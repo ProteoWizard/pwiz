@@ -25,15 +25,24 @@ using System.Reflection;
 using System.Text;
 using NHibernate;
 using NHibernate.Cfg;
+using pwiz.Topograph.Model;
 
 namespace pwiz.Topograph.Data
 {
-    public class SessionFactoryFactory
+    public static class SessionFactoryFactory
     {
+        private static ISessionFactory BuildSessionFactory(Configuration configuration)
+        {
+            Assembly assembly = typeof(SessionFactoryFactory).Assembly;
+            configuration.SetProperty("connection.provider", typeof(NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName);
+            configuration.AddInputStream(assembly.GetManifestResourceStream("pwiz.Topograph.Data.mapping.xml"));
+            ISessionFactory sessionFactory = configuration.BuildSessionFactory();
+            return sessionFactory;
+        }
+
         public static ISessionFactory CreateSessionFactory(String path, bool createSchema)
         {
-            Configuration configuration = new Configuration()
-                //.SetProperty("show_sql", "true")
+            var configuration = new Configuration()
                 .SetProperty("dialect", typeof(NHibernate.Dialect.SQLiteDialect).AssemblyQualifiedName)
                 .SetProperty("connection.connection_string", new SQLiteConnectionStringBuilder
                     {
@@ -44,11 +53,21 @@ namespace pwiz.Topograph.Data
             {
                 configuration.SetProperty("hbm2ddl.auto", "create");
             }
-            Assembly assembly = typeof(SessionFactoryFactory).Assembly;
-            configuration.SetProperty("connection.provider", typeof(NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName);
-            configuration.AddInputStream(assembly.GetManifestResourceStream("pwiz.Topograph.Data.mapping.xml"));
-            ISessionFactory sessionFactory = configuration.BuildSessionFactory();
-            return sessionFactory;
+            return BuildSessionFactory(configuration);
+        }
+
+        public static ISessionFactory CreateSessionFactory(TpgLinkDef tpgLinkDef, bool createSchema)
+        {
+            var configuration = new Configuration()
+                .SetProperty("show_sql", "true")
+                .SetProperty("dialect", tpgLinkDef.GetDialectClass().AssemblyQualifiedName)
+                .SetProperty("connection.connection_string", tpgLinkDef.GetConnectionString())
+                .SetProperty("connection.driver_class", tpgLinkDef.GetDriverClass().AssemblyQualifiedName);
+            if (createSchema)
+            {
+                configuration.SetProperty("hbm2ddl.auto", "create");
+            }
+            return BuildSessionFactory(configuration);
         }
     }
 }

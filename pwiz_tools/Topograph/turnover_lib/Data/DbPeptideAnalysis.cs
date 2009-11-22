@@ -28,12 +28,9 @@ namespace pwiz.Topograph.Data
         public DbPeptideAnalysis()
         {
             FileAnalyses = new List<DbPeptideFileAnalysis>();
-            PeptideRates = new List<DbPeptideRate>();
         }
         public virtual ICollection<DbPeptideFileAnalysis> FileAnalyses { get; set; }
         public virtual int FileAnalysisCount { get; set; }
-        public virtual ICollection<DbPeptideRate> PeptideRates { get; set; }
-        public virtual int PeptideRateCount { get; set; }
         public virtual String Name { get; set; }
         public virtual DbPeptide Peptide { get; set; }
         public virtual DbWorkspace Workspace { get; set; }

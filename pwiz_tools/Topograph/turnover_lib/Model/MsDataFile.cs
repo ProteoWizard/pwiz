@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using NHibernate;
@@ -35,7 +36,6 @@ namespace pwiz.Topograph.Model
         private double? _timePoint;
         public MsDataFile(Workspace workspace, DbMsDataFile msDataFile) : base(workspace, msDataFile)
         {
-            MsDataFileData = new MsDataFileData(this, msDataFile);
         }
 
         public MsDataFileData MsDataFileData { get; private set; }
@@ -44,13 +44,25 @@ namespace pwiz.Topograph.Model
         {
             MsDataFileData.Init(path, msDataFileImpl);
         }
+        protected override IEnumerable<ModelProperty> GetModelProperties()
+        {
+            foreach (var property in base.GetModelProperties())
+            {
+                yield return property;
+            }
+            yield return Property<MsDataFile,String>(m=>m._label, (m,v)=>m._label =v, e=>e.Label,(e,v)=>e.Label=v);
+            yield return Property<MsDataFile, String>(
+                m => m._cohort, (m, v) => m._cohort = v, 
+                e => e.Cohort, (e, v) => e.Cohort = v);
+            yield return Property<MsDataFile, double?>(
+                m => m._timePoint, (m, v) => m._timePoint = v,
+                e => e.TimePoint, (e, v) => e.TimePoint = v);
+        }
         protected override void Load(DbMsDataFile entity)
         {
-            base.Load(entity);
             Name = entity.Name;
-            _label = entity.Label;
-            _cohort = entity.Cohort;
-            _timePoint = entity.TimePoint;
+            MsDataFileData = new MsDataFileData(this, entity);
+            base.Load(entity);
         }
 
         protected override DbMsDataFile UpdateDbEntity(ISession session)
@@ -59,6 +71,7 @@ namespace pwiz.Topograph.Model
             msDataFile.Label = Label;
             msDataFile.Cohort = _cohort;
             msDataFile.TimePoint = _timePoint;
+            session.Save(new DbChangeLog(this));
             return msDataFile;
         }
 

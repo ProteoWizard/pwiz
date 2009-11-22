@@ -24,8 +24,8 @@ using System.Linq;
 using System.Text;
 using NHibernate;
 using NHibernate.Criterion;
-using pwiz.Common.Chemistry;
 using pwiz.Topograph.Data;
+using pwiz.Topograph.Data.Snapshot;
 using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.MsData;
 
@@ -33,7 +33,7 @@ namespace pwiz.Topograph.Model
 {
     public class PeptideFileAnalysis : AnnotatedEntityModel<DbPeptideFileAnalysis>
     {
-        private ExcludedMzs _excludedMzs;
+        private ExcludedMzs _excludedMzs = new ExcludedMzs();
         private bool _autoFindPeak;
         private bool _overrideExcludedMzs;
         private double[] _times;
@@ -57,17 +57,32 @@ namespace pwiz.Topograph.Model
             SetWorkspaceVersion(Workspace.WorkspaceVersion);
         }
 
+        protected override IEnumerable<ModelProperty> GetModelProperties()
+        {
+            foreach (var p in base.GetModelProperties())
+            {
+                yield return p;
+            }
+            yield return Property<PeptideFileAnalysis, bool>(
+                m => m._overrideExcludedMzs,
+                (m, v) => m._overrideExcludedMzs = v,
+                e => e.OverrideExcludedMasses,
+                (e, v) => e.OverrideExcludedMasses = v
+                );
+            yield return Property<PeptideFileAnalysis, byte[]>(
+                m => m._excludedMzs.ToByteArray(), 
+                (m, v) => m._excludedMzs.SetByteArray(v),
+                e => e.ExcludedMasses ?? new byte[0],
+                (e, v) => e.ExcludedMasses = v == null || v.Length == 0 ? null : v);
+            yield return Property<PeptideFileAnalysis, bool>(
+                m => m._autoFindPeak,
+                (m, v) => m._autoFindPeak = v,
+                e => e.AutoFindPeak,
+                (e, v) => e.AutoFindPeak = v);
+        }
+
         protected override void Load(DbPeptideFileAnalysis dbPeptideFileAnalysis)
         {
-            OverrideExcludedMzs = dbPeptideFileAnalysis.OverrideExcludedMasses;
-            if (OverrideExcludedMzs)
-            {
-                if (dbPeptideFileAnalysis.ExcludedMasses != null)
-                {
-                    _excludedMzs.SetByteArray(dbPeptideFileAnalysis.ExcludedMasses);
-                }
-            }
-            _autoFindPeak = dbPeptideFileAnalysis.AutoFindPeak;
             base.Load(dbPeptideFileAnalysis);
             MsDataFile = Workspace.MsDataFiles.GetMsDataFile(dbPeptideFileAnalysis.MsDataFile);
             FirstTime = dbPeptideFileAnalysis.ChromatogramStartTime;
@@ -80,6 +95,19 @@ namespace pwiz.Topograph.Model
                 _scanIndexes = dbPeptideFileAnalysis.ScanIndexes;
             }
             _workspaceVersion = Workspace.SavedWorkspaceVersion;
+        }
+
+        public override bool IsDirty()
+        {
+            return base.IsDirty() || (!_autoFindPeak && Peaks.IsDirty);
+        }
+
+        public void Merge(PeptideFileAnalysisSnapshot snapshot)
+        {
+            Load(snapshot.DbPeptideFileAnalysis);
+            Chromatograms = snapshot.GetChromatograms(this);
+            Peaks = snapshot.GetPeaks(this);
+            PeptideDistributions = snapshot.GetDistributions(this);
         }
 
         public Peaks Peaks { get; private set; }
@@ -236,17 +264,12 @@ namespace pwiz.Topograph.Model
         {
             using (GetWriteLock())
             {
-                bool recalcRates = Chromatograms.ChildCount > 0 || PeptideDistributions.ChildCount > 0;
                 Peaks = new Peaks(this);
                 PeptideDistributions = new PeptideDistributions(this);
                 if (Chromatograms.ChildCount > 0)
                 {
                     Peaks.CalcIntensities();
                     PeptideDistributions.Calculate(Peaks);
-                }
-                if (recalcRates)
-                {
-                    PeptideAnalysis.RecalculateRates();
                 }
             }
         }
@@ -263,7 +286,6 @@ namespace pwiz.Topograph.Model
                         return;
                     }
                     base.ValidationStatus = value;
-                    PeptideAnalysis.RecalculateRates();
                 }
             }
         }

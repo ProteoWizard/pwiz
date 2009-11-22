@@ -39,8 +39,9 @@ namespace pwiz.Topograph.ui.Forms
 {
     public partial class TurnoverForm : Form
     {
-        public const string WorkspaceFilter = "Topograph Workspaces(*.tpg)|*.tpg"
-                                               + "|All Files (*.*)|*.*";
+        public const string WorkspaceFilter = "Topograph Workspaces(*.tpg)|*.tpg";
+        public const string OnlineWorkspaceFilter = "Topograph Online Workspaces(*.tpglnk)|*.tpglnk";
+        public const string AnyWorkspaceFilter = "Topograph Workspaces(*.tpg,*.tpglnk)|*.tpg;*.tpglnk";
 
         private Workspace _workspace;
 
@@ -50,27 +51,38 @@ namespace pwiz.Topograph.ui.Forms
             Instance = this;
         }
 
-        private ToolStripMenuItem[] WorkspaceMenuItems
+        private IList<ToolStripMenuItem> WorkspaceOpenMenuItems
         {
             get
             {
                 return new[]
                 {
-                        modificationsToolStripMenuItem,
-                        addSearchResultsToolStripMenuItem,
                         closeWorkspaceToolStripMenuItem,
-                        enrichmentToolStripMenuItem,
-                        peptidesToolStripMenuItem,
-                        peptideAnalysesToolStripMenuItem,
-                        queryToolStripMenuItem,
-                        dataFilesToolStripMenuItem,
-                        saveWorkspaceToolStripMenuItem,
                         statusToolStripMenuItem,
-                        updateProteinNamesToolStripMenuItem,
-                        machineSettingsToolStripMenuItem,
-                        mercuryToolStripMenuItem,
-                        halfLivesToolStripMenuItem,
+                        locksToolStripMenuItem,
                 };
+            }
+        }
+        private ToolStripMenuItem[] WorkspaceLoadedMenuItems
+        {
+            get {
+                return new[]
+                           {
+                               modificationsToolStripMenuItem,
+                               addSearchResultsToolStripMenuItem,
+                               enrichmentToolStripMenuItem,
+                               peptidesToolStripMenuItem,
+                               peptideAnalysesToolStripMenuItem,
+                               queryToolStripMenuItem,
+                               dataFilesToolStripMenuItem,
+                               saveWorkspaceToolStripMenuItem,
+                               updateProteinNamesToolStripMenuItem,
+                               machineSettingsToolStripMenuItem,
+                               mercuryToolStripMenuItem,
+                               halfLivesToolStripMenuItem,
+                               upsizeWorkspaceToolStripMenuItem,
+                               dataDirectoryToolStripMenuItem,
+                           };
             }
         }
 
@@ -104,35 +116,31 @@ namespace pwiz.Topograph.ui.Forms
                     _workspace.SetActionInvoker(null);
                     _workspace.EntitiesChange -= Workspace_EntitiesChange;
                     _workspace.WorkspaceDirty -= Workspace_WorkspaceDirty;
+                    _workspace.WorkspaceLoaded -= Workspace_WorkspaceLoaded;
                 }
                 _workspace = value;
                 if (_workspace != null)
                 {
                     _workspace.SetActionInvoker(ActionInvoker);
-                    int count;
-                    using (var session = _workspace.OpenSession())
-                    {
-                        var query = session.CreateQuery("SELECT COUNT(*) FROM " + typeof (DbPeptideAnalysis));
-                        count = Convert.ToInt32(query.UniqueResult());
-                    }
-                    if (count == 0)
-                    {
-                        new PeptidesForm(_workspace).Show(dockPanel, DockState.Document);
-                    }
-                    else
-                    {
-                        new PeptideAnalysesForm(_workspace).Show(dockPanel, DockState.Document);
-                    }
-                    foreach (var menuItem in WorkspaceMenuItems)
+                    foreach (var menuItem in WorkspaceOpenMenuItems)
                     {
                         menuItem.Enabled = true;
                     }
+                    foreach (var menuItem in WorkspaceLoadedMenuItems)
+                    {
+                        menuItem.Enabled = _workspace.IsLoaded;
+                    }
                     _workspace.EntitiesChange += Workspace_EntitiesChange;
                     _workspace.WorkspaceDirty += Workspace_WorkspaceDirty;
+                    _workspace.WorkspaceLoaded += Workspace_WorkspaceLoaded;
                 }
                 else
                 {
-                    foreach (var menuItem in WorkspaceMenuItems)
+                    foreach (var menuItem in WorkspaceOpenMenuItems)
+                    {
+                        menuItem.Enabled = false;
+                    }
+                    foreach (var menuItem in WorkspaceLoadedMenuItems)
                     {
                         menuItem.Enabled = false;
                     }
@@ -144,6 +152,39 @@ namespace pwiz.Topograph.ui.Forms
         void Workspace_WorkspaceDirty(Workspace workspace)
         {
             UpdateWindowTitle();
+            if (workspace.IsLoaded)
+            {
+                EnsureDataDirectory(workspace);
+            }
+        }
+
+        void EnsureDataDirectory(Workspace workspace)
+        {
+            if (!workspace.IsLoaded)
+            {
+                return;
+            }
+            if (workspace.MsDataFiles.ChildCount == 0)
+            {
+                return;
+            }
+            var dataDirectory = workspace.GetDataDirectory();
+            if (dataDirectory == "")
+            {
+                return;
+            }
+            if (dataDirectory != null && Directory.Exists(dataDirectory))
+            {
+                return;
+            }
+            var message = dataDirectory == null ? "" : "The data directory '" + dataDirectory + "' does not exist.";
+            message += "Do you want to browse for the directory containing the MS data files in this workspace?";
+            if (MessageBox.Show(message, Program.AppName, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+            {
+                workspace.SetDataDirectory("");
+                return;
+            }
+            BrowseForDataDirectory();
         }
 
         void UpdateWindowTitle()
@@ -151,18 +192,84 @@ namespace pwiz.Topograph.ui.Forms
             if (Workspace == null)
             {
                 Text = Program.AppName;
+                return;
+            }
+            var text = Path.GetFileName(_workspace.DatabasePath);
+            if (_workspace.IsLoaded)
+            {
+                if (_workspace.WorkspaceVersion.Equals(_workspace.SavedWorkspaceVersion))
+                {
+                    if (_workspace.IsDirty)
+                    {
+                        text += "(changed)";
+                    }
+                }
+                else
+                {
+                    text += "(settings changed)";
+                }
             }
             else
             {
-                Text = Path.GetFileName(_workspace.DatabasePath) + 
-                    (_workspace.IsDirty ? "(changed)" : "") +
-                    " - " + Program.AppName;
+                text += "(loading)";
             }
+
+            text += " - " + Program.AppName;
+            Text = text;
         }
 
         void Workspace_EntitiesChange(EntitiesChangedEventArgs entitiesChangedEventArgs)
         {
             UpdateWindowTitle();
+        }
+
+        void Workspace_WorkspaceLoaded(Workspace workspace)
+        {
+            BeginInvoke(new Action(WorkspaceLoaded));
+        }
+
+        void WorkspaceLoaded()
+        {
+            foreach (var menuItem in WorkspaceLoadedMenuItems)
+            {
+                menuItem.Enabled = true;
+            }
+            if (_workspace.PeptideAnalyses.GetChildCount() > 0)
+            {
+                new PeptideAnalysesForm(_workspace).Show(dockPanel, DockState.Document);
+            }
+            else
+            {
+                new PeptidesForm(_workspace).Show(dockPanel, DockState.Document);
+            }
+        }
+
+        void InitWorkspace(ISessionFactory sessionFactory)
+        {
+            using (var session = sessionFactory.OpenSession())
+            {
+                var transaction = session.BeginTransaction();
+                var dbWorkspace = new DbWorkspace
+                                      {
+                                          ModificationCount = 1,
+                                          TracerDefCount = 1,
+                                          SchemaVersion = WorkspaceUpgrader.CurrentVersion,
+                                      };
+                session.Save(dbWorkspace);
+                DbTracerDef dbTracerDef = TracerDef.GetD3LeuEnrichment();
+                dbTracerDef.Workspace = dbWorkspace;
+                dbTracerDef.Name = "Tracer";
+                session.Save(dbTracerDef);
+
+                var modification = new DbModification
+                                       {
+                                           DeltaMass = 57.02,
+                                           Symbol = "C",
+                                           Workspace = dbWorkspace
+                                       };
+                session.Save(modification);
+                transaction.Commit();
+            }
         }
 
         private void newWorkspaceToolStripMenuItem_Click(object sender, EventArgs e)
@@ -191,28 +298,7 @@ namespace pwiz.Topograph.ui.Forms
             }
             using(ISessionFactory sessionFactory = SessionFactoryFactory.CreateSessionFactory(filename, true))
             {
-                ISession session = sessionFactory.OpenSession();
-                var transaction = session.BeginTransaction();
-                var dbWorkspace = new DbWorkspace
-                                      {
-                                          ModificationCount = 1,
-                                          TracerDefCount = 1,
-                                          SchemaVersion = WorkspaceUpgrader.CurrentVersion,
-                                      };
-                session.Save(dbWorkspace);
-                DbTracerDef dbTracerDef = TracerDef.GetD3LeuEnrichment();
-                dbTracerDef.Workspace = dbWorkspace;
-                dbTracerDef.Name = "Tracer";
-                session.Save(dbTracerDef);
-
-                var modification = new DbModification
-                                       {
-                                           DeltaMass = 57.02,
-                                           Symbol = "C",
-                                           Workspace = dbWorkspace
-                                       };
-                session.Save(modification);
-                transaction.Commit();
+                InitWorkspace(sessionFactory);
             }
             Workspace = new Workspace(filename);
             enrichmentToolStripMenuItem_Click(sender, e);
@@ -258,7 +344,7 @@ namespace pwiz.Topograph.ui.Forms
             Settings.Default.Reload();
             var fileDialog = new OpenFileDialog
                                  {
-                                     Filter = WorkspaceFilter,
+                                     Filter = AnyWorkspaceFilter,
                                      InitialDirectory = Settings.Default.WorkspaceDirectory
                                  };
             if (fileDialog.ShowDialog(this) == DialogResult.Cancel)
@@ -277,7 +363,7 @@ namespace pwiz.Topograph.ui.Forms
 
         private void addSearchResultsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            new AddSearchResultsForm(Workspace).ShowDialog();
+            new AddSearchResultsForm(Workspace).Show(this);
         }
 
         private void enrichmentToolStripMenuItem_Click(object sender, EventArgs e)
@@ -352,32 +438,12 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return false;
             }
-            if (MsDataFileUtil.TryInitMsDataFile(Workspace, msDataFile, msDataFile.Path, out errorMessage))
+            if (MsDataFileUtil.TryInitMsDataFile(Workspace, msDataFile, out errorMessage))
             {
                 return true;
             }
-            String name;
-            Settings.Default.Reload();
-            if (String.IsNullOrEmpty(msDataFile.Path))
-            {
-                String pathToTry = Path.Combine(Settings.Default.RawFilesDirectory, msDataFile.Name + ".RAW");
-                String msgIgnore;
-                if (File.Exists(pathToTry))
-                {
-                    if (MsDataFileUtil.TryInitMsDataFile(Workspace, msDataFile, pathToTry, out msgIgnore))
-                    {
-                        return true;
-                    }
-                }
-                name = msDataFile.Name;
-            }
-            else
-            {
-                name = msDataFile.Path;
-            }
-
             DialogResult dialogResult = MessageBox.Show(
-                "Unable to open the data file for " + name + ". " + errorMessage + " Do you want to look for this file?",
+                "Unable to open the data file for " + msDataFile.Name + ". " + errorMessage + " Do you want to look for this file?",
                 Program.AppName, MessageBoxButtons.OKCancel);
             while (dialogResult == DialogResult.OK)
             {
@@ -394,10 +460,8 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     break;
                 }
-
-                Settings.Default.RawFilesDirectory = Path.GetDirectoryName(fileDialog.FileName);
-                Settings.Default.Save();
-                if (MsDataFileUtil.TryInitMsDataFile(Workspace, msDataFile, fileDialog.FileName, out errorMessage))
+                Workspace.SetDataDirectory(Path.GetDirectoryName(fileDialog.FileName));
+                if (MsDataFileUtil.TryInitMsDataFile(Workspace, msDataFile, out errorMessage))
                 {
                     return true;
                 }
@@ -537,5 +601,173 @@ namespace pwiz.Topograph.ui.Forms
         }
 
         public DockPanel DocumentPanel { get { return dockPanel; } }
+
+        private void newOnlineWorkspaceToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!PromptToSaveWorkspace())
+            {
+                return;
+            }
+            var dialog = new TpgLinkForm
+                             {
+                                 ShowReadOnlyCheckbox = false,
+                                 BrowseOnOk = true,
+                             };
+            while (true)
+            {
+                if (dialog.ShowDialog(this) == DialogResult.Cancel)
+                {
+                    return;
+                }
+                var tpgLinkDef = dialog.GetTpgLinkDef();
+                try
+                {
+                    tpgLinkDef.CreateDatabase();
+                }
+                catch (Exception exception)
+                {
+                    var result = MessageBox.Show(this, "There was an error creating the database.  Do you want to try again?\n" + exception, Program.AppName, MessageBoxButtons.OKCancel);
+                    if (result == DialogResult.Cancel)
+                    {
+                        return;
+                    }
+                    continue;
+                }
+                using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(tpgLinkDef, true))
+                {
+                    InitWorkspace(sessionFactory);
+                }
+
+                tpgLinkDef.Save(dialog.Filename);
+                break;
+            }
+            Workspace = OpenWorkspace(dialog.Filename);
+        }
+
+        private void openOnlineWorkspaceToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!PromptToSaveWorkspace())
+            {
+                return;
+            }
+            var dialog = new TpgLinkForm
+            {
+                ShowReadOnlyCheckbox = false,
+                BrowseOnOk = true,
+            };
+            while (true)
+            {
+                if (dialog.ShowDialog(this) == DialogResult.Cancel)
+                {
+                    return;
+                }
+                var tpgLinkDef = dialog.GetTpgLinkDef();
+                tpgLinkDef.Save(dialog.Filename);
+                try
+                {
+                    Workspace = OpenWorkspace(dialog.Filename);
+                    if (Workspace == null)
+                    {
+                        return;
+                    }
+                }
+                catch (Exception exception)
+                {
+                    var result = MessageBox.Show(this, "There was an error connecting to the database.  Do you want to try again?\n" + exception, Program.AppName, MessageBoxButtons.OKCancel);
+                    if (result == DialogResult.Cancel)
+                    {
+                        return;
+                    }
+                    continue;
+                }
+            }
+            
+        }
+
+        private void upsizeWorkspaceToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!PromptToSaveWorkspace())
+            {
+                return;
+            }
+            var dialog = new TpgLinkForm
+            {
+                ShowReadOnlyCheckbox = false,
+            };
+            while (true)
+            {
+                if (dialog.ShowDialog(this) == DialogResult.Cancel)
+                {
+                    return;
+                }
+                var tpgLinkDef = dialog.GetTpgLinkDef();
+                try
+                {
+                    tpgLinkDef.CreateDatabase();
+                }
+                catch (Exception exception)
+                {
+                    var result = MessageBox.Show(this, "There was an error creating the database.  Do you want to try again?\n" + exception, Program.AppName, MessageBoxButtons.OKCancel);
+                    if (result == DialogResult.Cancel)
+                    {
+                        return;
+                    }
+                    continue;
+                }
+                using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(tpgLinkDef, true))
+                {
+                    var workspaceUpsizer = new WorkspaceUpsizer(Workspace.SessionFactory, sessionFactory);
+                    new LongOperationBroker(workspaceUpsizer, new LongWaitDialog(this, "Upsizing workspace")).LaunchJob();
+                }
+                break;
+            }
+        }
+
+        public void BrowseForDataDirectory()
+        {
+            while (true)
+            {
+                var dialog = new FolderBrowserDialog();
+                var currentDataDirectory = Workspace.GetDataDirectory();
+                if (!string.IsNullOrEmpty(currentDataDirectory) && Directory.Exists(currentDataDirectory))
+                {
+                    dialog.SelectedPath = currentDataDirectory;
+                }
+                var dialogResult = dialog.ShowDialog(this);
+                if (dialogResult == DialogResult.Cancel)
+                {
+                    Workspace.SetDataDirectory("");
+                    return;
+                }
+                if (!Workspace.IsValidDataDirectory(dialog.SelectedPath))
+                {
+                    if (MessageBox.Show(
+                        "That directory does not appear to contain any of the data files from this workspace.  Are you sure you want to use that directory?",
+                        Program.AppName, MessageBoxButtons.YesNo) == DialogResult.No)
+                    {
+                        continue;
+                    }
+                }
+                Workspace.SetDataDirectory(dialog.SelectedPath);
+                return;
+            }
+        }
+
+        private void dataDirectoryToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            BrowseForDataDirectory();
+        }
+
+        private void locksToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var locksForm = Program.FindOpenForm<LocksForm>();
+            if (locksForm != null)
+            {
+                locksForm.Activate();
+                return;
+            }
+            locksForm = new LocksForm(Workspace);
+            locksForm.Show(DocumentPanel, DockState.Floating);
+        }
     }
 }

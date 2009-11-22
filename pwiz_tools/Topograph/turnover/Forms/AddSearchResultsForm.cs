@@ -138,7 +138,7 @@ namespace pwiz.Topograph.ui.Forms
                                 });
         }
 
-        private void AddSearchResults(String file, Dictionary<string,DbPeptide> peptides, Dictionary<string, DbMsDataFile> dataFiles)
+        private void AddSearchResults(String file, Dictionary<string,DbPeptide> peptides, Dictionary<string,DbMsDataFile> dataFiles)
         {
             String extension = Path.GetExtension(file);
             List<SearchResult> searchResults;
@@ -166,7 +166,6 @@ namespace pwiz.Topograph.ui.Forms
             }
             var dbPeptideSearchResults = GetSearchResults(msDataFileName);
             var modifiedPeptides = new HashSet<DbPeptide>();
-
             using (var session = Workspace.OpenWriteSession())
             {
                 var dbWorkspace = Workspace.LoadDbWorkspace(session);
@@ -175,7 +174,7 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     if (!ProgressMonitor(100 + 100*i/searchResults.Count))
                     {
-                        return;
+                        break;
                     }
                     var searchResult = searchResults[i];
                     if (useMinXCorr)
@@ -206,6 +205,8 @@ namespace pwiz.Topograph.ui.Forms
                         {
                             continue;
                         }
+                    }
+                    if (dbPeptide == null) {
                         dbPeptide = new DbPeptide
                                         {
                                             Workspace = dbWorkspace,
@@ -220,14 +221,13 @@ namespace pwiz.Topograph.ui.Forms
                     DbMsDataFile dbMsDataFile;
                     if (!dataFiles.TryGetValue(searchResult.Filename, out dbMsDataFile))
                     {
-                        var msDataFilePath = Workspace.ResolveMsDataFilePath(Path.GetDirectoryName(file),
+                        Workspace.UpdateDataDirectoryFromSearchResultDirectory(Path.GetDirectoryName(file),
                                                                              searchResult.Filename);
                         dbMsDataFile = new DbMsDataFile
                                            {
                                                Name = searchResult.Filename,
                                                Label = searchResult.Filename,
                                                Workspace = dbWorkspace,
-                                               Path = msDataFilePath
                                            };
                         session.Save(dbMsDataFile);
                         dataFiles.Add(dbMsDataFile.Name, dbMsDataFile);
@@ -250,6 +250,7 @@ namespace pwiz.Topograph.ui.Forms
                         session.Save(dbPeptideSearchResult);
                         dbPeptide.SearchResultCount++;
                         session.Update(dbPeptide);
+                        session.Save(new DbChangeLog(Workspace, dbPeptide));
                         modifiedPeptides.Add(dbPeptide);
                         dbPeptideSearchResults.Add(key, dbPeptideSearchResult);
                     }
@@ -260,55 +261,31 @@ namespace pwiz.Topograph.ui.Forms
                             dbPeptideSearchResult.MinCharge <= searchResult.Charge &&
                             dbPeptideSearchResult.MaxCharge >= searchResult.Charge)
                         {
-                            continue;
                         }
-                        if (dbPeptideSearchResult.FirstDetectedScan > searchResult.ScanIndex)
+                        else
                         {
-                            dbPeptideSearchResult.FirstDetectedScan = searchResult.ScanIndex;
-                            dbPeptideSearchResult.FirstTracerCount = searchResult.TracerCount;
+
+                            if (dbPeptideSearchResult.FirstDetectedScan > searchResult.ScanIndex)
+                            {
+                                dbPeptideSearchResult.FirstDetectedScan = searchResult.ScanIndex;
+                                dbPeptideSearchResult.FirstTracerCount = searchResult.TracerCount;
+                            }
+                            if (dbPeptideSearchResult.LastDetectedScan < searchResult.ScanIndex)
+                            {
+                                dbPeptideSearchResult.LastDetectedScan = searchResult.ScanIndex;
+                                dbPeptideSearchResult.LastTracerCount = searchResult.TracerCount;
+                            }
+                            dbPeptideSearchResult.MinCharge = Math.Min(dbPeptideSearchResult.MinCharge, searchResult.Charge);
+                            dbPeptideSearchResult.MaxCharge = Math.Max(dbPeptideSearchResult.MaxCharge, searchResult.Charge);
+                            session.Update(dbPeptideSearchResult);
                         }
-                        if (dbPeptideSearchResult.LastDetectedScan < searchResult.ScanIndex)
-                        {
-                            dbPeptideSearchResult.LastDetectedScan = searchResult.ScanIndex;
-                            dbPeptideSearchResult.LastTracerCount = searchResult.TracerCount;
-                        }
-                        dbPeptideSearchResult.MinCharge = Math.Min(dbPeptideSearchResult.MinCharge, searchResult.Charge);
-                        dbPeptideSearchResult.MaxCharge = Math.Max(dbPeptideSearchResult.MaxCharge, searchResult.Charge);
-                        session.Update(dbPeptideSearchResult);
+
                     }
                 }
                 dbWorkspace.PeptideCount = peptides.Count;
                 dbWorkspace.MsDataFileCount = dataFiles.Count;
                 session.Update(dbWorkspace);
                 session.Transaction.Commit();
-            }
-
-            using (Workspace.GetWriteLock())
-            {
-                using (var session = Workspace.OpenSession())
-                {
-                    foreach (var dbPeptide in modifiedPeptides)
-                    {
-                        var peptide = Workspace.Peptides.GetPeptide(dbPeptide);
-                        if (peptide == null)
-                        {
-                            peptide = new Peptide(Workspace, session.Get<DbPeptide>(dbPeptide.Id));
-                            Workspace.Peptides.AddChild(dbPeptide.Id.Value, peptide);
-                            Workspace.AddEntityModel(peptide);
-                        }
-                        peptide.SearchResultCount = dbPeptide.SearchResultCount;
-                    }
-                    foreach (var dbMsDataFile in dataFiles.Values)
-                    {
-                        var msDataFile = Workspace.MsDataFiles.GetMsDataFile(dbMsDataFile);
-                        if (msDataFile == null)
-                        {
-                            msDataFile = new MsDataFile(Workspace, session.Get<DbMsDataFile>(dbMsDataFile.Id));
-                            Workspace.MsDataFiles.AddChild(msDataFile.Id.Value, msDataFile);
-                            Workspace.AddEntityModel(msDataFile);
-                        }
-                    }
-                }
             }
         }
         class SearchResultKey

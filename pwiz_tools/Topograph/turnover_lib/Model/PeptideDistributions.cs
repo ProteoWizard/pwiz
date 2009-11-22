@@ -101,12 +101,10 @@ namespace pwiz.Topograph.Model
         {
             return parent.PeptideDistributionCount;
         }
-
         protected override void SetChildCount(DbPeptideFileAnalysis parent, int childCount)
         {
             parent.PeptideDistributionCount = childCount;
         }
-
         protected override IEnumerable<KeyValuePair<PeptideQuantity, DbPeptideDistribution>> GetChildren(DbPeptideFileAnalysis parent)
         {
             foreach (var peptideDistribution in parent.PeptideDistributions)
@@ -114,7 +112,6 @@ namespace pwiz.Topograph.Model
                 yield return new KeyValuePair<PeptideQuantity, DbPeptideDistribution>(peptideDistribution.PeptideQuantity, peptideDistribution);
             }
         }
-
         public override PeptideDistribution WrapChild(DbPeptideDistribution entity)
         {
             return new PeptideDistribution(Workspace, entity);

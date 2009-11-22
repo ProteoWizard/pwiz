@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using NHibernate;
 using pwiz.Topograph.Data;
 
@@ -38,11 +39,72 @@ namespace pwiz.Topograph.Model
         }
         public override void SaveEntity(ISession session, C child, P parent, E entity)
         {
+            if (!child.IsDirty())
+            {
+                return;
+            }
             if (entity != null && entity.Id.HasValue && child.Id == null)
             {
                 child.SetId(entity.Id.Value);
             }
             child.Save(session);
+        }
+
+        public bool SaveChildren(ISession session)
+        {
+            bool dirty = false;
+            foreach (var child in ListChildren())
+            {
+                if (child.IsDirty())
+                {
+                    dirty = true;
+                }
+            }
+            var parent = session.Get<P>(Id);
+            dirty = dirty || GetChildCount(parent) != _childDict.Count;
+            if (dirty)
+            {
+                Save(session);
+            }
+            return dirty;
+        }
+
+        protected override void MergeChild(C child, E entity)
+        {
+            child.Merge(entity);
+        }
+
+        private ModelProperty ChildCountProperty
+        {
+            get
+            {
+                return Property<EntityModelCollection<P, K, E, C>, int>(m => m.GetChildCount(), (m, v) =>
+                                                                                                    {
+                                                                                                        throw new InvalidOperationException
+                                                                                                            ();
+                                                                                                    },
+                                                                        GetChildCount,
+                                                                        SetChildCount);
+            }
+        }
+        public override bool IsDirty()
+        {
+            if (base.IsDirty())
+            {
+                return true;
+            }
+            if (IsPropDirty(ChildCountProperty))
+            {
+                return true;
+            }
+            foreach (var child in ListChildren())
+            {
+                if (child.IsDirty())
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }

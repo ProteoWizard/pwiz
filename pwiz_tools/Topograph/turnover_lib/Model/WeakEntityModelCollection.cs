@@ -91,5 +91,16 @@ namespace pwiz.Topograph.Model
             }
             return children;
         }
+        public void AddChildId(long id)
+        {
+            lock(this)
+            {
+                if (!_childDict.ContainsKey(id))
+                {
+                    _childDict.Add(id, null);
+                    _childCount = _childDict.Count;
+                }
+            }
+        }
     }
 }

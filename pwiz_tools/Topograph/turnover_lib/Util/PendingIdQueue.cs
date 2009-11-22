@@ -11,7 +11,7 @@ namespace pwiz.Topograph.Util
         private IList<long> _queriedIds = new long[0];
         private int _queriedIdIndex;
         private bool _requeryPending = true;
-        private ICollection<long> _additionalIds = new HashSet<long>();
+        private HashSet<long> _additionalIds = new HashSet<long>();
 
         public void SetQueriedIds(ICollection<long> ids)
         {
@@ -24,28 +24,40 @@ namespace pwiz.Topograph.Util
             }
         }
 
-        public IEnumerable<long> EnumerateIds()
+        public long? GetNextId()
         {
-            var returnedSet = new HashSet<long>();
-            lock(this)
+            lock (this)
             {
-                while (_queriedIdIndex < _queriedIds.Count)
+                if (_queriedIdIndex < _queriedIds.Count)
                 {
                     long id = _queriedIds[_queriedIdIndex];
                     _queriedIdIndex++;
-                    if (returnedSet.Add(id))
-                    {
-                        yield return id;
-                    }
+                    return id;
                 }
-                while (_additionalIds.Count > 0)
+                if (_additionalIds.Count > 0)
                 {
                     long id = _additionalIds.First();
                     _additionalIds.Remove(id);
-                    if (returnedSet.Add(id))
-                    {
-                        yield return id;
-                    }
+                    return id;
+                }
+                return null;
+            }
+            
+        }
+
+        public IEnumerable<long> EnumerateIds()
+        {
+            var returnedSet = new HashSet<long>();
+            while (true)
+            {
+                long? id = GetNextId();
+                if (id == null)
+                {
+                    yield break;
+                }
+                if (returnedSet.Add(id.Value))
+                {
+                    yield return id.Value;
                 }
             }
         }
@@ -71,6 +83,13 @@ namespace pwiz.Topograph.Util
             lock(this)
             {
                 _additionalIds.Add(id);
+            }
+        }
+        public void AddIds(IEnumerable<long> ids)
+        {
+            lock(this)
+            {
+                _additionalIds.UnionWith(ids);
             }
         }
 

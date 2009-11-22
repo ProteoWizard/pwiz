@@ -230,8 +230,12 @@ namespace pwiz.Topograph.ui.Forms
 
         private void btnShowGraph_Click(object sender, EventArgs e)
         {
-            var graphForm = new GraphForm(PeptideAnalysis);
-            graphForm.Show(DockPanel, DockState);
+            var halfLifeForm = new HalfLifeForm(Workspace)
+                                   {
+                                       Peptide = Peptide.Sequence,
+                                       ProteinName = Peptide.ProteinName,
+                                   };
+            halfLifeForm.Show(DockPanel, DockState);
         }
 
         private void dataGridView_CellContentClick(object sender, DataGridViewCellEventArgs e)

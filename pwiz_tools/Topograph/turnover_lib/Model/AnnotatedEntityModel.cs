@@ -32,20 +32,25 @@ namespace pwiz.Topograph.Model
         protected AnnotatedEntityModel(Workspace workspace, T entity) : base(workspace, entity)
         {
         }
-        protected override void Load(T entity)
+        protected override IEnumerable<ModelProperty> GetModelProperties()
         {
-            base.Load(entity);
-            _validationStatus = entity.ValidationStatus;
-            _note = entity.Note;
+            foreach (var modelProperty in base.GetModelProperties())
+            {
+                yield return modelProperty;
+            }
+            yield return Property<AnnotatedEntityModel<T>,ValidationStatus>(
+                m=>m._validationStatus, 
+                (m,v)=>m._validationStatus = v, 
+                e=>e.ValidationStatus, 
+                (e,v)=>e.ValidationStatus = v);
+            yield return Property<AnnotatedEntityModel<T>, string>(
+                m=>m._note,
+                (m,v)=>m._note = v,
+                e=>e.Note,
+                (e,v)=>e.Note = v
+                );
         }
 
-        protected override T UpdateDbEntity(ISession session)
-        {
-            T result = base.UpdateDbEntity(session);
-            result.ValidationStatus = _validationStatus;
-            result.Note = _note;
-            return result;
-        }
 
         public virtual ValidationStatus ValidationStatus
         {

@@ -60,5 +60,7 @@ namespace pwiz.Topograph.Data
         public virtual int TracerDefCount { get; set; }
 
         public virtual int SchemaVersion { get; set; }
+
+        public virtual String DataFilePath { get; set; }
     }
 }

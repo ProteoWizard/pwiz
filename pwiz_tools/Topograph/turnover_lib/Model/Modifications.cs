@@ -17,18 +17,16 @@
  * limitations under the License.
  */
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using pwiz.Topograph.Data;
 
 namespace pwiz.Topograph.Model
 {
-    public class Modifications : SimpleChildCollection<DbWorkspace, String, DbModification>
+    public class Modifications : SettingCollection<DbWorkspace, String, DbModification, Modification>
     {
         public Modifications(Workspace workspace, DbWorkspace dbWorkspace)
             : base(workspace, dbWorkspace)
-        {
-        }
-        public Modifications(Workspace workspace) : base(workspace)
         {
         }
         protected override IEnumerable<KeyValuePair<string, DbModification>> GetChildren(DbWorkspace parent)
@@ -39,11 +37,6 @@ namespace pwiz.Topograph.Model
             }
         }
 
-        protected override void SetParent(DbModification child, DbWorkspace parent)
-        {
-            child.Workspace = parent;
-        }
-
         protected override int GetChildCount(DbWorkspace parent)
         {
             return parent.ModificationCount;
@@ -52,6 +45,11 @@ namespace pwiz.Topograph.Model
         protected override void SetChildCount(DbWorkspace parent, int childCount)
         {
             parent.ModificationCount = childCount;
+        }
+
+        public override Modification WrapChild(DbModification entity)
+        {
+            return new Modification(Workspace, entity);
         }
     }
 }

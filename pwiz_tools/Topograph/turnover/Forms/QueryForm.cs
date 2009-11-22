@@ -31,7 +31,6 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     new Table(typeof(DbPeptideAnalysis), "PeptideAnalysis"),
                     new Table(typeof(DbPeptideFileAnalysis), "PeptideFileAnalysis"),
-                    new Table(typeof(DbPeptideRate), "Rate"),
                     new Table(typeof(DbPeptideDistribution), "Distribution"),
                     new Table(typeof(DbPeptideAmount), "Amount"),
                 }

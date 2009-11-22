@@ -42,25 +42,35 @@ namespace pwiz.Topograph.Model
         private static readonly ILog _log = LogManager.GetLogger(typeof (Workspace));
         private readonly ChromatogramGenerator _chromatogramGenerator;
         private readonly ResultCalculator _resultCalculator;
+        private readonly Reconciler _reconciler;
         private Modifications _modifications;
         private WorkspaceSettings _settings;
         private AminoAcidFormulas _aminoAcidFormulas;
         private EntitiesChangedEventArgs _entitiesChangedEventArgs;
         private readonly HashSet<PeptideAnalysis> _dirtyPeptideAnalyses = new HashSet<PeptideAnalysis>();
-        private readonly HashSet<Peptide> _dirtyPeptides = new HashSet<Peptide>();
         private TracerDefs _tracerDefs;
         private IList<TracerDef> _tracerDefList;
         private ActionInvoker _actionInvoker;
         public Workspace(String path)
         {
+            InstanceId = Guid.NewGuid();
             DatabasePath = path;
             DatabaseLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
             WorkspaceLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
             WorkspaceVersion = new WorkspaceVersion();
             SavedWorkspaceVersion = new WorkspaceVersion();
-            SessionFactory = SessionFactoryFactory.CreateSessionFactory(path, false);
+            if (Path.GetExtension(path) == TpgLinkDef.Extension)
+            {
+                TpgLinkDef = TpgLinkDef.Load(path);
+                SessionFactory = TpgLinkDef.OpenSessionFactory();
+            }
+            else
+            {
+                SessionFactory = SessionFactoryFactory.CreateSessionFactory(path, false);
+            }
             _chromatogramGenerator = new ChromatogramGenerator(this);
             _resultCalculator = new ResultCalculator(this);
+            _reconciler = new Reconciler(this);
             using (var session = OpenSession())
             {
                 DbWorkspaceId = ((DbWorkspace)session.CreateCriteria(typeof(DbWorkspace)).UniqueResult()).Id.Value;
@@ -72,6 +82,7 @@ namespace pwiz.Topograph.Model
                 MsDataFiles = new MsDataFiles(this, dbWorkspace);
                 Peptides = new Peptides(this, dbWorkspace);
             }
+            _reconciler.Start();
         }
 
         public long DbWorkspaceId { get; private set; }
@@ -83,13 +94,23 @@ namespace pwiz.Topograph.Model
         public MsDataFiles MsDataFiles { get; private set; }
         public Peptides Peptides { get; private set; }
         public String DatabasePath { get; private set; }
+        public Guid InstanceId { get; private set; }
+        public TpgLinkDef TpgLinkDef { get; private set; }
         public ISession OpenSession()
         {
-            return new SessionWithLock(SessionFactory.OpenSession(), DatabaseLock, false);
+            if (UseDatabaseLock)
+            {
+                return new SessionWithLock(SessionFactory.OpenSession(), DatabaseLock, false);
+            }
+            return SessionFactory.OpenSession();
         }
         public ISession OpenWriteSession()
         {
-            return new SessionWithLock(SessionFactory.OpenSession(), DatabaseLock, true);
+            if (UseDatabaseLock)
+            {
+                return new SessionWithLock(SessionFactory.OpenSession(), DatabaseLock, true);
+            }
+            return SessionFactory.OpenSession();
         }
         public ISessionFactory SessionFactory
         {
@@ -101,6 +122,33 @@ namespace pwiz.Topograph.Model
             get; private set;
         }
         public ReaderWriterLockSlim WorkspaceLock { get; private set; }
+        public bool IsLoaded { get; private set; }
+        public void Load(ICollection<DbSetting> settings, ICollection<DbModification> modifications, ICollection<DbTracerDef> tracerDefs)
+        {
+            var savedWorkspaceVersion = WorkspaceVersion;
+            savedWorkspaceVersion = _settings.MergeChildren(savedWorkspaceVersion, settings.ToDictionary(s => s.Name));
+            savedWorkspaceVersion = _modifications.MergeChildren(savedWorkspaceVersion,
+                                                                 modifications.ToDictionary(m => m.Symbol));
+            savedWorkspaceVersion = _tracerDefs.MergeChildren(savedWorkspaceVersion,
+                                                              tracerDefs.ToDictionary(t => t.Name));
+            var currentWorkspaceVersion = savedWorkspaceVersion;
+            currentWorkspaceVersion = _settings.CurrentWorkspaceVersion(currentWorkspaceVersion);
+            currentWorkspaceVersion = _modifications.CurrentWorkspaceVersion(currentWorkspaceVersion);
+            currentWorkspaceVersion = _tracerDefs.CurrentWorkspaceVersion(currentWorkspaceVersion);
+            
+            SavedWorkspaceVersion = savedWorkspaceVersion;
+            SetWorkspaceVersion(currentWorkspaceVersion);
+            if (!IsLoaded)
+            {
+                IsLoaded = true;
+                var listener = WorkspaceLoaded;
+                if (listener != null)
+                {
+                    listener.Invoke(this);
+                }
+            }
+            DispatchDirtyEvent();
+        }
 
         public String ConnectionString
         {
@@ -159,16 +207,14 @@ namespace pwiz.Topograph.Model
                 using(GetWriteLock())
                 {
                     _aminoAcidFormulas = null;
-                    _modifications = new Modifications(this);
-                    foreach (var modification in value)
+                    var modificationsDict = new Dictionary<String, DbModification>();
+                    foreach (var entry in value)
                     {
-                        _modifications.AddChild(modification.Key, new DbModification
-                        {
-                            Symbol = modification.Key,
-                            DeltaMass = modification.Value
-                        });
+                        modificationsDict.Add(entry.Key, new DbModification {Symbol = entry.Key, DeltaMass = entry.Value});
                     }
-                    SetWorkspaceVersion(WorkspaceVersion.IncMassVersion());
+
+                    var workspaceVersion = _modifications.UpdateFromUi(WorkspaceVersion, modificationsDict);
+                    SetWorkspaceVersion(workspaceVersion);
                 }
             }
         }
@@ -253,73 +299,44 @@ namespace pwiz.Topograph.Model
             }
         }
 
-        public static String ResolveMsDataFilePath(String directory, String filename)
+        public void UpdateDataDirectoryFromSearchResultDirectory(String searchResultDirectory, String filename)
         {
+            if (GetDataDirectory() != null)
+            {
+                return;
+            }
+            var directory = searchResultDirectory;
             while(true)
             {
-                String path = Path.Combine(directory, filename + ".RAW");
-                _log.Debug("Checking existence of:" + path);
-                if (File.Exists(path))
+                if (GetDataFilePath(filename, directory) != null)
                 {
-                    return path;
+                    SetDataDirectory(directory);
+                    return;
                 }
                 var parent = Path.GetDirectoryName(directory);
                 if (String.IsNullOrEmpty(parent) || parent == directory)
                 {
-                    return null;
+                    return;
                 }
                 directory = parent;
             }
         }
 
-        public void SetTracerDefs(IList<DbTracerDef> tracerDefs)
+        public List<DbTracerDef> GetDbTracerDefs()
+        {
+            var result = new List<DbTracerDef>();
+            foreach (var tracerDefModel in TracerDefs.ListChildren())
+            {
+                result.Add(tracerDefModel.ToDbTracerDef());
+            }
+            return result;
+        }
+        
+        public void SetDbTracerDefs(IList<DbTracerDef> tracerDefs)
         {
             using(GetWriteLock())
             {
-                var oldTracers = new Dictionary<KeyValuePair<String, double>, TracerDef>();
-                foreach (var tracerDef in GetTracerDefs())
-                {
-                    oldTracers[new KeyValuePair<string, double>(tracerDef.TraceeSymbol, tracerDef.DeltaMass)] =
-                        tracerDef;
-                }
-                var newWorkspaceVersion = WorkspaceVersion;
-                if (tracerDefs.Count != oldTracers.Count)
-                {
-                    newWorkspaceVersion = newWorkspaceVersion.IncMassVersion();
-                }
-                else
-                {
-                    foreach (var dbTracerDef in tracerDefs)
-                    {
-                        TracerDef oldTracerDef;
-                        if (!oldTracers.TryGetValue(
-                                 new KeyValuePair<string, double>(dbTracerDef.TracerSymbol, dbTracerDef.DeltaMass),
-                                 out oldTracerDef))
-                        {
-                            newWorkspaceVersion = newWorkspaceVersion.IncMassVersion();
-                            break;
-                        }
-                        if (oldTracerDef.IsotopesEluteEarlier != dbTracerDef.IsotopesEluteEarlier
-                            || oldTracerDef.IsotopesEluteLater != dbTracerDef.IsotopesEluteLater)
-                        {
-                            newWorkspaceVersion = newWorkspaceVersion.IncChromatogramPeakVersion();
-                        }
-                        if (oldTracerDef.Name != dbTracerDef.Name
-                            || oldTracerDef.InitialApe != dbTracerDef.InitialEnrichment
-                            || oldTracerDef.FinalApe != dbTracerDef.FinalEnrichment
-                            || oldTracerDef.AtomCount != dbTracerDef.AtomCount
-                            || oldTracerDef.AtomPercentEnrichment != dbTracerDef.AtomPercentEnrichment)
-                        {
-                            newWorkspaceVersion = newWorkspaceVersion.IncEnrichmentVersion();
-                        }
-                    }
-                }
-                _tracerDefs = new TracerDefs(this);
-                _tracerDefList = null;
-                foreach (var dbTracerDef in tracerDefs)
-                {
-                    _tracerDefs.AddChild(dbTracerDef.Name, dbTracerDef);
-                }
+                var newWorkspaceVersion = _tracerDefs.UpdateFromUi(WorkspaceVersion, tracerDefs.ToDictionary(t => t.Name));
                 SetWorkspaceVersion(newWorkspaceVersion);
             }
         }
@@ -380,17 +397,6 @@ namespace pwiz.Topograph.Model
             {
                 return;
             }
-            foreach (var msDataFile in entitiesChangedEventArgs.GetEntities<MsDataFile>())
-            {
-                if (entitiesChangedEventArgs.IsChanged(msDataFile))
-                {
-                    using (GetWriteLock())
-                    {
-                        SetWorkspaceVersion(WorkspaceVersion.IncCohortVersion());
-                    }
-                    break;
-                }
-            }
         }
         public void RemoveEntityModel(EntityModel key)
         {
@@ -423,19 +429,33 @@ namespace pwiz.Topograph.Model
                 {
                     _dirtyPeptideAnalyses.Add(((PeptideFileAnalysis) key).PeptideAnalysis);
                 }
-                else if (key is Peptide)
-                {
-                    _dirtyPeptides.Add((Peptide) key);
-                }
                 if (!IsDirty)
                 {
-                    if (key is MsDataFile)
+                    if (key is MsDataFile || key is Peptide)
                     {
                         IsDirty = true;
                     }
-                    else if (_dirtyPeptideAnalyses.Count > 0 || _dirtyPeptides.Count > 0)
+                    else if (_dirtyPeptideAnalyses.Count > 0)
                     {
                         IsDirty = true;
+                    }
+                }
+            }
+        }
+        public void AddChangedPeptideAnalyses(IEnumerable<KeyValuePair<long,DbPeptideAnalysis>> peptideAnalyses)
+        {
+            lock(this)
+            {
+                EnsureEntitiesChangedEventArgs().AddChangedPeptideAnalyses(peptideAnalyses);
+                foreach (var entry in peptideAnalyses)
+                {
+                    if (entry.Value == null)
+                    {
+                        PeptideAnalyses.RemoveChild(entry.Key);
+                    }
+                    else
+                    {
+                        PeptideAnalyses.AddChildId(entry.Key);
                     }
                 }
             }
@@ -447,24 +467,28 @@ namespace pwiz.Topograph.Model
         public bool Save(ILongOperationUi longOperationUi)
         {
             var broker = new LongOperationBroker(Save, longOperationUi);
-            using (GetReadLock())
-            {
-                broker.LaunchJob();
-            }
+            broker.LaunchJob();
             if (broker.WasCancelled)
             {
                 return false;
             }
-            var saveEventListener = WorkspaceDirty;
-            if (saveEventListener != null)
-            {
-                saveEventListener.Invoke(this);
-            }
+            _reconciler.Wake();
             return true;
         }
 
         public void Save(LongOperationBroker longOperationBroker)
         {
+            longOperationBroker.UpdateStatusMessage("Synchronizing with database changes");
+            int reconcileAttempt = 1;
+            while (true)
+            {
+                if (Reconciler.ReconcileNow())
+                {
+                    break;
+                }
+                reconcileAttempt++;
+                longOperationBroker.UpdateStatusMessage("Synchronizing with database changes attempt #" + reconcileAttempt);
+            }
             using (GetReadLock())
             {
                 using (var session = OpenWriteSession())
@@ -477,6 +501,7 @@ namespace pwiz.Topograph.Model
                             .ExecuteUpdate();
                         session.CreateSQLQuery("UPDATE DbPeptideFileAnalysis SET ChromatogramCount = 0, PeakCount = 0, PeptideDistributionCount = 0")
                             .ExecuteUpdate();
+                        session.CreateSQLQuery("DELETE FROM DbLock").ExecuteUpdate();
                     }
                     if (!SavedWorkspaceVersion.PeaksValid(WorkspaceVersion))
                     {
@@ -498,33 +523,27 @@ namespace pwiz.Topograph.Model
                             .ExecuteUpdate();
                         session.CreateSQLQuery("DELETE FROM DbPeptideDistribution")
                             .ExecuteUpdate();
-                        session.CreateSQLQuery("DELETE FROM DbPeptideRate")
-                            .ExecuteUpdate();
                         if (SavedWorkspaceVersion.PeaksValid(WorkspaceVersion))
                         {
                             session.CreateSQLQuery("UPDATE DbPeptideFileAnalysis SET PeptideDistributionCount = 0")
                                 .ExecuteUpdate();
                         }
-                        session.CreateSQLQuery("UPDATE DbPeptideAnalysis SET PeptideRateCount = 0")
-                            .ExecuteUpdate();
-                    }
-                    longOperationBroker.UpdateStatusMessage("Saving tracer definitions");
-                    _tracerDefs.Save(session);
-                    longOperationBroker.UpdateStatusMessage("Saving modifications");
-                    _modifications.Save(session);
-                    longOperationBroker.UpdateStatusMessage("Saving settings");
-                    _settings.Save(session);
-                    longOperationBroker.UpdateStatusMessage("Saving data files");
-                    MsDataFiles.Save(session);
-                    longOperationBroker.UpdateStatusMessage("Saving peptides");
-                    foreach (var peptide in _dirtyPeptides)
-                    {
-                        if (longOperationBroker.WasCancelled)
+                        if (SavedWorkspaceVersion.ChromatogramsValid(WorkspaceVersion))
                         {
-                            return;
+                            session.CreateSQLQuery("DELETE FROM DbLock WHERE LockType = " + (int)LockType.results).ExecuteUpdate();
                         }
-                        peptide.Save(session);
                     }
+                    bool workspaceChanged = false;
+                    longOperationBroker.UpdateStatusMessage("Saving tracer definitions");
+                    workspaceChanged = _tracerDefs.SaveChildren(session) || workspaceChanged;
+                    longOperationBroker.UpdateStatusMessage("Saving modifications");
+                    workspaceChanged = _modifications.SaveChildren(session) || workspaceChanged;
+                    longOperationBroker.UpdateStatusMessage("Saving settings");
+                    workspaceChanged = _settings.SaveChildren(session) || workspaceChanged;
+                    longOperationBroker.UpdateStatusMessage("Saving data files");
+                    MsDataFiles.SaveChildren(session);
+                    longOperationBroker.UpdateStatusMessage("Saving peptides");
+                    Peptides.SaveChildren(session);
                     longOperationBroker.UpdateStatusMessage("Saving peptide analyses");
                     foreach (var peptideAnalysis in _dirtyPeptideAnalyses)
                     {
@@ -534,18 +553,12 @@ namespace pwiz.Topograph.Model
                         }
                         peptideAnalysis.SaveDeep(session);
                     }
+                    if (workspaceChanged)
+                    {
+                        session.Save(new DbChangeLog(this));
+                    }
                     longOperationBroker.SetIsCancelleable(false);
                     session.Transaction.Commit();
-                    SavedWorkspaceVersion = WorkspaceVersion;
-                    foreach (var peptideAnalysis in _dirtyPeptideAnalyses)
-                    {
-                        peptideAnalysis.AfterSaveDeep();
-                    }
-                    _dirtyPeptideAnalyses.Clear();
-                    _dirtyPeptides.Clear();
-                    IsDirty = false;
-                    _resultCalculator.SetRequeryPending();
-                    _chromatogramGenerator.SetRequeryPending();
                 }
             }
         }
@@ -568,12 +581,13 @@ namespace pwiz.Topograph.Model
             {
                 _chromatogramGenerator.Stop();
                 _resultCalculator.Stop();
+                _reconciler.Stop();
             }
         }
 
         public event EntitiesChangeListener EntitiesChange;
         public event WorkspaceDirtyListener WorkspaceDirty;
-
+        public event WorkspaceLoadedListener WorkspaceLoaded; 
         public WorkspaceVersion WorkspaceVersion { get; private set; }
         public WorkspaceVersion SavedWorkspaceVersion { get; private set; }
         private void SetWorkspaceVersion(WorkspaceVersion newWorkspaceVersion)
@@ -582,6 +596,7 @@ namespace pwiz.Topograph.Model
             {
                 return;
             }
+            _tracerDefList = null;
             WorkspaceVersion = newWorkspaceVersion;
             foreach (var peptideAnalysis in PeptideAnalyses.ListChildren())
             {
@@ -609,7 +624,6 @@ namespace pwiz.Topograph.Model
                             }
                         }
                         session.BeginTransaction();
-                        peptideAnalysis.PeptideRates.Save(session);
                         foreach (var peptideFileAnalysis in peptideAnalysis.GetFileAnalyses(false))
                         {
                             peptideFileAnalysis.Peaks.Save(session);
@@ -632,12 +646,36 @@ namespace pwiz.Topograph.Model
             }
         }
 
+        public string GetDataDirectory()
+        {
+            if (TpgLinkDef != null)
+            {
+                return TpgLinkDef.DataDirectory;
+            }
+            return _settings.GetSetting(SettingEnum.data_directory, (string) null);
+        }
+
+        public void SetDataDirectory(string directory)
+        {
+            if (directory == GetDataDirectory())
+            {
+                return;
+            }
+            if (TpgLinkDef != null)
+            {
+                TpgLinkDef.DataDirectory = directory;
+                TpgLinkDef.Save(DatabasePath);
+                return;
+            }
+            _settings.SetSetting(SettingEnum.data_directory, directory);
+        }
+
         private void DispatchDirtyEvent()
         {
             var action = WorkspaceDirty;
-            if (action != null)
+            if (action != null && _actionInvoker != null)
             {
-                action.Invoke(this);
+                _actionInvoker.Invoke(()=>action.Invoke(this));
             }
         }
 
@@ -657,16 +695,14 @@ namespace pwiz.Topograph.Model
                         return;
                     }
                     _isDirty = value;
-                    if (_actionInvoker != null)
-                    {
-                        _actionInvoker.Invoke(DispatchDirtyEvent);
-                    }
+                    DispatchDirtyEvent();
                 }
             } 
         }
 
         public ResultCalculator ResultCalculator { get { return _resultCalculator; } }
         public ChromatogramGenerator ChromatogramGenerator { get { return _chromatogramGenerator; } }
+        public Reconciler Reconciler { get { return _reconciler; } }
         public WorkspaceSettings Settings 
         { 
             get
@@ -712,11 +748,88 @@ namespace pwiz.Topograph.Model
         {
             return new AutoLock(WorkspaceLock, true);
         }
+
+        public DatabaseTypeEnum DatabaseTypeEnum
+        {
+            get
+            {
+                if (TpgLinkDef == null)
+                {
+                    return DatabaseTypeEnum.sqlite;
+                }
+                return TpgLinkDef.DatabaseTypeEnum;
+            }
+        }
+        public bool UseLongTransactions
+        {
+            get
+            {
+                return DatabaseTypeEnum == DatabaseTypeEnum.sqlite;   
+            }
+        }
+        public bool UseDatabaseLock
+        {
+            get
+            {
+                return DatabaseTypeEnum == DatabaseTypeEnum.sqlite;
+            }
+        }
+        public void CheckDirty()
+        {
+            foreach (var peptideAnalysis in _dirtyPeptideAnalyses.ToArray())
+            {
+                if (!peptideAnalysis.IsDirty())
+                {
+                    _dirtyPeptideAnalyses.Remove(peptideAnalysis);
+                }
+            }
+            bool isDirty = _dirtyPeptideAnalyses.Count > 0
+                           || _settings.IsDirty()
+                           || _tracerDefs.IsDirty()
+                           || _modifications.IsDirty()
+                           || Peptides.IsDirty()
+                           || MsDataFiles.IsDirty();
+            IsDirty = isDirty;
+        }
+        public string GetDataFilePath(String msDataFileName)
+        {
+            return GetDataFilePath(msDataFileName, GetDataDirectory());
+        }
+        private string GetDataFilePath(String msDataFileName, String dataDirectory)
+        {
+            if (string.IsNullOrEmpty(dataDirectory))
+            {
+                return null;
+            }
+            foreach (var ext in new[] { ".RAW", ".mzML", ".mzXML" })
+            {
+                var path = Path.Combine(dataDirectory, msDataFileName + ext);
+                if (File.Exists(path))
+                {
+                    return path;
+                }
+            }
+            return null;
+        }
+
+        public bool IsValidDataDirectory(String path)
+        {
+            foreach (var msDataFile in MsDataFiles.ListChildren())
+            {
+                if (GetDataFilePath(msDataFile.Name, path) != null)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
     }
 
     public delegate void EntitiesChangeListener(EntitiesChangedEventArgs entitiesChangedEventArgs);
 
     public delegate void WorkspaceDirtyListener(Workspace workspace);
+
+    public delegate void WorkspaceLoadedListener(Workspace workspace);
 
     public delegate void ActionInvoker(Action action);
 

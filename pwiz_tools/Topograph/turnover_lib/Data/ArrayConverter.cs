@@ -18,8 +18,10 @@
  */
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using zlib;
 
 namespace pwiz.Topograph.Data
 {
@@ -61,6 +63,24 @@ namespace pwiz.Topograph.Data
                 result[i] = array[i];
             }
             return result;
+        }
+        public static byte[] Compress(byte[] uncompressed)
+        {
+            var stream = new MemoryStream();
+            var zstream = new ZOutputStream(stream, 3);
+            zstream.Write(uncompressed, 0, uncompressed.Length);
+            zstream.finish();
+            return stream.ToArray();
+        }
+        public static byte[] Uncompress(byte[] compressed, int sizeUncompressed)
+        {
+            var uncompressed = new byte[sizeUncompressed];
+            var zstream = new ZOutputStream(new MemoryStream(uncompressed));
+            zstream.Write(compressed, 0, compressed.Length);
+            zstream.finish();
+            if (zstream.TotalOut != sizeUncompressed)
+                throw new IOException("Failure uncompressing data.");
+            return uncompressed;
         }
     }
 }

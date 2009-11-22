@@ -42,11 +42,7 @@ namespace pwiz.Topograph.Model
 
         public override PeptideAnalysis WrapChild(DbPeptideAnalysis entity)
         {
-            if (entity == null)
-            {
-                return null;
-            }
-            return new PeptideAnalysis(Workspace, entity);
+            throw new InvalidOperationException();
         }
 
         protected override int GetChildCount(DbWorkspace parent)

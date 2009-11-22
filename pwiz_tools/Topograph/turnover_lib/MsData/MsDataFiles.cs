@@ -72,22 +72,22 @@ namespace pwiz.Topograph.MsData
         public static bool InitMsDataFile(Workspace workspace, MsDataFile msDataFile)
         {
             String error;
-            return TryInitMsDataFile(workspace, msDataFile, msDataFile.Path, out error);
+            return TryInitMsDataFile(workspace, msDataFile, out error);
         }
 
-        public static bool TryInitMsDataFile(Workspace workspace, MsDataFile msDataFile, String path, out String message)
+        public static bool TryInitMsDataFile(Workspace workspace, MsDataFile msDataFile, out String message)
         {
+            if (string.IsNullOrEmpty(workspace.GetDataDirectory()))
+            {
+                message = "Workspace data directory has not been specified";
+                return false;
+            }
+            var path = workspace.GetDataFilePath(msDataFile.Name);
             if (path == null)
             {
-                message = "Location of data file has never been specified.";
+                message = "File could not be found";
                 return false;
             }
-            if (!File.Exists(path))
-            {
-                message = "File does not exist.";
-                return false;
-            }
-
             if (msDataFile.HasTimes())
             {
                 message = "File exists and has been read before.";

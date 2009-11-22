@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using pwiz.Topograph.Model;
+using pwiz.Topograph.MsData;
 
 namespace pwiz.Topograph.Data
 {
@@ -32,6 +33,25 @@ namespace pwiz.Topograph.Data
         public virtual double MzMin { get; set; }
         public virtual double MzMax { get; set; }
         public virtual byte[] PointsBytes { get; set; }
+        public virtual int? UncompressedSize { get; set; }
+        public virtual IList<ChromatogramPoint> ChromatogramPoints
+        {
+            get
+            {
+                if (UncompressedSize == null)
+                {
+                    return ChromatogramPoint.FromByteArray(PointsBytes);
+                }
+                var uncompressedBytes = ArrayConverter.Uncompress(PointsBytes, UncompressedSize.Value);
+                return ChromatogramPoint.FromByteArray(uncompressedBytes);
+            }
+            set
+            {
+                var uncompressedBytes = ChromatogramPoint.ToByteArray(value);
+                PointsBytes = ArrayConverter.Compress(uncompressedBytes);
+                UncompressedSize = uncompressedBytes.Length;
+            }
+        }
         
         public virtual int[] ScanIndexes
         {

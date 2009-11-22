@@ -7,33 +7,33 @@ using pwiz.Topograph.Data;
 
 namespace pwiz.Topograph.Model
 {
-    public class WorkspaceSetting : EntityModel<DbSetting>
+    public class WorkspaceSetting : AbstractSetting<DbSetting>
     {
         public const string QueryPrefix = "query:";
         private String _value;
         private String _name;
         public WorkspaceSetting(Workspace workspace, DbSetting dbSetting) : base(workspace, dbSetting)
         {
-            
         }
 
         public WorkspaceSetting(Workspace workspace) : base (workspace)
         {
-            
         }
 
-        protected override void Load(DbSetting entity)
+        protected override IEnumerable<ModelProperty> GetModelProperties()
         {
-            _name = entity.Name;
-            _value = entity.Value;
-        }
-
-        protected override DbSetting UpdateDbEntity(ISession session)
-        {
-            var dbSetting = base.UpdateDbEntity(session);
-            dbSetting.Name = Name;
-            dbSetting.Value = Value;
-            return dbSetting;
+            foreach (var modelProperty in base.GetModelProperties())
+            {
+                yield return modelProperty;
+            }
+            yield return
+                Property<WorkspaceSetting, String>(
+                m => m.Name, (m, v) => m.Name = v, 
+                e => e.Name, (e, v) => e.Name = v);
+            yield return
+                Property<WorkspaceSetting, String>(
+                m => m.Value, (m, v) => m.Value = v, 
+                e => e.Value, (e, v) => e.Value = v);
         }
 
         protected override DbSetting ConstructEntity(ISession session)
@@ -72,6 +72,18 @@ namespace pwiz.Topograph.Model
             {
                 SetIfChanged(ref _value, value);
             }
+        }
+
+        public override WorkspaceVersion GetWorkspaceVersion(WorkspaceVersion workspaceVersion, DbSetting entity)
+        {
+            if (Name == SettingEnum.mass_accuracy.ToString())
+            {
+                if (entity == null || Value != entity.Value)
+                {
+                    return workspaceVersion.IncChromatogramPeakVersion();
+                }
+            }
+            return workspaceVersion;
         }
     }
 }

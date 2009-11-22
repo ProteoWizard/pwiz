@@ -27,35 +27,22 @@ namespace pwiz.Topograph.Model
     public class WorkspaceVersion
     {
         public int ChromatogramPeakVersion { get; private set; }
-        public int CohortVersion { get; private set; }
         public int EnrichmentVersion { get; private set; }
         public int MassVersion { get; private set; }
         public WorkspaceVersion IncChromatogramPeakVersion()
         {
             return new WorkspaceVersion
                        {
-                           CohortVersion = CohortVersion,
                            ChromatogramPeakVersion = ChromatogramPeakVersion + 1,
                            EnrichmentVersion = EnrichmentVersion,
                            MassVersion = MassVersion,
                        };
-        }
-        public WorkspaceVersion IncCohortVersion()
-        {
-            return new WorkspaceVersion
-            {
-                ChromatogramPeakVersion = ChromatogramPeakVersion,
-                CohortVersion = CohortVersion + 1,
-                EnrichmentVersion = EnrichmentVersion,
-                MassVersion = MassVersion
-            };
         }
         public WorkspaceVersion IncEnrichmentVersion()
         {
             return new WorkspaceVersion
                        {
                            ChromatogramPeakVersion = ChromatogramPeakVersion,
-                           CohortVersion = CohortVersion,
                            EnrichmentVersion = EnrichmentVersion + 1,
                            MassVersion = MassVersion
                        };
@@ -65,7 +52,6 @@ namespace pwiz.Topograph.Model
             return new WorkspaceVersion
                        {
                            ChromatogramPeakVersion = ChromatogramPeakVersion,
-                           CohortVersion = CohortVersion,
                            EnrichmentVersion = EnrichmentVersion,
                            MassVersion = MassVersion + 1,
                        };
@@ -76,7 +62,6 @@ namespace pwiz.Topograph.Model
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return other.ChromatogramPeakVersion == ChromatogramPeakVersion 
-                && other.CohortVersion == CohortVersion 
                 && other.EnrichmentVersion == EnrichmentVersion 
                 && other.MassVersion == MassVersion;
         }
@@ -94,7 +79,6 @@ namespace pwiz.Topograph.Model
             unchecked
             {
                 int result = ChromatogramPeakVersion;
-                result = (result*397) ^ CohortVersion;
                 result = (result*397) ^ EnrichmentVersion;
                 result = (result*397) ^ MassVersion;
                 return result;
@@ -113,11 +97,6 @@ namespace pwiz.Topograph.Model
         {
             return PeaksValid(currentVersion) 
                 && EnrichmentVersion >= currentVersion.EnrichmentVersion;
-        }
-        public bool PeptideRatesValid(WorkspaceVersion currentVersion)
-        {
-            return DistributionsValid(currentVersion)
-                   && CohortVersion >= currentVersion.CohortVersion;
         }
     }
 }

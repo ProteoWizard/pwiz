@@ -48,6 +48,8 @@ namespace pwiz.Topograph.ui.Controls
             }
             var cell = Rows[e.RowIndex].Cells[e.ColumnIndex];
             var value = cell.Value;
+            DbPeptideAnalysis dbPeptideAnalysis;
+            DbPeptideFileAnalysis dbPeptideFileAnalysis;
             if (!(value is IDbEntity))
             {
                 return;
@@ -56,7 +58,7 @@ namespace pwiz.Topograph.ui.Controls
             {
                 using (var session = Workspace.OpenSession())
                 {
-                    DbPeptideFileAnalysis dbPeptideFileAnalysis = null;
+                    dbPeptideFileAnalysis = null;
                     if (value is DbPeptideDistribution)
                     {
                         dbPeptideFileAnalysis =
@@ -70,7 +72,7 @@ namespace pwiz.Topograph.ui.Controls
                     {
                         dbPeptideFileAnalysis = session.Get<DbPeptideFileAnalysis>(((DbPeptideFileAnalysis) value).Id);
                     }
-                    DbPeptideAnalysis dbPeptideAnalysis = null;
+                    dbPeptideAnalysis = null;
                     if (dbPeptideFileAnalysis != null)
                     {
                         dbPeptideAnalysis = dbPeptideFileAnalysis.PeptideAnalysis;
@@ -81,43 +83,43 @@ namespace pwiz.Topograph.ui.Controls
                         {
                             dbPeptideAnalysis = session.Get<DbPeptideAnalysis>(((DbPeptideAnalysis) value).Id);
                         }
-                        else if (value is DbPeptideRate)
-                        {
-                            dbPeptideAnalysis = session.Get<DbPeptideRate>(((DbPeptideRate) value).Id).PeptideAnalysis;
-                        }
                     }
                     if (dbPeptideAnalysis == null)
                     {
                         return;
                     }
-                    var peptideAnalysis = Workspace.PeptideAnalyses.GetChild(dbPeptideAnalysis.Id.Value, session);
-                    var form = Program.FindOpenEntityForm<PeptideAnalysisFrame>(peptideAnalysis);
-                    if (form != null)
-                    {
-                        form.Activate();
-                    }
-                    else
-                    {
-                        var dockableForm = FindForm() as DockableForm;
-                        form = new PeptideAnalysisFrame(peptideAnalysis);
-                        if (dockableForm != null)
-                        {
-                            form.Show(dockableForm.DockPanel, dockableForm.DockState);
-                        }
-                        else
-                        {
-                            form.Show(TurnoverForm.Instance);
-                        }
-                    }
-                    if (dbPeptideFileAnalysis != null)
-                    {
-                        PeptideFileAnalysisFrame.ActivatePeptideDataForm<ChromatogramForm>(form.PeptideAnalysisSummary,
-                                                                                           peptideAnalysis.
-                                                                                               GetFileAnalysis(
-                                                                                               dbPeptideFileAnalysis.Id.
-                                                                                                   Value));
-                    }
                 }
+            }
+            var peptideAnalysis = Workspace.Reconciler.LoadPeptideAnalysis(dbPeptideAnalysis.Id.Value);
+            if (peptideAnalysis == null)
+            {
+                return;
+            }
+            var form = Program.FindOpenEntityForm<PeptideAnalysisFrame>(peptideAnalysis);
+            if (form != null)
+            {
+                form.Activate();
+            }
+            else
+            {
+                var dockableForm = FindForm() as DockableForm;
+                form = new PeptideAnalysisFrame(peptideAnalysis);
+                if (dockableForm != null)
+                {
+                    form.Show(dockableForm.DockPanel, dockableForm.DockState);
+                }
+                else
+                {
+                    form.Show(TurnoverForm.Instance);
+                }
+            }
+            if (dbPeptideFileAnalysis != null)
+            {
+                PeptideFileAnalysisFrame.ActivatePeptideDataForm<ChromatogramForm>(form.PeptideAnalysisSummary,
+                                                                                   peptideAnalysis.
+                                                                                       GetFileAnalysis(
+                                                                                       dbPeptideFileAnalysis.Id.
+                                                                                           Value));
             }
         }
 

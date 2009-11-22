@@ -296,7 +296,7 @@ namespace pwiz.Topograph.Enrichment
                                               {
                                                   TracerFormula = tracerFormula,
                                                   TracerPercent = GetTracerPercent(tracerPercents[i]),
-                                                  PercentAmount = 100*amounts[i]/amounts.Sum(),
+                                                  PercentAmountValue = 100*amounts[i]/amounts.Sum(),
                                               };
                 precursorEnrichments.AddChild(tracerFormula, precursorEnrichment);
             }
@@ -351,7 +351,7 @@ namespace pwiz.Topograph.Enrichment
                           {
                               TracerFormula = tracerFormulas[i].ToString(),
                               TracerPercent = GetTracerPercent(tracerFormulas[i]),
-                              PercentAmount = 100 * amounts[i] / amounts.Sum(),
+                              PercentAmountValue = 100 * amounts[i] / amounts.Sum(),
                         };
                 tracerAmounts.AddChild(tracerAmount.TracerFormula, tracerAmount);
             }

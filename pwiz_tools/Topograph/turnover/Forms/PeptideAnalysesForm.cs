@@ -26,14 +26,20 @@ using System.Text;
 using System.Windows.Forms;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
+using pwiz.Topograph.Util;
 using pwiz.Topograph.ui.Controls;
 
 namespace pwiz.Topograph.ui.Forms
 {
     public partial class PeptideAnalysesForm : WorkspaceForm
     {
-        private readonly Dictionary<long, DataGridViewRow> _peptideAnalysisRows
-            = new Dictionary<long, DataGridViewRow>();
+        private bool _initialQueryCompleted;
+        private readonly Dictionary<long, DataGridViewRow> _peptideAnalysisRows = new Dictionary<long, DataGridViewRow>();
+        private readonly object _requeryLock = new object();
+
+        private HashSet<long> _peptideAnalysisIdsToRequery;
+
+        private WorkspaceVersion _workspaceVersion;
 
         public PeptideAnalysesForm(Workspace workspace) : base(workspace)
         {
@@ -45,8 +51,6 @@ namespace pwiz.Topograph.ui.Forms
             colMaxScoreTracerCount.DefaultCellStyle.Format = "0.####";
             colMinScorePrecursorEnrichment.DefaultCellStyle.Format = "0.####";
             colMaxScorePrecursorEnrichment.DefaultCellStyle.Format = "0.####";
-            colHalfLifeTracerCount.DefaultCellStyle.Format = "0.##";
-            colHalfLifePrecursorEnrichment.DefaultCellStyle.Format = "0.##";
         }
 
         void _deleteAnalysesMenuItem_Click(object sender, EventArgs e)
@@ -74,7 +78,7 @@ namespace pwiz.Topograph.ui.Forms
             {
                 using (var session = Workspace.OpenSession())
                 {
-                    var peptideAnalysis = Workspace.PeptideAnalyses.GetChild(peptideAnalysisIds[0], session);
+                    var peptideAnalysis = session.Get<DbPeptideAnalysis>(peptideAnalysisIds[0]);
                     message = "Are you sure you want to delete the analysis of the peptide '" +
                               peptideAnalysis.Peptide.Sequence + "'?";
                 }
@@ -92,7 +96,13 @@ namespace pwiz.Topograph.ui.Forms
                 session.BeginTransaction();
                 foreach (var id in peptideAnalysisIds)
                 {
-                    session.Delete(session.Load<DbPeptideAnalysis>(id));
+                    var peptideAnalysis = session.Get<DbPeptideAnalysis>(id);
+                    if (peptideAnalysis == null)
+                    {
+                        continue;
+                    }
+                    session.Delete(peptideAnalysis);
+                    session.Save(new DbChangeLog(Workspace, peptideAnalysis) {IsDeleted = true});
                 }
                 session.Transaction.Commit();
             }
@@ -116,273 +126,198 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
-            Requery();
+            new Action(RequeryPeptideAnalyses).BeginInvoke(null, null);
         }
 
-
-        private void AddAndUpdateRows(ICollection<PeptideAnalysis> peptideAnalyses)
+        private void AddPeptideAnalysesToRequery(ICollection<long> ids)
         {
-            foreach (var entry in AddRows(peptideAnalyses))
+            if (ids.Count == 0)
             {
-                UpdateRow(entry.Value, entry.Key);
+                return;
+            }
+            lock(this)
+            {
+                if (_peptideAnalysisIdsToRequery == null)
+                {
+                    _peptideAnalysisIdsToRequery = new HashSet<long>();
+                    new Action(RequeryPeptideAnalyses).BeginInvoke(null, null);
+                }
+                _peptideAnalysisIdsToRequery.UnionWith(ids);
             }
         }
 
-        protected void Requery()
+        private void RequeryPeptideAnalyses()
         {
-            dataGridView.Rows.Clear();
-            _peptideAnalysisRows.Clear();
-            using (var session = Workspace.OpenSession())
+            lock(_requeryLock)
             {
-                String hql = "SELECT pa.Id, pa.Peptide.Protein, pa.Peptide.FullSequence, pa.Peptide.ValidationStatus, pa.Note, pa.Peptide.ProteinDescription "
-                             + "\nFROM " + typeof (DbPeptideAnalysis) + " pa";
-                var query = session.CreateQuery(hql);
-                var rowDatas = query.List();
-                if (rowDatas.Count == 0)
+                ICollection<long> idsToRequery;
+                String idList = null;
+                lock (this)
                 {
-                    return;
-                }
-                dataGridView.Rows.Add(rowDatas.Count);
-                for (int i = 0; i < rowDatas.Count; i ++)
-                {
-                    var rowData = (object[]) rowDatas[i];
-                    var row = dataGridView.Rows[i];
-                    row.Tag = rowData[0];
-                    _peptideAnalysisRows.Add((long) rowData[0], row);
-                    row.Cells[colProtein.Index].Value = rowData[1];
-                    row.Cells[colPeptide.Index].Value = rowData[2];
-                    row.Cells[colStatus.Index].Value = Convert.ChangeType(rowData[3], typeof(ValidationStatus));
-                    row.Cells[colNote.Index].Value = rowData[4];
-                    row.Cells[colProteinDescription.Index].Value = rowData[5];
-                    row.Cells[colMaxTracers.Index].Value = Workspace.GetMaxTracerCount(Peptide.TrimSequence(rowData[2].ToString()));
-                }
-                var query2 =
-                    session.CreateQuery("SELECT pr.PeptideAnalysis.Id, pr.PeptideQuantity, pr.HalfLife, pr.IsComplete FROM " +
-                                        typeof (DbPeptideRate)
-                                        + " pr WHERE pr.Cohort = ''");
-                foreach (object[] rowData in query2.List())
-                {
-                    DataGridViewRow row;
-                    if (!_peptideAnalysisRows.TryGetValue((long) rowData[0], out row))
+                    if (_initialQueryCompleted)
                     {
-                        continue;
-                    }
-                    DisplayHalfLife(row, (PeptideQuantity) rowData[1], (double?) rowData[2], (bool) rowData[3]);
-                }
-            }
-            UpdateColumnVisibility();
-            new Action(RequeryResults).BeginInvoke(null, null);
-        }
-
-        private void RequeryResults()
-        {
-            var results = new List<object[]>();
-            using (var session = Workspace.OpenSession())
-            {
-                var query3 =
-                    session.CreateQuery("SELECT pd.PeptideFileAnalysis.PeptideAnalysis.Id, pd.PeptideQuantity, Min(pd.Score), Max(pd.Score) "
-                                        + "\nfrom " + typeof (DbPeptideDistribution) +
-                                        " pd GROUP BY pd.PeptideFileAnalysis.PeptideAnalysis.Id, pd.PeptideQuantity");
-                query3.List(results);
-            }
-            BeginInvoke(new Action<IList<object[]>>(DisplayResults), results);
-        }
-
-        private void DisplayResults(IList<object[]> results) 
-        {
-            foreach (object[] rowData in results)
-            {
-                DataGridViewRow row;
-                if (!_peptideAnalysisRows.TryGetValue((long)rowData[0], out row))
-                {
-                    continue;
-                }
-                var peptideQuantity = (PeptideQuantity)rowData[1];
-                if (peptideQuantity == PeptideQuantity.tracer_count)
-                {
-                    row.Cells[colMinScoreTracerCount.Index].Value = rowData[2];
-                    row.Cells[colMaxScoreTracerCount.Index].Value = rowData[3];
-                }
-                else
-                {
-                    row.Cells[colMinScorePrecursorEnrichment.Index].Value = rowData[2];
-                    row.Cells[colMaxScorePrecursorEnrichment.Index].Value = rowData[3];
-                }
-            }
-        }
-
-        private void UpdateRow(DataGridViewRow row, PeptideAnalysis peptideAnalysis)
-        {
-            row.Cells[colProtein.Name].Value = peptideAnalysis.Peptide.ProteinName;
-            row.Cells[colPeptide.Name].Value = peptideAnalysis.Peptide.FullSequence;
-            row.Cells[colStatus.Name].Value = peptideAnalysis.ValidationStatus;
-            row.Cells[colNote.Name].Value = peptideAnalysis.Note;
-            row.Cells[colProteinDescription.Name].Value = peptideAnalysis.Peptide.ProteinDescription;
-            row.Cells[colMaxTracers.Index].Value = peptideAnalysis.Peptide.MaxTracerCount;
-            DisplayHalfLife(row, PeptideQuantity.precursor_enrichment, peptideAnalysis);
-            DisplayHalfLife(row, PeptideQuantity.tracer_count, peptideAnalysis);
-            double? minScoreTracerCount = null;
-            double? maxScoreTracerCount = null;
-            double? minScorePrecursorEnrichment = null;
-            double? maxScorePrecursorEnrichment = null;
-            foreach (var peptideFileAnalysis in peptideAnalysis.FileAnalyses.ListPeptideFileAnalyses(true))
-            {
-                foreach (var peptideDistribution in peptideFileAnalysis.PeptideDistributions.ListChildren())
-                {
-                    if (peptideDistribution.PeptideQuantity == PeptideQuantity.tracer_count)
-                    {
-                        if (minScoreTracerCount == null || minScoreTracerCount > peptideDistribution.Score)
+                        idsToRequery = _peptideAnalysisIdsToRequery;
+                        _peptideAnalysisIdsToRequery = null;
+                        if (idsToRequery == null || idsToRequery.Count == 0)
                         {
-                            minScoreTracerCount = peptideDistribution.Score;
+                            return;
                         }
-                        if (maxScoreTracerCount == null || maxScoreTracerCount < peptideDistribution.Score)
-                        {
-                            maxScoreTracerCount = peptideDistribution.Score;
-                        }
+                        idList = "(" + Lists.Join(idsToRequery, ",") + ")";
                     }
                     else
                     {
-                        if (minScorePrecursorEnrichment == null || minScorePrecursorEnrichment > peptideDistribution.Score)
+                        idsToRequery = null;
+                    }
+                    _initialQueryCompleted = true;
+                }
+
+                var peptideAnalysisRows = new Dictionary<long, PeptideAnalysisRow>();
+                using (var session = Workspace.OpenSession())
+                {
+                    String hql = "SELECT pa.Id, pa.Peptide.Protein, pa.Peptide.FullSequence, pa.Peptide.ValidationStatus, pa.Note, pa.Peptide.ProteinDescription "
+                                 + "\nFROM " + typeof(DbPeptideAnalysis) + " pa";
+
+                    if (idsToRequery != null)
+                    {
+                        hql += "\nWHERE pa.Id IN " + idList;
+                    }
+                    var query = session.CreateQuery(hql);
+                    foreach (object[] rowData in query.List())
+                    {
+                        PeptideAnalysisRow peptideAnalysisRow;
+                        var id = (long)rowData[0];
+                        if (!peptideAnalysisRows.TryGetValue(id, out peptideAnalysisRow))
                         {
-                            minScorePrecursorEnrichment = peptideDistribution.Score;
+                            peptideAnalysisRow = new PeptideAnalysisRow { Id = id };
+                            peptideAnalysisRows.Add(id, peptideAnalysisRow);
                         }
-                        if (maxScorePrecursorEnrichment == null || maxScorePrecursorEnrichment < peptideDistribution.Score)
+                        peptideAnalysisRow.Protein = (string)rowData[1];
+                        peptideAnalysisRow.Peptide = (string)rowData[2];
+                        peptideAnalysisRow.ValidationStatus = (ValidationStatus)rowData[3];
+                        peptideAnalysisRow.Note = (string)rowData[4];
+                        peptideAnalysisRow.ProteinDescription = (string)rowData[5];
+                        peptideAnalysisRow.MaxTracers =
+                            Workspace.GetMaxTracerCount(Peptide.TrimSequence(peptideAnalysisRow.Peptide));
+                    }
+                    var hql2 = "SELECT pd.PeptideFileAnalysis.PeptideAnalysis.Id, pd.PeptideQuantity, Min(pd.Score), Max(pd.Score) "
+                               + "\nfrom " + typeof(DbPeptideDistribution) +
+                               " pd ";
+                    if (idsToRequery != null)
+                    {
+                        hql2 += "\nWHERE pd.PeptideFileAnalysis.PeptideAnalysis.Id IN " + idList;
+                    }
+                    hql2 += "\nGROUP BY pd.PeptideFileAnalysis.PeptideAnalysis.Id, pd.PeptideQuantity";
+                    var query2 = session.CreateQuery(hql2);
+                    foreach (object[] rowData in query2.List())
+                    {
+                        PeptideAnalysisRow peptideAnalysisRow;
+                        var id = (long)rowData[0];
+                        if (!peptideAnalysisRows.TryGetValue(id, out peptideAnalysisRow))
                         {
-                            maxScorePrecursorEnrichment = peptideDistribution.Score;
+                            continue;
+                        }
+                        var peptideQuantity = (PeptideQuantity)rowData[1];
+                        if (peptideQuantity == PeptideQuantity.tracer_count)
+                        {
+                            peptideAnalysisRow.MinScoreTracerAmounts = (double?)rowData[2];
+                            peptideAnalysisRow.MaxScoreTracerAmounts = (double?)rowData[3];
+                        }
+                        else
+                        {
+                            peptideAnalysisRow.MinScorePrecursorEnrichments = (double?)rowData[2];
+                            peptideAnalysisRow.MaxScorePrecursorEnrichments = (double?)rowData[3];
                         }
                     }
                 }
-            }
-            row.Cells[colMinScoreTracerCount.Index].Value = minScoreTracerCount;
-            row.Cells[colMaxScoreTracerCount.Index].Value = maxScoreTracerCount;
-            row.Cells[colMinScorePrecursorEnrichment.Index].Value = minScorePrecursorEnrichment;
-            row.Cells[colMaxScorePrecursorEnrichment.Index].Value = maxScorePrecursorEnrichment;
-        }
-
-        private void DisplayHalfLife(DataGridViewRow row, PeptideQuantity peptideQuantity, PeptideAnalysis peptideAnalysis)
-        {
-            String tracerName = "";
-            var tracerDefs = Workspace.GetTracerDefs();
-            if (tracerDefs.Count > 0)
-            {
-                tracerName = tracerDefs[0].Name;
-            }
-            var rate = peptideAnalysis.PeptideRates.GetChild(new RateKey(tracerName, peptideQuantity, null));
-            if (rate == null)
-            {
-                DisplayHalfLife(row, peptideQuantity, null, true);
-            }
-            else
-            {
-                DisplayHalfLife(row, peptideQuantity, rate.HalfLife, rate.IsComplete);
+                if (idsToRequery != null)
+                {
+                    foreach (var id in idsToRequery)
+                    {
+                        if (!peptideAnalysisRows.ContainsKey(id))
+                        {
+                            peptideAnalysisRows.Add(id, null);
+                        }
+                    }
+                }
+                BeginInvoke(new Action<Dictionary<long, PeptideAnalysisRow>>(UpdateRows), peptideAnalysisRows);
             }
         }
 
-        private void DisplayHalfLife(DataGridViewRow row, PeptideQuantity peptideQuantity, double? halfLife, bool isComplete)
+        private void UpdateRows(Dictionary<long, PeptideAnalysisRow> rows)
         {
-            var cell = row.Cells[peptideQuantity == PeptideQuantity.tracer_count ? colHalfLifeTracerCount.Index : colHalfLifePrecursorEnrichment.Index];
-            cell.Value = halfLife;
-            cell.Style.ForeColor = isComplete ? Color.Black : Color.Gray;
-        }
-
-        private IDictionary<PeptideAnalysis, DataGridViewRow> AddRows(ICollection<PeptideAnalysis> peptideAnalyses)
-        {
-            var result = new Dictionary<PeptideAnalysis, DataGridViewRow>();
-            foreach (var peptideAnalysis in peptideAnalyses)
+            if (rows.Count == 0)
             {
-                var row = new DataGridViewRow {Tag = peptideAnalysis.Id};
-                row.Tag = peptideAnalysis.Id;
-                _peptideAnalysisRows.Add(peptideAnalysis.Id.Value, row);
-                result.Add(peptideAnalysis, row);
+                return;
             }
-            dataGridView.Rows.AddRange(result.Values.ToArray());
-            return result;
+            try
+            {
+                dataGridView.SuspendLayout();
+                foreach (var entry in rows)
+                {
+                    DataGridViewRow row;
+                    _peptideAnalysisRows.TryGetValue(entry.Key, out row);
+                    if (entry.Value == null)
+                    {
+                        if (row != null)
+                        {
+                            dataGridView.Rows.Remove(row);
+                            _peptideAnalysisRows.Remove(entry.Key);
+                        }
+                        continue;
+                    }
+                    if (row == null)
+                    {
+                        row = dataGridView.Rows[dataGridView.Rows.Add()];
+                        row.Tag = entry.Value.Id;
+                    }
+                    row.Cells[colProtein.Name].Value = entry.Value.Protein;
+                    row.Cells[colPeptide.Name].Value = entry.Value.Peptide;
+                    row.Cells[colStatus.Name].Value = entry.Value.ValidationStatus;
+                    row.Cells[colNote.Name].Value = entry.Value.Note;
+                    row.Cells[colProteinDescription.Name].Value = entry.Value.ProteinDescription;
+                    row.Cells[colMaxTracers.Index].Value = entry.Value.MaxTracers;
+                    row.Cells[colMinScoreTracerCount.Index].Value = entry.Value.MinScoreTracerAmounts;
+                    row.Cells[colMaxScoreTracerCount.Index].Value = entry.Value.MaxScoreTracerAmounts;
+                    row.Cells[colMinScorePrecursorEnrichment.Index].Value = entry.Value.MinScorePrecursorEnrichments;
+                    row.Cells[colMaxScorePrecursorEnrichment.Index].Value = entry.Value.MaxScorePrecursorEnrichments;
+                }
+            }
+            finally
+            {
+                dataGridView.ResumeLayout();
+            }
         }
 
         private void UpdateColumnVisibility()
         {
-            bool showHalfLife = false;
-            foreach (var msDataFile in Workspace.MsDataFiles.ListChildren())
-            {
-                if (msDataFile.TimePoint.HasValue)
-                {
-                    showHalfLife = true;
-                    break;
-                }
-            }
-            
             var defTracerCount = Workspace.GetDefaultPeptideQuantity() == PeptideQuantity.tracer_count;
             colMinScoreTracerCount.Visible = defTracerCount;
             colMaxScoreTracerCount.Visible = defTracerCount;
-            colHalfLifeTracerCount.Visible = defTracerCount && showHalfLife;
             colMinScorePrecursorEnrichment.Visible = !defTracerCount;
             colMaxScorePrecursorEnrichment.Visible = !defTracerCount;
-            colHalfLifePrecursorEnrichment.Visible = !defTracerCount && showHalfLife;
         }
 
         protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
         {
             base.OnWorkspaceEntitiesChanged(args);
-            if (args.GetEntities<WorkspaceSetting>().Count > 0 || args.GetEntities<MsDataFile>().Count > 0)
+            if (!Workspace.WorkspaceVersion.Equals(_workspaceVersion))
             {
                 UpdateColumnVisibility();
             }
-            var peptideAnalyses = new HashSet<PeptideAnalysis>();
-            foreach (var peptideAnalysis in args.GetEntities<PeptideAnalysis>())
-            {
-                DataGridViewRow row;
-                _peptideAnalysisRows.TryGetValue(peptideAnalysis.Id.Value, out row);
-                if (args.IsRemoved(peptideAnalysis))
-                {
-                    if (row != null)
-                    {
-                        dataGridView.Rows.Remove(row);
-                        _peptideAnalysisRows.Remove(peptideAnalysis.Id.Value);
-                    }
-                }
-                else
-                {
-                    if (row == null)
-                    {
-                        AddRows(new[] {peptideAnalysis});
-                    }
-                    peptideAnalyses.Add(peptideAnalysis);
-                }
-            }
-            foreach (var entity in args.GetEntities<PeptideRates>())
-            {
-                peptideAnalyses.Add(entity.PeptideAnalysis);
-            }
-            foreach (var entity in args.GetEntities<PeptideDistributions>())
-            {
-                peptideAnalyses.Add(entity.PeptideFileAnalysis.PeptideAnalysis);
-            }
-            foreach (var entity in args.GetEntities<PeptideFileAnalysis>())
-            {
-                peptideAnalyses.Add(entity.PeptideAnalysis);
-            }
-            foreach (var peptideAnalysis in peptideAnalyses)
-            {
-                DataGridViewRow row;
-                if (_peptideAnalysisRows.TryGetValue(peptideAnalysis.Id.Value, out row))
-                {
-                    UpdateRow(row, peptideAnalysis);
-                }
-            }
+            AddPeptideAnalysesToRequery(args.GetChangedPeptideAnalyses().Keys);
         }
 
         private void dataGridView_RowHeaderMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
         {
-            using (var session = Workspace.OpenSession())
+            var peptideAnalysis = Workspace.Reconciler.LoadPeptideAnalysis((long) dataGridView.Rows[e.RowIndex].Tag);
+            if (peptideAnalysis == null)
             {
-                var id = (long) dataGridView.Rows[e.RowIndex].Tag;
-                OpenPeptideAnalysis(
-                    Workspace.PeptideAnalyses.GetChild(id, session));
+                return;
             }
+            OpenPeptideAnalysis(peptideAnalysis);
         }
 
         private PeptideAnalysisFrame OpenPeptideAnalysis(PeptideAnalysis peptideAnalysis)
@@ -396,13 +331,10 @@ namespace pwiz.Topograph.ui.Forms
             var row = dataGridView.Rows[e.RowIndex];
             var cell = row.Cells[e.ColumnIndex];
             var peptideAnalysisId = (long)row.Tag;
-            PeptideAnalysis peptideAnalysis;
-            using (Workspace.GetReadLock())
+            var peptideAnalysis = Workspace.Reconciler.LoadPeptideAnalysis(peptideAnalysisId);
+            if (peptideAnalysis == null)
             {
-                using (var session = Workspace.OpenSession())
-                {
-                    peptideAnalysis = Workspace.PeptideAnalyses.GetChild(peptideAnalysisId, session);
-                }
+                return;
             }
             using (Workspace.GetWriteLock())
             {
@@ -430,17 +362,14 @@ namespace pwiz.Topograph.ui.Forms
             }
             var column = dataGridView.Columns[e.ColumnIndex];
             var row = dataGridView.Rows[e.RowIndex];
-            PeptideAnalysis peptideAnalysis;
-            using (var session = Workspace.OpenSession())
-            {
-                peptideAnalysis = Workspace.PeptideAnalyses.GetChild((long) row.Tag, session);
-            }
+            var peptideAnalysis = Workspace.Reconciler.LoadPeptideAnalysis((long) row.Tag);
+
             PeptideQuantity? peptideQuantity = null;
-            if (column == colHalfLifeTracerCount || column == colMinScoreTracerCount || column == colMaxScoreTracerCount)
+            if (column == colMinScoreTracerCount || column == colMaxScoreTracerCount)
             {
                 peptideQuantity = PeptideQuantity.tracer_count;
             }
-            if (column == colHalfLifePrecursorEnrichment || column == colMinScorePrecursorEnrichment || column == colMaxScorePrecursorEnrichment)
+            if (column == colMinScorePrecursorEnrichment || column == colMaxScorePrecursorEnrichment)
             {
                 peptideQuantity = PeptideQuantity.precursor_enrichment;
             }
@@ -496,23 +425,21 @@ namespace pwiz.Topograph.ui.Forms
                 }
                 return;
             }
-            if (column != colHalfLifeTracerCount && column != colHalfLifePrecursorEnrichment)
-            {
-                return;
-            }
-            var graphForm = Program.FindOpenEntityForm<GraphForm>(peptideAnalysis);
-            if (graphForm == null)
-            {
-                graphForm = new GraphForm(peptideAnalysis);
-                graphForm.Show(form.PeptideAnalysisSummary.DockPanel, DigitalRune.Windows.Docking.DockState.Document);
-            }
-            else
-            {
-                graphForm.Activate();
-            }
-            graphForm.GraphValue = column == colHalfLifeTracerCount
-                                       ? PeptideQuantity.tracer_count
-                                       : PeptideQuantity.precursor_enrichment;
+        }
+
+        class PeptideAnalysisRow
+        {
+            public long Id;
+            public String Peptide;
+            public ValidationStatus ValidationStatus;
+            public String Note;
+            public String Protein;
+            public String ProteinDescription;
+            public int MaxTracers;
+            public double? MinScoreTracerAmounts;
+            public double? MaxScoreTracerAmounts;
+            public double? MinScorePrecursorEnrichments;
+            public double? MaxScorePrecursorEnrichments;
         }
     }
 }

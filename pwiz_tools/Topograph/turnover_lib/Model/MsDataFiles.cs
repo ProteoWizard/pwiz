@@ -30,6 +30,7 @@ namespace pwiz.Topograph.Model
         {
             
         }
+        protected override bool TrustChildCount { get { return false; } }
 
         protected override IEnumerable<KeyValuePair<long, DbMsDataFile>> GetChildren(DbWorkspace parent)
         {

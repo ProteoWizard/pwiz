@@ -50,7 +50,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>35</ApplicationRevision>
+    <ApplicationRevision>36</ApplicationRevision>
     <ApplicationVersion>0.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -182,17 +182,17 @@
     <Compile Include="Forms\AddSearchResultsForm.Designer.cs">
       <DependentUpon>AddSearchResultsForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\GraphForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\GraphForm.Designer.cs">
-      <DependentUpon>GraphForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="Forms\HalfLifeForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\HalfLifeForm.Designer.cs">
       <DependentUpon>HalfLifeForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\LocksForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\LocksForm.Designer.cs">
+      <DependentUpon>LocksForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\LongWaitDialog.cs">
       <SubType>Form</SubType>
@@ -265,6 +265,12 @@
     </Compile>
     <Compile Include="Forms\StatusForm.Designer.cs">
       <DependentUpon>StatusForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\TpgLinkForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\TpgLinkForm.Designer.cs">
+      <DependentUpon>TpgLinkForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\TracerAmountsForm.cs">
       <SubType>Form</SubType>
@@ -340,11 +346,11 @@
     <EmbeddedResource Include="Forms\EnrichmentDialog.resx">
       <DependentUpon>EnrichmentDialog.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\GraphForm.resx">
-      <DependentUpon>GraphForm.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Forms\HalfLifeForm.resx">
       <DependentUpon>HalfLifeForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\LocksForm.resx">
+      <DependentUpon>LocksForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\LongWaitDialog.resx">
       <DependentUpon>LongWaitDialog.cs</DependentUpon>
@@ -393,6 +399,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\StatusForm.resx">
       <DependentUpon>StatusForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\TpgLinkForm.resx">
+      <DependentUpon>TpgLinkForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\TracerAmountsForm.resx">
       <DependentUpon>TracerAmountsForm.cs</DependentUpon>

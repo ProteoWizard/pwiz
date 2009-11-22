@@ -24,8 +24,11 @@ namespace pwiz.Topograph.ui.Forms
 
         private void btnOK_Click(object sender, EventArgs e)
         {
-            Workspace.SetMassAccuracy(Convert.ToDouble(tbxMassAccuracy.Text));
-            Workspace.SetDefaultPeptideQuantity((PeptideQuantity) comboTracerCountType.SelectedIndex);
+            using (Workspace.GetWriteLock())
+            {
+                Workspace.SetMassAccuracy(Convert.ToDouble(tbxMassAccuracy.Text));
+                Workspace.SetDefaultPeptideQuantity((PeptideQuantity)comboTracerCountType.SelectedIndex);
+            }
             Close();
         }
 

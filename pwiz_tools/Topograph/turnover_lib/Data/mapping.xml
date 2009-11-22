@@ -14,6 +14,7 @@
     <property name="MzMin" />
     <property name="MzMax" />
     <property name="PointsBytes" length="1000000" type="BinaryBlob" />
+    <property name="UncompressedSize" />
   </class>
   <class name="DbMsDataFile">
     <id name="Id">
@@ -50,8 +51,8 @@
     <property name="SearchResultCount" />
     <property name="Sequence" not-null="true" unique-key="PeptideSequence"/>
     <property name="FullSequence" />
-    <property name="Protein" />
-    <property name="ProteinDescription" length="1000" />
+    <property name="Protein" length="1000"/>
+    <property name="ProteinDescription" length="10000" />
   </class>
   <class name="DbPeptideSearchResult">
     <id name="Id">
@@ -132,6 +133,7 @@
     <property name="TracerDefCount" />
 
     <property name="SchemaVersion" />
+    <property name="DataFilePath" />
   </class>
   <class name="DbModification">
     <id name="Id">
@@ -151,7 +153,7 @@
     <version name="Version" generated="never"/>
     <many-to-one name="Workspace" unique-key="WorkspaceName" not-null="true"/>
     <property name="Name" unique-key="WorkspaceName" not-null="true"/>
-    <property name="Value" />
+    <property name="Value" length="10000"/>
   </class>
   <class name="DbPeak">
     <id name="Id">
@@ -187,12 +189,12 @@
       <one-to-many class="DbChromatogram" />
     </bag>
     <property name="ChromatogramCount" />
-    <bag name="Peaks" cascade="delete" inverse="true" batch-size="10">
+    <bag name="Peaks" cascade="delete" inverse="true">
       <key column="PeptideFileAnalysis" />
       <one-to-many class="DbPeak "/>
     </bag>
     <property name="PeakCount"/>
-    <bag name="PeptideDistributions" cascade="delete" inverse="true" batch-size="10">
+    <bag name="PeptideDistributions" cascade="delete" inverse="true">
       <key column="PeptideFileAnalysis"/>
       <one-to-many class="DbPeptideDistribution"/>
     </bag>
@@ -232,11 +234,6 @@
       <one-to-many class="DbPeptideFileAnalysis"/>
     </bag>
     <property name="FileAnalysisCount"/>
-    <bag name="PeptideRates" cascade="delete" inverse="true">
-      <key column="PeptideAnalysis"/>
-      <one-to-many class="DbPeptideRate"/>
-    </bag>
-    <property name="PeptideRateCount"/>
   </class>
   <class name="DbPeptideDistribution">
     <id name="Id">
@@ -248,7 +245,7 @@
     <property name="PeptideQuantity" not-null="true" unique-key="PeptideDistribution" />
     <property name="Score" />
     <property name="TracerPercent" />
-    <bag name="PeptideAmounts" cascade="delete" inverse="true" batch-size="10">
+    <bag name="PeptideAmounts" cascade="delete" inverse="true">
       <key column="PeptideDistribution" />
       <one-to-many class="DbPeptideAmount"/>
     </bag>
@@ -265,20 +262,30 @@
     <property name="PercentAmount" />
     <property name="TracerPercent" />
   </class>
-  <class name="DbPeptideRate">
+  <class name="DbChangeLog">
+    <id name="Id">
+      <column name="Id" not-null="true"/>
+      <generator class="native" />
+    </id>
+    <!--<timestamp name="TimeStamp" generated="always"/>-->
+    <property name="InstanceIdBytes" length="16"/>
+    <property name="PeptideAnalysisId" />
+    <property name="PeptideId" />
+    <property name="MsDataFileId" />
+    <property name="WorkspaceId" />
+    <property name="IsDeleted" />
+  </class>
+  <class name="DbLock">
     <id name="Id">
       <column name="Id" not-null="true"/>
       <generator class="native" />
     </id>
     <version name="Version" generated="never"/>
-    <many-to-one name="PeptideAnalysis" not-null="true" unique-key="PeptideRate" />
-    <property name="PeptideQuantity" not-null="true" unique-key="PeptideRate" />
-    <property name="Cohort" not-null="true" unique-key="PeptideRate" />
-    <property name="Tracer" not-null="true" unique-key="PeptideRate" />
-    <property name="HalfLife" />
-    <property name="InitialTurnover" />
-    <property name="LimitValue" />
-    <property name="Score" />
-    <property name="IsComplete" />
+
+    <property name="InstanceIdBytes" length="16" />
+    <property name="LockType" />
+    <property name="WorkspaceId" unique="true"/>
+    <property name="PeptideAnalysisId" unique="true"/>
+    <property name="MsDataFileId" unique="true"/>
   </class>
 </hibernate-mapping>

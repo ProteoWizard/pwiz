@@ -20,6 +20,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using pwiz.Common.Collections;
+using pwiz.Topograph.Data;
 
 namespace pwiz.Topograph.Model
 {
@@ -36,6 +38,9 @@ namespace pwiz.Topograph.Model
 
         private readonly Dictionary<EntityModel, EntityModel> removedEntities
             = new Dictionary<EntityModel, EntityModel>();
+
+        private readonly Dictionary<long, DbPeptideAnalysis> changedPeptideAnalyses
+            = new Dictionary<long, DbPeptideAnalysis>();
 
         private bool readOnly = false;
 
@@ -76,6 +81,17 @@ namespace pwiz.Topograph.Model
                 removedEntities[entityModel] = entityModel;
                 newEntities.Remove(entityModel);
                 changedEntities.Remove(entityModel);
+            }
+        }
+        public void AddChangedPeptideAnalyses(IEnumerable<KeyValuePair<long, DbPeptideAnalysis>> dict)
+        {
+            lock(this)
+            {
+                CheckReadOnly();
+                foreach (var entry in dict)
+                {
+                    changedPeptideAnalyses[entry.Key] = entry.Value;
+                }
             }
         }
 
@@ -153,6 +169,10 @@ namespace pwiz.Topograph.Model
                 }
             }
             return false;
+        }
+        public IDictionary<long, DbPeptideAnalysis> GetChangedPeptideAnalyses()
+        {
+            return new ImmutableDictionary<long, DbPeptideAnalysis>(changedPeptideAnalyses);
         }
     }
 }

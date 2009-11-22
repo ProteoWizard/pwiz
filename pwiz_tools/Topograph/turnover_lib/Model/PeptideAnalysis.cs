@@ -24,6 +24,7 @@ using System.Text;
 using NHibernate;
 using NHibernate.Criterion;
 using pwiz.Topograph.Data;
+using pwiz.Topograph.Data.Snapshot;
 using pwiz.Topograph.Enrichment;
 
 namespace pwiz.Topograph.Model
@@ -40,46 +41,80 @@ namespace pwiz.Topograph.Model
         public PeptideAnalysis(Workspace workspace, DbPeptideAnalysis dbPeptideAnalysis) : base(workspace, dbPeptideAnalysis)
         {
             FileAnalyses = new PeptideFileAnalyses(this, dbPeptideAnalysis);
-            PeptideRates = new PeptideRates(this, dbPeptideAnalysis);
+            ExcludedMzs.ChangedEvent += ExcludedMzs_ChangedEvent;
             SetWorkspaceVersion(workspace.WorkspaceVersion);
         }
 
+        public PeptideAnalysis(Workspace workspace, PeptideAnalysisSnapshot snapshot) : this(workspace, snapshot.DbPeptideAnalysis)
+        {
+            Merge(snapshot);
+        }
+
         public Peptide Peptide { get; private set; }
-        public PeptideRates PeptideRates { get; private set; }
         public PeptideFileAnalyses FileAnalyses { get; private set; }
+
+        protected override IEnumerable<ModelProperty> GetModelProperties()
+        {
+            foreach (var modelProperty in base.GetModelProperties())
+            {
+                yield return modelProperty;
+            }
+            yield return Property<PeptideAnalysis,int>(
+                m=>m._minCharge,(m,v)=>m._minCharge = v, e => e.MinCharge, (e,v)=>e.MinCharge = v);
+            yield return Property<PeptideAnalysis, int>(
+                m=>m._maxCharge,(m,v)=>m._maxCharge = v, e=>e.MaxCharge,(e,v)=>e.MaxCharge = v);
+            yield return Property<PeptideAnalysis, int>(
+                m=>m._intermediateLevels, (m,v)=>m._intermediateLevels=v, 
+                e=>e.IntermediateEnrichmentLevels, (e,v)=>e.IntermediateEnrichmentLevels=v);
+            yield return Property<PeptideAnalysis, byte[]>(
+                m => m.ExcludedMzs.ToByteArray(),
+                (m, v) => (m).ExcludedMzs.SetByteArray(v),
+                e => e.ExcludedMasses ?? new byte[0],
+                (e,v)=>e.ExcludedMasses = v == null || v.Length == 0 ? null : v);
+        }
+
         protected override void Load(DbPeptideAnalysis entity)
         {
-            base.Load(entity);
+            ExcludedMzs = ExcludedMzs ?? new ExcludedMzs();
             Peptide = Workspace.Peptides.GetPeptide(entity.Peptide);
-            _minCharge = entity.MinCharge;
-            _maxCharge = entity.MaxCharge;
-            _intermediateLevels = entity.IntermediateEnrichmentLevels;
-            ExcludedMzs = new ExcludedMzs(this);
-            ExcludedMzs.ChangedEvent += ExcludedMzs_ChangedEvent;
-            if (entity.ExcludedMasses != null)
-            {
-                ExcludedMzs.SetByteArray(entity.ExcludedMasses);
-            }
+            base.Load(entity);
             _workspaceVersion = Workspace.SavedWorkspaceVersion;
+        }
+
+        public override bool IsDirty()
+        {
+            if (base.IsDirty())
+            {
+                return true;
+            }
+            foreach (var fileAnalysis in FileAnalyses.ListChildren())
+            {
+                if (fileAnalysis.IsDirty())
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public void Merge(PeptideAnalysisSnapshot peptideAnalysisSnapshot)
+        {
+            Load(peptideAnalysisSnapshot.DbPeptideAnalysis);
+            foreach (var snapshot in peptideAnalysisSnapshot.FileAnalysisSnapshots.Values)
+            {
+                var fileAnalysis = FileAnalyses.GetChild(snapshot.Id);
+                if (fileAnalysis == null)
+                {
+                    fileAnalysis = new PeptideFileAnalysis(this, snapshot.DbPeptideFileAnalysis);
+                    FileAnalyses.AddChild(fileAnalysis.Id.Value, fileAnalysis);
+                }
+                fileAnalysis.Merge(snapshot);
+            }
         }
 
         void ExcludedMzs_ChangedEvent(ExcludedMzs obj)
         {
             OnChange();
-        }
-
-        protected override DbPeptideAnalysis UpdateDbEntity(ISession session)
-        {
-            var entity = base.UpdateDbEntity(session);
-            entity.MinCharge = MinCharge;
-            entity.MaxCharge = MaxCharge;
-            entity.IntermediateEnrichmentLevels = IntermediateLevels;
-            entity.ExcludedMasses = ExcludedMzs.ToByteArray();
-            if (PeptideRates.IsDirty)
-            {
-                entity.PeptideRateCount = 0;
-            }
-            return entity;
         }
 
         public void SaveDeep(ISession session)
@@ -97,20 +132,7 @@ namespace pwiz.Topograph.Model
                     fileAnalysis.PeptideDistributions.Save(session);
                 }
             }
-            if (PeptideRates.IsDirty)
-            {
-                PeptideRates.Save(session);
-            }
-        }
-
-        public void AfterSaveDeep()
-        {
-            foreach (var fileAnalysis in FileAnalyses.ListChildren())
-            {
-                fileAnalysis.Peaks.IsDirty = false;
-                fileAnalysis.PeptideDistributions.IsDirty = false;
-            }
-            PeptideRates.IsDirty = false;
+            session.Save(new DbChangeLog(this));
         }
 
         public Dictionary<int,IList<MzRange>> GetMzs()
@@ -235,38 +257,12 @@ namespace pwiz.Topograph.Model
         }
         public void SetWorkspaceVersion(WorkspaceVersion newWorkspaceVersion)
         {
-            if (!_workspaceVersion.PeptideRatesValid(newWorkspaceVersion))
-            {
-                PeptideRates = new PeptideRates(this);
-            }
             _workspaceVersion = newWorkspaceVersion;
             _turnoverCalculator = null;
             foreach (var peptideFileAnalysis in FileAnalyses.ListChildren())
             {
                 peptideFileAnalysis.SetWorkspaceVersion(newWorkspaceVersion);
             }
-        }
-        public void SetPeptideRates(PeptideRates peptideRates)
-        {
-            PeptideRates = peptideRates;
-        }
-        public void RecalculateRates()
-        {
-            var peptideRates = new PeptideRates(this);
-            var peptideDistributionsList = new List<PeptideDistributions>();
-            bool isComplete = true;
-            foreach (var peptideFileAnalysis in FileAnalyses.ListPeptideFileAnalyses(true))
-            {
-                var peptideDistributions = peptideFileAnalysis.PeptideDistributions;
-                if (peptideDistributions.ChildCount == 0)
-                {
-                    isComplete = false;
-                    continue;
-                }
-                peptideDistributionsList.Add(peptideDistributions);
-            }
-            peptideRates.Calculate(peptideDistributionsList, isComplete);
-            PeptideRates = peptideRates;
         }
     }
     public enum IntensityScaleMode

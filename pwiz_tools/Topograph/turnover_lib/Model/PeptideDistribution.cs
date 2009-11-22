@@ -101,7 +101,7 @@ namespace pwiz.Topograph.Model
                 double total = 0;
                 foreach (var child in ListChildren())
                 {
-                    total += child.PercentAmount;
+                    total += child.PercentAmountValue;
                 }
                 return total;
             }
@@ -122,7 +122,7 @@ namespace pwiz.Topograph.Model
                 {
                     percent = percent * 100 / maxTracerCount;
                 }
-                result += percent * peptideAmount.PercentAmount / 100;
+                result += percent * peptideAmount.PercentAmountValue / 100;
             }
             return result;
         }
@@ -134,8 +134,8 @@ namespace pwiz.Topograph.Model
                 double totalValue = 0;
                 foreach (var child in ListChildren())
                 {
-                    totalAmount += child.PercentAmount;
-                    totalValue += child.TracerPercent * child.PercentAmount;
+                    totalAmount += child.PercentAmountValue;
+                    totalValue += child.TracerPercent * child.PercentAmountValue;
                 }
                 return totalValue/totalAmount;
             }
@@ -144,7 +144,7 @@ namespace pwiz.Topograph.Model
         {
             get
             {
-                return 100*(1 - GetChild("").PercentAmount/TotalAmount);
+                return 100*(1 - GetChild("").PercentAmountValue/TotalAmount);
             }
         }
         public PeptideQuantity PeptideQuantity { get; private set; }

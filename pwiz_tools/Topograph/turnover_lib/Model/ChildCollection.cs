@@ -30,11 +30,26 @@ namespace pwiz.Topograph.Model
         where P:DbEntity<P>
         where E:DbEntity<E>
     {
-        private int _childCount;
+        protected int _childCount;
         protected IDictionary<K, C> _childDict;
+
+        protected ModelProperty PropChildCount
+        {
+            get
+            {
+                return Property<ChildCollection<P, K, E, C>, int>
+                (
+                    m => m.GetChildCount(),
+                    (m, v) => m._childCount = v,
+                    GetChildCount,
+                    SetChildCount
+                );
+            }   
+        }
         protected ChildCollection(Workspace workspace, P entity)
             : base(workspace, entity)
         {
+            _childDict = ConstructChildDict();
         }
         protected ChildCollection(EntityModel parent, P entity) : this(parent.Workspace, entity)
         {
@@ -51,39 +66,10 @@ namespace pwiz.Topograph.Model
             _childDict = ConstructChildDict();
         }
         protected abstract IEnumerable<KeyValuePair<K, E>> GetChildren(P parent);
-        public void EnsureChildrenLoaded()
-        {
-            using (GetReadLock())
-            {
-                lock(this)
-                {
-                    if (_childDict != null)
-                    {
-                        return;
-                    }
-                }
-                using (var session = Workspace.OpenSession())
-                {
-                    lock(this)
-                    {
-                        _childDict = ConstructChildDict();
-                        try
-                        {
-                            LoadChildren(session.Load<P>(Id));
-                        }
-                        catch (Exception e)
-                        {
-                            Console.Out.WriteLine(e);
-                        }
-                    }
-                }
-            }
-        }
         public virtual IList<C> ListChildren()
         {
             using(GetReadLock())
             {
-                EnsureChildrenLoaded();
                 lock(this)
                 {
                     return _childDict.Values.ToArray();
@@ -106,7 +92,6 @@ namespace pwiz.Topograph.Model
         {
             using(GetReadLock())
             {
-                EnsureChildrenLoaded();
                 return _childDict.Keys.ToArray();
             }
         }
@@ -117,32 +102,56 @@ namespace pwiz.Topograph.Model
         protected abstract void SetChildCount(P parent, int childCount);
         protected override void Load(P parent)
         {
+            base.Load(parent);
             _childCount = GetChildCount(parent);
-            if (_childCount == 0)
+            if (_childCount == 0 && TrustChildCount)
             {
                 _childDict = ConstructChildDict();
             }
         }
+        protected virtual bool TrustChildCount { get { return true;} }
         protected virtual void LoadChildren(P parent)
         {
             LoadChildren(GetChildren(parent));
         }
         public void LoadChildren(IEnumerable<KeyValuePair<K,E>> children)
         {
-            using(GetReadLock())
+            lock(this)
             {
-                lock(this)
+                var keys = new HashSet<K>();
+                foreach (var entry in children)
                 {
-                    Debug.Assert(_childDict.Count == 0);
-                    foreach (var entry in children)
+                    keys.Add(entry.Key);
+                    C child;
+                    if (_childDict.TryGetValue(entry.Key, out child))
                     {
-                        Debug.Assert(!_childDict.ContainsKey(entry.Key));
-                        C child = entry.Value == null ? default(C) : WrapChild(entry.Value);
+                        MergeChild(child, entry.Value);
+                    }
+                    else
+                    {
+                        child = entry.Value == null ? default(C) : WrapChild(entry.Value);
                         _childDict.Add(entry.Key, child);
-                        AfterAddChild(child);
+                    }
+                    AfterAddChild(child);
+                }
+                foreach (var entry in _childDict.ToArray())
+                {
+                    if (!keys.Contains(entry.Key))
+                    {
+                        RemoveChild(entry.Key);
                     }
                 }
             }
+        }
+
+        protected virtual void MergeChild(C child, E entity)
+        {
+            throw new InvalidOperationException();
+        }
+
+        public void LoadChildren(IEnumerable<E> children, Func<E,K> func)
+        {
+            LoadChildren(children.ToDictionary(func));
         }
 
         protected virtual void AfterAddChild(C child)
@@ -151,11 +160,6 @@ namespace pwiz.Topograph.Model
 
         protected virtual void AfterRemoveChild(C child)
         {
-        }
-
-        public virtual bool AreChildrenLoaded()
-        {
-            return _childDict != null;
         }
 
         protected override P UpdateDbEntity(ISession session)
@@ -200,7 +204,6 @@ namespace pwiz.Topograph.Model
         {
             using(GetReadLock())
             {
-                EnsureChildrenLoaded();
                 C child;
                 _childDict.TryGetValue(key, out child);
                 return child;
@@ -211,7 +214,6 @@ namespace pwiz.Topograph.Model
         {
             using (GetReadLock())
             {
-                EnsureChildrenLoaded();
                 lock (this)
                 {
                     _childDict.Add(key, child);
@@ -224,8 +226,6 @@ namespace pwiz.Topograph.Model
         {
             using(GetWriteLock())
             {
-                EnsureChildrenLoaded();
-
                 if (_childDict.Remove(key))
                 {
                     _childCount = _childDict.Count;

@@ -102,7 +102,7 @@ namespace pwiz.Topograph.ui.Forms
             var tracerAmounts = peptideFileAnalysis.PeptideDistributions.GetChild(PeptideQuantity.tracer_count);
             if (precursorEnrichments != null)
             {
-                row.Cells[colTurnover.Index].Value = 100.0 - precursorEnrichments.GetChild("").PercentAmount;
+                row.Cells[colTurnover.Index].Value = 100.0 - precursorEnrichments.GetChild("").PercentAmountValue;
             }
             else
             {

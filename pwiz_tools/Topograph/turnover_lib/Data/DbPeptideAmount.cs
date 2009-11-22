@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.Data
 {
@@ -28,6 +29,17 @@ namespace pwiz.Topograph.Data
         public virtual DbPeptideDistribution PeptideDistribution { get; set; }
         public virtual String TracerFormula { get; set; }
         public virtual double TracerPercent { get; set; }
-        public virtual double PercentAmount { get; set; }
+        protected virtual double? PercentAmount { get; set; }
+        public virtual double PercentAmountValue
+        {
+            get
+            {
+                return ConvertHelper.FromDbValue(PercentAmount);
+            }
+            set
+            {
+                PercentAmount = ConvertHelper.ToDbValue(value);
+            }
+        }
     }
 }

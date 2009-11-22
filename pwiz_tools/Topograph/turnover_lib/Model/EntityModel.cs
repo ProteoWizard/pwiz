@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -136,8 +137,46 @@ namespace pwiz.Topograph.Model
 
         protected virtual void Load(T entity)
         {
+            foreach (var modelProperty in GetModelProperties())
+            {
+                if (modelProperty.IsDirty(this, SavedEntity))
+                {
+                    continue;
+                }
+                modelProperty.ModelSetter.Invoke(this, modelProperty.EntityGetter.Invoke(entity));
+            }
+            SavedEntity = entity;
         }
 
+        public virtual void Merge(T entity)
+        {
+            Load(entity);
+        }
+
+        public virtual bool IsDirty()
+        {
+            if (SavedEntity == null)
+            {
+                return true;
+            }
+            foreach (var modelProperty in GetModelProperties())
+            {
+                if (modelProperty.IsDirty(this, SavedEntity))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        public bool IsNew()
+        {
+            return SavedEntity == null;
+        }
+        public T SavedEntity { get; set; }
+        public virtual bool IsPropDirty(ModelProperty property)
+        {
+            return SavedEntity == null || property.IsDirty(this, SavedEntity);
+        }
         protected virtual T ConstructEntity(ISession session)
         {
             throw new InvalidOperationException();
@@ -160,18 +199,49 @@ namespace pwiz.Topograph.Model
 
         protected virtual T UpdateDbEntity(ISession session)
         {
-            T result;
+            T result = null;
             if (Id.HasValue)
             {
                 result = session.Get<T>(Id);
-                if (result != null)
-                {
-                    return result;
-                }
             }
-            result = ConstructEntity(session);
-            SetId(null);
+            if (result == null)
+            {
+                result = ConstructEntity(session);
+                SetId(null);
+            }
+            foreach (var modelProperty in GetModelProperties())
+            {
+                modelProperty.EntitySetter.Invoke(result, modelProperty.ModelGetter.Invoke(this)); 
+            }
             return result;
+        }
+        protected static ModelProperty Property<M,V>(Func<M,V> getter, Action<M,V> setter, Func<T,V> entityGetter, Action<T,V> entitySetter)
+        {
+            return ModelProperty.Property(getter, setter, entityGetter, entitySetter);
+        }
+        protected void LoadValue<V>(ref V value, T entity, Func<T,V> func)
+        {
+            value = NewValueUnlessCurrentChanged(value, entity, func);
+        }
+        protected V NewValueUnlessCurrentChanged<V>(V currentValue, T newEntity, Func<T,V> func)
+        {
+            if (SavedEntity == null || AreEqual(currentValue, func(SavedEntity)))
+            {
+                return func(newEntity);
+            }
+            return currentValue;
+        }
+        protected bool AreEqual<V>(V value1, V value2)
+        {
+            if (typeof(V).IsArray)
+            {
+                return Lists.EqualsDeep((IList) value1, (IList) value2);
+            }
+            return Equals(value1, value2);
+        }
+        protected virtual IEnumerable<ModelProperty> GetModelProperties()
+        {
+            yield break;
         }
     }
 

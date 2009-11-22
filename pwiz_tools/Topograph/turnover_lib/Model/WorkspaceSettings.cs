@@ -23,7 +23,7 @@ using pwiz.Topograph.Data;
 
 namespace pwiz.Topograph.Model
 {
-    public class WorkspaceSettings : EntityModelCollection<DbWorkspace, String, DbSetting, WorkspaceSetting>
+    public class WorkspaceSettings : SettingCollection<DbWorkspace, String, DbSetting, WorkspaceSetting>
     {
         public WorkspaceSettings(Workspace workspace, DbWorkspace dbWorkspace) : base(workspace, dbWorkspace)
         {
@@ -48,6 +48,10 @@ namespace pwiz.Topograph.Model
             {
                 return defaultValue;
             }
+            if (setting.Value == null)
+            {
+                return default(T);
+            }
             if (typeof(T).IsEnum)
             {
                 return (T) Enum.Parse(typeof (T), setting.Value);
@@ -57,17 +61,22 @@ namespace pwiz.Topograph.Model
 
         public void SetSetting<T>(SettingEnum settingEnum, T value)
         {
-            RemoveChild(settingEnum.ToString());
-            var setting = new WorkspaceSetting(Workspace, new DbSetting
-                                                              {
-                                                                  Name = settingEnum.ToString(),
-                                                                  Value =
-                                                                      Equals(value, default(T))
-                                                                          ? null
-                                                                          : value.ToString()
-                                                              });
-            AddChild(settingEnum.ToString(), setting);
-            Workspace.EntityChanged(setting);
+            var strName = settingEnum.ToString();
+            var child = GetChild(strName);
+            var strValue = Equals(value, default(T)) ? null : value.ToString();
+            if (child == null)
+            {
+                AddChild(strName, child = new WorkspaceSetting(Workspace)
+                                              {
+                                                  Name = strName,
+                                                  Value = strValue,
+                                              });
+            }
+            else
+            {
+                child.Value = strValue;
+            }
+            Workspace.EntityChanged(child);
         }
 
         protected override int GetChildCount(DbWorkspace parent)

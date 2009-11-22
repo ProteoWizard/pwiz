@@ -24,6 +24,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using NHibernate.Criterion;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
 using Timer=System.Windows.Forms.Timer;
@@ -93,37 +94,45 @@ namespace pwiz.Topograph.ui.Forms
         private void DoCreateAnalyses(char[] excludeAas, int minTracerCount)
         {
             _statusMessage = "Listing peptides";
-            var peptides = Workspace.Peptides.ListChildren();
-            for (int i = 0; i < peptides.Count(); i++)
+            var peptides = new List<DbPeptide>();
+            using (var session = Workspace.OpenWriteSession())
             {
-                _statusMessage = "Peptide " + (i + 1) + "/" + peptides.Count;
-                _progress = 100*i/peptides.Count;
-                if (_cancelled)
+                session.CreateCriteria(typeof (DbPeptide)).List(peptides);
+                for (int i = 0; i < peptides.Count(); i++)
                 {
-                    break;
-                }
-                var peptide = peptides[i];
-                if (peptide.Sequence.IndexOfAny(excludeAas) >= 0)
-                {
-                    continue;
-                }
-                if (peptide.MaxTracerCount < minTracerCount)
-                {
-                    continue;
-                }
-                var searchResults = new List<DbPeptideSearchResult>();
-                var peptideAnalysis = peptide.EnsurePeptideAnalysis();
-                var newFileAnalyses = new List<DbPeptideFileAnalysis>();
-                using (var session = Workspace.OpenSession())
-                {
-                    var dbPeptide = session.Get<DbPeptide>(peptide.Id);
-                    var dataFileIdQuery = session.CreateQuery("SELECT A.MsDataFile.Id FROM " + typeof (DbPeptideFileAnalysis) +
-                                                              " A WHERE A.PeptideAnalysis.Id = :peptideAnalysisId")
-                        .SetParameter("peptideAnalysisId", peptideAnalysis.Id);
+                    _statusMessage = "Peptide " + (i + 1) + "/" + peptides.Count;
+                    _progress = 100 * i / peptides.Count;
+                    if (_cancelled)
+                    {
+                        break;
+                    }
+                    var peptide = peptides[i];
+                    if (peptide.Sequence.IndexOfAny(excludeAas) >= 0)
+                    {
+                        continue;
+                    }
+                    if (Workspace.GetMaxTracerCount(peptide.Sequence) < minTracerCount)
+                    {
+                        continue;
+                    }
+                    var searchResults = new List<DbPeptideSearchResult>();
+                    var dbPeptideAnalysis = (DbPeptideAnalysis) session.CreateCriteria(typeof (DbPeptideAnalysis))
+                        .Add(Restrictions.Eq("Peptide", peptide)).UniqueResult();
+                    if (dbPeptideAnalysis == null)
+                    {
+                        dbPeptideAnalysis = Peptide.CreateDbPeptideAnalysis(session, peptide);
+                    }
+                    var newFileAnalyses = new List<DbPeptideFileAnalysis>();
                     var idList = new List<long>();
-                    dataFileIdQuery.List(idList);
+                    if (dbPeptideAnalysis.Id.HasValue)
+                    {
+                        var dataFileIdQuery = session.CreateQuery("SELECT A.MsDataFile.Id FROM " + typeof(DbPeptideFileAnalysis) +
+                                                                  " A WHERE A.PeptideAnalysis.Id = :peptideAnalysisId")
+                            .SetParameter("peptideAnalysisId", dbPeptideAnalysis.Id);
+                        dataFileIdQuery.List(idList);
+                    }
                     var dataFileIds = new HashSet<long>(idList);
-                    foreach (var peptideSearchResult in dbPeptide.SearchResults)
+                    foreach (var peptideSearchResult in peptide.SearchResults)
                     {
                         if (dataFileIds.Contains(peptideSearchResult.MsDataFile.Id.Value))
                         {
@@ -131,56 +140,54 @@ namespace pwiz.Topograph.ui.Forms
                         }
                         searchResults.Add(peptideSearchResult);
                     }
-                }
-                foreach (var peptideSearchResult in searchResults)
-                {
-                    if (_cancelled)
+                    foreach (var peptideSearchResult in searchResults)
                     {
-                        return;
-                    }
-                    var msDataFile = Workspace.MsDataFiles.GetMsDataFile(peptideSearchResult.MsDataFile);
-                    if (!msDataFile.HasTimes())
-                    {
-                        var fileInited = (bool) Invoke(new Func<MsDataFile, bool>(
-                                                           TurnoverForm.Instance.EnsureMsDataFile), msDataFile);
-                        if (!fileInited)
+                        if (_cancelled)
                         {
-                            continue;
+                            return;
                         }
-                    }
-                }
-                using (Workspace.GetReadLock())
-                {
-                    using (var session = Workspace.OpenWriteSession())
-                    {
-                        var dbPeptideAnalysis = session.Get<DbPeptideAnalysis>(peptideAnalysis.Id);
-                        session.BeginTransaction();
-                        foreach (var peptideSearchResult in searchResults)
+                        var msDataFile = Workspace.MsDataFiles.GetMsDataFile(peptideSearchResult.MsDataFile);
+                        if (!msDataFile.HasTimes())
                         {
-                            var msDataFile = Workspace.MsDataFiles.GetMsDataFile(peptideSearchResult.MsDataFile);
-                            if (!msDataFile.HasTimes())
+                            var fileInited = (bool)Invoke(new Func<MsDataFile, bool>(
+                                                               TurnoverForm.Instance.EnsureMsDataFile), msDataFile);
+                            if (!fileInited)
                             {
                                 continue;
                             }
-                            var dbPeptideFileAnalysis = PeptideFileAnalysis.CreatePeptideFileAnalysis(session, msDataFile,
-                                                                                                      dbPeptideAnalysis,
-                                                                                                      peptideSearchResult);
-                            dbPeptideAnalysis.FileAnalysisCount++;
-                            session.Save(dbPeptideFileAnalysis);
-                            newFileAnalyses.Add(dbPeptideFileAnalysis);
                         }
-                        session.Update(dbPeptideAnalysis);
-                        session.Transaction.Commit();
                     }
-                }
-                using (Workspace.GetWriteLock())
-                {
-                    foreach (var dbPeptideFileAnalysis in newFileAnalyses)
+                    session.BeginTransaction();
+                    bool newAnalysis;
+                    if (dbPeptideAnalysis.Id.HasValue)
                     {
-                        peptideAnalysis.FileAnalyses.AddChild(dbPeptideFileAnalysis.Id.Value,
-                            new PeptideFileAnalysis(peptideAnalysis, dbPeptideFileAnalysis));
-                        Workspace.AddEntityModel(peptideAnalysis);
+                        newAnalysis = false;
                     }
+                    else
+                    {
+                        session.Save(dbPeptideAnalysis);
+                        newAnalysis = true;
+                    }
+                    foreach (var peptideSearchResult in searchResults)
+                    {
+                        var msDataFile = Workspace.MsDataFiles.GetMsDataFile(peptideSearchResult.MsDataFile);
+                        if (!msDataFile.HasTimes())
+                        {
+                            continue;
+                        }
+                        var dbPeptideFileAnalysis = PeptideFileAnalysis.CreatePeptideFileAnalysis(session, msDataFile,
+                                                                                                  dbPeptideAnalysis,
+                                                                                                  peptideSearchResult);
+                        dbPeptideAnalysis.FileAnalysisCount++;
+                        session.Save(dbPeptideFileAnalysis);
+                        newFileAnalyses.Add(dbPeptideFileAnalysis);
+                    }
+                    session.Update(dbPeptideAnalysis);
+                    if (!newAnalysis)
+                    {
+                        session.Save(new DbChangeLog(Workspace, dbPeptideAnalysis));
+                    }
+                    session.Transaction.Commit();
                 }
             }
         }

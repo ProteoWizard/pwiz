@@ -57,7 +57,7 @@ namespace pwiz.Topograph.Enrichment
             }
         }
 
-        public TracerDef(Workspace workspace, DbTracerDef dbTracerDef)
+        public TracerDef(Workspace workspace, TracerDefModel dbTracerDef)
         {
             Workspace = workspace;
             Name = dbTracerDef.Name;

@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.Model
 {
@@ -27,16 +28,13 @@ namespace pwiz.Topograph.Model
     {
         private HashSet<int> _excludedMasses = new HashSet<int>();
 
-        public ExcludedMzs(PeptideAnalysis peptideAnalysis)
+        public ExcludedMzs()
         {
-            PeptideAnalysis = peptideAnalysis;
         }
-        public ExcludedMzs(ExcludedMzs that) : this(that.PeptideAnalysis)
+        public ExcludedMzs(ExcludedMzs that)
         {
             _excludedMasses = new HashSet<int>(that._excludedMasses);
         }
-
-        public PeptideAnalysis PeptideAnalysis { get; private set; }
 
         public bool IsExcluded(int massIndex)
         {
@@ -64,9 +62,12 @@ namespace pwiz.Topograph.Model
         }
         public byte[] ToByteArray()
         {
-            var excludedArray =
-                new bool[PeptideAnalysis.GetMassCount()];
-            for (int i = 0; i < PeptideAnalysis.GetMassCount(); i++)
+            if (_excludedMasses.Count == 0)
+            {
+                return new byte[0];
+            }
+            var excludedArray = new bool[_excludedMasses.Max()];
+            for (int i = 0; i < excludedArray.Length; i++)
             {
                 excludedArray[i] = _excludedMasses.Contains(i);
             }
@@ -76,19 +77,23 @@ namespace pwiz.Topograph.Model
         }
         public void SetByteArray(byte[] bytes)
         {
-            var excludedArray = new bool[PeptideAnalysis.GetMassCount()];
-            if (bytes.Length != excludedArray.Length)
+            var excludedArray = new bool[bytes.Length];
+            if (Lists.EqualsDeep(bytes, ToByteArray()))
             {
                 return;
             }
             _excludedMasses.Clear();
             Buffer.BlockCopy(bytes, 0, excludedArray, 0, bytes.Length);
-            for (int massIndex = 0; massIndex < PeptideAnalysis.GetMassCount(); massIndex++)
+            for (int massIndex = 0; massIndex < excludedArray.Length; massIndex++)
             {
                 if (excludedArray[massIndex])
                 {
                     _excludedMasses.Add(massIndex);
                 }
+            }
+            if (ChangedEvent != null)
+            {
+                ChangedEvent.Invoke(this);
             }
         }
         public bool IsMassExcluded(int massIndex)

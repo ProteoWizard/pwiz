@@ -44,10 +44,8 @@ namespace pwiz.Topograph.ui.Forms
             this.colMaxTracers = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colMinScoreTracerCount = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colMaxScoreTracerCount = new System.Windows.Forms.DataGridViewLinkColumn();
-            this.colHalfLifeTracerCount = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colMinScorePrecursorEnrichment = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colMaxScorePrecursorEnrichment = new System.Windows.Forms.DataGridViewLinkColumn();
-            this.colHalfLifePrecursorEnrichment = new System.Windows.Forms.DataGridViewLinkColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.contextMenuStrip1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -67,10 +65,8 @@ namespace pwiz.Topograph.ui.Forms
             this.colMaxTracers,
             this.colMinScoreTracerCount,
             this.colMaxScoreTracerCount,
-            this.colHalfLifeTracerCount,
             this.colMinScorePrecursorEnrichment,
-            this.colMaxScorePrecursorEnrichment,
-            this.colHalfLifePrecursorEnrichment});
+            this.colMaxScorePrecursorEnrichment});
             this.dataGridView.ContextMenuStrip = this.contextMenuStrip1;
             this.dataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView.Location = new System.Drawing.Point(0, 29);
@@ -175,14 +171,6 @@ namespace pwiz.Topograph.ui.Forms
             this.colMaxScoreTracerCount.ReadOnly = true;
             this.colMaxScoreTracerCount.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
-            // colHalfLifeTracerCount
-            // 
-            this.colHalfLifeTracerCount.HeaderText = "Half Life";
-            this.colHalfLifeTracerCount.Name = "colHalfLifeTracerCount";
-            this.colHalfLifeTracerCount.ReadOnly = true;
-            this.colHalfLifeTracerCount.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.colHalfLifeTracerCount.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
             // colMinScorePrecursorEnrichment
             // 
             this.colMinScorePrecursorEnrichment.HeaderText = "Min Score";
@@ -194,14 +182,6 @@ namespace pwiz.Topograph.ui.Forms
             // 
             this.colMaxScorePrecursorEnrichment.HeaderText = "Max Score";
             this.colMaxScorePrecursorEnrichment.Name = "colMaxScorePrecursorEnrichment";
-            // 
-            // colHalfLifePrecursorEnrichment
-            // 
-            this.colHalfLifePrecursorEnrichment.HeaderText = "Half Life";
-            this.colHalfLifePrecursorEnrichment.Name = "colHalfLifePrecursorEnrichment";
-            this.colHalfLifePrecursorEnrichment.ReadOnly = true;
-            this.colHalfLifePrecursorEnrichment.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.colHalfLifePrecursorEnrichment.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
             // PeptideAnalysesForm
             // 
@@ -235,9 +215,7 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn colMaxTracers;
         private System.Windows.Forms.DataGridViewLinkColumn colMinScoreTracerCount;
         private System.Windows.Forms.DataGridViewLinkColumn colMaxScoreTracerCount;
-        private System.Windows.Forms.DataGridViewLinkColumn colHalfLifeTracerCount;
         private System.Windows.Forms.DataGridViewLinkColumn colMinScorePrecursorEnrichment;
         private System.Windows.Forms.DataGridViewLinkColumn colMaxScorePrecursorEnrichment;
-        private System.Windows.Forms.DataGridViewLinkColumn colHalfLifePrecursorEnrichment;
     }
 }

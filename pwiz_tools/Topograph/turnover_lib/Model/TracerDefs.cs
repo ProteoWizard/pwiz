@@ -4,18 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using pwiz.Topograph.Data;
+using pwiz.Topograph.Enrichment;
 
 namespace pwiz.Topograph.Model
 {
-    public class TracerDefs : SimpleChildCollection<DbWorkspace, String, DbTracerDef>
+    public class TracerDefs : SettingCollection<DbWorkspace, String, DbTracerDef, TracerDefModel>
     {
         public TracerDefs(Workspace workspace, DbWorkspace dbWorkspace) : base(workspace, dbWorkspace)
         {
-        }
-
-        public TracerDefs(Workspace workspace) : base(workspace)
-        {
-            SetId(workspace.DbWorkspaceId);
         }
 
         protected override IEnumerable<KeyValuePair<String, DbTracerDef>> GetChildren(DbWorkspace parent)
@@ -36,9 +32,9 @@ namespace pwiz.Topograph.Model
             parent.TracerDefCount = childCount;
         }
 
-        protected override void SetParent(DbTracerDef child, DbWorkspace parent)
+        public override TracerDefModel WrapChild(DbTracerDef entity)
         {
-            child.Workspace = parent;
+            return new TracerDefModel(Workspace, entity);
         }
     }
 }

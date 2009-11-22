@@ -33,9 +33,15 @@
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newWorkspaceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openWorkspaceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
+            this.newOnlineWorkspaceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openOnlineWorkspaceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.upsizeWorkspaceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.saveWorkspaceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.closeWorkspaceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addSearchResultsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptidesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -44,12 +50,14 @@
             this.statusToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.queryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mercuryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.halfLivesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.enrichmentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.modificationsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.updateProteinNamesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.machineSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.halfLivesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.dataDirectoryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.locksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -80,9 +88,15 @@
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.newWorkspaceToolStripMenuItem,
             this.openWorkspaceToolStripMenuItem,
+            this.toolStripSeparator2,
+            this.newOnlineWorkspaceToolStripMenuItem,
+            this.openOnlineWorkspaceToolStripMenuItem,
+            this.upsizeWorkspaceToolStripMenuItem,
+            this.toolStripSeparator3,
             this.saveWorkspaceToolStripMenuItem,
             this.closeWorkspaceToolStripMenuItem,
             this.addSearchResultsToolStripMenuItem,
+            this.toolStripSeparator1,
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
@@ -91,22 +105,54 @@
             // newWorkspaceToolStripMenuItem
             // 
             this.newWorkspaceToolStripMenuItem.Name = "newWorkspaceToolStripMenuItem";
-            this.newWorkspaceToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
+            this.newWorkspaceToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
             this.newWorkspaceToolStripMenuItem.Text = "New Workspace...";
             this.newWorkspaceToolStripMenuItem.Click += new System.EventHandler(this.newWorkspaceToolStripMenuItem_Click);
             // 
             // openWorkspaceToolStripMenuItem
             // 
             this.openWorkspaceToolStripMenuItem.Name = "openWorkspaceToolStripMenuItem";
-            this.openWorkspaceToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
+            this.openWorkspaceToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
             this.openWorkspaceToolStripMenuItem.Text = "Open Workspace...";
             this.openWorkspaceToolStripMenuItem.Click += new System.EventHandler(this.openWorkspaceToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(238, 6);
+            // 
+            // newOnlineWorkspaceToolStripMenuItem
+            // 
+            this.newOnlineWorkspaceToolStripMenuItem.Name = "newOnlineWorkspaceToolStripMenuItem";
+            this.newOnlineWorkspaceToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
+            this.newOnlineWorkspaceToolStripMenuItem.Text = "New Online Workspace...";
+            this.newOnlineWorkspaceToolStripMenuItem.Click += new System.EventHandler(this.newOnlineWorkspaceToolStripMenuItem_Click);
+            // 
+            // openOnlineWorkspaceToolStripMenuItem
+            // 
+            this.openOnlineWorkspaceToolStripMenuItem.Name = "openOnlineWorkspaceToolStripMenuItem";
+            this.openOnlineWorkspaceToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
+            this.openOnlineWorkspaceToolStripMenuItem.Text = "Connect to Online Workspace...";
+            this.openOnlineWorkspaceToolStripMenuItem.Click += new System.EventHandler(this.openOnlineWorkspaceToolStripMenuItem_Click);
+            // 
+            // upsizeWorkspaceToolStripMenuItem
+            // 
+            this.upsizeWorkspaceToolStripMenuItem.Enabled = false;
+            this.upsizeWorkspaceToolStripMenuItem.Name = "upsizeWorkspaceToolStripMenuItem";
+            this.upsizeWorkspaceToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
+            this.upsizeWorkspaceToolStripMenuItem.Text = "Upsize Workspace...";
+            this.upsizeWorkspaceToolStripMenuItem.Click += new System.EventHandler(this.upsizeWorkspaceToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator3
+            // 
+            this.toolStripSeparator3.Name = "toolStripSeparator3";
+            this.toolStripSeparator3.Size = new System.Drawing.Size(238, 6);
             // 
             // saveWorkspaceToolStripMenuItem
             // 
             this.saveWorkspaceToolStripMenuItem.Enabled = false;
             this.saveWorkspaceToolStripMenuItem.Name = "saveWorkspaceToolStripMenuItem";
-            this.saveWorkspaceToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
+            this.saveWorkspaceToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
             this.saveWorkspaceToolStripMenuItem.Text = "Save Workspace";
             this.saveWorkspaceToolStripMenuItem.Click += new System.EventHandler(this.saveWorkspaceToolStripMenuItem_Click);
             // 
@@ -114,7 +160,7 @@
             // 
             this.closeWorkspaceToolStripMenuItem.Enabled = false;
             this.closeWorkspaceToolStripMenuItem.Name = "closeWorkspaceToolStripMenuItem";
-            this.closeWorkspaceToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
+            this.closeWorkspaceToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
             this.closeWorkspaceToolStripMenuItem.Text = "Close Workspace";
             this.closeWorkspaceToolStripMenuItem.Click += new System.EventHandler(this.closeWorkspaceToolStripMenuItem_Click);
             // 
@@ -122,14 +168,19 @@
             // 
             this.addSearchResultsToolStripMenuItem.Enabled = false;
             this.addSearchResultsToolStripMenuItem.Name = "addSearchResultsToolStripMenuItem";
-            this.addSearchResultsToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
+            this.addSearchResultsToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
             this.addSearchResultsToolStripMenuItem.Text = "Add Search Results...";
             this.addSearchResultsToolStripMenuItem.Click += new System.EventHandler(this.addSearchResultsToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(238, 6);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -142,7 +193,8 @@
             this.statusToolStripMenuItem,
             this.queryToolStripMenuItem,
             this.mercuryToolStripMenuItem,
-            this.halfLivesToolStripMenuItem});
+            this.halfLivesToolStripMenuItem,
+            this.locksToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "View";
@@ -195,13 +247,22 @@
             this.mercuryToolStripMenuItem.Text = "Isotope Distribution Graph";
             this.mercuryToolStripMenuItem.Click += new System.EventHandler(this.mercuryToolStripMenuItem_Click);
             // 
+            // halfLivesToolStripMenuItem
+            // 
+            this.halfLivesToolStripMenuItem.Enabled = false;
+            this.halfLivesToolStripMenuItem.Name = "halfLivesToolStripMenuItem";
+            this.halfLivesToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.halfLivesToolStripMenuItem.Text = "Half Lives";
+            this.halfLivesToolStripMenuItem.Click += new System.EventHandler(this.halfLivesToolStripMenuItem_Click);
+            // 
             // settingsToolStripMenuItem
             // 
             this.settingsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.enrichmentToolStripMenuItem,
             this.modificationsToolStripMenuItem,
             this.updateProteinNamesToolStripMenuItem,
-            this.machineSettingsToolStripMenuItem});
+            this.machineSettingsToolStripMenuItem,
+            this.dataDirectoryToolStripMenuItem});
             this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
             this.settingsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
             this.settingsToolStripMenuItem.Text = "Settings";
@@ -238,13 +299,21 @@
             this.machineSettingsToolStripMenuItem.Text = "Miscellaneous...";
             this.machineSettingsToolStripMenuItem.Click += new System.EventHandler(this.machineSettingsToolStripMenuItem_Click);
             // 
-            // halfLivesToolStripMenuItem
+            // dataDirectoryToolStripMenuItem
             // 
-            this.halfLivesToolStripMenuItem.Enabled = false;
-            this.halfLivesToolStripMenuItem.Name = "halfLivesToolStripMenuItem";
-            this.halfLivesToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
-            this.halfLivesToolStripMenuItem.Text = "Half Lives";
-            this.halfLivesToolStripMenuItem.Click += new System.EventHandler(this.halfLivesToolStripMenuItem_Click);
+            this.dataDirectoryToolStripMenuItem.Enabled = false;
+            this.dataDirectoryToolStripMenuItem.Name = "dataDirectoryToolStripMenuItem";
+            this.dataDirectoryToolStripMenuItem.Size = new System.Drawing.Size(202, 22);
+            this.dataDirectoryToolStripMenuItem.Text = "Data Directory...";
+            this.dataDirectoryToolStripMenuItem.Click += new System.EventHandler(this.dataDirectoryToolStripMenuItem_Click);
+            // 
+            // locksToolStripMenuItem
+            // 
+            this.locksToolStripMenuItem.Enabled = false;
+            this.locksToolStripMenuItem.Name = "locksToolStripMenuItem";
+            this.locksToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.locksToolStripMenuItem.Text = "Database Locks";
+            this.locksToolStripMenuItem.Click += new System.EventHandler(this.locksToolStripMenuItem_Click);
             // 
             // TurnoverForm
             // 
@@ -287,5 +356,13 @@
         private System.Windows.Forms.ToolStripMenuItem machineSettingsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem mercuryToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem halfLivesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        private System.Windows.Forms.ToolStripMenuItem newOnlineWorkspaceToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem openOnlineWorkspaceToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem upsizeWorkspaceToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem dataDirectoryToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem locksToolStripMenuItem;
     }
 }

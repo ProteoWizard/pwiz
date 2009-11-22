@@ -39,20 +39,9 @@ namespace pwiz.Topograph.ui.Forms
         public EnrichmentDialog(Workspace workspace) : base(workspace)
         {
             InitializeComponent();
-            foreach (var tracerDef in workspace.GetTracerDefs())
+            _tracerDefs = workspace.GetDbTracerDefs();
+            foreach (var tracerDef in _tracerDefs)
             {
-                _tracerDefs.Add(new DbTracerDef
-                                    {
-                                        Name = tracerDef.Name,
-                                        AtomCount = tracerDef.AtomCount,
-                                        AtomPercentEnrichment = tracerDef.AtomPercentEnrichment,
-                                        DeltaMass = tracerDef.DeltaMass,
-                                        FinalEnrichment = tracerDef.FinalApe,
-                                        InitialEnrichment = tracerDef.InitialApe,
-                                        IsotopesEluteEarlier = tracerDef.IsotopesEluteEarlier,
-                                        IsotopesEluteLater = tracerDef.IsotopesEluteLater,
-                                        TracerSymbol = tracerDef.TraceeSymbol
-                                    });
                 comboTracers.Items.Add(tracerDef.Name);
             }
             comboTracers.Items.Add(newTracerText);
@@ -155,7 +144,7 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return;
             }
-            Workspace.SetTracerDefs(_tracerDefs);
+            Workspace.SetDbTracerDefs(_tracerDefs);
             Close();
         }
 

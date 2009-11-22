@@ -87,6 +87,10 @@ namespace pwiz.Topograph.ui.Forms
 
         public static PeptideAnalysisFrame ShowPeptideAnalysis(PeptideAnalysis peptideAnalysis)
         {
+            if (peptideAnalysis == null)
+            {
+                return null;
+            }
             var form = Program.FindOpenEntityForm<PeptideAnalysisFrame>(peptideAnalysis);
             if (form != null)
             {

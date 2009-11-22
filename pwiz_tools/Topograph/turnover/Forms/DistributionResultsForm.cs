@@ -105,7 +105,7 @@ namespace pwiz.Topograph.ui.Forms
                 var row = GridViewFormulas.Rows[GridViewFormulas.Rows.Add()];
                 row.Cells[0].Value = entries[iCandidate].Key.ToString();
                 row.Cells[0].Style.BackColor = color;
-                row.Cells[1].Value = distributions[iCandidate].PercentAmount / 100;
+                row.Cells[1].Value = distributions[iCandidate].PercentAmountValue / 100;
                 barGraphControl.GraphPane.AddBar(entries[iCandidate].Key.ToString(), predictedBarPoints, color);
             }
             barGraphControl.GraphPane.AxisChange();

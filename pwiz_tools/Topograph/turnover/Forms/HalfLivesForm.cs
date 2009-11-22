@@ -138,6 +138,7 @@ namespace pwiz.Topograph.ui.Forms
             if (e.ColumnIndex == colPeptide.Index)
             {
                 var sequence = Convert.ToString(row.Cells[colPeptide.Index].Value);
+                DbPeptideAnalysis dbPeptideAnalysis;
                 using (Workspace.GetReadLock())
                 {
                     using (var session = Workspace.OpenSession())
@@ -145,25 +146,25 @@ namespace pwiz.Topograph.ui.Forms
                         var query =
                             session.CreateQuery("FROM " + typeof (DbPeptideAnalysis) +
                                                 " T WHERE T.Peptide.Sequence = :sequence")
-                                                .SetParameter("sequence", sequence)
-                                                .SetMaxResults(1);
-                        var dbPeptideAnalysis = query.UniqueResult() as DbPeptideAnalysis;
+                                .SetParameter("sequence", sequence)
+                                .SetMaxResults(1);
+                        dbPeptideAnalysis = query.UniqueResult() as DbPeptideAnalysis;
                         if (dbPeptideAnalysis == null)
                         {
                             return;
                         }
-                        var peptideAnalysis = Workspace.PeptideAnalyses.GetChild(dbPeptideAnalysis.Id.Value, session);
-                        var form = Program.FindOpenEntityForm<PeptideAnalysisFrame>(peptideAnalysis);
-                        if (form != null)
-                        {
-                            form.Activate();
-                            return;
-                        }
-                        form = new PeptideAnalysisFrame(peptideAnalysis);
-                        form.Show(DockPanel, DockState);
-                        return;
                     }
                 }
+                var peptideAnalysis = Workspace.Reconciler.LoadPeptideAnalysis(dbPeptideAnalysis.Id.Value);
+                var form = Program.FindOpenEntityForm<PeptideAnalysisFrame>(peptideAnalysis);
+                if (form != null)
+                {
+                    form.Activate();
+                    return;
+                }
+                form = new PeptideAnalysisFrame(peptideAnalysis);
+                form.Show(DockPanel, DockState);
+                return;
             }
             foreach (var entry in _cohortColumns)
             {

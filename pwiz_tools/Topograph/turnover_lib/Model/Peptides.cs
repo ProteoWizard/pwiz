@@ -30,6 +30,7 @@ namespace pwiz.Topograph.Model
         public Peptides(Workspace workspace, DbWorkspace dbWorkspace) : base(workspace, dbWorkspace)
         {
         }
+        protected override bool TrustChildCount { get { return false;}}
         protected override IEnumerable<KeyValuePair<long, DbPeptide>> GetChildren(DbWorkspace parent)
         {
             foreach (var dbPeptide in parent.Peptides)

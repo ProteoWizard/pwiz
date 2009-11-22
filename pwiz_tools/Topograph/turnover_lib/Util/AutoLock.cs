@@ -25,6 +25,7 @@ namespace pwiz.Topograph.Util
 
         public ReaderWriterLockSlim ReaderWriterLock { get; private set; }
         public bool IsWriterLock { get; private set; }
+        public bool IsUpgraded { get; private set; }
 
         public virtual void Dispose()
         {

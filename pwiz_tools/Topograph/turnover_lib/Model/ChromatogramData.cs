@@ -42,7 +42,7 @@ namespace pwiz.Topograph.Model
             base.Load(entity);
             MzKey = entity.MzKey;
             MzRange = entity.MzRange;
-            Points = ChromatogramPoint.FromByteArray(entity.PointsBytes);
+            Points = entity.ChromatogramPoints;
         }
         public MzKey MzKey { get; private set; }
         public int MassIndex { get { return MzKey.MassIndex; } }

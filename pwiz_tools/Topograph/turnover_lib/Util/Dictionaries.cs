@@ -123,5 +123,14 @@ namespace pwiz.Topograph.Util
             }
             return result;
         }
+        public V GetValueOrDefault<K,V>(Dictionary<K,V> dict, K key, V defaultValue)
+        {
+            V result;
+            if (!dict.TryGetValue(key, out result))
+            {
+                return defaultValue;
+            }
+            return result;
+        }
     }
 }

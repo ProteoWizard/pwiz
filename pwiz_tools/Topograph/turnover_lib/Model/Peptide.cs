@@ -39,14 +39,26 @@ namespace pwiz.Topograph.Model
         {
         }
 
+        protected override IEnumerable<ModelProperty> GetModelProperties()
+        {
+            foreach (var property in base.GetModelProperties())
+            {
+                yield return property;
+            }
+            yield return Property<Peptide,String>(
+                m=>m.ProteinName, (m,v)=>m.ProteinName=v,
+                e=>e.Protein, (e,v)=>e.Protein=v);
+            yield return Property<Peptide, String>(
+                m => m.ProteinDescription, (m, v) => m.ProteinDescription = v,
+                e => e.ProteinDescription, (e, v) => e.ProteinDescription = v);
+        }
+
         protected override void Load(DbPeptide entity)
         {
-            base.Load(entity);
-            ProteinName = entity.Protein;
-            ProteinDescription = entity.ProteinDescription;
             Sequence = entity.Sequence;
             FullSequence = entity.FullSequence;
             _searchResultCount = entity.SearchResultCount;
+            base.Load(entity);
         }
 
         protected override DbPeptide UpdateDbEntity(ISession session)
@@ -54,6 +66,7 @@ namespace pwiz.Topograph.Model
             var peptide = base.UpdateDbEntity(session);
             peptide.Protein = ProteinName;
             peptide.ProteinDescription = ProteinDescription;
+            session.Save(new DbChangeLog(this));
             return peptide;
         }
 
@@ -81,10 +94,9 @@ namespace pwiz.Topograph.Model
             }
         }
 
-        public DbPeptideAnalysis CreateDbPeptideAnalysis(ISession session)
+        public static DbPeptideAnalysis CreateDbPeptideAnalysis(ISession session, DbPeptide dbPeptide)
         {
             int minCharge, maxCharge;
-            var dbPeptide = session.Load<DbPeptide>(Id);
             var query = session.CreateQuery("SELECT MIN(s.MinCharge), MAX(s.MaxCharge)"
                                             + "\nFROM " + typeof (DbPeptideSearchResult) +
                                             " s WHERE s.Peptide = :peptide")
@@ -96,19 +108,25 @@ namespace pwiz.Topograph.Model
             }
             minCharge = Convert.ToInt32(minMaxCharge[0]);
             maxCharge = Convert.ToInt32(minMaxCharge[1]);
-            var dbWorkspace = Workspace.LoadDbWorkspace(session);
             return new DbPeptideAnalysis
             {
-                Peptide = session.Load<DbPeptide>(Id),
-                Workspace = dbWorkspace,
+                Peptide = dbPeptide,
+                Workspace = dbPeptide.Workspace,
                 MinCharge = minCharge,
                 MaxCharge = maxCharge,
                 IntermediateEnrichmentLevels = 0,
             };
         }
 
+        public DbPeptideAnalysis CreateDbPeptideAnalysis(ISession session)
+        {
+            return CreateDbPeptideAnalysis(session, session.Load<DbPeptide>(Id));
+            
+        }
+
         public PeptideAnalysis EnsurePeptideAnalysis()
         {
+            return null;
             PeptideAnalysis peptideAnalysis;
             using (Workspace.GetReadLock())
             {

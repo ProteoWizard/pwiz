@@ -182,7 +182,7 @@ namespace pwiz.Topograph.ui.Forms
                 }
                 foreach (DbPeptideAnalysis dbPeptideAnalysis in query.List())
                 {
-                    var peptideAnalysis = Workspace.PeptideAnalyses.GetChild(dbPeptideAnalysis.Id.Value, session);
+                    var peptideAnalysis = Workspace.Reconciler.LoadPeptideAnalysis(dbPeptideAnalysis.Id.Value);
                     peptideAnalysis.IncChromatogramRefCount();
                     peptideAnalyses.Add(peptideAnalysis);
                 }
@@ -230,9 +230,9 @@ namespace pwiz.Topograph.ui.Forms
             }
             _workspaceVersion = Workspace.WorkspaceVersion;
             dataGridView1.Rows.Clear();
+            RequeryPeptideAnalyses();
             using (Workspace.GetReadLock())
             {
-                RequeryPeptideAnalyses();
                 foreach (var peptideAnalysis in _peptideAnalyses)
                 {
                     tbxProteinDescription.Text = peptideAnalysis.Peptide.ProteinDescription;

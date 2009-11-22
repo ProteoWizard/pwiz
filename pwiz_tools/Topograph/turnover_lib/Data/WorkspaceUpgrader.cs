@@ -2,15 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
+using System.IO;
 using System.Linq;
 using System.Text;
+using MySql.Data.MySqlClient;
+using pwiz.Topograph.Model;
 using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.Data
 {
     public class WorkspaceUpgrader : ILongOperationJob
     {
-        public const int CurrentVersion = 2;
+        public const int CurrentVersion = 3;
         public const int MinUpgradeableVersion = 1;
         private IDbCommand _currentCommand;
         private LongOperationBroker _longOperationBroker;
@@ -18,12 +21,26 @@ namespace pwiz.Topograph.Data
         public WorkspaceUpgrader(String path)
         {
             WorkspacePath = path;
+            if (Path.GetExtension(path) == TpgLinkDef.Extension)
+            {
+                TpgLinkDef = TpgLinkDef.Load(path);
+            }
+        }
+        public WorkspaceUpgrader(TpgLinkDef tpgLinkDef)
+        {
+            TpgLinkDef = tpgLinkDef;
         }
 
         public String WorkspacePath { get; private set; }
 
+        public TpgLinkDef TpgLinkDef { get; private set; }
+
         public IDbConnection OpenConnection()
         {
+            if (TpgLinkDef != null)
+            {
+                return TpgLinkDef.OpenConnection();
+            }
             var connectionString = new SQLiteConnectionStringBuilder()
                                        {
                                            DataSource = WorkspacePath
@@ -78,6 +95,23 @@ namespace pwiz.Topograph.Data
                         .ExecuteNonQuery();
                     CreateCommand(connection, 
                         "UPDATE DbPeptideFileAnalysis SET ExcludedMasses = ExcludedMzs, OverrideExcludedMasses = OverrideExcludedMzs")
+                        .ExecuteNonQuery();
+                }
+                if (dbVersion < 3)
+                {
+                    broker.UpdateStatusMessage("Upgrading from version 2 to 3");
+                    CreateCommand(connection,
+                                  "CREATE TABLE DbChangeLog (Id  integer, TimeStamp DATETIME not null, PeptideAnalysisId INTEGER, "
+                                  +"PeptideFileAnalysisId INTEGER, "
+                                  +"PeptideId INTEGER, MsDataFileId INTEGER, WorkspaceId INTEGER, primary key (Id))")
+                                  .ExecuteNonQuery();
+                    CreateCommand(connection,
+                                  "CREATE TABLE DbLock (Id  integer, TimeStamp DATETIME not null, InstanceId TEXT,"
+                                  + "LockType INTEGER, WorkspaceId INTEGER, PeptideAnalysisId INTEGER, MsDataFileId INTEGER,"
+                                  + " primary key (Id))")
+                                  .ExecuteNonQuery();
+                    CreateCommand(connection, "ALTER TABLE DbWorkspace ADD COLUMN DataFilePath TEXT").ExecuteNonQuery();
+                    CreateCommand(connection, "ALTER TABLE DbChromatogram ADD COLUMN UncompressedSize INTEGER")
                         .ExecuteNonQuery();
                 }
                 if (dbVersion < CurrentVersion)
