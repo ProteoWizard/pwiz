@@ -27,6 +27,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -35,13 +36,8 @@ namespace pwiz.Skyline.Controls.Graphs
     /// Interface for any window that contains a graph, to allow non-blocking
     /// updates with a <see cref="Timer"/>.
     /// </summary>
-    public interface IGraphContainer
+    public interface IGraphContainer : IUpdatable
     {
-        /// <summary>
-        /// Render the graph.
-        /// </summary>
-        void UpdateGraph();
-
         /// <summary>
         /// Locks/unlocks the Y-axis, so that it auto-scales.
         /// </summary>
@@ -103,7 +99,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                  e.DocumentPrevious.Settings.PeptideSettings.Libraries.Libraries))
             {
                 ZoomSpectrumToSettings();
-                UpdateGraph();
+                UpdateUI();
             }
         }
 
@@ -120,10 +116,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void GraphSpectrum_VisibleChanged(object sender, System.EventArgs e)
         {
-            UpdateGraph();
+            UpdateUI();
         }
 
-        public void UpdateGraph()
+        public void UpdateUI()
         {
             // Only worry about updates, if the graph is visible
             // And make sure it is not disposed, since rendering happens on a timer

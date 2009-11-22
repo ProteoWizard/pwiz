@@ -115,6 +115,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 YAxis.Scale.Min = 0;
                 YAxis.Scale.Max = _graphData.MaxY * 1.05;
             }
+            if (Settings.Default.AreaPeptideCV)
+                YAxis.Title.Text += " CV";
 
             XAxis.Scale.TextLabels = _graphData.Labels;
             ScaleAxisLabels();
@@ -374,14 +376,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         listAreas.Add(chromInfo.Area.Value);
                 }
 
-                if (listAreas.Count == 0)
-                    return PointPairMissing(iGroup);
-
-                var statAreas = new Statistics(listAreas.ToArray());
-
-                var pointPair = MeanErrorBarItem.MakePointPair(iGroup, statAreas.Mean(), statAreas.StdDev());
-                maxY = Math.Max(maxY, MeanErrorBarItem.GetYTotal(pointPair));
-                return pointPair;
+                return CreatePointPair(iGroup, listAreas, ref maxY);
             }
 
             private static PointPair CreatePointPair(int iGroup, TransitionDocNode nodeTran, ref double maxY)
@@ -392,16 +387,25 @@ namespace pwiz.Skyline.Controls.Graphs
                 var listAreas = new List<double>();
                 foreach (var chromInfo in nodeTran.ChromInfos)
                 {
-                    if (chromInfo.OptimizationStep == 0)
+                    if (chromInfo.OptimizationStep == 0 && !chromInfo.IsEmpty)
                         listAreas.Add(chromInfo.Area);
                 }
 
+                return CreatePointPair(iGroup, listAreas, ref maxY);
+            }
+
+            private static PointPair CreatePointPair(int iGroup, List<double> listAreas, ref double maxY)
+            {
                 if (listAreas.Count == 0)
                     return PointPairMissing(iGroup);
 
                 var statAreas = new Statistics(listAreas.ToArray());
 
-                var pointPair = MeanErrorBarItem.MakePointPair(iGroup, statAreas.Mean(), statAreas.StdDev());
+                PointPair pointPair;
+                if (Settings.Default.AreaPeptideCV)
+                    pointPair = MeanErrorBarItem.MakePointPair(iGroup, statAreas.StdDev()/statAreas.Mean(), 0);
+                else
+                    pointPair = MeanErrorBarItem.MakePointPair(iGroup, statAreas.Mean(), statAreas.StdDev());
                 maxY = Math.Max(maxY, MeanErrorBarItem.GetYTotal(pointPair));
                 return pointPair;
             }

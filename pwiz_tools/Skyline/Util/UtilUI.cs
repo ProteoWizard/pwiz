@@ -258,6 +258,15 @@ namespace pwiz.Skyline.Util
         void ProvideData();
     }
 
+    public interface IUpdatable
+    {
+        /// <summary>
+        /// Update this UI element.  Updates are performed on a time
+        /// event to avoid blocking the UI thread.
+        /// </summary>
+        void UpdateUI();        
+    }
+
     public sealed class MoveThreshold
     {
         public MoveThreshold(int width, int height)

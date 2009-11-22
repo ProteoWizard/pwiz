@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
@@ -73,7 +73,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public void OnResultsIndexChanged()
         {
             if (GraphSummary.GraphPane is RTReplicateGraphPane || !Settings.Default.RTAverageReplicates)
-                GraphSummary.UpdateGraph();
+                GraphSummary.UpdateUI();
         }
 
         public void OnUpdateGraph()
@@ -115,7 +115,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             GraphType = GraphTypeRT.schedule;
                         else
                             GraphType = GraphTypeRT.replicate;
-                        GraphSummary.UpdateGraph();
+                        GraphSummary.UpdateUI();
                         return true;
                     }
                     break;

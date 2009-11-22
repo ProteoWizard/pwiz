@@ -1807,6 +1807,8 @@ namespace pwiz.Skyline
                     _graphRetentionTime.ResultsIndex = comboResults.SelectedIndex;
                 if (_graphPeakArea != null)
                     _graphPeakArea.ResultsIndex = comboResults.SelectedIndex;
+                if (_resultsGridForm != null)
+                    _resultsGridForm.ResultsIndex = comboResults.SelectedIndex;
 
                 // Make sure the graphs for the result set are visible.
                 if (GetGraphChrom(name) != null)

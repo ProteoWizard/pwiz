@@ -18,23 +18,48 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
 {
-    public partial class ResultsGridForm : DockableForm
+    public partial class ResultsGridForm : DockableForm, IUpdatable
     {
+        public static bool SynchronizeSelection
+        {
+            get { return Settings.Default.ResultsGridSynchSelection; }
+            set { Settings.Default.ResultsGridSynchSelection = value; }
+        }
+
+        private int _resultsIndex;
+
         public ResultsGridForm(IDocumentUIContainer documentUiContainer, SequenceTree sequenceTree)
         {
             InitializeComponent();
             resultsGrid.Init(documentUiContainer, sequenceTree);
+        }
+
+        public int ResultsIndex
+        {
+            get { return _resultsIndex; }
+            set
+            {
+                if (_resultsIndex != value)
+                {
+                    _resultsIndex = value;
+
+                    if (SynchronizeSelection)
+                        resultsGrid.UpdateSelectedReplicate();
+                }
+            }
+        }
+
+        public void UpdateUI()
+        {
+            resultsGrid.UpdateGrid();
         }
 
         private void chooseColumnsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -58,6 +83,16 @@ namespace pwiz.Skyline.Controls
             {
                 columns[i].Visible = columnVisibles[i];
             }
+        }
+
+        private void synchronizeSelectionContextMenuItem_Click(object sender, EventArgs e)
+        {
+            SynchronizeSelection = synchronizeSelectionContextMenuItem.Checked;
+        }
+
+        private void contextMenuResultsGrid_Opening(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            synchronizeSelectionContextMenuItem.Checked = SynchronizeSelection;
         }
     }
 }

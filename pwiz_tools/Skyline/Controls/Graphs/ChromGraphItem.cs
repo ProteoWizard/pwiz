@@ -347,12 +347,12 @@ namespace pwiz.Skyline.Controls.Graphs
             // Search forward for the start of the peak
             // This position is retained as the start of the next search, since
             // peaks are not guaranteed to be non-overlapping.
-            while (_times[iLastStart] < startTime)
+            while (iLastStart < _times.Length && _times[iLastStart] < startTime)
                 iLastStart++;
             // Search forward for the maximum intensity until the end of the peak is reached
             int maxIndex = -1;
             double maxIntensity = 0;
-            for (int iPoint = iLastStart; _times[iPoint] < endTime; iPoint++)
+            for (int iPoint = iLastStart; iPoint < _times.Length && _times[iPoint] < endTime; iPoint++)
             {
                 if (_intensities[iPoint] > maxIntensity)
                 {

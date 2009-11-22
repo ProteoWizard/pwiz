@@ -19,8 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -40,111 +38,142 @@ namespace pwiz.Skyline.Controls
             = new Dictionary<RowIdentifier, DataGridViewRow>();
 
         private bool _inCommitEdit;
+        private bool _inReplicateChange;
+
+        public interface IStateProvider
+        {
+            TreeNode SelectedNode { get; }
+
+            int SelectedResultsIndex { get; set; }
+        }
+
+        private class DefaultStateProvider : IStateProvider
+        {
+            public TreeNode SelectedNode { get { return null; } }
+            public int SelectedResultsIndex { get; set; }
+        }
 
         public ResultsGrid()
         {
             // Replicate
-            Columns.Add(ReplicateNameColumn = new DataGridViewTextBoxColumn
-                                                  {
-                                                      Name = "ReplicateName",
-                                                      HeaderText = "Replicate Name",
-                                                      ReadOnly = true,
-                                                  });
-            Columns.Add(FileNameColumn = new DataGridViewTextBoxColumn
-                                             {
-                                                 Name = "FileName",
-                                                 HeaderText = "File Name",
-                                                 ReadOnly = true
-                                             });
-            Columns.Add(SampleNameColumn = new DataGridViewTextBoxColumn
-                                               {
-                                                   Name = "SampleName",
-                                                   HeaderText = "Sample Name",
-                                                   ReadOnly = true
-                                               });
-            Columns.Add(OptStepColumn = new DataGridViewTextBoxColumn
-                                            {
-                                                Name = "OptStep",
-                                                HeaderText = "Opt Step",
-                                                ReadOnly = true,
-                                            });
+            Columns.Add(ReplicateNameColumn
+                = new DataGridViewTextBoxColumn
+                    {
+                        Name = "ReplicateName",
+                        HeaderText = "Replicate Name",
+                        ReadOnly = true,
+                    });
+            Columns.Add(FileNameColumn
+                = new DataGridViewTextBoxColumn
+                    {
+                        Name = "FileName",
+                        HeaderText = "File Name",
+                        ReadOnly = true
+                    });
+            Columns.Add(SampleNameColumn
+                = new DataGridViewTextBoxColumn
+                    {
+                        Name = "SampleName",
+                        HeaderText = "Sample Name",
+                        ReadOnly = true
+                    });
+            Columns.Add(OptStepColumn
+                = new DataGridViewTextBoxColumn
+                    {
+                        Name = "OptStep",
+                        HeaderText = "Opt Step",
+                        ReadOnly = true,
+                    });
+
             // Peptide
-            Columns.Add(PeptidePeakFoundRatioColumn = new DataGridViewTextBoxColumn
-                                                          {
-                                                              Name = "PeptidePeakFoundRatio",
-                                                              HeaderText = "Peptide Peak Found Ratio",
-                                                              ReadOnly = true,
-                                                              DefaultCellStyle = {Format = Formats.PEAK_FOUND_RATIO}
-                                                          });
-            Columns.Add(PeptideRetentionTimeColumn = new DataGridViewTextBoxColumn
-                                                         {
-                                                             Name = "PeptideRetentionTime",
-                                                             HeaderText = "Peptide Retention Time",
-                                                             ReadOnly = true,
-                                                             DefaultCellStyle = {Format = Formats.RETENTION_TIME}
-                                                         });
-            Columns.Add(RatioToStandardColumn = new DataGridViewTextBoxColumn
-                                                    {
-                                                        Name = "RatioToStandard",
-                                                        HeaderText = "Ratio To Standard",
-                                                        ReadOnly = true,
-                                                        DefaultCellStyle = {Format = Formats.STANDARD_RATIO}
-                                                    });
+            Columns.Add(PeptidePeakFoundRatioColumn
+                = new DataGridViewTextBoxColumn
+                    {
+                        Name = "PeptidePeakFoundRatio",
+                        HeaderText = "Peptide Peak Found Ratio",
+                        ReadOnly = true,
+                        DefaultCellStyle = {Format = Formats.PEAK_FOUND_RATIO}
+                    });
+            Columns.Add(PeptideRetentionTimeColumn
+                = new DataGridViewTextBoxColumn
+                      {
+                          Name = "PeptideRetentionTime",
+                          HeaderText = "Peptide Retention Time",
+                          ReadOnly = true,
+                          DefaultCellStyle = {Format = Formats.RETENTION_TIME}
+                      });
+            Columns.Add(RatioToStandardColumn
+                = new DataGridViewTextBoxColumn
+                      {
+                          Name = "RatioToStandard",
+                          HeaderText = "Ratio To Standard",
+                          ReadOnly = true,
+                          DefaultCellStyle = {Format = Formats.STANDARD_RATIO}
+                      });
+
             // Precursor
-            Columns.Add(PrecursorPeakFoundRatioColumn = new DataGridViewTextBoxColumn
-                                                            {
-                                                                Name = "PrecursorPeakFound",
-                                                                HeaderText = "Precursor Peak Found Ratio",
-                                                                ReadOnly = true,
-                                                                DefaultCellStyle = {Format = Formats.PEAK_FOUND_RATIO}
-                                                            });
-            Columns.Add(BestRetentionTimeColumn = new DataGridViewTextBoxColumn
-                                                      {
-                                                          Name = "BestRetentionTime",
-                                                          HeaderText = "Best Retention Time",
-                                                          ReadOnly = true,
-                                                          DefaultCellStyle = {Format = Formats.RETENTION_TIME}
-                                                      });
-            Columns.Add(MaxFwhmColumn = new DataGridViewTextBoxColumn
-                                            {
-                                                Name = "MaxFwhm",
-                                                HeaderText = "Max Fwhm",
-                                                ReadOnly = true,
-                                                DefaultCellStyle ={Format = Formats.RETENTION_TIME}
-                                            });
-            Columns.Add(MinStartTimeColumn = new DataGridViewTextBoxColumn
-                                                 {
-                                                     Name = "MinStartTime",
-                                                     HeaderText = "Min Start Time",
-                                                     ReadOnly = true,
-                                                     DefaultCellStyle = {Format = Formats.RETENTION_TIME}
-                                                 });
-            Columns.Add(MaxEndTimeColumn = new DataGridViewTextBoxColumn
-                                               {
-                                                   Name = "MaxEndTime",
-                                                   HeaderText = "Max End Time",
-                                                   ReadOnly = true,
-                                                   DefaultCellStyle = {Format = Formats.RETENTION_TIME}
-                                               });
-            Columns.Add(TotalAreaColumn = new DataGridViewTextBoxColumn
-                                              {
-                                                  Name = "TotalArea",
-                                                  HeaderText = "Total Area",
-                                                  ReadOnly = true,
-                                                  DefaultCellStyle = {Format = Formats.PEAK_AREA}
-                                              });
-            Columns.Add(LibraryDotProductColumn = new DataGridViewTextBoxColumn
-                                                      {
-                                                          Name = "LibraryDotProduct",
-                                                          HeaderText = "Library Dot Product",
-                                                          ReadOnly = true,
-                                                          DefaultCellStyle = {Format = Formats.STANDARD_RATIO}
-                                                      });
-            Columns.Add(PrecursorNoteColumn = new DataGridViewTextBoxColumn
-                                                  {
-                                                      Name = "PrecursorNote",
-                                                      HeaderText = "Precursor Note",
-                                                  });
+            Columns.Add(PrecursorPeakFoundRatioColumn
+                = new DataGridViewTextBoxColumn
+                    {
+                        Name = "PrecursorPeakFound",
+                        HeaderText = "Precursor Peak Found Ratio",
+                        ReadOnly = true,
+                        DefaultCellStyle = {Format = Formats.PEAK_FOUND_RATIO}
+                    });
+            Columns.Add(BestRetentionTimeColumn
+                = new DataGridViewTextBoxColumn
+                      {
+                          Name = "BestRetentionTime",
+                          HeaderText = "Best Retention Time",
+                          ReadOnly = true,
+                          DefaultCellStyle = {Format = Formats.RETENTION_TIME}
+                      });
+            Columns.Add(MaxFwhmColumn
+                = new DataGridViewTextBoxColumn
+                      {
+                          Name = "MaxFwhm",
+                          HeaderText = "Max Fwhm",
+                          ReadOnly = true,
+                          DefaultCellStyle = {Format = Formats.RETENTION_TIME}
+                      });
+            Columns.Add(MinStartTimeColumn
+                = new DataGridViewTextBoxColumn
+                      {
+                          Name = "MinStartTime",
+                          HeaderText = "Min Start Time",
+                          ReadOnly = true,
+                          DefaultCellStyle = {Format = Formats.RETENTION_TIME}
+                      });
+            Columns.Add(MaxEndTimeColumn
+                = new DataGridViewTextBoxColumn
+                      {
+                          Name = "MaxEndTime",
+                          HeaderText = "Max End Time",
+                          ReadOnly = true,
+                          DefaultCellStyle = {Format = Formats.RETENTION_TIME}
+                      });
+            Columns.Add(TotalAreaColumn
+                = new DataGridViewTextBoxColumn
+                      {
+                          Name = "TotalArea",
+                          HeaderText = "Total Area",
+                          ReadOnly = true,
+                          DefaultCellStyle = {Format = Formats.PEAK_AREA}
+                      });
+            Columns.Add(LibraryDotProductColumn
+                = new DataGridViewTextBoxColumn
+                      {
+                          Name = "LibraryDotProduct",
+                          HeaderText = "Library Dot Product",
+                          ReadOnly = true,
+                          DefaultCellStyle = {Format = Formats.STANDARD_RATIO}
+                      });
+            Columns.Add(PrecursorNoteColumn
+                = new DataGridViewTextBoxColumn
+                      {
+                          Name = "PrecursorReplicateNote",
+                          HeaderText = "Precursor Replicate Note",
+                      });
             
             // Transitions
             Columns.Add(RetentionTimeColumn 
@@ -172,62 +201,77 @@ namespace pwiz.Skyline.Controls
                         DefaultCellStyle = {Format = Formats.RETENTION_TIME},
                     });
             Columns.Add(EndTimeColumn
-                        = new DataGridViewTextBoxColumn
-                              {
-                                  Name = "EndTime",
-                                  HeaderText = "End Time",
-                                  ReadOnly = true,
-                                  DefaultCellStyle = {Format = Formats.RETENTION_TIME}
-                              }
-                );
+                = new DataGridViewTextBoxColumn
+                      {
+                          Name = "EndTime",
+                          HeaderText = "End Time",
+                          ReadOnly = true,
+                          DefaultCellStyle = {Format = Formats.RETENTION_TIME}
+                      });
             Columns.Add(AreaColumn
-                        = new DataGridViewTextBoxColumn
-                              {
-                                  Name = "Area",
-                                  HeaderText = "Area",
-                                  ReadOnly = true,
-                                  DefaultCellStyle = {Format = Formats.PEAK_AREA}
-                              });
+                = new DataGridViewTextBoxColumn
+                      {
+                          Name = "Area",
+                          HeaderText = "Area",
+                          ReadOnly = true,
+                          DefaultCellStyle = {Format = Formats.PEAK_AREA}
+                      });
             Columns.Add(BackgroundColumn
-                        = new DataGridViewTextBoxColumn
-                              {
-                                  Name = "Background",
-                                  HeaderText = "Background",
-                                  ReadOnly = true,
-                                  DefaultCellStyle = {Format = Formats.PEAK_AREA}
-                              });
+                = new DataGridViewTextBoxColumn
+                      {
+                          Name = "Background",
+                          HeaderText = "Background",
+                          ReadOnly = true,
+                          DefaultCellStyle = {Format = Formats.PEAK_AREA}
+                      });
             Columns.Add(AreaRatioColumn = new DataGridViewTextBoxColumn
-                                              {
-                                                  Name = "AreaRatio",
-                                                  HeaderText = "Area Ratio",
-                                                  ReadOnly = true,
-                                                  DefaultCellStyle = {Format = Formats.STANDARD_RATIO}
-                                              });
-            Columns.Add(HeightColumn = new DataGridViewTextBoxColumn
-                                           {
-                                               Name = "Height",
-                                               HeaderText = "Height",
-                                               ReadOnly = true,
-                                               DefaultCellStyle = {Format = Formats.PEAK_AREA}
-                                           });
-            Columns.Add(PeakRankColumn = new DataGridViewTextBoxColumn
-                                             {
-                                                 Name = "PeakRank",
-                                                 HeaderText = "Peak Rank",
-                                                 ReadOnly = true,
-                                             });
-            Columns.Add(TransitionNoteColumn = new DataGridViewTextBoxColumn
-                                                   {
-                                                       Name = "TransitionNote",
-                                                       HeaderText = "Transition Note"
-                                                   });
+                      {
+                          Name = "AreaRatio",
+                          HeaderText = "Area Ratio",
+                          ReadOnly = true,
+                          DefaultCellStyle = {Format = Formats.STANDARD_RATIO}
+                      });
+            Columns.Add(HeightColumn
+                = new DataGridViewTextBoxColumn
+                      {
+                          Name = "Height",
+                          HeaderText = "Height",
+                          ReadOnly = true,
+                          DefaultCellStyle = {Format = Formats.PEAK_AREA}
+                      });
+            Columns.Add(PeakRankColumn
+                = new DataGridViewTextBoxColumn
+                      {
+                          Name = "PeakRank",
+                          HeaderText = "Peak Rank",
+                          ReadOnly = true,
+                      });
+            Columns.Add(TransitionNoteColumn
+                = new DataGridViewTextBoxColumn
+                      {
+                          Name = "TransitionReplicateNote",
+                          HeaderText = "Transition Replicate Note"
+                      });
+            KeyDown += ResultsGrid_KeyDown;
             CellEndEdit += ResultsGrid_CellEndEdit;
+            CurrentCellChanged += ResultsGrid_CurrentCellChanged;
         }
 
         public void Init(IDocumentUIContainer documentUiContainer, SequenceTree sequenceTree)
         {
             DocumentUiContainer = documentUiContainer;
-            SequenceTree = sequenceTree;
+            StateProvider = documentUiContainer as IStateProvider ??
+                            new DefaultStateProvider();
+        }
+
+        private void ResultsGrid_KeyDown(object sender, KeyEventArgs e)
+        {
+            switch (e.KeyCode)
+            {
+                case Keys.Escape:
+                    DocumentUiContainer.FocusDocument();
+                    break;
+            }
         }
 
         void ResultsGrid_CellEndEdit(object sender, DataGridViewCellEventArgs e)
@@ -280,6 +324,25 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+        private void ResultsGrid_CurrentCellChanged(object sender, EventArgs e)
+        {
+            if (_inReplicateChange || !ResultsGridForm.SynchronizeSelection)
+                return;
+
+            if (CurrentRow != null && CurrentRow.Index != StateProvider.SelectedResultsIndex)
+            {
+                _inReplicateChange = true;
+                try
+                {
+                    StateProvider.SelectedResultsIndex = ((RowIdentifier)CurrentRow.Tag).ReplicateIndex;
+                }
+                finally
+                {
+                    _inReplicateChange = false;
+                }
+            }
+        }
+
         /// <summary>
         /// For a node which is either the currently selected node, or one of its
         /// ancestors, return the path to that node.
@@ -294,7 +357,7 @@ namespace pwiz.Skyline.Controls
             return identityPath;
         }
 
-        TransitionGroupChromInfo GetChromInfo(Results<TransitionGroupChromInfo> results, RowIdentifier rowIdentifier)
+        static TransitionGroupChromInfo GetChromInfo(Results<TransitionGroupChromInfo> results, RowIdentifier rowIdentifier)
         {
             foreach (var chromInfo in results[rowIdentifier.ReplicateIndex])
             {
@@ -306,7 +369,7 @@ namespace pwiz.Skyline.Controls
             return null;
         }
 
-        TransitionChromInfo GetChromInfo(Results<TransitionChromInfo> results, RowIdentifier rowIdentifier)
+        static TransitionChromInfo GetChromInfo(Results<TransitionChromInfo> results, RowIdentifier rowIdentifier)
         {
             foreach (var chromInfo in results[rowIdentifier.ReplicateIndex])
             {
@@ -318,7 +381,7 @@ namespace pwiz.Skyline.Controls
             return null;
         }
 
-        Results<T> ChangeChromInfo<T>(Results<T> results, RowIdentifier rowIdentifier, T chromInfoOld, T chromInfoNew) where T: ChromInfo
+        static Results<T> ChangeChromInfo<T>(Results<T> results, RowIdentifier rowIdentifier, T chromInfoOld, T chromInfoNew) where T: ChromInfo
         {
             var elements = new List<ChromInfoList<T>>();
             bool found = false;
@@ -460,22 +523,54 @@ namespace pwiz.Skyline.Controls
             return row;
         }
 
+        DataGridViewRow EnsureRow(int iReplicate, int iFile, int step, ICollection<RowIdentifier> rowIds)
+        {
+            var rowId = new RowIdentifier(iReplicate, iFile, step);
+            rowIds.Add(rowId);
+            return EnsureRow(rowId);
+        }
+
+        DataGridViewRow EnsureRow(int iReplicate, ICollection<RowIdentifier> rowIds)
+        {
+            return EnsureRow(iReplicate, 0, 0, rowIds);
+        }
+
+        private void ClearRows()
+        {
+            Rows.Clear();
+            _chromInfoRows.Clear();
+        }
+
+        private void HideColumns()
+        {
+            foreach (DataGridViewColumn column in Columns)
+            {
+                if (!ReferenceEquals(column, ReplicateNameColumn))
+                    column.Visible = false;
+            }
+        }
+
         /// <summary>
         /// Figures out which nodes in the document tree this control will be displaying data from.
         /// Remembers the selected IdentifyPath, TransitionDocNode, TransitionGroupDocNode and PeptideDocNode.
         /// </summary>
         private void UpdateSelectedTreeNode()
         {
-            Document = SequenceTree.Document;
-            var srmTreeNode = SequenceTree.SelectedNode as SrmTreeNode;
+            Document = DocumentUiContainer.DocumentUI;
+            var srmTreeNode = StateProvider.SelectedNode as SrmTreeNode;
             if (srmTreeNode == null)
             {
                 SelectedTransitionDocNode = null;
                 SelectedTransitionGroupDocNode = null;
                 SelectedPeptideDocNode = null;
                 SelectedPath = null;
+                ClearRows();
+                HideColumns();
                 return;
             }
+            var newPath = srmTreeNode.Path;
+            if (SelectedPath != null && SelectedPath.Depth != newPath.Depth)
+                ClearRows();
             SelectedPath = srmTreeNode.Path;
             SelectedTransitionDocNode = srmTreeNode.Model as TransitionDocNode;
             if (SelectedTransitionDocNode != null)
@@ -495,6 +590,19 @@ namespace pwiz.Skyline.Controls
         /// </summary>
         public void UpdateGrid()
         {
+            _inReplicateChange = true;
+            try
+            {
+                UpdateGridNotReplicate();
+            }
+            finally
+            {
+                _inReplicateChange = false;
+            }
+        }
+
+        private void UpdateGridNotReplicate()
+        {
             EndEdit();
             SaveColumnState();
             UpdateSelectedTreeNode();
@@ -504,8 +612,6 @@ namespace pwiz.Skyline.Controls
             }
             if (SelectedPath == null || Document.Settings.MeasuredResults == null)
             {
-                _chromInfoRows.Clear();
-                Rows.Clear();
                 return;
             }
             // Remember the set of rowIds that have data in them.  After updating the data, rows
@@ -517,21 +623,17 @@ namespace pwiz.Skyline.Controls
                 for (int iReplicate = 0; iReplicate < SelectedTransitionDocNode.Results.Count; iReplicate++) 
                 {
                     var results = SelectedTransitionDocNode.Results[iReplicate];
+                    if (results == null)
+                    {
+                        var row = EnsureRow(iReplicate, rowIds);
+                        FillTransitionRow(row, null);
+                        continue;
+                    }
+
                     foreach (var chromInfo in results)
                     {
-                        var rowId = new RowIdentifier(iReplicate, chromInfo.FileIndex, chromInfo.OptimizationStep);
-                        rowIds.Add(rowId);
-                        var row = EnsureRow(rowId);
-                        row.Cells[RetentionTimeColumn.Index].Value = chromInfo.RetentionTime;
-                        row.Cells[FwhmColumn.Index].Value = chromInfo.Fwhm;
-                        row.Cells[StartTimeColumn.Index].Value = chromInfo.StartRetentionTime;
-                        row.Cells[EndTimeColumn.Index].Value = chromInfo.EndRetentionTime;
-                        row.Cells[AreaColumn.Index].Value = chromInfo.Area;
-                        row.Cells[BackgroundColumn.Index].Value = chromInfo.BackgroundArea;
-                        row.Cells[AreaRatioColumn.Index].Value = chromInfo.Ratio;
-                        row.Cells[HeightColumn.Index].Value = chromInfo.Height;
-                        row.Cells[PeakRankColumn.Index].Value = chromInfo.Rank;
-                        row.Cells[TransitionNoteColumn.Index].Value = chromInfo.Note;
+                        var row = EnsureRow(iReplicate, chromInfo.FileIndex, chromInfo.OptimizationStep, rowIds);
+                        FillTransitionRow(row, chromInfo);
                     }
                 }
             }
@@ -541,44 +643,52 @@ namespace pwiz.Skyline.Controls
                 for (int iReplicate = 0; iReplicate < SelectedTransitionGroupDocNode.Results.Count; iReplicate++)
                 {
                     var results = SelectedTransitionGroupDocNode.Results[iReplicate];
+                    if (results == null)
+                    {
+                        var row = EnsureRow(iReplicate, rowIds);
+                        FillTransitionGroupRow(row, null);
+                        continue;
+                    }
+
                     foreach (var chromInfo in results)
                     {
-                        var rowId = new RowIdentifier(iReplicate, chromInfo.FileIndex, chromInfo.OptimizationStep);
-                        rowIds.Add(rowId);
-                        var row = EnsureRow(rowId);
-                        row.Cells[PrecursorPeakFoundRatioColumn.Index].Value = chromInfo.PeakCountRatio;
-                        row.Cells[BestRetentionTimeColumn.Index].Value = chromInfo.RetentionTime;
-                        row.Cells[MaxFwhmColumn.Index].Value = chromInfo.Fwhm;
-                        row.Cells[MinStartTimeColumn.Index].Value = chromInfo.StartRetentionTime;
-                        row.Cells[MaxEndTimeColumn.Index].Value = chromInfo.EndRetentionTime;
-                        row.Cells[TotalAreaColumn.Index].Value = chromInfo.Area;
-                        row.Cells[LibraryDotProductColumn.Index].Value = chromInfo.LibraryDotProduct;
-                        row.Cells[PrecursorNoteColumn.Index].Value = chromInfo.Note;
+                        var row = EnsureRow(iReplicate, chromInfo.FileIndex, chromInfo.OptimizationStep, rowIds);
+                        FillTransitionGroupRow(row, chromInfo);
+                    }
+                }
+            }
+
+            if (rowIds.Count == 0)
+            {
+                // Make sure some rows exist
+                if (SelectedPeptideDocNode == null)
+                {
+                    // Just a blank set of replicate rows
+                    for (int iReplicate = 0; iReplicate < Document.Settings.MeasuredResults.Chromatograms.Count; iReplicate++)
+                    {
+                        EnsureRow(iReplicate, rowIds);
+                    }
+                }
+                else
+                {
+                    // Need file indexes from a peptide
+                    for (int iReplicate = 0; iReplicate < SelectedPeptideDocNode.Results.Count; iReplicate++)
+                    {
+                        var results = SelectedPeptideDocNode.Results[iReplicate];
+                        if (results == null)
+                        {
+                            EnsureRow(iReplicate, rowIds);
+                            continue;
+                        }
+
+                        foreach (var chromInfo in results)
+                        {
+                            EnsureRow(iReplicate, chromInfo.FileIndex, 0, rowIds);
+                        }
                     }
                 }
             }
             
-            // Ensure that there is a row for every file
-            for (int iReplicate = 0; iReplicate < Document.Settings.MeasuredResults.Chromatograms.Count; iReplicate++)
-            {
-                var results = Document.Settings.MeasuredResults.Chromatograms[iReplicate];
-                for (int iFile = 0; iFile < results.MSDataFilePaths.Count; iFile++)
-                {
-                    var rowId = new RowIdentifier(iReplicate, iFile, 0);
-                    rowIds.Add(rowId);
-                    EnsureRow(rowId);
-                }
-            }
-
-            // Delete unused rows from the grid
-            var rowsToDelete = new HashSet<RowIdentifier>(_chromInfoRows.Keys);
-            rowsToDelete.ExceptWith(rowIds);
-            foreach (var rowId in rowsToDelete)
-            {
-                Rows.Remove(_chromInfoRows[rowId]);
-                _chromInfoRows.Remove(rowId);
-            }
-
             // Group all of the optimization step rows by file that they're in.
             var replicateRowDict = new Dictionary<RowIdentifier, ICollection<RowIdentifier>>();
             foreach (var rowId in _chromInfoRows.Keys)
@@ -592,6 +702,7 @@ namespace pwiz.Skyline.Controls
                 }
                 optStepRowIds.Add(rowId);
             }
+
             // Update columns that do not depend on optimization step
             for (int iReplicate = 0; iReplicate < Document.Settings.MeasuredResults.Chromatograms.Count; iReplicate++)
             {
@@ -599,7 +710,9 @@ namespace pwiz.Skyline.Controls
                 for (int iFile = 0; iFile < results.MSDataFilePaths.Count; iFile++)
                 {
                     var rowIdZero = new RowIdentifier(iReplicate, iFile, 0);
-                    var optStepRowIds = replicateRowDict[rowIdZero];
+                    ICollection<RowIdentifier> optStepRowIds;
+                    if (!replicateRowDict.TryGetValue(rowIdZero, out optStepRowIds))
+                        continue;
                     var filePath = results.MSDataFilePaths[iFile];
                     var fileName = SampleHelp.GetFileName(filePath);
                     var sampleName = SampleHelp.GetFileSampleName(filePath);
@@ -612,25 +725,43 @@ namespace pwiz.Skyline.Controls
                     }
                 }
             }
+
             if (SelectedPeptideDocNode != null)
             {
                 for (int iReplicate = 0; iReplicate < SelectedPeptideDocNode.Results.Count; iReplicate++)
                 {
                     var results = SelectedPeptideDocNode.Results[iReplicate];
+                    if (results == null)
+                    {
+                        var row = EnsureRow(iReplicate, rowIds);
+                        FillPeptideRow(row, null);                        
+                        continue;
+                    }
+
                     foreach (var chromInfo in results)
                     {
                         var rowIdZero = new RowIdentifier(iReplicate, chromInfo.FileIndex, 0);
-                        var optStepRowIds = replicateRowDict[rowIdZero];
+                        ICollection<RowIdentifier> optStepRowIds;
+                        if (!replicateRowDict.TryGetValue(rowIdZero, out optStepRowIds))
+                            continue;
                         foreach (var rowId in optStepRowIds)
                         {
                             var row = _chromInfoRows[rowId];
-                            row.Cells[PeptidePeakFoundRatioColumn.Index].Value = chromInfo.PeakCountRatio;
-                            row.Cells[PeptideRetentionTimeColumn.Index].Value = chromInfo.RetentionTime;
-                            row.Cells[RatioToStandardColumn.Index].Value = chromInfo.RatioToStandard;
+                            FillPeptideRow(row, chromInfo);
                         }
                     }
                 }
             }
+
+            // Delete unused rows from the grid
+            var rowsToDelete = new HashSet<RowIdentifier>(_chromInfoRows.Keys);
+            rowsToDelete.ExceptWith(rowIds);
+            foreach (var rowId in rowsToDelete)
+            {
+                Rows.Remove(_chromInfoRows[rowId]);
+                _chromInfoRows.Remove(rowId);
+            }
+
             // Set the visible columns to the default
             var defaultColumnSet = GetDefaultColumns();
             foreach (DataGridViewColumn column in Columns)
@@ -658,6 +789,108 @@ namespace pwiz.Skyline.Controls
                     column.Width = gridColumn.Width;
                     column.DisplayIndex = iColumn;
                     column.Visible = gridColumn.Visible && availableColumnSet.Contains(column);
+                }
+            }
+        }
+
+        private void FillPeptideRow(DataGridViewRow row, PeptideChromInfo chromInfo)
+        {
+            if (chromInfo == null)
+            {
+                row.Cells[PeptidePeakFoundRatioColumn.Index].Value = 
+                    row.Cells[PeptideRetentionTimeColumn.Index].Value = 
+                    row.Cells[RatioToStandardColumn.Index].Value = null;
+            }
+            else
+            {
+                row.Cells[PeptidePeakFoundRatioColumn.Index].Value = chromInfo.PeakCountRatio;
+                row.Cells[PeptideRetentionTimeColumn.Index].Value = chromInfo.RetentionTime;
+                row.Cells[RatioToStandardColumn.Index].Value = chromInfo.RatioToStandard;
+            }
+        }
+
+        private void FillTransitionGroupRow(DataGridViewRow row, TransitionGroupChromInfo chromInfo)
+        {
+            if (chromInfo == null)
+            {
+                row.Cells[PrecursorPeakFoundRatioColumn.Index].Value =
+                    row.Cells[BestRetentionTimeColumn.Index].Value =
+                    row.Cells[MaxFwhmColumn.Index].Value =
+                    row.Cells[MinStartTimeColumn.Index].Value =
+                    row.Cells[MaxEndTimeColumn.Index].Value =
+                    row.Cells[TotalAreaColumn.Index].Value =
+                    row.Cells[LibraryDotProductColumn.Index].Value =
+                    row.Cells[PrecursorNoteColumn.Index].Value = null;
+            }
+            else
+            {
+                row.Cells[PrecursorPeakFoundRatioColumn.Index].Value = chromInfo.PeakCountRatio;
+                row.Cells[BestRetentionTimeColumn.Index].Value = chromInfo.RetentionTime;
+                row.Cells[MaxFwhmColumn.Index].Value = chromInfo.Fwhm;
+                row.Cells[MinStartTimeColumn.Index].Value = chromInfo.StartRetentionTime;
+                row.Cells[MaxEndTimeColumn.Index].Value = chromInfo.EndRetentionTime;
+                row.Cells[TotalAreaColumn.Index].Value = chromInfo.Area;
+                row.Cells[LibraryDotProductColumn.Index].Value = chromInfo.LibraryDotProduct;
+                row.Cells[PrecursorNoteColumn.Index].Value = chromInfo.Note;                
+            }
+        }
+
+        private void FillTransitionRow(DataGridViewRow row, TransitionChromInfo chromInfo)
+        {
+            if (chromInfo == null)
+            {
+                row.Cells[RetentionTimeColumn.Index].Value =
+                    row.Cells[FwhmColumn.Index].Value =
+                    row.Cells[StartTimeColumn.Index].Value =
+                    row.Cells[EndTimeColumn.Index].Value =
+                    row.Cells[AreaColumn.Index].Value =
+                    row.Cells[BackgroundColumn.Index].Value =
+                    row.Cells[AreaRatioColumn.Index].Value =
+                    row.Cells[HeightColumn.Index].Value =
+                    row.Cells[PeakRankColumn.Index].Value =
+                    row.Cells[TransitionNoteColumn.Index].Value = null;
+            }
+            else
+            {
+                row.Cells[RetentionTimeColumn.Index].Value = chromInfo.RetentionTime;
+                row.Cells[FwhmColumn.Index].Value = chromInfo.Fwhm;
+                row.Cells[StartTimeColumn.Index].Value = chromInfo.StartRetentionTime;
+                row.Cells[EndTimeColumn.Index].Value = chromInfo.EndRetentionTime;
+                row.Cells[AreaColumn.Index].Value = chromInfo.Area;
+                row.Cells[BackgroundColumn.Index].Value = chromInfo.BackgroundArea;
+                row.Cells[AreaRatioColumn.Index].Value = chromInfo.Ratio;
+                row.Cells[HeightColumn.Index].Value = chromInfo.Height;
+                row.Cells[PeakRankColumn.Index].Value = chromInfo.Rank;
+                row.Cells[TransitionNoteColumn.Index].Value = chromInfo.Note;
+            }
+        }
+
+        public void UpdateSelectedReplicate()
+        {
+            if (_inReplicateChange)
+                return;
+
+            EndEdit();
+            if (_inCommitEdit || CurrentRow == null)
+            {
+                return;
+            }
+            int selectedResult = StateProvider.SelectedResultsIndex;
+            int selectedResultRow = ((RowIdentifier)CurrentRow.Tag).ReplicateIndex;
+
+            int selectedColumn = (SelectedCells.Count > 0 ? SelectedCells[0].ColumnIndex : 0);
+            if (selectedResult != selectedResultRow)
+            {
+                // For some reason GridView seems to store these in reverse order
+                for (int iRow = 0; iRow < Rows.Count; iRow++)
+                {
+                    if (((RowIdentifier)Rows[iRow].Tag).ReplicateIndex != selectedResult)
+                        continue;
+
+                    ClearSelection();
+                    SetSelectedCellCore(selectedColumn, iRow, true);
+                    CurrentCell = Rows[iRow].Cells[selectedColumn];
+                    break;
                 }
             }
         }
@@ -694,8 +927,7 @@ namespace pwiz.Skyline.Controls
         /// </summary>
         public ICollection<DataGridViewColumn> GetDefaultColumns()
         {
-            var result = new HashSet<DataGridViewColumn>();
-            result.Add(ReplicateNameColumn);
+            var result = new HashSet<DataGridViewColumn> {ReplicateNameColumn};
             if (SelectedTransitionDocNode != null)
             {
                 result.UnionWith(TransitionColumns);
@@ -737,24 +969,23 @@ namespace pwiz.Skyline.Controls
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
-            if (DocumentUiContainer == null || SequenceTree == null)
+            if (DocumentUiContainer == null)
             {
                 return;
             }
             DocumentUiContainer.ListenUI(DocumentChanged);
-            SequenceTree.AfterSelect += SequenceTree_AfterSelect;
             UpdateGrid();
+            UpdateSelectedReplicate();
         }
 
         protected override void OnHandleDestroyed(EventArgs e)
         {
             base.OnHandleDestroyed(e);
-            if (DocumentUiContainer == null || SequenceTree == null)
+            if (DocumentUiContainer == null)
             {
                 return;
             }
             DocumentUiContainer.UnlistenUI(DocumentChanged);
-            SequenceTree.AfterSelect -= SequenceTree_AfterSelect;
         }
 
         private void DocumentChanged(object sender, DocumentChangedEventArgs args)
@@ -762,13 +993,8 @@ namespace pwiz.Skyline.Controls
             UpdateGrid();
         }
 
-        void SequenceTree_AfterSelect(object sender, TreeViewEventArgs e)
-        {
-            UpdateGrid();
-        }
-
         public IDocumentUIContainer DocumentUiContainer { get; private set; }
-        public SequenceTree SequenceTree { get; private set; }
+        public IStateProvider StateProvider { get; private set; }
 
         // Replicate Columns
         public DataGridViewTextBoxColumn ReplicateNameColumn { get; private set; }
@@ -840,6 +1066,11 @@ namespace pwiz.Skyline.Controls
                 result = result*31 + FileIndex.GetHashCode();
                 result = result*31 + OptimizationStep.GetHashCode();
                 return result;
+            }
+
+            public override string ToString()
+            {
+                return string.Format("{0}, {1}, {2}", ReplicateIndex, FileIndex, OptimizationStep);
             }
         }
     }

@@ -99,6 +99,7 @@
     <property name="OptStep" />
     <property name="OptCollisionEnergy" />
     <property name="OptDeclusteringPotential" />
+    <property name="Note" length="10000" />
   </class>
   <class name="DbTransition">
     <id name="Id">
@@ -135,5 +136,6 @@
     <property name="Height" />
     <property name="PeakRank" />
     <property name="UserSetPeak" />
+    <property name="Note" length="10000" />
   </class>
 </hibernate-mapping>

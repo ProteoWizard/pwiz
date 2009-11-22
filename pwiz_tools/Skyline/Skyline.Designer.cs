@@ -267,6 +267,7 @@ namespace pwiz.Skyline
             this.areaOrderAreaContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaPercentViewContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaLogScaleContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaCvsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuMain.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.contextMenuTreeNode.SuspendLayout();
@@ -1213,6 +1214,7 @@ namespace pwiz.Skyline
             this.resultsGridMenuItem.CheckOnClick = true;
             this.resultsGridMenuItem.Enabled = false;
             this.resultsGridMenuItem.Name = "resultsGridMenuItem";
+            this.resultsGridMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.D4)));
             this.resultsGridMenuItem.Size = new System.Drawing.Size(196, 22);
             this.resultsGridMenuItem.Text = "Results Grid";
             this.resultsGridMenuItem.Click += new System.EventHandler(this.resultsGridMenuItem_Click);
@@ -2228,9 +2230,10 @@ namespace pwiz.Skyline
             this.areaGraphContextMenuItem,
             this.areaOrderContextMenuItem,
             this.areaPercentViewContextMenuItem,
-            this.areaLogScaleContextMenuItem});
+            this.areaLogScaleContextMenuItem,
+            this.areaCvsContextMenuItem});
             this.contextMenuPeakAreas.Name = "contextMenuStrip1";
-            this.contextMenuPeakAreas.Size = new System.Drawing.Size(136, 92);
+            this.contextMenuPeakAreas.Size = new System.Drawing.Size(136, 114);
             // 
             // areaGraphContextMenuItem
             // 
@@ -2302,6 +2305,14 @@ namespace pwiz.Skyline
             this.areaLogScaleContextMenuItem.Size = new System.Drawing.Size(135, 22);
             this.areaLogScaleContextMenuItem.Text = "Log Scale";
             this.areaLogScaleContextMenuItem.Click += new System.EventHandler(this.areaLogScaleContextMenuItem_Click);
+            // 
+            // areaCvsContextMenuItem
+            // 
+            this.areaCvsContextMenuItem.CheckOnClick = true;
+            this.areaCvsContextMenuItem.Name = "areaCvsContextMenuItem";
+            this.areaCvsContextMenuItem.Size = new System.Drawing.Size(135, 22);
+            this.areaCvsContextMenuItem.Text = "Area CVs";
+            this.areaCvsContextMenuItem.Click += new System.EventHandler(this.areaCvsContextMenuItem_Click);
             // 
             // SkylineWindow
             // 
@@ -2578,6 +2589,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem areaOrderRTContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaOrderAreaContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator36;
+        private System.Windows.Forms.ToolStripMenuItem areaCvsContextMenuItem;
     }
 }
 

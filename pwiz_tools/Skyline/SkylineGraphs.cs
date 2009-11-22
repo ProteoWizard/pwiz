@@ -41,7 +41,8 @@ namespace pwiz.Skyline
     public partial class SkylineWindow :
         GraphSpectrum.IStateProvider,
         GraphChromatogram.IStateProvider,
-        GraphSummary.IStateProvider
+        GraphSummary.IStateProvider,
+        ResultsGrid.IStateProvider
     {
         private GraphSpectrum _graphSpectrum;
         private GraphSummary _graphRetentionTime;
@@ -389,12 +390,12 @@ namespace pwiz.Skyline
                     // UpdateGraphPanes can handle null values in the list, but
                     // only call it when at least one of the graphs is present.
                     if (_graphRetentionTime != null || _graphPeakArea != null)
-                        UpdateGraphPanes(new List<IGraphContainer> {_graphRetentionTime, _graphPeakArea});
+                        UpdateGraphPanes(new List<IUpdatable> {_graphRetentionTime, _graphPeakArea});
                 }
                 return;                
             }
 
-            var listUpdateGraphs = new List<IGraphContainer>();
+            var listUpdateGraphs = new List<IUpdatable>();
             var filterNew = settingsNew.TransitionSettings.Filter;
             var filterOld = settingsOld.TransitionSettings.Filter;
             if (!ReferenceEquals(filterNew, filterOld))
@@ -581,14 +582,15 @@ namespace pwiz.Skyline
                 }
             } // layoutLock.Dispose()
 
-            // Just about any change could potentially change the list
-            // of retention times or peak areas.
+            // Just about any change could potentially change these panes.
             if (settingsNew.HasResults)
             {
                 if (_graphRetentionTime != null)
                     listUpdateGraphs.Add(_graphRetentionTime);
                 if (_graphPeakArea != null)
                     listUpdateGraphs.Add(_graphPeakArea);                
+                if (_resultsGridForm != null)
+                    listUpdateGraphs.Add(_resultsGridForm);
             }
 
             UpdateGraphPanes(listUpdateGraphs);
@@ -611,6 +613,10 @@ namespace pwiz.Skyline
                     persistentString.EndsWith(typeof(AreaGraphController).Name)))
             {
                 return _graphPeakArea ?? CreateGraphPeakArea();                
+            }
+            else if (Equals(persistentString, typeof(ResultsGridForm).ToString()))
+            {
+                return _resultsGridForm ?? CreateResultsGrid();
             }
             else if (persistentString.StartsWith(typeof(GraphChromatogram).ToString()))
             {
@@ -638,7 +644,7 @@ namespace pwiz.Skyline
                                    where graphChrom.Visible
                                    select graphChrom;
 
-            var listUpdateGraphs = new List<IGraphContainer>(listVisibleChrom.ToArray());
+            var listUpdateGraphs = new List<IUpdatable>(listVisibleChrom.ToArray());
             
             if (_graphSpectrum != null && _graphSpectrum.Visible)
                 listUpdateGraphs.Add(_graphSpectrum);
@@ -646,11 +652,13 @@ namespace pwiz.Skyline
                 listUpdateGraphs.Add(_graphRetentionTime);
             if (_graphPeakArea != null && _graphPeakArea.Visible)
                 listUpdateGraphs.Add(_graphPeakArea);
+            if (_resultsGridForm != null && _resultsGridForm.Visible)
+                listUpdateGraphs.Add(_resultsGridForm);
 
             UpdateGraphPanes(listUpdateGraphs);
         }
 
-        private void UpdateGraphPanes(ICollection<IGraphContainer> graphPanes)
+        private void UpdateGraphPanes(ICollection<IUpdatable> graphPanes)
         {
             if (graphPanes.Count == 0)
                 return;
@@ -667,7 +675,7 @@ namespace pwiz.Skyline
             // for the same triggering event.
             _timerGraphs.Stop();
 
-            IList<IGraphContainer> listGraphPanes = (IList<IGraphContainer>)_timerGraphs.Tag;
+            IList<IUpdatable> listGraphPanes = (IList<IUpdatable>)_timerGraphs.Tag;
             int count = 0;
             if (listGraphPanes != null && listGraphPanes.Count > 0)
             {
@@ -677,7 +685,7 @@ namespace pwiz.Skyline
 
                 if (listGraphPanes.Count > 0)
                 {
-                    listGraphPanes[0].UpdateGraph();
+                    listGraphPanes[0].UpdateUI();
                     listGraphPanes.RemoveAt(0);                    
                 }
                 count = listGraphPanes.Count;
@@ -727,7 +735,7 @@ namespace pwiz.Skyline
         {
             // Create a new spectrum graph
             _graphSpectrum = new GraphSpectrum(this);
-            _graphSpectrum.UpdateGraph();
+            _graphSpectrum.UpdateUI();
             _graphSpectrum.FormClosed += graphSpectrum_FormClosed;
             _graphSpectrum.VisibleChanged += graphSpectrum_VisibleChanged;
             return _graphSpectrum;
@@ -765,7 +773,7 @@ namespace pwiz.Skyline
         private void UpdateSpectrumGraph()
         {
             if (_graphSpectrum != null)
-                _graphSpectrum.UpdateGraph();
+                _graphSpectrum.UpdateUI();
         }
 
 //        private static bool SameChargeGroups(PeptideTreeNode nodeTree)
@@ -783,11 +791,6 @@ namespace pwiz.Skyline
 //            // True only if there was at least one group
 //            return (charge != 0);
 //        }
-
-        TreeNode GraphSpectrum.IStateProvider.SelectedNode
-        {
-            get { return sequenceTree.SelectedNode; }
-        }
 
         IList<IonType> GraphSpectrum.IStateProvider.ShowIonTypes
         {
@@ -865,11 +868,6 @@ namespace pwiz.Skyline
 
         #region Chromatogram graphs
 
-        TreeNode GraphChromatogram.IStateProvider.SelectedNode
-        {
-            get { return sequenceTree.SelectedNode; }
-        }
-
         void GraphChromatogram.IStateProvider.BuildChromatogramMenu(ContextMenuStrip menuStrip)
         {
             // Store original menuitems in an array, and insert a separator
@@ -892,7 +890,7 @@ namespace pwiz.Skyline
 
             var set = Settings.Default;
             int iInsert = 0;
-            var nodeTree = sequenceTree.SelectedNode;
+            var nodeTree = SelectedNode;
             if (nodeTree is TransitionTreeNode && GraphChromatogram.DisplayType == DisplayTypeChrom.single)
             {
                 if (HasPeak(comboResults.SelectedIndex, ((TransitionTreeNode)nodeTree).DocNode))
@@ -1092,7 +1090,7 @@ namespace pwiz.Skyline
             }
             else
             {
-                var nodePepTree = sequenceTree.SelectedNode as PeptideTreeNode;
+                var nodePepTree = SelectedNode as PeptideTreeNode;
                 Debug.Assert(nodePepTree != null && nodePepTree.Nodes.Count == 1);  // menu item incorrectly enabled
                 nodeGroup = (TransitionGroupDocNode) nodePepTree.DocNode.Children[0];
                 pathGroup = new IdentityPath(nodePepTree.Path, nodeGroup.Id);
@@ -1151,10 +1149,10 @@ namespace pwiz.Skyline
 
         private void removePeakContextMenuItem_Click(object sender, EventArgs e)
         {
-            var nodeTranTree = sequenceTree.SelectedNode as TransitionTreeNode;
+            var nodeTranTree = SelectedNode as TransitionTreeNode;
             if (nodeTranTree == null)
                 return;
-            RemovePeak(sequenceTree.SelectedPath.Parent, nodeTranTree.DocNode);
+            RemovePeak(SelectedPath.Parent, nodeTranTree.DocNode);
         }
 
         private void RemovePeak(IdentityPath groupPath, TransitionDocNode nodeTran)
@@ -1519,7 +1517,7 @@ namespace pwiz.Skyline
         private void UpdateChromGraphs()
         {
             foreach (var graphChrom in _listGraphChrom)
-                graphChrom.UpdateGraph();
+                graphChrom.UpdateUI();
         }
 
         #endregion
@@ -1608,17 +1606,6 @@ namespace pwiz.Skyline
             _graphRetentionTime = null;
         }
 
-        TreeNode GraphSummary.IStateProvider.SelectedNode
-        {
-            get { return sequenceTree.SelectedNode; }
-        }
-
-        IdentityPath GraphSummary.IStateProvider.SelectedPath
-        {
-            get { return sequenceTree.SelectedPath; }
-            set { sequenceTree.SelectedPath = value; }
-        }
-
         void GraphSummary.IStateProvider.BuildGraphMenu(ContextMenuStrip menuStrip, Point mousePt,
             GraphSummary.IController controller)
         {
@@ -1626,6 +1613,17 @@ namespace pwiz.Skyline
                 BuildRTGraphMenu(menuStrip, mousePt, (RTGraphController) controller);
             else if (controller is AreaGraphController)
                 BuildAreaGraphMenu(menuStrip);
+        }
+
+        public TreeNode SelectedNode
+        {
+            get { return sequenceTree.SelectedNode; }
+        }
+
+        public IdentityPath SelectedPath
+        {
+            get { return sequenceTree.SelectedPath; }
+            set { sequenceTree.SelectedPath = value; }
         }
 
         public int SelectedResultsIndex
@@ -1831,7 +1829,7 @@ namespace pwiz.Skyline
         private void UpdateRetentionTimeGraph()
         {
             if (_graphRetentionTime != null)
-                _graphRetentionTime.UpdateGraph();
+                _graphRetentionTime.UpdateUI();
         }
 
         #endregion
@@ -1979,6 +1977,8 @@ namespace pwiz.Skyline
                             areaOrderAreaContextMenuItem
                         });
                 }
+                menuStrip.Items.Insert(iInsert++, areaCvsContextMenuItem);
+                areaCvsContextMenuItem.Checked = set.AreaPeptideCV;
             }
             menuStrip.Items.Insert(iInsert++, areaLogScaleContextMenuItem);
             areaLogScaleContextMenuItem.Checked = set.AreaLogScale;
@@ -2058,10 +2058,16 @@ namespace pwiz.Skyline
             UpdatePeakAreaGraph();
         }
 
+        private void areaCvsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.AreaPeptideCV = areaCvsContextMenuItem.Checked;
+            UpdatePeakAreaGraph();
+        }
+
         private void UpdatePeakAreaGraph()
         {
             if (_graphPeakArea != null)
-                _graphPeakArea.UpdateGraph();
+                _graphPeakArea.UpdateUI();
         }
 
         #endregion

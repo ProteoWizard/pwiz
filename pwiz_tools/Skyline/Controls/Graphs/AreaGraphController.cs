@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows.Forms;
 using pwiz.Skyline.Properties;
 
@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public void OnResultsIndexChanged()
         {
             if (GraphSummary.GraphPane is AreaReplicateGraphPane /* || !Settings.Default.AreaAverageReplicates */)
-                GraphSummary.UpdateGraph();
+                GraphSummary.UpdateUI();
         }
 
         public void OnUpdateGraph()
@@ -67,7 +67,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             Settings.Default.AreaGraphType = GraphTypeArea.peptide.ToString();
                         else
                             Settings.Default.AreaGraphType = GraphTypeArea.replicate.ToString();
-                        GraphSummary.UpdateGraph();
+                        GraphSummary.UpdateUI();
                     }
                     break;
             }

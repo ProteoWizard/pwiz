@@ -55,6 +55,7 @@ namespace pwiz.Skyline.Model.Hibernate
         public virtual int OptStep { get; set; }
         public virtual double? OptCollisionEnergy { get; set; }
         public virtual double? OptDeclusteringPotential { get; set; }
-
+        [QueryColumn(FullName = "PrecursorReplicateNote")]
+        public virtual string Note { get; set; }
     }
 }

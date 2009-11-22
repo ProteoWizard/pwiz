@@ -21,11 +21,12 @@ using System.Drawing;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Util;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public partial class GraphSummary : DockableForm, IGraphContainer
+    public partial class GraphSummary : DockableForm, IUpdatable
     {
         private const string FONT_FACE = "Arial";
         private const int FONT_SIZE = 10;
@@ -91,7 +92,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _stateProvider = documentUIContainer as IStateProvider ??
                              new DefaultStateProvider();
 
-            UpdateGraph();
+            UpdateUI();
         }
 
         public int ResultsIndex
@@ -116,12 +117,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void OnDocumentUIChanged(object sender, DocumentChangedEventArgs e)
         {
-            UpdateGraph();
+            UpdateUI();
         }
 
         private void GraphSummary_VisibleChanged(object sender, EventArgs e)
         {
-            UpdateGraph();
+            UpdateUI();
         }
 
         private void GraphSummary_KeyDown(object sender, KeyEventArgs e)
@@ -151,7 +152,7 @@ namespace pwiz.Skyline.Controls.Graphs
             return base.GetPersistentString() + '|' + _controller.GetType().Name;
         }
 
-        public void UpdateGraph()
+        public void UpdateUI()
         {
             UpdateGraph(true);
         }
@@ -198,10 +199,6 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public IStateProvider StateProvider { get { return _stateProvider; } }
-
-        public void LockYAxis(bool lockY)
-        {
-        }
 
         protected override void OnClosed(EventArgs e)
         {

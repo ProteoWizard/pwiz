@@ -317,6 +317,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             // StdevAreaRatio = chromInfo.RatioStdev,
                             LibraryDotProduct = chromInfo.LibraryDotProduct,
                             // TotalSignalToNoise = SignalToNoise(chromInfo.Area, chromInfo.BackgroundArea),
+                            Note = chromInfo.Note,
                             UserSetTotal = chromInfo.UserSet,
                             PeptideResult = peptideResults[resultFile],
                         };
@@ -405,6 +406,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             ResultFile = resultFile,
                             OptStep = chromInfo.OptimizationStep,
                             AreaRatio = chromInfo.Ratio,
+                            Note = chromInfo.Note,
                             UserSetPeak = chromInfo.UserSet,
                             PrecursorResult = precursorResults[new ResultKey(resultFile,chromInfo.OptimizationStep)],
                         };

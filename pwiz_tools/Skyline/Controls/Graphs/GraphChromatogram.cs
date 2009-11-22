@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -211,7 +211,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Update the graph if it is no longer current, due to changes
                 // within the document node tree.
                 if (Visible && !IsDisposed && !IsCurrent)
-                    UpdateGraph();
+                    UpdateUI();
             }
         }
 
@@ -279,12 +279,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void comboFiles_SelectedIndexChanged(object sender, EventArgs e)
         {
-            UpdateGraph();
+            UpdateUI();
         }
 
         private void GraphChromatogram_VisibleChanged(object sender, EventArgs e)
         {
-            UpdateGraph();
+            UpdateUI();
         }
 
         private void GraphChromatogram_KeyDown(object sender, KeyEventArgs e)
@@ -300,7 +300,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public void UpdateGraph()
+        public void UpdateUI()
         {
             // Only worry about updates, if the graph is visible
             // And make sure it is not disposed, since rendering happens on a timer

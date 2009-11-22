@@ -245,5 +245,11 @@
     <Setting Name="AreaPeptideOrderEnum" Type="System.String" Scope="User">
       <Value Profile="(Default)">document</Value>
     </Setting>
+    <Setting Name="AreaPeptideCV" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ResultsGridSynchSelection" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
