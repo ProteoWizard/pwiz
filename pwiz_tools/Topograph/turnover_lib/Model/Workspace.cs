@@ -82,7 +82,6 @@ namespace pwiz.Topograph.Model
                 MsDataFiles = new MsDataFiles(this, dbWorkspace);
                 Peptides = new Peptides(this, dbWorkspace);
             }
-            _reconciler.Start();
         }
 
         public long DbWorkspaceId { get; private set; }
@@ -98,18 +97,10 @@ namespace pwiz.Topograph.Model
         public TpgLinkDef TpgLinkDef { get; private set; }
         public ISession OpenSession()
         {
-            if (UseDatabaseLock)
-            {
-                return new SessionWithLock(SessionFactory.OpenSession(), DatabaseLock, false);
-            }
             return SessionFactory.OpenSession();
         }
         public ISession OpenWriteSession()
         {
-            if (UseDatabaseLock)
-            {
-                return new SessionWithLock(SessionFactory.OpenSession(), DatabaseLock, true);
-            }
             return SessionFactory.OpenSession();
         }
         public ISessionFactory SessionFactory
@@ -123,13 +114,13 @@ namespace pwiz.Topograph.Model
         }
         public ReaderWriterLockSlim WorkspaceLock { get; private set; }
         public bool IsLoaded { get; private set; }
-        public void Load(ICollection<DbSetting> settings, ICollection<DbModification> modifications, ICollection<DbTracerDef> tracerDefs)
+        public void Load(DbWorkspace dbWorkspace, ICollection<DbSetting> settings, ICollection<DbModification> modifications, ICollection<DbTracerDef> tracerDefs)
         {
             var savedWorkspaceVersion = WorkspaceVersion;
-            savedWorkspaceVersion = _settings.MergeChildren(savedWorkspaceVersion, settings.ToDictionary(s => s.Name));
-            savedWorkspaceVersion = _modifications.MergeChildren(savedWorkspaceVersion,
+            savedWorkspaceVersion = _settings.MergeChildren(dbWorkspace, savedWorkspaceVersion, settings.ToDictionary(s => s.Name));
+            savedWorkspaceVersion = _modifications.MergeChildren(dbWorkspace, savedWorkspaceVersion,
                                                                  modifications.ToDictionary(m => m.Symbol));
-            savedWorkspaceVersion = _tracerDefs.MergeChildren(savedWorkspaceVersion,
+            savedWorkspaceVersion = _tracerDefs.MergeChildren(dbWorkspace, savedWorkspaceVersion,
                                                               tracerDefs.ToDictionary(t => t.Name));
             var currentWorkspaceVersion = savedWorkspaceVersion;
             currentWorkspaceVersion = _settings.CurrentWorkspaceVersion(currentWorkspaceVersion);
@@ -431,9 +422,13 @@ namespace pwiz.Topograph.Model
                 }
                 if (!IsDirty)
                 {
-                    if (key is MsDataFile || key is Peptide)
+                    if (key is MsDataFile)
                     {
-                        IsDirty = true;
+                        IsDirty = IsDirty || ((MsDataFile) key).IsDirty();
+                    }
+                    else if (key is Peptide)
+                    {
+                        IsDirty = IsDirty || ((Peptide) key).IsDirty();
                     }
                     else if (_dirtyPeptideAnalyses.Count > 0)
                     {
@@ -559,6 +554,7 @@ namespace pwiz.Topograph.Model
                     }
                     longOperationBroker.SetIsCancelleable(false);
                     session.Transaction.Commit();
+                    CheckDirty();
                 }
             }
         }
@@ -574,6 +570,7 @@ namespace pwiz.Topograph.Model
             }
             if (actionInvoker != null) 
             {
+                _reconciler.Start();
                 _resultCalculator.Start();
                 _chromatogramGenerator.Start();
             }

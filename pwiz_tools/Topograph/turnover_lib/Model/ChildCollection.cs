@@ -33,19 +33,6 @@ namespace pwiz.Topograph.Model
         protected int _childCount;
         protected IDictionary<K, C> _childDict;
 
-        protected ModelProperty PropChildCount
-        {
-            get
-            {
-                return Property<ChildCollection<P, K, E, C>, int>
-                (
-                    m => m.GetChildCount(),
-                    (m, v) => m._childCount = v,
-                    GetChildCount,
-                    SetChildCount
-                );
-            }   
-        }
         protected ChildCollection(Workspace workspace, P entity)
             : base(workspace, entity)
         {

@@ -289,5 +289,18 @@ namespace pwiz.Topograph.ui.Forms
         {
             Close();
         }
+
+        private void btnDelete_Click(object sender, EventArgs e)
+        {
+            if (_tracerIndex == _tracerDefs.Count)
+            {
+                return;
+            }
+            int tracerIndex = _tracerIndex;
+            _tracerIndex = -1;
+            _tracerDefs.RemoveAt(tracerIndex);
+            comboTracers.Items.RemoveAt(tracerIndex);
+            comboTracers.SelectedIndex = tracerIndex;
+        }
     }
 }

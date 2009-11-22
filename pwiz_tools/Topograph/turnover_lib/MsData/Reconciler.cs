@@ -124,6 +124,7 @@ namespace pwiz.Topograph.MsData
             var peptideIds = new HashSet<long>();
             var peptideAnalysisIds = new HashSet<long>();
             var fileAnalysisIdsForResultCalculator = new List<long>();
+            var fileAnalysisIdsForChromatogramGenerator = new List<long>();
             Dictionary<long, DbSetting> settings = null;
             Dictionary<long, DbModification> modifications = null;
             Dictionary<long, DbTracerDef> tracerDefs = null;
@@ -133,6 +134,7 @@ namespace pwiz.Topograph.MsData
             Dictionary<long, DbMsDataFile> msDataFiles;
             Dictionary<long, DbPeptideAnalysis> peptideAnalyses;
             Dictionary<long, PeptideAnalysisSnapshot> peptideAnalysisSnapshots;
+            DbWorkspace dbWorkspace = null;
             using (var session = _workspace.OpenSession())
             {
                 peptides = EntitiesWithIdGreaterThan<DbPeptide>(session, _lastPeptideId);
@@ -174,6 +176,7 @@ namespace pwiz.Topograph.MsData
                     settings = EntitiesWithIdGreaterThan<DbSetting>(session, 0);
                     modifications = EntitiesWithIdGreaterThan<DbModification>(session, 0);
                     tracerDefs = EntitiesWithIdGreaterThan<DbTracerDef>(session, 0);
+                    dbWorkspace = (DbWorkspace) session.CreateCriteria(typeof (DbWorkspace)).UniqueResult();
                 }
 
                 var peptideAnalysisIdsToSnapshot = new HashSet<long>(activePeptideAnalyses.Keys);
@@ -201,6 +204,10 @@ namespace pwiz.Topograph.MsData
                         session.CreateQuery("SELECT F.Id FROM " + typeof(DbPeptideFileAnalysis) +
                                             " F WHERE F.PeptideAnalysis.Id IN (" + Lists.Join(peptideAnalysisIds, ",") + ") AND F.ChromatogramCount <> 0 AND F.PeptideDistributionCount = 0")
                             .List(fileAnalysisIdsForResultCalculator);
+                        session.CreateQuery("SELECT F.Id FROM " + typeof (DbPeptideFileAnalysis) +
+                                            " F WHERE F.PeptideAnalysis.Id IN (" + Lists.Join(peptideAnalysisIds, ",") +
+                                            ") AND F.ChromatogramCount = 0")
+                            .List(fileAnalysisIdsForChromatogramGenerator);
                     }
                     var peptideAnalysisList = new List<DbPeptideAnalysis>();
                     session.CreateQuery("FROM " + typeof (DbPeptideAnalysis) + " A WHERE A.Id IN(" +
@@ -231,7 +238,7 @@ namespace pwiz.Topograph.MsData
             {
                 if (workspaceChanged)
                 {
-                    _workspace.Load(settings.Values, modifications.Values, tracerDefs.Values);
+                    _workspace.Load(dbWorkspace, settings.Values, modifications.Values, tracerDefs.Values);
                 }
                 foreach (var dbPeptide in peptides.Values)
                 {
@@ -292,6 +299,7 @@ namespace pwiz.Topograph.MsData
                 }
                 _workspace.AddChangedPeptideAnalyses(peptideAnalyses);
                 _workspace.ResultCalculator.AddPeptideFileAnalysisIds(fileAnalysisIdsForResultCalculator);
+                _workspace.ChromatogramGenerator.AddPeptideFileAnalysisIds(fileAnalysisIdsForChromatogramGenerator);
                 _workspace.CheckDirty();
             }
             return true;

@@ -58,6 +58,7 @@ namespace pwiz.Topograph.Model
                 if (child.IsDirty())
                 {
                     dirty = true;
+                    break;
                 }
             }
             var parent = session.Get<P>(Id);

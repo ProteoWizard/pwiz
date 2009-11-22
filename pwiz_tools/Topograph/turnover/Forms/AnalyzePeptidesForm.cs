@@ -187,6 +187,12 @@ namespace pwiz.Topograph.ui.Forms
                     {
                         session.Save(new DbChangeLog(Workspace, dbPeptideAnalysis));
                     }
+                    else
+                    {
+                        var dbWorkspace = Workspace.LoadDbWorkspace(session);
+                        dbWorkspace.PeptideAnalysisCount++;
+                        session.Update(dbWorkspace);
+                    }
                     session.Transaction.Commit();
                 }
             }

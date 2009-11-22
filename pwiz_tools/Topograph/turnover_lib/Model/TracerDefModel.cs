@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using NHibernate;
 using pwiz.Topograph.Data;
 
 namespace pwiz.Topograph.Model
@@ -110,5 +111,9 @@ namespace pwiz.Topograph.Model
         public virtual double FinalEnrichment { get; set; }
         public virtual bool IsotopesEluteEarlier { get; set; }
         public virtual bool IsotopesEluteLater { get; set; }
+        protected override DbTracerDef ConstructEntity(ISession session)
+        {
+            return new DbTracerDef { Workspace = Workspace.LoadDbWorkspace(session)};
+        }
     }
 }

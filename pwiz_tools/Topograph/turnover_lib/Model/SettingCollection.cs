@@ -15,9 +15,11 @@ namespace pwiz.Topograph.Model
         {
         }
 
-        public WorkspaceVersion MergeChildren(WorkspaceVersion workspaceVersion, Dictionary<K,E> newChildren)
+        public WorkspaceVersion MergeChildren(P parent, WorkspaceVersion workspaceVersion, Dictionary<K,E> newChildren)
         {
-            return UpdateChildren(workspaceVersion, newChildren, true);
+            var result = UpdateChildren(workspaceVersion, newChildren, true);
+            SavedEntity = parent;
+            return result;
         }
 
         private WorkspaceVersion UpdateChildren(WorkspaceVersion workspaceVersion, Dictionary<K,E> newChildren, bool fromDatabase)

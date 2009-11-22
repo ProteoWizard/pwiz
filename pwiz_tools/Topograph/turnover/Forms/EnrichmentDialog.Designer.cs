@@ -57,6 +57,7 @@
             this.label14 = new System.Windows.Forms.Label();
             this.tbxTracerName = new System.Windows.Forms.TextBox();
             this.btnCancel = new System.Windows.Forms.Button();
+            this.btnDelete = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // label1
@@ -306,12 +307,23 @@
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
+            // btnDelete
+            // 
+            this.btnDelete.Location = new System.Drawing.Point(210, 361);
+            this.btnDelete.Name = "btnDelete";
+            this.btnDelete.Size = new System.Drawing.Size(75, 23);
+            this.btnDelete.TabIndex = 26;
+            this.btnDelete.Text = "Delete";
+            this.btnDelete.UseVisualStyleBackColor = true;
+            this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
+            // 
             // EnrichmentDialog
             // 
             this.AcceptButton = this.btnSaveAndClose;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(650, 393);
+            this.Controls.Add(this.btnDelete);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.tbxTracerName);
             this.Controls.Add(this.label14);
@@ -378,6 +390,7 @@
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.TextBox tbxTracerName;
         private System.Windows.Forms.Button btnCancel;
+        private System.Windows.Forms.Button btnDelete;
 
     }
 }

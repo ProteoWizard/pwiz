@@ -331,6 +331,7 @@ namespace pwiz.Topograph.ui.Forms
             {
                 if (!IsRunning)
                 {
+                    Workspace.Reconciler.Wake();
                     break;
                 }
                 Thread.Sleep(100);

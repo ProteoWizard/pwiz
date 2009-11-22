@@ -42,6 +42,7 @@
             this.tbxExcludeAas = new System.Windows.Forms.TextBox();
             this.btnAnalyzePeptides = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
+            this.btnAddSearchResults = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -125,16 +126,18 @@
             this.tableLayoutPanel1.ColumnCount = 2;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.Controls.Add(this.label1, 0, 2);
-            this.tableLayoutPanel1.Controls.Add(this.label2, 0, 3);
-            this.tableLayoutPanel1.Controls.Add(this.tbxMinTracerCount, 1, 2);
-            this.tableLayoutPanel1.Controls.Add(this.tbxExcludeAas, 1, 3);
-            this.tableLayoutPanel1.Controls.Add(this.btnAnalyzePeptides, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.label3, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this.label1, 0, 3);
+            this.tableLayoutPanel1.Controls.Add(this.label2, 0, 4);
+            this.tableLayoutPanel1.Controls.Add(this.tbxMinTracerCount, 1, 3);
+            this.tableLayoutPanel1.Controls.Add(this.tbxExcludeAas, 1, 4);
+            this.tableLayoutPanel1.Controls.Add(this.btnAnalyzePeptides, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this.label3, 0, 2);
+            this.tableLayoutPanel1.Controls.Add(this.btnAddSearchResults, 0, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 5;
+            this.tableLayoutPanel1.RowCount = 6;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
@@ -147,7 +150,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label1.Location = new System.Drawing.Point(3, 55);
+            this.label1.Location = new System.Drawing.Point(3, 85);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(107, 25);
             this.label1.TabIndex = 0;
@@ -158,7 +161,7 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label2.Location = new System.Drawing.Point(3, 80);
+            this.label2.Location = new System.Drawing.Point(3, 110);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(107, 25);
             this.label2.TabIndex = 1;
@@ -168,7 +171,7 @@
             // tbxMinTracerCount
             // 
             this.tbxMinTracerCount.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tbxMinTracerCount.Location = new System.Drawing.Point(116, 58);
+            this.tbxMinTracerCount.Location = new System.Drawing.Point(116, 88);
             this.tbxMinTracerCount.Name = "tbxMinTracerCount";
             this.tbxMinTracerCount.Size = new System.Drawing.Size(107, 20);
             this.tbxMinTracerCount.TabIndex = 2;
@@ -177,7 +180,7 @@
             // tbxExcludeAas
             // 
             this.tbxExcludeAas.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tbxExcludeAas.Location = new System.Drawing.Point(116, 83);
+            this.tbxExcludeAas.Location = new System.Drawing.Point(116, 113);
             this.tbxExcludeAas.Name = "tbxExcludeAas";
             this.tbxExcludeAas.Size = new System.Drawing.Size(107, 20);
             this.tbxExcludeAas.TabIndex = 3;
@@ -186,7 +189,8 @@
             // btnAnalyzePeptides
             // 
             this.tableLayoutPanel1.SetColumnSpan(this.btnAnalyzePeptides, 2);
-            this.btnAnalyzePeptides.Location = new System.Drawing.Point(3, 3);
+            this.btnAnalyzePeptides.Enabled = false;
+            this.btnAnalyzePeptides.Location = new System.Drawing.Point(3, 33);
             this.btnAnalyzePeptides.Name = "btnAnalyzePeptides";
             this.btnAnalyzePeptides.Size = new System.Drawing.Size(117, 24);
             this.btnAnalyzePeptides.TabIndex = 4;
@@ -198,12 +202,23 @@
             // 
             this.tableLayoutPanel1.SetColumnSpan(this.label3, 2);
             this.label3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label3.Location = new System.Drawing.Point(3, 30);
+            this.label3.Location = new System.Drawing.Point(3, 60);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(220, 25);
             this.label3.TabIndex = 5;
             this.label3.Text = "Filter displayed peptides:";
             this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // btnAddSearchResults
+            // 
+            this.tableLayoutPanel1.SetColumnSpan(this.btnAddSearchResults, 2);
+            this.btnAddSearchResults.Location = new System.Drawing.Point(3, 3);
+            this.btnAddSearchResults.Name = "btnAddSearchResults";
+            this.btnAddSearchResults.Size = new System.Drawing.Size(145, 23);
+            this.btnAddSearchResults.TabIndex = 6;
+            this.btnAddSearchResults.Text = "Add Search Results...";
+            this.btnAddSearchResults.UseVisualStyleBackColor = true;
+            this.btnAddSearchResults.Click += new System.EventHandler(this.btnAddSearchResults_Click);
             // 
             // PeptidesForm
             // 
@@ -240,6 +255,7 @@
         private System.Windows.Forms.TextBox tbxExcludeAas;
         private System.Windows.Forms.Button btnAnalyzePeptides;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Button btnAddSearchResults;
 
     }
 }

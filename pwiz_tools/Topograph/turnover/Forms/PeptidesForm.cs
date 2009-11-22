@@ -68,6 +68,7 @@ namespace pwiz.Topograph.ui.Forms
         protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
         {
             base.OnWorkspaceEntitiesChanged(args);
+            btnAnalyzePeptides.Enabled = Workspace.Peptides.GetChildCount() > 0;
             var newPeptides = new List<Peptide>();
             foreach (var peptide in args.GetEntities<Peptide>())
             {
@@ -189,6 +190,11 @@ namespace pwiz.Topograph.ui.Forms
             }
             peptideAnalysesForm = new PeptideAnalysesForm(Workspace);
             peptideAnalysesForm.Show(DockPanel, DockState.Document);
+        }
+
+        private void btnAddSearchResults_Click(object sender, EventArgs e)
+        {
+            new AddSearchResultsForm(Workspace).Show(this);
         }
     }
 }

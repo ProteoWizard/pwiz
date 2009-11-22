@@ -41,5 +41,9 @@ namespace pwiz.Topograph.Model
             }
             return workspaceVersion;
         }
+        protected override DbModification ConstructEntity(NHibernate.ISession session)
+        {
+            return new DbModification();
+        }
     }
 }

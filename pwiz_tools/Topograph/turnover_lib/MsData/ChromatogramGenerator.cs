@@ -244,7 +244,6 @@ namespace pwiz.Topograph.MsData
                     {
                         _statusMessage = "Waiting for workspace to load";
                         _eventWaitHandle.Reset();
-                        continue;
                     }
                 }
                 if (_isSuspended || !_workspace.IsLoaded)
@@ -580,7 +579,7 @@ namespace pwiz.Topograph.MsData
             _pendingIdQueue.SetRequeryPending();
             _eventWaitHandle.Set();
         }
-        public void AddAnalysisIds(IEnumerable<long> ids)
+        public void AddPeptideFileAnalysisIds(IEnumerable<long> ids)
         {
             _pendingIdQueue.AddIds(ids);
         }
