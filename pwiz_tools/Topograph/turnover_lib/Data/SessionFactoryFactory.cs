@@ -25,6 +25,7 @@ using System.Reflection;
 using System.Text;
 using NHibernate;
 using NHibernate.Cfg;
+using NHibernate.Mapping;
 using pwiz.Topograph.Model;
 
 namespace pwiz.Topograph.Data
@@ -68,6 +69,22 @@ namespace pwiz.Topograph.Data
                 configuration.SetProperty("hbm2ddl.auto", "create");
             }
             return BuildSessionFactory(configuration);
+        }
+        public static ISessionFactory GetSessionFactoryWithoutIdGenerators(TpgLinkDef tpgLinkDef)
+        {
+            var configuration = new Configuration()
+                .SetProperty("show_sql", "true")
+                .SetProperty("dialect", tpgLinkDef.GetDialectClass().AssemblyQualifiedName)
+                .SetProperty("connection.connection_string", tpgLinkDef.GetConnectionString())
+                .SetProperty("connection.driver_class", tpgLinkDef.GetDriverClass().AssemblyQualifiedName);
+            Assembly assembly = typeof(SessionFactoryFactory).Assembly;
+            configuration.SetProperty("connection.provider", typeof(NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName);
+            configuration.AddInputStream(assembly.GetManifestResourceStream("pwiz.Topograph.Data.mapping.xml"));
+            foreach (var classMapping in configuration.ClassMappings)
+            {
+                classMapping.IdentifierProperty.Generation = PropertyGeneration.Never;
+            }
+            return configuration.BuildSessionFactory();
         }
     }
 }

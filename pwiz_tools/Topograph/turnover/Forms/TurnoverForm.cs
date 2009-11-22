@@ -717,23 +717,44 @@ namespace pwiz.Topograph.ui.Forms
                 var tpgLinkDef = dialog.GetTpgLinkDef();
                 try
                 {
-                    tpgLinkDef.CreateDatabase();
+                    tpgLinkDef.OpenConnection();
                 }
-                catch (Exception exception)
+                catch
                 {
-                    var result = MessageBox.Show(this, "There was an error creating the database.  Do you want to try again?\n" + exception, Program.AppName, MessageBoxButtons.OKCancel);
-                    if (result == DialogResult.Cancel)
+                    // ignore
+                    try
                     {
-                        return;
+                        tpgLinkDef.CreateDatabase();
                     }
-                    continue;
+                    catch (Exception exception)
+                    {
+                        var result = MessageBox.Show(this, "There was an error creating the database.  Do you want to try again?\n" + exception, Program.AppName, MessageBoxButtons.OKCancel);
+                        if (result == DialogResult.Cancel)
+                        {
+                            return;
+                        }
+                        continue;
+                    }
                 }
-                using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(tpgLinkDef, true))
+                while (true)
                 {
-                    var workspaceUpsizer = new WorkspaceUpsizer(Workspace.SessionFactory, sessionFactory);
-                    new LongOperationBroker(workspaceUpsizer, new LongWaitDialog(this, "Upsizing workspace")).LaunchJob();
+                    using (var targetSessionFactory = SessionFactoryFactory.GetSessionFactoryWithoutIdGenerators(tpgLinkDef))
+                    {
+                        var workspaceUpsizer = new WorkspaceUpsizer(Workspace.SessionFactory, targetSessionFactory);
+                        try
+                        {
+                            if (new LongOperationBroker(workspaceUpsizer, new LongWaitDialog(this, "Upsizing workspace")).LaunchJob())
+                            {
+                                return;
+                            }
+                            break;
+                        }
+                        catch (ApplicationException applicationException)
+                        {
+                            Console.Out.WriteLine(applicationException);
+                        }
+                    }
                 }
-                break;
             }
         }
 
