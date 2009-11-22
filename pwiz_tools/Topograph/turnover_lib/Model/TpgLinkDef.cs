@@ -84,7 +84,7 @@ namespace pwiz.Topograph.Model
                 case DatabaseTypeEnum.mysql:
                     return typeof (MySQLDialect);
                 case DatabaseTypeEnum.postgresql:
-                    return typeof (PostgreSQLDialect);
+                    return typeof (PostgreSQL82Dialect);
             }
             throw new ArgumentException();
         }
