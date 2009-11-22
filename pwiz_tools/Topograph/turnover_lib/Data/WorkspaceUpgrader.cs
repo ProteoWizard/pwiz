@@ -101,12 +101,11 @@ namespace pwiz.Topograph.Data
                 {
                     broker.UpdateStatusMessage("Upgrading from version 2 to 3");
                     CreateCommand(connection,
-                                  "CREATE TABLE DbChangeLog (Id  integer, TimeStamp DATETIME not null, PeptideAnalysisId INTEGER, "
-                                  +"PeptideFileAnalysisId INTEGER, "
+                                  "CREATE TABLE DbChangeLog (Id  integer, InstanceIdBytes BLOB, PeptideAnalysisId INTEGER, "
                                   +"PeptideId INTEGER, MsDataFileId INTEGER, WorkspaceId INTEGER, primary key (Id))")
                                   .ExecuteNonQuery();
                     CreateCommand(connection,
-                                  "CREATE TABLE DbLock (Id  integer, TimeStamp DATETIME not null, InstanceId TEXT,"
+                                  "CREATE TABLE DbLock (Id  integer, Version INTEGER not null, InstanceIdBytes BLOB,"
                                   + "LockType INTEGER, WorkspaceId INTEGER, PeptideAnalysisId INTEGER, MsDataFileId INTEGER,"
                                   + " primary key (Id))")
                                   .ExecuteNonQuery();

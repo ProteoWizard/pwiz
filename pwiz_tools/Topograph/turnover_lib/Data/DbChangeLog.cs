@@ -68,7 +68,5 @@ namespace pwiz.Topograph.Data
         public virtual long? PeptideId { get; set; }
         public virtual long? MsDataFileId { get; set; }
         public virtual long? WorkspaceId { get; set; }
-        public virtual bool IsUserEdit {get { return InstanceIdGuid != null;}}
-        public virtual bool IsDeleted { get; set; }
     }
 }

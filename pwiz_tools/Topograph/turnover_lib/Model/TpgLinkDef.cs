@@ -24,6 +24,7 @@ namespace pwiz.Topograph.Model
         public String Password { get; set; }
         public String DataDirectory { get; set; }
         public String DatabaseType { get; set; }
+        public int? Port { get; set; }
         public DatabaseTypeEnum DatabaseTypeEnum 
         {
             get
@@ -42,21 +43,35 @@ namespace pwiz.Topograph.Model
             switch (DatabaseTypeEnum)
             {
                 case DatabaseTypeEnum.mysql:
-                    return new MySqlConnectionStringBuilder
+                    {
+                        var builder = new MySqlConnectionStringBuilder
+                                          {
+                                              Server = Server,
+                                              UserID = Username,
+                                              Password = Password,
+                                              Database = Database,
+                                          };
+                        if (Port != null)
                         {
-                            Server = Server,
-                            UserID = Username,
-                            Password = Password,
-                            Database = Database,
-                        }.ToString();
+                            builder.Port = (uint) Port.Value;
+                        }
+                        return builder.ToString();
+                    }
                 case DatabaseTypeEnum.postgresql:
-                    return new NpgsqlConnectionStringBuilder
-                               {
-                                   Host = Server,
-                                   UserName = Username,
-                                   Password = Password,
-                                   Database = Database,
-                               }.ToString();
+                    {
+                        var builder = new NpgsqlConnectionStringBuilder
+                                          {
+                                              Host = Server,
+                                              UserName = Username,
+                                              Password = Password,
+                                              Database = Database,
+                                          };
+                        if (Port != null)
+                        {
+                            builder.Port = Port.Value;
+                        }
+                        return builder.ToString();
+                    }
             }
             throw new ArgumentException();
         }
@@ -91,19 +106,32 @@ namespace pwiz.Topograph.Model
             switch (DatabaseTypeEnum)
             {
                 case DatabaseTypeEnum.mysql:
-                    return new MySqlConnectionStringBuilder
                     {
-                        Server = Server,
-                        UserID = Username,
-                        Password = Password,
-                    }.ToString();
-                case DatabaseTypeEnum.postgresql:
-                    return new NpgsqlConnectionStringBuilder
+                    var builder = new MySqlConnectionStringBuilder
+                                      {
+                                          Server = Server,
+                                          UserID = Username,
+                                          Password = Password,
+                                      };
+                    if (Port != null)
                     {
-                        Host = Server,
-                        UserName = Username,
-                        Password = Password,
-                    }.ToString();
+                        builder.Port = (uint) Port;
+                    }
+                    return builder.ToString();
+                    }
+                case DatabaseTypeEnum.postgresql:{
+                    var builder = new NpgsqlConnectionStringBuilder
+                                      {
+                                          Host = Server,
+                                          UserName = Username,
+                                          Password = Password,
+                                      };
+                    if (Port != null)
+                    {
+                        builder.Port = Port.Value;
+                    }
+                    return builder.ToString();
+                    }
             }
             throw new ArgumentException();
         }

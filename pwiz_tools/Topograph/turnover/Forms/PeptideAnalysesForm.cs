@@ -102,7 +102,7 @@ namespace pwiz.Topograph.ui.Forms
                         continue;
                     }
                     session.Delete(peptideAnalysis);
-                    session.Save(new DbChangeLog(Workspace, peptideAnalysis) {IsDeleted = true});
+                    session.Save(new DbChangeLog(Workspace, peptideAnalysis));
                 }
                 session.Transaction.Commit();
             }

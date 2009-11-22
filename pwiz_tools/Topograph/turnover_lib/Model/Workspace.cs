@@ -657,17 +657,20 @@ namespace pwiz.Topograph.Model
 
         public void SetDataDirectory(string directory)
         {
-            if (directory == GetDataDirectory())
+            using (GetWriteLock())
             {
-                return;
+                if (directory == GetDataDirectory())
+                {
+                    return;
+                }
+                if (TpgLinkDef != null)
+                {
+                    TpgLinkDef.DataDirectory = directory;
+                    TpgLinkDef.Save(DatabasePath);
+                    return;
+                }
+                _settings.SetSetting(SettingEnum.data_directory, directory);
             }
-            if (TpgLinkDef != null)
-            {
-                TpgLinkDef.DataDirectory = directory;
-                TpgLinkDef.Save(DatabasePath);
-                return;
-            }
-            _settings.SetSetting(SettingEnum.data_directory, directory);
         }
 
         private void DispatchDirtyEvent()

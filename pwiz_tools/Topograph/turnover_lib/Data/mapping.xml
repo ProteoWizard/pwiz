@@ -267,13 +267,11 @@
       <column name="Id" not-null="true"/>
       <generator class="native" />
     </id>
-    <!--<timestamp name="TimeStamp" generated="always"/>-->
     <property name="InstanceIdBytes" length="16"/>
     <property name="PeptideAnalysisId" />
     <property name="PeptideId" />
     <property name="MsDataFileId" />
     <property name="WorkspaceId" />
-    <property name="IsDeleted" />
   </class>
   <class name="DbLock">
     <id name="Id">

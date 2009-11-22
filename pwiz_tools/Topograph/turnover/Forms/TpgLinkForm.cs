@@ -16,6 +16,7 @@ namespace pwiz.Topograph.ui.Forms
         public TpgLinkForm()
         {
             InitializeComponent();
+            comboDatabaseType.SelectedIndex = 0;
         }
         public bool ShowReadOnlyCheckbox 
         {
@@ -108,6 +109,8 @@ namespace pwiz.Topograph.ui.Forms
                            Password = Password,
                            Readonly = Readonly,
                            DatabaseType = Convert.ToString(comboDatabaseType.SelectedItem),
+                           Port = string.IsNullOrEmpty(tbxPort.Text) ? (int?) null 
+                                : int.Parse(tbxPort.Text)
                        };
         }
 

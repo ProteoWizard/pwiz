@@ -196,9 +196,12 @@ namespace pwiz.Topograph.MsData
                 }
                 if (peptideAnalysisIds.Count > 0)
                 {
-                    session.CreateQuery("SELECT F.Id FROM " + typeof (DbPeptideFileAnalysis) +
-                                        " F WHERE F.PeptideAnalysis.Id IN (" + Lists.Join(peptideAnalysisIds, "," )+ ") AND F.ChromatogramCount <> 0 AND F.PeptideDistributionCount = 0")
-                        .List(fileAnalysisIdsForResultCalculator);
+                    if (_workspace.IsLoaded)
+                    {
+                        session.CreateQuery("SELECT F.Id FROM " + typeof(DbPeptideFileAnalysis) +
+                                            " F WHERE F.PeptideAnalysis.Id IN (" + Lists.Join(peptideAnalysisIds, ",") + ") AND F.ChromatogramCount <> 0 AND F.PeptideDistributionCount = 0")
+                            .List(fileAnalysisIdsForResultCalculator);
+                    }
                     var peptideAnalysisList = new List<DbPeptideAnalysis>();
                     session.CreateQuery("FROM " + typeof (DbPeptideAnalysis) + " A WHERE A.Id IN(" +
                                         Lists.Join(peptideAnalysisIds, ",") + ")").List(peptideAnalysisList);

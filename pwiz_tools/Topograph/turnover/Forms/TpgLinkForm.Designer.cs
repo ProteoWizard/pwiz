@@ -41,6 +41,8 @@
             this.btnCancel = new System.Windows.Forms.Button();
             this.label5 = new System.Windows.Forms.Label();
             this.comboDatabaseType = new System.Windows.Forms.ComboBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.tbxPort = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // label1
@@ -82,7 +84,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(12, 100);
+            this.label3.Location = new System.Drawing.Point(12, 146);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(55, 13);
             this.label3.TabIndex = 4;
@@ -92,7 +94,7 @@
             // 
             this.tbxUsername.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbxUsername.Location = new System.Drawing.Point(107, 93);
+            this.tbxUsername.Location = new System.Drawing.Point(107, 139);
             this.tbxUsername.Name = "tbxUsername";
             this.tbxUsername.Size = new System.Drawing.Size(211, 20);
             this.tbxUsername.TabIndex = 5;
@@ -100,7 +102,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(12, 134);
+            this.label4.Location = new System.Drawing.Point(12, 168);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(53, 13);
             this.label4.TabIndex = 6;
@@ -110,18 +112,18 @@
             // 
             this.tbxPassword.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbxPassword.Location = new System.Drawing.Point(107, 131);
+            this.tbxPassword.Location = new System.Drawing.Point(107, 165);
             this.tbxPassword.Name = "tbxPassword";
             this.tbxPassword.Size = new System.Drawing.Size(211, 20);
-            this.tbxPassword.TabIndex = 7;
+            this.tbxPassword.TabIndex = 6;
             // 
             // cbxReadonly
             // 
             this.cbxReadonly.AutoSize = true;
-            this.cbxReadonly.Location = new System.Drawing.Point(12, 174);
+            this.cbxReadonly.Location = new System.Drawing.Point(12, 196);
             this.cbxReadonly.Name = "cbxReadonly";
             this.cbxReadonly.Size = new System.Drawing.Size(76, 17);
-            this.cbxReadonly.TabIndex = 8;
+            this.cbxReadonly.TabIndex = 7;
             this.cbxReadonly.Text = "Read Only";
             this.cbxReadonly.UseVisualStyleBackColor = true;
             // 
@@ -132,7 +134,7 @@
             this.btnOK.Location = new System.Drawing.Point(166, 229);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(71, 23);
-            this.btnOK.TabIndex = 9;
+            this.btnOK.TabIndex = 8;
             this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
@@ -144,14 +146,14 @@
             this.btnCancel.Location = new System.Drawing.Point(243, 229);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 10;
+            this.btnCancel.TabIndex = 9;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(12, 71);
+            this.label5.Location = new System.Drawing.Point(12, 115);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(80, 13);
             this.label5.TabIndex = 11;
@@ -167,10 +169,28 @@
             "postgresql",
             "mysql",
             "sqlite"});
-            this.comboDatabaseType.Location = new System.Drawing.Point(107, 68);
+            this.comboDatabaseType.Location = new System.Drawing.Point(107, 112);
             this.comboDatabaseType.Name = "comboDatabaseType";
             this.comboDatabaseType.Size = new System.Drawing.Size(211, 21);
-            this.comboDatabaseType.TabIndex = 12;
+            this.comboDatabaseType.TabIndex = 4;
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(16, 73);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(26, 13);
+            this.label6.TabIndex = 13;
+            this.label6.Text = "Port";
+            // 
+            // tbxPort
+            // 
+            this.tbxPort.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbxPort.Location = new System.Drawing.Point(107, 70);
+            this.tbxPort.Name = "tbxPort";
+            this.tbxPort.Size = new System.Drawing.Size(211, 20);
+            this.tbxPort.TabIndex = 3;
             // 
             // TpgLinkForm
             // 
@@ -179,6 +199,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(330, 264);
+            this.Controls.Add(this.tbxPort);
+            this.Controls.Add(this.label6);
             this.Controls.Add(this.comboDatabaseType);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.btnCancel);
@@ -214,5 +236,7 @@
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.ComboBox comboDatabaseType;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.TextBox tbxPort;
     }
 }

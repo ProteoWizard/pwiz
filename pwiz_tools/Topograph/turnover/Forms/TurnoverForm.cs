@@ -152,10 +152,6 @@ namespace pwiz.Topograph.ui.Forms
         void Workspace_WorkspaceDirty(Workspace workspace)
         {
             UpdateWindowTitle();
-            if (workspace.IsLoaded)
-            {
-                EnsureDataDirectory(workspace);
-            }
         }
 
         void EnsureDataDirectory(Workspace workspace)
@@ -242,6 +238,7 @@ namespace pwiz.Topograph.ui.Forms
             {
                 new PeptidesForm(_workspace).Show(dockPanel, DockState.Document);
             }
+            EnsureDataDirectory(_workspace);
         }
 
         void InitWorkspace(ISessionFactory sessionFactory)
@@ -727,7 +724,10 @@ namespace pwiz.Topograph.ui.Forms
         {
             while (true)
             {
-                var dialog = new FolderBrowserDialog();
+                var dialog = new FolderBrowserDialog()
+                                 {
+                                     ShowNewFolderButton = false
+                                 };
                 var currentDataDirectory = Workspace.GetDataDirectory();
                 if (!string.IsNullOrEmpty(currentDataDirectory) && Directory.Exists(currentDataDirectory))
                 {
