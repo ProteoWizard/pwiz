@@ -235,6 +235,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         private static void SavePrecursor(ISession session, DocInfo docInfo,
             DbPeptide dbPeptide, PeptideDocNode nodePeptide, TransitionGroupDocNode nodeGroup)
         {
+            var predictTran = docInfo.Settings.TransitionSettings.Prediction;
+
             TransitionGroup tranGroup = nodeGroup.TransitionGroup;
             DbPrecursor dbPrecursor = new DbPrecursor
                                         {
@@ -245,6 +247,15 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                             Mz = SequenceMassCalc.PersistentMZ(nodeGroup.PrecursorMz),
                                             Note = nodeGroup.Note
                                         };
+
+            double regressionMz = docInfo.Settings.GetRegressionMz(nodePeptide, nodeGroup);
+            dbPrecursor.CollisionEnergy = predictTran.CollisionEnergy.GetCollisionEnergy(
+                tranGroup.PrecursorCharge, regressionMz);
+            if (predictTran.DeclusteringPotential != null)
+            {
+                dbPrecursor.DeclusteringPotential = predictTran.DeclusteringPotential.GetDeclustringPotential(
+                    regressionMz);
+            }
 
             if (nodeGroup.HasLibInfo)
             {
@@ -320,24 +331,24 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             Note = chromInfo.Note,
                             UserSetTotal = chromInfo.UserSet,
                             PeptideResult = peptideResults[resultFile],
+                            // Set the optimization step no matter what, so that replicates without
+                            // optimization data will join with those with it.
+                            OptStep = chromInfo.OptimizationStep,
                         };
-                        // Set the optimization step no matter what, so that replicates without
-                        // optimization data will join with those with it.
-                        precursorResult.OptStep = chromInfo.OptimizationStep;
+
                         if (optFunction != null)
                         {
-                            double precursorMz = docInfo.Settings.GetRegressionMz(nodePeptide, nodeGroup);
                             if (optFunction is CollisionEnergyRegression)
                             {
                                 precursorResult.OptCollisionEnergy =
                                     ((CollisionEnergyRegression)optFunction).GetCollisionEnergy(
-                                        dbPrecursor.Charge, precursorMz, chromInfo.OptimizationStep);
+                                        dbPrecursor.Charge, regressionMz, chromInfo.OptimizationStep);
                             }
                             if (optFunction is DeclusteringPotentialRegression)
                             {
                                 precursorResult.OptDeclusteringPotential =
                                     ((DeclusteringPotentialRegression)optFunction).GetDeclustringPotential(
-                                        precursorMz, chromInfo.OptimizationStep);
+                                        regressionMz, chromInfo.OptimizationStep);
                             }
                         }
                         session.Save(precursorResult);

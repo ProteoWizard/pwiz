@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -112,6 +113,12 @@ namespace pwiz.Skyline.Controls
                       });
 
             // Precursor
+            Columns.Add(PrecursorNoteColumn
+                = new DataGridViewTextBoxColumn
+                {
+                    Name = "PrecursorReplicateNote",
+                    HeaderText = "Precursor Replicate Note",
+                });
             Columns.Add(PrecursorPeakFoundRatioColumn
                 = new DataGridViewTextBoxColumn
                     {
@@ -168,14 +175,30 @@ namespace pwiz.Skyline.Controls
                           ReadOnly = true,
                           DefaultCellStyle = {Format = Formats.STANDARD_RATIO}
                       });
-            Columns.Add(PrecursorNoteColumn
+            Columns.Add(OptCollisionEnergyColumn
                 = new DataGridViewTextBoxColumn
-                      {
-                          Name = "PrecursorReplicateNote",
-                          HeaderText = "Precursor Replicate Note",
-                      });
+                {
+                    Name = "OptCollisionEnergy",
+                    HeaderText = "Opt Collision Energy",
+                    ReadOnly = true,
+                    DefaultCellStyle = { Format = Formats.OPT_PARAMETER }
+                });
+            Columns.Add(OptDeclusteringPotentialColumn
+                = new DataGridViewTextBoxColumn
+                {
+                    Name = "OptDeclusteringPotential",
+                    HeaderText = "Opt Declustering Potential",
+                    ReadOnly = true,
+                    DefaultCellStyle = { Format = Formats.OPT_PARAMETER }
+                });
             
             // Transitions
+            Columns.Add(TransitionNoteColumn
+                = new DataGridViewTextBoxColumn
+                {
+                    Name = "TransitionReplicateNote",
+                    HeaderText = "Transition Replicate Note"
+                });
             Columns.Add(RetentionTimeColumn 
                 = new DataGridViewTextBoxColumn
                   {
@@ -245,12 +268,6 @@ namespace pwiz.Skyline.Controls
                           Name = "PeakRank",
                           HeaderText = "Peak Rank",
                           ReadOnly = true,
-                      });
-            Columns.Add(TransitionNoteColumn
-                = new DataGridViewTextBoxColumn
-                      {
-                          Name = "TransitionReplicateNote",
-                          HeaderText = "Transition Replicate Note"
                       });
             KeyDown += ResultsGrid_KeyDown;
             CellEndEdit += ResultsGrid_CellEndEdit;
@@ -451,6 +468,7 @@ namespace pwiz.Skyline.Controls
             {
                 return new DataGridViewColumn[]
                            {
+                                TransitionNoteColumn,
                                 RetentionTimeColumn,
                                 FwhmColumn,
                                 StartTimeColumn,
@@ -460,7 +478,6 @@ namespace pwiz.Skyline.Controls
                                 AreaRatioColumn,
                                 HeightColumn,
                                 PeakRankColumn,
-                                TransitionNoteColumn,
                            };
             }
         }
@@ -471,6 +488,7 @@ namespace pwiz.Skyline.Controls
             {
                 return new DataGridViewColumn[]
                            {
+                               PrecursorNoteColumn,
                                PrecursorPeakFoundRatioColumn,
                                BestRetentionTimeColumn,
                                MaxFwhmColumn,
@@ -478,7 +496,8 @@ namespace pwiz.Skyline.Controls
                                MaxEndTimeColumn,
                                TotalAreaColumn,
                                LibraryDotProductColumn,
-                               PrecursorNoteColumn,
+                               OptCollisionEnergyColumn,
+                               OptDeclusteringPotentialColumn,
                            };
             }
         }
@@ -617,6 +636,7 @@ namespace pwiz.Skyline.Controls
             // Remember the set of rowIds that have data in them.  After updating the data, rows
             // that are not in this set will be deleted from the grid
             var rowIds = new HashSet<RowIdentifier>();
+            var settings = Document.Settings;
 
             if (SelectedTransitionDocNode != null)
             {
@@ -642,18 +662,20 @@ namespace pwiz.Skyline.Controls
             {
                 for (int iReplicate = 0; iReplicate < SelectedTransitionGroupDocNode.Results.Count; iReplicate++)
                 {
+                    var optFunc = settings.MeasuredResults.Chromatograms[iReplicate].OptimizationFunction;
+
                     var results = SelectedTransitionGroupDocNode.Results[iReplicate];
                     if (results == null)
                     {
                         var row = EnsureRow(iReplicate, rowIds);
-                        FillTransitionGroupRow(row, null);
+                        FillTransitionGroupRow(row, settings, optFunc, null);
                         continue;
                     }
 
                     foreach (var chromInfo in results)
                     {
                         var row = EnsureRow(iReplicate, chromInfo.FileIndex, chromInfo.OptimizationStep, rowIds);
-                        FillTransitionGroupRow(row, chromInfo);
+                        FillTransitionGroupRow(row, settings, optFunc, chromInfo);
                     }
                 }
             }
@@ -664,7 +686,7 @@ namespace pwiz.Skyline.Controls
                 if (SelectedPeptideDocNode == null)
                 {
                     // Just a blank set of replicate rows
-                    for (int iReplicate = 0; iReplicate < Document.Settings.MeasuredResults.Chromatograms.Count; iReplicate++)
+                    for (int iReplicate = 0; iReplicate < settings.MeasuredResults.Chromatograms.Count; iReplicate++)
                     {
                         EnsureRow(iReplicate, rowIds);
                     }
@@ -704,9 +726,9 @@ namespace pwiz.Skyline.Controls
             }
 
             // Update columns that do not depend on optimization step
-            for (int iReplicate = 0; iReplicate < Document.Settings.MeasuredResults.Chromatograms.Count; iReplicate++)
+            for (int iReplicate = 0; iReplicate < settings.MeasuredResults.Chromatograms.Count; iReplicate++)
             {
-                var results = Document.Settings.MeasuredResults.Chromatograms[iReplicate];
+                var results = settings.MeasuredResults.Chromatograms[iReplicate];
                 for (int iFile = 0; iFile < results.MSDataFilePaths.Count; iFile++)
                 {
                     var rowIdZero = new RowIdentifier(iReplicate, iFile, 0);
@@ -809,7 +831,8 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-        private void FillTransitionGroupRow(DataGridViewRow row, TransitionGroupChromInfo chromInfo)
+        private void FillTransitionGroupRow(DataGridViewRow row, SrmSettings settings,
+            OptimizableRegression optFunc, TransitionGroupChromInfo chromInfo)
         {
             if (chromInfo == null)
             {
@@ -820,7 +843,9 @@ namespace pwiz.Skyline.Controls
                     row.Cells[MaxEndTimeColumn.Index].Value =
                     row.Cells[TotalAreaColumn.Index].Value =
                     row.Cells[LibraryDotProductColumn.Index].Value =
-                    row.Cells[PrecursorNoteColumn.Index].Value = null;
+                    row.Cells[PrecursorNoteColumn.Index].Value =
+                    row.Cells[OptCollisionEnergyColumn.Index].Value =
+                    row.Cells[OptDeclusteringPotentialColumn.Index].Value = null;
             }
             else
             {
@@ -831,7 +856,28 @@ namespace pwiz.Skyline.Controls
                 row.Cells[MaxEndTimeColumn.Index].Value = chromInfo.EndRetentionTime;
                 row.Cells[TotalAreaColumn.Index].Value = chromInfo.Area;
                 row.Cells[LibraryDotProductColumn.Index].Value = chromInfo.LibraryDotProduct;
-                row.Cells[PrecursorNoteColumn.Index].Value = chromInfo.Note;                
+                row.Cells[PrecursorNoteColumn.Index].Value = chromInfo.Note;
+                row.Cells[OptCollisionEnergyColumn.Index].Value = null;
+                row.Cells[OptDeclusteringPotentialColumn.Index].Value = null;
+
+                if (optFunc != null)
+                {
+                    double regressionMz = settings.GetRegressionMz(SelectedPeptideDocNode,
+                        SelectedTransitionGroupDocNode);
+                    if (optFunc is CollisionEnergyRegression)
+                    {
+                        int charge = SelectedTransitionGroupDocNode.TransitionGroup.PrecursorCharge;
+                        row.Cells[OptCollisionEnergyColumn.Index].Value =
+                            ((CollisionEnergyRegression)optFunc).GetCollisionEnergy(
+                                charge, regressionMz, chromInfo.OptimizationStep);
+                    }
+                    if (optFunc is DeclusteringPotentialRegression)
+                    {
+                        row.Cells[OptDeclusteringPotentialColumn.Index].Value =
+                            ((DeclusteringPotentialRegression)optFunc).GetDeclustringPotential(
+                                regressionMz, chromInfo.OptimizationStep);
+                    }
+                }
             }
         }
 
@@ -934,7 +980,10 @@ namespace pwiz.Skyline.Controls
             }
             else if (SelectedTransitionGroupDocNode != null)
             {
-                result.UnionWith(PrecursorColumns);
+                result.UnionWith(from column in PrecursorColumns
+                                     where !ReferenceEquals(column, OptCollisionEnergyColumn) &&
+                                           !ReferenceEquals(column, OptDeclusteringPotentialColumn)
+                                     select column);
             }
             else if (SelectedPeptideDocNode != null)
             {
@@ -1013,6 +1062,8 @@ namespace pwiz.Skyline.Controls
         public DataGridViewTextBoxColumn MaxEndTimeColumn { get; private set; }
         public DataGridViewTextBoxColumn TotalAreaColumn { get; private set; }
         public DataGridViewTextBoxColumn LibraryDotProductColumn { get; private set; }
+        public DataGridViewTextBoxColumn OptCollisionEnergyColumn { get; private set; }
+        public DataGridViewTextBoxColumn OptDeclusteringPotentialColumn { get; private set; }
         public DataGridViewTextBoxColumn PrecursorNoteColumn { get; private set; }
         // Transition Columns
         public DataGridViewTextBoxColumn RetentionTimeColumn { get; private set; }

@@ -34,8 +34,10 @@ namespace pwiz.Skyline.Model.Hibernate
         public virtual double NeutralMass { get; set; }
         [QueryColumn(FullName="PrecursorMz")]
         public virtual double Mz { get; set; }
+        [QueryColumn(Format = Formats.OPT_PARAMETER)]
         public virtual double CollisionEnergy { get; set; }
-        public virtual double DeclusteringPotential { get; set; }
+        [QueryColumn(Format = Formats.OPT_PARAMETER)]
+        public virtual double? DeclusteringPotential { get; set; }
         public virtual string ModifiedSequence { get; set; }
         [QueryColumn(FullName="PrecursorNote")]
         public virtual string Note { get; set; }

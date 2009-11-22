@@ -53,7 +53,9 @@ namespace pwiz.Skyline.Model.Hibernate
 //        public virtual double TotalSignalToNoise { get; set; }
         public virtual bool UserSetTotal { get; set; }
         public virtual int OptStep { get; set; }
+        [QueryColumn(Format = Formats.OPT_PARAMETER)]
         public virtual double? OptCollisionEnergy { get; set; }
+        [QueryColumn(Format = Formats.OPT_PARAMETER)]
         public virtual double? OptDeclusteringPotential { get; set; }
         [QueryColumn(FullName = "PrecursorReplicateNote")]
         public virtual string Note { get; set; }
