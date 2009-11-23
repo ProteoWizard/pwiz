@@ -111,6 +111,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public IController Controller { get { return _controller; } }
 
+        public IStateProvider StateProvider { get { return _stateProvider; } }
+
         public ZedGraphControl GraphControl { get { return graphControl; } }
 
         public IDocumentUIContainer DocumentUIContainer { get { return _documentContainer; } }
@@ -190,6 +192,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private bool graphControl_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {
+            if (e.Button == sender.PanButtons && ModifierKeys == sender.PanModifierKeys)
+                GraphPane.EnsureYMin();
             return GraphPane.HandleMouseMoveEvent(sender, e);
         }
 
@@ -198,7 +202,10 @@ namespace pwiz.Skyline.Controls.Graphs
             return GraphPane.HandleMouseDownEvent(sender, e);
         }
 
-        public IStateProvider StateProvider { get { return _stateProvider; } }
+        private void graphControl_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState)
+        {
+            GraphPane.EnsureYMin();
+        }
 
         protected override void OnClosed(EventArgs e)
         {

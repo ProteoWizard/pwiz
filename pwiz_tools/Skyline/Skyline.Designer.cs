@@ -2233,7 +2233,7 @@ namespace pwiz.Skyline
             this.areaLogScaleContextMenuItem,
             this.areaCvsContextMenuItem});
             this.contextMenuPeakAreas.Name = "contextMenuStrip1";
-            this.contextMenuPeakAreas.Size = new System.Drawing.Size(136, 114);
+            this.contextMenuPeakAreas.Size = new System.Drawing.Size(153, 136);
             // 
             // areaGraphContextMenuItem
             // 
@@ -2241,8 +2241,9 @@ namespace pwiz.Skyline
             this.areaReplicateComparisonContextMenuItem,
             this.areaPeptideComparisonContextMenuItem});
             this.areaGraphContextMenuItem.Name = "areaGraphContextMenuItem";
-            this.areaGraphContextMenuItem.Size = new System.Drawing.Size(135, 22);
+            this.areaGraphContextMenuItem.Size = new System.Drawing.Size(152, 22);
             this.areaGraphContextMenuItem.Text = "Graph";
+            this.areaGraphContextMenuItem.DropDownOpening += new System.EventHandler(this.areaGraphMenuItem_DropDownOpening);
             // 
             // areaReplicateComparisonContextMenuItem
             // 
@@ -2265,7 +2266,7 @@ namespace pwiz.Skyline
             this.areaOrderRTContextMenuItem,
             this.areaOrderAreaContextMenuItem});
             this.areaOrderContextMenuItem.Name = "areaOrderContextMenuItem";
-            this.areaOrderContextMenuItem.Size = new System.Drawing.Size(135, 22);
+            this.areaOrderContextMenuItem.Size = new System.Drawing.Size(152, 22);
             this.areaOrderContextMenuItem.Text = "Order";
             this.areaOrderContextMenuItem.DropDownOpening += new System.EventHandler(this.areaOrderContextMenuItem_DropDownOpening);
             // 
@@ -2294,7 +2295,7 @@ namespace pwiz.Skyline
             // 
             this.areaPercentViewContextMenuItem.CheckOnClick = true;
             this.areaPercentViewContextMenuItem.Name = "areaPercentViewContextMenuItem";
-            this.areaPercentViewContextMenuItem.Size = new System.Drawing.Size(135, 22);
+            this.areaPercentViewContextMenuItem.Size = new System.Drawing.Size(152, 22);
             this.areaPercentViewContextMenuItem.Text = "Normalized";
             this.areaPercentViewContextMenuItem.Click += new System.EventHandler(this.areaPercentViewContextMenuItem_Click);
             // 
@@ -2302,7 +2303,7 @@ namespace pwiz.Skyline
             // 
             this.areaLogScaleContextMenuItem.CheckOnClick = true;
             this.areaLogScaleContextMenuItem.Name = "areaLogScaleContextMenuItem";
-            this.areaLogScaleContextMenuItem.Size = new System.Drawing.Size(135, 22);
+            this.areaLogScaleContextMenuItem.Size = new System.Drawing.Size(152, 22);
             this.areaLogScaleContextMenuItem.Text = "Log Scale";
             this.areaLogScaleContextMenuItem.Click += new System.EventHandler(this.areaLogScaleContextMenuItem_Click);
             // 
@@ -2310,7 +2311,7 @@ namespace pwiz.Skyline
             // 
             this.areaCvsContextMenuItem.CheckOnClick = true;
             this.areaCvsContextMenuItem.Name = "areaCvsContextMenuItem";
-            this.areaCvsContextMenuItem.Size = new System.Drawing.Size(135, 22);
+            this.areaCvsContextMenuItem.Size = new System.Drawing.Size(152, 22);
             this.areaCvsContextMenuItem.Text = "Area CVs";
             this.areaCvsContextMenuItem.Click += new System.EventHandler(this.areaCvsContextMenuItem_Click);
             // 

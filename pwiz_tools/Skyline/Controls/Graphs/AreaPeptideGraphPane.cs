@@ -47,9 +47,6 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             XAxis.Title.Text = "Peptide";
             XAxis.Type = AxisType.Text;
-            // Y-axis extents are set in graph update
-            YAxis.Scale.MinAuto = false;
-            YAxis.Scale.MinAuto = false;
         }
 
         public override void UpdateGraph(bool checkData)
@@ -105,14 +102,16 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 YAxis.Title.Text = "Log Peak Area";
                 YAxis.Type = AxisType.Log;
-                YAxis.Scale.Min = 1;
+                YAxis.Scale.MinAuto = false;
+                FixedYMin = YAxis.Scale.Min = 1;
                 YAxis.Scale.Max = _graphData.MaxY * 10;
             }
             else
             {
                 YAxis.Title.Text = "Peak Area";
                 YAxis.Type = AxisType.Linear;
-                YAxis.Scale.Min = 0;
+                YAxis.Scale.MinAuto = false;
+                FixedYMin = YAxis.Scale.Min = 0;
                 YAxis.Scale.Max = _graphData.MaxY * 1.05;
             }
             if (Settings.Default.AreaPeptideCV)
@@ -460,7 +459,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     double meanArea, meanTime;
                     CalcStats(nodePepChild, out meanArea, out meanTime);
                     areas.Add(meanArea);
-                    areas.Add(meanTime);
+                    times.Add(meanTime);
                     if (ReferenceEquals(nodeGroup, nodePepChild))
                     {
                         AreaGroup = meanArea;

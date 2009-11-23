@@ -49,20 +49,35 @@ namespace pwiz.Skyline.Controls.Graphs
         public GraphSummary GraphSummary { get; private set; }
 
         /// <summary>
+        /// Sets a fixed minimum y value, which the graph control will maintain through
+        /// zooming and panning.
+        /// </summary>
+        public double? FixedYMin { get; set; }
+
+        public void EnsureYMin()
+        {
+            if (FixedYMin.HasValue && YAxis.Scale.Min != FixedYMin.Value)
+            {
+                YAxis.Scale.Min = FixedYMin.Value;
+                AxisChange(GraphSummary.GraphControl.CreateGraphics());
+            }            
+        }
+
+        /// <summary>
         /// Update the graph pane.
         /// </summary>
         /// <param name="checkData"></param>
         public abstract void UpdateGraph(bool checkData);
 
-        public virtual bool HandleMouseMoveEvent(ZedGraphControl sender, MouseEventArgs mouseEventArgs)
+        public virtual bool HandleMouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             return false;
         }
-        public virtual bool HandleMouseDownEvent(ZedGraphControl sender, MouseEventArgs mouseEventArgs)
+        public virtual bool HandleMouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             return false;
         }
-        public virtual bool HandleKeyDownEvent(object sender, KeyEventArgs keyEventArgs)
+        public virtual bool HandleKeyDownEvent(object sender, KeyEventArgs e)
         {
             return false;
         }

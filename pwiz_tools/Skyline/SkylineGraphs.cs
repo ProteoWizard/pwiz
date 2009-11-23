@@ -2047,14 +2047,16 @@ namespace pwiz.Skyline
         private void areaPercentViewContextMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.AreaPercentView = areaPercentViewContextMenuItem.Checked;
-            Settings.Default.AreaLogScale = !areaPercentViewContextMenuItem.Checked;
+            if (areaPercentViewContextMenuItem.Checked)
+                Settings.Default.AreaLogScale = false;
             UpdatePeakAreaGraph();
         }
 
         private void areaLogScaleContextMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.AreaLogScale = areaLogScaleContextMenuItem.Checked;
-            Settings.Default.AreaPercentView = !areaLogScaleContextMenuItem.Checked;
+            if (areaLogScaleContextMenuItem.Checked)
+                Settings.Default.AreaPercentView = false;
             UpdatePeakAreaGraph();
         }
 

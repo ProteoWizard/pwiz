@@ -47,6 +47,7 @@ namespace pwiz.Skyline.Controls.Graphs
             YAxis.Scale.MinAuto = false;
             YAxis.Scale.Min = 0;
         }
+
         public override bool HandleMouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             if (PeptideIndexFromPoint(new PointF(e.X, e.Y)) != null)
@@ -54,7 +55,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 GraphSummary.Cursor = Cursors.Hand;
                 return true;
             }
-            return false;
+            return base.HandleMouseMoveEvent(sender, e);
         }
 
         public override bool HandleMouseDownEvent(ZedGraphControl sender, MouseEventArgs e)

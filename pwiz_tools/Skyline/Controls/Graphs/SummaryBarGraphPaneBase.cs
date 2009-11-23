@@ -102,7 +102,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public override bool HandleMouseMoveEvent(ZedGraphControl sender, MouseEventArgs mouseEventArgs)
         {
             if (mouseEventArgs.Button != MouseButtons.None)
-                return false;
+                return base.HandleMouseMoveEvent(sender, mouseEventArgs);
 
             CurveItem nearestCurve;
             int iNearest;

@@ -75,7 +75,6 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             BarSettings.Type = BarType;
-            YAxis.Title.Text = "Peak Area";
             Title.Text = null;
 
             DisplayTypeChrom displayType = GraphChromatogram.DisplayType;
@@ -210,18 +209,52 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 _parentNode = parentNode;
                 XAxis.Scale.MaxAuto = XAxis.Scale.MinAuto = true;
-                YAxis.Scale.MaxAuto = YAxis.Scale.MinAuto = true;
+                YAxis.Scale.MaxAuto = true;
             }
             if (BarSettings.Type == BarType.PercentStack)
             {
                 YAxis.Scale.Max = 100;
                 YAxis.Scale.MaxAuto = false;
                 YAxis.Title.Text = "Peak Area Percentage";
+                YAxis.Type = AxisType.Linear;
+                YAxis.Scale.MinAuto = false;
+                FixedYMin = YAxis.Scale.Min = 0;
             }
             else
             {
                 if (normalizeOpt)
+                {
+                    // If currently log scale, reset the y-axis max
+                    if (YAxis.Type == AxisType.Log)
+                        YAxis.Scale.MaxAuto = true;
+
                     YAxis.Title.Text = "Peak Area Regression Percent";
+                    YAxis.Type = AxisType.Linear;
+                    YAxis.Scale.MinAuto = false;
+                    FixedYMin = YAxis.Scale.Min = 0;
+                }
+                else if (Settings.Default.AreaLogScale)
+                {
+                    // If currently not log scale, reset the y-axis max
+                    if (YAxis.Type != AxisType.Log)
+                        YAxis.Scale.MaxAuto = true;
+
+                    YAxis.Title.Text = "Log Peak Area";
+                    YAxis.Type = AxisType.Log;
+                    YAxis.Scale.MinAuto = false;
+                    FixedYMin = YAxis.Scale.Min = 1;
+                }
+                else
+                {
+                    // If currently log scale, reset the y-axis max
+                    if (YAxis.Type == AxisType.Log)
+                        YAxis.Scale.MaxAuto = true;
+
+                    YAxis.Title.Text = "Peak Area";
+                    YAxis.Type = AxisType.Linear;
+                    YAxis.Scale.MinAuto = false;
+                    FixedYMin = YAxis.Scale.Min = 0;
+                }
                 if (!YAxis.Scale.MaxAuto && YAxis.Scale.Max == 100)
                     YAxis.Scale.MaxAuto = true;
             }

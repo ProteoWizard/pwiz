@@ -52,6 +52,7 @@
             this.graphControl.MouseDownEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.graphControl_MouseDownEvent);
             this.graphControl.MouseMoveEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.graphControl_MouseMoveEvent);
             this.graphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.graphControl_ContextMenuBuilder);
+            this.graphControl.ZoomEvent += new ZedGraph.ZedGraphControl.ZoomEventHandler(this.graphControl_ZoomEvent);
             // 
             // GraphSummary
             // 
@@ -66,6 +67,7 @@
             this.MinimizeBox = false;
             this.Name = "GraphSummary";
             this.ShowInTaskbar = false;
+            this.TabText = "GraphSummary";
             this.Text = "GraphSummary";
             this.VisibleChanged += new System.EventHandler(this.GraphSummary_VisibleChanged);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.GraphSummary_KeyDown);
