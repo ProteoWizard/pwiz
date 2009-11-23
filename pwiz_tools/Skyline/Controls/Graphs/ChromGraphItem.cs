@@ -484,13 +484,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public sealed class FailedChromGraphItem : NoDataChromGraphItem
     {
-        public FailedChromGraphItem(TransitionDocNode nodeTran)
-            : base(string.Format("{0} (load failed)", ChromGraphItem.GetTitle(nodeTran)))
-        {            
-        }
-
-        public FailedChromGraphItem(TransitionGroupDocNode nodeGroup)
-            : base(string.Format("{0} (load failed)", ChromGraphItem.GetTitle(nodeGroup)))
+        public FailedChromGraphItem(TransitionGroupDocNode nodeGroup, Exception x)
+            : base(string.Format("{0} (load failed: {1})", ChromGraphItem.GetTitle(nodeGroup), x.Message))
         {            
         }
     }

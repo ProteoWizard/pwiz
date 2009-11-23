@@ -411,13 +411,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                 }
             }
-            catch (InvalidDataException)
+            catch (InvalidDataException x)
             {
-                DisplayFailureGraph(graphPane, nodeGroups);
+                DisplayFailureGraph(graphPane, nodeGroups, x);
             }
-            catch (IOException)
+            catch (IOException x)
             {
-                DisplayFailureGraph(graphPane, nodeGroups);
+                DisplayFailureGraph(graphPane, nodeGroups, x);
             }
 
             // Show unavailable message, if no chromatogoram loaded
@@ -443,12 +443,12 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.Refresh();
         }
 
-        private void DisplayFailureGraph(MSGraphPane graphPane, TransitionGroupDocNode[] nodeGroups)
+        private void DisplayFailureGraph(MSGraphPane graphPane, TransitionGroupDocNode[] nodeGroups, Exception x)
         {
             if (nodeGroups != null)
             {
                 foreach (var nodeGroup in nodeGroups)
-                    graphControl.AddGraphItem(graphPane, new FailedChromGraphItem(nodeGroup), false);
+                    graphControl.AddGraphItem(graphPane, new FailedChromGraphItem(nodeGroup, x), false);
             }
         }
 
@@ -683,17 +683,29 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (infos.Length == 0)
                     continue;
 
-                if (totalOptCount == 0)
+                // If the largest size is larger than currently seen
+                if (totalOptCount < infos.Length)
+                {
+                    // Reallocate and copy previously seen arrarys to the new size.
+                    // This data is probably not very good, or possibly invalid, but
+                    // better to show something, than just a chryptic error message.
                     totalOptCount = infos.Length;
-                else if (totalOptCount != infos.Length)
-                    throw new InvalidDataException("Optimization information for each transition must have the same number of steps to be summed.");
+                    for (int i = 0; i < listTranisitionChromInfoSets.Count; i++)
+                    {
+                        var transitionChromInfosNew = new TransitionChromInfo[totalOptCount];
+                        var transitionChromInfosOld = listTranisitionChromInfoSets[i];
+                        Array.Copy(transitionChromInfosOld, 0, transitionChromInfosNew,
+                            totalOptCount/2 - transitionChromInfosOld.Length/2, transitionChromInfosOld.Length);
+                    }
+                }
 
                 listChromInfoSets.Add(infos);
-                var transitionChromInfos = new TransitionChromInfo[infos.Length];
+                var transitionChromInfos = new TransitionChromInfo[totalOptCount];
                 int steps = infos.Length/2;
+                int offset = totalOptCount/2 - steps;
                 for (int i = 0; i < infos.Length; i++)
                 {
-                    transitionChromInfos[i] = GetTransitionChromInfo(nodeTran, _chromIndex, fileIndex, i - steps);
+                    transitionChromInfos[i + offset] = GetTransitionChromInfo(nodeTran, _chromIndex, fileIndex, i - steps);
                 }
                 listTranisitionChromInfoSets.Add(transitionChromInfos);
             }
