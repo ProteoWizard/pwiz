@@ -147,13 +147,7 @@ void testRead(const Reader& reader, const string& rawpath)
         manglePwizSoftware(msd);
         if (os_) TextWriter(*os_,0)(msd);
 
-        string targetResultFilename;
-        if (msds.size() == 1)
-            targetResultFilename = bfs::change_extension(rawpath, ".mzML").string();
-        else
-            targetResultFilename = bfs::change_extension(rawpath, "-" + msd.run.id + ".mzML").string();
-
-        MSDataFile targetResult(targetResultFilename);
+        MSDataFile targetResult(msd.run.id + ".mzML");
         hackInMemoryMSData(targetResult);
 
         // test for 1:1 equality
@@ -185,13 +179,8 @@ void generate(const Reader& reader, const string& rawpath)
     if (os_) *os_ << "Writing mzML(s) for " << rawpath << endl;
     for (size_t i=0; i < msds.size(); ++i)
     {
-        string outputFilename;
-        if (msds.size() == 1)
-            outputFilename = bfs::change_extension(rawpath, ".mzML").string();
-        else
-            outputFilename = bfs::change_extension(rawpath, "-" + msds[i]->run.id + ".mzML").string();
         calculateSourceFileChecksums(msds[i]->fileDescription.sourceFilePtrs);
-        MSDataFile::write(*msds[i], outputFilename, config);
+        MSDataFile::write(*msds[i], msds[i]->run.id + ".mzML", config);
     }
 }
 
