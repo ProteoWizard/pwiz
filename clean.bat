@@ -27,7 +27,7 @@ IF EXIST pwiz\analysis\svnrev.hpp del /q pwiz\analysis\svnrev.hpp
 IF EXIST pwiz\utility\proteome\svnrev.hpp del /q pwiz\utility\proteome\svnrev.hpp
 
 del /q pwiz\utility\bindings\CLI\*.xdc
-del /q pwiz\utility\vendor_api\thermo\xdk\*.dll
+del /q pwiz\utility\vendor_api\thermo\*.dll
 del /q pwiz_aux\msrc\utility\vendor_api\ABI\*.dll
 
 IF EXIST pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data rmdir /s /q pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data
