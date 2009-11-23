@@ -461,7 +461,7 @@ tar.create boost_1_39_0.tar.bz2
   exclude:.svn
   exclude:*.bak
   exclude:cvgen*.exe
-  exclude:svnrev.*
+  exclude:svnrev.hpp
   exclude:Reader_*_Test.data
   exclude:example_data/small* # large files in example_data
   exclude:bootstrap exclude:bin.* # boost-build intermediate directories
