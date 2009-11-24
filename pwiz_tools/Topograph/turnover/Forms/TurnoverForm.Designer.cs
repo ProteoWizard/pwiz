@@ -51,13 +51,13 @@
             this.queryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mercuryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.halfLivesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.locksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.enrichmentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.modificationsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.updateProteinNamesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.machineSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dataDirectoryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.locksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -141,6 +141,7 @@
             this.upsizeWorkspaceToolStripMenuItem.Name = "upsizeWorkspaceToolStripMenuItem";
             this.upsizeWorkspaceToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
             this.upsizeWorkspaceToolStripMenuItem.Text = "Upsize Workspace...";
+            this.upsizeWorkspaceToolStripMenuItem.Visible = false;
             this.upsizeWorkspaceToolStripMenuItem.Click += new System.EventHandler(this.upsizeWorkspaceToolStripMenuItem_Click);
             // 
             // toolStripSeparator3
@@ -255,6 +256,14 @@
             this.halfLivesToolStripMenuItem.Text = "Half Lives";
             this.halfLivesToolStripMenuItem.Click += new System.EventHandler(this.halfLivesToolStripMenuItem_Click);
             // 
+            // locksToolStripMenuItem
+            // 
+            this.locksToolStripMenuItem.Enabled = false;
+            this.locksToolStripMenuItem.Name = "locksToolStripMenuItem";
+            this.locksToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.locksToolStripMenuItem.Text = "Database Locks";
+            this.locksToolStripMenuItem.Click += new System.EventHandler(this.locksToolStripMenuItem_Click);
+            // 
             // settingsToolStripMenuItem
             // 
             this.settingsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -306,14 +315,6 @@
             this.dataDirectoryToolStripMenuItem.Size = new System.Drawing.Size(202, 22);
             this.dataDirectoryToolStripMenuItem.Text = "Data Directory...";
             this.dataDirectoryToolStripMenuItem.Click += new System.EventHandler(this.dataDirectoryToolStripMenuItem_Click);
-            // 
-            // locksToolStripMenuItem
-            // 
-            this.locksToolStripMenuItem.Enabled = false;
-            this.locksToolStripMenuItem.Name = "locksToolStripMenuItem";
-            this.locksToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
-            this.locksToolStripMenuItem.Text = "Database Locks";
-            this.locksToolStripMenuItem.Click += new System.EventHandler(this.locksToolStripMenuItem_Click);
             // 
             // TurnoverForm
             // 

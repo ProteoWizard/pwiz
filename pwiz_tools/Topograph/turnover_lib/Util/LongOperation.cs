@@ -31,11 +31,10 @@ namespace pwiz.Topograph.Util
         {
             new Action(RunJobBackground).BeginInvoke(null, null);
             _event.WaitOne(UiDelayMilliseconds);
-            if (IsComplete)
+            if (!IsComplete)
             {
-                return true;
+                Ui.DisplayLongOperationUi(this);
             }
-            Ui.DisplayLongOperationUi(this);
             _event.WaitOne();
             if (_exception != null)
             {

@@ -741,18 +741,11 @@ namespace pwiz.Topograph.ui.Forms
                     using (var targetSessionFactory = SessionFactoryFactory.GetSessionFactoryWithoutIdGenerators(tpgLinkDef))
                     {
                         var workspaceUpsizer = new WorkspaceUpsizer(Workspace.SessionFactory, targetSessionFactory);
-                        try
+                        if (new LongOperationBroker(workspaceUpsizer, new LongWaitDialog(this, "Upsizing workspace")).LaunchJob())
                         {
-                            if (new LongOperationBroker(workspaceUpsizer, new LongWaitDialog(this, "Upsizing workspace")).LaunchJob())
-                            {
-                                return;
-                            }
-                            break;
+                            return;
                         }
-                        catch (ApplicationException applicationException)
-                        {
-                            Console.Out.WriteLine(applicationException);
-                        }
+                        break;
                     }
                 }
             }
