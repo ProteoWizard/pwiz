@@ -1,3 +1,6 @@
+//
+// $Id$
+//
 #include "LinearLeastSquares.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include <iostream>

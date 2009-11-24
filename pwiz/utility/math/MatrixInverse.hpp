@@ -1,3 +1,6 @@
+//
+// $Id$
+//
 #ifndef _MATRIXINVERSE_HPP_
 #define _MATRIXINVERSE_HPP_
 
