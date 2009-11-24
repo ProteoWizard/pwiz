@@ -158,6 +158,12 @@
     <Compile Include="Forms\DistributionResultsForm.Designer.cs">
       <DependentUpon>DistributionResultsForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\DumpWorkspaceDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\DumpWorkspaceDlg.Designer.cs">
+      <DependentUpon>DumpWorkspaceDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\EnrichmentDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -342,6 +348,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\DataFileSummary.resx">
       <DependentUpon>DataFileSummary.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\DumpWorkspaceDlg.resx">
+      <DependentUpon>DumpWorkspaceDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\EnrichmentDialog.resx">
       <DependentUpon>EnrichmentDialog.cs</DependentUpon>

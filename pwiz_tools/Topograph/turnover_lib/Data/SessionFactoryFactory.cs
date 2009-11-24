@@ -25,6 +25,8 @@ using System.Reflection;
 using System.Text;
 using NHibernate;
 using NHibernate.Cfg;
+using NHibernate.Dialect;
+using NHibernate.Driver;
 using NHibernate.Mapping;
 using pwiz.Topograph.Model;
 
@@ -32,54 +34,76 @@ namespace pwiz.Topograph.Data
 {
     public static class SessionFactoryFactory
     {
-        private static ISessionFactory BuildSessionFactory(Configuration configuration)
+        public static Type GetDialectClass(DatabaseTypeEnum databaseTypeEnum)
+        {
+            switch (databaseTypeEnum)
+            {
+                case DatabaseTypeEnum.sqlite:
+                    return typeof(SQLiteDialect);
+                case DatabaseTypeEnum.mysql:
+                    return typeof(MySQLDialect);
+                case DatabaseTypeEnum.postgresql:
+                    return typeof(PostgreSQL82Dialect);
+            }
+            throw new ArgumentException();
+        }
+        public static Type GetDriverClass(DatabaseTypeEnum databaseTypeEnum)
+        {
+            switch (databaseTypeEnum)
+            {
+                case DatabaseTypeEnum.sqlite:
+                    return typeof(SQLite20Driver);
+                case DatabaseTypeEnum.mysql:
+                    return typeof(MySqlDataDriver);
+                case DatabaseTypeEnum.postgresql:
+                    return typeof(NpgsqlDriver);
+            }
+            throw new ArgumentException();
+        }
+        public static Configuration GetConfiguration(DatabaseTypeEnum databaseTypeEnum)
         {
             Assembly assembly = typeof(SessionFactoryFactory).Assembly;
-            configuration.SetProperty("connection.provider", typeof(NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName);
-            configuration.AddInputStream(assembly.GetManifestResourceStream("pwiz.Topograph.Data.mapping.xml"));
-            ISessionFactory sessionFactory = configuration.BuildSessionFactory();
-            return sessionFactory;
+            var configuration = new Configuration()
+                .SetProperty("dialect", GetDialectClass(databaseTypeEnum).AssemblyQualifiedName)
+                .SetProperty("connection.driver_class", GetDriverClass(databaseTypeEnum).AssemblyQualifiedName)
+                .SetProperty("connection.provider",
+                             typeof (NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName)
+                .AddInputStream(assembly.GetManifestResourceStream("pwiz.Topograph.Data.mapping.xml"));
+            return configuration;
+            
         }
 
         public static ISessionFactory CreateSessionFactory(String path, bool createSchema)
         {
-            var configuration = new Configuration()
-                .SetProperty("dialect", typeof(NHibernate.Dialect.SQLiteDialect).AssemblyQualifiedName)
+
+            var configuration = GetConfiguration(DatabaseTypeEnum.sqlite)
                 .SetProperty("connection.connection_string", new SQLiteConnectionStringBuilder
-                    {
-                        DataSource = path
-                    }.ToString())
-                .SetProperty("connection.driver_class", typeof(NHibernate.Driver.SQLite20Driver).AssemblyQualifiedName);
+                                                                 {
+                                                                     DataSource = path
+                                                                 }.ToString());
             if (createSchema)
             {
                 configuration.SetProperty("hbm2ddl.auto", "create");
             }
-            return BuildSessionFactory(configuration);
+            return configuration.BuildSessionFactory();
         }
 
         public static ISessionFactory CreateSessionFactory(TpgLinkDef tpgLinkDef, bool createSchema)
         {
-            var configuration = new Configuration()
+            var configuration = GetConfiguration(tpgLinkDef.DatabaseTypeEnum)
                 .SetProperty("show_sql", "true")
-                .SetProperty("dialect", tpgLinkDef.GetDialectClass().AssemblyQualifiedName)
-                .SetProperty("connection.connection_string", tpgLinkDef.GetConnectionString())
-                .SetProperty("connection.driver_class", tpgLinkDef.GetDriverClass().AssemblyQualifiedName);
+                .SetProperty("connection.connection_string", tpgLinkDef.GetConnectionString());
             if (createSchema)
             {
                 configuration.SetProperty("hbm2ddl.auto", "create");
             }
-            return BuildSessionFactory(configuration);
+            return configuration.BuildSessionFactory();
         }
         public static ISessionFactory GetSessionFactoryWithoutIdGenerators(TpgLinkDef tpgLinkDef)
         {
-            var configuration = new Configuration()
+            var configuration = GetConfiguration(tpgLinkDef.DatabaseTypeEnum)
                 .SetProperty("show_sql", "true")
-                .SetProperty("dialect", tpgLinkDef.GetDialectClass().AssemblyQualifiedName)
-                .SetProperty("connection.connection_string", tpgLinkDef.GetConnectionString())
-                .SetProperty("connection.driver_class", tpgLinkDef.GetDriverClass().AssemblyQualifiedName);
-            Assembly assembly = typeof(SessionFactoryFactory).Assembly;
-            configuration.SetProperty("connection.provider", typeof(NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName);
-            configuration.AddInputStream(assembly.GetManifestResourceStream("pwiz.Topograph.Data.mapping.xml"));
+                .SetProperty("connection.connection_string", tpgLinkDef.GetConnectionString());
             foreach (var classMapping in configuration.ClassMappings)
             {
                 classMapping.IdentifierProperty.Generation = PropertyGeneration.Never;

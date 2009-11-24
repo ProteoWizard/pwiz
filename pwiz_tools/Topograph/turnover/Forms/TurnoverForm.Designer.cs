@@ -36,7 +36,6 @@
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.newOnlineWorkspaceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openOnlineWorkspaceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.upsizeWorkspaceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.saveWorkspaceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.closeWorkspaceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -58,6 +57,7 @@
             this.updateProteinNamesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.machineSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dataDirectoryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.outputWorkspaceSQLToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -91,7 +91,7 @@
             this.toolStripSeparator2,
             this.newOnlineWorkspaceToolStripMenuItem,
             this.openOnlineWorkspaceToolStripMenuItem,
-            this.upsizeWorkspaceToolStripMenuItem,
+            this.outputWorkspaceSQLToolStripMenuItem,
             this.toolStripSeparator3,
             this.saveWorkspaceToolStripMenuItem,
             this.closeWorkspaceToolStripMenuItem,
@@ -134,15 +134,6 @@
             this.openOnlineWorkspaceToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
             this.openOnlineWorkspaceToolStripMenuItem.Text = "Connect to Online Workspace...";
             this.openOnlineWorkspaceToolStripMenuItem.Click += new System.EventHandler(this.openOnlineWorkspaceToolStripMenuItem_Click);
-            // 
-            // upsizeWorkspaceToolStripMenuItem
-            // 
-            this.upsizeWorkspaceToolStripMenuItem.Enabled = false;
-            this.upsizeWorkspaceToolStripMenuItem.Name = "upsizeWorkspaceToolStripMenuItem";
-            this.upsizeWorkspaceToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
-            this.upsizeWorkspaceToolStripMenuItem.Text = "Upsize Workspace...";
-            this.upsizeWorkspaceToolStripMenuItem.Visible = false;
-            this.upsizeWorkspaceToolStripMenuItem.Click += new System.EventHandler(this.upsizeWorkspaceToolStripMenuItem_Click);
             // 
             // toolStripSeparator3
             // 
@@ -316,6 +307,14 @@
             this.dataDirectoryToolStripMenuItem.Text = "Data Directory...";
             this.dataDirectoryToolStripMenuItem.Click += new System.EventHandler(this.dataDirectoryToolStripMenuItem_Click);
             // 
+            // outputWorkspaceSQLToolStripMenuItem
+            // 
+            this.outputWorkspaceSQLToolStripMenuItem.Enabled = false;
+            this.outputWorkspaceSQLToolStripMenuItem.Name = "outputWorkspaceSQLToolStripMenuItem";
+            this.outputWorkspaceSQLToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
+            this.outputWorkspaceSQLToolStripMenuItem.Text = "Export Workspace SQL...";
+            this.outputWorkspaceSQLToolStripMenuItem.Click += new System.EventHandler(this.outputWorkspaceSQLToolStripMenuItem_Click);
+            // 
             // TurnoverForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -362,8 +361,8 @@
         private System.Windows.Forms.ToolStripMenuItem openOnlineWorkspaceToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
-        private System.Windows.Forms.ToolStripMenuItem upsizeWorkspaceToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem dataDirectoryToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem locksToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem outputWorkspaceSQLToolStripMenuItem;
     }
 }

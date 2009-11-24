@@ -29,29 +29,12 @@ namespace pwiz.Topograph.ui.Forms
         public void DisplayLongOperationUi(LongOperationBroker broker)
         {
             LongOperationBroker = broker;
-            UpdateUi();
+            timer1_Tick(timer1, new EventArgs());
             ShowDialog(ParentWindow);
         }
 
         public void UpdateLongOperationUi()
         {
-            try
-            {
-                if (!IsDisposed && IsHandleCreated)
-                {
-                    BeginInvoke(new Action(UpdateUi));
-                }
-            }
-            catch(Exception e)
-            {
-                Console.Out.WriteLine(e);
-            }
-        }
-
-        private void UpdateUi()
-        {
-            tbxMessage.Text = LongOperationBroker.StatusMessage;
-            btnCancel.Enabled = LongOperationBroker.IsCancellable && !LongOperationBroker.WasCancelled;
         }
 
         public void LongOperationEnded()
@@ -82,6 +65,15 @@ namespace pwiz.Topograph.ui.Forms
         private void btnCancel_Click(object sender, EventArgs e)
         {
             Close();
+        }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            if (LongOperationBroker != null)
+            {
+                tbxMessage.Text = LongOperationBroker.StatusMessage;
+                btnCancel.Enabled = LongOperationBroker.IsCancellable && !LongOperationBroker.WasCancelled;
+            }
         }
     }
 }

@@ -105,6 +105,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data\DatabaseDumper.cs" />
     <Compile Include="Data\DbChangeLog.cs" />
     <Compile Include="Data\DbInstanceStatus.cs" />
     <Compile Include="Data\QueryExecuter.cs" />
@@ -113,7 +114,6 @@
     <Compile Include="Data\Snapshot\PeptideFileAnalysisSnapshot.cs" />
     <Compile Include="Data\Snapshot\Snapshot.cs" />
     <Compile Include="Data\WorkspaceUpgrader.cs" />
-    <Compile Include="Data\WorkspaceUpsizer.cs" />
     <Compile Include="Enrichment\TracerFormulaEnumerator.cs" />
     <Compile Include="Enrichment\TracerPercentEnumerator.cs" />
     <Compile Include="Fasta\FastaUpdater.cs" />

@@ -61,6 +61,7 @@ namespace pwiz.Topograph.ui.Forms
                         closeWorkspaceToolStripMenuItem,
                         statusToolStripMenuItem,
                         locksToolStripMenuItem,
+                        outputWorkspaceSQLToolStripMenuItem,
                 };
             }
         }
@@ -81,7 +82,6 @@ namespace pwiz.Topograph.ui.Forms
                                machineSettingsToolStripMenuItem,
                                mercuryToolStripMenuItem,
                                halfLivesToolStripMenuItem,
-                               upsizeWorkspaceToolStripMenuItem,
                                dataDirectoryToolStripMenuItem,
                            };
             }
@@ -698,58 +698,6 @@ namespace pwiz.Topograph.ui.Forms
             
         }
 
-        private void upsizeWorkspaceToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            if (!PromptToSaveWorkspace())
-            {
-                return;
-            }
-            var dialog = new TpgLinkForm
-            {
-                ShowReadOnlyCheckbox = false,
-            };
-            while (true)
-            {
-                if (dialog.ShowDialog(this) == DialogResult.Cancel)
-                {
-                    return;
-                }
-                var tpgLinkDef = dialog.GetTpgLinkDef();
-                try
-                {
-                    tpgLinkDef.OpenConnection();
-                }
-                catch
-                {
-                    // ignore
-                    try
-                    {
-                        tpgLinkDef.CreateDatabase();
-                    }
-                    catch (Exception exception)
-                    {
-                        var result = MessageBox.Show(this, "There was an error creating the database.  Do you want to try again?\n" + exception, Program.AppName, MessageBoxButtons.OKCancel);
-                        if (result == DialogResult.Cancel)
-                        {
-                            return;
-                        }
-                        continue;
-                    }
-                }
-                while (true)
-                {
-                    using (var targetSessionFactory = SessionFactoryFactory.GetSessionFactoryWithoutIdGenerators(tpgLinkDef))
-                    {
-                        var workspaceUpsizer = new WorkspaceUpsizer(Workspace.SessionFactory, targetSessionFactory);
-                        if (new LongOperationBroker(workspaceUpsizer, new LongWaitDialog(this, "Upsizing workspace")).LaunchJob())
-                        {
-                            return;
-                        }
-                        break;
-                    }
-                }
-            }
-        }
 
         public void BrowseForDataDirectory()
         {
@@ -814,6 +762,43 @@ namespace pwiz.Topograph.ui.Forms
             var title = ids.Count == 1 ? "Loading peptide analysis" : "Loading " + ids.Count + " peptide analyses";
             new LongOperationBroker(job, new LongWaitDialog(this, title)).LaunchJob();
             return job.PeptideAnalyses;
+        }
+
+        private void outputWorkspaceSQLToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (!PromptToSaveWorkspace())
+            {
+                return;
+            }
+            var dumpWorkspaceDlg = new DumpWorkspaceDlg();
+            if (dumpWorkspaceDlg.ShowDialog(this) == DialogResult.Cancel)
+            {
+                return;
+            }
+            Settings.Default.Reload();
+            var fileDialog = new SaveFileDialog()
+                                 {
+                                    Title = "Export Workspace SQL",
+                                    Filter = "SQL Files (*.sql)|*.sql|All Files|*.*",
+                                    InitialDirectory = Settings.Default.ExportResultsDirectory
+                                 };
+            if (fileDialog.ShowDialog(this) == DialogResult.Cancel)
+            {
+                return;
+            }
+            Settings.Default.ExportResultsDirectory = Path.GetDirectoryName(fileDialog.FileName);
+            Settings.Default.Save();
+            var workspace = Workspace;
+            try
+            {
+                Workspace = null;
+                var databaseDumper = new DatabaseDumper(workspace, dumpWorkspaceDlg.DatabaseTypeEnum, fileDialog.FileName);
+                new LongOperationBroker(databaseDumper, new LongWaitDialog(this, "Exporting SQL")).LaunchJob();
+            }
+            finally
+            {
+                Workspace = OpenWorkspace(workspace.DatabasePath);
+            }
         }
     }
 }

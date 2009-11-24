@@ -75,32 +75,7 @@ namespace pwiz.Topograph.Model
             }
             throw new ArgumentException();
         }
-        public Type GetDialectClass()
-        {
-            switch (DatabaseTypeEnum)
-            {
-                case DatabaseTypeEnum.sqlite:
-                    return typeof (SQLiteDialect);
-                case DatabaseTypeEnum.mysql:
-                    return typeof (MySQLDialect);
-                case DatabaseTypeEnum.postgresql:
-                    return typeof (PostgreSQL82Dialect);
-            }
-            throw new ArgumentException();
-        }
-        public Type GetDriverClass()
-        {
-            switch (DatabaseTypeEnum)
-            {
-                case DatabaseTypeEnum.sqlite:
-                    return typeof (SQLite20Driver);
-                case DatabaseTypeEnum.mysql:
-                    return typeof (MySqlDataDriver);
-                case DatabaseTypeEnum.postgresql:
-                    return typeof (NpgsqlDriver);
-            }
-            throw new ArgumentException();
-        }
+
         public String GetConnectionStringNoDatabase()
         {
             switch (DatabaseTypeEnum)
