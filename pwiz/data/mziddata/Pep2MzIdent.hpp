@@ -36,6 +36,12 @@ namespace mziddata{
 using namespace pwiz::data::pepxml;
 typedef boost::shared_ptr<MzIdentML> MzIdentMLPtr;
 
+/// Translates data from a MinimumPepXML object into a MzIdentML
+/// object tree when a translation is known. The MzIdentML object
+/// initializes a cvList with the "MS" and "UO" elements.
+///
+/// The translate method is used to copy data. The clear method resets
+/// the MzIdentML object, null's out the MSMSPipelineAnalysis.
 class PWIZ_API_DECL Pep2MzIdent
 {
 
@@ -52,6 +58,8 @@ public:
     /// MzIdentML object tree. The resulting MzIdentMLPtr is returned.
     MzIdentMLPtr translate();
 
+    void setMspa(const MSMSPipelineAnalysis& mspa);
+    
     /// Returns the MzIdentMLPtr object. If a translation has not been
     /// done, or if clear has been called, then an empty MzIdentML
     /// will be return in the MzIdentMLPtr object.
@@ -125,7 +133,7 @@ private:
     CVID cvidFromSearchScore(const std::string& name);
 
     // old member variables
-    MSMSPipelineAnalysis _mspa;
+    const MSMSPipelineAnalysis* _mspa;
     MzIdentMLPtr mzid;
     bool _translated;
 

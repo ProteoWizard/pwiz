@@ -216,7 +216,7 @@ AnalysisSoftwarePtr guessAnalysisSoftware(
 //
 
 Pep2MzIdent::Pep2MzIdent(const MSMSPipelineAnalysis& mspa, MzIdentMLPtr mzid)
-    : _mspa(mspa), mzid(mzid),
+    : _mspa(&mspa), mzid(mzid),
       precursorMonoisotopic(false), fragmentMonoisotopic(false),
       indices(new Indices())
 {
@@ -229,7 +229,7 @@ void Pep2MzIdent::clear()
 {
     indices = shared_ptr<Indices>(new Indices());
 
-    _mspa = MSMSPipelineAnalysis();
+    _mspa = NULL;
 
     mzid = MzIdentMLPtr(new MzIdentML());
     mzid->cvs.push_back(cv("MS"));
@@ -246,20 +246,20 @@ void Pep2MzIdent::clear()
 
 void Pep2MzIdent::translateRoot()
 {
-    mzid->creationDate = _mspa.date;
+    mzid->creationDate = _mspa->date;
 
-    translateEnzyme(_mspa.msmsRunSummary.sampleEnzyme, mzid);
+    translateEnzyme(_mspa->msmsRunSummary.sampleEnzyme, mzid);
 
     earlyMetadata();
 
     for (vector<SearchSummaryPtr>::const_iterator ss =
-             _mspa.msmsRunSummary.searchSummary.begin();
-         ss != _mspa.msmsRunSummary.searchSummary.end(); ss++)
+             _mspa->msmsRunSummary.searchSummary.begin();
+         ss != _mspa->msmsRunSummary.searchSummary.end(); ss++)
     {
         translateSearch(*ss, mzid);
     }
 
-    for (vector<SpectrumQueryPtr>::const_iterator it=_mspa.msmsRunSummary.spectrumQueries.begin(); it!=_mspa.msmsRunSummary.spectrumQueries.end(); it++)
+    for (vector<SpectrumQueryPtr>::const_iterator it=_mspa->msmsRunSummary.spectrumQueries.begin(); it!=_mspa->msmsRunSummary.spectrumQueries.end(); it++)
     {
         translateQueries(*it, mzid);
     }
@@ -924,9 +924,9 @@ void Pep2MzIdent::lateParameters(ParameterPtr parameter,
 
 void Pep2MzIdent::earlyMetadata()
 {
-    vector<SearchSummaryPtr>& ss = _mspa.msmsRunSummary.searchSummary;
-    for (vector<SearchSummaryPtr>::const_iterator sit = ss.begin();
-         sit != ss.end(); sit++)
+    const vector<SearchSummaryPtr>* ss = &_mspa->msmsRunSummary.searchSummary;
+    for (vector<SearchSummaryPtr>::const_iterator sit = ss->begin();
+         sit != ss->end(); sit++)
     {
         vector<ParameterPtr>& pp = (*sit)->parameters;
         for (vector<ParameterPtr>::const_iterator pit=pp.begin();
@@ -939,9 +939,9 @@ void Pep2MzIdent::earlyMetadata()
 
 void Pep2MzIdent::lateMetadata()
 {
-    vector<SearchSummaryPtr>& ss = _mspa.msmsRunSummary.searchSummary;
-    for (vector<SearchSummaryPtr>::const_iterator sit = ss.begin();
-         sit != ss.end(); sit++)
+    const vector<SearchSummaryPtr>* ss = &_mspa->msmsRunSummary.searchSummary;
+    for (vector<SearchSummaryPtr>::const_iterator sit = ss->begin();
+         sit != ss->end(); sit++)
     {
         vector<ParameterPtr>& pp = (*sit)->parameters;
         for (vector<ParameterPtr>::const_iterator pit=pp.begin();
