@@ -459,7 +459,7 @@
     </NativeReference>
     <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=2.1.0.20, Type=win32">
       <Name>MSFileReader.XRawfile2.SxS.manifest</Name>
-      <HintPath>..\..\pwiz\utility\vendor_api\thermo\xdk\MSFileReader.XRawfile2.SxS.manifest</HintPath>
+      <HintPath>..\..\pwiz\utility\vendor_api\thermo\MSFileReader.XRawfile2.SxS.manifest</HintPath>
     </NativeReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
