@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using NHibernate;
 using NHibernate.Criterion;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Data.Snapshot;
@@ -37,6 +38,7 @@ namespace pwiz.Topograph.MsData
         private Thread _resultCalculatorThread;
         private bool _isRunning;
         private readonly PendingIdQueue _pendingIdQueue = new PendingIdQueue();
+        private ISession _session;
 
         public ResultCalculator(Workspace workspace)
         {
@@ -75,10 +77,10 @@ namespace pwiz.Topograph.MsData
         }
         private ICollection<long> ListLockedAnalyses()
         {
-            using (var session = _workspace.OpenSession())
+            using (_session = _workspace.OpenSession())
             {
                 var list = new List<long>();
-                session.CreateQuery("SELECT T.PeptideAnalysisId FROM " + typeof (DbLock) +
+                _session.CreateQuery("SELECT T.PeptideAnalysisId FROM " + typeof (DbLock) +
                                     " T WHERE T.PeptideAnalysisId IS NOT NULL").List(list);
                 return new HashSet<long>(list);
             }
@@ -122,14 +124,14 @@ namespace pwiz.Topograph.MsData
             }
             var lockedIds = ListLockedAnalyses();
             long? peptideAnalysisId = null;
-            using (var session = _workspace.OpenSession())
+            using (_session = _workspace.OpenSession())
             {
                 while (peptideAnalysisId == null && (_pendingIdQueue.PendingIdCount() > 0 || _pendingIdQueue.IsRequeryPending()))
                 {
                     foreach (var fileAnalysisId in _pendingIdQueue.EnumerateIds())
                     {
                         var peptideFileAnalysis =
-                            session.Get<DbPeptideFileAnalysis>(fileAnalysisId);
+                            _session.Get<DbPeptideFileAnalysis>(fileAnalysisId);
                         if (peptideFileAnalysis == null)
                         {
                             continue;
@@ -153,7 +155,7 @@ namespace pwiz.Topograph.MsData
                     if (_pendingIdQueue.IsRequeryPending())
                     {
                         var list = new List<long>();
-                        var query = session.CreateQuery("SELECT F.Id FROM " + typeof(DbPeptideFileAnalysis) + " F"
+                        var query = _session.CreateQuery("SELECT F.Id FROM " + typeof(DbPeptideFileAnalysis) + " F"
                             + "\nWHERE F.ChromatogramCount <> 0 AND F.PeptideDistributionCount = 0");
                         query.List(list);
                         _pendingIdQueue.SetQueriedIds(list);
@@ -174,17 +176,17 @@ namespace pwiz.Topograph.MsData
                         }
                         peptideAnalysis = new PeptideAnalysis(_workspace, snapshot);
                         DbLock dbLock;
-                        using (var session = _workspace.OpenWriteSession())
+                        using (_session = _workspace.OpenWriteSession())
                         {
-                            session.BeginTransaction();
+                            _session.BeginTransaction();
                             dbLock = new DbLock()
                                          {
                                              InstanceIdGuid = _workspace.InstanceId,
                                              LockType = LockType.results,
                                              PeptideAnalysisId = peptideAnalysisId
                                          };
-                            session.Save(dbLock);
-                            session.Transaction.Commit();
+                            _session.Save(dbLock);
+                            _session.Transaction.Commit();
                         }
                         return new ResultCalculatorTask(peptideAnalysis, dbLock);
                     }
@@ -200,6 +202,18 @@ namespace pwiz.Topograph.MsData
                 return;
             }
             _isRunning = false;
+            var session = _session;
+            try
+            {
+                if (session != null)
+                {
+                    session.CancelQuery();
+                }
+            }
+            catch
+            {
+                // ignore
+            }
             _eventWaitHandle.Set();
         }
 
@@ -295,17 +309,17 @@ namespace pwiz.Topograph.MsData
             }
             if (task.CanSave())
             {
-                using (var session = _workspace.OpenWriteSession())
+                using (_session = _workspace.OpenWriteSession())
                 {
-                    session.BeginTransaction();
+                    _session.BeginTransaction();
                     foreach (var peptideFileAnalysis in task.PeptideAnalysis.GetFileAnalyses(false))
                     {
-                        peptideFileAnalysis.Peaks.Save(session);
-                        peptideFileAnalysis.PeptideDistributions.Save(session);
+                        peptideFileAnalysis.Peaks.Save(_session);
+                        peptideFileAnalysis.PeptideDistributions.Save(_session);
                     }
-                    session.Save(new DbChangeLog(task.PeptideAnalysis));
-                    task.FinishLock(session);
-                    session.Transaction.Commit();
+                    _session.Save(new DbChangeLog(task.PeptideAnalysis));
+                    task.FinishLock(_session);
+                    _session.Transaction.Commit();
                 }
             }
         }

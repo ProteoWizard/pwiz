@@ -290,17 +290,20 @@ namespace pwiz.Topograph.ui.Forms
         }
         class SearchResultKey
         {
-            public SearchResultKey(DbMsDataFile msDataFile, DbPeptide peptide)
+            public SearchResultKey(DbMsDataFile msDataFile, DbPeptide peptide) : this(msDataFile.Id.Value, peptide.Id.Value)
             {
-                MsDataFile = msDataFile;
-                Peptide = peptide;
             }
-            public DbMsDataFile MsDataFile { get; private set; }
-            public DbPeptide Peptide { get; private set; }
+            public SearchResultKey(long msDataFileId, long peptideId)
+            {
+                MsDataFileId = msDataFileId;
+                PeptideId = peptideId;
+            }
+            public long MsDataFileId { get; private set; }
+            public long PeptideId { get; private set; }
             public override int GetHashCode()
             {
-                int hashCode = MsDataFile.GetHashCode();
-                hashCode = hashCode * 31 + Peptide.GetHashCode();
+                int hashCode = MsDataFileId.GetHashCode();
+                hashCode = hashCode * 31 + PeptideId.GetHashCode();
                 return hashCode;
             }
             public override bool Equals(object obj)
@@ -314,7 +317,7 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     return false;
                 }
-                return MsDataFile.Equals(that.MsDataFile) && Peptide.Equals(that.Peptide);
+                return MsDataFileId.Equals(that.MsDataFileId) && PeptideId.Equals(that.PeptideId);
             }
         }
 

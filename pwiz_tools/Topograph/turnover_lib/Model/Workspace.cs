@@ -422,6 +422,10 @@ namespace pwiz.Topograph.Model
                 }
                 if (!IsDirty)
                 {
+                    if (key is WorkspaceSetting)
+                    {
+                        IsDirty = IsDirty || ((WorkspaceSetting) key).IsDirty();
+                    }
                     if (key is MsDataFile)
                     {
                         IsDirty = IsDirty || ((MsDataFile) key).IsDirty();

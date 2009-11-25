@@ -92,7 +92,7 @@ namespace pwiz.Topograph.MsData
             {
                 var activePeptideAnalyses = GetActivePeptideAnalyses();
                 var missingIds = new List<long>();
-                foreach (var id in peptideAnalyses.Keys)
+                foreach (var id in peptideAnalyses.Keys.ToArray())
                 {
                     PeptideAnalysis peptideAnalysis;
                     if (activePeptideAnalyses.TryGetValue(id, out peptideAnalysis))

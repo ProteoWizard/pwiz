@@ -136,6 +136,7 @@
     <Compile Include="Model\WorkspaceSetting.cs" />
     <Compile Include="Model\WorkspaceSettings.cs" />
     <Compile Include="Model\WorkspaceVersion.cs" />
+    <Compile Include="MsData\BackgroundJob.cs" />
     <Compile Include="MsData\Centroider.cs" />
     <Compile Include="MsData\ChromatogramGenerator.cs" />
     <Compile Include="Data\ArrayConverter.cs" />
