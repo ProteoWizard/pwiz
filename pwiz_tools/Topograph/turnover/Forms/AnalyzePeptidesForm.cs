@@ -122,7 +122,6 @@ namespace pwiz.Topograph.ui.Forms
                     {
                         dbPeptideAnalysis = Peptide.CreateDbPeptideAnalysis(session, peptide);
                     }
-                    var newFileAnalyses = new List<DbPeptideFileAnalysis>();
                     var idList = new List<long>();
                     if (dbPeptideAnalysis.Id.HasValue)
                     {
@@ -168,6 +167,8 @@ namespace pwiz.Topograph.ui.Forms
                         session.Save(dbPeptideAnalysis);
                         newAnalysis = true;
                     }
+                    var sqlStatementBuilder = new SqlStatementBuilder(session.SessionFactory.Dialect);
+                    var insertStatements = new List<string>();
                     foreach (var peptideSearchResult in searchResults)
                     {
                         var msDataFile = Workspace.MsDataFiles.GetMsDataFile(peptideSearchResult.MsDataFile);
@@ -178,10 +179,22 @@ namespace pwiz.Topograph.ui.Forms
                         var dbPeptideFileAnalysis = PeptideFileAnalysis.CreatePeptideFileAnalysis(session, msDataFile,
                                                                                                   dbPeptideAnalysis,
                                                                                                   peptideSearchResult);
+                        insertStatements.Add(sqlStatementBuilder.GetInsertStatement("DbPeptideFileAnalysis",
+                            new Dictionary<string, object>
+                                {
+                                    {"ChromatogramEndTime", dbPeptideFileAnalysis.ChromatogramEndTime},
+                                    {"ChromatogramStartTime", dbPeptideFileAnalysis.ChromatogramStartTime},
+                                    {"FirstDetectedScan", dbPeptideFileAnalysis.FirstDetectedScan},
+                                    {"LastDetectedScan", dbPeptideFileAnalysis.LastDetectedScan},
+                                    {"MsDataFile", msDataFile.Id},
+                                    {"PeptideAnalysis", dbPeptideAnalysis.Id},
+                                    {"AutoFindPeak", true},
+                                    {"Version",1}
+                                }
+                            ));
                         dbPeptideAnalysis.FileAnalysisCount++;
-                        session.Save(dbPeptideFileAnalysis);
-                        newFileAnalyses.Add(dbPeptideFileAnalysis);
                     }
+                    sqlStatementBuilder.ExecuteStatements(session, insertStatements);
                     session.Update(dbPeptideAnalysis);
                     if (!newAnalysis)
                     {
@@ -196,6 +209,11 @@ namespace pwiz.Topograph.ui.Forms
                     session.Transaction.Commit();
                 }
             }
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            Close();
         }
     }
 }

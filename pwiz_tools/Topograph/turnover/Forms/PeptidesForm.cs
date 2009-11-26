@@ -177,7 +177,7 @@ namespace pwiz.Topograph.ui.Forms
         private void btnAnalyzePeptides_Click(object sender, EventArgs e)
         {
             var oldCount = Workspace.PeptideAnalyses.ChildCount;
-            new AnalyzePeptidesForm(Workspace).ShowDialog(this);
+            new AnalyzePeptidesForm(Workspace).Show(this);
             if (oldCount == Workspace.PeptideAnalyses.ChildCount)
             {
                 return;
