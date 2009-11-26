@@ -34,6 +34,7 @@ using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.Search;
 using pwiz.Topograph.ui.Properties;
+using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.ui.Forms
 {
@@ -138,26 +139,86 @@ namespace pwiz.Topograph.ui.Forms
                                 });
         }
 
-        private void AddSearchResults(String file, Dictionary<string,DbPeptide> peptides, Dictionary<string,DbMsDataFile> dataFiles)
+        private IList<SearchResult> FilterSearchResults(Dictionary<string, DbPeptide> peptides, IList<SearchResult> searchResults)
         {
-            String extension = Path.GetExtension(file);
-            List<SearchResult> searchResults;
-            String msDataFileName;
             bool useMinXCorr = _useMinXCorr;
             bool onlyExistingPeptides = _onlyExistingPeptides;
+            if (!useMinXCorr && !onlyExistingPeptides)
+            {
+                return searchResults;
+            }
+            var result = new List<SearchResult>();
+            foreach (var searchResult in searchResults)
+            {
+                if (onlyExistingPeptides && !peptides.ContainsKey(Peptide.TrimSequence(searchResult.Sequence)))
+                {
+                    continue;
+                }
+                if (useMinXCorr)
+                {
+                    double minXCorr;
+                    switch (searchResult.Charge)
+                    {
+                        case 1:
+                            minXCorr = _minXCorr1;
+                            break;
+                        case 2:
+                            minXCorr = _minXCorr2;
+                            break;
+                        default:
+                            minXCorr = _minXCorr3;
+                            break;
+                    }
+                    if (searchResult.XCorr < minXCorr)
+                    {
+                        continue;
+                    }
+                }
+                result.Add(searchResult);
+            }
+            return result;
+        }
+
+        private Dictionary<string, int> SearchResultCountsBySequence(IEnumerable<SearchResult> searchResults)
+        {
+            var searchResultFilenames = new Dictionary<string, HashSet<string>>();
+            foreach (var searchResult in searchResults)
+            {
+                HashSet<string> filenames;
+                var trimmedSequence = Peptide.TrimSequence(searchResult.Sequence);
+                if (!searchResultFilenames.TryGetValue(trimmedSequence, out filenames))
+                {
+                    filenames = new HashSet<string>();
+                    searchResultFilenames.Add(trimmedSequence, filenames);
+                }
+                filenames.Add(searchResult.Filename);
+            }
+            var result = new Dictionary<string, int>();
+            foreach (var entry in searchResultFilenames)
+            {
+                result.Add(entry.Key, entry.Value.Count);
+            }
+            return result;
+        }
+
+        private void AddSearchResults(String file, Dictionary<string,DbPeptide> peptides, Dictionary<string,DbMsDataFile> dataFiles)
+        {
+            String baseMessage = _message;
+            String extension = Path.GetExtension(file);
+            IList<SearchResult> searchResults;
+            String msDataFileName;
             using (var stream = File.OpenRead(file))
             {
                 if (extension == ".sqt")
                 {
                     msDataFileName = Path.GetFileNameWithoutExtension(file);
                     searchResults = SearchResults.ReadSQT(msDataFileName, stream, ProgressMonitor);
+                    searchResults = FilterSearchResults(peptides, searchResults);
                 }
                 else
                 {
                     msDataFileName = null;
                     searchResults = SearchResults.ReadDTASelect(stream, ProgressMonitor);
-                    useMinXCorr = false;
-                    onlyExistingPeptides = false;
                 }
             }
             if (searchResults == null)
@@ -166,57 +227,59 @@ namespace pwiz.Topograph.ui.Forms
             }
             var dbPeptideSearchResults = GetSearchResults(msDataFileName);
             var modifiedPeptides = new HashSet<DbPeptide>();
+            var searchResultsToInsert = new Dictionary<SearchResultKey, DbPeptideSearchResult>();
+            var searchResultsToUpdate = new Dictionary<SearchResultKey, DbPeptideSearchResult>();
             using (var session = Workspace.OpenWriteSession())
             {
+                var statementBuilder = new SqlStatementBuilder(session.SessionFactory.Dialect);
                 var dbWorkspace = Workspace.LoadDbWorkspace(session);
                 session.BeginTransaction();
-                for (int i = 0; i < searchResults.Count; i++)
+                var searchResultCountsBySequence = SearchResultCountsBySequence(searchResults);
+                var newPeptides = new Dictionary<String, Dictionary<String, object>>();
+
+                foreach (var searchResult in searchResults)
                 {
-                    if (!ProgressMonitor(100 + 100*i/searchResults.Count))
+                    var trimmedSequence = Peptide.TrimSequence(searchResult.Sequence);
+                    if (peptides.ContainsKey(trimmedSequence) || newPeptides.ContainsKey(trimmedSequence))
                     {
-                        break;
+                        continue;
                     }
-                    var searchResult = searchResults[i];
-                    if (useMinXCorr)
+                    newPeptides.Add(trimmedSequence, new Dictionary<string, object>
+                                                         {
+                                                             {"Workspace", dbWorkspace.Id},
+                                                             {"Protein", searchResult.Protein},
+                                                             {"ProteinDescription", searchResult.ProteinDescription},
+                                                             {"Sequence", trimmedSequence},
+                                                             {"FullSequence", searchResult.Sequence},
+                                                             {"SearchResultCount", searchResultCountsBySequence[trimmedSequence]},
+                                                             {"Version",1},
+                                                         });
+                }
+                if (newPeptides.Count > 0)
+                {
+                    long maxPeptideId = (long?) session.CreateQuery("SELECT Max(T.Id) FROM DbPeptide T").UniqueResult() ?? 0;
+                    var insertStatements = new List<String>();
+                    foreach (var dict in newPeptides.Values)
                     {
-                        double minXCorr;
-                        switch (searchResult.Charge)
-                        {
-                            case 1:
-                                minXCorr = _minXCorr1;
-                                break;
-                            case 2:
-                                minXCorr = _minXCorr2;
-                                break;
-                            default:
-                                minXCorr = _minXCorr3;
-                                break;
-                        }
-                        if (searchResult.XCorr < minXCorr)
-                        {
-                            continue;
-                        }
+                        insertStatements.Add(statementBuilder.GetInsertStatement("DbPeptide", dict));
                     }
-                    String trimmedSequence = Peptide.TrimSequence(searchResult.Sequence);
+                    statementBuilder.ExecuteStatements(session, insertStatements);
+                    var criteria = session.CreateCriteria(typeof (DbPeptide))
+                        .Add(Restrictions.Gt("Id", maxPeptideId));
+                    foreach (DbPeptide dbPeptide in criteria.List())
+                    {
+                        peptides.Add(dbPeptide.Sequence, dbPeptide);
+                    }
+                }
+
+                foreach (var searchResult in searchResults)
+                {
+                    var trimmedSequence = Peptide.TrimSequence(searchResult.Sequence);
                     DbPeptide dbPeptide;
                     if (!peptides.TryGetValue(trimmedSequence, out dbPeptide))
                     {
-                        if (onlyExistingPeptides)
-                        {
-                            continue;
-                        }
-                    }
-                    if (dbPeptide == null) {
-                        dbPeptide = new DbPeptide
-                                        {
-                                            Workspace = dbWorkspace,
-                                            Protein = searchResult.Protein,
-                                            ProteinDescription = searchResult.ProteinDescription,
-                                            Sequence = trimmedSequence,
-                                            FullSequence = searchResult.Sequence,
-                                        };
-                        session.Save(dbPeptide);
-                        peptides.Add(trimmedSequence, dbPeptide);
+                        // should not happen
+                        continue;
                     }
                     DbMsDataFile dbMsDataFile;
                     if (!dataFiles.TryGetValue(searchResult.Filename, out dbMsDataFile))
@@ -224,19 +287,33 @@ namespace pwiz.Topograph.ui.Forms
                         Workspace.UpdateDataDirectoryFromSearchResultDirectory(Path.GetDirectoryName(file),
                                                                              searchResult.Filename);
                         dbMsDataFile = new DbMsDataFile
-                                           {
-                                               Name = searchResult.Filename,
-                                               Label = searchResult.Filename,
-                                               Workspace = dbWorkspace,
-                                           };
+                        {
+                            Name = searchResult.Filename,
+                            Label = searchResult.Filename,
+                            Workspace = dbWorkspace,
+                        };
                         session.Save(dbMsDataFile);
                         dataFiles.Add(dbMsDataFile.Name, dbMsDataFile);
                     }
+                    
                     var key = new SearchResultKey(dbMsDataFile, dbPeptide);
                     DbPeptideSearchResult dbPeptideSearchResult;
-                    if (!dbPeptideSearchResults.TryGetValue(key, out dbPeptideSearchResult))
+                    if (dbPeptideSearchResults.TryGetValue(key, out dbPeptideSearchResult))
                     {
-                        dbPeptideSearchResult = new DbPeptideSearchResult
+                        if (dbPeptideSearchResult.FirstDetectedScan <= searchResult.ScanIndex &&
+                            dbPeptideSearchResult.LastDetectedScan >= searchResult.ScanIndex &&
+                            dbPeptideSearchResult.MinCharge <= searchResult.Charge &&
+                            dbPeptideSearchResult.MaxCharge >= searchResult.Charge)
+                        {
+                            continue;
+                        }
+                        searchResultsToUpdate[key] = dbPeptideSearchResult;
+                    }
+                    else
+                    {
+                        if (!searchResultsToInsert.TryGetValue(key, out dbPeptideSearchResult))
+                        {
+                            dbPeptideSearchResult = new DbPeptideSearchResult
                                                     {
                                                         MsDataFile = dbMsDataFile,
                                                         Peptide = dbPeptide,
@@ -247,47 +324,71 @@ namespace pwiz.Topograph.ui.Forms
                                                         FirstTracerCount = searchResult.TracerCount,
                                                         LastTracerCount = searchResult.TracerCount,
                                                     };
-                        session.Save(dbPeptideSearchResult);
-                        dbPeptide.SearchResultCount++;
-                        session.Update(dbPeptide);
-                        session.Save(new DbChangeLog(Workspace, dbPeptide));
-                        modifiedPeptides.Add(dbPeptide);
-                        dbPeptideSearchResults.Add(key, dbPeptideSearchResult);
-                    }
-                    else
-                    {
-                        if (dbPeptideSearchResult.FirstDetectedScan <= searchResult.ScanIndex &&
-                            dbPeptideSearchResult.LastDetectedScan >= searchResult.ScanIndex &&
-                            dbPeptideSearchResult.MinCharge <= searchResult.Charge &&
-                            dbPeptideSearchResult.MaxCharge >= searchResult.Charge)
-                        {
-                        }
-                        else
-                        {
-
-                            if (dbPeptideSearchResult.FirstDetectedScan > searchResult.ScanIndex)
+                            searchResultsToInsert.Add(key, dbPeptideSearchResult);
+                            if (!newPeptides.ContainsKey(trimmedSequence))
                             {
-                                dbPeptideSearchResult.FirstDetectedScan = searchResult.ScanIndex;
-                                dbPeptideSearchResult.FirstTracerCount = searchResult.TracerCount;
+                                dbPeptide.SearchResultCount++;
+                                modifiedPeptides.Add(dbPeptide);
                             }
-                            if (dbPeptideSearchResult.LastDetectedScan < searchResult.ScanIndex)
-                            {
-                                dbPeptideSearchResult.LastDetectedScan = searchResult.ScanIndex;
-                                dbPeptideSearchResult.LastTracerCount = searchResult.TracerCount;
-                            }
-                            dbPeptideSearchResult.MinCharge = Math.Min(dbPeptideSearchResult.MinCharge, searchResult.Charge);
-                            dbPeptideSearchResult.MaxCharge = Math.Max(dbPeptideSearchResult.MaxCharge, searchResult.Charge);
-                            session.Update(dbPeptideSearchResult);
                         }
-
                     }
+                    dbPeptideSearchResult.FirstDetectedScan = Math.Min(dbPeptideSearchResult.FirstDetectedScan,
+                                                                       searchResult.ScanIndex);
+                    dbPeptideSearchResult.LastDetectedScan = Math.Max(dbPeptideSearchResult.LastDetectedScan,
+                                                                      searchResult.ScanIndex);
+                    dbPeptideSearchResult.MinCharge = Math.Min(dbPeptideSearchResult.MinCharge, searchResult.Charge);
+                    dbPeptideSearchResult.MaxCharge = Math.Max(dbPeptideSearchResult.MaxCharge, searchResult.Charge);
                 }
+                var statements = new List<string>();
+                foreach (var dbPeptide in modifiedPeptides)
+                {
+                    statements.Add(statementBuilder.GetUpdateStatement("DbPeptide", 
+                        new Dictionary<string, object>{{"SearchResultCount", dbPeptide.SearchResultCount}}, 
+                        new Dictionary<string, object>{{"Id", dbPeptide.Id}}));
+                    statements.Add(statementBuilder.GetInsertStatement("DbChangeLog",
+                        new Dictionary<string, object>{
+                            {"InstanceIdBytes", Workspace.InstanceId.ToByteArray()},
+                            {"PeptideId", dbPeptide.Id}
+                        }));
+                }
+                foreach (var dbPeptideSearchResult in searchResultsToInsert.Values)
+                {
+                    statements.Add(statementBuilder.GetInsertStatement("DbPeptideSearchResult",
+                        new Dictionary<string, object> {
+                            {"MsDataFile", dbPeptideSearchResult.MsDataFile.Id},
+                            {"Peptide", dbPeptideSearchResult.Peptide.Id},
+                            {"MinCharge", dbPeptideSearchResult.MinCharge},
+                            {"MaxCharge", dbPeptideSearchResult.MaxCharge},
+                            {"FirstDetectedScan", dbPeptideSearchResult.FirstDetectedScan},
+                            {"LastDetectedScan", dbPeptideSearchResult.LastDetectedScan},
+                            {"FirstTracerCount", dbPeptideSearchResult.FirstTracerCount},
+                            {"LastTracerCount", dbPeptideSearchResult.LastTracerCount},
+                            {"Version",1}
+                        }));
+                }
+                foreach (var dbPeptideSearchResult in searchResultsToUpdate.Values)
+                {
+                    statements.Add(statementBuilder.GetUpdateStatement("DbPeptideSearchResult",
+                        new Dictionary<string, object> {
+                            {"MinCharge", dbPeptideSearchResult.MinCharge},
+                            {"MaxCharge", dbPeptideSearchResult.MaxCharge},
+                            {"FirstDetectedScan", dbPeptideSearchResult.FirstDetectedScan},
+                            {"LastDetectedScan", dbPeptideSearchResult.LastDetectedScan},
+                            {"FirstTracerCount", dbPeptideSearchResult.FirstTracerCount},
+                            {"LastTracerCount", dbPeptideSearchResult.LastTracerCount},
+                        },
+                            new Dictionary<string, object> { { "Id", dbPeptideSearchResult.Id.Value } }
+                        ));
+                }
+                statementBuilder.ExecuteStatements(session, statements);
                 dbWorkspace.PeptideCount = peptides.Count;
                 dbWorkspace.MsDataFileCount = dataFiles.Count;
                 session.Update(dbWorkspace);
+                UpdateProgress(baseMessage + "(Committing transaction", 99);
                 session.Transaction.Commit();
             }
         }
+
         class SearchResultKey
         {
             public SearchResultKey(DbMsDataFile msDataFile, DbPeptide peptide) : this(msDataFile.Id.Value, peptide.Id.Value)

@@ -74,7 +74,7 @@ namespace pwiz.Topograph.Util
             foreach (var value in values)
             {
                 result.Append(comma);
-                comma = ",";
+                comma = separator;
                 result.Append(value);
             }
             return result.ToString();

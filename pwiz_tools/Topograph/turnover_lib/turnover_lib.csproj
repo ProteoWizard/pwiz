@@ -113,6 +113,7 @@
     <Compile Include="Data\Snapshot\PeptideAnalysisSnapshot.cs" />
     <Compile Include="Data\Snapshot\PeptideFileAnalysisSnapshot.cs" />
     <Compile Include="Data\Snapshot\Snapshot.cs" />
+    <Compile Include="Data\SqlStatementBuilder.cs" />
     <Compile Include="Data\WorkspaceUpgrader.cs" />
     <Compile Include="Enrichment\TracerFormulaEnumerator.cs" />
     <Compile Include="Enrichment\TracerPercentEnumerator.cs" />
