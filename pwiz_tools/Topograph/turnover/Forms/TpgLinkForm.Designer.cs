@@ -166,8 +166,8 @@
             this.comboDatabaseType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboDatabaseType.FormattingEnabled = true;
             this.comboDatabaseType.Items.AddRange(new object[] {
-            "postgresql",
             "mysql",
+            "postgresql",
             "sqlite"});
             this.comboDatabaseType.Location = new System.Drawing.Point(107, 112);
             this.comboDatabaseType.Name = "comboDatabaseType";

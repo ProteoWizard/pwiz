@@ -74,9 +74,16 @@ namespace pwiz.Topograph.MsData
                         return;
                     }
                 }
-                if (!ReconcileNow())
+                try
                 {
-                    _eventWaitHandle.Set();
+                    if (!ReconcileNow())
+                    {
+                        _eventWaitHandle.Set();
+                    }
+                }
+                catch (Exception exception)
+                {
+                    Console.Out.WriteLine(exception);
                 }
             }
         }
@@ -267,9 +274,16 @@ namespace pwiz.Topograph.MsData
                 {
                     return true;
                 }
-                if (maxChangeId != GetMaxId<DbChangeLog>(session))
+                foreach (var changeLog in EntitiesWithIdGreaterThan<DbChangeLog>(session, maxChangeId).Values)
                 {
-                    return false;
+                    if (changeLog.WorkspaceId != null || changeLog.PeptideId != null || changeLog.MsDataFileId != null)
+                    {
+                        return false;
+                    }
+                    if (changeLog.PeptideAnalysisId != null && peptideAnalysisSnapshots.ContainsKey(changeLog.PeptideAnalysisId.Value))
+                    {
+                        return false;
+                    }
                 }
                 
                 _lastPeptideId = Math.Max(_lastPeptideId, GetMaxId(peptides));
