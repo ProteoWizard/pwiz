@@ -85,9 +85,9 @@ using namespace pwiz;
     RTCONFIG_VARIABLE( int,				MaxFragmentChargeState,		0				) \
     RTCONFIG_VARIABLE( double,			MaxModificationMassPlus,	300.0			) \
 	RTCONFIG_VARIABLE( double,			MaxModificationMassMinus,	150.0			) \
-	RTCONFIG_VARIABLE( double,			MinModificationMass,		NEUTRON			) \
+    RTCONFIG_VARIABLE( double,			MinModificationMass,		NEUTRON			) \
     RTCONFIG_VARIABLE( double,			NTerminusMzTolerance,		0.75 			) \
-	RTCONFIG_VARIABLE( double,			CTerminusMzTolerance,		0.5	    		) \
+    RTCONFIG_VARIABLE( double,			CTerminusMzTolerance,		0.5	    		) \
     RTCONFIG_VARIABLE( bool,            MassReconMode,              false           )
     
 
@@ -97,21 +97,17 @@ namespace freicore
 namespace tagrecon
 {
 
-    struct RunTimeConfig : public BaseRunTimeConfig
+        struct RunTimeConfig : public BaseRunTimeConfig
         {
         public:
-        	RTCONFIG_DEFINE_MEMBERS( RunTimeConfig, TAGRECON_RUNTIME_CONFIG, "\r\n\t ", "tagrecon.cfg", "\r\n#" )
+            RTCONFIG_DEFINE_MEMBERS( RunTimeConfig, TAGRECON_RUNTIME_CONFIG, "\r\n\t ", "tagrecon.cfg", "\r\n#" )
 
-        	path executableFilepath; // path to tagrecon executable (to look for unimod and blosum)
+                path executableFilepath; // path to tagrecon executable (to look for unimod and blosum)
 
-        	boost::regex cleavageAgentRegex;
+            boost::regex cleavageAgentRegex;
             Digestion::Config digestionConfig;
 
             FragmentTypesBitset defaultFragmentTypes;
-
-			// Dynamic and static mods
-			DynamicModSet   dynamicMods;
-			StaticModSet    staticMods;
 
             int				SpectraBatchSize;
             int				ProteinBatchSize;
@@ -133,58 +129,58 @@ namespace tagrecon
             {
                 tagMutexesInitialized = false;
 
-            path pathToUnimodXML(UnimodXML);
-            if( !pathToUnimodXML.has_parent_path() )
-                UnimodXML = (executableFilepath.parent_path() / pathToUnimodXML).string();
-            if( !exists(UnimodXML) )
-                throw runtime_error("unable to find Unimod XML \"" + UnimodXML + "\"");
+                path pathToUnimodXML(UnimodXML);
+                if( !pathToUnimodXML.has_parent_path() )
+                    UnimodXML = (executableFilepath.parent_path() / pathToUnimodXML).string();
+                if( !exists(UnimodXML) )
+                    throw runtime_error("unable to find Unimod XML \"" + UnimodXML + "\"");
 
-            path pathToBlosum(Blosum);
-            if( !pathToBlosum.has_parent_path() )
-                Blosum = (executableFilepath.parent_path() / pathToBlosum).string();
-            if( !exists(Blosum) )
-                throw runtime_error("unable to find Blosum matrix \"" + Blosum + "\"");
+                path pathToBlosum(Blosum);
+                if( !pathToBlosum.has_parent_path() )
+                    Blosum = (executableFilepath.parent_path() / pathToBlosum).string();
+                if( !exists(Blosum) )
+                    throw runtime_error("unable to find Blosum matrix \"" + Blosum + "\"");
 
                 //cout << "ProteinDatabase:" << ProteinDatabase << "\n";
 
-            trim(CleavageRules); // trim flanking whitespace
-            if( CleavageRules.find(' ') == string::npos )
-            {
-                // a single token must be either a cleavage agent name or regex
-
-                // first try to parse the token as the name of an agent
-                CVID cleavageAgent = Digestion::getCleavageAgentByName(CleavageRules);
-                if( cleavageAgent == CVID_Unknown )
+                trim(CleavageRules); // trim flanking whitespace
+                if( CleavageRules.find(' ') == string::npos )
                 {
-                    // next try to parse the token as a Perl regex
-                    try
+                    // a single token must be either a cleavage agent name or regex
+
+                    // first try to parse the token as the name of an agent
+                    CVID cleavageAgent = Digestion::getCleavageAgentByName(CleavageRules);
+                    if( cleavageAgent == CVID_Unknown )
                     {
-                        // regex must be zero width, so it must use at least one parenthesis;
-                        // this will catch most bad cleavage agent names (e.g. "tripsen")
-                        if( CleavageRules.find('(') == string::npos )
-                            throw boost::bad_expression(boost::regex_constants::error_bad_pattern);
-                        cleavageAgentRegex = boost::regex(CleavageRules);
+                        // next try to parse the token as a Perl regex
+                        try
+                        {
+                            // regex must be zero width, so it must use at least one parenthesis;
+                            // this will catch most bad cleavage agent names (e.g. "tripsen")
+                            if( CleavageRules.find('(') == string::npos )
+                                throw boost::bad_expression(boost::regex_constants::error_bad_pattern);
+                            cleavageAgentRegex = boost::regex(CleavageRules);
+                        }
+                        catch (boost::bad_expression&)
+                        {
+                            // a bad regex or agent name is fatal
+                            throw runtime_error("invalid cleavage agent name or regex: " + CleavageRules);
+                        }
                     }
-                    catch (boost::bad_expression&)
+                    else
                     {
-                        // a bad regex or agent name is fatal
-                        throw runtime_error("invalid cleavage agent name or regex: " + CleavageRules);
+                        // use regex for predefined cleavage agent
+                        cleavageAgentRegex = boost::regex(Digestion::getCleavageAgentRegex(cleavageAgent));
                     }
                 }
                 else
                 {
-                    // use regex for predefined cleavage agent
-                    cleavageAgentRegex = boost::regex(Digestion::getCleavageAgentRegex(cleavageAgent));
+                    // multiple tokens must be a CleavageRuleSet
+                    CleavageRuleSet tmpRuleSet;
+                    stringstream CleavageRulesStream( CleavageRules );
+                    CleavageRulesStream >> tmpRuleSet;
+                    cleavageAgentRegex = boost::regex(tmpRuleSet.asCleavageAgentRegex());
                 }
-            }
-            else
-            {
-                // multiple tokens must be a CleavageRuleSet
-                CleavageRuleSet tmpRuleSet;
-		        stringstream CleavageRulesStream( CleavageRules );
-		        CleavageRulesStream >> tmpRuleSet;
-                cleavageAgentRegex = boost::regex(tmpRuleSet.asCleavageAgentRegex());
-            }
 
 
                 int maxMissedCleavages = NumMaxMissedCleavages < 0 ? 100000 : NumMaxMissedCleavages;
@@ -262,19 +258,20 @@ namespace tagrecon
                 }
 
                 hasDynamicMods = false;
-				if( !DynamicMods.empty() )
-				{
-					DynamicMods = TrimWhitespace( DynamicMods );
-					dynamicMods = DynamicModSet( DynamicMods );
-					if(dynamicMods.size()>0)
-						hasDynamicMods = true;
-				}
+                if( !DynamicMods.empty() )
+                {
+                    DynamicMods = TrimWhitespace( DynamicMods );
+                    g_residueMap->setDynamicMods( DynamicMods );
+                    if(g_residueMap->dynamicMods.size()>0) {
+                        hasDynamicMods = true;
+                    }
+                }
 
-				if( !StaticMods.empty() )
-				{
-					StaticMods = TrimWhitespace( StaticMods );
-					staticMods = StaticModSet( StaticMods );
-				}
+                if( !StaticMods.empty() )
+                {
+                    StaticMods = TrimWhitespace( StaticMods );
+                    g_residueMap->setStaticMods( StaticMods );
+                }
 
                 maxChargeStateFromSpectra = 1;
                 PrecursorMassTolerance.push_back(PrecursorMzTolerance);
@@ -291,8 +288,8 @@ namespace tagrecon
             }
         };
 
-    extern RunTimeConfig* g_rtConfig;
-}
+        extern RunTimeConfig* g_rtConfig;
+    }
 }
 
 #endif

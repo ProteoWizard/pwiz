@@ -42,7 +42,7 @@ namespace freicore {
 
 			// Get the static mods configured by the user and create a <aminoAcid,mass> map
 			multimap <string, float> staticModMap;
-			for(StaticModSet::iterator staticModIter = g_rtConfig->staticMods.begin(); staticModIter != g_rtConfig->staticMods.end(); staticModIter++) {
+			for(StaticModSet::iterator staticModIter = g_residueMap->staticMods.begin(); staticModIter != g_residueMap->staticMods.end(); staticModIter++) {
 				staticModMap.insert(multimap<string,float>::value_type(string(1,staticModIter->name),staticModIter->mass));
 			}
 
