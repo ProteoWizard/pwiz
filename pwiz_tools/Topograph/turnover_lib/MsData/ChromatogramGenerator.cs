@@ -44,6 +44,7 @@ namespace pwiz.Topograph.MsData
         private String _statusMessage;
         private readonly PendingIdQueue _pendingIdQueue = new PendingIdQueue();
         private ISession _session;
+        private ICollection<long> _rejectedMsDataFileIds = new HashSet<long>();
 
         public ChromatogramGenerator(Workspace workspace)
         {
@@ -131,6 +132,10 @@ namespace pwiz.Topograph.MsData
                         {
                             continue;
                         }
+                        if (_rejectedMsDataFileIds.Contains(peptideFileAnalysis.MsDataFile.Id.Value))
+                        {
+                            continue;
+                        }
                         if (!peptideFileAnalysis.IsMzKeySetComplete(peptideFileAnalysis.Chromatograms.GetKeys()))
                         {
                             if (msDataFileId == null)
@@ -177,6 +182,10 @@ namespace pwiz.Topograph.MsData
                                     continue;
                                 }
                                 if (lockedMsDataFileIds.Contains(peptideFileAnalysis.MsDataFile.Id.Value))
+                                {
+                                    continue;
+                                }
+                                if (_rejectedMsDataFileIds.Contains(peptideFileAnalysis.MsDataFile.Id.Value))
                                 {
                                     continue;
                                 }
@@ -393,11 +402,12 @@ namespace pwiz.Topograph.MsData
             MsDataFileImpl pwizMsDataFileImpl;
             try
             {
-                pwizMsDataFileImpl = new MsDataFileImpl(chromatogramTask.MsDataFile.Path);
+                pwizMsDataFileImpl = new MsDataFileImpl(_workspace.GetDataFilePath(msDataFile.Name));
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                msDataFile.ValidationStatus = ValidationStatus.reject;
+                ErrorLog.LogException(exception);
+                _rejectedMsDataFileIds.Add(msDataFile.Id.Value);
                 return;
             }
             using (pwizMsDataFileImpl)

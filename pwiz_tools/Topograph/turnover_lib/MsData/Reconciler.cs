@@ -163,6 +163,7 @@ namespace pwiz.Topograph.MsData
         }
 
 
+        private const int max_requery_count = 100;
         private bool ReconcileNow(Dictionary<long, PeptideAnalysis> activePeptideAnalyses)
         {
             var msDataFileIds = new HashSet<long>();
@@ -246,13 +247,16 @@ namespace pwiz.Topograph.MsData
                 {
                     if (_workspace.IsLoaded)
                     {
-                        session.CreateQuery("SELECT F.Id FROM " + typeof(DbPeptideFileAnalysis) +
-                                            " F WHERE F.PeptideAnalysis.Id IN (" + Lists.Join(peptideAnalysisIds, ",") + ") AND F.ChromatogramCount <> 0 AND F.PeptideDistributionCount = 0")
-                            .List(fileAnalysisIdsForResultCalculator);
-                        session.CreateQuery("SELECT F.Id FROM " + typeof (DbPeptideFileAnalysis) +
-                                            " F WHERE F.PeptideAnalysis.Id IN (" + Lists.Join(peptideAnalysisIds, ",") +
-                                            ") AND F.ChromatogramCount = 0")
-                            .List(fileAnalysisIdsForChromatogramGenerator);
+                        if (peptideAnalysisIds.Count < max_requery_count)
+                        {
+                            session.CreateQuery("SELECT F.Id FROM " + typeof(DbPeptideFileAnalysis) +
+                                                " F WHERE F.PeptideAnalysis.Id IN (" + Lists.Join(peptideAnalysisIds, ",") + ") AND F.ChromatogramCount <> 0 AND F.PeptideDistributionCount = 0")
+                                .List(fileAnalysisIdsForResultCalculator);
+                            session.CreateQuery("SELECT F.Id FROM " + typeof(DbPeptideFileAnalysis) +
+                                                " F WHERE F.PeptideAnalysis.Id IN (" + Lists.Join(peptideAnalysisIds, ",") +
+                                                ") AND F.ChromatogramCount = 0")
+                                .List(fileAnalysisIdsForChromatogramGenerator);
+                        }
                     }
                     var peptideAnalysisList = new List<DbPeptideAnalysis>();
                     session.CreateQuery("FROM " + typeof (DbPeptideAnalysis) + " A WHERE A.Id IN(" +
@@ -357,7 +361,7 @@ namespace pwiz.Topograph.MsData
                 _workspace.AddChangedPeptideAnalyses(peptideAnalyses);
                 _workspace.ResultCalculator.AddPeptideFileAnalysisIds(fileAnalysisIdsForResultCalculator);
                 _workspace.ChromatogramGenerator.AddPeptideFileAnalysisIds(fileAnalysisIdsForChromatogramGenerator);
-                if (workspaceChanged)
+                if (workspaceChanged || peptideAnalysisIds.Count >= max_requery_count)
                 {
                     _workspace.ChromatogramGenerator.SetRequeryPending();
                     _workspace.ResultCalculator.SetRequeryPending();
@@ -369,7 +373,7 @@ namespace pwiz.Topograph.MsData
 
         private static void AddIfLessThan(ICollection<long> set, long maxId, long? key)
         {
-            if (!key.HasValue || key >= maxId)
+            if (!key.HasValue || key > maxId)
             {
                 return;
             }

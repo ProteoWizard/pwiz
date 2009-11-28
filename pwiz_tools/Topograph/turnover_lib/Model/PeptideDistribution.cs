@@ -79,8 +79,16 @@ namespace pwiz.Topograph.Model
         protected override DbPeptideDistribution UpdateDbEntity(ISession session)
         {
             var result = base.UpdateDbEntity(session);
-            result.Score = Score;
-            result.TracerPercent = TracerPercent;
+            if (double.IsNaN(TracerPercent))
+            {
+                result.Score = 0;
+                result.TracerPercent = 0;
+            }
+            else
+            {
+                result.Score = Score;
+                result.TracerPercent = TracerPercent;
+            }
             return result;
         }
 
