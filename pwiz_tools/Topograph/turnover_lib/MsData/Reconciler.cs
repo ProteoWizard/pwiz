@@ -83,7 +83,7 @@ namespace pwiz.Topograph.MsData
                 }
                 catch (Exception exception)
                 {
-                    Console.Out.WriteLine(exception);
+                    ErrorLog.LogException(exception);
                 }
             }
         }

@@ -269,8 +269,9 @@ namespace pwiz.Topograph.MsData
             {
                 foreach (var peptideFileAnalysis in task.PeptideAnalysis.FileAnalyses.ListChildren())
                 {
-                    if (peptideFileAnalysis.Chromatograms.ChildCount == 0 
-                        || !peptideFileAnalysis.IsMzKeySetComplete(peptideFileAnalysis.Chromatograms.GetKeys()))
+                    if (peptideFileAnalysis.Peaks.ChildCount == 0 && 
+                        (peptideFileAnalysis.Chromatograms.ChildCount == 0
+                        || !peptideFileAnalysis.IsMzKeySetComplete(peptideFileAnalysis.Chromatograms.GetKeys())))
                     {
                         continue;
                     }
@@ -314,6 +315,18 @@ namespace pwiz.Topograph.MsData
                     _session.BeginTransaction();
                     foreach (var peptideFileAnalysis in task.PeptideAnalysis.GetFileAnalyses(false))
                     {
+                        if (peptideFileAnalysis.Peaks.ChildCount == 0 && 
+                            (peptideFileAnalysis.Chromatograms.ChildCount > 0 && 
+                            !peptideFileAnalysis.IsMzKeySetComplete(peptideFileAnalysis.Chromatograms.GetKeys())))
+                        {
+                            var dbPeptideFileAnalysis = _session.Get<DbPeptideFileAnalysis>(peptideFileAnalysis.Id);
+                            dbPeptideFileAnalysis.ChromatogramCount = 0;
+                            _session.Update(dbPeptideFileAnalysis);
+                            foreach (var dbChromatogram in dbPeptideFileAnalysis.Chromatograms)
+                            {
+                                _session.Delete(dbChromatogram);
+                            }
+                        }
                         peptideFileAnalysis.Peaks.Save(_session);
                         peptideFileAnalysis.PeptideDistributions.Save(_session);
                     }

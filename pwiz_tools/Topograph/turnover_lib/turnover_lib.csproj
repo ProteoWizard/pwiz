@@ -108,6 +108,9 @@
     <Compile Include="Data\DatabaseDumper.cs" />
     <Compile Include="Data\DbChangeLog.cs" />
     <Compile Include="Data\DbInstanceStatus.cs" />
+    <Compile Include="Data\DbProtein.cs" />
+    <Compile Include="Data\DbProteinIdType.cs" />
+    <Compile Include="Data\DbProteinName.cs" />
     <Compile Include="Data\QueryExecuter.cs" />
     <Compile Include="Data\Snapshot\LoadPeptideAnalysisSnapshot.cs" />
     <Compile Include="Data\Snapshot\PeptideAnalysisSnapshot.cs" />
@@ -181,6 +184,7 @@
     <Compile Include="Enrichment\ChargedPeptide.cs" />
     <Compile Include="Enrichment\PeakFinder.cs" />
     <Compile Include="Enrichment\TurnoverCalculator.cs" />
+    <Compile Include="MsData\ErrorLog.cs" />
     <Compile Include="MsData\MsDataFiles.cs" />
     <Compile Include="MsData\HalfLifeCalculator.cs" />
     <Compile Include="MsData\Reconciler.cs" />
