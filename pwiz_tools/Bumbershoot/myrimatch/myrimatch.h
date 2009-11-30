@@ -154,11 +154,11 @@ namespace myrimatch
 		int ReceiveUnpreparedSpectraBatchFromRootProcess();
 		int TransmitUnpreparedSpectraToChildProcesses();
 		int ReceiveSpectraFromRootProcess();
-		int TransmitSpectraToChildProcesses();
+		int TransmitSpectraToChildProcesses( int done);
 		int TransmitProteinsToChildProcesses();
 		int ReceiveProteinBatchFromRootProcess( int lastQueryCount );
 		int TransmitResultsToRootProcess( const searchStats& stats );
-		int ReceiveResultsFromChildProcesses( searchStats& overallSearchStats );
+		int ReceiveResultsFromChildProcesses( searchStats& overallSearchStats, bool firstBatch );
 	#endif
 
 	extern WorkerThreadMap					g_workerThreads;

@@ -854,6 +854,7 @@ namespace myrimatch
                         if(variantIterator.isSkipped) {
                             ++ threadInfo->stats.numCandidatesSkipped;
                             STOP_PROFILER(12);
+                            ++ itr;
                             continue;
                         }
                         STOP_PROFILER(12);
@@ -976,10 +977,103 @@ namespace myrimatch
 		return stats;
 	}
 
+    // Shared pointer to SpectraList.
+    typedef boost::shared_ptr<SpectraList> SpectraListPtr;
+    /**
+        This function takes a spectra list and splits them into small batches as dictated by
+        ResultsPerBatch variable. This function also checks to make sure that the last batch
+        is not smaller than 1000 spectra.
+    */
+    inline vector<SpectraListPtr> estimateSpectralBatches()
+    {
+        int estimatedResultsSize = 0;
+        
+        // Shuffle the spectra so that there is a 
+        // proper load balancing between batches.
+        spectra.random_shuffle();
+
+        vector<SpectraListPtr> batches;
+        SpectraListPtr current(new SpectraList());
+        // For each spectrum
+        for( SpectraList::const_iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr ) 
+        {
+            // Check the result size, if it exceeds the limit, then push back the
+            // current list into the vector and get a fresh list
+            estimatedResultsSize += g_rtConfig->MaxResults;
+            if(estimatedResultsSize>g_rtConfig->ResultsPerBatch) 
+            {
+                batches.push_back(current);
+                current.reset(new SpectraList());
+                estimatedResultsSize = g_rtConfig->MaxResults;
+            }
+            current->push_back((*sItr));
+        }
+        // Make sure you push back the last batch
+        if(current->size()>0)
+            batches.push_back(current);
+        // Check to see if the last batch is not a tiny batch
+        if(batches.back()->size()<1000 && batches.size()>1) 
+        {
+            SpectraListPtr last = batches.back(); batches.pop_back();
+            SpectraListPtr penultimate = batches.back(); batches.pop_back();
+            penultimate->insert(last->begin(),last->end(),penultimate->end());
+            batches.push_back(penultimate);
+            last->clear( false );
+        }
+        //for(vector<SpectraListPtr>::const_iterator bItr = batches.begin(); bItr != batches.end(); ++bItr)
+        //    cout << (*bItr)->size() << endl;
+        return batches;
+    }
+
+    /*inline vector<int> estimateSpectralBatches()
+    {
+        int estimatedResultsSize = 0;
+        int batchSize = 0;
+        int currentIndex = 0;
+        vector<int> batches;
+        vector<int> batchSizes;
+        // For each spectrum
+        for( SpectraList::const_iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr ) 
+        {
+            // Check the result size, if it exceeds the limit, then push back the
+            // current list into the vector and get a fresh list
+            estimatedResultsSize += g_rtConfig->MaxResults;
+            if(estimatedResultsSize>g_rtConfig->ResultsPerBatch) 
+            {
+                batches.push_back(currentIndex-1);
+                batchSize.push_back(batchSize-1);
+                estimatedResultsSize = g_rtConfig->MaxResults;
+                batchSize = 0;
+            }
+            ++currentIndex;
+            ++batchSize;
+        }
+        // Make sure you push back the last batch
+        if(batchSize>0) {
+            batches.push_back(currentIndex);
+            batchSizes.push_back(batchSize);
+        }
+        // Check to see if the last batch is not a tiny batch
+        if(batcheSize.back()<1000 && batches.size()>1) 
+        {
+            int lastIndex = batches.pop_back();
+            int penultimateIndex = batches.pop_back();
+            batches.push_back(lastIndex);
+        }
+        return batches;
+    }*/
+
+    /**
+        This function is the entry point into the MyriMatch search engine. This
+        function process the command line arguments, sets up the search, triggers
+        the threads that perform the search, and writes out the result file.
+     */
 	int ProcessHandler( int argc, char* argv[] )
 	{
+        // One thread at a time please...
 		simplethread_create_mutex( &resourceMutex );
 
+        // Get the command line arguments and process them
 		vector< string > args;
 		for( int i=0; i < argc; ++i )
 			args.push_back( argv[i] );
@@ -987,11 +1081,14 @@ namespace myrimatch
 		if( InitProcess( args ) )
 			return 1;
 
+        // Get the database name
 		g_dbFilename = g_rtConfig->ProteinDatabase;
 		int numSpectra = 0;
 
 		INIT_PROFILERS(13)
 
+        // If this is a parent process then read the input spectral data and 
+        // protein database files
 		if( g_pid == 0 )
 		{
 			for( size_t i=1; i < args.size(); ++i )
@@ -1009,6 +1106,7 @@ namespace myrimatch
 			if( !TestFileType( g_dbFilename, "fasta" ) )
 				return 1;
 
+            // Read the protein database
 			cout << g_hostString << " is reading \"" << g_dbFilename << "\"" << endl;
 			Timer readTime(true);
 			try
@@ -1020,9 +1118,15 @@ namespace myrimatch
 				return 1;
 			}
 			cout << g_hostString << " read " << proteins.size() << " proteins; " << readTime.End() << " seconds elapsed." << endl;
+            
+            // randomize order of the proteins to optimize work distribution
+            // in the MPI and multi-threading mode.
+			proteins.random_shuffle(); 
 
-			proteins.random_shuffle(); // randomize order to optimize work distribution
-
+            // If we are running in clster mode and this is a master process then
+            // compute the protein batch size using numer of child processes. Each 
+            // child process is sent all spectra to be searched against a batch of
+            // protein sequences.
 			#ifdef USE_MPI
 				if( g_numChildren > 0 )
 				{
@@ -1033,11 +1137,14 @@ namespace myrimatch
 
 			fileList_t finishedFiles;
 			fileList_t::iterator fItr;
+            // For each input spectra file
 			for( fItr = g_inputFilenames.begin(); fItr != g_inputFilenames.end(); ++fItr )
 			{
 				Timer fileTime(true);
 
+                // Hold the spectra objects
 				spectra.clear();
+                // Holds the map of parent mass to corresponding spectra
 				spectraMassMapsByChargeState.clear();
 
 				//if( !TestFileType( *fItr, "mzdata" ) )
@@ -1051,6 +1158,8 @@ namespace myrimatch
 				//long long memoryUsageCap = (int) GetAvailablePhysicalMemory() / 4;
 				//int peakCountCap = (float) memoryUsageCap / ( sizeof( peakPreInfo ) + sizeof( peakInfo ) );
 				//cout << g_hostString << " sets memory usage ceiling at " << memoryUsageCap << ", or about " << peakCountCap << " total peaks." << endl;
+                
+                // Read the spectra
 				try
 				{
 					spectra.readPeaks( *fItr, g_rtConfig->StartSpectraScanNum, g_rtConfig->EndSpectraScanNum );
@@ -1060,7 +1169,7 @@ namespace myrimatch
 					return 1;
 				}
 
-				int totalPeakCount = 0;
+				
 				/*int i = 0;	
 				while( GetAvailablePhysicalMemory() - 2*totalPeakCount*(sizeof(PeakInfo)+sizeof(float)) > 100000000 )
 				{
@@ -1073,7 +1182,9 @@ namespace myrimatch
 					//DataReader.ReadSpectraRange( 1000, 1025 );
 				//else
 				//	DataReader.ReadSpectra( 0, peakCountCap );
-
+                
+                // Compute the peak counts
+                int totalPeakCount = 0;
 				numSpectra = (int) spectra.size();
 				for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
 					totalPeakCount += (*sItr)->peakPreCount;
@@ -1087,6 +1198,7 @@ namespace myrimatch
 					skip = 1;
 				}
 
+                // If the file has no spectra, then tell the child processes to skip
 				#ifdef USE_MPI
 					if( g_numChildren > 0 && !g_rtConfig->EstimateSearchTimeOnly )
 					{
@@ -1105,124 +1217,36 @@ namespace myrimatch
 				vector< size_t > opcs; // original peak count statistics
 				vector< size_t > fpcs; // filtered peak count statistics
 
+                // If the file has spectra
 				if( !skip )
 				{
+                    // If this is a master process and we are in MPI mode.
 					if( g_numProcesses > 1 && !g_rtConfig->EstimateSearchTimeOnly )
 					{
 						#ifdef USE_MPI
-							cout << g_hostString << " is sending spectra to worker nodes to prepare them for search." << endl;
-							Timer prepareTime(true);
-							TransmitUnpreparedSpectraToChildProcesses();
-
-							spectra.clear();
-
-							ReceivePreparedSpectraFromChildProcesses();
-
-							numSpectra = (int) spectra.size();
-
-							skip = 0;
-							if( numSpectra == 0 )
-							{
-								cout << g_hostString << " is skipping a file with no suitable spectra." << endl;
-								skip = 1;
-							}
-
-							for( int p=0; p < g_numChildren; ++p )
-								MPI_Ssend( &skip,		1,		MPI_INT,	p+1, 0x00, MPI_COMM_WORLD );
-
-							if( !skip )
-							{
-								opcs = spectra.getOriginalPeakCountStatistics();
-								fpcs = spectra.getFilteredPeakCountStatistics();
-								cout << g_hostString << ": mean original (filtered) peak count: " <<
-										opcs[5] << " (" << fpcs[5] << ")" << endl;
-								cout << g_hostString << ": min/max original (filtered) peak count: " <<
-										opcs[0] << " (" << fpcs[0] << ") / " << opcs[1] << " (" << fpcs[1] << ")" << endl;
-								cout << g_hostString << ": original (filtered) peak count at 1st/2nd/3rd quartiles: " <<
-										opcs[2] << " (" << fpcs[2] << "), " <<
-										opcs[3] << " (" << fpcs[3] << "), " <<
-										opcs[4] << " (" << fpcs[4] << ")" << endl;
-
-								float filter = 1.0f - ( (float) fpcs[5] / (float) opcs[5] );
-								cout << g_hostString << " filtered out " << filter * 100.0f << "% of peaks." << endl;
-
-								cout << g_hostString << " has " << numSpectra << " spectra prepared now; " << prepareTime.End() << " seconds elapsed." << endl;
-
-								InitWorkerGlobals();
-
-								SpectraList finishedSpectra;
-								//do
-								{
-									cout << g_hostString << " is sending some prepared spectra to all worker nodes from a pool of " << spectra.size() << " spectra." << endl;
-                                    try
-                                    {
-									    Timer sendTime(true);
-									    numSpectra = TransmitSpectraToChildProcesses();
-									    cout << g_hostString << " is finished sending " << numSpectra << " prepared spectra to all worker nodes; " <<
-											    sendTime.End() << " seconds elapsed." << endl;
-                                    } catch( std::exception& e )
-                                    {
-                                        cout << g_hostString << " had an error transmitting prepared spectra: " << e.what() << endl;
-                                        MPI_Abort( MPI_COMM_WORLD, 1 );
-                                    }
-
-									cout << g_hostString << " is commencing database search on " << numSpectra << " spectra." << endl;
-                                    try
-                                    {
-									    startTime = GetTimeString(); startDate = GetDateString(); searchTime.Begin();
-									    TransmitProteinsToChildProcesses();
-									    cout << g_hostString << " has finished database search; " << searchTime.End() << " seconds elapsed." << endl;
-                                    } catch( std::exception& e )
-                                    {
-                                        cout << g_hostString << " had an error transmitting protein batches: " << e.what() << endl;
-                                        MPI_Abort( MPI_COMM_WORLD, 1 );
-                                    }
-
-									cout << g_hostString << " is receiving search results for " << numSpectra << " spectra." << endl;
-                                    try
-                                    {
-									    Timer receiveTime(true);
-									    ReceiveResultsFromChildProcesses(sumSearchStats);
-									    cout << g_hostString << " is finished receiving search results; " << receiveTime.End() << " seconds elapsed." << endl;
-                                    } catch( std::exception& e )
-                                    {
-                                        cout << g_hostString << " had an error receiving results: " << e.what() << endl;
-                                        MPI_Abort( MPI_COMM_WORLD, 1 );
-                                    }
-									
-									cout << g_hostString << " overall stats: " << (string) sumSearchStats << endl;
-
-									//SpectraList::iterator lastSpectrumItr = spectra.begin();
-									//advance_to_bound( lastSpectrumItr, spectra.end(), numSpectra );
-									//finishedSpectra.insert( spectra.begin(), spectra.end(), finishedSpectra.end() );
-									//spectra.erase( spectra.begin(), spectra.end(), false );
-								}// while( spectra.size() > 0 );
-
-								//finishedSpectra.clear();
-
-								DestroyWorkerGlobals();
-							}
-
-						#endif
-					} else
-					{
-						cout << g_hostString << " is preparing " << numSpectra << " spectra." << endl;
+                        // Send some spectra away to the child nodes for processing
+						cout << g_hostString << " is sending spectra to worker nodes to prepare them for search." << endl;
 						Timer prepareTime(true);
-						PrepareSpectra();
-						cout << g_hostString << " is finished preparing spectra; " << prepareTime.End() << " seconds elapsed." << endl;
-						//spectra.dump();
-
+						TransmitUnpreparedSpectraToChildProcesses();
+						spectra.clear();
+						ReceivePreparedSpectraFromChildProcesses();
 						numSpectra = (int) spectra.size();
-
+                        
 						skip = 0;
 						if( numSpectra == 0 )
 						{
 							cout << g_hostString << " is skipping a file with no suitable spectra." << endl;
 							skip = 1;
 						}
+                        
+                        // If all processed spectra gets dropped out then
+                        // there is no need to proceed.
+						for( int p=0; p < g_numChildren; ++p )
+							MPI_Ssend( &skip,		1,		MPI_INT,	p+1, 0x00, MPI_COMM_WORLD );
 
 						if( !skip )
 						{
+                            // Get peak count stats
 							opcs = spectra.getOriginalPeakCountStatistics();
 							fpcs = spectra.getFilteredPeakCountStatistics();
 							cout << g_hostString << ": mean original (filtered) peak count: " <<
@@ -1236,9 +1260,128 @@ namespace myrimatch
 
 							float filter = 1.0f - ( (float) fpcs[5] / (float) opcs[5] );
 							cout << g_hostString << " filtered out " << filter * 100.0f << "% of peaks." << endl;
+							cout << g_hostString << " has " << numSpectra << " spectra prepared now; " << prepareTime.End() << " seconds elapsed." << endl;
+                            
+                            // Init the globals
+							InitWorkerGlobals();
+                            
+                            // List to store finished spectra
+							SpectraList finishedSpectra;
+                            // Split the spectra into batches if needed
+                            vector<SpectraListPtr> batches = estimateSpectralBatches();
+                            if(batches.size()>1)
+                                cout << g_hostString << " is splitting spectra into " << batches.size() << " batches for search." << endl;
+                            startTime = GetTimeString(); startDate = GetDateString(); searchTime.Begin();
+                            // For each spectral batch
+                            size_t batchIndex = 0;
+                            for(vector<SpectraListPtr>::iterator bItr = batches.begin(); bItr != batches.end(); ++bItr) 
+							{
+                                // Variables to report batch progess to the user
+                                ++batchIndex;
+                                stringstream batchString;
+                                batchString << "";
+                                if(batches.size()>1)
+                                    batchString << " (" << batchIndex << " of " << batches.size() << " batches)";
+                                // Clear the master list and populate it with a small batch
+								spectra.clear( false );
+                                spectra.insert((*bItr)->begin(), (*bItr)->end(), spectra.end());
+                                // Check to see if we are processing the last batch.
+                                int lastBatch = 0;
+                                if((*bItr) == batches.back())
+                                    lastBatch = 1;
+                                // Transmit spectra to all children. Also tell them if this is
+                                // the last batch of the spectra they would be getting from the parent.
+                                cout << g_hostString << " is sending some prepared spectra to all worker nodes from a pool of " << spectra.size() << " spectra" << batchString.str() << "." << endl;
+                                try
+                                {
+								    Timer sendTime(true);
+								    numSpectra = TransmitSpectraToChildProcesses(lastBatch);
+								    cout << g_hostString << " is finished sending " << numSpectra << " prepared spectra to all worker nodes; " <<
+										    sendTime.End() << " seconds elapsed." << endl;
+                                } catch( std::exception& e )
+                                {
+                                    cout << g_hostString << " had an error transmitting prepared spectra: " << e.what() << endl;
+                                    MPI_Abort( MPI_COMM_WORLD, 1 );
+                                }
+                                // Transmit the proteins and start the search.
+								cout << g_hostString << " is commencing database search on " << numSpectra << " spectra" << batchString.str() << "." << endl;
+                                try
+                                {
+								    Timer batchTimer(true); batchTimer.Begin();
+								    TransmitProteinsToChildProcesses();
+								    cout << g_hostString << " has finished database search; " << batchTimer.End() << " seconds elapsed" << batchString.str() << "." << endl;
+                                } catch( std::exception& e )
+                                {
+                                    cout << g_hostString << " had an error transmitting protein batches: " << e.what() << endl;
+                                    MPI_Abort( MPI_COMM_WORLD, 1 );
+                                }
+                                // Get the results
+								cout << g_hostString << " is receiving search results for " << numSpectra << " spectra" << batchString.str() << "." << endl;
+                                try
+                                {
+								    Timer receiveTime(true);
+								    ReceiveResultsFromChildProcesses(sumSearchStats, ((*bItr) == batches.front()));
+								    cout << g_hostString << " is finished receiving search results; " << receiveTime.End() << " seconds elapsed." << endl;
+                                } catch( std::exception& e )
+                                {
+                                    cout << g_hostString << " had an error receiving results: " << e.what() << endl;
+                                    MPI_Abort( MPI_COMM_WORLD, 1 );
+                                }
+								cout << g_hostString << " overall stats: " << (string) sumSearchStats << endl;
+                                
+                                // Store the searched spectra in a list and clear the 
+                                // master list for next batch
+								finishedSpectra.insert( spectra.begin(), spectra.end(), finishedSpectra.end() );
+								spectra.clear( false );
+                                (*bItr)->clear( false );
+							}
+                            searchTime.End();
+                            // Move the searched spectra from temporary list to the master list
+                            spectra.clear( false );
+                            spectra.insert(finishedSpectra.begin(), finishedSpectra.end(), spectra.end() );
+							finishedSpectra.clear(false);
+                            // Spectra are randomly shuffled for load distribution during batching process
+                            // Sort them back by ID.
+                            spectra.sort( spectraSortByID() );
+
+							DestroyWorkerGlobals();
+						}
+
+						#endif
+					} else
+					{
+                        // If we are not in the MPI mode then prepare the spectra
+                        // ourselves
+						cout << g_hostString << " is preparing " << numSpectra << " spectra." << endl;
+						Timer prepareTime(true);
+						PrepareSpectra();
+						cout << g_hostString << " is finished preparing spectra; " << prepareTime.End() << " seconds elapsed." << endl;
+						numSpectra = (int) spectra.size();
+
+						skip = 0;
+						if( numSpectra == 0 )
+						{
+							cout << g_hostString << " is skipping a file with no suitable spectra." << endl;
+							skip = 1;
+						}
+                        // If the file has spectra to search
+						if( !skip )
+						{
+							opcs = spectra.getOriginalPeakCountStatistics();
+							fpcs = spectra.getFilteredPeakCountStatistics();
+							cout << g_hostString << ": mean original (filtered) peak count: " <<
+									opcs[5] << " (" << fpcs[5] << ")" << endl;
+							cout << g_hostString << ": min/max original (filtered) peak count: " <<
+									opcs[0] << " (" << fpcs[0] << ") / " << opcs[1] << " (" << fpcs[1] << ")" << endl;
+							cout << g_hostString << ": original (filtered) peak count at 1st/2nd/3rd quartiles: " <<
+									opcs[2] << " (" << fpcs[2] << "), " <<
+									opcs[3] << " (" << fpcs[3] << "), " <<
+									opcs[4] << " (" << fpcs[4] << ")" << endl;
+							float filter = 1.0f - ( (float) fpcs[5] / (float) opcs[5] );
+							cout << g_hostString << " filtered out " << filter * 100.0f << "% of peaks." << endl;
 
 							InitWorkerGlobals();
-
+                            // Start the search
 							if( !g_rtConfig->EstimateSearchTimeOnly )
 							{
 								cout << g_hostString << " is commencing database search on " << numSpectra << " spectra." << endl;
@@ -1261,112 +1404,114 @@ namespace myrimatch
 
 						DestroyWorkerGlobals();
 					}
-
+                    // Write the output
                     if( !skip ) {
-						WriteOutputToFile( *fItr, startTime, startDate, searchTime.End(), opcs, fpcs, sumSearchStats );
-					cout << g_hostString << " finished file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
-                    PRINT_PROFILERS(cout,"old");
+                        WriteOutputToFile( *fItr, startTime, startDate, searchTime.End(), opcs, fpcs, sumSearchStats );
+                        cout << g_hostString << " finished file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
+                        //PRINT_PROFILERS(cout,"old");
                     }
 
 				}
-
+                
+                // Tell the child nodes that we are all done if there are 
+                // no other spectral data files to process
 				#ifdef USE_MPI
-					int done = ( ( g_inputFilenames.size() - finishedFiles.size() ) == 0 ? 1 : 0 );
-					for( int p=0; p < g_numChildren; ++p )
-						MPI_Ssend( &done,		1,		MPI_INT,	p+1, 0x00, MPI_COMM_WORLD );
+				int done = ( ( g_inputFilenames.size() - finishedFiles.size() ) == 0 ? 1 : 0 );
+				for( int p=0; p < g_numChildren; ++p )
+					MPI_Ssend( &done,		1,		MPI_INT,	p+1, 0x00, MPI_COMM_WORLD );
 				#endif
 			}
 		}
 		#ifdef USE_MPI
-			else
+		else
+		{
+            if( g_rtConfig->EstimateSearchTimeOnly )
+                return 0; // nothing to do
+
+			int allDone = 0;
+
+			while( !allDone )
 			{
-                if( g_rtConfig->EstimateSearchTimeOnly )
-                    return 0; // nothing to do
+				int skip;
+				MPI_Recv( &skip,	1,		MPI_INT,	0,	0x00, MPI_COMM_WORLD, &st );
 
-				int allDone = 0;
-
-				while( !allDone )
+				if( !skip )
 				{
-					int skip;
+					SpectraList preparedSpectra;
+
+					while( ReceiveUnpreparedSpectraBatchFromRootProcess() )
+					{
+						PrepareSpectra();
+						preparedSpectra.insert( spectra.begin(), spectra.end(), preparedSpectra.end() );
+						spectra.clear( false );
+					}
+
+					//for( int i=0; i < (int) preparedSpectra.size(); ++i )
+					//	cout << preparedSpectra[i]->id.index << " " << preparedSpectra[i]->peakData.size() << endl;
+
+					TransmitPreparedSpectraToRootProcess( preparedSpectra );
+
+					preparedSpectra.clear();
+                    
+
 					MPI_Recv( &skip,	1,		MPI_INT,	0,	0x00, MPI_COMM_WORLD, &st );
 
 					if( !skip )
 					{
-						SpectraList preparedSpectra;
 
-						while( ReceiveUnpreparedSpectraBatchFromRootProcess() )
+						int done = 0;
+						do
 						{
-							PrepareSpectra();
-							preparedSpectra.insert( spectra.begin(), spectra.end(), preparedSpectra.end() );
-							spectra.clear( false );
-						}
+                            try
+                            {
+							    done = ReceiveSpectraFromRootProcess();
+                            } catch( std::exception& e )
+                            {
+                                cout << g_hostString << " had an error receiving prepared spectra: " << e.what() << endl;
+                                MPI_Abort( MPI_COMM_WORLD, 1 );
+                            }
 
-						//for( int i=0; i < (int) preparedSpectra.size(); ++i )
-						//	cout << preparedSpectra[i]->id.index << " " << preparedSpectra[i]->peakData.size() << endl;
+							InitWorkerGlobals();
 
-						TransmitPreparedSpectraToRootProcess( preparedSpectra );
+							int numBatches = 0;
+							searchStats sumSearchStats;
+							searchStats lastSearchStats;
+                            try
+                            {
+							    while( ReceiveProteinBatchFromRootProcess( lastSearchStats.numComparisonsDone ) )
+							    {
+								    ++ numBatches;
 
-						preparedSpectra.clear();
+								    lastSearchStats = ExecuteSearch();
+								    sumSearchStats = sumSearchStats + lastSearchStats;
+								    proteins.clear();
+							    }
+                            } catch( std::exception& e )
+                            {
+                                cout << g_hostString << " had an error receiving protein batch: " << e.what() << endl;
+                                MPI_Abort( MPI_COMM_WORLD, 1 );
+                            }
 
-						MPI_Recv( &skip,	1,		MPI_INT,	0,	0x00, MPI_COMM_WORLD, &st );
+							cout << g_hostString << " stats: " << numBatches << " batches; " << (string) sumSearchStats << endl;
 
-						if( !skip )
-						{
+                            try
+                            {
+							    TransmitResultsToRootProcess( sumSearchStats );
+                            } catch( std::exception& e )
+                            {
+                                cout << g_hostString << " had an error transmitting results: " << e.what() << endl;
+                                MPI_Abort( MPI_COMM_WORLD, 1 );
+                            }
 
-							int done = 0;
-							do
-							{
-                                try
-                                {
-								    done = ReceiveSpectraFromRootProcess();
-                                } catch( std::exception& e )
-                                {
-                                    cout << g_hostString << " had an error receiving prepared spectra: " << e.what() << endl;
-                                    MPI_Abort( MPI_COMM_WORLD, 1 );
-                                }
-
-								InitWorkerGlobals();
-
-								int numBatches = 0;
-								searchStats sumSearchStats;
-								searchStats lastSearchStats;
-                                try
-                                {
-								    while( ReceiveProteinBatchFromRootProcess( lastSearchStats.numComparisonsDone ) )
-								    {
-									    ++ numBatches;
-
-									    lastSearchStats = ExecuteSearch();
-									    sumSearchStats = sumSearchStats + lastSearchStats;
-									    proteins.clear();
-								    }
-                                } catch( std::exception& e )
-                                {
-                                    cout << g_hostString << " had an error receiving protein batch: " << e.what() << endl;
-                                    MPI_Abort( MPI_COMM_WORLD, 1 );
-                                }
-
-								cout << g_hostString << " stats: " << numBatches << " batches; " << (string) sumSearchStats << endl;
-
-                                try
-                                {
-								    TransmitResultsToRootProcess( sumSearchStats );
-                                } catch( std::exception& e )
-                                {
-                                    cout << g_hostString << " had an error transmitting results: " << e.what() << endl;
-                                    MPI_Abort( MPI_COMM_WORLD, 1 );
-                                }
-
-								DestroyWorkerGlobals();
-								spectra.clear();
-								spectraMassMapsByChargeState.clear();
-							} while( !done );
-						}
+							DestroyWorkerGlobals();
+							spectra.clear();
+							spectraMassMapsByChargeState.clear();
+						} while( !done );
 					}
-
-					MPI_Recv( &allDone,	1,		MPI_INT,	0,	0x00, MPI_COMM_WORLD, &st );
 				}
-			}
+				MPI_Recv( &allDone,	1,		MPI_INT,	0,	0x00, MPI_COMM_WORLD, &st );
+			} // end of while
+		} // end of if
 		#endif
 
 		return 0;

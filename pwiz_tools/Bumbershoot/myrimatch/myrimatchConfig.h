@@ -72,7 +72,8 @@ using namespace pwiz::math;
 	RTCONFIG_VARIABLE( int,				MaxScoreHistogramValues,	100				) \
 	RTCONFIG_VARIABLE( int,				ScoreHistogramWidth,		800				) \
 	RTCONFIG_VARIABLE( int,				ScoreHistogramHeight,		600				) \
-	RTCONFIG_VARIABLE( int,				MaxFragmentChargeState,		0				)
+	RTCONFIG_VARIABLE( int,				MaxFragmentChargeState,		0				) \
+    RTCONFIG_VARIABLE( int,				ResultsPerBatch, 		    200000		    )
 	//RTCONFIG_VARIABLE( int,				DeisotopingTestMode,		0				)
 
 

@@ -101,14 +101,14 @@ namespace myrimatch
 				scoreList.push_back( SearchScoreInfo( "expect", expect ) );
 			}
 			
-			scoreList.push_back( SearchScoreInfo( "deltaMVHMode", deltaMVHMode ) );
-			scoreList.push_back( SearchScoreInfo( "deltaMVHAvg", deltaMVHAvg ) );
-			scoreList.push_back( SearchScoreInfo( "deltaMVHSeqType", deltaMVHSeqType ) );
-			scoreList.push_back( SearchScoreInfo( "deltaMVHSmartSeqType", deltaMVHSmartSeqType ) );
-			scoreList.push_back( SearchScoreInfo( "deltaMZFidelityMode", deltaMZFidelityMode ) );
-			scoreList.push_back( SearchScoreInfo( "deltaMZFidelityAvg", deltaMZFidelityAvg ) );
-			scoreList.push_back( SearchScoreInfo( "deltaMZFidelitySeqType", deltaMZFidelitySeqType ) );
-			scoreList.push_back( SearchScoreInfo( "deltaMZFidelitySmartSeqType", deltaMZFidelitySmartSeqType ) );
+			//scoreList.push_back( SearchScoreInfo( "deltaMVHMode", deltaMVHMode ) );
+			//scoreList.push_back( SearchScoreInfo( "deltaMVHAvg", deltaMVHAvg ) );
+			//scoreList.push_back( SearchScoreInfo( "deltaMVHSeqType", deltaMVHSeqType ) );
+			//scoreList.push_back( SearchScoreInfo( "deltaMVHSmartSeqType", deltaMVHSmartSeqType ) );
+			//scoreList.push_back( SearchScoreInfo( "deltaMZFidelityMode", deltaMZFidelityMode ) );
+			//scoreList.push_back( SearchScoreInfo( "deltaMZFidelityAvg", deltaMZFidelityAvg ) );
+			//scoreList.push_back( SearchScoreInfo( "deltaMZFidelitySeqType", deltaMZFidelitySeqType ) );
+			//scoreList.push_back( SearchScoreInfo( "deltaMZFidelitySmartSeqType", deltaMZFidelitySmartSeqType ) );
 
 			//scoreList.push_back( SearchScoreInfo( "mvhMode", mvhMode) );
 			//scoreList.push_back( SearchScoreInfo( "mzFidelityMode", mzFidelityMode) );

@@ -334,6 +334,7 @@ namespace myrimatch
 	int ReceiveSpectraFromRootProcess()
 	{
 		int numSpectra;
+        int done;
 
 		#ifdef MPI_DEBUG
 			cout << g_hostString << " is receiving " << numSpectra << " unprepared spectra." << endl;
@@ -362,6 +363,7 @@ namespace myrimatch
 			//cout << g_hostString << " is unpacking spectra." << endl;
 			packArchive & numSpectra;
 			//cout << g_hostString << " has " << numSpectra << " spectra." << endl;
+            packArchive & done;
 
 			for( int j=0; j < numSpectra; ++j )
 			{
@@ -382,10 +384,10 @@ namespace myrimatch
 					receiveTime.End() << " seconds elapsed." << endl;
 		#endif
 
-		return 1;
+		return done;
 	}
 
-	int TransmitSpectraToChildProcesses()
+	int TransmitSpectraToChildProcesses(int done)
 	{
 		spectra.sort( spectraSortByID() );
 
@@ -395,10 +397,11 @@ namespace myrimatch
 		binary_oarchive packArchive( packStream );
 
 		packArchive & numSpectra;
+        packArchive & done;
 		for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
 		{
-			Spectrum* s = (*sItr);
-			packArchive & *s;
+		    Spectrum* s = (*sItr);
+		    packArchive & *s;
 		}
 
 		stringstream compressedStream;
@@ -586,7 +589,7 @@ namespace myrimatch
 			cout << g_hostString << " finished receiving " << batchSize << " proteins; " <<
 					receiveTime.End() << " seconds elapsed." << endl;
 		#endif
-
+        
 		stringstream packStream( pack );
 		binary_iarchive packArchive( packStream );
 
@@ -655,7 +658,7 @@ namespace myrimatch
 		return 0;
 	}
 
-	int ReceiveResultsFromChildProcesses(searchStats& overallSearchStats)
+	int ReceiveResultsFromChildProcesses(searchStats& overallSearchStats, bool firstBatch = false)
 	{
 		int numSpectra;
 		int sourceProcess;
@@ -663,6 +666,8 @@ namespace myrimatch
 		Timer ResultsTime( true );
 		float totalResultsTime = 0.01f;
 		float lastUpdate = 0.0f;
+
+        searchStats batchStats;
 
 		for( int p=0; p < g_numChildren; ++p )
 		{
@@ -695,7 +700,16 @@ namespace myrimatch
 				searchStats childSearchStats;
 				packArchive & numSpectra;
 				packArchive & childSearchStats;
-				overallSearchStats = overallSearchStats + childSearchStats;
+                if(firstBatch)
+                {
+				    overallSearchStats = overallSearchStats + childSearchStats;
+                }
+                else 
+                {
+                    overallSearchStats.numCandidatesQueried += childSearchStats.numCandidatesQueried;
+                    overallSearchStats.numComparisonsDone += childSearchStats.numComparisonsDone;
+                    overallSearchStats.numCandidatesSkipped += childSearchStats.numCandidatesSkipped;
+                }
 
 				//cout << g_hostString << " is unpacking results for " << numSpectra << " spectra." << endl;
 				for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
