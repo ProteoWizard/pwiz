@@ -1230,7 +1230,7 @@ PWIZ_API_DECL const SpectrumIdentity& SpectrumListSimple::spectrumIdentity(size_
 PWIZ_API_DECL SpectrumPtr SpectrumListSimple::spectrum(size_t index, bool getBinaryData) const
 {
     // validate index
-    if (index > size())
+    if (index >= size())
         throw runtime_error("[MSData::SpectrumListSimple::spectrum()] Invalid index.");
 
     // validate Spectrum* 
@@ -1238,7 +1238,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumListSimple::spectrum(size_t index, bool getBin
         throw runtime_error("[MSData::SpectrumListSimple::spectrum()] Null SpectrumPtr.");
 
     return spectra[index];
-} 
+}
 
 
 PWIZ_API_DECL const shared_ptr<const DataProcessing> SpectrumListSimple::dataProcessingPtr() const
@@ -1287,7 +1287,7 @@ PWIZ_API_DECL const ChromatogramIdentity& ChromatogramListSimple::chromatogramId
 PWIZ_API_DECL ChromatogramPtr ChromatogramListSimple::chromatogram(size_t index, bool getBinaryData) const
 {
     // validate index
-    if (index > size())
+    if (index >= size())
         throw runtime_error("[MSData::ChromatogramListSimple::chromatogram()] Invalid index.");
 
     // validate Chromatogram* 
@@ -1295,7 +1295,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramListSimple::chromatogram(size_t index,
         throw runtime_error("[MSData::ChromatogramListSimple::chromatogram()] Null ChromatogramPtr.");
 
     return chromatograms[index];
-} 
+}
 
 
 PWIZ_API_DECL const shared_ptr<const DataProcessing> ChromatogramListSimple::dataProcessingPtr() const
