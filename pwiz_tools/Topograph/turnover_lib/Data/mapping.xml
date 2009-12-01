@@ -228,6 +228,7 @@
     <property name="MaxCharge" />
     <property name="ExcludedMasses" type="BinaryBlob" />
     <property name="IntermediateEnrichmentLevels" />
+    <property name="MassAccuracy" />
     
     <bag name="FileAnalyses" cascade="delete" inverse="true">
       <key column="PeptideAnalysis" />
@@ -285,5 +286,14 @@
     <property name="WorkspaceId" unique="true"/>
     <property name="PeptideAnalysisId" unique="true"/>
     <property name="MsDataFileId" unique="true"/>
+  </class>
+  <class name="DbProtein">
+    <id name="Id">
+      <column name="Id" not-null="true"/>
+      <generator class="native" />
+    </id>
+    <version name="Version" generated="never"/>
+    <property name="SequenceHash" unique="true" />
+    <property name="Sequence" length="50000" />
   </class>
 </hibernate-mapping>

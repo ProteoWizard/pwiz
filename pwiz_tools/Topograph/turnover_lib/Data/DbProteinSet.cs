@@ -5,9 +5,7 @@ using System.Text;
 
 namespace pwiz.Topograph.Data
 {
-    public class DbProteinName
+    public class DbProteinSet : DbEntity<DbProteinSet>
     {
-        public virtual String SeqId { get; set; }
-        public virtual String Description { get; set; }
     }
 }

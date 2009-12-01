@@ -330,7 +330,10 @@ namespace pwiz.Topograph.Model
         }
         public void InvalidateChromatograms()
         {
-            Chromatograms = new Chromatograms(this);
+            if (!IsMzKeySetComplete(Chromatograms.GetKeys()))
+            {
+                Chromatograms = new Chromatograms(this);
+            }
             Recalculate();
         }
         private void ExcludedMzs_Changed(ExcludedMzs excludedMzs)

@@ -109,8 +109,9 @@
     <Compile Include="Data\DbChangeLog.cs" />
     <Compile Include="Data\DbInstanceStatus.cs" />
     <Compile Include="Data\DbProtein.cs" />
-    <Compile Include="Data\DbProteinIdType.cs" />
     <Compile Include="Data\DbProteinName.cs" />
+    <Compile Include="Data\DbProteinSet.cs" />
+    <Compile Include="Data\DbProteinSetMember.cs" />
     <Compile Include="Data\QueryExecuter.cs" />
     <Compile Include="Data\Snapshot\LoadPeptideAnalysisSnapshot.cs" />
     <Compile Include="Data\Snapshot\PeptideAnalysisSnapshot.cs" />

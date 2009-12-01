@@ -58,7 +58,7 @@ namespace pwiz.Topograph.Model
         {
             lock(this)
             {
-                var massAccuracy = Workspace.GetMassAccuracy();
+                var massAccuracy = PeptideFileAnalysis.PeptideAnalysis.GetMassAccuracy();
                 if (_intensities != null && massAccuracy == _massAccuarcy)
                 {
                     return _intensities;

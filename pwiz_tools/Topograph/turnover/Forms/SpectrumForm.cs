@@ -145,7 +145,7 @@ namespace pwiz.Topograph.ui.Forms
                             mzRanges.Add(mzRange, label);
                         }
                     }
-                    spectrum.MassAccuracy = Workspace.GetMassAccuracy();
+                    spectrum.MassAccuracy = PeptideAnalysis.GetMassAccuracy();
                     spectrum.MzRanges = mzRanges;
                 }
                 _msGraphControl.AddGraphItem(_msGraphControl.GraphPane, spectrum);
@@ -153,7 +153,7 @@ namespace pwiz.Topograph.ui.Forms
             }
             if (PeptideAnalysis != null && cbxShowPeptideMzs.Checked)
             {
-                double massAccuracy = Workspace.GetMassAccuracy();
+                double massAccuracy = PeptideAnalysis.GetMassAccuracy();
                 for (int charge = PeptideAnalysis.MinCharge; charge <= PeptideAnalysis.MaxCharge; charge++)
                 {
                     var mzs = PeptideAnalysis.GetMzs()[charge];

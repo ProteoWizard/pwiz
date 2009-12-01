@@ -174,6 +174,15 @@ namespace pwiz.Topograph.ui.Forms
             tbxMaxCharge.Text = PeptideAnalysis.MaxCharge.ToString();
             tbxIntermediateLevels.Text = PeptideAnalysis.IntermediateLevels.ToString();
             tbxProtein.Text = Peptide.ProteinName + " " + Peptide.ProteinDescription;
+            tbxMassAccuracy.Text = PeptideAnalysis.GetMassAccuracy().ToString();
+            if (PeptideAnalysis.MassAccuracy == null)
+            {
+                tbxMassAccuracy.Font = Font;
+            }
+            else
+            {
+                tbxMassAccuracy.Font = new Font(Font, FontStyle.Bold);
+            }
             UpdateMassGrid();
             UpdateRows(peptideAnalysisRows.Keys);
         }
@@ -264,6 +273,30 @@ namespace pwiz.Topograph.ui.Forms
                 else
                 {
                     PeptideFileAnalysisFrame.ActivatePeptideDataForm<PrecursorEnrichmentsForm>(this, peptideAnalysis);
+                }
+            }
+        }
+
+        private void tbxMassAccuracy_Leave(object sender, EventArgs e)
+        {
+            double value;
+            try
+            {
+                value = double.Parse(tbxMassAccuracy.Text);
+            }
+            catch
+            {
+                return;
+            }
+            using (Workspace.GetWriteLock())
+            {
+                if (value == Workspace.GetMassAccuracy())
+                {
+                    PeptideAnalysis.MassAccuracy = null;
+                }
+                else
+                {
+                    PeptideAnalysis.MassAccuracy = value;
                 }
             }
         }

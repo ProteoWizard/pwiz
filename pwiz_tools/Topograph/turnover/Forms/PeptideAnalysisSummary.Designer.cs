@@ -60,6 +60,8 @@ namespace pwiz.Topograph.ui.Forms
             this.colPeakEnd = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colTracerPercent = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colScore = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.label5 = new System.Windows.Forms.Label();
+            this.tbxMassAccuracy = new System.Windows.Forms.TextBox();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -99,8 +101,8 @@ namespace pwiz.Topograph.ui.Forms
             this.tableLayoutPanel1.Controls.Add(this.tbxFormula, 1, 1);
             this.tableLayoutPanel1.Controls.Add(this.tbxMinCharge, 1, 5);
             this.tableLayoutPanel1.Controls.Add(this.tbxMaxCharge, 1, 6);
-            this.tableLayoutPanel1.Controls.Add(this.gridViewExcludedMzs, 0, 9);
-            this.tableLayoutPanel1.Controls.Add(this.btnCreateAnalyses, 0, 8);
+            this.tableLayoutPanel1.Controls.Add(this.gridViewExcludedMzs, 0, 10);
+            this.tableLayoutPanel1.Controls.Add(this.btnCreateAnalyses, 0, 9);
             this.tableLayoutPanel1.Controls.Add(this.label7, 0, 7);
             this.tableLayoutPanel1.Controls.Add(this.tbxIntermediateLevels, 1, 7);
             this.tableLayoutPanel1.Controls.Add(this.label8, 0, 3);
@@ -109,11 +111,14 @@ namespace pwiz.Topograph.ui.Forms
             this.tableLayoutPanel1.Controls.Add(this.tbxAvgMass, 1, 4);
             this.tableLayoutPanel1.Controls.Add(this.label10, 0, 2);
             this.tableLayoutPanel1.Controls.Add(this.tbxProtein, 1, 2);
-            this.tableLayoutPanel1.Controls.Add(this.btnShowGraph, 1, 8);
+            this.tableLayoutPanel1.Controls.Add(this.btnShowGraph, 1, 9);
+            this.tableLayoutPanel1.Controls.Add(this.label5, 0, 8);
+            this.tableLayoutPanel1.Controls.Add(this.tbxMassAccuracy, 1, 8);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 10;
+            this.tableLayoutPanel1.RowCount = 11;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
@@ -124,8 +129,6 @@ namespace pwiz.Topograph.ui.Forms
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(259, 412);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
@@ -216,16 +219,16 @@ namespace pwiz.Topograph.ui.Forms
             this.gridViewExcludedMzs.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.tableLayoutPanel1.SetColumnSpan(this.gridViewExcludedMzs, 2);
             this.gridViewExcludedMzs.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.gridViewExcludedMzs.Location = new System.Drawing.Point(3, 228);
+            this.gridViewExcludedMzs.Location = new System.Drawing.Point(3, 253);
             this.gridViewExcludedMzs.Name = "gridViewExcludedMzs";
             this.gridViewExcludedMzs.PeptideAnalysis = null;
             this.gridViewExcludedMzs.PeptideFileAnalysis = null;
-            this.gridViewExcludedMzs.Size = new System.Drawing.Size(253, 181);
+            this.gridViewExcludedMzs.Size = new System.Drawing.Size(253, 156);
             this.gridViewExcludedMzs.TabIndex = 9;
             // 
             // btnCreateAnalyses
             // 
-            this.btnCreateAnalyses.Location = new System.Drawing.Point(3, 203);
+            this.btnCreateAnalyses.Location = new System.Drawing.Point(3, 228);
             this.btnCreateAnalyses.Name = "btnCreateAnalyses";
             this.btnCreateAnalyses.Size = new System.Drawing.Size(115, 19);
             this.btnCreateAnalyses.TabIndex = 8;
@@ -316,7 +319,7 @@ namespace pwiz.Topograph.ui.Forms
             // btnShowGraph
             // 
             this.btnShowGraph.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btnShowGraph.Location = new System.Drawing.Point(126, 203);
+            this.btnShowGraph.Location = new System.Drawing.Point(126, 228);
             this.btnShowGraph.Name = "btnShowGraph";
             this.btnShowGraph.Size = new System.Drawing.Size(130, 19);
             this.btnShowGraph.TabIndex = 22;
@@ -403,6 +406,26 @@ namespace pwiz.Topograph.ui.Forms
             this.colScore.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.colScore.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.label5.Location = new System.Drawing.Point(3, 200);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(117, 25);
+            this.label5.TabIndex = 23;
+            this.label5.Text = "Mass Accuracy";
+            this.label5.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // tbxMassAccuracy
+            // 
+            this.tbxMassAccuracy.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tbxMassAccuracy.Location = new System.Drawing.Point(126, 203);
+            this.tbxMassAccuracy.Name = "tbxMassAccuracy";
+            this.tbxMassAccuracy.Size = new System.Drawing.Size(130, 20);
+            this.tbxMassAccuracy.TabIndex = 24;
+            this.tbxMassAccuracy.Leave += new System.EventHandler(this.tbxMassAccuracy_Leave);
+            // 
             // PeptideAnalysisSummary
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -455,5 +478,7 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.DataGridViewLinkColumn colPeakEnd;
         private System.Windows.Forms.DataGridViewLinkColumn colTracerPercent;
         private System.Windows.Forms.DataGridViewLinkColumn colScore;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TextBox tbxMassAccuracy;
     }
 }

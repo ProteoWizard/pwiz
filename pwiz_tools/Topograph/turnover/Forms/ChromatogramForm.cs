@@ -47,8 +47,8 @@ namespace pwiz.Topograph.ui.Forms
         {
             InitializeComponent();
             gridIntensities.PeptideFileAnalysis = PeptideFileAnalysis;
-            gridIntensities.SelectionChanged += (o, e) => PeptideFileAnalysisChanged();
-            gridIntensities.CurrentCellChanged += (o, e) => PeptideFileAnalysisChanged();
+            gridIntensities.SelectionChanged += (o, e) => UpdateUi();
+            gridIntensities.CurrentCellChanged += (o, e) => UpdateUi();
             msGraphControl = new MSGraphControl
                                  {
                                      Dock = DockStyle.Fill
@@ -72,7 +72,7 @@ namespace pwiz.Topograph.ui.Forms
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
-            PeptideFileAnalysisChanged();
+            UpdateUi();
         }
 
         private SelectionDragging GetSelectionDragging(Point pt)
@@ -243,14 +243,22 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        protected override void PeptideFileAnalysisChanged()
+        protected void UpdateUi()
         {
-            base.PeptideFileAnalysisChanged();
             chromatograms = PeptideFileAnalysis.GetChromatograms();
             if (chromatograms != null)
             {
                 times = PeptideFileAnalysis.Times ?? new List<double>();
                 Recalc();
+            }
+        }
+
+        protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
+        {
+            base.OnWorkspaceEntitiesChanged(args);
+            if (args.Contains(PeptideFileAnalysis) || args.Contains(PeptideAnalysis))
+            {
+                UpdateUi();
             }
         }
 

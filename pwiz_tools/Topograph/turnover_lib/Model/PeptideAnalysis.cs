@@ -36,6 +36,7 @@ namespace pwiz.Topograph.Model
         private int _intermediateLevels;
         private TurnoverCalculator _turnoverCalculator;
         private int _chromatogramRefCount;
+        private double? _massAccuracy;
         private WorkspaceVersion _workspaceVersion;
 
         public PeptideAnalysis(Workspace workspace, DbPeptideAnalysis dbPeptideAnalysis) : base(workspace, dbPeptideAnalysis)
@@ -117,6 +118,29 @@ namespace pwiz.Topograph.Model
             OnChange();
         }
 
+        public double? MassAccuracy
+        {
+            get
+            {
+                return _massAccuracy;
+            }
+            set
+            {
+                if (_massAccuracy == value)
+                {
+                    return;
+                }
+                _massAccuracy = value;
+                InvalidateChromatograms();
+                OnChange();
+            }
+        }
+
+        public double GetMassAccuracy()
+        {
+            return MassAccuracy ?? Workspace.GetMassAccuracy();
+        }
+
         public void SaveDeep(ISession session)
         {
             Save(session);
@@ -160,7 +184,7 @@ namespace pwiz.Topograph.Model
                         return;
                     }
                     _minCharge = value;
-                    //InvalidateChromatograms();
+                    InvalidateChromatograms();
                     OnChange();
                 }
             }
@@ -188,7 +212,7 @@ namespace pwiz.Topograph.Model
                         return;
                     }
                     _maxCharge = value;
-                    //InvalidateChromatograms();
+                    InvalidateChromatograms();
                     OnChange();
                 }
             } 
