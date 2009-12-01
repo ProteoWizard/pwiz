@@ -91,7 +91,7 @@ namespace pwiz.Topograph.ui.Forms
             _msGraphControl.GraphPane.GraphObjList.Clear();
             _msGraphControl.GraphPane.CurveList.Clear();
 
-            using (var msDataFileImpl = new MsDataFileImpl(MsDataFile.Path))
+            using (var msDataFileImpl = new MsDataFileImpl(Workspace.GetDataFilePath(MsDataFile.Name)))
             {
                 tbxMsLevel.Text = MsDataFile.GetMsLevel(_scanIndex, msDataFileImpl).ToString();
                 try
