@@ -214,8 +214,9 @@ namespace pwiz.SkylineTest
             //    a. Same peptides
             path = docPeptides2.GetPathTo(0);
             docPeptides3 = docPeptides2.ImportFasta(new StringReader(TEXT_BOVINE_PEPTIDES1), true, path, out path);
-            Assert.AreSame(docPeptides2, docPeptides3);
-            Assert.IsNull(path);
+            // No longer filter repeated peptides, because they are useful for explicit modifictations.
+            Assert.AreNotSame(docPeptides2, docPeptides3);
+            Assert.IsNotNull(path);
 
             //    b. Different paptides
             path = docPeptides2.GetPathTo(0);

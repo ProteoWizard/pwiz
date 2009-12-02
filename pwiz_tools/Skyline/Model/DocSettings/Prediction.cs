@@ -277,7 +277,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (count == 0)
                 return null;
 
-            double r = 0.0;
+            double r = double.MinValue;
             Statistics[] aStatValues = new Statistics[calcs];
             for (int i = 0; i < calcs; i++)
                 aStatValues[i] = new Statistics(alistValues[i].ToArray());

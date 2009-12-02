@@ -42,7 +42,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(275, 42);
+            this.btnCancel.Location = new System.Drawing.Point(341, 42);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 6;
@@ -53,7 +53,7 @@
             // 
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOk.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOk.Location = new System.Drawing.Point(275, 12);
+            this.btnOk.Location = new System.Drawing.Point(341, 12);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 5;
@@ -70,7 +70,7 @@
             this.listSamples.FormattingEnabled = true;
             this.listSamples.Location = new System.Drawing.Point(14, 73);
             this.listSamples.Name = "listSamples";
-            this.listSamples.Size = new System.Drawing.Size(243, 244);
+            this.listSamples.Size = new System.Drawing.Size(309, 244);
             this.listSamples.TabIndex = 3;
             // 
             // cbSelectAll
@@ -118,7 +118,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(362, 372);
+            this.ClientSize = new System.Drawing.Size(428, 372);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.labelFile);
             this.Controls.Add(this.label1);

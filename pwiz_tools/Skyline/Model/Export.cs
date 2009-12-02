@@ -27,6 +27,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -461,7 +462,7 @@ namespace pwiz.Skyline.Model
 
         protected double GetProductMz(double productMz, int step)
         {
-            return productMz + 0.01*step;
+            return productMz + ChromatogramInfo.OPTIMIZE_SHIFT_SIZE*step;
         }
 
         protected double GetCollisionEnergy(PeptideDocNode nodePep,

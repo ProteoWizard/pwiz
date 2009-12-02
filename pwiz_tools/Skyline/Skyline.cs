@@ -653,12 +653,19 @@ namespace pwiz.Skyline
 
             string textCsv = Clipboard.GetText(TextDataFormat.CommaSeparatedValue);
             string text = Clipboard.GetText().Trim();
-            if (string.IsNullOrEmpty(textCsv))
-                Paste(text);
-            else if (!text.StartsWith(">"))
-                Paste(textCsv);
-            else
-                Paste(textCsv, text);
+            try
+            {
+                if (string.IsNullOrEmpty(textCsv))
+                    Paste(text);
+                else if (!text.StartsWith(">"))
+                    Paste(textCsv);
+                else
+                    Paste(textCsv, text);
+            }
+            catch (InvalidDataException x)
+            {
+                MessageDlg.Show(this, x.Message);
+            }
         }
 
         public void Paste(string text)
@@ -814,8 +821,10 @@ namespace pwiz.Skyline
                     continue;
 
                 // Make no duplicates are added during a paste
-                if (setAdded.Contains(pepSeqClean))
-                    continue;
+                // With explicit modifications, there is now reason to add duplicates,
+                // when multiple modified forms are desired.
+                // if (setAdded.Contains(pepSeqClean))
+                //    continue;
                 setAdded.Add(pepSeqClean);
                 listAllPeptides.Add(pepSeqClean);
 
@@ -1860,12 +1869,14 @@ namespace pwiz.Skyline
                             comboResults.SelectedIndex = 0;
                         else
                             comboResults.SelectedItem = selected;
+                        ComboHelper.AutoSizeDropDown(comboResults);
                     }
 
                     // Show the toolbar after updating the files
                     if (!toolBarResults.Visible)
                     {
                         toolBarResults.Visible = true;
+                        EnsureResultsComboSize();
                         sequenceTree.Top = toolBarResults.Bottom;
                         sequenceTree.Height -= toolBarResults.Height;
                     }                    
@@ -2037,7 +2048,13 @@ namespace pwiz.Skyline
 
         private void toolBarResults_Resize(object sender, EventArgs e)
         {
+            EnsureResultsComboSize();
+        }
+
+        private void EnsureResultsComboSize()
+        {
             comboResults.Width = toolBarResults.Width - labelResults.Width - 6;
+            ComboHelper.AutoSizeDropDown(comboResults);
         }
     }
 }

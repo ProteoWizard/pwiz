@@ -696,6 +696,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         var transitionChromInfosOld = listTranisitionChromInfoSets[i];
                         Array.Copy(transitionChromInfosOld, 0, transitionChromInfosNew,
                             totalOptCount/2 - transitionChromInfosOld.Length/2, transitionChromInfosOld.Length);
+                        listTranisitionChromInfoSets[i] = transitionChromInfosNew;
                     }
                 }
 
@@ -739,6 +740,8 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var graphData = listGraphData[i];
                 var infoPrimary = graphData.InfoPrimary;
+                if (infoPrimary == null)
+                    continue;
 
                 // Sum intensities of all transitions in this
                 // optimization bucket
@@ -770,6 +773,8 @@ namespace pwiz.Skyline.Controls.Graphs
             for (int i = 0; i < listGraphData.Count; i++)
             {
                 var graphData = listGraphData[i];
+                if (graphData.InfoPrimary == null)
+                    continue;
 
                 int step = i - totalSteps;
                 int width = lineWidth;
@@ -1101,6 +1106,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         comboFiles.SelectedIndex = 0;
                     else
                         comboFiles.SelectedItem = selected;
+                    ComboHelper.AutoSizeDropDown(comboFiles);
                 }
 
                 // Show the toolbar after updating the files
@@ -1260,8 +1266,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private ChromGraphItem FindBestPeakItem(CurveItem curve)
         {
-            ChromGraphItem graphItem = (ChromGraphItem)curve.Tag;
-            if (graphItem.TransitionChromInfo != null)
+            ChromGraphItem graphItem = curve.Tag as ChromGraphItem;
+            if (graphItem == null || graphItem.TransitionChromInfo != null)
                 return graphItem;
 
             foreach (var curveCurr in GraphPane.CurveList)

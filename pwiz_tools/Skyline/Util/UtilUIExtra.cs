@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Drawing;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -323,5 +324,33 @@ EndSelection:<<<<<<<3
             }
             return arg.ToString();
         }
+    }
+
+    public static class ComboHelper
+    {
+        public static void AutoSizeDropDown(ToolStripComboBox comboBox)
+        {
+            AutoSizeDropDown((ComboBox) comboBox.Control);
+        }
+
+        public static void AutoSizeDropDown(ComboBox comboBox)
+        {
+            // Make the dropdown at least as wide as the combo box itself
+            int widestWidth = comboBox.Width;
+
+            using (Graphics g = comboBox.CreateGraphics())
+            {
+                for (int i = 0; i < comboBox.Items.Count; i++)
+                {
+                    string valueToMeasure = (string)comboBox.Items[i];
+
+                    int currentWidth = TextRenderer.MeasureText(g, valueToMeasure, comboBox.Font).Width;
+                    if (currentWidth > widestWidth)
+                        widestWidth = currentWidth;
+                }
+            }
+
+            comboBox.DropDownWidth = widestWidth;
+        }        
     }
 }

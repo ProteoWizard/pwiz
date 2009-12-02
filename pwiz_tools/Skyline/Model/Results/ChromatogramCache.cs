@@ -776,17 +776,17 @@ namespace pwiz.Skyline.Model.Results
                         int offsetPeaks = _listPeaks.Count;
                         long offsetPoints = _outStream.Position;
 
-                        _copyBytes = bytesData;
-                        _inStream.Seek(0, SeekOrigin.Begin);
-
-                        CopyInToOut();
-
                         _listCachedFiles.AddRange(chromCacheFiles);
                         _listPeaks.AddRange(chromatogramPeaks);
                         _listTransitions.AddRange(chromTransitions);
                         for (int i = 0; i < chromatogramEntries.Length; i++)
                             chromatogramEntries[i].Offset(offsetFiles, offsetTransitions, offsetPeaks, offsetPoints);
                         _listGroups.AddRange(chromatogramEntries);
+
+                        _copyBytes = bytesData;
+                        _inStream.Seek(0, SeekOrigin.Begin);
+
+                        CopyInToOut();
                     }
                     catch (InvalidDataException x)
                     {
@@ -1288,13 +1288,16 @@ namespace pwiz.Skyline.Model.Results
 
                         chromDataSetNext.PickChromatogramPeaks();
 
+                        if (_outStream == null)
+                            throw new InvalidDataException("Failure writing cache file.");
+
                         long location = _outStream.Position;
 
                         float[] times = chromDataSetNext.Times;
                         float[][] intensities = chromDataSetNext.Intensities;
                         // Write the raw chromatogram points
                         byte[] points = TimeIntensitiesToBytes(times, intensities);
-                        // Compress the data (only about 12% savings)
+                        // Compress the data (can be huge for AB data with lots of zeros)
                         byte[] peaksCompressed = points.Compress(3);
                         int lenCompressed = peaksCompressed.Length;
                         _outStream.Write(peaksCompressed, 0, lenCompressed);
@@ -1703,9 +1706,11 @@ namespace pwiz.Skyline.Model.Results
                     for (int i = 0; i < _listChromData.Count; i++)
                     {
                         if (i < _listChromData.Count - 1 &&
-                            _listChromData[i+1].Key.Product - _listChromData[i].Key.Product < ChromatogramInfo.OPTIMIZE_SHIFT_THRESHOLD)
+                            ChromatogramInfo.IsOptimizationSpacing(_listChromData[i].Key.Product, _listChromData[i+1].Key.Product))
                         {
-                            Debug.Assert(_listChromData[i + 1].Key.Product > _listChromData[i].Key.Product, "Incorrectly sorted chromatograms");
+                            Debug.Assert(_listChromData[i + 1].Key.Product > _listChromData[i].Key.Product,
+                                string.Format("Incorrectly sorted chromatograms {0} > {1}",
+                                    _listChromData[i+1].Key.Product, _listChromData[i].Key.Product));
                             _listChromData[i].IsOptimizationData = true;
                         }
                         else
@@ -1797,9 +1802,9 @@ namespace pwiz.Skyline.Model.Results
                         intervalDelta = statIntervals.Min();
                     }
 
-                    // Never go smaller than 1/2 a second.
-//                    if (intervalDelta < 0.5/60)
-//                        intervalDelta = 0.5/60;  // For breakpoint setting
+                    // Never go smaller than 1/5 a second.
+                    if (intervalDelta < 0.2/60)
+                        intervalDelta = 0.2/60;  // For breakpoint setting
 
                     bool inferZeros = false;
                     if (_isProcessedScans && statDeltas.Max() / intervalDelta > TIME_DELTA_MAX_RATIO_THRESHOLD)
@@ -1912,7 +1917,10 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
 
+                // Moved to ProteoWizard
+// ReSharper disable UnusedMember.Local
                 private bool WiffZerosFix()
+// ReSharper restore UnusedMember.Local
                 {
                     if (!HasFlankingZeros)
                         return false;
@@ -1996,6 +2004,9 @@ namespace pwiz.Skyline.Model.Results
                 {
                     get
                     {
+                        // Make sure the intensity arrays are not just empty to avoid
+                        // an infinite loop.
+                        bool seenData = false;
                         // Check for interleaving zeros
                         foreach (var chromData in _listChromData)
                         {
@@ -2004,9 +2015,10 @@ namespace pwiz.Skyline.Model.Results
                             {
                                 if (intensities[i] != 0)
                                     return false;
+                                seenData = true;
                             }
                         }
-                        return true;
+                        return seenData;
                     }
                 }
 

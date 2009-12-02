@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public static double GetYTotal(PointPair pointPair)
         {
-            return pointPair.Y + ((ErrorTag) pointPair.Tag).Error/2;
+            return pointPair.Y + ((ErrorTag) pointPair.Tag).Error;
         }
 
         public MeanErrorBarItem(String label, 
@@ -91,9 +91,9 @@ namespace pwiz.Skyline.Controls.Graphs
             valueHandler.GetValues(curve, index, out curBase, out curLowVal, out curHiVal);
 
             float pixBase = baseAxis.Scale.Transform(curve.IsOverrideOrdinal, index, curBase);
-            double lowError = curHiVal - errorTag.Error/2;
+            double lowError = curHiVal - errorTag.Error;
             float pixLowError = valueAxis.Scale.Transform(lowError);
-            float pixHiError = valueAxis.Scale.Transform(lowError + errorTag.Error);
+            float pixHiError = valueAxis.Scale.Transform(lowError + errorTag.Error*2);
 
             float clusterWidth = pane.BarSettings.GetClusterWidth();
             //float barWidth = curve.GetBarWidth( pane );

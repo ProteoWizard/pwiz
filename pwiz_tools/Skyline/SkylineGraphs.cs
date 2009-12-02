@@ -421,6 +421,7 @@ namespace pwiz.Skyline
 
             using (var layoutLock = new DockPanelLayoutLock(dockPanel))
             {
+                bool deserialized = false;
                 if (docIdChanged && File.Exists(GetViewFile(DocumentFilePath)))
                 {
                     layoutLock.EnsureLocked();
@@ -438,6 +439,7 @@ namespace pwiz.Skyline
                     // Hide the graph panel, if nothing remains
                     if (FirstDocumentPane == -1)
                         splitMain.Panel2Collapsed = true;
+                    deserialized = true;
                 }
 
                 bool enable = DocumentUI.Settings.PeptideSettings.Libraries.HasLibraries;
@@ -448,8 +450,11 @@ namespace pwiz.Skyline
                     chargesMenuItem.Enabled = enable;
                     ranksMenuItem.Enabled = enable;
 
-                    layoutLock.EnsureLocked();
-                    ShowGraphSpectrum(enable && Settings.Default.ShowSpectra);
+                    if (!deserialized)
+                    {
+                        layoutLock.EnsureLocked();
+                        ShowGraphSpectrum(enable && Settings.Default.ShowSpectra);
+                    }
                 }
                 enable = DocumentUI.Settings.HasResults;
                 if (retentionTimesMenuItem.Enabled != enable)
@@ -460,13 +465,20 @@ namespace pwiz.Skyline
                     replicateComparisonMenuItem.Enabled = enable;
                     schedulingMenuItem.Enabled = enable;
 
-                    layoutLock.EnsureLocked();
-                    ShowGraphRetentionTime(enable && Settings.Default.ShowRetentionTimeGraph);
+                    if (!deserialized)
+                    {
+                        layoutLock.EnsureLocked();
+                        ShowGraphRetentionTime(enable && Settings.Default.ShowRetentionTimeGraph);
+                    }
                 }
                 if (resultsGridMenuItem.Enabled != enable)
                 {
                     resultsGridMenuItem.Enabled = enable;
-                    ShowResultsGrid(enable && Settings.Default.ShowResultsGrid);
+                    if (!deserialized)
+                    {
+                        layoutLock.EnsureLocked();
+                        ShowResultsGrid(enable && Settings.Default.ShowResultsGrid);
+                    }
                 }
                 if (peakAreasMenuItem.Enabled != enable)
                 {
@@ -475,8 +487,11 @@ namespace pwiz.Skyline
                     areaReplicateComparisonMenuItem.Enabled = enable;
                     areaPeptideComparisonMenuItem.Enabled = enable;
 
-                    layoutLock.EnsureLocked();
-                    ShowGraphPeakArea(enable && Settings.Default.ShowPeakAreaGraph);                    
+                    if (!deserialized)
+                    {
+                        layoutLock.EnsureLocked();
+                        ShowGraphPeakArea(enable && Settings.Default.ShowPeakAreaGraph);
+                    }
                 }
 
                 if (!ReferenceEquals(settingsNew.MeasuredResults, settingsOld.MeasuredResults))
@@ -1679,6 +1694,7 @@ namespace pwiz.Skyline
                 menuStrip.Items.Insert(iInsert++, setRTThresholdContextMenuItem);
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator22);
                 menuStrip.Items.Insert(iInsert++, createRTRegressionContextMenuItem);
+                createRTRegressionContextMenuItem.Enabled = (RTGraphController.RegressionRefined != null);
                 bool showDelete = controller.ShowDelete(mousePt);
                 bool showDeleteOutliers = controller.ShowDeleteOutliers;
                 if (showDelete || showDeleteOutliers)

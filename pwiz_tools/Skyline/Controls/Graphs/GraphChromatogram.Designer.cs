@@ -41,8 +41,8 @@
             // graphControl
             // 
             this.graphControl.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                                                                              | System.Windows.Forms.AnchorStyles.Left)
-                                                                             | System.Windows.Forms.AnchorStyles.Right)));
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.graphControl.EditButtons = System.Windows.Forms.MouseButtons.Left;
             this.graphControl.EditModifierKeys = System.Windows.Forms.Keys.None;
             msGraphPane1.AllowCurveOverlap = false;
@@ -86,8 +86,8 @@
             // 
             this.toolBar.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolBar.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-                                                                                     this.toolStripLabel1,
-                                                                                     this.comboFiles});
+            this.toolStripLabel1,
+            this.comboFiles});
             this.toolBar.Location = new System.Drawing.Point(0, 0);
             this.toolBar.Name = "toolBar";
             this.toolBar.Size = new System.Drawing.Size(473, 25);
@@ -105,6 +105,7 @@
             this.comboFiles.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboFiles.MaxDropDownItems = 15;
             this.comboFiles.Name = "comboFiles";
+            this.comboFiles.Overflow = System.Windows.Forms.ToolStripItemOverflow.Never;
             this.comboFiles.Size = new System.Drawing.Size(200, 25);
             this.comboFiles.SelectedIndexChanged += new System.EventHandler(this.comboFiles_SelectedIndexChanged);
             // 

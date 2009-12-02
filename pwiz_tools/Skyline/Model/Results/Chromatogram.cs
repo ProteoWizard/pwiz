@@ -167,9 +167,12 @@ namespace pwiz.Skyline.Model.Results
                 OptimizableRegression optimizationFunction)
             : base(new ChromatogramSetId(), name)
         {
-            // Make sure data file names are stored in a consistent order.
             _msDataFilePaths = msDataFileNames.ToArray();
-            Array.Sort(_msDataFilePaths);
+            // Make sure data file names are stored in a consistent order.
+            // CONSIDER: Or maybe not.  This is confusing, and probably not the right
+            //           thing to do when the file view is added, and file order is
+            //           changeable.
+            // Array.Sort(_msDataFilePaths);
             // New cach flags with everything set as not cached.
             _fileCacheFlags = new bool[_msDataFilePaths.Length];
 

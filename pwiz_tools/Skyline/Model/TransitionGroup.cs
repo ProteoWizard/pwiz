@@ -383,10 +383,16 @@ namespace pwiz.Skyline.Model
                     if (measuredResults.TryLoadChromatogram(chromatograms, this, mzMatchTolerance, false, out arrayChromInfo))
                     {
                         // Find the file indexes once
-                        int countFiles = arrayChromInfo.Length;
-                        int[] fileIndexes = new int[countFiles];
-                        for (int j = 0; j < countFiles; j++)
+                        int countGroupInfos = arrayChromInfo.Length;
+                        int[] fileIndexes = new int[countGroupInfos];
+                        for (int j = 0; j < countGroupInfos; j++)
                             fileIndexes[j] = chromatograms.IndexOfFile(arrayChromInfo[j]);
+
+                        // Figure out the number of steps for this chromatogram set, if it has
+                        // an optimization function.
+                        int numSteps = 0;
+                        if (chromatograms.OptimizationFunction != null)
+                            numSteps = chromatograms.OptimizationFunction.StepCount;
 
                         // Calculate the transition info, and the max values for the transition group
                         for (int iTran = 0; iTran < Children.Count; iTran++)
@@ -398,26 +404,34 @@ namespace pwiz.Skyline.Model
                                 nodeTran.Results[indexOld] : null;
 
                             var listTranInfo = new List<TransitionChromInfo>();
-                            for (int j = 0; j < countFiles; j++)
+                            for (int j = 0; j < countGroupInfos; j++)
                             {
                                 // Get all transition chromatogram info for this file.
                                 ChromatogramGroupInfo chromGroupInfo = arrayChromInfo[j];
+                                int fileIndex = fileIndexes[j];
+
                                 ChromatogramInfo[] infos = chromGroupInfo.GetAllTransitionInfo((float)nodeTran.Mz,
                                     mzMatchTolerance, chromatograms.OptimizationFunction);
-                                int numSteps = infos.Length/2;
-                                for (int i = 0; i < infos.Length; i++)
+
+                                // Always add the right number of steps to the list, no matter
+                                // how many entries were returned.
+                                int offset = infos.Length/2 - numSteps;
+                                int countInfos = numSteps*2 + 1;
+                                for (int i = 0; i < countInfos; i++)
                                 {
-                                    var info = infos[i];
-                                    if (info.BestPeakIndex == -1)
-                                        continue;
+                                    ChromatogramInfo info = null;
+                                    int iInfo = i + offset;
+                                    if (0 <= iInfo && iInfo < infos.Length)
+                                        info = infos[iInfo];
 
                                     // Check for existing info that was set by the user.
-                                    int fileIndex = fileIndexes[j];
                                     int step = i - numSteps;
                                     var chromInfo = FindChromInfo(results, fileIndex, step);
                                     if (chromInfo == null || !chromInfo.UserSet)
                                     {
-                                        ChromPeak peak = info.GetPeak(info.BestPeakIndex);
+                                        ChromPeak peak = (info != null && info.BestPeakIndex != -1 ?
+                                            info.GetPeak(info.BestPeakIndex) : ChromPeak.EMPTY);
+
                                         // Avoid creating new info objects that represent the same data
                                         // in use before.
                                         if (chromInfo == null || !chromInfo.Equivalent(fileIndex, step, peak))
@@ -575,7 +589,7 @@ namespace pwiz.Skyline.Model
                 var arrayRanked = new KeyValuePair<int, TransitionChromInfo>[countTransitions];
                 for (int i = 0; i < _listResultCalcs.Count; i++)
                 {
-                    for (int iFile = 0; /* internal break */ ; iFile++)
+                    for (int iInfo = 0; /* internal break */ ; iInfo++)
                     {
                         int countInfo = 0;
                         double[] peakAreas = null, libIntensities = null;
@@ -584,15 +598,20 @@ namespace pwiz.Skyline.Model
                             peakAreas = new double[countTransitions];
                             libIntensities = new double[countTransitions];
                         }
+                        int fileIndex = 0, optStep = 0;
                         for (int iTran = 0; iTran < countTransitions; iTran++)
                         {
                             var results = _arrayChromInfoSets[iTran][i];
-                            var chromInfo = (results != null && iFile < results.Count ? results[iFile] : null);
+                            var chromInfo = (results != null && iInfo < results.Count ? results[iInfo] : null);
                             arrayRanked[iTran] =
                                 new KeyValuePair<int, TransitionChromInfo>(iTran, chromInfo);
                             // Count non-null info
                             if (chromInfo != null)
+                            {
                                 countInfo++;
+                                fileIndex = chromInfo.FileIndex;
+                                optStep = chromInfo.OptimizationStep;
+                            }
 
                             // Store information for correlation score
                             if (peakAreas != null)
@@ -608,7 +627,7 @@ namespace pwiz.Skyline.Model
 
                         // Calculate correlation score
                         if (peakAreas != null)
-                            _listResultCalcs[i].SetLibInfo(iFile, peakAreas, libIntensities);
+                            _listResultCalcs[i].SetLibInfo(fileIndex, optStep, peakAreas, libIntensities);
 
                         // Sort by area descending
                         Array.Sort(arrayRanked, (p1, p2) =>
@@ -622,7 +641,7 @@ namespace pwiz.Skyline.Model
                                 continue;
                             int rank = (pair.Value.Area > 0 ? iRank + 1 : 0);
                             if (pair.Value.Rank != rank)
-                                _arrayChromInfoSets[pair.Key][i][iFile] = pair.Value.ChangeRank(rank);
+                                _arrayChromInfoSets[pair.Key][i][iInfo] = pair.Value.ChangeRank(rank);
                         }
                     }
                 }
@@ -698,8 +717,10 @@ namespace pwiz.Skyline.Model
                 return (listInfo.Count > 0 && listInfo[0] != null ? listInfo : null);
             }
 
-            public void SetLibInfo(int iFile, double[] peakAreas, double[] libIntensities)
+            public void SetLibInfo(int fileIndex, int optStep, double[] peakAreas, double[] libIntensities)
             {
+                int iFile = IndexOfFile(fileIndex, optStep);
+                Debug.Assert(iFile >= 0);   // Should have already been added
                 Calculators[iFile].SetLibInfo(peakAreas, libIntensities);
             }
 
@@ -808,6 +829,10 @@ namespace pwiz.Skyline.Model
 
             public void SetLibInfo(double[] peakAreas, double[] libIntensities)
             {
+                // Only do this once.
+                if (LibraryDotProduct.HasValue)
+                    return;
+
                 var statPeakAreas = new Statistics(peakAreas);
                 var statLibIntensities = new Statistics(libIntensities);
                 LibraryDotProduct = (float) statPeakAreas.AngleSqrt(statLibIntensities);

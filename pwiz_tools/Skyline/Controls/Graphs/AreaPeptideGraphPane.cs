@@ -147,7 +147,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 DisplayTypeChrom displayType)
             {
                 // Determine the shortest possible unique ID for each peptide
-                var uniqueSeq = new Dictionary<string, string>();
+                var uniqueSeq = new List<KeyValuePair<string, string>>();
                 foreach (var nodePep in document.Peptides)
                     AddUniqePrefix(uniqueSeq, nodePep.Peptide.Sequence, 3);
                 // Flip the dictionary from ID - peptide to peptide - ID
@@ -409,24 +409,74 @@ namespace pwiz.Skyline.Controls.Graphs
                 return pointPair;
             }
 
-            private static void AddUniqePrefix(IDictionary<string, string> uniqueSeq, string seq, int len)
+            private sealed class PrefixComparer : IComparer<KeyValuePair<string, string>>
+            {
+                public int Compare(KeyValuePair<string, string> v1, KeyValuePair<string, string> v2)
+                {
+                    return Comparer.DefaultInvariant.Compare(v1.Key, v2.Key);
+                }
+            }
+
+            private static readonly PrefixComparer PREFIX_COMPARER = new PrefixComparer();
+
+            private static void AddUniqePrefix(List<KeyValuePair<string, string>> uniqueSeq, string seq, int len)
             {
                 // Get the prefix of the specified length
                 string prefix = seq.Substring(0, len);
 
                 // If this prefix is not in the dictionary, add it
-                string conflict;
-                if (!uniqueSeq.TryGetValue(seq, out conflict))
-                    uniqueSeq.Add(prefix, seq);
+                var insertVal = new KeyValuePair<string, string>(prefix, seq);
+                int iVal = uniqueSeq.BinarySearch(insertVal, PREFIX_COMPARER);
+                if (iVal < 0)
+                    iVal = ~iVal;
+
+                string nextPrefix = (iVal < uniqueSeq.Count ? uniqueSeq[iVal].Key : "");
+                string nextSeq = (iVal < uniqueSeq.Count ? uniqueSeq[iVal].Value : "");
+
+                if (Equals(prefix, nextPrefix))
+                {
+                    // If this is the same sequence again, ignore it.
+                    if (Equals(seq, nextSeq))
+                        return;
+
+                    // If the prefix is shorter than the matching sequence, lengthen it
+                    // for that sequence.
+                    if (len < nextSeq.Length)
+                    {
+                        uniqueSeq.RemoveAt(iVal);
+                        uniqueSeq.Insert(iVal, new KeyValuePair<string, string>(nextSeq.Substring(0, len + 1), nextSeq));
+                    }
+                    // If the prefix is shorter than the current sequence, lengthen it for
+                    // the current sequence also.
+                    if (len < seq.Length)
+                        len++;
+
+                    // Then try again for this sequence with either a longer next prefix
+                    // or a longer current prefix
+                    AddUniqePrefix(uniqueSeq, seq, len);
+                }
+                else if (nextPrefix.StartsWith(prefix))
+                {
+                    if (len == seq.Length)
+                    {
+                        uniqueSeq.Insert(iVal, insertVal);
+                    }
+                    else
+                    {
+                        // Advance until the prefixes no longer share a common prefix
+                        int stopIndex = Math.Min(nextPrefix.Length, seq.Length);
+                        do
+                        {
+                            prefix = seq.Substring(0, ++len);
+                        }
+                        while (len < stopIndex && nextPrefix.StartsWith(prefix));
+
+                        AddUniqePrefix(uniqueSeq, seq, len);
+                    }
+                }
                 else
                 {
-                    // Otherwise, remove the current conflicting peptide, and
-                    // add it back with one more character of the prefix
-                    uniqueSeq.Remove(prefix);
-                    uniqueSeq.Add(conflict.Substring(0, len + 1), conflict);
-
-                    // Then try again for this prefix with one more character
-                    AddUniqePrefix(uniqueSeq, seq, len + 1);
+                    uniqueSeq.Insert(iVal, insertVal);
                 }
             }
         }

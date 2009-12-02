@@ -79,9 +79,9 @@ namespace pwiz.Skyline.Model.Lib
                     if (spec == null)
                         continue;
                     var library = LoadLibrary(container, spec);
-                    if (library == null)
+                    if (library == null || !ReferenceEquals(document.Id, container.Document.Id))
                     {
-                        // Loading was cancelled
+                        // Loading was cancelled or document changed
                         EndProcessing(document);
                         return false;
                     }

@@ -622,8 +622,8 @@ namespace pwiz.Skyline.Model.Results
                     // If there is optimization data, return only the middle value, which
                     // was the regression value.
                     int iBegin = i;
-                    while (i < endTran - 1 && _allTransitions[i+1].Product - _allTransitions[i].Product <
-                            ChromatogramInfo.OPTIMIZE_SHIFT_THRESHOLD)
+                    while (i < endTran - 1 &&
+                        ChromatogramInfo.IsOptimizationSpacing(_allTransitions[i].Product, _allTransitions[i+1].Product))
                     {
                         i++;
                     }
@@ -654,8 +654,8 @@ namespace pwiz.Skyline.Model.Results
                 if (ChromKey.CompareTolerant(productMz, _allTransitions[i].Product, tolerance) == 0)
                 {
                     // If there is optimization data, add it to the list
-                    while (i < endTran - 1 && _allTransitions[i + 1].Product - _allTransitions[i].Product <
-                            ChromatogramInfo.OPTIMIZE_SHIFT_THRESHOLD)
+                    while (i < endTran - 1 &&
+                        ChromatogramInfo.IsOptimizationSpacing(_allTransitions[i].Product, _allTransitions[i+1].Product))
                     {
                         listInfo.Add(new ChromatogramInfo(_groupHeaderInfo, i - startTran,
                             _allFiles, _allTransitions, _allPeaks, Times, IntensityArray));
@@ -738,7 +738,14 @@ namespace pwiz.Skyline.Model.Results
 
     public class ChromatogramInfo : ChromatogramGroupInfo
     {
-        public const double OPTIMIZE_SHIFT_THRESHOLD = 0.015;
+        public const double OPTIMIZE_SHIFT_SIZE = 0.01;
+        private const double OPTIMIZE_SHIFT_THRESHOLD = 0.001;
+
+        public static bool IsOptimizationSpacing(double mz1, double mz2)
+        {
+            double delta = Math.Abs(OPTIMIZE_SHIFT_SIZE - mz2 - mz1);
+            return delta < OPTIMIZE_SHIFT_THRESHOLD;
+        }
 
         protected readonly int _transitionIndex;
 

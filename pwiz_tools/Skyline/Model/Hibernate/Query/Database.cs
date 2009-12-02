@@ -237,10 +237,15 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         {
             var predictTran = docInfo.Settings.TransitionSettings.Prediction;
 
+            var calcPre = docInfo.Settings.GetPrecursorCalc(nodeGroup.TransitionGroup.LabelType, nodePeptide.ExplicitMods);
+            string seq = nodeGroup.TransitionGroup.Peptide.Sequence;
+            string seqModified = calcPre.GetModifiedSequence(seq, true);
+
             TransitionGroup tranGroup = nodeGroup.TransitionGroup;
             DbPrecursor dbPrecursor = new DbPrecursor
                                         {
                                             Peptide = dbPeptide,
+                                            ModifiedSequence = seqModified,
                                             Charge = tranGroup.PrecursorCharge,
                                             IsotopeLabelType = tranGroup.LabelType,
                                             NeutralMass = SequenceMassCalc.PersistentNeutral(SequenceMassCalc.GetMH(nodeGroup.PrecursorMz, tranGroup.PrecursorCharge)),

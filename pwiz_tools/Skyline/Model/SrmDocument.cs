@@ -437,9 +437,11 @@ namespace pwiz.Skyline.Model
                 PeptideGroupDocNode nodeGroup = (PeptideGroupDocNode) FindNode(pathGroup);
 
                 // Add only peptides not already in this group
+                // With explicit modifications, there is now reason to add duplicates,
+                // when multiple modified forms are desired.
                 HashSet<Peptide> setPeptides = new HashSet<Peptide>();
-                foreach (PeptideDocNode nodePeptide in nodeGroup.Children)
-                    setPeptides.Add(nodePeptide.Peptide);
+                // foreach (PeptideDocNode nodePeptide in nodeGroup.Children)
+                //    setPeptides.Add(nodePeptide.Peptide);
                 List<DocNode> listAdd = new List<DocNode>();
                 foreach (PeptideDocNode nodePeptide in peptideGroupsAdd[0].Children)
                 {

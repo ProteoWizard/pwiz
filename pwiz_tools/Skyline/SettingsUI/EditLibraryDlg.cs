@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
@@ -33,9 +34,6 @@ namespace pwiz.Skyline.SettingsUI
     {
         private LibrarySpec _librarySpec;
         private readonly IEnumerable<LibrarySpec> _existing;
-        private bool _clickedOk;
-
-        private readonly MessageBoxHelper _helper;
 
         public EditLibraryDlg(IEnumerable<LibrarySpec> existing)
         {
@@ -44,8 +42,6 @@ namespace pwiz.Skyline.SettingsUI
             InitializeComponent();
 
             textName.Focus();
-
-            _helper = new MessageBoxHelper(this);
         }
 
         public LibrarySpec LibrarySpec
@@ -68,71 +64,65 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        protected override void OnClosing(CancelEventArgs e)
+        public void OkDialog()
         {
-            if (_clickedOk)
+            var e = new CancelEventArgs();
+            var helper = new MessageBoxHelper(this);
+
+            string name;
+            if (!helper.ValidateNameTextBox(e, textName, out name))
+                return;
+
+            // Allow updating the original modification
+            if (LibrarySpec == null || !Equals(name, LibrarySpec.Name))
             {
-                _clickedOk = false; // Reset in case of failure.
-
-                string name;
-                if (!_helper.ValidateNameTextBox(e, textName, out name))
-                    return;
-
-                // Allow updating the original modification
-                if (LibrarySpec == null || !Equals(name, LibrarySpec.Name))
+                // But not any other existing modification
+                foreach (LibrarySpec mod in _existing)
                 {
-                    // But not any other existing modification
-                    foreach (LibrarySpec mod in _existing)
+                    if (Equals(name, mod.Name))
                     {
-                        if (Equals(name, mod.Name))
-                        {
-                            _helper.ShowTextBoxError(textName, "The library '{0}' already exists.", name);
-                            e.Cancel = true;
-                            return;
-                        }
+                        helper.ShowTextBoxError(textName, "The library '{0}' already exists.", name);
+                        return;
                     }
                 }
-
-                LibrarySpec librarySpec;
-                String path = textPath.Text;
-
-                if (!File.Exists(path))
-                {
-                    MessageBox.Show(this, string.Format("The file {0} does not exist.", path), Program.Name);
-                    textPath.Focus();
-                    e.Cancel = true;
-                    return;
-                }
-                if (FileEx.IsDirectory(path))
-                {
-                    MessageBox.Show(this, string.Format("The path {0} is a directory.", path), Program.Name);
-                    textPath.Focus();
-                    e.Cancel = true;
-                    return;                            
-                }
-                string ext = Path.GetExtension(path);
-                if (Equals(ext, BiblioSpecLiteSpec.EXT))
-                    librarySpec = new BiblioSpecLiteSpec(name, path);
-                else if (Equals(ext, BiblioSpecLibSpec.EXT))
-                    librarySpec = new BiblioSpecLibSpec(name, path);
-                else if (Equals(ext, XHunterLibSpec.EXT))
-                    librarySpec = new XHunterLibSpec(name, path);
-                else if (Equals(ext, NistLibSpec.EXT))
-                    librarySpec = new NistLibSpec(name, path);
-                else // if (Equals(ext, SpectrastSpec.EXT))
-                    librarySpec = new SpectrastSpec(name, path);
-
-//                if (librarySpec == null)
-//                {
-//                    MessageBox.Show("Unexpected error", Program.Name);
-//                    e.Cancel = true;
-//                    return;
-//                }
-
-                _librarySpec = librarySpec;
             }
 
-            base.OnClosing(e);
+            LibrarySpec librarySpec;
+            String path = textPath.Text;
+
+            if (!File.Exists(path))
+            {
+                MessageBox.Show(this, string.Format("The file {0} does not exist.", path), Program.Name);
+                textPath.Focus();
+                return;
+            }
+            if (FileEx.IsDirectory(path))
+            {
+                MessageBox.Show(this, string.Format("The path {0} is a directory.", path), Program.Name);
+                textPath.Focus();
+                return;
+            }
+            string ext = Path.GetExtension(path);
+            if (Equals(ext, BiblioSpecLiteSpec.EXT))
+                librarySpec = new BiblioSpecLiteSpec(name, path);
+            else if (Equals(ext, BiblioSpecLibSpec.EXT))
+                librarySpec = new BiblioSpecLibSpec(name, path);
+            else if (Equals(ext, XHunterLibSpec.EXT))
+                librarySpec = new XHunterLibSpec(name, path);
+            else if (Equals(ext, NistLibSpec.EXT))
+                librarySpec = new NistLibSpec(name, path);
+            else if (Equals(ext, SpectrastSpec.EXT))
+                librarySpec = new SpectrastSpec(name, path);
+            else
+            {
+                MessageDlg.Show(this, string.Format("The file {0} is not a supported spectral library file format.", path));
+                textPath.Focus();
+                return;
+            }
+
+            _librarySpec = librarySpec;
+            DialogResult = DialogResult.OK;
+            Close();
         }
 
         private void btnBrowse_Click(object sender, EventArgs e)
@@ -153,7 +143,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            _clickedOk = true;
+            OkDialog();
         }
 
         public static string GetLibraryPath(IWin32Window parent, string fileName)

@@ -312,7 +312,7 @@ namespace pwiz.Skyline.SettingsUI
         private void editLibraries_Click(object sender, EventArgs e)
         {
             _driverLibrary.EditList();
-            if (listLibraries.SelectedIndices.Count == 0)
+            if (listLibraries.CheckedIndices.Count == 0)
                 panelPick.Visible = false;
         }
 

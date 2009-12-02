@@ -588,7 +588,7 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"-1\" max_mz=\"1503\" />");
             AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"100\" />");
             AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"10\" max_mz=\"5000\" mz_match_tolerance=\"0\"/>");
-            AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"10\" max_mz=\"5000\" mz_match_tolerance=\"0.55\"/>");
+            AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"10\" max_mz=\"5000\" mz_match_tolerance=\"0.65\"/>");
         }
 
         private static void CheckSettingsList<TItem>(SettingsList<TItem> target, SettingsList<TItem> copy)
