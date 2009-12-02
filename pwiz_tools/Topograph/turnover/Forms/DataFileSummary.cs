@@ -153,13 +153,13 @@ namespace pwiz.Topograph.ui.Forms
             var peptideFileAnalysis = (PeptideFileAnalysis) dataGridView.Rows[e.RowIndex].Tag;
             if (e.ColumnIndex < 0)
             {
-                ShowPeptideFileAnalysisForm<ChromatogramForm>(peptideFileAnalysis);
+                ShowPeptideFileAnalysisForm<AbstractChromatogramForm>(peptideFileAnalysis);
                 return;
             }
             var column = dataGridView.Columns[e.ColumnIndex];
             if (column == colPeakStart || column == colPeakEnd)
             {
-                ShowPeptideFileAnalysisForm<ChromatogramForm>(peptideFileAnalysis);
+                ShowPeptideFileAnalysisForm<AbstractChromatogramForm>(peptideFileAnalysis);
             } 
             else if (column == colTurnover)
             {

@@ -234,6 +234,10 @@ namespace pwiz.Topograph.Enrichment
                     }
                 }
                 remaining = newRemaining;
+                if (remaining.Count == 0)
+                {
+                    return null;
+                }
             }
             Vector result = new Vector(candidates.Count);
             for (int i = 0; i < remaining.Count; i++)

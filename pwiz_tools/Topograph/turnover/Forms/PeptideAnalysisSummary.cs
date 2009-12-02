@@ -161,7 +161,7 @@ namespace pwiz.Topograph.ui.Forms
         {
             var row = dataGridView.Rows[e.RowIndex];
             var peptideAnalysis = (PeptideFileAnalysis) row.Tag;
-            PeptideFileAnalysisFrame.ActivatePeptideDataForm<ChromatogramForm>(this, peptideAnalysis);
+            PeptideFileAnalysisFrame.ActivatePeptideDataForm<AbstractChromatogramForm>(this, peptideAnalysis);
         }
 
         protected void OnPeptideAnalysisChanged()
@@ -262,7 +262,7 @@ namespace pwiz.Topograph.ui.Forms
             }
             if (column == colPeakStart || column == colPeakEnd)
             {
-                PeptideFileAnalysisFrame.ActivatePeptideDataForm<ChromatogramForm>(this, peptideAnalysis);
+                PeptideFileAnalysisFrame.ActivatePeptideDataForm<AbstractChromatogramForm>(this, peptideAnalysis);
             }
             else if (column == colTracerPercent || column == colScore)
             {

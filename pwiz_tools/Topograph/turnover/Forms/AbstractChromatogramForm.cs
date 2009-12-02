@@ -35,20 +35,20 @@ using ZedGraph;
 
 namespace pwiz.Topograph.ui.Forms
 {
-    public partial class ChromatogramForm : PeptideFileAnalysisForm
+    public partial class AbstractChromatogramForm : PeptideFileAnalysisForm
     {
-        private MSGraphControl msGraphControl;
-        private Chromatograms chromatograms;
-        private BoxObj selectionBoxObj;
+        protected MSGraphControl msGraphControl;
+        protected BoxObj selectionBoxObj;
         private SelectionDragging selectionDragging;
-        private IList<double> times;
+        protected IList<double> times;
         private Point _ptClick;
-        public ChromatogramForm(PeptideFileAnalysis peptideFileAnalysis) : base(peptideFileAnalysis)
+        private AbstractChromatogramForm() : base(null)
+        {
+            
+        }
+        protected AbstractChromatogramForm(PeptideFileAnalysis peptideFileAnalysis) : base(peptideFileAnalysis)
         {
             InitializeComponent();
-            gridIntensities.PeptideFileAnalysis = PeptideFileAnalysis;
-            gridIntensities.SelectionChanged += (o, e) => UpdateUi();
-            gridIntensities.CurrentCellChanged += (o, e) => UpdateUi();
             msGraphControl = new MSGraphControl
                                  {
                                      Dock = DockStyle.Fill
@@ -58,8 +58,6 @@ namespace pwiz.Topograph.ui.Forms
             msGraphControl.MouseDownEvent += msGraphControl_MouseDownEvent;
             msGraphControl.MouseUpEvent += msGraphControl_MouseUpEvent;
             msGraphControl.ContextMenuBuilder += msGraphControl_ContextMenuBuilder;
-            splitContainer1.Panel2.Controls.Add(msGraphControl);
-            Text = "Chromatograms";
         }
 
         void msGraphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
@@ -117,7 +115,7 @@ namespace pwiz.Topograph.ui.Forms
             return PeptideFileAnalysis.ScanIndexFromTime(time);
         }
 
-        double TimeFromScanIndex(int scanIndex)
+        protected double TimeFromScanIndex(int scanIndex)
         {
             return PeptideFileAnalysis.TimeFromScanIndex(scanIndex);
         }
@@ -140,9 +138,9 @@ namespace pwiz.Topograph.ui.Forms
                 double peakStart, peakEnd;
                 GetPeakStartEnd(selectionDragging, value, out peakStart, out peakEnd);
                 msGraphControl.GraphPane.GraphObjList.Remove(selectionBoxObj);
-                selectionBoxObj = new BoxObj(peakStart, msGraphControl.GraphPane.YAxis.Scale.Max * .8,
+                selectionBoxObj = new BoxObj(peakStart, int.MaxValue,
                                                  peakEnd - peakStart,
-                                                 msGraphControl.GraphPane.YAxis.Scale.Max, Color.Goldenrod,
+                                                 int.MaxValue, Color.Goldenrod,
                                                  Color.Goldenrod)
                 {
                     IsClippedToChartRect = true,
@@ -178,21 +176,10 @@ namespace pwiz.Topograph.ui.Forms
                 value2 = PeptideFileAnalysis.PeakStart.Value;
             }
             PeptideFileAnalysis.AutoFindPeak = false;
-            PeptideFileAnalysis.SetPeakStartEnd(Math.Min(value1, value2), Math.Max(value1, value2), chromatograms);
+            PeptideFileAnalysis.SetPeakStartEnd(Math.Min(value1, value2), Math.Max(value1, value2), PeptideFileAnalysis.Chromatograms);
             selectionDragging = SelectionDragging.none;
             Recalc();
             return true;
-        }
-
-        public ExcludedMzs ExcludedMzs {
-            get
-            {
-                if (PeptideFileAnalysis != null)
-                {
-                    return PeptideFileAnalysis.ExcludedMzs;
-                }
-                return PeptideAnalysis.ExcludedMzs;
-            }
         }
 
         bool msGraphControl_DoubleClickEvent(ZedGraphControl sender, MouseEventArgs e)
@@ -203,6 +190,28 @@ namespace pwiz.Topograph.ui.Forms
             DisplaySpectrum(scanIndex);
             return true;
         }
+
+        protected virtual ICollection<int> GetSelectedCharges()
+        {
+            var result = new List<int>();
+            for (int i = PeptideAnalysis.MinCharge; i <= PeptideAnalysis.MaxCharge; i++)
+            {
+                result.Add(i);
+            }
+            return result;
+        }
+
+        protected virtual ICollection<int> GetSelectedMasses()
+        {
+            var result = new List<int>();
+            int massCount = PeptideAnalysis.GetMassCount();
+            for (int i = 0; i < massCount; i++)
+            {
+                result.Add(i);
+            }
+            return result;
+        }
+
         void DisplaySpectrum(int scanIndex)
         {
             if (!TurnoverForm.Instance.EnsureMsDataFile(PeptideFileAnalysis.MsDataFile, true))
@@ -218,8 +227,8 @@ namespace pwiz.Topograph.ui.Forms
             spectrumForm.Show(this);
             double minMz = 2000;
             double maxMz = 0;
-            var selectedCharges = gridIntensities.GetSelectedCharges();
-            var selectedMasses = gridIntensities.GetSelectedMasses();
+            var selectedCharges = GetSelectedCharges();
+            var selectedMasses = GetSelectedMasses();
             for (int charge = PeptideAnalysis.MinCharge; charge <= PeptideAnalysis.MaxCharge; charge++)
             {
                 if (selectedCharges.Count > 0 && !selectedCharges.Contains(charge))
@@ -243,12 +252,24 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
+
+        protected bool Smooth
+        {
+            get
+            {
+                return toolStripMenuItemSmooth.Checked;
+            }
+        }
+
         protected void UpdateUi()
         {
-            chromatograms = PeptideFileAnalysis.GetChromatograms();
-            if (chromatograms != null)
+            if (PeptideFileAnalysis == null)
             {
-                times = PeptideFileAnalysis.Times ?? new List<double>();
+                return;
+            }
+            if (PeptideFileAnalysis.GetChromatograms() != null)
+            {
+                times = PeptideFileAnalysis.Times ?? new double[0];
                 Recalc();
             }
         }
@@ -262,104 +283,9 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        private Color GetColor(MzKey mzKey)
+        protected virtual void Recalc()
         {
-            return gridIntensities.GetColor(mzKey);
-        }
-
-        private void ShowChromatograms()
-        {
-            if (msGraphControl.GraphPane == null)
-            {
-                // TODO: How can this happen?
-                return;
-            }
-            msGraphControl.GraphPane.GraphObjList.Clear();
-            msGraphControl.GraphPane.CurveList.Clear();
-            var selectedCharges = gridIntensities.GetSelectedCharges();
-            var selectedMasses = gridIntensities.GetSelectedMasses();
-            for (int charge = PeptideAnalysis.MinCharge; charge <= PeptideAnalysis.MaxCharge; charge ++ )
-            {
-                if (selectedCharges.Count > 0 && !selectedCharges.Contains(charge))
-                {
-                    continue;
-                }
-                for (int iMass = 0; iMass < PeptideAnalysis.GetMassCount(); iMass++)
-                {
-                    var mzKey = new MzKey(charge, iMass);
-                    if (selectedMasses.Count > 0)
-                    {
-                        if (!selectedMasses.Contains(iMass))
-                        {
-                            continue;
-                        }
-                    }
-                    else
-                    {
-                        if (ExcludedMzs.IsExcluded(mzKey.MassIndex))
-                        {
-                            continue;
-                        }
-                    }
-                    ChromatogramData chromatogram = chromatograms.GetChild(mzKey);
-                    if (chromatogram == null)
-                    {
-                        continue;
-                    }
-                    var graphItem = new ChromatogramGraphItem();
-                    graphItem.Color = GetColor(mzKey);
-                    var intensities = chromatogram.GetIntensities().ToArray();
-                    if (toolStripMenuItemSmooth.Checked)
-                    {
-                        intensities = ChromatogramData.SavitzkyGolaySmooth(intensities);
-                    }
-                    PointPairList points = new PointPairList(chromatogram.Times, intensities);
-                    graphItem.Points = points;
-                    msGraphControl.AddGraphItem(msGraphControl.GraphPane, graphItem);
-                }
-            }
-        }
-
-        public void Recalc()
-        {
-            if (msGraphControl.GraphPane == null)
-            {
-                // TODO(nicksh): listeners should have been detached.
-                return;
-            }
-            using (PeptideFileAnalysis.GetReadLock())
-            {
-                cbxAutoFindPeak.Checked = PeptideFileAnalysis.AutoFindPeak;
-                cbxOverrideExcludedMzs.Checked = PeptideFileAnalysis.OverrideExcludedMzs;
-                if (PeptideFileAnalysis.Peaks.ChildCount == 0)
-                {
-                    return;
-                }
-                ShowChromatograms();
-                double selStart = TimeFromScanIndex(PeptideFileAnalysis.PeakStart.Value);
-                double selEnd = TimeFromScanIndex(PeptideFileAnalysis.PeakEnd.Value);
-                double selectionBoxHeight = msGraphControl.GraphPane.YAxis.Scale.Max * .8;
-                selectionBoxObj = new BoxObj(selStart, selectionBoxHeight,
-                                                 selEnd - selStart,
-                                                 selectionBoxHeight, Color.Goldenrod,
-                                                 Color.Goldenrod)
-                {
-                    IsClippedToChartRect = true,
-                    ZOrder = ZOrder.F_BehindGrid
-                };
-                msGraphControl.GraphPane.GraphObjList.Add(selectionBoxObj);
-                var backgroundLine = new LineObj(Color.DarkGray, times[0], PeptideFileAnalysis.Background, times[times.Count - 1], PeptideFileAnalysis.Background);
-                msGraphControl.GraphPane.GraphObjList.Add(backgroundLine);
-                double detectedLineHeight = msGraphControl.GraphPane.YAxis.Scale.Max * .9;
-                double time = TimeFromScanIndex(PeptideFileAnalysis.FirstDetectedScan);
-                msGraphControl.GraphPane.GraphObjList.Add(new LineObj(Color.Black, time, detectedLineHeight, time, 0));
-                if (PeptideFileAnalysis.LastDetectedScan != PeptideFileAnalysis.FirstDetectedScan)
-                {
-                    time = TimeFromScanIndex(PeptideFileAnalysis.LastDetectedScan);
-                    msGraphControl.GraphPane.GraphObjList.Add(new LineObj(Color.Black, time, detectedLineHeight, time, 0));
-                }
-                msGraphControl.Invalidate();
-            }
+            
         }
 
 //        public static ChromatogramForm Show(DockableForm sibling, Workspace workspace, long peptideDataId)
@@ -397,16 +323,6 @@ namespace pwiz.Topograph.ui.Forms
             none,
             start,
             end,
-        }
-
-        private void cbxAutoFindPeak_CheckedChanged(object sender, EventArgs e)
-        {
-            PeptideFileAnalysis.AutoFindPeak = cbxAutoFindPeak.Checked;
-        }
-
-        private void cbxOverrideExcludedMzs_CheckedChanged(object sender, EventArgs e)
-        {
-            PeptideFileAnalysis.OverrideExcludedMzs = cbxOverrideExcludedMzs.Checked;
         }
 
         private void toolStripMenuItemSmooth_Click(object sender, EventArgs e)
@@ -463,6 +379,7 @@ namespace pwiz.Topograph.ui.Forms
         public void CustomizeYAxis(Axis axis)
         {
             axis.Title.Text = "Intensity";
+            axis.Scale.MaxAuto = true;
             CustomizeAxis(axis);
         }
 

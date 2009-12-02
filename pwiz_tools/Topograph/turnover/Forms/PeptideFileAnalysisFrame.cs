@@ -35,9 +35,10 @@ namespace pwiz.Topograph.ui.Forms
     public partial class PeptideFileAnalysisFrame : PeptideFileAnalysisForm
     {
         private readonly DockPanel dockPanel;
-        private ChromatogramForm _chromatogramForm;
+        private AbstractChromatogramForm _chromatogramForm;
         private PrecursorEnrichmentsForm _precursorEnrichmentsForm;
         private TracerAmountsForm _tracerAmountsForm;
+        private TracerChromatogramForm _tracerChromatogramForm;
         private PeptideFileAnalysisFrame(PeptideFileAnalysis peptideFileAnalysis) : base(peptideFileAnalysis)
         {
             InitializeComponent();
@@ -157,6 +158,14 @@ namespace pwiz.Topograph.ui.Forms
                                              CloseButton = false
                                          };
                 _tracerAmountsForm.Show(dockPanel, DockState.Document);
+            }
+            if (_tracerChromatogramForm == null)
+            {
+                _tracerChromatogramForm = new TracerChromatogramForm(PeptideFileAnalysis)
+                                              {
+                                                  CloseButton = false
+                                              };
+                _tracerChromatogramForm.Show(dockPanel, DockState.Document);
             }
             UpdateForm();
         }

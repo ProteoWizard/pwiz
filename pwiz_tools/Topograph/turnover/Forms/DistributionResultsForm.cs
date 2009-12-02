@@ -92,21 +92,17 @@ namespace pwiz.Topograph.ui.Forms
                     predictedBarPoints[iMass].Y += entries[iCandidate].Value[iMass];
                 }
                 
-                Color color;
-                if (candidateCount == 1)
-                {
-                    color = Color.FromArgb(0, 0, 255);
-                } 
-                else
-                {
-                    color = Color.FromArgb(0, 255*iCandidate/(candidateCount - 1),
-                                   255*(candidateCount - iCandidate - 1)/(candidateCount - 1));
-                }
+                var color = GetColor(iCandidate, candidateCount);
                 var row = GridViewFormulas.Rows[GridViewFormulas.Rows.Add()];
                 row.Cells[0].Value = entries[iCandidate].Key.ToString();
                 row.Cells[0].Style.BackColor = color;
                 row.Cells[1].Value = distributions[iCandidate].PercentAmountValue / 100;
-                barGraphControl.GraphPane.AddBar(entries[iCandidate].Key.ToString(), predictedBarPoints, color);
+                var label = entries[iCandidate].Key.ToString();
+                if (label.Length == 0)
+                {
+                    label = "No tracers";
+                }
+                barGraphControl.GraphPane.AddBar(label, predictedBarPoints, color);
             }
             barGraphControl.GraphPane.AxisChange();
             barGraphControl.Invalidate();
@@ -116,6 +112,17 @@ namespace pwiz.Topograph.ui.Forms
                 row.Cells[0].Value = tracerDef.Name;
                 row.Cells[1].Value = peptideDistribution.GetTracerPercent(tracerDef) / 100;
             }
+        }
+
+        public static Color GetColor(int iCandidate, int candidateCount)
+        {
+            if (candidateCount == 1)
+            {
+                return Color.FromArgb(0, 0, 255);
+            }
+            return Color.FromArgb(0, 255 * iCandidate / (candidateCount - 1),
+                           255 * (candidateCount - iCandidate - 1) / (candidateCount - 1));
+            
         }
 
         protected override void OnHandleCreated(EventArgs e)

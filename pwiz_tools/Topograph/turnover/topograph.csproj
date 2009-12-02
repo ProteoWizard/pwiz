@@ -50,7 +50,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>42</ApplicationRevision>
+    <ApplicationRevision>43</ApplicationRevision>
     <ApplicationVersion>0.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -134,6 +134,12 @@
     <Compile Include="Forms\BuiltInQueryForm.Designer.cs">
       <DependentUpon>BuiltInQueryForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\AbstractChromatogramForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\AbstractChromatogramForm.Designer.cs">
+      <DependentUpon>AbstractChromatogramForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\ChromatogramForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -187,6 +193,12 @@
     </Compile>
     <Compile Include="Forms\AddSearchResultsForm.Designer.cs">
       <DependentUpon>AddSearchResultsForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\GridFilterForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\GridFilterForm.Designer.cs">
+      <DependentUpon>GridFilterForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\HalfLifeForm.cs">
       <SubType>Form</SubType>
@@ -308,6 +320,12 @@
     <Compile Include="Forms\PrecursorEnrichmentsForm.Designer.cs">
       <DependentUpon>PrecursorEnrichmentsForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\TracerChromatogramForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\TracerChromatogramForm.Designer.cs">
+      <DependentUpon>TracerChromatogramForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\TurnoverForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -339,6 +357,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\BuiltInQueryForm.resx">
       <DependentUpon>BuiltInQueryForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\AbstractChromatogramForm.resx">
+      <DependentUpon>AbstractChromatogramForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\ChromatogramForm.resx">
       <DependentUpon>ChromatogramForm.cs</DependentUpon>
@@ -414,6 +435,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\TracerAmountsForm.resx">
       <DependentUpon>TracerAmountsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\TracerChromatogramForm.resx">
+      <DependentUpon>TracerChromatogramForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\TurnoverForm.resx">
       <DependentUpon>TurnoverForm.cs</DependentUpon>

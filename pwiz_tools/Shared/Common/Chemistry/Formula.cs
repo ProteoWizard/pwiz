@@ -148,12 +148,12 @@ namespace pwiz.Common.Chemistry
                 int keyCompare = thisEnumerator.Current.Key.CompareTo(thatEnumerator.Current.Key);
                 if (keyCompare != 0)
                 {
-                    return -keyCompare;
+                    return keyCompare;
                 }
                 int valueCompare = thisEnumerator.Current.Value.CompareTo(thatEnumerator.Current.Value);
                 if (valueCompare != 0)
                 {
-                    return -valueCompare;
+                    return valueCompare;
                 }
             }
             return thatEnumerator.MoveNext() ? -1 : 0;

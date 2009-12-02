@@ -115,7 +115,7 @@ namespace pwiz.Topograph.ui.Controls
             }
             if (dbPeptideFileAnalysis != null)
             {
-                PeptideFileAnalysisFrame.ActivatePeptideDataForm<ChromatogramForm>(form.PeptideAnalysisSummary,
+                PeptideFileAnalysisFrame.ActivatePeptideDataForm<AbstractChromatogramForm>(form.PeptideAnalysisSummary,
                                                                                    peptideAnalysis.
                                                                                        GetFileAnalysis(
                                                                                        dbPeptideFileAnalysis.Id.
