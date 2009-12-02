@@ -4,6 +4,7 @@
 	Version="9.00"
 	Name="directag"
 	ProjectGUID="{45679AE1-A904-4857-AF5F-9260B3DEFCA8}"
+	RootNamespace="directag"
 	Keyword="MakeFileProj"
 	TargetFrameworkVersion="0"
 	>
@@ -76,6 +77,14 @@
 				RelativePath=".\directagSpectrum.h"
 				>
 			</File>
+			<File
+				RelativePath=".\ranker.h"
+				>
+			</File>
+			<File
+				RelativePath=".\writeHighQualSpectra.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
@@ -98,6 +107,10 @@
 			</File>
 			<File
 				RelativePath=".\directagSpectrum.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\writeHighQualSpectra.cpp"
 				>
 			</File>
 		</Filter>

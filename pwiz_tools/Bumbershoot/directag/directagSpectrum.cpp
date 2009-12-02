@@ -112,6 +112,7 @@ namespace directag
 				double inten = r_iItr->first;
 				peakPreData.insert( peakPreData.end(), make_pair( mz, inten ) );
 				peakData[ mz ].intensityRank = peakPreData.size();
+				peakData[ mz ].intensity = inten;
 			}
 		}
 		intenSortedPeakPreData.clear();
@@ -310,6 +311,11 @@ namespace directag
 		// Create peak data from pre peak data
 		ClassifyPeakIntensities();
 
+		for( PeakData::iterator itr = peakData.begin(); itr != peakData.end(); ++itr ) 
+		{
+			itr->second.hasComplementAsCharge.resize(numFragmentChargeStates, false);
+		}
+
 		totalPeakSpace = peakData.rbegin()->first - peakData.begin()->first;
 		peakCount = (int) peakData.size();
 	}
@@ -388,6 +394,12 @@ namespace directag
 
 		// Reclassify intensities and find complements based on fully processed spectrum
 		ClassifyPeakIntensities();
+				
+		for( PeakData::iterator itr = peakData.begin(); itr != peakData.end(); ++itr )
+           {
+                 itr->second.hasComplementAsCharge.resize(numFragmentChargeStates, false);
+           }
+
 		FindComplements( g_rtConfig->ComplementMzTolerance );
 
 		totalPeakSpace = peakData.rbegin()->first - peakData.begin()->first;
@@ -418,6 +430,10 @@ namespace directag
 		size_t numTagsGenerated = findTags();
 		STOP_PROFILER(3)
 
+		// compute approximate tagMzRange for ScanRanker
+		float tagMzRangeLowerBound = peakData.rbegin()->first;
+		float tagMzRangeUpperBound = peakData.begin()->first;
+
 		for( TagList::iterator itr = interimTagList.begin(); itr != interimTagList.end(); ++itr )
 		{
 			TagInfo& tag = const_cast< TagInfo& >( *itr );
@@ -428,11 +444,17 @@ namespace directag
 			tag.totalScore *= numTagsGenerated;
 			//for( map< string, double >::iterator scoreItr = tag.scores.begin(); scoreItr != tag.scores.end(); ++scoreItr )
 			//	scoreItr->second *= numTagsGenerated;
+
+			tagMzRangeLowerBound = min( tagMzRangeLowerBound, tag.lowPeakMz);
+			tagMzRangeUpperBound = max( tagMzRangeUpperBound, tag.highPeakMz);
+
 			START_PROFILER(5)
 			if( g_rtConfig->MaxTagScore == 0 || tag.totalScore <= g_rtConfig->MaxTagScore )
 				tagList.insert( tag );
 			STOP_PROFILER(5)
 		}
+
+		tagMzRange = ((tagMzRangeUpperBound - tagMzRangeLowerBound) < 0) ? 0 : (tagMzRangeUpperBound - tagMzRangeLowerBound);
 
 		for( TagList::iterator itr = validTagList.begin(); itr != validTagList.end(); ++itr )
 		{
@@ -449,6 +471,10 @@ namespace directag
 			} else
 				tagList.insert( tag, true );
 		}
+
+		// Code for ScanRanker
+		bestTagScore = (tagList.empty()) ? g_rtConfig->MaxTagScore : tagList.rbegin()->totalScore;
+		bestTagTIC = (tagList.empty()) ? 0 : tagList.rbegin()->tagTIC;
 
 		START_PROFILER(6)
 		deallocate( validTagList );
@@ -542,6 +568,7 @@ namespace directag
 
 			//int totalPathLength = 0;
 			int totalIntensityRanks = 1;
+			double totalIntensity = 0;
 			//int totalContextRanks = 1;
 			vector< double > complementPairMasses;
 			//spectrumGraph& tagGraph = tagGraphs[peakChargeState-1];
@@ -551,6 +578,7 @@ namespace directag
 
 				newTag.worstPeakRank = max( peak.intensityRank, newTag.worstPeakRank );
 				totalIntensityRanks += peak.intensityRank;
+				totalIntensity += peak.intensity;
 
 				bool hasComplement = peak.hasComplementAsCharge[ peakChargeState-1 ];
 				++ complementClassKey[ hasComplement ? 0 : 1 ];
@@ -565,6 +593,7 @@ namespace directag
 			//newTag.scores[ "intensity" ] = irBins[ totalIntensityRanks ];
 			newTag.intensityScore = irBins[ totalIntensityRanks ];
 			newTag.ranksum = totalIntensityRanks;
+			newTag.tagTIC = (float) totalIntensity;
 
 			double complementClassScore = 0;
 			if( complementClassCounts[0] > 0 )
@@ -604,6 +633,7 @@ namespace directag
 				newTag.scores[ "random" ] = (double) g_rtConfig->GetRandomScore();
 
 			newTag.lowPeakMz = peakList.front()->first;
+			newTag.highPeakMz = peakList.back()->first;
 
 			//----------------------------------------- lower y - water+proton 
 			//newNode->cTerminusMass = max( 0.0, *peakList.begin() - WATER + PROTON );

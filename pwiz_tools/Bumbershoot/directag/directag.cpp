@@ -27,6 +27,9 @@
 #include "pwiz/utility/proteome/Version.hpp"
 #include "svnrev.hpp"
 
+#include "ranker.h"
+#include "writeHighQualSpectra.h"
+
 using namespace freicore;
 
 namespace freicore
@@ -39,6 +42,10 @@ namespace directag
 	RunTimeConfig*               g_rtConfig;
 
 	simplethread_mutex_t         resourceMutex;
+
+	// Code for ScanRanker
+	vector<int>				mergedSpectraIndices;
+	vector<int>				highQualSpectraIndices;
 
     int Version::Major()                {return 1;}
     int Version::Minor()                {return 2;}
@@ -102,7 +109,7 @@ namespace directag
 			Histogram<int> totalValidLongestPathRanks;
 			Histogram<int> totalIntensityRanksums;
 			Histogram<int> totalValidIntensityRanksums;
-			Spectrum* s;
+			//Spectrum* s;
 			map< float, int > scoreToRanksumMap;
 
 			/*for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
@@ -169,6 +176,74 @@ namespace directag
 		cout << g_hostString << " is writing tags to \"" << outputFilename << "\"." << endl;
 		spectra.writeTags( inputFilename, g_rtConfig->OutputSuffix, header.str(), g_rtConfig->getVariables() );
 		spectra.clear();
+	}
+
+	// Code for writing ScanRanker metrics file
+	void WriteSpecQualMetrics( const string& inputFilename, SpectraList& instance, const string& outFilename)
+	{
+		cout << g_hostString << " is generating output of quality metrics." << endl;
+		string filenameAsScanName;
+		filenameAsScanName =	inputFilename.substr( inputFilename.find_last_of( SYS_PATH_SEPARATOR )+1,
+								inputFilename.find_last_of( '.' ) - inputFilename.find_last_of( SYS_PATH_SEPARATOR )-1 );
+
+		string outputFilename = (outFilename.empty()) ? (filenameAsScanName + "-ScanRankerMetrics" + ".txt") :  outFilename;
+		
+		ofstream fileStream( outputFilename.c_str() );
+
+		fileStream << "NativeID\tIndex\tCharge\tBestTagScore\tBestTagTIC\tTagMzRange\tBestTagScoreNorm\tBestTagTICNorm\tTagMzRangeNorm\tScanRankerScore\n" ;
+		Spectrum* s;
+		for( SpectraList::iterator sItr = instance.begin(); sItr != instance.end(); ++sItr )
+		{
+			s = *sItr;
+			fileStream	<< s->nativeID << '\t'
+						<< s->id.index << '\t'
+						<< s->id.charge << '\t'
+						<< s->bestTagScore << '\t'
+						<< s->bestTagTIC << '\t'
+						<< s->tagMzRange << '\t'
+						<< s->bestTagScoreNorm << '\t'
+						<< s->bestTagTICNorm << '\t'
+						<< s->tagMzRangeNorm << '\t'
+						<< s->qualScore << '\n';
+		}
+	}
+
+	// Code for calculating ScanRanker score
+	void CalculateQualScore( SpectraList& instance)
+	{
+		vector<float> bestTagScoreList;
+		vector<float> bestTagTICList;
+		vector<float> tagMzRangeList;
+		vector<float> rankedBestTagScoreList;
+		vector<float> rankedBestTagTICList;
+		vector<float> rankedTagMzRangeList;
+		Spectrum* s;
+		string rankMethod = "average"; //Can also be "min" or "max" or "default"
+
+		for( SpectraList::iterator sItr = instance.begin(); sItr != instance.end(); ++sItr )
+		{
+			s = *sItr;
+			bestTagScoreList.push_back( s->bestTagScore );
+			bestTagTICList.push_back( s->bestTagTIC );
+			tagMzRangeList.push_back( s->tagMzRange );
+		}
+
+		rankhigh( bestTagScoreList, rankedBestTagScoreList, rankMethod );
+		rank( bestTagTICList, rankedBestTagTICList, rankMethod );
+		rank( tagMzRangeList, rankedTagMzRangeList, rankMethod );
+
+		int i = 0;
+		size_t numTotalSpectra = instance.size();
+		for( SpectraList::iterator sItr = instance.begin(); sItr != instance.end(); ++sItr )
+		{
+			s = *sItr;
+			s->bestTagScoreNorm = (rankedBestTagScoreList[i]-1) / (float) numTotalSpectra;
+			s->bestTagTICNorm = (rankedBestTagTICList[i]-1) / (float) numTotalSpectra;
+			s->tagMzRangeNorm = (rankedTagMzRangeList[i]-1) / (float) numTotalSpectra;
+//          s->qualScore = ( rankedBestTagScoreList[i] + rankedBestTagTICList[i] + rankedTagMzRangeList[i] ) / (3 * (float) numTotalSpectra);
+			s->qualScore = (s->bestTagScoreNorm + s->bestTagTICNorm + s->tagMzRangeNorm ) / 3;
+			++i;
+		}
 	}
 
 	void PrepareSpectra()
@@ -896,7 +971,64 @@ namespace directag {
 						}
 					}
 
-					if( !skip )
+					// Code for ScanRanker, write metrics and high quality spectra
+					if( !skip && (g_rtConfig->WriteScanRankerMetrics || g_rtConfig->WriteHighQualSpectra))
+					{
+						CalculateQualScore( spectra );
+						spectra.sort( spectraSortByQualScore() );
+					}
+
+					if( !skip && g_rtConfig->WriteScanRankerMetrics)
+					{
+						try
+						{
+						WriteSpecQualMetrics( *fItr, spectra, g_rtConfig->ScanRankerMetricsFileName);
+						cout << g_hostString << " finished writing spectral quality metrics for file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
+						} catch( ... )
+						{
+							cerr << "Error while writing ScanRanker metrics file." << endl;
+							exit(1);
+						}
+					}
+
+					if( !skip && g_rtConfig->WriteHighQualSpectra)
+					{						
+						Spectrum* s;
+						mergedSpectraIndices.clear();
+						highQualSpectraIndices.clear();
+						for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
+						{
+							s = *sItr;
+							// merge duplicate spectra
+							vector<int>::iterator found = find(mergedSpectraIndices.begin(),mergedSpectraIndices.end(), s->id.index );
+							if( found == mergedSpectraIndices.end() )
+							{
+								mergedSpectraIndices.push_back( s->id.index );
+							}
+						}
+						int maxOutput = (int) (((double) mergedSpectraIndices.size()) * g_rtConfig->HighQualSpecCutoff);
+						cout << endl << "Extracting high quality spectra ..." << endl;
+						cout << "The number of filtered spectra: " << mergedSpectraIndices.size() << endl;
+						cout << "The number of high quality spectra: " << maxOutput << endl;
+						for(int i = 0; i < maxOutput; ++i )
+						{
+							highQualSpectraIndices.push_back( mergedSpectraIndices.at(i) );
+						}
+
+						try
+						{
+							std::sort( highQualSpectraIndices.begin(), highQualSpectraIndices.end() );
+							writeHighQualSpectra( *fItr, highQualSpectraIndices, g_rtConfig->OutputFormat, g_rtConfig->HighQualSpecFileName);
+							cout << g_hostString << " finished writing high quality spectra for file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
+
+						} catch( ... )
+						{
+							cerr << "Error while sorting and writing output." << endl;
+							exit(1);
+						}
+					}
+
+					if( !skip && g_rtConfig->WriteOutTags)
 					{
 						try
 						{
@@ -909,6 +1041,20 @@ namespace directag {
 							exit(1);
 						}
 					}
+
+					//if( !skip )
+					//{
+					//	try
+					//	{
+					//		spectra.sort( spectraSortByID() );
+					//		WriteTagsToTagsFile( *fItr, startTime, startDate, taggingTime.End() );
+					//		cout << g_hostString << " finished file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
+					//	} catch( ... )
+					//	{
+					//		cerr << "Error while sorting and writing XML output." << endl;
+					//		exit(1);
+					//	}
+					//}
 				}
 			}
 

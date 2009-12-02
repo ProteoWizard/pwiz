@@ -82,6 +82,7 @@ namespace directag
 		int		intensityRank;
 		//int		longestPathRank;
 		char	hasSomeComplement;
+		double	intensity;
 
 		vector< bool > hasComplementAsCharge;
 	};
@@ -232,6 +233,15 @@ namespace directag
 		map< int, double >		complementPDF;
 
 		bgComplements_t			bgComplements;
+
+		// code for ScanRanker
+		float					bestTagScore;
+		float					bestTagTIC;
+		float					tagMzRange;
+		float					bestTagScoreNorm;
+		float					bestTagTICNorm;
+		float					tagMzRangeNorm;
+		float					qualScore;
 	};
 
 	struct SpectraList : public	PeakSpectraList< Spectrum, SpectraList >,

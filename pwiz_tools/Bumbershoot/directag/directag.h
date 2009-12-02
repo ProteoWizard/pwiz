@@ -119,6 +119,18 @@ namespace directag
 	void					GenerateForegroundTables();
 
 	gapMap_t::iterator		FindPeakNear( gapMap_t&, float, float );
+
+	// code for ScanRanker
+	extern vector<int>				mergedSpectraIndices;
+	extern vector<int>				highQualSpectraIndices;
+
+	struct spectraSortByQualScore
+	{
+		bool operator() ( const Spectrum* a, const Spectrum* b )
+		{
+			return a->qualScore > b->qualScore;  // descending order
+		}
+	};
 }
 }
 

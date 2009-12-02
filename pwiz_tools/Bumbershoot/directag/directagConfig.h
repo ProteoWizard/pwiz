@@ -65,7 +65,16 @@ using namespace freicore;
 	RTCONFIG_VARIABLE( double,			IntensityScoreWeight,		1.0			) \
 	RTCONFIG_VARIABLE( double,			MzFidelityScoreWeight,		1.0			) \
 	RTCONFIG_VARIABLE( double,			ComplementScoreWeight,		1.0			) \
-	RTCONFIG_VARIABLE( double,			RandomScoreWeight,			0.0			)
+	RTCONFIG_VARIABLE( double,			RandomScoreWeight,			0.0			) \
+	\
+	RTCONFIG_VARIABLE( bool,			WriteOutTags,				true		) \
+	RTCONFIG_VARIABLE( bool,			WriteScanRankerMetrics,		false		) \
+	RTCONFIG_VARIABLE( string,			ScanRankerMetricsFileName,	""			) \
+	RTCONFIG_VARIABLE( bool,			WriteHighQualSpectra,		false		) \
+	RTCONFIG_VARIABLE( string,			HighQualSpecFileName,		""			) \
+	RTCONFIG_VARIABLE( double,			HighQualSpecCutoff,			0.6			) \
+	RTCONFIG_VARIABLE( string,			OutputFormat,				"mzML"		) \
+
 
 namespace freicore
 {
