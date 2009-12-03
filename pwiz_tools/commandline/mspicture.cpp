@@ -57,11 +57,12 @@ struct Config
     string outputDirectory;
     string usageOptions;
     string peptideFilename;
+    string shape;
     vector<string> commands;
     Pseudo2DGel::Config pseudo2dConfig;
     bool verbose;
 
-    Config() : outputDirectory("."), verbose(false) {}
+    Config() : outputDirectory("."), shape("circle"), verbose(false) {}
 };
 
 template <typename analyzer_type>
@@ -158,6 +159,9 @@ Config parseCommandArgs(int argc, const char* argv[])
             ": sum intensity in bins [default = max intensity]")
         ("ms2locs,m",
             ": indicate masses selected for ms2")
+        ("shape",
+            po::value<string>(&config.shape),
+            ": shape of the pseudo2d gel markup [circle(default)|square].")
         ("pepxml,p",
             po::value<string>(&config.peptideFilename),
             ": pepxml file location")
@@ -260,7 +264,12 @@ Config parseCommandArgs(int argc, const char* argv[])
 
     if (vm.count("time"))
         config.pseudo2dConfig.binScan = false;
-        
+
+    if (config.shape == "square")
+        config.pseudo2dConfig.markupShape = Pseudo2DGel::square;
+    else
+        config.pseudo2dConfig.markupShape = Pseudo2DGel::circle;
+    
     config.pseudo2dConfig.positiveMs2Only = !vm.count("ms2locs") && ids;
     
     config.usageOptions = usageOptions;
