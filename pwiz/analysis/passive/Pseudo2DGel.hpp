@@ -49,6 +49,12 @@ class PWIZ_API_DECL Pseudo2DGel : public MSDataAnalyzer
 {
     public:
 
+    enum MarkupShape
+    {
+        circle = 0,
+        square = 1
+    };
+    
     /// Holds the configuration for an instance of Pseudo2DGel.
     ///
     /// Controls both the image generation as well as markups on the
@@ -101,6 +107,9 @@ class PWIZ_API_DECL Pseudo2DGel : public MSDataAnalyzer
         /// locations. 
         boost::shared_ptr<pwiz::peptideid::PeptideID> peptide_id;
 
+        /// The shape used for pseudo2d gel markups.
+        MarkupShape markupShape;
+        
         Config();
         Config(const std::string& args);
         Config(const std::string& args,

@@ -102,6 +102,8 @@ void Pseudo2DGel::Config::process(const std::string& args)
             binSum = true; 
         else if (*it == "ms2locs")
             ms2 = true;
+        else if (*it == "shape")
+            markupShape = (it->substr(6) == "square" ? square : circle);
         else if (it->find("pepxml=") == 0)
             peptide_id = shared_ptr<PeptideID>(new PeptideID_pepXml(it->c_str()+7));
         else if (it->find("msi=") == 0)
@@ -209,6 +211,8 @@ class Pseudo2DGel::Impl
     ScanInfo ms2Scans_;
 
     int idedPeptides_;
+    
+    MarkupShape markupShape_;
 
     // Returns the score for this ms2 scan, it's precursor. Throws
     // an exception if no such scores exists or if both have a value.
@@ -229,7 +233,7 @@ class Pseudo2DGel::Impl
 
     // data processing and image creation
     size_t countUniquePeptides(const ScanList& scans);
-    Image::Color chooseCircleColor(size_t ms2Index);
+    Image::Color chooseMarkupColor(size_t ms2Index);
     void writeImages(const DataInfo& dataInfo);
     auto_ptr<IntensityFunction> createIntensityFunction(const ScanList& scans);
     void writeImage(const DataInfo& dataInfo, const string& label, ScanInfo& scans);
@@ -912,7 +916,7 @@ size_t Pseudo2DGel::Impl::countUniquePeptides(const ScanList& scans)
     return counts.size();
 }
 
-Image::Color Pseudo2DGel::Impl::chooseCircleColor(size_t cachedIndex)
+Image::Color Pseudo2DGel::Impl::chooseMarkupColor(size_t cachedIndex)
 {
     Image::Color color;
 
@@ -1369,9 +1373,15 @@ void Pseudo2DGel::Impl::drawMS2(Image& image, const ScanInfo& scansInfo,
         
         Image::Point center = lineBegin + Image::Point(ms2Scans_.bin[j],0);
         
-        Image::Color color = chooseCircleColor(ms2Scans_.scans[j]);
-        
-        image.circle(center, 3, color, false);
+        Image::Color color = chooseMarkupColor(ms2Scans_.scans[j]);
+
+        if (config_.markupShape == circle)
+            image.circle(center, 3, color, false);
+        else if (config_.markupShape == square)
+        {
+            Image::Point p1(center.x-1, center.y-1), p2(center.x+1, center.y+1);
+            image.rectangle(p1, p2, color, false);
+        }
     }
 }
 
