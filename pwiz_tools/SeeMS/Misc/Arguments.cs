@@ -1,3 +1,7 @@
+//
+// $Id$
+//
+
 /*
 * Arguments class: application arguments interpreter
 *

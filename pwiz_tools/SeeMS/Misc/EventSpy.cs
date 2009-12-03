@@ -1,3 +1,7 @@
+//
+// $Id$
+//
+
 ////////////////////////////////////////////////////////////////
 // MSDN Magazine -- May 2004
 // If this code works, it was written by Paul DiLascia.

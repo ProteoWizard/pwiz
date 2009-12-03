@@ -126,24 +126,6 @@
     <Compile Include="Dialogs\AboutForm.designer.cs">
       <DependentUpon>AboutForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Dialogs\AnnotationSettingsAddEditDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Dialogs\AnnotationSettingsAddEditDialog.Designer.cs">
-      <DependentUpon>AnnotationSettingsAddEditDialog.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Dialogs\AnnotationEditAddEditDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Dialogs\AnnotationEditAddEditDialog.Designer.cs">
-      <DependentUpon>AnnotationEditAddEditDialog.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Dialogs\ChromatogramAnnotationSettingsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Dialogs\ChromatogramAnnotationSettingsForm.Designer.cs">
-      <DependentUpon>ChromatogramAnnotationSettingsForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="Dialogs\DataPointTableForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -202,31 +184,7 @@
     <Compile Include="Dialogs\GraphForm.Designer.cs">
       <DependentUpon>GraphForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Dialogs\AnnotationEditForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Dialogs\AnnotationEditForm.Designer.cs">
-      <DependentUpon>AnnotationEditForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Dialogs\ScanAnnotationSettingsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Dialogs\ScanAnnotationSettingsForm.Designer.cs">
-      <DependentUpon>ScanAnnotationSettingsForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="Misc\MruStripMenu.cs" />
-    <Compile Include="Dialogs\PeptideFragmentationForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Dialogs\PeptideFragmentationForm.Designer.cs">
-      <DependentUpon>PeptideFragmentationForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Dialogs\PeptideMassMapProteinDigestForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Dialogs\PeptideMassMapProteinDigestForm.Designer.cs">
-      <DependentUpon>PeptideMassMapProteinDigestForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="Processing.cs" />
     <Compile Include="seems.cs">
       <SubType>Form</SubType>
@@ -236,22 +194,6 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="Dialogs\AnnotationEditForm.resx">
-      <SubType>Designer</SubType>
-      <DependentUpon>AnnotationEditForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Dialogs\ScanAnnotationSettingsForm.resx">
-      <SubType>Designer</SubType>
-      <DependentUpon>ScanAnnotationSettingsForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Dialogs\PeptideFragmentationForm.resx">
-      <SubType>Designer</SubType>
-      <DependentUpon>PeptideFragmentationForm.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Dialogs\PeptideMassMapProteinDigestForm.resx">
-      <SubType>Designer</SubType>
-      <DependentUpon>PeptideMassMapProteinDigestForm.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -291,7 +233,6 @@
     </Compile>
     <Compile Include="Types.cs">
     </Compile>
-    <Compile Include="Misc\WebBrowserCache.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Dialogs\AnnotationPanels.resx">
@@ -304,18 +245,6 @@
     <EmbeddedResource Include="Dialogs\AboutForm.resx">
       <DependentUpon>AboutForm.cs</DependentUpon>
       <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Dialogs\AnnotationSettingsAddEditDialog.resx">
-      <SubType>Designer</SubType>
-      <DependentUpon>AnnotationSettingsAddEditDialog.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Dialogs\AnnotationEditAddEditDialog.resx">
-      <DependentUpon>AnnotationEditAddEditDialog.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Dialogs\ChromatogramAnnotationSettingsForm.resx">
-      <SubType>Designer</SubType>
-      <DependentUpon>ChromatogramAnnotationSettingsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Dialogs\DataPointTableForm.resx">
       <DependentUpon>DataPointTableForm.cs</DependentUpon>
