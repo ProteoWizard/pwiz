@@ -58,6 +58,8 @@ public:
     /// MzIdentML object tree. The resulting MzIdentMLPtr is returned.
     MzIdentMLPtr translate();
 
+    /// Clears fields and then sets the _mspa field to the address of
+    /// mspa.
     void setMspa(const MSMSPipelineAnalysis& mspa);
     
     /// Returns the MzIdentMLPtr object. If a translation has not been

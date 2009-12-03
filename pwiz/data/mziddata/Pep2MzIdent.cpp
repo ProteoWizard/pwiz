@@ -225,6 +225,13 @@ Pep2MzIdent::Pep2MzIdent(const MSMSPipelineAnalysis& mspa, MzIdentMLPtr mzid)
     //translate();
 }
 
+void Pep2MzIdent::setMspa(const MSMSPipelineAnalysis& mspa)
+{
+    clear();
+    
+    _mspa = &mspa;
+}
+
 void Pep2MzIdent::clear()
 {
     indices = shared_ptr<Indices>(new Indices());
