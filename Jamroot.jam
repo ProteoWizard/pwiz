@@ -209,15 +209,22 @@ svnrev.generate-version-header $(PWIZ_ROOT_PATH)/pwiz/utility/proteome/svnrev.hp
 
 svnrev.generate-version-header $(PWIZ_ROOT_PATH)/pwiz/data/proteome/svnrev.hpp :
     [ path.glob $(PWIZ_ROOT_PATH)/pwiz/data/proteome : *.?pp Jamfile.jam ] ;
-    
+
+# TODO: collecting global revision info should use revision info that's already been collected;
+# TODO: especially for things like SeeMS which have some MSVC-generated files that aren't versioned
 local revision-info =
     [ svnrev.generate-version-header $(PWIZ_ROOT_PATH)/pwiz/svnrev.hpp :
             $(PWIZ_ROOT_PATH)/Jamroot.jam
             [ path.glob $(PWIZ_ROOT_PATH)/libraries : *.jam ]
             [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz
                              $(PWIZ_ROOT_PATH)/pwiz_aux/msrc
-                             $(PWIZ_ROOT_PATH)/pwiz_tools
-                : *.?pp *.jam
+                             $(PWIZ_ROOT_PATH)/pwiz_tools/commandline
+                             $(PWIZ_ROOT_PATH)/pwiz_tools/common
+                             $(PWIZ_ROOT_PATH)/pwiz_tools/examples
+                             $(PWIZ_ROOT_PATH)/pwiz_tools/SeeMS
+                             $(PWIZ_ROOT_PATH)/pwiz_tools/sld
+                : *.?pp *.jam *.cs
+                : tar.excluded
             ]
         : warn-on-missing
         #: print-revision-info
