@@ -160,10 +160,6 @@
     </Compile>
     <Compile Include="Misc\FileSizeFormatProvider.cs" />
     <Compile Include="Misc\ListViewColumnSorter.cs" />
-    <Compile Include="Misc\SpectrumDataSet.cs">
-      <DependentUpon>SpectrumDataSet.xsd</DependentUpon>
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="Misc\SpectrumDataSet.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -293,26 +289,7 @@
     <None Include="Misc\ChromatogramDataSet.xss">
       <DependentUpon>ChromatogramDataSet.xsd</DependentUpon>
     </None>
-    <None Include="Misc\Images\Desktop.png" />
-    <None Include="Misc\Images\MyComputer.png" />
-    <None Include="Misc\Images\MyDocuments.png" />
-    <None Include="Misc\Images\MyNetworkPlaces.png" />
     <Content Include="Misc\DataProcessing.ico" />
-    <Content Include="Misc\Images\back.png" />
-    <None Include="Misc\Images\Centroider.png" />
-    <None Include="Misc\Images\DataProcessing.png" />
-    <Content Include="Misc\Images\file.png" />
-    <Content Include="Misc\Images\folder.png" />
-    <Content Include="Misc\Images\LocalDrive.png" />
-    <Content Include="Misc\Images\NetworkDrive.png" />
-    <Content Include="Misc\Images\OpticalDrive.png" />
-    <None Include="Misc\Images\PeakIntegral.png" />
-    <None Include="Misc\Images\PeakIntegralActive.png" />
-    <None Include="Misc\Images\Smoother.png" />
-    <None Include="Misc\Images\Thresholder.png" />
-    <Content Include="Misc\Images\up.png" />
-    <Content Include="Misc\Images\views.png" />
-    <None Include="Misc\Images\RecentDocuments.png" />
     <None Include="Misc\SpectrumDataSet.xsc">
       <DependentUpon>SpectrumDataSet.xsd</DependentUpon>
     </None>

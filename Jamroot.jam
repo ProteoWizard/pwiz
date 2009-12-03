@@ -475,7 +475,9 @@ tar.create boost_1_39_0.tar.bz2
   exclude:Reader_*_Test.data
   exclude:example_data/small* # large files in example_data
   exclude:bootstrap exclude:bin.* # boost-build intermediate directories
-  exclude:bin exclude:obj # C#.NET intermediate directories
+  exclude:bin exclude:obj exclude:TestResults # C#.NET intermediate directories
+  exclude:_ReSharper.* # ReSharper directory for C# projects
+  exclude:*.ncb exclude:*.suo exclude:*.user exclude:*.p12 # More visual studio files
   exclude:*.xdc # .NET XML documentation sources
   exclude:tar.excluded # a place to put any files in these directories that shouldn't be tarballed
   exclude:pwiz_tools/Skyline exclude:pwiz_tools/Shared exclude:pwiz_tools/Topograph
