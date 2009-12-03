@@ -84,7 +84,8 @@ if [ modules.peek : NT ]
     # generate SeeMS version header
     generate-AssemblyInfo.cs $(SEEMS_PATH)/Properties/AssemblyInfo.cs :
         [ path.glob-tree $(SEEMS_PATH) : *.jam *.cs ]
-        : warn-on-missing : : "SeeMS" "A visualization, annotation, and processing tool for mass spectrometry data." "Vanderbilt University" "SeeMS" ;
+        : #warn-on-missing
+        : : "SeeMS" "A visualization, annotation, and processing tool for mass spectrometry data." "Vanderbilt University" "SeeMS" ;
 
 
     rule do_seems_build ( targets + : sources * : properties * )
