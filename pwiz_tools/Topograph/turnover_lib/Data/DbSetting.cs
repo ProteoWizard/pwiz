@@ -36,6 +36,7 @@ namespace pwiz.Topograph.Data
         exclude_aas,
         mass_accuracy,
         default_peptide_quantity,
-        data_directory
+        data_directory,
+        err_on_side_of_lower_abundance,
     }
 }

@@ -37,6 +37,9 @@ namespace pwiz.Topograph.ui.Forms
             this.comboTracerCountType = new System.Windows.Forms.ComboBox();
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
+            this.cbxWeightSignalAbsenceMore = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // label1
@@ -58,7 +61,7 @@ namespace pwiz.Topograph.ui.Forms
             // btnOK
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOK.Location = new System.Drawing.Point(239, 256);
+            this.btnOK.Location = new System.Drawing.Point(239, 443);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(76, 23);
             this.btnOK.TabIndex = 1;
@@ -70,7 +73,7 @@ namespace pwiz.Topograph.ui.Forms
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(321, 256);
+            this.btnCancel.Location = new System.Drawing.Point(321, 443);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(67, 23);
             this.btnCancel.TabIndex = 2;
@@ -112,13 +115,43 @@ namespace pwiz.Topograph.ui.Forms
             this.label4.TabIndex = 6;
             this.label4.Text = resources.GetString("label4.Text");
             // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(0, 0);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(35, 13);
+            this.label5.TabIndex = 7;
+            this.label5.Text = "label5";
+            // 
+            // label6
+            // 
+            this.label6.Location = new System.Drawing.Point(20, 260);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(354, 76);
+            this.label6.TabIndex = 8;
+            this.label6.Text = resources.GetString("label6.Text");
+            // 
+            // cbxWeightSignalAbsenceMore
+            // 
+            this.cbxWeightSignalAbsenceMore.AutoSize = true;
+            this.cbxWeightSignalAbsenceMore.Location = new System.Drawing.Point(36, 361);
+            this.cbxWeightSignalAbsenceMore.Name = "cbxWeightSignalAbsenceMore";
+            this.cbxWeightSignalAbsenceMore.Size = new System.Drawing.Size(249, 17);
+            this.cbxWeightSignalAbsenceMore.TabIndex = 9;
+            this.cbxWeightSignalAbsenceMore.Text = "Weight absence of signal higher than presence";
+            this.cbxWeightSignalAbsenceMore.UseVisualStyleBackColor = true;
+            // 
             // MiscSettingsForm
             // 
             this.AcceptButton = this.btnOK;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(407, 291);
+            this.ClientSize = new System.Drawing.Size(407, 478);
+            this.Controls.Add(this.cbxWeightSignalAbsenceMore);
+            this.Controls.Add(this.label6);
+            this.Controls.Add(this.label5);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.comboTracerCountType);
@@ -145,5 +178,8 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.ComboBox comboTracerCountType;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.CheckBox cbxWeightSignalAbsenceMore;
     }
 }

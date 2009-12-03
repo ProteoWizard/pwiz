@@ -121,13 +121,11 @@ namespace pwiz.Topograph.Model
         public DbPeptideAnalysis CreateDbPeptideAnalysis(ISession session)
         {
             return CreateDbPeptideAnalysis(session, session.Load<DbPeptide>(Id));
-            
         }
 
         public PeptideAnalysis EnsurePeptideAnalysis()
         {
-            return null;
-            PeptideAnalysis peptideAnalysis;
+            DbPeptideAnalysis dbPeptideAnalysis;
             using (Workspace.GetReadLock())
             {
                 using (var session = Workspace.OpenWriteSession())
@@ -136,29 +134,21 @@ namespace pwiz.Topograph.Model
                     var criteria = session.CreateCriteria(typeof (DbPeptideAnalysis))
                         .Add(Restrictions.Eq("Peptide", dbPeptide))
                         .Add(Restrictions.Eq("Workspace", Workspace.LoadDbWorkspace(session)));
-                    var dbPeptideAnalysis = (DbPeptideAnalysis) criteria.UniqueResult();
-                    if (dbPeptideAnalysis != null)
-                    {
-                        return Workspace.PeptideAnalyses.GetChild(dbPeptideAnalysis.Id.Value, session);
-                    }
-                    dbPeptideAnalysis = CreateDbPeptideAnalysis(session);
+                    dbPeptideAnalysis = (DbPeptideAnalysis) criteria.UniqueResult();
                     if (dbPeptideAnalysis == null)
                     {
-                        return null;
+                        dbPeptideAnalysis = CreateDbPeptideAnalysis(session);
+                        if (dbPeptideAnalysis == null)
+                        {
+                            return null;
+                        }
+                        session.BeginTransaction();
+                        session.Save(dbPeptideAnalysis);
+                        session.Transaction.Commit();
                     }
-                    session.BeginTransaction();
-                    session.Save(dbPeptideAnalysis);
-                    session.Transaction.Commit();
-                    peptideAnalysis = new PeptideAnalysis(Workspace, dbPeptideAnalysis);
                 }
             }
-            using (Workspace.GetWriteLock()) 
-            {
-                Workspace.PeptideAnalyses.AddChild(peptideAnalysis.Id.Value, peptideAnalysis);
-                Workspace.AddEntityModel(peptideAnalysis);
-                Workspace.ChromatogramGenerator.SetRequeryPending();
-                return peptideAnalysis;
-            }
+            return Workspace.Reconciler.LoadPeptideAnalysis(dbPeptideAnalysis.Id.Value);
         }
         public int SearchResultCount
         {

@@ -39,9 +39,11 @@ namespace pwiz.Topograph.Enrichment
         private readonly ICollection<String> _traceeSymbols;
         private readonly int _maxTracerCount;
         private readonly AminoAcidFormulas _aminoAcidFormulas;
+        private readonly bool _errOnSideOfLowerAbundance;
         public TurnoverCalculator(Workspace workspace, String sequence)
         {
             Sequence = sequence;
+            _errOnSideOfLowerAbundance = workspace.GetErrOnSideOfLowerAbundance();
             _aminoAcidFormulas = workspace.GetAminoAcidFormulasWithTracers();
             _tracerDefs = new Dictionary<String, TracerDef>();
             _traceeSymbols = new HashSet<String>();
@@ -191,6 +193,26 @@ namespace pwiz.Topograph.Enrichment
             return matrixResult.GetColumnVector(0);
         }
 
+        internal Vector FindBestCombination(Vector targetVector, Vector[] candidateVectors, bool errOnSideOfLowerAbundance)
+        {
+            var result = FindBestCombination(targetVector, candidateVectors);
+            if (!errOnSideOfLowerAbundance)
+            {
+                return result;
+            }
+            var newTargetVector = new Vector(targetVector.Length);
+            for (int i = 0; i < newTargetVector.Length; i++)
+            {
+                var totalCandidate = 0.0;
+                for (int iVector = 0; iVector < candidateVectors.Length; iVector++)
+                {
+                    totalCandidate += candidateVectors[iVector][i]*result[iVector];
+                }
+                newTargetVector[i] = Math.Min(totalCandidate, targetVector[i]);
+            }
+            return FindBestCombination(newTargetVector, candidateVectors);
+        }
+
         Vector FindBestCombinationFilterNegatives(Vector observedIntensities, IList<Vector> candidates, Func<int,bool> excludeFunc)
         {
             Vector[] filteredCandidates = new Vector[candidates.Count];
@@ -216,7 +238,7 @@ namespace pwiz.Topograph.Enrichment
                 {
                     curCandidates[i] = candidates[remaining[i]];
                 }
-                filteredResult = FindBestCombination(observedIntensities, curCandidates);
+                filteredResult = FindBestCombination(observedIntensities, curCandidates, _errOnSideOfLowerAbundance);
                 if (filteredResult == null)
                 {
                     return null;

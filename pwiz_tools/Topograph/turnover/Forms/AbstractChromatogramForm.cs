@@ -42,6 +42,7 @@ namespace pwiz.Topograph.ui.Forms
         private SelectionDragging selectionDragging;
         protected IList<double> times;
         private Point _ptClick;
+        private WorkspaceVersion _workspaceVersion;
         private AbstractChromatogramForm() : base(null)
         {
             
@@ -267,6 +268,7 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return;
             }
+            _workspaceVersion = Workspace.WorkspaceVersion;
             if (PeptideFileAnalysis.GetChromatograms() != null)
             {
                 times = PeptideFileAnalysis.Times ?? new double[0];
@@ -277,7 +279,7 @@ namespace pwiz.Topograph.ui.Forms
         protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
         {
             base.OnWorkspaceEntitiesChanged(args);
-            if (args.Contains(PeptideFileAnalysis) || args.Contains(PeptideAnalysis))
+            if (args.Contains(PeptideFileAnalysis) || args.Contains(PeptideAnalysis) || !Equals(Workspace.WorkspaceVersion, _workspaceVersion))
             {
                 UpdateUi();
             }

@@ -71,14 +71,6 @@ namespace pwiz.Topograph.ui.Forms
             UpdateUi();
         }
 
-        protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
-        {
-            if (args.Contains(PeptideAnalysis) || args.Contains(PeptideFileAnalysis))
-            {
-                UpdateUi();
-            }
-        }
-
         private IDictionary<TracerFormula,IPointList> GetPoints()
         {
             var pointDict = new Dictionary<TracerFormula, IList<double>>();

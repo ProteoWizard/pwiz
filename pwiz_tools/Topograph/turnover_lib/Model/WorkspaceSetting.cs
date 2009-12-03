@@ -83,6 +83,13 @@ namespace pwiz.Topograph.Model
                     return workspaceVersion.IncChromatogramPeakVersion();
                 }
             }
+            if (Name == SettingEnum.err_on_side_of_lower_abundance.ToString())
+            {
+                if (entity == null || Value != entity.Value)
+                {
+                    return workspaceVersion.IncEnrichmentVersion();
+                }
+            }
             return workspaceVersion;
         }
     }

@@ -33,6 +33,7 @@ namespace pwiz.Topograph.Model
         public MsDataFileData(MsDataFile msDataFile, DbMsDataFile dbMsDataFile)
             : base(msDataFile.Workspace, dbMsDataFile)
         {
+            MsDataFile = msDataFile;
         }
         protected override void Load(DbMsDataFile entity)
         {
@@ -42,7 +43,8 @@ namespace pwiz.Topograph.Model
             _msLevels = entity.MsLevels;
         }
         public MsDataFile MsDataFile { get; private set; }
-        public String Path {
+        public String Path 
+        {
             get
             {
                 return _path;
@@ -50,7 +52,8 @@ namespace pwiz.Topograph.Model
             set
             {
                 SetIfChanged(ref _path, value);
-            }}
+            }
+        }
         public void Init(String path, MsDataFileImpl msDataFileImpl)
         {
             Path = path;
@@ -80,6 +83,7 @@ namespace pwiz.Topograph.Model
                 }
                 msDataFile.MsLevels = _msLevels;
             }
+            session.Save(new DbChangeLog(MsDataFile));
             return msDataFile;
         }
         public int GetMsLevel(int scanIndex, MsDataFileImpl msDataFileImpl)

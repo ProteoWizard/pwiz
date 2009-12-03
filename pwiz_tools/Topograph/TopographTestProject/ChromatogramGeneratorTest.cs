@@ -54,7 +54,8 @@ namespace pwiz.Topograph.Test
             using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(dbPath, true))
             {
                 using (var session = sessionFactory.OpenSession())
-                { 
+                {
+                    session.BeginTransaction();
                     DbWorkspace dbWorkspace = new DbWorkspace
                     {
                         TracerDefCount = 1,
@@ -65,6 +66,13 @@ namespace pwiz.Topograph.Test
                     dbTracerDef.Name = "Tracer";
 
                     session.Save(dbTracerDef);
+                    session.Save(new DbSetting
+                                     {
+                                         Workspace = dbWorkspace,
+                                         Name = SettingEnum.data_directory.ToString(),
+                                         Value = GetDataDirectory()
+                                     });
+                    session.Transaction.Commit();
                 }
             }
             Workspace workspace = new Workspace(dbPath);
@@ -83,6 +91,7 @@ namespace pwiz.Topograph.Test
 
                 msDataFile = new MsDataFile(workspace, dbMsDataFile);
             }
+            workspace.Reconciler.ReconcileNow();
             Assert.IsTrue(MsDataFileUtil.InitMsDataFile(workspace, msDataFile));
             DbPeptide dbPeptide;
             using (var session = workspace.OpenWriteSession())
@@ -102,8 +111,8 @@ namespace pwiz.Topograph.Test
                     MsDataFile = session.Load<DbMsDataFile>(msDataFile.Id),
                     MinCharge = 3,
                     MaxCharge = 3,
-                    FirstDetectedScan = 2645,
-                    LastDetectedScan = 2645
+                    FirstDetectedScan = 45,
+                    LastDetectedScan = 45
                 };
                 session.Save(searchResult);
                 session.Transaction.Commit();
@@ -116,10 +125,15 @@ namespace pwiz.Topograph.Test
             while (peptideFileAnalysis.Chromatograms.ChildCount == 0)
             {
                 Thread.Sleep(100);
+                workspace.Reconciler.ReconcileNow();
             }
             var chromatogramDatas = peptideFileAnalysis.GetChromatograms();
             Assert.IsFalse(chromatogramDatas.GetChildCount() == 0);
             chromatogramGenerator.Stop();
+            while (chromatogramGenerator.IsThreadAlive)
+            {
+                Thread.Sleep(100);
+            }
         }
     }
 }

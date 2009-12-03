@@ -635,6 +635,13 @@ namespace pwiz.Topograph.MsData
                 }
             }
         }
+        public bool IsThreadAlive
+        {
+            get
+            {
+                return _chromatogramGeneratorThread.IsAlive;
+            }
+        }
 
         private class ChromatogramTask : Task
         {

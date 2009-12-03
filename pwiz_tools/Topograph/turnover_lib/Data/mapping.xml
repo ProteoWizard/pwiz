@@ -133,7 +133,6 @@
     <property name="TracerDefCount" />
 
     <property name="SchemaVersion" />
-    <property name="DataFilePath" />
   </class>
   <class name="DbModification">
     <id name="Id">

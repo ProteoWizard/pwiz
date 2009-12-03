@@ -123,4 +123,7 @@
   <data name="label4.Text" xml:space="preserve">
     <value>In SILAC experiments where there is no partial labeling of peptides, and in 15N experiments where each peptide has so many tracers, the precursor enrichments form is more useful.  In D3 Leucine turnover experiments where it is possible to measure the exact enrichment of individual peptides the tracer amounts form is more useful.</value>
   </data>
+  <data name="label6.Text" xml:space="preserve">
+    <value>When computing the amount of tracers that are present in a sample, it is usually the case that there is a choice of M/Z values that could be considered.  Topograph can be configured so that it weights the absence of a signal in one M/Z more heavily than the presence of signal in another M/Z.</value>
+  </data>
 </root>
