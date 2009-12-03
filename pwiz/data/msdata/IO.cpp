@@ -1573,6 +1573,7 @@ struct HandlerScanList : public HandlerParamContainer
         else if (name == "scan" || name == "acquisition")
         {
             scanList->scans.push_back(Scan());
+            handlerScan_.version = version;
             handlerScan_.scan = &scanList->scans.back(); 
             return Status(Status::Delegate, &handlerScan_);
         }
