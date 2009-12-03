@@ -471,6 +471,7 @@ tar.create boost_1_39_0.tar.bz2
   exclude:bin exclude:obj # C#.NET intermediate directories
   exclude:*.xdc # .NET XML documentation sources
   exclude:tar.excluded # a place to put any files in these directories that shouldn't be tarballed
+  exclude:pwiz_tools/Skyline exclude:pwiz_tools/Shared exclude:pwiz_tools/Topograph
 ;
 
 # the SUBSET file acts as flag so that building a subset tarball doesn't build a source tarball
@@ -523,6 +524,7 @@ tar.create pwiz-src.tar.bz2
     <name>pwiz-src-$(version-tag:J=_).tar.bz2
     <location>$(.common-location)
     <dependency>boost_1_39_0.tar.bz2
+    <dependency>SUBSET
   ;
 
 tar.create pwiz-src-without-vendor-support.tar.bz2
