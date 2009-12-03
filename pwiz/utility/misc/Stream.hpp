@@ -35,6 +35,7 @@ using std::iostream;
 using std::istream;
 using std::ostream;
 
+using std::fstream;
 using std::ifstream;
 using std::ofstream;
 
@@ -62,6 +63,7 @@ using std::setbase;
 using std::showbase;
 using std::showpoint;
 using std::showpos;
+using std::boolalpha;
 
 using boost::lexical_cast;
 using boost::bad_lexical_cast;

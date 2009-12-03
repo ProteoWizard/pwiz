@@ -207,6 +207,9 @@ svnrev.generate-version-header $(PWIZ_ROOT_PATH)/pwiz/analysis/svnrev.hpp :
 svnrev.generate-version-header $(PWIZ_ROOT_PATH)/pwiz/utility/proteome/svnrev.hpp :
     [ path.glob $(PWIZ_ROOT_PATH)/pwiz/utility/proteome : *.?pp Jamfile.jam ] ;
 
+svnrev.generate-version-header $(PWIZ_ROOT_PATH)/pwiz/data/proteome/svnrev.hpp :
+    [ path.glob $(PWIZ_ROOT_PATH)/pwiz/data/proteome : *.?pp Jamfile.jam ] ;
+    
 local revision-info =
     [ svnrev.generate-version-header $(PWIZ_ROOT_PATH)/pwiz/svnrev.hpp :
             $(PWIZ_ROOT_PATH)/Jamroot.jam

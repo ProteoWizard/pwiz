@@ -28,6 +28,7 @@
 #include <deque>
 #include <algorithm>
 #include <utility>
+#include <boost/foreach.hpp>
 
 using std::vector;
 using std::list;
@@ -55,6 +56,8 @@ using std::replace_copy_if;
 using std::replace_if;
 
 using std::transform;
+using std::sort;
+using std::stable_sort;
 
 using std::binary_search;
 using std::adjacent_find;
