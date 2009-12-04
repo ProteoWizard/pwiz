@@ -415,7 +415,7 @@ rule binary-tarball-requirements ( properties * )
     if ! <architecture> in $(properties:G) { properties += <architecture>$(.platform:L) ; }
     local name = [ common.format-name <base> <property:target-os> <property:architecture> <toolset> <runtime> -$(version-tag:J=_)
                                       : pwiz-bin : TBZ2 : [ property-set.create $(properties) ] ] ;
-    result += <name>$(name) ;
+    result += <name>$(name) <dependency>executables <location>$(.common-location) ;
     return $(result) ;
 }
 
@@ -424,8 +424,6 @@ tar.create pwiz-bin.tar.bz2
 
   : # requirements
     <conditional>@binary-tarball-requirements
-    <location>$(.common-location)
-    <dependency>executables
   ;
 
 
