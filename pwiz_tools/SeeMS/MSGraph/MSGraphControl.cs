@@ -28,7 +28,7 @@ using System.Text;
 using System.Windows.Forms;
 using ZedGraph;
 
-namespace MSGraph
+namespace pwiz.MSGraph
 {
     public partial class MSGraphControl : ZedGraphControl
     {

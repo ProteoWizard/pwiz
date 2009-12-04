@@ -1,4 +1,4 @@
-﻿//
+//
 // $Id$
 //
 //
@@ -42,7 +42,7 @@ namespace seems
         /// the update can use the graph item, the pointList argument and/or
         /// any existing annotations to modify how this annotation is presented
         /// </summary>
-        void Update( GraphItem item, MSGraph.MSPointList pointList, GraphObjList annotations );
+        void Update( GraphItem item, pwiz.MSGraph.MSPointList pointList, GraphObjList annotations );
 
         /// <summary>
         /// Gets or sets whether the annotation is currently active
@@ -123,7 +123,7 @@ namespace seems
             enabled = true;
         }
 
-        public virtual void Update( GraphItem item, MSGraph.MSPointList pointList, GraphObjList annotations )
+        public virtual void Update( GraphItem item, pwiz.MSGraph.MSPointList pointList, GraphObjList annotations )
         {
             throw new NotImplementedException();
         }
@@ -294,7 +294,7 @@ namespace seems
             return "Peptide Fragmentation (" + sequence + ")";
         }
 
-        private void addFragment( GraphObjList list, MSGraph.MSPointList points, string series, int length, int charge, double mz )
+        private void addFragment( GraphObjList list, pwiz.MSGraph.MSPointList points, string series, int length, int charge, double mz )
         {
             string label = String.Format("{0}{1}{2}", series, length, (charge > 1 ? "+" + charge.ToString() : ""));
 
@@ -384,7 +384,7 @@ namespace seems
         /// Takes a left mz value and right mz value and returns true if both are found in the spectrum.
         /// TODO: make mass tolerance user-configurable (currently hard-coded to 0.5 m/z)
         ///</summary>
-        private bool aminoAcidHasFragmentEvidence( MSGraph.MSPointList points, double leftMZ, double rightMZ )
+        private bool aminoAcidHasFragmentEvidence( pwiz.MSGraph.MSPointList points, double leftMZ, double rightMZ )
         {
             // Search index
             int index = -1;
@@ -406,7 +406,7 @@ namespace seems
         }
 
         ///<summary>Adds user requested ion series on top of the chart.</summary>
-        private void addIonSeries( GraphObjList list, MSGraph.MSPointList points, Peptide peptide, Fragmentation fragmentation, string topSeries, string bottomSeries)
+        private void addIonSeries( GraphObjList list, pwiz.MSGraph.MSPointList points, Peptide peptide, Fragmentation fragmentation, string topSeries, string bottomSeries)
         {
             int ionSeriesChargeState = min;
             string sequence = peptide.sequence;
@@ -675,7 +675,7 @@ namespace seems
             }
         }
 
-        public override void Update( GraphItem item, MSGraph.MSPointList points, GraphObjList annotations )
+        public override void Update( GraphItem item, pwiz.MSGraph.MSPointList points, GraphObjList annotations )
         {
             if( !Enabled )
                 return;

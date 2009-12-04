@@ -141,7 +141,7 @@ namespace seems
         IList<GraphItem> DataItems { get; }
     }
 
-	public abstract class GraphItem : IComparable<GraphItem>, MSGraph.IMSGraphItemInfo
+	public abstract class GraphItem : IComparable<GraphItem>, pwiz.MSGraph.IMSGraphItemInfo
 	{
         public GraphItem()
         {
@@ -181,14 +181,14 @@ namespace seems
 
         public object Tag;
 
-        public virtual MSGraph.MSGraphItemType GraphItemType
+        public virtual pwiz.MSGraph.MSGraphItemType GraphItemType
         {
             get
             {
                 if( IsChromatogram )
-                    return MSGraph.MSGraphItemType.Chromatogram;
+                    return pwiz.MSGraph.MSGraphItemType.Chromatogram;
                 else
-                    return MSGraph.MSGraphItemType.Spectrum;
+                    return pwiz.MSGraph.MSGraphItemType.Spectrum;
             }
         }
 
@@ -228,9 +228,9 @@ namespace seems
             }
         }
 
-        public virtual MSGraph.MSGraphItemDrawMethod GraphItemDrawMethod
+        public virtual pwiz.MSGraph.MSGraphItemDrawMethod GraphItemDrawMethod
         {
-            get { return MSGraph.MSGraphItemDrawMethod.Stick; }
+            get { return pwiz.MSGraph.MSGraphItemDrawMethod.Stick; }
         }
 
         private AnnotationSettings annotationSettings;
@@ -240,13 +240,13 @@ namespace seems
             set { annotationSettings = value; }
         }
 
-        public virtual MSGraph.PointAnnotation AnnotatePoint( ZedGraph.PointPair point )
+        public virtual pwiz.MSGraph.PointAnnotation AnnotatePoint( ZedGraph.PointPair point )
         {
             if( annotationSettings != null )
             {
                 Map<double, SeemsPointAnnotation>.Enumerator itr = annotationSettings.PointAnnotations.Find( point.X );
                 if( itr.IsValid && itr.Current.Value != null )
-                    return new MSGraph.PointAnnotation( itr.Current.Value.Label );
+                    return new pwiz.MSGraph.PointAnnotation( itr.Current.Value.Label );
 
                 return annotationSettings.AnnotatePoint( point );
             }
@@ -254,7 +254,7 @@ namespace seems
             return null;
         }
 
-        public virtual void AddAnnotations( MSGraph.MSGraphPane graphPane, Graphics g, MSGraph.MSPointList pointList, ZedGraph.GraphObjList annotations )
+        public virtual void AddAnnotations( pwiz.MSGraph.MSGraphPane graphPane, Graphics g, pwiz.MSGraph.MSPointList pointList, ZedGraph.GraphObjList annotations )
         {
             PointMap points = new PointMap( Points );
             foreach( IAnnotation annotation in annotationList )
@@ -318,7 +318,7 @@ namespace seems
 
         public ChromatogramListForm OwningListForm { get { return source.ChromatogramListForm; } }
 
-        public override void AddAnnotations( MSGraph.MSGraphPane graphPane, Graphics g, MSGraph.MSPointList pointList, ZedGraph.GraphObjList annotations )
+        public override void AddAnnotations( pwiz.MSGraph.MSGraphPane graphPane, Graphics g, pwiz.MSGraph.MSPointList pointList, ZedGraph.GraphObjList annotations )
         {
             base.AddAnnotations( graphPane, g, pointList, annotations );
         }
@@ -334,9 +334,9 @@ namespace seems
             }
 		}
 
-        public override MSGraph.MSGraphItemDrawMethod GraphItemDrawMethod
+        public override pwiz.MSGraph.MSGraphItemDrawMethod GraphItemDrawMethod
         {
-            get { return MSGraph.MSGraphItemDrawMethod.Line; }
+            get { return pwiz.MSGraph.MSGraphItemDrawMethod.Line; }
         }
 	}
 
@@ -399,7 +399,7 @@ namespace seems
         /// <summary>
         /// add precursor and non-matched annotations
         /// </summary>
-        public override void AddAnnotations( MSGraph.MSGraphPane graphPane, Graphics g, MSGraph.MSPointList pointList, ZedGraph.GraphObjList annotations )
+        public override void AddAnnotations( pwiz.MSGraph.MSGraphPane graphPane, Graphics g, pwiz.MSGraph.MSPointList pointList, ZedGraph.GraphObjList annotations )
         {
             base.AddAnnotations( graphPane, g, pointList, annotations );
             //using( Spectrum element = Element )
@@ -455,15 +455,15 @@ namespace seems
             }
 		}
 
-        public override MSGraph.MSGraphItemDrawMethod GraphItemDrawMethod
+        public override pwiz.MSGraph.MSGraphItemDrawMethod GraphItemDrawMethod
         {
             get
             {
                 CVParam representation = Element.cvParamChild(CVID.MS_spectrum_representation);
                 if( !representation.empty() && representation.cvid == CVID.MS_profile_spectrum )
-                    return MSGraph.MSGraphItemDrawMethod.Line;
+                    return pwiz.MSGraph.MSGraphItemDrawMethod.Line;
                 else
-                    return MSGraph.MSGraphItemDrawMethod.Stick;
+                    return pwiz.MSGraph.MSGraphItemDrawMethod.Stick;
             }
         }
 
@@ -532,7 +532,7 @@ namespace seems
         }
 
         private ZedGraph.FontSpec pointFontSpec;
-        public MSGraph.PointAnnotation AnnotatePoint( ZedGraph.PointPair point )
+        public pwiz.MSGraph.PointAnnotation AnnotatePoint( ZedGraph.PointPair point )
         {
             string label = null;
             if( ShowXValues && ShowYValues )
@@ -543,7 +543,7 @@ namespace seems
                 label = String.Format( "{0:f2}", point.Y );
 
             if( label != null )
-                return new MSGraph.PointAnnotation( label, pointFontSpec );
+                return new pwiz.MSGraph.PointAnnotation( label, pointFontSpec );
             return null;
         }
 

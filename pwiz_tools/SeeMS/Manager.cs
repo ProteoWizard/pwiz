@@ -29,7 +29,7 @@ using DigitalRune.Windows.Docking;
 using pwiz.CLI;
 using pwiz.CLI.msdata;
 using pwiz.CLI.analysis;
-using MSGraph;
+using pwiz.MSGraph;
 using ZedGraph;
 using CommandLine.Utility;
 
@@ -1060,14 +1060,14 @@ namespace seems
 
         private void graphForm_PreviewKeyDown( object sender, PreviewKeyDownEventArgs e )
         {
-            if( !( sender is GraphForm ) && !( sender is MSGraph.MSGraphControl ) )
+            if( !( sender is GraphForm ) && !( sender is pwiz.MSGraph.MSGraphControl ) )
                 throw new Exception( "Error processing keyboard input: unable to handle sender " + sender.ToString() );
 
             GraphForm graphForm;
             if( sender is GraphForm )
                 graphForm = sender as GraphForm;
             else
-                graphForm = ( sender as MSGraph.MSGraphControl ).Parent as GraphForm;
+                graphForm = ( sender as pwiz.MSGraph.MSGraphControl ).Parent as GraphForm;
 
             GraphItem graphItem = graphForm.FocusedItem.Tag as GraphItem;
             SpectrumSource source = graphItem.Source.Source;

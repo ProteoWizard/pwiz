@@ -31,7 +31,7 @@ using System.Xml;
 using System.Threading;
 using pwiz.CLI;
 using pwiz.CLI.msdata;
-using MSGraph;
+using pwiz.MSGraph;
 
 namespace seems
 {

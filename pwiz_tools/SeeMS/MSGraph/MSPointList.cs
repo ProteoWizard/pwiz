@@ -24,7 +24,7 @@ using System.Collections.Generic;
 using System.Text;
 using ZedGraph;
 
-namespace MSGraph
+namespace pwiz.MSGraph
 {
     public class MSPointList : IPointList, IEnumerable<PointPair>
     {

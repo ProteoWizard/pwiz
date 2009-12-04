@@ -19,7 +19,7 @@
 // limitations under the License.
 //
 
-namespace MSGraph
+namespace pwiz.MSGraph
 {
     partial class MSGraphControl
     {

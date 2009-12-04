@@ -7,7 +7,7 @@
     <ProjectGuid>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MSGraph</RootNamespace>
+    <RootNamespace>pwiz.MSGraph</RootNamespace>
     <AssemblyName>MSGraph</AssemblyName>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>MSGraphControl.snk</AssemblyOriginatorKeyFile>

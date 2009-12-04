@@ -50,9 +50,9 @@ namespace seems
 		private void InitializeComponent()
 		{
             this.components = new System.ComponentModel.Container();
-            MSGraph.MSGraphPane msGraphPane1 = new MSGraph.MSGraphPane();
+            pwiz.MSGraph.MSGraphPane msGraphPane1 = new pwiz.MSGraph.MSGraphPane();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager( typeof( GraphForm ) );
-            this.msGraphControl = new MSGraph.MSGraphControl();
+            this.msGraphControl = new pwiz.MSGraph.MSGraphControl();
             this.SuspendLayout();
             // 
             // msGraphControl
@@ -110,7 +110,7 @@ namespace seems
 
 		#endregion
 
-        private MSGraph.MSGraphControl msGraphControl;
+        private pwiz.MSGraph.MSGraphControl msGraphControl;
 
 
     }

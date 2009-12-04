@@ -29,7 +29,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
-using MSGraph;
+using pwiz.MSGraph;
 using ZedGraph;
 
 using System.Diagnostics;
@@ -73,7 +73,7 @@ namespace seems
         }
         #endregion
 
-		public MSGraph.MSGraphControl ZedGraphControl { get { return msGraphControl; } }
+		public pwiz.MSGraph.MSGraphControl ZedGraphControl { get { return msGraphControl; } }
 
         MSGraphPane focusedPane = null;
         CurveItem focusedItem = null;

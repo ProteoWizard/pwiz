@@ -26,7 +26,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using ZedGraph;
 
-namespace MSGraph
+namespace pwiz.MSGraph
 {
     public enum MSGraphItemType
     {
