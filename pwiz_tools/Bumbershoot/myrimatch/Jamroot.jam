@@ -254,7 +254,6 @@ rule binary-tarball-requirements ( properties * )
     local location = $(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
 
     local non-redistributables =
-        *MSFileReader.XRawfile2.dll *fregistry.dll *fileio.dll                          # Thermo API
         *ABSciex.DataAccess.WiffFileDataReader.dll *Clear?ore*.dll *rscoree.dll         # ABI API
         *DACServer.dll *genutil.dll *raw.dll *RawCsm.dll *Security*.dll *MetaGD32.dll ; # Waters API
 
@@ -273,7 +272,7 @@ rule binary-tarball-requirements ( properties * )
     }
     local name = [ common.format-name <base> <property:target-os> <property:architecture> <toolset> <runtime> -$(version-tag:J=_)
                                       : $(bin-tarball-basename) : TBZ2 : [ property-set.create $(properties) ] ] ;
-    result += <name>$(name) ;
+    result += <name>$(name) <dependency>install <location>$(BUILD_PATH) ;
     return $(result) ;
 }
 
@@ -283,8 +282,6 @@ tar.create $(bin-tarball-basename).tar.bz2
 
   : # requirements
       <conditional>@binary-tarball-requirements
-      <location>$(BUILD_PATH)
-      <dependency>install
   ;
 
 
