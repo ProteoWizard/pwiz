@@ -9,6 +9,6 @@ pushd %PWIZ_ROOT%
 
 IF EXIST bin rmdir /s /q bin
 IF EXIST obj rmdir /s /q obj
-IF EXIST MSGraph\bin rmdir /s /q MSGraph\bin
-IF EXIST MSGraph\obj rmdir /s /q MSGraph\obj
+IF EXIST ..\Shared\MSGraph\bin rmdir /s /q ..\Shared\MSGraph\bin
+IF EXIST ..\Shared\MSGraph\obj rmdir /s /q ..\Shared\MSGraph\obj
 popd

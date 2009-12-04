@@ -480,7 +480,19 @@ tar.create boost_1_39_0.tar.bz2
   exclude:*.ncb exclude:*.suo exclude:*.user exclude:*.p12 # More visual studio files
   exclude:*.xdc # .NET XML documentation sources
   exclude:tar.excluded # a place to put any files in these directories that shouldn't be tarballed
-  exclude:pwiz_tools/Skyline exclude:pwiz_tools/Shared exclude:pwiz_tools/Topograph
+  exclude:pwiz_tools/Skyline
+  exclude:pwiz_tools/Topograph
+  exclude:pwiz_tools/Shared/Common
+  exclude:pwiz_tools/Shared/Crawdad
+  exclude:pwiz_tools/Shared/ProteomeDb
+  exclude:pwiz_tools/Shared/ProteowizardWrapper
+  exclude:pwiz_tools/Shared/Lib/DotNetZip-v1.8
+  exclude:pwiz_tools/Shared/Lib/NHibernate
+  exclude:pwiz_tools/Shared/Lib/npgsql
+  exclude:pwiz_tools/Shared/Lib/System.Data.*
+  exclude:pwiz_tools/Shared/Lib/MathNet.*
+  exclude:pwiz_tools/Shared/Lib/mysql.*
+  exclude:pwiz_tools/Shared/Lib/zlib.*
 ;
 
 # the SUBSET file acts as flag so that building a subset tarball doesn't build a source tarball
