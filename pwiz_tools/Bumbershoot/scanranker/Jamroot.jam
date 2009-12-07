@@ -1,0 +1,395 @@
+#
+# $Id: Jamroot.jam 80 2009-11-03 20:14:43Z chambm $
+#
+# The contents of this file are subject to the Mozilla Public License
+# Version 1.1 (the "License"); you may not use this file except in
+# compliance with the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations
+# under the License.
+#
+# The Original Code is the IDPicker build system.
+#
+# The Initial Developer of the Original Code is Matt Chambers.
+#
+# Copyright 2009 Vanderbilt University
+#
+# Contributor(s): Surendra Dasaris
+#
+
+# Usage:
+#
+#   bjam [options]
+#
+#   Builds and installs the GUI, DirecTag and idpQonvert for ScanRanker
+#
+# Targets and Related Options:
+#
+#   build                   Build Bumbershoot libraries and applications
+#   =====
+#
+#   --expat-src=<DIR>       Find Expat 2.0+ source distribution here.
+#                           Default: "ext/src/expat*"
+
+
+.os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
+.platform = [ modules.peek : OSPLAT ] ; # X86, X86_64, POWERPC
+
+
+path-constant ROOT_PATH : . ;
+path-constant BUILD_PATH : ./DirecTag/build-$(.os:L)-$(.platform:L) ;
+path-constant LIBRARIES_PATH : ./DirecTag/freicore/libraries ;
+path-constant PWIZ_SOURCE : ./DirecTag/freicore/pwiz_src ;
+
+
+# this makes pwiz use DirecTag/freicore's libraries directory
+local argv = [ modules.peek : ARGV ] ;
+modules.poke : ARGV : $(argv) --libraries-path="$(LIBRARIES_PATH)" ;
+
+
+import os ;
+import modules ;
+import common ;
+import package ;
+import errors : error ;
+import feature ;
+import mpi ;
+
+
+project bumbershoot
+	: requirements
+	    #<include>DirecTag/freicore/pwiz_src
+	    #<include>DirecTag/freicore/libraries/boost_aux
+
+      <toolset>gcc,<link>shared:<runtime-link>shared
+      
+      # using pwiz_wifffile (compiled with /clr) requires the shared runtime,
+      # regardless of how pwiz_wifffile is linked
+      <toolset>msvc:<runtime-link>shared
+
+      # special msvc hacks
+      <toolset>msvc:<define>WIN32                     # windows
+      <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
+      <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
+      <toolset>msvc:<define>_SECURE_SCL_THROWS=1      # checked iterators throw instead of crash  
+      <toolset>msvc:<define>_USE_MATH_DEFINES         # for M_PI in <cmath>
+      <toolset>msvc:<cxxflags>/wd4100                 # warning: unreferenced formal parameter
+      <toolset>msvc:<cxxflags>/wd4512                 # warning: assignment operator could not be generated
+      <toolset>msvc:<cxxflags>/wd4127                 # warning: conditional expression is constant (boost::lexical_cast)
+      <toolset>msvc:<cxxflags>/wd4701                 # warning: potentially uninitialized local variable 'result' used (boost::lexical_cast, debug)
+      <toolset>msvc:<cxxflags>/wd4245                 # warning: conversion from 'type1' to 'type2', signed/unsigned mismatch (boost/filesystem/convenience.hpp)
+      <toolset>msvc:<cxxflags>/wd4251                 # warning: class needs to have dll-interface to be used by clients of class
+      <toolset>msvc:<cxxflags>/wd4267	                # warning: conversion from 'type1' to 'type2', possible loss of data (boost::lexical_cast)
+      <toolset>msvc:<cxxflags>/wd4244                 # warning: conversion from 'int' to 'unsigned short', possible loss of data (boost/date_time/microsec_time_clock.hpp)
+      <toolset>msvc:<cxxflags>/wd4275                 # warning: non dll-interface class 'base' used as base for dll-interface class 'derived'
+
+      # special gcc hack - Cygwin gcc 3.4.4, Ubuntu gcc 4.1.2 
+      # warning: '__cur' might be used uninitialized in this function 
+      <toolset>gcc:<cxxflags>-Wno-uninitialized   
+
+      # special Cygwin gcc-3.4.4 hack
+      # linker "multiple definition" error on inclusion of boost-1.34.1 filesystem headers  
+      <toolset>gcc-3.4.4:<linkflags>-Wl,--allow-multiple-definition
+      <toolset>gcc-mingw-3.4.5:<linkflags>-Wl,--allow-multiple-definition
+
+      # allow "long long" even with -pedantic
+      <toolset>gcc:<cxxflags>-Wno-long-long
+      <toolset>darwin:<cxxflags>-Wno-long-long
+
+      # don't call 'strip' -- causes 'Bus error' in some cases
+      #  e.g. find_if with inline predicate
+      <toolset>darwin:<debug-symbols>on
+
+      <threading>multi
+
+  : build-dir $(BUILD_PATH)
+  : default-build
+      <variant>release
+      <link>static
+      <runtime-link>static
+	;
+
+
+local expat_src = [ MATCH --expat-src=(.*) : [ modules.peek : ARGV ] ] ;
+expat_src ?= [ glob "DirecTag/freicore/ext/src/expat*" : "DirecTag/freicore/ext/src/*.tar.gz" ] ;
+expat_src = $(expat_src[0]) ;
+
+if ! $(expat_src)
+{
+     error "This build requires the Expat source code. Specify the path to the Expat source distribution with '--expat-src=<path>'" ;
+}
+
+
+tmp = [ modules.peek : BOOST_BUILD_PATH ] ;
+tmp += DirecTag/freicore/ext DirecTag/freicore/libraries ;
+modules.poke : BOOST_BUILD_PATH : $(tmp) ;
+
+
+local application-name = "ScanRanker" ;
+
+
+# set version info (used for tarball filenames)
+import svnrev sequence ;
+
+constant MAJOR : 1 ;
+constant MINOR : 0 ;
+
+# rule for generating a C# AssemblyInfo file
+rule generate-AssemblyInfo.cs ( filepath ? : sources-with-rcs-keywords + : warn-on-missing ? : print-revision-info ? :
+                                AssemblyTitle AssemblyDescription AssemblyCompany AssemblyProduct )
+{
+    # default filepath is "GUI/Properties/AssemblyInfo.cs" in the current directory
+    filepath ?= GUI/Properties/AssemblyInfo.cs ;
+
+    if $(print-revision-info) { echo Generating/updating version in $(filepath) ; }
+
+    local existing-revision-info ;
+    if [ path.exists $(filepath) ]
+    {
+        existing-revision-info = [ svnrev.get-revision-info $(filepath) ] ;
+        if $(print-revision-info) { echo Existing maximum revision: $(existing-revision-info) ; }
+    }
+
+    sources-with-rcs-keywords = [ sequence.transform path.native : $(sources-with-rcs-keywords) ] ;
+    local revision-info = [ svnrev.get-revision-info $(sources-with-rcs-keywords)
+                                : $(warn-on-missing) : $(print-revision-info) ] ;
+
+    if $(print-revision-info) { echo Current maximum revision: $(revision-info) ; }
+
+    if ! $(existing-revision-info) ||
+       $(existing-revision-info[1]) != $(revision-info[1])
+    {
+        local AssemblyCopyright = "Copyright © $(AssemblyCompany) $(revision-info[2])" ;
+
+        local header-text =
+"// This file was generated by the \"svnrev\" utility
+// You should not modify it manually, as it may be re-generated.
+//
+// $Revision: $(revision-info[1]) $
+// $Date: $(revision-info[2])-$(revision-info[3])-$(revision-info[4]) $
+//
+
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+
+[assembly: AssemblyTitle(\"$(AssemblyTitle)\")]
+[assembly: AssemblyDescription(\"$(AssemblyDescription)\")]
+[assembly: AssemblyCompany(\"$(AssemblyCompany)\")]
+[assembly: AssemblyProduct(\"$(AssemblyProduct)\")]
+[assembly: AssemblyCopyright(\"$(AssemblyCopyright)\")]
+[assembly: AssemblyVersion(\"$(MAJOR).$(MINOR).$(revision-info[1])\")]
+[assembly: AssemblyFileVersion(\"$(MAJOR).$(MINOR).$(revision-info[1])\")]
+" ;
+
+        header-text = @($(filepath):E=$(header-text)) ;
+    }
+
+    return $(revision-info) ;
+}
+
+
+constant COMPANY_AND_PRODUCT : "Vanderbilt University" "ScanRanker" ;
+
+# generate overall ScanRanker version header
+local revision-info = [ generate-AssemblyInfo.cs GUI/Properties/AssemblyInfo.cs :
+    [ path.glob-tree . : *.jam
+                         *.?pp *.h
+                         *.cs
+                         #*.html
+                         #*.vdproj
+      : DirecTag build-*-* ]
+    : warn-on-missing : : "GUI/Properties" "Implements ScanRanker's shared logic." $(COMPANY_AND_PRODUCT) ] ;
+
+# revision-info is a sequence: <max revision> <max year> <max month> <max day> <number of modified files in working copy>
+
+local year = $(revision-info[2]) ;
+local month = $(revision-info[3]) ;
+local day = $(revision-info[4]) ;
+
+constant SVNREV : $(revision-info[1]) ;
+constant SVNREVDATE : "(last modified $(year)-$(month)-$(day))" ;
+
+
+version-tag = $(MAJOR) $(MINOR) $(SVNREV) ;
+
+if $(revision-info[5]) > 0
+{
+    version-tag += "modified" ;
+    echo NOTICE: WORKING COPY HAS $(revision-info[5]) MODIFIED FILES. ;
+}
+
+echo $(application-name) $(version-tag:J=.) $(SVNREVDATE:J=) ;
+
+
+# generate version headers for other projects
+#generate-AssemblyInfo.cs GUI/Forms/Properties/AssemblyInfo.cs : [ path.glob-tree GUI : *.cs ] : : : "IDPickerGUI" "Graphical interface for IDPicker." $(COMPANY_AND_PRODUCT) ;
+#generate-AssemblyInfo.cs Workspace/Properties/AssemblyInfo.cs : [ glob Workspace/*.cs ] : : : "Workspace" "Implements IDPicker's core logic." $(COMPANY_AND_PRODUCT) ;
+#generate-AssemblyInfo.cs Presentation/Properties/AssemblyInfo.cs : [ glob Presentation/*.cs ] : : : "Presentation" "Implements IDPicker's presentation logic." $(COMPANY_AND_PRODUCT) ;
+
+
+path-constant BOOST_SOURCE : "DirecTag/freicore/libraries/boost_1_39_0" ;
+
+using ext-boost : 1.39.0 : $(BOOST_SOURCE) ;
+
+
+rule install-location ( properties * )
+{
+    local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
+    local variants = [ feature.get-values <variant> : $(properties) ] ;
+    return <location>$(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
+}
+
+rule install-vendor-api-dependencies ( properties * )
+{
+    local location = [ install-location $(properties) ] ;
+    local dependencies ;
+    if <toolset>msvc in $(properties)
+    {
+        if [ path.exists $(PWIZ_SOURCE)/pwiz/utility/vendor_api/thermo ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo/$(location) ; }
+        if [ path.exists $(PWIZ_SOURCE)/pwiz/utility/vendor_api/Agilent ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz/utility/vendor_api/Agilent//install_pwiz_vendor_api_agilent/$(location) ; }
+        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI//install_pwiz_vendor_api_abi/$(location) ; }
+        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Bruker ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker/$(location) ; }
+        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Waters ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/$(location) ; }
+    }
+    return $(dependencies) ;
+}
+
+rule dotNET-dependencies ( properties * )
+{
+    local location = [ install-location $(properties) ] ;
+    return <dependency>GUI//ScanRanker.exe/$(location) ;
+}
+
+install install
+    : # sources
+        DirecTag//directag
+        DirecTag/idpQonvert//idpQonvert
+    : # requirements
+        <install-type>EXE
+        <conditional>@dotNET-dependencies
+        <conditional>@install-location
+        <conditional>@install-vendor-api-dependencies
+    ;
+
+#build-project DirecTag//directag ;
+
+#build-project Deploy ;
+
+# any source tree can build binary tarballs
+
+import modules os ;
+
+if [ os.on-windows ]
+{
+    using tar : bsdtar.exe ;
+}
+else
+{
+    using tar ;
+}
+import tar sequence property-set ;
+
+bin-tarball-basename = "$(application-name:L)-bin" ;
+
+rule binary-tarball-requirements ( properties * )
+{
+    local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
+    local variants = [ feature.get-values <variant> : $(properties) ] ;
+    local location = $(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
+
+    local non-redistributables =
+        *MSFileReader.XRawfile2.dll *fregistry.dll *fileio.dll                          # Thermo API
+        *ABSciex.DataAccess.WiffFileDataReader.dll *Clear?ore*.dll *rscoree.dll         # ABI API
+        *DACServer.dll *genutil.dll *raw.dll *RawCsm.dll *Security*.dll *MetaGD32.dll ; # Waters API
+
+    if $(variants[1]) = "release"
+    {
+        non-redistributables += *.pdb   # MSVC debug symbols
+                                *.xml ; # .NET documentation
+    }
+
+    non-redistributables = [ sequence.join $(non-redistributables) : "&&exclude:" ] ;
+    local result = <tar-source>path-anchor:$(location)&&exclude:$(non-redistributables)&&$(location) ;
+    if ! <architecture> in $(properties:G)
+    {
+        if $(.platform:L) = "x86_64" && <address-model>32 in $(properties) { properties += <architecture>x86 ; }
+        else { properties += <architecture>$(.platform:L) ; }
+    }
+    local name = [ common.format-name <base> <property:target-os> <property:architecture> <toolset> <runtime> -$(version-tag:J=_)
+                                      : $(bin-tarball-basename) : TBZ2 : [ property-set.create $(properties) ] ] ;
+    result += <name>$(name) <dependency>install <location>$(BUILD_PATH) ;
+    return $(result) ;
+}
+
+
+tar.create $(bin-tarball-basename).tar.bz2
+  : # sources are handled by the conditional
+
+  : # requirements
+      <conditional>@binary-tarball-requirements
+  ;
+
+
+# full source trees automatically build source tarballs
+
+if ! [ path.exists $(ROOT_PATH)/SUBSET ]
+{
+
+# the SUBSET file acts as flag so that building a subset tarball doesn't build a source tarball
+make SUBSET : : @make_SUBSET : <location>$(BUILD_PATH) ;
+actions make_SUBSET
+{
+@($(STDOUT):E=
+This $(application-name) source tree uses a subset of the full Boost tarball.
+) > "$(<)"
+}
+
+.common-sources =
+;
+
+tar.create $(application-name:L)-src.tar.bz2
+  : # sources
+
+    path-anchor:$(ROOT_PATH)
+
+    $(.exclusion-list)
+
+    $(ROOT_PATH)/GUI
+    [ glob $(ROOT_PATH)/DirecTag/*.h ]
+    [ glob $(ROOT_PATH)/DirecTag/*.cpp ]
+    $(ROOT_PATH)/DirecTag/Jamroot.jam
+
+    [ glob $(ROOT_PATH)/DirecTag/freicore/*.h ]
+    [ glob $(ROOT_PATH)/DirecTag/freicore/*.cpp ]
+    [ glob $(ROOT_PATH)/DirecTag/freicore/*.tar.bz2 ]
+    $(ROOT_PATH)/DirecTag/freicore/Jamfile.jam
+    $(ROOT_PATH)/DirecTag/freicore/ext
+
+    $(ROOT_PATH)/Jamroot.jam
+    $(ROOT_PATH)/quickbuild.bat
+    #$(ROOT_PATH)/quickbuild.sh
+    $(ROOT_PATH)/clean.bat
+    #$(ROOT_PATH)/clean.sh
+
+    $(LIBRARIES_PATH)/boost-build
+    $(LIBRARIES_PATH)/boost_aux
+    [ path.glob $(LIBRARIES_PATH) : *.bat *.sh *.jam *.dll *.lib *.exe *.cpp gd*.tar.bz2 zlib*.tar.bz2 ]
+  
+    path-anchor:$(BUILD_PATH)
+    $(BUILD_PATH)/SUBSET
+  
+    # include the bcp'd boost tarball as if it was really located at "libraries/boost_*.tar.bz2"
+    path-anchor:$(BOOST_SUBSET_PATH)
+    $(BOOST_SUBSET_PATH)/DirecTag/freicore/libraries
+
+  : # requirements
+    <name>$(application-name:L)-src-$(version-tag:J=_).tar.bz2
+    <location>$(BUILD_PATH)
+    <dependency>DirecTag//boost_1_39_0.tar.bz2
+  ;
+
+} # if SUBSET

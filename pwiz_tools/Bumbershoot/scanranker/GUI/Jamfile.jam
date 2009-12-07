@@ -1,0 +1,117 @@
+#
+# $Id: Jamroot.jam 8 2009-10-09 22:21:34Z chambm $
+#
+# The contents of this file are subject to the Mozilla Public License
+# Version 1.1 (the "License"); you may not use this file except in
+# compliance with the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations
+# under the License.
+#
+# The Original Code is the IDPicker build system.
+#
+# The Initial Developer of the Original Code is Matt Chambers.
+#
+# Copyright 2009 Vanderbilt University
+#
+# Contributor(s): Surendra Dasaris
+#
+
+
+import modules path feature ;
+
+path-constant THIS_PATH : . ;
+
+rule msbuild_ScanRankerGUI ( targets + : sources * : properties * )
+{
+    if <variant>debug in $(properties) ||
+       <debug-symbols>on in $(properties)
+    {
+        CONFIGURATION on $(<[1]) = "Debug" ;
+    }
+    else
+    {
+        CONFIGURATION on $(<[1]) = "Release" ;
+    }
+
+    local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
+    OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
+    INTERMEDIATE_PATH on $(<[1]) = "BaseIntermediateOutputPath=$(BUILD_PATH)/obj/" ;
+    JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
+}
+
+actions msbuild_ScanRankerGUI
+{
+    REM support both MSVC 8 and 9
+    IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
+    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86 >nul
+    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
+    echo Building ScanRankerGUI in $(CONFIGURATION:L) configuration...
+    msbuild $(THIS_PATH)/ScanRanker.csproj /p:Configuration=$(CONFIGURATION);$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
+}
+
+
+rule build-location ( properties * )
+{
+    local result ;
+    # don't override the location when it's already set
+    if ! <location> in $(properties:G)
+    {
+        if <variant>debug in $(properties) ||
+           <debug-symbols>on in $(properties)
+        {
+            result = <location>$(BUILD_PATH)/bin/Debug ;
+        }
+        else
+        {
+            result = <location>$(BUILD_PATH)/bin/Release ;
+        }
+        return $(result) ;
+    }
+    else
+    {
+        return $(properties) ;
+    }
+}
+
+
+import tar ;
+using tar : bsdtar.exe ;
+
+local pwiz_src_tarball = [ SORT [ glob $(ROOT_PATH)/DirecTag/freicore/pwiz-src*.tar.bz2 ] ] ;
+pwiz_src_tarball = $(pwiz_src_tarball[-1]) ; # take the last (latest) tarball
+
+# extract support for pwiz CLI bindings from pwiz tarball
+tar.extract
+      # tar filepath
+        $(pwiz_src_tarball)
+    : # include patterns
+        quickbuild.* clean.*
+        Jamroot.jam
+        LICENSE NOTICE
+        pwiz
+        pwiz_aux/msrc
+        pwiz_aux/Jamfile.jam
+        pwiz_tools/common
+
+    : # requirements
+        <location>$(PWIZ_SOURCE)
+    : # usage-requirements
+    : check-last-file-only
+    ;
+
+
+make ScanRanker.exe
+    : # sources
+        [ path.glob-tree $(ROOT_PATH)/GUI : *.cs ]
+    : # actions
+        @msbuild_ScanRankerGUI
+    : # requirements
+        <toolset>msvc:<assembly>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli
+        <conditional>@build-location
+        <dependency>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli/<location>$(THIS_PATH)/obj
+    ;
+  
