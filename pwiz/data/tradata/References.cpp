@@ -23,6 +23,7 @@
 
 #include "References.hpp"
 #include <stdexcept>
+#include <boost/foreach.hpp>
 
 
 namespace pwiz {
@@ -102,7 +103,7 @@ void resolve(vector< shared_ptr<object_type> >& objectPtrs, const TraData& msd)
 
 PWIZ_API_DECL void resolve(RetentionTime& retentionTime, const TraData& td)
 {
-    resolve(retentionTime.predictedRetentionTimeSoftwarePtr, td.softwarePtrs);
+    resolve(retentionTime.softwarePtr, td.softwarePtrs);
 }
 
 
@@ -122,7 +123,8 @@ PWIZ_API_DECL void resolve(Configuration& configuration, const TraData& td)
 
 PWIZ_API_DECL void resolve(Peptide& peptide, const TraData& td)
 {
-    resolve(peptide.proteinPtr, td.proteinPtrs);
+    BOOST_FOREACH(ProteinPtr& proteinPtr, peptide.proteinPtrs)
+        resolve(proteinPtr, td.proteinPtrs);
 }
 
 
@@ -133,10 +135,19 @@ PWIZ_API_DECL void resolve(Transition& transition, const TraData& td)
 }
 
 
+PWIZ_API_DECL void resolve(Target& target, const TraData& td)
+{
+    resolve(target.peptidePtr, td.peptidePtrs);
+    resolve(target.compoundPtr, td.compoundPtrs);
+}
+
+
 PWIZ_API_DECL void resolve(TraData& td)
 {
     resolve(td.peptidePtrs, td);
     resolve(td.transitions, td);
+    resolve(td.targets.targetExcludeList, td);
+    resolve(td.targets.targetIncludeList, td);
 }
 
 

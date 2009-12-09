@@ -166,6 +166,13 @@ void diff(const Protein& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
+void diff(const Modification& a,
+          const Modification& b,
+          Modification& a_b,
+          Modification& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
 void diff(const Peptide& a,
           const Peptide& b,
           Peptide& a_b,
@@ -180,24 +187,17 @@ void diff(const Compound& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
-void diff(const Precursor& a,
-          const Precursor& b,
-          Precursor& a_b,
-          Precursor& b_a,
-          const DiffConfig& config);
-
-PWIZ_API_DECL
-void diff(const Product& a,
-          const Product& b,
-          Product& a_b,
-          Product& b_a,
-          const DiffConfig& config);
-
-PWIZ_API_DECL
 void diff(const Transition& a,
           const Transition& b,
           Transition& a_b,
           Transition& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const Target& a,
+          const Target& b,
+          Target& a_b,
+          Target& b_a,
           const DiffConfig& config);
 
 PWIZ_API_DECL

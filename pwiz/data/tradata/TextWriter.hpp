@@ -36,6 +36,10 @@ namespace pwiz {
 namespace tradata {
 
 
+using boost::lexical_cast;
+using std::string;
+
+
 class PWIZ_API_DECL TextWriter
 {
     public:
@@ -92,8 +96,7 @@ class PWIZ_API_DECL TextWriter
     TextWriter& operator()(const TraData& msd)
     {
         (*this)("tradata:");
-        if (!msd.version.empty())
-            child()("version: " + msd.version);
+        child()("version: " + msd.version());
         if (!msd.cvs.empty())
             child()("cvList: ", msd.cvs);
         if (!msd.contactPtrs.empty())
@@ -112,6 +115,8 @@ class PWIZ_API_DECL TextWriter
             child()("compoundList: ", msd.compoundPtrs);
         if (!msd.transitions.empty())
             child()("transitionList: ", msd.transitions);
+        if (!msd.targets.empty())
+            child()(msd.targets);
 
         return *this;
     }
@@ -163,27 +168,17 @@ class PWIZ_API_DECL TextWriter
     TextWriter& operator()(const RetentionTime& retentionTime)
     {
         (*this)("retentionTime:");
-        child()
-            ("normalizationStandard: " + retentionTime.normalizationStandard)
-            ("normalizedRetentionTime: ", retentionTime.normalizedRetentionTime)
-            ("localRetentionTime: ", retentionTime.localRetentionTime)
-            ("predictedRetentionTime: ", retentionTime.predictedRetentionTime)
-            (static_cast<const ParamContainer&>(retentionTime));
-        if (retentionTime.predictedRetentionTimeSoftwarePtr.get() &&
-            !retentionTime.predictedRetentionTimeSoftwarePtr->empty())
-            child()("predictedRetentionTimeSoftwareRef: " + retentionTime.predictedRetentionTimeSoftwarePtr->id);
+        child()(static_cast<const ParamContainer&>(retentionTime));
+        if (retentionTime.softwarePtr.get() &&
+            !retentionTime.softwarePtr->empty())
+            child()("softwareRef: " + retentionTime.softwarePtr->id);
         return *this;    
     }
 
     TextWriter& operator()(const Prediction& prediction)
     {
         (*this)("prediction:");
-        child()
-            ("recommendedTransitionRank: ", prediction.recommendedTransitionRank)
-            ("transitionSource: " + prediction.transitionSource)
-            ("relativeIntensity: ", prediction.relativeIntensity)
-            ("intensityRank: ", prediction.intensityRank)
-            (static_cast<const ParamContainer&>(prediction));
+        child()(static_cast<const ParamContainer&>(prediction));
         return *this;   
     }
 
@@ -197,40 +192,78 @@ class PWIZ_API_DECL TextWriter
     TextWriter& operator()(const Validation& validation)
     {
         (*this)("validation:");
-        child()
-            ("recommendedTransitionRank: ", validation.recommendedTransitionRank)
-            ("transitionSource: " + validation.transitionSource)
-            ("relativeIntensity: ", validation.relativeIntensity)
-            ("intensityRank: ", validation.intensityRank)
-            (static_cast<const ParamContainer&>(validation));
+        child()(static_cast<const ParamContainer&>(validation));
+        return *this;
+    }
+
+    TextWriter& operator()(const Protein& protein)
+    {
+        (*this)("protein:");
+        child()("id: " + protein.id)
+               ("sequence: " + protein.sequence);
+        child()(static_cast<const ParamContainer&>(protein));
+        return *this;
+    }
+
+    TextWriter& operator()(const Modification& modification)
+    {
+        (*this)("modification:");
+        child()("location: ", lexical_cast<string>(modification.location))
+               ("monoisotopicMassDelta: " + lexical_cast<string>(modification.monoisotopicMassDelta))
+               ("averageMassDelta: " + lexical_cast<string>(modification.averageMassDelta));
+        child()(static_cast<const ParamContainer&>(modification));
+        return *this;
+    }
+
+    TextWriter& operator()(const Peptide& peptide)
+    {
+        (*this)("peptide:");
+        child()("id: " + peptide.id)
+               ("sequence: " + peptide.sequence)
+               (peptide.evidence);
+
+        if (!peptide.proteinPtrs.empty())
+            child()("proteinRefs:", peptide.proteinPtrs);
+        if (!peptide.modifications.empty())
+            child()("modifications:", peptide.modifications);
+        if (!peptide.retentionTimes.empty())
+            child()("retentionTimes:", peptide.retentionTimes);
+
+        child()(static_cast<const ParamContainer&>(peptide));
+        return *this;
+    }
+
+    TextWriter& operator()(const Compound& compound)
+    {
+        (*this)("compound:");
+        child()("id: " + compound.id)
+               ("retentionTimes:", compound.retentionTimes);
+        child()(static_cast<const ParamContainer&>(compound));
         return *this;
     }
 
     TextWriter& operator()(const Precursor& precursor)
     {
         (*this)("precursor:");
-        child()
-            ("m/z: ", precursor.mz)
-            ("charge: ", precursor.charge);
+        child()(static_cast<const ParamContainer&>(precursor));
         return *this;
     }
 
     TextWriter& operator()(const Product& product)
     {
         (*this)("product:");
-        child()
-            ("m/z: ", product.mz)
-            ("charge: ", product.charge);
+        child()(static_cast<const ParamContainer&>(product));
         return *this;
     }
 
     TextWriter& operator()(const Transition& transition)
     {
         (*this)("transition:");
-        child()
-            ("name: ", transition.name)
-            ("precursor: ", transition.precursor.mz)
-            ("product: ", transition.product.mz);
+        child()("id: ", transition.id);
+            if (!transition.precursor.empty())
+                child()(transition.precursor);
+            if (!transition.product.empty())
+                child()(transition.product);
             if (!transition.prediction.empty())
                 child()(transition.prediction);
             if (!transition.interpretationList.empty())
@@ -241,6 +274,32 @@ class PWIZ_API_DECL TextWriter
                 child()("peptideRef: " + transition.peptidePtr->id);
             if (transition.compoundPtr.get() && !transition.compoundPtr->empty())
                 child()("compoundRef: " + transition.compoundPtr->id);
+        return *this;
+    }
+
+    TextWriter& operator()(const Target& target)
+    {
+        (*this)("target:");
+        child()("id: ", target.id);
+            if (!target.precursor.empty())
+                child()(target.precursor);
+            if (!target.configurationList.empty())
+                child()("configurationList: ", target.configurationList);
+            if (target.peptidePtr.get() && !target.peptidePtr->empty())
+                child()("peptideRef: " + target.peptidePtr->id);
+            if (target.compoundPtr.get() && !target.compoundPtr->empty())
+                child()("compoundRef: " + target.compoundPtr->id);
+        return *this;
+    }
+
+    TextWriter& operator()(const TargetList& targetList)
+    {
+        (*this)("targetList:");
+        child()(static_cast<const ParamContainer&>(targetList));
+            if (!targetList.targetExcludeList.empty())
+                child()("targetExcludeList: ", targetList.targetExcludeList);
+            if (!targetList.targetIncludeList.empty())
+                child()("targetIncludeList: ", targetList.targetIncludeList);
         return *this;
     }
 

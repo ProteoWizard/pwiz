@@ -42,24 +42,26 @@ void testTransition()
 
     Transition transition;
     transition.peptidePtr = PeptidePtr(new Peptide("pep1"));
-    transition.peptidePtr->proteinPtr = ProteinPtr(new Protein("prot1"));
+    transition.peptidePtr->proteinPtrs.push_back(ProteinPtr(new Protein("prot1")));
     transition.compoundPtr = CompoundPtr(new Compound("cmp1"));
 
     TraData td;
     td.peptidePtrs.push_back(PeptidePtr(new Peptide("pep1")));
-    td.peptidePtrs.back()->groupLabel = "happy";
-    td.peptidePtrs.back()->proteinPtr = ProteinPtr(new Protein("prot1"));
-    td.peptidePtrs.back()->proteinPtr->sequence = "ABCD";
+    td.peptidePtrs.back()->set(MS_theoretical_mass, 123);
+    td.peptidePtrs.back()->proteinPtrs.push_back(ProteinPtr(new Protein("prot1")));
+    td.peptidePtrs.back()->proteinPtrs.back()->sequence = "ABCD";
 
     td.compoundPtrs.push_back(CompoundPtr(new Compound("cmp1")));
-    td.compoundPtrs.back()->retentionTime.localRetentionTime = 123;
+    td.compoundPtrs.back()->retentionTimes.push_back(RetentionTime());
+    td.compoundPtrs.back()->retentionTimes.back().set(MS_peak_intensity, 123);
 
     References::resolve(transition, td);
 
-    unit_assert(transition.peptidePtr->groupLabel == "happy");
-    unit_assert(transition.peptidePtr->proteinPtr.get());
-    unit_assert(transition.peptidePtr->proteinPtr->sequence == "ABCD");
-    unit_assert(transition.compoundPtr->retentionTime.localRetentionTime == 123);
+    unit_assert(transition.peptidePtr->cvParam(MS_theoretical_mass).value == "123");
+    unit_assert(transition.peptidePtr->proteinPtrs.back().get());
+    unit_assert(transition.peptidePtr->proteinPtrs.back()->sequence == "ABCD");
+    unit_assert(!transition.compoundPtr->retentionTimes.empty());
+    unit_assert(transition.compoundPtr->retentionTimes.back().cvParam(MS_peak_intensity).value == "123");
 }
 
 
@@ -70,24 +72,26 @@ void testTraData()
     td.proteinPtrs.back()->sequence = "ABCD";
 
     td.peptidePtrs.push_back(PeptidePtr(new Peptide("pep1")));
-    td.peptidePtrs.back()->groupLabel = "happy";
-    td.peptidePtrs.back()->proteinPtr = ProteinPtr(new Protein("prot1"));
+    td.peptidePtrs.back()->set(MS_theoretical_mass, 123);
+    td.peptidePtrs.back()->proteinPtrs.push_back(ProteinPtr(new Protein("prot1")));
 
     td.compoundPtrs.push_back(CompoundPtr(new Compound("cmp1")));
-    td.compoundPtrs.back()->retentionTime.localRetentionTime = 123;
+    td.compoundPtrs.back()->retentionTimes.push_back(RetentionTime());
+    td.compoundPtrs.back()->retentionTimes.back().set(MS_peak_intensity, 123);
 
     td.transitions.push_back(Transition());
     Transition& transition = td.transitions.back();
     transition.peptidePtr = PeptidePtr(new Peptide("pep1"));
-    transition.peptidePtr->proteinPtr = ProteinPtr(new Protein("prot1"));
+    transition.peptidePtr->proteinPtrs.push_back(ProteinPtr(new Protein("prot1")));
     transition.compoundPtr = CompoundPtr(new Compound("cmp1"));
 
     References::resolve(td);
 
-    unit_assert(transition.peptidePtr->groupLabel == "happy");
-    unit_assert(transition.peptidePtr->proteinPtr.get());
-    unit_assert(transition.peptidePtr->proteinPtr->sequence == "ABCD");
-    unit_assert(transition.compoundPtr->retentionTime.localRetentionTime == 123);
+    unit_assert(transition.peptidePtr->cvParam(MS_theoretical_mass).value == "123");
+    unit_assert(transition.peptidePtr->proteinPtrs.back().get());
+    unit_assert(transition.peptidePtr->proteinPtrs.back()->sequence == "ABCD");
+    unit_assert(!transition.compoundPtr->retentionTimes.empty());
+    unit_assert(transition.compoundPtr->retentionTimes.back().cvParam(MS_peak_intensity).value == "123");
 }
 
 

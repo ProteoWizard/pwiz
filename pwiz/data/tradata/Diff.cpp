@@ -416,10 +416,6 @@ void diff(const Protein& a,
 {
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
     diff(a.id, b.id, a_b.id, b_a.id, config);
-    diff(a.accession, b.accession, a_b.accession, b_a.accession, config);
-    diff(a.name, b.name, a_b.name, b_a.name, config);
-    diff(a.description, b.description, a_b.description, b_a.description, config);
-    diff(a.comment, b.comment, a_b.comment, b_a.comment, config);
     diff(a.sequence, b.sequence, a_b.sequence, b_a.sequence, config);
 
     // provide id for context
@@ -439,11 +435,7 @@ void diff(const RetentionTime& a,
           const DiffConfig& config)
 {
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
-    diff_numeric<double>(a.localRetentionTime, b.localRetentionTime, a_b.localRetentionTime, b_a.localRetentionTime, config);
-    diff_numeric<double>(a.normalizedRetentionTime, b.normalizedRetentionTime, a_b.normalizedRetentionTime, b_a.normalizedRetentionTime, config);
-    diff_numeric<double>(a.predictedRetentionTime, b.predictedRetentionTime, a_b.predictedRetentionTime, b_a.predictedRetentionTime, config);
-    diff(a.normalizationStandard, b.normalizationStandard, a_b.normalizationStandard, b_a.normalizationStandard, config);
-    ptr_diff(a.predictedRetentionTimeSoftwarePtr, b.predictedRetentionTimeSoftwarePtr, a_b.predictedRetentionTimeSoftwarePtr, b_a.predictedRetentionTimeSoftwarePtr, config);
+    ptr_diff(a.softwarePtr, b.softwarePtr, a_b.softwarePtr, b_a.softwarePtr, config);
 }
 
 
@@ -459,6 +451,20 @@ void diff(const Evidence& a,
 
 
 PWIZ_API_DECL
+void diff(const Modification& a,
+          const Modification& b,
+          Modification& a_b,
+          Modification& b_a,
+          const DiffConfig& config)
+{
+    diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
+    diff_numeric(a.location, b.location, a_b.location, b_a.location, config);
+    diff_numeric(a.monoisotopicMassDelta, b.monoisotopicMassDelta, a_b.monoisotopicMassDelta, b_a.monoisotopicMassDelta, config);
+    diff_numeric(a.averageMassDelta, b.averageMassDelta, a_b.averageMassDelta, b_a.averageMassDelta, config);
+}
+
+
+PWIZ_API_DECL
 void diff(const Peptide& a,
           const Peptide& b,
           Peptide& a_b,
@@ -467,12 +473,10 @@ void diff(const Peptide& a,
 {
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
     diff(a.id, b.id, a_b.id, b_a.id, config);
-    diff(a.groupLabel, b.groupLabel, a_b.groupLabel, b_a.groupLabel, config);
-    diff(a.labelingCategory, b.labelingCategory, a_b.labelingCategory, b_a.labelingCategory, config);
-    diff(a.unmodifiedSequence, b.unmodifiedSequence, a_b.unmodifiedSequence, b_a.unmodifiedSequence, config);
-    diff(a.modifiedSequence, b.modifiedSequence, a_b.modifiedSequence, b_a.modifiedSequence, config);
-    ptr_diff(a.proteinPtr, b.proteinPtr, a_b.proteinPtr, b_a.proteinPtr, config);
-    diff(a.retentionTime, b.retentionTime, a_b.retentionTime, b_a.retentionTime, config);
+    diff(a.sequence, b.sequence, a_b.sequence, b_a.sequence, config);
+    vector_diff_deep(a.proteinPtrs, b.proteinPtrs, a_b.proteinPtrs, b_a.proteinPtrs, config);
+    vector_diff_diff(a.modifications, b.modifications, a_b.modifications, b_a.modifications, config);
+    vector_diff_diff(a.retentionTimes, b.retentionTimes, a_b.retentionTimes, b_a.retentionTimes, config);
     diff(a.evidence, b.evidence, a_b.evidence, b_a.evidence, config);
 
     // provide id for context
@@ -493,7 +497,7 @@ void diff(const Compound& a,
 {
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
     diff(a.id, b.id, a_b.id, b_a.id, config);
-    diff(a.retentionTime, b.retentionTime, a_b.retentionTime, b_a.retentionTime, config);
+    vector_diff_diff(a.retentionTimes, b.retentionTimes, a_b.retentionTimes, b_a.retentionTimes, config);
 
     // provide id for context
     if (!a_b.empty() || !b_a.empty()) 
@@ -512,10 +516,6 @@ void diff(const Prediction& a,
           const DiffConfig& config)
 {
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
-    diff_numeric<unsigned int>(a.intensityRank, b.intensityRank, a_b.intensityRank, b_a.intensityRank, config);
-    diff_numeric<unsigned int>(a.recommendedTransitionRank, b.recommendedTransitionRank, a_b.recommendedTransitionRank, b_a.recommendedTransitionRank, config);
-    diff_numeric<double>(a.relativeIntensity, b.relativeIntensity, a_b.relativeIntensity, b_a.relativeIntensity, config);
-    diff(a.transitionSource, b.transitionSource, a_b.transitionSource, b_a.transitionSource, config);
     ptr_diff(a.contactPtr, b.contactPtr, a_b.contactPtr, b_a.contactPtr, config);
     ptr_diff(a.softwarePtr, b.softwarePtr, a_b.softwarePtr, b_a.softwarePtr, config);
 }
@@ -529,10 +529,6 @@ void diff(const Validation& a,
           const DiffConfig& config)
 {
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
-    diff_numeric<unsigned int>(a.intensityRank, b.intensityRank, a_b.intensityRank, b_a.intensityRank, config);
-    diff_numeric<unsigned int>(a.recommendedTransitionRank, b.recommendedTransitionRank, a_b.recommendedTransitionRank, b_a.recommendedTransitionRank, config);
-    diff_numeric<double>(a.relativeIntensity, b.relativeIntensity, a_b.relativeIntensity, b_a.relativeIntensity, config);
-    diff(a.transitionSource, b.transitionSource, a_b.transitionSource, b_a.transitionSource, config);
 }
 
 
@@ -544,11 +540,6 @@ void diff(const Interpretation& a,
           const DiffConfig& config)
 {
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
-    diff_numeric<int>(a.productOrdinal, b.productOrdinal, a_b.productOrdinal, b_a.productOrdinal, config);
-    diff_numeric<double>(a.mzDelta, b.mzDelta, a_b.mzDelta, b_a.mzDelta, config);
-    diff(a.productSeries, b.productSeries, a_b.productSeries, b_a.productSeries, config);
-    diff(a.productAdjustment, b.productAdjustment, a_b.productAdjustment, b_a.productAdjustment, config);
-    diff_numeric<bool>(a.primary, b.primary, a_b.primary, b_a.primary, config);
 }
 
 
@@ -559,6 +550,7 @@ void diff(const Configuration& a,
           Configuration& b_a,
           const DiffConfig& config)
 {
+    diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
     ptr_diff(a.contactPtr, b.contactPtr, a_b.contactPtr, b_a.contactPtr, config);
     ptr_diff(a.instrumentPtr, b.instrumentPtr, a_b.instrumentPtr, b_a.instrumentPtr, config);
     vector_diff_diff(a.validations, b.validations, a_b.validations, b_a.validations, config);
@@ -572,7 +564,8 @@ void diff(const Transition& a,
           Transition& b_a,
           const DiffConfig& config)
 {
-    diff(a.name, b.name, a_b.name, b_a.name, config);
+    diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
+    diff(a.id, b.id, a_b.id, b_a.id, config);
     diff(a.precursor, b.precursor, a_b.precursor, b_a.precursor, config);
     diff(a.product, b.product, a_b.product, b_a.product, config);
     diff(a.prediction, b.prediction, a_b.prediction, b_a.prediction, config);
@@ -584,39 +577,32 @@ void diff(const Transition& a,
     // provide name for context
     if (!a_b.empty() || !b_a.empty()) 
     {
-        a_b.name = a.name; 
-        b_a.name = b.name; 
+        a_b.id = a.id; 
+        b_a.id = b.id; 
     }
 }
 
 
 PWIZ_API_DECL
-void diff(const Precursor& a,
-          const Precursor& b,
-          Precursor& a_b,
-          Precursor& b_a,
+void diff(const Target& a,
+          const Target& b,
+          Target& a_b,
+          Target& b_a,
           const DiffConfig& config)
 {
-    a_b = Precursor();
-    b_a = Precursor();
+    diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
+    diff(a.id, b.id, a_b.id, b_a.id, config);
+    diff(a.precursor, b.precursor, a_b.precursor, b_a.precursor, config);
+    ptr_diff(a.peptidePtr, b.peptidePtr, a_b.peptidePtr, b_a.peptidePtr, config);
+    ptr_diff(a.compoundPtr, b.compoundPtr, a_b.compoundPtr, b_a.compoundPtr, config);
+    vector_diff_diff(a.configurationList, b.configurationList, a_b.configurationList, b_a.configurationList, config);
 
-    diff_numeric<double>(a.mz, b.mz, a_b.mz, b_a.mz, config);
-    diff_numeric<unsigned int>(a.charge, b.charge, a_b.charge, b_a.charge, config);
-}
-
-
-PWIZ_API_DECL
-void diff(const Product& a,
-          const Product& b,
-          Product& a_b,
-          Product& b_a,
-          const DiffConfig& config)
-{
-    a_b = Product();
-    b_a = Product();
-
-    diff_numeric<double>(a.mz, b.mz, a_b.mz, b_a.mz, config);
-    diff_numeric<unsigned int>(a.charge, b.mz, a_b.charge, b_a.charge, config);
+    // provide name for context
+    if (!a_b.empty() || !b_a.empty()) 
+    {
+        a_b.id = a.id; 
+        b_a.id = b.id; 
+    }
 }
 
 
@@ -627,7 +613,10 @@ void diff(const TraData& a,
           TraData& b_a,
           const DiffConfig& config)
 {
-    diff(a.version, b.version, a_b.version, b_a.version, config);
+    string a_b_version, b_a_version;
+
+    diff(a.id, b.id, a_b.id, b_a.id, config);
+    diff(a.version(), b.version(), a_b_version, b_a_version, config);
     vector_diff_diff(a.cvs, b.cvs, a_b.cvs, b_a.cvs, config);
     vector_diff_deep(a.contactPtrs, b.contactPtrs, a_b.contactPtrs, b_a.contactPtrs, config);
     vector_diff_diff(a.publications, b.publications, a_b.publications, b_a.publications, config);
@@ -637,6 +626,16 @@ void diff(const TraData& a,
     vector_diff_deep(a.peptidePtrs, b.peptidePtrs, a_b.peptidePtrs, b_a.peptidePtrs, config);
     vector_diff_deep(a.compoundPtrs, b.compoundPtrs, a_b.compoundPtrs, b_a.compoundPtrs, config);
     vector_diff_diff(a.transitions, b.transitions, a_b.transitions, b_a.transitions, config);
+    vector_diff_diff(a.targets.targetExcludeList, b.targets.targetExcludeList, a_b.targets.targetExcludeList, b_a.targets.targetExcludeList, config);
+    vector_diff_diff(a.targets.targetIncludeList, b.targets.targetIncludeList, a_b.targets.targetIncludeList, b_a.targets.targetIncludeList, config);
+
+    // provide context
+    if (!a_b.empty() || !b_a.empty() ||
+        !a_b_version.empty() || !b_a_version.empty()) 
+    {
+        a_b.id = a.id + (a_b_version.empty() ? "" : " (" + a_b_version + ")");
+        b_a.id = b.id + (b_a_version.empty() ? "" : " (" + b_a_version + ")");
+    }
 }
 
 } // namespace diff_impl

@@ -150,26 +150,8 @@ typedef boost::shared_ptr<Software> SoftwarePtr;
 
 struct PWIZ_API_DECL RetentionTime : public ParamContainer
 {
-    RetentionTime()
-        :   normalizedRetentionTime(0),
-            localRetentionTime(0),
-            predictedRetentionTime(0)
-    {}
-
-    /// Normalization standard used to generate the normalized retention time (e.g. H-PINS)
-    std::string normalizationStandard;
-
-    /// Retention time normalized to some standard reference
-    double normalizedRetentionTime;
-
-    /// Retention time calibrated to the local instrumental setup
-    double localRetentionTime;
-
-    /// Software used to predict a retention time
-    SoftwarePtr predictedRetentionTimeSoftwarePtr;
-
-    /// Retention time predicted by a software algorithm
-    double predictedRetentionTime;
+    /// Software used to determine the retention time
+    SoftwarePtr softwarePtr;
 
     /// returns true iff all members are empty and contain no params
     bool empty() const;
@@ -179,24 +161,6 @@ struct PWIZ_API_DECL RetentionTime : public ParamContainer
 /// Information about a prediction for a suitable transition using some software
 struct PWIZ_API_DECL Prediction : public ParamContainer
 {
-    Prediction()
-        :   recommendedTransitionRank(0),
-            relativeIntensity(0),
-            intensityRank(0)
-    {}
-
-    /// Ordinal rank of recommendation of transitions for this peptide
-    unsigned int recommendedTransitionRank;
-
-    /// Description of the source from which this prediction is derived
-    std::string transitionSource;
-
-    /// Relative intensity of the peak in the source from which this prediction is derived
-    double relativeIntensity;
-
-    /// Ordinal rank of intensity of the peak in the source from which this prediction is derived
-    unsigned int intensityRank;
-
     /// Reference to a software package from which this prediction is derived
     SoftwarePtr softwarePtr;
 
@@ -211,7 +175,7 @@ struct PWIZ_API_DECL Prediction : public ParamContainer
 /// Information about empirical mass spectrometer observations of the peptide
 struct PWIZ_API_DECL Evidence : public ParamContainer
 {
-    /// returns true iff all members are empty and contain no params
+    /// returns true iff contain no params
     bool empty() const;
 };
 
@@ -219,25 +183,7 @@ struct PWIZ_API_DECL Evidence : public ParamContainer
 /// Information about the state of validation of a transition on a given instrument model
 struct PWIZ_API_DECL Validation : public ParamContainer
 {
-    Validation()
-        :   recommendedTransitionRank(0),
-            relativeIntensity(0),
-            intensityRank(0)
-    {}
-
-    /// Recommended rank for this transition based on validation information
-    unsigned int recommendedTransitionRank;
-
-    /// Description of how this transitions was validated
-    std::string transitionSource;
-
-    /// Relative intensity of the peaks among sibling transitions for this peptide
-    double relativeIntensity;
-
-    /// Rank of the intensity of the peaks among sibling transitions for this peptide
-    unsigned int intensityRank;
-
-    /// returns true iff all members are empty and contain no params
+    /// returns true iff contain no params
     bool empty() const;
 };
 
@@ -276,51 +222,18 @@ struct PWIZ_API_DECL Configuration : public ParamContainer
 /// A possible interpration of the product ion for a transition
 struct PWIZ_API_DECL Interpretation : public ParamContainer
 {
-    Interpretation()
-        :   productOrdinal(0),
-            mzDelta(0),
-            primary(false)
-    {}
-
-    /// Fragment ion series of the product ion (e.g. b, y, c, z, etc.)
-    std::string productSeries;
-
-    /// Ordinal for the product ion (e.g. 8 for a y8 ion)
-    int productOrdinal;
-
-    /// Additional adjustment of the fragment series and ordinal (e.g. -18^2 for a double water loss)
-    std::string productAdjustment;
-
-    /// Difference in m/z of the transition product ion m/z (Q3) minus the calculated m/z for this interpretation
-    double mzDelta;
-
-    /// True if this interpretation is considered the most likely of all possible listed interpretation of the product ion
-    bool primary;
-
-    /// returns true iff all members are empty and contain no params
+    /// returns true iff contains no params
     bool empty() const;
 };
 
 
 struct PWIZ_API_DECL Protein : public ParamContainer
 {
-    /// Amino acid sequence of the protein
-    std::string sequence;
-
-    /// Name of the protein which one or more transitions are intended to identify
-    std::string name;
-
-    /// Accession number of the protein which one or more transitions are intended to identify
-    std::string accession;
-
-    /// Description of the protein which one or more transitions are intended to identify
-    std::string description;
-
     /// Identifier for the protein to be used for referencing within a document
     std::string id;
 
-    /// Arbitrary comment about this protein
-    std::string comment;
+    /// Amino acid sequence of the protein
+    std::string sequence;
 
     Protein(const std::string& id = "");
 
@@ -331,29 +244,48 @@ struct PWIZ_API_DECL Protein : public ParamContainer
 typedef boost::shared_ptr<Protein> ProteinPtr;
 
 
+/// A molecule modification specification.
+/// If n modifications are present on the peptide, there should be n instances of the modification element.
+/// If multiple modifications are provided as cvParams, it is assumed the modification is ambiguous,
+/// i.e. one modification or the other. If no cvParams are provided it is assumed that the delta has not been
+/// matched to a known modification.
+struct PWIZ_API_DECL Modification : public ParamContainer
+{
+    Modification();
+
+    /// Location of the modification within the peptide sequence, counted from the N-terminus, starting at position 1. Specific modifications to the N-terminus should be given the location 0. Modification to the C-terminus should be given as peptide length + 1.
+    int location;
+
+    /// Atomic mass delta when assuming only the most common isotope of elements in Daltons.
+	double monoisotopicMassDelta;
+
+    /// Atomic mass delta when considering the natural distribution of isotopes in Daltons.
+    double averageMassDelta;
+
+    /// returns true iff all members are zero and contain no params
+    bool empty() const;
+};
+
+
 /// Peptide for which one or more transitions are intended to identify
 struct PWIZ_API_DECL Peptide : public ParamContainer
 {
-    RetentionTime retentionTime;
-    Evidence evidence;
-
-    /// Label common to two or more transitions intended to group them for later analysis, typically corresponding transitions for light and heavy versions of a peptide
-    std::string groupLabel;
-
     /// Identifier for the peptide to be used for referencing within a document
     std::string id;
 
-    /// Sequence of the peptide without any mass modification information
-    std::string unmodifiedSequence;
+    /// Amino acid sequence of the peptide being described
+    std::string sequence;
 
-    /// Sequence of the peptide with modified amino acids denoted by having the new total mass in square brackets following the amino acid letter
-    std::string modifiedSequence;
+    /// List of modifications on this peptide
+    std::vector<Modification> modifications;
 
-    /// Labeling category of the peptide, typically heavy or light
-    std::string labelingCategory;
+    /// Reference to zero or more proteins which this peptide is intended to identify
+    std::vector<ProteinPtr> proteinPtrs;
 
-    /// Reference to a protein which this peptide is intended to identify
-    ProteinPtr proteinPtr;
+    /// List of retention time information entries
+    std::vector<RetentionTime> retentionTimes;
+
+    Evidence evidence;
 
     Peptide(const std::string& id = "");
 
@@ -370,8 +302,8 @@ struct PWIZ_API_DECL Compound : public ParamContainer
     /// Identifier for the compound to be used for referencing within a document
     std::string id;
 
-    /// Information about predicted or calibrated retention times
-    RetentionTime retentionTime;
+    /// List of retention time information entries
+    std::vector<RetentionTime> retentionTimes;
 
     Compound(const std::string& id = "");
 
@@ -383,33 +315,32 @@ typedef boost::shared_ptr<Compound> CompoundPtr;
 
 
 /// Precursor (Q1) of the transition
-struct PWIZ_API_DECL Precursor
+struct PWIZ_API_DECL Precursor : public ParamContainer
 {
-    Precursor() : charge(0), mz(0) {}
-
-    /// Charge of the precursor for this transition
-    unsigned int charge;
-
-    /// Precursor m/z value for this transition
-    double mz;
+    /// returns true iff contains no params
+    bool empty() const;
 };
 
 
 /// Product (Q3) of the transition
-struct PWIZ_API_DECL Product
+struct PWIZ_API_DECL Product : public ParamContainer
 {
-    Product() : charge(0), mz(0) {}
-
-    /// Charge of the product for this transition
-    unsigned int charge;
-
-    /// Product m/z value for this transition
-    double mz;
+    /// returns true iff contains no params
+    bool empty() const;
 };
 
 
-struct PWIZ_API_DECL Transition
+struct PWIZ_API_DECL Transition : public ParamContainer
 {
+    /// String label for this transition
+    std::string id;
+
+    /// Reference to a peptide which this transition is intended to identify
+    PeptidePtr peptidePtr;
+
+    /// Reference to a compound for this transition
+    CompoundPtr compoundPtr;
+
     /// Precursor (Q1) of the transition
     Precursor precursor;
 
@@ -425,24 +356,55 @@ struct PWIZ_API_DECL Transition
     /// List of insutrument configurations used in the validation or optimization of the transitions
     std::vector<Configuration> configurationList;
 
-    /// Reference to a peptide which this transition is intended to identify
-    PeptidePtr peptidePtr;
-
-    /// Reference to a compound for this transition
-    CompoundPtr compoundPtr;
-
-    /// String label for this transition
-    std::string name;
-
-    /// returns true iff all members are empty
+    /// returns true iff all members are empty and contain no params
     bool empty() const;
 };
 
 
+/// A peptide or compound that is to be included or excluded from a target list of precursor m/z values.
+struct PWIZ_API_DECL Target : public ParamContainer
+{
+	/// String label for this target
+    std::string id;
+
+    /// Reference to a peptide for which this target is the trigger
+    PeptidePtr peptidePtr;
+
+    /// Reference to a compound for which this target is the trigger
+    CompoundPtr compoundPtr;
+    
+    /// Precursor (Q1) of the target
+    Precursor precursor;
+
+    /// List of instrument configurations used in the validation or optimization of the target
+    std::vector<Configuration> configurationList;
+
+    /// returns true iff all members are empty and contain no params
+    bool empty() const;
+};
+
+
+/// List of precursor m/z targets to include or exclude
+struct PWIZ_API_DECL TargetList : public ParamContainer
+{
+    /// List of precursor m/z targets to exclude
+    std::vector<Target> targetExcludeList;
+
+    /// List of precursor m/z targets to include
+    std::vector<Target> targetIncludeList;
+
+    /// returns true iff all members are empty and contain no params
+    bool empty() const;
+};
+
+
+namespace IO {struct HandlerTraData;} // forward declaration for friend
+
+
 struct PWIZ_API_DECL TraData
 {
-    /// the version of this traML document.
-    std::string version;
+    /// for internal use: not currently in the schema
+    std::string id;
 
     /// List of controlled vocabularies used in a TraML document
     /// note: one of the <cv> elements in this list MUST be the PSI MS controlled vocabulary. All <cvParam> elements in the document MUST refer to one of the <cv> elements in this list.
@@ -451,6 +413,7 @@ struct PWIZ_API_DECL TraData
     /// List of contacts referenced in the generation or validation of transitions
     std::vector<ContactPtr> contactPtrs;
 
+    /// List of publications from which the transitions were collected or wherein they are published
     std::vector<Publication> publications;
     
     /// List of instruments on which transitions are validated
@@ -462,15 +425,35 @@ struct PWIZ_API_DECL TraData
     /// List of proteins for which one or more transitions are intended to identify
     std::vector<ProteinPtr> proteinPtrs;
 
-    /// compoundList
+    /// List of compounds (including peptides) for which one or more transitions are intended to identify
     std::vector<PeptidePtr> peptidePtrs;
     std::vector<CompoundPtr> compoundPtrs;
 
     /// List of transitions
     std::vector<Transition> transitions;
 
+    /// List of precursor m/z targets to include or exclude
+    TargetList targets;
+
     /// returns true iff all members are empty
     bool empty() const;
+
+    /// returns the version of this traML document;
+    /// for a document created programmatically, the version is the current release version of traML;
+    /// for a document created from a file/stream, the version is the schema version read from the file/stream
+    const std::string& version() const;
+
+    TraData();
+    virtual ~TraData();
+
+    private:
+    // no copying
+    TraData(const TraData&);
+    TraData& operator=(const TraData&);
+
+    protected:
+    std::string version_; // schema version read from the file/stream
+    friend struct IO::HandlerTraData;
 };
 
 

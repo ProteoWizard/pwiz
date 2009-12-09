@@ -25,7 +25,9 @@
 #include "IO.hpp"
 #include "References.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
-#include "boost/lexical_cast.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/optimized_lexical_cast.hpp"
+#include <boost/foreach.hpp>
 #include <stdexcept>
 #include <functional>
 #include <iostream>
@@ -44,14 +46,19 @@ using boost::lexical_cast;
 using boost::shared_ptr;
 
 
+static const int TRAML_VERSION_PRERELEASE = 0;
+static const int TRAML_VERSION_1_0 = 1;
+
+
 template <typename object_type>
 void writeList(minimxml::XMLWriter& writer, const vector<object_type>& objects, 
-               const string& label)
+               const string& label, bool writeCountAttribute = false)
 {
     if (!objects.empty())
     {
         XMLWriter::Attributes attributes;
-        attributes.push_back(make_pair("count", lexical_cast<string>(objects.size())));
+        if (writeCountAttribute)
+            attributes.push_back(make_pair("count", lexical_cast<string>(objects.size())));
         writer.startElement(label, attributes);
         for (typename vector<object_type>::const_iterator it=objects.begin(); it!=objects.end(); ++it)
             write(writer, *it);
@@ -61,12 +68,13 @@ void writeList(minimxml::XMLWriter& writer, const vector<object_type>& objects,
 
 template <typename object_type>
 void writePtrList(minimxml::XMLWriter& writer, const vector<object_type>& objectPtrs, 
-                  const string& label)
+                  const string& label, bool writeCountAttribute = false)
 {
     if (!objectPtrs.empty())
     {
         XMLWriter::Attributes attributes;
-        attributes.push_back(make_pair("count", lexical_cast<string>(objectPtrs.size())));
+        if (writeCountAttribute)
+            attributes.push_back(make_pair("count", lexical_cast<string>(objectPtrs.size())));
         writer.startElement(label, attributes);
         for (typename vector<object_type>::const_iterator it=objectPtrs.begin(); it!=objectPtrs.end(); ++it)
             write(writer, **it);
@@ -87,7 +95,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const CV& cv)
     attributes.push_back(make_pair("fullName", cv.fullName));
     attributes.push_back(make_pair("version", cv.version));
     attributes.push_back(make_pair("URI", cv.URI));
-    writer.startElement("cv", attributes, XMLWriter::EmptyElement);
+    writer.startElement("Cv", attributes, XMLWriter::EmptyElement);
 }
 
 
@@ -100,7 +108,7 @@ struct HandlerCV : public SAXParser::Handler
                                 const Attributes& attributes,
                                 stream_offset position)
     {
-        if (name != "cv")
+        if (name != "Cv")
             throw runtime_error(("[IO::HandlerCV] Unexpected element name: " + name).c_str());
         getAttribute(attributes, "id", cv->id);
         getAttribute(attributes, "fullName", cv->fullName);
@@ -137,7 +145,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const UserParam& userParam
         attributes.push_back(make_pair("unitName", cvTermInfo(userParam.units).name));
     }
 
-    writer.startElement("userParam", attributes, XMLWriter::EmptyElement);
+    writer.startElement("UserParam", attributes, XMLWriter::EmptyElement);
 }
 
 
@@ -150,11 +158,11 @@ struct HandlerUserParam : public SAXParser::Handler
                                 const Attributes& attributes,
                                 stream_offset position)
     {
-        if (name != "userParam")
+        if (name != "UserParam")
             throw runtime_error(("[IO::HandlerUserParam] Unexpected element name: " + name).c_str());
 
         if (!userParam)
-            throw runtime_error("[IO::HandlerUserParam] Null userParam.");
+            throw runtime_error("[IO::HandlerUserParam] Null UserParam.");
 
         getAttribute(attributes, "name", userParam->name);
         getAttribute(attributes, "value", userParam->value);
@@ -195,7 +203,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const CVParam& cvParam)
         attributes.push_back(make_pair("unitAccession", cvTermInfo(cvParam.units).id));
         attributes.push_back(make_pair("unitName", cvTermInfo(cvParam.units).name));
     }
-    writer.startElement("cvParam", attributes, XMLWriter::EmptyElement);
+    writer.startElement("CvParam", attributes, XMLWriter::EmptyElement);
 }
 
 
@@ -209,11 +217,11 @@ struct HandlerCVParam : public SAXParser::Handler
                                 const Attributes& attributes,
                                 stream_offset position)
     {
-        if (name != "cvParam")
+        if (name != "CvParam")
             throw runtime_error(("[IO::HandlerCVParam] Unexpected element name: " + name).c_str());
 
         if (!cvParam)
-            throw runtime_error("[IO::HandlerCVParam] Null cvParam."); 
+            throw runtime_error("[IO::HandlerCVParam] Null CvParam."); 
 
         string accession;
         getAttribute(attributes, "accession", accession);
@@ -274,13 +282,13 @@ struct HandlerParamContainer : public SAXParser::Handler
         if (!paramContainer)
             throw runtime_error("[IO::HandlerParamContainer] Null paramContainer.");
 
-        if (name == "cvParam")
+        if (name == "CvParam")
         {
             paramContainer->cvParams.push_back(CVParam()); 
             handlerCVParam_.cvParam = &paramContainer->cvParams.back();
             return Status(Status::Delegate, &handlerCVParam_);
         }
-        else if (name == "userParam")
+        else if (name == "UserParam")
         {
             paramContainer->userParams.push_back(UserParam()); 
             handlerUserParam_.userParam = &paramContainer->userParams.back();
@@ -327,7 +335,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Contact& c)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("id", c.id));
-    writer.startElement("contact", attributes);
+    writer.startElement("Contact", attributes);
     writeParamContainer(writer, c);
     writer.endElement();
 }
@@ -342,7 +350,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Publication& p)
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("id", p.id));
-    writer.startElement("publication", attributes);
+    writer.startElement("Publication", attributes);
     writeParamContainer(writer, p);
     writer.endElement();
 }
@@ -355,15 +363,26 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Publication& p)
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Interpretation& x)
 {
+    writer.startElement("Interpretation");
+    writeParamContainer(writer, x);
+    writer.endElement();
+}
+
+
+//
+// RetentionTime
+//
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const RetentionTime& x)
+{
     XMLWriter::Attributes attributes;
-    if (!x.productSeries.empty())
-        attributes.push_back(make_pair("productSeries", x.productSeries));
-    attributes.push_back(make_pair("productOrdinal", lexical_cast<string>(x.productOrdinal)));
-    if (!x.productAdjustment.empty())
-        attributes.push_back(make_pair("productAdjustment", x.productAdjustment));
-    attributes.push_back(make_pair("mzDelta", lexical_cast<string>(x.mzDelta)));
-    attributes.push_back(make_pair("primary", lexical_cast<string>(x.primary)));
-    writer.startElement("interpretation", attributes);
+
+    if (x.softwarePtr.get())
+    {
+        attributes.push_back(make_pair("softwareRef", x.softwarePtr->id));
+    }
+    writer.startElement("RetentionTime", attributes);
     writeParamContainer(writer, x);
     writer.endElement();
 }
@@ -380,88 +399,137 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Configuration& x)
 
     if (x.contactPtr.get() && !x.contactPtr->empty())
         attributes.push_back(make_pair("contactRef", x.contactPtr->id));
-    if (x.contactPtr.get() && !x.contactPtr->empty())
+    if (x.instrumentPtr.get() && !x.instrumentPtr->empty())
         attributes.push_back(make_pair("instrumentRef", x.instrumentPtr->id));
 
-    writer.startElement("configuration", attributes);
+    writer.startElement("Configuration", attributes);
     writeParamContainer(writer, x);
     for (size_t i=0; i < x.validations.size(); ++i)
     {
         const Validation& v = x.validations[i];
-        attributes.clear();
-        if (!v.transitionSource.empty())
-            attributes.push_back(make_pair("transitionSource", v.transitionSource));
-        attributes.push_back(make_pair("recommendedTransitionRank", lexical_cast<string>(v.recommendedTransitionRank)));
-        attributes.push_back(make_pair("relativeIntensity", lexical_cast<string>(v.relativeIntensity)));
-        attributes.push_back(make_pair("intensityRank", lexical_cast<string>(v.intensityRank)));
-        writer.startElement("validation", attributes);
+        writer.startElement("Validation");
+        writeParamContainer(writer, v);
         writer.endElement();
     }
     writer.endElement();
 }
 
 
-//
-// RetentionTime
-//
-
-
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const RetentionTime& x)
+struct HandlerConfiguration : public HandlerParamContainer
 {
-    XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("normalizationStandard", x.normalizationStandard));
-    attributes.push_back(make_pair("normalizedRetentionTime", lexical_cast<string>(x.normalizedRetentionTime)));
-    attributes.push_back(make_pair("localRetentionTime", lexical_cast<string>(x.localRetentionTime)));
-    attributes.push_back(make_pair("predictedRetentionTime", lexical_cast<string>(x.predictedRetentionTime)));
-    if (x.predictedRetentionTimeSoftwarePtr.get())
-    {
-        attributes.push_back(make_pair("predictedRetentionTimeSoftwareRef", x.predictedRetentionTimeSoftwarePtr->id));
-    }
-    writer.startElement("retentionTime", attributes);
-    writeParamContainer(writer, x);
-    writer.endElement();
-}
+    Configuration* configuration;
 
-
-struct HandlerRetentionTime : public HandlerParamContainer
-{
-    RetentionTime* retentionTime;
-
-    HandlerRetentionTime(RetentionTime* retentionTime = 0) 
-    :   retentionTime(retentionTime)
+    HandlerConfiguration(Configuration* configuration = 0) 
+    :   configuration(configuration), handlerValidation_("Validation")
     {}
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
                                 stream_offset position)
     {
-        if (!retentionTime)
-            throw runtime_error("[IO::HandlerRetentionTime] Null retentionTime.");
+        if (!configuration)
+            throw runtime_error("[IO::HandlerConfiguration] Null configuration.");
 
-        if (name == "retentionTime")
+        if (name == "Configuration")
         {
-            getAttribute(attributes, "normalizationStandard", retentionTime->normalizationStandard);
-            getAttribute(attributes, "normalizedRetentionTime", retentionTime->normalizedRetentionTime);
-            getAttribute(attributes, "localRetentionTime", retentionTime->localRetentionTime);
-            getAttribute(attributes, "predictedRetentionTime", retentionTime->predictedRetentionTime);
+            // note: placeholder
+            string contactRef;
+            getAttribute(attributes, "contactRef", contactRef);
+            if (!contactRef.empty())
+                configuration->contactPtr = ContactPtr(new Contact(contactRef));
+        
+             // note: placeholder
+            string instrumentRef;
+            getAttribute(attributes, "instrumentRef", instrumentRef);
+            if (!instrumentRef.empty())
+                configuration->instrumentPtr = InstrumentPtr(new Instrument(instrumentRef));
 
-            string ref;
-            getAttribute(attributes, "predictedRetentionTimeSoftwareRef", ref);
-            if (!ref.empty())
-                retentionTime->predictedRetentionTimeSoftwarePtr = SoftwarePtr(new Software(ref));
+            return Status::Ok;
+        }
+        else if (name == "Validation")
+        {
+            configuration->validations.push_back(Validation());
+            handlerValidation_.paramContainer = &configuration->validations.back();
+            return Status(Status::Delegate, &handlerValidation_);
+        }
+
+        HandlerParamContainer::paramContainer = configuration;
+        return HandlerParamContainer::startElement(name, attributes, position);
+    }
+
+    private:
+    HandlerNamedParamContainer handlerValidation_;
+};
+
+
+PWIZ_API_DECL void read(std::istream& is, Configuration& x)
+{
+    HandlerConfiguration handler(&x);
+    SAXParser::parse(is, handler);
+}
+
+
+//
+// Prediction
+//
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Prediction& x)
+{
+    XMLWriter::Attributes attributes;
+
+    if (x.contactPtr.get() && !x.contactPtr->empty())
+        attributes.push_back(make_pair("contactRef", x.contactPtr->id));
+    if (x.softwarePtr.get() && !x.softwarePtr->empty())
+        attributes.push_back(make_pair("softwareRef", x.softwarePtr->id));
+
+    writer.startElement("Prediction", attributes);
+    writeParamContainer(writer, x);
+    writer.endElement();
+}
+
+
+struct HandlerPrediction : public HandlerParamContainer
+{
+    Prediction* prediction;
+
+    HandlerPrediction(Prediction* prediction = 0) 
+    :   prediction(prediction)
+    {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (!prediction)
+            throw runtime_error("[IO::HandlerPrediction] Null prediction.");
+
+        if (name == "Prediction")
+        {
+            // note: placeholder
+            string contactRef;
+            getAttribute(attributes, "contactRef", contactRef);
+            if (!contactRef.empty())
+                prediction->contactPtr = ContactPtr(new Contact(contactRef));
+        
+             // note: placeholder
+            string softwareRef;
+            getAttribute(attributes, "softwareRef", softwareRef);
+            if (!softwareRef.empty())
+                prediction->softwarePtr = SoftwarePtr(new Software(softwareRef));
 
             return Status::Ok;
         }
 
-        HandlerParamContainer::paramContainer = retentionTime;
+        HandlerParamContainer::paramContainer = prediction;
         return HandlerParamContainer::startElement(name, attributes, position);
     }
 };
 
 
-PWIZ_API_DECL void read(std::istream& is, RetentionTime& x)
+PWIZ_API_DECL void read(std::istream& is, Prediction& x)
 {
-    HandlerRetentionTime handler(&x);
+    HandlerPrediction handler(&x);
     SAXParser::parse(is, handler);
 }
 
@@ -475,7 +543,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Instrument& instrume
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("id", instrument.id));
-    writer.startElement("instrument", attributes);
+    writer.startElement("Instrument", attributes);
     writeParamContainer(writer, instrument);
     writer.endElement();
 }
@@ -494,7 +562,7 @@ struct HandlerInstrument : public HandlerParamContainer
         if (!instrument)
             throw runtime_error("[IO::HandlerInstrument] Null instrument.");
 
-        if (name == "instrument")
+        if (name == "Instrument")
         {
             getAttribute(attributes, "id", instrument->id);
             return Status::Ok;
@@ -523,7 +591,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Software& software)
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("id", software.id));
     attributes.push_back(make_pair("version", software.version));
-    writer.startElement("software", attributes);
+    writer.startElement("Software", attributes);
     writeParamContainer(writer, software);
     writer.endElement();
 }
@@ -540,9 +608,9 @@ struct HandlerSoftware : public HandlerParamContainer
                                 stream_offset position)
     {
         if (!software)
-            throw runtime_error("[IO::HandlerSoftware] Null software.");
+            throw runtime_error("[IO::HandlerSoftware] Null Software.");
 
-        if (name == "software")
+        if (name == "Software")
         {
             getAttribute(attributes, "id", software->id);
             getAttribute(attributes, "version", software->version);
@@ -571,20 +639,12 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinPtr& proteinP
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("id", proteinPtr->id));
-    if (!proteinPtr->name.empty())
-        attributes.push_back(make_pair("name", proteinPtr->name));
-    if (!proteinPtr->accession.empty())
-        attributes.push_back(make_pair("accession", proteinPtr->accession));
-    if (!proteinPtr->description.empty())
-        attributes.push_back(make_pair("description", proteinPtr->description));
-    if (!proteinPtr->comment.empty())
-        attributes.push_back(make_pair("comment", proteinPtr->comment));
 
-    writer.startElement("protein", attributes);
+    writer.startElement("Protein", attributes);
     writeParamContainer(writer, *proteinPtr);
     if (!proteinPtr->sequence.empty())
     {
-        writer.startElement("sequence");
+        writer.startElement("Sequence");
         writer.characters(proteinPtr->sequence);
         writer.endElement();
     }
@@ -605,19 +665,15 @@ struct HandlerProtein : public HandlerParamContainer
                                 stream_offset position)
     {
         if (!protein)
-            throw runtime_error("[IO::HandlerProtein] Null protein.");
+            throw runtime_error("[IO::HandlerProtein] Null Protein.");
 
-        if (name == "protein")
+        if (name == "Protein")
         {
             getAttribute(attributes, "id", protein->id);
-            getAttribute(attributes, "name", protein->name);
-            getAttribute(attributes, "accession", protein->accession);
-            getAttribute(attributes, "description", protein->description);
-            getAttribute(attributes, "comment", protein->comment);
 
             return Status::Ok;
         }
-        else if (name == "sequence")
+        else if (name == "Sequence")
         {
             return Status::Ok;
         }
@@ -642,6 +698,61 @@ PWIZ_API_DECL void read(std::istream& is, Protein& protein)
 
 
 //
+// Protein
+//
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Modification& modification)
+{
+    XMLWriter::Attributes attributes;
+    attributes.push_back(make_pair("location", lexical_cast<string>(modification.location)));
+    attributes.push_back(make_pair("monoisotopicDeltaMass", lexical_cast<string>(modification.monoisotopicMassDelta)));
+    attributes.push_back(make_pair("averageMassDelta", lexical_cast<string>(modification.averageMassDelta)));
+
+    writer.startElement("Modification", attributes);
+    writeParamContainer(writer, modification);
+    writer.endElement();
+}
+
+    
+struct HandlerModification : public HandlerParamContainer
+{
+    Modification* modification;
+
+    HandlerModification(Modification* modification = 0)
+    :   modification(modification)
+    {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (!modification)
+            throw runtime_error("[IO::HandlerModification] Null modification.");
+
+        if (name == "Modification")
+        {
+            getAttribute(attributes, "location", modification->location);
+            getAttribute(attributes, "monoisotopicMassDelta", modification->monoisotopicMassDelta);
+            getAttribute(attributes, "averageMassDelta", modification->averageMassDelta);
+
+            return Status::Ok;
+        }
+
+        HandlerParamContainer::paramContainer = modification;
+        return HandlerParamContainer::startElement(name, attributes, position);
+    }
+};
+
+
+PWIZ_API_DECL void read(std::istream& is, Modification& modification)
+{
+    HandlerModification handler(&modification);
+    SAXParser::parse(is, handler);
+}
+
+
+//
 // Peptide
 //
 
@@ -650,20 +761,39 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptidePtr& peptideP
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("id", peptidePtr->id));
-    if (!peptidePtr->groupLabel.empty())
-        attributes.push_back(make_pair("groupLabel", peptidePtr->groupLabel));
-    if (!peptidePtr->unmodifiedSequence.empty())
-        attributes.push_back(make_pair("unmodifiedSequence", peptidePtr->unmodifiedSequence));
-    if (!peptidePtr->modifiedSequence.empty())
-        attributes.push_back(make_pair("modifiedSequence", peptidePtr->modifiedSequence));
-    if (!peptidePtr->labelingCategory.empty())
-        attributes.push_back(make_pair("labelingCategory", peptidePtr->labelingCategory));
-    if (peptidePtr->proteinPtr.get())
-        attributes.push_back(make_pair("proteinRef", peptidePtr->proteinPtr->id));
+    attributes.push_back(make_pair("sequence", peptidePtr->sequence));
 
-    writer.startElement("peptide", attributes);
+    writer.startElement("Peptide", attributes);
     writeParamContainer(writer, *peptidePtr);
-    write(writer, peptidePtr->retentionTime);
+
+    BOOST_FOREACH(const ProteinPtr& p, peptidePtr->proteinPtrs)
+    {
+        attributes.clear();
+        attributes.push_back(make_pair("ref", p->id));
+        writer.startElement("ProteinRef", attributes, XMLWriter::EmptyElement);
+    }
+
+    BOOST_FOREACH(const Modification& m, peptidePtr->modifications)
+    {
+        writer.startElement("Modification");
+        write(writer, m);
+        writer.endElement();
+    }
+
+    BOOST_FOREACH(const RetentionTime& r, peptidePtr->retentionTimes)
+    {
+        writer.startElement("RetentionTime");
+        write(writer, r);
+        writer.endElement();
+    }
+
+    if (!peptidePtr->evidence.empty())
+    {
+        writer.startElement("Evidence");
+        writeParamContainer(writer, peptidePtr->evidence);
+        writer.endElement();
+    }
+
     writer.endElement();
 }
 
@@ -673,7 +803,7 @@ struct HandlerPeptide : public HandlerParamContainer
     Peptide* peptide;
 
     HandlerPeptide(Peptide* peptide = 0)
-    :   peptide(peptide)
+    :   peptide(peptide), handlerModification_("Modification"), handlerRetentionTime_("RetentionTime")
     {}
 
     virtual Status startElement(const string& name, 
@@ -683,34 +813,56 @@ struct HandlerPeptide : public HandlerParamContainer
         if (!peptide)
             throw runtime_error("[IO::HandlerPeptide] Null peptide.");
 
-        if (name == "peptide")
+        if (name == "Peptide")
         {
             getAttribute(attributes, "id", peptide->id);
-            getAttribute(attributes, "groupLabel", peptide->groupLabel);
-            getAttribute(attributes, "unmodifiedSequence", peptide->unmodifiedSequence);
-            getAttribute(attributes, "modifiedSequence", peptide->modifiedSequence);
-            getAttribute(attributes, "labelingCategory", peptide->labelingCategory);
-
-            // note: placeholder
-            string proteinRef;
-            getAttribute(attributes, "proteinRef", proteinRef);
-            if (!proteinRef.empty())
-                peptide->proteinPtr = ProteinPtr(new Protein(proteinRef));
+            getAttribute(attributes, "sequence", peptide->sequence);
 
             return Status::Ok;
         }
-        else if (name == "retentionTime")
+        else if (name == "ProteinRef")
         {
-            handlerRetentionTime_.retentionTime = &peptide->retentionTime;
+            // note: placeholder
+            string proteinRef;
+            getAttribute(attributes, "ref", proteinRef);
+            if (!proteinRef.empty())
+                peptide->proteinPtrs.push_back(ProteinPtr(new Protein(proteinRef)));
+            return Status::Ok;
+        }
+        else if (name == "Modification")
+        {
+            peptide->modifications.push_back(Modification());
+            getAttribute(attributes, "location", peptide->modifications.back().location);
+            getAttribute(attributes, "monoisotopicMassDelta", peptide->modifications.back().monoisotopicMassDelta);
+            getAttribute(attributes, "averageMassDelta", peptide->modifications.back().averageMassDelta);
+            handlerModification_.paramContainer = &peptide->modifications.back();
+            return Status(Status::Delegate, &handlerModification_);
+        }
+        else if (name == "RetentionTime")
+        {
+            peptide->retentionTimes.push_back(RetentionTime());
+
+            // note: placeholder
+            string softwareRef;
+            getAttribute(attributes, "softwareRef", softwareRef);
+            if (!softwareRef.empty())
+                peptide->retentionTimes.back().softwarePtr = SoftwarePtr(new Software(softwareRef));
+
+            handlerRetentionTime_.paramContainer = &peptide->retentionTimes.back();
             return Status(Status::Delegate, &handlerRetentionTime_);
+        }
+        else if (name == "Evidence")
+        {
+            HandlerParamContainer::paramContainer = &peptide->evidence;
+            return Status::Ok;
         }
 
         HandlerParamContainer::paramContainer = peptide;
         return HandlerParamContainer::startElement(name, attributes, position);
     }
 
-    private:
-    HandlerRetentionTime handlerRetentionTime_;
+    HandlerNamedParamContainer handlerModification_;
+    HandlerNamedParamContainer handlerRetentionTime_;
 };
 
 
@@ -731,9 +883,16 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const CompoundPtr& compoun
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("id", compoundPtr->id));
 
-    writer.startElement("compound", attributes);
+    writer.startElement("Compound", attributes);
     writeParamContainer(writer, *compoundPtr);
-    write(writer, compoundPtr->retentionTime);
+
+    BOOST_FOREACH(const RetentionTime& r, compoundPtr->retentionTimes)
+    {
+        writer.startElement("RetentionTime");
+        write(writer, r);
+        writer.endElement();
+    }
+
     writer.endElement();
 }
 
@@ -743,7 +902,7 @@ struct HandlerCompound : public HandlerParamContainer
     Compound* compound;
 
     HandlerCompound(Compound* compound = 0)
-    :   compound(compound)
+    :   compound(compound), handlerRetentionTime_("RetentionTime")
     {}
 
     virtual Status startElement(const string& name, 
@@ -753,15 +912,23 @@ struct HandlerCompound : public HandlerParamContainer
         if (!compound)
             throw runtime_error("[IO::HandlerCompound] Null compound.");
 
-        if (name == "compound")
+        if (name == "Compound")
         {
             getAttribute(attributes, "id", compound->id);
 
             return Status::Ok;
         }
-        else if (name == "retentionTime")
+        else if (name == "RetentionTime")
         {
-            handlerRetentionTime_.retentionTime = &compound->retentionTime;
+            compound->retentionTimes.push_back(RetentionTime());
+
+            // note: placeholder
+            string softwareRef;
+            getAttribute(attributes, "softwareRef", softwareRef);
+            if (!softwareRef.empty())
+                compound->retentionTimes.back().softwarePtr = SoftwarePtr(new Software(softwareRef));
+
+            handlerRetentionTime_.paramContainer = &compound->retentionTimes.back();
             return Status(Status::Delegate, &handlerRetentionTime_);
         }
 
@@ -770,7 +937,7 @@ struct HandlerCompound : public HandlerParamContainer
     }
 
     private:
-    HandlerRetentionTime handlerRetentionTime_;
+    HandlerNamedParamContainer handlerRetentionTime_;
 };
 
 
@@ -790,39 +957,39 @@ PWIZ_API_DECL
 void write(minimxml::XMLWriter& writer, const Transition& transition)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("name", transition.name));
+    attributes.push_back(make_pair("id", transition.id));
     if (transition.peptidePtr.get())
         attributes.push_back(make_pair("peptideRef", transition.peptidePtr->id));
     if (transition.compoundPtr.get())
         attributes.push_back(make_pair("compoundRef", transition.compoundPtr->id));
 
-    writer.startElement("transition", attributes);
+    writer.startElement("Transition", attributes);
+    writeParamContainer(writer, transition);
 
-    attributes.clear();
-    attributes.push_back(make_pair("mz", lexical_cast<string>(transition.precursor.mz)));
-    attributes.push_back(make_pair("charge", lexical_cast<string>(transition.precursor.charge)));
-    writer.startElement("precursor", attributes);
+    writer.startElement("Precursor");
+    writeParamContainer(writer, transition.precursor);
     writer.endElement();
 
-    attributes.clear();
-    attributes.push_back(make_pair("mz", lexical_cast<string>(transition.product.mz)));
-    attributes.push_back(make_pair("charge", lexical_cast<string>(transition.product.charge)));
-    writer.startElement("product", attributes);
+    writer.startElement("Product");
+    writeParamContainer(writer, transition.product);
     writer.endElement();
 
-    writeList(writer, transition.interpretationList, "interpretationList");
-    writeList(writer, transition.configurationList, "configurationList");
+    writeList(writer, transition.interpretationList, "InterpretationList");
+    writeList(writer, transition.configurationList, "ConfigurationList");
 
     writer.endElement();
 }
 
     
-struct HandlerTransition : public SAXParser::Handler
+struct HandlerTransition : public HandlerParamContainer
 {
     Transition* transition;
 
     HandlerTransition(Transition* _transition = 0)
-    :   transition(_transition)
+    :   transition(_transition),
+        handlerInterpretation_("Interpretation"),
+        handlerPrecursor_("Precursor"),
+        handlerProduct_("Product")
     {}
 
     virtual Status startElement(const string& name, 
@@ -832,9 +999,9 @@ struct HandlerTransition : public SAXParser::Handler
         if (!transition)
             throw runtime_error("[IO::HandlerTransition] Null transition.");
 
-        if (name == "transition")
+        if (name == "Transition")
         {
-            getAttribute(attributes, "name", transition->name);
+            getAttribute(attributes, "id", transition->id);
 
             // note: placeholder
             string peptideRef;
@@ -847,78 +1014,52 @@ struct HandlerTransition : public SAXParser::Handler
             getAttribute(attributes, "compoundRef", compoundRef);
             if (!compoundRef.empty())
                 transition->compoundPtr = CompoundPtr(new Compound(compoundRef));
+
+            return Status::Ok;
         }
-        else if (name == "interpretationList" ||
-                 name == "configurationList")
+        else if (name == "InterpretationList" ||
+                 name == "ConfigurationList")
         {
+            return Status::Ok;
         }
-        else if (name == "interpretation")
+        else if (name == "Interpretation")
         {
             transition->interpretationList.push_back(Interpretation());
-            getAttribute(attributes, "productSeries", transition->interpretationList.back().productSeries);
-            getAttribute(attributes, "productOrdinal", transition->interpretationList.back().productOrdinal);
-            getAttribute(attributes, "productAdjustment", transition->interpretationList.back().productAdjustment);
-            getAttribute(attributes, "mzDelta", transition->interpretationList.back().mzDelta);
-            getAttribute(attributes, "primary", transition->interpretationList.back().primary);
+            handlerInterpretation_.paramContainer = &transition->interpretationList.back();
+            return Status(Status::Delegate, &handlerInterpretation_);
         }
-        else if (name == "configuration")
+        else if (name == "Configuration")
         {
             transition->configurationList.push_back(Configuration());
-
-            // note: placeholder
-            string contactRef;
-            getAttribute(attributes, "contactRef", contactRef);
-            if (!contactRef.empty())
-                transition->configurationList.back().contactPtr = ContactPtr(new Contact(contactRef));
-        
-             // note: placeholder
-            string instrumentRef;
-            getAttribute(attributes, "instrumentRef", instrumentRef);
-            if (!instrumentRef.empty())
-                transition->configurationList.back().instrumentPtr = InstrumentPtr(new Instrument(instrumentRef));
+            handlerConfiguration_.configuration = &transition->configurationList.back();
+            return Status(Status::Delegate, &handlerConfiguration_);
         }
-        else if (name == "validation")
+        else if (name == "Precursor")
         {
-            transition->configurationList.back().validations.push_back(Validation());
-            getAttribute(attributes, "recommendedTransitionRank", transition->configurationList.back().validations.back().recommendedTransitionRank);
-            getAttribute(attributes, "transitionSource", transition->configurationList.back().validations.back().transitionSource);
-            getAttribute(attributes, "relativeIntensity", transition->configurationList.back().validations.back().relativeIntensity);
-            getAttribute(attributes, "intensityRank", transition->configurationList.back().validations.back().intensityRank);
+            handlerPrecursor_.paramContainer = &transition->precursor;
+            return Status(Status::Delegate, &handlerPrecursor_);
         }
-        else if (name == "precursor")
+        else if (name == "Product")
         {
-            getAttribute(attributes, "mz", transition->precursor.mz);
-            getAttribute(attributes, "charge", transition->product.charge);
+            handlerProduct_.paramContainer = &transition->product;
+            return Status(Status::Delegate, &handlerProduct_);
         }
-        else if (name == "product")
+        else if (name == "Prediction")
         {
-            getAttribute(attributes, "mz", transition->product.mz);
-            getAttribute(attributes, "charge", transition->product.charge);
+            handlerPrediction_.prediction = &transition->prediction;
+            return Status(Status::Delegate, &handlerPrediction_);
         }
-        else if (name == "prediction")
-        {
-            getAttribute(attributes, "recommendedTransitionRank", transition->prediction.recommendedTransitionRank);
-            getAttribute(attributes, "transitionSource", transition->prediction.transitionSource);
-            getAttribute(attributes, "relativeIntensity", transition->prediction.relativeIntensity);
-            getAttribute(attributes, "intensityRank", transition->prediction.intensityRank);
 
-            // note: placeholder
-            string softwareRef;
-            getAttribute(attributes, "softwareRef", softwareRef);
-            if (!softwareRef.empty())
-                transition->prediction.softwarePtr = SoftwarePtr(new Software(softwareRef));
-
-            // note: placeholder
-            string contactRef;
-            getAttribute(attributes, "contactRef", contactRef);
-            if (!contactRef.empty())
-                transition->prediction.contactPtr = ContactPtr(new Contact(contactRef));
-        }
-        else
-            throw runtime_error("[IO::HandlerTransition] unknown element \"" + name + "\"");
-
-        return Status::Ok;
+        HandlerParamContainer::paramContainer = transition;
+        return HandlerParamContainer::startElement(name, attributes, position);
     }
+
+    private:
+    HandlerNamedParamContainer handlerInterpretation_;
+    HandlerConfiguration handlerConfiguration_;
+    HandlerNamedParamContainer handlerPrecursor_;
+    HandlerNamedParamContainer handlerProduct_;
+    HandlerPrediction handlerPrediction_;
 };
 
 
@@ -931,6 +1072,160 @@ void read(std::istream& is, Transition& transition)
 
 
 //
+// Target
+//
+
+
+PWIZ_API_DECL
+void write(minimxml::XMLWriter& writer, const Target& target)
+{
+    XMLWriter::Attributes attributes;
+    attributes.push_back(make_pair("id", target.id));
+    if (target.peptidePtr.get())
+        attributes.push_back(make_pair("peptideRef", target.peptidePtr->id));
+    if (target.compoundPtr.get())
+        attributes.push_back(make_pair("compoundRef", target.compoundPtr->id));
+
+    writer.startElement("Target", attributes);
+    writeParamContainer(writer, target);
+
+    writer.startElement("Precursor");
+    writeParamContainer(writer, target.precursor);
+    writer.endElement();
+
+    writeList(writer, target.configurationList, "ConfigurationList");
+
+    writer.endElement();
+}
+
+    
+struct HandlerTarget : public HandlerParamContainer
+{
+    Target* target;
+
+    HandlerTarget(Target* _target = 0)
+    :   target(_target), handlerPrecursor_("Precursor")
+    {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (!target)
+            throw runtime_error("[IO::HandlerTarget] Null target.");
+
+        if (name == "Target")
+        {
+            getAttribute(attributes, "id", target->id);
+
+            // note: placeholder
+            string peptideRef;
+            getAttribute(attributes, "peptideRef", peptideRef);
+            if (!peptideRef.empty())
+                target->peptidePtr = PeptidePtr(new Peptide(peptideRef));
+
+            // note: placeholder
+            string compoundRef;
+            getAttribute(attributes, "compoundRef", compoundRef);
+            if (!compoundRef.empty())
+                target->compoundPtr = CompoundPtr(new Compound(compoundRef));
+
+            return Status::Ok;
+        }
+        else if (name == "ConfigurationList")
+        {
+            return Status::Ok;
+        }
+        else if (name == "Configuration")
+        {
+            target->configurationList.push_back(Configuration());
+            handlerConfiguration_.configuration = &target->configurationList.back();
+            return Status(Status::Delegate, &handlerConfiguration_);
+        }
+        else if (name == "Precursor")
+        {
+            handlerPrecursor_.paramContainer = &target->precursor;
+            return Status(Status::Delegate, &handlerPrecursor_);
+        }
+
+        HandlerParamContainer::paramContainer = target;
+        return HandlerParamContainer::startElement(name, attributes, position);
+    }
+
+    private:
+    HandlerConfiguration handlerConfiguration_;
+    HandlerNamedParamContainer handlerPrecursor_;
+};
+
+
+PWIZ_API_DECL
+void read(std::istream& is, Target& target)
+{
+    HandlerTarget handler(&target);
+    SAXParser::parse(is, handler);
+}
+
+
+//
+// TargetList
+//
+
+
+struct HandlerTargetList : public HandlerParamContainer
+{
+    TargetList* targets;
+
+    HandlerTargetList(TargetList* _targets = 0)
+    :   targets(_targets)
+    {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (!targets)
+            throw runtime_error("[IO::HandlerTargetList] Null target.");
+
+        if (name == "TargetList")
+        {
+            return Status::Ok;
+        }
+        else if (name == "TargetExcludeList")
+        {
+            excludeTargets_ = true;
+            return Status::Ok;
+        }
+        else if (name == "TargetIncludeList")
+        {
+            excludeTargets_ = false;
+            return Status::Ok;
+        }
+        else if (name == "Target")
+        {
+            if (excludeTargets_)
+            {
+                targets->targetExcludeList.push_back(Target());
+                handlerTarget_.target = &targets->targetExcludeList.back();
+            }
+            else
+            {
+                targets->targetIncludeList.push_back(Target());
+                handlerTarget_.target = &targets->targetIncludeList.back();
+            }
+            return Status(Status::Delegate, &handlerTarget_);
+        }
+
+        HandlerParamContainer::paramContainer = targets;
+        return HandlerParamContainer::startElement(name, attributes, position);
+    }
+
+    private:
+    bool excludeTargets_;
+    HandlerTarget handlerTarget_;
+};
+
+
+//
 // TraData
 //
 
@@ -939,26 +1234,26 @@ PWIZ_API_DECL
 void write(minimxml::XMLWriter& writer, const TraData& td)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("xmlns", "http://psi.hupo.org/ms/mzml"));
+    attributes.push_back(make_pair("xmlns", "http://psi.hupo.org/ms/traml"));
     attributes.push_back(make_pair("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance"));
-    attributes.push_back(make_pair("xsi:schemaLocation", "http://psi.hupo.org/ms/traml http://www.peptideatlas.org/tmp/TraML/0.2/TraML0.2.xsd"));
-    attributes.push_back(make_pair("version", td.version));
+    attributes.push_back(make_pair("xsi:schemaLocation", "http://psi.hupo.org/ms/traml http://www.peptideatlas.org/tmp/TraML/" + td.version() + "/TraML" + td.version() + ".xsd"));
+    attributes.push_back(make_pair("version", td.version()));
 
     writer.startElement("TraML", attributes);
 
-    writeList(writer, td.cvs, "cvList");
+    writeList(writer, td.cvs, "CvList");
 
-    writePtrList(writer, td.contactPtrs, "contactList");
-    writeList(writer, td.publications, "publicationList");
-    writePtrList(writer, td.instrumentPtrs, "instrumentList");
-    writePtrList(writer, td.softwarePtrs, "softwareList");
-    writeList(writer, td.proteinPtrs, "proteinList");
+    writePtrList(writer, td.contactPtrs, "ContactList");
+    writeList(writer, td.publications, "PublicationList");
+    writePtrList(writer, td.instrumentPtrs, "InstrumentList");
+    writePtrList(writer, td.softwarePtrs, "SoftwareList");
+    writeList(writer, td.proteinPtrs, "ProteinList");
 
     if (!td.peptidePtrs.empty() || !td.compoundPtrs.empty())
     {
         attributes.clear();
         attributes.push_back(make_pair("count", lexical_cast<string>(td.peptidePtrs.size() + td.compoundPtrs.size())));
-        writer.startElement("compoundList", attributes);
+        writer.startElement("CompoundList", attributes);
         for (vector<PeptidePtr>::const_iterator it=td.peptidePtrs.begin(); it!=td.peptidePtrs.end(); ++it)
             write(writer, *it);
         for (vector<CompoundPtr>::const_iterator it=td.compoundPtrs.begin(); it!=td.compoundPtrs.end(); ++it)
@@ -966,7 +1261,13 @@ void write(minimxml::XMLWriter& writer, const TraData& td)
         writer.endElement();
     }
 
-    writeList(writer, td.transitions, "transitionList");
+    writeList(writer, td.transitions, "TransitionList");
+
+    writer.startElement("TargetList");
+    writeParamContainer(writer, td.targets);
+    writeList(writer, td.targets.targetExcludeList, "TargetExcludeList");
+    writeList(writer, td.targets.targetIncludeList, "TargetIncludeList");
+    writer.endElement();
 
     writer.endElement();
 }
@@ -977,7 +1278,9 @@ struct HandlerTraData : public SAXParser::Handler
     TraData* td;
 
     HandlerTraData(TraData* td = 0) 
-    :  td(td), handlerContact_("contact"), handlerPublication_("publication") 
+    :  td(td),
+       handlerContact_("Contact"),
+       handlerPublication_("Publication")
     {}
 
     virtual Status startElement(const string& name, 
@@ -989,76 +1292,96 @@ struct HandlerTraData : public SAXParser::Handler
 
         if (name == "TraML")
         {
-            getAttribute(attributes, "version", td->version);
+            // "http://psi.hupo.org/ms/traml http://psidev.info/files/ms/traML/xsd/traML<version>.xsd"
+            string schemaLocation;
+            getAttribute(attributes, "xsi:schemaLocation", schemaLocation);
+            if (schemaLocation.empty())
+                getAttribute(attributes, "version", td->version_); // fallback
+            else
+            {
+                schemaLocation = schemaLocation.substr(schemaLocation.find(' ')+1);
+                string xsdName = bfs::path(schemaLocation).filename();
+                td->version_ = xsdName.substr(5, xsdName.length()-9); // read between "traML" and ".xsd"
+            }
+
+            version = TRAML_VERSION_PRERELEASE;
+            //if (td->version_.find("1.0") == 0)
+            //    version = TRAML_VERSION_1_0;
+
             return Status::Ok;
         }
-        else if (name == "cvList" || 
-                 name == "contactList" || 
-                 name == "publicationList" || 
-                 name == "instrumentList" ||
-                 name == "softwareList" ||
-                 name == "proteinList" ||
-                 name == "compoundList" ||
-                 name == "transitionList")
+        else if (name == "CvList" || 
+                 name == "ContactList" || 
+                 name == "PublicationList" || 
+                 name == "InstrumentList" ||
+                 name == "SoftwareList" ||
+                 name == "ProteinList" ||
+                 name == "CompoundList" ||
+                 name == "TransitionList")
         {
             // ignore these, unless we want to validate the count attribute
             return Status::Ok;
         }
-        else if (name == "cv")
+        else if (name == "Cv")
         {
             td->cvs.push_back(CV()); 
             handlerCV_.cv = &td->cvs.back();
             return Status(Status::Delegate, &handlerCV_);
         }
-        else if (name == "contact")
+        else if (name == "Contact")
         {
             td->contactPtrs.push_back(ContactPtr(new Contact));
             getAttribute(attributes, "id", td->contactPtrs.back()->id);
             handlerContact_.paramContainer = td->contactPtrs.back().get();
             return Status(Status::Delegate, &handlerContact_);
         }
-        else if (name == "publication")
+        else if (name == "Publication")
         {
             td->publications.push_back(Publication());
             getAttribute(attributes, "id", td->publications.back().id);
             handlerPublication_.paramContainer = &td->publications.back();
             return Status(Status::Delegate, &handlerPublication_);
         }
-        else if (name == "instrument")
+        else if (name == "Instrument")
         {
             td->instrumentPtrs.push_back(InstrumentPtr(new Instrument));
             handlerInstrument_.instrument = td->instrumentPtrs.back().get();
             return Status(Status::Delegate, &handlerInstrument_);
         }
-        else if (name == "software")
+        else if (name == "Software")
         {
             td->softwarePtrs.push_back(SoftwarePtr(new Software));            
             handlerSoftware_.software = td->softwarePtrs.back().get();
             return Status(Status::Delegate, &handlerSoftware_);
         }        
-        else if (name == "protein")
+        else if (name == "Protein")
         {
             td->proteinPtrs.push_back(ProteinPtr(new Protein));            
             handlerProtein_.protein = td->proteinPtrs.back().get();
             return Status(Status::Delegate, &handlerProtein_);
         }
-        else if (name == "peptide")
+        else if (name == "Peptide")
         {
             td->peptidePtrs.push_back(PeptidePtr(new Peptide));
             handlerPeptide_.peptide = td->peptidePtrs.back().get();
             return Status(Status::Delegate, &handlerPeptide_);
         }
-        else if (name == "compound")
+        else if (name == "Compound")
         {
             td->compoundPtrs.push_back(CompoundPtr(new Compound));
             handlerCompound_.compound = td->compoundPtrs.back().get();
             return Status(Status::Delegate, &handlerCompound_);
         }
-        else if (name == "transition")
+        else if (name == "Transition")
         {
             td->transitions.push_back(Transition());
             handlerTransition_.transition = &td->transitions.back();
             return Status(Status::Delegate, &handlerTransition_);
+        }
+        else if (name == "TargetList")
+        {
+            handlerTargetList_.targets = &td->targets;
+            return Status(Status::Delegate, &handlerTargetList_);
         }
 
         throw runtime_error(("[IO::HandlerTraData] Unexpected element name: " + name).c_str());
@@ -1074,6 +1397,7 @@ struct HandlerTraData : public SAXParser::Handler
     HandlerPeptide handlerPeptide_;
     HandlerCompound handlerCompound_;
     HandlerTransition handlerTransition_;
+    HandlerTargetList handlerTargetList_;
 };
 
 
@@ -1089,5 +1413,3 @@ void read(std::istream& is, TraData& td)
 } // namespace IO
 } // namespace tradata
 } // namespace pwiz
-
-

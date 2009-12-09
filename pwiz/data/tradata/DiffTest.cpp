@@ -249,8 +249,6 @@ void testPrediction()
     b.userParams.push_back(UserParam("common"));
     a.cvParams.push_back(MS_m_z);
     b.cvParams.push_back(MS_m_z);
-    a.intensityRank = b.intensityRank = 1;
-    a.transitionSource = b.transitionSource = "common";
     a.contactPtr = ContactPtr(new Contact("common"));
     b.contactPtr = ContactPtr(new Contact("common"));
 
@@ -274,13 +272,11 @@ void testValidation()
     b.userParams.push_back(UserParam("common"));
     a.cvParams.push_back(MS_m_z);
     b.cvParams.push_back(MS_m_z);
-    a.intensityRank = b.intensityRank = 1;
-    a.transitionSource = b.transitionSource = "common";
    
     Diff<Validation> diff(a, b);
     unit_assert(!diff);
 
-    a.transitionSource = "different";
+    b.set(MS_peak_intensity, 42);
 
     diff(a, b);
     if (os_) *os_ << diff << endl;
@@ -318,12 +314,11 @@ void testRetentionTime()
     b.userParams.push_back(UserParam("common"));
     a.cvParams.push_back(MS_m_z);
     b.cvParams.push_back(MS_m_z);
-    a.localRetentionTime = b.localRetentionTime = 123;
    
     Diff<RetentionTime> diff(a, b);
     unit_assert(!diff);
 
-    a.localRetentionTime = 321;
+    a.set(MS_peak_intensity, 42);
 
     diff(a, b);
     if (os_) *os_ << diff << endl;
@@ -354,6 +349,26 @@ void testProtein()
 }
 
 
+void testModification()
+{
+    if (os_) *os_ << "testModification()\n";
+
+    Modification a, b;
+    a.location = b.location = 7;
+    a.monoisotopicMassDelta = b.monoisotopicMassDelta = 42;
+    a.averageMassDelta = b.averageMassDelta = 42;
+
+    Diff<Modification> diff(a, b);
+    unit_assert(!diff);
+
+    a.monoisotopicMassDelta = 84;
+
+    diff(a, b);
+    if (os_) *os_ << diff << endl;
+    unit_assert(diff);
+}
+
+
 void testPeptide()
 {
     if (os_) *os_ << "testPeptide()\n";
@@ -365,14 +380,13 @@ void testPeptide()
     b.cvParams.push_back(MS_m_z);
     a.evidence.set(MS_peak_intensity, 42);
     b.evidence.set(MS_peak_intensity, 42);
-    a.retentionTime.localRetentionTime = 123;
-    b.retentionTime.localRetentionTime = 123;
+    a.sequence = b.sequence = "ABCD";
     a.id = b.id = "foo";
    
     Diff<Peptide> diff(a, b);
     unit_assert(!diff);
 
-    a.retentionTime.normalizationStandard = "different";
+    a.sequence = "DCBA";
 
     diff(a, b);
     if (os_) *os_ << diff << endl;
@@ -389,14 +403,12 @@ void testCompound()
     b.userParams.push_back(UserParam("common"));
     a.cvParams.push_back(MS_m_z);
     b.cvParams.push_back(MS_m_z);
-    a.retentionTime.localRetentionTime = 123;
-    b.retentionTime.localRetentionTime = 123;
     a.id = b.id = "foo";
    
     Diff<Compound> diff(a, b);
     unit_assert(!diff);
 
-    b.retentionTime.predictedRetentionTime = 321;
+    b.retentionTimes.push_back(RetentionTime());
 
     diff(a, b);
     if (os_) *os_ << diff << endl;
@@ -409,10 +421,12 @@ void testTransition()
     if (os_) *os_ << "testTransition()\n";
 
     Transition a, b;
-    a.name = b.name = "T1";
-    a.precursor.mz = b.precursor.mz = 123.45;
-    a.product.mz = b.product.mz = 456.78;
-    Validation v; v.intensityRank = 1;
+    a.id = b.id = "T1";
+    a.precursor.set(MS_selected_ion_m_z, 123.45);
+    b.precursor.set(MS_selected_ion_m_z, 123.45);
+    a.product.set(MS_selected_ion_m_z, 456.78);
+    b.product.set(MS_selected_ion_m_z, 456.78);
+    Validation v; v.set(MS_peak_intensity, 42);
     Configuration c; c.validations.push_back(v);
     a.configurationList.push_back(c);
     b.configurationList.push_back(c);
@@ -422,7 +436,32 @@ void testTransition()
     Diff<Transition> diff(a, b);
     unit_assert(!diff);
 
-    b.peptidePtr->modifiedSequence = "different";
+    b.peptidePtr->sequence = "different";
+
+    diff(a, b);
+    if (os_) *os_ << diff << endl;
+    unit_assert(diff);
+}
+
+void testTarget()
+{
+    if (os_) *os_ << "testTarget()\n";
+
+    Target a, b;
+    a.id = b.id = "T1";
+    a.precursor.set(MS_selected_ion_m_z, 123.45);
+    b.precursor.set(MS_selected_ion_m_z, 123.45);
+    Validation v; v.set(MS_peak_intensity, 42);
+    Configuration c; c.validations.push_back(v);
+    a.configurationList.push_back(c);
+    b.configurationList.push_back(c);
+    a.peptidePtr = PeptidePtr(new Peptide("common"));
+    b.peptidePtr = PeptidePtr(new Peptide("common"));
+   
+    Diff<Target> diff(a, b);
+    unit_assert(!diff);
+
+    b.peptidePtr->sequence = "different";
 
     diff(a, b);
     if (os_) *os_ << diff << endl;
@@ -513,7 +552,6 @@ void testTraData()
     Diff<TraData> diff(a, b);
     unit_assert(!diff);
 
-    b.version = "version";
     a.cvs.push_back(CV());
     b.softwarePtrs.push_back(SoftwarePtr(new Software("software")));
 
@@ -526,9 +564,6 @@ void testTraData()
     diff(a, b);
     if (os_) *os_ << diff << endl;
     unit_assert(diff);
-
-    unit_assert(diff.a_b.version.empty());
-    unit_assert(diff.b_a.version == "version");
 
     unit_assert(diff.a_b.cvs.size() == 1);
     unit_assert(diff.b_a.cvs.empty());
@@ -557,9 +592,11 @@ void test()
     testEvidence();
     testRetentionTime();
     testProtein();
+    testModification();
     testPeptide();
     testCompound();
     testTransition();
+    testTarget();
     //testPrecursor();
     //testProduct();
     testTraData();

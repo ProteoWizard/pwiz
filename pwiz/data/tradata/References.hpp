@@ -41,6 +41,7 @@ PWIZ_API_DECL void resolve(Prediction& prediction, const TraData& td);
 PWIZ_API_DECL void resolve(Configuration& configuration, const TraData& td);
 PWIZ_API_DECL void resolve(Peptide& peptide, const TraData& td);
 PWIZ_API_DECL void resolve(Transition& transition, const TraData& td);
+PWIZ_API_DECL void resolve(Target& target, const TraData& td);
 
 
 /// Resolve internal references in a TraData object.

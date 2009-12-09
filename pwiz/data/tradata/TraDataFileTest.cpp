@@ -27,6 +27,10 @@
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/misc/Stream.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include <boost/iostreams/filtering_stream.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+#include <boost/iostreams/device/file_descriptor.hpp>
+#include <boost/iostreams/copy.hpp>
 
 
 using namespace std;
@@ -78,23 +82,21 @@ void test()
         unit_assert(!diff);
 
 	    // now give the gzip read a workout
-	    std::string cmd("gzip ");
-	    cmd += filename1;
-	    if (!system(cmd.c_str())) // don't fret if gzip command isn't present
-        {
-		    filename1+=".gz";
-		    TraDataFile td1(filename1);
+	    bio::filtering_istream tinyGZ(bio::gzip_compressor() | bio::file_descriptor_source(filename1));
+        bio::copy(tinyGZ, bio::file_descriptor_sink(filename1+".gz", ios::out|ios::binary));
 
-            // compare
-            Diff<TraData> diff(tiny, td1);
-            if (diff && os_) *os_ << diff << endl;
-            unit_assert(!diff);
-        }
+        TraDataFile td3(filename1);
+
+        // compare
+        diff(tiny, td3);
+        if (diff && os_) *os_ << diff << endl;
+        unit_assert(!diff);
 	}
 
     // remove temp files
     boost::filesystem::remove(filename1);
     boost::filesystem::remove(filename2);
+    boost::filesystem::remove(filename1 + ".gz");
 }
 
 

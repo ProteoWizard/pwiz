@@ -182,10 +182,7 @@ PWIZ_API_DECL bool Evidence::empty() const
 
 PWIZ_API_DECL bool Prediction::empty() const
 {
-    return transitionSource.empty() && ParamContainer::empty() &&
-           intensityRank == unsigned() &&
-           recommendedTransitionRank == unsigned() &&
-           relativeIntensity == double() &&
+    return ParamContainer::empty() &&
            (!contactPtr.get() || contactPtr->empty()) && 
            (!softwarePtr.get() || softwarePtr->empty());
 }
@@ -193,31 +190,19 @@ PWIZ_API_DECL bool Prediction::empty() const
 
 PWIZ_API_DECL bool Validation::empty() const
 {
-    return transitionSource.empty() && ParamContainer::empty() &&
-           intensityRank == unsigned() &&
-           recommendedTransitionRank == unsigned() &&
-           relativeIntensity == double();
+    return ParamContainer::empty();
 }
 
 
 PWIZ_API_DECL bool RetentionTime::empty() const
 {
-    return ParamContainer::empty() &&
-           normalizationStandard.empty() &&
-           localRetentionTime == double() &&
-           normalizedRetentionTime == double() &&
-           predictedRetentionTime == double();
+    return ParamContainer::empty();
 }
 
 
 PWIZ_API_DECL bool Interpretation::empty() const
 {
-    return productSeries.empty() &&
-           productAdjustment.empty() &&
-           ParamContainer::empty() &&
-           productOrdinal == unsigned() &&
-           /* TODO: how do we test a bool? * primary == unsigned int() && */
-           mzDelta == double();
+    return ParamContainer::empty();
 }
 
 
@@ -254,19 +239,47 @@ PWIZ_API_DECL bool Protein::empty() const
 
 
 
+PWIZ_API_DECL Modification::Modification()
+: location(), monoisotopicMassDelta(), averageMassDelta()
+{}
+
+
+PWIZ_API_DECL bool Modification::empty() const
+{
+    return ParamContainer::empty() &&
+           location == int() &&
+           monoisotopicMassDelta == double() &&
+           averageMassDelta == double();
+}
+
+
+
+
+PWIZ_API_DECL bool Precursor::empty() const
+{
+    return ParamContainer::empty();
+}
+
+
+PWIZ_API_DECL bool Product::empty() const
+{
+    return ParamContainer::empty();
+}
+
+
+
+
 PWIZ_API_DECL Peptide::Peptide(const string& id) : id(id) {}
 
 
 PWIZ_API_DECL bool Peptide::empty() const
 {
     return evidence.empty() &&
-           groupLabel.empty() &&
            id.empty() &&
-           unmodifiedSequence.empty() &&
-           modifiedSequence.empty() &&
-           labelingCategory.empty() &&
-           retentionTime.empty() &&
-           (!proteinPtr.get() || proteinPtr->empty()) &&
+           sequence.empty() &&
+           modifications.empty() &&
+           retentionTimes.empty() &&
+           proteinPtrs.empty() &&
            ParamContainer::empty();
 }
 
@@ -278,7 +291,7 @@ PWIZ_API_DECL Compound::Compound(const string& id) : id(id) {}
 
 PWIZ_API_DECL bool Compound::empty() const
 {
-    return id.empty() && retentionTime.empty() && ParamContainer::empty();
+    return id.empty() && retentionTimes.empty() && ParamContainer::empty();
 }
 
 
@@ -286,19 +299,45 @@ PWIZ_API_DECL bool Compound::empty() const
 
 PWIZ_API_DECL bool Transition::empty() const
 {
-    return interpretationList.empty() &&
+    return ParamContainer::empty() &&
+           precursor.empty() &&
+           product.empty() &&
+           interpretationList.empty() &&
            configurationList.empty() &&
            (!peptidePtr.get() || peptidePtr->empty()) &&
            (!compoundPtr.get() || compoundPtr->empty()) &&
-           name.empty();
+           id.empty();
+}
+
+
+PWIZ_API_DECL bool Target::empty() const
+{
+    return ParamContainer::empty() &&
+           precursor.empty() &&
+           configurationList.empty() &&
+           (!peptidePtr.get() || peptidePtr->empty()) &&
+           (!compoundPtr.get() || compoundPtr->empty()) &&
+           id.empty();
+}
+
+
+PWIZ_API_DECL bool TargetList::empty() const
+{
+    return targetExcludeList.empty() &&
+           targetIncludeList.empty() &&
+           ParamContainer::empty();
 }
 
 
 
 
+PWIZ_API_DECL TraData::TraData() : version_("0.9.2") {}
+PWIZ_API_DECL TraData::~TraData() {}
+
+
 PWIZ_API_DECL bool TraData::empty() const
 {
-    return version.empty() &&
+    return id.empty() &&
            cvs.empty() &&
            contactPtrs.empty() &&
            publications.empty() &&
@@ -307,7 +346,14 @@ PWIZ_API_DECL bool TraData::empty() const
            proteinPtrs.empty() &&
            peptidePtrs.empty() &&
            compoundPtrs.empty() &&
-           transitions.empty();
+           transitions.empty() &&
+           targets.empty();
+}
+
+
+PWIZ_API_DECL const string& TraData::version() const
+{
+    return version_;
 }
 
 

@@ -25,6 +25,7 @@
 #include "examples.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "boost/lexical_cast.hpp"
+#include <boost/foreach.hpp>
 #include <iostream>
 #include <iterator>
 
