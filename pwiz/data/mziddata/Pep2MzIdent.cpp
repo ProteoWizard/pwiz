@@ -678,7 +678,7 @@ void Pep2MzIdent::earlyParameters(ParameterPtr parameter,
         else if (iends_with(sd->location, ".mzXML"))
         {
             sd->fileFormat.set(MS_ISB_mzXML_file);
-            sd->spectrumIDFormat.set(MS_spectrum_from_database_nativeID_format);
+            sd->spectrumIDFormat.set(MS_scan_number_only_nativeID_format);
         }
         else
             throw runtime_error(("[Pep2MzIdent::processParameter] Unknown "

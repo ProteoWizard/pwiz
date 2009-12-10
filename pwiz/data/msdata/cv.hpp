@@ -40,8 +40,8 @@
 //   auto-generated-by: OBO-Edit 1.101
 //   default-namespace: MS
 //   remark: namespace: MS
-//   remark: version: 2.28.0
-//   remark: release date: 2009-11-18
+//   remark: version: 2.29.0
+//   remark: release date: 2009-12-10
 //   remark: coverage: Mass spectrometer output files and spectra interpretation
 //   remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 //   remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
@@ -165,7 +165,7 @@ enum PWIZ_API_DECL CVID
     /// magnetic field strength: A property of space that produces a force on a charged particle equal to qv x B where q is the particle charge and v its velocity.
     MS_magnetic_field_strength = 1000025,
 
-    /// magnetic field strength: A property of space that produces a force on a charged particle equal to qv x B where q is the particle charge and v its velocity.
+    /// B (magnetic field strength): A property of space that produces a force on a charged particle equal to qv x B where q is the particle charge and v its velocity.
     MS_B = MS_magnetic_field_strength,
 
     /// detector type: Type of detector used in the mass spectrometer.
@@ -213,19 +213,19 @@ enum PWIZ_API_DECL CVID
     /// m/z: Three-character symbol m/z is used to denote the quantity formed by dividing the mass of an ion in unified atomic mass units by its charge number (regardless of sign). The symbol is written in italicized lower case letters with no spaces. Note 1: The term mass-to-charge-ratio is deprecated. Mass-to-charge ratio has been used for the abscissa of a mass spectrum, although the quantity measured is not the quotient of the ion's mass to its electric charge. The three-character symbol m/z is recommended for the quantity that is the independent variable in a mass spectrum Note 2: The proposed unit thomson (Th) is deprecated.
     MS_m_z = 1000040,
 
-    /// m/z: Three-character symbol m/z is used to denote the quantity formed by dividing the mass of an ion in unified atomic mass units by its charge number (regardless of sign). The symbol is written in italicized lower case letters with no spaces. Note 1: The term mass-to-charge-ratio is deprecated. Mass-to-charge ratio has been used for the abscissa of a mass spectrum, although the quantity measured is not the quotient of the ion's mass to its electric charge. The three-character symbol m/z is recommended for the quantity that is the independent variable in a mass spectrum Note 2: The proposed unit thomson (Th) is deprecated.
+    /// mass-to-charge ratio (m/z): Three-character symbol m/z is used to denote the quantity formed by dividing the mass of an ion in unified atomic mass units by its charge number (regardless of sign). The symbol is written in italicized lower case letters with no spaces. Note 1: The term mass-to-charge-ratio is deprecated. Mass-to-charge ratio has been used for the abscissa of a mass spectrum, although the quantity measured is not the quotient of the ion's mass to its electric charge. The three-character symbol m/z is recommended for the quantity that is the independent variable in a mass spectrum Note 2: The proposed unit thomson (Th) is deprecated.
     MS_mass_to_charge_ratio = MS_m_z,
 
-    /// m/z: Three-character symbol m/z is used to denote the quantity formed by dividing the mass of an ion in unified atomic mass units by its charge number (regardless of sign). The symbol is written in italicized lower case letters with no spaces. Note 1: The term mass-to-charge-ratio is deprecated. Mass-to-charge ratio has been used for the abscissa of a mass spectrum, although the quantity measured is not the quotient of the ion's mass to its electric charge. The three-character symbol m/z is recommended for the quantity that is the independent variable in a mass spectrum Note 2: The proposed unit thomson (Th) is deprecated.
+    /// Th (m/z): Three-character symbol m/z is used to denote the quantity formed by dividing the mass of an ion in unified atomic mass units by its charge number (regardless of sign). The symbol is written in italicized lower case letters with no spaces. Note 1: The term mass-to-charge-ratio is deprecated. Mass-to-charge ratio has been used for the abscissa of a mass spectrum, although the quantity measured is not the quotient of the ion's mass to its electric charge. The three-character symbol m/z is recommended for the quantity that is the independent variable in a mass spectrum Note 2: The proposed unit thomson (Th) is deprecated.
     MS_Th = MS_m_z,
 
-    /// m/z: Three-character symbol m/z is used to denote the quantity formed by dividing the mass of an ion in unified atomic mass units by its charge number (regardless of sign). The symbol is written in italicized lower case letters with no spaces. Note 1: The term mass-to-charge-ratio is deprecated. Mass-to-charge ratio has been used for the abscissa of a mass spectrum, although the quantity measured is not the quotient of the ion's mass to its electric charge. The three-character symbol m/z is recommended for the quantity that is the independent variable in a mass spectrum Note 2: The proposed unit thomson (Th) is deprecated.
+    /// thomson (m/z): Three-character symbol m/z is used to denote the quantity formed by dividing the mass of an ion in unified atomic mass units by its charge number (regardless of sign). The symbol is written in italicized lower case letters with no spaces. Note 1: The term mass-to-charge-ratio is deprecated. Mass-to-charge ratio has been used for the abscissa of a mass spectrum, although the quantity measured is not the quotient of the ion's mass to its electric charge. The three-character symbol m/z is recommended for the quantity that is the independent variable in a mass spectrum Note 2: The proposed unit thomson (Th) is deprecated.
     MS_thomson = MS_m_z,
 
     /// charge state: The charge state of the ion, single or multiple and positive or negatively charged.
     MS_charge_state = 1000041,
 
-    /// charge state: The charge state of the ion, single or multiple and positive or negatively charged.
+    /// z (charge state): The charge state of the ion, single or multiple and positive or negatively charged.
     MS_z = MS_charge_state,
 
     /// peak intensity: Intensity of ions as measured by the height or area of a peak in a mass spectrum.
@@ -270,7 +270,7 @@ enum PWIZ_API_DECL CVID
     /// continuous flow fast atom bombardment: Fast atom bombardment ionization in which the analyte in solution is entrained in a flowing liquid matrix.
     MS_continuous_flow_fast_atom_bombardment = 1000055,
 
-    /// continuous flow fast atom bombardment: Fast atom bombardment ionization in which the analyte in solution is entrained in a flowing liquid matrix.
+    /// CF-FAB (continuous flow fast atom bombardment): Fast atom bombardment ionization in which the analyte in solution is entrained in a flowing liquid matrix.
     MS_CF_FAB = MS_continuous_flow_fast_atom_bombardment,
 
     /// direct inlet: The sample is directly inserted into the ion source, usually on the end of a heatable probe.
@@ -318,37 +318,37 @@ enum PWIZ_API_DECL CVID
     /// atmospheric pressure chemical ionization: Chemical ionization that takes place at atmospheric pressure as opposed to the reduced pressure is normally used for chemical ionization.
     MS_atmospheric_pressure_chemical_ionization = 1000070,
 
-    /// atmospheric pressure chemical ionization: Chemical ionization that takes place at atmospheric pressure as opposed to the reduced pressure is normally used for chemical ionization.
+    /// APCI (atmospheric pressure chemical ionization): Chemical ionization that takes place at atmospheric pressure as opposed to the reduced pressure is normally used for chemical ionization.
     MS_APCI = MS_atmospheric_pressure_chemical_ionization,
 
     /// chemical ionization: The formation of a new ion by the reaction of a neutral species with an ion. The process may involve transfer of an electron, a proton or other charged species between the reactants. When a positive ion results from chemical ionization the term may be used without qualification. When a negative ion results the term negative ion chemical ionization should be used. Note that this term is not synonymous with chemi-ionization.
     MS_chemical_ionization = 1000071,
 
-    /// chemical ionization: The formation of a new ion by the reaction of a neutral species with an ion. The process may involve transfer of an electron, a proton or other charged species between the reactants. When a positive ion results from chemical ionization the term may be used without qualification. When a negative ion results the term negative ion chemical ionization should be used. Note that this term is not synonymous with chemi-ionization.
+    /// CI (chemical ionization): The formation of a new ion by the reaction of a neutral species with an ion. The process may involve transfer of an electron, a proton or other charged species between the reactants. When a positive ion results from chemical ionization the term may be used without qualification. When a negative ion results the term negative ion chemical ionization should be used. Note that this term is not synonymous with chemi-ionization.
     MS_CI = MS_chemical_ionization,
 
     /// Electronic Ionization: The ionization of an atom or molecule by electrons that are typically accelerated to energies between 50 and 150 eV. Usually 70 eV electrons are used to produce positive ions. The term 'electron impact' is not recommended. 
     MS_Electronic_Ionization_OBSOLETE = 1000072,
 
-    /// Electronic Ionization: The ionization of an atom or molecule by electrons that are typically accelerated to energies between 50 and 150 eV. Usually 70 eV electrons are used to produce positive ions. The term 'electron impact' is not recommended. 
+    /// EI (Electronic Ionization): The ionization of an atom or molecule by electrons that are typically accelerated to energies between 50 and 150 eV. Usually 70 eV electrons are used to produce positive ions. The term 'electron impact' is not recommended. 
     MS_EI_OBSOLETE = MS_Electronic_Ionization_OBSOLETE,
 
     /// electrospray ionization: A process in which ionized species in the gas phase are produced from an analyte-containing solution via highly charged fine droplets, by means of spraying the solution from a narrow-bore needle tip at atmospheric pressure in the presence of a high electric field. When a pressurized gas is used to aid in the formation of a stable spray, the term pneumatically assisted electrospray ionization is used. The term ion spray is not recommended.
     MS_electrospray_ionization = 1000073,
 
-    /// electrospray ionization: A process in which ionized species in the gas phase are produced from an analyte-containing solution via highly charged fine droplets, by means of spraying the solution from a narrow-bore needle tip at atmospheric pressure in the presence of a high electric field. When a pressurized gas is used to aid in the formation of a stable spray, the term pneumatically assisted electrospray ionization is used. The term ion spray is not recommended.
+    /// ESI (electrospray ionization): A process in which ionized species in the gas phase are produced from an analyte-containing solution via highly charged fine droplets, by means of spraying the solution from a narrow-bore needle tip at atmospheric pressure in the presence of a high electric field. When a pressurized gas is used to aid in the formation of a stable spray, the term pneumatically assisted electrospray ionization is used. The term ion spray is not recommended.
     MS_ESI = MS_electrospray_ionization,
 
     /// fast atom bombardment ionization: The ionization of any species by the interaction of a focused beam of neutral atoms having a translational energy of several thousand eV with a sample that is typically dissolved in a solvent matrix. See also secondary ionization.
     MS_fast_atom_bombardment_ionization = 1000074,
 
-    /// fast atom bombardment ionization: The ionization of any species by the interaction of a focused beam of neutral atoms having a translational energy of several thousand eV with a sample that is typically dissolved in a solvent matrix. See also secondary ionization.
+    /// FAB (fast atom bombardment ionization): The ionization of any species by the interaction of a focused beam of neutral atoms having a translational energy of several thousand eV with a sample that is typically dissolved in a solvent matrix. See also secondary ionization.
     MS_FAB = MS_fast_atom_bombardment_ionization,
 
     /// matrix-assisted laser desorption ionization: The formation of gas-phase ions from molecules that are present in a solid or solvent matrix that is irradiated with a pulsed laser. See also laser desorption/ionization.
     MS_matrix_assisted_laser_desorption_ionization = 1000075,
 
-    /// matrix-assisted laser desorption ionization: The formation of gas-phase ions from molecules that are present in a solid or solvent matrix that is irradiated with a pulsed laser. See also laser desorption/ionization.
+    /// MALDI (matrix-assisted laser desorption ionization): The formation of gas-phase ions from molecules that are present in a solid or solvent matrix that is irradiated with a pulsed laser. See also laser desorption/ionization.
     MS_MALDI = MS_matrix_assisted_laser_desorption_ionization,
 
     /// negative ion mode: OBSOLETE
@@ -363,7 +363,7 @@ enum PWIZ_API_DECL CVID
     /// fourier transform ion cyclotron resonance mass spectrometer: A mass spectrometer based on the principle of ion cyclotron resonance in which an ion in a magnetic field moves in a circular orbit at a frequency characteristic of its m/z value. Ions are coherently excited to a larger radius orbit using a pulse of radio frequency energy and their image charge is detected on receiver plates as a time domain signal. Fourier transformation of the time domain signal results in a frequency domain signal which is converted to a mass spectrum based in the inverse relationship between frequency and m/z.
     MS_fourier_transform_ion_cyclotron_resonance_mass_spectrometer = 1000079,
 
-    /// fourier transform ion cyclotron resonance mass spectrometer: A mass spectrometer based on the principle of ion cyclotron resonance in which an ion in a magnetic field moves in a circular orbit at a frequency characteristic of its m/z value. Ions are coherently excited to a larger radius orbit using a pulse of radio frequency energy and their image charge is detected on receiver plates as a time domain signal. Fourier transformation of the time domain signal results in a frequency domain signal which is converted to a mass spectrum based in the inverse relationship between frequency and m/z.
+    /// FT_ICR (fourier transform ion cyclotron resonance mass spectrometer): A mass spectrometer based on the principle of ion cyclotron resonance in which an ion in a magnetic field moves in a circular orbit at a frequency characteristic of its m/z value. Ions are coherently excited to a larger radius orbit using a pulse of radio frequency energy and their image charge is detected on receiver plates as a time domain signal. Fourier transformation of the time domain signal results in a frequency domain signal which is converted to a mass spectrum based in the inverse relationship between frequency and m/z.
     MS_FT_ICR = MS_fourier_transform_ion_cyclotron_resonance_mass_spectrometer,
 
     /// magnetic sector: A device that produces a magnetic field perpendicular to a charged particle beam that deflects the beam to an extent that is proportional to the particle momentum per unit charge. For a monoenergetic beam, the deflection is proportional to m/z.
@@ -375,13 +375,13 @@ enum PWIZ_API_DECL CVID
     /// quadrupole ion trap: Quadrupole Ion Trap mass analyzer captures the ions in a three dimensional ion trap and then selectively ejects them by varying the RF and DC potentials.
     MS_quadrupole_ion_trap = 1000082,
 
-    /// quadrupole ion trap: Quadrupole Ion Trap mass analyzer captures the ions in a three dimensional ion trap and then selectively ejects them by varying the RF and DC potentials.
+    /// Paul Ion trap (quadrupole ion trap): Quadrupole Ion Trap mass analyzer captures the ions in a three dimensional ion trap and then selectively ejects them by varying the RF and DC potentials.
     MS_Paul_Ion_trap = MS_quadrupole_ion_trap,
 
-    /// quadrupole ion trap: Quadrupole Ion Trap mass analyzer captures the ions in a three dimensional ion trap and then selectively ejects them by varying the RF and DC potentials.
+    /// QIT (quadrupole ion trap): Quadrupole Ion Trap mass analyzer captures the ions in a three dimensional ion trap and then selectively ejects them by varying the RF and DC potentials.
     MS_QIT = MS_quadrupole_ion_trap,
 
-    /// quadrupole ion trap: Quadrupole Ion Trap mass analyzer captures the ions in a three dimensional ion trap and then selectively ejects them by varying the RF and DC potentials.
+    /// Quistor (quadrupole ion trap): Quadrupole Ion Trap mass analyzer captures the ions in a three dimensional ion trap and then selectively ejects them by varying the RF and DC potentials.
     MS_Quistor = MS_quadrupole_ion_trap,
 
     /// radial ejection linear ion trap: A linear ion trap mass spectrometer where ions are ejected along the radius of the analyzer.
@@ -390,7 +390,7 @@ enum PWIZ_API_DECL CVID
     /// time-of-flight: Instrument that separates ions by m/z in a field-free region after acceleration to a fixed acceleration energy.
     MS_time_of_flight = 1000084,
 
-    /// time-of-flight: Instrument that separates ions by m/z in a field-free region after acceleration to a fixed acceleration energy.
+    /// TOF (time-of-flight): Instrument that separates ions by m/z in a field-free region after acceleration to a fixed acceleration energy.
     MS_TOF = MS_time_of_flight,
 
     /// baseline: An attribute of resolution when recording the detector response in absence of the analyte.
@@ -399,7 +399,7 @@ enum PWIZ_API_DECL CVID
     /// full width at half-maximum: A measure of resolution represented as width of the peak at half peak height.
     MS_full_width_at_half_maximum = 1000086,
 
-    /// full width at half-maximum: A measure of resolution represented as width of the peak at half peak height.
+    /// FWHM (full width at half-maximum): A measure of resolution represented as width of the peak at half peak height.
     MS_FWHM = MS_full_width_at_half_maximum,
 
     /// ten percent valley: An attribute of resolution when the ratio between adjacent signals is 10% of the signal height.
@@ -441,7 +441,7 @@ enum PWIZ_API_DECL CVID
     /// multiple reaction monitoring: This term is not recommended. See Selected Reaction Monitoring.
     MS_multiple_reaction_monitoring_OBSOLETE = 1000099,
 
-    /// multiple reaction monitoring: This term is not recommended. See Selected Reaction Monitoring.
+    /// MRM (multiple reaction monitoring): This term is not recommended. See Selected Reaction Monitoring.
     MS_MRM_OBSOLETE = MS_multiple_reaction_monitoring_OBSOLETE,
 
     /// precursor ion scan: The specific scan function or process that will record a precursor ion spectrum.
@@ -468,7 +468,7 @@ enum PWIZ_API_DECL CVID
     /// channeltron: A horn-shaped (or cone-shaped) continuous dynode particle multiplier. The ion strikes the inner surface of the device and induces the production of secondary electrons that in turn impinge on the inner surfaces to produce more secondary electrons. This avalanche effect produces an increase in signal in the final measured current pulse.
     MS_channeltron = 1000107,
 
-    /// channeltron: A horn-shaped (or cone-shaped) continuous dynode particle multiplier. The ion strikes the inner surface of the device and induces the production of secondary electrons that in turn impinge on the inner surfaces to produce more secondary electrons. This avalanche effect produces an increase in signal in the final measured current pulse.
+    /// Channeltron Detector (channeltron): A horn-shaped (or cone-shaped) continuous dynode particle multiplier. The ion strikes the inner surface of the device and induces the production of secondary electrons that in turn impinge on the inner surfaces to produce more secondary electrons. This avalanche effect produces an increase in signal in the final measured current pulse.
     MS_Channeltron_Detector = MS_channeltron,
 
     /// conversion dynode electron multiplier: A surface that is held at high potential so that ions striking the surface produce electrons that are subsequently detected.
@@ -480,13 +480,13 @@ enum PWIZ_API_DECL CVID
     /// daly detector: Detector consisting of a conversion dynode, scintillator and photomultiplier. The metal knob at high potential emits secondary electrons when ions impinge on the surface. The secondary electrons are accelerated onto the scintillator that produces light that is then detected by the photomultiplier detector.
     MS_daly_detector = 1000110,
 
-    /// daly detector: Detector consisting of a conversion dynode, scintillator and photomultiplier. The metal knob at high potential emits secondary electrons when ions impinge on the surface. The secondary electrons are accelerated onto the scintillator that produces light that is then detected by the photomultiplier detector.
+    /// Daly (daly detector): Detector consisting of a conversion dynode, scintillator and photomultiplier. The metal knob at high potential emits secondary electrons when ions impinge on the surface. The secondary electrons are accelerated onto the scintillator that produces light that is then detected by the photomultiplier detector.
     MS_Daly = MS_daly_detector,
 
     /// electron multiplier tube: A device to amplify the current of a beam or packet of charged particles or photons by incidence upon the surface of an electrode to produce secondary electrons.
     MS_electron_multiplier_tube = 1000111,
 
-    /// electron multiplier tube: A device to amplify the current of a beam or packet of charged particles or photons by incidence upon the surface of an electrode to produce secondary electrons.
+    /// EMT (electron multiplier tube): A device to amplify the current of a beam or packet of charged particles or photons by incidence upon the surface of an electrode to produce secondary electrons.
     MS_EMT = MS_electron_multiplier_tube,
 
     /// faraday cup: A conducting cup or chamber that intercepts a charged particle beam and is electrically connected to a current measuring device.
@@ -498,7 +498,7 @@ enum PWIZ_API_DECL CVID
     /// microchannel plate detector: A thin plate that contains a closely spaced array of channels that each act as a continuous dynode particle multiplier. A charged particle, fast neutral particle, or photon striking the plate causes a cascade of secondary electrons that ultimately exits the opposite side of the plate.
     MS_microchannel_plate_detector = 1000114,
 
-    /// microchannel plate detector: A thin plate that contains a closely spaced array of channels that each act as a continuous dynode particle multiplier. A charged particle, fast neutral particle, or photon striking the plate causes a cascade of secondary electrons that ultimately exits the opposite side of the plate.
+    /// multichannel plate (microchannel plate detector): A thin plate that contains a closely spaced array of channels that each act as a continuous dynode particle multiplier. A charged particle, fast neutral particle, or photon striking the plate causes a cascade of secondary electrons that ultimately exits the opposite side of the plate.
     MS_multichannel_plate = MS_microchannel_plate_detector,
 
     /// multi-collector: A detector system commonly used in inductively coupled plasma mass spectrometers.
@@ -507,13 +507,13 @@ enum PWIZ_API_DECL CVID
     /// photomultiplier: A detector for conversion of the ion/electron signal into photon(s) which are then amplified and detected.
     MS_photomultiplier = 1000116,
 
-    /// photomultiplier: A detector for conversion of the ion/electron signal into photon(s) which are then amplified and detected.
+    /// PMT (photomultiplier): A detector for conversion of the ion/electron signal into photon(s) which are then amplified and detected.
     MS_PMT = MS_photomultiplier,
 
     /// analog-digital converter: Analog-to-digital converter (abbreviated ADC, A/D or A to D) is an electronic integrated circuit (i/c) that converts continuous signals to discrete digital numbers.
     MS_analog_digital_converter = 1000117,
 
-    /// analog-digital converter: Analog-to-digital converter (abbreviated ADC, A/D or A to D) is an electronic integrated circuit (i/c) that converts continuous signals to discrete digital numbers.
+    /// ADC (analog-digital converter): Analog-to-digital converter (abbreviated ADC, A/D or A to D) is an electronic integrated circuit (i/c) that converts continuous signals to discrete digital numbers.
     MS_ADC = MS_analog_digital_converter,
 
     /// pulse counting: Definition to do.
@@ -522,7 +522,7 @@ enum PWIZ_API_DECL CVID
     /// time-digital converter: A device for converting a signal of sporadic pluses into a digital representation of their time indices.
     MS_time_digital_converter = 1000119,
 
-    /// time-digital converter: A device for converting a signal of sporadic pluses into a digital representation of their time indices.
+    /// TDC (time-digital converter): A device for converting a signal of sporadic pluses into a digital representation of their time indices.
     MS_TDC = MS_time_digital_converter,
 
     /// transient recorder: A detector acquisition mode used for detecting transient signals.
@@ -549,16 +549,16 @@ enum PWIZ_API_DECL CVID
     /// centroid spectrum: Processing of profile data to produce spectra that contains discrete peaks of zero width. Often used to reduce the size of dataset.
     MS_centroid_spectrum = 1000127,
 
-    /// centroid spectrum: Processing of profile data to produce spectra that contains discrete peaks of zero width. Often used to reduce the size of dataset.
+    /// Discrete Mass Spectrum (centroid spectrum): Processing of profile data to produce spectra that contains discrete peaks of zero width. Often used to reduce the size of dataset.
     MS_Discrete_Mass_Spectrum = MS_centroid_spectrum,
 
     /// profile spectrum: A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.
     MS_profile_spectrum = 1000128,
 
-    /// profile spectrum: A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.
+    /// continuous mass spectrum (profile spectrum): A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.
     MS_continuous_mass_spectrum = MS_profile_spectrum,
 
-    /// profile spectrum: A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.
+    /// Continuum Mass Spectrum (profile spectrum): A profile mass spectrum is created when data is recorded with ion current (counts per second) on one axis and mass/charge ratio on another axis.
     MS_Continuum_Mass_Spectrum = MS_profile_spectrum,
 
     /// negative scan: Polarity of the scan is negative.
@@ -576,31 +576,31 @@ enum PWIZ_API_DECL CVID
     /// collision-induced dissociation: The dissociation of an ion after collisional excitation. The term collisional-activated dissociation is not recommended.
     MS_collision_induced_dissociation = 1000133,
 
-    /// collision-induced dissociation: The dissociation of an ion after collisional excitation. The term collisional-activated dissociation is not recommended.
+    /// CID (collision-induced dissociation): The dissociation of an ion after collisional excitation. The term collisional-activated dissociation is not recommended.
     MS_CID = MS_collision_induced_dissociation,
 
     /// plasma desorption: The ionization of material in a solid sample by bombarding it with ionic or neutral atoms formed as a result of the fission of a suitable nuclide, typically 252Cf. Synonymous with fission fragment ionization.
     MS_plasma_desorption = 1000134,
 
-    /// plasma desorption: The ionization of material in a solid sample by bombarding it with ionic or neutral atoms formed as a result of the fission of a suitable nuclide, typically 252Cf. Synonymous with fission fragment ionization.
+    /// PD (plasma desorption): The ionization of material in a solid sample by bombarding it with ionic or neutral atoms formed as a result of the fission of a suitable nuclide, typically 252Cf. Synonymous with fission fragment ionization.
     MS_PD = MS_plasma_desorption,
 
     /// post-source decay: A technique specific to reflectron time-of-flight mass spectrometers where product ions of metastable transitions or collision-induced dissociations generated in the drift tube prior to entering the reflectron are m/z separated to yield product ion spectra.
     MS_post_source_decay = 1000135,
 
-    /// post-source decay: A technique specific to reflectron time-of-flight mass spectrometers where product ions of metastable transitions or collision-induced dissociations generated in the drift tube prior to entering the reflectron are m/z separated to yield product ion spectra.
+    /// PSD (post-source decay): A technique specific to reflectron time-of-flight mass spectrometers where product ions of metastable transitions or collision-induced dissociations generated in the drift tube prior to entering the reflectron are m/z separated to yield product ion spectra.
     MS_PSD = MS_post_source_decay,
 
     /// surface-induced dissociation: Fragmentation that results from the collision of an ion with a surface.
     MS_surface_induced_dissociation = 1000136,
 
-    /// surface-induced dissociation: Fragmentation that results from the collision of an ion with a surface.
+    /// SID (surface-induced dissociation): Fragmentation that results from the collision of an ion with a surface.
     MS_SID = MS_surface_induced_dissociation,
 
     /// electron volt: A non-SI unit of energy (eV) defined as the energy acquired by a particle containing one unit of charge through a potential difference of one volt. An electron-volt is equal to 1.602 176 53(14) x 10^-19 J.
     MS_electron_volt_OBSOLETE = 1000137,
 
-    /// electron volt: A non-SI unit of energy (eV) defined as the energy acquired by a particle containing one unit of charge through a potential difference of one volt. An electron-volt is equal to 1.602 176 53(14) x 10^-19 J.
+    /// eV (electron volt): A non-SI unit of energy (eV) defined as the energy acquired by a particle containing one unit of charge through a potential difference of one volt. An electron-volt is equal to 1.602 176 53(14) x 10^-19 J.
     MS_eV_OBSOLETE = MS_electron_volt_OBSOLETE,
 
     /// percent collision energy: Collision energy required to fragment an ion represented as a percent value.
@@ -807,16 +807,16 @@ enum PWIZ_API_DECL CVID
     /// selected ion monitoring: The operation of a mass spectrometer in which the intensities of several specific m/z values are recorded rather than the entire mass spectrum.
     MS_selected_ion_monitoring = 1000205,
 
-    /// selected ion monitoring: The operation of a mass spectrometer in which the intensities of several specific m/z values are recorded rather than the entire mass spectrum.
+    /// Multiple Ion Monitoring (selected ion monitoring): The operation of a mass spectrometer in which the intensities of several specific m/z values are recorded rather than the entire mass spectrum.
     MS_Multiple_Ion_Monitoring = MS_selected_ion_monitoring,
 
-    /// selected ion monitoring: The operation of a mass spectrometer in which the intensities of several specific m/z values are recorded rather than the entire mass spectrum.
+    /// SIM (selected ion monitoring): The operation of a mass spectrometer in which the intensities of several specific m/z values are recorded rather than the entire mass spectrum.
     MS_SIM = MS_selected_ion_monitoring,
 
     /// selected reaction monitoring: Data acquired from specific product ions corresponding to m/z selected precursor ions recorded via multiple stages of mass spectrometry. Selected reaction monitoring can be performed in time or in space.
     MS_selected_reaction_monitoring = 1000206,
 
-    /// selected reaction monitoring: Data acquired from specific product ions corresponding to m/z selected precursor ions recorded via multiple stages of mass spectrometry. Selected reaction monitoring can be performed in time or in space.
+    /// SRM (selected reaction monitoring): Data acquired from specific product ions corresponding to m/z selected precursor ions recorded via multiple stages of mass spectrometry. Selected reaction monitoring can be performed in time or in space.
     MS_SRM = MS_selected_reaction_monitoring,
 
     /// accurate mass: An experimentally determined mass that is can be to determine a unique elemental formula. For ions less than 200 u, a measurement with 5 ppm accuracy is sufficient to determine the elemental composition.
@@ -828,31 +828,31 @@ enum PWIZ_API_DECL CVID
     /// appearance energy: The minimum energy that must be imparted to an atom or molecule to produce a specified ion. The term appearance potential is not recommended.
     MS_appearance_energy = 1000209,
 
-    /// appearance energy: The minimum energy that must be imparted to an atom or molecule to produce a specified ion. The term appearance potential is not recommended.
+    /// AE (appearance energy): The minimum energy that must be imparted to an atom or molecule to produce a specified ion. The term appearance potential is not recommended.
     MS_AE = MS_appearance_energy,
 
     /// base peak: The peak in a mass spectrum that has the greatest intensity. This term may be applied to the spectra of pure substances or mixtures.
     MS_base_peak = 1000210,
 
-    /// base peak: The peak in a mass spectrum that has the greatest intensity. This term may be applied to the spectra of pure substances or mixtures.
+    /// BP (base peak): The peak in a mass spectrum that has the greatest intensity. This term may be applied to the spectra of pure substances or mixtures.
     MS_BP = MS_base_peak,
 
     /// OBSOLETE charge number: OBSOLETE. The total charge on an ion divided by the electron charge e. OBSOLETED 2009-10-27 since this was viewed as a duplication of 00041 charge state.
     MS_OBSOLETE_charge_number_OBSOLETE = 1000211,
 
-    /// OBSOLETE charge number: OBSOLETE. The total charge on an ion divided by the electron charge e. OBSOLETED 2009-10-27 since this was viewed as a duplication of 00041 charge state.
+    /// z (OBSOLETE charge number): OBSOLETE. The total charge on an ion divided by the electron charge e. OBSOLETED 2009-10-27 since this was viewed as a duplication of 00041 charge state.
     MS_z_OBSOLETE = MS_OBSOLETE_charge_number_OBSOLETE,
 
     /// dalton: A non-SI unit of mass (symbol Da) that is equal to the unified atomic mass unit: 1.660 538 86(28) x 10^-27 kg.
     MS_dalton_OBSOLETE = 1000212,
 
-    /// dalton: A non-SI unit of mass (symbol Da) that is equal to the unified atomic mass unit: 1.660 538 86(28) x 10^-27 kg.
+    /// Da (dalton): A non-SI unit of mass (symbol Da) that is equal to the unified atomic mass unit: 1.660 538 86(28) x 10^-27 kg.
     MS_Da_OBSOLETE = MS_dalton_OBSOLETE,
 
     /// electron affinity: The electron affinity of M is the minimum energy required for the process M- ? M + e where M- and M are in their ground rotational, vibrational and electronic states and the electron has zero kinetic energy.
     MS_electron_affinity = 1000213,
 
-    /// electron affinity: The electron affinity of M is the minimum energy required for the process M- ? M + e where M- and M are in their ground rotational, vibrational and electronic states and the electron has zero kinetic energy.
+    /// EA (electron affinity): The electron affinity of M is the minimum energy required for the process M- ? M + e where M- and M are in their ground rotational, vibrational and electronic states and the electron has zero kinetic energy.
     MS_EA = MS_electron_affinity,
 
     /// electron energy obsolete: The potential difference through which electrons are accelerated before they are used to bring about electron ionization.
@@ -864,7 +864,7 @@ enum PWIZ_API_DECL CVID
     /// field-free region: A section of a mass spectrometer in which there are no electric or magnetic fields.
     MS_field_free_region = 1000216,
 
-    /// field-free region: A section of a mass spectrometer in which there are no electric or magnetic fields.
+    /// FFR (field-free region): A section of a mass spectrometer in which there are no electric or magnetic fields.
     MS_FFR = MS_field_free_region,
 
     /// ionization cross section: A measure of the probability that a given ionization process will occur when an atom or molecule interacts with a photon, electron, atom or molecule.
@@ -876,13 +876,13 @@ enum PWIZ_API_DECL CVID
     /// ionization energy: The minimum energy required to remove an electron from an atom or molecule to produce a positive ion.
     MS_ionization_energy = 1000219,
 
-    /// ionization energy: The minimum energy required to remove an electron from an atom or molecule to produce a positive ion.
+    /// IE (ionization energy): The minimum energy required to remove an electron from an atom or molecule to produce a positive ion.
     MS_IE = MS_ionization_energy,
 
     /// isotope dilution mass spectrometry: A quantitative mass spectrometry technique in which an isotopically enriched compound is used as an internal standard.
     MS_isotope_dilution_mass_spectrometry = 1000220,
 
-    /// isotope dilution mass spectrometry: A quantitative mass spectrometry technique in which an isotopically enriched compound is used as an internal standard.
+    /// IDMS (isotope dilution mass spectrometry): A quantitative mass spectrometry technique in which an isotopically enriched compound is used as an internal standard.
     MS_IDMS = MS_isotope_dilution_mass_spectrometry,
 
     /// magnetic deflection: The deflection of charged particles in a magnetic field due to a force equal to qv B where q is the particle charge, v its velocity and B the magnetic field. Magnetic deflection of an ion beam is used for m/z separation in a magnetic sector mass spectrometer.
@@ -903,13 +903,13 @@ enum PWIZ_API_DECL CVID
     /// molecular beam mass spectrometry: A mass spectrometry technique in which the sample is introduced into the mass spectrometer as a molecular beam.
     MS_molecular_beam_mass_spectrometry = 1000226,
 
-    /// molecular beam mass spectrometry: A mass spectrometry technique in which the sample is introduced into the mass spectrometer as a molecular beam.
+    /// MBMS (molecular beam mass spectrometry): A mass spectrometry technique in which the sample is introduced into the mass spectrometer as a molecular beam.
     MS_MBMS = MS_molecular_beam_mass_spectrometry,
 
     /// multiphoton ionization: Photoionization of an atom or molecule in which in two or more photons are absorbed.
     MS_multiphoton_ionization = 1000227,
 
-    /// multiphoton ionization: Photoionization of an atom or molecule in which in two or more photons are absorbed.
+    /// MPI (multiphoton ionization): Photoionization of an atom or molecule in which in two or more photons are absorbed.
     MS_MPI = MS_multiphoton_ionization,
 
     /// nitrogen rule: An organic molecule containing the elements C, H, O, S, P, or halogen has an odd nominal mass if it contains an odd number of nitrogen atoms.
@@ -930,7 +930,7 @@ enum PWIZ_API_DECL CVID
     /// proton affinity: The proton affinity of a species M is defined as the negative of the enthalpy change for the reaction M + H+ ->[M+H]+, where all species are in their ground rotational, vibrational and electronic states.
     MS_proton_affinity = 1000233,
 
-    /// proton affinity: The proton affinity of a species M is defined as the negative of the enthalpy change for the reaction M + H+ ->[M+H]+, where all species are in their ground rotational, vibrational and electronic states.
+    /// PA (proton affinity): The proton affinity of a species M is defined as the negative of the enthalpy change for the reaction M + H+ ->[M+H]+, where all species are in their ground rotational, vibrational and electronic states.
     MS_PA = MS_proton_affinity,
 
     /// mass resolving power: In a mass spectrum, the observed mass divided by the difference between two masses that can be separated. The method by which delta m was obtained and the mass at which the measurement was made should be reported.
@@ -939,7 +939,7 @@ enum PWIZ_API_DECL CVID
     /// total ion current chromatogram: Chromatogram obtained by plotting the total ion current detected in each of a series of mass spectra recorded as a function of retention time.
     MS_total_ion_current_chromatogram = 1000235,
 
-    /// total ion current chromatogram: Chromatogram obtained by plotting the total ion current detected in each of a series of mass spectra recorded as a function of retention time.
+    /// TIC chromatogram (total ion current chromatogram): Chromatogram obtained by plotting the total ion current detected in each of a series of mass spectra recorded as a function of retention time.
     MS_TIC_chromatogram = MS_total_ion_current_chromatogram,
 
     /// transmission: The ratio of the number of ions leaving a region of a mass spectrometer to the number entering that region.
@@ -948,310 +948,310 @@ enum PWIZ_API_DECL CVID
     /// unified atomic mass unit: A non-SI unit of mass (u) defined as one twelfth of ^12 C in its ground state and equal to 1.660 538 86(28) x 10^-27 kg.
     MS_unified_atomic_mass_unit_OBSOLETE = 1000237,
 
-    /// unified atomic mass unit: A non-SI unit of mass (u) defined as one twelfth of ^12 C in its ground state and equal to 1.660 538 86(28) x 10^-27 kg.
+    /// u (unified atomic mass unit): A non-SI unit of mass (u) defined as one twelfth of ^12 C in its ground state and equal to 1.660 538 86(28) x 10^-27 kg.
     MS_u_OBSOLETE = MS_unified_atomic_mass_unit_OBSOLETE,
 
     /// accelerator mass spectrometry: A mass spectrometry technique in which atoms extracted from a sample are ionized, accelerated to MeV energies and separated according to their momentum, charge and energy.
     MS_accelerator_mass_spectrometry = 1000238,
 
-    /// accelerator mass spectrometry: A mass spectrometry technique in which atoms extracted from a sample are ionized, accelerated to MeV energies and separated according to their momentum, charge and energy.
+    /// AMS (accelerator mass spectrometry): A mass spectrometry technique in which atoms extracted from a sample are ionized, accelerated to MeV energies and separated according to their momentum, charge and energy.
     MS_AMS = MS_accelerator_mass_spectrometry,
 
     /// atmospheric pressure matrix-assisted laser desorption ionization: Matrix-assisted laser desorption ionization in which the sample target is at atmospheric pressure and the ions formed by the pulsed laser are sampled through a small aperture into the mass spectrometer.
     MS_atmospheric_pressure_matrix_assisted_laser_desorption_ionization = 1000239,
 
-    /// atmospheric pressure matrix-assisted laser desorption ionization: Matrix-assisted laser desorption ionization in which the sample target is at atmospheric pressure and the ions formed by the pulsed laser are sampled through a small aperture into the mass spectrometer.
+    /// AP MALDI (atmospheric pressure matrix-assisted laser desorption ionization): Matrix-assisted laser desorption ionization in which the sample target is at atmospheric pressure and the ions formed by the pulsed laser are sampled through a small aperture into the mass spectrometer.
     MS_AP_MALDI = MS_atmospheric_pressure_matrix_assisted_laser_desorption_ionization,
 
     /// atmospheric pressure ionization: Any ionization process in which ions are formed in the gas phase at atmospheric pressure.
     MS_atmospheric_pressure_ionization = 1000240,
 
-    /// atmospheric pressure ionization: Any ionization process in which ions are formed in the gas phase at atmospheric pressure.
+    /// API (atmospheric pressure ionization): Any ionization process in which ions are formed in the gas phase at atmospheric pressure.
     MS_API = MS_atmospheric_pressure_ionization,
 
     /// Atmostpheric Pressure Photoionization: Atmospheric pressure chemical ionization in which the reactant ions are generated by photo-ionization.
     MS_Atmostpheric_Pressure_Photoionization_OBSOLETE = 1000241,
 
-    /// Atmostpheric Pressure Photoionization: Atmospheric pressure chemical ionization in which the reactant ions are generated by photo-ionization.
+    /// APPI (Atmostpheric Pressure Photoionization): Atmospheric pressure chemical ionization in which the reactant ions are generated by photo-ionization.
     MS_APPI_OBSOLETE = MS_Atmostpheric_Pressure_Photoionization_OBSOLETE,
 
     /// blackbody infrared radiative dissociation: A special case of infrared multiphoton dissociation wherein excitation of the reactant ion is caused by absorption of infrared photons radiating from heated blackbody surroundings, which are usually the walls of a vacuum chamber. See also infrared multiphoton dissociation.
     MS_blackbody_infrared_radiative_dissociation = 1000242,
 
-    /// blackbody infrared radiative dissociation: A special case of infrared multiphoton dissociation wherein excitation of the reactant ion is caused by absorption of infrared photons radiating from heated blackbody surroundings, which are usually the walls of a vacuum chamber. See also infrared multiphoton dissociation.
+    /// BIRD (blackbody infrared radiative dissociation): A special case of infrared multiphoton dissociation wherein excitation of the reactant ion is caused by absorption of infrared photons radiating from heated blackbody surroundings, which are usually the walls of a vacuum chamber. See also infrared multiphoton dissociation.
     MS_BIRD = MS_blackbody_infrared_radiative_dissociation,
 
     /// charge-remote fragmentation: A fragmentation of an even-electron ion in which the cleaved bond is not adjacent to the apparent charge site.
     MS_charge_remote_fragmentation = 1000243,
 
-    /// charge-remote fragmentation: A fragmentation of an even-electron ion in which the cleaved bond is not adjacent to the apparent charge site.
+    /// CRF (charge-remote fragmentation): A fragmentation of an even-electron ion in which the cleaved bond is not adjacent to the apparent charge site.
     MS_CRF = MS_charge_remote_fragmentation,
 
     /// consecutive reaction monitoring: MSn experiment with three or more stages of m/z separation and in which a particular multi-step reaction path is monitored.
     MS_consecutive_reaction_monitoring = 1000244,
 
-    /// consecutive reaction monitoring: MSn experiment with three or more stages of m/z separation and in which a particular multi-step reaction path is monitored.
+    /// CRM (consecutive reaction monitoring): MSn experiment with three or more stages of m/z separation and in which a particular multi-step reaction path is monitored.
     MS_CRM = MS_consecutive_reaction_monitoring,
 
     /// charge stripping: The reaction of a positive ion with an atom or molecule that results in the removal of one or more electrons from the ion.
     MS_charge_stripping = 1000245,
 
-    /// charge stripping: The reaction of a positive ion with an atom or molecule that results in the removal of one or more electrons from the ion.
+    /// CS (charge stripping): The reaction of a positive ion with an atom or molecule that results in the removal of one or more electrons from the ion.
     MS_CS = MS_charge_stripping,
 
     /// delayed extraction: The application of the accelerating voltage pulse after a time delay in desorption ionization from a surface. The extraction delay can produce energy focusing in a time-of-flight mass spectrometer.
     MS_delayed_extraction = 1000246,
 
-    /// delayed extraction: The application of the accelerating voltage pulse after a time delay in desorption ionization from a surface. The extraction delay can produce energy focusing in a time-of-flight mass spectrometer.
+    /// DE (delayed extraction): The application of the accelerating voltage pulse after a time delay in desorption ionization from a surface. The extraction delay can produce energy focusing in a time-of-flight mass spectrometer.
     MS_DE = MS_delayed_extraction,
 
     /// desorption ionization: The formation of ions from a solid or liquid material after the rapid vaporization of that sample.
     MS_desorption_ionization = 1000247,
 
-    /// desorption ionization: The formation of ions from a solid or liquid material after the rapid vaporization of that sample.
+    /// DI (desorption ionization): The formation of ions from a solid or liquid material after the rapid vaporization of that sample.
     MS_DI = MS_desorption_ionization,
 
     /// direct insertion probe: A device for introducing a solid or liquid sample into a mass spectrometer ion source for desorption ionization.
     MS_direct_insertion_probe = 1000248,
 
-    /// direct insertion probe: A device for introducing a solid or liquid sample into a mass spectrometer ion source for desorption ionization.
+    /// DIP (direct insertion probe): A device for introducing a solid or liquid sample into a mass spectrometer ion source for desorption ionization.
     MS_DIP = MS_direct_insertion_probe,
 
     /// direct liquid introduction: The delivery of a liquid sample into a mass spectrometer for spray or desorption ionization.
     MS_direct_liquid_introduction = 1000249,
 
-    /// direct liquid introduction: The delivery of a liquid sample into a mass spectrometer for spray or desorption ionization.
+    /// DLI (direct liquid introduction): The delivery of a liquid sample into a mass spectrometer for spray or desorption ionization.
     MS_DLI = MS_direct_liquid_introduction,
 
     /// electron capture dissociation: A process in which a multiply protonated molecules interacts with a low energy electrons. Capture of the electron leads the liberation of energy and a reduction in charge state of the ion with the production of the (M + nH) (n-1)+ odd electron ion, which readily fragments.
     MS_electron_capture_dissociation = 1000250,
 
-    /// electron capture dissociation: A process in which a multiply protonated molecules interacts with a low energy electrons. Capture of the electron leads the liberation of energy and a reduction in charge state of the ion with the production of the (M + nH) (n-1)+ odd electron ion, which readily fragments.
+    /// ECD (electron capture dissociation): A process in which a multiply protonated molecules interacts with a low energy electrons. Capture of the electron leads the liberation of energy and a reduction in charge state of the ion with the production of the (M + nH) (n-1)+ odd electron ion, which readily fragments.
     MS_ECD = MS_electron_capture_dissociation,
 
     /// even-electron ion: An ion containing no unpaired electrons in its ground electronic state, e.g. CH3+ in its ground state.
     MS_even_electron_ion = 1000251,
 
-    /// even-electron ion: An ion containing no unpaired electrons in its ground electronic state, e.g. CH3+ in its ground state.
+    /// EE (even-electron ion): An ion containing no unpaired electrons in its ground electronic state, e.g. CH3+ in its ground state.
     MS_EE = MS_even_electron_ion,
 
     /// electron-induced excitation in organics: The reaction of an ion with an electron in which the translational energy of the collision is converted into internal energy of the ion.
     MS_electron_induced_excitation_in_organics = 1000252,
 
-    /// electron-induced excitation in organics: The reaction of an ion with an electron in which the translational energy of the collision is converted into internal energy of the ion.
+    /// EIEIO (electron-induced excitation in organics): The reaction of an ion with an electron in which the translational energy of the collision is converted into internal energy of the ion.
     MS_EIEIO = MS_electron_induced_excitation_in_organics,
 
     /// electron multiplier: A device to amplify the current of a beam or packet of charged particles or photons by incidence upon the surface of an electrode to produce secondary electrons. The secondary electrons are then accelerated to other electrodes or parts of a continuous electrode to produce further secondary electrons.
     MS_electron_multiplier = 1000253,
 
-    /// electron multiplier: A device to amplify the current of a beam or packet of charged particles or photons by incidence upon the surface of an electrode to produce secondary electrons. The secondary electrons are then accelerated to other electrodes or parts of a continuous electrode to produce further secondary electrons.
+    /// EM (electron multiplier): A device to amplify the current of a beam or packet of charged particles or photons by incidence upon the surface of an electrode to produce secondary electrons. The secondary electrons are then accelerated to other electrodes or parts of a continuous electrode to produce further secondary electrons.
     MS_EM = MS_electron_multiplier,
 
     /// electrostatic energy analyzer: A device consisting of conducting parallel plates, concentric cylinders or concentric spheres that separates charged particles according to their kinetic energy by means of an electric field that is constant in time.
     MS_electrostatic_energy_analyzer = 1000254,
 
-    /// electrostatic energy analyzer: A device consisting of conducting parallel plates, concentric cylinders or concentric spheres that separates charged particles according to their kinetic energy by means of an electric field that is constant in time.
+    /// ESA (electrostatic energy analyzer): A device consisting of conducting parallel plates, concentric cylinders or concentric spheres that separates charged particles according to their kinetic energy by means of an electric field that is constant in time.
     MS_ESA = MS_electrostatic_energy_analyzer,
 
     /// flowing afterglow: An ion source immersed in a flow of helium or other inert buffer gas that carries the ions through a meter-long reactor at pressures around 100 Pa.
     MS_flowing_afterglow = 1000255,
 
-    /// flowing afterglow: An ion source immersed in a flow of helium or other inert buffer gas that carries the ions through a meter-long reactor at pressures around 100 Pa.
+    /// FA (flowing afterglow): An ion source immersed in a flow of helium or other inert buffer gas that carries the ions through a meter-long reactor at pressures around 100 Pa.
     MS_FA = MS_flowing_afterglow,
 
     /// high-field asymmetric waveform ion mobility spectrometry: The separation of ions between two concentric cylindrical electrodes due to application of a high voltage asymmetric waveform whereby ions migrate towards one of the two electrodes depending on the ratio of the high- to low-field mobility of the ion.
     MS_high_field_asymmetric_waveform_ion_mobility_spectrometry = 1000256,
 
-    /// high-field asymmetric waveform ion mobility spectrometry: The separation of ions between two concentric cylindrical electrodes due to application of a high voltage asymmetric waveform whereby ions migrate towards one of the two electrodes depending on the ratio of the high- to low-field mobility of the ion.
+    /// FAIMS (high-field asymmetric waveform ion mobility spectrometry): The separation of ions between two concentric cylindrical electrodes due to application of a high voltage asymmetric waveform whereby ions migrate towards one of the two electrodes depending on the ratio of the high- to low-field mobility of the ion.
     MS_FAIMS = MS_high_field_asymmetric_waveform_ion_mobility_spectrometry,
 
     /// field desorption: The formation of gas-phase ions from a material deposited on a solid surface in the presence of a high electric field. Because this process may encompass ionization by field ionization or other mechanisms, it is not recommended as a synonym for field desorption ionization.
     MS_field_desorption = 1000257,
 
-    /// field desorption: The formation of gas-phase ions from a material deposited on a solid surface in the presence of a high electric field. Because this process may encompass ionization by field ionization or other mechanisms, it is not recommended as a synonym for field desorption ionization.
+    /// FD (field desorption): The formation of gas-phase ions from a material deposited on a solid surface in the presence of a high electric field. Because this process may encompass ionization by field ionization or other mechanisms, it is not recommended as a synonym for field desorption ionization.
     MS_FD = MS_field_desorption,
 
     /// field ionization: The removal of electrons from any species by interaction with a high electric field.
     MS_field_ionization = 1000258,
 
-    /// field ionization: The removal of electrons from any species by interaction with a high electric field.
+    /// FI (field ionization): The removal of electrons from any species by interaction with a high electric field.
     MS_FI = MS_field_ionization,
 
     /// glow discharge ionization: The formation of ions in the gas phase and from solid samples at the cathode by application of a voltage to a low pressure gas.
     MS_glow_discharge_ionization = 1000259,
 
-    /// glow discharge ionization: The formation of ions in the gas phase and from solid samples at the cathode by application of a voltage to a low pressure gas.
+    /// GD-MS (glow discharge ionization): The formation of ions in the gas phase and from solid samples at the cathode by application of a voltage to a low pressure gas.
     MS_GD_MS = MS_glow_discharge_ionization,
 
     /// ion kinetic energy spectrometry: A method of analysis in which a beam of ions is separated according to the ratio of its translational energy to charge.
     MS_ion_kinetic_energy_spectrometry = 1000260,
 
-    /// ion kinetic energy spectrometry: A method of analysis in which a beam of ions is separated according to the ratio of its translational energy to charge.
+    /// IKES (ion kinetic energy spectrometry): A method of analysis in which a beam of ions is separated according to the ratio of its translational energy to charge.
     MS_IKES = MS_ion_kinetic_energy_spectrometry,
 
     /// ion mobility spectrometry: The separation of ions according to their velocity through a buffer gas under the influence of an electric field.
     MS_ion_mobility_spectrometry = 1000261,
 
-    /// ion mobility spectrometry: The separation of ions according to their velocity through a buffer gas under the influence of an electric field.
+    /// IMS (ion mobility spectrometry): The separation of ions according to their velocity through a buffer gas under the influence of an electric field.
     MS_IMS = MS_ion_mobility_spectrometry,
 
     /// infrared multiphoton dissociation: Multiphoton ionization where the reactant ion dissociates as a result of the absorption of multiple infrared photons.
     MS_infrared_multiphoton_dissociation = 1000262,
 
-    /// infrared multiphoton dissociation: Multiphoton ionization where the reactant ion dissociates as a result of the absorption of multiple infrared photons.
+    /// IRMPD (infrared multiphoton dissociation): Multiphoton ionization where the reactant ion dissociates as a result of the absorption of multiple infrared photons.
     MS_IRMPD = MS_infrared_multiphoton_dissociation,
 
     /// isotope ratio mass spectrometry: The measurement of the relative quantity of the different isotopes of an element in a material with a mass spectrometer.
     MS_isotope_ratio_mass_spectrometry = 1000263,
 
-    /// isotope ratio mass spectrometry: The measurement of the relative quantity of the different isotopes of an element in a material with a mass spectrometer.
+    /// IRMS (isotope ratio mass spectrometry): The measurement of the relative quantity of the different isotopes of an element in a material with a mass spectrometer.
     MS_IRMS = MS_isotope_ratio_mass_spectrometry,
 
     /// ion trap: A device for spatially confining ions using electric and magnetic fields alone or in combination.
     MS_ion_trap = 1000264,
 
-    /// ion trap: A device for spatially confining ions using electric and magnetic fields alone or in combination.
+    /// IT (ion trap): A device for spatially confining ions using electric and magnetic fields alone or in combination.
     MS_IT = MS_ion_trap,
 
     /// kinetic energy release distribution: Distribution of values of translational kinetic energy release for an ensemble of metastable ions undergoing a specific dissociation reaction.
     MS_kinetic_energy_release_distribution = 1000265,
 
-    /// kinetic energy release distribution: Distribution of values of translational kinetic energy release for an ensemble of metastable ions undergoing a specific dissociation reaction.
+    /// KERD (kinetic energy release distribution): Distribution of values of translational kinetic energy release for an ensemble of metastable ions undergoing a specific dissociation reaction.
     MS_KERD = MS_kinetic_energy_release_distribution,
 
     /// Laser Desorption: The formation of ions through the interaction of a laser with a material or with gas-phase ions or molecules.
     MS_Laser_Desorption_OBSOLETE = 1000266,
 
-    /// Laser Desorption: The formation of ions through the interaction of a laser with a material or with gas-phase ions or molecules.
+    /// Laser Ionization MERGE (Laser Desorption): The formation of ions through the interaction of a laser with a material or with gas-phase ions or molecules.
     MS_Laser_Ionization_MERGE_OBSOLETE = MS_Laser_Desorption_OBSOLETE,
 
-    /// Laser Desorption: The formation of ions through the interaction of a laser with a material or with gas-phase ions or molecules.
+    /// LD (Laser Desorption): The formation of ions through the interaction of a laser with a material or with gas-phase ions or molecules.
     MS_LD_OBSOLETE = MS_Laser_Desorption_OBSOLETE,
 
     /// mass analyzed ion kinetic energy spectrometry: Spectra that are obtained from a sector mass spectrometer that incorporates at least one magnetic sector plus one electric sector in reverse geometry. The accelerating voltage, V, and the magnetic sector field, B, are set at fixed values to select the precursor ions, which are then allowed to dissociate or to react in a field free region between the two sectors. The kinetic energy product ions of m/z selected precursor ions is analyzed by scanning the electric sector field, E. The width of the product ion spectrum peaks is related to the kinetic energy release distribution (KERD) for the dissociation process.
     MS_mass_analyzed_ion_kinetic_energy_spectrometry = 1000267,
 
-    /// mass analyzed ion kinetic energy spectrometry: Spectra that are obtained from a sector mass spectrometer that incorporates at least one magnetic sector plus one electric sector in reverse geometry. The accelerating voltage, V, and the magnetic sector field, B, are set at fixed values to select the precursor ions, which are then allowed to dissociate or to react in a field free region between the two sectors. The kinetic energy product ions of m/z selected precursor ions is analyzed by scanning the electric sector field, E. The width of the product ion spectrum peaks is related to the kinetic energy release distribution (KERD) for the dissociation process.
+    /// MIKES (mass analyzed ion kinetic energy spectrometry): Spectra that are obtained from a sector mass spectrometer that incorporates at least one magnetic sector plus one electric sector in reverse geometry. The accelerating voltage, V, and the magnetic sector field, B, are set at fixed values to select the precursor ions, which are then allowed to dissociate or to react in a field free region between the two sectors. The kinetic energy product ions of m/z selected precursor ions is analyzed by scanning the electric sector field, E. The width of the product ion spectrum peaks is related to the kinetic energy release distribution (KERD) for the dissociation process.
     MS_MIKES = MS_mass_analyzed_ion_kinetic_energy_spectrometry,
 
     /// mass spectrometry: The branch of science that deals with all aspects of mass spectrometers and the results obtained with these instruments.
     MS_mass_spectrometry = 1000268,
 
-    /// mass spectrometry: The branch of science that deals with all aspects of mass spectrometers and the results obtained with these instruments.
+    /// MS (mass spectrometry): The branch of science that deals with all aspects of mass spectrometers and the results obtained with these instruments.
     MS_MS = MS_mass_spectrometry,
 
     /// mass spectrometry/mass spectrometry: The acquisition, study and spectra of the electrically charged products or precursors of a m/z selected ion or ions.
     MS_mass_spectrometry_mass_spectrometry = 1000269,
 
-    /// mass spectrometry/mass spectrometry: The acquisition, study and spectra of the electrically charged products or precursors of a m/z selected ion or ions.
+    /// MS/MS (mass spectrometry/mass spectrometry): The acquisition, study and spectra of the electrically charged products or precursors of a m/z selected ion or ions.
     MS_MS_MS = MS_mass_spectrometry_mass_spectrometry,
 
     /// multiple stage mass spectrometry: Multiple stages of precursor ion m/z selection followed by product ion detection for successive progeny ions.
     MS_multiple_stage_mass_spectrometry = 1000270,
 
-    /// multiple stage mass spectrometry: Multiple stages of precursor ion m/z selection followed by product ion detection for successive progeny ions.
+    /// MSn (multiple stage mass spectrometry): Multiple stages of precursor ion m/z selection followed by product ion detection for successive progeny ions.
     MS_MSn = MS_multiple_stage_mass_spectrometry,
 
     /// Negative Ion chemical ionization: Chemical ionization that results in the formation of negative ions.
     MS_Negative_Ion_chemical_ionization = 1000271,
 
-    /// Negative Ion chemical ionization: Chemical ionization that results in the formation of negative ions.
+    /// NICI (Negative Ion chemical ionization): Chemical ionization that results in the formation of negative ions.
     MS_NICI = MS_Negative_Ion_chemical_ionization,
 
     /// neutralization reionization mass spectrometry: With this technique, m/z selected ions form neutrals by charge transfer to a collision gas or by dissociation. The neutrals are separated from the remaining ions and ionized in collisions with a second gas. This method is used to investigate reaction intermediates and other unstable species.
     MS_neutralization_reionization_mass_spectrometry = 1000272,
 
-    /// neutralization reionization mass spectrometry: With this technique, m/z selected ions form neutrals by charge transfer to a collision gas or by dissociation. The neutrals are separated from the remaining ions and ionized in collisions with a second gas. This method is used to investigate reaction intermediates and other unstable species.
+    /// NRMS (neutralization reionization mass spectrometry): With this technique, m/z selected ions form neutrals by charge transfer to a collision gas or by dissociation. The neutrals are separated from the remaining ions and ionized in collisions with a second gas. This method is used to investigate reaction intermediates and other unstable species.
     MS_NRMS = MS_neutralization_reionization_mass_spectrometry,
 
     /// photoionization: The ionization of an atom or molecule by a photon, written M + h? ? M^+ + e. The term photon impact is not recommended.
     MS_photoionization = 1000273,
 
-    /// photoionization: The ionization of an atom or molecule by a photon, written M + h? ? M^+ + e. The term photon impact is not recommended.
+    /// PI (photoionization): The ionization of an atom or molecule by a photon, written M + h? ? M^+ + e. The term photon impact is not recommended.
     MS_PI = MS_photoionization,
 
     /// pyrolysis mass spectrometry: A mass spectrometry technique in which the sample is heated to the point of decomposition and the gaseous decomposition products are introduced into the ion source.
     MS_pyrolysis_mass_spectrometry = 1000274,
 
-    /// pyrolysis mass spectrometry: A mass spectrometry technique in which the sample is heated to the point of decomposition and the gaseous decomposition products are introduced into the ion source.
+    /// PyMS (pyrolysis mass spectrometry): A mass spectrometry technique in which the sample is heated to the point of decomposition and the gaseous decomposition products are introduced into the ion source.
     MS_PyMS = MS_pyrolysis_mass_spectrometry,
 
     /// collision quadrupole: A transmission quadrupole to which an oscillating potential is applied so as to focus a beam of ions through a collision gas with no m/z separation.
     MS_collision_quadrupole = 1000275,
 
-    /// collision quadrupole: A transmission quadrupole to which an oscillating potential is applied so as to focus a beam of ions through a collision gas with no m/z separation.
+    /// q (collision quadrupole): A transmission quadrupole to which an oscillating potential is applied so as to focus a beam of ions through a collision gas with no m/z separation.
     MS_q = MS_collision_quadrupole,
 
     /// resonance enhanced multiphoton ionization: Multiphoton ionization in which the ionization cross section is significantly enhanced because the energy of the incident photons is resonant with an intermediate excited state of the neutral species.
     MS_resonance_enhanced_multiphoton_ionization = 1000276,
 
-    /// resonance enhanced multiphoton ionization: Multiphoton ionization in which the ionization cross section is significantly enhanced because the energy of the incident photons is resonant with an intermediate excited state of the neutral species.
+    /// REMPI (resonance enhanced multiphoton ionization): Multiphoton ionization in which the ionization cross section is significantly enhanced because the energy of the incident photons is resonant with an intermediate excited state of the neutral species.
     MS_REMPI = MS_resonance_enhanced_multiphoton_ionization,
 
     /// residual gas analyzer: A mass spectrometer used to measure the composition and pressure of gasses in an evacuated chamber.
     MS_residual_gas_analyzer = 1000277,
 
-    /// residual gas analyzer: A mass spectrometer used to measure the composition and pressure of gasses in an evacuated chamber.
+    /// RGA (residual gas analyzer): A mass spectrometer used to measure the composition and pressure of gasses in an evacuated chamber.
     MS_RGA = MS_residual_gas_analyzer,
 
     /// surface enhanced laser desorption ionization: The formation of ionized species in the gas phase from analytes deposited on a particular surface substrate which is irradiated with a laser beam of which wavelength is absorbed by the surface. See also desorption/ionization on silicon and laser desorption/ionization.
     MS_surface_enhanced_laser_desorption_ionization = 1000278,
 
-    /// surface enhanced laser desorption ionization: The formation of ionized species in the gas phase from analytes deposited on a particular surface substrate which is irradiated with a laser beam of which wavelength is absorbed by the surface. See also desorption/ionization on silicon and laser desorption/ionization.
+    /// SELDI (surface enhanced laser desorption ionization): The formation of ionized species in the gas phase from analytes deposited on a particular surface substrate which is irradiated with a laser beam of which wavelength is absorbed by the surface. See also desorption/ionization on silicon and laser desorption/ionization.
     MS_SELDI = MS_surface_enhanced_laser_desorption_ionization,
 
     /// surface enhanced neat desorption: Matrix-assisted laser desorption ionization in which the matrix is covalently linked to the target surface.
     MS_surface_enhanced_neat_desorption = 1000279,
 
-    /// surface enhanced neat desorption: Matrix-assisted laser desorption ionization in which the matrix is covalently linked to the target surface.
+    /// SEND (surface enhanced neat desorption): Matrix-assisted laser desorption ionization in which the matrix is covalently linked to the target surface.
     MS_SEND = MS_surface_enhanced_neat_desorption,
 
     /// suface ionization: The ionization of a neutral species when it interacts with a solid surface with an appropriate work function and temperature.
     MS_suface_ionization_OBSOLETE = 1000280,
 
-    /// suface ionization: The ionization of a neutral species when it interacts with a solid surface with an appropriate work function and temperature.
+    /// SI (suface ionization): The ionization of a neutral species when it interacts with a solid surface with an appropriate work function and temperature.
     MS_SI_OBSOLETE = MS_suface_ionization_OBSOLETE,
 
     /// selected ion flow tube: A device in which m/z selected ions are entrained in an inert carrier gas and undergo ion-molecule reactions.
     MS_selected_ion_flow_tube = 1000281,
 
-    /// selected ion flow tube: A device in which m/z selected ions are entrained in an inert carrier gas and undergo ion-molecule reactions.
+    /// SIFT (selected ion flow tube): A device in which m/z selected ions are entrained in an inert carrier gas and undergo ion-molecule reactions.
     MS_SIFT = MS_selected_ion_flow_tube,
 
     /// sustained off-resonance irradiation: A technique associated with Fourier transform ion cyclotron resonance (FT-ICR) mass spectrometry to carry out ion/neutral reactions such as low-energy collision-induced dissociation. A radio-frequency electric field of slightly off-resonance to the cyclotron frequency of the reactant ion cyclically accelerates and decelerates the reactant ion that is confined in the Penning ion trap. The ion's orbit does not exceed the dimensions of ion trap while the ion undergoes an ion/neutral species process that produces a high average translational energy for an extended time.
     MS_sustained_off_resonance_irradiation = 1000282,
 
-    /// sustained off-resonance irradiation: A technique associated with Fourier transform ion cyclotron resonance (FT-ICR) mass spectrometry to carry out ion/neutral reactions such as low-energy collision-induced dissociation. A radio-frequency electric field of slightly off-resonance to the cyclotron frequency of the reactant ion cyclically accelerates and decelerates the reactant ion that is confined in the Penning ion trap. The ion's orbit does not exceed the dimensions of ion trap while the ion undergoes an ion/neutral species process that produces a high average translational energy for an extended time.
+    /// SORI (sustained off-resonance irradiation): A technique associated with Fourier transform ion cyclotron resonance (FT-ICR) mass spectrometry to carry out ion/neutral reactions such as low-energy collision-induced dissociation. A radio-frequency electric field of slightly off-resonance to the cyclotron frequency of the reactant ion cyclically accelerates and decelerates the reactant ion that is confined in the Penning ion trap. The ion's orbit does not exceed the dimensions of ion trap while the ion undergoes an ion/neutral species process that produces a high average translational energy for an extended time.
     MS_SORI = MS_sustained_off_resonance_irradiation,
 
     /// Spark Source Mass Spectrometry: Mass spectrometry using spark ionization.
     MS_Spark_Source_Mass_Spectrometry_OBSOLETE = 1000283,
 
-    /// Spark Source Mass Spectrometry: Mass spectrometry using spark ionization.
+    /// SSMS (Spark Source Mass Spectrometry): Mass spectrometry using spark ionization.
     MS_SSMS_OBSOLETE = MS_Spark_Source_Mass_Spectrometry_OBSOLETE,
 
     /// stored waveform inverse fourier transform: A technique to create excitation waveforms for ions in FT-ICR mass spectrometer or Paul ion trap. An excitation waveform in the time-domain is generated by taking the inverse Fourier transform of an appropriate frequency-domain programmed excitation spectrum, in which the resonance frequencies of ions to be excited are included. This technique may be used for selection of precursor ions in MS/MS experiments.
     MS_stored_waveform_inverse_fourier_transform = 1000284,
 
-    /// stored waveform inverse fourier transform: A technique to create excitation waveforms for ions in FT-ICR mass spectrometer or Paul ion trap. An excitation waveform in the time-domain is generated by taking the inverse Fourier transform of an appropriate frequency-domain programmed excitation spectrum, in which the resonance frequencies of ions to be excited are included. This technique may be used for selection of precursor ions in MS/MS experiments.
+    /// SWIFT (stored waveform inverse fourier transform): A technique to create excitation waveforms for ions in FT-ICR mass spectrometer or Paul ion trap. An excitation waveform in the time-domain is generated by taking the inverse Fourier transform of an appropriate frequency-domain programmed excitation spectrum, in which the resonance frequencies of ions to be excited are included. This technique may be used for selection of precursor ions in MS/MS experiments.
     MS_SWIFT = MS_stored_waveform_inverse_fourier_transform,
 
     /// total ion current: The sum of all the separate ion currents carried by the ions of different m/z contributing to a complete mass spectrum or in a specified m/z range of a mass spectrum.
     MS_total_ion_current = 1000285,
 
-    /// total ion current: The sum of all the separate ion currents carried by the ions of different m/z contributing to a complete mass spectrum or in a specified m/z range of a mass spectrum.
+    /// TIC (total ion current): The sum of all the separate ion currents carried by the ions of different m/z contributing to a complete mass spectrum or in a specified m/z range of a mass spectrum.
     MS_TIC = MS_total_ion_current,
 
     /// time lag focusing: Energy focusing in a time-of-flight mass spectrometer that is accomplished by introducing a time delay between the formation of the ions and the application of the accelerating voltage pulse.
     MS_time_lag_focusing = 1000286,
 
-    /// time lag focusing: Energy focusing in a time-of-flight mass spectrometer that is accomplished by introducing a time delay between the formation of the ions and the application of the accelerating voltage pulse.
+    /// TLF (time lag focusing): Energy focusing in a time-of-flight mass spectrometer that is accomplished by introducing a time delay between the formation of the ions and the application of the accelerating voltage pulse.
     MS_TLF = MS_time_lag_focusing,
 
     /// time-of-flight mass spectrometer: An instrument that separates ions by m/z in a field-free region after acceleration to a fixed kinetic energy.
     MS_time_of_flight_mass_spectrometer = 1000287,
 
-    /// time-of-flight mass spectrometer: An instrument that separates ions by m/z in a field-free region after acceleration to a fixed kinetic energy.
+    /// TOF-MS (time-of-flight mass spectrometer): An instrument that separates ions by m/z in a field-free region after acceleration to a fixed kinetic energy.
     MS_TOF_MS = MS_time_of_flight_mass_spectrometer,
 
     /// cyclotron: A device that uses an oscillating electric field and magnetic field to accelerate charged particles.
@@ -1365,19 +1365,19 @@ enum PWIZ_API_DECL CVID
     /// constant neutral gain scan: Spectrum of all precursor ions that undergo a selected m/z increment.
     MS_constant_neutral_gain_scan = 1000324,
 
-    /// constant neutral gain scan: Spectrum of all precursor ions that undergo a selected m/z increment.
+    /// Constant Neutral Mass Gain Scan (constant neutral gain scan): Spectrum of all precursor ions that undergo a selected m/z increment.
     MS_Constant_Neutral_Mass_Gain_Scan = MS_constant_neutral_gain_scan,
 
     /// constant neutral gain spectrum: A spectrum formed of all product ions that have been produced by gain of a pre-selected neutral mass following the reaction with and addition of the gas in a collision cell.
     MS_constant_neutral_gain_spectrum = 1000325,
 
-    /// constant neutral gain spectrum: A spectrum formed of all product ions that have been produced by gain of a pre-selected neutral mass following the reaction with and addition of the gas in a collision cell.
+    /// constant neutral mass gain spectrum (constant neutral gain spectrum): A spectrum formed of all product ions that have been produced by gain of a pre-selected neutral mass following the reaction with and addition of the gas in a collision cell.
     MS_constant_neutral_mass_gain_spectrum = MS_constant_neutral_gain_spectrum,
 
     /// constant neutral loss spectrum: A spectrum formed of all product ions that have been produced with a selected m/z decrement from any precursor ions. The spectrum shown correlates to the precursor ion spectrum. See also neutral loss spectrum.
     MS_constant_neutral_loss_spectrum = 1000326,
 
-    /// constant neutral loss spectrum: A spectrum formed of all product ions that have been produced with a selected m/z decrement from any precursor ions. The spectrum shown correlates to the precursor ion spectrum. See also neutral loss spectrum.
+    /// constant neutral mass loss spectrum (constant neutral loss spectrum): A spectrum formed of all product ions that have been produced with a selected m/z decrement from any precursor ions. The spectrum shown correlates to the precursor ion spectrum. See also neutral loss spectrum.
     MS_constant_neutral_mass_loss_spectrum = MS_constant_neutral_loss_spectrum,
 
     /// consecutive reaction monitoring: A type of MS/MS experiments with three or more stages of m/z separation and in which a particular multi-step reaction path is monitored.
@@ -1434,7 +1434,7 @@ enum PWIZ_API_DECL CVID
     /// progeny ion: A charged product of a series of consecutive reactions that includes product ions, 1st generation product ions, 2nd generation product ions, etc. Given the sequential fragmentation scheme: M1+ -> M2+ -> M3+ -> M4+ -> M5+. M4+ is the precursor ion of M5+, a 1st generation product ion of M3+, a 2nd generation product ion of M2+ and a 3rd generation product ion of M1+.
     MS_progeny_ion = 1000344,
 
-    /// progeny ion: A charged product of a series of consecutive reactions that includes product ions, 1st generation product ions, 2nd generation product ions, etc. Given the sequential fragmentation scheme: M1+ -> M2+ -> M3+ -> M4+ -> M5+. M4+ is the precursor ion of M5+, a 1st generation product ion of M3+, a 2nd generation product ion of M2+ and a 3rd generation product ion of M1+.
+    /// Progeny Fragment Ion (progeny ion): A charged product of a series of consecutive reactions that includes product ions, 1st generation product ions, 2nd generation product ions, etc. Given the sequential fragmentation scheme: M1+ -> M2+ -> M3+ -> M4+ -> M5+. M4+ is the precursor ion of M5+, a 1st generation product ion of M3+, a 2nd generation product ion of M2+ and a 3rd generation product ion of M1+.
     MS_Progeny_Fragment_Ion = MS_progeny_ion,
 
     /// array detector: Detector comprising several ion collection elements, arranged in a line or grid where each element is an individual detector.
@@ -1596,7 +1596,7 @@ enum PWIZ_API_DECL CVID
     /// nanoelectrospray: Electrospray ionization at a flow rate less than ~25 nL/min. Nanoelectrospray is synonymous with nanospray. The flow is dependent on the potenial on the tip of the electrospray needle and/or a gas presure to push the sample through the needle. See also electrospray ionization and microelectrospray.
     MS_nanoelectrospray = 1000398,
 
-    /// nanoelectrospray: Electrospray ionization at a flow rate less than ~25 nL/min. Nanoelectrospray is synonymous with nanospray. The flow is dependent on the potenial on the tip of the electrospray needle and/or a gas presure to push the sample through the needle. See also electrospray ionization and microelectrospray.
+    /// nanospray (nanoelectrospray): Electrospray ionization at a flow rate less than ~25 nL/min. Nanoelectrospray is synonymous with nanospray. The flow is dependent on the potenial on the tip of the electrospray needle and/or a gas presure to push the sample through the needle. See also electrospray ionization and microelectrospray.
     MS_nanospray = MS_nanoelectrospray,
 
     /// penning ionization: Ionization that occurs through the interaction of two or more neutral gaseous species, at least one of which is internally excited.
@@ -1710,7 +1710,7 @@ enum PWIZ_API_DECL CVID
     /// photodissociation: A process wherein the reactant ion is dissociated as a result of absorption of one or more photons.
     MS_photodissociation = 1000435,
 
-    /// photodissociation: A process wherein the reactant ion is dissociated as a result of absorption of one or more photons.
+    /// Multiphoton Dissociation (photodissociation): A process wherein the reactant ion is dissociated as a result of absorption of one or more photons.
     MS_Multiphoton_Dissociation = MS_photodissociation,
 
     /// partial charge transfer reaction: Reaction of an ion with a neutral species in which some but not all of the ion charge is transferred to the neutral.
@@ -1746,7 +1746,7 @@ enum PWIZ_API_DECL CVID
     /// fast ion bombardment: The ionization of any species by the interaction of a focused beam of ions having a translational energy of several thousand eV with a solid sample.
     MS_fast_ion_bombardment = 1000446,
 
-    /// fast ion bombardment: The ionization of any species by the interaction of a focused beam of ions having a translational energy of several thousand eV with a solid sample.
+    /// FIB (fast ion bombardment): The ionization of any species by the interaction of a focused beam of ions having a translational energy of several thousand eV with a solid sample.
     MS_FIB = MS_fast_ion_bombardment,
 
     /// LTQ: Finnigan LTQ MS.
@@ -1764,13 +1764,13 @@ enum PWIZ_API_DECL CVID
     /// mass analyzer: Terms used to describe the Analyzer.
     MS_mass_analyzer = 1000451,
 
-    /// mass analyzer: Terms used to describe the Analyzer.
+    /// analyzer (mass analyzer): Terms used to describe the Analyzer.
     MS_analyzer = MS_mass_analyzer,
 
     /// data transformation: Terms used to describe types of data processing.
     MS_data_transformation = 1000452,
 
-    /// data transformation: Terms used to describe types of data processing.
+    /// data processing (data transformation): Terms used to describe types of data processing.
     MS_data_processing = MS_data_transformation,
 
     /// detector: The device that detects ions.
@@ -1785,7 +1785,7 @@ enum PWIZ_API_DECL CVID
     /// precursor activation: Terms to describe the precursor activation.
     MS_precursor_activation = 1000456,
 
-    /// precursor activation: Terms to describe the precursor activation.
+    /// activation (precursor activation): Terms to describe the precursor activation.
     MS_activation = MS_precursor_activation,
 
     /// sample: Terms to describe the sample.
@@ -1809,7 +1809,7 @@ enum PWIZ_API_DECL CVID
     /// instrument: Description of the instrument or the mass spectrometer.
     MS_instrument = 1000463,
 
-    /// instrument: Description of the instrument or the mass spectrometer.
+    /// instrument configuration (instrument): Description of the instrument or the mass spectrometer.
     MS_instrument_configuration = MS_instrument,
 
     /// mass unit: A unit of measurement for mass.
@@ -1854,7 +1854,7 @@ enum PWIZ_API_DECL CVID
     /// 6410 Triple Quadrupole LC/MS: The 6410 Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with a Agilent triple quadrupole mass spectrometer. Mass range of the mass spectrometer is 15-1650 m/z, resolution is at three settings of 0.7 u (unit), 1.2 u (wide) and 2.5 u (widest). The mass accuracy for 6410 mass spectrometer is 0.1 across the mass range. The collision cell is a hexapole with linear acceleration.
     MS_6410_Triple_Quadrupole_LC_MS = 1000477,
 
-    /// 6410 Triple Quadrupole LC/MS: The 6410 Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with a Agilent triple quadrupole mass spectrometer. Mass range of the mass spectrometer is 15-1650 m/z, resolution is at three settings of 0.7 u (unit), 1.2 u (wide) and 2.5 u (widest). The mass accuracy for 6410 mass spectrometer is 0.1 across the mass range. The collision cell is a hexapole with linear acceleration.
+    /// 6410 Triple Quad LC/MS (6410 Triple Quadrupole LC/MS): The 6410 Quadrupole LC/MS system is a Agilent liquid chromatography instrument combined with a Agilent triple quadrupole mass spectrometer. Mass range of the mass spectrometer is 15-1650 m/z, resolution is at three settings of 0.7 u (unit), 1.2 u (wide) and 2.5 u (widest). The mass accuracy for 6410 mass spectrometer is 0.1 across the mass range. The collision cell is a hexapole with linear acceleration.
     MS_6410_Triple_Quad_LC_MS = MS_6410_Triple_Quadrupole_LC_MS,
 
     /// 1200 series LC/MSD VL: The LC/MSD VL ion trap is part of the family of Agilent ion trap mass spectrometers. It has ESI, APCI and APPI ion sources and is a useful ion trap when the amount of sample is not the limiting factor.
@@ -1911,7 +1911,7 @@ enum PWIZ_API_DECL CVID
     /// Applied Biosystems instrument model: Applied Biosystems instrument model.
     MS_Applied_Biosystems_instrument_model = 1000495,
 
-    /// Applied Biosystems instrument model: Applied Biosystems instrument model.
+    /// ABI (Applied Biosystems instrument model): Applied Biosystems instrument model.
     MS_ABI = MS_Applied_Biosystems_instrument_model,
 
     /// instrument attribute: Instrument properties that are associated with a value.
@@ -1920,7 +1920,7 @@ enum PWIZ_API_DECL CVID
     /// zoom scan: Special scan mode, where data with improved resoltuion is acquired. This is typically achieved by scanning a more narrow m/z window or scanning with a lower scan rate.
     MS_zoom_scan = 1000497,
 
-    /// zoom scan: Special scan mode, where data with improved resoltuion is acquired. This is typically achieved by scanning a more narrow m/z window or scanning with a lower scan rate.
+    /// enhanced resolution scan (zoom scan): Special scan mode, where data with improved resoltuion is acquired. This is typically achieved by scanning a more narrow m/z window or scanning with a lower scan rate.
     MS_enhanced_resolution_scan = MS_zoom_scan,
 
     /// full scan: Feature of the ion trap mass spectrometer where MS data is acquired over a mass range.
@@ -2046,7 +2046,7 @@ enum PWIZ_API_DECL CVID
     /// massWolf: A software for converting Waters raw directory format to mzXML or mzML. massWolf was originally developed at the Institute for Systems Biology.
     MS_massWolf = 1000538,
 
-    /// massWolf: A software for converting Waters raw directory format to mzXML or mzML. massWolf was originally developed at the Institute for Systems Biology.
+    /// wolf (massWolf): A software for converting Waters raw directory format to mzXML or mzML. massWolf was originally developed at the Institute for Systems Biology.
     MS_wolf = MS_massWolf,
 
     /// Voyager Biospectrometry Workstation System: Applied Biosystems MALDI-TOF data acquisition and analysis system.
@@ -2166,7 +2166,7 @@ enum PWIZ_API_DECL CVID
     /// raw data file: Describes the type of file and its content.
     MS_raw_data_file = 1000577,
 
-    /// raw data file: Describes the type of file and its content.
+    /// source file (raw data file): Describes the type of file and its content.
     MS_source_file = MS_raw_data_file,
 
     /// LCQ Fleet: LCQ Fleet.
@@ -2175,28 +2175,28 @@ enum PWIZ_API_DECL CVID
     /// MS1 spectrum: Mass spectrum created by a single-stage MS experiment or the first stage of a multi-stage experiment.
     MS_MS1_spectrum = 1000579,
 
-    /// MS1 spectrum: Mass spectrum created by a single-stage MS experiment or the first stage of a multi-stage experiment.
+    /// full spectrum (MS1 spectrum): Mass spectrum created by a single-stage MS experiment or the first stage of a multi-stage experiment.
     MS_full_spectrum = MS_MS1_spectrum,
 
-    /// MS1 spectrum: Mass spectrum created by a single-stage MS experiment or the first stage of a multi-stage experiment.
+    /// Q1 spectrum (MS1 spectrum): Mass spectrum created by a single-stage MS experiment or the first stage of a multi-stage experiment.
     MS_Q1_spectrum = MS_MS1_spectrum,
 
-    /// MS1 spectrum: Mass spectrum created by a single-stage MS experiment or the first stage of a multi-stage experiment.
+    /// Q3 spectrum (MS1 spectrum): Mass spectrum created by a single-stage MS experiment or the first stage of a multi-stage experiment.
     MS_Q3_spectrum = MS_MS1_spectrum,
 
-    /// MS1 spectrum: Mass spectrum created by a single-stage MS experiment or the first stage of a multi-stage experiment.
+    /// Single-Stage Mass Spectrometry (MS1 spectrum): Mass spectrum created by a single-stage MS experiment or the first stage of a multi-stage experiment.
     MS_Single_Stage_Mass_Spectrometry = MS_MS1_spectrum,
 
     /// MSn spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n= 2.
     MS_MSn_spectrum = 1000580,
 
-    /// MSn spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n= 2.
+    /// multiple-stage mass spectrometry spectrum (MSn spectrum): MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n= 2.
     MS_multiple_stage_mass_spectrometry_spectrum = MS_MSn_spectrum,
 
-    /// MSn spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n= 2.
+    /// nth generation product ion spectrum (MSn spectrum): MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n= 2.
     MS_nth_generation_product_ion_spectrum = MS_MSn_spectrum,
 
-    /// MSn spectrum: MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n= 2.
+    /// product ion spectrum (MSn spectrum): MSn refers to multi-stage MS/MS experiments designed to record product ion spectra where n is the number of product ion stages (progeny ions). For ion traps, sequential MS/MS experiments can be undertaken where n > 2 whereas for a simple triple quadrupole system n= 2.
     MS_product_ion_spectrum = MS_MSn_spectrum,
 
     /// CRM spectrum: Spectrum generated from MSn experiment with three or more stages of m/z separation and in which a particular multi-step reaction path is monitored.
@@ -2205,25 +2205,25 @@ enum PWIZ_API_DECL CVID
     /// SIM spectrum: Spectrum obtained with the operation of a mass spectrometer in which the abundances of one ion or several ions of specific m/z values are recorded rather than the entire mass spectrum (Selected Ion Monitoring).
     MS_SIM_spectrum = 1000582,
 
-    /// SIM spectrum: Spectrum obtained with the operation of a mass spectrometer in which the abundances of one ion or several ions of specific m/z values are recorded rather than the entire mass spectrum (Selected Ion Monitoring).
+    /// MIM spectrum (SIM spectrum): Spectrum obtained with the operation of a mass spectrometer in which the abundances of one ion or several ions of specific m/z values are recorded rather than the entire mass spectrum (Selected Ion Monitoring).
     MS_MIM_spectrum = MS_SIM_spectrum,
 
-    /// SIM spectrum: Spectrum obtained with the operation of a mass spectrometer in which the abundances of one ion or several ions of specific m/z values are recorded rather than the entire mass spectrum (Selected Ion Monitoring).
+    /// multiple ion monitoring spectrum (SIM spectrum): Spectrum obtained with the operation of a mass spectrometer in which the abundances of one ion or several ions of specific m/z values are recorded rather than the entire mass spectrum (Selected Ion Monitoring).
     MS_multiple_ion_monitoring_spectrum = MS_SIM_spectrum,
 
-    /// SIM spectrum: Spectrum obtained with the operation of a mass spectrometer in which the abundances of one ion or several ions of specific m/z values are recorded rather than the entire mass spectrum (Selected Ion Monitoring).
+    /// selected ion monitoring spectrum (SIM spectrum): Spectrum obtained with the operation of a mass spectrometer in which the abundances of one ion or several ions of specific m/z values are recorded rather than the entire mass spectrum (Selected Ion Monitoring).
     MS_selected_ion_monitoring_spectrum = MS_SIM_spectrum,
 
     /// SRM spectrum: Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair.  Data can be obtained for a single transition pair or multiple transition pairs.  Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs.  Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.
     MS_SRM_spectrum = 1000583,
 
-    /// SRM spectrum: Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair.  Data can be obtained for a single transition pair or multiple transition pairs.  Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs.  Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.
+    /// MRM spectrum (SRM spectrum): Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair.  Data can be obtained for a single transition pair or multiple transition pairs.  Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs.  Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.
     MS_MRM_spectrum = MS_SRM_spectrum,
 
-    /// SRM spectrum: Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair.  Data can be obtained for a single transition pair or multiple transition pairs.  Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs.  Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.
+    /// multiple reaction monitoring spectrum (SRM spectrum): Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair.  Data can be obtained for a single transition pair or multiple transition pairs.  Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs.  Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.
     MS_multiple_reaction_monitoring_spectrum = MS_SRM_spectrum,
 
-    /// SRM spectrum: Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair.  Data can be obtained for a single transition pair or multiple transition pairs.  Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs.  Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.
+    /// selected reaction monitoring spectrum (SRM spectrum): Spectrum obtained when data are acquired from specific product ions corresponding to m/z values of selected precursor ions a recorded via two or more stages of mass spectrometry. The precursor/product ion pair is called a transition pair.  Data can be obtained for a single transition pair or multiple transition pairs.  Multiple time segments of different transition pairs can exist in a single file. Single precursor ions can have multiple product ions consitituting multiple transition pairs.  Selected reaction monitoring can be performed as tandem mass spectrometry in time or tandem mass spectrometry in space.
     MS_selected_reaction_monitoring_spectrum = MS_SRM_spectrum,
 
     /// mzML file: Proteomics Standards Inititative mzML file format.
@@ -2259,7 +2259,7 @@ enum PWIZ_API_DECL CVID
     /// low intensity data point removal: The removal of very low intensity data points that are likely to be spurious noise rather than real signal.
     MS_low_intensity_data_point_removal = 1000594,
 
-    /// low intensity data point removal: The removal of very low intensity data points that are likely to be spurious noise rather than real signal.
+    /// thresholding (low intensity data point removal): The removal of very low intensity data points that are likely to be spurious noise rather than real signal.
     MS_thresholding = MS_low_intensity_data_point_removal,
 
     /// time array: A data array of relative time offset values from a reference time.
@@ -2274,13 +2274,13 @@ enum PWIZ_API_DECL CVID
     /// electron transfer dissociation: A process to fragment ions in a mass spectrometer by inducing fragmentation of cations (e.g. peptides or proteins) by transferring electrons to them.
     MS_electron_transfer_dissociation = 1000598,
 
-    /// electron transfer dissociation: A process to fragment ions in a mass spectrometer by inducing fragmentation of cations (e.g. peptides or proteins) by transferring electrons to them.
+    /// ETD (electron transfer dissociation): A process to fragment ions in a mass spectrometer by inducing fragmentation of cations (e.g. peptides or proteins) by transferring electrons to them.
     MS_ETD = MS_electron_transfer_dissociation,
 
     /// pulsed q dissociation: A process that involves precursor ion activation at high Q, a time delay to allow the precursor to fragment, then a rapid pulse to low Q where all fragment ions are trapped. The product ions can then be scanned out of the ion trap and detected.
     MS_pulsed_q_dissociation = 1000599,
 
-    /// pulsed q dissociation: A process that involves precursor ion activation at high Q, a time delay to allow the precursor to fragment, then a rapid pulse to low Q where all fragment ions are trapped. The product ions can then be scanned out of the ion trap and detected.
+    /// PQD (pulsed q dissociation): A process that involves precursor ion activation at high Q, a time delay to allow the precursor to fragment, then a rapid pulse to low Q where all fragment ions are trapped. The product ions can then be scanned out of the ion trap and detected.
     MS_PQD = MS_pulsed_q_dissociation,
 
     /// Proteios: Database application and analysis platform for proteomics.
@@ -2331,7 +2331,7 @@ enum PWIZ_API_DECL CVID
     /// ProteoWizard: ProteoWizard software for data analysis. Currently developed and maintained by Darren Kessner at Parag Mallick's lab (Center for Applied Molecular Medicine at the University of Southern California).
     MS_ProteoWizard = 1000615,
 
-    /// ProteoWizard: ProteoWizard software for data analysis. Currently developed and maintained by Darren Kessner at Parag Mallick's lab (Center for Applied Molecular Medicine at the University of Southern California).
+    /// pwiz (ProteoWizard): ProteoWizard software for data analysis. Currently developed and maintained by Darren Kessner at Parag Mallick's lab (Center for Applied Molecular Medicine at the University of Southern California).
     MS_pwiz = MS_ProteoWizard,
 
     /// preset scan configuration: A user-defined scan configuration that specifies the instrumental settings in which a spectrum is acquired. An instrument may cycle through a list of preset scan configurations to acquire data. This is a more generic term for the Thermo \"scan event\", which is defined in the Thermo Xcalibur glossary as: a mass spectrometer scan that is defined by choosing the necessary scan parameter settings. Multiple scan events can be defined for each segment of time.
@@ -2352,7 +2352,7 @@ enum PWIZ_API_DECL CVID
     /// photodiode array detector: An array detector used to record spectra in the ultraviolet and visable region of light.
     MS_photodiode_array_detector = 1000621,
 
-    /// photodiode array detector: An array detector used to record spectra in the ultraviolet and visable region of light.
+    /// PDA (photodiode array detector): An array detector used to record spectra in the ultraviolet and visable region of light.
     MS_PDA = MS_photodiode_array_detector,
 
     /// Surveyor PDA: Surveyor PDA.
@@ -2364,7 +2364,7 @@ enum PWIZ_API_DECL CVID
     /// inductive detector: Inductive detector.
     MS_inductive_detector = 1000624,
 
-    /// inductive detector: Inductive detector.
+    /// image current detector (inductive detector): Inductive detector.
     MS_image_current_detector = MS_inductive_detector,
 
     /// chromatogram: The representation of detector response versus time.
@@ -2376,7 +2376,7 @@ enum PWIZ_API_DECL CVID
     /// selected ion current chromatogram: Chromatogram created by creating an array of the measurements of a specific single ion current at each time point.
     MS_selected_ion_current_chromatogram = 1000627,
 
-    /// selected ion current chromatogram: Chromatogram created by creating an array of the measurements of a specific single ion current at each time point.
+    /// SIC chromatogram (selected ion current chromatogram): Chromatogram created by creating an array of the measurements of a specific single ion current at each time point.
     MS_SIC_chromatogram = MS_selected_ion_current_chromatogram,
 
     /// basepeak chromatogram: Chromatogram created by creating an array of the most intense peaks at each time point.
@@ -2796,7 +2796,7 @@ enum PWIZ_API_DECL CVID
     /// native spectrum identifier format: Describes how the native spectrum identifiers are formated.
     MS_native_spectrum_identifier_format = 1000767,
 
-    /// native spectrum identifier format: Describes how the native spectrum identifiers are formated.
+    /// nativeID format (native spectrum identifier format): Describes how the native spectrum identifiers are formated.
     MS_nativeID_format = MS_native_spectrum_identifier_format,
 
     /// Thermo nativeID format: controllerType=xsd:nonNegativeInteger controllerNumber=xsd:positiveInteger scan=xsd:positiveInteger.
@@ -2850,22 +2850,22 @@ enum PWIZ_API_DECL CVID
     /// Gaussian smoothing: Reduces intensity spikes by convolving the data with a one-dimensional Gaussian function.
     MS_Gaussian_smoothing = 1000784,
 
-    /// Gaussian smoothing: Reduces intensity spikes by convolving the data with a one-dimensional Gaussian function.
+    /// binomial smoothing (Gaussian smoothing): Reduces intensity spikes by convolving the data with a one-dimensional Gaussian function.
     MS_binomial_smoothing = MS_Gaussian_smoothing,
 
-    /// Gaussian smoothing: Reduces intensity spikes by convolving the data with a one-dimensional Gaussian function.
+    /// Weierstrass transform (Gaussian smoothing): Reduces intensity spikes by convolving the data with a one-dimensional Gaussian function.
     MS_Weierstrass_transform = MS_Gaussian_smoothing,
 
     /// moving average smoothing: Reduces intensity spikes by averaging each point with two or more adjacent points. The more adjacent points that used, the stronger the smoothing effect.
     MS_moving_average_smoothing = 1000785,
 
-    /// moving average smoothing: Reduces intensity spikes by averaging each point with two or more adjacent points. The more adjacent points that used, the stronger the smoothing effect.
+    /// box smoothing (moving average smoothing): Reduces intensity spikes by averaging each point with two or more adjacent points. The more adjacent points that used, the stronger the smoothing effect.
     MS_box_smoothing = MS_moving_average_smoothing,
 
-    /// moving average smoothing: Reduces intensity spikes by averaging each point with two or more adjacent points. The more adjacent points that used, the stronger the smoothing effect.
+    /// boxcar smoothing (moving average smoothing): Reduces intensity spikes by averaging each point with two or more adjacent points. The more adjacent points that used, the stronger the smoothing effect.
     MS_boxcar_smoothing = MS_moving_average_smoothing,
 
-    /// moving average smoothing: Reduces intensity spikes by averaging each point with two or more adjacent points. The more adjacent points that used, the stronger the smoothing effect.
+    /// sliding average smoothing (moving average smoothing): Reduces intensity spikes by averaging each point with two or more adjacent points. The more adjacent points that used, the stronger the smoothing effect.
     MS_sliding_average_smoothing = MS_moving_average_smoothing,
 
     /// non-standard data array: A data array that contains data not covered by any other term in this group. Please do not use this term, if the binary data array type might be commonly used - contact the PSI-MS working group in order to have another CV term added.
@@ -2916,13 +2916,13 @@ enum PWIZ_API_DECL CVID
     /// area peak picking: Spectral peak processing conducted on the acquired data to convert profile data to centroided data. The area defined by all raw data points that belong to the peak is reported.
     MS_area_peak_picking = 1000801,
 
-    /// area peak picking: Spectral peak processing conducted on the acquired data to convert profile data to centroided data. The area defined by all raw data points that belong to the peak is reported.
+    /// sum peak picking (area peak picking): Spectral peak processing conducted on the acquired data to convert profile data to centroided data. The area defined by all raw data points that belong to the peak is reported.
     MS_sum_peak_picking = MS_area_peak_picking,
 
     /// height peak picking: Spectral peak processing conducted on the acquired data to convert profile data to centroided data. The maximum intensity of all raw data points that belong to the peak is reported.
     MS_height_peak_picking = 1000802,
 
-    /// height peak picking: Spectral peak processing conducted on the acquired data to convert profile data to centroided data. The maximum intensity of all raw data points that belong to the peak is reported.
+    /// max peak picking (height peak picking): Spectral peak processing conducted on the acquired data to convert profile data to centroided data. The maximum intensity of all raw data points that belong to the peak is reported.
     MS_max_peak_picking = MS_height_peak_picking,
 
     /// analyzer scan offset: Offset between two analyzers in a constant neutral loss or neutral gain scan. The value corresponds to the neutral loss or neutral gain value.
@@ -2931,7 +2931,7 @@ enum PWIZ_API_DECL CVID
     /// electromagnetic radiation spectrum: A plot of the relative intensity of electromagnetic radiation as a function of the wavelength.
     MS_electromagnetic_radiation_spectrum = 1000804,
 
-    /// electromagnetic radiation spectrum: A plot of the relative intensity of electromagnetic radiation as a function of the wavelength.
+    /// EMR spectrum (electromagnetic radiation spectrum): A plot of the relative intensity of electromagnetic radiation as a function of the wavelength.
     MS_EMR_spectrum = MS_electromagnetic_radiation_spectrum,
 
     /// emission spectrum: A plot of the relative intensity of electromagnetic radiation emitted by atoms or molecules when excited.
@@ -2955,7 +2955,7 @@ enum PWIZ_API_DECL CVID
     /// electromagnetic radiation chromatogram: The measurement of electromagnetic properties as a function of the retention time.
     MS_electromagnetic_radiation_chromatogram = 1000811,
 
-    /// electromagnetic radiation chromatogram: The measurement of electromagnetic properties as a function of the retention time.
+    /// EMR radiation chromatogram (electromagnetic radiation chromatogram): The measurement of electromagnetic properties as a function of the retention time.
     MS_EMR_radiation_chromatogram = MS_electromagnetic_radiation_chromatogram,
 
     /// absorption chromatogram: The measurement of light absorbed by the sample as a function of the retention time.
@@ -3108,13 +3108,13 @@ enum PWIZ_API_DECL CVID
     /// isoelectric point: The pH of a solution at which a charged molecule does not migrate in an electric field.
     MS_isoelectric_point = 1000862,
 
-    /// isoelectric point: The pH of a solution at which a charged molecule does not migrate in an electric field.
+    /// pI (isoelectric point): The pH of a solution at which a charged molecule does not migrate in an electric field.
     MS_pI = MS_isoelectric_point,
 
     /// predicted isoelectric point: The pH of a solution at which a charged molecule would not migrate in an electric field, as predicted by a software algorithm.
     MS_predicted_isoelectric_point = 1000863,
 
-    /// predicted isoelectric point: The pH of a solution at which a charged molecule would not migrate in an electric field, as predicted by a software algorithm.
+    /// predicted pI (predicted isoelectric point): The pH of a solution at which a charged molecule would not migrate in an electric field, as predicted by a software algorithm.
     MS_predicted_pI = MS_predicted_isoelectric_point,
 
     /// chemical compound formula: A combination of symbols used to express the chemical composition of a compound.
@@ -3141,7 +3141,7 @@ enum PWIZ_API_DECL CVID
     /// SRM software: Software used to predict, select, or optimize transitions or analyze the results of selected reaction monitoring runs.
     MS_SRM_software = 1000871,
 
-    /// MaRiMba: SRM software used to select candidate SRM transitions from a spectral library.
+    /// MaRiMba: Software used to predict transitions for selected reaction monitoring experiments based on observed spectrum libraries developed and distributed by the Institute for Systems Biology. http://tools.proteomecenter.org/wiki/index.php?title=Software:TPP-MaRiMba.
     MS_MaRiMba = 1000872,
 
     /// peptide attribute calculation software: Software used to predict or calculate numberical attributes of peptides.
@@ -3204,7 +3204,7 @@ enum PWIZ_API_DECL CVID
     /// unlabeled peptide: A peptide that has not been labeled with heavier-than-usual isotopes. This is often referred to as \"light\" to distinguish from \"heavy\".
     MS_unlabeled_peptide = 1000892,
 
-    /// unlabeled peptide: A peptide that has not been labeled with heavier-than-usual isotopes. This is often referred to as \"light\" to distinguish from \"heavy\".
+    /// light labeled peptide (unlabeled peptide): A peptide that has not been labeled with heavier-than-usual isotopes. This is often referred to as \"light\" to distinguish from \"heavy\".
     MS_light_labeled_peptide = MS_unlabeled_peptide,
 
     /// peptide group label: An arbitrary string label used to mark a set of peptides that belong together in a set, whereby the members are differentiated by different isotopic labels. For example, the heavy and light forms of the same peptide will both be assigned the same peptide group label.
@@ -3255,7 +3255,7 @@ enum PWIZ_API_DECL CVID
     /// transition: A set of two m/z values corresponding to the precursor m/z and a fragment m/z that in combination can be used to identify or quantify a specific ion, although not necessarily uniquely.
     MS_transition = 1000908,
 
-    /// transition: A set of two m/z values corresponding to the precursor m/z and a fragment m/z that in combination can be used to identify or quantify a specific ion, although not necessarily uniquely.
+    /// reaction (transition): A set of two m/z values corresponding to the precursor m/z and a fragment m/z that in combination can be used to identify or quantify a specific ion, although not necessarily uniquely.
     MS_reaction = MS_transition,
 
     /// transition validation method: The strategy used to validate that a transition is effective.
@@ -3304,7 +3304,7 @@ enum PWIZ_API_DECL CVID
     MS_TIQAM = 1000923,
 
     /// MaRiMba: Software used to predict transitions for selected reaction monitoring experiments based on observed spectrum libraries developed and distributed by the Institute for Systems Biology. http://tools.proteomecenter.org/wiki/index.php?title=Software:TPP-MaRiMba.
-    MS_MaRiMba_1000924 = 1000924,
+    MS_MaRiMba_OBSOLETE = 1000924,
 
     /// ATAQS: Software suite used to predict, select, and optimize transitions as well as analyze the results of selected reaction monitoring runs developed and distributed by the Institute for Systems Biology.
     MS_ATAQS = 1000925,
@@ -3900,13 +3900,13 @@ enum PWIZ_API_DECL CVID
     /// product ion m/z: The m/z of the product ion.
     MS_product_ion_m_z = 1001225,
 
-    /// product ion m/z: The m/z of the product ion.
+    /// fragment ion m/z (product ion m/z): The m/z of the product ion.
     MS_fragment_ion_m_z = MS_product_ion_m_z,
 
     /// product ion intensity: The intensity of the product ion.
     MS_product_ion_intensity = 1001226,
 
-    /// product ion intensity: The intensity of the product ion.
+    /// fragment ion intensity (product ion intensity): The intensity of the product ion.
     MS_fragment_ion_intensity = MS_product_ion_intensity,
 
     /// product ion m/z error: The product ion m/z error.
@@ -4602,19 +4602,19 @@ enum PWIZ_API_DECL CVID
     /// selected ion monitoring chromatogram: Chromatogram created by creating an array of the measurements of a selectively monitored ion at each time point.
     MS_selected_ion_monitoring_chromatogram = 1001472,
 
-    /// selected ion monitoring chromatogram: Chromatogram created by creating an array of the measurements of a selectively monitored ion at each time point.
+    /// SIM chromatogram (selected ion monitoring chromatogram): Chromatogram created by creating an array of the measurements of a selectively monitored ion at each time point.
     MS_SIM_chromatogram = MS_selected_ion_monitoring_chromatogram,
 
     /// selected reaction monitoring chromatogram: Chromatogram created by creating an array of the measurements of a selectively monitored reaction at each time point.
     MS_selected_reaction_monitoring_chromatogram = 1001473,
 
-    /// selected reaction monitoring chromatogram: Chromatogram created by creating an array of the measurements of a selectively monitored reaction at each time point.
+    /// SRM chromatogram (selected reaction monitoring chromatogram): Chromatogram created by creating an array of the measurements of a selectively monitored reaction at each time point.
     MS_SRM_chromatogram = MS_selected_reaction_monitoring_chromatogram,
 
     /// consecutive reaction monitoring chromatogram: Chromatogram created by creating an array of the measurements of a series of monitored reactions at each time point.
     MS_consecutive_reaction_monitoring_chromatogram_OBSOLETE = 1001474,
 
-    /// consecutive reaction monitoring chromatogram: Chromatogram created by creating an array of the measurements of a series of monitored reactions at each time point.
+    /// CRM chromatogram (consecutive reaction monitoring chromatogram): Chromatogram created by creating an array of the measurements of a series of monitored reactions at each time point.
     MS_CRM_chromatogram_OBSOLETE = MS_consecutive_reaction_monitoring_chromatogram_OBSOLETE,
 
     /// OMSSA: Open Mass Spectrometry Search Algorithm was used to analyze the spectra.
@@ -4768,7 +4768,7 @@ enum PWIZ_API_DECL CVID
     MS_precursor_neutral_loss_ = 1001525,
 
     /// spectrum from database nativeID format: databasekey=xsd:Long
-    MS_spectrum_from_database_nativeID_format = 1001526,
+    MS_spectrum_from_database_nativeID_format_1001526 = 1001526,
 
     /// Proteinscape spectra: Spectra from Bruker/Protagen Proteinscape database.
     MS_Proteinscape_spectra = 1001527,
@@ -14116,7 +14116,7 @@ enum PWIZ_API_DECL CVID
     BTO_culture_condition_heme_grown_cell = 300002229,
 
     /// culture condition:naphthalene-grown cell: 
-    BTO_culture_condition_naphthalene_grown_cell = 300002230,
+    BTO_culture_condition_naphthalene_grown_cell_300002230 = 300002230,
 
     /// culture condition:porcine gastric mucin-grown cell: 
     BTO_culture_condition_porcine_gastric_mucin_grown_cell = 300002231,
@@ -14419,7 +14419,7 @@ enum PWIZ_API_DECL CVID
     BTO_lamina_propria = 300002330,
 
     /// HLE cell: Human hepatoma cell line.
-    BTO_HLE_cell = 300002331,
+    BTO_HLE_cell_300002331 = 300002331,
 
     /// monocytic leukemia cell line: 
     BTO_monocytic_leukemia_cell_line = 300002332,
@@ -17380,7 +17380,7 @@ enum PWIZ_API_DECL CVID
     BTO_EMT_6_cell = 300003329,
 
     /// culture condition:n-hexadecane-grown cell: 
-    BTO_culture_condition_n_hexadecane_grown_cell = 300003330,
+    BTO_culture_condition_n_hexadecane_grown_cell_300003330 = 300003330,
 
     /// culture condition:methane-grown cell: 
     BTO_culture_condition_methane_grown_cell = 300003331,

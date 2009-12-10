@@ -4,8 +4,8 @@ saved-by: andreas_bertsch
 auto-generated-by: OBO-Edit 1.101
 default-namespace: MS
 remark: namespace: MS
-remark: version: 2.28.0
-remark: release date: 2009-11-18
+remark: version: 2.29.0
+remark: release date: 2009-12-10
 remark: coverage: Mass spectrometer output files and spectra interpretation
 remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
@@ -5832,8 +5832,8 @@ is_a: MS:1000531 ! software
 [Term]
 id: MS:1000872
 name: MaRiMba
-def: "SRM software used to select candidate SRM transitions from a spectral library." [PSI:MS]
-is_a: MS:1000711 ! ClinProTools
+def: "Software used to predict transitions for selected reaction monitoring experiments based on observed spectrum libraries developed and distributed by the Institute for Systems Biology. http://tools.proteomecenter.org/wiki/index.php?title=Software:TPP-MaRiMba." [PSI:MS]
+is_a: MS:1000871 ! SRM software
 
 [Term]
 id: MS:1000873
@@ -6172,8 +6172,9 @@ is_a: MS:1000871 ! SRM software
 [Term]
 id: MS:1000924
 name: MaRiMba
-def: "Software used to predict transitions for selected reaction monitoring experiments based on observed spectrum libraries developed and distributed by the Institute for Systems Biology. http://tools.proteomecenter.org/wiki/index.php?title=Software:TPP-MaRiMba." [PSI:MS]
-is_a: MS:1000871 ! SRM software
+def: "OBSOLETE Software used to predict transitions for selected reaction monitoring experiments based on observed spectrum libraries developed and distributed by the Institute for Systems Biology. http://tools.proteomecenter.org/wiki/index.php?title=Software:TPP-MaRiMba." [PSI:MS]
+comment: This term was made obsolete because it was redundant with an existing term (MS:1000872)
+is_obsolete: true
 
 [Term]
 id: MS:1000925

@@ -22,15 +22,18 @@
 //
 
 
-#include "../../../data/msdata/obo.hpp"
+#include "pwiz/data/msdata/obo.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
+#include "boost/foreach.hpp"
+#include "pwiz/utility/misc/Stream.hpp"
 #include <iostream>
 #include <iomanip>
 #include <fstream>
 #include <iterator>
 #include <algorithm>
 #include <map>
+#include <set>
 
 
 using namespace std;
@@ -158,20 +161,31 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "public enum class CVID\n{\n"
           "    CVID_Unknown = -1";
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
-    for (set<Term>::const_iterator it=obo->terms.begin(); it!=obo->terms.end(); ++it)
     {
-        os << ",\n\n"
-           << "    /// <summary>" << it->name << ": " << it->def << "</summary>\n"
-           << "    " << enumName(*it) << " = " << enumValue(*it, obo-obos.begin());
-        
-        if (obo->prefix == "MS") // add synonyms for PSI-MS only
+        multiset<string> enumNames;
+        BOOST_FOREACH(const Term& term, obo->terms)
+            enumNames.insert(enumName(term));
+
+        BOOST_FOREACH(const Term& term, obo->terms)
         {
-            for (vector<string>::const_iterator syn=it->exactSynonyms.begin(); 
-                 syn!=it->exactSynonyms.end(); ++syn)
+            string eName = enumName(term);
+            if (enumNames.count(eName) > 1)
             {
-                os << ",\n\n"
-                   << "    /// <summary>" << it->name << ": " << it->def << "</summary>\n"
-                   << "    " << enumName(it->prefix, *syn, it->isObsolete) << " = " << enumName(*it);
+                eName += "_" + lexical_cast<string>(enumValue(term, obo-obos.begin()));
+            }
+
+            os << ",\n\n"
+               << "    /// <summary>" << term.name << ": " << term.def << "</summary>\n"
+               << "    " << eName << " = " << enumValue(term, obo-obos.begin());
+
+            if (obo->prefix == "MS") // add synonyms for PSI-MS only
+            {
+                BOOST_FOREACH(const string& synonym, term.exactSynonyms)
+                {
+                    os << ",\n\n"
+                       << "    /// <summary>" << synonym << ": " << term.def << "</summary>\n"
+                       << "    " << enumName(term.prefix, synonym, term.isObsolete) << " = " << eName;
+                }
             }
         }
     }
