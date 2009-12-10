@@ -45,6 +45,12 @@ void writeTiny()
     string filename = "tiny.pwiz.traML";
     cout << "Writing file " << filename << endl;
     TraDataFile::write(td, filename);
+
+    // with MIAPE metadata added 
+    examples::addMIAPEExampleMetadata(td);
+    filename = "tiny_miape.pwiz.traML";
+    cout << "Writing file " << filename << endl;
+    TraDataFile::write(td, filename);
 }
 
 
