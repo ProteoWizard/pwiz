@@ -79,7 +79,7 @@ PrecursorMassFilter::Config::Config(
 
 void PrecursorMassFilter::describe(ProcessingMethod& method) const
 {
-    method.set(MS_ECD_ETD_Precursor_Mass_Filter);
+    method.userParams.push_back(UserParam("MS_ECD_ETD_precursor_mass_filter"));
     method.userParams.push_back(UserParam("remove precursor", lexical_cast<string>(params.removePrecursor)));
     method.userParams.push_back(UserParam("filter charge reduced precursors", lexical_cast<string>(params.removeReducedChargePrecursors)));
     method.userParams.push_back(UserParam("remove neutral loss masses", lexical_cast<string>(params.neutralLossSpecies.size() > 0)));

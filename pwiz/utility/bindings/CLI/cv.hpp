@@ -32,23 +32,25 @@
 #include "SharedCLI.hpp"
 
 
-// [C:\bumbershoot\src\pwiz-src\pwiz\data\msdata\psi-ms.obo]
+// [c:\bumbershoot\src\pwiz-src\pwiz\data\msdata\psi-ms.obo]
 //   format-version: 1.2
-//   date: 14:07:2009 18:30
-//   saved-by: Eric Deutsch
+//   date: 19:08:2009 0:07
+//   saved-by: andreas_bertsch
 //   auto-generated-by: OBO-Edit 1.101
 //   default-namespace: MS
 //   remark: namespace: MS
-//   remark: version: 2.20.2
-//   remark: release date: 2009-07-20T17:57:48Z
+//   remark: version: 2.28.0
+//   remark: release date: 2009-11-18
 //   remark: coverage: Mass spectrometer output files and spectra interpretation
 //   remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 //   remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
+//   remark: creator: Marius Kallhardt <Marius.Kallhardt <-at-> bdal.de>
+//   remark: creator: Eric Deutsch <edeutsch <-at-> systemsbiology.org>
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group and HUPO Proteomics Standards Initiative Proteomics Informatics Working Group 
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
 //   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo?revision=1.21
 //
-// [C:\bumbershoot\src\pwiz-src\pwiz\data\msdata\unit.obo]
+// [c:\bumbershoot\src\pwiz-src\pwiz\data\msdata\unit.obo]
 //   format-version: 1.2
 //   date: 14:07:2009 12:37
 //   saved-by: George Gkoutos
@@ -212,8 +214,11 @@ public enum class CVID
     /// <summary>charge state: The charge state of the ion, single or multiple and positive or negatively charged.</summary>
     MS_charge_state = 1000041,
 
-    /// <summary>intensity: Intensity of ions as measured by the height or area of a peak in a mass spectrum.</summary>
-    MS_intensity = 1000042,
+    /// <summary>charge state: The charge state of the ion, single or multiple and positive or negatively charged.</summary>
+    MS_z = MS_charge_state,
+
+    /// <summary>peak intensity: Intensity of ions as measured by the height or area of a peak in a mass spectrum.</summary>
+    MS_peak_intensity = 1000042,
 
     /// <summary>intensity unit: Intensity units are commonly arbitrary. Detected in counts per second (cps) when using counting detectors, but measured in volts when using analog detectors.</summary>
     MS_intensity_unit = 1000043,
@@ -596,11 +601,11 @@ public enum class CVID
     /// <summary>4700 Proteomics Analyzer: Applied Biosystems/MDS SCIEX 4700 Proteomics Analyzer MS.</summary>
     MS_4700_Proteomics_Analyzer = 1000140,
 
-    /// <summary>APEX IV: Bruker Daltonics APEX IV MS.</summary>
-    MS_APEX_IV = 1000141,
+    /// <summary>apex IV: Bruker Daltonics' apex IV: ESI, MALDI, Nanospray, APCI, APPI, Qh-FT_ICR.</summary>
+    MS_apex_IV = 1000141,
 
-    /// <summary>APEX-Q: Bruker Daltonics APEX-Q MS.</summary>
-    MS_APEX_Q = 1000142,
+    /// <summary>apex Q: Bruker Daltonics' apex Q: ESI, MALDI, Nanospray, APCI, APPI, Qh-FT_ICR.</summary>
+    MS_apex_Q = 1000142,
 
     /// <summary>API 150EX: Applied Biosystems/MDS SCIEX API 150EX MS.</summary>
     MS_API_150EX = 1000143,
@@ -617,20 +622,20 @@ public enum class CVID
     /// <summary>API 4000: Applied Biosystems/MDS SCIEX API 4000 MS.</summary>
     MS_API_4000 = 1000147,
 
-    /// <summary>autoFlex II: Bruker Daltonics autoFlex II MS.</summary>
-    MS_autoFlex_II = 1000148,
+    /// <summary>autoflex II: Bruker Daltonics' autoflex II: MALDI TOF.</summary>
+    MS_autoflex_II = 1000148,
 
-    /// <summary>autoFlex TOF/TOF: Bruker Daltonics autoFlex TOF/TOF MS.</summary>
-    MS_autoFlex_TOF_TOF = 1000149,
+    /// <summary>autoflex TOF/TOF: Bruker Daltonics' autoflex TOF/TOF MS: MALDI TOF.</summary>
+    MS_autoflex_TOF_TOF = 1000149,
 
     /// <summary>Auto Spec Ultima NT: Waters AutoSpec Ultima NT MS.</summary>
     MS_Auto_Spec_Ultima_NT = 1000150,
 
-    /// <summary>Bio TOF II: Bruker Daltonics BioTOF II MS.</summary>
-    MS_Bio_TOF_II = 1000151,
+    /// <summary>BioTOF II: Bruker Daltonics' BioTOF II: ESI TOF.</summary>
+    MS_BioTOF_II = 1000151,
 
-    /// <summary>Bio TOF Q: Bruker Daltonics BioTOF Q MS.</summary>
-    MS_Bio_TOF_Q = 1000152,
+    /// <summary>BioTOF-Q: Bruker Daltonics' BioTOF-Q: ESI Q-TOF.</summary>
+    MS_BioTOF_Q = 1000152,
 
     /// <summary>DELTA plusAdvantage: ThermoFinnigan DELTA plusAdvantage MS.</summary>
     MS_DELTA_plusAdvantage = 1000153,
@@ -641,11 +646,11 @@ public enum class CVID
     /// <summary>ELEMENT2: ThermoFinnigan ELEMENT2 MS.</summary>
     MS_ELEMENT2 = 1000155,
 
-    /// <summary>esquire4000: Bruker Daltonics esquire4000 MS.</summary>
-    MS_esquire4000 = 1000156,
+    /// <summary>esquire 4000: Bruker Daltonics' esquire 4000: linear ion trap, ESI, MALDI, Nanospray, APCI, APPI.</summary>
+    MS_esquire_4000 = 1000156,
 
-    /// <summary>esquire6000: Bruker Daltonics esquire6000 MS.</summary>
-    MS_esquire6000 = 1000157,
+    /// <summary>esquire 6000: Bruker Daltonics' esquire 6000: linear ion trap, ESI, MALDI, Nanospray, APCI, APPI.</summary>
+    MS_esquire_6000 = 1000157,
 
     /// <summary>explorer: IonSpec Explorer MS.</summary>
     MS_explorer = 1000158,
@@ -653,11 +658,11 @@ public enum class CVID
     /// <summary>GCT: Waters GCT MS.</summary>
     MS_GCT = 1000159,
 
-    /// <summary>HCT: Bruker Daltonics HCT MS.</summary>
+    /// <summary>HCT: Bruker Daltonics' HCT: ESI Q-TOF, Nanospray, APCI, APPI.</summary>
     MS_HCT = 1000160,
 
-    /// <summary>HCT Plus: Bruker Daltonics HCTPlus MS.</summary>
-    MS_HCT_Plus = 1000161,
+    /// <summary>HCTplus: Bruker Daltonics' HCTplus: ESI Q-TOF, Nanospray, APCI, APPI.</summary>
+    MS_HCTplus = 1000161,
 
     /// <summary>HiRes ESI: IonSpec HiResESI MS.</summary>
     MS_HiRes_ESI = 1000162,
@@ -704,11 +709,11 @@ public enum class CVID
     /// <summary>MAT95XP Trap: ThermoFinnigan MAT95XP Trap MS.</summary>
     MS_MAT95XP_Trap = 1000176,
 
-    /// <summary>microFlex: Bruker Daltonics microFlex MS.</summary>
-    MS_microFlex = 1000177,
+    /// <summary>microflex: Bruker Daltonics' microflex: MALDI TOF.</summary>
+    MS_microflex = 1000177,
 
-    /// <summary>microTOFLC: Bruker Daltonics microTOFLC MS.</summary>
-    MS_microTOFLC = 1000178,
+    /// <summary>microTOF LC: Bruker Daltonics' microTOF LC: ESI TOF, Nanospray, APCI, APPI.</summary>
+    MS_microTOF_LC = 1000178,
 
     /// <summary>neptune: ThermoFinnigan NEPTUNE MS.</summary>
     MS_neptune = 1000179,
@@ -722,7 +727,7 @@ public enum class CVID
     /// <summary>OMEGA-2001: IonSpec OMEGA-2001 MS.</summary>
     MS_OMEGA_2001 = 1000182,
 
-    /// <summary>OmniFlex: Bruker Daltonics OminFlex MS.</summary>
+    /// <summary>OmniFlex: Bruker Daltonics' OmniFlex: MALDI TOF.</summary>
     MS_OmniFlex = 1000183,
 
     /// <summary>Platform ICP: Waters Platform ICP MS.</summary>
@@ -776,11 +781,11 @@ public enum class CVID
     /// <summary>ultima: IonSpec Ultima MS.</summary>
     MS_ultima = 1000200,
 
-    /// <summary>ultraFlex: Bruker Daltonics ultraFlex MS.</summary>
-    MS_ultraFlex = 1000201,
+    /// <summary>ultraflex: Bruker Daltonics' ultraflex: MALDI TOF.</summary>
+    MS_ultraflex = 1000201,
 
-    /// <summary>ultraFlex TOF/TOF: Bruker Daltonics ultraFlex TOF/TOF MS.</summary>
-    MS_ultraFlex_TOF_TOF = 1000202,
+    /// <summary>ultraflex TOF/TOF: Bruker Daltonics' ultraflex TOF/TOF: MALDI TOF.</summary>
+    MS_ultraflex_TOF_TOF = 1000202,
 
     /// <summary>Voyager-DE PRO: Applied Biosystems/MDS SCIEX Voyager-DE PRO MS.</summary>
     MS_Voyager_DE_PRO = 1000203,
@@ -821,11 +826,11 @@ public enum class CVID
     /// <summary>base peak: The peak in a mass spectrum that has the greatest intensity. This term may be applied to the spectra of pure substances or mixtures.</summary>
     MS_BP = MS_base_peak,
 
-    /// <summary>charge number: The total charge on an ion divided by the electron charge e.</summary>
-    MS_charge_number = 1000211,
+    /// <summary>OBSOLETE charge number: OBSOLETE. The total charge on an ion divided by the electron charge e. OBSOLETED 2009-10-27 since this was viewed as a duplication of 00041 charge state.</summary>
+    MS_OBSOLETE_charge_number_OBSOLETE = 1000211,
 
-    /// <summary>charge number: The total charge on an ion divided by the electron charge e.</summary>
-    MS_z = MS_charge_number,
+    /// <summary>OBSOLETE charge number: OBSOLETE. The total charge on an ion divided by the electron charge e. OBSOLETED 2009-10-27 since this was viewed as a duplication of 00041 charge state.</summary>
+    MS_z_OBSOLETE = MS_OBSOLETE_charge_number_OBSOLETE,
 
     /// <summary>dalton: A non-SI unit of mass (symbol Da) that is equal to the unified atomic mass unit: 1.660 538 86(28) x 10^-27 kg.</summary>
     MS_dalton_OBSOLETE = 1000212,
@@ -2312,10 +2317,10 @@ public enum class CVID
     /// <summary>ProteinLynx Global Server mass spectrum XML file: Peak list file format used by ProteinLynx Global Server.</summary>
     MS_ProteinLynx_Global_Server_mass_spectrum_XML_file = 1000614,
 
-    /// <summary>ProteoWizard: ProteoWizard software for data analysis. Currently developed and maintained by Darren Kessner at Parag Mallick's lab SFCAP at Cedars-Sinai.</summary>
+    /// <summary>ProteoWizard: ProteoWizard software for data analysis. Currently developed and maintained by Darren Kessner at Parag Mallick's lab (Center for Applied Molecular Medicine at the University of Southern California).</summary>
     MS_ProteoWizard = 1000615,
 
-    /// <summary>ProteoWizard: ProteoWizard software for data analysis. Currently developed and maintained by Darren Kessner at Parag Mallick's lab SFCAP at Cedars-Sinai.</summary>
+    /// <summary>ProteoWizard: ProteoWizard software for data analysis. Currently developed and maintained by Darren Kessner at Parag Mallick's lab (Center for Applied Molecular Medicine at the University of Southern California).</summary>
     MS_pwiz = MS_ProteoWizard,
 
     /// <summary>preset scan configuration: A user-defined scan configuration that specifies the instrumental settings in which a spectrum is acquired. An instrument may cycle through a list of preset scan configurations to acquire data. This is a more generic term for the Thermo \"scan event\", which is defined in the Thermo Xcalibur glossary as: a mass spectrometer scan that is defined by choosing the necessary scan parameter settings. Multiple scan events can be defined for each segment of time.</summary>
@@ -2561,37 +2566,37 @@ public enum class CVID
     /// <summary>Waters software: Waters software for data acquisition and analysis.</summary>
     MS_Waters_software = 1000694,
 
-    /// <summary>apex ultra: Bruker Daltonics apex ultra.</summary>
+    /// <summary>apex ultra: Bruker Daltonics' apex ultra: ESI, MALDI, Nanospray, APCI, APPI, Qh-FT_ICR.</summary>
     MS_apex_ultra = 1000695,
 
-    /// <summary>autoflex III smartbeam: Bruker Daltonics autoflex III smartbeam.</summary>
+    /// <summary>autoflex III smartbeam: Bruker Daltonics' autoflex III smartbeam: MALDI TOF.</summary>
     MS_autoflex_III_smartbeam = 1000696,
 
-    /// <summary>HCT Series: Bruker Daltonics HCT Series</summary>
-    MS_HCT_Series = 1000697,
+    /// <summary>Bruker Daltonics HCT Series: Bruker Daltonics HCT Series</summary>
+    MS_Bruker_Daltonics_HCT_Series = 1000697,
 
-    /// <summary>HCTultra: Bruker Daltonics HCTultra</summary>
+    /// <summary>HCTultra: Bruker Daltonics' HCTultra: ESI TOF, Nanospray, APCI, APPI.</summary>
     MS_HCTultra = 1000698,
 
-    /// <summary>HCTultra PTM: Bruker Daltonics HCTultra PTM Discovery System</summary>
+    /// <summary>HCTultra PTM: Bruker Daltonics' HCTultra PTM: ESI TOF, Nanospray, APCI, APPI, PTR</summary>
     MS_HCTultra_PTM = 1000699,
 
-    /// <summary>HCTultra ETD II: Bruker Daltonics HCTultra ETD II System</summary>
+    /// <summary>HCTultra ETD II: Bruker Daltonics' HCTultra ETD II: ESI Q-TOF, Nanospray, APCI, APPI, ETD</summary>
     MS_HCTultra_ETD_II = 1000700,
 
-    /// <summary>microflex LT: Bruker Daltonics microflex MS.</summary>
+    /// <summary>microflex LT: Bruker Daltonics' microflex LT: MALDI TOF.</summary>
     MS_microflex_LT = 1000701,
 
-    /// <summary>micrOTOF: Bruker Daltonics micrOTOF</summary>
+    /// <summary>micrOTOF: Bruker Daltonics' micrOTOF: ESI TOF, APCI, APPI.</summary>
     MS_micrOTOF = 1000702,
 
-    /// <summary>micrOTOF-Q: Bruker Daltonics micrOTOF-Q</summary>
+    /// <summary>micrOTOF-Q: Bruker Daltonics' micrOTOF-Q: ESI Q-TOF, Nanospray, APCI, APPI.</summary>
     MS_micrOTOF_Q = 1000703,
 
-    /// <summary>micrOTOF-Q II: Bruker Daltonics micrOTOF-Q II</summary>
+    /// <summary>micrOTOF-Q II: Bruker Daltonics' micrOTOF-Q II: ESI Q-TOF, Nanospray, APCI, APPI.</summary>
     MS_micrOTOF_Q_II = 1000704,
 
-    /// <summary>ultraflex III TOF/TOF: Bruker Daltonics ultraflex III TOF/TOF.</summary>
+    /// <summary>ultraflex III TOF/TOF: Bruker Daltonics' ultraflex III TOF/TOF: MALDI TOF</summary>
     MS_ultraflex_III_TOF_TOF = 1000705,
 
     /// <summary>apexControl: Bruker software for data acquisition.</summary>
@@ -3071,9 +3076,6 @@ public enum class CVID
     /// <summary>LTQ Velos: Thermo Scientific LTQ Velos MS.</summary>
     MS_LTQ_Velos = 1000855,
 
-    /// LTQ Orbitrap Velos: Thermo Scientific LTQ Orbitrap Velos MS
-    MS_LTQ_Orbitrap_Velos = 1001599,
-
     /// <summary>LTQ Velos ETD: Thermo Scientific LTQ Velos MS with ETD.</summary>
     MS_LTQ_Velos_ETD = 1000856,
 
@@ -3157,6 +3159,144 @@ public enum class CVID
 
     /// <summary>chemical compound: A substance formed by chemical union of two or more elements or ingredients in definite proportion by weight.</summary>
     MS_chemical_compound = 1000881,
+
+    /// <summary>protein: A compound composed of one or more chains of amino acids in a specific order determined by the base sequence of nucleotides in the DNA coding for the protein.</summary>
+    MS_protein = 1000882,
+
+    /// <summary>protein short name: A short name or symbol of a protein (e.g., HSF 1 or HSF1_HUMAN).</summary>
+    MS_protein_short_name = 1000883,
+
+    /// <summary>protein attribute: An nonphysical attribute describing a specific protein.</summary>
+    MS_protein_attribute = 1000884,
+
+    /// <summary>protein accession: Accession number for a specific protein in a database.</summary>
+    MS_protein_accession = 1000885,
+
+    /// <summary>protein name: A long name describing the function of the protein.</summary>
+    MS_protein_name = 1000886,
+
+    /// <summary>peptide attribute: An nonphysical attribute that can be used to describe a peptide.</summary>
+    MS_peptide_attribute = 1000887,
+
+    /// <summary>unmodified peptide sequence: A sequence of letter symbols denoting the order of amino acids that compose the peptide, without encoding any amino acid mass modifications that might be present.</summary>
+    MS_unmodified_peptide_sequence = 1000888,
+
+    /// <summary>modified peptide sequence: A sequence of letter symbols denoting the order of amino acids that compose the peptide plus the encoding any amino acid mass modifications that are present using the notation where the total mass of the modified amino acid is specified in square bracketed numbers following the letter (e.g. R[162.10111] indicates an arginine whose final modified mass is 162.10111 amu).</summary>
+    MS_modified_peptide_sequence = 1000889,
+
+    /// <summary>peptide labeling state: A state description of how a peptide might be isotopically or isobarically labelled.</summary>
+    MS_peptide_labeling_state = 1000890,
+
+    /// <summary>heavy labeled peptide: A peptide that has been created or labeled with some heavier-than-usual isotopes.</summary>
+    MS_heavy_labeled_peptide = 1000891,
+
+    /// <summary>unlabeled peptide: A peptide that has not been labeled with heavier-than-usual isotopes. This is often referred to as \"light\" to distinguish from \"heavy\".</summary>
+    MS_unlabeled_peptide = 1000892,
+
+    /// <summary>unlabeled peptide: A peptide that has not been labeled with heavier-than-usual isotopes. This is often referred to as \"light\" to distinguish from \"heavy\".</summary>
+    MS_light_labeled_peptide = MS_unlabeled_peptide,
+
+    /// <summary>peptide group label: An arbitrary string label used to mark a set of peptides that belong together in a set, whereby the members are differentiated by different isotopic labels. For example, the heavy and light forms of the same peptide will both be assigned the same peptide group label.</summary>
+    MS_peptide_group_label = 1000893,
+
+    /// <summary>retention time: A measure of the interval relative to the beginning of a mass spectrometric run when a peptide will exit the chromatographic column.</summary>
+    MS_retention_time = 1000894,
+
+    /// <summary>local retention time: A measure of the interval relative to the beginning of a mass spectrometric run when a peptide will exit an unspecified local chromatographic column and instrumental setup.</summary>
+    MS_local_retention_time = 1000895,
+
+    /// <summary>normalized retention time: A measure of the interval relative to the beginning of a mass spectrometric run when a peptide will exit a standardized reference chromatographic column and instrumental setup.</summary>
+    MS_normalized_retention_time = 1000896,
+
+    /// <summary>predicted retention time: A time interval relative to the beginning of a mass spectrometric run when a peptide will exit a chromatographic column as predicted by a referenced software application.</summary>
+    MS_predicted_retention_time = 1000897,
+
+    /// <summary>standard: Something, such as a practice or a product, that is widely recognized or employed, especially because of its excellence.</summary>
+    MS_standard = 1000898,
+
+    /// <summary>de facto standard: A practice or product that has become a standard not because it has been approved by a standards organization but because it is widely used and recognized by the industry as being standard.</summary>
+    MS_de_facto_standard = 1000899,
+
+    /// <summary>minimum information standard: A specification of a minimum amount of information needed to reproduce or fully interpret a scientific result.</summary>
+    MS_minimum_information_standard = 1000900,
+
+    /// <summary>retention time normalization standard: A standard providing the retention times at which a set of reference compounds exit the reference chromatographic column.</summary>
+    MS_retention_time_normalization_standard = 1000901,
+
+    /// <summary>H-PINS retention time normalization standard: The de facto standard providing the retention times at which a set of halogenated reference peptides exit the reference chromatographic column, as published by Mirzaei et al. in Molecular and Cellular Proteomics in early 2009 (Early access: http://www.mcponline.org/cgi/content/abstract/M800569-MCP200v1).</summary>
+    MS_H_PINS_retention_time_normalization_standard = 1000902,
+
+    /// <summary>product ion series ordinal: The ordinal of the fragment within a specified ion series. (e.g. 8 for a y8 ion).</summary>
+    MS_product_ion_series_ordinal = 1000903,
+
+    /// <summary>product ion m/z delta: The difference in m/z of the predicted m/z based on the assigned product ion minus the actual observed peak m/z.</summary>
+    MS_product_ion_m_z_delta = 1000904,
+
+    /// <summary>percent of base peak times 100: The magnitude of a peak expressed in terms of the percentage of the magnitude of the base peak intensity multiplied by 100. The base peak is therefore 10000. This unit is common in normalized spectrum libraries.</summary>
+    MS_percent_of_base_peak_times_100 = 1000905,
+
+    /// <summary>peak intensity rank: Ordinal specifying the rank in intensity of a peak in a spectrum. Base peak is 1. The next most intense peak is 2, etc.</summary>
+    MS_peak_intensity_rank = 1000906,
+
+    /// <summary>peak targeting suitability rank: Ordinal specifying the rank of a peak in a spectrum in terms of suitability for targeting. The most suitable peak is 1. The next most suitability peak is 2, etc. Suitability is algorithm and context dependant.</summary>
+    MS_peak_targeting_suitability_rank = 1000907,
+
+    /// <summary>transition: A set of two m/z values corresponding to the precursor m/z and a fragment m/z that in combination can be used to identify or quantify a specific ion, although not necessarily uniquely.</summary>
+    MS_transition = 1000908,
+
+    /// <summary>transition: A set of two m/z values corresponding to the precursor m/z and a fragment m/z that in combination can be used to identify or quantify a specific ion, although not necessarily uniquely.</summary>
+    MS_reaction = MS_transition,
+
+    /// <summary>transition validation method: The strategy used to validate that a transition is effective.</summary>
+    MS_transition_validation_method = 1000909,
+
+    /// <summary>transition optimized on specified instrument: The transition has been optimized by direct injection of the peptide into an instrument specified in a separate term, and the optimum voltages and fragmentation energies have been determined.</summary>
+    MS_transition_optimized_on_specified_instrument = 1000910,
+
+    /// <summary>transition validated with an MS/MS spectrum on specified instrument: The transition has been validated by obtaining an MS/MS spectrum and demonstrating that the peak is detectable on the instrument specified with a separate term.</summary>
+    MS_transition_validated_with_an_MS_MS_spectrum_on_specified_instrument = 1000911,
+
+    /// <summary>transition purported from an MS/MS spectrum on a different, specified instrument: The transition has been purported by obtaining an MS/MS spectrum and demonstrating that the peak is detectable on the instrument specified with a separate term. However, the detecting instrument is of a different type (e.g. ion trap) than the instrument that the transition will eventually be used on (e.g. triple quad).</summary>
+    MS_transition_purported_from_an_MS_MS_spectrum_on_a_different__specified_instrument = 1000912,
+
+    /// <summary>transition predicted by informatic analysis: The transition has been predicted by informatics software without any direct spectral evidence.</summary>
+    MS_transition_predicted_by_informatic_analysis = 1000913,
+
+    /// <summary>tab delimited text file: A file that has two or more columns of tabular data where each column is separated by a TAB character.</summary>
+    MS_tab_delimited_text_file = 1000914,
+
+    /// <summary>retention time window attribute: An attribute of a window in time about which a peptide might elute from the column.</summary>
+    MS_retention_time_window_attribute = 1000915,
+
+    /// <summary>retention time window lower offset: The extent of the retention time window in time units below the target retention time. The lower and upper offsets may be asymetric about the target time.</summary>
+    MS_retention_time_window_lower_offset = 1000916,
+
+    /// <summary>retention time window upper offset: The extent of the retention time window in time units above the target retention time. The lower and upper offsets may be asymetric about the target time.</summary>
+    MS_retention_time_window_upper_offset = 1000917,
+
+    /// <summary>target list: A list of peptides or compounds and their expected m/z coordinates that can be used to cause a mass spectrometry to obtain spectra of those molecules specifically.</summary>
+    MS_target_list = 1000918,
+
+    /// <summary>target inclusion exclusion priority: A priority setting specifying whether included or excluded targets have priority over the other.</summary>
+    MS_target_inclusion_exclusion_priority = 1000919,
+
+    /// <summary>includes supersede excludes: A priority setting specifying that included targets have priority over the excluded targets if there is a conflict.</summary>
+    MS_includes_supersede_excludes = 1000920,
+
+    /// <summary>excludes supersede includes: A priority setting specifying that excluded targets have priority over the included targets if there is a conflict.</summary>
+    MS_excludes_supersede_includes = 1000921,
+
+    /// <summary>Skyline: Software used to predict, select, and optimize transitions as well as analyze the results of selected reaction monitoring runs developed and distributed by the MacCoss lab at the University of Washington. https://brendanx-uw1.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=default.</summary>
+    MS_Skyline = 1000922,
+
+    /// <summary>TIQAM: Software used to predict, select, and optimize transitions for selected reaction monitoring experiments developed and distributed by the Institute for Systems Biology. http://tools.proteomecenter.org/TIQAM/TIQAM.html.</summary>
+    MS_TIQAM = 1000923,
+
+    /// <summary>MaRiMba: Software used to predict transitions for selected reaction monitoring experiments based on observed spectrum libraries developed and distributed by the Institute for Systems Biology. http://tools.proteomecenter.org/wiki/index.php?title=Software:TPP-MaRiMba.</summary>
+    MS_MaRiMba = 1000924,
+
+    /// <summary>ATAQS: Software suite used to predict, select, and optimize transitions as well as analyze the results of selected reaction monitoring runs developed and distributed by the Institute for Systems Biology.</summary>
+    MS_ATAQS = 1000925,
 
     /// <summary>spectrum interpretation: Collection of terms from the PSI Proteome Informatics standards describing the interpretation of spectra.</summary>
     MS_spectrum_interpretation = 1001000,
@@ -4615,6 +4755,99 @@ public enum class CVID
 
     /// <summary>precursor neutral loss : This term can describe a neutral loss m/z value that is lost from an ion.</summary>
     MS_precursor_neutral_loss_ = 1001525,
+
+    /// <summary>spectrum from database nativeID format: databasekey=xsd:Long</summary>
+    MS_spectrum_from_database_nativeID_format = 1001526,
+
+    /// <summary>Proteinscape spectra: Spectra from Bruker/Protagen Proteinscape database.</summary>
+    MS_Proteinscape_spectra = 1001527,
+
+    /// <summary>Mascot query number: query=xsd:nonNegativeInteger</summary>
+    MS_Mascot_query_number = 1001528,
+
+    /// <summary>spectra data details: Child-terms contain information to map the results back to spectra.</summary>
+    MS_spectra_data_details = 1001529,
+
+    /// <summary>mzML unique identifier: mzMLid=xsd:IDREF</summary>
+    MS_mzML_unique_identifier = 1001530,
+
+    /// <summary>spectrum from ProteinScape database nativeID format: databasekey=xsd:long</summary>
+    MS_spectrum_from_ProteinScape_database_nativeID_format = 1001531,
+
+    /// <summary>spectrum from database nativeID format: databasekey=xsd:string</summary>
+    MS_spectrum_from_database_nativeID_format = 1001532,
+
+    /// <summary>Bruker Daltonics esquire series: </summary>
+    MS_Bruker_Daltonics_esquire_series = 1001533,
+
+    /// <summary>Bruker Daltonics flex series: </summary>
+    MS_Bruker_Daltonics_flex_series = 1001534,
+
+    /// <summary>Bruker Daltonics BioTOF series: </summary>
+    MS_Bruker_Daltonics_BioTOF_series = 1001535,
+
+    /// <summary>Bruker Daltonics micrOTOF series: </summary>
+    MS_Bruker_Daltonics_micrOTOF_series = 1001536,
+
+    /// <summary>BioTOF: Bruker Daltonics' BioTOF: ESI TOF</summary>
+    MS_BioTOF = 1001537,
+
+    /// <summary>BioTOF III: Bruker Daltonics' BioTOF III: ESI TOF</summary>
+    MS_BioTOF_III = 1001538,
+
+    /// <summary>UltroTOF-Q: Bruker Daltonics' UltroTOF-Q: ESI Q-TOF (MALDI optional).</summary>
+    MS_UltroTOF_Q = 1001539,
+
+    /// <summary>micrOTOF II: Bruker Daltonics' micrOTOF II: ESI TOF, Nanospray, APCI, APPI.</summary>
+    MS_micrOTOF_II = 1001540,
+
+    /// <summary>maXis: Bruker Daltonics' maXis: ESI Q-TOF, Nanospray, APCI, APPI.</summary>
+    MS_maXis = 1001541,
+
+    /// <summary>amaZon ETD: Bruker Daltonics' amaZon ETD: ESI quadrupole ion trap, Nanospray, APCI, APPI, ETD, PTR.</summary>
+    MS_amaZon_ETD = 1001542,
+
+    /// <summary>microflex LRF: Bruker Daltonics' microflex LRF: MALDI TOF.</summary>
+    MS_microflex_LRF = 1001543,
+
+    /// <summary>ultrafleXtreme: Bruker Daltonics' ultrafleXtreme: MALDI TOF.</summary>
+    MS_ultrafleXtreme = 1001544,
+
+    /// <summary>Bruker Daltonics amaZon series: </summary>
+    MS_Bruker_Daltonics_amaZon_series = 1001545,
+
+    /// <summary>amaZon X: Bruker Daltonics' amaZon X: ESI quadrupole ion trap, APCI, APPI, ETD, PTR.</summary>
+    MS_amaZon_X = 1001546,
+
+    /// <summary>Bruker Daltonics maXis series: </summary>
+    MS_Bruker_Daltonics_maXis_series = 1001547,
+
+    /// <summary>Bruker Daltonics solarix series: Bruker Daltonics' solarix: ESI quadrupole ion trap, APCI, APPI, ETD, PTR.</summary>
+    MS_Bruker_Daltonics_solarix_series = 1001548,
+
+    /// <summary>solariX: Bruker Daltonics' solariX: ESI, MALDI, Qh-FT_ICR.</summary>
+    MS_solariX = 1001549,
+
+    /// <summary>microflex II: Bruker Daltonics' microflex II: MALDI TOF.</summary>
+    MS_microflex_II = 1001550,
+
+    /// <summary>autoflex II TOF/TOF: Bruker Daltonics' autoflex II TOF/TOF: MALDI TOF.</summary>
+    MS_autoflex_II_TOF_TOF = 1001553,
+
+    /// <summary>autoflex III TOF/TOF smartbeam: Bruker Daltonics' autoflex III TOF/TOF smartbeam: MALDI TOF.</summary>
+    MS_autoflex_III_TOF_TOF_smartbeam = 1001554,
+
+    /// <summary>autoflex: Bruker Daltonics' autoflex: MALDI TOF.</summary>
+    MS_autoflex = 1001555,
+
+    /// <summary>Bruker Daltonics apex series: </summary>
+    MS_Bruker_Daltonics_apex_series = 1001556,
+
+    /// <summary>Shimadzu Biotech software: </summary>
+    MS_Shimadzu_Biotech_software = 1001557,
+
+    /// <summary>MALDI Solutions: Shimadzu Biotech software for data acquisition, processing, and analysis.</summary>
+    MS_MALDI_Solutions = 1001558,
 
     /// <summary>ProteinScape:ProfoundProbability: The Profound probability score stored by ProteinScape.</summary>
     MS_ProteinScape_ProfoundProbability = 1001597,
