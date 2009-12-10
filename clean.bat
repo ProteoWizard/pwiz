@@ -12,7 +12,6 @@ IF EXIST build-nt-x86 rmdir /s /q build-nt-x86
 IF EXIST build-nt-x86_64 rmdir /s /q build-nt-x86_64
 IF EXIST libraries\boost-build\jam_src\bin.ntx86 rmdir /s /q libraries\boost-build\jam_src\bin.ntx86
 IF EXIST libraries\boost-build\jam_src\bootstrap rmdir /s /q libraries\boost-build\jam_src\bootstrap
-IF EXIST libraries\boost_1_36_0 rmdir /s /q libraries\boost_1_36_0
 IF EXIST libraries\boost_1_39_0 rmdir /s /q libraries\boost_1_39_0
 IF EXIST libraries\gd-2.0.33 rmdir /s /q libraries\gd-2.0.33
 IF EXIST libraries\zlib-1.2.3 rmdir /s /q libraries\zlib-1.2.3
@@ -20,11 +19,11 @@ IF EXIST libraries\fftw-3.1.2 rmdir /s /q libraries\fftw-3.1.2
 
 IF EXIST libraries\libfftw3-3.def del /q libraries\libfftw3-3.def
 IF EXIST libraries\libfftw3-3.dll del /q libraries\libfftw3-3.dll
-IF EXIST pwiz\svnrev.hpp del /q pwiz\svnrev.hpp
-IF EXIST pwiz\svnrev.jam del /q pwiz\svnrev.jam
-IF EXIST pwiz\data\msdata\svnrev.hpp del /q pwiz\data\msdata\svnrev.hpp
-IF EXIST pwiz\analysis\svnrev.hpp del /q pwiz\analysis\svnrev.hpp
-IF EXIST pwiz\utility\proteome\svnrev.hpp del /q pwiz\utility\proteome\svnrev.hpp
+
+IF EXIST pwiz\Version.cpp del /q pwiz\Version.cpp
+IF EXIST pwiz\data\msdata\Version.cpp del /q pwiz\data\msdata\Version.cpp
+IF EXIST pwiz\analysis\Version.cpp del /q pwiz\analysis\Version.cpp
+IF EXIST pwiz\data\proteome\Version.cpp del /q pwiz\data\proteome\Version.cpp
 
 del /q pwiz\utility\bindings\CLI\*.xdc
 del /q pwiz\utility\vendor_api\thermo\*.dll
