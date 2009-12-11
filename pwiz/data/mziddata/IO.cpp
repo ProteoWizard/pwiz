@@ -27,6 +27,7 @@
 #include "References.hpp"
 #include "pwiz/data/msdata/IO.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include "boost/lexical_cast.hpp"
 #include <stdexcept>
 #include <functional>
@@ -44,6 +45,8 @@ using namespace boost::logic;
 //using namespace util;
 using boost::lexical_cast;
 using boost::shared_ptr;
+
+static const int MZIDENTML_VERSION_1_0 = 0;
 
 template <typename object_type>
 void writeList(minimxml::XMLWriter& writer, const vector<object_type>& objects, 
@@ -4460,11 +4463,11 @@ void write(minimxml::XMLWriter& writer, const MzIdentML& mzid)
     addIdAttributes(mzid, attributes);
 
     attributes.push_back(make_pair("creationDate", mzid.creationDate));
-    attributes.push_back(make_pair("version", mzid.version));
+    attributes.push_back(make_pair("version", mzid.version()));
 
 
     attributes.push_back(make_pair("xsi:schemaLocation",
-                                   "http://psidev.info/psi/pi/mzIdentML/1.0 ../schema/mzIdentML1.0.0.xsd"));
+                                   "http://psidev.info/psi/pi/mzIdentML/1.0 ../schema/mzIdentML" + mzid.version() + ".xsd"));
     attributes.push_back(make_pair("xmlns",
                                    "http://psidev.info/psi/pi/mzIdentML/1.0"));
     attributes.push_back(make_pair("xmlns:xsi",
@@ -4512,7 +4515,21 @@ struct HandlerMzIdentML : public HandlerIdentifiableType
         if (name == "mzIdentML")
         {
             getAttribute(attributes, "creationDate", mzid->creationDate);
-            getAttribute(attributes, "version", mzid->version);
+
+            // "http://psidev.info/psi/pi/mzIdentML/1.0 ../schema/mzIdentML<version>.xsd"
+            string schemaLocation;
+            getAttribute(attributes, "xsi:schemaLocation", schemaLocation);
+            if (schemaLocation.empty())
+                getAttribute(attributes, "version", mzid->version_); // deprecated?
+            else
+            {
+                schemaLocation = schemaLocation.substr(schemaLocation.find(' ')+1);
+                string xsdName = bfs::path(schemaLocation).filename();
+                mzid->version_ = xsdName.substr(9, xsdName.length()-13); // read between "mzIdentML" and ".xsd"
+            }
+
+            if (mzid->version_.find("1.0.0") == 0)
+                version = MZIDENTML_VERSION_1_0;
 
             HandlerIdentifiableType::id = mzid;
             return HandlerIdentifiableType::startElement(name, attributes, position);

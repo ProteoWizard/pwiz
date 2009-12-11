@@ -295,6 +295,13 @@ generate-Version.cpp $(PWIZ_ROOT_PATH)/pwiz/analysis/Version.cpp : analysis :
         : *.?pp Jamfile.jam : Version.cpp
     ] ;
 
+generate-Version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/mziddata/Version.cpp : mziddata :
+    [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz/data/mziddata
+                     $(PWIZ_ROOT_PATH)/pwiz/utility/misc
+                     $(PWIZ_ROOT_PATH)/pwiz/utility/minimxml
+        : *.?pp Jamfile.jam : Version.cpp
+    ] ;
+
 generate-Version.cpp $(PWIZ_ROOT_PATH)/pwiz/utility/proteome/Version.cpp : proteome :
     [ path.glob $(PWIZ_ROOT_PATH)/pwiz/utility/proteome : *.?pp Jamfile.jam : Version.cpp ] ;
 

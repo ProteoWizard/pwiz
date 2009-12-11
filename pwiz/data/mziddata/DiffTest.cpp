@@ -1198,7 +1198,6 @@ void testMzIdentML()
     Diff<MzIdentML> diff(a, b);
     unit_assert(!diff);
 
-    b.version = "version";
     a.cvs.push_back(CV());
     b.analysisSoftwareList.push_back(AnalysisSoftwarePtr(new AnalysisSoftware));
     a.auditCollection.push_back(ContactPtr(new Contact()));
@@ -1214,9 +1213,6 @@ void testMzIdentML()
     if (os_) *os_ << diff << endl;
 
     unit_assert(diff);
-
-    unit_assert(diff.a_b.version == "1.0.0");
-    unit_assert(diff.b_a.version == "version");
 
     unit_assert(diff.a_b.cvs.size() == 1);
     unit_assert(diff.b_a.cvs.empty());

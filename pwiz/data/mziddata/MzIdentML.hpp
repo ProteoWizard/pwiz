@@ -40,6 +40,10 @@
 namespace pwiz {
 namespace mziddata {
 
+/// returns a default list of CVs used in an MzIdentML document;
+/// currently includes PSI-MS, Unit Ontology, and UNIMOD
+PWIZ_API_DECL std::vector<pwiz::CV> defaultCVList();
+
 // these types are used verbatim from MSData
 using msdata::CVParam;
 using msdata::UserParam;
@@ -831,13 +835,12 @@ struct PWIZ_API_DECL DataCollection
 
 typedef boost::shared_ptr<DataCollection> DataCollectionPtr;
 
+namespace IO {struct HandlerMzIdentML;} // forward declaration for friend
+
 struct PWIZ_API_DECL MzIdentML : public IdentifiableType
 {
     MzIdentML(const std::string& id_ = "",
-              const std::string& version_ = "1.0.0",
               const std::string& creationDate_ = "");
-    
-    std::string version;
 
     // attributes included in the MzIdentML schema
     std::string creationDate;
@@ -866,6 +869,15 @@ struct PWIZ_API_DECL MzIdentML : public IdentifiableType
     std::vector<BibliographicReferencePtr> bibliographicReference;
 
     bool empty() const;
+   
+    /// returns the version of this mzIdentML document;
+    /// for a document created programmatically, the version is the current release version of mzIdentML;
+    /// for a document created from a file/stream, the version is the schema version read from the file/stream
+    const std::string& version() const;
+
+    protected:
+    std::string version_; // schema version read from the file/stream
+    friend struct IO::HandlerMzIdentML;
 };
 
 typedef boost::shared_ptr<MzIdentML> MzIdentMLPtr;

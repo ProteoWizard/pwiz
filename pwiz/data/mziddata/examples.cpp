@@ -24,6 +24,7 @@
 
 #include "References.hpp"
 #include "examples.hpp"
+#include "Version.hpp"
 
 #include <iostream>
 
@@ -51,13 +52,26 @@ const char* peptideList[] = {
 PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
 {
     mzid.id="";
-    mzid.version="1.0.0";
     // Look up Matt's recent commits for boost date class
     mzid.creationDate = "2009-06-23T11:04:10";
     
     mzid.cvs = defaultCVList();
 
-    AnalysisSoftwarePtr analysisSoftwarePtr(new AnalysisSoftware());
+    ContactPtr contactPwiz(new Organization("ORG_PWIZ", "ProteoWizard"));
+    contactPwiz->email = "support@proteowizard.org";
+    mzid.auditCollection.push_back(contactPwiz);
+
+    AnalysisSoftwarePtr analysisSoftwarePtr = AnalysisSoftwarePtr(new AnalysisSoftware());
+    analysisSoftwarePtr->id = "pwiz_" + Version::str();
+    analysisSoftwarePtr->name = "ProteoWizard MzIdentML";
+    analysisSoftwarePtr->softwareName.set(MS_pwiz);
+    analysisSoftwarePtr->version = Version::str();
+    analysisSoftwarePtr->contactRolePtr.reset(new ContactRole);
+    analysisSoftwarePtr->contactRolePtr->role.set(MS_software_vendor);
+    analysisSoftwarePtr->contactRolePtr->contactPtr = contactPwiz;
+    mzid.analysisSoftwareList.push_back(analysisSoftwarePtr);
+
+    analysisSoftwarePtr = AnalysisSoftwarePtr(new AnalysisSoftware());
     analysisSoftwarePtr->id="AS_mascot_server";
     analysisSoftwarePtr->name="Mascot Server";
     analysisSoftwarePtr->version="2.2.101";
@@ -433,18 +447,6 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     mzid.dataCollection.analysisData.proteinDetectionListPtr = pdl;
 
     References::resolve(mzid); 
-}
-
-PWIZ_API_DECL vector<CV> defaultCVList()
-{
-    vector<CV> result;
-    result.resize(3);
-
-    result[0] = cv("MS");
-    result[1] = cv("UNIMOD");
-    result[2] = cv("UO");
-    
-    return result;
 }
 
 } // namespace pwiz

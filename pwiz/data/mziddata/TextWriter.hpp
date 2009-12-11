@@ -691,8 +691,8 @@ class PWIZ_API_DECL TextWriter
     
     TextWriter& operator()(const Sample::subSample& subSample)
     {
-        if (subSample.samplePtr.get());
-        (*this)("Sample_ref: "+subSample.samplePtr->id);
+        if (subSample.samplePtr.get())
+            (*this)("Sample_ref: "+subSample.samplePtr->id);
 
         return *this;
     }
@@ -924,8 +924,7 @@ class PWIZ_API_DECL TextWriter
     {
         (*this)("mzid:");
         child()((IdentifiableType)mzid);
-        if (!mzid.version.empty())
-            child()("version: " + mzid.version);
+               ("version: " + mzid.version());
         if (!mzid.cvs.empty())
             child()("cvList: ", mzid.cvs);
         if (!mzid.analysisSoftwareList.empty())

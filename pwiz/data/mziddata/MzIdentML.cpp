@@ -38,6 +38,19 @@ using msdata::CVParamIs;
 using msdata::CVParamIsChildOf;
 
 
+PWIZ_API_DECL vector<CV> defaultCVList()
+{
+    vector<CV> result;
+    result.resize(3);
+
+    result[0] = cv("MS");
+    result[1] = cv("UNIMOD");
+    result[2] = cv("UO");
+    
+    return result;
+}
+
+
 //
 // IdentifiableType
 //
@@ -1002,9 +1015,8 @@ PWIZ_API_DECL bool DataCollection::empty() const
 //
 
 PWIZ_API_DECL MzIdentML::MzIdentML(const std::string& id_,
-                                   const std::string& version_,
                                    const std::string& creationDate_)
-    : IdentifiableType(id_), version(version_), creationDate(creationDate_)
+    : IdentifiableType(id_), creationDate(creationDate_), version_("1.0.0")
 {
 #ifdef _MSC_VER
     const char* format = "%Y-%m-%dT%X";
@@ -1026,7 +1038,6 @@ PWIZ_API_DECL MzIdentML::MzIdentML(const std::string& id_,
 PWIZ_API_DECL bool MzIdentML::empty() const
 {
     return IdentifiableType::empty() &&
-        version.empty() &&
         cvs.empty() &&
         provider.empty() &&
         auditCollection.empty() &&
@@ -1036,6 +1047,11 @@ PWIZ_API_DECL bool MzIdentML::empty() const
         analysisProtocolCollection.empty() &&
         dataCollection.empty() &&
         bibliographicReference.empty();
+}
+
+PWIZ_API_DECL const string& MzIdentML::version() const
+{
+    return version_;
 }
 
 } // namespace pwiz

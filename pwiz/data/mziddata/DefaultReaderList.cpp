@@ -29,7 +29,7 @@
 #include "DefaultReaderList.hpp"
 #include "Serializer_mzid.hpp"
 //#include "References.hpp"
-#include "pwiz/data/msdata/Version.hpp"
+#include "pwiz/data/mziddata/Version.hpp"
 #include "boost/regex.hpp"
 #include "boost/foreach.hpp"
 #include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
@@ -78,6 +78,57 @@ string GetXMLRootElementFromFile(const string& filepath)
     return GetXMLRootElement(file);
 }
 
+AnalysisSoftwarePtr getPwizSoftware(MzIdentML& mzid)
+{
+    string version = pwiz::mziddata::Version::str();
+
+    AnalysisSoftwarePtr result;
+
+    BOOST_FOREACH(const AnalysisSoftwarePtr& softwarePtr, mzid.analysisSoftwareList)
+        if (softwarePtr->softwareName.hasCVParam(MS_pwiz) && softwarePtr->version==version)
+        {
+            result = softwarePtr;
+            if (result->contactRolePtr.get() && result->contactRolePtr->contactPtr.get())
+                return result;
+        }
+
+    ContactPtr contactPwiz;
+    BOOST_FOREACH(const ContactPtr& contactPtr, mzid.auditCollection)
+        if (contactPtr->name == "ProteoWizard")
+            contactPwiz = contactPtr;
+
+    if (!contactPwiz.get())
+    {
+        contactPwiz.reset(new Organization("ORG_PWIZ", "ProteoWizard"));
+        contactPwiz->email = "support@proteowizard.org";
+        mzid.auditCollection.push_back(contactPwiz);
+    }
+
+    if (!result.get())
+    {
+        result.reset(new AnalysisSoftware("pwiz_" + version, "ProteoWizard MzIdentML"));
+        result->softwareName.set(MS_pwiz);
+        result->version = version;
+        mzid.analysisSoftwareList.push_back(result);
+    }
+
+    if (!result->contactRolePtr.get())
+    {
+        result->contactRolePtr.reset(new ContactRole);
+        result->contactRolePtr->role.set(MS_software_vendor);
+    }
+    result->contactRolePtr->contactPtr = contactPwiz;
+
+    return result;
+}
+
+void fillInCommonMetadata(const string& filename, MzIdentML& mzid)
+{
+    mzid.cvs = defaultCVList();
+
+    // add pwiz software and contact metadata
+    AnalysisSoftwarePtr softwarePwiz = getPwizSoftware(mzid);
+}
 
 class Reader_mzid : public Reader
 {
@@ -85,8 +136,8 @@ class Reader_mzid : public Reader
 
     virtual std::string identify(const std::string& filename, const std::string& head) const
     {
-         istringstream iss(head);
-		 return std::string((type(iss) != Type_Unknown)?getType():"");
+        istringstream iss(head);
+        return std::string((type(iss) != Type_Unknown)?getType():"");
     }
 
     virtual void read(const std::string& filename, const std::string& head, MzIdentML& result, int documentIndex = 0) const
@@ -94,7 +145,7 @@ class Reader_mzid : public Reader
         if (documentIndex != 0)
             throw ReaderFail("[Reader_mzid::read] multiple documents not supported");
 
-		shared_ptr<istream> is(new pwiz::util::random_access_compressed_ifstream(filename.c_str()));
+        shared_ptr<istream> is(new pwiz::util::random_access_compressed_ifstream(filename.c_str()));
         if (!is.get() || !*is)
             throw runtime_error(("[Reader_mzid::read] Unable to open file " + filename).c_str());
 
@@ -112,6 +163,8 @@ class Reader_mzid : public Reader
                 throw runtime_error("[Reader_mzid::read] This isn't happening.");
             }
         }
+
+        fillInCommonMetadata(filename, result);
     }
 
     virtual void read(const std::string& filename,
@@ -122,7 +175,7 @@ class Reader_mzid : public Reader
         read(filename, head, *results.back());
     }
 
-	virtual const char *getType() const {return "mzIdentML";}
+    virtual const char *getType() const {return "mzIdentML";}
 
     private:
 

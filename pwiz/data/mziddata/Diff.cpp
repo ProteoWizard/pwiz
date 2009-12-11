@@ -1244,10 +1244,12 @@ void diff(const MzIdentML& a,
           MzIdentML& b_a,
           const DiffConfig& config)
 {
+    string a_b_version, b_a_version;
+
     // Attributes
     diff((const IdentifiableType&)a, (const IdentifiableType&)b,
          (IdentifiableType&)a_b, (IdentifiableType&)b_a, config);
-    diff(a.version, b.version, a_b.version, b_a.version, config);
+    diff(a.version(), b.version(), a_b_version, b_a_version, config);
     diff(a.creationDate, b.creationDate, a_b.creationDate, b_a.creationDate, config);
 
     // Elements
@@ -1265,7 +1267,12 @@ void diff(const MzIdentML& a,
     vector_diff_deep(a.bibliographicReference, b.bibliographicReference, a_b.bibliographicReference, b_a.bibliographicReference, config);
     
 
-    
+    if (!a_b_version.empty() || !b_a_version.empty())
+    {
+        a_b.name = a.name + " (" + a_b_version + ")";
+        b_a.name = b.name + " (" + b_a_version + ")";
+    }
+
     // provide names for context
     //if (!a_b.empty() && a_b.name.empty()) a_b.name = a.name; 
     //if (!b_a.empty() && b_a.name.empty()) b_a.name = b.name; 

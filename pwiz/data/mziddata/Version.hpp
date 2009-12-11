@@ -1,11 +1,10 @@
 //
-// $Id$ 
+// $Id$
 //
 //
-// Original author: Robert Burke <robert.burke@proteowizard.org>
+// Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
 //
-// Copyright 2007 Spielberg Family Center for Applied Proteomics
-//   Cedars-Sinai Medical Center, Los Angeles, California  90048
+// Copyright 2009 Vanderbilt University - Nashville, TN 37232
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); 
 // you may not use this file except in compliance with the License. 
@@ -20,20 +19,25 @@
 // limitations under the License.
 //
 
-#ifndef _MZID_EXAMPLES_HPP_
-#define _MZID_EXAMPLES_HPP_
 
-#include "pwiz/utility/misc/Export.hpp"
-#include "MzIdentML.hpp"
+#ifndef _PWIZ_MZIDDATA_VERSION_HPP_
+#define _PWIZ_MZIDDATA_VERSION_HPP_
+
+#include <string>
 
 namespace pwiz {
 namespace mziddata {
-namespace examples {
 
-PWIZ_API_DECL void initializeTiny(MzIdentML& mzid);
+struct Version
+{
+    static int Major();
+    static int Minor();
+    static int Revision();
+    static std::string str();
+    static std::string LastModified();
+};
 
-} // namespace pwiz 
 } // namespace mziddata
-} // namespace examples 
+} // namespace pwiz
 
-#endif // _MZID_EXAMPLES_HPP_
+#endif // _PWIZ_MZIDDATA_VERSION_HPP_
