@@ -27,6 +27,7 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include "boost/shared_ptr.hpp"
 #include <string>
+#include <iostream>
 
 
 namespace pwiz {
@@ -65,8 +66,11 @@ class PWIZ_API_DECL SHA1Calculator
     /// static function to calculate hash of a buffer
     static std::string hash(const unsigned char* buffer, size_t bufferSize);
 
+    /// static function to calculate hash of an input stream 
+    static std::string hash(std::istream& is);
+
     /// static function to calculate hash of a file 
-    static std::string hashFile(const std::string& filename);    
+    static std::string hashFile(const std::string& filename);
 
     private:
     class Impl;

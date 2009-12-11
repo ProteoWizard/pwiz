@@ -71,6 +71,15 @@ void test()
 }
 
 
+void testStream()
+{
+    istringstream is(textBrown_);
+    string hash = SHA1Calculator::hash(is);
+    if (os_) *os_ << "hash file: " << hash << endl;
+    unit_assert(hash == "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12");
+}
+
+
 void testFile()
 {
     const char* filename = "sha1test.test.txt";
@@ -144,6 +153,7 @@ int main(int argc, char* argv[])
         if (os_) *os_ << "sha1test\n";
 
         test();
+        testStream();
         testFile();
         testStatic();
         testMillion();

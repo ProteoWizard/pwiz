@@ -30,7 +30,6 @@
 
 
 #include "SHA1Calculator.hpp"
-#include <iostream>
 #include <stdexcept>
 
 
@@ -134,6 +133,20 @@ PWIZ_API_DECL string SHA1Calculator::hash(const unsigned char* buffer, size_t bu
 {
     CSHA1 sha1;
     sha1.Update(buffer, static_cast<UINT_32>(bufferSize));
+    sha1.Final();
+    return formatHash(sha1);
+}
+
+
+PWIZ_API_DECL string SHA1Calculator::hash(istream& is)
+{
+    CSHA1 sha1;
+    is.clear();
+    is.seekg(0);
+    unsigned char buffer[65535];
+    size_t bytesRead;
+    while (is && (bytesRead = is.readsome(reinterpret_cast<char*>(buffer), 65535)) > 0)
+        sha1.Update(buffer, static_cast<UINT_32>(bytesRead));
     sha1.Final();
     return formatHash(sha1);
 }
