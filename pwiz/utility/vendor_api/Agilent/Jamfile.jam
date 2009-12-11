@@ -48,7 +48,7 @@ rule vendor-api-usage-requirements ( properties * )
        [ path.exists $(API_PATH)/MassSpecDataReader.dll ]
     {
         result += <assembly>$(API_PATH)/MassSpecDataReader.dll ;
-        result += <assembly>$(API_PATH)/BaseCommon.dll ;
+        result += <assembly-dependency>$(API_PATH)/BaseCommon.dll ;
         result += <assembly>$(API_PATH)/BaseDataAccess.dll ;
         result += <assembly>$(API_PATH)/BaseError.dll ;
         result += <assembly>$(API_PATH)/BaseTof.dll ;
