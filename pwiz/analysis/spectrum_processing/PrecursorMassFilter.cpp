@@ -62,7 +62,7 @@ PrecursorMassFilter::Config::Config(
     bool removeMostIntensePeakInWindow_,
     bool useBlanketFiltering_,
     int  numNeutralLossSpecies,
-    char* neutralLossSpecies_[])
+    const char* neutralLossSpecies_[])
     :    
     matchingTolerance(tolerance), 
     removePrecursor(removePrecursor_),

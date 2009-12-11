@@ -36,7 +36,7 @@ namespace analysis {
 // "Post Acquisition ETD Spectral Processing of Increased Peptide Identifications"
 // by D. M. Good et al
 ///TODO: locate a more complete list (Zubarev Lab)
-static char* defaultNeutralLossFormulae[] = {
+static const char* defaultNeutralLossFormulae[] = {
     "N1H3",
     "H2O1",
     "C1O1",
@@ -98,7 +98,7 @@ struct PrecursorMassFilter : public SpectrumDataFilter
             bool           selectiveRemovalofPrecursors_ = false,
             bool           useBlanketFiltering_ = false,
             int            numNeutralLossSpecies = 13,
-            char*          neutralLossSpecies_[] = defaultNeutralLossFormulae
+            const char*    neutralLossSpecies_[] = defaultNeutralLossFormulae
         );
 
         MZTolerance matchingTolerance;
