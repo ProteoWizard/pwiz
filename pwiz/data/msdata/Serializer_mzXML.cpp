@@ -347,15 +347,20 @@ void write_peaks(XMLWriter& xmlWriter, const vector<MZIntensityPair>& mzIntensit
 
     BinaryDataEncoder encoder(bdeConfig);
     string encoded;
+    size_t binaryByteCount; // size before base64 encoding
 
     if (!mzIntensityPairs.empty())
         encoder.encode(reinterpret_cast<const double*>(&mzIntensityPairs[0]), 
-                       mzIntensityPairs.size()*2, encoded);
+                       mzIntensityPairs.size()*2, encoded, &binaryByteCount);
 
     XMLWriter::Attributes attributes;
     string precision = bdeConfig.precision == BinaryDataEncoder::Precision_32 ? "32" : "64";
     if (bdeConfig.compression == BinaryDataEncoder::Compression_Zlib)
+    {
         attributes.push_back(make_pair("compressionType", "zlib"));
+        attributes.push_back(make_pair("compressedLen", lexical_cast<string>(binaryByteCount)));
+    }
+
     attributes.push_back(make_pair("precision", precision));
     attributes.push_back(make_pair("byteOrder", "network"));
     attributes.push_back(make_pair("pairOrder", "m/z-int"));

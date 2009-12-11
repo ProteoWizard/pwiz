@@ -65,10 +65,10 @@ class PWIZ_API_DECL BinaryDataEncoder
     BinaryDataEncoder(const Config& config = Config());
 
     /// encode binary data as a text string
-    void encode(const std::vector<double>& data, std::string& result) const;
+    void encode(const std::vector<double>& data, std::string& result, size_t* binaryByteCount = NULL) const;
 
     /// encode binary data as a text string
-    void encode(const double* data, size_t dataSize, std::string& result) const;
+    void encode(const double* data, size_t dataSize, std::string& result, size_t* binaryByteCount = NULL) const;
 
     /// decode text-encoded data as binary 
     void decode(const std::string& encodedData, std::vector<double>& result) const;

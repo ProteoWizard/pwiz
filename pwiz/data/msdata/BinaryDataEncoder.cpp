@@ -60,8 +60,8 @@ class BinaryDataEncoder::Impl
     :   config_(config)
     {}
 
-    void encode(const vector<double>& data, string& result);
-    void encode(const double* data, size_t dataSize, std::string& result);
+    void encode(const vector<double>& data, string& result, size_t* binaryByteCount);
+    void encode(const double* data, size_t dataSize, std::string& result, size_t* binaryByteCount);
     void decode(const string& encodedData, vector<double>& result);
 
     private:
@@ -79,10 +79,10 @@ struct DoubleToFloat
 };
 
 
-void BinaryDataEncoder::Impl::encode(const vector<double>& data, string& result)
+void BinaryDataEncoder::Impl::encode(const vector<double>& data, string& result, size_t* binaryByteCount)
 {
     if (data.empty()) return;
-    encode(&data[0], data.size(), result);
+    encode(&data[0], data.size(), result, binaryByteCount);
 }
 
 
@@ -112,7 +112,7 @@ string filterArray(const void* byteBuffer, size_t byteCount)
 }
 
 
-void BinaryDataEncoder::Impl::encode(const double* data, size_t dataSize, std::string& result)
+void BinaryDataEncoder::Impl::encode(const double* data, size_t dataSize, std::string& result, size_t* binaryByteCount)
 {
     //
     // We use buffer abstractions, since we may need to change buffers during
@@ -189,6 +189,9 @@ void BinaryDataEncoder::Impl::encode(const double* data, size_t dataSize, std::s
     result.resize(Base64::binaryToTextSize(byteCount));    
     size_t textSize = Base64::binaryToText(byteBuffer, byteCount, &result[0]);
     result.resize(textSize);
+
+    if (binaryByteCount != NULL)
+        *binaryByteCount = byteCount; // size before base64 encoding
 }
 
 
@@ -283,15 +286,15 @@ PWIZ_API_DECL BinaryDataEncoder::BinaryDataEncoder(const Config& config)
 {}
 
 
-PWIZ_API_DECL void BinaryDataEncoder::encode(const std::vector<double>& data, std::string& result) const
+PWIZ_API_DECL void BinaryDataEncoder::encode(const std::vector<double>& data, std::string& result, size_t* binaryByteCount /*= NULL*/) const
 {
-    impl_->encode(data, result);
+    impl_->encode(data, result, binaryByteCount);
 }
 
 
-PWIZ_API_DECL void BinaryDataEncoder::encode(const double* data, size_t dataSize, std::string& result) const
+PWIZ_API_DECL void BinaryDataEncoder::encode(const double* data, size_t dataSize, std::string& result, size_t* binaryByteCount /*= NULL*/) const
 {
-    impl_->encode(data, dataSize, result);
+    impl_->encode(data, dataSize, result, binaryByteCount);
 }
 
 
