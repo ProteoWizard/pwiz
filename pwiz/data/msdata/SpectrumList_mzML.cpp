@@ -76,7 +76,7 @@ class SpectrumList_mzMLImpl : public SpectrumList_mzML
     private:
     shared_ptr<istream> is_;
     const MSData& msd_;
-    bool indexed_;
+    mutable bool indexed_;
 
     mutable once_flag_proxy indexSizeSet_;
     mutable once_flag_proxy indexInitialized_;
@@ -136,7 +136,7 @@ IndexList SpectrumList_mzMLImpl::findSpotID(const string& spotID) const
 SpectrumPtr SpectrumList_mzMLImpl::spectrum(size_t index, bool getBinaryData) const
 {
     boost::call_once(indexInitialized_.flag, boost::bind(&SpectrumList_mzMLImpl::createIndex, this));
-    if (index > index_.size())
+    if (index >= index_.size())
         throw runtime_error("[SpectrumList_mzML::spectrum()] Index out of bounds.");
 
     // allocate Spectrum object and read it in
@@ -145,12 +145,32 @@ SpectrumPtr SpectrumList_mzMLImpl::spectrum(size_t index, bool getBinaryData) co
     if (!result.get())
         throw runtime_error("[SpectrumList_mzML::spectrum()] Out of memory.");
 
-    is_->seekg(offset_to_position(index_[index].sourceFilePosition));
-    if (!*is_) 
-        throw runtime_error("[SpectrumList_mzML::spectrum()] Error seeking to <spectrum>.");
-
     IO::BinaryDataFlag binaryDataFlag = getBinaryData ? IO::ReadBinaryData : IO::IgnoreBinaryData;
-    IO::read(*is_, *result, binaryDataFlag, (msd_.version().find("1.0") == 0 ? 1 : 0), &msd_);
+    int schemaVersion = msd_.version().find("1.0") == 0 ? 1 : 0;
+
+    try
+    {
+        is_->seekg(offset_to_position(index_[index].sourceFilePosition));
+        if (!*is_) 
+            throw runtime_error("[SpectrumList_mzML::spectrum()] Error seeking to <spectrum>.");
+
+        IO::read(*is_, *result, binaryDataFlag, schemaVersion, &msd_);
+
+        // test for reading the wrong spectrum
+        if (result->index != index)
+            throw runtime_error("[SpectrumList_mzML::spectrum()] Index entry points to the wrong spectrum.");
+    }
+    catch (runtime_error&)
+    {
+        // TODO: log warning about missing/corrupt index
+
+        // recreate index
+        indexed_ = false;
+        createIndex();
+
+        is_->seekg(offset_to_position(index_[index].sourceFilePosition));
+        IO::read(*is_, *result, binaryDataFlag, schemaVersion, &msd_);
+    }
 
     // resolve any references into the MSData object
 
@@ -425,13 +445,30 @@ void SpectrumList_mzMLImpl::createIndex() const
 {
     boost::call_once(indexSizeSet_.flag, boost::bind(&SpectrumList_mzMLImpl::setIndexSize, this));
 
+    index_.clear();
+
     // resize the index assuming the count attribute is accurate
     index_.resize(size_);
 
     if (indexed_)
-        readIndex();
+    {
+        try
+        {
+            readIndex();
+        }
+        catch (runtime_error&)
+        {
+            // TODO: log warning that the index was corrupt/missing
+            is_->clear();
+            is_->seekg(0);
+            HandlerIndexCreator handler(index_);
+            handler.autoUnescapeCharacters = false;
+            SAXParser::parse(*is_, handler);
+        }
+    }
     else
     {
+        is_->clear();
         is_->seekg(0);
         HandlerIndexCreator handler(index_);
         handler.autoUnescapeCharacters = false;
@@ -444,6 +481,9 @@ void SpectrumList_mzMLImpl::createIndex() const
 
 void SpectrumList_mzMLImpl::createMaps() const
 {
+    idToIndex_.clear();
+    spotIDToIndexList_.clear();
+
     vector<SpectrumIdentity>::const_iterator it;
     it=index_.begin();
     for (size_t i=0; i!=index_.size(); ++i, ++it)

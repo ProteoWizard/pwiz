@@ -85,12 +85,8 @@ void test(bool indexed)
 
     unit_assert(sl->chromatogramIdentity(0).index == 0);
     unit_assert(sl->chromatogramIdentity(0).id == "tic");
- 
-    ChromatogramPtr s_cache = sl->chromatogram(0); // cache read
-    unit_assert(s_cache.get() == s.get());
 
     s = sl->chromatogram(0, true); // read with binary data
-    unit_assert(s_cache.get() != s.get());
 
     vector<TimeIntensityPair> pairs;
     s->getTimeIntensityPairs(pairs);

@@ -65,26 +65,32 @@ class ChromatogramList_mzMLImpl : public ChromatogramList_mzML
     private:
     shared_ptr<istream> is_;
     const MSData& msd_;
-    vector<ChromatogramIdentity> index_;
-    map<string,size_t> idToIndex_;
-    mutable vector<ChromatogramPtr> chromatogramCache_;
+    mutable vector<ChromatogramIdentity> index_;
+    mutable map<string,size_t> idToIndex_;
 
     void readIndex();
-    void createIndex();
-    void createMaps();
+    void createIndex() const;
+    void createMaps() const;
 };
 
 
 ChromatogramList_mzMLImpl::ChromatogramList_mzMLImpl(shared_ptr<istream> is, const MSData& msd, bool indexed)
 :   is_(is), msd_(msd)
 {
-    if (indexed) 
-        readIndex(); 
-    else 
+    if (indexed)
+        try
+        {
+            readIndex();
+        }
+        catch (runtime_error&)
+        {
+            // TODO: log warning that the index was corrupt/missing
+            createIndex();
+        }
+    else
         createIndex();
 
     createMaps();
-    chromatogramCache_.resize(index_.size());
 }
 
 
@@ -106,13 +112,8 @@ size_t ChromatogramList_mzMLImpl::find(const string& id) const
 
 ChromatogramPtr ChromatogramList_mzMLImpl::chromatogram(size_t index, bool getBinaryData) const
 {
-    if (index > index_.size())
+    if (index >= index_.size())
         throw runtime_error("[ChromatogramList_mzML::chromatogram()] Index out of bounds.");
-
-    // returned cached Chromatogram if possible
-
-    if (!getBinaryData && chromatogramCache_[index].get())
-        return chromatogramCache_[index];
 
     // allocate Chromatogram object and read it in
 
@@ -120,21 +121,34 @@ ChromatogramPtr ChromatogramList_mzMLImpl::chromatogram(size_t index, bool getBi
     if (!result.get())
         throw runtime_error("[ChromatogramList_mzML::chromatogram()] Out of memory.");
 
-    is_->seekg(offset_to_position(index_[index].sourceFilePosition));
-    if (!*is_) 
-        throw runtime_error("[ChromatogramList_mzML::chromatogram()] Error seeking to <chromatogram>.");
-
     IO::BinaryDataFlag binaryDataFlag = getBinaryData ? IO::ReadBinaryData : IO::IgnoreBinaryData;
-    IO::read(*is_, *result, binaryDataFlag);
+
+    try
+    {
+        is_->seekg(offset_to_position(index_[index].sourceFilePosition));
+        if (!*is_) 
+            throw runtime_error("[ChromatogramList_mzML::chromatogram()] Error seeking to <chromatogram>.");
+
+        IO::read(*is_, *result, binaryDataFlag);
+
+        // test for reading the wrong chromatogram
+        if (result->index != index)
+            throw runtime_error("[ChromatogramList_mzML::chromatogram()] Index entry points to the wrong chromatogram.");
+    }
+    catch (runtime_error&)
+    {
+        // TODO: log warning about missing/corrupt index
+
+        // recreate index
+        createIndex();
+
+        is_->seekg(offset_to_position(index_[index].sourceFilePosition));
+        IO::read(*is_, *result, binaryDataFlag);
+    }
 
     // resolve any references into the MSData object
 
     References::resolve(*result, msd_);
-
-    // save to cache if no binary data
-
-    if (!getBinaryData && !chromatogramCache_[index].get())
-        chromatogramCache_[index] = result; 
 
     return result;
 }
@@ -293,6 +307,7 @@ void ChromatogramList_mzMLImpl::readIndex()
     const int bufferSize = 512;
     string buffer(bufferSize, '\0');
 
+    is_->clear();
     is_->seekg(-bufferSize, ios::end);
     is_->read(&buffer[0], bufferSize);
 
@@ -328,7 +343,7 @@ class HandlerIndexCreator : public SAXParser::Handler
     public:
 
     HandlerIndexCreator(vector<ChromatogramIdentity>& index)
-    :   index_(index)
+    :   index_(index), chromatogramCount_(0)
     {}
 
     virtual Status startElement(const string& name, 
@@ -337,19 +352,14 @@ class HandlerIndexCreator : public SAXParser::Handler
     {
         if (name == "chromatogram")
         {
-            string index, id;
-            getAttribute(attributes, "index", index);
-            getAttribute(attributes, "id", id);
+            index_.push_back(ChromatogramIdentity());
+            ChromatogramIdentity& ci = index_.back();
+            ci.index = chromatogramCount_;
+            ci.sourceFilePosition = position;
 
-            ChromatogramIdentity si;
-            si.index = lexical_cast<size_t>(index);
-            si.id = id;
-            si.sourceFilePosition = position;
+            getAttribute(attributes, "id", ci.id);
 
-            if (si.index != index_.size())
-                throw runtime_error("[ChromatogramList_mzML::HandlerIndexCreator] Bad index.");
-
-            index_.push_back(si);
+            ++chromatogramCount_;
         }
 
         return Status::Ok;
@@ -366,19 +376,24 @@ class HandlerIndexCreator : public SAXParser::Handler
 
     private:
     vector<ChromatogramIdentity>& index_;
+    size_t chromatogramCount_;
 };
 
 
-void ChromatogramList_mzMLImpl::createIndex()
+void ChromatogramList_mzMLImpl::createIndex() const
 {
+    is_->clear();
     is_->seekg(0);
+    index_.clear();
     HandlerIndexCreator handler(index_);
     SAXParser::parse(*is_, handler);
 }
 
 
-void ChromatogramList_mzMLImpl::createMaps()
+void ChromatogramList_mzMLImpl::createMaps() const
 {
+    idToIndex_.clear();
+
     vector<ChromatogramIdentity>::const_iterator it=index_.begin();
     for (size_t i=0; i!=index_.size(); ++i, ++it)
         idToIndex_[it->id] = i;
