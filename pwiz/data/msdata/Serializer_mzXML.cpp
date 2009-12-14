@@ -360,6 +360,8 @@ void write_peaks(XMLWriter& xmlWriter, const vector<MZIntensityPair>& mzIntensit
         attributes.push_back(make_pair("compressionType", "zlib"));
         attributes.push_back(make_pair("compressedLen", lexical_cast<string>(binaryByteCount)));
     }
+    else
+        attributes.push_back(make_pair("compressedLen", "0"));
 
     attributes.push_back(make_pair("precision", precision));
     attributes.push_back(make_pair("byteOrder", "network"));
