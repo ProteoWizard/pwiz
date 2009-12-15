@@ -39,6 +39,5 @@ project
 #
 
 unit-test diff_std_test : diff_std_test.cpp ;
-
-
-
+unit-test BinaryIndexStreamTest : BinaryIndexStreamTest.cpp BinaryIndexStream.cpp ;
+unit-test MemoryIndexTest : MemoryIndexTest.cpp MemoryIndex.cpp ;
