@@ -35,6 +35,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
     {
         private readonly ISessionFactory _sessionFactory;
         private readonly ISession _session;
+        private DataSettings _dataSettings;
         public Database()
         {
             var configuration = SessionFactoryFactory.GetConfiguration(":memory:");
@@ -55,12 +56,12 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 
         public Schema GetSchema()
         {
-            return new Schema(SessionFactory);
+            return new Schema(SessionFactory, _dataSettings);
         }
 
         public ResultSet ExecuteQuery(Type table, IList<Identifier> columns)
         {
-            Schema schema = new Schema(SessionFactory);
+            Schema schema = new Schema(SessionFactory, _dataSettings);
             StringBuilder hql = new StringBuilder("SELECT ");
             String comma = "";
             List<ColumnInfo> columnInfos = new List<ColumnInfo>();
@@ -89,6 +90,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         public void AddSrmDocument(SrmDocument srmDocument)
         {
             SrmDocumentRevisionIndex = srmDocument.RevisionIndex;
+            _dataSettings = srmDocument.Settings.DataSettings;
             DocInfo docInfo = new DocInfo(srmDocument);
             ITransaction transaction = _session.BeginTransaction();
             SaveResults(_session, docInfo);
@@ -102,6 +104,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                               Sequence = peptideGroup.Sequence,
                                               Note = nodeGroup.Note
                                           };
+                AddAnnotations(dbProtein, nodeGroup.Annotations);
                 _session.Save(dbProtein);
                 Dictionary<DbResultFile, DbProteinResult> proteinResults = new Dictionary<DbResultFile, DbProteinResult>();
                 if (srmDocument.Settings.HasResults)
@@ -132,6 +135,14 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 _session.Clear();
             }
             transaction.Commit();
+        }
+
+        private static void AddAnnotations(DbEntity dbEntity, Annotations annotations)
+        {
+            foreach (var entry in annotations.ListAnnotations())
+            {
+                dbEntity.Annotations[entry.Key] = entry.Value;
+            }
         }
 
         private static void SaveResults(ISession session, DocInfo docInfo)
@@ -185,6 +196,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 double rt = docInfo.PeptidePrediction.RetentionTime.GetRetentionTime(peptide.Sequence);                
                 dbPeptide.PredictedRetentionTime = rt;
             }
+            AddAnnotations(dbPeptide, nodePeptide.Annotations);
             session.Save(dbPeptide);
             var peptideResults = new Dictionary<DbResultFile, DbPeptideResult>();
             docInfo.PeptideResults.Add(dbPeptide, peptideResults);
@@ -214,7 +226,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             PeptidePeakFoundRatio = chromInfo.PeakCountRatio,
                             PeptideRetentionTime = chromInfo.RetentionTime,
                             RatioToStandard = chromInfo.RatioToStandard,
-                            ProteinResult = docInfo.ProteinResults[dbProtein][resultFile]
+                            ProteinResult = docInfo.ProteinResults[dbProtein][resultFile],
                         };
                         session.Save(dbPeptideResult);
                         peptideResults.Add(resultFile, dbPeptideResult);
@@ -252,7 +264,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                             Mz = SequenceMassCalc.PersistentMZ(nodeGroup.PrecursorMz),
                                             Note = nodeGroup.Note
                                         };
-
+            AddAnnotations(dbPrecursor, nodeGroup.Annotations);
             double regressionMz = docInfo.Settings.GetRegressionMz(nodePeptide, nodeGroup);
             dbPrecursor.CollisionEnergy = predictTran.CollisionEnergy.GetCollisionEnergy(
                 tranGroup.PrecursorCharge, regressionMz);
@@ -333,14 +345,17 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             // StdevAreaRatio = chromInfo.RatioStdev,
                             LibraryDotProduct = chromInfo.LibraryDotProduct,
                             // TotalSignalToNoise = SignalToNoise(chromInfo.Area, chromInfo.BackgroundArea),
-                            Note = chromInfo.Note,
+                            Note = chromInfo.Annotations.Note,
                             UserSetTotal = chromInfo.UserSet,
                             PeptideResult = peptideResults[resultFile],
                             // Set the optimization step no matter what, so that replicates without
                             // optimization data will join with those with it.
                             OptStep = chromInfo.OptimizationStep,
                         };
-
+                        AddAnnotations(precursorResult, chromInfo.Annotations);
+                        // Set the optimization step no matter what, so that replicates without
+                        // optimization data will join with those with it.
+                        precursorResult.OptStep = chromInfo.OptimizationStep;
                         if (optFunction != null)
                         {
                             if (optFunction is CollisionEnergyRegression)
@@ -394,7 +409,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 dbTransition.LibraryIntensity = nodeTran.LibInfo.Intensity;
                 dbTransition.LibraryRank = nodeTran.LibInfo.Rank;
             }
-
+            AddAnnotations(dbTransition, nodeTran.Annotations);
             session.Save(dbTransition);
             var precursorResults = docInfo.PrecursorResults[dbPrecursor];
             if (nodeTran.HasResults)
@@ -422,10 +437,11 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             ResultFile = resultFile,
                             OptStep = chromInfo.OptimizationStep,
                             AreaRatio = chromInfo.Ratio,
-                            Note = chromInfo.Note,
+                            Note = chromInfo.Annotations.Note,
                             UserSetPeak = chromInfo.UserSet,
                             PrecursorResult = precursorResults[new ResultKey(resultFile,chromInfo.OptimizationStep)],
                         };
+                        AddAnnotations(transitionResult, chromInfo.Annotations);
                         if (!chromInfo.IsEmpty)
                         {
                             transitionResult.RetentionTime = chromInfo.RetentionTime;

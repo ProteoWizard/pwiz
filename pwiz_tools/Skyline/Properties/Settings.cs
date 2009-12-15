@@ -415,6 +415,26 @@ namespace pwiz.Skyline.Properties
                 this[typeof(ReportSpecList).Name] = value;
             }
         }
+
+        [System.Configuration.UserScopedSettingAttribute]
+        public AnnotationDefList AnnotationDefList
+        {
+            get
+            {
+                var list = (AnnotationDefList) this["AnnotationDefList"];
+                if (list == null)
+                {
+                    list = new AnnotationDefList();
+                    list.AddDefaults();
+                    AnnotationDefList = list;
+                }
+                return list;
+            }
+            set
+            {
+                this["AnnotationDefList"] = value;
+            }
+        }
     }
 
     /// <summary>
@@ -876,7 +896,8 @@ namespace pwiz.Skyline.Properties
                         TransitionInstrument.DEFAULT_MZ_MATCH_TOLERANCE, // MzMatchTolerance
                         null  // MaxTransitions
                     )
-                )
+                ),
+                new DataSettings(new AnnotationDef[0])
             );
 
         public static string DefaultName
@@ -1062,7 +1083,47 @@ namespace pwiz.Skyline.Properties
     {
         public GridColumnsList()
         {
-            
         }
+    }
+
+    public sealed class AnnotationDefList : SettingsList<AnnotationDef>, IListSerializer<AnnotationDef>
+    {
+        public AnnotationDefList()
+        {
+        }
+
+        public override IEnumerable<AnnotationDef> GetDefaults()
+        {
+            return new AnnotationDef[0];
+        }
+
+        public override AnnotationDef EditItem(AnnotationDef item, IEnumerable<AnnotationDef> existing, object tag)
+        {
+            var dialog = new DefineAnnotationDlg(existing ?? this);
+            dialog.SetAnnotationDef(item);
+            if (dialog.ShowDialog() == DialogResult.OK)
+            {
+                return dialog.GetAnnotationDef();
+            }
+
+            return null;
+        }
+
+        public override AnnotationDef CopyItem(AnnotationDef item)
+        {
+            return (AnnotationDef)item.ChangeName(string.Empty);
+        }
+
+        public override string Title { get { return "Define Annotations"; } }
+
+        public override string Label { get { return "&Annotations:"; } }
+
+        public Type SerialType { get { return typeof(AnnotationDef); } }
+
+        public ICollection<AnnotationDef> CreateEmptyList()
+        {
+            return new AnnotationDefList();
+        }
+
     }
 }

@@ -184,6 +184,10 @@ namespace pwiz.Skyline.Model
             Settings = settings;
         }
 
+        public override AnnotationDef.AnnotationTarget AnnotationTarget { 
+            get { throw new InvalidOperationException();}
+        }
+
         /// <summary>
         /// Monotonically increasing index, incremented each time a modified
         /// document is created.  Works much like the revision count in Subversion.
@@ -728,6 +732,7 @@ namespace pwiz.Skyline.Model
 
             protein,
             note,
+            annotation,
             alternatives,
             alternative_protein,
             sequence,
@@ -895,7 +900,7 @@ namespace pwiz.Skyline.Model
             string labelDescription = reader.GetAttribute(ATTR.label_description) ?? "";
             reader.ReadStartElement();
 
-            string note = ReadNote(reader);
+            var annotations = ReadAnnotations(reader);
 
             AlternativeProtein[] alternatives;
             if (!reader.IsStartElement(EL.alternatives) || reader.IsEmptyElement)
@@ -953,7 +958,7 @@ namespace pwiz.Skyline.Model
 
             reader.ReadEndElement();
 
-            return new PeptideGroupDocNode(group, note, label, labelDescription,
+            return new PeptideGroupDocNode(group, annotations, label, labelDescription,
                 children ?? new PeptideDocNode[0], autoManageChildren);
         }
 
@@ -1008,7 +1013,7 @@ namespace pwiz.Skyline.Model
 
             PeptideGroup group = new PeptideGroup();
 
-            string note = null;
+            Annotations annotations = Annotations.Empty;
             PeptideDocNode[] children = null;
 
             if (reader.IsEmptyElement)
@@ -1016,7 +1021,7 @@ namespace pwiz.Skyline.Model
             else
             {
                 reader.ReadStartElement();
-                note = ReadNote(reader);
+                annotations = ReadAnnotations(reader);
 
                 if (!reader.IsStartElement(EL.selected_peptides))
                     children = ReadPeptideListXml(reader, group);
@@ -1032,7 +1037,7 @@ namespace pwiz.Skyline.Model
                 reader.ReadEndElement();    // peptide_list
             }
 
-            return new PeptideGroupDocNode(group, note, name, description,
+            return new PeptideGroupDocNode(group, annotations, name, description,
                 children ?? new PeptideDocNode[0], autoManageChildren);
         }
 
@@ -1077,7 +1082,7 @@ namespace pwiz.Skyline.Model
 
             Peptide peptide = new Peptide(group as FastaSequence, sequence, start, end, missedCleavages);
 
-            string note = null;
+            var annotations = Annotations.Empty;
             ExplicitMods mods = null;
             Results<PeptideChromInfo> results = null;
             TransitionGroupDocNode[] children = null;
@@ -1087,7 +1092,7 @@ namespace pwiz.Skyline.Model
             else
             {
                 reader.ReadStartElement();
-                note = ReadNote(reader);
+                annotations = ReadAnnotations(reader);
                 mods = ReadExplicitMods(reader, peptide);
 
                 results = ReadPeptideResults(reader);
@@ -1112,7 +1117,7 @@ namespace pwiz.Skyline.Model
                 reader.ReadEndElement();
             }
 
-            return new PeptideDocNode(peptide, rank, note, mods, results,
+            return new PeptideDocNode(peptide, rank, annotations, mods, results,
                 children ?? new TransitionGroupDocNode[0], autoManageChildren);
         }
 
@@ -1215,7 +1220,7 @@ namespace pwiz.Skyline.Model
 
             TransitionGroup group = new TransitionGroup(peptide, precursorCharge, labelType);
             bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
-            string note = null;
+            var annotations = Annotations.Empty;
             SpectrumHeaderInfo libInfo = null;
             Results<TransitionGroupChromInfo> results = null;
             TransitionDocNode[] children = null;
@@ -1225,7 +1230,7 @@ namespace pwiz.Skyline.Model
             else
             {
                 reader.ReadStartElement();
-                note = ReadNote(reader);
+                annotations = ReadAnnotations(reader);
                 libInfo = ReadTransitionGroupLibInfo(reader);
                 results = ReadTransitionGroupResults(reader);
 
@@ -1235,7 +1240,7 @@ namespace pwiz.Skyline.Model
             }
 
             double precursorMassH = Settings.GetPrecursorMass(group.LabelType, peptide.Sequence, mods);
-            return new TransitionGroupDocNode(group, note, precursorMassH, libInfo, results,
+            return new TransitionGroupDocNode(group, annotations, precursorMassH, libInfo, results,
                 children ?? new TransitionDocNode[0], autoManageChildren);
         }
 
@@ -1271,11 +1276,11 @@ namespace pwiz.Skyline.Model
             float? ratio = reader.GetNullableFloatAttribute(ATTR.ratio);
             float? stdev = reader.GetNullableFloatAttribute(ATTR.ratio_stdev);
             float? libraryDotProduct = reader.GetNullableFloatAttribute(ATTR.library_dotp);
-            String note = null;
+            var annotations = Annotations.Empty;
             if (!reader.IsEmptyElement)
             {
                 reader.ReadStartElement();
-                note = ReadNote(reader);
+                annotations = ReadAnnotations(reader);
             }
             // Ignore userSet during load, since all values are still calculated
             // from the child transitions.  Otherwise inconsistency is possible.
@@ -1293,7 +1298,7 @@ namespace pwiz.Skyline.Model
                                                 ratio,
                                                 stdev,
                                                 libraryDotProduct,
-                                                note,
+                                                annotations,
                                                 userSet);
         }
 
@@ -1405,14 +1410,21 @@ namespace pwiz.Skyline.Model
 
             double massH = Settings.GetFragmentMass(group.LabelType, mods, transition);
 
-            return new TransitionDocNode(transition, info.Note, massH, info.LibInfo, info.Results);
+            return new TransitionDocNode(transition, info.Annotations, massH, info.LibInfo, info.Results);
         }
 
-        private static string ReadNote(XmlReader reader)
+        private static Annotations ReadAnnotations(XmlReader reader)
         {
+            string note = null;
+            var annotations = new Dictionary<string, string>();
+
             if (reader.IsStartElement(EL.note))
-                return reader.ReadElementString();
-            return null;
+                note = reader.ReadElementString();
+            while (reader.IsStartElement(EL.annotation))
+            {
+                annotations[reader.GetAttribute(ATTR.name)] = reader.ReadElementString();
+            }
+            return new Annotations(note, annotations);
         }
 
         /// <summary>
@@ -1428,7 +1440,7 @@ namespace pwiz.Skyline.Model
             public int Ordinal { get; private set; }
             public int PrecursorCharge { get; private set; }
             public int Charge { get; private set; }
-            public string Note { get; private set; }
+            public Annotations Annotations { get; private set; }
             public TransitionLibInfo LibInfo { get; private set; }
             public Results<TransitionChromInfo> Results { get; private set; }
 
@@ -1445,7 +1457,7 @@ namespace pwiz.Skyline.Model
                 else
                 {
                     reader.ReadStartElement();
-                    Note = ReadNote(reader);
+                    Annotations = ReadAnnotations(reader);
                     LibInfo = ReadTransitionLibInfo(reader);
                     Results = ReadTransitionResults(reader, settings);
 
@@ -1505,14 +1517,14 @@ namespace pwiz.Skyline.Model
                 if (ratio.HasValue)
                     ratio = Math.Max(0, ratio.Value);
                 bool userSet = reader.GetBoolAttribute(ATTR.user_set);
-                String note = null;
+                var annotations = Annotations.Empty;
                 if (!reader.IsEmptyElement)
                 {
                     reader.ReadStartElement();
-                    note = ReadNote(reader);
+                    annotations = ReadAnnotations(reader);
                 }
                 return new TransitionChromInfo(indexFile, optimizationStep, retentionTime, startRetentionTime, endRetentionTime,
-                                               area, backgroundArea, height, fwhm, fwhmDegenerate, ratio, note, userSet);
+                                               area, backgroundArea, height, fwhm, fwhmDegenerate, ratio, annotations, userSet);
             }
         }
 
@@ -1611,7 +1623,7 @@ namespace pwiz.Skyline.Model
             }
             writer.WriteAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
             // Write child elements
-            WriteNote(writer, node);
+            WriteAnnotations(writer, node.Annotations);
 
             FastaSequence seq = node.PeptideGroup as FastaSequence;
             if (seq != null)
@@ -1706,7 +1718,7 @@ namespace pwiz.Skyline.Model
                 writer.WriteAttribute(ATTR.predicted_retention_time, retentionTime);
             }
             // Write child elements
-            WriteNote(writer, node);
+            WriteAnnotations(writer, node.Annotations);
             WriteExplicitMods(writer, node);
 
             if (node.HasResults)
@@ -1769,7 +1781,7 @@ namespace pwiz.Skyline.Model
                 writer.WriteAttribute(ATTR.isotope_label, group.LabelType);
             writer.WriteAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
             // Write child elements
-            WriteNote(writer, node);
+            WriteAnnotations(writer, node.Annotations);
             if (node.HasLibInfo)
             {
                 var helpers = PeptideLibraries.SpectrumHeaderXmlHelpers;
@@ -1804,10 +1816,7 @@ namespace pwiz.Skyline.Model
             writer.WriteAttributeNullable(ATTR.ratio, chromInfo.Ratio);
             writer.WriteAttributeNullable(ATTR.ratio_stdev, chromInfo.RatioStdev);
             writer.WriteAttributeNullable(ATTR.library_dotp, chromInfo.LibraryDotProduct);
-            if (chromInfo.Note != null)
-            {
-                writer.WriteElementString(EL.note, chromInfo.Note);
-            }
+            WriteAnnotations(writer, chromInfo.Annotations);
         }
 
         /// <summary>
@@ -1827,7 +1836,7 @@ namespace pwiz.Skyline.Model
                 SequenceMassCalc.PersistentNeutral(massH));
             writer.WriteAttribute(ATTR.product_charge, transition.Charge);
 
-            WriteNote(writer, nodeTransition);
+            WriteAnnotations(writer, nodeTransition.Annotations);
 
             if (nodeTransition.HasLibInfo)
             {
@@ -1878,16 +1887,20 @@ namespace pwiz.Skyline.Model
                 writer.WriteAttributeNullable(ATTR.ratio, chromInfo.Ratio);                
             }
             writer.WriteAttribute(ATTR.user_set, chromInfo.UserSet);
-            if (chromInfo.Note != null)
-            {
-                writer.WriteElementString(EL.note, chromInfo.Note);
-            }
+            WriteAnnotations(writer, chromInfo.Annotations);
         }
 
-        private static void WriteNote(XmlWriter writer, DocNode node)
+        private static void WriteAnnotations(XmlWriter writer, Annotations annotations)
         {
-            if (node.Note != null)
-                writer.WriteElementString(EL.note, node.Note);
+            if (annotations.Note != null)
+                writer.WriteElementString(EL.note, annotations.Note);
+            foreach (var entry in annotations.ListAnnotations())
+            {
+                writer.WriteStartElement(EL.annotation);
+                writer.WriteAttribute(ATTR.name, entry.Key);
+                writer.WriteString(entry.Value);
+                writer.WriteEndElement();
+            }
         }
 
         private static void WriteResults<T>(XmlWriter writer, SrmSettings settings,

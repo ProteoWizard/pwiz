@@ -308,7 +308,7 @@ namespace pwiz.Skyline.EditUI
             }
             return new PeptideGroupDocNode(
                 peptideGroupDocNode.PeptideGroup, 
-                peptideGroupDocNode.Note, 
+                peptideGroupDocNode.Annotations, 
                 peptideGroupDocNode.Name, 
                 peptideGroupDocNode.Description, 
                 children.ToArray(),

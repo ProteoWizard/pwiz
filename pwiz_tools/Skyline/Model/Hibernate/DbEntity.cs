@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 
 namespace pwiz.Skyline.Model.Hibernate
 {
@@ -25,6 +26,10 @@ namespace pwiz.Skyline.Model.Hibernate
     /// </summary>
     public abstract class DbEntity
     {
+        protected DbEntity()
+        {
+            Annotations = new Dictionary<string, string>();
+        }
         /// <summary>
         /// Primary key of this entity.  Entities which have not been saved yet have a null Id.
         /// </summary>
@@ -63,5 +68,6 @@ namespace pwiz.Skyline.Model.Hibernate
             }
             return EntityClass.GetHashCode()*31 + Id.GetHashCode();
         }
+        public virtual IDictionary<string, string> Annotations { get; private set; }
     }
 }

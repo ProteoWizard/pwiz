@@ -21,34 +21,56 @@ using System.Collections.Generic;
 using System.Reflection;
 using NHibernate;
 using NHibernate.Metadata;
+using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Hibernate.Query
 {
     public class Schema
     {
         private readonly ISessionFactory _sessionFactory;
-        public Schema(ISessionFactory sessionFactory)
+        private readonly HashSet<string> _annotationDefNames;
+        public Schema(ISessionFactory sessionFactory, DataSettings dataSettings)
         {
             _sessionFactory = sessionFactory;
+            _annotationDefNames = new HashSet<string>();
+            if (dataSettings != null)
+            {
+                foreach (var annotationDef in dataSettings.AnnotationDefs)
+                {
+                    _annotationDefNames.Add(annotationDef.Name);
+                }
+            }
         }
 
         public IClassMetadata GetClassMetadata(Type type)
         {
             return _sessionFactory.GetClassMetadata(type);
         }
+
         public ColumnInfo GetColumnInfo(Type table, String column)
         {
-            PropertyInfo propertyInfo = table.GetProperty(column);
-            ColumnInfo columnInfo = new ColumnInfo
+            var columnInfo = new ColumnInfo
             {
                 Identifier = new Identifier(column),
                 Caption = column
             };
-            foreach (QueryColumn attr in propertyInfo.GetCustomAttributes(typeof(QueryColumn), true))
+            if (column.StartsWith(AnnotationPropertyAccessor.AnnotationPrefix))
             {
-                columnInfo.Caption = attr.FullName ?? columnInfo.Caption;
-                columnInfo.Format = attr.Format ?? columnInfo.Format;
-                columnInfo.ColumnType = propertyInfo.PropertyType;
+                var classMetadata = GetClassMetadata(table);
+                var annotationName = column.Substring(AnnotationPropertyAccessor.AnnotationPrefix.Length);
+                columnInfo.Caption = annotationName;
+                columnInfo.ColumnType = classMetadata.GetPropertyType(column).ReturnedClass;
+                columnInfo.IsHidden = !_annotationDefNames.Contains(annotationName);
+            }
+            else
+            {
+                PropertyInfo propertyInfo = table.GetProperty(column);
+                foreach (QueryColumn attr in propertyInfo.GetCustomAttributes(typeof(QueryColumn), true))
+                {
+                    columnInfo.Caption = attr.FullName ?? columnInfo.Caption;
+                    columnInfo.Format = attr.Format ?? columnInfo.Format;
+                    columnInfo.ColumnType = propertyInfo.PropertyType;
+                }
             }
             return columnInfo;
         }

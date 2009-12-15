@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Controls
             IList<bool> columnVisibles = new List<bool>();
             foreach (var column in columns)
             {
-                columnLabels.Add(column.Name);
+                columnLabels.Add(column.HeaderText);
                 columnVisibles.Add(column.Visible);
             }
             columnChooserForm.SetColumns(columnLabels, columnVisibles);

@@ -30,13 +30,13 @@ namespace pwiz.Skyline.Model
     public class PeptideDocNode : DocNodeParent
     {
         public PeptideDocNode(Peptide id, TransitionGroupDocNode[] children)
-            : this(id, null, null, null, null, children, true)
+            : this(id, null, Annotations.Empty, null, null, children, true)
         {
         }
 
-        public PeptideDocNode(Peptide id, int? rank, string note, ExplicitMods mods,
+        public PeptideDocNode(Peptide id, int? rank, Annotations annotations, ExplicitMods mods,
                 Results<PeptideChromInfo> results, TransitionGroupDocNode[] children, bool autoManageChildren)
-            : base(id, note, children, autoManageChildren)
+            : base(id, annotations, children, autoManageChildren)
         {
             ExplicitMods = mods;
             Rank = rank;
@@ -44,6 +44,8 @@ namespace pwiz.Skyline.Model
         }
 
         public Peptide Peptide { get { return (Peptide)Id; } }
+
+        public override AnnotationDef.AnnotationTarget AnnotationTarget { get { return AnnotationDef.AnnotationTarget.peptide; } }
 
         public ExplicitMods ExplicitMods { get; private set; }
 

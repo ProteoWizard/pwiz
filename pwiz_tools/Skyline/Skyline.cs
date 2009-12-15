@@ -887,14 +887,21 @@ namespace pwiz.Skyline
             {
                 EditNoteDlg dlg = new EditNoteDlg
                     {
-                        Note = nodeTree.Model.Note,
                         Text = string.Format("Edit Note {0} {1}", nodeTree.Heading, nodeTree.Text)
                     };
+                dlg.Init(nodeTree.Document, nodeTree.Model.AnnotationTarget, nodeTree.Model.Annotations);
 
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    ModifyDocument("Edit note", doc => (SrmDocument)
-                        doc.ReplaceChild(nodeTree.Path.Parent, nodeTree.Model.ChangeNote(dlg.Note)));
+                    var annotations = dlg.GetAnnotations();
+                    ModifyDocument("Edit note", doc =>
+                                                    {
+                                                        doc = (SrmDocument)
+                                                            doc.ReplaceChild(nodeTree.Path.Parent,
+                                                                             nodeTree.Model.ChangeAnnotations(
+                                                                                 annotations));
+                                                        return doc;
+                                                    });
                 }
             }
         }
@@ -1626,14 +1633,14 @@ namespace pwiz.Skyline
                     if (oldPeptideGroupDocNode == null)
                     {
                         // Add a new peptide list or protein to the end of the document
-                        newPeptideGroupDocNode = new PeptideGroupDocNode(peptideGroup, null, peptideGroupName, null,
+                        newPeptideGroupDocNode = new PeptideGroupDocNode(peptideGroup, Annotations.Empty, peptideGroupName, null,
                             peptideDocNodes.ToArray(), peptideSequence == null);
                         ModifyDocument(modifyMessage, doc=>(SrmDocument) doc.Add(newPeptideGroupDocNode));
                     }
                     else
                     {
                         // Add peptide to existing protein
-                        newPeptideGroupDocNode = new PeptideGroupDocNode(oldPeptideGroupDocNode.PeptideGroup, oldPeptideGroupDocNode.Note, oldPeptideGroupDocNode.Name,
+                        newPeptideGroupDocNode = new PeptideGroupDocNode(oldPeptideGroupDocNode.PeptideGroup, oldPeptideGroupDocNode.Annotations, oldPeptideGroupDocNode.Name,
                             oldPeptideGroupDocNode.Description, peptideDocNodes.ToArray(), false);
                         ModifyDocument(modifyMessage, doc=> (SrmDocument) doc.ReplaceChild(newPeptideGroupDocNode));
                     }
@@ -2056,6 +2063,12 @@ namespace pwiz.Skyline
             comboResults.Width = toolBarResults.Width - labelResults.Width - 6;
             ComboHelper.AutoSizeDropDown(comboResults);
         }
+        private void annotationsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var dlg = new ChooseAnnotationsDlg(this);
+            dlg.ShowDialog(this);
+        }
+
     }
 }
 

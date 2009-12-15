@@ -288,7 +288,7 @@ namespace pwiz.Skyline.EditUI
                     var newPeptide = new Peptide(null, peptideSequence, null, null, missedCleavages);
                     children.Add(new PeptideDocNode(newPeptide, new TransitionGroupDocNode[0]).ChangeSettings(document.Settings, SrmSettingsDiff.ALL));
                 }
-                var newPeptideGroupDocNode = new PeptideGroupDocNode(peptideGroupDocNode.PeptideGroup, peptideGroupDocNode.Note, peptideGroupDocNode.Name, peptideGroupDocNode.Description, children.ToArray(), true);
+                var newPeptideGroupDocNode = new PeptideGroupDocNode(peptideGroupDocNode.PeptideGroup, peptideGroupDocNode.Annotations, peptideGroupDocNode.Name, peptideGroupDocNode.Description, children.ToArray(), true);
                 document = (SrmDocument) document.ReplaceChild(newPeptideGroupDocNode);
             }
             return document;
@@ -607,7 +607,7 @@ namespace pwiz.Skyline.EditUI
                                                       productCharge, ionType.Value, ordinal.Value));
                 
                 }
-                var newPeptideGroupDocNode = new PeptideGroupDocNode(peptideGroupDocNode.PeptideGroup, peptideGroupDocNode.Note, 
+                var newPeptideGroupDocNode = new PeptideGroupDocNode(peptideGroupDocNode.PeptideGroup, peptideGroupDocNode.Annotations, 
                     peptideGroupDocNode.Name, peptideGroupDocNode.Description, children.ToArray(), true);
                 document = (SrmDocument)document.ReplaceChild(newPeptideGroupDocNode);
             }

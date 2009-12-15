@@ -55,7 +55,7 @@ namespace pwiz.Skyline.FileUI
         public void SetDatabase(Database database)
         {
             _database = database;
-            _columnSet = ColumnSet.GetTransitionsColumnSet(new Schema(_database.SessionFactory));
+            _columnSet = ColumnSet.GetTransitionsColumnSet(_database.GetSchema());
             treeView.Nodes.Clear();
             treeView.Nodes.AddRange(_columnSet.GetTreeNodes().ToArray());
         }

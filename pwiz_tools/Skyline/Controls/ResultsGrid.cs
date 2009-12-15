@@ -27,6 +27,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
 {
@@ -37,6 +38,9 @@ namespace pwiz.Skyline.Controls
     {
         private readonly Dictionary<RowIdentifier, DataGridViewRow> _chromInfoRows 
             = new Dictionary<RowIdentifier, DataGridViewRow>();
+
+        private Dictionary<string, DataGridViewColumn> _annotationColumns 
+            = new Dictionary<string, DataGridViewColumn>();
 
         private bool _inCommitEdit;
         private bool _inReplicateChange;
@@ -310,7 +314,8 @@ namespace pwiz.Skyline.Controls
                         return;
                     }
                     var chromInfoOld = GetChromInfo(SelectedTransitionGroupDocNode.Results, rowIdentifier);
-                    var chromInfoNew = chromInfoOld.ChangeNote(Convert.ToString(row.Cells[e.ColumnIndex].Value));
+                    var chromInfoNew = chromInfoOld.ChangeAnnotations(
+                        chromInfoOld.Annotations.ChangeNote(Convert.ToString(row.Cells[e.ColumnIndex].Value)));
                     Debug.Assert(chromInfoNew.UserSet);
                     Program.MainWindow.ModifyDocument("Set Note",
                         doc => (SrmDocument)doc.ReplaceChild(
@@ -326,13 +331,43 @@ namespace pwiz.Skyline.Controls
                         return;
                     }
                     var chromInfoOld = GetChromInfo(transitionDocNode.Results, rowIdentifier);
-                    var chromInfoNew = chromInfoOld.ChangeNote(Convert.ToString(row.Cells[e.ColumnIndex].Value));
+                    var chromInfoNew = chromInfoOld.ChangeAnnotations(
+                        chromInfoOld.Annotations.ChangeNote(Convert.ToString(row.Cells[e.ColumnIndex].Value)));
                     Debug.Assert(chromInfoNew.UserSet);
                     Program.MainWindow.ModifyDocument("Set Note",
                         doc => (SrmDocument)doc.ReplaceChild(
                             PathToSelectedNode(transitionDocNode).Parent, transitionDocNode.ChangeResults(
                             ChangeChromInfo(transitionDocNode.Results, rowIdentifier, chromInfoOld, chromInfoNew))));
                     return;
+                }
+                var column = Columns[e.ColumnIndex];
+                var annotationDef = column.Tag as AnnotationDef;
+                if (annotationDef != null)
+                {
+                    var chromInfo = GetChromInfo(annotationDef, rowIdentifier);
+                    var transitionChromInfo = chromInfo as TransitionChromInfo;
+                    var value = row.Cells[e.ColumnIndex].Value;
+                    if (transitionChromInfo != null)
+                    {
+                        var chromInfoNew = transitionChromInfo.ChangeAnnotations(
+                            transitionChromInfo.Annotations.ChangeAnnotation(annotationDef, value));
+                        Program.MainWindow.ModifyDocument("Set " + annotationDef.Name, 
+                            doc => (SrmDocument) doc.ReplaceChild(
+                                PathToSelectedNode(SelectedTransitionDocNode).Parent,
+                                SelectedTransitionDocNode.ChangeResults(
+                                    ChangeChromInfo(SelectedTransitionDocNode.Results, rowIdentifier, transitionChromInfo, chromInfoNew))));
+                    }
+                    var transitionGroupChromInfo = chromInfo as TransitionGroupChromInfo;
+                    if (transitionGroupChromInfo != null)
+                    {
+                        var chromInfoNew = transitionGroupChromInfo.ChangeAnnotations(
+                            transitionGroupChromInfo.Annotations.ChangeAnnotation(annotationDef, value));
+                        Program.MainWindow.ModifyDocument("Set " + annotationDef.Name,
+                            doc => (SrmDocument) doc.ReplaceChild(
+                                PathToSelectedNode(SelectedTransitionGroupDocNode).Parent,
+                                SelectedTransitionGroupDocNode.ChangeResults(
+                                    ChangeChromInfo(SelectedTransitionGroupDocNode.Results, rowIdentifier, transitionGroupChromInfo, chromInfoNew))));
+                    }
                 }
             }
             finally
@@ -382,6 +417,19 @@ namespace pwiz.Skyline.Controls
                 {
                     return chromInfo;
                 }
+            }
+            return null;
+        }
+
+        ChromInfo GetChromInfo(AnnotationDef annotationDef, RowIdentifier rowIdentifier)
+        {
+            if (SelectedTransitionDocNode != null && 0 != (annotationDef.AnnotationTargets & AnnotationDef.AnnotationTarget.transition_result))
+            {
+                return GetChromInfo(SelectedTransitionDocNode.Results, rowIdentifier);
+            }
+            if (SelectedTransitionGroupDocNode != null && 0 != (annotationDef.AnnotationTargets & AnnotationDef.AnnotationTarget.precursor_result))
+            {
+                return GetChromInfo(SelectedTransitionGroupDocNode.Results, rowIdentifier);
             }
             return null;
         }
@@ -604,6 +652,93 @@ namespace pwiz.Skyline.Controls
             SelectedPeptideDocNode = srmTreeNode.Model as PeptideDocNode;
         }
 
+        private void UpdateAnnotationColumns()
+        {
+            var newAnnotationColumns = new Dictionary<string, DataGridViewColumn>();
+            foreach (var annotationDef in Document.Settings.DataSettings.AnnotationDefs)
+            {
+                if (0 == (annotationDef.AnnotationTargets & (AnnotationDef.AnnotationTarget.precursor_result | AnnotationDef.AnnotationTarget.transition_result)))
+                {
+                    continue;
+                }
+                var name = AnnotationPropertyAccessor.AnnotationPrefix + annotationDef.Name;
+                DataGridViewColumn column;
+                _annotationColumns.TryGetValue(name, out column);
+                if (column != null)
+                {
+                    bool canReuseColumn = false;
+                    switch (annotationDef.Type)
+                    {
+                        case AnnotationDef.AnnotationType.true_false:
+                            canReuseColumn = column is DataGridViewCheckBoxColumn;
+                            break;
+                        case AnnotationDef.AnnotationType.text:
+                            canReuseColumn = column is DataGridViewTextBoxColumn;
+                            break;
+                        case AnnotationDef.AnnotationType.value_list:
+                            var comboBoxColumn = column as DataGridViewComboBoxColumn;
+                            if (comboBoxColumn != null)
+                            {
+                                if (comboBoxColumn.Items.Count == annotationDef.Items.Count + 1 && "".Equals(comboBoxColumn.Items[0]))
+                                {
+                                    canReuseColumn = true;
+                                    for (int i = 0; i < annotationDef.Items.Count; i++)
+                                    {
+                                        if (!annotationDef.Items[i].Equals(comboBoxColumn.Items[i + 1]))
+                                        {
+                                            canReuseColumn = false;
+                                            break;
+                                        }
+                                    }
+                                    
+                                }
+                            }
+                            break;
+                    }
+                    if (!canReuseColumn)
+                    {
+                        Columns.Remove(column);
+                        _annotationColumns.Remove(column.Name);
+                        column = null;
+                    }
+                }
+                if (column == null)
+                {
+                    switch (annotationDef.Type)
+                    {
+                        case AnnotationDef.AnnotationType.true_false:
+                            column = new DataGridViewCheckBoxColumn();
+                            break;
+                        case AnnotationDef.AnnotationType.value_list:
+                            var comboBoxColumn = new DataGridViewComboBoxColumn();
+                            comboBoxColumn.Items.Add("");
+                            foreach (var item in annotationDef.Items)
+                            {
+                                comboBoxColumn.Items.Add(item);
+                            }
+                            column = comboBoxColumn;
+                            break;
+                        default:
+                            column = new DataGridViewTextBoxColumn();
+                            break;
+                    }
+                    column.Name = name;
+                    column.HeaderText = annotationDef.Name;
+                    Columns.Add(column);
+                }
+                column.Tag = annotationDef;
+                newAnnotationColumns[name] = column;
+            }
+            foreach (var entry in _annotationColumns)
+            {
+                if (!newAnnotationColumns.ContainsKey(entry.Key))
+                {
+                    Columns.Remove(entry.Key);
+                }
+            }
+            _annotationColumns = newAnnotationColumns;
+        }
+
         /// <summary>
         /// Updates all of the UI.  Called whenever the document is modified, or the selected tree node changes.
         /// </summary>
@@ -633,6 +768,7 @@ namespace pwiz.Skyline.Controls
             {
                 return;
             }
+            UpdateAnnotationColumns();
             // Remember the set of rowIds that have data in them.  After updating the data, rows
             // that are not in this set will be deleted from the grid
             var rowIds = new HashSet<RowIdentifier>();
@@ -801,6 +937,7 @@ namespace pwiz.Skyline.Controls
             if (gridColumns != null)
             {
                 var availableColumnSet = new HashSet<DataGridViewColumn>(GetAvailableColumns());
+                int displayIndex = 0;
                 for (int iColumn = 0; iColumn < gridColumns.Columns.Count; iColumn++)
                 {
                     var gridColumn = gridColumns.Columns[iColumn];
@@ -809,7 +946,7 @@ namespace pwiz.Skyline.Controls
                         continue;
                     }
                     column.Width = gridColumn.Width;
-                    column.DisplayIndex = iColumn;
+                    column.DisplayIndex = displayIndex++;
                     column.Visible = gridColumn.Visible && availableColumnSet.Contains(column);
                 }
             }
@@ -856,7 +993,7 @@ namespace pwiz.Skyline.Controls
                 row.Cells[MaxEndTimeColumn.Index].Value = chromInfo.EndRetentionTime;
                 row.Cells[TotalAreaColumn.Index].Value = chromInfo.Area;
                 row.Cells[LibraryDotProductColumn.Index].Value = chromInfo.LibraryDotProduct;
-                row.Cells[PrecursorNoteColumn.Index].Value = chromInfo.Note;
+                row.Cells[PrecursorNoteColumn.Index].Value = chromInfo.Annotations.Note;
                 row.Cells[OptCollisionEnergyColumn.Index].Value = null;
                 row.Cells[OptDeclusteringPotentialColumn.Index].Value = null;
 
@@ -877,6 +1014,21 @@ namespace pwiz.Skyline.Controls
                             ((DeclusteringPotentialRegression)optFunc).GetDeclustringPotential(
                                 regressionMz, chromInfo.OptimizationStep);
                     }
+                }
+            }
+            foreach (var column in _annotationColumns.Values)
+            {
+                var annotationDef = (AnnotationDef)column.Tag;
+                var mask = AnnotationDef.AnnotationTarget.precursor_result;
+                if (SelectedTransitionDocNode != null)
+                {
+                    mask |= AnnotationDef.AnnotationTarget.transition_result;
+                }
+                if (AnnotationDef.AnnotationTarget.precursor_result == (annotationDef.AnnotationTargets & mask))
+                {
+                    row.Cells[column.Index].Value = 
+                        chromInfo == null ? null : 
+                        chromInfo.Annotations.GetAnnotation(annotationDef);
                 }
             }
         }
@@ -907,7 +1059,17 @@ namespace pwiz.Skyline.Controls
                 row.Cells[AreaRatioColumn.Index].Value = chromInfo.Ratio;
                 row.Cells[HeightColumn.Index].Value = chromInfo.Height;
                 row.Cells[PeakRankColumn.Index].Value = chromInfo.Rank;
-                row.Cells[TransitionNoteColumn.Index].Value = chromInfo.Note;
+                row.Cells[TransitionNoteColumn.Index].Value = chromInfo.Annotations.Note;
+            }
+            foreach (var column in _annotationColumns.Values)
+            {
+                var annotationDef = (AnnotationDef) column.Tag;
+                if (0 != (annotationDef.AnnotationTargets & AnnotationDef.AnnotationTarget.transition_result))
+                {
+                    row.Cells[column.Index].Value = 
+                        chromInfo == null ? null :
+                        chromInfo.Annotations.GetAnnotation(annotationDef);
+                }
             }
         }
 
@@ -974,9 +1136,11 @@ namespace pwiz.Skyline.Controls
         public ICollection<DataGridViewColumn> GetDefaultColumns()
         {
             var result = new HashSet<DataGridViewColumn> {ReplicateNameColumn};
+            AnnotationDef.AnnotationTarget annotationTargets = 0;
             if (SelectedTransitionDocNode != null)
             {
                 result.UnionWith(TransitionColumns);
+                annotationTargets = AnnotationDef.AnnotationTarget.transition_result;
             }
             else if (SelectedTransitionGroupDocNode != null)
             {
@@ -984,10 +1148,19 @@ namespace pwiz.Skyline.Controls
                                      where !ReferenceEquals(column, OptCollisionEnergyColumn) &&
                                            !ReferenceEquals(column, OptDeclusteringPotentialColumn)
                                      select column);
+                annotationTargets = AnnotationDef.AnnotationTarget.precursor_result;
             }
             else if (SelectedPeptideDocNode != null)
             {
                 result.UnionWith(PeptideColumns);
+            }
+            foreach (var column in _annotationColumns.Values)
+            {
+                var annotationDef = (AnnotationDef) column.Tag;
+                if (0 != (annotationDef.AnnotationTargets & annotationTargets))
+                {
+                    result.Add(column);
+                }
             }
             return result;
         }
@@ -1000,6 +1173,7 @@ namespace pwiz.Skyline.Controls
         {
             var result = new List<DataGridViewColumn>();
             result.AddRange(ReplicateColumns);
+            AnnotationDef.AnnotationTarget targets = 0;
             if (SelectedPeptideDocNode != null)
             {
                 result.AddRange(PeptideColumns);
@@ -1007,10 +1181,20 @@ namespace pwiz.Skyline.Controls
             if (SelectedTransitionGroupDocNode != null)
             {
                 result.AddRange(PrecursorColumns);
+                targets |= AnnotationDef.AnnotationTarget.precursor_result;
             }
             if (SelectedTransitionDocNode != null)
             {
                 result.AddRange(TransitionColumns);
+                targets |= AnnotationDef.AnnotationTarget.transition_result;
+            }
+            foreach (var column in _annotationColumns.Values)
+            {
+                var annotationDef = (AnnotationDef) column.Tag;
+                if (0 != (annotationDef.AnnotationTargets & targets))
+                {
+                    result.Add(column);
+                }
             }
             return result;
         }

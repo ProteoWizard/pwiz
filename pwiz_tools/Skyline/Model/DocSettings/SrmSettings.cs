@@ -49,11 +49,12 @@ namespace pwiz.Skyline.Model.DocSettings
     [XmlRoot("settings_summary")]
     public class SrmSettings : XmlNamedElement, IPeptideFilter
     {
-        public SrmSettings(string name, PeptideSettings peptideSettings, TransitionSettings transitionSettings)
+        public SrmSettings(string name, PeptideSettings peptideSettings, TransitionSettings transitionSettings, DataSettings dataSettings)
             : base(name)
         {
             PeptideSettings = peptideSettings;
             TransitionSettings = transitionSettings;
+            DataSettings = dataSettings;
 
             // Create cached calculator instances
             CreatePrecursorMassCalcs();
@@ -63,6 +64,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public PeptideSettings PeptideSettings { get; private set; }
 
         public TransitionSettings TransitionSettings { get; private set; }
+
+        public DataSettings DataSettings { get; private set; }
 
         public MeasuredResults MeasuredResults { get; private set; }
 
@@ -186,6 +189,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 settings.CreateFragmentMassCalcs();
 
             return settings;
+        }
+
+        public SrmSettings ChangeDataSettings(DataSettings prop)
+        {
+            return ChangeProp(ImClone(this), (im, v) => im.DataSettings = prop, prop);
         }
 
         public SrmSettings ChangeMeasuredResults(MeasuredResults prop)
@@ -453,7 +461,14 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (prediction.DeclusteringPotential != null &&
                         !defSet.DeclusterPotentialList.Contains(prediction.DeclusteringPotential))
                     defSet.DeclusterPotentialList.Add(prediction.DeclusteringPotential);
-            }            
+            }
+            foreach (var annotationDef in DataSettings.AnnotationDefs)
+            {
+                if (!defSet.AnnotationDefList.ContainsKey(annotationDef.Name))
+                {
+                    defSet.AnnotationDefList.Add(annotationDef);
+                }
+            }
         }
 
         public SrmSettings ConnectLibrarySpecs(Func<Library, LibrarySpec> findLibrarySpec)
@@ -588,6 +603,7 @@ namespace pwiz.Skyline.Model.DocSettings
             PeptideSettings = reader.DeserializeElement<PeptideSettings>();
             TransitionSettings = reader.DeserializeElement<TransitionSettings>();
             MeasuredResults = reader.DeserializeElement<MeasuredResults>();
+            DataSettings = reader.DeserializeElement<DataSettings>() ?? new DataSettings(new AnnotationDef[0]);
             reader.ReadEndElement();
             ValidateLoad();
         }
@@ -600,6 +616,7 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteElement(TransitionSettings);
             if (MeasuredResults != null)
                 writer.WriteElement(MeasuredResults);
+            writer.WriteElement(DataSettings);
         }
 
         #endregion
@@ -612,7 +629,8 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(this, obj)) return true;
             return base.Equals(obj) &&
                 Equals(obj.PeptideSettings, PeptideSettings) &&
-                Equals(obj.TransitionSettings, TransitionSettings);
+                Equals(obj.TransitionSettings, TransitionSettings) &&
+                Equals(obj.DataSettings, DataSettings);
         }
 
         public override bool Equals(object obj)
@@ -629,6 +647,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 int result = base.GetHashCode();
                 result = (result*397) ^ PeptideSettings.GetHashCode();
                 result = (result*397) ^ TransitionSettings.GetHashCode();
+                result = (result*397) ^ DataSettings.GetHashCode();
                 return result;
             }
         }

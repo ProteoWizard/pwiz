@@ -33,14 +33,14 @@ namespace pwiz.Skyline.Model
         public const int MIN_DOT_PRODUCT_TRANSITIONS = 4;
 
         public TransitionGroupDocNode(TransitionGroup id, double massH, TransitionDocNode[] children)
-            : this(id, null, massH, null, null, children, true)
+            : this(id, Annotations.Empty, massH, null, null, children, true)
         {
         }
 
-        public TransitionGroupDocNode(TransitionGroup id, string note, double massH,
+        public TransitionGroupDocNode(TransitionGroup id, Annotations annotations, double massH,
                 SpectrumHeaderInfo libInfo, Results<TransitionGroupChromInfo> results, TransitionDocNode[] children,
                 bool autoManageChildren)
-            : base(id, note, children, autoManageChildren)
+            : base(id, annotations, children, autoManageChildren)
         {
             PrecursorMz = SequenceMassCalc.GetMZ(massH, id.PrecursorCharge);
             LibInfo = libInfo;
@@ -48,12 +48,14 @@ namespace pwiz.Skyline.Model
         }
 
         private TransitionGroupDocNode(TransitionGroupDocNode group, double precursorMz, IList<DocNode> children)
-            : base(group.TransitionGroup, group.Note, children, group.AutoManageChildren)
+            : base(group.TransitionGroup, group.Annotations, children, group.AutoManageChildren)
         {
             PrecursorMz = precursorMz;
         }
 
         public TransitionGroup TransitionGroup { get { return (TransitionGroup) Id; }}
+
+        public override AnnotationDef.AnnotationTarget AnnotationTarget { get { return AnnotationDef.AnnotationTarget.precursor; } }
 
         public double PrecursorMz { get; private set; }
 
@@ -768,7 +770,7 @@ namespace pwiz.Skyline.Model
                 {
                     Ratio = chromInfo.Ratio;
                     RatioStdev = chromInfo.RatioStdev;
-                    Note = chromInfo.Note;
+                    Annotations = chromInfo.Annotations;
                 }
             }
 
@@ -787,7 +789,7 @@ namespace pwiz.Skyline.Model
             private float? LibraryDotProduct { get; set; }
             private float? Ratio { get; set; }
             private float? RatioStdev { get; set; }
-            private String Note { get; set; }
+            private Annotations Annotations { get; set; }
             private bool UserSet { get; set; }
 
             private float PeakCountRatio { get { return ((float) PeakCount)/TransitionCount; } }
@@ -854,7 +856,7 @@ namespace pwiz.Skyline.Model
                                                     Ratio,
                                                     RatioStdev,
                                                     LibraryDotProduct,
-                                                    Note,
+                                                    Annotations.Empty,
                                                     UserSet);
             }
         }

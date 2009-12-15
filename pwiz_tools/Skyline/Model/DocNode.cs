@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
@@ -38,14 +39,14 @@ namespace pwiz.Skyline.Model
     public abstract class DocNode : Immutable
     {
         protected DocNode(Identity id)
-            : this(id, null)
+            : this(id, Annotations.Empty)
         {
         }
 
-        protected DocNode(Identity id, string note)
+        protected DocNode(Identity id, Annotations annotations)
         {
             Id = id;
-            Note = note;
+            Annotations = annotations;
         }
 
         /// <summary>
@@ -55,22 +56,25 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public Identity Id { get; private set; }
 
+        public Annotations Annotations { get; private set; }
+
+        public abstract AnnotationDef.AnnotationTarget AnnotationTarget { get; }
         /// <summary>
         /// User supplied comment of this node.  All <see cref="DocNode"/> objects
         /// in the document support user notes.
         /// </summary>
-        public string Note { get; private set; }
+        public string Note { get { return Annotations.Note;} }
 
-        public string NoteMark { get { return (Note == null ? "" : "*"); } }
+        public string NoteMark { get { return Annotations.IsEmpty ? "" : "*"; } }
 
         /// <summary>
         /// Returns a clone of this with a different property value.
         /// </summary>
         /// <param name="noteProp">Value for the property on the new instance</param>
         /// <returns>New instance</returns>
-        public DocNode ChangeNote(string noteProp)
+        public DocNode ChangeAnnotations(Annotations annotations)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.Note = v, noteProp);            
+            return ChangeProp(ImClone(this), (im, v) => im.Annotations = v, annotations);            
         }
 
         /// <summary>
@@ -132,7 +136,7 @@ namespace pwiz.Skyline.Model
         /// <param name="id">The <see cref="Identity"/> object for this node</param>
         /// <param name="children">Children of this node</param>
         protected DocNodeParent(Identity id, IList<DocNode> children)
-            : this(id, null, children, true)
+            : this(id, Annotations.Empty, children, true)
         {
         }
 
@@ -141,10 +145,10 @@ namespace pwiz.Skyline.Model
         /// in a complete instance of a node.
         /// </summary>
         /// <param name="id">The <see cref="Identity"/> object for this node</param>
-        /// <param name="noteProp">Comment string for this node, or null if none</param>
+        /// <param name="annotations">Annotations for this node</param>
         /// <param name="children">Children of this node</param>
         /// <param name="autoManageChildren">Whether children should be added and removed when the settings change</param>
-        protected DocNodeParent(Identity id, string noteProp, IList<DocNode> children, bool autoManageChildren) : base(id, noteProp)
+        protected DocNodeParent(Identity id, Annotations annotations, IList<DocNode> children, bool autoManageChildren) : base(id, annotations)
         {
             Children = children;
             _nodeCountStack = GetCounts(children);

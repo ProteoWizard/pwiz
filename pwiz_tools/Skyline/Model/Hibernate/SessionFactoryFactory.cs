@@ -21,6 +21,8 @@ using System.Data.SQLite;
 using System.Reflection;
 using NHibernate;
 using NHibernate.Cfg;
+using NHibernate.Mapping;
+using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Hibernate
 {
@@ -49,7 +51,43 @@ namespace pwiz.Skyline.Model.Hibernate
             Assembly assembly = typeof(SessionFactoryFactory).Assembly;
             configuration.SetProperty("connection.provider", typeof(NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName);
             configuration.AddInputStream(assembly.GetManifestResourceStream(typeof(SessionFactoryFactory).Namespace + ".mapping.xml"));
+            AddAnnotations(configuration, AnnotationDef.AnnotationTarget.protein, typeof(DbProtein));
+            AddAnnotations(configuration, AnnotationDef.AnnotationTarget.peptide, typeof(DbPeptide));
+            AddAnnotations(configuration, AnnotationDef.AnnotationTarget.precursor, typeof(DbPrecursor));
+            AddAnnotations(configuration, AnnotationDef.AnnotationTarget.transition, typeof(DbTransition));
+            AddAnnotations(configuration, AnnotationDef.AnnotationTarget.precursor_result, typeof(DbPrecursorResult));
+            AddAnnotations(configuration, AnnotationDef.AnnotationTarget.transition_result, typeof(DbTransitionResult));
             return configuration;
+        }
+
+        private static void AddAnnotations(Configuration configuration, AnnotationDef.AnnotationTarget annotationTarget, Type persistentClass)
+        {
+            var mapping = configuration.GetClassMapping(persistentClass);
+            foreach (var annotationDef in Properties.Settings.Default.AnnotationDefList)
+            {
+                if (0 == (annotationDef.AnnotationTargets & annotationTarget))
+                {
+                    continue;
+                }
+                var column = new Column(AnnotationPropertyAccessor.AnnotationPrefix + annotationDef.Name);
+                mapping.Table.AddColumn(column);
+                var isBoolAttribute = annotationDef.Type == AnnotationDef.AnnotationType.true_false;
+                var value = new SimpleValue(mapping.Table)
+                                {
+                                        TypeName =
+                                        isBoolAttribute ? "boolean" : "string",
+                                };
+                value.AddColumn(column);
+                var property = new Property(value)
+                                   {
+                                       Name = AnnotationPropertyAccessor.AnnotationPrefix + annotationDef.Name,
+                                       PropertyAccessorName = 
+                                            isBoolAttribute 
+                                            ? typeof(BoolAnnotationPropertyAccessor).AssemblyQualifiedName 
+                                            : typeof(AnnotationPropertyAccessor).AssemblyQualifiedName,
+                                   };
+                mapping.AddProperty(property);
+            }
         }
     }
 }

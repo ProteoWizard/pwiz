@@ -19,6 +19,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 
@@ -32,18 +33,20 @@ namespace pwiz.Skyline.Model
     public class TransitionDocNode : DocNode
     {
         public TransitionDocNode(Transition id, double massH, TransitionLibInfo libInfo)
-            : this(id, null, massH, libInfo, null)
+            : this(id, Annotations.Empty, massH, libInfo, null)
         {
         }
 
-        public TransitionDocNode(Transition id, string note, double massH,
+        public TransitionDocNode(Transition id, Annotations annotations, double massH,
                 TransitionLibInfo libInfo, Results<TransitionChromInfo> results)
-            : base(id, note)
+            : base(id, annotations)
         {
             Mz = SequenceMassCalc.GetMZ(massH, id.Charge);
             LibInfo = libInfo;
             Results = results;
         }
+
+        public override AnnotationDef.AnnotationTarget AnnotationTarget { get { return AnnotationDef.AnnotationTarget.transition; } }
 
         public Transition Transition { get { return (Transition)Id; } }
 
@@ -158,7 +161,8 @@ namespace pwiz.Skyline.Model
                     {
                         // Something is wrong, if the value has already been added
                         Debug.Assert(chromInfoNew != null);
-                        chromInfoNew = chromInfoNew.ChangeNote(chromInfo.Note);
+
+                        chromInfoNew = chromInfoNew.ChangeAnnotations(chromInfo.Annotations);
                         listChromInfoNew.Add(chromInfoNew);
                         chromInfoNew = null;    // Only add once
                     }

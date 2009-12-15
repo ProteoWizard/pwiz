@@ -33,25 +33,30 @@ namespace pwiz.Skyline.Model
         private string _description;
 
         public PeptideGroupDocNode(PeptideGroup id, string name, string description, PeptideDocNode[] children)
-            : this(id, null, name, description, children)
+            : this(id, Annotations.Empty, name, description, children)
         {
         }
 
-        public PeptideGroupDocNode(PeptideGroup id, string note, string name, string description,
+        public PeptideGroupDocNode(PeptideGroup id, Annotations annotations, string name, string description,
                 PeptideDocNode[] children)
-            : this(id, note, name, description, children, true)
+            : this(id, annotations, name, description, children, true)
         {
         }
 
-        public PeptideGroupDocNode(PeptideGroup id, String note, String name, String description,
+        public PeptideGroupDocNode(PeptideGroup id, Annotations annotations, String name, String description,
                 PeptideDocNode[] children, bool autoManageChildren)
-            : base (id, note, children, autoManageChildren)
+            : base (id, annotations, children, autoManageChildren)
         {
             _name = name;
             _description = description;
         }
 
         public PeptideGroup PeptideGroup { get { return (PeptideGroup)Id; } }
+
+        public override AnnotationDef.AnnotationTarget AnnotationTarget
+        {
+            get { return AnnotationDef.AnnotationTarget.protein; }
+        }
 
         public bool IsPeptideList { get { return !(PeptideGroup is FastaSequence); } }
 

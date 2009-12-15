@@ -94,7 +94,7 @@ namespace pwiz.Skyline.Model.Results
                                         float? ratio,
                                         float? stdev,
                                         float? libraryDotProduct,
-                                        String note,
+                                        Annotations annotations,
                                         bool userSet)
             : base(fileIndex)
         {
@@ -109,7 +109,7 @@ namespace pwiz.Skyline.Model.Results
             Ratio = ratio;
             RatioStdev = stdev;
             LibraryDotProduct = libraryDotProduct;
-            Note = note;
+            Annotations = annotations;
             UserSet = userSet;
         }
 
@@ -125,7 +125,7 @@ namespace pwiz.Skyline.Model.Results
         public float? Ratio { get; private set; }
         public float? RatioStdev { get; private set; }
         public float? LibraryDotProduct { get; private set; }
-        public String Note { get; private set; }
+        public Annotations Annotations { get; private set; }
 
         /// <summary>
         /// Set if user action has explicitly set these values
@@ -142,15 +142,11 @@ namespace pwiz.Skyline.Model.Results
             return im;
         }
 
-        public TransitionGroupChromInfo ChangeNote(String note)
+        public TransitionGroupChromInfo ChangeAnnotations(Annotations annotations)
         {
-            if (note == "")
-            {
-                note = null;
-            }
             return ChangeProp(ImClone(this), 
-                (im, v) => { im.Note = v; im.UserSet = im.UserSet || v != null; }, 
-                note);
+                (im, v) => { im.Annotations = v; im.UserSet = im.UserSet || !v.IsEmpty; }, 
+                annotations);
         }
 
         #endregion
@@ -169,7 +165,7 @@ namespace pwiz.Skyline.Model.Results
                    other.Fwhm.Equals(Fwhm) &&
                    other.Ratio == Ratio &&
                    other.LibraryDotProduct.Equals(LibraryDotProduct) &&
-                   other.Note == Note &&
+                   other.Annotations.Equals(Annotations) &&
                    other.UserSet.Equals(UserSet);
         }
 
@@ -209,7 +205,7 @@ namespace pwiz.Skyline.Model.Results
         public TransitionChromInfo(int fileIndex, int optimizationStep, ChromPeak peak, float? ratio, bool userSet)
             : this(fileIndex, optimizationStep, peak.RetentionTime, peak.StartTime, peak.EndTime,
                    peak.Area, peak.BackgroundArea, peak.Height, peak.Fwhm,
-                   peak.IsFwhmDegenerate, ratio, null, userSet)
+                   peak.IsFwhmDegenerate, ratio, Annotations.Empty, userSet)
         {            
         }
 
@@ -217,7 +213,7 @@ namespace pwiz.Skyline.Model.Results
                                    float startRetentionTime, float endRetentionTime,
                                    float area, float backgroundArea, float height,
                                    float fwhm, bool fwhmDegenerate, float? ratio,
-                                   String note, bool userSet)
+                                   Annotations annotations, bool userSet)
             : base(fileIndex)
         {
             OptimizationStep = optimizationStep;
@@ -230,7 +226,7 @@ namespace pwiz.Skyline.Model.Results
             Fwhm = fwhm;
             IsFwhmDegenerate = fwhmDegenerate;
             Ratio = ratio;
-            Note = note;
+            Annotations = annotations;
             UserSet = userSet;
         }
 
@@ -256,7 +252,7 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public float? Ratio { get; private set; }
 
-        public String Note { get; private set; }
+        public Annotations Annotations { get; private set; }
 
         /// <summary>
         /// Set if user action has explicitly set these values
@@ -291,17 +287,13 @@ namespace pwiz.Skyline.Model.Results
             return ChangeProp(ImClone(this), (im, v) => im.Rank = v, prop);
         }
 
-        public TransitionChromInfo ChangeNote(String note)
+        public TransitionChromInfo ChangeAnnotations(Annotations annotations)
         {
-            if (note == "")
-            {
-                note = null;
-            }
             return ChangeProp(ImClone(this), (im, v) =>
                                                  {
-                                                     im.Note = v;
-                                                     im.UserSet = im.UserSet || v != null;
-                                                 }, note);
+                                                     im.Annotations = v;
+                                                     im.UserSet = im.UserSet || !v.IsEmpty;
+                                                 }, annotations);
         }
 
         #endregion
@@ -324,7 +316,7 @@ namespace pwiz.Skyline.Model.Results
                    other.Rank == Rank &&
                    other.Ratio.Equals(Ratio) &&
                    other.OptimizationStep.Equals(OptimizationStep) &&
-                   other.Note == Note &&
+                   other.Annotations.Equals(Annotations) &&
                    other.UserSet.Equals(UserSet);
         }
 
@@ -351,7 +343,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ Rank;
                 result = (result*397) ^ (Ratio.HasValue ? Ratio.Value.GetHashCode() : 0);
                 result = (result*397) ^ OptimizationStep.GetHashCode();
-                result = (result*397) ^ (Note == null ? 0 : Note.GetHashCode());
+                result = (result*397) ^ Annotations.GetHashCode();
                 result = (result*397) ^ UserSet.GetHashCode();
                 return result;
             }

@@ -152,6 +152,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.peptideSettingsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transitionSettingsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.annotationsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.statusGeneral = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusProgress = new System.Windows.Forms.ToolStripProgressBar();
@@ -1255,7 +1256,8 @@ namespace pwiz.Skyline
             this.importSettingsMenuItem1,
             this.toolStripSeparator3,
             this.peptideSettingsMenuItem,
-            this.transitionSettingsMenuItem});
+            this.transitionSettingsMenuItem,
+            this.annotationsToolStripMenuItem});
             this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
             this.settingsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
             this.settingsToolStripMenuItem.Text = "&Settings";
@@ -1318,6 +1320,13 @@ namespace pwiz.Skyline
             this.transitionSettingsMenuItem.Size = new System.Drawing.Size(181, 22);
             this.transitionSettingsMenuItem.Text = "&Transition Settings...";
             this.transitionSettingsMenuItem.Click += new System.EventHandler(this.transitionSettingsMenuItem_Click);
+            // 
+            // annotationsToolStripMenuItem
+            // 
+            this.annotationsToolStripMenuItem.Name = "annotationsToolStripMenuItem";
+            this.annotationsToolStripMenuItem.Size = new System.Drawing.Size(181, 22);
+            this.annotationsToolStripMenuItem.Text = "&Annotations...";
+            this.annotationsToolStripMenuItem.Click += new System.EventHandler(this.annotationsToolStripMenuItem_Click);
             // 
             // statusStrip
             // 
@@ -2591,6 +2600,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem areaOrderAreaContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator36;
         private System.Windows.Forms.ToolStripMenuItem areaCvsContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem annotationsToolStripMenuItem;
     }
 }
 

@@ -185,12 +185,22 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 {
                     continue;
                 }
+                var label = propertyName;
+                if (label.StartsWith(AnnotationPropertyAccessor.AnnotationPrefix))
+                {
+                    label = label.Substring(AnnotationPropertyAccessor.AnnotationPrefix.Length);
+                }
+                var columnInfo = CreateColumnInfo(identifier, classMetadata, propertyName);
+                if (columnInfo.IsHidden)
+                {
+                    continue;
+                }
                 TreeNode propertyNode 
                     = new TreeNode
                     {
                         Name = propertyName,
-                        Text = propertyName,
-                        Tag = CreateColumnInfo(identifier, classMetadata, propertyName)
+                        Text = label,
+                        Tag = columnInfo
                     };
                 result.Add(propertyNode);
             }
@@ -205,7 +215,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                             Identifier = new Identifier(parentIdentifier, propertyName),
                                             Caption = columnInfo.Caption,
                                             Format = columnInfo.Format,
-                                            ColumnType = columnInfo.ColumnType
+                                            ColumnType = columnInfo.ColumnType,
+                                            IsHidden = columnInfo.IsHidden
                                         };
             return nodeData;
         }
