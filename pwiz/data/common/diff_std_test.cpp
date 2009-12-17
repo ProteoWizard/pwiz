@@ -30,115 +30,79 @@
 using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::diff_std;
-using namespace pwiz::diff_std::diff_impl;
 
 ostream* os_ = 0;
 
-void testString()
+void testString(const string& a, const string& b)
 {
-    if (os_) *os_ << "testString()\n";
+    if (os_) *os_ << "diff_string(\"" << a << "\", \"" << b << "\")" << endl;
 
-    Diff<string> diff("goober", "goober");
-    unit_assert(diff.a_b.empty() && diff.b_a.empty());
-    unit_assert(!diff);
+    string a_b, b_a;
+    diff_string(a, b, a_b, b_a);
+    if (os_) *os_ << "a-b: " << a_b << "\nb-a: " << b_a << endl;
 
-    diff("goober", "goo");
-    unit_assert(diff);
-    // Doesn't mean as much without the TextWriter.
-    // TextWriter excluded from diff_std for now.
-    if (os_) *os_ << diff << endl;
+    if (a == b)
+        unit_assert(a_b.empty() && b_a.empty());
+    else
+        unit_assert(!a_b.empty() && !b_a.empty());
 }
 
-void testNumeric()
+template <typename integral_type>
+void testIntegralReally(integral_type a, integral_type b)
 {
-    if (os_) *os_ << "testNumeric()\n";
-    DiffConfig config;
-    
-    int a_i, b_i, a_b_i, b_a_i;
+    if (os_) *os_ << "diff_integral(\"" << a << "\", \"" << b << "\")" << endl;
 
-    a_i = 1;
-    b_i = 1;
-    a_b_i = 0;
-    b_a_i = 0;
-    diff_numeric(a_i , b_i, a_b_i, b_a_i, config);
-    unit_assert(a_b_i == 0);
-    unit_assert(b_a_i == 0);
+    integral_type a_b, b_a;
+    diff_integral(a, b, a_b, b_a);
+    if (a == b)
+        unit_assert(a_b == integral_type() && b_a == integral_type());
+    else
+        unit_assert(a_b != integral_type() || b_a != integral_type());
+}
 
-    a_i = -1;
-    diff_numeric(a_i , b_i, a_b_i, b_a_i, config);
-    unit_assert(a_b_i == -1);
-    unit_assert(b_a_i == 1);
-    
-    short a_s, b_s, a_b_s, b_a_s;
+template <typename integral_type>
+void testIntegral()
+{
+    testIntegralReally<int>(1, 1);
+    testIntegralReally<int>(-1, 1);
+    testIntegralReally<int>(-1, -1);
+    testIntegralReally<int>(1, 0);
+    testIntegralReally<int>(-1, 0);
+}
 
-    a_s = 1;
-    b_s = 1;
-    a_b_s = 0;
-    b_a_s = 0;
-    diff_numeric(a_s , b_s, a_b_s, b_a_s, config);
-    unit_assert(a_b_s == 0);
-    unit_assert(b_a_s == 0);
-    
-    a_s = -1;
-    diff_numeric(a_s , b_s, a_b_s, b_a_s, config);
-    unit_assert(a_b_s == -1);
-    unit_assert(b_a_s == 1);
-    
-    long a_l, b_l, a_b_l, b_a_l;
-    
-    a_l = 1;
-    b_l = 1;
-    a_b_l = 0;
-    b_a_l = 0;
-    diff_numeric(a_l , b_l, a_b_l, b_a_l, config);
-    unit_assert(a_b_l == 0);
-    unit_assert(b_a_l == 0);
-    
-    a_l = -1;
-    diff_numeric(a_l , b_l, a_b_l, b_a_l, config);
-    unit_assert(a_b_l == -1);
-    unit_assert(b_a_l == 1);
+template <typename floating_type>
+void testFloating(floating_type a, floating_type b, floating_type precision)
+{
+    floating_type a_b, b_a;
 
-    float a_f, b_f, a_b_f, b_a_f;
-
-    a_f = 1;
-    b_f = 1;
-    a_b_f = 0;
-    b_a_f = 0;
-    diff_numeric(a_f , b_f, a_b_f, b_a_f, config);
-    unit_assert(a_b_f == 0);
-    unit_assert(b_a_f == 0);
-    
-    a_f = -1;
-    diff_numeric(a_f , b_f, a_b_f, b_a_f, config);
-    unit_assert(a_b_f == -1);
-    unit_assert(b_a_f == 1);
-    
-    double a_d, b_d, a_b_d, b_a_d;
-
-    a_d = 1.;
-    b_d = 1.;
-    a_b_d = 0.;
-    b_a_d = 0.;
-    diff_numeric(a_d , b_d, a_b_d, b_a_d, config);
-    unit_assert_equal(a_b_d, 0., config.precision +
-                      std::numeric_limits<double>::epsilon());
-    unit_assert_equal(b_a_d, 0., config.precision +
-                      std::numeric_limits<double>::epsilon());
-    
-    a_d = -1.;
-    diff_numeric(a_d , b_d, a_b_d, b_a_d, config);
-
-    unit_assert_equal(a_b_d, 2., config.precision +
-                      std::numeric_limits<double>::epsilon());
-    unit_assert_equal(b_a_d, 2., config.precision +
-                      std::numeric_limits<double>::epsilon());
+    diff_floating(a, b, a_b, b_a, precision);
+    if (fabs(a - b) <= precision + std::numeric_limits<floating_type>::epsilon())
+        unit_assert(a_b == floating_type() && b_a == floating_type());
+    else
+        unit_assert(a_b == fabs(a - b) && b_a == fabs(a - b));
 }
 
 void test()
 {
-    testString();
-    testNumeric();
+    testString("goober", "goober");
+    testString("goober", "goo");
+
+    testIntegral<int>();
+    testIntegral<short>();
+    testIntegral<long>();
+    testIntegral<unsigned int>();
+    testIntegral<unsigned short>();
+    testIntegral<unsigned long>();
+
+    testFloating<float>(1.f, 1.f, 1.e-6f);
+    testFloating<float>(1.f, 1.0000000001f, 1.e-6f);
+    testFloating<float>(1.f, 1.00001f, 1.e-6f);
+    testFloating<float>(4.f, 4.2f, 1.f);
+
+    testFloating<double>(1, 1, 1e-6);
+    testFloating<double>(1, 1.0000000001, 1e-6);
+    testFloating<double>(1, 1.00001, 1e-6);
+    testFloating<double>(4, 4.2, 1);
 }
 
 int main(int argc, char* argv[])
