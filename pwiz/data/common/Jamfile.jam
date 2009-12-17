@@ -34,10 +34,17 @@ project
 # -O2 without -fno-strict-aliasing causes miscompilation in MSRunPeaksEncoder.cpp 
 
 
+lib pwiz_data_common
+    : # sources
+        BinaryIndexStream.cpp
+        MemoryIndex.cpp
+    ;
+
+
 #
 # unit tests (ordered by dependency)
 #
 
 unit-test diff_std_test : diff_std_test.cpp ;
-unit-test BinaryIndexStreamTest : BinaryIndexStreamTest.cpp BinaryIndexStream.cpp ;
-unit-test MemoryIndexTest : MemoryIndexTest.cpp MemoryIndex.cpp ;
+unit-test BinaryIndexStreamTest : BinaryIndexStreamTest.cpp pwiz_data_common ;
+unit-test MemoryIndexTest : MemoryIndexTest.cpp pwiz_data_common ;

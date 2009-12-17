@@ -342,15 +342,13 @@ class BinaryIndexStream::Impl
 
     virtual size_t size() const
     {
-        if (maxIdLength_ == 0)
-            throw runtime_error("[BinaryIndexStream::size] Stream is not a valid index (was BinaryIndexStream::create() called?)");
         return size_;
     }
 
     virtual EntryPtr find(const std::string& id) const
     {
-        if (maxIdLength_ == 0)
-            throw runtime_error("[BinaryIndexStream::find] Stream is not a valid index (was BinaryIndexStream::create() called?)");
+        if (size_ == 0)
+            return EntryPtr();
 
         EntryPtr entryPtr(new Entry); entryPtr->id = id;
         const stream_offset indexBegin = sizeof(streamLength_) + sizeof(maxIdLength_) + entrySize_ * size_;
@@ -378,9 +376,6 @@ class BinaryIndexStream::Impl
 
     virtual EntryPtr find(size_t index) const
     {
-        if (maxIdLength_ == 0)
-            throw runtime_error("[BinaryIndexStream::find] Stream is not a valid index (was BinaryIndexStream::create() called?)");
-
         if (index >= size_)
             return EntryPtr();
 

@@ -52,9 +52,9 @@ void test()
         }
 
         BinaryIndexStream index(indexStreamPtr);
-        unit_assert_throws(index.size(), runtime_error);
-        unit_assert_throws(index.find("42"), runtime_error);
-        unit_assert_throws(index.find(42), runtime_error);
+        unit_assert(index.size() == 0);
+        unit_assert(!index.find("42").get());
+        unit_assert(!index.find(42).get());
 
         index.create(entries);
         unit_assert(index.size() == 10);
