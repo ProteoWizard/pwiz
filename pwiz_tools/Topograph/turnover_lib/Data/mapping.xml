@@ -286,13 +286,13 @@
     <property name="PeptideAnalysisId" unique="true"/>
     <property name="MsDataFileId" unique="true"/>
   </class>
-  <class name="DbProtein">
+  <!--<class name="DbProtein">
     <id name="Id">
       <column name="Id" not-null="true"/>
       <generator class="native" />
     </id>
     <version name="Version" generated="never"/>
-    <property name="SequenceHash" unique="true" />
+    <property name="SequenceHash" length="16"/>
     <property name="Sequence" length="50000" />
-  </class>
+  </class>-->
 </hibernate-mapping>
