@@ -65,13 +65,13 @@ void test()
             unit_assert(entryPtr.get());
             unit_assert(entryPtr->id == lexical_cast<string>(i));
             unit_assert(entryPtr->index == i);
-            unit_assert(entryPtr->offset == i*100);
+            unit_assert(entryPtr->offset == Index::stream_offset(i*100));
 
             entryPtr = index.find(entryPtr->id);
             unit_assert(entryPtr.get());
             unit_assert(entryPtr->id == lexical_cast<string>(i));
             unit_assert(entryPtr->index == i);
-            unit_assert(entryPtr->offset == i*100);
+            unit_assert(entryPtr->offset == Index::stream_offset(i*100));
         }
 
         unit_assert(!index.find("42").get());
@@ -91,13 +91,13 @@ void test()
             unit_assert(entryPtr.get());
             unit_assert(entryPtr->id == lexical_cast<string>(i));
             unit_assert(entryPtr->index == i);
-            unit_assert(entryPtr->offset == i*100);
+            unit_assert(entryPtr->offset == Index::stream_offset(i*100));
 
             entryPtr = index.find(entryPtr->id);
             unit_assert(entryPtr.get());
             unit_assert(entryPtr->id == lexical_cast<string>(i));
             unit_assert(entryPtr->index == i);
-            unit_assert(entryPtr->offset == i*100);
+            unit_assert(entryPtr->offset == Index::stream_offset(i*100));
         }
 
         unit_assert(!index.find("42").get());
@@ -128,13 +128,13 @@ void test()
             unit_assert(entryPtr.get());
             unit_assert(entryPtr->id == lexical_cast<string>(i));
             unit_assert(entryPtr->index == i);
-            unit_assert(entryPtr->offset == i*100);
+            unit_assert(entryPtr->offset == Index::stream_offset(i*100));
 
             entryPtr = index.find(entryPtr->id);
             unit_assert(entryPtr.get());
             unit_assert(entryPtr->id == lexical_cast<string>(i));
             unit_assert(entryPtr->index == i);
-            unit_assert(entryPtr->offset == i*100);
+            unit_assert(entryPtr->offset == Index::stream_offset(i*100));
         }
 
         unit_assert(!index.find("5").get());
