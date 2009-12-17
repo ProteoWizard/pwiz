@@ -4,7 +4,8 @@
 /// chainsaw.cpp
 ///
 
-#include "pwiz/utility/proteome/IPIFASTADatabase.hpp"
+#include "pwiz/data/proteome/Reader_FASTA.hpp"
+#include "pwiz/data/proteome/ProteomeDataFile.hpp"
 #include "pwiz/utility/proteome/Digestion.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "boost/program_options.hpp"
@@ -142,12 +143,14 @@ void go(const Config& config)
                 }
 
             cout << "Reading database: " << *file_it << endl;
-            IPIFASTADatabase db(*file_it);
-            IPIFASTADatabase::const_iterator it = db.begin();
+            Reader_FASTA::Config readerConfig; readerConfig.indexed = true;
+            shared_ptr<Reader> defaultReader(new Reader_FASTA(readerConfig));
+            ProteomeDataFile pd(*file_it, defaultReader.get());
+            const ProteinList& pl = *pd.proteinListPtr;
 
-            cout << "Finished reading database. Digesting " << db.records().size() << " proteins..." << endl;
+            cout << "Finished reading database. Digesting " << pl.size() << " proteins..." << endl;
             bpt::ptime digestStart = bpt::microsec_clock::local_time();
-            for(size_t index = 0; it != db.end(); ++it, ++index)
+            for(size_t index = 0, end=pl.size(); index < end; ++index)
                 {
                     if (index > 0 && (index % 10) == 0)
                     {
@@ -158,14 +161,15 @@ void go(const Config& config)
                     }
 
                     // digest
-                    Peptide peptide(it->sequence);
+                    ProteinPtr proteinPtr = pl.protein(index, true);
+
                     shared_ptr<Digestion> digestion;
                     if (!config.cleavageAgentRegex.empty())
-                        digestion.reset(new Digestion(peptide, boost::regex(config.cleavageAgentRegex), config.digestionConfig));
+                        digestion.reset(new Digestion(*proteinPtr, boost::regex(config.cleavageAgentRegex), config.digestionConfig));
                     else if (!config.digestionMotif.empty())
-                        digestion.reset(new Digestion(peptide, config.digestionMotif, config.digestionConfig));
+                        digestion.reset(new Digestion(*proteinPtr, config.digestionMotif, config.digestionConfig));
                     else
-                        digestion.reset(new Digestion(peptide, config.proteolyticEnzyme, config.digestionConfig));
+                        digestion.reset(new Digestion(*proteinPtr, config.proteolyticEnzyme, config.digestionConfig));
 
                     // iterate through digested peptides and output
                     vector<DigestedPeptide> digestedPeptides(digestion->begin(), digestion->end());
@@ -174,7 +178,7 @@ void go(const Config& config)
                             vector<DigestedPeptide>::iterator jt = digestedPeptides.begin();
                             for(; jt!= digestedPeptides.end(); ++jt)                
                                 ofs << jt->sequence() 
-                                    << "\t" << it->faID 
+                                    << "\t" << proteinPtr->id
                                     << "\t" << jt->monoisotopicMass(0, false) /* unmodified neutral mass + h2o*/ 
                                     << "\t" << jt->missedCleavages() 
                                     << "\t" << jt->specificTermini() 
