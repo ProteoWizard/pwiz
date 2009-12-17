@@ -24,6 +24,7 @@
 
 #include "Reader.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/Stream.hpp"
 #include <stdexcept>
 
 
@@ -33,20 +34,29 @@ namespace proteome {
 
 using namespace std;
 using namespace pwiz::util;
+using boost::shared_ptr;
 
 
-PWIZ_API_DECL std::string ReaderList::identify(const string& filename) const
+PWIZ_API_DECL void Reader::read(const string& uri, ProteomeData& result) const
 {
-    return identify(filename, read_file_header(filename, 512));
+    shared_ptr<istream> uriStreamPtr(new ifstream(uri.c_str()));
+    read(uri, uriStreamPtr, result);
 }
 
 
-PWIZ_API_DECL std::string ReaderList::identify(const string& filename, const string& head) const
+PWIZ_API_DECL std::string ReaderList::identify(const string& uri) const
+{
+    shared_ptr<istream> uriStreamPtr(new ifstream(uri.c_str()));
+    return identify(uri, uriStreamPtr);
+}
+
+
+PWIZ_API_DECL std::string ReaderList::identify(const string& uri, shared_ptr<istream> uriStreamPtr) const
 {
 	std::string result;
     for (const_iterator it=begin(); it!=end(); ++it)
 	{
-		result = (*it)->identify(filename, head);
+		result = (*it)->identify(uri, uriStreamPtr);
         if (result.length())
 		{
 			break;
@@ -56,22 +66,22 @@ PWIZ_API_DECL std::string ReaderList::identify(const string& filename, const str
 }
 
 
-PWIZ_API_DECL void ReaderList::read(const string& filename, ProteomeData& result) const
+PWIZ_API_DECL void ReaderList::read(const string& uri, ProteomeData& result) const
 {
-    read(filename, read_file_header(filename, 512), result);
+    shared_ptr<istream> uriStreamPtr(new ifstream(uri.c_str()));
+    read(uri, uriStreamPtr, result);
 }
 
 
-PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, ProteomeData& result) const
+PWIZ_API_DECL void ReaderList::read(const string& uri, shared_ptr<istream> uriStreamPtr, ProteomeData& result) const
 {
     for (const_iterator it=begin(); it!=end(); ++it)
-        if ((*it)->accept(filename, head))
+        if ((*it)->accept(uri, uriStreamPtr))
         {
-            (*it)->read(filename, head, result);
+            (*it)->read(uri, uriStreamPtr, result);
             return;
         }
-    throw ReaderFail((" don't know how to read " +
-                        filename).c_str());
+    throw ReaderFail(" don't know how to read " + uri);
 }
 
 

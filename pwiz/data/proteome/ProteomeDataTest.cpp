@@ -43,8 +43,13 @@ void testProteinListSimple()
 
     unit_assert(proteinListSimple->empty());
 
+    Protein emptyProtein("", 0, "", "");
+    unit_assert(emptyProtein.empty());
+
     ProteinPtr protein0(new Protein("IPI-1701", 0, "The final frontier!", ""));
     ProteinPtr protein1(new Protein("SPROT|42", 1, "Life, the universe, and everything.", ""));
+
+    unit_assert(!protein0->empty());
 
     proteinListSimple->proteins.push_back(protein0);
     proteinListSimple->proteins.push_back(protein1);

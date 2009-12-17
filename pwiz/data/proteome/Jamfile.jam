@@ -28,13 +28,18 @@ lib pwiz_data_proteome
         Modification.cpp
         Digestion.cpp
         ProteomeData.cpp
+        Diff.cpp
         Reader.cpp
+        Serializer_FASTA.cpp
         Reader_FASTA.cpp
+        DefaultReaderList.cpp
+        ProteomeDataFile.cpp
         Version.cpp
     : # requirements
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata # needed for access to CV (TODO: move CV out of msdata!)
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/proteome//pwiz_utility_proteome
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/common//pwiz_data_common
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
         <library>/ext/boost//thread
         <library>/ext/boost//regex
@@ -43,6 +48,7 @@ lib pwiz_data_proteome
     : # usage-requirements
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/proteome//pwiz_utility_proteome
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/common//pwiz_data_common
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
         <library>/ext/boost//thread
         <library>/ext/boost//regex
@@ -50,9 +56,14 @@ lib pwiz_data_proteome
     ;
 
 
+lib pwiz_data_proteome_examples : examples.cpp pwiz_data_proteome ;
+
+
 unit-test AminoAcidTest : AminoAcidTest.cpp pwiz_data_proteome ;
 unit-test PeptideTest : PeptideTest.cpp pwiz_data_proteome ;
 unit-test DigestionTest : DigestionTest.cpp pwiz_data_proteome ;
 unit-test ProteomeDataTest : ProteomeDataTest.cpp pwiz_data_proteome ;
+unit-test DiffTest : DiffTest.cpp pwiz_data_proteome ;
 unit-test ReaderTest : ReaderTest.cpp pwiz_data_proteome ;
-unit-test Reader_FASTA_Test : Reader_FASTA_Test.cpp pwiz_data_proteome ;
+unit-test Serializer_FASTA_Test : Serializer_FASTA_Test.cpp pwiz_data_proteome pwiz_data_proteome_examples ;
+unit-test ProteomeDataFileTest : ProteomeDataFileTest.cpp pwiz_data_proteome pwiz_data_proteome_examples ;

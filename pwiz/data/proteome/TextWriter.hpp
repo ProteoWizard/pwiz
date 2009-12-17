@@ -20,8 +20,8 @@
 //
 
 
-#ifndef _TEXTWRITER_HPP_
-#define _TEXTWRITER_HPP_
+#ifndef _PROTEOME_TEXTWRITER_HPP_
+#define _PROTEOME_TEXTWRITER_HPP_
 
 
 #include "pwiz/utility/misc/Export.hpp"
@@ -52,27 +52,6 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    TextWriter& operator()(const CVParam& cvParam)
-    {
-        os_ << indent_ << "cvParam: " << cvTermInfo(cvParam.cvid).name;
-        if (!cvParam.value.empty())
-            os_ << ", " << cvParam.value;
-        if (cvParam.units != CVID_Unknown)
-            os_ << ", " << cvParam.unitsName();
-        os_ << std::endl; 
-        return *this;    
-    }
-
-    TextWriter& operator()(const UserParam& userParam)
-    {
-        os_ << indent_ << "userParam: " << userParam.name;
-        if (!userParam.value.empty()) os_ << ", " << userParam.value; 
-        if (!userParam.type.empty()) os_ << ", " << userParam.type; 
-        if (userParam.units != CVID_Unknown) os_ << ", " << cvTermInfo(userParam.units).name;
-        os_ << std::endl; 
-        return *this;    
-    }
-
     template<typename object_type>
     TextWriter& operator()(const std::string& label, const std::vector<object_type>& v)
     {
@@ -89,7 +68,7 @@ class PWIZ_API_DECL TextWriter
             ("id: " + pd.id);
 
         if (pd.proteinListPtr.get())
-            child()(pd.proteinListPtr, metadata_only);
+            child()(*pd.proteinListPtr, metadata_only);
 
         return *this;
     }
@@ -139,4 +118,4 @@ class PWIZ_API_DECL TextWriter
 } // namespace pwiz
 
 
-#endif // _TEXTWRITER_HPP_
+#endif // _PROTEOME_TEXTWRITER_HPP_

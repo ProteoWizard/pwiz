@@ -39,6 +39,13 @@ Protein::Protein(const std::string& id, size_t index, const std::string& descrip
 {}
 
 
+PWIZ_API_DECL
+bool Protein::empty() const
+{
+    return id.empty() && description.empty() && sequence().empty();
+}
+
+
 //
 // ProteinList (default implementations)
 //

@@ -53,21 +53,16 @@ class PWIZ_API_DECL Reader_FASTA : public Reader
 
     const char* getType() const {return "FASTA";}
 
-    virtual std::string identify(const std::string& filename,
-                                 const std::string& head) const;
-
-    /// fill in the ProteomeData structure
-    virtual void read(const std::string& filename,
-                      const std::string& head,
-                      ProteomeData& result) const;
+    virtual std::string identify(const std::string& uri,
+                                 boost::shared_ptr<std::istream> uriStreamPtr) const;
 
     /// fill in the ProteomeData structure
     virtual void read(const std::string& uri,
-                      boost::shared_ptr<std::istream> streamPtr,
+                      boost::shared_ptr<std::istream> uriStreamPtr,
                       ProteomeData& result) const;
 
     private:
-    Config config;
+    Config config_;
     Reader_FASTA(Reader_FASTA&);
     Reader_FASTA& operator=(Reader_FASTA&);
 };

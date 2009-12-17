@@ -37,6 +37,8 @@ struct PWIZ_API_DECL Protein : public Peptide
 {
     Protein(const std::string& id, size_t index, const std::string& description, const std::string& sequence);
 
+    bool empty() const;
+
     std::string id;
     size_t index;
     std::string description;

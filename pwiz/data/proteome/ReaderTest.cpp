@@ -22,14 +22,14 @@
 
 #include "Reader.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
-#include <cstring>
+#include "pwiz/utility/misc/Stream.hpp"
 
 
 using namespace std;
 using namespace pwiz::util;
 using namespace pwiz;
 using namespace pwiz::proteome;
+using boost::shared_ptr;
 
 
 ostream* os_ = 0;
@@ -48,16 +48,16 @@ class Reader1 : public Reader
 
     Config config;
 
-    virtual std::string identify(const std::string& filename, const std::string& head) const
+    virtual std::string identify(const std::string& uri, boost::shared_ptr<std::istream> uriStreamPtr) const
     {
-        bool result = (filename == "1"); 
+        bool result = (uri == "1"); 
         if (os_) *os_ << "Reader1::identify(): " << boolalpha << result << endl;
-        return std::string (result?filename:std::string("")); 
+        return std::string (result?uri:std::string("")); 
     }
 
-    virtual void read(const std::string& filename, 
-                      const std::string& head,
-                      ProteomeData& result) const 
+    virtual void read(const std::string& uri,
+                      boost::shared_ptr<std::istream> uriStreamPtr,
+                      ProteomeData& result) const
     {
         if (os_) *os_ << "Reader1::read()\n";
         config.done = true;
@@ -80,15 +80,15 @@ class Reader2 : public Reader
 
     Config config;
 
-    virtual std::string identify(const std::string& filename, const std::string& head) const
+    virtual std::string identify(const std::string& uri, boost::shared_ptr<std::istream> uriStreamPtr) const
     {
-        bool result = (filename == "2"); 
+        bool result = (uri == "2"); 
         if (os_) *os_ << "Reader2::identify(): " << boolalpha << result << endl;
-        return std::string (result?filename:std::string("")); 
+        return std::string (result?uri:std::string("")); 
     }
 
-    virtual void read(const std::string& filename, 
-                      const std::string& head,
+    virtual void read(const std::string& uri,
+                      boost::shared_ptr<std::istream> uriStreamPtr,
                       ProteomeData& result) const
     {
         if (os_) *os_ << "Reader2::read()\n";
@@ -143,11 +143,11 @@ void testAccept()
     readers.push_back(ReaderPtr(new Reader2));
 
     if (os_) *os_ << "accept 1:\n";
-    unit_assert(readers.accept("1", "head"));
+    unit_assert(readers.accept("1", shared_ptr<istream>()));
     if (os_) *os_ << "accept 2:\n";
-    unit_assert(readers.accept("2", "head"));
+    unit_assert(readers.accept("2", shared_ptr<istream>()));
     if (os_) *os_ << "accept 3:\n";
-    unit_assert(!readers.accept("3", "head"));
+    unit_assert(!readers.accept("3", shared_ptr<istream>()));
 
     if (os_) *os_ << endl;
 }
@@ -168,14 +168,14 @@ void testRead()
     // and read(), which opens possibility for misuse. 
 
     unit_assert(readers.get<Reader1>()->config.done == false);
-    if (readers.accept("1", "head"))
-        readers.read("1", "head", pd);
+    if (readers.accept("1", shared_ptr<istream>()))
+        readers.read("1", shared_ptr<istream>(), pd);
     unit_assert(readers.get<Reader1>()->config.done == true);
 
     readers.get<Reader1>()->config.done = false;
     unit_assert(readers.get<Reader2>()->config.done == false);
-    if (readers.accept("2", "head"))
-        readers.read("2", "head", pd);
+    if (readers.accept("2", shared_ptr<istream>()))
+        readers.read("2", shared_ptr<istream>(), pd);
     unit_assert(readers.get<Reader1>()->config.done == false);
     unit_assert(readers.get<Reader2>()->config.done == true);
 

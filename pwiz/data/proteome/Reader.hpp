@@ -20,8 +20,8 @@
 //
 
 
-#ifndef _READER_HPP_
-#define _READER_HPP_
+#ifndef _PROTEOME_READER_HPP_
+#define _PROTEOME_READER_HPP_
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "ProteomeData.hpp"
@@ -41,23 +41,27 @@ class PWIZ_API_DECL Reader
     /// return true iff Reader recognizes the file as one it should handle
 	/// that's not to say one it CAN handle, necessarily, as in Thermo on linux,
 	/// see comment for identify() below
-    bool accept(const std::string& filename,
-                const std::string& head) const
+    bool accept(const std::string& uri,
+                boost::shared_ptr<std::istream> uriStreamPtr) const
 	{
-		return (identify(filename,head).length() != 0);
+		return (identify(uri, uriStreamPtr).length() != 0);
 	}
 
     /// return file type iff Reader recognizes the file, else empty;
 	/// note: for formats requiring a 3rd party DLL identify() should
 	/// return non-empty if it recognized the format, even though reading
 	/// may fail if the 3rd party DLL isn't actually present
-    /// Reader may filter based on filename and/or head of the file
-    virtual std::string identify(const std::string& filename,
-                                 const std::string& head) const = 0;
+    /// Reader may filter based on URI and/or contents of the file
+    virtual std::string identify(const std::string& uri,
+                                 boost::shared_ptr<std::istream> uriStreamPtr) const = 0;
 
-    /// fill in the ProteomeData structure from the first (or only) run
-    virtual void read(const std::string& filename,
-                      const std::string& head,
+    /// fill in the ProteomeData structure from a new URI stream
+    virtual void read(const std::string& uri,
+                      ProteomeData& result) const;
+
+    /// fill in the ProteomeData structure from a shared URI stream
+    virtual void read(const std::string& uri,
+                      boost::shared_ptr<std::istream> uriStreamPtr,
                       ProteomeData& result) const = 0;
 
 
@@ -97,19 +101,19 @@ class PWIZ_API_DECL ReaderList : public Reader,
     public:
 
     /// returns child name iff some child identifies, else empty string
-	virtual std::string identify(const std::string& filename) const;
+	virtual std::string identify(const std::string& uri) const;
 
     /// returns child name iff some child identifies, else empty string
-	virtual std::string identify(const std::string& filename,
-                                 const std::string& head) const;
+	virtual std::string identify(const std::string& uri,
+                                 boost::shared_ptr<std::istream> uriStreamPtr) const;
 
     /// delegates to first child that identifies
-    virtual void read(const std::string& filename,
+    virtual void read(const std::string& uri,
                       ProteomeData& result) const;
 
     /// delegates to first child that identifies
-    virtual void read(const std::string& filename,
-                      const std::string& head,
+    virtual void read(const std::string& uri,
+                      boost::shared_ptr<std::istream> uriStreamPtr,
                       ProteomeData& result) const;
 
 
@@ -158,4 +162,4 @@ PWIZ_API_DECL ReaderList operator +(const ReaderPtr& lhs, const ReaderPtr& rhs);
 } // namespace pwiz
 
 
-#endif // _READER_HPP_
+#endif // _PROTEOME_READER_HPP_
