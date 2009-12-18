@@ -35,7 +35,8 @@ namespace analysis {
 using namespace std;
 using namespace msdata;
 using namespace pwiz::util;
-using namespace pwiz::proteome;
+using namespace pwiz::chemistry;
+
 
 ///TODO: this struct probably belongs in a more visible location
 struct MassLessThan
@@ -73,7 +74,7 @@ PrecursorMassFilter::Config::Config(
 {
     for (int i=0; i<numNeutralLossSpecies; i++)
     {
-        neutralLossSpecies.push_back(Chemistry::Formula(neutralLossSpecies_[i]));
+        neutralLossSpecies.push_back(chemistry::Formula(neutralLossSpecies_[i]));
     }
 }
 
@@ -157,16 +158,16 @@ void PrecursorMassFilter::operator () (const SpectrumPtr spectrum) const
                         double mass = mz * charge;
                         for (int i = charge - 1; i > 0; --i)
                         {
-                            double mzVal = (mass + (charge - i) * Chemistry::Electron) / (double) i;
+                            double mzVal = (mass + (charge - i) * chemistry::Electron) / (double) i;
                             filterMassList.push_back(PrecursorReferenceMass(PrecursorReferenceMass::eChargeReducedPrecursor, 
                                                                             mzVal, 
                                                                             i, 
                                                                             params.removeMostIntensePeakInWindow));
                             // ignore removeMostIntensePeakInWindow flag for neutral losses pending
                             // a detailed examination of whether the flag should be used.
-                            BOOST_FOREACH(Chemistry::Formula neutralLoss, params.neutralLossSpecies)
+                            BOOST_FOREACH(chemistry::Formula neutralLoss, params.neutralLossSpecies)
                             {
-                                mzVal = (mass + (charge - i) * Chemistry::Electron - neutralLoss.monoisotopicMass()) / (double) i;
+                                mzVal = (mass + (charge - i) * chemistry::Electron - neutralLoss.monoisotopicMass()) / (double) i;
                                 filterMassList.push_back(PrecursorReferenceMass(PrecursorReferenceMass::eNeutralLoss, mzVal));
                             }
                         }

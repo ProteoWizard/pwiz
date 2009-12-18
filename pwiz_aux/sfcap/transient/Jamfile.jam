@@ -45,11 +45,11 @@ lib pwiz_aux_sfcap_transient_generator
         TransientGenerator.cpp
     : # requirements
         <library>pwiz_aux_sfcap_transient
-        <library>../../../pwiz/utility/proteome
+        <library>../../../pwiz/utility/chemistry//pwiz_utility_chemistry
     : # default-build
     : # usage-requirements
         <library>pwiz_aux_sfcap_transient
-        <library>../../../pwiz/utility/proteome
+        <library>../../../pwiz/utility/chemistry//pwiz_utility_chemistry
 ;
 
 

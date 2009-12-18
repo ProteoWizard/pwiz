@@ -26,20 +26,20 @@
 #include "IsotopeCalculator.hpp"
 #include "IsotopeTable.hpp"
 #include "Ion.hpp"
-#include "auto_vector.h"
 #include <iostream>
 #include <algorithm>
 #include <stdexcept>
 #include <cmath>
 #include <numeric>
+#include <boost/ptr_container/ptr_vector.hpp>
 
 
 namespace pwiz {
-namespace proteome {
+namespace chemistry {
 
 
 using namespace std;
-using namespace Chemistry;
+using boost::ptr_vector;
 
 
 class IsotopeCalculator::Impl
@@ -56,7 +56,7 @@ class IsotopeCalculator::Impl
     double abundanceCutoff_;
     double massPrecision_; 
 
-    auto_vector<IsotopeTable> tableStorage_;
+    ptr_vector<IsotopeTable> tableStorage_;
     typedef map<Element::Type, const IsotopeTable*> TableMap;
     TableMap tableMap_;
 
@@ -183,7 +183,7 @@ void normalize(MassDistribution& md, int normalization)
     if (normalization & IsotopeCalculator::NormalizeAbundance)
     {
         double sumSquaredAbundances = 0;
-        for (Chemistry::MassDistribution::iterator it=md.begin(); it!=md.end(); ++it)
+        for (MassDistribution::iterator it=md.begin(); it!=md.end(); ++it)
         {
             double a = it->abundance;
             sumSquaredAbundances += a*a;
@@ -194,7 +194,7 @@ void normalize(MassDistribution& md, int normalization)
 
     double massShift = (normalization & IsotopeCalculator::NormalizeMass) ? md[0].mass : 0;
 
-    for (Chemistry::MassDistribution::iterator it=md.begin(); it!=md.end(); ++it)
+    for (MassDistribution::iterator it=md.begin(); it!=md.end(); ++it)
     {
         it->mass -= massShift; 
         it->abundance /= abundanceScale; 
@@ -258,7 +258,7 @@ namespace {
 
 struct TableInfo
 {
-    Chemistry::Element::Type element;
+    Element::Type element;
     int maxAtomCount;
 };
 
@@ -280,11 +280,11 @@ void IsotopeCalculator::Impl::initializeIsotopeTables()
 {
     for (TableInfo* it=tableInfo_; it!=tableInfo_+tableInfoSize_; ++it)
     {
-        auto_ptr<IsotopeTable> temp(new IsotopeTable(Element::Info::record(it->element).isotopes, 
-                                                     it->maxAtomCount, 
-                                                     abundanceCutoff_));
-        tableMap_[it->element] = temp.get(); // store pointer in the map
-        tableStorage_.push_back(temp); // maintain ownership in the auto_vector
+        IsotopeTable* temp(new IsotopeTable(Element::Info::record(it->element).isotopes, 
+                                            it->maxAtomCount, 
+                                            abundanceCutoff_));
+        tableMap_[it->element] = temp; // store pointer in the map
+        tableStorage_.push_back(temp); // maintain ownership in the ptr_vector
     }
 }
 
@@ -314,7 +314,5 @@ MassDistribution IsotopeCalculator::distribution(const Formula& formula,
 }
 
 
-} // namespace proteome
+} // namespace chemistry
 } // namespace pwiz
-
-

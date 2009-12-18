@@ -33,7 +33,7 @@ namespace proteome {
 
 
 using namespace std;
-using namespace Chemistry;
+using namespace chemistry;
 using namespace pwiz::util;
 
 
@@ -41,7 +41,7 @@ class Modification::Impl
 {
     public:
 
-    Impl(const Chemistry::Formula& formula)
+    Impl(const chemistry::Formula& formula)
         :   formula_(new Formula(formula)),
             monoDeltaMass(formula_->monoisotopicMass()),
             avgDeltaMass(formula_->molecularWeight())
@@ -67,7 +67,7 @@ class Modification::Impl
         return formula_.get() != NULL;
     }
 
-    inline const Chemistry::Formula& formula() const
+    inline const chemistry::Formula& formula() const
     {
         if (!formula_.get())
             throw runtime_error("[Modification::formula()] this mod was constructed with mass info only");
@@ -95,7 +95,7 @@ PWIZ_API_DECL Modification::Modification()
 {
 }
 
-PWIZ_API_DECL Modification::Modification(const Chemistry::Formula& formula)
+PWIZ_API_DECL Modification::Modification(const chemistry::Formula& formula)
 :   impl_(new Impl(formula))
 {
 }

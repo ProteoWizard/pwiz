@@ -32,19 +32,19 @@
 
 using namespace std;
 using namespace pwiz::util;
-using namespace pwiz::proteome;
+using namespace pwiz::chemistry;
 
 
 ostream* os_ = 0;
 
 
-bool hasGreaterAbundance(const Chemistry::MassAbundance& a, const Chemistry::MassAbundance& b)
+bool hasGreaterAbundance(const MassAbundance& a, const MassAbundance& b)
 {
     return a.abundance > b.abundance;
 }
 
 
-bool hasLessMass(const Chemistry::MassAbundance& a, const Chemistry::MassAbundance& b)
+bool hasLessMass(const MassAbundance& a, const MassAbundance& b)
 {
     return a.mass < b.mass;
 }
@@ -52,8 +52,6 @@ bool hasLessMass(const Chemistry::MassAbundance& a, const Chemistry::MassAbundan
 
 void test1()
 {
-    using namespace Chemistry;
-
     MassDistribution md;
     md.push_back(MassAbundance(10, 1));
 
@@ -71,8 +69,6 @@ void test1()
 
 void test2()
 {
-    using namespace Chemistry;
-
     const double p0 = .9;
     const double p1 = 1 - p0;
 
@@ -125,7 +121,7 @@ void test2()
 }
 
 
-void compare(const Chemistry::MassDistribution& test, const Chemistry::MassDistribution& good)
+void compare(const MassDistribution& test, const MassDistribution& good)
 {
     unit_assert(test.size() == good.size()); 
     for (unsigned int i=0; i<test.size(); i++)
@@ -138,8 +134,6 @@ void compare(const Chemistry::MassDistribution& test, const Chemistry::MassDistr
 
 void test3()
 {
-    using namespace Chemistry;
-
     const double p0 = .9;
     const double p1 = .09;
     const double p2 = 1 - (p0 + p1);
@@ -182,8 +176,6 @@ void test3()
 
 void test4()
 {
-    using namespace Chemistry;
-
     const double p0 = .9;
     const double p1 = .09;
     const double p2 = .009;
@@ -214,8 +206,6 @@ void test4()
 
 void testSulfur()
 {
-    using namespace Chemistry;
-
     IsotopeTable table(Element::Info::record(Element::Se).isotopes, 10, 1e-10);
    
     cout << table << endl; 

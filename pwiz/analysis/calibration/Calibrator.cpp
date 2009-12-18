@@ -24,7 +24,7 @@
 #include "Calibrator.hpp"
 #include "ErrorEstimator.hpp"
 #include "MassSpread.hpp"
-#include "pwiz/utility/proteome/Ion.hpp"
+#include "pwiz/utility/chemistry/Ion.hpp"
 #include <cmath>
 #include <iterator>
 #include <stdexcept>

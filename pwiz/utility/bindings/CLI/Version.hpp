@@ -30,7 +30,7 @@
 #pragma warning( disable : 4634 4635 )
 #include "../../../data/msdata/Version.hpp"
 #include "../../../analysis/Version.hpp"
-#include "../../../utility/proteome/Version.hpp"
+#include "../../../data/proteome/Version.hpp"
 #pragma warning( pop )
 
 

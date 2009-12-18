@@ -550,7 +550,7 @@ void writeFragmentation(const Peptide& p, const Fragmentation& f, ostream& os)
 
 void fragmentTest()
 {
-    using Chemistry::Proton;
+    using chemistry::Proton;
     const double EPSILON = 0.005;
 
     for (size_t i=0; i < testFragmentationsSize; ++i)

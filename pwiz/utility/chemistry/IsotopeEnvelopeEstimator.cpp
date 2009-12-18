@@ -36,7 +36,7 @@ using namespace std;
 
 
 namespace pwiz {
-namespace proteome {
+namespace chemistry {
 
 
 class IsotopeEnvelopeEstimator::Impl
@@ -44,12 +44,12 @@ class IsotopeEnvelopeEstimator::Impl
     public:
 
     Impl(const Config& config);
-    Chemistry::MassDistribution isotopeEnvelope(double mass) const;
+    MassDistribution isotopeEnvelope(double mass) const;
 
     private:
 
     Config config_;
-    vector<Chemistry::MassDistribution> cache_;
+    vector<MassDistribution> cache_;
 
     unsigned int massToIndex(double mass) const;
     double indexToMass(unsigned int index) const;
@@ -83,12 +83,12 @@ double IsotopeEnvelopeEstimator::Impl::indexToMass(unsigned int index) const
 
 
 namespace {
-Chemistry::Formula estimateFormula(double mass)
+Formula estimateFormula(double mass)
 {
     // estimate formula assuming it's a peptide, using average elemental composition
     // of amino acid residues
 
-    using namespace Chemistry::Element;
+    using namespace Element;
 
     const double averageResidueMass = 111.10524;
     const double averageC = 4.944;
@@ -97,11 +97,11 @@ Chemistry::Formula estimateFormula(double mass)
     const double averageO = 1.476;
     const double averageS = 0.042;
 
-    Chemistry::Formula water("H2O1");
+    Formula water("H2O1");
     double residueCount = (mass - water.monoisotopicMass())/averageResidueMass;
     if (residueCount < 0) residueCount = 0;
 
-    Chemistry::Formula result;
+    Formula result;
 
     result[C] = (int)round(residueCount * averageC);
     result[H] = (int)round(residueCount * averageH);
@@ -126,9 +126,9 @@ void IsotopeEnvelopeEstimator::Impl::initializeCache()
     {
         // estimate the peptide formula and cache the normalized distribution 
 
-        Chemistry::Formula formula = estimateFormula(indexToMass(index));
+        Formula formula = estimateFormula(indexToMass(index));
 
-        Chemistry::MassDistribution md = 
+        MassDistribution md = 
             config_.isotopeCalculator->distribution(formula, 
                                                     0, // charge state
                                                     config_.normalization);
@@ -137,7 +137,7 @@ void IsotopeEnvelopeEstimator::Impl::initializeCache()
 }
 
 
-Chemistry::MassDistribution IsotopeEnvelopeEstimator::Impl::isotopeEnvelope(double mass) const
+MassDistribution IsotopeEnvelopeEstimator::Impl::isotopeEnvelope(double mass) const
 {
     return cache_[massToIndex(mass)];
 }
@@ -155,13 +155,11 @@ PWIZ_API_DECL IsotopeEnvelopeEstimator::IsotopeEnvelopeEstimator(const Config& c
 PWIZ_API_DECL IsotopeEnvelopeEstimator::~IsotopeEnvelopeEstimator() {} // auto destruction of impl_
 
 
-PWIZ_API_DECL Chemistry::MassDistribution IsotopeEnvelopeEstimator::isotopeEnvelope(double mass) const
+PWIZ_API_DECL MassDistribution IsotopeEnvelopeEstimator::isotopeEnvelope(double mass) const
 {
     return impl_->isotopeEnvelope(mass);
 }
 
 
-} // namespace proteome
+} // namespace chemistry
 } // namespace pwiz
-
-

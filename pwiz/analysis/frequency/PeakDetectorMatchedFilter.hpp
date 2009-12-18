@@ -27,7 +27,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "PeakDetector.hpp"
-#include "pwiz/utility/proteome/IsotopeEnvelopeEstimator.hpp"
+#include "pwiz/utility/chemistry/IsotopeEnvelopeEstimator.hpp"
 #include <memory>
 #include <complex>
 
@@ -46,7 +46,7 @@ class PWIZ_API_DECL PeakDetectorMatchedFilter : public PeakDetector
     struct PWIZ_API_DECL Config
     {
         /// IsotopeEnvelopeEstimator pointer, must be valid for PeakDetector lifetime 
-        const proteome::IsotopeEnvelopeEstimator* isotopeEnvelopeEstimator;
+        const chemistry::IsotopeEnvelopeEstimator* isotopeEnvelopeEstimator;
 
         /// number of filter correlations computed per frequency step 
         int filterMatchRate;

@@ -33,12 +33,12 @@
 #include <algorithm>
 
 
-using namespace pwiz::proteome::Chemistry;
+using namespace pwiz::chemistry;
 using namespace std;
 
 
 namespace pwiz {
-namespace proteome {
+namespace chemistry {
 
 
 //
@@ -408,7 +408,7 @@ void IsotopeTable::Impl::printRecord(int recordIndex) const
 // IsotopeTable implementation
 
 
-PWIZ_API_DECL IsotopeTable::IsotopeTable(const Chemistry::MassDistribution& md, int maxAtomCount, double cutoff)
+PWIZ_API_DECL IsotopeTable::IsotopeTable(const MassDistribution& md, int maxAtomCount, double cutoff)
 :   impl_(new Impl(md, maxAtomCount, cutoff))
 {}
 
@@ -429,6 +429,5 @@ PWIZ_API_DECL ostream& operator<<(ostream& os, const IsotopeTable& isotopeTable)
 }
 
 
-} // namespace proteome
+} // namespace chemistry
 } // namespace pwiz
-

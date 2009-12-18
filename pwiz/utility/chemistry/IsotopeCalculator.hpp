@@ -1,5 +1,5 @@
 //
-// $Id$
+// $Id$ 
 //
 //
 // Original author: Darren Kessner <darren@proteowizard.org>
@@ -21,46 +21,47 @@
 //
 
 
-#ifndef _ISOTOPETABLE_HPP_
-#define _ISOTOPETABLE_HPP_
+#ifndef _ISOTOPECALCULATOR_HPP_
+#define _ISOTOPECALCULATOR_HPP_
 
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "Chemistry.hpp"
+#include <memory>
 
 
 namespace pwiz {
-namespace proteome {
+namespace chemistry {
 
 
-/// Class representing a table of isotope distributions for collections of multiple
-/// atoms of a single element; the table is computed on instantiation, based on the 
-/// element's mass distribution, a maximum atom count, and abundance cutoff value.
-class PWIZ_API_DECL IsotopeTable
+class PWIZ_API_DECL IsotopeCalculator
 {
     public:
+    
+    IsotopeCalculator(double abundanceCutoff, double massPrecision);
+    ~IsotopeCalculator();
 
-    IsotopeTable(const Chemistry::MassDistribution& md, int maxAtomCount, double cutoff); 
-    ~IsotopeTable();
-
-    Chemistry::MassDistribution distribution(int atomCount) const;
-
+    enum PWIZ_API_DECL NormalizationFlags
+    {
+        NormalizeMass = 0x01,       // shift masses -> monoisotopic_mass == 0
+        NormalizeAbundance = 0x02   // scale abundances -> sum(abundance[i]^2) == 1 
+    };
+    
+    MassDistribution distribution(const Formula& formula,
+                                             int chargeState = 0,
+                                             int normalization = 0) const;
     private:
     class Impl;
     std::auto_ptr<Impl> impl_;
 
     // no copying
-    IsotopeTable(const IsotopeTable&);
-    IsotopeTable& operator=(const IsotopeTable&);
-
-    /// debugging
-    friend PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const IsotopeTable& isotopeTable);
+    IsotopeCalculator(const IsotopeCalculator&);
+    IsotopeCalculator& operator=(const IsotopeCalculator);
 };
 
 
-} // namespace proteome
+} // namespace chemistry
 } // namespace pwiz
 
 
-#endif // _ISOTOPETABLE_HPP_
-
+#endif // _ISOTOPECALCULATOR_HPP_

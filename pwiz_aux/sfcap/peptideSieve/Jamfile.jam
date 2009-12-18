@@ -40,7 +40,7 @@ exe PeptideSieve
     : # sources
         peptideSieve.cpp
         pwiz_aux_sfcap_peptidesieve
-	../../../pwiz/utility/proteome//pwiz_utility_proteome
+        ../../../pwiz/utility/chemistry//pwiz_utility_chemistry
         /ext/boost//program_options
     : <include>../../..
     ;

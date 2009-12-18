@@ -38,7 +38,7 @@ lib pwiz_data_proteome
     : # requirements
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata # needed for access to CV (TODO: move CV out of msdata!)
-        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/proteome//pwiz_utility_proteome
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/chemistry//pwiz_utility_chemistry
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/common//pwiz_data_common
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
         <library>/ext/boost//thread
@@ -47,7 +47,7 @@ lib pwiz_data_proteome
     : # default-build
     : # usage-requirements
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
-        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/proteome//pwiz_utility_proteome
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/chemistry//pwiz_utility_chemistry
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/common//pwiz_data_common
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
         <library>/ext/boost//thread

@@ -29,9 +29,9 @@
 #include "pwiz/data/misc/CalibrationParameters.hpp"
 #include "pwiz/data/misc/FrequencyData.hpp"
 #include "pwiz/data/misc/PeakData.hpp"
-#include "pwiz/utility/proteome/Chemistry.hpp"
-#include "pwiz/utility/proteome/Ion.hpp"
-#include "pwiz/utility/proteome/IsotopeEnvelopeEstimator.hpp"
+#include "pwiz/utility/chemistry/Chemistry.hpp"
+#include "pwiz/utility/chemistry/Ion.hpp"
+#include "pwiz/utility/chemistry/IsotopeEnvelopeEstimator.hpp"
 #include "pwiz/utility/math/MatchedFilter.hpp"
 #include "pwiz/utility/math/round.hpp"
 #include "pwiz/utility/misc/Timer.hpp"
@@ -46,7 +46,7 @@ namespace frequency {
 using namespace std;
 using namespace util;
 using namespace math;
-using namespace proteome;
+using namespace chemistry;
 using namespace data;
 using namespace data::peakdata;
 
@@ -503,7 +503,7 @@ void PeakDetectorMatchedFilterImpl::calculateScore(Score& score,
 
     // get isotope envelope estimate based on rough estimate of monoisotopic mass
     double monoisotopicMassEstimate = neutralMass - score.neutronCount * neutronMass_;
-    Chemistry::MassDistribution envelope = 
+    chemistry::MassDistribution envelope = 
         config_.isotopeEnvelopeEstimator->isotopeEnvelope(monoisotopicMassEstimate);
 
     // calculate better estimate of monoisotopic mass after we have isotope envelope

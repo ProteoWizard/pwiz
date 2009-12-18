@@ -83,6 +83,7 @@ PWIZ_API_DECL void SpectrumTable::close(const DataInfo& dataInfo)
     const size_t width_basePeakMZ = 12;
     const size_t width_basePeakIntensity = 14;
     const size_t width_totalIonCurrent = 14;
+    const size_t width_precursorCharge = 8;
     const size_t width_precursorMZ = 12;
     const size_t width_thermoMonoisotopicMZ = 15;
     const size_t width_filterStringMZ = 15;
@@ -99,6 +100,7 @@ PWIZ_API_DECL void SpectrumTable::close(const DataInfo& dataInfo)
        << setw(width_basePeakMZ) << "basePeakMZ"
        << setw(width_basePeakIntensity) << "basePeakInt"
        << setw(width_totalIonCurrent) << "TIC"
+       << setw(width_precursorCharge) << "charge"
        << setw(width_precursorMZ) << "precursorMZ"
        << setw(width_thermoMonoisotopicMZ) << "thermo_monoMZ"
        << setw(width_filterStringMZ) << "filterStringMZ"
@@ -107,7 +109,7 @@ PWIZ_API_DECL void SpectrumTable::close(const DataInfo& dataInfo)
     for (vector<SpectrumInfo>::const_iterator it=cache_.begin(); it!=cache_.end(); ++it)
     {
         os << setw(width_index) << it->index 
-           << setw(width_id) << it->id 
+           << setw(width_id) << msdata::id::abbreviate(it->id)
            << setw(width_scanEvent) << it->scanEvent 
            << setw(width_massAnalyzerType) << it->massAnalyzerTypeAbbreviation()
            << setw(width_msLevel) << "ms" + lexical_cast<string>(it->msLevel)
@@ -117,6 +119,7 @@ PWIZ_API_DECL void SpectrumTable::close(const DataInfo& dataInfo)
            << setw(width_basePeakMZ) << fixed << setprecision(4) << it->basePeakMZ 
            << setw(width_basePeakIntensity) << fixed << setprecision(2) << it->basePeakIntensity
            << setw(width_totalIonCurrent) << fixed << setprecision(2) << it->totalIonCurrent
+           << setw(width_precursorCharge) << fixed << setprecision(0) << (!it->precursors.empty() ? it->precursors[0].charge : 0)
            << setw(width_precursorMZ) << fixed << setprecision(4) << (!it->precursors.empty() ? it->precursors[0].mz : 0)
            << setw(width_thermoMonoisotopicMZ) << fixed << setprecision(4) << it->thermoMonoisotopicMZ
            << setw(width_filterStringMZ) << fixed << setprecision(4) << it->mzFromFilterString()

@@ -28,12 +28,12 @@ lib pwiz_aux_sfcap_proctran
         KnownMassList.cpp
     : # requirements
         <library>../../../pwiz/data/misc
-        <library>../../../pwiz/utility/proteome
+        <library>../../../pwiz/utility/chemistry//pwiz_utility_chemistry
         <library>../../../pwiz/analysis/calibration
     : # default-build
     : # usage-requirements
         <library>../../../pwiz/data/misc
-        <library>../../../pwiz/utility/proteome
+        <library>../../../pwiz/utility/chemistry//pwiz_utility_chemistry
         <library>../../../pwiz/analysis/calibration
     ;
 

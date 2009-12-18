@@ -1,10 +1,10 @@
 //
-// $Id$
+// $Id$ 
 //
 //
 // Original author: Darren Kessner <darren@proteowizard.org>
 //
-// Copyright 2005 Louis Warschaw Prostate Cancer Center
+// Copyright 2006 Louis Warschaw Prostate Cancer Center
 //   Cedars Sinai Medical Center, Los Angeles, California  90048
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); 
@@ -21,38 +21,48 @@
 //
 
 
-#ifndef _ION_HPP_
-#define _ION_HPP_
+#ifndef _CHEMISTRYDATA_HPP_
+#define _CHEMISTRYDATA_HPP_
+
+
+#include "pwiz/utility/misc/Export.hpp"
+#include "Chemistry.hpp"
 
 
 namespace pwiz {
-namespace proteome {
+namespace chemistry {
+namespace detail {
 
 
-namespace Ion
+typedef pwiz::chemistry::Element::Type Type;
+
+
+struct PWIZ_API_DECL Isotope 
 {
-    const double protonMass_ = 1.00727647;
-
-    inline double mz(double neutralMass, int charge)
-    {
-        return neutralMass/charge + protonMass_;
-    } 
-
-    inline double neutralMass(double mz, int charge)
-    {
-        return (mz - protonMass_)*charge; 
-    }
-
-    inline double ionMass(double neutralMass, int charge)
-    {
-        return neutralMass + protonMass_*charge;
-    }
-}
+    double mass; 
+    double abundance;
+};
 
 
-} // namespace proteome 
+struct PWIZ_API_DECL Element 
+{
+    Type type;
+    const char* symbol;
+    int atomicNumber;
+    double atomicWeight;
+    Isotope* isotopes;
+    int isotopesSize;
+};
+
+
+PWIZ_API_DECL Element* elements();
+PWIZ_API_DECL int elementsSize();
+
+
+} // namespace detail
+} // namespace chemistry
 } // namespace pwiz
 
 
-#endif // _ION_HPP_
+#endif // _CHEMISTRYDATA_HPP_
 

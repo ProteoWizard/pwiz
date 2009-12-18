@@ -6,7 +6,7 @@
 
 #include "pwiz/data/proteome/Reader_FASTA.hpp"
 #include "pwiz/data/proteome/ProteomeDataFile.hpp"
-#include "pwiz/utility/proteome/Digestion.hpp"
+#include "pwiz/data/proteome/Digestion.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "boost/program_options.hpp"
 #include <iostream>

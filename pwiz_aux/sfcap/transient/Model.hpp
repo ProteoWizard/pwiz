@@ -96,12 +96,12 @@ typedef std::vector<ChargeAbundance> ChargeDistribution;
 /// charge state distribution 
 struct Species 
 {
-    proteome::Chemistry::Formula formula;
+    chemistry::Formula formula;
     ChargeDistribution chargeDistribution;
 
     Species(){}
 
-    Species(const proteome::Chemistry::Formula& f, 
+    Species(const chemistry::Formula& f, 
             const ChargeDistribution& cd)
     :   formula(f), chargeDistribution(cd)
     {}

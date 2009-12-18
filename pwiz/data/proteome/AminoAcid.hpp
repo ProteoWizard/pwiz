@@ -26,7 +26,7 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "pwiz/utility/proteome/Chemistry.hpp"
+#include "pwiz/utility/chemistry/Chemistry.hpp"
 #include <string>
 #include <memory>
 
@@ -79,8 +79,8 @@ struct PWIZ_API_DECL Record
     std::string name; 
     std::string abbreviation; 
     char symbol; 
-    Chemistry::Formula residueFormula;
-    Chemistry::Formula formula;
+    chemistry::Formula residueFormula;
+    chemistry::Formula formula;
     double abundance;
 };
 

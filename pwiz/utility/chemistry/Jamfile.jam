@@ -21,8 +21,23 @@
 #
 
 
-exe pepdb : pepdb.cpp pwiz_utility_proteome ../peptideSieve/digest.cpp ../peptideSieve ;
-explicit pepdb ;
+lib pwiz_utility_chemistry
+    : # sources
+        Chemistry.cpp 
+        ChemistryData.cpp 
+        IsotopeCalculator.cpp 
+        IsotopeEnvelopeEstimator.cpp 
+        IsotopeTable.cpp
+    : # requirements
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+        <library>/ext/boost//thread
+    : # default-build
+    : # usage-requirements
+        <library>/ext/boost//thread
+    ;
 
-unit-test IPIFASTADatabaseTest : IPIFASTADatabaseTest.cpp IPIFASTADatabase.cpp /ext/boost//filesystem ;
 
+unit-test ChemistryTest : ChemistryTest.cpp pwiz_utility_chemistry ; 
+unit-test IsotopeCalculatorTest : IsotopeCalculatorTest.cpp pwiz_utility_chemistry ; 
+unit-test IsotopeEnvelopeEstimatorTest : IsotopeEnvelopeEstimatorTest.cpp pwiz_utility_chemistry ;
+unit-test IsotopeTableTest : IsotopeTableTest.cpp pwiz_utility_chemistry ;

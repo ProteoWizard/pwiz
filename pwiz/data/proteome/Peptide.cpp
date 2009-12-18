@@ -38,7 +38,7 @@ namespace proteome {
 
 
 using namespace std;
-using namespace Chemistry;
+using namespace chemistry;
 using boost::shared_ptr;
 
 
@@ -385,13 +385,13 @@ PWIZ_API_DECL Formula Peptide::formula(bool modified) const
 PWIZ_API_DECL double Peptide::monoisotopicMass(int charge, bool modified) const
 {
     return charge == 0 ? impl_->monoMass(modified)
-                       : (impl_->monoMass(modified) + Chemistry::Proton * charge) / charge;
+                       : (impl_->monoMass(modified) + chemistry::Proton * charge) / charge;
 }
 
 PWIZ_API_DECL double Peptide::molecularWeight(int charge, bool modified) const
 {
     return charge == 0 ? impl_->avgMass(modified)
-                       : (impl_->avgMass(modified) + Chemistry::Proton * charge) / charge;
+                       : (impl_->avgMass(modified) + chemistry::Proton * charge) / charge;
 }
 
 PWIZ_API_DECL ModificationMap& Peptide::modifications()
@@ -488,43 +488,43 @@ class Fragmentation::Impl
     inline double a(size_t length, size_t charge) const
     {
         return charge == 0 ? NTerminalDeltaMass+f(length)+aMass
-                           : (NTerminalDeltaMass+f(length)+aMass+Chemistry::Proton*charge) / charge;
+                           : (NTerminalDeltaMass+f(length)+aMass+chemistry::Proton*charge) / charge;
     }
 
     inline double b(size_t length, size_t charge) const
     {
         return charge == 0 ? NTerminalDeltaMass+f(length)+bMass
-                           : (NTerminalDeltaMass+f(length)+bMass+Chemistry::Proton*charge) / charge;
+                           : (NTerminalDeltaMass+f(length)+bMass+chemistry::Proton*charge) / charge;
     }
 
     inline double c(size_t length, size_t charge) const
     {
         return charge == 0 ? NTerminalDeltaMass+f(length)+cMass
-                           : (NTerminalDeltaMass+f(length)+cMass+Chemistry::Proton*charge) / charge;
+                           : (NTerminalDeltaMass+f(length)+cMass+chemistry::Proton*charge) / charge;
     }
 
     inline double x(size_t length, size_t charge) const
     {
         return charge == 0 ? CTerminalDeltaMass+masses.back()-f(maxLength-length)+xMass
-                           : (CTerminalDeltaMass+masses.back()-f(maxLength-length)+xMass+Chemistry::Proton*charge) / charge;
+                           : (CTerminalDeltaMass+masses.back()-f(maxLength-length)+xMass+chemistry::Proton*charge) / charge;
     }
 
     inline double y(size_t length, size_t charge) const
     {
         return charge == 0 ? CTerminalDeltaMass+masses.back()-f(maxLength-length)+yMass
-                           : (CTerminalDeltaMass+masses.back()-f(maxLength-length)+yMass+Chemistry::Proton*charge) / charge;
+                           : (CTerminalDeltaMass+masses.back()-f(maxLength-length)+yMass+chemistry::Proton*charge) / charge;
     }
 
     inline double z(size_t length, size_t charge) const
     {
         return charge == 0 ? CTerminalDeltaMass+masses.back()-f(maxLength-length)+zMass
-                           : (CTerminalDeltaMass+masses.back()-f(maxLength-length)+zMass+Chemistry::Proton*charge) / charge;
+                           : (CTerminalDeltaMass+masses.back()-f(maxLength-length)+zMass+chemistry::Proton*charge) / charge;
     }
 
     inline double zRadical(size_t length, size_t charge) const
     {
-        return charge == 0 ? CTerminalDeltaMass+masses.back()-f(maxLength-length)+zMass+Chemistry::Proton
-                           : (CTerminalDeltaMass+masses.back()-f(maxLength-length)+zMass+Chemistry::Proton*(charge+1)) / charge;
+        return charge == 0 ? CTerminalDeltaMass+masses.back()-f(maxLength-length)+zMass+chemistry::Proton
+                           : (CTerminalDeltaMass+masses.back()-f(maxLength-length)+zMass+chemistry::Proton*(charge+1)) / charge;
     }
 
     size_t maxLength;
@@ -554,12 +554,12 @@ class Fragmentation::Impl
             zFormula = Formula("N-1H-3") + Formula("H2O1");
         }
 
-        Chemistry::Formula aFormula;
-        Chemistry::Formula bFormula;
-        Chemistry::Formula cFormula;
-        Chemistry::Formula xFormula;
-        Chemistry::Formula yFormula;
-        Chemistry::Formula zFormula;
+        chemistry::Formula aFormula;
+        chemistry::Formula bFormula;
+        chemistry::Formula cFormula;
+        chemistry::Formula xFormula;
+        chemistry::Formula yFormula;
+        chemistry::Formula zFormula;
     };
 };
 

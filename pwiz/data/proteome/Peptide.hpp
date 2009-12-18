@@ -26,7 +26,7 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "pwiz/utility/proteome/Chemistry.hpp"
+#include "pwiz/utility/chemistry/Chemistry.hpp"
 
 namespace pwiz {
 namespace proteome {
@@ -74,7 +74,7 @@ class PWIZ_API_DECL Peptide
     /// if modified = false: returns the composition formula of sequence()+water
     /// if modified = true: returns the composition formula of sequence()+modifications()+water
     /// throws an exception if modified = true and any modification has only mass information
-    Chemistry::Formula formula(bool modified = false) const;
+    chemistry::Formula formula(bool modified = false) const;
 
     /// if charge = 0: returns neutral mass
     /// if charge > 0: returns charged m/z

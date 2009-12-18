@@ -35,8 +35,7 @@
 
 using namespace std;
 using namespace pwiz::util;
-using namespace pwiz::proteome;
-using namespace Chemistry;
+using namespace pwiz::chemistry;
 
 
 ostream* os_ = 0;

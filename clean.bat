@@ -23,6 +23,8 @@ IF EXIST libraries\libfftw3-3.dll del /q libraries\libfftw3-3.dll
 IF EXIST pwiz\Version.cpp del /q pwiz\Version.cpp
 IF EXIST pwiz\data\msdata\Version.cpp del /q pwiz\data\msdata\Version.cpp
 IF EXIST pwiz\analysis\Version.cpp del /q pwiz\analysis\Version.cpp
+IF EXIST pwiz\mziddata\Version.cpp del /q pwiz\mziddata\Version.cpp
+IF EXIST pwiz\tradata\Version.cpp del /q pwiz\tradata\Version.cpp
 IF EXIST pwiz\data\proteome\Version.cpp del /q pwiz\data\proteome\Version.cpp
 
 del /q pwiz\utility\bindings\CLI\*.xdc

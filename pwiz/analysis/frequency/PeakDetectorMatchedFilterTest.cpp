@@ -33,7 +33,7 @@
 using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::frequency;
-using namespace pwiz::proteome;
+using namespace pwiz::chemistry;
 using namespace pwiz::data;
 using namespace pwiz::data::peakdata;
 

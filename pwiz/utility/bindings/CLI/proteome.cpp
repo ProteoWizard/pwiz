@@ -31,9 +31,9 @@ namespace CLI {
 namespace proteome {
 
 
-double Chemistry::Proton::get() {return b::Chemistry::Proton;}
-double Chemistry::Neutron::get() {return b::Chemistry::Neutron;}
-double Chemistry::Electron::get() {return b::Chemistry::Electron;}
+double Chemistry::Proton::get() {return pwiz::chemistry::Proton;}
+double Chemistry::Neutron::get() {return pwiz::chemistry::Neutron;}
+double Chemistry::Electron::get() {return pwiz::chemistry::Electron;}
 
 
 Peptide::Peptide()

@@ -28,12 +28,12 @@
 #include <numeric>
 #include <algorithm>
 #include <cstring>
-#include<iterator>
+#include <iterator>
 
 
 using namespace std;
 using namespace pwiz::util;
-using namespace pwiz::proteome;
+using namespace pwiz::chemistry;
 
 
 ostream* os_ = 0;
@@ -99,8 +99,6 @@ double probability(const vector<double>& p, const vector<int>& i)
 
 void testUsage(const IsotopeCalculator& calc)
 {
-    using namespace Chemistry;
-
     Formula angiotensin("C50 H71 N13 O12 ");
     Formula bombesin("C71 H110 N24 O18 S1");
     Formula substanceP("C63 H98 N18 O13 S1");
@@ -114,8 +112,6 @@ void testUsage(const IsotopeCalculator& calc)
 
 void testProbabilites(const IsotopeCalculator& calc)
 {
-    using namespace Chemistry;
-
     const MassDistribution& md = Element::Info::record(Element::C).isotopes;
 
     if (os_) *os_ << "C distribution: " << md << endl;
@@ -156,8 +152,6 @@ void testProbabilites(const IsotopeCalculator& calc)
 
 void testNormalization(const IsotopeCalculator& calc)
 {
-    using namespace Chemistry;
-
     if (os_) *os_ << "mass normalized:\n"
                   << calc.distribution(Formula("C100"), 0, 
                                        IsotopeCalculator::NormalizeMass) << endl; 

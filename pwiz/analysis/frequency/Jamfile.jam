@@ -54,13 +54,13 @@ lib pwiz_analysis_frequency
     : # requirements
 	    <library>../../utility/math//pwiz_utility_math
         <library>../../data/misc//pwiz_data_misc
-        <library>../../utility/proteome//pwiz_utility_proteome
+        <library>../../utility/chemistry//pwiz_utility_chemistry
         <library>/ext/boost//filesystem
     : # default-build
     : # usage-requirements
 	    <library>../../utility/math//pwiz_utility_math
         <library>../../data/misc//pwiz_data_misc
-        <library>../../utility/proteome//pwiz_utility_proteome
+        <library>../../utility/chemistry//pwiz_utility_chemistry
         <library>/ext/boost//filesystem
     ;
 

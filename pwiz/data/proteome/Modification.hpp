@@ -44,7 +44,7 @@ class PWIZ_API_DECL Modification
     /// constructs a zero-mass modification (provided for MSVC compatibility)
     Modification();
 
-    Modification(const Chemistry::Formula& formula);
+    Modification(const chemistry::Formula& formula);
     Modification(double monoisotopicDeltaMass,
                  double averageDeltaMass);
     Modification(const Modification&);
@@ -56,7 +56,7 @@ class PWIZ_API_DECL Modification
 
     /// returns the difference formula;
     /// throws runtime_error if hasFormula() = false
-    const Chemistry::Formula& formula() const;
+    const chemistry::Formula& formula() const;
 
     double monoisotopicDeltaMass() const;
     double averageDeltaMass() const;

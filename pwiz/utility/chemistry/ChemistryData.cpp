@@ -27,11 +27,11 @@
 
 
 namespace pwiz {
-namespace proteome {
-namespace ChemistryData {
+namespace chemistry {
+namespace detail {
 
 
-using namespace pwiz::proteome::Chemistry::Element;
+using namespace pwiz::chemistry::Element;
 
 
 Isotope isotopes_H[] = { {1.0078250321, 0.999885}, {2.014101778, 0.000115}, {3.0160492675, 0}, };
@@ -511,7 +511,7 @@ PWIZ_API_DECL int elementsSize()
 }
 
 
-} // namespace ChemistryData
-} // namespace proteome
+} // namespace detail
+} // namespace chemistry
 } // namespace pwiz
 

@@ -249,14 +249,14 @@ void convert_fasta(const vector<string>& args)
       peptide.erase(peptide.length() - 1,1); //drop the last character
       Peptide p(peptide);
       record.mass = p.formula().monoisotopicMass();
-      pwiz::proteome::Chemistry::Formula f(p.formula());
+      pwiz::chemistry::Formula f(p.formula());
       f = p.formula(); 
       //should write an assignment operator
-      record.formula.C = f[pwiz::proteome::Chemistry::Element::C];
-      record.formula.H = f[pwiz::proteome::Chemistry::Element::H];
-      record.formula.N = f[pwiz::proteome::Chemistry::Element::N];
-      record.formula.O = f[pwiz::proteome::Chemistry::Element::O];
-      record.formula.S = f[pwiz::proteome::Chemistry::Element::S];
+      record.formula.C = f[pwiz::chemistry::Element::C];
+      record.formula.H = f[pwiz::chemistry::Element::H];
+      record.formula.N = f[pwiz::chemistry::Element::N];
+      record.formula.O = f[pwiz::chemistry::Element::O];
+      record.formula.S = f[pwiz::chemistry::Element::S];
       record.sequenceKey = stringId;
       stringId++;
       pdb_tmp.push_back(record);

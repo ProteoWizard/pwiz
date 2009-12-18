@@ -34,8 +34,7 @@
 
 
 namespace pwiz {
-namespace proteome {
-namespace Chemistry {
+namespace chemistry {
 
 
 /// the mass of a proton in unified atomic mass units
@@ -175,10 +174,8 @@ PWIZ_API_DECL Formula operator*(int scalar, const Formula& a);
 PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Formula& formula);
 
 
-} // namespace Chemistry 
-} // namespace proteome
+} // namespace chemistry 
 } // namespace pwiz
 
 
 #endif // _CHEMISTRY_HPP_
-

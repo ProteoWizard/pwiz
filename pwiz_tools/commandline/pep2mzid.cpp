@@ -26,7 +26,7 @@
 #include "pwiz/data/misc/MinimumPepXML.hpp"
 #include "pwiz/data/msdata/cv.hpp"
 #include "pwiz/Version.hpp"
-#include "pwiz/utility/proteome/Peptide.hpp"
+#include "pwiz/data/proteome/Peptide.hpp"
 
 #include <iostream>
 #include <fstream>

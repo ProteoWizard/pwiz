@@ -26,7 +26,7 @@
 
 #include "pwiz/analysis/common/DataFilter.hpp"
 #include "pwiz/analysis/peakdetect/MZTolerance.hpp"
-#include "pwiz/utility/proteome/Chemistry.hpp"
+#include "pwiz/utility/chemistry/Chemistry.hpp"
 
 
 namespace pwiz {
@@ -109,7 +109,7 @@ struct PrecursorMassFilter : public SpectrumDataFilter
         bool removeReducedChargePrecursors;
         /** intact precursors can undergo loss of neutral molecules after the dissociation event
           * this flag specifies the removal of these "neutral loss" ions (precursor mass - neutral loss mass)/charge */
-        std::vector<pwiz::proteome::Chemistry::Formula> neutralLossSpecies;
+        std::vector<pwiz::chemistry::Formula> neutralLossSpecies;
         /** in cases where the precursor charge is indeterminate, but defined as being one of a series of values,
           * we use the following flag to remove precursors for all hypothetical values of the parent charge */
         bool removePossibleChargePrecursors;

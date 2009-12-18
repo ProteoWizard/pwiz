@@ -27,8 +27,8 @@
 #pragma warning( push )
 #pragma warning( disable : 4634 4635 )
 #include "SharedCLI.hpp"
-#include "pwiz/utility/proteome/Chemistry.hpp"
-#include "pwiz/utility/proteome/Peptide.hpp"
+#include "pwiz/utility/chemistry/Chemistry.hpp"
+#include "pwiz/data/proteome/Peptide.hpp"
 #pragma warning( pop )
 
 

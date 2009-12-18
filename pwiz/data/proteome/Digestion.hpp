@@ -28,7 +28,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/cv.hpp"
-#include "pwiz/utility/proteome/Chemistry.hpp"
+#include "pwiz/utility/chemistry/Chemistry.hpp"
 #include "Peptide.hpp"
 #include <boost/regex.hpp>
 #include "boost/shared_ptr.hpp"

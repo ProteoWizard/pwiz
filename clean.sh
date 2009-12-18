@@ -17,6 +17,8 @@ if [ -f libraries/libfftw3-3.dll ]; then rm -f libraries/libfftw3-3.dll; fi;
 if [ -f pwiz/Version.cpp ]; then rm -f pwiz/Version.cpp; fi;
 if [ -f pwiz/data/msdata/Version.cpp ]; then rm -f pwiz/data/msdata/Version.cpp; fi;
 if [ -f pwiz/analysis/Version.cpp ]; then rm -f pwiz/analysis/Version.cpp; fi;
+if [ -f pwiz/tradata/Version.cpp ]; then rm -f pwiz/tradata/Version.cpp; fi;
+if [ -f pwiz/mziddata/Version.cpp ]; then rm -f pwiz/mziddata/Version.cpp; fi;
 if [ -f pwiz/utility/proteome/Version.cpp ]; then rm -f pwiz/utility/proteome/Version.cpp; fi;
 
 if [ -d pwiz/data/vendor_readers/Thermo/Reader_Thermo_Test.data ]; then rm -fr pwiz/data/vendor_readers/Thermo/Reader_Thermo_Test.data; fi;

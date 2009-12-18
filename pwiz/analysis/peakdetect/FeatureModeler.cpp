@@ -25,8 +25,8 @@
 #include "FeatureModeler.hpp"
 #include "MZRTField.hpp"
 #include "pwiz/utility/misc/Export.hpp"
-#include "pwiz/utility/proteome/IsotopeEnvelopeEstimator.hpp"
-#include "pwiz/utility/proteome/Ion.hpp"
+#include "pwiz/utility/chemistry/IsotopeEnvelopeEstimator.hpp"
+#include "pwiz/utility/chemistry/Ion.hpp"
 #include "boost/shared_ptr.hpp"
 #include "boost/math/distributions/normal.hpp"
 #include <stdexcept>
@@ -37,7 +37,7 @@ namespace analysis {
 
 
 using namespace pwiz::data::peakdata;
-using namespace pwiz::proteome;
+using namespace pwiz::chemistry;
 using namespace pwiz::math;
 using namespace std;
 using boost::shared_ptr;
@@ -147,7 +147,7 @@ class GaussianModel
     int charge_;
     double neutralMass_;
 
-    Chemistry::MassDistribution envelope_;
+    chemistry::MassDistribution envelope_;
 
     double intensity_;
 

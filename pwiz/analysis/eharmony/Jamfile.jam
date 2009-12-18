@@ -17,7 +17,7 @@ lib pwiz_analysis_eharmony
       DatabaseQuery.cpp
       MSIAMTData.cpp
       ../../data/misc//pwiz_data_misc
-      ../../utility/proteome//pwiz_utility_proteome 
+      ../../utility/chemistry//pwiz_utility_chemistry
       ;
 
 ### UNIT TESTS ###

@@ -25,6 +25,7 @@ build-project-if-exists misc ;
 build-project-if-exists math ;
 build-project-if-exists minimxml ;
 build-project-if-exists proteome ;
+build-project-if-exists chemistry ;
 build-project-if-exists vendor_api ;
 build-project-if-exists bindings ;
 

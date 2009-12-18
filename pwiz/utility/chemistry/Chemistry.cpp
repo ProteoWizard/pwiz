@@ -40,8 +40,7 @@ using namespace std;
 
 
 namespace pwiz {
-namespace proteome {
-namespace Chemistry { 
+namespace chemistry { 
 
 
 PWIZ_API_DECL bool MassAbundance::operator==(const MassAbundance& that) const
@@ -86,10 +85,10 @@ class RecordData : public boost::singleton<RecordData>
     RecordData(boost::restricted)
     {
         // iterate through the ChemistryData array and put it in our own data structure
-        ChemistryData::Element* it = ChemistryData::elements();
-        ChemistryData::Element* end = ChemistryData::elements() + ChemistryData::elementsSize();
+        detail::Element* it = detail::elements();
+        detail::Element* end = detail::elements() + detail::elementsSize();
 
-        data_.resize(ChemistryData::elementsSize());
+        data_.resize(detail::elementsSize());
 
         for (; it!=end; ++it)
         {
@@ -99,7 +98,7 @@ class RecordData : public boost::singleton<RecordData>
             record.atomicNumber = it->atomicNumber;
             record.atomicWeight = it->atomicWeight;
             
-            for (ChemistryData::Isotope* p=it->isotopes; p<it->isotopes+it->isotopesSize; ++p)
+            for (detail::Isotope* p=it->isotopes; p<it->isotopes+it->isotopesSize; ++p)
                 record.isotopes.push_back(MassAbundance(p->mass, p->abundance));        
 
             data_[it->type] = record;        
@@ -109,7 +108,7 @@ class RecordData : public boost::singleton<RecordData>
     inline const Info::Record& record(Type type) const
     {
         if (data_.size() <= size_t(type))
-            throw runtime_error("[Chemistry::Element::Info::Impl::record()]  Record not found.");
+            throw runtime_error("[chemistry::Element::Info::Impl::record()]  Record not found.");
 
         return data_[type];
     }
@@ -142,8 +141,8 @@ struct Text2EnumMap : public map<string, Element::Type>,
 {
     Text2EnumMap(boost::restricted)
     {
-        for (ChemistryData::Element* it = ChemistryData::elements(); 
-             it != ChemistryData::elements() + ChemistryData::elementsSize();
+        for (detail::Element* it = detail::elements(); 
+             it != detail::elements() + detail::elementsSize();
              ++it)
             insert(make_pair(it->symbol, it->type));
     }
@@ -154,7 +153,7 @@ Element::Type text2enum(const string& text)
     Text2EnumMap::lease text2EnumMap;
     Text2EnumMap::const_iterator itr = text2EnumMap->find(text);
     if (itr == text2EnumMap->end())
-        throw runtime_error(("[Chemistry::text2enum()] Error translating symbol " + text).c_str());
+        throw runtime_error(("[chemistry::text2enum()] Error translating symbol " + text).c_str());
     return itr->second;
 }
 
@@ -489,8 +488,5 @@ PWIZ_API_DECL ostream& operator<<(ostream& os, const Formula& formula)
 }
 
 
-} // namespace Chemistry
-} // namespace proteome 
+} // namespace chemistry
 } // namespace pwiz
-
-

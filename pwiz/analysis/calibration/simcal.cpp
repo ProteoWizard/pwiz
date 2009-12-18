@@ -26,7 +26,7 @@
 #include "MassDatabase.hpp"
 #include "auto_vector.h"
 #include "Random.hpp"
-#include "pwiz/utility/proteome/Ion.hpp"
+#include "pwiz/utility/chemistry/Ion.hpp"
 #include <iostream>
 #include <iomanip>
 #include <fstream>

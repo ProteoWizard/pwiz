@@ -39,7 +39,7 @@ namespace pdanalysis {
 
 
 using namespace pwiz::data::peakdata; // import names from peakdata into this namespace 
-using pwiz::proteome::Chemistry::Formula;
+using pwiz::chemistry::Formula;
 using pwiz::util::IntegerSet;
 
 

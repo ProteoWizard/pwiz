@@ -26,7 +26,7 @@
 #include "PeakFamilyDetectorFT.hpp"
 #include "pwiz/analysis/frequency/PeakDetectorMatchedFilter.hpp"
 #include "pwiz/data/misc/FrequencyData.hpp"
-#include "pwiz/utility/proteome/IsotopeEnvelopeEstimator.hpp"
+#include "pwiz/utility/chemistry/IsotopeEnvelopeEstimator.hpp"
 #include <fstream>
 
 
@@ -35,7 +35,7 @@ namespace analysis {
 
 
 using namespace std;
-using namespace pwiz::proteome;
+using namespace pwiz::chemistry;
 using namespace pwiz::data;
 using namespace pwiz::frequency;
 

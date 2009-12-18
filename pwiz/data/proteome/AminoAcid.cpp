@@ -73,8 +73,8 @@ Record createRecord(const std::string& name,
     result.name = name;
     result.abbreviation = abbreviation;
     result.symbol = symbol;
-    result.residueFormula = Chemistry::Formula(formula);
-    result.formula = result.residueFormula + Chemistry::Formula("H2O1");
+    result.residueFormula = chemistry::Formula(formula);
+    result.formula = result.residueFormula + chemistry::Formula("H2O1");
     result.abundance = abundance;
     return result;
 }
@@ -83,7 +83,7 @@ Record createRecord(const std::string& name,
 
 void RecordData::initializeRecords()
 {
-    using namespace Chemistry;
+    using namespace chemistry;
     records_.resize(Unknown+1);
     records_[Alanine] = createRecord("Alanine", "Ala", 'A', "C3 H5 N1 O1 S0", .078);
     records_[Cysteine] = createRecord("Cysteine", "Cys", 'C', "C3 H5 N1 O1 S1", .019);

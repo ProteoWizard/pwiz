@@ -31,7 +31,7 @@
  
 
 namespace pwiz {
-namespace proteome {
+namespace chemistry {
 
 
 /// Class used for calculating a theoretical isotope envelope for a given mass,
@@ -66,7 +66,7 @@ class PWIZ_API_DECL IsotopeEnvelopeEstimator
     IsotopeEnvelopeEstimator(const Config& config);
     ~IsotopeEnvelopeEstimator();
 
-    Chemistry::MassDistribution isotopeEnvelope(double mass) const;
+    MassDistribution isotopeEnvelope(double mass) const;
 
     private:
 
@@ -79,9 +79,8 @@ class PWIZ_API_DECL IsotopeEnvelopeEstimator
 };
 
 
-} // namespace proteome
+} // namespace chemistry
 } // namespace pwiz
 
 
 #endif // _ISOTOPEENVELOPEESTIMATOR_HPP_
-

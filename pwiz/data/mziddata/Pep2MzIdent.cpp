@@ -22,7 +22,7 @@
 #define PWIZ_SOURCE
 
 #include "Pep2MzIdent.hpp"
-#include "pwiz/utility/proteome/Ion.hpp"
+#include "pwiz/utility/chemistry/Ion.hpp"
 #include "pwiz/data/msdata/cv.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/filesystem.hpp"
@@ -32,7 +32,7 @@ using namespace pwiz;
 using namespace pwiz::msdata;
 using namespace pwiz::mziddata;
 using namespace pwiz::data::pepxml;
-using namespace pwiz::proteome;
+using namespace pwiz::chemistry;
 
 using namespace boost;
 using namespace std;
