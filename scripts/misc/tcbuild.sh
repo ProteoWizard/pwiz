@@ -35,6 +35,6 @@ if ! /bin/bash quickbuild.sh -p2 --teamcity-test-decoration -j4 debug; then
 fi
 
 # uncomment this to test that test failures and error output are handled properly
-/bin/bash quickbuild.sh -p2 --teamcity-test-decoration pwiz/utility/misc//FailUnitTest pwiz/utility/misc//FailRunTest
+# /bin/bash quickbuild.sh -p2 --teamcity-test-decoration pwiz/utility/misc//FailUnitTest pwiz/utility/misc//FailRunTest
 
 exit $EXIT
