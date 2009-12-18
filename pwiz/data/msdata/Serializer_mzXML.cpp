@@ -304,7 +304,7 @@ vector<PrecursorInfo> getPrecursorInfo(const Spectrum& spectrum,
                 case MS_CID: info.activation = "CID"; break;
                 case MS_ETD: info.activation = "ETD"; break;
                 case MS_ECD: info.activation = "ECD"; break;
-                default: /* TODO: log an error, an exception would be too harsh here */
+                default: break; /* TODO: log an error, an exception would be too harsh here */
             }
             info.collisionEnergy = it->activation.cvParam(MS_collision_energy).value;
         }
