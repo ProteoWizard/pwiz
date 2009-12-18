@@ -25,6 +25,7 @@ toolset.inherit-rules intel-win : msvc ;
 generators.override intel-win.compile.c.pch   : pch.default-c-pch-generator   ;
 generators.override intel-win.compile.c++.pch : pch.default-cpp-pch-generator ;
 generators.override intel-win.compile.rc : rc.compile.resource ;
+generators.override intel-win.compile.mc : mc.compile ;
 
 toolset.flags intel-win.compile PCH_SOURCE <pch>on : <pch-source> ;
 
@@ -77,6 +78,8 @@ rule init ( version ? :     # the compiler version
     toolset.flags intel-win.link .LD $(condition) : $(setup)xilink ;
     toolset.flags intel-win.archive .LD $(condition) : $(setup)xilink /lib ;
     toolset.flags intel-win.link .MT $(condition) : $(setup)mt -nologo ;
+    toolset.flags intel-win.compile .MC $(condition) : $(setup)mc ;
+    toolset.flags intel-win.compile .RC $(condition) : $(setup)rc ;
 
     local m = [ MATCH (.).* : $(version) ] ;
     local major = $(m[1]) ;

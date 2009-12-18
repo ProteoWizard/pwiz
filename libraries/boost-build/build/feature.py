@@ -1,6 +1,6 @@
 # Status: mostly ported.
 # TODO: carry over tests.
-# Base revision: 40480
+# Base revision: 56043
 #
 # Copyright 2001, 2002, 2003 Dave Abrahams 
 # Copyright 2002, 2006 Rene Rivera 
@@ -128,7 +128,17 @@ def set_default (feature, value):
 
     feature = add_grist (feature)
     f = __all_features [feature]
+    attributes = f['attributes']
+    bad_attribute = None
 
+    if "free" in attributes:
+        bad_attribute = "free"
+    elif "optional" in attributes:
+        bad_attribute = "optional"
+        
+    if bad_attribute:
+        raise InvalidValue ("%s property %s cannot have a default" % (bad_attribute, feature))
+        
     if isinstance(value, list):
         value = value[0]
 
@@ -370,7 +380,8 @@ def validate_value_string (feature, value_string):
     values = [value_string]
 
     if f['subfeatures']:
-        values = value_string.split('-')
+        if not value_string in f['subfeatures']:
+            values = value_string.split('-')
 
     # An empty value is allowed for optional features
     if not values[0] in f['values'] and \

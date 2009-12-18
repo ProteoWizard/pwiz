@@ -486,7 +486,7 @@ local rule probe ( python-cmd )
             python-cmd = \"$(python-cmd)\" ;
         }
         local full-cmd =
-            $(python-cmd)" -c \"from sys import *; print '"$(format:J=\\n)"' % ("$(exprs:J=,)")\"" ;
+            $(python-cmd)" -c \"from sys import *; print('"$(format:J=\\n)"' % ("$(exprs:J=,)"))\"" ;
 
         local output = [ shell-cmd $(full-cmd) ] ;
         if $(output)
@@ -855,7 +855,7 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
         }
         target-requirements += <python>$(version:E=default) ;
     }
-
+ 
     target-requirements += <target-os>$(target-os) ;
 
     # See if we can find a framework directory on darwin.
@@ -1064,6 +1064,18 @@ rule python-extension ( name : sources * : requirements * : default-build * :
 
 IMPORT python : python-extension : : python-extension ;
 
+rule py2to3
+{
+    common.copy $(>) $(<) ;
+    2to3 $(<) ;
+}
+
+actions 2to3
+{
+    2to3 -wn "$(<)"
+    2to3 -dwn "$(<)"
+}
+
 
 # Support for testing.
 type.register PY : py ;
@@ -1083,8 +1095,26 @@ class python-test-generator : generator
 
     rule run ( project name ? : property-set : sources * : multiple ? )
     {
+        local pyversion = [ $(property-set).get <python> ] ;
         local python ;
         local other-pythons ;
+    
+        # Make new target that converting Python source by 2to3 when running with Python 3.
+        local rule make-2to3-source ( source )
+        {
+            if $(pyversion) >= 3.0
+            {
+                local a = [ new action $(source) : python.py2to3 : $(property-set) ] ;
+                local t =  [ utility.basename [ $(s).name ] ] ;
+                local p = [ new file-target $(t) : PY : $(project) : $(a) ] ;
+                return $(p) ;
+            }
+            else
+            {
+                return $(source) ;
+            }
+        }
+
         for local s in $(sources)
         {
             if [ $(s).type ] = PY
@@ -1092,12 +1122,13 @@ class python-test-generator : generator
                 if ! $(python)
                 {
                     # First Python source ends up on command line.
-                    python = $(s) ;
+                    python = [ make-2to3-source $(s) ] ;
+
                 }
                 else
                 {
                     # Other Python sources become dependencies.
-                    other-pythons += $(s) ;
+                    other-pythons += [ make-2to3-source $(s) ] ;
                 }
             }
         }
@@ -1226,6 +1257,7 @@ rule capture-output ( target : sources * : properties * )
 
 rule bpl-test ( name : sources * : requirements * )
 {
+    local s ;
     sources ?= $(name).py $(name).cpp ;
     return [ testing.make-test run-pyd : $(sources) /boost/python//boost_python
         : $(requirements) : $(name) ] ;

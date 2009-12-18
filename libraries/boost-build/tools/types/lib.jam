@@ -16,6 +16,7 @@ type.set-generated-target-prefix LIB : <target-os>cygwin : "cyg" ;
 type.register STATIC_LIB : a lib : LIB ;
 
 type.set-generated-target-suffix STATIC_LIB : <target-os>windows : lib ;
+type.set-generated-target-suffix STATIC_LIB : <toolset>gcc <target-os>windows : a ;
 type.set-generated-target-suffix STATIC_LIB : <target-os>cygwin : lib ;
 type.set-generated-target-prefix STATIC_LIB : : lib ;
 

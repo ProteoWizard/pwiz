@@ -434,6 +434,9 @@ rule init ( prefix : full_bin ? : full_inc ? : full_lib ? : version ? : conditio
     # Phonon Multimedia (Qt 4.4) 
     add-shared-library phonon : QtGui QtXml : QT_PHONON_LIB : $(target-requirements) ;
 
+    # Multimedia engine (Qt 4.6) 
+    add-shared-library QtMultimedia : QtGui : QT_MULTIMEDIA_LIB : $(target-requirements) ;
+
     # XmlPatterns-Engine (Qt 4.4) 
     add-shared-library QtXmlPatterns : QtNetwork : QT_XMLPATTERNS_LIB : $(target-requirements) ;
 

@@ -448,12 +448,12 @@ static void hashstat( struct hash * hp )
         run = here;
     }
 
-    printf( "%s table: %d+%d+%d (%dK+%ldK) items+table+hash, %f density\n",
+    printf( "%s table: %d+%d+%d (%dK+%luK) items+table+hash, %f density\n",
         hp->name,
         count,
         hp->items.nel,
         hp->tab.nel,
         hp->items.nel * hp->items.size / 1024,
-        hp->tab.nel * sizeof( ITEM ** ) / 1024,
+        (long unsigned)hp->tab.nel * sizeof( ITEM ** ) / 1024,
         (float)count / (float)sets );
 }

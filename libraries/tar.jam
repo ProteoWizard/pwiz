@@ -203,7 +203,7 @@ class extract-tar-target-class : basic-target
         self.include-patterns ?= "" ;
 
         ECHO "tar.list $(name)" ;
-        self.tar-list = [ SPLIT \n : [ SHELL "$(self.tar-binary-filepath) -tf $(name) $(self.include-patterns)" ] ] ;
+        self.tar-list = [ SPLIT_BY_CHARACTERS [ SHELL "$(self.tar-binary-filepath) -tf $(name) $(self.include-patterns)" ] : \n ] ;
 
         basic-target.__init__ $(name) : $(project) : : $(requirements) : : $(usage-requirements) ;
     }
@@ -369,7 +369,7 @@ rule extract ( tar-filepath : include-patterns * : tar-requirements * : tar-usag
     }
 
     ECHO "tar.list $(tar-filepath:D=)" ;
-    local tar-list = [ SPLIT \n : [ SHELL "$(tar-binary-filepath) -tf $(tar-filepath) $(include-patterns)" ] ] ;
+    local tar-list = [ SPLIT_BY_CHARACTERS [ SHELL "$(tar-binary-filepath) -tf $(tar-filepath) $(include-patterns)" ] : \n ] ;
 
     local args = [ modules.peek : ARGV ] ;
     if --clean in $(args) && $(tar-filepath) in $(args) ||

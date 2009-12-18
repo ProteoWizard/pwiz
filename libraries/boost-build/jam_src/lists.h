@@ -63,7 +63,7 @@ struct _list {
 
 typedef struct _lol LOL;
 
-# define LOL_MAX 9
+# define LOL_MAX 19
 
 struct _lol {
     int count;

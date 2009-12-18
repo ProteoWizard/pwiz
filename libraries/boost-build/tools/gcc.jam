@@ -373,10 +373,12 @@ rule setup-address-model ( targets * : sources * : properties * )
             {
                 option = -m32 ;
             }
-            else
+            else if $(model) = 64
             {
                 option = -m64 ;
             }
+            # For darwin, the model can be 32_64. darwin.jam will handle that
+            # on its own.
         }
         OPTIONS on $(targets) += $(option) ;
     }    
@@ -674,7 +676,7 @@ rule init-link-flags ( toolset linker condition )
         # as opposed to -s since icc (intel's compiler) is generally
         # option-compatible with and inherits from the gcc toolset, but does not
         # support -s.
-        toolset.flags $(toolset).link OPTIONS     $(condition)/<debug-symbols>off : -Wl,--strip-all   : unchecked ;
+        toolset.flags $(toolset).link OPTIONS     $(condition)/<strip>on          : -Wl,--strip-all   : unchecked ;
         toolset.flags $(toolset).link RPATH       $(condition)                    : <dll-path>        : unchecked ;
         toolset.flags $(toolset).link RPATH_LINK  $(condition)                    : <xdll-path>       : unchecked ;
         toolset.flags $(toolset).link START-GROUP $(condition)                    : -Wl,--start-group : unchecked ;
@@ -729,7 +731,7 @@ rule init-link-flags ( toolset linker condition )
 
     case hpux :
         {
-        toolset.flags $(toolset).link OPTIONS $(condition)/<debug-symbols>off
+        toolset.flags $(toolset).link OPTIONS $(condition)/<strip>on
             : -Wl,-s : unchecked ;
         toolset.flags $(toolset).link OPTIONS $(condition)/<link>shared
             : -fPIC : unchecked ;
@@ -738,7 +740,7 @@ rule init-link-flags ( toolset linker condition )
     case osf :
         {
         # No --strip-all, just -s.
-        toolset.flags $(toolset).link OPTIONS $(condition)/<debug-symbols>off
+        toolset.flags $(toolset).link OPTIONS $(condition)/<strip>on
             : -Wl,-s : unchecked ;
         toolset.flags $(toolset).link RPATH $(condition) : <dll-path>
             : unchecked ;
@@ -750,7 +752,7 @@ rule init-link-flags ( toolset linker condition )
 
     case sun :
         {
-        toolset.flags $(toolset).link OPTIONS $(condition)/<debug-symbols>off
+        toolset.flags $(toolset).link OPTIONS $(condition)/<strip>on
             : -Wl,-s : unchecked ;
         toolset.flags $(toolset).link RPATH $(condition) : <dll-path>
             : unchecked ;
@@ -936,6 +938,9 @@ local rule cpu-flags ( toolset variable : architecture : instruction-set + : val
 # Set architecture/instruction-set options.
 #
 # x86 and compatible
+# The 'native' option appeared in gcc 4.2 so we cannot safely use it
+# as default. Use conservative i386 instead.
+cpu-flags gcc OPTIONS : x86 : native : -march=native ;
 cpu-flags gcc OPTIONS : x86 : i386 : -march=i386 : default ;
 cpu-flags gcc OPTIONS : x86 : i486 : -march=i486 ;
 cpu-flags gcc OPTIONS : x86 : i586 : -march=i586 ;
@@ -951,6 +956,7 @@ cpu-flags gcc OPTIONS : x86 : pentium4 : -march=pentium4 ;
 cpu-flags gcc OPTIONS : x86 : pentium4m : -march=pentium4m ;
 cpu-flags gcc OPTIONS : x86 : prescott : -march=prescott ;
 cpu-flags gcc OPTIONS : x86 : nocona : -march=nocona ;
+cpu-flags gcc OPTIONS : x86 : core2 : -march=core2 ;
 cpu-flags gcc OPTIONS : x86 : k6 : -march=k6 ;
 cpu-flags gcc OPTIONS : x86 : k6-2 : -march=k6-2 ;
 cpu-flags gcc OPTIONS : x86 : k6-3 : -march=k6-3 ;

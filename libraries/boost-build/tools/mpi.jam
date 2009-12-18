@@ -163,7 +163,20 @@ rule cmdline_to_features ( cmdline : unknown-features ? )
                local add = [ add_feature $(prefix) $(name) $(cmdline) ] ;
 
                if $(add) {
-                  result += $(add[1]) ;
+
+                  if $(add[1]) = <find-shared-library>pthread
+                  {
+                      # Uhm. It's not really nice that this MPI implementation
+                      # uses -lpthread as opposed to -pthread. We do want to
+                      # set <threading>multi, instead of -lpthread.
+                      result += "<threading>multi" ;
+                      MPI_EXTRA_REQUIREMENTS += "<threading>multi" ;                      
+                  }
+                  else
+                  {                      
+                      result += $(add[1]) ;                  
+                  }
+                                     
                   cmdline = $(add[2]) ;
                   matched = yes ;
                }
@@ -205,7 +218,7 @@ rule cmdline_to_features ( cmdline : unknown-features ? )
     if $(otherflags) {
        for unknown in $(unknown-features)
        {
-         result += "$(unknown)$(otherflags)" ;
+         result += "$(unknown)$(otherflags:J= )" ;
        }
     }
 

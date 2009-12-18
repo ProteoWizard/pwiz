@@ -495,6 +495,20 @@ int main( int argc, char * * argv, char * * arg_environ )
             }
         }
 
+        /* KEEP_GOING overrides -q option. */
+        {
+            LIST *p = L0;
+            p = var_get ("KEEP_GOING");
+            if (p)
+            {
+                int v = atoi (p->string);
+                if (v == 0)
+                    globs.quitquick = 1;
+                else
+                    globs.quitquick = 0;
+            }
+        }
+
         /* Now make target. */
         {
             PROFILE_ENTER( MAIN_MAKE );

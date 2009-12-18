@@ -3,7 +3,7 @@
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
 
 # Status: ported (danielw)
-# Base revision: 40480
+# Base revision: 56043
 
 #  This module defines the 'alias' rule and associated class.
 #

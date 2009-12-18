@@ -40,6 +40,8 @@ import type ;
 type.register MANIFEST : manifest ;
 feature.feature embed-manifest : on off : incidental propagated ;
 
+type.register PDB : pdb ;
+
 ################################################################################
 #
 # Public rules.
@@ -254,6 +256,15 @@ rule configure-version-specific ( toolset : version : conditions )
         # 8.0 and above only has multi-threaded static RTL.
         toolset.flags $(toolset).compile CFLAGS $(conditions)/<runtime-debugging>off/<runtime-link>static/<threading>single : /MT ;
         toolset.flags $(toolset).compile CFLAGS $(conditions)/<runtime-debugging>on/<runtime-link>static/<threading>single : /MTd ;
+
+        # Specify target machine type so the linker will not need to guess.
+        toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-amd64) : /MACHINE:X64 ;
+        toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-i386)  : /MACHINE:X86 ;
+        toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-ia64)  : /MACHINE:IA64 ;
+        
+        # Make sure that manifest will be generated even if there is no
+        # dependencies to put there.
+        toolset.flags $(toolset).link LINKFLAGS $(conditions)/<embed-manifest>off : /MANIFEST ;
     }
     toolset.pop-checking-for-flags-module ;
 }
@@ -296,14 +307,13 @@ else
 
 # For the assembler the following options are turned on by default:
 #
-#   -coff  generate COFF format object file (compatible with cl.exe output)
 #   -Zp4   align structures to 4 bytes
 #   -Cp    preserve case of user identifiers
 #   -Cx    preserve case in publics, externs
 #
 actions compile.asm
 {
-    $(.ASM) -nologo -c -coff -Zp4 -Cp -Cx $(USER_ASMFLAGS) -Fo "$(<:W)" "$(>:W)"
+    $(.ASM) -c -Zp4 -Cp -Cx -D$(DEFINES) $(ASMFLAGS) $(USER_ASMFLAGS) -Fo "$(<:W)" "$(>:W)"
 }
 
 
@@ -337,7 +347,18 @@ toolset.flags msvc YLOPTION : "-Yl" ;
 # Action for running the C/C++ compiler without using precompiled headers.
 #
 # WARNING: Synchronize any changes this in action with intel-win
-actions compile-c-c++
+#
+# Notes regarding PDB generation, for when we use <debug-symbols>on/<debug-store>database
+#
+# 1. PDB_CFLAG is only set for <debug-symbols>on/<debug-store>database, ensuring that the /Fd flag is dropped if PDB_CFLAG is empty
+#
+# 2. When compiling executables's source files, PDB_NAME is set on a per-source file basis by rule compile-c-c++. 
+#    The linker will pull these into the executable's PDB
+#
+# 3. When compiling library's source files, PDB_NAME is updated to <libname>.pdb for each source file by rule archive, 
+#    as in this case the compiler must be used to create a single PDB for our library.
+#
+actions compile-c-c++ bind PDB_NAME
 {
     $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" $(.CC.FILTER)"
 }
@@ -351,6 +372,7 @@ rule compile-c-c++ ( targets + : sources * )
 {
     DEPENDS $(<[1]) : [ on $(<[1]) return $(PCH_HEADER) ] ;
     DEPENDS $(<[1]) : [ on $(<[1]) return $(PCH_FILE) ] ;
+    PDB_NAME on $(<) = $(<:S=.pdb) ;
 }
 
 # Action for running the C/C++ compiler using precompiled headers. In addition
@@ -361,7 +383,7 @@ rule compile-c-c++ ( targets + : sources * )
 # syntax highlighting in the messy N-quoted code below.
 actions compile-c-c++-pch
 {
-    $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" "@($(<[1]:W).cpp:E=#include $(.escaped-double-quote)$(>[1]:D=)$(.escaped-double-quote))" $(.CC.FILTER)
+    $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" "@($(<[1]:W).cpp:E=#include $(.escaped-double-quote)$(>[1]:D=)$(.escaped-double-quote)$(.nl))" $(.CC.FILTER)
 }
 
 
@@ -522,7 +544,7 @@ if [ os.name ] in NT
 {
     actions link bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
-        $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")" $(MANIFEST_DEPENDENCIES)
+        $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
         if %ERRORLEVEL% NEQ 0 EXIT %ERRORLEVEL%
     }
     
@@ -535,7 +557,7 @@ if [ os.name ] in NT
 
     actions link.dll bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
-        $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")" $(MANIFEST_DEPENDENCIES)
+        $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
         if %ERRORLEVEL% NEQ 0 EXIT %ERRORLEVEL%
     }
     
@@ -579,6 +601,16 @@ else
     }    
 }
 
+# this rule sets up the pdb file that will be used when generating static 
+# libraries and the debug-store option is database, so that the compiler 
+# puts all debug info into a single .pdb file named after the library
+#
+# Poking at source targets this way is probably not clean, but it's the
+# easiest approach.
+rule archive ( targets + : sources * : properties * )
+{
+    PDB_NAME on $(>) = $(<:S=.pdb) ;
+}
 
 ################################################################################
 #
@@ -760,11 +792,15 @@ local rule configure-really ( version ? : options * )
             # version from the path.
             # FIXME: We currently detect both Microsoft Visual Studio 9.0 and
             # 9.0express as 9.0 here.
-            if [ MATCH "(Microsoft Visual Studio 9)" : $(command) ]
+            if [ MATCH "(Microsoft Visual Studio 10)" : $(command) ]
+            {
+                version = 10.0 ;
+            }
+            else if [ MATCH "(Microsoft Visual Studio 9)" : $(command) ]
             {
                 version = 9.0 ;
             }
-            if [ MATCH "(Microsoft Visual Studio 8)" : $(command) ]
+            else if [ MATCH "(Microsoft Visual Studio 8)" : $(command) ]
             {
                 version = 8.0 ;
             }
@@ -812,7 +848,10 @@ local rule configure-really ( version ? : options * )
             # MSVC 7.1 compiler even though it thinks it is using the msvc-9.0
             # toolset version.
             command = [ common.get-absolute-tool-path $(command[-1]) ] ;
-
+        }
+        
+        if $(command)
+        {            
             local parent = [ path.make $(command) ] ;
             parent = [ path.parent $(parent) ] ;
             parent = [ path.native $(parent) ] ;
@@ -934,8 +973,13 @@ local rule configure-really ( version ? : options * )
         resource-compiler = [ feature.get-values <resource-compiler> : $(options) ] ;
         resource-compiler ?= rc ;
 
+        # Turn on some options for i386 assembler
+        #  -coff  generate COFF format object file (compatible with cl.exe output)
+        local default-assembler-amd64 = ml64 ;
+        local default-assembler-i386  = "ml -coff" ;
+        local default-assembler-ia64  = ias ;
+
         assembler = [ feature.get-values <assembler> : $(options) ] ;
-        assembler ?= ml ;
 
         idl-compiler = [ feature.get-values <idl-compiler> : $(options) ] ;
         idl-compiler ?= midl ;
@@ -962,9 +1006,12 @@ local rule configure-really ( version ? : options * )
                 }
             }
 
+            local cpu-assembler = $(assembler) ;
+            cpu-assembler ?= $(default-assembler-$(c)) ;
+
             toolset.flags msvc.compile .CC  $(cpu-conditions) : $(setup-$(c))$(compiler) /Zm800 -nologo ;
             toolset.flags msvc.compile .RC  $(cpu-conditions) : $(setup-$(c))$(resource-compiler) ;
-            toolset.flags msvc.compile .ASM $(cpu-conditions) : $(setup-$(c))$(assembler) ;
+            toolset.flags msvc.compile .ASM $(cpu-conditions) : $(setup-$(c))$(cpu-assembler) -nologo ;
             toolset.flags msvc.link    .LD  $(cpu-conditions) : $(setup-$(c))$(linker) /NOLOGO /INCREMENTAL:NO ;
             toolset.flags msvc.archive .LD  $(cpu-conditions) : $(setup-$(c))$(linker) /lib /NOLOGO  ;
             toolset.flags msvc.compile .IDL $(cpu-conditions) : $(setup-$(c))$(idl-compiler) ;
@@ -1063,16 +1110,41 @@ class msvc-linking-generator : linking-generator
     {
         local result = [ linking-generator.generated-targets $(sources)
           : $(property-set) : $(project) $(name) ] ;
-        if [ $(property-set).get <embed-manifest> ] = "off"
+
+        if $(result)
         {
-            if ! $(name)
-            {
-                name = [ determine-output-name $(sources) ] ;
-            }
-            
+            local name-main = [ $(result[0]).name ] ;
             local action = [ $(result[0]).action ] ;
-            result += [ virtual-target.register
-                [ class.new file-target $(name) : MANIFEST : $(project) : $(action) ] ] ;
+            
+            if [ $(property-set).get <debug-symbols> ] = "on"
+            {		 
+                # We force exact name on PDB. The reason is tagging -- the tag rule may
+                # reasonably special case some target types, like SHARED_LIB. The tag rule
+                # will not catch PDB, and it cannot even easily figure if PDB is paired with
+                # SHARED_LIB or EXE or something else. Because PDB always get the
+                # same name as the main target, with .pdb as extension, just force it.
+                local target = [ class.new file-target $(name-main:S=.pdb) exact : PDB : $(project) : $(action) ] ;
+                local registered-target = [ virtual-target.register $(target) ] ;
+                if $(target) != $(registered-target)
+                {
+                    $(action).replace-targets $(target) : $(registered-target) ;
+                }
+                result += $(registered-target) ;
+            }
+
+            if [ $(property-set).get <embed-manifest> ] = "off"
+            {
+                # Manifest is evil target. It has .manifest appened to the name of 
+                # main target, including extension. E.g. a.exe.manifest. We use 'exact'
+                # name because to achieve this effect.
+                local target = [ class.new file-target $(name-main).manifest exact : MANIFEST : $(project) : $(action) ] ;
+                local registered-target = [ virtual-target.register $(target) ] ;
+                if $(target) != $(registered-target)
+                {
+                    $(action).replace-targets $(target) : $(registered-target) ;
+                }
+                result += $(registered-target) ;
+            }
         }
         return $(result) ;
     }
@@ -1193,11 +1265,11 @@ local rule register-toolset-really ( )
     toolset.flags msvc.compile CFLAGS <runtime-debugging>off/<runtime-link>static/<threading>multi : /MT ;
     toolset.flags msvc.compile CFLAGS <runtime-debugging>on/<runtime-link>static/<threading>multi : /MTd ;
 
-    toolset.flags msvc.compile.c OPTIONS <cflags> : ;
+    toolset.flags msvc.compile OPTIONS <cflags> : ;
     toolset.flags msvc.compile.c++ OPTIONS <cxxflags> : ;
     toolset.flags msvc.compile.c++clr OPTIONS <cxxflags> : ;
 
-    toolset.flags msvc.compile PDB_CFLAG <debug-symbols>on/<debug-store>database : /Fd ;  # not used yet
+    toolset.flags msvc.compile PDB_CFLAG <debug-symbols>on/<debug-store>database : /Fd ;
 
     toolset.flags msvc.compile DEFINES <define> ;
     toolset.flags msvc.compile UNDEFS <undef> ;
@@ -1206,6 +1278,15 @@ local rule register-toolset-really ( )
 
     # Declare flags for the assembler.
     toolset.flags msvc.compile.asm USER_ASMFLAGS <asmflags> ;
+
+    toolset.flags msvc.compile.asm ASMFLAGS <debug-symbols>on : "/Zi /Zd" ;
+
+    toolset.flags msvc.compile.asm ASMFLAGS <warnings>on : /W3 ;
+    toolset.flags msvc.compile.asm ASMFLAGS <warnings>off : /W0 ;
+    toolset.flags msvc.compile.asm ASMFLAGS <warnings>all : /W4 ;
+    toolset.flags msvc.compile.asm ASMFLAGS <warnings-as-errors>on : /WX ;
+
+    toolset.flags msvc.compile.asm DEFINES <define> ;
 
     # Declare flags for linking.
     {
@@ -1336,7 +1417,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 
 
 # Known toolset versions, in order of preference.
-.known-versions = 9.0 9.0express 8.0 8.0express 7.1 7.1toolkit 7.0 6.0 ;
+.known-versions = 10.0 10.0express 9.0 9.0express 8.0 8.0express 7.1 7.1toolkit 7.0 6.0 ;
 
 # Version aliases.
 .version-alias-6 = 6.0 ;
@@ -1344,6 +1425,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 .version-alias-7 = 7.0 ;
 .version-alias-8 = 8.0 ;
 .version-alias-9 = 9.0 ;
+.version-alias-10 = 10.0 ;
 
 # Names of registry keys containing the Visual C++ installation path (relative
 # to "HKEY_LOCAL_MACHINE\SOFTWARE\\Microsoft").
@@ -1354,6 +1436,8 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 .version-8.0express-reg = "VCExpress\\8.0\\Setup\\VC" ;
 .version-9.0-reg = "VisualStudio\\9.0\\Setup\\VC" ;
 .version-9.0express-reg = "VCExpress\\9.0\\Setup\\VC" ;
+.version-10.0-reg = "VisualStudio\\10.0\\Setup\\VC" ;
+.version-10.0express-reg = "VCExpress\\10.0\\Setup\\VC" ;
 
 # Visual C++ Toolkit 2003 does not store its installation path in the registry.
 # The environment variable 'VCToolkitInstallDir' and the default installation

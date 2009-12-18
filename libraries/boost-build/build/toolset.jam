@@ -449,7 +449,7 @@ rule inherit-flags ( toolset : base : prohibited-properties * : prohibited-vars 
 }
 
 
-rule inherit-rules ( toolset : base )
+rule inherit-rules ( toolset : base : localize ? )
 {
     # It appears that "action" creates a local rule.
     local base-generators = [ generators.generators-for-toolset $(base) ] ;
@@ -459,8 +459,8 @@ rule inherit-rules ( toolset : base )
         rules += [ MATCH "[^.]*\.(.*)" : [ $(g).rule-name ] ] ;
     }
     rules = [ sequence.unique $(rules) ] ;
-    IMPORT $(base) : $(rules) : $(toolset) : $(rules) ;
-    IMPORT $(base) : $(rules) : : $(toolset).$(rules) ;
+    IMPORT $(base) : $(rules) : $(toolset) : $(rules) : $(localize) ;
+    IMPORT $(toolset) : $(rules) : : $(toolset).$(rules) ;
 }
 
 

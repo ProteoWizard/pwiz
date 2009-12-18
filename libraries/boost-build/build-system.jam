@@ -238,6 +238,12 @@ local rule load-config ( module-name : filename : path + : must-find ? )
                 "$(filename)" "from" $(where) "." ;
         }
 
+        # Set source location so that path-constant in config files
+        # with relative paths work. This is of most importance
+        # for project-config.jam, but may be used in other
+        # config files as well.
+        local attributes = [ project.attributes $(module-name) ] ;
+        $(attributes).set source-location : $(where:D) : exact ;
         modules.load $(module-name) : $(filename) : $(path) ;
         project.load-used-projects $(module-name) ;
     }
@@ -898,6 +904,21 @@ local rule should-clean-project ( project )
         modules.poke : PARALLELISM : $(j) ;
     }
     
+    local k = [ option.get keep-going : true : true ] ;
+    if $(k) in "on" "yes" "true"
+    {
+        modules.poke : KEEP_GOING : 1 ;
+    }
+    else if $(k) in "off" "no" "false"
+    {
+        modules.poke : KEEP_GOING : 0 ;
+    }
+    else
+    {
+        ECHO "error: Invalid value for the --keep-going option" ;
+        EXIT ;
+    }
+                
     # The 'all' pseudo target is not strictly needed expect in the case when we
     # use it below but people often assume they always have this target
     # available and do not declare it themselves before use which may cause

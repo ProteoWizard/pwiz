@@ -110,6 +110,24 @@ LIST * var_expand( LIST * l, char * in, char * end, LOL * lol, int cancopyin )
                 return list_copy( l, lol_get( lol, in[ 2 ] - '1' ) );
         }
     }
+    else if ( in[0] == '$' && in[1] == '(' && in[2] == '1' && in[4] == ')' &&
+              in[5] == '\0') {
+
+        switch( in[3] )
+        {
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+            return list_copy( l, lol_get( lol, in[3]-'0'+10-1 ) );
+        }
+    }
 
     /* Expand @() files, to single item plus accompanying file. */
     if ( ( in[ 0 ] == '@' ) && ( in[ 1 ] == '(' ) && ( *( end - 1 ) == ')' ) )
@@ -354,6 +372,9 @@ expand:
                     value = lol_get( lol, 1 );
                 else if ( ( varname[0] >= '1' ) && ( varname[0] <= '9' ) )
                     value = lol_get( lol, varname[0] - '1' );
+                else if( varname[0] == '1' && varname[1] >= '0' &&
+                     varname[1] <= '9' && !varname[2] )
+                value = lol_get( lol, varname[1] - '0' + 10 - 1 );
             }
 
             if ( !value )

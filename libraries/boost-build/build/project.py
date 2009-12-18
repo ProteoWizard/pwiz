@@ -1,5 +1,5 @@
 # Status: being ported by Vladimir Prus
-# Base revision: 40480
+# Base revision: 42507
 
 # Copyright 2002, 2003 Dave Abrahams 
 # Copyright 2002, 2005, 2006 Rene Rivera 
@@ -255,7 +255,7 @@ class ProjectRegistry:
                 self.dir2jamfile[dir] = jamfile
             jamfile_glob = jamfile
 
-        if len(jamfile_glob):
+        if len(jamfile_glob) > 1:
             # Multiple Jamfiles found in the same place. Warn about this.
             # And ensure we use only one of them.
             # As a temporary convenience measure, if there's Jamfile.v2 amount
@@ -266,8 +266,10 @@ class ProjectRegistry:
             if len(v2_jamfiles) == 1:
                 jamfile_glob = v2_jamfiles
             else:
-                print """warning: Found multiple Jamfiles at '%s'!
-Loading the first one: '%s'.""" % (dir, jamfile_glob[0])
+                print """warning: Found multiple Jamfiles at '%s'!""" % (dir)
+                for j in jamfile_glob:
+                    print "    -", j
+                print "Loading the first one"
     
         # Could not find it, error.
         if not no_errors and not jamfile_glob:
@@ -390,7 +392,7 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
         self.module2attributes[module_name] = attributes
 
         if location:
-            attributes.set("source-location", location, exact=1)
+            attributes.set("source-location", [location], exact=1)
         else:
             attributes.set("source-location", "", exact=1)
 
@@ -510,12 +512,22 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
         """Returns the value of the specified attribute in the
         specified jamfile module."""
         return self.module2attributes[project].get(attribute)
+        try:    
+            return self.module2attributes[project].get(attribute)
+        except:
+            print "Sucks", project, attribute
+            raise "Sucks"
+
+    def attributeDefault(self, project, attribute, default):
+        """Returns the value of the specified attribute in the
+        specified jamfile module."""
+        return self.module2attributes[project].getDefault(attribute, default)
 
     def target(self, project_module):
         """Returns the project target corresponding to the 'project-module'."""
-        if not self.module2target[project_module]:
+        if not self.module2target.has_key(project_module):
             self.module2target[project_module] = \
-                ProjectTarget(project_module, project_module,
+                b2.build.targets.ProjectTarget(project_module, project_module,
                               self.attribute(project_module, "requirements"))
         
         return self.module2target[project_module]
@@ -524,12 +536,12 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
         # Use/load a project.
         saved_project = self.current_project
         project_module = self.load(location)
-        declared_id = self.attribute(project_module, "id")
+        declared_id = self.attributeDefault(project_module, "id", "")
 
         if not declared_id or declared_id != id:
             # The project at 'location' either have no id or
             # that id is not equal to the 'id' parameter.
-            if self.id2module[id] and self.id2module[id] != project_module:
+            if self.id2module.has_key(id) and self.id2module[id] != project_module:
                 self.manager.errors()(
 """Attempt to redeclare already existing project id '%s'""" % id)
             self.id2module[id] = project_module
@@ -743,6 +755,9 @@ for project at '%s'""" % (attribute, self.location))
     def get(self, attribute):
         return self.__dict__[attribute]
 
+    def getDefault(self, attribute, default):
+        return self.__dict__.get(attribute, default)
+
     def dump(self):
         """Prints the project attributes."""
         id = self.get("id")
@@ -884,7 +899,7 @@ Don't know how to combine that with the --build-dir option.""")
                     attributes.set("build-dir", p, exact=1)
             elif explicit_build_dir:
                 self.registry.manager.errors()(
-"""When --build-dir is specified, the 'build-project'
+"""When --build-dir is specified, the 'build-dir'
 attribute is allowed only for top-level 'project' invocations""")
 
     def constant(self, name, value):
@@ -905,7 +920,7 @@ attribute is allowed only for top-level 'project' invocations""")
         # See comment in 'load' for explanation why we record the
         # parameters as opposed to loading the project now.
         m = self.registry.current().project_module();
-        self.registry.used_projects[m].append((id, where))
+        self.registry.used_projects[m].append((id[0], where[0]))
         
     def build_project(self, dir):
         assert(isinstance(dir, list))
@@ -993,4 +1008,7 @@ attribute is allowed only for top-level 'project' invocations""")
         """
 
         c = string.join(condition, ",")
-        return [c + ":" + r for r in requirements]
+        if c.find(":") != -1:
+            return [c + r for r in requirements]
+        else:
+            return [c + ":" + r for r in requirements]

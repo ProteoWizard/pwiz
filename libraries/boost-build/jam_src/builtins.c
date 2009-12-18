@@ -142,8 +142,9 @@ void load_builtins()
                     builtin_match, 0, 0 ) );
 
     {
-        char * args[] = { "pattern", ":", "string" };
-        bind_builtin( "SPLIT", builtin_split, 0, 0 );
+        char * args[] = { "string", ":", "delimiters" };
+        bind_builtin( "SPLIT_BY_CHARACTERS", 
+                      builtin_split_by_characters, 0, 0 );
     }
 
     duplicate_rule( "NoCare",
@@ -857,15 +858,15 @@ LIST * builtin_match( PARSE * parse, FRAME * frame )
     return result;
 }
 
-LIST * builtin_split( PARSE * parse, FRAME * frame )
+LIST * builtin_split_by_characters( PARSE * parse, FRAME * frame )
 {
-    LIST * l = lol_get( frame->args, 0 );
-    LIST * r = lol_get( frame->args, 1 );
+    LIST * l1 = lol_get( frame->args, 0 );
+    LIST * l2 = lol_get( frame->args, 1 );
 
     LIST * result = 0;
 
-    char* delimiters = l->string;
-    char* s = r->string;
+    char* s = strdup (l1->string);
+    char* delimiters = l2->string;
     char* t;
 
     t = strtok (s, delimiters);
@@ -874,6 +875,8 @@ LIST * builtin_split( PARSE * parse, FRAME * frame )
         result = list_new(result, newstr(t));
         t = strtok (NULL, delimiters);
     }
+
+    free (s);
 
     return result;
 }

@@ -158,11 +158,11 @@ def translate_paths (properties, path):
             p = split [1]
         
         if get_grist (p) and 'path' in feature.attributes (get_grist (p)):
-            values = __re_two_ampersands.split (forward_slashes (get_grist (p)))
+            values = __re_two_ampersands.split (forward_slashes (replace_grist (p, "")))
 
             t = [os.path.join(path, v) for v in values]
             t = '&&'.join (t)
-            tp = backslashes_to_slashes (replace_grist (t, get_grist (p)))
+            tp = replace_grist (t, get_grist (p)).replace("\\", "/")
             result.append (condition + tp)
             
         else:

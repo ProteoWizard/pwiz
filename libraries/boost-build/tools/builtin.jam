@@ -121,6 +121,12 @@ feature.feature asynch-exceptions  : off on          : propagated ;
 feature.feature extern-c-nothrow   : off on          : propagated ;
 
 feature.feature debug-symbols      : on off          : propagated ;
+# Controls whether the binary should be stripped -- that is have
+# everything not necessary to running removed. This option should
+# not be very often needed. Also, this feature will show up in
+# target paths of everything, not just binaries. Should fix that
+# when impelementing feature relevance.
+feature.feature strip              : off on          : propagated ;
 feature.feature define             :                 : free ;
 feature.feature undef              :                 : free ;
 feature.feature "include"          :                 : free path ; #order-sensitive ;
@@ -264,8 +270,8 @@ feature.feature architecture :
 # The specific instruction set in an architecture to compile.
 feature.feature instruction-set :
     # x86 and x86-64
-    i386 i486 i586 i686 pentium pentium-mmx pentiumpro pentium2 pentium3
-    pentium3m pentium-m pentium4 pentium4m prescott nocona conroe conroe-xe
+    native i386 i486 i586 i686 pentium pentium-mmx pentiumpro pentium2 pentium3
+    pentium3m pentium-m pentium4 pentium4m prescott nocona core2 conroe conroe-xe
     conroe-l allendale mermon mermon-xe kentsfield kentsfield-xe penryn wolfdale
     yorksfield nehalem k6 k6-2 k6-3 athlon athlon-tbird athlon-4 athlon-xp
     athlon-mp k8 opteron athlon64 athlon-fx winchip-c6 winchip2 c3 c3-2

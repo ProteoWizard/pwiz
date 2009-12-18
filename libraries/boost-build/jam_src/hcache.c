@@ -166,7 +166,7 @@ void write_netstring( FILE * f, char const * s )
 {
     if ( !s )
         s = "";
-    fprintf( f, "%lu\t%s\n", strlen( s ), s );
+    fprintf( f, "%lu\t%s\n", (long unsigned)strlen( s ), s );
 }
 
 

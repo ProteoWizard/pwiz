@@ -59,6 +59,7 @@ rule configure ( command ? : condition ? : options * )
 rule compile.resource ( target : sources * : properties * )
 {
     local rc-type = [ on $(target) return $(.RC_TYPE) ] ;
+    rc-type ?= null ;
     compile.resource.$(rc-type) $(target) : $(sources[1]) ;
 }
 

@@ -771,7 +771,8 @@ rule use ( id : location )
             $(project-module) )
         {
             errors.user-error Attempt to redeclare already existing project id
-                '$(id)' ;
+                '$(id)' 
+                location '$(location)' ;
         }
         $(id).jamfile-module = $(project-module) ;
     }
@@ -1034,6 +1035,16 @@ module project-rules
         }
     }
 
+    rule always ( target-names * )
+    {
+        import project ;
+        local t = [ project.current ] ;
+        for local n in $(target-names)
+        {
+            $(t).mark-target-as-always $(n) ;
+        }        
+    }
+    
     rule glob ( wildcards + : excludes * )
     {
         import project ;

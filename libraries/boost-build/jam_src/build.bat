@@ -471,7 +471,7 @@ if "_%BJAM_UPDATE%_" == "_update_" (
 
 @echo ON
 @if "_%BJAM_UPDATE%_" == "_update_" goto Skip_Bootstrap
-rd /S /Q bootstrap
+if exist bootstrap rd /S /Q bootstrap
 md bootstrap
 @if not exist jamgram.y goto Bootstrap_GrammarPrep
 @if not exist jamgramtab.h goto Bootstrap_GrammarPrep

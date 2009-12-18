@@ -256,9 +256,9 @@ class qbk-scanner : common-scanner
 {
     rule pattern ( )
     {
-        return "\\[[ \t]*include[ \t]+([^]]+)\\]" 
-        "\\[[ \t]*include:[a-zA-Z0-9_]+[ \t]+([^]]+)\\]" 
-        "\\[[ \t]*import[ \t]+([^]]+)\\]" ;
+        return "\\[[ ]*include[ ]+([^]]+)\\]" 
+        "\\[[ ]*include:[a-zA-Z0-9_]+[ ]+([^]]+)\\]" 
+        "\\[[ ]*import[ ]+([^]]+)\\]" ;
     }
 }
 
