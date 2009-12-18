@@ -346,7 +346,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
                 precursor.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth, MS_m_z);
             }
 
-            if (scanInfo->isDependent())
+            if (scanInfo->precursorMZ(i) > 0)
             {
                 // add selected ion m/z
                 selectedIon.set(MS_selected_ion_m_z, scanInfo->precursorMZ(i), MS_m_z);
