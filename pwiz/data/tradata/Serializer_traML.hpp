@@ -20,8 +20,8 @@
 //
 
 
-#ifndef _SERIALIZER_MZML_HPP_
-#define _SERIALIZER_MZML_HPP_
+#ifndef _SERIALIZER_TRAML_HPP_
+#define _SERIALIZER_TRAML_HPP_
 
 
 #include "pwiz/utility/misc/Export.hpp"
@@ -54,5 +54,5 @@ class PWIZ_API_DECL Serializer_traML
 } // namespace pwiz
 
 
-#endif // _SERIALIZER_MZML_HPP_
+#endif // _SERIALIZER_TRAML_HPP_
 

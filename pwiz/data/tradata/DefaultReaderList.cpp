@@ -28,7 +28,7 @@
 #include "DefaultReaderList.hpp"
 #include "Serializer_traML.hpp"
 #include "References.hpp"
-#include "pwiz/data/msdata/Version.hpp"
+#include "pwiz/data/tradata/Version.hpp"
 #include "boost/regex.hpp"
 #include "boost/foreach.hpp"
 #include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
@@ -77,6 +77,28 @@ string GetXMLRootElementFromFile(const string& filepath)
     return GetXMLRootElement(file);
 }
 
+SoftwarePtr getSoftwarePwiz(vector<SoftwarePtr>& softwarePtrs)
+{
+    string version = pwiz::tradata::Version::str();
+
+    for (vector<SoftwarePtr>::const_iterator it=softwarePtrs.begin(); it!=softwarePtrs.end(); ++it)
+        if ((*it)->hasCVParam(MS_pwiz) && (*it)->version==version)
+            return *it;
+
+    SoftwarePtr sp(new Software);
+    sp->id = "pwiz_" + version;
+    sp->set(MS_pwiz);
+    sp->version = version;
+    softwarePtrs.push_back(sp);
+    return sp;
+}
+
+void fillInCommonMetadata(const string& filename, TraData& td)
+{
+    td.cvs = msdata::defaultCVList();
+
+    SoftwarePtr softwarePwiz = getSoftwarePwiz(td.softwarePtrs);
+}
 
 class Reader_traML : public Reader
 {
@@ -111,6 +133,8 @@ class Reader_traML : public Reader
                 throw runtime_error("[Reader_traML::read] This isn't happening.");
             }
         }
+
+       fillInCommonMetadata(filename, result);
     }
 
     virtual void read(const std::string& filename,

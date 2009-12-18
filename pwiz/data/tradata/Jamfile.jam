@@ -44,6 +44,7 @@ lib pwiz_data_tradata
         Reader.cpp
         DefaultReaderList.cpp
         TraDataFile.cpp
+        Version.cpp
     : # requirements
         <library>../msdata//pwiz_data_msdata
     : # default-build
