@@ -304,6 +304,7 @@ vector<PrecursorInfo> getPrecursorInfo(const Spectrum& spectrum,
                 case MS_CID: info.activation = "CID"; break;
                 case MS_ETD: info.activation = "ETD"; break;
                 case MS_ECD: info.activation = "ECD"; break;
+                default: /* TODO: log an error, an exception would be too harsh here */
             }
             info.collisionEnergy = it->activation.cvParam(MS_collision_energy).value;
         }
@@ -669,8 +670,7 @@ CVID translateSourceFileTypeToNativeIdFormat(CVID sourceFileType)
         case MS_ISB_mzXML_file:             return MS_scan_number_only_nativeID_format;
         case MS_PSI_mzData_file:            return MS_spectrum_identifier_nativeID_format;
         case MS_Mascot_MGF_file:            return MS_multiple_peak_list_nativeID_format;
-        // TODO(mchambers): Fix this with the Agilent case above
-//        case MS_Agilent_MassHunter_file:    return MS_Agilent_MassHunter_nativeID_format;
+        case MS_Agilent_MassHunter_file:    return MS_Agilent_MassHunter_nativeID_format;
 
         // for these sources we must assume the scan number came from the index
         case MS_ABI_WIFF_file:
@@ -957,7 +957,7 @@ class Handler_mzXML : public SAXParser::Handler
             return Status::Done;
         }
 
-        throw runtime_error(("[SpectrumList_mzML::Handler_mzXML] Unexpected element name: " + name).c_str());
+        throw runtime_error(("[SpectrumList_mzXML::Handler_mzXML] Unexpected element name: " + name).c_str());
     }
 
     private:
