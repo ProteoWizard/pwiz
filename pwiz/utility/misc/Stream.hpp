@@ -31,6 +31,7 @@
 
 namespace bio = boost::iostreams;
 
+using std::ios;
 using std::iostream;
 using std::istream;
 using std::ostream;
