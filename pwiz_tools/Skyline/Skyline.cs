@@ -310,6 +310,7 @@ namespace pwiz.Skyline
             // Update title and status bar.
             UpdateTitle();
             UpdateNodeCountStatus();
+            insertProteinsMenuItem.Enabled = !DocumentUI.Settings.PeptideSettings.BackgroundProteome.IsNone;
         }
 
         /// <summary>
@@ -640,6 +641,7 @@ namespace pwiz.Skyline
             if (StatementCompletionAction(textBox => textBox.Copy()))
                 return;
 
+            
             IClipboardDataProvider provider =
                 sequenceTree.SelectedNode as IClipboardDataProvider;
             if (provider != null)
@@ -2068,7 +2070,6 @@ namespace pwiz.Skyline
             var dlg = new ChooseAnnotationsDlg(this);
             dlg.ShowDialog(this);
         }
-
     }
 }
 

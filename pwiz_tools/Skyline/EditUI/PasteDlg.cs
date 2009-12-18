@@ -41,7 +41,7 @@ namespace pwiz.Skyline.EditUI
             DocumentUiContainer = documentUiContainer;
             if (GetBackgroundProteome(documentUiContainer.DocumentUI).IsNone)
             {
-                tabPageProteinList.Visible = false;
+                tabControl1.Controls.Remove(tabPageProteinList);
             }
             _statementCompletionEditBox = new StatementCompletionTextBox(documentUiContainer)
                                               {
