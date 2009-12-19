@@ -927,6 +927,8 @@ namespace pwiz.Skyline
                     menuStrip.Items.Insert(iInsert++, toolStripSeparator33);                    
                 }
             }
+            legendChromContextMenuItem.Checked = set.ShowChromatogramLegend;
+            menuStrip.Items.Insert(iInsert++, legendChromContextMenuItem);
             peakBoundariesContextMenuItem.Checked = set.ShowPeakBoundaries;
             menuStrip.Items.Insert(iInsert++, peakBoundariesContextMenuItem);
             menuStrip.Items.Insert(iInsert++, retentionTimesContextMenuItem);
@@ -1012,6 +1014,12 @@ namespace pwiz.Skyline
         {
             var chromInfo = GetTransitionChromInfo(nodeTran, iResults);
             return (chromInfo != null && !chromInfo.IsEmpty);
+        }
+
+        private void legendChromContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowChromatogramLegend = legendChromContextMenuItem.Checked;
+            UpdateChromGraphs();
         }
 
         private void peakBoundariesContextMenuItem_Click(object sender, EventArgs e)
@@ -1720,6 +1728,8 @@ namespace pwiz.Skyline
                         totalTranContextMenuItem
                     });
                 }
+                selectionContextMenuItem.Checked = set.ShowReplicateSelection;
+                menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
             }
 
             menuStrip.Items.Insert(iInsert, toolStripSeparator24);
@@ -1764,6 +1774,13 @@ namespace pwiz.Skyline
             Settings.Default.RTGraphType = GraphTypeRT.schedule.ToString();
             ShowGraphRetentionTime(true);
             UpdateRetentionTimeGraph();
+        }
+
+        private void selectionContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowReplicateSelection = selectionContextMenuItem.Checked;
+            UpdateRetentionTimeGraph();
+            UpdatePeakAreaGraph();
         }
 
         private void refineRTContextMenuItem_Click(object sender, EventArgs e)
@@ -1978,8 +1995,10 @@ namespace pwiz.Skyline
             }
             if (graphType == GraphTypeArea.replicate)
             {
-                menuStrip.Items.Insert(iInsert++, areaPercentViewContextMenuItem);
+                selectionContextMenuItem.Checked = set.ShowReplicateSelection;
+                menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
                 areaPercentViewContextMenuItem.Checked = set.AreaPercentView;
+                menuStrip.Items.Insert(iInsert++, areaPercentViewContextMenuItem);
             }
             else if (graphType == GraphTypeArea.peptide)
             {

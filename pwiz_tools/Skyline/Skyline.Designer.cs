@@ -70,6 +70,8 @@ namespace pwiz.Skyline
             this.insertProteinsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.insertPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.insertTransitionListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.refineMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.manageUniquePeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator8 = new System.Windows.Forms.ToolStripSeparator();
             this.editNoteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator6 = new System.Windows.Forms.ToolStripSeparator();
@@ -84,8 +86,6 @@ namespace pwiz.Skyline
             this.toolStripSeparator5 = new System.Windows.Forms.ToolStripSeparator();
             this.findPeptideMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.modifyPeptideMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.removeDuplicatePeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.manageUniquePeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator30 = new System.Windows.Forms.ToolStripSeparator();
             this.removeResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -174,7 +174,6 @@ namespace pwiz.Skyline
             this.toolBarResults = new System.Windows.Forms.ToolStrip();
             this.labelResults = new System.Windows.Forms.ToolStripLabel();
             this.comboResults = new System.Windows.Forms.ToolStripComboBox();
-            this.sequenceTree = new pwiz.Skyline.Controls.SequenceTree();
             this.dockPanel = new DigitalRune.Windows.Docking.DockPanel();
             this.contextMenuSpectrum = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.aionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -201,6 +200,7 @@ namespace pwiz.Skyline
             this.removePeaksGraphMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removePeaksGraphSubMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator33 = new System.Windows.Forms.ToolStripSeparator();
+            this.legendChromContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peakBoundariesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.retentionTimesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.allRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -269,6 +269,8 @@ namespace pwiz.Skyline
             this.areaPercentViewContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaLogScaleContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCvsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.sequenceTree = new pwiz.Skyline.Controls.SequenceTree();
+            this.selectionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuMain.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.contextMenuTreeNode.SuspendLayout();
@@ -495,6 +497,8 @@ namespace pwiz.Skyline
             this.deleteMenuItem,
             this.toolStripSeparator4,
             this.insertToolStripMenuItem,
+            this.refineMenuItem,
+            this.manageUniquePeptidesMenuItem,
             this.toolStripSeparator8,
             this.editNoteToolStripMenuItem,
             this.toolStripSeparator6,
@@ -503,8 +507,6 @@ namespace pwiz.Skyline
             this.toolStripSeparator5,
             this.findPeptideMenuItem,
             this.modifyPeptideMenuItem,
-            this.removeDuplicatePeptidesMenuItem,
-            this.manageUniquePeptidesMenuItem,
             this.toolStripSeparator30,
             this.removeResultsMenuItem});
             this.editToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Fuchsia;
@@ -519,7 +521,7 @@ namespace pwiz.Skyline
             this.undoMenuItem.ImageTransparentColor = System.Drawing.Color.Fuchsia;
             this.undoMenuItem.Name = "undoMenuItem";
             this.undoMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Z)));
-            this.undoMenuItem.Size = new System.Drawing.Size(218, 22);
+            this.undoMenuItem.Size = new System.Drawing.Size(189, 22);
             this.undoMenuItem.Text = "&Undo";
             // 
             // redoMenuItem
@@ -529,13 +531,13 @@ namespace pwiz.Skyline
             this.redoMenuItem.ImageTransparentColor = System.Drawing.Color.Fuchsia;
             this.redoMenuItem.Name = "redoMenuItem";
             this.redoMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Y)));
-            this.redoMenuItem.Size = new System.Drawing.Size(218, 22);
+            this.redoMenuItem.Size = new System.Drawing.Size(189, 22);
             this.redoMenuItem.Text = "&Redo";
             // 
             // toolStripSeparator34
             // 
             this.toolStripSeparator34.Name = "toolStripSeparator34";
-            this.toolStripSeparator34.Size = new System.Drawing.Size(215, 6);
+            this.toolStripSeparator34.Size = new System.Drawing.Size(186, 6);
             // 
             // cutMenuItem
             // 
@@ -543,7 +545,7 @@ namespace pwiz.Skyline
             this.cutMenuItem.ImageTransparentColor = System.Drawing.Color.Fuchsia;
             this.cutMenuItem.Name = "cutMenuItem";
             this.cutMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.X)));
-            this.cutMenuItem.Size = new System.Drawing.Size(218, 22);
+            this.cutMenuItem.Size = new System.Drawing.Size(189, 22);
             this.cutMenuItem.Text = "Cu&t";
             this.cutMenuItem.Click += new System.EventHandler(this.cutMenuItem_Click);
             // 
@@ -553,7 +555,7 @@ namespace pwiz.Skyline
             this.copyMenuItem.ImageTransparentColor = System.Drawing.Color.Fuchsia;
             this.copyMenuItem.Name = "copyMenuItem";
             this.copyMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.C)));
-            this.copyMenuItem.Size = new System.Drawing.Size(218, 22);
+            this.copyMenuItem.Size = new System.Drawing.Size(189, 22);
             this.copyMenuItem.Text = "&Copy";
             this.copyMenuItem.Click += new System.EventHandler(this.copyMenuItem_Click);
             // 
@@ -563,7 +565,7 @@ namespace pwiz.Skyline
             this.pasteMenuItem.ImageTransparentColor = System.Drawing.Color.Fuchsia;
             this.pasteMenuItem.Name = "pasteMenuItem";
             this.pasteMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.V)));
-            this.pasteMenuItem.Size = new System.Drawing.Size(218, 22);
+            this.pasteMenuItem.Size = new System.Drawing.Size(189, 22);
             this.pasteMenuItem.Text = "&Paste";
             this.pasteMenuItem.Click += new System.EventHandler(this.pasteMenuItem_Click);
             // 
@@ -573,14 +575,14 @@ namespace pwiz.Skyline
             this.deleteMenuItem.ImageTransparentColor = System.Drawing.Color.Fuchsia;
             this.deleteMenuItem.Name = "deleteMenuItem";
             this.deleteMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Delete;
-            this.deleteMenuItem.Size = new System.Drawing.Size(218, 22);
+            this.deleteMenuItem.Size = new System.Drawing.Size(189, 22);
             this.deleteMenuItem.Text = "&Delete";
             this.deleteMenuItem.Click += new System.EventHandler(this.deleteMenuItem_Click);
             // 
             // toolStripSeparator4
             // 
             this.toolStripSeparator4.Name = "toolStripSeparator4";
-            this.toolStripSeparator4.Size = new System.Drawing.Size(215, 6);
+            this.toolStripSeparator4.Size = new System.Drawing.Size(186, 6);
             // 
             // insertToolStripMenuItem
             // 
@@ -590,7 +592,7 @@ namespace pwiz.Skyline
             this.insertPeptidesMenuItem,
             this.insertTransitionListMenuItem});
             this.insertToolStripMenuItem.Name = "insertToolStripMenuItem";
-            this.insertToolStripMenuItem.Size = new System.Drawing.Size(218, 22);
+            this.insertToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
             this.insertToolStripMenuItem.Text = "&Insert";
             // 
             // insertFASTAMenuItem
@@ -621,10 +623,24 @@ namespace pwiz.Skyline
             this.insertTransitionListMenuItem.Text = "&Transition List...";
             this.insertTransitionListMenuItem.Click += new System.EventHandler(this.insertTransitionListMenuItem_Click);
             // 
+            // refineMenuItem
+            // 
+            this.refineMenuItem.Name = "refineMenuItem";
+            this.refineMenuItem.Size = new System.Drawing.Size(189, 22);
+            this.refineMenuItem.Text = "&Refine...";
+            this.refineMenuItem.Click += new System.EventHandler(this.refineMenuItem_Click);
+            // 
+            // manageUniquePeptidesMenuItem
+            // 
+            this.manageUniquePeptidesMenuItem.Name = "manageUniquePeptidesMenuItem";
+            this.manageUniquePeptidesMenuItem.Size = new System.Drawing.Size(189, 22);
+            this.manageUniquePeptidesMenuItem.Text = "&Unique Peptides...";
+            this.manageUniquePeptidesMenuItem.Click += new System.EventHandler(this.manageUniquePeptidesMenuItem_Click);
+            // 
             // toolStripSeparator8
             // 
             this.toolStripSeparator8.Name = "toolStripSeparator8";
-            this.toolStripSeparator8.Size = new System.Drawing.Size(215, 6);
+            this.toolStripSeparator8.Size = new System.Drawing.Size(186, 6);
             // 
             // editNoteToolStripMenuItem
             // 
@@ -632,14 +648,14 @@ namespace pwiz.Skyline
             this.editNoteToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Fuchsia;
             this.editNoteToolStripMenuItem.Name = "editNoteToolStripMenuItem";
             this.editNoteToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.F2)));
-            this.editNoteToolStripMenuItem.Size = new System.Drawing.Size(218, 22);
+            this.editNoteToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
             this.editNoteToolStripMenuItem.Text = "Edit &Note";
             this.editNoteToolStripMenuItem.Click += new System.EventHandler(this.editNoteMenuItem_Click);
             // 
             // toolStripSeparator6
             // 
             this.toolStripSeparator6.Name = "toolStripSeparator6";
-            this.toolStripSeparator6.Size = new System.Drawing.Size(215, 6);
+            this.toolStripSeparator6.Size = new System.Drawing.Size(186, 6);
             // 
             // expandAllToolStripMenuItem
             // 
@@ -648,7 +664,7 @@ namespace pwiz.Skyline
             this.expandPeptidesMenuItem,
             this.expandPrecursorsMenuItem});
             this.expandAllToolStripMenuItem.Name = "expandAllToolStripMenuItem";
-            this.expandAllToolStripMenuItem.Size = new System.Drawing.Size(218, 22);
+            this.expandAllToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
             this.expandAllToolStripMenuItem.Text = "&Expand All";
             // 
             // expandProteinsMenuItem
@@ -682,7 +698,7 @@ namespace pwiz.Skyline
             this.collapsePeptidesMenuItem,
             this.collapsePrecursorsMenuItem});
             this.collapseAllToolStripMenuItem.Name = "collapseAllToolStripMenuItem";
-            this.collapseAllToolStripMenuItem.Size = new System.Drawing.Size(218, 22);
+            this.collapseAllToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
             this.collapseAllToolStripMenuItem.Text = "C&ollapse All";
             // 
             // collapseProteinsMenuItem
@@ -715,46 +731,32 @@ namespace pwiz.Skyline
             // toolStripSeparator5
             // 
             this.toolStripSeparator5.Name = "toolStripSeparator5";
-            this.toolStripSeparator5.Size = new System.Drawing.Size(215, 6);
+            this.toolStripSeparator5.Size = new System.Drawing.Size(186, 6);
             // 
             // findPeptideMenuItem
             // 
             this.findPeptideMenuItem.Name = "findPeptideMenuItem";
             this.findPeptideMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.F)));
-            this.findPeptideMenuItem.Size = new System.Drawing.Size(218, 22);
+            this.findPeptideMenuItem.Size = new System.Drawing.Size(189, 22);
             this.findPeptideMenuItem.Text = "&Find Peptide...";
             this.findPeptideMenuItem.Click += new System.EventHandler(this.findPeptideMenuItem_Click);
             // 
             // modifyPeptideMenuItem
             // 
             this.modifyPeptideMenuItem.Name = "modifyPeptideMenuItem";
-            this.modifyPeptideMenuItem.Size = new System.Drawing.Size(218, 22);
+            this.modifyPeptideMenuItem.Size = new System.Drawing.Size(189, 22);
             this.modifyPeptideMenuItem.Text = "&Modify Peptide...";
             this.modifyPeptideMenuItem.Click += new System.EventHandler(this.modifyPeptideMenuItem_Click);
-            // 
-            // removeDuplicatePeptidesMenuItem
-            // 
-            this.removeDuplicatePeptidesMenuItem.Name = "removeDuplicatePeptidesMenuItem";
-            this.removeDuplicatePeptidesMenuItem.Size = new System.Drawing.Size(218, 22);
-            this.removeDuplicatePeptidesMenuItem.Text = "Remo&ve Duplicate Peptides";
-            this.removeDuplicatePeptidesMenuItem.Click += new System.EventHandler(this.removeDuplicatePeptidesMenuItem_Click);
-            // 
-            // manageUniquePeptidesMenuItem
-            // 
-            this.manageUniquePeptidesMenuItem.Name = "manageUniquePeptidesMenuItem";
-            this.manageUniquePeptidesMenuItem.Size = new System.Drawing.Size(218, 22);
-            this.manageUniquePeptidesMenuItem.Text = "&Unique Peptides...";
-            this.manageUniquePeptidesMenuItem.Click += new System.EventHandler(this.manageUniquePeptidesToolStripMenuItem_Click);
             // 
             // toolStripSeparator30
             // 
             this.toolStripSeparator30.Name = "toolStripSeparator30";
-            this.toolStripSeparator30.Size = new System.Drawing.Size(215, 6);
+            this.toolStripSeparator30.Size = new System.Drawing.Size(186, 6);
             // 
             // removeResultsMenuItem
             // 
             this.removeResultsMenuItem.Name = "removeResultsMenuItem";
-            this.removeResultsMenuItem.Size = new System.Drawing.Size(218, 22);
+            this.removeResultsMenuItem.Size = new System.Drawing.Size(189, 22);
             this.removeResultsMenuItem.Text = "Remove Re&sults...";
             this.removeResultsMenuItem.Click += new System.EventHandler(this.removeResultsMenuItem_Click);
             // 
@@ -1529,34 +1531,6 @@ namespace pwiz.Skyline
             this.comboResults.Size = new System.Drawing.Size(160, 23);
             this.comboResults.SelectedIndexChanged += new System.EventHandler(this.comboResults_SelectedIndexChanged);
             // 
-            // sequenceTree
-            // 
-            this.sequenceTree.AllowDrop = true;
-            this.sequenceTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.sequenceTree.AutoExpandSingleNodes = true;
-            this.sequenceTree.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.sequenceTree.Cursor = System.Windows.Forms.Cursors.Arrow;
-            this.sequenceTree.HideSelection = false;
-            this.sequenceTree.LabelEdit = true;
-            this.sequenceTree.Location = new System.Drawing.Point(-1, 0);
-            this.sequenceTree.Name = "sequenceTree";
-            this.sequenceTree.ResultsIndex = 0;
-            this.sequenceTree.SelectedPath = null;
-            this.sequenceTree.Size = new System.Drawing.Size(271, 444);
-            this.sequenceTree.TabIndex = 2;
-            this.sequenceTree.PickedChildrenEvent += new System.EventHandler<pwiz.Skyline.Controls.SeqNode.PickedChildrenEventArgs>(this.sequenceTree_PickedChildrenEvent);
-            this.sequenceTree.AfterNodeEdit += new System.EventHandler<System.Windows.Forms.NodeLabelEditEventArgs>(this.sequenceTree_AfterLabelEdit);
-            this.sequenceTree.MouseUp += new System.Windows.Forms.MouseEventHandler(this.sequenceTree_MouseUp);
-            this.sequenceTree.DragDrop += new System.Windows.Forms.DragEventHandler(this.sequenceTree_DragDrop);
-            this.sequenceTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.sequenceTree_AfterSelect);
-            this.sequenceTree.SelectedNodeChanged += new System.Windows.Forms.TreeViewEventHandler(this.sequenceTree_SelectedNodeChanged);
-            this.sequenceTree.BeforeNodeEdit += new System.EventHandler<System.Windows.Forms.NodeLabelEditEventArgs>(this.sequenceTree_BeforeLabelEdit);
-            this.sequenceTree.DragEnter += new System.Windows.Forms.DragEventHandler(this.sequenceTree_DragEnter);
-            this.sequenceTree.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.sequenceTree_ItemDrag);
-            this.sequenceTree.DragOver += new System.Windows.Forms.DragEventHandler(this.sequenceTree_DragOver);
-            // 
             // dockPanel
             // 
             this.dockPanel.ActiveAutoHideContent = null;
@@ -1733,6 +1707,7 @@ namespace pwiz.Skyline
             this.removePeakGraphMenuItem,
             this.removePeaksGraphMenuItem,
             this.toolStripSeparator33,
+            this.legendChromContextMenuItem,
             this.peakBoundariesContextMenuItem,
             this.retentionTimesContextMenuItem,
             this.retentionTimePredContextMenuItem,
@@ -1748,7 +1723,7 @@ namespace pwiz.Skyline
             this.zoomChromContextMenuItem,
             this.toolStripSeparator26});
             this.contextMenuChromatogram.Name = "contextMenuChromatogram";
-            this.contextMenuChromatogram.Size = new System.Drawing.Size(213, 282);
+            this.contextMenuChromatogram.Size = new System.Drawing.Size(213, 304);
             // 
             // removePeakGraphMenuItem
             // 
@@ -1776,6 +1751,14 @@ namespace pwiz.Skyline
             // 
             this.toolStripSeparator33.Name = "toolStripSeparator33";
             this.toolStripSeparator33.Size = new System.Drawing.Size(209, 6);
+            // 
+            // legendChromContextMenuItem
+            // 
+            this.legendChromContextMenuItem.CheckOnClick = true;
+            this.legendChromContextMenuItem.Name = "legendChromContextMenuItem";
+            this.legendChromContextMenuItem.Size = new System.Drawing.Size(212, 22);
+            this.legendChromContextMenuItem.Text = "Legend";
+            this.legendChromContextMenuItem.Click += new System.EventHandler(this.legendChromContextMenuItem_Click);
             // 
             // peakBoundariesContextMenuItem
             // 
@@ -2106,6 +2089,7 @@ namespace pwiz.Skyline
             // 
             this.contextMenuRetentionTimes.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.timeGraphContextMenuItem,
+            this.selectionContextMenuItem,
             this.refineRTContextMenuItem,
             this.predictionRTContextMenuItem,
             this.averageReplicatesContextMenuItem,
@@ -2119,7 +2103,7 @@ namespace pwiz.Skyline
             this.zoomOutRTContextMenuItem,
             this.toolStripSeparator25});
             this.contextMenuRetentionTimes.Name = "contextMenuRetentionTimes";
-            this.contextMenuRetentionTimes.Size = new System.Drawing.Size(178, 226);
+            this.contextMenuRetentionTimes.Size = new System.Drawing.Size(178, 270);
             // 
             // timeGraphContextMenuItem
             // 
@@ -2324,6 +2308,42 @@ namespace pwiz.Skyline
             this.areaCvsContextMenuItem.Text = "Area CVs";
             this.areaCvsContextMenuItem.Click += new System.EventHandler(this.areaCvsContextMenuItem_Click);
             // 
+            // sequenceTree
+            // 
+            this.sequenceTree.AllowDrop = true;
+            this.sequenceTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.sequenceTree.AutoExpandSingleNodes = true;
+            this.sequenceTree.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.sequenceTree.Cursor = System.Windows.Forms.Cursors.Arrow;
+            this.sequenceTree.HideSelection = false;
+            this.sequenceTree.LabelEdit = true;
+            this.sequenceTree.Location = new System.Drawing.Point(-1, 0);
+            this.sequenceTree.Name = "sequenceTree";
+            this.sequenceTree.ResultsIndex = 0;
+            this.sequenceTree.SelectedPath = null;
+            this.sequenceTree.Size = new System.Drawing.Size(271, 444);
+            this.sequenceTree.TabIndex = 2;
+            this.sequenceTree.PickedChildrenEvent += new System.EventHandler<pwiz.Skyline.Controls.SeqNode.PickedChildrenEventArgs>(this.sequenceTree_PickedChildrenEvent);
+            this.sequenceTree.AfterNodeEdit += new System.EventHandler<System.Windows.Forms.NodeLabelEditEventArgs>(this.sequenceTree_AfterLabelEdit);
+            this.sequenceTree.MouseUp += new System.Windows.Forms.MouseEventHandler(this.sequenceTree_MouseUp);
+            this.sequenceTree.DragDrop += new System.Windows.Forms.DragEventHandler(this.sequenceTree_DragDrop);
+            this.sequenceTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.sequenceTree_AfterSelect);
+            this.sequenceTree.SelectedNodeChanged += new System.Windows.Forms.TreeViewEventHandler(this.sequenceTree_SelectedNodeChanged);
+            this.sequenceTree.BeforeNodeEdit += new System.EventHandler<System.Windows.Forms.NodeLabelEditEventArgs>(this.sequenceTree_BeforeLabelEdit);
+            this.sequenceTree.DragEnter += new System.Windows.Forms.DragEventHandler(this.sequenceTree_DragEnter);
+            this.sequenceTree.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.sequenceTree_ItemDrag);
+            this.sequenceTree.DragOver += new System.Windows.Forms.DragEventHandler(this.sequenceTree_DragOver);
+            // 
+            // selectionContextMenuItem
+            // 
+            this.selectionContextMenuItem.CheckOnClick = true;
+            this.selectionContextMenuItem.Name = "selectionContextMenuItem";
+            this.selectionContextMenuItem.Size = new System.Drawing.Size(177, 22);
+            this.selectionContextMenuItem.Text = "Selection";
+            this.selectionContextMenuItem.Click += new System.EventHandler(this.selectionContextMenuItem_Click);
+            // 
             // SkylineWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -2403,7 +2423,6 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator6;
         private System.Windows.Forms.ToolStripMenuItem collapseProteinsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem collapsePeptidesMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem removeDuplicatePeptidesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importFASTAMenuItem;
@@ -2601,6 +2620,9 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator36;
         private System.Windows.Forms.ToolStripMenuItem areaCvsContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem annotationsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem refineMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem legendChromContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem selectionContextMenuItem;
     }
 }
 

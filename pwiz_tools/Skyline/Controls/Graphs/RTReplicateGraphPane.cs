@@ -156,7 +156,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
             // Draw a box around the currently selected replicate
-            if (minRetentionTime != double.MaxValue)
+            if (ShowSelection && minRetentionTime != double.MaxValue)
             {
                 GraphObjList.Add(new BoxObj(selectedReplicateIndex + .5, maxRetentionTime, 1,
                                             maxRetentionTime - minRetentionTime, Color.Black, Color.Empty)

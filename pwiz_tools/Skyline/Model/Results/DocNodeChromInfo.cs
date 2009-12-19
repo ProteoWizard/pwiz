@@ -277,6 +277,21 @@ namespace pwiz.Skyline.Model.Results
 
         #region Property change methods
 
+        public TransitionChromInfo ChangePeak(ChromPeak peak, bool userSet)
+        {
+            var chromInfo = ImClone(this);
+            chromInfo.RetentionTime = peak.RetentionTime;
+            chromInfo.StartRetentionTime = peak.StartTime;
+            chromInfo.EndRetentionTime = peak.EndTime;
+            chromInfo.Area = peak.Area;
+            chromInfo.BackgroundArea = peak.BackgroundArea;
+            chromInfo.Height = peak.Height;
+            chromInfo.Fwhm = peak.Fwhm;
+            chromInfo.IsFwhmDegenerate = peak.IsFwhmDegenerate;
+            chromInfo.UserSet = userSet;
+            return chromInfo;
+        }
+
         public TransitionChromInfo ChangeRatio(float? prop)
         {
             return ChangeProp(ImClone(this), (im, v) => im.Ratio = v, prop);

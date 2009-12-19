@@ -99,7 +99,7 @@ namespace pwiz.Skyline.Model
             {
                 foreach (var chromInfo in result)
                 {
-                    if (chromInfo.OptimizationStep == 0)
+                    if (chromInfo != null && chromInfo.OptimizationStep == 0)
                         return chromInfo;
                 }
             }
@@ -149,33 +149,31 @@ namespace pwiz.Skyline.Model
         {
             var listChromInfo = Results[indexSet];
             var listChromInfoNew = new List<TransitionChromInfo>();
-            var chromInfoNew = new TransitionChromInfo(indexFile, step, peak, null, true);
             if (listChromInfo == null)
-                listChromInfoNew.Add(chromInfoNew);
+                listChromInfoNew.Add(new TransitionChromInfo(indexFile, step, peak, null, true));
             else
             {
+                bool peakAdded = false;
                 foreach (var chromInfo in listChromInfo)
                 {
                     // Replace an existing entry with same index values
                     if (chromInfo.FileIndex == indexFile && chromInfo.OptimizationStep == step)
                     {
-                        // Something is wrong, if the value has already been added
-                        Debug.Assert(chromInfoNew != null);
-
-                        chromInfoNew = chromInfoNew.ChangeAnnotations(chromInfo.Annotations);
-                        listChromInfoNew.Add(chromInfoNew);
-                        chromInfoNew = null;    // Only add once
+                        // Something is wrong, if the value has already been added (duplicate peak? out of order?)
+                        Debug.Assert(!peakAdded);
+                        listChromInfoNew.Add(chromInfo.ChangePeak(peak, true));
+                        peakAdded = true;
                     }
                     else
                     {
                         // Entries should be ordered, so if the new entry has not been added
                         // when an entry past it is seen, then add the new entry.
-                        if (chromInfoNew != null &&
+                        if (!peakAdded &&
                             chromInfo.FileIndex >= indexFile &&
                             chromInfo.OptimizationStep > step)
                         {
-                            listChromInfoNew.Add(chromInfoNew);
-                            chromInfoNew = null;    // Only add once                            
+                            listChromInfoNew.Add(new TransitionChromInfo(indexFile, step, peak, null, true));
+                            peakAdded = true;
                         }
                         listChromInfoNew.Add(chromInfo);
                     }
@@ -195,6 +193,8 @@ namespace pwiz.Skyline.Model
             {
                 if (chromInfo.FileIndex != indexFile)
                     listChromInfoNew.Add(chromInfo);
+                else if (chromInfo.OptimizationStep == 0)
+                    listChromInfoNew.Add(chromInfo.ChangePeak(ChromPeak.EMPTY, true));
             }
             if (listChromInfo.Count == listChromInfoNew.Count)
                 return this;

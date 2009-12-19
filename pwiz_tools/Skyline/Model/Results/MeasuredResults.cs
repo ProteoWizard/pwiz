@@ -49,7 +49,15 @@ namespace pwiz.Skyline.Model.Results
             private set { _chromatograms = MakeReadOnly(value.ToArray()); }
         }
 
-        public bool IsLoaded { get { return _cacheFinal != null && !_cacheFinal.ReadStream.IsModified; } }
+        public bool IsLoaded
+        {
+            get
+            {
+                // All the chromatogram sets are loaded, and the cache has not been modified
+                return !Chromatograms.Contains(c => !c.IsLoaded) &&
+                    _cacheFinal != null && !_cacheFinal.ReadStream.IsModified;
+            }
+        }
 
         public bool IsChromatogramSetLoaded(int index)
         {

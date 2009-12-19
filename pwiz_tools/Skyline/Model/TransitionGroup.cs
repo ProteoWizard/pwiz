@@ -166,15 +166,18 @@ namespace pwiz.Skyline.Model
                 {
                     foreach (var result in Results)
                     {
-                        // Only use results with at least 0.5 peak count ratio
                         if (result == null)
                             continue;
-                        var chromInfo = result[0];
-                        if (chromInfo == null || chromInfo.OptimizationStep != 0 || chromInfo.PeakCountRatio < 0.5)
-                            continue;
 
-                        rtTotal += (chromInfo.StartRetentionTime.Value + chromInfo.EndRetentionTime.Value)/2;
-                        rtCount++;
+                        foreach (var chromInfo in result)
+                        {
+                            // Only use results with at least 0.5 peak count ratio, and optimization step 0
+                            if (chromInfo == null || chromInfo.OptimizationStep != 0 || chromInfo.PeakCountRatio < 0.5)
+                                continue;
+
+                            rtTotal += (chromInfo.StartRetentionTime.Value + chromInfo.EndRetentionTime.Value) / 2;
+                            rtCount++;
+                        }
                     }
                 }
 
@@ -772,6 +775,10 @@ namespace pwiz.Skyline.Model
                     RatioStdev = chromInfo.RatioStdev;
                     Annotations = chromInfo.Annotations;
                 }
+                else
+                {
+                    Annotations = Annotations.Empty;
+                }
             }
 
             public int FileIndex { get; private set; }
@@ -856,7 +863,7 @@ namespace pwiz.Skyline.Model
                                                     Ratio,
                                                     RatioStdev,
                                                     LibraryDotProduct,
-                                                    Annotations.Empty,
+                                                    Annotations,
                                                     UserSet);
             }
         }

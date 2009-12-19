@@ -222,7 +222,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void comboCalculator_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (gridPeptides.Rows.Count > 1)
+            if (gridPeptides.Rows.Count > 1 && comboCalculator.SelectedItem != null)
                 RecalcRegression(comboCalculator.SelectedItem.ToString());
         }
 

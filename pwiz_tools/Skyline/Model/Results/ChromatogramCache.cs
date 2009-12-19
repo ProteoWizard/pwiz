@@ -1606,7 +1606,10 @@ namespace pwiz.Skyline.Model.Results
                     int maxPeakIndex = listPeakSets.IndexOf(peakSetMax);
                     for (int i = 0, len = listPeakSets.Count; i < len; i++)
                     {
-                        foreach (var peak in listPeakSets[i])
+                        var peakSet = listPeakSets[i];
+                        var peakMax = peakSet[0].Peak;
+
+                        foreach (var peak in peakSet)
                         {
                             // Set the max peak index on the data for each transition,
                             // but only the first time through.
@@ -1616,7 +1619,7 @@ namespace pwiz.Skyline.Model.Results
                             if (peak.Peak == null)
                                 peak.Data.Peaks.Add(ChromPeak.EMPTY);
                             else
-                                peak.Data.Peaks.Add(new ChromPeak(peak.Peak, peak.Data.Times));
+                                peak.Data.Peaks.Add(peak.CalcChromPeak(peakMax));
                         }
                     }
                 }
@@ -1735,6 +1738,8 @@ namespace pwiz.Skyline.Model.Results
                     bool foundVariation = false;
 
                     List<double> listDeltas = new List<double>();
+                    List<double> listMaxDeltas = new List<double>();
+                    double maxIntensity = 0;
                     float[] firstTimes = null;
                     double expectedTimeDelta = 0;
                     foreach (var chromData in _listChromData)
@@ -1759,6 +1764,18 @@ namespace pwiz.Skyline.Model.Results
                             double delta = time - lastTime;
                             lastTime = time;
                             listDeltas.Add(Math.Round(delta, 4));
+
+                            // Collect the 10 deltas after the maximum peak
+                            if (chromData.Intensities[i] > maxIntensity)
+                            {
+                                maxIntensity = chromData.Intensities[i];
+                                listMaxDeltas.Clear();
+                                listMaxDeltas.Add(delta);
+                            }
+                            else if (0 < listMaxDeltas.Count && listMaxDeltas.Count < 10)
+                            {
+                                listMaxDeltas.Add(delta);
+                            }
 
                             if (!foundVariation && (time != firstTimes[i] ||
                                     Math.Abs(delta - expectedTimeDelta) > TIME_DELTA_VARIATION_THRESHOLD))
@@ -1808,7 +1825,25 @@ namespace pwiz.Skyline.Model.Results
 
                     bool inferZeros = false;
                     if (_isProcessedScans && statDeltas.Max() / intervalDelta > TIME_DELTA_MAX_RATIO_THRESHOLD)
-                        inferZeros = true;  // Verbose expression for easy breakpoint placement
+                    {
+                        inferZeros = true; // Verbose expression for easy breakpoint placement
+
+                        // Try really hard to use a delta that will work for the maximum peak
+                        // TODO: Make this more reliable, and enable it for everyone
+//                        if (listMaxDeltas.Count > 0)
+//                        {
+//                            intervalDelta = listMaxDeltas[0];
+//                            for (int i = 1; i < listMaxDeltas.Count; i++)
+//                            {
+//                                double delta = listMaxDeltas[i];
+//                                // If an order of magnitude change in time intervarl is encountered stop
+//                                if (intervalDelta / 4 > delta || delta > intervalDelta*4)
+//                                    break;
+//                                // Calculate a weighted mean
+//                                intervalDelta = (intervalDelta*i + delta)/(i + 1);
+//                            }
+//                        }
+                    }
 
                     // Create the single set of time intervals that all points for
                     // this precursor will be mapped onto.
@@ -2123,10 +2158,12 @@ namespace pwiz.Skyline.Model.Results
 
                 public void FindPeaks()
                 {
-                    CrawdadPeakFinder finder = new CrawdadPeakFinder();
-                    finder.SetChromatogram(Times, Intensities);
-                    RawPeaks = finder.CalcPeaks(MAX_PEAKS);                    
+                    Finder = new CrawdadPeakFinder();
+                    Finder.SetChromatogram(Times, Intensities);
+                    RawPeaks = Finder.CalcPeaks(MAX_PEAKS);                    
                 }
+
+                private CrawdadPeakFinder Finder { get; set; }
 
                 public ChromKey Key { get; private set; }
                 public float[] RawTimes { get; private set; }
@@ -2143,6 +2180,14 @@ namespace pwiz.Skyline.Model.Results
                 {
                     RawTimes = Times = timesNew;
                     RawIntensities = Intensities = intensitiesNew;
+                }
+
+                public ChromPeak CalcChromPeak(CrawdadPeak peak, CrawdadPeak peakMax)
+                {
+                    // TODO: Enable this when other peak detection changes come on line
+//                    if (!ReferenceEquals(peak, peakMax))
+//                        peak = Finder.GetPeak(peakMax.StartIndex, peakMax.EndIndex);
+                    return new ChromPeak(peak, Times);
                 }
             }
 
@@ -2162,6 +2207,11 @@ namespace pwiz.Skyline.Model.Results
                     return Peak == null ? Data.Key.ToString() :
                         string.Format("{0} - area = {1:F0}, start = {2}, end = {3}",
                             Data.Key, Peak.Area, Peak.StartIndex, Peak.EndIndex);
+                }
+
+                public ChromPeak CalcChromPeak(CrawdadPeak peakMax)
+                {
+                    return Data.CalcChromPeak(Peak, peakMax);
                 }
             }
 

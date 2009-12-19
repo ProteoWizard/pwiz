@@ -23,6 +23,7 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.ProteomeDatabase.API;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -119,18 +120,12 @@ namespace pwiz.Skyline.EditUI
                     _peptideDocNodes.Add((PeptideDocNode) child);
                 }
             }
-            if (BackgroundProteome == null)
-            {
-                MessageBox.Show(this, "You need to specify a background proteome in the Peptide Settings dialog.", Program.Name);
-                Close();
-                return;
-            }
             _peptideProteins = null;
             var peptideSettings = DocumentUIContainer.DocumentUI.Settings.PeptideSettings;
             var digestion = BackgroundProteome.GetDigestion(peptideSettings);
             if (digestion == null)
             {
-                MessageBox.Show(this, "The background proteome database has not yet finished being digested with " + peptideSettings.Enzyme.Name, Program.Name);
+                MessageDlg.Show(this, string.Format("The background proteome {0} has not yet finished being digested with {1}.", BackgroundProteome.Name, peptideSettings.Enzyme.Name));
                 Close();
                 return;
             }
@@ -188,6 +183,8 @@ namespace pwiz.Skyline.EditUI
                 }
             }
             dataGridView1.EndEdit();
+            // Select the first peptide to populate the other controls in the dialog.
+            dataGridView1.CurrentCell = dataGridView1.Rows[0].Cells[1];
         }
 
         private void QueryPeptideProteins(ILongWaitBroker longWaitBroker)

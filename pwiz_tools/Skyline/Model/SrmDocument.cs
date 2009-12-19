@@ -546,6 +546,11 @@ namespace pwiz.Skyline.Model
             throw new InvalidOperationException("Invalid move source.");
         }
 
+        public SrmDocument Refine(RefinementSettings settings)
+        {
+            return this;
+        }
+
         public SrmDocument RemoveDuplicatePeptides()
         {
             // First just count occurances of each possible peptide for the sequences

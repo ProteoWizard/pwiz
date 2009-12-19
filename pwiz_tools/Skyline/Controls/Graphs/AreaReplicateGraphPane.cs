@@ -183,7 +183,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
             // Draw a box around the currently selected replicate
-            if (maxArea >  -double.MaxValue)
+            if (ShowSelection && maxArea >  -double.MaxValue)
             {
                 double yValue;
                 switch (BarSettings.Type)
@@ -228,7 +228,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (YAxis.Type == AxisType.Log)
                         YAxis.Scale.MaxAuto = true;
 
-                    YAxis.Title.Text = "Peak Area Regression Percent";
+                    YAxis.Title.Text = "Percent of Regression Peak Area";
                     YAxis.Type = AxisType.Linear;
                     YAxis.Scale.MinAuto = false;
                     FixedYMin = YAxis.Scale.Min = 0;

@@ -410,6 +410,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         listChromGraphs[0].RetentionWindow = window;
                     }
                 }
+                GraphPane.Legend.IsVisible = Settings.Default.ShowChromatogramLegend;
             }
             catch (InvalidDataException x)
             {

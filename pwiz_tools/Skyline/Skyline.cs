@@ -611,6 +611,7 @@ namespace pwiz.Skyline
             enabled = nodeTree != null;
             deleteMenuItem.Enabled = enabled;
             editNoteToolStripMenuItem.Enabled = enabled;
+            manageUniquePeptidesMenuItem.Enabled = enabled;
             modifyPeptideMenuItem.Enabled = sequenceTree.GetNodeOfType<PeptideTreeNode>() != null;
 
             // Update any visible graphs
@@ -1114,8 +1115,14 @@ namespace pwiz.Skyline
             ModifyDocument("Remove duplicate peptides", doc => doc.RemoveDuplicatePeptides());
         }
 
-        private void manageUniquePeptidesToolStripMenuItem_Click(object sender, EventArgs e)
+        private void manageUniquePeptidesMenuItem_Click(object sender, EventArgs e)
         {
+            if (DocumentUI.Settings.PeptideSettings.BackgroundProteome.IsNone)
+            {
+                MessageDlg.Show(this, "Inspecting peptide uniqueness requires a background proteome.\n" +
+                    "Choose a background proteome in the Digestions tab of the Peptide Settings.");
+                return;
+            }
             var treeNode = sequenceTree.SelectedNode;
             while (treeNode != null && !(treeNode is PeptideGroupTreeNode))
             {
@@ -1169,6 +1176,14 @@ namespace pwiz.Skyline
             pasteDlg.ShowDialog(this);
         }
 
+        private void refineMenuItem_Click(object sender, EventArgs e)
+        {
+            var refineDlg = new RefineDlg(DocumentUI);
+            if (refineDlg.ShowDialog(this) == DialogResult.OK)
+            {
+                ModifyDocument("Refine", doc => doc.Refine(refineDlg.RefinementSettings));                
+            }
+        }
 
         #endregion // Edit menu
 

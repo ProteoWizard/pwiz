@@ -32,14 +32,15 @@
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(UniquePeptidesDlg));
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.PeptideIncludedColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.PeptideColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.includeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.excludeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
-            this.PeptideIncludedColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn();
-            this.PeptideColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.label1 = new System.Windows.Forms.Label();
             this.tbxProteinName = new System.Windows.Forms.TextBox();
             this.tbxProteinDescription = new System.Windows.Forms.TextBox();
@@ -78,7 +79,7 @@
             dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
             this.dataGridView1.DefaultCellStyle = dataGridViewCellStyle2;
-            this.dataGridView1.Location = new System.Drawing.Point(0, -2);
+            this.dataGridView1.Location = new System.Drawing.Point(-1, -2);
             this.dataGridView1.Name = "dataGridView1";
             dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
@@ -88,8 +89,19 @@
             dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.dataGridView1.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
-            this.dataGridView1.Size = new System.Drawing.Size(705, 264);
+            this.dataGridView1.Size = new System.Drawing.Size(705, 248);
             this.dataGridView1.TabIndex = 0;
+            // 
+            // PeptideIncludedColumn
+            // 
+            this.PeptideIncludedColumn.HeaderText = "Included";
+            this.PeptideIncludedColumn.Name = "PeptideIncludedColumn";
+            this.PeptideIncludedColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            // 
+            // PeptideColumn
+            // 
+            this.PeptideColumn.HeaderText = "Peptide";
+            this.PeptideColumn.Name = "PeptideColumn";
             // 
             // contextMenuStrip1
             // 
@@ -116,10 +128,10 @@
             // btnOK
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOK.Location = new System.Drawing.Point(544, 399);
+            this.btnOK.Location = new System.Drawing.Point(535, 389);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
-            this.btnOK.TabIndex = 2;
+            this.btnOK.TabIndex = 7;
             this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
@@ -128,84 +140,73 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(625, 399);
+            this.btnCancel.Location = new System.Drawing.Point(616, 389);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 3;
+            this.btnCancel.TabIndex = 8;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
-            // 
-            // PeptideIncludedColumn
-            // 
-            this.PeptideIncludedColumn.HeaderText = "Included";
-            this.PeptideIncludedColumn.Name = "PeptideIncludedColumn";
-            this.PeptideIncludedColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
-            // PeptideColumn
-            // 
-            this.PeptideColumn.HeaderText = "Peptide";
-            this.PeptideColumn.Name = "PeptideColumn";
             // 
             // label1
             // 
             this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(6, 277);
+            this.label1.Location = new System.Drawing.Point(12, 267);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(74, 13);
-            this.label1.TabIndex = 4;
-            this.label1.Text = "Protein Name:";
+            this.label1.TabIndex = 1;
+            this.label1.Text = "&Protein Name:";
             // 
             // tbxProteinName
             // 
             this.tbxProteinName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbxProteinName.Location = new System.Drawing.Point(92, 274);
+            this.tbxProteinName.Location = new System.Drawing.Point(92, 264);
             this.tbxProteinName.Name = "tbxProteinName";
             this.tbxProteinName.ReadOnly = true;
-            this.tbxProteinName.Size = new System.Drawing.Size(608, 20);
-            this.tbxProteinName.TabIndex = 5;
+            this.tbxProteinName.Size = new System.Drawing.Size(599, 20);
+            this.tbxProteinName.TabIndex = 2;
             // 
             // tbxProteinDescription
             // 
             this.tbxProteinDescription.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbxProteinDescription.Location = new System.Drawing.Point(91, 303);
+            this.tbxProteinDescription.Location = new System.Drawing.Point(92, 293);
             this.tbxProteinDescription.Name = "tbxProteinDescription";
             this.tbxProteinDescription.ReadOnly = true;
-            this.tbxProteinDescription.Size = new System.Drawing.Size(609, 20);
-            this.tbxProteinDescription.TabIndex = 6;
+            this.tbxProteinDescription.Size = new System.Drawing.Size(599, 20);
+            this.tbxProteinDescription.TabIndex = 4;
             // 
             // label2
             // 
             this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 305);
+            this.label2.Location = new System.Drawing.Point(12, 296);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(60, 13);
-            this.label2.TabIndex = 7;
-            this.label2.Text = "Description";
+            this.label2.Size = new System.Drawing.Size(63, 13);
+            this.label2.TabIndex = 3;
+            this.label2.Text = "&Description:";
             // 
             // label3
             // 
             this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(16, 336);
+            this.label3.Location = new System.Drawing.Point(12, 326);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(56, 13);
-            this.label3.TabIndex = 8;
-            this.label3.Text = "Sequence";
+            this.label3.Size = new System.Drawing.Size(59, 13);
+            this.label3.TabIndex = 5;
+            this.label3.Text = "&Sequence:";
             // 
             // richTextBoxSequence
             // 
             this.richTextBoxSequence.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.richTextBoxSequence.Location = new System.Drawing.Point(92, 333);
+            this.richTextBoxSequence.Location = new System.Drawing.Point(92, 323);
             this.richTextBoxSequence.Name = "richTextBoxSequence";
             this.richTextBoxSequence.ReadOnly = true;
-            this.richTextBoxSequence.Size = new System.Drawing.Size(608, 60);
-            this.richTextBoxSequence.TabIndex = 9;
+            this.richTextBoxSequence.Size = new System.Drawing.Size(599, 60);
+            this.richTextBoxSequence.TabIndex = 6;
             this.richTextBoxSequence.Text = "";
             // 
             // UniquePeptidesDlg
@@ -214,19 +215,25 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(704, 425);
+            this.ClientSize = new System.Drawing.Size(703, 424);
             this.ContextMenuStrip = this.contextMenuStrip1;
             this.Controls.Add(this.richTextBoxSequence);
-            this.Controls.Add(this.label3);
-            this.Controls.Add(this.label2);
-            this.Controls.Add(this.tbxProteinDescription);
-            this.Controls.Add(this.tbxProteinName);
-            this.Controls.Add(this.label1);
             this.Controls.Add(this.dataGridView1);
-            this.Controls.Add(this.btnCancel);
+            this.Controls.Add(this.tbxProteinDescription);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.tbxProteinName);
+            this.Controls.Add(this.label2);
             this.Controls.Add(this.btnOK);
+            this.Controls.Add(this.btnCancel);
+            this.Controls.Add(this.label1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "UniquePeptidesDlg";
-            this.Text = "UniquePeptidesDlg";
+            this.ShowInTaskbar = false;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+            this.TabText = "Unique Peptides";
+            this.Text = "Unique Peptides";
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.contextMenuStrip1.ResumeLayout(false);
             this.ResumeLayout(false);

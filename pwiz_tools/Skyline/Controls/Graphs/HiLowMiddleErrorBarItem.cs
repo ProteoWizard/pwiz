@@ -66,10 +66,11 @@ namespace pwiz.Skyline.Controls.Graphs
         public HiLowMiddleErrorBar(Color color, Color middleColor)
             : base(color)
         {
-            MiddleFill = new Fill(middleColor);
+            // Pens scale better in EMF files
+            MiddlePen = new Pen(middleColor);
         }
 
-        public Fill MiddleFill { get; private set; }
+        public Pen MiddlePen { get; private set; }
 
         protected override void DrawSingleBar(Graphics g, GraphPane pane, CurveItem curve,
                                               int index, int pos, Axis baseAxis, Axis valueAxis, float barWidth, float scaleFactor)
@@ -104,7 +105,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
 
             // Draw the bar
-            RectangleF rect;
             if (pane.BarSettings.Base == BarBase.X)
             {
                 if (barWidth >= 3 && middleError.Error > 0)
@@ -117,20 +117,18 @@ namespace pwiz.Skyline.Controls.Graphs
                     float pixMidX = (float)Math.Round(pixSide + barWidth / 2);
 
                     // Line
-                    rect = new RectangleF(pixMidX, pixHiError, 1, pixLowError - pixHiError);
-                    MiddleFill.Draw(g, rect);
+                    g.DrawLine(MiddlePen, pixMidX, pixHiError, pixMidX, pixLowError);
                     if (barWidth >= PIX_TERM_WIDTH)
                     {
                         // Ends
-                        rect = new RectangleF(pixMidX - (float)Math.Round(PIX_TERM_WIDTH / 2), pixHiError, PIX_TERM_WIDTH, 1);
-                        MiddleFill.Draw(g, rect);
-                        rect = new RectangleF(pixMidX - (float)Math.Round(PIX_TERM_WIDTH / 2), pixLowError, PIX_TERM_WIDTH, 1);
-                        MiddleFill.Draw(g, rect);
+                        float pixLeft = pixMidX - (float)Math.Round(PIX_TERM_WIDTH / 2);
+                        float pixRight = pixLeft + PIX_TERM_WIDTH - 1;
+                        g.DrawLine(MiddlePen, pixLeft, pixHiError, pixRight, pixHiError);
+                        g.DrawLine(MiddlePen, pixLeft, pixLowError, pixRight, pixLowError);
                     }
                 }
 
-                rect = new RectangleF(pixSide, pixMiddleValue, barWidth, 1);
-                MiddleFill.Draw(g, rect);
+                g.DrawLine(MiddlePen, pixSide, pixMiddleValue, pixSide + barWidth, pixMiddleValue);
             }
             else
             {
@@ -144,20 +142,18 @@ namespace pwiz.Skyline.Controls.Graphs
                     float pixMidY = (float)Math.Round(pixSide + barWidth / 2);
 
                     // Line
-                    rect = new RectangleF(pixLowError, pixMidY, pixHiError - pixLowError, 1);
-                    MiddleFill.Draw(g, rect);
+                    g.DrawLine(MiddlePen, pixLowError, pixMidY, pixHiError, pixMidY);
                     if (barWidth >= PIX_TERM_WIDTH)
                     {
                         // Ends
-                        rect = new RectangleF(pixHiError, pixMidY - (float)Math.Round(PIX_TERM_WIDTH / 2), 1, PIX_TERM_WIDTH);
-                        MiddleFill.Draw(g, rect);
-                        rect = new RectangleF(pixLowError, pixMidY - (float)Math.Round(PIX_TERM_WIDTH / 2), 1, PIX_TERM_WIDTH);
-                        MiddleFill.Draw(g, rect);                        
+                        float pixTop = pixMidY - (float)Math.Round(PIX_TERM_WIDTH / 2);
+                        float pixBottom = pixTop + PIX_TERM_WIDTH - 1;
+                        g.DrawLine(MiddlePen, pixHiError, pixTop, pixHiError, pixBottom);
+                        g.DrawLine(MiddlePen, pixLowError, pixTop, pixLowError, pixBottom);
                     }
                 }
 
-                rect = new RectangleF(pixMiddleValue, pixSide, 1, barWidth);
-                MiddleFill.Draw(g, rect);
+                g.DrawLine(MiddlePen, pixMiddleValue, pixSide, pixMiddleValue, pixSide + barWidth);
             }
         }
     }

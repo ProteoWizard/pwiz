@@ -27,7 +27,6 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
 {
@@ -310,10 +309,13 @@ namespace pwiz.Skyline.Controls
                 {
                     var precursorDocNode = SelectedTransitionGroupDocNode;
                     if (precursorDocNode == null)
-                    {
                         return;
-                    }
+
+                    string noteNew = Convert.ToString(row.Cells[e.ColumnIndex].Value);
                     var chromInfoOld = GetChromInfo(SelectedTransitionGroupDocNode.Results, rowIdentifier);
+                    if (Equals(chromInfoOld.Annotations.Note, noteNew))
+                        return;
+
                     var chromInfoNew = chromInfoOld.ChangeAnnotations(
                         chromInfoOld.Annotations.ChangeNote(Convert.ToString(row.Cells[e.ColumnIndex].Value)));
                     Debug.Assert(chromInfoNew.UserSet);
@@ -327,10 +329,13 @@ namespace pwiz.Skyline.Controls
                 {
                     var transitionDocNode = SelectedTransitionDocNode;
                     if (transitionDocNode == null)
-                    {
                         return;
-                    }
+
+                    string noteNew = Convert.ToString(row.Cells[e.ColumnIndex].Value);
                     var chromInfoOld = GetChromInfo(transitionDocNode.Results, rowIdentifier);
+                    if (Equals(chromInfoOld.Annotations.Note, noteNew))
+                        return;
+
                     var chromInfoNew = chromInfoOld.ChangeAnnotations(
                         chromInfoOld.Annotations.ChangeNote(Convert.ToString(row.Cells[e.ColumnIndex].Value)));
                     Debug.Assert(chromInfoNew.UserSet);
@@ -356,7 +361,7 @@ namespace pwiz.Skyline.Controls
                                 PathToSelectedNode(SelectedTransitionDocNode).Parent,
                                 SelectedTransitionDocNode.ChangeResults(
                                     ChangeChromInfo(SelectedTransitionDocNode.Results, rowIdentifier, transitionChromInfo, chromInfoNew))));
-                    }
+            }
                     var transitionGroupChromInfo = chromInfo as TransitionGroupChromInfo;
                     if (transitionGroupChromInfo != null)
                     {
@@ -1023,7 +1028,7 @@ namespace pwiz.Skyline.Controls
                 if (SelectedTransitionDocNode != null)
                 {
                     mask |= AnnotationDef.AnnotationTarget.transition_result;
-                }
+        }
                 if (AnnotationDef.AnnotationTarget.precursor_result == (annotationDef.AnnotationTargets & mask))
                 {
                     row.Cells[column.Index].Value = 
@@ -1069,7 +1074,7 @@ namespace pwiz.Skyline.Controls
                     row.Cells[column.Index].Value = 
                         chromInfo == null ? null :
                         chromInfo.Annotations.GetAnnotation(annotationDef);
-                }
+        }
             }
         }
 

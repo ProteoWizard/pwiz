@@ -290,30 +290,29 @@ namespace pwiz.Skyline.Model.Results
 // ReSharper restore InconsistentNaming
 
         public ChromPeak(CrawdadPeak peak, float[] times)
-            : this(times[peak.TimeIndex],
-                    times[peak.StartIndex],
-                    times[peak.EndIndex],
-                    peak.Area,
-                    peak.BackgroundArea,
-                    peak.Height,
-                    peak.Fwhm * (times[peak.StartIndex + 1] - times[peak.StartIndex]),
-                    peak.FwhmDegenerate)
-        {
-        }
-
-        public ChromPeak(float retentionTime, float startTime, float endTime,
-            float area, float backgroundArea, float height, float fwhm, bool fwhmDegenerate)
             : this()
         {
-            RetentionTime = retentionTime;
-            StartTime = startTime;
-            EndTime = endTime;
-            Area = area;
-            BackgroundArea = backgroundArea;
-            Height = height;
-            Fwhm = fwhm;
+            // Get the interval being used to convert from Crawdad index based numbers
+            // to numbers that are normalized with respect to time.
+            double interval = times[peak.StartIndex + 1] - times[peak.StartIndex];
+            // Normalize area numbers by time in seconds, since this will be the least
+            // dramatic change from Skyline v0.5, when the Crawdad index based areas
+            // were used directly.
+            // TODO: Implement enough backward compatibility code for this to be enabled
+//            double intervalSeconds = interval*60;
+
+            RetentionTime = times[peak.TimeIndex];
+            StartTime = times[peak.StartIndex];
+            EndTime = times[peak.EndIndex];
+
+//            Area = (float) (peak.Area * intervalSeconds);
+//            BackgroundArea = (float) (peak.BackgroundArea * intervalSeconds);
+            Area = peak.Area;
+            BackgroundArea = peak.BackgroundArea;
+            Height = peak.Height;
+            Fwhm = (float) (peak.Fwhm * interval);
             Flags = 0;
-            if (fwhmDegenerate)
+            if (peak.FwhmDegenerate)
                 Flags |= FlagValues.degenerate_fwhm;
         }
 
