@@ -32,11 +32,6 @@
 #include "Reader_Thermo_Detail.hpp"
 #endif
 
-using namespace pwiz::msdata;
-using namespace pwiz::msdata::detail;
-using namespace pwiz::data;
-using namespace pwiz::util;
-
 struct IsRawFile : public pwiz::util::TestPathPredicate
 {
     bool operator() (const string& rawpath) const
@@ -56,6 +51,11 @@ int main(int argc, char* argv[])
     try
     {
         #ifdef PWIZ_READER_THERMO
+
+        using namespace pwiz::msdata;
+        using namespace pwiz::msdata::detail;
+        using namespace pwiz::data;
+        using namespace pwiz::util;
 
         // test that all instrument types are handled by translation functions (skipping the 'Unknown' type)
         bool allInstrumentTestsPassed = true;
