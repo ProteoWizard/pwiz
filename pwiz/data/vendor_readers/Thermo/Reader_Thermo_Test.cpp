@@ -54,6 +54,7 @@ int main(int argc, char* argv[])
 
         using namespace pwiz::msdata;
         using namespace pwiz::msdata::detail;
+        using namespace pwiz;
         //using namespace pwiz::data;
         using namespace pwiz::util;
 
