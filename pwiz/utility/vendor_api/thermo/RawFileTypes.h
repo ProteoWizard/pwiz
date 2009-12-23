@@ -98,6 +98,8 @@ enum PWIZ_API_DECL InstrumentModelType
     InstrumentModelType_Accela_PDA,
     InstrumentModelType_LTQ_Velos,
     InstrumentModelType_LTQ_Orbitrap_Velos,
+
+    InstrumentModelType_Count,
 };
 
 
@@ -210,6 +212,9 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
         case InstrumentModelType_Exactive:
         case InstrumentModelType_LTQ_Velos:
         case InstrumentModelType_LTQ_Orbitrap_Velos:
+        case InstrumentModelType_TSQ_Quantum_Ultra:
+        case InstrumentModelType_TSQ_Quantum_Ultra_AM:
+        case InstrumentModelType_TSQ_Vantage_Standard:
             ionSources.push_back(IonizationType_ESI);
             break;
 
@@ -330,6 +335,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_TSQ_Quantum_Access:
         case InstrumentModelType_TSQ_Quantum_Ultra:
         case InstrumentModelType_TSQ_Quantum_Ultra_AM:
+        case InstrumentModelType_TSQ_Vantage_Standard:
         case InstrumentModelType_GC_Quantum:
             return MassAnalyzerType_Triple_Quadrupole;
 
@@ -418,6 +424,9 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_TSQ:
         case InstrumentModelType_TSQ_Quantum:
         case InstrumentModelType_TSQ_Quantum_Access:
+        case InstrumentModelType_TSQ_Quantum_Ultra:
+        case InstrumentModelType_TSQ_Quantum_Ultra_AM:
+        case InstrumentModelType_TSQ_Vantage_Standard:
         case InstrumentModelType_GC_Quantum:
             massAnalyzers.push_back(MassAnalyzerType_Triple_Quadrupole);
             break;
@@ -523,6 +532,9 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_LTQ_XL_ETD:
         case InstrumentModelType_TSQ_Quantum:
         case InstrumentModelType_TSQ_Quantum_Access:
+        case InstrumentModelType_TSQ_Quantum_Ultra:
+        case InstrumentModelType_TSQ_Quantum_Ultra_AM:
+        case InstrumentModelType_TSQ_Vantage_Standard:
         case InstrumentModelType_DSQ:
         case InstrumentModelType_PolarisQ:
         case InstrumentModelType_ITQ_700:

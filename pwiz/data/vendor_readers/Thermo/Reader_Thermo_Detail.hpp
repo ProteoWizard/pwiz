@@ -35,8 +35,14 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
+using namespace pwiz::data;
+
 PWIZ_API_DECL
 std::vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile);
+
+PWIZ_API_DECL
+std::vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& commonSource,
+                                                                    InstrumentModelType model);
 
 PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentModelType);
 PWIZ_API_DECL CVID translateAsScanningMethod(ScanType scanType);

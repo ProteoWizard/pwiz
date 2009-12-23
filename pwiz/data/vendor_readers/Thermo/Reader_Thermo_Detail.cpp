@@ -110,8 +110,6 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
 PWIZ_API_DECL
 vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile)
 {
-    vector<InstrumentConfiguration> configurations;
-
     InstrumentModelType model = parseInstrumentModelType(rawfile.value(InstModel));
 
     // source common to all configurations (TODO: handle multiple sources in a single run?)
@@ -126,6 +124,15 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile)
     if (firstInletType != CVID_Unknown)
         commonSource.set(firstInletType);
 
+    return createInstrumentConfigurations(commonSource, model);
+}
+
+
+PWIZ_API_DECL
+vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& commonSource, InstrumentModelType model)
+{
+    vector<InstrumentConfiguration> configurations;
+    
     switch (model)
     {
         case InstrumentModelType_Exactive:
@@ -153,6 +160,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile)
         case InstrumentModelType_LTQ_Orbitrap_XL:
         case InstrumentModelType_LTQ_Orbitrap_XL_ETD:
         case InstrumentModelType_MALDI_LTQ_Orbitrap:
+        case InstrumentModelType_LTQ_Orbitrap_Velos:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_orbitrap, 2));
