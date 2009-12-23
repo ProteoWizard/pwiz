@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
 
         using namespace pwiz::msdata;
         using namespace pwiz::msdata::detail;
-        using namespace pwiz::data;
+        //using namespace pwiz::data;
         using namespace pwiz::util;
 
         // test that all instrument types are handled by translation functions (skipping the 'Unknown' type)

@@ -36,7 +36,7 @@
 #include <boost/bind.hpp>
 
 
-using namespace pwiz::data;
+//using namespace pwiz::data;
 
 
 namespace pwiz {
