@@ -68,7 +68,7 @@ rule vendor-api-usage-requirements ( properties * )
     if <toolset>msvc in $(properties)
     {
         result += <define>PWIZ_READER_THERMO ;
-        if [ path.exists $(API_PATH)/MSFileReader.XRawfile2.dll ]
+        if $(.hasDLLs)
         {
             result += <manifest-dependency>$(API_PATH)/MSFileReader.XRawfile2.dll ;
             result += <assembly-dependency>$(API_PATH)/MSFileReader.XRawfile2.dll ;
