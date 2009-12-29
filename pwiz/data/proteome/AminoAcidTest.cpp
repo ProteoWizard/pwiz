@@ -139,7 +139,7 @@ void test()
     for (int i=0; i < 22; ++i) // skip X for now
     {
         TestAminoAcid& aa = testAminoAcids[i];
-        chemistry::Formula residueFormula = AminoAcid::Info::record(aa.symbol).residueFormula;
+        Formula residueFormula = AminoAcid::Info::record(aa.symbol).residueFormula;
         unit_assert_equal(residueFormula.monoisotopicMass(), aa.monoMass, 0.00001);
         unit_assert_equal(residueFormula.molecularWeight(), aa.avgMass, 0.0001);
         //set<char> mmNames = mm2n.getNames(aa.monoMass, EPSILON);
@@ -162,7 +162,7 @@ void test()
     {
         const AminoAcid::Info::Record& record = *it;
 
-        chemistry::Formula residueFormula = record.residueFormula;
+        Formula residueFormula = record.residueFormula;
         averageMonoisotopicMass += residueFormula.monoisotopicMass() * record.abundance; 
         averageC += residueFormula[C] * record.abundance;
         averageH += residueFormula[H] * record.abundance;

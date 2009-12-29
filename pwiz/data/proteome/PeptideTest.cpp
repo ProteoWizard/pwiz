@@ -34,6 +34,7 @@
 using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::proteome;
+using namespace pwiz::chemistry;
 
 
 ostream* os_ = 0;
@@ -550,7 +551,6 @@ void writeFragmentation(const Peptide& p, const Fragmentation& f, ostream& os)
 
 void fragmentTest()
 {
-    using chemistry::Proton;
     const double EPSILON = 0.005;
 
     for (size_t i=0; i < testFragmentationsSize; ++i)
