@@ -33,7 +33,7 @@ namespace pwiz.Topograph.ui.Forms
 {
     public partial class PeptideAnalysisSummary : EntityModelForm
     {
-        private readonly Dictionary<PeptideFileAnalysis, DataGridViewRow> peptideAnalysisRows 
+        private readonly Dictionary<PeptideFileAnalysis, DataGridViewRow> _peptideFileAnalysisRows 
             = new Dictionary<PeptideFileAnalysis, DataGridViewRow>();
         public PeptideAnalysisSummary(PeptideAnalysis peptideAnalysis) : base(peptideAnalysis)
         {
@@ -52,27 +52,7 @@ namespace pwiz.Topograph.ui.Forms
 
         private void btnCreateAnalyses_Click(object sender, EventArgs e)
         {
-            dataGridView.Rows.Clear();
-            peptideAnalysisRows.Clear();
-            foreach (var msDataFile in Workspace.GetMsDataFiles())
-            {
-                if (!msDataFile.HasTimes())
-                {
-                    if (!msDataFile.HasSearchResults(Peptide))
-                    {
-                        continue;
-                    }
-                    if (!TurnoverForm.Instance.EnsureMsDataFile(msDataFile))
-                    {
-                        continue;
-                    }
-                }
-                PeptideFileAnalysis peptideFileAnalysis = PeptideFileAnalysis.EnsurePeptideFileAnalysis(PeptideAnalysis, msDataFile);
-                if (peptideFileAnalysis != null)
-                {
-                    UpdateRow(AddRow(peptideFileAnalysis));
-                }
-            }
+            new CreateFileAnalysesForm(PeptideAnalysis).ShowDialog(this);
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -89,19 +69,19 @@ namespace pwiz.Topograph.ui.Forms
         {
             var row = dataGridView.Rows[dataGridView.Rows.Add()];
             row.Tag = peptideFileAnalysis;
-            peptideAnalysisRows.Add(peptideFileAnalysis, row);
+            _peptideFileAnalysisRows.Add(peptideFileAnalysis, row);
             return row;
         }
 
         private void Remove(PeptideFileAnalysis peptideFileAnalysis)
         {
             DataGridViewRow row;
-            if (!peptideAnalysisRows.TryGetValue(peptideFileAnalysis, out row))
+            if (!_peptideFileAnalysisRows.TryGetValue(peptideFileAnalysis, out row))
             {
                 return;
             }
             dataGridView.Rows.Remove(row);
-            peptideAnalysisRows.Remove(peptideFileAnalysis);
+            _peptideFileAnalysisRows.Remove(peptideFileAnalysis);
         }
 
         private void UpdateRow(DataGridViewRow row)
@@ -130,9 +110,9 @@ namespace pwiz.Topograph.ui.Forms
         protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
         {
             base.OnWorkspaceEntitiesChanged(args);
-            if (args.GetEntities<MsDataFile>().Count > 0)
+            if (args.GetEntities<MsDataFile>().Count > 0 || args.Contains(PeptideAnalysis))
             {
-                UpdateRows(peptideAnalysisRows.Keys);
+                UpdateRows(_peptideFileAnalysisRows.Keys);
             }
             else
             {
@@ -144,14 +124,14 @@ namespace pwiz.Topograph.ui.Forms
                 UpdateRows(peptideFileAnalyses);
             }
         }
-        private void UpdateRows(ICollection<PeptideFileAnalysis> peptideAnalyses)
+        private void UpdateRows(ICollection<PeptideFileAnalysis> peptideFileAnalyses)
         {
-            foreach (var peptideAnalysis in peptideAnalyses)
+            foreach (var peptideFileAnalysis in peptideFileAnalyses)
             {
                 DataGridViewRow row;
-                if (!peptideAnalysisRows.TryGetValue(peptideAnalysis, out row))
+                if (!_peptideFileAnalysisRows.TryGetValue(peptideFileAnalysis, out row))
                 {
-                    continue;
+                    row = AddRow(peptideFileAnalysis);
                 }
                 UpdateRow(row);
             }
@@ -184,7 +164,7 @@ namespace pwiz.Topograph.ui.Forms
                 tbxMassAccuracy.Font = new Font(Font, FontStyle.Bold);
             }
             UpdateMassGrid();
-            UpdateRows(peptideAnalysisRows.Keys);
+            UpdateRows(PeptideAnalysis.FileAnalyses.ListChildren());
         }
 
         protected override void EntityChanged(EntityModelChangeEventArgs args)

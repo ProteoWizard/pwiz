@@ -148,8 +148,8 @@ namespace pwiz.Topograph.Model
         public String Sequence { get { return Peptide.Sequence; }}
         public double FirstTime { get; private set; }
         public double LastTime { get; private set; }
-        public int FirstDetectedScan { get; private set; }
-        public int LastDetectedScan { get; private set; }
+        public int? FirstDetectedScan { get; private set; }
+        public int? LastDetectedScan { get; private set; }
         public int TracerCount { get { return Peptide.MaxTracerCount; } }
         public int? PeakStart
         {
@@ -180,14 +180,35 @@ namespace pwiz.Topograph.Model
         public static DbPeptideFileAnalysis CreatePeptideFileAnalysis(ISession session, MsDataFile msDataFile, DbPeptideAnalysis dbPeptideAnalysis, DbPeptideSearchResult peptideSearchResult)
         {
             var dbMsDataFile = session.Load<DbMsDataFile>(msDataFile.Id);
-            double chromatogramStartTime = msDataFile.GetTime(peptideSearchResult.FirstDetectedScan - 1800);
-            double chromatogramEndTime = msDataFile.GetTime(peptideSearchResult.LastDetectedScan + 1800);
+            double chromatogramStartTime, chromatogramEndTime;
+            int? firstDetectedScan, lastDetectedScan;
+            if (peptideSearchResult != null)
+            {
+                chromatogramStartTime = msDataFile.GetTime(peptideSearchResult.FirstDetectedScan - 1800);
+                chromatogramEndTime = msDataFile.GetTime(peptideSearchResult.LastDetectedScan + 1800);
+                firstDetectedScan = peptideSearchResult.FirstDetectedScan;
+                lastDetectedScan = peptideSearchResult.LastDetectedScan;
+            }
+            else
+            {
+                var query = session.CreateQuery("SELECT MIN(T.ChromatogramStartTime),MAX(T.ChromatogramEndTime) FROM " +
+                                    typeof (DbPeptideFileAnalysis) + " T WHERE T.PeptideAnalysis = :peptideAnalysis")
+                    .SetParameter("peptideAnalysis", dbPeptideAnalysis);
+                var result = (object[]) query.UniqueResult();
+                if (result[0] == null)
+                {
+                    return null;
+                }
+                chromatogramStartTime = Convert.ToDouble(result[0]);
+                chromatogramEndTime = Convert.ToDouble(result[1]);
+                firstDetectedScan = lastDetectedScan = null;
+            }
             return new DbPeptideFileAnalysis
             {
                 ChromatogramEndTime = chromatogramEndTime,
                 ChromatogramStartTime = chromatogramStartTime,
-                FirstDetectedScan = peptideSearchResult.FirstDetectedScan,
-                LastDetectedScan = peptideSearchResult.LastDetectedScan,
+                FirstDetectedScan = firstDetectedScan,
+                LastDetectedScan = lastDetectedScan,
                 MsDataFile = dbMsDataFile,
                 PeptideAnalysis = dbPeptideAnalysis,
                 AutoFindPeak = true,
@@ -220,12 +241,11 @@ namespace pwiz.Topograph.Model
                     .Add(Restrictions.Eq("Peptide", dbPeptideAnalysis.Peptide))
                     .Add(Restrictions.Eq("MsDataFile", dbMsDataFile));
                 var searchResult = (DbPeptideSearchResult) searchResultCriteria.UniqueResult();
-                if (searchResult == null)
+                var dbPeptideFileAnalysis = CreatePeptideFileAnalysis(session, msDataFile, dbPeptideAnalysis, searchResult);
+                if (dbPeptideFileAnalysis == null)
                 {
                     return null;
                 }
-
-                var dbPeptideFileAnalysis = CreatePeptideFileAnalysis(session, msDataFile, dbPeptideAnalysis, searchResult);
                 session.BeginTransaction();
                 session.Save(dbPeptideFileAnalysis);
                 dbPeptideAnalysis.FileAnalysisCount++;

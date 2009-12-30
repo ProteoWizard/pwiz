@@ -50,7 +50,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>43</ApplicationRevision>
+    <ApplicationRevision>44</ApplicationRevision>
     <ApplicationVersion>0.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -145,6 +145,12 @@
     </Compile>
     <Compile Include="Forms\ChromatogramForm.Designer.cs">
       <DependentUpon>ChromatogramForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\CreateFileAnalysesForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\CreateFileAnalysesForm.Designer.cs">
+      <DependentUpon>CreateFileAnalysesForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\DataFilesForm.cs">
       <SubType>Form</SubType>
@@ -363,6 +369,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\ChromatogramForm.resx">
       <DependentUpon>ChromatogramForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\CreateFileAnalysesForm.resx">
+      <DependentUpon>CreateFileAnalysesForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\DataFilesForm.resx">
       <DependentUpon>DataFilesForm.cs</DependentUpon>

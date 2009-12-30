@@ -44,8 +44,8 @@ namespace pwiz.Topograph.Data
         public virtual bool OverrideExcludedMasses { get; set; }
         public virtual double ChromatogramStartTime { get; set; }
         public virtual double ChromatogramEndTime { get; set; }
-        public virtual int FirstDetectedScan { get; set; }
-        public virtual int LastDetectedScan { get; set; }
+        public virtual int? FirstDetectedScan { get; set; }
+        public virtual int? LastDetectedScan { get; set; }
         public virtual int? PeakStart { get; set; }
         public virtual double? PeakStartTime { get; set; }
         public virtual int? PeakEnd { get; set; }

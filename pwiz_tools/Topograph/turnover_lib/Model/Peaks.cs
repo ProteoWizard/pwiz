@@ -96,6 +96,16 @@ namespace pwiz.Topograph.Model
         private void FindPeak()
         {
             var scanIndexes = PeptideFileAnalysis.ScanIndexesArray;
+            if (PeptideFileAnalysis.FirstDetectedScan == null || PeptideFileAnalysis.LastDetectedScan == null 
+                || PeptideFileAnalysis.FirstDetectedScan == 0 || PeptideFileAnalysis.LastDetectedScan == 0)
+            {
+                var blindPeakFinder = new BlindPeakFinder(PeptideFileAnalysis, PeptideFileAnalysis.Chromatograms);
+                int blindPeakStart, blindPeakEnd;
+                blindPeakFinder.FindPeak(out blindPeakStart, out blindPeakEnd);
+                PeakStart = scanIndexes[blindPeakStart];
+                PeakEnd = scanIndexes[blindPeakEnd];
+                return;
+            }
             int firstDetectedScan = Array.BinarySearch(PeptideFileAnalysis.ScanIndexesArray, PeptideFileAnalysis.FirstDetectedScan);
             if (firstDetectedScan < 0)
             {

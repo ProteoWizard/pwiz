@@ -91,8 +91,10 @@ namespace pwiz.Topograph.Data
         public static ISessionFactory CreateSessionFactory(TpgLinkDef tpgLinkDef, bool createSchema)
         {
             var configuration = GetConfiguration(tpgLinkDef.DatabaseTypeEnum)
-                .SetProperty("show_sql", "true")
                 .SetProperty("connection.connection_string", tpgLinkDef.GetConnectionString());
+#if(DEBUG)      
+            configuration.SetProperty("show_sql", "true")
+#endif 
             if (createSchema)
             {
                 configuration.SetProperty("hbm2ddl.auto", "create");

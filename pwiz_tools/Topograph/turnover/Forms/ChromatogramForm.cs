@@ -126,12 +126,15 @@ namespace pwiz.Topograph.ui.Forms
                 var backgroundLine = new LineObj(Color.DarkGray, times[0], PeptideFileAnalysis.Background, times[times.Count - 1], PeptideFileAnalysis.Background);
                 msGraphControl.GraphPane.GraphObjList.Add(backgroundLine);
                 double detectedLineHeight = msGraphControl.GraphPane.YAxis.Scale.Max * .9;
-                double time = TimeFromScanIndex(PeptideFileAnalysis.FirstDetectedScan);
-                msGraphControl.GraphPane.GraphObjList.Add(new LineObj(Color.Black, time, detectedLineHeight, time, 0));
-                if (PeptideFileAnalysis.LastDetectedScan != PeptideFileAnalysis.FirstDetectedScan)
+                if (PeptideFileAnalysis.FirstDetectedScan.HasValue)
                 {
-                    time = TimeFromScanIndex(PeptideFileAnalysis.LastDetectedScan);
+                    double time = TimeFromScanIndex(PeptideFileAnalysis.FirstDetectedScan.Value);
                     msGraphControl.GraphPane.GraphObjList.Add(new LineObj(Color.Black, time, detectedLineHeight, time, 0));
+                    if (PeptideFileAnalysis.LastDetectedScan != PeptideFileAnalysis.FirstDetectedScan)
+                    {
+                        time = TimeFromScanIndex(PeptideFileAnalysis.LastDetectedScan.Value);
+                        msGraphControl.GraphPane.GraphObjList.Add(new LineObj(Color.Black, time, detectedLineHeight, time, 0));
+                    }
                 }
                 msGraphControl.Invalidate();
             }
