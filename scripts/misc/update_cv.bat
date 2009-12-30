@@ -21,34 +21,24 @@ popd
 
 @echo off
 
-REM # Extract Boost.Build (for VC9 support)
-pushd %PWIZ_ROOT%\libraries
-IF EXIST boost-build\jam_src\build.bat GOTO SKIP_BB
-bsdtar.exe -xkjvf boost-build.tar.bz2
-copy /Y msvc.jam boost-build\tools
-:SKIP_BB
-popd
-
-@echo off
-
 set PWIZ_BJAM=%PWIZ_ROOT%\libraries\boost-build\jam_src\bin.ntx86\bjam.exe
 
-@echo off
+REM # msvc.jam assumes it will find "ShowVer.exe" in %PATH%
+set PATH=%PATH%;%PWIZ_ROOT%\libraries
 
 REM # Build local copy of bjam
 IF EXIST %PWIZ_BJAM% GOTO SKIP_BJAM
 echo Building bjam...
 pushd %PWIZ_ROOT%\libraries\boost-build\jam_src
 call build.bat
+@echo off
+setlocal
+@echo off
 popd
 :SKIP_BJAM
 
-@echo off
-
 set BOOST_BUILD_PATH=%PWIZ_ROOT%\libraries\boost-build
-
-@echo off
 
 REM # build and run cvgen targets
 echo Building and running cvgen and cvgen_cli...
-%PWIZ_BJAM% toolset=msvc %PWIZ_ROOT%\pwiz\data\msdata//cv.hpp %PWIZ_ROOT%\pwiz\utility\bindings\CLI//cv.hpp %*
+%PWIZ_BJAM% toolset=msvc %PWIZ_ROOT%\pwiz\data\common//cv.hpp %PWIZ_ROOT%\pwiz\utility\bindings\CLI//cv.hpp %*

@@ -1,6 +1,6 @@
 ' Download psi-ms.obo
 psimsURL = "http://psidev.cvs.sourceforge.net/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo"
-psimsDestination = "..\..\pwiz\data\msdata\psi-ms.obo"
+psimsDestination = "..\..\pwiz\data\common\psi-ms.obo"
 Set objXMLHTTP = CreateObject("MSXML2.XMLHTTP")
 
 objXMLHTTP.open "GET", psimsURL, false
@@ -26,7 +26,7 @@ End if
 
 ' Download unit.obo
 unitURL = "http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo"
-unitDestination = "..\..\pwiz\data\msdata\unit.obo"
+unitDestination = "..\..\pwiz\data\common\unit.obo"
 objXMLHTTP.open "GET", unitURL, false
 objXMLHTTP.send()
 
