@@ -114,8 +114,11 @@ if [ modules.peek : NT ]
         IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
         IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
         echo Unit testing Topograph in $(CONFIGURATION:L) configuration...
+        set name="Topograph unit test"
+        $(TEST_PRECOMMAND)
         msbuild $(TOPOGRAPH_PATH)/turnover.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:TopographTestProject /nologo /verbosity:minimal
         msbuild $(TOPOGRAPH_PATH)/Topograph.test.proj /p:SolutionDir=$(TOPOGRAPH_PATH);OutDir=$(OUTPUT_PATH);TestProject=TopographTestProject /nologo /verbosity:minimal
+        $(TEST_POSTCOMMAND)
     }
 
     rule do_topograph_test_passed ( targets + : sources * : properties * )

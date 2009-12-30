@@ -70,8 +70,11 @@ if [ modules.peek : NT ]
         IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
         IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
         echo Unit testing Skyline in $(CONFIGURATION:L) configuration...
+        set name="Skyline unit test"
+        $(TEST_PRECOMMAND)
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:Test /nologo /verbosity:minimal
         msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);OutDir=$(OUTPUT_PATH);TestProject=Test /nologo /verbosity:minimal
+        $(TEST_POSTCOMMAND)
     }
     
     rule do_skyline_test_functional ( targets + : sources * : properties * )
@@ -84,8 +87,11 @@ if [ modules.peek : NT ]
         IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
         IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
         echo Functional testing Skyline in $(CONFIGURATION:L) configuration...
+        set name="Skyline functional test"
+        $(TEST_PRECOMMAND)
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:TestFunctional /nologo /verbosity:minimal
         msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);OutDir=$(OUTPUT_PATH);TestProject=TestFunctional /nologo /verbosity:minimal
+        $(TEST_POSTCOMMAND)
     }
     
     rule do_skyline_test_passed ( targets + : sources * : properties * )
