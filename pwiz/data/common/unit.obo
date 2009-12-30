@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 14:07:2009 12:37
+date: 18:12:2009 10:12
 saved-by: George Gkoutos
 auto-generated-by: OBO-Edit 2.000-beta55
 subsetdef: abnormal_slim "Abnormal/normal slim"
@@ -617,6 +617,13 @@ id: UO:0000084
 name: gram per cubic centimeter
 def: "A mass unit density which is equal to mass of an object in grams divided by the volume in cubic centimeters." [NIST:NIST "http://physics.nist.gov/cuu/Units/"]
 synonym: "g/cm^[3]" EXACT []
+is_a: UO:0000052 ! mass density unit
+
+[Term]
+id: UO:0000301
+name: microgram per liter
+def: "A mass unit density which is equal to mass of an object in micrograms divided by the volume in liters." [UOC:GVG]
+synonym: "ug/L" EXACT []
 is_a: UO:0000052 ! mass density unit
 
 [Term]
@@ -1365,8 +1372,9 @@ is_a: UO:0000186 ! dimensionless unit
 
 [Term]
 id: UO:0000189
-name: count
+name: count unit
 def: "A dimensionless unit which denotes a simple count of things." [MGED:MGED "http://mged.sourceforge.net/ontologies/MGEDontology.php"]
+synonym: "count" EXACT []
 is_a: UO:0000186 ! dimensionless unit
 
 [Term]
@@ -1385,7 +1393,7 @@ is_a: UO:0000190 ! ratio
 id: UO:0000192
 name: molecule count
 def: "A dimensionless count unit which denotes the number of molecules." [MGED:MGED "http://mged.sourceforge.net/ontologies/MGEDontology.php"]
-is_a: UO:0000189 ! count
+is_a: UO:0000189 ! count unit
 
 [Term]
 id: UO:0000193
@@ -1510,14 +1518,14 @@ id: UO:0000210
 name: colony forming unit
 def: "A dimensionless count unit which a measure of viable bacterial numbers." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
 synonym: "cfu" EXACT []
-is_a: UO:0000189 ! count
+is_a: UO:0000189 ! count unit
 
 [Term]
 id: UO:0000211
 name: plaque forming unit
 def: "A dimensionless count unit which a measure of plague forming units in a given volume." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
 synonym: "pfu" EXACT []
-is_a: UO:0000189 ! count
+is_a: UO:0000189 ! count unit
 
 [Term]
 id: UO:0000212
@@ -1743,9 +1751,9 @@ is_a: UO:0000239 ! spatial resolution unit
 [Term]
 id: UO:0000244
 name: base pair
-def: "A length unit which contains one nucleotide." [UO:GVG]
+def: "A count unit which contains one nucleotide." [UO:GVG]
 synonym: "bp" EXACT []
-is_a: UO:0000189 ! count
+is_a: UO:0000189 ! count unit
 
 [Term]
 id: UO:0000245

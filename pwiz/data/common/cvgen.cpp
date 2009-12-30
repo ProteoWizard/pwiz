@@ -37,8 +37,7 @@
 
 
 using namespace std;
-using namespace pwiz;
-using namespace pwiz::msdata;
+using namespace pwiz::data;
 namespace bfs = boost::filesystem;
 
 
@@ -149,7 +148,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
     {
-        os << "// [" << obo->filename << "]\n";
+        os << "// [" << bfs::path(obo->filename).filename() << "]\n";
         
         for (vector<string>::const_iterator it=obo->header.begin(); it!=obo->header.end(); ++it)
             os << "//   " << *it << endl;

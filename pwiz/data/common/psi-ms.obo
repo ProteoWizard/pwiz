@@ -4,8 +4,8 @@ saved-by: andreas_bertsch
 auto-generated-by: OBO-Edit 1.101
 default-namespace: MS
 remark: namespace: MS
-remark: version: 2.29.0
-remark: release date: 2009-12-10
+remark: version: 2.30.0
+remark: release date: 2009-12-30
 remark: coverage: Mass spectrometer output files and spectra interpretation
 remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
@@ -9433,6 +9433,18 @@ is_a: MS:1001557 ! Shimadzu Biotech software
 is_a: MS:1001455 ! acquisition software
 is_a: MS:1001456 ! analysis software
 is_a: MS:1001457 ! data processing software
+
+[Term]
+id: MS:1001559
+name: AB SCIEX TOF/TOF T2D nativeID format
+def: "file=xsd:IDREF." [PSI:MS]
+is_a: MS:1000767 ! native spectrum identifier format
+
+[Term]
+id: MS:1001560
+name: AB SCIEX TOF/TOF T2D file
+def: "Applied Biosystems/MDS Analytical Technologies TOF/TOF instrument export format." [PSI:MS]
+is_a: MS:1000560 ! mass spectrometer file format
 
 [Typedef]
 id: has_regexp
