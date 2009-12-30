@@ -1,6 +1,6 @@
 ﻿namespace pwiz.Skyline.Alerts
 {
-    partial class MissingLibraryDlg
+    partial class ShareTypeDlg
     {
         /// <summary>
         /// Required designer variable.
@@ -28,24 +28,24 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.btnOpen = new System.Windows.Forms.Button();
+            this.btnMinimal = new System.Windows.Forms.Button();
             this.labelMessage = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.btnBrowse = new System.Windows.Forms.Button();
+            this.btnComplete = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
-            // btnOpen
+            // btnMinimal
             // 
-            this.btnOpen.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOpen.Location = new System.Drawing.Point(159, 101);
-            this.btnOpen.Name = "btnOpen";
-            this.btnOpen.Size = new System.Drawing.Size(75, 23);
-            this.btnOpen.TabIndex = 0;
-            this.btnOpen.Text = "&Open";
-            this.btnOpen.UseVisualStyleBackColor = true;
-            this.btnOpen.Click += new System.EventHandler(this.btnOpen_Click);
+            this.btnMinimal.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnMinimal.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.btnMinimal.Location = new System.Drawing.Point(159, 101);
+            this.btnMinimal.Name = "btnMinimal";
+            this.btnMinimal.Size = new System.Drawing.Size(75, 23);
+            this.btnMinimal.TabIndex = 0;
+            this.btnMinimal.Text = "&Minimal";
+            this.btnMinimal.UseVisualStyleBackColor = true;
             // 
             // labelMessage
             // 
@@ -69,16 +69,16 @@
             this.panel1.Size = new System.Drawing.Size(412, 89);
             this.panel1.TabIndex = 2;
             // 
-            // btnBrowse
+            // btnComplete
             // 
-            this.btnBrowse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnBrowse.Location = new System.Drawing.Point(240, 101);
-            this.btnBrowse.Name = "btnBrowse";
-            this.btnBrowse.Size = new System.Drawing.Size(75, 23);
-            this.btnBrowse.TabIndex = 3;
-            this.btnBrowse.Text = "&Browse...";
-            this.btnBrowse.UseVisualStyleBackColor = true;
-            this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
+            this.btnComplete.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnComplete.Location = new System.Drawing.Point(240, 101);
+            this.btnComplete.Name = "btnComplete";
+            this.btnComplete.Size = new System.Drawing.Size(75, 23);
+            this.btnComplete.TabIndex = 3;
+            this.btnComplete.Text = "&Complete";
+            this.btnComplete.UseVisualStyleBackColor = true;
+            this.btnComplete.Click += new System.EventHandler(this.btnComplete_Click);
             // 
             // btnCancel
             // 
@@ -91,21 +91,21 @@
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
-            // MissingLibraryDlg
+            // ShareTypeDlg
             // 
-            this.AcceptButton = this.btnOpen;
+            this.AcceptButton = this.btnMinimal;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(408, 136);
             this.Controls.Add(this.btnCancel);
-            this.Controls.Add(this.btnBrowse);
+            this.Controls.Add(this.btnComplete);
             this.Controls.Add(this.panel1);
-            this.Controls.Add(this.btnOpen);
+            this.Controls.Add(this.btnMinimal);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "MissingLibraryDlg";
+            this.Name = "ShareTypeDlg";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.panel1.ResumeLayout(false);
@@ -116,10 +116,10 @@
 
         #endregion
 
-        private System.Windows.Forms.Button btnOpen;
+        private System.Windows.Forms.Button btnMinimal;
         private System.Windows.Forms.Label labelMessage;
         private System.Windows.Forms.Panel panel1;
-        private System.Windows.Forms.Button btnBrowse;
+        private System.Windows.Forms.Button btnComplete;
         private System.Windows.Forms.Button btnCancel;
     }
 }

@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -35,6 +36,8 @@ namespace pwiz.Skyline.FileUI
             _results = document.Settings.MeasuredResults;
 
             InitializeComponent();
+
+            Icon = Resources.Skyline;
 
             UpdateResultsList();
         }

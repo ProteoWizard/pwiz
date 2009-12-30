@@ -40,7 +40,7 @@ namespace pwiz.Skyline
 {
     public partial class SkylineWindow
     {
-        private static string GetViewFile(string fileName)
+        public static string GetViewFile(string fileName)
         {
             return fileName + ".view";
         }
@@ -80,7 +80,16 @@ namespace pwiz.Skyline
         {
             if (!CheckSaveDocument())
                 return;
-            SwitchDocument(new SrmDocument(DocumentUI.Settings.MakeSavable()), null);
+
+            // Create a new document with the default settings.
+            SrmDocument document = new SrmDocument(Settings.Default.SrmSettingsList[0]);
+
+            // Make sure settings lists contain correct values for
+            // this document.
+            document.Settings.UpdateLists();
+
+            // Switch over to the new document
+            SwitchDocument(document, null);
         }
 
         private void openMenuItem_Click(object sender, EventArgs e)
@@ -122,8 +131,6 @@ namespace pwiz.Skyline
                     if (!CheckResults(document, path))
                         return false;
 
-                    // TODO: Shutdown background processing on current file.
-
                     // Make sure settings lists contain correct values for
                     // this document.
                     document.Settings.UpdateLists();
@@ -157,7 +164,7 @@ namespace pwiz.Skyline
                         // First look for the file name in the document directory
                         string pathLibrary = Path.Combine(Path.GetDirectoryName(path), fileName);
                         if (File.Exists(pathLibrary))
-                            return library.CreateSpec(pathLibrary);
+                            return library.CreateSpec(pathLibrary).ChangeDocumentLocal(true);
                         // In the user's default library directory
                         pathLibrary = Path.Combine(Settings.Default.LibraryDirectory, fileName);
                         if (File.Exists(pathLibrary))
@@ -294,10 +301,9 @@ namespace pwiz.Skyline
         {
             // Make sure results are loaded before performaing a Save As,
             // since the results cache must be copied to the new location.
-            if (DocumentUI.Settings.HasResults &&
-                    !DocumentUI.Settings.MeasuredResults.IsLoaded)
+            if (!DocumentUI.Settings.IsLoaded)
             {
-                MessageDlg.Show(this, "Results must be fully loaded before the document can be saved to a new name.");
+                MessageDlg.Show(this, "The document must be fully loaded before it can be saved to a new name.");
             }
 
             SaveFileDialog dlg = new SaveFileDialog
@@ -439,6 +445,77 @@ namespace pwiz.Skyline
             }
 
             UpdateTitle();
+        }
+
+        private void shareDocumentMenuItem_Click(object sender, EventArgs e)
+        {
+            var document = DocumentUI;
+            if (!document.Settings.IsLoaded)
+            {
+                MessageDlg.Show(this, "The document must be fully loaded before it can be shared.");
+                return;
+            }
+
+            bool saved = false;
+            string fileName = DocumentFilePath;
+            if (string.IsNullOrEmpty(fileName))
+            {
+                if (MessageBox.Show(this, "The document must be saved before it can be shared.", Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                    return;
+
+                if (!SaveDocumentAs())
+                    return;
+
+                saved = true;
+                fileName = DocumentFilePath;
+            }
+
+            bool completeSharing = true;
+            if (document.Settings.HasLibraries || document.Settings.HasBackgroundProteome)
+            {
+                var dlgType = new ShareTypeDlg(document);
+                if (dlgType.ShowDialog(this) == DialogResult.Cancel)
+                    return;
+                completeSharing = dlgType.IsCompleteSharing;
+            }
+
+            var dlg = new SaveFileDialog
+            {
+                Title = "Share Document",
+                InitialDirectory = Path.GetDirectoryName(fileName),
+                FileName = Path.GetFileNameWithoutExtension(fileName) + "." + SrmDocumentSharing.EXT,
+                OverwritePrompt = true,
+                DefaultExt = SrmDocumentSharing.EXT,
+                Filter = string.Join("|", new[]
+                    {
+                        "Skyline Shared Documents (*." + SrmDocumentSharing.EXT + ")|*." + SrmDocumentSharing.EXT,
+                        "All Files (*.*)|*.*"
+                    })
+            };
+
+            if (dlg.ShowDialog(this) == DialogResult.Cancel)
+                return;
+            // Make sure the document is completely saved before sharing
+            if (!saved && !SaveDocument())
+                return;
+
+            try
+            {
+                var longWaitDlg = new LongWaitDlg
+                                  {
+                                      Text = "Compressing Files",
+                                  };
+                var sharing = new SrmDocumentSharing(document, fileName, dlg.FileName, completeSharing);
+                longWaitDlg.PerformWork(this, 1000, sharing.Share);
+            }
+            catch (IOException x)
+            {
+                MessageDlg.Show(this, string.Format("Failed attempting to create sharing file {0}.\n{1}", dlg.FileName, x.Message));
+            }
+            catch (Exception)
+            {
+                MessageDlg.Show(this, string.Format("Failed attempting to create sharing file {0}.", dlg.FileName));
+            }
         }
 
         private void exportTransitionListMenuItem_Click(object sender, EventArgs e)

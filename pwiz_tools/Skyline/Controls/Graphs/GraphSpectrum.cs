@@ -71,6 +71,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             InitializeComponent();
 
+            Icon = Resources.SkylineData;
+
             graphControl.MasterPane.Border.IsVisible = false;
             var graphPane = GraphPane;
             graphPane.Border.IsVisible = false;

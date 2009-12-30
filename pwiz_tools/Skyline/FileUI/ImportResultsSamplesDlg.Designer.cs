@@ -126,7 +126,6 @@
             this.Controls.Add(this.listSamples);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "ImportResultsSamplesDlg";

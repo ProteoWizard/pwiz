@@ -37,6 +37,7 @@ namespace pwiz.Skyline
             this.openMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveAsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.shareDocumentMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -292,6 +293,7 @@ namespace pwiz.Skyline
             this.openMenuItem,
             this.saveMenuItem,
             this.saveAsMenuItem,
+            this.shareDocumentMenuItem,
             this.toolStripSeparator2,
             this.importToolStripMenuItem,
             this.exportToolStripMenuItem,
@@ -340,6 +342,13 @@ namespace pwiz.Skyline
             this.saveAsMenuItem.Size = new System.Drawing.Size(155, 22);
             this.saveAsMenuItem.Text = "Save &As...";
             this.saveAsMenuItem.Click += new System.EventHandler(this.saveAsMenuItem_Click);
+            // 
+            // shareDocumentMenuItem
+            // 
+            this.shareDocumentMenuItem.Name = "shareDocumentMenuItem";
+            this.shareDocumentMenuItem.Size = new System.Drawing.Size(155, 22);
+            this.shareDocumentMenuItem.Text = "S&hare...";
+            this.shareDocumentMenuItem.Click += new System.EventHandler(this.shareDocumentMenuItem_Click);
             // 
             // toolStripSeparator2
             // 
@@ -2624,6 +2633,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem refineMenuItem;
         private System.Windows.Forms.ToolStripMenuItem legendChromContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem selectionContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem shareDocumentMenuItem;
     }
 }
 

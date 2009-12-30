@@ -44,6 +44,8 @@ namespace pwiz.Skyline.SettingsUI
 
             InitializeComponent();
 
+            Icon = Resources.Skyline;
+
             foreach (string item in RetentionTimeRegression.GetRetentionScoreCalcNames())
                 comboCalculator.Items.Add(item);
 

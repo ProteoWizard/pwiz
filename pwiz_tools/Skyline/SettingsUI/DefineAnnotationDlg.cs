@@ -19,13 +19,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -34,12 +32,15 @@ namespace pwiz.Skyline.SettingsUI
     /// </summary>
     public partial class DefineAnnotationDlg : Form
     {
-        private IEnumerable<AnnotationDef> _existing;
+        private readonly IEnumerable<AnnotationDef> _existing;
         private AnnotationDef _annotationDef;
 
         public DefineAnnotationDlg(IEnumerable<AnnotationDef> existing)
         {
             InitializeComponent();
+
+            Icon = Resources.Skyline;
+
             _existing = existing;
         }
 

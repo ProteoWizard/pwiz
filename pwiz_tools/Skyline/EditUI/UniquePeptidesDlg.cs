@@ -28,6 +28,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Proteome;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -43,6 +44,9 @@ namespace pwiz.Skyline.EditUI
         public UniquePeptidesDlg(IDocumentUIContainer documentUiContainer)
         {
             InitializeComponent();
+
+            Icon = Resources.Skyline;
+
             DocumentUIContainer = documentUiContainer;
             dataGridView1.CurrentCellChanged += dataGridView1_CurrentCellChanged;
         }

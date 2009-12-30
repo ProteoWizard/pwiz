@@ -713,4 +713,22 @@ namespace pwiz.Skyline.Util
             }          
         }
     }
+
+    public class TemporaryDirectory : IDisposable
+    {
+        public const string TEMP_PREFIX = "~SK";
+
+        public TemporaryDirectory()
+        {
+            DirPath = Path.Combine(Path.GetTempPath(), TEMP_PREFIX + Path.GetRandomFileName());
+            Directory.CreateDirectory(DirPath);
+        }
+
+        public string DirPath { get; private set; }
+
+        public void Dispose()
+        {
+            Directory.Delete(DirPath, true);
+        }
+    }
 }

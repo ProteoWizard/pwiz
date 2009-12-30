@@ -12,7 +12,7 @@
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY C:\proj\pwiz\pwiz\pwiz_tools\Skyline\Model\Lib\Library.csKIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
@@ -388,9 +388,24 @@ namespace pwiz.Skyline.Model.Lib
 
         public string FilePath { get; private set; }
 
+        /// <summary>
+        /// True if this library spec was created in order to open the current document
+        /// only, and should not be stored long term in the global settings.
+        /// </summary>
+        public bool IsDocumentLocal { get; private set; }
+
         public abstract Library LoadLibrary(ILoadMonitor loader);
 
         public abstract IEnumerable<PeptideRankId> PeptideRankIds { get; }
+
+        #region Property change methods
+
+        public LibrarySpec ChangeDocumentLocal(bool prop)
+        {
+            return ChangeProp(ImClone(this), (im, v) => im.IsDocumentLocal = v, prop);
+        }        
+
+        #endregion
 
         #region Implementation of IXmlSerializable
 
@@ -417,6 +432,9 @@ namespace pwiz.Skyline.Model.Lib
 
         public override void WriteXml(XmlWriter writer)
         {
+            if (IsDocumentLocal)
+                throw new InvalidOperationException("Document local library specs cannot be persisted to XML.");
+
             // Write tag attributes
             base.WriteXml(writer);
             writer.WriteAttributeString(ATTR.file_path, FilePath);
@@ -426,11 +444,13 @@ namespace pwiz.Skyline.Model.Lib
 
         #region object overrides
 
-        public bool Equals(LibrarySpec obj)
+        public bool Equals(LibrarySpec other)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return base.Equals(obj) && Equals(obj.FilePath, FilePath);
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return base.Equals(other) &&
+                Equals(other.FilePath, FilePath) &&
+                other.IsDocumentLocal.Equals(IsDocumentLocal);
         }
 
         public override bool Equals(object obj)
@@ -444,7 +464,10 @@ namespace pwiz.Skyline.Model.Lib
         {
             unchecked
             {
-                return (base.GetHashCode()*397) ^ FilePath.GetHashCode();
+                int result = base.GetHashCode();
+                result = (result*397) ^ FilePath.GetHashCode();
+                result = (result*397) ^ IsDocumentLocal.GetHashCode();
+                return result;
             }
         }
 
@@ -491,7 +514,13 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         /// <param name="rankId">Indentifier of the value to return</param>
         /// <returns>The value to use in ranking</returns>
-        public virtual float GetRankValue(PeptideRankId rankId) { return float.MinValue; }
+        public virtual float GetRankValue(PeptideRankId rankId)
+        {
+            // If super class has not provided a number of copies, return 1.
+            if (rankId == LibrarySpec.PEP_RANK_COPIES)
+                return 1;
+            return float.MinValue;
+        }
 
         public abstract IEnumerable<KeyValuePair<PeptideRankId, string>> RankValues { get; }
 

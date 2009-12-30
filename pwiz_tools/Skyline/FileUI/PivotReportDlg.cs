@@ -23,6 +23,7 @@ using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate.Query;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -48,6 +49,8 @@ namespace pwiz.Skyline.FileUI
             _existing = existing;
 
             InitializeComponent();
+
+            Icon = Resources.Skyline;
 
             _helper = new MessageBoxHelper(this);
         }

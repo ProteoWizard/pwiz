@@ -51,6 +51,8 @@ namespace pwiz.Skyline.EditUI
 
             InitializeComponent();
 
+            Icon = Resources.Skyline;
+
             SuspendLayout();
             ComboBox comboStaticLast = null, comboHeavyLast = null;
             Label labelAALast = null;

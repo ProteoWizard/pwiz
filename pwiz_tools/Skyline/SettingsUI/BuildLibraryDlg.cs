@@ -52,6 +52,8 @@ namespace pwiz.Skyline.SettingsUI
         {
             InitializeComponent();
 
+            Icon = Resources.Skyline;
+
             panelFiles.Visible = false;
 
             textName.Focus();

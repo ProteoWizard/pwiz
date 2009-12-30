@@ -73,7 +73,6 @@
             this.ClientSize = new System.Drawing.Size(521, 290);
             this.Controls.Add(this.btnClose);
             this.Controls.Add(this.graphControl);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "GraphRegression";

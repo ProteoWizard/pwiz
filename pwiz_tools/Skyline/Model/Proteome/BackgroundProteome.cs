@@ -22,6 +22,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Proteome
@@ -34,6 +35,9 @@ namespace pwiz.Skyline.Model.Proteome
     [XmlRoot("background_proteome")]
     public class BackgroundProteome : BackgroundProteomeSpec
     {
+        public static readonly BackgroundProteome NONE =
+            new BackgroundProteome(BackgroundProteomeList.GetDefault());
+
         private HashSet<Digestion> Digestions { get; set; }
         public BackgroundProteome(BackgroundProteomeSpec backgroundProteomeSpec) : this(backgroundProteomeSpec, false)
         {

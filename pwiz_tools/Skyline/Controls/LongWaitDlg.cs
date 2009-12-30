@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Controls
         /// <summary>
         /// Percent complete in the progress indicator shown to the user
         /// </summary>
-        int ProgressValue { set; }
+        int ProgressValue { get; set; }
 
         /// <summary>
         /// Message shown to the user
@@ -63,6 +63,7 @@ namespace pwiz.Skyline.Controls
 
         public int ProgressValue
         {
+            get { return Interlocked.Exchange(ref _progressValue, _progressValue); }
             set { Interlocked.Exchange(ref _progressValue, value); }
         }
 

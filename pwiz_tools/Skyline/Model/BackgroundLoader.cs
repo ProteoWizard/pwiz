@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Model
         private readonly Dictionary<int, IDocumentContainer> _processing =
             new Dictionary<int, IDocumentContainer>();
 
-        public EventHandler<ProgressUpdateEventArgs> ProgressUpdateEvent;
+        public event EventHandler<ProgressUpdateEventArgs> ProgressUpdateEvent;
 
         public IStreamManager StreamManager
         {

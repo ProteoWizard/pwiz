@@ -161,6 +161,8 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_library")]
     public sealed class BiblioSpecLibrary : Library
     {
+        public const string DEFAULT_AUTHORITY = "proteome.gs.washington.edu";
+
         private bool _bigEndian;
         private bool _linuxFormat;
         private Dictionary<LibKey, BiblioSpectrumInfo> _dictLibrary;

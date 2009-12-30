@@ -170,7 +170,6 @@ namespace pwiz.Skyline.SettingsUI
             this.Controls.Add(this.comboType);
             this.Controls.Add(this.tbxName);
             this.Controls.Add(this.label1);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "DefineAnnotationDlg";

@@ -27,6 +27,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Proteome;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -38,6 +39,9 @@ namespace pwiz.Skyline.EditUI
         public PasteDlg(IDocumentUIContainer documentUiContainer)
         {
             InitializeComponent();
+
+            Icon = Resources.Skyline;
+
             DocumentUiContainer = documentUiContainer;
             if (GetBackgroundProteome(documentUiContainer.DocumentUI).IsNone)
             {

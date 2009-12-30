@@ -18,8 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -33,11 +31,15 @@ namespace pwiz.Skyline.SettingsUI
     /// </summary>
     public partial class ChooseAnnotationsDlg : Form
     {
-        private SkylineWindow _parent;
-        private SettingsListBoxDriver<AnnotationDef> _annotationsListBoxDriver;
+        private readonly SkylineWindow _parent;
+        private readonly SettingsListBoxDriver<AnnotationDef> _annotationsListBoxDriver;
+
         public ChooseAnnotationsDlg(SkylineWindow parent)
         {
             InitializeComponent();
+
+            Icon = Resources.Skyline;
+
             _parent = parent;
             _annotationsListBoxDriver = new SettingsListBoxDriver<AnnotationDef>(checkedListBoxAnnotations, Settings.Default.AnnotationDefList);
             _annotationsListBoxDriver.LoadList(null, parent.DocumentUI.Settings.DataSettings.AnnotationDefs);

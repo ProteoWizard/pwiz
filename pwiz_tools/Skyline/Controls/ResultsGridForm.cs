@@ -39,6 +39,9 @@ namespace pwiz.Skyline.Controls
         public ResultsGridForm(IDocumentUIContainer documentUiContainer, SequenceTree sequenceTree)
         {
             InitializeComponent();
+
+            Icon = Resources.Skyline;
+
             resultsGrid.Init(documentUiContainer, sequenceTree);
         }
 

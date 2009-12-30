@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Controls
 {
@@ -28,6 +29,8 @@ namespace pwiz.Skyline.Controls
         public ColumnChooser()
         {
             InitializeComponent();
+
+            Icon = Resources.Skyline;
         }
 
         public void SetColumns(IList<String> nameList, IList<bool> checkedList)

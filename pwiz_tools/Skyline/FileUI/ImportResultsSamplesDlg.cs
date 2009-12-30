@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -32,6 +33,8 @@ namespace pwiz.Skyline.FileUI
         public ImportResultsSamplesDlg(string filePath, IEnumerable<string> sampleNames)
         {
             InitializeComponent();
+
+            Icon = Resources.Skyline;
 
             labelFile.Text = Path.GetFileName(filePath);
             foreach (var sampleName in sampleNames)

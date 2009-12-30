@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
+using System.Text;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -616,5 +617,14 @@ namespace pwiz.Skyline.Util
         }
 
         public string ElementName { get; set; }
+    }
+
+    /// <summary>
+    /// For writing XML to memory with UTF8 encoding, because <see cref="StringWriter.Encoding"/>
+    /// is read-only.
+    /// </summary>
+    public sealed class XmlStringWriter : StringWriter
+    {
+        public override Encoding Encoding { get { return Encoding.UTF8; } }
     }
 }

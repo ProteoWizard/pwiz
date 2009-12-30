@@ -564,6 +564,7 @@ namespace pwiz.Skyline.Properties
             return PeptideLibraries.LibrarySpecXmlHelpers;
         }
     }
+
     public sealed class BackgroundProteomeList : SettingsList<BackgroundProteomeSpec>
     {
         private static readonly BackgroundProteomeSpec NONE = new BackgroundProteomeSpec("None", "");
@@ -860,7 +861,7 @@ namespace pwiz.Skyline.Properties
                         new Library[0]          // Libraries
                         ), 
                     new PeptideModifications(StaticModList.GetDefaultsOn(), HeavyModList.GetDefaultsOn()),
-                    new BackgroundProteome(BackgroundProteomeList.GetDefault())
+                    BackgroundProteome.NONE
                 ),
                 new TransitionSettings
                 (

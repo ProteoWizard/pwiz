@@ -2,6 +2,7 @@
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -10,6 +11,8 @@ namespace pwiz.Skyline.EditUI
         public RefineDlg(SrmDocument document)
         {
             InitializeComponent();
+
+            Icon = Resources.Skyline;
 
             var settings = document.Settings;
             tabResults.Visible = settings.HasResults;

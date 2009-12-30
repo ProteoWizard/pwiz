@@ -178,6 +178,8 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("hunter_library")]
     public sealed class XHunterLibrary : Library
     {
+        public const string DEFAULT_AUTHORITY = "thegpm.org";
+
         private static readonly Regex REGEX_HEADER = new Regex(@"HLF v=(\d+) s=([^ ]+) d=(\d\d\d\d\.\d\d.\d\d)");
         private Dictionary<LibKey, XHunterSpectrumInfo> _dictLibrary;
         private IPooledStream _readStream;

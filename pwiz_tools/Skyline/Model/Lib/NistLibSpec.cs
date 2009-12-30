@@ -250,6 +250,8 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("nist_library")]
     public sealed class NistLibrary : NistLibraryBase
     {
+        public const string DEFAULT_AUTHORITY = "nist.gov";
+
         public const string EXT_CACHE = ".slc";
 
         public static NistLibrary Load(LibrarySpec spec, ILoadMonitor loader)

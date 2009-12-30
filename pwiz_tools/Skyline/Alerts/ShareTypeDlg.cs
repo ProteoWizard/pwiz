@@ -18,6 +18,7 @@
  */
 using System;
 using System.Windows.Forms;
+using pwiz.Skyline.Model;
 
 namespace pwiz.Skyline.Alerts
 {
@@ -25,21 +26,25 @@ namespace pwiz.Skyline.Alerts
     /// Use for a <see cref="MessageBox"/> substitute that can be
     /// detected and closed by automated functional tests.
     /// </summary>
-    public partial class MessageDlg : Form
+    public partial class ShareTypeDlg : Form
     {
-        public static void Show(IWin32Window parent, string message)
-        {
-            new MessageDlg(message).ShowDialog(parent);
-        }
-
-        public MessageDlg(string message)
+        public ShareTypeDlg(SrmDocument document)
         {
             InitializeComponent();
 
-            int height = labelMessage.Height;
-            labelMessage.Text = Message = message;
-            Height += Math.Max(0, labelMessage.Height - height*3);
+            labelMessage.Text = "The document can be shared either in its complete form, or in a minimal form intended for read-only use with ";
+            if (document.Settings.HasLibraries && document.Settings.HasBackgroundProteome)
+                labelMessage.Text += "its background proteome disconnected, and all libraries minimized to contain only precursors used in the document.";
+            else if (document.Settings.HasBackgroundProteome)
+                labelMessage.Text += "its background proteome disconnected.";
+            else if (document.Settings.HasLibraries)
+                labelMessage.Text += "all libraries minimized to contain only precursors used in the document.";
+            else
+                throw new InvalidOperationException("Invalide use of " + typeof(ShareTypeDlg).Name + " for document without background proteome or libraries.");
+            labelMessage.Text += "\nChoose the appropriate sharing option below.";
         }
+
+        public bool IsCompleteSharing { get; set; }
 
         protected override void CreateHandle()
         {
@@ -48,16 +53,15 @@ namespace pwiz.Skyline.Alerts
             Text = Program.Name;
         }
 
-        public string Message { get; private set; }
-
         public void OkDialog()
         {
             DialogResult = DialogResult.OK;
             Close();
         }
 
-        private void btnOk_Click(object sender, System.EventArgs e)
+        private void btnComplete_Click(object sender, System.EventArgs e)
         {
+            IsCompleteSharing = true;
             OkDialog();
         }
     }

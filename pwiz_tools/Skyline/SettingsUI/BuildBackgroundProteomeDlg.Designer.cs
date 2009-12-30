@@ -28,7 +28,6 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BuildBackgroundProteomeDlg));
             this.btnBrowse = new System.Windows.Forms.Button();
             this.labelFile = new System.Windows.Forms.Label();
             this.textPath = new System.Windows.Forms.TextBox();
@@ -196,7 +195,6 @@ namespace pwiz.Skyline.SettingsUI
             this.Controls.Add(this.label4);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "BuildBackgroundProteomeDlg";

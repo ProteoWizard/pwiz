@@ -832,7 +832,6 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(487, 333);
             this.Controls.Add(this.resultsGrid);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "ResultsGridForm";
             this.ShowInTaskbar = false;
             this.TabText = "Results Grid";

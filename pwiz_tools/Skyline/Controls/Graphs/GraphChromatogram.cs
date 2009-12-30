@@ -103,6 +103,7 @@ namespace pwiz.Skyline.Controls.Graphs
             InitializeComponent();
 
             TabText = name;
+            Icon = Resources.SkylineData;
 
             graphControl.MasterPane.Border.IsVisible = false;
             var graphPane = GraphPane;

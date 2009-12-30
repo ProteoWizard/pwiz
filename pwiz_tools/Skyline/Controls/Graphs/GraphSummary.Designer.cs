@@ -61,7 +61,6 @@
             this.ClientSize = new System.Drawing.Size(624, 444);
             this.Controls.Add(this.graphControl);
             this.HideOnClose = true;
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.KeyPreview = true;
             this.MaximizeBox = false;
             this.MinimizeBox = false;

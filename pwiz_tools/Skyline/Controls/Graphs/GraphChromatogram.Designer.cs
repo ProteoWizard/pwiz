@@ -119,7 +119,6 @@
             this.Controls.Add(this.graphControl);
             this.DockAreas = DigitalRune.Windows.Docking.DockAreas.Document;
             this.HideOnClose = true;
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.KeyPreview = true;
             this.Name = "GraphChromatogram";
             this.TabText = "Chromatograms";

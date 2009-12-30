@@ -51,8 +51,8 @@ namespace pwiz.SkylineTest
 
         public static void ExtractTestFiles(this TestContext testContext, string relativePathZip, string destDir)
         {
-            string wiffZip = testContext.GetProjectDirectory(relativePathZip);
-            using (ZipFile zipFile = ZipFile.Read(wiffZip))
+            string pathZip = testContext.GetProjectDirectory(relativePathZip);
+            using (ZipFile zipFile = ZipFile.Read(pathZip))
             {
                 foreach (ZipEntry zipEntry in zipFile)
                     zipEntry.Extract(destDir, ExtractExistingFileAction.OverwriteSilently);

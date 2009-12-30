@@ -71,6 +71,20 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool HasResults { get { return MeasuredResults != null; } }
 
+        public bool HasLibraries { get { return PeptideSettings.Libraries.HasLibraries; } }
+
+        public bool HasBackgroundProteome { get { return !PeptideSettings.BackgroundProteome.IsNone; } }
+
+        public bool IsLoaded
+        {
+            get
+            {
+                return (!HasResults || MeasuredResults.IsLoaded) &&
+                       (!HasLibraries || PeptideSettings.Libraries.IsLoaded);
+                // BackgroundProteome?
+            }
+        }
+
         // Cached calculators
         private SequenceMassCalc PrecursorMassCalc { get; set; }
 
@@ -432,6 +446,13 @@ namespace pwiz.Skyline.Model.DocSettings
                         defSet.PeptideExcludeList.Add(exclude);
                 }
             }
+            // First remove all old document local specs.
+            foreach (LibrarySpec librarySpec in defSet.SpectralLibraryList.ToArray())
+            {
+                if (librarySpec.IsDocumentLocal)
+                    defSet.SpectralLibraryList.Remove(librarySpec);
+            }
+            // Then add any specs belonging to this document.
             if (PeptideSettings.Libraries.HasLibraries)
             {
                 foreach (LibrarySpec librarySpec in PeptideSettings.Libraries.LibrarySpecs)

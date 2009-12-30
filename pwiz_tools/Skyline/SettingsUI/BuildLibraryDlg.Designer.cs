@@ -351,7 +351,6 @@
             this.Controls.Add(this.btnNext);
             this.Controls.Add(this.panelProperties);
             this.Controls.Add(this.panelFiles);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "BuildLibraryDlg";

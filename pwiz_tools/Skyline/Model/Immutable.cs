@@ -90,7 +90,7 @@ namespace pwiz.Skyline.Model
         /// <see cref="Immutable"/> objects, where all property setters must be private,
         /// and changing a property requires cloning the original object.
         /// 
-        /// These expression take the form:
+        /// These expressions take the form:
         /// 
         /// public PeptideGroupDocNode ChangeName(string name)
         /// {
@@ -111,6 +111,54 @@ namespace pwiz.Skyline.Model
             where T : Immutable
         {
             set(immutable, value);
+            if (immutable is IValidating)
+                ((IValidating)immutable).Validate();
+            return immutable;
+        }
+
+        /// <summary>
+        /// Delegate provided through a lambda expression in conjunction with
+        /// <see cref="Immutable.ChangeProp{T}"/> to create public single-line,
+        /// single-property change methods for <see cref="Immutable"/> objects,
+        /// where all property setters must be private, and changing a property requires
+        /// cloning the original object.
+        /// 
+        /// The exressions take the following form:
+        /// 
+        /// im => im.Name = prop
+        /// 
+        /// Where prop is a captured local variable in the surrounding function.
+        /// 
+        /// This simpler version suggested by Nick Shulman.
+        /// </summary>
+        /// <typeparam name="T">Type of the node being changed</typeparam>
+        /// <param name="immutable">The node instance to change</param>
+        protected delegate void SetLambda<T>(T immutable);
+
+        /// <summary>
+        /// Use to create more concise single-property change methods for
+        /// <see cref="Immutable"/> objects, where all property setters must be private,
+        /// and changing a property requires cloning the original object.
+        /// 
+        /// These expressions take the form:
+        /// 
+        /// public PeptideGroupDocNode ChangeName(string name)
+        /// {
+        ///     return ChangeProp(ImClone(this), im => im.Name = name);
+        /// }
+        /// 
+        /// Where prop is a captured local variable in the surrounding function.
+        /// 
+        /// This simpler version suggested by Nick Shulman.
+        /// </summary>
+        /// <typeparam name="T">Type of the node being changed</typeparam>
+        /// <param name="immutable">A cloned node on which to set the property</param>
+        /// <param name="set">The delegate used to set the property (usually a lambda experssion)</param>
+        /// <returns>The modified clone instance</returns>
+        protected static T ChangeProp<T>(T immutable, SetLambda<T> set)
+            where T : Immutable
+        {
+            set(immutable);
             if (immutable is IValidating)
                 ((IValidating)immutable).Validate();
             return immutable;

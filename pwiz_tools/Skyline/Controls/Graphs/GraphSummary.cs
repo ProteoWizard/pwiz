@@ -21,6 +21,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
 
@@ -81,6 +82,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public GraphSummary(IDocumentUIContainer documentUIContainer, IController controller)
         {
             InitializeComponent();
+
+            Icon = Resources.SkylineData;
 
             graphControl.MasterPane.Border.IsVisible = false;
 

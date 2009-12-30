@@ -46,6 +46,9 @@ namespace pwiz.Skyline.SettingsUI
         public BuildBackgroundProteomeDlg(IEnumerable<BackgroundProteomeSpec> existing)
         {
             InitializeComponent();
+
+            Icon = Resources.Skyline;
+
             _existing = existing;
             _messageBoxHelper = new MessageBoxHelper(this);
 

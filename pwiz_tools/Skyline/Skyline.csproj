@@ -91,6 +91,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
     </Reference>
+    <Reference Include="Ionic.Zip, Version=1.8.4.5, Culture=neutral, PublicKeyToken=edbe51ad942a3f5c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Shared\Lib\DotNetZip-v1.8\Release\Ionic.Zip.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="NHibernate, Version=2.0.1.4000, Culture=neutral, PublicKeyToken=aa95f207798dfdb4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -137,6 +141,12 @@
     </Compile>
     <Compile Include="Alerts\AboutDlg.Designer.cs">
       <DependentUpon>AboutDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Alerts\ShareTypeDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\ShareTypeDlg.Designer.cs">
+      <DependentUpon>ShareTypeDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Alerts\MissingLibraryDlg.cs">
       <SubType>Form</SubType>
@@ -260,6 +270,13 @@
     <Compile Include="EditUI\RefineDlg.Designer.cs">
       <DependentUpon>RefineDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Model\Lib\BlibData\BlibDb.cs" />
+    <Compile Include="Model\Lib\BlibData\DbEntity.cs" />
+    <Compile Include="Model\Lib\BlibData\DbLibInfo.cs" />
+    <Compile Include="Model\Lib\BlibData\DbModification.cs" />
+    <Compile Include="Model\Lib\BlibData\DbRefSpectra.cs" />
+    <Compile Include="Model\Lib\BlibData\DbRefSpectraPeaks.cs" />
+    <Compile Include="Model\Lib\BlibData\SessionFactoryFactory.cs" />
     <Compile Include="Model\RefinementSettings.cs" />
     <Compile Include="EditUI\ShowRTThresholdDlg.cs">
       <SubType>Form</SubType>
@@ -431,6 +448,7 @@
     <Compile Include="Model\Results\DocNodeChromInfo.cs" />
     <Compile Include="Model\Results\MeasuredResults.cs" />
     <Compile Include="Model\SrmDocument.cs" />
+    <Compile Include="Model\SrmDocumentSharing.cs" />
     <Compile Include="Model\Transition.cs" />
     <Compile Include="Model\TransitionCalc.cs" />
     <Compile Include="Model\TransitionGroup.cs" />
@@ -762,6 +780,9 @@
     <Content Include="Microsoft.VC90.MFC\Microsoft.VC90.MFC.manifest">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Alerts\ShareTypeDlg.resx">
+      <DependentUpon>ShareTypeDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\MissingLibraryDlg.resx">
       <DependentUpon>MissingLibraryDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -947,6 +968,7 @@
     <Content Include="Microsoft.VC90.MFC\mfcm90u.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Model\Lib\BlibData\mapping.xml" />
     <Content Include="msparser.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

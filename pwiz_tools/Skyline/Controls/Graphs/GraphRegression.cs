@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
 
@@ -30,6 +31,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public GraphRegression(ICollection<RegressionGraphData> regressionGraphDatas)
         {
             InitializeComponent();
+
+            Icon = Resources.Skyline;
 
             if (regressionGraphDatas.Count > 1)
             {

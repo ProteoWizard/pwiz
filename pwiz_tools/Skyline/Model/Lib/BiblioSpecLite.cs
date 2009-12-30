@@ -26,6 +26,7 @@ using System.Globalization;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -74,13 +75,15 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_lite_library")]
     public sealed class BiblioSpecLiteLibrary : Library
     {
-        private Dictionary<LibKey, BiblioLiteSpectrumInfo> _dictLibrary;
+        public const string DEFAULT_AUTHORITY = "proteome.gs.washington.edu";
 
-        private PooledSQLiteConnection _sqliteConnection;
+        private IDictionary<LibKey, BiblioLiteSpectrumInfo> _dictLibrary;
+
+        private PooledSqliteConnection _sqliteConnection;
 
         public static BiblioSpecLiteLibrary Load(BiblioSpecLiteSpec spec, ILoadMonitor loader)
         {
-            var library = new BiblioSpecLiteLibrary(spec) { FilePath = spec.FilePath };
+            var library = new BiblioSpecLiteLibrary(spec);
             if (library.Load(loader))
                 return library;
             return null;            
@@ -93,6 +96,22 @@ namespace pwiz.Skyline.Model.Lib
         private BiblioSpecLiteLibrary(LibrarySpec spec)
             : base(spec)
         {
+            FilePath = spec.FilePath;
+        }
+
+        /// <summary>
+        /// Constructs library from its component parts.  For use with <see cref="BlibDb"/>.
+        /// </summary>
+        public BiblioSpecLiteLibrary(LibrarySpec spec, string lsid, int minorVer, int majorVer,
+            IDictionary<LibKey, BiblioLiteSpectrumInfo> dictLibrary, IStreamManager streamManager)
+            :this(spec)
+        {
+            Lsid = lsid;
+            SetRevision(minorVer, majorVer);
+
+            _dictLibrary = dictLibrary;
+            // Create the SQLite connection without actually connecting
+            _sqliteConnection = new PooledSqliteConnection(streamManager.ConnectionPool, FilePath);
         }
 
         public override LibrarySpec CreateSpec(string path)
@@ -106,6 +125,17 @@ namespace pwiz.Skyline.Model.Lib
         /// A monotonically increasing revision number associated with this library.
         /// </summary>
         public float Revision { get; private set; }
+
+        /// <summary>
+        /// Sets the revision float value, given integer minor and major versions.
+        /// </summary>
+        /// <param name="majorVer">Major version from database</param>
+        /// <param name="minorVer">Minor version from database</param>
+        private void SetRevision(int majorVer, int minorVer)
+        {
+            Revision = float.Parse(string.Format("{0}.{1}", majorVer, minorVer),
+                CultureInfo.InvariantCulture);            
+        }
 
         /// <summary>
         /// Path to the file on disk from which this library was loaded.  This value
@@ -124,9 +154,9 @@ namespace pwiz.Skyline.Model.Lib
             get { return _sqliteConnection; }
         }
 
-        private SQLiteConnection CreateConnection(ILoadMonitor loader)
+        private SQLiteConnection CreateConnection(IStreamManager streamManager)
         {
-            _sqliteConnection = new PooledSQLiteConnection(loader.StreamManager.ConnectionPool, FilePath);
+            _sqliteConnection = new PooledSqliteConnection(streamManager.ConnectionPool, FilePath);
             return _sqliteConnection.Connection;
         }
 
@@ -185,7 +215,7 @@ namespace pwiz.Skyline.Model.Lib
             loader.UpdateProgress(status);
             try
             {
-                using (SQLiteCommand select = new SQLiteCommand(CreateConnection(loader)))
+                using (SQLiteCommand select = new SQLiteCommand(CreateConnection(loader.StreamManager)))
                 {
                     int rows;
 
@@ -199,10 +229,8 @@ namespace pwiz.Skyline.Model.Lib
                         rows = reader.GetInt32(LibInfo.numSpecs);
 
                         Lsid = reader.GetString(LibInfo.libLSID);
-                        string revStr = string.Format("{0}.{1}",
-                                                      reader.GetInt32(LibInfo.majorVersion),
-                                                      reader.GetInt32(LibInfo.minorVersion));
-                        Revision = float.Parse(revStr, CultureInfo.InvariantCulture);
+
+                        SetRevision(reader.GetInt32(LibInfo.majorVersion), reader.GetInt32(LibInfo.minorVersion));
                     }
 
                     // Corrupted library without a valid row count, but try to compensate
@@ -442,9 +470,9 @@ namespace pwiz.Skyline.Model.Lib
 
         #endregion
 
-        private class PooledSQLiteConnection : ConnectionId<SQLiteConnection>, IPooledStream
+        private class PooledSqliteConnection : ConnectionId<SQLiteConnection>, IPooledStream
         {
-            public PooledSQLiteConnection(ConnectionPool connectionPool, string filePath) : base(connectionPool)
+            public PooledSqliteConnection(ConnectionPool connectionPool, string filePath) : base(connectionPool)
             {
                 FilePath = filePath;
                 FileTime = File.GetLastWriteTime(FilePath);
@@ -484,7 +512,7 @@ namespace pwiz.Skyline.Model.Lib
         }
     }
 
-    internal struct BiblioLiteSpectrumInfo
+    public struct BiblioLiteSpectrumInfo
     {
         private readonly short _copies;
         private readonly short _numPeaks;

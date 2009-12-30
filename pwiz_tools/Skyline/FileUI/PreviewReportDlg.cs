@@ -18,6 +18,7 @@
  */
 using System.Windows.Forms;
 using pwiz.Skyline.Model.Hibernate.Query;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -29,6 +30,8 @@ namespace pwiz.Skyline.FileUI
         public PreviewReportDlg()
         {
             InitializeComponent();
+
+            Icon = Resources.Skyline;
         }
 
         public void SetResults(ResultSet resultSet)

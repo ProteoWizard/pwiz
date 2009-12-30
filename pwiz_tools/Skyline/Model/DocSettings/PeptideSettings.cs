@@ -1101,34 +1101,45 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public PeptideLibraries ChangePick(PeptidePick prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.Pick = v, prop);
+            return ChangeProp(ImClone(this), im => im.Pick = prop);
         }
 
         public PeptideLibraries ChangeRankId(PeptideRankId prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.RankId = v, prop);
+            return ChangeProp(ImClone(this), im => im.RankId = prop);
         }
 
         public PeptideLibraries ChangePeptideCount(int? prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.PeptideCount = v, prop);
+            return ChangeProp(ImClone(this), im => im.PeptideCount = prop);
         }
 
         public PeptideLibraries ChangeLibrarySpecs(IList<LibrarySpec> prop)
         {
-            PeptideLibraries libNew = ImClone(this);
-            libNew.LibrarySpecs = prop;
-            // Keep the libraries array in synch, reloading all libraries, if necessary.
-            // CONSIDER: Loop checking name matching?
-            if (libNew.Libraries.Count != prop.Count)
-                libNew.Libraries = new Library[prop.Count];
-            libNew.DoValidate();
-            return libNew;
+            return ChangeProp(ImClone(this),
+                              im =>
+                                  {
+                                      im.LibrarySpecs = prop;
+                                      // Keep the libraries array in synch, reloading all libraries, if necessary.
+                                      // CONSIDER: Loop checking name matching?
+                                      if (im.Libraries.Count != prop.Count)
+                                          im.Libraries = new Library[prop.Count];
+                                  });
         }        
 
         public PeptideLibraries ChangeLibraries(IList<Library> prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.Libraries = v, prop);
+            return ChangeProp(ImClone(this), im => im.Libraries = prop);
+        }
+
+        public PeptideLibraries ChangeLibraries(IList<LibrarySpec> specs, IList<Library> libs)
+        {
+            return ChangeProp(ImClone(this),
+                              im =>
+                                  {
+                                      im.LibrarySpecs = specs;
+                                      im.Libraries = libs;
+                                  });
         }
 
         public PeptideLibraries Disconnect()
@@ -1359,10 +1370,13 @@ namespace pwiz.Skyline.Model.DocSettings
                     if (item == null)
                     {
                         var spec = _librarySpecs[i];
-                        IXmlElementHelper<LibrarySpec> helper = XmlUtil.FindHelper(spec, LIBRARY_SPEC_HELPERS);
-                        if (helper == null)
-                            throw new InvalidOperationException("Attempt to serialize list containing invalid type.");
-                        writer.WriteElement(helper.ElementNames[0], spec);
+                        if (!spec.IsDocumentLocal)
+                        {
+                            IXmlElementHelper<LibrarySpec> helper = XmlUtil.FindHelper(spec, LIBRARY_SPEC_HELPERS);
+                            if (helper == null)
+                                throw new InvalidOperationException("Attempt to serialize list containing invalid type.");
+                            writer.WriteElement(helper.ElementNames[0], spec);                            
+                        }
                     }
                     else
                     {

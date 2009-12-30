@@ -19,6 +19,7 @@
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -27,6 +28,8 @@ namespace pwiz.Skyline.SettingsUI
         public RTDetails(RetentionTimeStatistics statistics)
         {
             InitializeComponent();
+
+            Icon = Resources.Skyline;
 
             for (int i = 0; i < statistics.Peptides.Count; i++)
             {
