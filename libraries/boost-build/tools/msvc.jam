@@ -363,9 +363,9 @@ actions compile-c-c++ bind PDB_NAME
     $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" $(.CC.FILTER)"
 }
 
-actions compile-c++clr bind ASSEMBLIES
+actions compile-c++clr
 {
-    $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" /clr /FU"$(ASSEMBLIES)" $(CC_RSPLINE))" $(.CC.FILTER)"
+    $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" /clr $(ASSEMBLIES) $(CC_RSPLINE))" $(.CC.FILTER)"
 }
 
 rule compile-c-c++ ( targets + : sources * )
@@ -374,6 +374,7 @@ rule compile-c-c++ ( targets + : sources * )
     DEPENDS $(<[1]) : [ on $(<[1]) return $(PCH_FILE) ] ;
     PDB_NAME on $(<) = $(<:S=.pdb) ;
 }
+
 
 # Action for running the C/C++ compiler using precompiled headers. In addition
 # to whatever else it needs to compile, this action also adds a temporary source
@@ -403,8 +404,32 @@ rule compile.c++ ( targets + : sources * : properties * )
 }
 
 
+rule set-assemblies ( target : properties * )
+{
+    local assemblies-string ;
+    local assemblies = [ feature.get-values <assembly> : $(properties) ] ;
+    if $(assemblies)
+    {
+        for local assembly in $(assemblies)
+        {
+            local assembly-path = [ $(assembly).name ] ;
+            if $(assembly-path:S) != ".pdb"
+            {
+                if ! [ path.is-rooted $(assembly-path) ]
+                {
+                    assembly-path = [ path.join [ $(assembly).path ] $(assembly-path:D=) ] ;
+                }
+                assembly-path = [ path.native $(assembly-path) ] ;
+                assemblies-string += " /FU\"$(assembly-path)\"" ;
+            }
+        }
+    }
+    ASSEMBLIES on $(target) = $(assemblies-string) ;
+}
+
 rule compile.c++clr ( targets + : sources * : properties * )
 {
+    set-assemblies $(<[1]) : $(properties) ;
     get-rspline $(targets) : -TP ;
     compile-c++clr $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
 }
