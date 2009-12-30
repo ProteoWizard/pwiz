@@ -32,7 +32,7 @@
 
 
 using namespace std;
-using namespace pwiz;
+using namespace pwiz::data;
 using namespace pwiz::msdata;
 using namespace pwiz::util;
 using boost::lexical_cast;
@@ -58,7 +58,7 @@ void test()
     serializer.read(iss, msd2);
 
     // do a diff on the two objects
-    Diff<MSData> diff(msd, msd2); 
+    Diff<MSData, pwiz::msdata::DiffConfig> diff(msd, msd2); 
     unit_assert(!diff);
 
     // write out mzML 

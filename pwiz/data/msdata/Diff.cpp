@@ -24,310 +24,22 @@
 #define PWIZ_SOURCE
 
 #include "Diff.hpp"
+#include "TextWriter.hpp"
 #include <string>
 #include <cmath>
 #include <stdexcept>
-
-namespace pwiz {
-namespace msdata {
-namespace diff_impl {
+#include <iostream>
 
 
 using namespace std;
 using boost::shared_ptr;
 using boost::lexical_cast;
+using namespace pwiz::msdata;
 
 
-PWIZ_API_DECL
-void diff(const string& a, 
-          const string& b, 
-          string& a_b, 
-          string& b_a,
-          const DiffConfig& config)
-{
-    a_b.clear();
-    b_a.clear();
-    
-    if (a != b)
-    {
-        a_b = a;
-        b_a = b;
-    }
-}
-
-
-template <typename T>
-void diff_numeric(const T& a, 
-                  const T& b, 
-                  T& a_b, 
-                  T& b_a,
-                  const DiffConfig& config)
-{
-    a_b = 0;
-    b_a = 0;
-    
-    if (a != b)
-    {
-        a_b = a;
-        b_a = b;
-    }
-}
-
-
-template <>
-void diff_numeric(const double& a,
-                  const double& b,
-                  double& a_b,
-                  double& b_a,
-                  const DiffConfig& config)
-{
-    a_b = 0;
-    b_a = 0;
-
-    if (fabs(a - b) > config.precision + std::numeric_limits<double>::epsilon())
-    {
-        a_b = fabs(a - b);
-        b_a = fabs(a - b);
-    }
-}
-
-
-PWIZ_API_DECL
-void diff(const CV& a, 
-          const CV& b, 
-          CV& a_b, 
-          CV& b_a,
-          const DiffConfig& config)
-{
-    diff(a.URI, b.URI, a_b.URI, b_a.URI, config);
-    diff(a.id, b.id, a_b.id, b_a.id, config);
-    diff(a.fullName, b.fullName, a_b.fullName, b_a.fullName, config);
-    diff(a.version, b.version, a_b.version, b_a.version, config);
-}
-
-
-PWIZ_API_DECL
-void diff(CVID a,
-          CVID b,
-          CVID& a_b,
-          CVID& b_a,
-          const DiffConfig& config)
-{
-    a_b = b_a = CVID_Unknown;
-    if (a!=b)  
-    {
-        a_b = a;
-        b_a = b;
-    }
-}
-
-
-PWIZ_API_DECL
-void diff(const CVParam& a, 
-          const CVParam& b, 
-          CVParam& a_b, 
-          CVParam& b_a,
-          const DiffConfig& config)
-{
-    diff(a.cvid, b.cvid, a_b.cvid, b_a.cvid, config);
-
-    // use precision to compare floating point values
-    try
-    {
-        lexical_cast<int>(a.value);
-        lexical_cast<int>(b.value);
-    }
-    catch (boost::bad_lexical_cast&)
-    {
-        try
-        {
-            double aValue = lexical_cast<double>(a.value);
-            double bValue = lexical_cast<double>(b.value);
-            double a_bValue, b_aValue;
-            diff_numeric<double>(aValue, bValue, a_bValue, b_aValue, config);
-            a_b.value = lexical_cast<string>(a_bValue);
-            b_a.value = lexical_cast<string>(b_aValue);
-        }
-        catch (boost::bad_lexical_cast&)
-        {
-            diff(a.value, b.value, a_b.value, b_a.value, config);
-        }
-    }
-
-    diff(a.units, b.units, a_b.units, b_a.units, config);
-
-    // provide names for context
-    if (!a_b.empty() && a_b.cvid==CVID_Unknown) a_b.cvid = a.cvid; 
-    if (!b_a.empty() && b_a.cvid==CVID_Unknown) b_a.cvid = b.cvid; 
-}
-
-
-PWIZ_API_DECL
-void diff(const UserParam& a, 
-          const UserParam& b, 
-          UserParam& a_b, 
-          UserParam& b_a,
-          const DiffConfig& config)
-{
-    diff(a.name, b.name, a_b.name, b_a.name, config);
-    diff(a.value, b.value, a_b.value, b_a.value, config);
-    diff(a.type, b.type, a_b.type, b_a.type, config);
-    diff(a.units, b.units, a_b.units, b_a.units, config);
-
-    // provide names for context
-    if (!a_b.empty() && a_b.name.empty()) a_b.name = a.name; 
-    if (!b_a.empty() && b_a.name.empty()) b_a.name = b.name; 
-}
-
-
-template <typename object_type>
-void vector_diff(const vector<object_type>& a,
-                 const vector<object_type>& b,
-                 vector<object_type>& a_b,
-                 vector<object_type>& b_a)
-{
-    // calculate set differences of two vectors
-
-    a_b.clear();
-    b_a.clear();
-
-    for (typename vector<object_type>::const_iterator it=a.begin(); it!=a.end(); ++it)
-        if (find(b.begin(), b.end(), *it) == b.end())
-            a_b.push_back(*it);
-
-    for (typename vector<object_type>::const_iterator it=b.begin(); it!=b.end(); ++it)
-        if (find(a.begin(), a.end(), *it) == a.end())
-            b_a.push_back(*it);
-}
-
-
-template <typename object_type>
-struct HasID
-{
-    const string& id_;
-    HasID(const string& id) : id_(id) {}
-    bool operator()(const shared_ptr<object_type>& objectPtr) {return objectPtr->id == id_;}
-};
-
-
-template <typename object_type>
-class Same
-{
-    public:
-
-    Same(const object_type& object,
-         const DiffConfig& config)
-    :   mine_(object), config_(config)
-    {}
-
-    bool operator()(const object_type& yours)
-    {
-        // true iff yours is the same as mine
-        return !Diff<object_type>(mine_, yours, config_);
-    }
-
-    private:
-    const object_type& mine_;
-    const DiffConfig& config_;
-};
-
-
-template <typename object_type>
-void vector_diff_diff(const vector<object_type>& a,
-                      const vector<object_type>& b,
-                      vector<object_type>& a_b,
-                      vector<object_type>& b_a,
-                      const DiffConfig& config)
-{
-    // calculate set differences of two vectors, using diff on each object
-
-    a_b.clear();
-    b_a.clear();
-
-    for (typename vector<object_type>::const_iterator it=a.begin(); it!=a.end(); ++it)
-        if (find_if(b.begin(), b.end(), Same<object_type>(*it, config)) == b.end())
-            a_b.push_back(*it);
-
-    for (typename vector<object_type>::const_iterator it=b.begin(); it!=b.end(); ++it)
-        if (find_if(a.begin(), a.end(), Same<object_type>(*it, config)) == a.end())
-            b_a.push_back(*it);
-}
-
-
-template <typename object_type>
-class SameDeep
-{
-    public:
-
-    SameDeep(const object_type& object,
-             const DiffConfig& config)
-    :   mine_(object), config_(config)
-    {}
-
-    bool operator()(const shared_ptr<object_type>& yours)
-    {
-        // true iff yours is the same as mine
-        return !Diff<object_type>(mine_, *yours, config_);
-    }
-
-    private:
-    const object_type& mine_;
-    const DiffConfig& config_;
-};
-
-
-template <typename object_type>
-void vector_diff_deep(const vector< shared_ptr<object_type> >& a,
-                      const vector< shared_ptr<object_type> >& b,
-                      vector< shared_ptr<object_type> >& a_b,
-                      vector< shared_ptr<object_type> >& b_a,
-                      const DiffConfig& config)
-{
-    // calculate set differences of two vectors of ObjectPtrs (deep compare using diff)
-
-    a_b.clear();
-    b_a.clear();
-
-    for (typename vector< shared_ptr<object_type> >::const_iterator it=a.begin(); it!=a.end(); ++it)
-        if (find_if(b.begin(), b.end(), SameDeep<object_type>(**it, config)) == b.end())
-            a_b.push_back(*it);
-
-    for (typename vector< shared_ptr<object_type> >::const_iterator it=b.begin(); it!=b.end(); ++it)
-        if (find_if(a.begin(), a.end(), SameDeep<object_type>(**it, config)) == a.end())
-            b_a.push_back(*it);
-}
-
-
-PWIZ_API_DECL
-void diff(const ParamContainer& a, 
-          const ParamContainer& b, 
-          ParamContainer& a_b, 
-          ParamContainer& b_a,
-          const DiffConfig& config)
-{
-    vector_diff_deep(a.paramGroupPtrs, b.paramGroupPtrs, a_b.paramGroupPtrs, b_a.paramGroupPtrs, config);
-    vector_diff(a.cvParams, b.cvParams, a_b.cvParams, b_a.cvParams);
-    vector_diff(a.userParams, b.userParams, a_b.userParams, b_a.userParams);
-}
-
-
-PWIZ_API_DECL
-void diff(const ParamGroup& a, 
-          const ParamGroup& b, 
-          ParamGroup& a_b, 
-          ParamGroup& b_a,
-          const DiffConfig& config)
-{
-    diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
-    diff(a.id, b.id, a_b.id, b_a.id, config);
-
-    // provide id for context
-    if (!a_b.empty() || !b_a.empty()) 
-    {
-        a_b.id = a.id; 
-        b_a.id = b.id; 
-    }
-}
+namespace pwiz {
+namespace data {
+namespace diff_impl {
 
 
 PWIZ_API_DECL
@@ -393,8 +105,8 @@ void diff(const Component& a,
 {
     int a_bType, b_aType; // TODO: how to take the difference of enum types?
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
-    diff_numeric(a.order, b.order, a_b.order, b_a.order, config);
-    diff_numeric((int)a.type, (int)b.type, a_bType, b_aType, config);
+    diff_integral(a.order, b.order, a_b.order, b_a.order, config);
+    diff_integral((int)a.type, (int)b.type, a_bType, b_aType, config);
 }
 
 
@@ -437,27 +149,6 @@ void diff(const Software& a,
 }
 
 
-template <typename object_type>
-void ptr_diff(const shared_ptr<object_type>& a,
-              const shared_ptr<object_type>& b,
-              shared_ptr<object_type>& a_b,
-              shared_ptr<object_type>& b_a,
-              const DiffConfig& config)
-{
-    if (!a.get() && !b.get()) return;
-
-    shared_ptr<object_type> a_temp = a.get() ? a : shared_ptr<object_type>(new object_type);
-    shared_ptr<object_type> b_temp = b.get() ? b : shared_ptr<object_type>(new object_type);
-
-    if (!a_b.get()) a_b = shared_ptr<object_type>(new object_type);
-    if (!b_a.get()) b_a = shared_ptr<object_type>(new object_type);
-    diff(*a_temp, *b_temp, *a_b, *b_a, config);
-
-    if (a_b->empty()) a_b = shared_ptr<object_type>();
-    if (b_a->empty()) b_a = shared_ptr<object_type>();
-}
-
-
 PWIZ_API_DECL
 void diff(const InstrumentConfiguration& a,
           const InstrumentConfiguration& b,
@@ -487,7 +178,7 @@ void diff(const ProcessingMethod& a,
           const DiffConfig& config)
 {
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
-    diff_numeric(a.order, b.order, a_b.order, b_a.order, config);
+    diff_integral(a.order, b.order, a_b.order, b_a.order, config);
     ptr_diff(a.softwarePtr, b.softwarePtr, a_b.softwarePtr, b_a.softwarePtr, config);
 }
 
@@ -636,7 +327,6 @@ double maxdiff(const vector<double>& a, const vector<double>& b)
 
 const char* userParamName_BinaryDataArrayDifference_ = "Binary data array difference";
 
-
 PWIZ_API_DECL
 void diff(const BinaryDataArray& a,
           const BinaryDataArray& b,
@@ -728,8 +418,8 @@ void diff(const Spectrum& a,
     b_a = Spectrum();
 
     // important scan metadata
-    diff_numeric(a.index, b.index, a_b.index, b_a.index, config);
-    diff_numeric(a.defaultArrayLength, b.defaultArrayLength, a_b.defaultArrayLength, b_a.defaultArrayLength, config);
+    diff_integral(a.index, b.index, a_b.index, b_a.index, config);
+    diff_integral(a.defaultArrayLength, b.defaultArrayLength, a_b.defaultArrayLength, b_a.defaultArrayLength, config);
     vector_diff_diff(a.precursors, b.precursors, a_b.precursors, b_a.precursors, config);
     vector_diff_diff(a.products, b.products, a_b.products, b_a.products, config);
 
@@ -752,23 +442,21 @@ void diff(const Spectrum& a,
                                  lexical_cast<string>(b.binaryDataArrayPtrs.size())));
     }
     else
-    { 
-
-      double maxPrecisionDiff=0;
-      diff(a.binaryDataArrayPtrs, b.binaryDataArrayPtrs, 
-             a_b.binaryDataArrayPtrs, b_a.binaryDataArrayPtrs, config, maxPrecisionDiff);
+    {
+        double maxPrecisionDiff=0;
+        diff(a.binaryDataArrayPtrs, b.binaryDataArrayPtrs, 
+             a_b.binaryDataArrayPtrs, b_a.binaryDataArrayPtrs,
+             config, maxPrecisionDiff);
       
-      if (maxPrecisionDiff>(config.precision+numeric_limits<double>::epsilon()))   
-  
-      {
-	a_b.userParams.push_back(UserParam(userParamName_BinaryDataArrayDifference_,
+        if (maxPrecisionDiff>(config.precision+numeric_limits<double>::epsilon()))   
+        {
+            a_b.userParams.push_back(UserParam(userParamName_BinaryDataArrayDifference_,
                                                lexical_cast<string>(maxPrecisionDiff),
                                                "xsd:float"));      
-        b_a.userParams.push_back(UserParam(userParamName_BinaryDataArrayDifference_,
-					 lexical_cast<string>(maxPrecisionDiff),
-					 "xsd:float"));
-      }
-
+            b_a.userParams.push_back(UserParam(userParamName_BinaryDataArrayDifference_,
+			                                   lexical_cast<string>(maxPrecisionDiff),
+			                                   "xsd:float"));
+        }
     }
 
     // provide context
@@ -791,8 +479,8 @@ void diff(const Chromatogram& a,
     b_a = Chromatogram();
 
     // important scan metadata
-    diff_numeric(a.index, b.index, a_b.index, b_a.index, config);
-    diff_numeric(a.defaultArrayLength, b.defaultArrayLength, a_b.defaultArrayLength, b_a.defaultArrayLength, config);
+    diff_integral(a.index, b.index, a_b.index, b_a.index, config);
+    diff_integral(a.defaultArrayLength, b.defaultArrayLength, a_b.defaultArrayLength, b_a.defaultArrayLength, config);
 
     if (!config.ignoreMetadata)
     {
@@ -812,24 +500,22 @@ void diff(const Chromatogram& a,
         b_a.userParams.push_back(UserParam("Binary data array count: " + 
                                  lexical_cast<string>(b.binaryDataArrayPtrs.size())));
     }
-
     else
     {
-      double maxPrecisionDiff=0;
-      diff(a.binaryDataArrayPtrs, b.binaryDataArrayPtrs, 
-             a_b.binaryDataArrayPtrs, b_a.binaryDataArrayPtrs, config, maxPrecisionDiff);
-     
-      if (maxPrecisionDiff>(config.precision+numeric_limits<double>::epsilon()))   
-  
-      {
-	a_b.userParams.push_back(UserParam(userParamName_BinaryDataArrayDifference_,
+        double maxPrecisionDiff=0;
+        diff(a.binaryDataArrayPtrs, b.binaryDataArrayPtrs,
+             a_b.binaryDataArrayPtrs, b_a.binaryDataArrayPtrs,
+             config, maxPrecisionDiff);
+
+        if (maxPrecisionDiff>(config.precision+numeric_limits<double>::epsilon()))   
+        {
+            a_b.userParams.push_back(UserParam(userParamName_BinaryDataArrayDifference_,
                                                lexical_cast<string>(maxPrecisionDiff),
                                                "xsd:float"));      
-        b_a.userParams.push_back(UserParam(userParamName_BinaryDataArrayDifference_,
-					 lexical_cast<string>(maxPrecisionDiff),
-					 "xsd:float"));
-      }
-
+            b_a.userParams.push_back(UserParam(userParamName_BinaryDataArrayDifference_,
+                                               lexical_cast<string>(maxPrecisionDiff),
+                                               "xsd:float"));
+        }
     }
 
     // provide context
@@ -841,12 +527,14 @@ void diff(const Chromatogram& a,
 }
 
 
+static const char* userParamName_MaxBinaryDataArrayDifference_ = "Maximum binary data array difference";
+
 PWIZ_API_DECL
 void diff(const SpectrumList& a,
           const SpectrumList& b,
           SpectrumListSimple& a_b,
           SpectrumListSimple& b_a,
-          const DiffConfig& config, double& maxPrecisionDiff)
+          const DiffConfig& config)
 {
     a_b.spectra.clear();
     b_a.spectra.clear();
@@ -873,6 +561,7 @@ void diff(const SpectrumList& a,
         return;
     }
 
+    double maxPrecisionDiff = 0;
     for (unsigned int i=0; i<a.size(); i++)
     { 
         SpectrumPtr temp_a_b(new Spectrum);        
@@ -883,13 +572,25 @@ void diff(const SpectrumList& a,
         {
             a_b.spectra.push_back(temp_a_b);
             b_a.spectra.push_back(temp_b_a);
-	    
-            if(!temp_a_b->userParam(userParamName_BinaryDataArrayDifference_).empty())
+
+            if (!temp_a_b->userParam(userParamName_BinaryDataArrayDifference_).empty())
             {
                 double max=lexical_cast<double>(temp_a_b->userParam(userParamName_BinaryDataArrayDifference_).value);
                 if (max>maxPrecisionDiff) maxPrecisionDiff=max;
             }
         }
+    }
+
+    if (maxPrecisionDiff > 0)
+    {
+        if (!a_b.dp.get()) a_b.dp = DataProcessingPtr(new DataProcessing);
+        if (a_b.dp->processingMethods.empty()) a_b.dp->processingMethods.push_back(ProcessingMethod());
+        ProcessingMethod& listDiffMethod = a_b.dp->processingMethods.back();
+
+        if (listDiffMethod.userParam(userParamName_MaxBinaryDataArrayDifference_).empty())
+            listDiffMethod.userParams.push_back(UserParam(userParamName_MaxBinaryDataArrayDifference_, lexical_cast<string>(maxPrecisionDiff)));
+        else
+            listDiffMethod.userParam(userParamName_MaxBinaryDataArrayDifference_).value = lexical_cast<string>(maxPrecisionDiff);
     }
 }
 
@@ -899,7 +600,7 @@ void diff(const ChromatogramList& a,
           const ChromatogramList& b,
           ChromatogramListSimple& a_b,
           ChromatogramListSimple& b_a,
-          const DiffConfig& config, double& maxPrecisionDiff)
+          const DiffConfig& config)
 {
     a_b.chromatograms.clear();
     b_a.chromatograms.clear();
@@ -927,6 +628,7 @@ void diff(const ChromatogramList& a,
         return;
     }
 
+    double maxPrecisionDiff = 0;
     for (unsigned int i=0; i<a.size(); i++)
     { 
         ChromatogramPtr temp_a_b(new Chromatogram);        
@@ -936,18 +638,25 @@ void diff(const ChromatogramList& a,
         {
             a_b.chromatograms.push_back(temp_a_b);
             b_a.chromatograms.push_back(temp_b_a);
+
+            if (!temp_a_b->userParam(userParamName_BinaryDataArrayDifference_).empty())
+            {
+                double max=lexical_cast<double>(temp_a_b->userParam(userParamName_BinaryDataArrayDifference_).value);
+                if(max>maxPrecisionDiff) maxPrecisionDiff=max;
+            }
         }
+    }
 
-	if(!temp_a_b->userParams.empty() || !temp_b_a->userParams.empty())
-	  {
-	    double max=lexical_cast<double>(temp_a_b->userParam(userParamName_BinaryDataArrayDifference_).value);
-	    if(max>maxPrecisionDiff) 
-	      {
-		maxPrecisionDiff=max;
-	
-	      }
-	  }	
+    if (maxPrecisionDiff > 0)
+    {
+        if (!a_b.dp.get()) a_b.dp = DataProcessingPtr(new DataProcessing);
+        if (a_b.dp->processingMethods.empty()) a_b.dp->processingMethods.push_back(ProcessingMethod());
+        ProcessingMethod& listDiffMethod = a_b.dp->processingMethods.back();
 
+        if (listDiffMethod.userParam(userParamName_MaxBinaryDataArrayDifference_).empty())
+            listDiffMethod.userParams.push_back(UserParam(userParamName_MaxBinaryDataArrayDifference_, lexical_cast<string>(maxPrecisionDiff)));
+        else
+            listDiffMethod.userParam(userParamName_MaxBinaryDataArrayDifference_).value = lexical_cast<string>(maxPrecisionDiff);
     }
 }
 
@@ -967,7 +676,7 @@ void diff(const Run& a,
         ptr_diff(a.defaultSourceFilePtr, b.defaultSourceFilePtr, a_b.defaultSourceFilePtr, b_a.defaultSourceFilePtr, config);
         diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
     }
-  
+
     // special handling for SpectrumList diff
     shared_ptr<SpectrumListSimple> temp_a_b(new SpectrumListSimple); 
     shared_ptr<SpectrumListSimple> temp_b_a(new SpectrumListSimple);
@@ -975,19 +684,25 @@ void diff(const Run& a,
     b_a.spectrumListPtr = temp_b_a; 
     SpectrumListPtr temp_a = a.spectrumListPtr.get() ? a.spectrumListPtr : SpectrumListPtr(new SpectrumListSimple);
     SpectrumListPtr temp_b = b.spectrumListPtr.get() ? b.spectrumListPtr : SpectrumListPtr(new SpectrumListSimple);
-    double maxPrecisionDiffSpec=0;
-    diff(*temp_a, *temp_b, *temp_a_b, *temp_b_a, config,maxPrecisionDiffSpec);
-    
+    diff(*temp_a, *temp_b, *temp_a_b, *temp_b_a, config);
+
+    double maxPrecisionDiffSpec = 0;
+    DataProcessingPtr sl_a_b_dp = temp_a_b->dp;
+    if (sl_a_b_dp.get() &&
+        !sl_a_b_dp->processingMethods.empty() &&
+        !sl_a_b_dp->processingMethods.back().userParam(userParamName_MaxBinaryDataArrayDifference_).empty())
+        maxPrecisionDiffSpec = lexical_cast<double>(sl_a_b_dp->processingMethods.back().userParam(userParamName_MaxBinaryDataArrayDifference_).value);
+
     if (maxPrecisionDiffSpec>(config.precision+numeric_limits<double>::epsilon()))
-      {
-          a_b.userParams.push_back(UserParam("Spectrum binary data array difference",
-					     lexical_cast<string>(maxPrecisionDiffSpec),
-					     "xsd:float"));
-          b_a.userParams.push_back(UserParam("Spectrum binary data array difference",
-					     lexical_cast<string>(maxPrecisionDiffSpec),
-					     "xsd:float"));
-      }
-    
+    {
+        a_b.userParams.push_back(UserParam("Spectrum binary data array difference",
+            lexical_cast<string>(maxPrecisionDiffSpec),
+            "xsd:float"));
+        b_a.userParams.push_back(UserParam("Spectrum binary data array difference",
+            lexical_cast<string>(maxPrecisionDiffSpec),
+            "xsd:float"));
+    }
+
     // special handling for ChromatogramList diff
     shared_ptr<ChromatogramListSimple> cl_temp_a_b(new ChromatogramListSimple); 
     shared_ptr<ChromatogramListSimple> cl_temp_b_a(new ChromatogramListSimple);
@@ -995,19 +710,24 @@ void diff(const Run& a,
     b_a.chromatogramListPtr = cl_temp_b_a; 
     ChromatogramListPtr cl_temp_a = a.chromatogramListPtr.get() ? a.chromatogramListPtr : ChromatogramListPtr(new ChromatogramListSimple);
     ChromatogramListPtr cl_temp_b = b.chromatogramListPtr.get() ? b.chromatogramListPtr : ChromatogramListPtr(new ChromatogramListSimple);
+    diff(*cl_temp_a, *cl_temp_b, *cl_temp_a_b, *cl_temp_b_a, config);
 
-    double maxPrecisionDiffChr=0;
-    diff(*cl_temp_a, *cl_temp_b, *cl_temp_a_b, *cl_temp_b_a, config,maxPrecisionDiffChr);
-   
+    double maxPrecisionDiffChr = 0;
+    DataProcessingPtr cl_a_b_dp = temp_a_b->dp;
+    if (cl_a_b_dp.get() &&
+        !cl_a_b_dp->processingMethods.empty() &&
+        !cl_a_b_dp->processingMethods.back().userParam(userParamName_MaxBinaryDataArrayDifference_).empty())
+        maxPrecisionDiffChr = lexical_cast<double>(cl_a_b_dp->processingMethods.back().userParam(userParamName_MaxBinaryDataArrayDifference_).value);
+
     if (maxPrecisionDiffChr>(config.precision+numeric_limits<double>::epsilon()))
-      {
+    {
         a_b.userParams.push_back(UserParam("Chromatogram binary data array difference",
-                                             lexical_cast<string>(maxPrecisionDiffChr),
-                                             "xsd:float"));
-	b_a.userParams.push_back(UserParam("Chromatogram binary data array difference",
-					   lexical_cast<string>(maxPrecisionDiffChr),
-					   "xsd:float"));
-      }
+            lexical_cast<string>(maxPrecisionDiffChr),
+            "xsd:float"));
+        b_a.userParams.push_back(UserParam("Chromatogram binary data array difference",
+            lexical_cast<string>(maxPrecisionDiffChr),
+            "xsd:float"));
+    }
 
     // provide context
     if (!a_b.empty() || !b_a.empty()) 
@@ -1059,86 +779,81 @@ void diff(const MSData& a,
 }
 
 
-std::ostream& os_write_spectra(std::ostream& os, const SpectrumListPtr a_b, const SpectrumListPtr b_a)
+} // namespace diff_impl
+} // namespace data
+
+
+namespace msdata
 {
 
-  TextWriter write(os, 1);
-  
-  if(a_b->size()!=b_a->size())
-    {
-      os<<"in SpectrumList diff: SpectrumList sizes differ"<<endl;
-      return os;
-    }
-  
-  for(size_t index(0);index<(*a_b).size();index++)
-    {
 
-      os<<"+\n";
-      write(*(a_b->spectrum(index)));
-   
-      os<<"-\n";
-      write(*(b_a->spectrum(index)));
-    
+std::ostream& os_write_spectra(std::ostream& os, const SpectrumListPtr a_b, const SpectrumListPtr b_a)
+{
+    TextWriter write(os, 1);
+
+    if(a_b->size()!=b_a->size())
+    {
+        os<<"in SpectrumList diff: SpectrumList sizes differ"<<endl;
+        return os;
     }
 
-  return os;
+    for(size_t index(0);index<(*a_b).size();index++)
+    {
+        os<<"+\n";
+        write(*(a_b->spectrum(index)));
+
+        os<<"-\n";
+        write(*(b_a->spectrum(index)));
+    }
+
+    return os;
 }
 
 std::ostream& os_write_chromatograms(std::ostream& os, const ChromatogramListPtr a_b, const ChromatogramListPtr b_a)
 {
-  
-  TextWriter write(os,1);
+    TextWriter write(os,1);
 
-  if(a_b->size()!=b_a->size())
+    if(a_b->size()!=b_a->size())
     {
-      os<<"in ChromatogramList diff: ChromatogramList sizes differ"<<endl;
-      return os;
+        os<<"in ChromatogramList diff: ChromatogramList sizes differ"<<endl;
+        return os;
     }
 
- 
-
-  for(size_t index=0;index<a_b->size();index++)
+    for(size_t index=0;index<a_b->size();index++)
     {
+        os<<"+\n";
+        write(*(a_b->chromatogram(index)));  
 
-      os<<"+\n";
-      write(*(a_b->chromatogram(index)));  
-
-      os<<"-\n";
-      write(*(b_a->chromatogram(index)));
-      
+        os<<"-\n";
+        write(*(b_a->chromatogram(index)));
     }
 
-  return os;
+    return os;
 }
-
-} // namespace diff_impl
 
 
 PWIZ_API_DECL
-std::ostream& operator<<(std::ostream& os, const Diff<MSData>& diff)
+std::ostream& operator<<(std::ostream& os, const data::Diff<MSData, DiffConfig>& diff)
 {
-  using namespace diff_impl;
+    TextWriter write(os,1);
 
-  TextWriter write(os,1);
-
-  if(!diff.a_b.empty()|| !diff.b_a.empty())
+    if(!diff.a_b.empty()|| !diff.b_a.empty())
 
     {
-      os<<"+\n";
-      write(diff.a_b,true);
-      os<<"-\n";
-      write(diff.b_a,true);
-      
+        os<<"+\n";
+        write(diff.a_b,true);
+        os<<"-\n";
+        write(diff.b_a,true);
 
-      os_write_spectra(os,diff.a_b.run.spectrumListPtr,diff.b_a.run.spectrumListPtr);
+        os_write_spectra(os,diff.a_b.run.spectrumListPtr,diff.b_a.run.spectrumListPtr);
 
-      os_write_chromatograms(os,diff.a_b.run.chromatogramListPtr, diff.b_a.run.chromatogramListPtr);
+        os_write_chromatograms(os,diff.a_b.run.chromatogramListPtr, diff.b_a.run.chromatogramListPtr);
     }
 
-  return os;
+    return os;
 
 }
+
+
 } // namespace msdata
 } // namespace pwiz
-
-

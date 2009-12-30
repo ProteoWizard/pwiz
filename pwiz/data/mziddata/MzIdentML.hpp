@@ -26,28 +26,25 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "pwiz/data/msdata/MSData.hpp"
-#include "pwiz/data/msdata/cv.hpp"
-#include "pwiz/data/msdata/CVParam.hpp"
+#include "pwiz/data/common/cv.hpp"
+#include "pwiz/data/common/ParamTypes.hpp"
 #include "boost/shared_ptr.hpp"
 #include "boost/logic/tribool.hpp"
 #include <vector>
 #include <string>
 #include <map>
 
-#include <iostream>
 
 namespace pwiz {
 namespace mziddata {
 
+using namespace pwiz::cv;
+using namespace pwiz::data;
+
 /// returns a default list of CVs used in an MzIdentML document;
 /// currently includes PSI-MS, Unit Ontology, and UNIMOD
-PWIZ_API_DECL std::vector<pwiz::CV> defaultCVList();
+PWIZ_API_DECL std::vector<CV> defaultCVList();
 
-// these types are used verbatim from MSData
-using msdata::CVParam;
-using msdata::UserParam;
-using msdata::ParamContainer;
 
 struct PWIZ_API_DECL IdentifiableType
 {
@@ -848,7 +845,7 @@ struct PWIZ_API_DECL MzIdentML : public IdentifiableType
     ///////////////////////////////////////////////////////////////////////
     // Elements
 
-    std::vector<pwiz::CV> cvs;
+    std::vector<CV> cvs;
 
     std::vector<AnalysisSoftwarePtr> analysisSoftwareList;
 

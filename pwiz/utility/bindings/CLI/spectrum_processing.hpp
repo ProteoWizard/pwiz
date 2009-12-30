@@ -25,7 +25,7 @@
 
 
 #pragma warning( push )
-#pragma warning( disable : 4635 )
+#pragma warning( disable : 4634 4635 )
 //#include "SpectrumListWrapper.hpp"
 #include "SharedCLI.hpp"
 #include "SpectrumList_PeakFilter.hpp"

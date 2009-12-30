@@ -32,7 +32,7 @@
 
 
 namespace pwiz {
-namespace msdata {
+namespace data {
 
 
 /// translates text to CV terms
@@ -45,10 +45,10 @@ class PWIZ_API_DECL CVTranslator
     CVTranslator();
 
     /// insert a text-cvid pair into the dictionary
-    void insert(const std::string& text, CVID cvid);
+    void insert(const std::string& text, cv::CVID cvid);
 
     /// translate text -> CVID
-    CVID translate(const std::string& text) const;
+    cv::CVID translate(const std::string& text) const;
 
     private:
     class Impl;
@@ -58,7 +58,7 @@ class PWIZ_API_DECL CVTranslator
 };
 
 
-} // namespace msdata
+} // namespace data
 } // namespace pwiz
 
 

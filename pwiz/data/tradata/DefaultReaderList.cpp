@@ -95,7 +95,7 @@ SoftwarePtr getSoftwarePwiz(vector<SoftwarePtr>& softwarePtrs)
 
 void fillInCommonMetadata(const string& filename, TraData& td)
 {
-    td.cvs = msdata::defaultCVList();
+    td.cvs = defaultCVList();
 
     SoftwarePtr softwarePwiz = getSoftwarePwiz(td.softwarePtrs);
 }

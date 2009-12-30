@@ -28,11 +28,11 @@
 #define _CV_HPP_CLI_
 
 
-#include "../../../data/msdata/cv.hpp"
+#include "pwiz/data/common/cv.hpp"
 #include "SharedCLI.hpp"
 
 
-// [c:\bumbershoot\src\pwiz-src\pwiz\data\msdata\psi-ms.obo]
+// [C:\bumbershoot\src\pwiz-src\pwiz\data\common\psi-ms.obo]
 //   format-version: 1.2
 //   date: 19:08:2009 0:07
 //   saved-by: andreas_bertsch
@@ -50,7 +50,7 @@
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
 //   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo?revision=1.21
 //
-// [c:\bumbershoot\src\pwiz-src\pwiz\data\msdata\unit.obo]
+// [C:\bumbershoot\src\pwiz-src\pwiz\data\common\unit.obo]
 //   format-version: 1.2
 //   date: 14:07:2009 12:37
 //   saved-by: George Gkoutos
@@ -5667,7 +5667,7 @@ public enum class CVID
 /// <summary>
 /// A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(CVIDList, pwiz::CVID, CVID, NATIVE_VALUE_TO_CLI, CLI_VALUE_TO_NATIVE_VALUE);
+DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(CVIDList, pwiz::cv::CVID, CVID, NATIVE_VALUE_TO_CLI, CLI_VALUE_TO_NATIVE_VALUE);
 
 /// <summary>
 /// A list of enumerated System.Strings; implements IList&lt;System.String&gt;
@@ -5679,7 +5679,7 @@ DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(StringList, std::string, System::St
 /// </summary>
 public ref class CVTermInfo
 {
-    DEFINE_INTERNAL_BASE_CODE(CVTermInfo, pwiz::CVTermInfo);
+    DEFINE_INTERNAL_BASE_CODE(CVTermInfo, pwiz::cv::CVTermInfo);
     public:
 
     /// <summary>
@@ -5723,17 +5723,17 @@ public ref class CVTermInfo
     /// </summary>
     property StringList^ exactSynonyms { StringList^ get() {return gcnew StringList(&base_->exactSynonyms);} }
 
-    CVTermInfo() : base_(new pwiz::CVTermInfo()) {}
+    CVTermInfo() : base_(new pwiz::cv::CVTermInfo()) {}
 
     /// <summary>
     /// returns CV term info for the specified CVID
     /// </summary>
-    CVTermInfo(CVID cvid) : base_(new pwiz::CVTermInfo(pwiz::cvTermInfo((pwiz::CVID) cvid))) {}
+    CVTermInfo(CVID cvid) : base_(new pwiz::cv::CVTermInfo(pwiz::cv::cvTermInfo((pwiz::cv::CVID) cvid))) {}
 
     /// <summary>
     /// returns CV term info for the specified id in the form: "prefix:number"
     /// </summary>
-    CVTermInfo(System::String^ id) : base_(new pwiz::CVTermInfo(pwiz::cvTermInfo(ToStdString(id)))) {}
+    CVTermInfo(System::String^ id) : base_(new pwiz::cv::CVTermInfo(pwiz::cv::cvTermInfo(ToStdString(id)))) {}
 
     /// <summary>
     /// returns the shortest synonym from exactSynonyms()

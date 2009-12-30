@@ -38,7 +38,7 @@ namespace CLI {
 
 
 CV::CV()
-: base_(new pwiz::CV()), owner_(nullptr)
+: base_(new pwiz::cv::CV()), owner_(nullptr)
 {}
 
 System::String^ CV::id::get() {return gcnew System::String(base_->id.c_str());}
@@ -79,7 +79,7 @@ UserParam::UserParam(System::String^ _name, System::String^ _value, System::Stri
 {value_ = gcnew UserParamValue(base_);}
 
 UserParam::UserParam(System::String^ _name, System::String^ _value, System::String^ _type, CVID _units)
-: base_(new boost::shared_ptr<b::UserParam>(new b::UserParam(ToStdString(_name), ToStdString(_value), ToStdString(_type), (pwiz::CVID) _units))), owner_(nullptr)
+: base_(new boost::shared_ptr<b::UserParam>(new b::UserParam(ToStdString(_name), ToStdString(_value), ToStdString(_type), (pwiz::cv::CVID) _units))), owner_(nullptr)
 {value_ = gcnew UserParamValue(base_);}
 
 System::String^ UserParam::name::get() {return gcnew System::String((*base_)->name.c_str());}
@@ -89,7 +89,7 @@ System::String^ UserParam::type::get() {return gcnew System::String((*base_)->ty
 void UserParam::type::set(System::String^ value) {(*base_)->type = ToStdString(value);}
 
 CVID UserParam::units::get() {return (CVID) (*base_)->units;}
-void UserParam::units::set(CVID value) {(*base_)->units = (pwiz::CVID) value;}
+void UserParam::units::set(CVID value) {(*base_)->units = (pwiz::cv::CVID) value;}
 
 UserParamValue^ UserParam::value::get() {return value_;}
 
@@ -108,27 +108,27 @@ UserParamList^ ParamContainer::userParams::get() {return gcnew UserParamList(&ba
 
 CVParam^ ParamContainer::cvParam(CVID cvid)
 {
-    return gcnew CVParam(new pwiz::msdata::CVParam(base_->cvParam((pwiz::CVID) cvid)));
+    return gcnew CVParam(new pwiz::data::CVParam(base_->cvParam((pwiz::cv::CVID) cvid)));
 }
 
 CVParam^ ParamContainer::cvParamChild(CVID cvid)
 {
-    return gcnew CVParam(new pwiz::msdata::CVParam(base_->cvParamChild((pwiz::CVID) cvid)));
+    return gcnew CVParam(new pwiz::data::CVParam(base_->cvParamChild((pwiz::cv::CVID) cvid)));
 }
 
 bool ParamContainer::hasCVParam(CVID cvid)
 {
-    return base_->hasCVParam((pwiz::CVID) cvid);
+    return base_->hasCVParam((pwiz::cv::CVID) cvid);
 }
 
 bool ParamContainer::hasCVParamChild(CVID cvid)
 {
-    return base_->hasCVParamChild((pwiz::CVID) cvid);
+    return base_->hasCVParamChild((pwiz::cv::CVID) cvid);
 }
 
 UserParam^ ParamContainer::userParam(System::String^ name)
 {
-    return gcnew UserParam(new pwiz::msdata::UserParam(base_->userParam(ToStdString(name))));
+    return gcnew UserParam(new pwiz::data::UserParam(base_->userParam(ToStdString(name))));
 }
 
 bool ParamContainer::empty()
@@ -136,9 +136,9 @@ bool ParamContainer::empty()
     return base_->empty();
 }
 
-void ParamContainer::set(CVID cvid) {base_->set((pwiz::CVID) cvid);}
-void ParamContainer::set(CVID cvid, System::String^ value) {base_->set((pwiz::CVID) cvid, ToStdString(value));}
-void ParamContainer::set(CVID cvid, System::String^ value, CVID units) {base_->set((pwiz::CVID) cvid, ToStdString(value), (pwiz::CVID) units);}
+void ParamContainer::set(CVID cvid) {base_->set((pwiz::cv::CVID) cvid);}
+void ParamContainer::set(CVID cvid, System::String^ value) {base_->set((pwiz::cv::CVID) cvid, ToStdString(value));}
+void ParamContainer::set(CVID cvid, System::String^ value, CVID units) {base_->set((pwiz::cv::CVID) cvid, ToStdString(value), (pwiz::cv::CVID) units);}
 
 void ParamContainer::set(CVID cvid, bool value) {set(cvid, (value ? "true" : "false"));}
 void ParamContainer::set(CVID cvid, System::Int32 value) {set(cvid, value.ToString());}
@@ -261,7 +261,7 @@ Component::Component(ComponentType type, int order)
 {owner_ = nullptr; base_ = static_cast<b::Component*>(ParamContainer::base_);}
 
 Component::Component(CVID cvid, int order)
-: ParamContainer(new b::Component((pwiz::CVID) cvid, order))
+: ParamContainer(new b::Component((pwiz::cv::CVID) cvid, order))
 {owner_ = nullptr; base_ = static_cast<b::Component*>(ParamContainer::base_);}
 
 ComponentType Component::type::get() {return (ComponentType) base_->type;}
@@ -272,7 +272,7 @@ void Component::order::set(int value) {base_->order = value;}
 
 void Component::define(CVID cvid, int order)
 {
-    base_->define((pwiz::CVID) cvid, order);
+    base_->define((pwiz::cv::CVID) cvid, order);
 }
 
 bool Component::empty()
@@ -412,7 +412,7 @@ ScanWindow::ScanWindow()
 {owner_ = nullptr; base_ = static_cast<b::ScanWindow*>(ParamContainer::base_);}
 
 ScanWindow::ScanWindow(double low, double high, CVID unit)
-: ParamContainer(new b::ScanWindow(low, high, (pwiz::CVID) unit))
+: ParamContainer(new b::ScanWindow(low, high, (pwiz::cv::CVID) unit))
 {owner_ = nullptr; base_ = static_cast<b::ScanWindow*>(ParamContainer::base_);}
 
 
@@ -630,12 +630,12 @@ BinaryDataArray^ Spectrum::getIntensityArray()
 
 void Spectrum::setMZIntensityPairs(MZIntensityPairList^ input)
 {
-    (*base_)->setMZIntensityPairs(*input->base_, (pwiz::CVID) CVID::CVID_Unknown);
+    (*base_)->setMZIntensityPairs(*input->base_, (pwiz::cv::CVID) CVID::CVID_Unknown);
 }
 
 void Spectrum::setMZIntensityPairs(MZIntensityPairList^ input, CVID intensityUnits)
 {
-    (*base_)->setMZIntensityPairs(*input->base_, (pwiz::CVID) intensityUnits);
+    (*base_)->setMZIntensityPairs(*input->base_, (pwiz::cv::CVID) intensityUnits);
 }
 
 void Spectrum::setMZIntensityArrays(System::Collections::Generic::List<double>^ mzArray,
@@ -666,7 +666,7 @@ void Spectrum::setMZIntensityArrays(System::Collections::Generic::List<double>^ 
         intensityVector.assign(intensityArrayBegin, intensityArrayBegin + intensityArray2->Length);
     }
 
-    (*base_)->setMZIntensityArrays(mzVector, intensityVector, (pwiz::CVID) intensityUnits);
+    (*base_)->setMZIntensityArrays(mzVector, intensityVector, (pwiz::cv::CVID) intensityUnits);
 }
 
 bool Spectrum::empty()
@@ -715,7 +715,7 @@ void Chromatogram::getTimeIntensityPairs(TimeIntensityPairList^% output)
 
 void Chromatogram::setTimeIntensityPairs(TimeIntensityPairList^ input, CVID timeUnits, CVID intensityUnits)
 {
-    CATCH_AND_FORWARD((*base_)->setTimeIntensityPairs(*input->base_, (pwiz::CVID) timeUnits, (pwiz::CVID) intensityUnits);)
+    CATCH_AND_FORWARD((*base_)->setTimeIntensityPairs(*input->base_, (pwiz::cv::CVID) timeUnits, (pwiz::cv::CVID) intensityUnits);)
 }
 
 bool Chromatogram::empty()

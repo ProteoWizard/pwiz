@@ -33,7 +33,8 @@
 
 
 using namespace std;
-using namespace pwiz;
+using namespace pwiz::cv;
+using namespace pwiz::data;
 using namespace pwiz::util;
 using namespace pwiz::msdata;
 using boost::shared_ptr;

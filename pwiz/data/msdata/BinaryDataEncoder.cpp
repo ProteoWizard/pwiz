@@ -43,7 +43,8 @@ namespace msdata {
 
 
 using namespace std;
-using namespace util;
+using namespace pwiz::util;
+using namespace pwiz::cv;
 using namespace boost::iostreams;
 
 

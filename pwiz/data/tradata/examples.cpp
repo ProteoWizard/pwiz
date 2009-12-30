@@ -37,7 +37,7 @@ using namespace std;
 PWIZ_API_DECL void initializeTiny(TraData& td)
 {
     //td.id = "urn:lsid:psidev.info:mzML.instanceDocuments.tiny.pwiz";
-    td.cvs = msdata::defaultCVList();
+    td.cvs = defaultCVList();
 
 
     Transition transition1;

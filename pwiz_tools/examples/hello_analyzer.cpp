@@ -25,7 +25,8 @@
 #include <iostream>
 
 
-using namespace pwiz;
+using namespace pwiz::data;
+using namespace pwiz::cv;
 using namespace pwiz::analysis;
 using namespace std;
 

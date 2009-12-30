@@ -30,74 +30,10 @@
 
 using namespace std;
 using namespace pwiz::util;
-using namespace pwiz;
+using namespace pwiz::data;
 using namespace pwiz::msdata;
 using boost::shared_ptr;
 using boost::lexical_cast;
-
-
-void testParamContainer()
-{
-    ParamContainer pc;
-    pc.cvParams.push_back(MS_reflectron_on);
-    pc.cvParams.push_back(MS_MSn_spectrum);
-    pc.cvParams.push_back(MS_reflectron_off);
-    pc.cvParams.push_back(CVParam(MS_ionization_type, 420));
-    pc.userParams.push_back(UserParam("name1", "1", "type1", UO_second));
-    pc.userParams.push_back(UserParam("name2", "2", "type2", UO_minute));
-
-    ParamGroupPtr pg(new ParamGroup);
-    pg->cvParams.push_back(CVParam(UO_dalton, 666));
-    pc.paramGroupPtrs.push_back(pg);
-   
-    unit_assert(pc.hasCVParam(MS_reflectron_off));
-    unit_assert(!pc.hasCVParam(MS_spectrum_type));
-    unit_assert(pc.hasCVParam(UO_dalton));
-    unit_assert(!pc.hasCVParam(UO_mass_unit));
-      
-    unit_assert(pc.hasCVParamChild(MS_spectrum_type));
-    unit_assert(pc.hasCVParamChild(UO_mass_unit));
-
-    unit_assert(pc.cvParam(MS_selected_ion_m_z) == CVID_Unknown);
-    unit_assert(pc.cvParam(MS_reflectron_off) == MS_reflectron_off);
-    unit_assert(pc.cvParam(UO_mass_unit) == CVID_Unknown);
-    unit_assert(pc.cvParam(UO_dalton).cvid == UO_dalton);
-
-    unit_assert(pc.cvParamChild(MS_spectrum_type) == MS_MSn_spectrum);
-    unit_assert(pc.cvParamChild(UO_mass_unit).cvid == UO_dalton);
-
-    string result = "goober";
-    result = pc.cvParam(MS_selected_ion_m_z).value;
-    unit_assert(result == "");
-    result = pc.cvParam(MS_ionization_type).value;
-    unit_assert(result == "420");
-    result = pc.cvParam(UO_dalton).value;
-    unit_assert(result == "666");
-
-    UserParam userParam = pc.userParam("name");
-    unit_assert(userParam.empty());
-    userParam = pc.userParam("name1");
-    unit_assert(userParam.name == "name1");
-    unit_assert(userParam.valueAs<int>() == 1);
-    unit_assert(userParam.type == "type1");
-    unit_assert(userParam.units == UO_second);
-    userParam = pc.userParam("name2");
-    unit_assert(userParam.name == "name2");
-    unit_assert(userParam.valueAs<double>() == 2);
-    unit_assert(userParam.type == "type2");
-    unit_assert(userParam.units == UO_minute);
-    unit_assert(pc.userParam("goober").valueAs<int>() == 0);
-
-    pc.set(MS_ms_level, 2);
-    unit_assert(pc.cvParam(MS_ms_level).valueAs<int>() == 2);
-    pc.set(MS_ms_level, 3);
-    unit_assert(pc.cvParam(MS_ms_level).valueAs<int>() == 3);
-
-    pc.set(MS_deisotoping, true);
-    unit_assert(pc.cvParam(MS_deisotoping).valueAs<bool>() == true);
-    pc.set(MS_deisotoping, false);
-    unit_assert(pc.cvParam(MS_deisotoping).valueAs<bool>() == false);
-}
 
 
 void testSpectrumListSimple()
@@ -333,7 +269,6 @@ int main()
 {
     try
     {
-        testParamContainer();
         testSpectrumListSimple();
         testChromatograms();
         testIDParsing();

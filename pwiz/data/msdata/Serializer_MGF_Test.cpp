@@ -23,13 +23,15 @@
 #include "Serializer_MGF.hpp"
 #include "Serializer_mzML.hpp"
 #include "Diff.hpp"
+#include "TextWriter.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 
 
 using namespace std;
 using namespace pwiz::util;
-using namespace pwiz;
+using namespace pwiz::cv;
+using namespace pwiz::data;
 using namespace pwiz::msdata;
 using boost::shared_ptr;
 
@@ -110,7 +112,7 @@ void testWriteRead(const MSData& msd)
     diffConfig.ignoreMetadata = true;
     diffConfig.ignoreChromatograms = true;
 
-    Diff<MSData> diff(msd, msd2, diffConfig);
+    Diff<MSData, DiffConfig> diff(msd, msd2, diffConfig);
     if (os_ && diff) *os_ << diff << endl; 
     unit_assert(!diff);
 

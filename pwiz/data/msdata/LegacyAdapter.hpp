@@ -31,11 +31,14 @@
 #include "boost/shared_ptr.hpp"
 
 
+namespace pwiz { namespace data { class CVTranslator; } }
+
+
 namespace pwiz {
 namespace msdata {
 
 
-class CVTranslator;
+using pwiz::data::CVTranslator;
 
 
 ///

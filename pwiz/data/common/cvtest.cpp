@@ -27,7 +27,7 @@
 #include <cstring>
 
 
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::util;
 using namespace std;
 

@@ -25,7 +25,7 @@
 
 
 namespace b = pwiz::msdata;
-
+typedef b::Diff<b::MSData, b::DiffConfig> NativeMSDataDiff;
 
 namespace {
 
@@ -48,32 +48,32 @@ namespace msdata {
 
 
 Diff::Diff()
-:   base_(new b::Diff<b::MSData>())
+:   base_(new NativeMSDataDiff())
 {}
 
 
 Diff::Diff(DiffConfig^ config)
-:   base_(new b::Diff<b::MSData>(NativeDiffConfig(config)))
+:   base_(new NativeMSDataDiff(NativeDiffConfig(config)))
 {}
 
 
 Diff::Diff(MSData% a, MSData% b)
-:   base_(new b::Diff<b::MSData>(**a.base_, **b.base_))
+:   base_(new NativeMSDataDiff(**a.base_, **b.base_))
 {}
 
 
 Diff::Diff(MSData^ a, MSData^ b)
-:   base_(new b::Diff<b::MSData>(**a->base_, **b->base_))
+:   base_(new NativeMSDataDiff(**a->base_, **b->base_))
 {}
 
 
 Diff::Diff(MSData% a, MSData% b, DiffConfig^ config)
-:   base_(new b::Diff<b::MSData>(**a.base_, **b.base_, NativeDiffConfig(config)))
+:   base_(new NativeMSDataDiff(**a.base_, **b.base_, NativeDiffConfig(config)))
 {}
 
 
 Diff::Diff(MSData^ a, MSData^ b, DiffConfig^ config)
-:   base_(new b::Diff<b::MSData>(**a->base_, **b->base_, NativeDiffConfig(config)))
+:   base_(new NativeMSDataDiff(**a->base_, **b->base_, NativeDiffConfig(config)))
 {}
 
 

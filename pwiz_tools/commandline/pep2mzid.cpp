@@ -22,9 +22,9 @@
 
 #include "pwiz/data/mziddata/MzIdentMLFile.hpp"
 #include "pwiz/data/mziddata/Pep2MzIdent.hpp"
-#include "pwiz/data/msdata/CVTranslator.hpp"
+#include "pwiz/data/common/CVTranslator.hpp"
 #include "pwiz/data/misc/MinimumPepXML.hpp"
-#include "pwiz/data/msdata/cv.hpp"
+#include "pwiz/data/common/cv.hpp"
 #include "pwiz/Version.hpp"
 #include "pwiz/data/proteome/Peptide.hpp"
 
@@ -44,8 +44,8 @@ using boost::lexical_cast;
 using namespace std;
 using namespace boost::filesystem;
 
+using namespace pwiz::data;
 using namespace pwiz::mziddata;
-using namespace pwiz::msdata;
 using namespace pwiz::data::pepxml;
 
 int main(int argc, char* argv[])

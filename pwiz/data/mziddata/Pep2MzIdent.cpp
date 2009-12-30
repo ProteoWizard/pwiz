@@ -23,13 +23,13 @@
 
 #include "Pep2MzIdent.hpp"
 #include "pwiz/utility/chemistry/Ion.hpp"
-#include "pwiz/data/msdata/cv.hpp"
+#include "pwiz/data/common/cv.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/filesystem.hpp"
 #include "boost/algorithm/string.hpp"
 
 using namespace pwiz;
-using namespace pwiz::msdata;
+using namespace pwiz::cv;
 using namespace pwiz::mziddata;
 using namespace pwiz::data::pepxml;
 using namespace pwiz::chemistry;
@@ -220,8 +220,8 @@ Pep2MzIdent::Pep2MzIdent(const MSMSPipelineAnalysis& mspa, MzIdentMLPtr mzid)
       precursorMonoisotopic(false), fragmentMonoisotopic(false),
       indices(new Indices())
 {
-    mzid->cvs.push_back(cv("MS"));
-    mzid->cvs.push_back(cv("UO"));
+    mzid->cvs.push_back(cv::cv("MS"));
+    mzid->cvs.push_back(cv::cv("UO"));
     //translate();
 }
 
@@ -239,8 +239,8 @@ void Pep2MzIdent::clear()
     _mspa = NULL;
 
     mzid = MzIdentMLPtr(new MzIdentML());
-    mzid->cvs.push_back(cv("MS"));
-    mzid->cvs.push_back(cv("UO"));
+    mzid->cvs.push_back(cv::cv("MS"));
+    mzid->cvs.push_back(cv::cv("UO"));
 
     _translated = false;
 
@@ -616,8 +616,8 @@ void Pep2MzIdent::translateQueries(const SpectrumQueryPtr query,
 MzIdentMLPtr Pep2MzIdent::translate()
 {
     mzid = MzIdentMLPtr(new MzIdentML());
-    mzid->cvs.push_back(cv("MS"));
-    mzid->cvs.push_back(cv("UO"));
+    mzid->cvs.push_back(cv::cv("MS"));
+    mzid->cvs.push_back(cv::cv("UO"));
    
     translateRoot();
 

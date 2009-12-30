@@ -192,7 +192,7 @@ void testTraData()
 
     // compare 'a' and 'b'
 
-    Diff<TraData> diff(a,b);
+    Diff<TraData, DiffConfig> diff(a,b);
     if (diff && os_) *os_ << "diff:\n" << diff << endl;
     unit_assert(!diff);
 }

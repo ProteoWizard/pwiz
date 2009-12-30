@@ -27,7 +27,7 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "pwiz/data/msdata/cv.hpp"
+#include "pwiz/data/common/cv.hpp"
 #include "pwiz/utility/chemistry/Chemistry.hpp"
 #include "Peptide.hpp"
 #include <boost/regex.hpp>
@@ -39,6 +39,9 @@
 
 namespace pwiz {
 namespace proteome {
+
+
+using namespace pwiz::cv;
 
 
 /// enumeration of commonly used proteolytic enzymes or enzyme-like proteases

@@ -30,6 +30,7 @@
 using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::proteome;
+using namespace pwiz::data;
 using boost::shared_ptr;
 
 
@@ -67,12 +68,12 @@ void testProteinList()
     ProteinList& a = aSimple;
     ProteinList& b = bSimple;
     
-    Diff<ProteinList> diff(a, b);
+    Diff<ProteinList, DiffConfig, ProteinListSimple> diff(a, b);
 
     DiffConfig config_ignore;
     config_ignore.ignoreMetadata = true;
 
-    Diff<ProteinList> diffIgnore(a, b, config_ignore);
+    Diff<ProteinList, DiffConfig, ProteinListSimple> diffIgnore(a, b, config_ignore);
     unit_assert(!diff);
     unit_assert(!diffIgnore);
 
@@ -145,7 +146,7 @@ void testProteomeData()
     a.id = "goober";  
     b.id = "goober";  
 
-    Diff<ProteomeData> diff(a, b);
+    Diff<ProteomeData, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     b.id = "raisinet";        

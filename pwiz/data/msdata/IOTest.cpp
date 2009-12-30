@@ -33,7 +33,8 @@
 using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::minimxml;
-using namespace pwiz;
+using namespace pwiz::cv;
+using namespace pwiz::data;
 using namespace pwiz::msdata;
 using boost::shared_ptr;
 using boost::iostreams::stream_offset;
@@ -63,7 +64,7 @@ void testObject(const object_type& a)
 
     // compare 'a' and 'b'
 
-    Diff<object_type> diff(a,b);
+    Diff<object_type, DiffConfig> diff(a,b);
     if (diff && os_) *os_ << "diff:\n" << diff << endl;
     unit_assert(!diff); 
 }
@@ -115,7 +116,7 @@ void testObject_SpectrumList(const SpectrumList& a)
 
   // compare 'a' and 'b'
 
-  Diff<SpectrumList> diff(a,b);
+  Diff<SpectrumList, DiffConfig, SpectrumListSimple> diff(a,b);
   if (diff && os_) *os_ << "diff:\n" << diff << endl;
   unit_assert(!diff);
 
@@ -142,7 +143,7 @@ void testObject_ChromatogramList(const ChromatogramList& a)
 
   // compare 'a' and 'b'
 
-  Diff<ChromatogramList> diff(a,b);
+  Diff<ChromatogramList, DiffConfig, ChromatogramListSimple> diff(a,b);
   if (diff && os_) *os_ << "diff:\n" << diff << endl;
   unit_assert(!diff);
 }
@@ -550,7 +551,7 @@ void testSpectrum()
 
     // compare 'a' and 'b'
 
-    Diff<Spectrum> diff(a,b);
+    Diff<Spectrum, DiffConfig> diff(a,b);
     if (diff && os_) *os_ << "diff:\n" << diff << endl;
     unit_assert(!diff);
 
@@ -604,7 +605,7 @@ void testChromatogram()
 
     // compare 'a' and 'b'
 
-    Diff<Chromatogram> diff(a,b);
+    Diff<Chromatogram, DiffConfig> diff(a,b);
     if (diff && os_) *os_ << "diff:\n" << diff << endl;
     unit_assert(!diff);
 
@@ -913,7 +914,7 @@ void testRun()
 
     // compare 'a' and 'b'
 
-    Diff<Run> diff(a,b);
+    Diff<Run, DiffConfig> diff(a,b);
     if (diff && os_) *os_ << "diff:\n" << diff << endl;
     unit_assert(diff);
     unit_assert(diff.a_b.spectrumListPtr.get());
@@ -1232,7 +1233,7 @@ void testMSData()
 
     // compare 'a' and 'b'
 
-    Diff<MSData> diff(a,b);
+    Diff<MSData, DiffConfig> diff(a,b);
     if (diff && os_) *os_ << "diff:\n" << diff << endl;
     unit_assert(diff);
     unit_assert(diff.a_b.run.spectrumListPtr.get());

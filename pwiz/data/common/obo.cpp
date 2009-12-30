@@ -31,7 +31,7 @@
 
 
 namespace pwiz {
-namespace msdata {
+namespace data {
 
 
 using namespace std;
@@ -360,7 +360,5 @@ PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const OBO& obo)
 }
 
 
-} // namespace msdata
+} // namespace data
 } // namespace pwiz
-
-

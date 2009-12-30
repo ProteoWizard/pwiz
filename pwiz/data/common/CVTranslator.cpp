@@ -35,10 +35,11 @@
 
 
 namespace pwiz {
-namespace msdata {
+namespace data {
 
 
 using namespace std;
+using namespace pwiz::cv;
 using boost::lexical_cast;
 using boost::algorithm::starts_with;
 
@@ -224,6 +225,6 @@ PWIZ_API_DECL void CVTranslator::insert(const string& text, CVID cvid) {impl_->i
 PWIZ_API_DECL CVID CVTranslator::translate(const string& text) const {return impl_->translate(text);}
 
 
-} // namespace msdata
+} // namespace data
 } // namespace pwiz
 

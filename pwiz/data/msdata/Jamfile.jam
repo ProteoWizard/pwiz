@@ -38,27 +38,10 @@ project
 # -O2 without -fno-strict-aliasing causes miscompilation in MSRunPeaksEncoder.cpp 
 
 
-lib pwiz_data_msdata_obo 
-    : # sources
-        obo.cpp 
-    : # usage
-        <library>/ext/boost//regex
-        <library>/ext/boost//system
-    : # default-build
-    : # usage-requirements 
-        <library>/ext/boost//regex
-        <library>/ext/boost//system
-    ;
-
-
 lib pwiz_data_msdata
     : # sources
-        pwiz_data_msdata_obo
-        cv.cpp
         BinaryDataEncoder.cpp
         ChromatogramList_mzML.cpp
-        CVParam.cpp 
-        CVTranslator.cpp
         DefaultReaderList.cpp
         Diff.cpp
         IO.cpp
@@ -80,22 +63,22 @@ lib pwiz_data_msdata
         References.cpp
         Version.cpp
     : # requirements
+        <library>../common//pwiz_data_common
         <library>../..//pwiz_version
 		<library>../../utility/misc//pwiz_utility_misc
         <library>../../utility/minimxml//pwiz_utility_minimxml
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
         <library>/ext/boost//filesystem
-        <library>/ext/boost//regex
         <library>/ext/boost//thread
         <library>/ext/zlib//z
     : # default-build
     : # usage-requirements
+        <library>../common//pwiz_data_common
         <library>../..//pwiz_version
 		<library>../../utility/misc//pwiz_utility_misc
         <library>../../utility/minimxml//pwiz_utility_minimxml
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
         <library>/ext/boost//filesystem
-        <library>/ext/boost//regex
         <library>/ext/boost//thread
         <library>/ext/zlib//z
     ;
@@ -109,36 +92,6 @@ lib pwiz_data_msdata_examples
     ;
 
 
-#
-# cvgen is a program that generates cv.hpp/cpp from .obo files (passed as args)
-# usage:
-#  bjam cv.hpp (creates cv.hpp and cv.cpp in the source directory)
-#
-
-exe cvgen
-    : # sources
-        cvgen.cpp
-        pwiz_data_msdata_obo
-    : # requirements
-        <library>/ext/boost//filesystem
-    ;
-explicit cvgen ;
-
-
-install install_cvgen
-    : cvgen
-    : <location>.
-    ;
-explicit install_cvgen ;
-
-actions do_cvgen
-{
-   echo calling bjam install_cvgen
-   "$(>[1]:P)/cvgen" $(>)
-}
-
-make cv.hpp : psi-ms.obo unit.obo unimod.obo BrendaTissueOBO.obo : do_cvgen : <dependency>install_cvgen ;
-explicit cv.hpp ;
 
 
 #
@@ -146,10 +99,6 @@ explicit cv.hpp ;
 #
 
 
-unit-test obotest : obotest.cpp pwiz_data_msdata_obo /ext/boost//filesystem /ext/boost//regex ;
-unit-test cvtest : cvtest.cpp pwiz_data_msdata ; # cv.cpp ;
-unit-test CVTranslatorTest : CVTranslatorTest.cpp pwiz_data_msdata ; # CVTranslator.cpp cv.cpp ;
-unit-test CVParamTest : CVParamTest.cpp pwiz_data_msdata ; # CVParam.cpp cv.cpp ;
 unit-test MSDataTest : MSDataTest.cpp pwiz_data_msdata ; # MSData.cpp cv.cpp ;
 unit-test LegacyAdapterTest : LegacyAdapterTest.cpp pwiz_data_msdata ; # LegacyAdapter.cpp CVTranslator.cpp MSData.cpp cv.cpp ;
 unit-test SpectrumIteratorTest : SpectrumIteratorTest.cpp pwiz_data_msdata ; # SpectrumIterator.cpp MSData.cpp cv.cpp ../util ;

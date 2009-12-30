@@ -14,7 +14,7 @@
 #include <string>
 
 using namespace std;
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::proteome;
 using boost::shared_ptr;
 

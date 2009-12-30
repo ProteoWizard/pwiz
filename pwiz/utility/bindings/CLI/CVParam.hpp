@@ -28,7 +28,7 @@
 #pragma warning( disable : 4634 4635 )
 #include "SharedCLI.hpp"
 #include "cv.hpp"
-#include "../../../data/msdata/CVParam.hpp"
+#include "pwiz/data/common/ParamTypes.hpp"
 #pragma warning( pop )
 
 
@@ -42,10 +42,10 @@ namespace msdata {
 /// </summary>
 public ref class CVParamValue
 {
-    internal: CVParamValue(boost::shared_ptr<pwiz::msdata::CVParam>* base);
+    internal: CVParamValue(boost::shared_ptr<pwiz::data::CVParam>* base);
               virtual ~CVParamValue();
               !CVParamValue();
-    internal: boost::shared_ptr<pwiz::msdata::CVParam>* base_;
+    internal: boost::shared_ptr<pwiz::data::CVParam>* base_;
 
     public:
     virtual System::String^ ToString() override {return (System::String^) this;}
@@ -63,11 +63,11 @@ public ref class CVParamValue
 /// </summary>
 public ref class CVParam
 {
-    internal: CVParam(pwiz::msdata::CVParam* base, System::Object^ owner);
-              CVParam(pwiz::msdata::CVParam* base);
+    internal: CVParam(pwiz::data::CVParam* base, System::Object^ owner);
+              CVParam(pwiz::data::CVParam* base);
               virtual ~CVParam();
               !CVParam();
-    internal: boost::shared_ptr<pwiz::msdata::CVParam>* base_;
+    internal: boost::shared_ptr<pwiz::data::CVParam>* base_;
               System::Object^ owner_;
               CVParamValue^ value_;
 
@@ -79,7 +79,7 @@ public ref class CVParam
     property CVID cvid
     {
         CVID get() {return (CVID) (*base_)->cvid;}
-        void set(CVID value) {(*base_)->cvid = (pwiz::CVID) value;}
+        void set(CVID value) {(*base_)->cvid = (pwiz::cv::CVID) value;}
     }
 
     /// <summary>
@@ -98,7 +98,7 @@ public ref class CVParam
     property CVID units
     {
         CVID get() {return (CVID) (*base_)->units;}
-        void set(CVID value) {(*base_)->units = (pwiz::CVID) value;}
+        void set(CVID value) {(*base_)->units = (pwiz::cv::CVID) value;}
     }
 
     CVParam(CVID _cvid, float _value);

@@ -29,7 +29,7 @@
 
 using namespace std;
 using namespace pwiz::util;
-using namespace pwiz;
+using namespace pwiz::data;
 using namespace pwiz::mziddata;
 using boost::shared_ptr;
 
@@ -38,19 +38,6 @@ using boost::shared_ptr;
 
 ostream* os_ = 0;
 const double epsilon = numeric_limits<double>::epsilon();
-
-void testString()
-{
-    if (os_) *os_ << "testString()\n";
-
-    Diff<string> diff("goober", "goober");
-    unit_assert(diff.a_b.empty() && diff.b_a.empty());
-    unit_assert(!diff);
-
-    diff("goober", "goo");
-    unit_assert(diff);
-    if (os_) *os_ << diff << endl;
-}
 
 void testIdentifiableType()
 {
@@ -61,7 +48,7 @@ void testIdentifiableType()
     a.name="a_name";
     b = a;
 
-    Diff<IdentifiableType> diff(a, b);
+    Diff<IdentifiableType, DiffConfig> diff(a, b);
     if (diff && os_) *os_ << diff << endl;
     unit_assert(!diff);
 
@@ -71,40 +58,6 @@ void testIdentifiableType()
     diff(a, b);
     if (os_) *os_ << diff << endl;
     unit_assert(diff);
-}
-
-
-void testParamContainer()
-{
-    if (os_) *os_ << "testParamContainer()\n";
-
-    ParamContainer a, b;
-    a.userParams.push_back(UserParam("common"));
-    b.userParams.push_back(UserParam("common"));
-    a.cvParams.push_back(MS_m_z);
-    b.cvParams.push_back(MS_m_z);
-
-    Diff<ParamContainer> diff(a, b);
-    unit_assert(!diff);
-
-    a.userParams.push_back(UserParam("different", "1"));
-    b.userParams.push_back(UserParam("different", "2"));
-    a.cvParams.push_back(MS_charge_state);
-    b.cvParams.push_back(MS_intensity_normalization);
-
-    diff(a, b);
-    if (os_) *os_ << diff << endl;
-    unit_assert(diff);
-
-    unit_assert(diff.a_b.userParams.size() == 1);
-    unit_assert(diff.a_b.userParams[0] == UserParam("different","1"));
-    unit_assert(diff.b_a.userParams.size() == 1);
-    unit_assert(diff.b_a.userParams[0] == UserParam("different","2"));
-
-    unit_assert(diff.a_b.cvParams.size() == 1);
-    unit_assert(diff.a_b.cvParams[0] == MS_charge_state);
-    unit_assert(diff.b_a.cvParams.size() == 1);
-    unit_assert(diff.b_a.cvParams[0] == MS_intensity_normalization);
 }
 
 void testFragmentArray()
@@ -117,7 +70,7 @@ void testFragmentArray()
     a.measurePtr = MeasurePtr(new Measure("Measure_ref"));
     b = a;
 
-    Diff<FragmentArray> diff(a, b);
+    Diff<FragmentArray, DiffConfig> diff(a, b);
     unit_assert(!diff);
     if (os_) *os_ << diff << endl;
 
@@ -152,7 +105,7 @@ void testIonType()
 
     b = a;
 
-    Diff<IonType> diff(a, b);
+    Diff<IonType, DiffConfig> diff(a, b);
     unit_assert(!diff);
     if (os_ && diff) *os_ << diff << endl;
 
@@ -192,7 +145,7 @@ void testMaterial()
     a.cvParams.set(MS_sample_number);
     b = a;
 
-    Diff<Material> diff(a, b);
+    Diff<Material, DiffConfig> diff(a, b);
     if (os_) *os_ << diff << endl;
     unit_assert(!diff);
 
@@ -225,7 +178,7 @@ void testMeasure()
     a.paramGroup.set(MS_product_ion_m_z, 200);
     b = a;
 
-    Diff<Measure> diff(a, b);
+    Diff<Measure, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     b.paramGroup.set(MS_product_ion_intensity, 1);
@@ -253,7 +206,7 @@ void testModParam()
     a.cvParams.set(UNIMOD_Gln__pyro_Glu);
     b = a;
 
-    Diff<ModParam> diff(a, b);
+    Diff<ModParam, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     b.massDelta = 10;
@@ -283,7 +236,7 @@ void testPeptideEvidence()
 
     PeptideEvidence a, b;
 
-    Diff<PeptideEvidence> diff(a, b);
+    Diff<PeptideEvidence, DiffConfig> diff(a, b);
     if (os_) *os_ << diff << endl;
     unit_assert(!diff);
 
@@ -360,7 +313,7 @@ void testProteinAmbiguityGroup()
     a.paramGroup.set(MS_mascot_score, 164.4);
     b = a;
 
-    Diff<ProteinAmbiguityGroup> diff(a, b);
+    Diff<ProteinAmbiguityGroup, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     b.proteinDetectionHypothesis.clear();
@@ -388,7 +341,7 @@ void testProteinDetectionHypothesis()
     if (os_) *os_ << "testProteinDetectionHypothesis()\n";
 
     ProteinDetectionHypothesis a, b;
-    Diff<ProteinDetectionHypothesis> diff(a,b);
+    Diff<ProteinDetectionHypothesis, DiffConfig> diff(a,b);
     unit_assert(!diff);
 
     a.dbSequencePtr = DBSequencePtr(new DBSequence("DBSequence_ref"));
@@ -427,7 +380,7 @@ void testSpectrumIdentificationList()
     if (os_) *os_ << "testSpectrumIdentificationList()\n";
 
     SpectrumIdentificationList a, b;
-    Diff<SpectrumIdentificationList> diff(a,b);
+    Diff<SpectrumIdentificationList, DiffConfig> diff(a,b);
     unit_assert(!diff);
 
     a.numSequencesSearched = 9;
@@ -465,7 +418,7 @@ void testProteinDetectionList()
     if (os_) *os_ << "testProteinDetectionList()\n";
 
     ProteinDetectionList a,b;
-    Diff<ProteinDetectionList> diff(a,b);
+    Diff<ProteinDetectionList, DiffConfig> diff(a,b);
     unit_assert(!diff);
 
     a.proteinAmbiguityGroup.push_back(ProteinAmbiguityGroupPtr(new ProteinAmbiguityGroup()));
@@ -496,7 +449,7 @@ void testAnalysisData()
     if (os_) *os_ << "testAnalysisData()\n";
 
     AnalysisData a, b;
-    Diff<AnalysisData> diff(a,b);
+    Diff<AnalysisData, DiffConfig> diff(a,b);
     unit_assert(!diff);
 
     a.spectrumIdentificationList.push_back(boost::shared_ptr<SpectrumIdentificationList>(new SpectrumIdentificationList()));
@@ -531,7 +484,7 @@ void testSearchDatabase()
     if (os_) *os_ << "testSearchDatabase()" << endl;
 
     SearchDatabase a, b;
-    Diff<SearchDatabase> diff(a,b);
+    Diff<SearchDatabase, DiffConfig> diff(a,b);
     unit_assert(!diff);
 
     a.version = "1.0";
@@ -579,7 +532,7 @@ void testSpectraData()
     if (os_) *os_ << "testSpectraData()\n" << endl;
 
     SpectraData a, b;
-    Diff<SpectraData> diff(a,b);
+    Diff<SpectraData, DiffConfig> diff(a,b);
     unit_assert(!diff);
 
     a.location = "mahtomedi";
@@ -613,7 +566,7 @@ void testSourceFile()
     if (os_) *os_ << "testSourceFile()\n" << endl;
 
     SourceFile a,b;
-    Diff<SourceFile> diff(a,b);
+    Diff<SourceFile, DiffConfig> diff(a,b);
     unit_assert(!diff);
 
     a.location = "madison";
@@ -656,7 +609,7 @@ void testInputs()
     if (os_) *os_ << "testInputs()\n";
 
     Inputs a, b;
-    Diff<Inputs> diff(a,b);
+    Diff<Inputs, DiffConfig> diff(a,b);
     unit_assert(!diff);
 
     a.sourceFile.push_back(SourceFilePtr(new SourceFile()));
@@ -693,7 +646,7 @@ void testEnzyme()
     if (os_) *os_ << "testEnzyme()\n";
 
     Enzyme a,b;
-    Diff<Enzyme> diff(a,b);
+    Diff<Enzyme, DiffConfig> diff(a,b);
     if (diff && os_) *os_ << diff << endl;
     unit_assert(!diff);
 
@@ -746,7 +699,7 @@ void testEnzymes()
     if (os_) *os_ << "testEnzymes()\n";
 
     Enzymes a, b;
-    Diff<Enzymes> diff(a, b);
+    Diff<Enzymes, DiffConfig> diff(a, b);
     if (diff && os_) *os_ << diff << endl;
 
     a.independent = "indep";
@@ -770,7 +723,7 @@ void testMassTable()
     a.ambiguousResidue.push_back(d);
 
     b = a;
-    Diff<MassTable> diff(a, b);
+    Diff<MassTable, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     b.id = "b_id";
@@ -804,7 +757,7 @@ void testResidue()
     a.Mass = 1.0;
     b = a;
 
-    Diff<Residue> diff(a, b);
+    Diff<Residue, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     b.Code = "OFF";
@@ -832,7 +785,7 @@ void testAmbiguousResidue()
     a.params.set(MS_alternate_single_letter_codes);
     b = a;
 
-    Diff<AmbiguousResidue> diff(a, b);
+    Diff<AmbiguousResidue, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     b.Code = "B";
@@ -864,7 +817,7 @@ void testFilter()
     a.exclude.set(MS_translation_table);
     b = a;
 
-    Diff<Filter> diff(a, b);
+    Diff<Filter, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     b.filterType.clear();
@@ -925,7 +878,7 @@ void testContact()
 
     b = a;
 
-    Diff<Contact> diff(a, b);
+    Diff<Contact, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     b.id = "b_id";
@@ -960,7 +913,7 @@ void testAffiliations()
 
     b = a;
 
-    Diff<Affiliations> diff(a, b);
+    Diff<Affiliations, DiffConfig> diff(a, b);
     if (os_) *os_ << diff << endl;
     unit_assert(!diff);
 
@@ -987,7 +940,7 @@ void testPerson()
     a.affiliations.push_back(c);
 
     b = a;
-    Diff<Person> diff(a, b);
+    Diff<Person, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     b.lastName = "smith";
@@ -1125,7 +1078,7 @@ void testContactRole()
 
     b = a;
 
-    Diff<ContactRole> diff(a, b);
+    Diff<ContactRole, DiffConfig> diff(a, b);
     if (os_) *os_ << diff << endl;
     unit_assert(!diff);
 
@@ -1148,7 +1101,7 @@ void testAnalysisSoftware()
 
     AnalysisSoftware a, b;
 
-    Diff<AnalysisSoftware> diff(a,b);
+    Diff<AnalysisSoftware, DiffConfig> diff(a,b);
     unit_assert(!diff);
 
     // a.version
@@ -1169,7 +1122,7 @@ void testDataCollection()
     if (os_) *os_ << "testDataCollection()\n";
 
     DataCollection a, b;
-    Diff<DataCollection> diff(a, b);
+    Diff<DataCollection, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     // a.inputs
@@ -1195,7 +1148,7 @@ void testMzIdentML()
     examples::initializeTiny(a);
     examples::initializeTiny(b);
 
-    Diff<MzIdentML> diff(a, b);
+    Diff<MzIdentML, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     a.cvs.push_back(CV());
@@ -1220,9 +1173,7 @@ void testMzIdentML()
 
 void test()
 {
-    testString();
     testIdentifiableType();
-    testParamContainer();
     testContact();
     testContactRole();
     testFragmentArray();

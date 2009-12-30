@@ -48,13 +48,15 @@ lib pwiz_data_mzid
         References.cpp
         Version.cpp
     : # requirements
-        <library>../msdata//pwiz_data_msdata
+        <library>../common//pwiz_data_common
         <library>../misc//pwiz_data_misc
+        <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
         <library>../../utility/chemistry//pwiz_utility_chemistry
     : # default-build
     : # usage-requirements
-        <library>../msdata//pwiz_data_msdata
+        <library>../common//pwiz_data_common
         <library>../misc//pwiz_data_misc
+        <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
         <library>../../utility/chemistry//pwiz_utility_chemistry
     ;
 

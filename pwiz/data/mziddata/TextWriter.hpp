@@ -27,8 +27,6 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "MzIdentML.hpp"
-#include "pwiz/data/msdata/CVParam.hpp"
-#include "pwiz/data/msdata/MSData.hpp"
 #include "boost/lexical_cast.hpp"
 #include <iostream>
 #include <string>
@@ -38,8 +36,8 @@
 namespace pwiz {
 namespace mziddata {
 
-using msdata::CVParam;
-using msdata::UserParam;
+using namespace pwiz::cv;
+using namespace pwiz::data;
 using namespace boost::logic;
 
 class PWIZ_API_DECL TextWriter

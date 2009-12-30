@@ -22,6 +22,7 @@
 
 #include "Serializer_traML.hpp"
 #include "Diff.hpp"
+#include "TextWriter.hpp"
 #include "examples.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "boost/iostreams/positioning.hpp"
@@ -58,7 +59,7 @@ void testWriteRead()
     TraData td2;
     tramlSerializer.read(iss, td2);
 
-    Diff<TraData> diff(td, td2);
+    Diff<TraData, DiffConfig> diff(td, td2);
     if (os_ && diff) *os_ << diff << endl; 
     unit_assert(!diff);
 }

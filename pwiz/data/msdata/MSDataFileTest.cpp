@@ -38,7 +38,8 @@
 
 using namespace std;
 using namespace pwiz::util;
-using namespace pwiz;
+using namespace pwiz::cv;
+using namespace pwiz::data;
 using namespace pwiz::msdata;
 
 
@@ -91,7 +92,7 @@ void validateWriteRead(const MSDataFile::WriteConfig& writeConfig,
         hackInMemoryMSData(msd1);
 
         // compare
-        Diff<MSData> diff(tiny, msd1, diffConfig);
+        Diff<MSData, DiffConfig> diff(tiny, msd1, diffConfig);
         if (diff && os_) *os_ << diff << endl;
         unit_assert(!diff);
 

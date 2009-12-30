@@ -24,7 +24,7 @@
 
 #include "MzIdentML.hpp"
 #include "pwiz/data/misc/MinimumPepXML.hpp"
-#include "pwiz/data/msdata/CVTranslator.hpp"
+#include "pwiz/data/common/CVTranslator.hpp"
 #include "pwiz/utility/misc/Export.hpp"
 
 #include <vector>
@@ -149,7 +149,7 @@ private:
 
     std::vector< std::pair<std::string, PeptidePtr> > seqPeptidePairs;
     
-    pwiz::msdata::CVTranslator translator;
+    pwiz::data::CVTranslator translator;
 
     const std::vector<AminoAcidModification>* aminoAcidModifications;
 };

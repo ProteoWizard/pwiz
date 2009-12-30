@@ -41,7 +41,7 @@ namespace CLI {
 /// </summary>
 public ref class CV
 {
-    DEFINE_INTERNAL_BASE_CODE(CV, pwiz::CV);
+    DEFINE_INTERNAL_BASE_CODE(CV, pwiz::cv::CV);
              
     public:
 
@@ -99,10 +99,10 @@ namespace msdata {
 /// </summary>
 public ref class UserParamValue
 {
-    internal: UserParamValue(boost::shared_ptr<pwiz::msdata::UserParam>* base) : base_(new boost::shared_ptr<pwiz::msdata::UserParam>(*base)) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(UserParamValue))}
+    internal: UserParamValue(boost::shared_ptr<pwiz::data::UserParam>* base) : base_(new boost::shared_ptr<pwiz::data::UserParam>(*base)) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(UserParamValue))}
               virtual ~UserParamValue() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(UserParamValue), true) SAFEDELETE(base_);}
               !UserParamValue() {delete this;}
-              boost::shared_ptr<pwiz::msdata::UserParam>* base_;
+              boost::shared_ptr<pwiz::data::UserParam>* base_;
 
     public:
     virtual System::String^ ToString() override {return (System::String^) this;}
@@ -121,11 +121,11 @@ public ref class UserParamValue
 /// </summary>
 public ref class UserParam
 {
-    internal: UserParam(pwiz::msdata::UserParam* base, System::Object^ owner) : base_(new boost::shared_ptr<pwiz::msdata::UserParam>(base)), owner_(owner), value_(gcnew UserParamValue(base_)) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(UserParam))}
-              UserParam(pwiz::msdata::UserParam* base) : base_(new boost::shared_ptr<pwiz::msdata::UserParam>(base)), owner_(nullptr), value_(gcnew UserParamValue(base_)) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(UserParam))}
+    internal: UserParam(pwiz::data::UserParam* base, System::Object^ owner) : base_(new boost::shared_ptr<pwiz::data::UserParam>(base)), owner_(owner), value_(gcnew UserParamValue(base_)) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(UserParam))}
+              UserParam(pwiz::data::UserParam* base) : base_(new boost::shared_ptr<pwiz::data::UserParam>(base)), owner_(nullptr), value_(gcnew UserParamValue(base_)) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(UserParam))}
               virtual ~UserParam() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(UserParam), (owner_ == nullptr)) if (owner_ == nullptr) SAFEDELETE(base_);}
               !UserParam() {delete this;}
-              boost::shared_ptr<pwiz::msdata::UserParam>* base_;
+              boost::shared_ptr<pwiz::data::UserParam>* base_;
               System::Object^ owner_;
               UserParamValue^ value_;
 
@@ -199,13 +199,13 @@ ref class UserParamList;
 /// </summary>
 public ref class ParamContainer
 {
-    internal: ParamContainer(pwiz::msdata::ParamContainer* base) : base_(base) {}
+    internal: ParamContainer(pwiz::data::ParamContainer* base) : base_(base) {}
               virtual ~ParamContainer() {/*LOG_DESTRUCT(BOOST_PP_STRINGIZE(ParamContainer)) SAFEDELETE(base_);*/}
-              pwiz::msdata::ParamContainer* base_;
+              pwiz::data::ParamContainer* base_;
               System::Object^ owner_;
 
     public:
-    ParamContainer() : base_(new pwiz::msdata::ParamContainer()) {}
+    ParamContainer() : base_(new pwiz::data::ParamContainer()) {}
 
     /// <summary>
     /// a collection of references to ParamGroups
@@ -356,7 +356,7 @@ public ref class ParamContainer
 /// </summary>
 public ref class ParamGroup : public ParamContainer
 {
-    DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, ParamGroup, ParamContainer);
+    DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(pwiz::data, ParamGroup, ParamContainer);
 
     public:
 
@@ -383,11 +383,11 @@ public ref class ParamGroup : public ParamContainer
 // Preprocessed version for debugging
 /*public ref class ParamGroupList : public System::Collections::Generic::IList<ParamGroup^> \
 { \
-    internal: ParamGroupList(std::vector<pwiz::msdata::ParamGroupPtr>* base) : base_(base) {} \
+    internal: ParamGroupList(std::vector<pwiz::data::ParamGroupPtr>* base) : base_(base) {} \
               virtual ~ParamGroupList() {if (base_) delete base_;} \
-              std::vector<pwiz::msdata::ParamGroupPtr>* base_; \
+              std::vector<pwiz::data::ParamGroupPtr>* base_; \
     \
-    public: ParamGroupList() : base_(new std::vector<pwiz::msdata::ParamGroupPtr>()) {} \
+    public: ParamGroupList() : base_(new std::vector<pwiz::data::ParamGroupPtr>()) {} \
     \
     public: \
     System::String^ get() {return gcnew System::String((*base_)->id.c_str());}
@@ -399,20 +399,20 @@ public ref class ParamGroup : public ParamContainer
         virtual void set(int index, ParamGroup^ value) {} \
     } \
     \
-    virtual void Add(ParamGroup^ item) {base_->push_back(CLI_TO_NATIVE_SHARED_PTR(pwiz::msdata::ParamGroupPtr, item));} \
+    virtual void Add(ParamGroup^ item) {base_->push_back(CLI_TO_NATIVE_SHARED_PTR(pwiz::data::ParamGroupPtr, item));} \
     virtual void Clear() {base_->clear();} \
-    virtual bool Contains(ParamGroup^ item) {return std::find(base_->begin(), base_->end(), CLI_TO_NATIVE_SHARED_PTR(pwiz::msdata::ParamGroupPtr, item)) != base_->end();} \
+    virtual bool Contains(ParamGroup^ item) {return std::find(base_->begin(), base_->end(), CLI_TO_NATIVE_SHARED_PTR(pwiz::data::ParamGroupPtr, item)) != base_->end();} \
     virtual void CopyTo(array<ParamGroup^>^ arrayTarget, int arrayIndex) {} \
-    virtual bool Remove(ParamGroup^ item) {std::vector<pwiz::msdata::ParamGroupPtr>::iterator itr = std::find(base_->begin(), base_->end(), CLI_TO_NATIVE_SHARED_PTR(pwiz::msdata::ParamGroupPtr, item)); if(itr == base_->end()) return false; base_->erase(itr); return true;} \
-    virtual int IndexOf(ParamGroup^ item) {return (int) (std::find(base_->begin(), base_->end(), CLI_TO_NATIVE_SHARED_PTR(pwiz::msdata::ParamGroupPtr, item))-base_->begin());} \
-    virtual void Insert(int index, ParamGroup^ item) {base_->insert(base_->begin() + index, CLI_TO_NATIVE_SHARED_PTR(pwiz::msdata::ParamGroupPtr, item));} \
+    virtual bool Remove(ParamGroup^ item) {std::vector<pwiz::data::ParamGroupPtr>::iterator itr = std::find(base_->begin(), base_->end(), CLI_TO_NATIVE_SHARED_PTR(pwiz::data::ParamGroupPtr, item)); if(itr == base_->end()) return false; base_->erase(itr); return true;} \
+    virtual int IndexOf(ParamGroup^ item) {return (int) (std::find(base_->begin(), base_->end(), CLI_TO_NATIVE_SHARED_PTR(pwiz::data::ParamGroupPtr, item))-base_->begin());} \
+    virtual void Insert(int index, ParamGroup^ item) {base_->insert(base_->begin() + index, CLI_TO_NATIVE_SHARED_PTR(pwiz::data::ParamGroupPtr, item));} \
     virtual void RemoveAt(int index) {base_->erase(base_->begin() + index);} \
     \
     ref class Enumerator : System::Collections::Generic::IEnumerator<ParamGroup^> \
     { \
-        public: Enumerator(std::vector<pwiz::msdata::ParamGroupPtr>* base) : base_(base) {} \
-        internal: std::vector<pwiz::msdata::ParamGroupPtr>* base_; \
-        internal: std::vector<pwiz::msdata::ParamGroupPtr>::iterator* itr_; \
+        public: Enumerator(std::vector<pwiz::data::ParamGroupPtr>* base) : base_(base) {} \
+        internal: std::vector<pwiz::data::ParamGroupPtr>* base_; \
+        internal: std::vector<pwiz::data::ParamGroupPtr>::iterator* itr_; \
         \
         public: \
         property ParamGroup^ Current { virtual ParamGroup^ get(); } \
@@ -433,19 +433,19 @@ public ref class ParamGroup : public ParamContainer
 /// <summary>
 /// A list of ParamGroup references; implements the IList&lt;ParamGroup&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ParamGroupList, pwiz::msdata::ParamGroupPtr, ParamGroup, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ParamGroupList, pwiz::data::ParamGroupPtr, ParamGroup, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
 
 
 /// <summary>
 /// A list of CVParam references; implements the IList&lt;CVParam&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(CVParamList, pwiz::msdata::CVParam, CVParam, NATIVE_REFERENCE_TO_CLI, CLI_SHARED_PTR_TO_NATIVE_REFERENCE);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(CVParamList, pwiz::data::CVParam, CVParam, NATIVE_REFERENCE_TO_CLI, CLI_SHARED_PTR_TO_NATIVE_REFERENCE);
 
 
 /// <summary>
 /// A list of UserParam references; implements the IList&lt;UserParam&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(UserParamList, pwiz::msdata::UserParam, UserParam, NATIVE_REFERENCE_TO_CLI, CLI_SHARED_PTR_TO_NATIVE_REFERENCE);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(UserParamList, pwiz::data::UserParam, UserParam, NATIVE_REFERENCE_TO_CLI, CLI_SHARED_PTR_TO_NATIVE_REFERENCE);
 
 
 /// <summary>
@@ -730,7 +730,7 @@ public ref class Software : public ParamContainer
     /// <summary>
     /// returns true iff all members are empty or null
     /// </summary>
-    bool empty();
+    bool empty() new;
 };
 
 
@@ -1943,7 +1943,7 @@ public ref class Run : public ParamContainer
 /// <summary>
 /// A list of CV references; implements the IList&lt;CV&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(CVList, pwiz::CV, CV, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(CVList, pwiz::cv::CV, CV, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 /// <summary>

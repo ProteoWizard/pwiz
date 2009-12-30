@@ -22,7 +22,7 @@
 
 
 #include "LegacyAdapter.hpp"
-#include "CVTranslator.hpp"
+#include "pwiz/data/common/CVTranslator.hpp"
 #include "TextWriter.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "boost/lambda/lambda.hpp"

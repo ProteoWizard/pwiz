@@ -40,7 +40,7 @@
 
 using namespace std;
 using namespace pwiz::util;
-using namespace pwiz;
+using namespace pwiz::data::diff_impl;
 using namespace pwiz::msdata;
 
 
@@ -152,7 +152,7 @@ void testRead(const Reader& reader, const string& rawpath)
         hackInMemoryMSData(targetResult);
 
         // test for 1:1 equality
-        Diff<MSData> diff(msd, targetResult);
+        Diff<MSData, DiffConfig> diff(msd, targetResult);
         if (diff) cerr << diff << endl; 
         unit_assert(!diff);
     }

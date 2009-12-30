@@ -28,8 +28,8 @@ namespace CLI {
 namespace msdata {
 
 
-CVParamValue::CVParamValue(boost::shared_ptr<pwiz::msdata::CVParam>* base)
-: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(*base))
+CVParamValue::CVParamValue(boost::shared_ptr<pwiz::data::CVParam>* base)
+: base_(new boost::shared_ptr<pwiz::data::CVParam>(*base))
 {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CVParamValue))}
 
 CVParamValue::~CVParamValue()
@@ -38,12 +38,12 @@ CVParamValue::~CVParamValue()
 CVParamValue::!CVParamValue()
 {delete this;}
 
-CVParam::CVParam(pwiz::msdata::CVParam* base, System::Object^ owner)
-: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(base)), owner_(owner), value_(gcnew CVParamValue(base_))
+CVParam::CVParam(pwiz::data::CVParam* base, System::Object^ owner)
+: base_(new boost::shared_ptr<pwiz::data::CVParam>(base)), owner_(owner), value_(gcnew CVParamValue(base_))
 {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CVParam))}
 
-CVParam::CVParam(pwiz::msdata::CVParam* base)
-: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(base)), owner_(nullptr), value_(gcnew CVParamValue(base_))
+CVParam::CVParam(pwiz::data::CVParam* base)
+: base_(new boost::shared_ptr<pwiz::data::CVParam>(base)), owner_(nullptr), value_(gcnew CVParamValue(base_))
 {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CVParam))}
 
 CVParam::~CVParam()
@@ -53,63 +53,63 @@ CVParam::!CVParam()
 {delete this;}
 
 CVParam::CVParam(CVID _cvid, float _value)
-: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::CVID) _cvid, _value)))
+: base_(new boost::shared_ptr<pwiz::data::CVParam>(new pwiz::data::CVParam((pwiz::cv::CVID) _cvid, _value)))
 {value_ = gcnew CVParamValue(base_);}
 
 CVParam::CVParam(CVID _cvid, double _value)
-: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::CVID) _cvid, _value)))
+: base_(new boost::shared_ptr<pwiz::data::CVParam>(new pwiz::data::CVParam((pwiz::cv::CVID) _cvid, _value)))
 {value_ = gcnew CVParamValue(base_);}
 
 CVParam::CVParam(CVID _cvid, System::Int32 _value)
-: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::CVID) _cvid, _value)))
+: base_(new boost::shared_ptr<pwiz::data::CVParam>(new pwiz::data::CVParam((pwiz::cv::CVID) _cvid, _value)))
 {value_ = gcnew CVParamValue(base_);}
 
 //CVParam::CVParam(CVID _cvid, System::Int64 _value)
-//{base_ = new pwiz::msdata::CVParam((pwiz::CVID) _cvid, _value);}
+//{base_ = new pwiz::data::CVParam((pwiz::cv::CVID) _cvid, _value);}
 
 CVParam::CVParam(CVID _cvid, System::UInt32 _value)
-: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::CVID) _cvid, _value)))
+: base_(new boost::shared_ptr<pwiz::data::CVParam>(new pwiz::data::CVParam((pwiz::cv::CVID) _cvid, _value)))
 {value_ = gcnew CVParamValue(base_);}
 
 //CVParam::CVParam(CVID _cvid, System::UInt64 _value)
-//{base_ = new pwiz::msdata::CVParam((pwiz::CVID) _cvid, _value);}
+//{base_ = new pwiz::data::CVParam((pwiz::cv::CVID) _cvid, _value);}
 
 CVParam::CVParam(CVID _cvid, System::String^ _value)
-: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::CVID) _cvid, ToStdString(_value))))
+: base_(new boost::shared_ptr<pwiz::data::CVParam>(new pwiz::data::CVParam((pwiz::cv::CVID) _cvid, ToStdString(_value))))
 {value_ = gcnew CVParamValue(base_);}
 
 CVParam::CVParam(CVID _cvid, float _value, CVID _units)
-: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::CVID) _cvid, _value, (pwiz::CVID) _units)))
+: base_(new boost::shared_ptr<pwiz::data::CVParam>(new pwiz::data::CVParam((pwiz::cv::CVID) _cvid, _value, (pwiz::cv::CVID) _units)))
 {value_ = gcnew CVParamValue(base_);}
 
 CVParam::CVParam(CVID _cvid, double _value, CVID _units)
-: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::CVID) _cvid, _value, (pwiz::CVID) _units)))
+: base_(new boost::shared_ptr<pwiz::data::CVParam>(new pwiz::data::CVParam((pwiz::cv::CVID) _cvid, _value, (pwiz::cv::CVID) _units)))
 {value_ = gcnew CVParamValue(base_);}
 
 CVParam::CVParam(CVID _cvid, System::Int32 _value, CVID _units)
-: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::CVID) _cvid, _value, (pwiz::CVID) _units)))
+: base_(new boost::shared_ptr<pwiz::data::CVParam>(new pwiz::data::CVParam((pwiz::cv::CVID) _cvid, _value, (pwiz::cv::CVID) _units)))
 {value_ = gcnew CVParamValue(base_);}
 
 //CVParam::CVParam(CVID _cvid, System::Int64 _value, CVID _units)
-//{base_ = new pwiz::msdata::CVParam((pwiz::CVID) _cvid, _value, (pwiz::CVID) _units);}
+//{base_ = new pwiz::data::CVParam((pwiz::cv::CVID) _cvid, _value, (pwiz::cv::CVID) _units);}
 
 CVParam::CVParam(CVID _cvid, System::UInt32 _value, CVID _units)
-: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::CVID) _cvid, _value, (pwiz::CVID) _units)))
+: base_(new boost::shared_ptr<pwiz::data::CVParam>(new pwiz::data::CVParam((pwiz::cv::CVID) _cvid, _value, (pwiz::cv::CVID) _units)))
 {value_ = gcnew CVParamValue(base_);}
 
 //CVParam::CVParam(CVID _cvid, System::UInt64 _value, CVID _units)
-//{base_ = new pwiz::msdata::CVParam((pwiz::CVID) _cvid, _value, (pwiz::CVID) _units);}
+//{base_ = new pwiz::data::CVParam((pwiz::cv::CVID) _cvid, _value, (pwiz::cv::CVID) _units);}
 
 CVParam::CVParam(CVID _cvid, System::String^ _value, CVID _units)
-: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::CVID) _cvid, ToStdString(_value), (pwiz::CVID) _units)))
+: base_(new boost::shared_ptr<pwiz::data::CVParam>(new pwiz::data::CVParam((pwiz::cv::CVID) _cvid, ToStdString(_value), (pwiz::cv::CVID) _units)))
 {value_ = gcnew CVParamValue(base_);}
 
 CVParam::CVParam(CVID _cvid)
-: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam((pwiz::CVID) _cvid)))
+: base_(new boost::shared_ptr<pwiz::data::CVParam>(new pwiz::data::CVParam((pwiz::cv::CVID) _cvid)))
 {value_ = gcnew CVParamValue(base_);}
 
 CVParam::CVParam()
-: base_(new boost::shared_ptr<pwiz::msdata::CVParam>(new pwiz::msdata::CVParam()))
+: base_(new boost::shared_ptr<pwiz::data::CVParam>(new pwiz::data::CVParam()))
 {value_ = gcnew CVParamValue(base_);}
 
 double CVParam::timeInSeconds() {return (*base_)->timeInSeconds();}

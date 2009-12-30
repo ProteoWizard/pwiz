@@ -109,10 +109,6 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Organization& cp);
 PWIZ_API_DECL void read(std::istream& writer, Organization& cp);
 
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const pwiz::CV& CV);
-PWIZ_API_DECL void read(std::istream& is, pwiz::CV& CV);
-
-
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SearchModification& sm);
 PWIZ_API_DECL void read(std::istream& is, SearchModification& sm);
 

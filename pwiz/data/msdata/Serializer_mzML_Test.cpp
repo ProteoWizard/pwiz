@@ -34,7 +34,7 @@
 
 using namespace std;
 using namespace pwiz::util;
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::msdata;
 using boost::shared_ptr;
 
@@ -59,7 +59,7 @@ void testWriteRead(const MSData& msd, const Serializer_mzML::Config& config)
 
     References::resolve(msd2);
 
-    Diff<MSData> diff(msd, msd2);
+    Diff<MSData, DiffConfig> diff(msd, msd2);
     if (os_ && diff) *os_ << diff << endl; 
     unit_assert(!diff);
 }

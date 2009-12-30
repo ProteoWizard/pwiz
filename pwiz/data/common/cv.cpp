@@ -32,6 +32,7 @@
 
 
 namespace pwiz {
+namespace cv {
 
 
 namespace {
@@ -14527,6 +14528,7 @@ PWIZ_API_DECL const vector<CVID>& cvids()
 }
 
 
+} // namespace cv
 } // namespace pwiz
 
 

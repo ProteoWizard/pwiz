@@ -34,17 +34,71 @@ project
 # -O2 without -fno-strict-aliasing causes miscompilation in MSRunPeaksEncoder.cpp 
 
 
+lib pwiz_data_obo
+    : # sources
+        obo.cpp
+    : # requirements
+        <library>/ext/boost//regex
+    : # default-build
+    : # usage-requirements 
+        <library>/ext/boost//regex
+    ;
+
+
 lib pwiz_data_common
     : # sources
         BinaryIndexStream.cpp
         MemoryIndex.cpp
+        cv.cpp
+        ParamTypes.cpp
+        diff_std.cpp
+        CVTranslator.cpp
+    : # requirements
+    : # default-build
+    : # usage-requirements
     ;
+
+
+#
+# cvgen is a program that generates cv.hpp/cpp from .obo files (passed as args)
+# usage:
+#  bjam cv.hpp (creates cv.hpp and cv.cpp in the source directory)
+#
+
+exe cvgen
+    : # sources
+        cvgen.cpp
+        pwiz_data_obo
+    : # requirements
+        <library>/ext/boost//filesystem
+    ;
+explicit cvgen ;
+
+
+install install_cvgen
+    : cvgen
+    : <location>.
+    ;
+explicit install_cvgen ;
+
+actions do_cvgen
+{
+   echo calling bjam install_cvgen
+   "$(>[1]:P)/cvgen" $(>)
+}
+
+make cv.hpp : psi-ms.obo unit.obo unimod.obo BrendaTissueOBO.obo : do_cvgen : <dependency>install_cvgen ;
+explicit cv.hpp ;
 
 
 #
 # unit tests (ordered by dependency)
 #
 
-unit-test diff_std_test : diff_std_test.cpp ;
 unit-test BinaryIndexStreamTest : BinaryIndexStreamTest.cpp pwiz_data_common ;
 unit-test MemoryIndexTest : MemoryIndexTest.cpp pwiz_data_common ;
+unit-test obotest : obotest.cpp pwiz_data_obo /ext/boost//filesystem ;
+unit-test cvtest : cvtest.cpp pwiz_data_common ;
+unit-test diff_std_test : diff_std_test.cpp pwiz_data_common ;
+unit-test ParamTypesTest : ParamTypesTest.cpp pwiz_data_common ;
+unit-test CVTranslatorTest : CVTranslatorTest.cpp pwiz_data_common ;

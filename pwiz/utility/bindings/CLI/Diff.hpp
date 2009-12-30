@@ -85,7 +85,8 @@ public ref class DiffConfig
 /// </summary>
 public ref class Diff
 {
-    DEFINE_INTERNAL_BASE_CODE(Diff, pwiz::msdata::Diff<pwiz::msdata::MSData>);
+    typedef pwiz::data::Diff<pwiz::msdata::MSData, pwiz::msdata::DiffConfig> MSDataDiff;
+    DEFINE_INTERNAL_BASE_CODE(Diff, MSDataDiff);
 
     public:
 

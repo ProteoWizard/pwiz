@@ -30,7 +30,7 @@
 
 
 using namespace std;
-using namespace pwiz;
+using namespace pwiz::data;
 using namespace pwiz::mziddata;
 using boost::shared_ptr;
 

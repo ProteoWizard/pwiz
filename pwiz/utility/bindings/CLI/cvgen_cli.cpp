@@ -22,7 +22,7 @@
 //
 
 
-#include "pwiz/data/msdata/obo.hpp"
+#include "pwiz/data/common/obo.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
 #include "boost/foreach.hpp"
@@ -37,8 +37,7 @@
 
 
 using namespace std;
-using namespace pwiz;
-using namespace pwiz::msdata;
+using namespace pwiz::data;
 namespace bfs = boost::filesystem;
 
 
@@ -140,7 +139,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     string includeGuard = includeGuardString(basename);
     os << "#ifndef " << includeGuard << endl
        << "#define " << includeGuard << "\n\n\n"
-       << "#include \"../../../data/msdata/cv.hpp\"\n"
+       << "#include \"pwiz/data/common/cv.hpp\"\n"
        << "#include \"SharedCLI.hpp\"\n"
        << "\n\n";
 
@@ -194,7 +193,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     os << "/// <summary>\n"
        << "/// A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;\n"
        << "/// </summary>\n"
-       << "DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(CVIDList, pwiz::CVID, CVID, NATIVE_VALUE_TO_CLI, CLI_VALUE_TO_NATIVE_VALUE);\n"
+       << "DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(CVIDList, pwiz::cv::CVID, CVID, NATIVE_VALUE_TO_CLI, CLI_VALUE_TO_NATIVE_VALUE);\n"
        << "\n"
        << "/// <summary>\n"
        << "/// A list of enumerated System.Strings; implements IList&lt;System.String&gt;\n"
@@ -206,7 +205,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
        << "/// </summary>\n"
        << "public ref class CVTermInfo\n"
        << "{\n"
-       << "    DEFINE_INTERNAL_BASE_CODE(CVTermInfo, pwiz::CVTermInfo);\n"
+       << "    DEFINE_INTERNAL_BASE_CODE(CVTermInfo, pwiz::cv::CVTermInfo);\n"
        << "    public:\n"
        << "\n"
        << "    /// <summary>\n"
@@ -250,17 +249,17 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
        << "    /// </summary>\n"
        << "    property StringList^ exactSynonyms { StringList^ get() {return gcnew StringList(&base_->exactSynonyms);} }\n"
        << "\n"
-       << "    CVTermInfo() : base_(new pwiz::CVTermInfo()) {}\n"
+       << "    CVTermInfo() : base_(new pwiz::cv::CVTermInfo()) {}\n"
        << "\n"
        << "    /// <summary>\n"
        << "    /// returns CV term info for the specified CVID\n"
        << "    /// </summary>\n"
-       << "    CVTermInfo(CVID cvid) : base_(new pwiz::CVTermInfo(pwiz::cvTermInfo((pwiz::CVID) cvid))) {}\n"
+       << "    CVTermInfo(CVID cvid) : base_(new pwiz::cv::CVTermInfo(pwiz::cv::cvTermInfo((pwiz::cv::CVID) cvid))) {}\n"
        << "\n"
        << "    /// <summary>\n"
        << "    /// returns CV term info for the specified id in the form: \"prefix:number\"\n"
        << "    /// </summary>\n"
-       << "    CVTermInfo(System::String^ id) : base_(new pwiz::CVTermInfo(pwiz::cvTermInfo(ToStdString(id)))) {}\n"
+       << "    CVTermInfo(System::String^ id) : base_(new pwiz::cv::CVTermInfo(pwiz::cv::cvTermInfo(ToStdString(id)))) {}\n"
        << "\n"
        << "    /// <summary>\n"
        << "    /// returns the shortest synonym from exactSynonyms()\n"
@@ -289,9 +288,9 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
     os << "#define PWIZ_SOURCE\n\n"
        << "#include \"" << basename << ".hpp\"\n"
-       << "#include \"utility/misc/String.hpp\"\n"
-       << "#include \"utility/misc/Container.hpp\"\n"
-       << "#include \"utility/misc/Exception.hpp\"\n"
+       << "#include \"pwiz/utility/misc/String.hpp\"\n"
+       << "#include \"pwiz/utility/misc/Container.hpp\"\n"
+       << "#include \"pwiz/utility/misc/Exception.hpp\"\n"
        << "\n\n";
 
     namespaceBegin(os, basename);

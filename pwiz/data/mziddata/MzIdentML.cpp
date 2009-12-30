@@ -34,8 +34,8 @@ namespace mziddata {
 using namespace std;
 using namespace boost::logic;
 using namespace boost::gregorian;
-using msdata::CVParamIs;
-using msdata::CVParamIsChildOf;
+using namespace pwiz::cv;
+using namespace pwiz::data;
 
 
 PWIZ_API_DECL vector<CV> defaultCVList()
@@ -43,9 +43,9 @@ PWIZ_API_DECL vector<CV> defaultCVList()
     vector<CV> result;
     result.resize(3);
 
-    result[0] = cv("MS");
-    result[1] = cv("UNIMOD");
-    result[2] = cv("UO");
+    result[0] = cv::cv("MS");
+    result[1] = cv::cv("UNIMOD");
+    result[2] = cv::cv("UO");
     
     return result;
 }

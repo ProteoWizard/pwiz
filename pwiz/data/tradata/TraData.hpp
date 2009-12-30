@@ -25,7 +25,8 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "../msdata/MSData.hpp"
+#include "pwiz/data/common/cv.hpp"
+#include "pwiz/data/common/ParamTypes.hpp"
 #include <vector>
 #include <string>
 
@@ -34,73 +35,12 @@ namespace pwiz {
 namespace tradata {
 
 
-// these types are used verbatim from MSData
-using msdata::CVParam;
-using msdata::UserParam;
+using namespace pwiz::data;
 
 
-/// The base class for elements that may contain cvParams or userParams
-struct PWIZ_API_DECL ParamContainer
-{
-    /// a collection of controlled vocabulary terms
-    std::vector<CVParam> cvParams;
-
-    /// a collection of uncontrolled user terms
-    std::vector<UserParam> userParams;
-    
-    /// finds cvid in the container:
-    /// - returns first CVParam result such that (result.cvid == cvid); 
-    /// - if not found, returns CVParam(CVID_Unknown)
-    /// - recursive: looks into paramGroupPtrs
-    CVParam cvParam(CVID cvid) const; 
-
-    /// finds child of cvid in the container:
-    /// - returns first CVParam result such that (result.cvid is_a cvid); 
-    /// - if not found, CVParam(CVID_Unknown)
-    /// - recursive: looks into paramGroupPtrs
-    CVParam cvParamChild(CVID cvid) const; 
-
-    /// returns true iff cvParams contains exact cvid (recursive)
-    bool hasCVParam(CVID cvid) const;
-
-    /// returns true iff cvParams contains a child (is_a) of cvid (recursive)
-    bool hasCVParamChild(CVID cvid) const;
-
-    /// finds UserParam with specified name 
-    /// - returns UserParam() if name not found 
-    /// - not recursive: looks only at local userParams
-    UserParam userParam(const std::string&) const; 
-
-    /// set/add a CVParam (not recursive)
-    void set(CVID cvid, const std::string& value = "", CVID units = CVID_Unknown);
-
-    /// set/add a CVParam (not recursive)
-    template <typename value_type>
-    void set(CVID cvid, value_type value, CVID units = CVID_Unknown)
-    {
-        set(cvid, boost::lexical_cast<std::string>(value), units);
-    }
-
-    /// returns true iff the element contains no params or param groups
-    bool empty() const;
-
-    /// clears the collections
-    void clear();
-
-    /// returns true iff this and that have the exact same cvParams and userParams
-    bool operator==(const ParamContainer& that) const;
-
-    /// returns !(this==that)
-    bool operator!=(const ParamContainer& that) const;
-};
-
-
-/// special case for bool (outside the class for gcc 3.4, and inline for msvc)
-template<>
-inline void ParamContainer::set<bool>(CVID cvid, bool value, CVID units)
-{
-    set(cvid, (value ? "true" : "false"), units);
-}
+/// returns a default list of CVs used in an TraML document;
+/// currently includes PSI-MS, Unit Ontology, and UNIMOD
+PWIZ_API_DECL std::vector<CV> defaultCVList();
 
 
 struct PWIZ_API_DECL Contact : public ParamContainer

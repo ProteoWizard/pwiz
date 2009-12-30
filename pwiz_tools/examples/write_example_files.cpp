@@ -29,7 +29,7 @@
 
 
 using namespace std;
-using namespace pwiz;
+using namespace pwiz::data;
 using namespace pwiz::msdata;
 using boost::shared_ptr;
 

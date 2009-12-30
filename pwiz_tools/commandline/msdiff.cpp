@@ -31,7 +31,6 @@
 
 
 using namespace std;
-using namespace pwiz;
 using namespace pwiz::msdata;
 
 
@@ -129,7 +128,7 @@ int do_diff(const Config& config)
     MSDataFile msd1(config.filenames[0], &readers);
     MSDataFile msd2(config.filenames[1], &readers);
 
-    Diff<MSData> diff(msd1, msd2, config.diffConfig);
+    Diff<MSData, DiffConfig> diff(msd1, msd2, config.diffConfig);
     if (diff) cout << diff; 
     return diff;
 }

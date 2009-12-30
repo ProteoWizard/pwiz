@@ -35,7 +35,7 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
-//using namespace pwiz::data;
+using namespace pwiz::cv;
 
 PWIZ_API_DECL
 std::vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile);

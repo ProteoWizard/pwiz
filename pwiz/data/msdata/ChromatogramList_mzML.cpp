@@ -40,6 +40,7 @@ namespace msdata {
 
 using namespace std;
 using namespace pwiz::minimxml;
+using namespace pwiz::cv;
 using boost::shared_ptr;
 using boost::lexical_cast;
 using boost::iostreams::offset_to_position;

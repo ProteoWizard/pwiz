@@ -25,7 +25,7 @@
 #define PWIZ_SOURCE
 
 #include "LegacyAdapter.hpp"
-#include "CVTranslator.hpp"
+#include "pwiz/data/common/CVTranslator.hpp"
 #include "boost/lambda/lambda.hpp"
 #include "boost/lambda/bind.hpp"
 #include <iostream>
@@ -38,6 +38,7 @@ namespace msdata {
 
 using namespace std;
 using namespace boost::lambda;
+using namespace pwiz::data;
 
 
 //

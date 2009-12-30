@@ -39,6 +39,8 @@ namespace msdata {
 
 
 using namespace std;
+using namespace pwiz::cv;
+using namespace pwiz::data;
 using boost::lexical_cast;
 using boost::shared_ptr;
 
@@ -48,182 +50,10 @@ PWIZ_API_DECL vector<CV> defaultCVList()
     vector<CV> result; 
     result.resize(2);
 
-    result[0] = cv("MS");
-    result[1] = cv("UO");
+    result[0] = cv::cv("MS");
+    result[1] = cv::cv("UO");
 
     return result;
-}
-
-
-//
-// UserParam
-//
-
-
-PWIZ_API_DECL
-UserParam::UserParam(const string& _name, 
-                     const string& _value, 
-                     const string& _type,
-                     CVID _units)
-:   name(_name), value(_value), type(_type), units(_units)
-{}
-
-
-PWIZ_API_DECL bool UserParam::empty() const 
-{
-    return name.empty() && value.empty() && type.empty() && units==CVID_Unknown;
-}
-
-
-PWIZ_API_DECL bool UserParam::operator==(const UserParam& that) const
-{
-    return (name==that.name && value==that.value && type==that.type && units==that.units);
-}
-
-
-PWIZ_API_DECL bool UserParam::operator!=(const UserParam& that) const
-{
-    return !operator==(that); 
-}
-
-
-//
-// ParamContainer
-//
-
-
-PWIZ_API_DECL CVParam ParamContainer::cvParam(CVID cvid) const
-{
-    // first look in our own cvParams
-
-    vector<CVParam>::const_iterator it = 
-        find_if(cvParams.begin(), cvParams.end(), CVParamIs(cvid));
-   
-    if (it!=cvParams.end()) return *it;
-
-    // then recurse into paramGroupPtrs
-
-    for (vector<ParamGroupPtr>::const_iterator jt=paramGroupPtrs.begin();
-         jt!=paramGroupPtrs.end(); ++jt)
-    {
-        CVParam result = jt->get() ? (*jt)->cvParam(cvid) : CVParam();
-        if (result.cvid != CVID_Unknown)
-            return result;
-    }
-
-    return CVParam();
-}
-
-
-PWIZ_API_DECL CVParam ParamContainer::cvParamChild(CVID cvid) const
-{
-    // first look in our own cvParams
-
-    vector<CVParam>::const_iterator it = 
-        find_if(cvParams.begin(), cvParams.end(), CVParamIsChildOf(cvid));
-   
-    if (it!=cvParams.end()) return *it;
-
-    // then recurse into paramGroupPtrs
-
-    for (vector<ParamGroupPtr>::const_iterator jt=paramGroupPtrs.begin();
-         jt!=paramGroupPtrs.end(); ++jt)
-    {
-        CVParam result = jt->get() ? (*jt)->cvParamChild(cvid) : CVParam();
-        if (result.cvid != CVID_Unknown)
-            return result;
-    }
-
-    return CVParam();
-}
-
-
-PWIZ_API_DECL bool ParamContainer::hasCVParam(CVID cvid) const
-{
-    CVParam param = cvParam(cvid);
-    return (param.cvid != CVID_Unknown);
-}
-
-
-PWIZ_API_DECL bool ParamContainer::hasCVParamChild(CVID cvid) const
-{
-    CVParam param = cvParamChild(cvid);
-    return (param.cvid != CVID_Unknown);
-}
-
-
-namespace {
-struct HasName
-{
-    string name_;
-    HasName(const string& name) : name_(name) {}
-    bool operator()(const UserParam& userParam) {return name_ == userParam.name;}
-};
-} // namespace
-
-
-PWIZ_API_DECL UserParam ParamContainer::userParam(const string& name) const
-{
-    vector<UserParam>::const_iterator it = 
-        find_if(userParams.begin(), userParams.end(), HasName(name));
-    return it!=userParams.end() ? *it : UserParam();
-}
-
-
-PWIZ_API_DECL void ParamContainer::set(CVID cvid, const string& value, CVID units)
-{
-    vector<CVParam>::iterator it = find_if(cvParams.begin(), cvParams.end(), CVParamIs(cvid));
-   
-    if (it!=cvParams.end())
-    {
-        it->value = value;
-        it->units = units;
-        return;
-    }
-
-    cvParams.push_back(CVParam(cvid, value, units));
-}
-
-
-PWIZ_API_DECL bool ParamContainer::empty() const
-{
-    return paramGroupPtrs.empty() && cvParams.empty() && userParams.empty();
-}
-
-
-PWIZ_API_DECL void ParamContainer::clear()
-{
-    paramGroupPtrs.clear();
-    cvParams.clear();
-    userParams.clear();
-}
-
-
-PWIZ_API_DECL bool ParamContainer::operator==(const ParamContainer& that) const
-{
-    return !Diff<ParamContainer>(*this, that);
-}
-
-
-PWIZ_API_DECL bool ParamContainer::operator!=(const ParamContainer& that) const
-{
-    return !(*this == that);
-}
-
-
-//
-// ParamGroup
-//
-
-
-PWIZ_API_DECL ParamGroup::ParamGroup(const string& _id)
-: id(_id) 
-{}
-
-
-PWIZ_API_DECL bool ParamGroup::empty() const 
-{
-    return id.empty() && ParamContainer::empty();
 }
 
 

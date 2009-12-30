@@ -35,7 +35,8 @@
 
 using namespace std;
 using namespace pwiz::util;
-using namespace pwiz;
+using namespace pwiz::cv;
+using namespace pwiz::data;
 using namespace pwiz::tradata;
 
 
@@ -44,6 +45,14 @@ ostream* os_ = 0;
 
 string filenameBase_ = "temp.TraDataFileTest";
 
+void hackInMemoryTraData(TraData& td)
+{
+    // remove metadata ptrs appended on read
+    //vector<SourceFilePtr>& sfs = msd.fileDescription.sourceFilePtrs;
+    //if (!sfs.empty()) sfs.erase(sfs.end()-1);
+    vector<SoftwarePtr>& sws = td.softwarePtrs;
+    if (!sws.empty()) sws.erase(sws.end()-1);
+}
 
 void test()
 {
@@ -64,9 +73,10 @@ void test()
 
         // read back into an TraDataFile object
         TraDataFile td1(filename1);
+        hackInMemoryTraData(td1);
 
         // compare
-        Diff<TraData> diff(tiny, td1);
+        Diff<TraData, DiffConfig> diff(tiny, td1);
         if (diff && os_) *os_ << diff << endl;
         unit_assert(!diff);
 
@@ -75,6 +85,7 @@ void test()
 
         // read back into another TraDataFile object
         TraDataFile td2(filename2);
+        hackInMemoryTraData(td2);
 
         // compare
         diff(tiny, td2);
@@ -86,6 +97,7 @@ void test()
         bio::copy(tinyGZ, bio::file_descriptor_sink(filename1+".gz", ios::out|ios::binary));
 
         TraDataFile td3(filename1);
+        hackInMemoryTraData(td3);
 
         // compare
         diff(tiny, td3);

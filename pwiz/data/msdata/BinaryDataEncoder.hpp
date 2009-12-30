@@ -30,7 +30,7 @@
 #include <string>
 #include <vector>
 #include <map>
-#include "cv.hpp"
+#include "pwiz/data/common/cv.hpp"
 
 
 namespace pwiz {
@@ -53,7 +53,7 @@ class PWIZ_API_DECL BinaryDataEncoder
         ByteOrder byteOrder;
         Compression compression;
 
-        std::map<CVID, Precision> precisionOverrides;
+        std::map<cv::CVID, Precision> precisionOverrides;
 
         Config()
         :   precision(Precision_64),

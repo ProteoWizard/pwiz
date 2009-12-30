@@ -27,7 +27,7 @@
 #include "Diff.hpp"
 #include "SHA1OutputObserver.hpp"
 #include "LegacyAdapter.hpp"
-#include "CVTranslator.hpp"
+#include "pwiz/data/common/CVTranslator.hpp"
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
@@ -46,6 +46,7 @@ using boost::lexical_cast;
 using boost::iostreams::stream_offset;
 using namespace pwiz::util;
 using namespace pwiz::minimxml;
+using namespace pwiz::data;
 
 
 class Serializer_mzXML::Impl

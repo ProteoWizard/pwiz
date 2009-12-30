@@ -34,7 +34,7 @@
 
 
 namespace pwiz {
-namespace msdata {
+namespace data {
 
 
 /// a single controlled vocabulary term
@@ -88,7 +88,7 @@ PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Term& term);
 PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const OBO& obo);
 
 
-} // namespace msdata
+} // namespace data
 } // namespace pwiz
 
 

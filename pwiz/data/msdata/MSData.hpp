@@ -26,7 +26,7 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "CVParam.hpp"
+#include "pwiz/data/common/ParamTypes.hpp"
 #include "boost/shared_ptr.hpp"
 #include "boost/iostreams/positioning.hpp"
 #include <vector>
@@ -38,140 +38,10 @@ namespace pwiz {
 namespace msdata {
 
 
+using namespace data;
+
+
 PWIZ_API_DECL std::vector<CV> defaultCVList();
-
-
-/// Uncontrolled user parameters (essentially allowing free text). Before using these, one should verify whether there is an appropriate CV term available, and if so, use the CV term instead
-struct PWIZ_API_DECL UserParam
-{
-    /// the name for the parameter.
-    std::string name;
-
-    /// the value for the parameter, where appropriate.
-    std::string value;
-
-    /// the datatype of the parameter, where appropriate (e.g.: xsd:float).
-    std::string type;
-
-    /// an optional CV parameter for the unit term associated with the value, if any (e.g. MS_electron_volt).
-    CVID units;
-
-    UserParam(const std::string& _name = "", 
-              const std::string& _value = "", 
-              const std::string& _type = "",
-              CVID _units = CVID_Unknown);
-
-
-    /// Templated value access with type conversion
-    template<typename value_type>
-    value_type valueAs() const
-    {
-        return !value.empty() ? boost::lexical_cast<value_type>(value) 
-                              : boost::lexical_cast<value_type>(0);
-    }
-
-    /// returns true iff name, value, type, and units are all empty
-    bool empty() const;
-
-    /// returns true iff name, value, type, and units are all pairwise equal
-    bool operator==(const UserParam& that) const;
-
-    /// returns !(this==that)
-    bool operator!=(const UserParam& that) const;
-};
-
-
-// Special case for bool (outside the class for gcc 3.4, and inline for msvc)
-template<>
-inline bool UserParam::valueAs<bool>() const
-{
-    return value == "true";
-}
-
-
-struct ParamGroup;
-typedef boost::shared_ptr<ParamGroup> ParamGroupPtr;
-
-
-/// The base class for elements that may contain cvParams, userParams, or paramGroup references
-struct PWIZ_API_DECL ParamContainer
-{
-    /// a collection of references to ParamGroups
-    std::vector<ParamGroupPtr> paramGroupPtrs;
-
-    /// a collection of controlled vocabulary terms
-    std::vector<CVParam> cvParams;
-
-    /// a collection of uncontrolled user terms
-    std::vector<UserParam> userParams;
-    
-    /// finds cvid in the container:
-    /// - returns first CVParam result such that (result.cvid == cvid); 
-    /// - if not found, returns CVParam(CVID_Unknown)
-    /// - recursive: looks into paramGroupPtrs
-    CVParam cvParam(CVID cvid) const; 
-
-    /// finds child of cvid in the container:
-    /// - returns first CVParam result such that (result.cvid is_a cvid); 
-    /// - if not found, CVParam(CVID_Unknown)
-    /// - recursive: looks into paramGroupPtrs
-    CVParam cvParamChild(CVID cvid) const; 
-
-    /// returns true iff cvParams contains exact cvid (recursive)
-    bool hasCVParam(CVID cvid) const;
-
-    /// returns true iff cvParams contains a child (is_a) of cvid (recursive)
-    bool hasCVParamChild(CVID cvid) const;
-
-    /// finds UserParam with specified name 
-    /// - returns UserParam() if name not found 
-    /// - not recursive: looks only at local userParams
-    UserParam userParam(const std::string&) const; 
-
-    /// set/add a CVParam (not recursive)
-    void set(CVID cvid, const std::string& value = "", CVID units = CVID_Unknown);
-
-    /// set/add a CVParam (not recursive)
-    template <typename value_type>
-    void set(CVID cvid, value_type value, CVID units = CVID_Unknown)
-    {
-        set(cvid, boost::lexical_cast<std::string>(value), units);
-    }
-
-    /// returns true iff the element contains no params or param groups
-    bool empty() const;
-
-    /// clears the collections
-    void clear();
-
-    /// returns true iff this and that have the exact same cvParams and userParams
-    /// - recursive: looks into paramGroupPtrs
-    bool operator==(const ParamContainer& that) const;
-
-    /// returns !(this==that)
-    bool operator!=(const ParamContainer& that) const;
-};
-
-
-/// special case for bool (outside the class for gcc 3.4, and inline for msvc)
-template<>
-inline void ParamContainer::set<bool>(CVID cvid, bool value, CVID units)
-{
-    set(cvid, (value ? "true" : "false"), units);
-}
-
-
-/// A collection of CVParam and UserParam elements that can be referenced from elsewhere in this mzML document by using the 'paramGroupRef' element in that location to reference the 'id' attribute value of this element. 
-struct PWIZ_API_DECL ParamGroup : public ParamContainer
-{
-    /// the identifier with which to reference this ReferenceableParamGroup.
-    std::string id;
-
-    ParamGroup(const std::string& _id = "");
-
-    /// returns true iff the element contains no params or param groups
-    bool empty() const;
-};
 
 
 /// This summarizes the different types of spectra that can be expected in the file. This is expected to aid processing software in skipping files that do not contain appropriate spectrum types for it.

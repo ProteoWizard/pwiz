@@ -38,7 +38,7 @@ namespace proteome {
 
 
 using namespace std;
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::util;
 using boost::shared_ptr;
 
@@ -355,14 +355,14 @@ class CleavageAgentInfo : public boost::singleton<CleavageAgentInfo>
     public:
     CleavageAgentInfo(boost::restricted)
     {
-        const vector<CVID>& cvids = pwiz::cvids();
+        const vector<CVID>& cvids = pwiz::cv::cvids();
         for (vector<CVID>::const_iterator itr = cvids.begin();
              itr != cvids.end(); ++itr)
         {
-            if (!pwiz::cvIsA(*itr, MS_cleavage_agent_name))
+            if (!cvIsA(*itr, MS_cleavage_agent_name))
                 continue;
 
-            const CVTermInfo& cvTermInfo = pwiz::cvTermInfo(*itr);
+            const CVTermInfo& cvTermInfo = pwiz::cv::cvTermInfo(*itr);
             multimap<string, CVID>::const_iterator regexRelationItr =
                 cvTermInfo.otherRelations.find("has_regexp");
             if (regexRelationItr != cvTermInfo.otherRelations.end())
@@ -370,7 +370,7 @@ class CleavageAgentInfo : public boost::singleton<CleavageAgentInfo>
                 cleavageAgents_.insert(*itr);
                 cleavageAgentNames_.push_back(cvTermInfo.name);
                 cleavageAgentNameToCvidMap_[bal::to_lower_copy(cvTermInfo.name)] = *itr;
-                const CVTermInfo& cleavageAgentRegexTerm = pwiz::cvTermInfo(regexRelationItr->second);
+                const CVTermInfo& cleavageAgentRegexTerm = pwiz::cv::cvTermInfo(regexRelationItr->second);
                 cleavageAgentToRegexMap_[*itr] = &cleavageAgentRegexTerm;
             }
         }
@@ -392,7 +392,7 @@ class CleavageAgentInfo : public boost::singleton<CleavageAgentInfo>
 
     const std::string& getCleavageAgentRegex(CVID agentCvid) const
     {
-        if (!pwiz::cvIsA(agentCvid, MS_cleavage_agent_name))
+        if (!pwiz::cv::cvIsA(agentCvid, MS_cleavage_agent_name))
             throw invalid_argument("[getRegexForCleavageAgent] CVID is not a cleavage agent.");
 
         map<CVID, const CVTermInfo*>::const_iterator regexTermItr =

@@ -115,7 +115,7 @@ make pwiz_bindings_cli.xml
 exe cvgen_cli
     : # sources
         cvgen_cli.cpp
-        ../../../data/msdata//pwiz_data_msdata_obo
+        $(PWIZ_ROOT_PATH)/pwiz/data/common//pwiz_data_obo
     : # requirements
         <library>/ext/boost//filesystem
         <link>static
@@ -135,7 +135,7 @@ actions do_cvgen_cli
    $(>[1]:P:T)\\..\\..\\utility\\bindings\\CLI\\cvgen_cli $(>)
 }
 
-make cv.hpp : ../../../data/msdata/psi-ms.obo ../../../data/msdata/unit.obo : do_cvgen_cli : <dependency>install_cvgen_cli ;
+make cv.hpp : $(PWIZ_ROOT_PATH)/pwiz/data/common/psi-ms.obo $(PWIZ_ROOT_PATH)/pwiz/data/common/unit.obo : do_cvgen_cli : <dependency>install_cvgen_cli ;
 explicit cv.hpp ;
 
 

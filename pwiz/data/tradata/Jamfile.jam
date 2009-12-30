@@ -46,10 +46,18 @@ lib pwiz_data_tradata
         TraDataFile.cpp
         Version.cpp
     : # requirements
-        <library>../msdata//pwiz_data_msdata
+        <library>../common//pwiz_data_common
+		<library>../../utility/misc//pwiz_utility_misc
+        <library>../../utility/minimxml//pwiz_utility_minimxml
+        <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
+        <library>/ext/boost//regex
     : # default-build
     : # usage-requirements
-        <library>../msdata//pwiz_data_msdata
+        <library>../common//pwiz_data_common
+		<library>../../utility/misc//pwiz_utility_misc
+        <library>../../utility/minimxml//pwiz_utility_minimxml
+        <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
+        <library>/ext/boost//regex
     ;
 
 

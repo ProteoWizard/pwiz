@@ -25,7 +25,6 @@
 
 #include "IO.hpp"
 #include "References.hpp"
-#include "pwiz/data/msdata/IO.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "boost/lexical_cast.hpp"

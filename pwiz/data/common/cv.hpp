@@ -33,7 +33,7 @@
 #include "pwiz/utility/misc/Export.hpp"
 
 
-// [c:\bumbershoot\src\pwiz-src\pwiz\data\msdata\psi-ms.obo]
+// [pwiz\data\common\psi-ms.obo]
 //   format-version: 1.2
 //   date: 19:08:2009 0:07
 //   saved-by: andreas_bertsch
@@ -51,7 +51,7 @@
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
 //   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo?revision=1.21
 //
-// [c:\bumbershoot\src\pwiz-src\pwiz\data\msdata\unit.obo]
+// [pwiz\data\common\unit.obo]
 //   format-version: 1.2
 //   date: 14:07:2009 12:37
 //   saved-by: George Gkoutos
@@ -66,13 +66,13 @@
 //   namespace-id-rule: * UO:$sequence(7,0,9999999)$
 //   import: http://purl.org/obo/obo-all/quality/quality.obo
 //
-// [c:\bumbershoot\src\pwiz-src\pwiz\data\msdata\unimod.obo]
+// [pwiz\data\common\unimod.obo]
 //   format-version: 1.0
 //   date: 19:11:2008 14:50
 //   saved-by: psi-pi_team
 //   default-namespace: UNIMOD
 //
-// [c:\bumbershoot\src\pwiz-src\pwiz\data\msdata\BrendaTissueOBO.obo]
+// [pwiz\data\common\BrendaTissueOBO.obo]
 //   format-version: 1.2
 //   date: 21:05:2009 21:34
 //   auto-generated-by: OBO-Edit 2.000-beta49
@@ -80,6 +80,7 @@
 
 
 namespace pwiz {
+namespace cv {
 
 
 /// enumeration of controlled vocabulary (CV) terms, generated from OBO file(s)
@@ -19525,6 +19526,7 @@ PWIZ_API_DECL bool cvIsA(CVID child, CVID parent);
 PWIZ_API_DECL const std::vector<CVID>& cvids();
 
 
+} // namespace cv
 } // namespace pwiz
 
 

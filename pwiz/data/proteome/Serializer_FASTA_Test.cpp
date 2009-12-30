@@ -55,7 +55,7 @@ void testWriteRead(const Serializer_FASTA::Config& config)
     ProteomeData pd2;
     serializer.read(iss, pd2);
 
-    Diff<ProteomeData> diff(pd, pd2);
+    Diff<ProteomeData, DiffConfig> diff(pd, pd2);
     if (os_ && diff) *os_ << diff << endl; 
     unit_assert(!diff);
 }

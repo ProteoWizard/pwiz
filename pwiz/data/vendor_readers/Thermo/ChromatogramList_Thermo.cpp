@@ -36,12 +36,13 @@
 #include <boost/bind.hpp>
 
 
-//using namespace pwiz::data;
+using namespace pwiz::cv;
 
 
 namespace pwiz {
 namespace msdata {
 namespace detail {
+
 
 ChromatogramList_Thermo::ChromatogramList_Thermo(const MSData& msd, RawFilePtr rawfile)
 :   msd_(msd), rawfile_(rawfile), indexInitialized_(BOOST_ONCE_INIT)

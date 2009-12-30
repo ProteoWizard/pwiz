@@ -33,7 +33,7 @@
 
 using namespace std;
 using namespace pwiz::util;
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::msdata;
 namespace bfs = boost::filesystem;
 

@@ -27,88 +27,18 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "MSData.hpp"
-#include "TextWriter.hpp"
+
+
+namespace pwiz { namespace msdata { struct DiffConfig; } }
 
 
 namespace pwiz {
-namespace msdata {
-
-
-/// configuration struct for diffs
-struct PWIZ_API_DECL DiffConfig 
-{
-    /// precision with which two doubles are compared
-    double precision;
-
-    /// ignore all file level metadata, and most scan level metadata,
-    /// i.e. verify scan binary data, plus important scan metadata:
-    ///  - msLevel 
-    ///  - scanNumber 
-    ///  - precursor.ionSelection
-    bool ignoreMetadata;
-
-    bool ignoreChromatograms;
-
-    bool ignoreDataProcessing;
-
-    DiffConfig()
-    :   precision(1e-6), 
-        ignoreMetadata(false),
-        ignoreChromatograms(false),
-        ignoreDataProcessing(false)
-    {}
-};
-
-
-//
-// diff implementation declarations
-//
-
-
+namespace data {
 namespace diff_impl {
 
 
-PWIZ_API_DECL
-void diff(const std::string& a,
-          const std::string& b,
-          std::string& a_b,
-          std::string& b_a,
-          const DiffConfig& config);
+using namespace msdata;
 
-PWIZ_API_DECL
-void diff(const CV& a,
-          const CV& b,
-          CV& a_b,
-          CV& b_a,
-          const DiffConfig& config);
-
-PWIZ_API_DECL
-void diff(const UserParam& a,
-          const UserParam& b,
-          UserParam& a_b,
-          UserParam& b_a,
-          const DiffConfig& config);
-
-PWIZ_API_DECL
-void diff(const CVParam& a,
-          const CVParam& b,
-          CVParam& a_b,
-          CVParam& b_a,
-          const DiffConfig& config);
-
-PWIZ_API_DECL
-void diff(const ParamContainer& a,
-          const ParamContainer& b,
-          ParamContainer& a_b,
-          ParamContainer& b_a,
-          const DiffConfig& config);
-
-PWIZ_API_DECL
-void diff(const ParamGroup& a,
-          const ParamGroup& b,
-          ParamGroup& a_b,
-          ParamGroup& b_a,
-          const DiffConfig& config);
 
 PWIZ_API_DECL
 void diff(const SourceFile& a,
@@ -234,14 +164,14 @@ void diff(const SpectrumList& a,
           const SpectrumList& b,
           SpectrumListSimple& a_b,
           SpectrumListSimple& b_a,
-          const DiffConfig& config, double& maxPrecisionDiff);
+          const DiffConfig& config);
 
 PWIZ_API_DECL
 void diff(const ChromatogramList& a,
           const ChromatogramList& b,
           ChromatogramListSimple& a_b,
           ChromatogramListSimple& b_a,
-          const DiffConfig& config, double& maxPrecisionDiff);
+          const DiffConfig& config);
 
 PWIZ_API_DECL
 void diff(const Run& a,
@@ -257,167 +187,48 @@ void diff(const MSData& a,
           MSData& b_a,
           const DiffConfig& config);
 
-} // namespace diff_impl 
+
+} // namespace diff_impl
+} // namespace data
+} // namespace pwiz
 
 
-///     
-/// Calculate diffs of objects in the MSData structure hierarchy.
-///
-/// A diff between two objects a and b calculates the set differences
-/// a\b and b\a.
-///
-/// The Diff struct acts as a functor, but also stores the 
-/// results of the diff calculation.  
-///
-/// The bool conversion operator is provided to indicate whether 
-/// the two objects are different (either a\b or b\a is non-empty).
-///
-/// object_type requirements:
-///   object_type a;
-///   a.empty();
-///   diff(const object_type& a, const object_type& b, object_type& a_b, object_type& b_a);
-///
-template <typename object_type>
-struct Diff
+// this include must come after the above declarations or GCC won't see them
+#include "pwiz/data/common/diff_std.hpp"
+
+
+namespace pwiz {
+namespace msdata {
+
+
+/// configuration struct for diffing MSData types
+struct PWIZ_API_DECL DiffConfig : public pwiz::data::BaseDiffConfig
 {
-    Diff(const DiffConfig& config = DiffConfig())
-    :   config_(config)
+    /// ignore all file level metadata, and most scan level metadata,
+    /// i.e. verify scan binary data, plus important scan metadata:
+    ///  - msLevel 
+    ///  - scanNumber 
+    ///  - precursor.ionSelection
+    bool ignoreMetadata;
+
+    bool ignoreChromatograms;
+
+    bool ignoreDataProcessing;
+
+    DiffConfig()
+    :   pwiz::data::BaseDiffConfig(), 
+        ignoreMetadata(false),
+        ignoreChromatograms(false),
+        ignoreDataProcessing(false)
     {}
-
-    Diff(const object_type& a,
-               const object_type& b,
-               const DiffConfig& config = DiffConfig())
-    :   config_(config)
-    {
-        
-        diff_impl::diff(a, b, a_b, b_a, config_);
-    }
-
-    object_type a_b;
-    object_type b_a;
-
-    /// conversion to bool, with same semantics as *nix diff command:
-    ///  true == different
-    ///  false == not different
-    operator bool() {return !(a_b.empty() && b_a.empty());}
-
-    Diff& operator()(const object_type& a,
-                           const object_type& b)
-    {
-        
-        diff_impl::diff(a, b, a_b, b_a, config_);
-        return *this;
-    }
-
-    private:
-    DiffConfig config_;
 };
 
 
-template <>
-struct Diff<SpectrumList>
-{
-    Diff(const DiffConfig& config = DiffConfig())
-    :   config_(config)
-    {}
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const pwiz::data::Diff<MSData, DiffConfig>& diff);
 
-    Diff(const SpectrumList& a,
-               const SpectrumList& b,
-               const DiffConfig& config = DiffConfig())
-      :   config_(config)
-    {
-        double maxPrecisionDiff=0;
-        diff_impl::diff(a, b, a_b, b_a, config_, maxPrecisionDiff);
-    }
-
-    SpectrumListSimple a_b;
-    SpectrumListSimple b_a;
-
-    /// conversion to bool, with same semantics as *nix diff command:
-    ///  true == different
-    ///  false == not different
-    operator bool() {return !(a_b.empty() && b_a.empty());}
-
-    Diff& operator()(const SpectrumList& a,
-		   const SpectrumList& b)
- 
-   {
-        double maxPrecisionDiff=0;
-        diff_impl::diff(a, b, a_b, b_a, config_,maxPrecisionDiff);
-        return *this;
-   }
-
-
-    private:
-    DiffConfig config_;
-};
-
-template <>
-struct Diff<ChromatogramList>
-{
-    Diff(const DiffConfig& config = DiffConfig())
-    :   config_(config)
-    {}
-
-    Diff(const ChromatogramList& a,
-               const ChromatogramList& b,
-               const DiffConfig& config = DiffConfig())
-
-      :   config_(config)
-    {
-        double maxPrecisionDiff=0;
-        diff_impl::diff(a, b, a_b, b_a, config_,maxPrecisionDiff);
-    }
-
-    ChromatogramListSimple a_b;
-    ChromatogramListSimple b_a;
-
-    /// conversion to bool, with same semantics as *nix diff command:
-    ///  true == different
-    ///  false == not different
-    operator bool() {return !(a_b.empty() && b_a.empty());}
-
-    Diff& operator()(const ChromatogramList& a,
-                     const ChromatogramList& b)
-    {   
-        double maxPrecisionDiff=0;
-        diff_impl::diff(a, b, a_b, b_a, config_,maxPrecisionDiff);
-        return *this;
-    }
-
-    private:
-    DiffConfig config_;
-};
-
-///
-/// stream insertion of Diff results
-///
-
-template <typename object_type>
-std::ostream& operator<<(std::ostream& os, const Diff<object_type>& diff)
-{
-    TextWriter write(os, 1);
-
-    if (!diff.a_b.empty())
-    {            
-        os << "+\n";
-        write(diff.a_b);
-    }
-
-    if (!diff.b_a.empty())
-    {            
-        os << "-\n";
-        write(diff.b_a);
-    }
-
-    return os;
-}
-
-PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const Diff<MSData>& diff);
 
 } // namespace msdata
 } // namespace pwiz
 
 
 #endif // _DIFF_HPP_
-

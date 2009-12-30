@@ -37,6 +37,7 @@
 using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::proteome;
+using namespace pwiz::data;
 using boost::shared_ptr;
 
 
@@ -75,7 +76,7 @@ void validateWriteRead(const ProteomeDataFile::WriteConfig& writeConfig,
         ProteomeDataFile pd1(filename1, reader.get());
 
         // compare
-        Diff<ProteomeData> diff(tiny, pd1, diffConfig);
+        Diff<ProteomeData, DiffConfig> diff(tiny, pd1, diffConfig);
         if (diff && os_) *os_ << diff << endl;
         unit_assert(!diff);
 

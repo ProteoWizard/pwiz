@@ -24,6 +24,7 @@
 #include "Serializer_mzXML.hpp"
 #include "Serializer_mzML.hpp"
 #include "Diff.hpp"
+#include "TextWriter.hpp"
 #include "examples.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "boost/iostreams/positioning.hpp"
@@ -34,7 +35,8 @@
 
 using namespace std;
 using namespace pwiz::util;
-using namespace pwiz;
+using namespace pwiz::cv;
+using namespace pwiz::data;
 using namespace pwiz::msdata;
 using boost::shared_ptr;
 
@@ -61,7 +63,7 @@ void testWriteRead(const MSData& msd, const Serializer_mzXML::Config& config)
     diffConfig.ignoreMetadata = true;
     diffConfig.ignoreChromatograms = true;
 
-    Diff<MSData> diff(msd, msd2, diffConfig);
+    Diff<MSData, DiffConfig> diff(msd, msd2, diffConfig);
     if (os_ && diff) *os_ << diff << endl; 
     unit_assert(!diff);
 

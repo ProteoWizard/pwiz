@@ -24,17 +24,20 @@
 #define PWIZ_SOURCE
 
 #include "Diff.hpp"
+#include "TextWriter.hpp"
+#include "pwiz/data/common/diff_std.hpp"
 #include <string>
 #include <cmath>
 #include <stdexcept>
 
+
 namespace pwiz {
-namespace proteome {
+namespace data {
 namespace diff_impl {
 
 
 using namespace std;
-using namespace pwiz::diff_std;
+using namespace pwiz::proteome;
 using boost::shared_ptr;
 using boost::lexical_cast;
 
@@ -50,16 +53,16 @@ void diff(const Protein& a,
     b_a = Protein("", 0, "", "");
 
     // important scan metadata
-    diff_integral(a.index, b.index, a_b.index, b_a.index);
-    diff_string(a.id, b.id, a_b.id, b_a.id);
+    diff_integral(a.index, b.index, a_b.index, b_a.index, config);
+    diff(a.id, b.id, a_b.id, b_a.id, config);
 
     if (!config.ignoreMetadata)
     {
-        diff_string(a.description, b.description, a_b.description, b_a.description);
+        diff(a.description, b.description, a_b.description, b_a.description, config);
     }
 
     string sequenceA_B, sequenceB_A;
-    diff_string(a.sequence(), b.sequence(), sequenceA_B, sequenceB_A);
+    diff(a.sequence(), b.sequence(), sequenceA_B, sequenceB_A, config);
 
     // provide context
     if (!a_b.empty() || !b_a.empty() ||
@@ -112,7 +115,7 @@ void diff(const ProteomeData& a,
 {
     if (!config.ignoreMetadata)
     {
-        diff_string(a.id, b.id, a_b.id, b_a.id);
+        diff(a.id, b.id, a_b.id, b_a.id, config);
     }
 
     // special handling for ProteinList diff
@@ -134,7 +137,10 @@ void diff(const ProteomeData& a,
 
 
 } // namespace diff_impl
+} // namespace data
 
+
+namespace proteome {
 
 std::ostream& os_write_proteins(std::ostream& os, const ProteinListPtr a_b, const ProteinListPtr b_a)
 {
@@ -160,10 +166,8 @@ std::ostream& os_write_proteins(std::ostream& os, const ProteinListPtr a_b, cons
 
 
 PWIZ_API_DECL
-std::ostream& operator<<(std::ostream& os, const Diff<ProteomeData>& diff)
+std::ostream& operator<<(std::ostream& os, const data::Diff<ProteomeData, DiffConfig>& diff)
 {
-    using namespace diff_impl;
-
     TextWriter write(os, 1);
 
     if(!diff.a_b.empty()|| !diff.b_a.empty())

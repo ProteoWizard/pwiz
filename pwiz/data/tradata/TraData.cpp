@@ -30,108 +30,20 @@ namespace tradata {
 
 
 using namespace std;
-using msdata::CVParamIs;
-using msdata::CVParamIsChildOf;
+using namespace pwiz::cv;
 
 
-PWIZ_API_DECL CVParam ParamContainer::cvParam(CVID cvid) const
+PWIZ_API_DECL vector<CV> defaultCVList()
 {
-    // first look in our own cvParams
+    vector<CV> result;
+    result.resize(3);
 
-    vector<CVParam>::const_iterator it = 
-        find_if(cvParams.begin(), cvParams.end(), CVParamIs(cvid));
-   
-    if (it!=cvParams.end()) return *it;
-
-    return CVParam();
+    result[0] = cv::cv("MS");
+    result[1] = cv::cv("UNIMOD");
+    result[2] = cv::cv("UO");
+    
+    return result;
 }
-
-
-PWIZ_API_DECL CVParam ParamContainer::cvParamChild(CVID cvid) const
-{
-    // first look in our own cvParams
-
-    vector<CVParam>::const_iterator it = 
-        find_if(cvParams.begin(), cvParams.end(), CVParamIsChildOf(cvid));
-   
-    if (it!=cvParams.end()) return *it;
-
-    return CVParam();
-}
-
-
-PWIZ_API_DECL bool ParamContainer::hasCVParam(CVID cvid) const
-{
-    CVParam param = cvParam(cvid);
-    return (param.cvid != CVID_Unknown);
-}
-
-
-PWIZ_API_DECL bool ParamContainer::hasCVParamChild(CVID cvid) const
-{
-    CVParam param = cvParamChild(cvid);
-    return (param.cvid != CVID_Unknown);
-}
-
-
-namespace {
-struct HasName
-{
-    string name_;
-    HasName(const string& name) : name_(name) {}
-    bool operator()(const UserParam& userParam) {return name_ == userParam.name;}
-};
-} // namespace
-
-
-PWIZ_API_DECL UserParam ParamContainer::userParam(const string& name) const
-{
-    vector<UserParam>::const_iterator it = 
-        find_if(userParams.begin(), userParams.end(), HasName(name));
-    return it!=userParams.end() ? *it : UserParam();
-}
-
-
-PWIZ_API_DECL void ParamContainer::set(CVID cvid, const string& value, CVID units)
-{
-    vector<CVParam>::iterator it = find_if(cvParams.begin(), cvParams.end(), CVParamIs(cvid));
-   
-    if (it!=cvParams.end())
-    {
-        it->value = value;
-        it->units = units;
-        return;
-    }
-
-    cvParams.push_back(CVParam(cvid, value, units));
-}
-
-
-PWIZ_API_DECL bool ParamContainer::empty() const
-{
-    return cvParams.empty() && userParams.empty();
-}
-
-
-PWIZ_API_DECL void ParamContainer::clear()
-{
-    cvParams.clear();
-    userParams.clear();
-}
-
-
-PWIZ_API_DECL bool ParamContainer::operator==(const ParamContainer& that) const
-{
-    return false;//!Diff<ParamContainer>(*this, that);
-}
-
-
-PWIZ_API_DECL bool ParamContainer::operator!=(const ParamContainer& that) const
-{
-    return !(*this == that);
-}
-
-
 
 
 PWIZ_API_DECL Contact::Contact(const string& id) : id(id) {}

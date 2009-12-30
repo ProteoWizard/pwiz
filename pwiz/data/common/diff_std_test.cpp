@@ -29,7 +29,9 @@
 
 using namespace std;
 using namespace pwiz::util;
-using namespace pwiz::diff_std;
+using namespace pwiz::cv;
+using namespace pwiz::data;
+using namespace pwiz::data::diff_impl;
 
 ostream* os_ = 0;
 
@@ -53,7 +55,7 @@ void testIntegralReally(integral_type a, integral_type b)
     if (os_) *os_ << "diff_integral(\"" << a << "\", \"" << b << "\")" << endl;
 
     integral_type a_b, b_a;
-    diff_integral(a, b, a_b, b_a);
+    diff_integral(a, b, a_b, b_a, BaseDiffConfig());
     if (a == b)
         unit_assert(a_b == integral_type() && b_a == integral_type());
     else
@@ -74,13 +76,173 @@ template <typename floating_type>
 void testFloating(floating_type a, floating_type b, floating_type precision)
 {
     floating_type a_b, b_a;
+    BaseDiffConfig config((double) precision);
 
-    diff_floating(a, b, a_b, b_a, precision);
-    if (fabs(a - b) <= precision + std::numeric_limits<floating_type>::epsilon())
+    diff_floating(a, b, a_b, b_a, config);
+    if (fabs(a - b) <= config.precision + std::numeric_limits<floating_type>::epsilon())
         unit_assert(a_b == floating_type() && b_a == floating_type());
     else
         unit_assert(a_b == fabs(a - b) && b_a == fabs(a - b));
 }
+
+
+void testCV()
+{
+    if (os_) *os_ << "testCV()\n";
+
+    CV a, b;
+    a.URI = "uri";
+    a.id = "cvLabel";
+    a.fullName = "fullName";
+    a.version = "version";
+    b = a;
+
+    Diff<CV> diff;
+    diff(a,b);
+
+    unit_assert(diff.a_b.empty());
+    unit_assert(diff.b_a.empty());
+    unit_assert(!diff);
+
+    a.version = "version_changed";
+
+    diff(a,b); 
+    if (os_) *os_ << diff << endl;
+    unit_assert(diff);
+    unit_assert(diff.a_b.URI.empty() && diff.b_a.URI.empty());
+    unit_assert(diff.a_b.id.empty() && diff.b_a.id.empty());
+    unit_assert(diff.a_b.fullName.empty() && diff.b_a.fullName.empty());
+    unit_assert(diff.a_b.version == "version_changed");
+    unit_assert(diff.b_a.version == "version");
+}
+
+
+void testUserParam()
+{
+    if (os_) *os_ << "testUserParam()\n";
+
+    UserParam a, b;
+    a.name = "name";
+    a.value = "value";
+    a.type = "type";
+    a.units = UO_minute;
+    b = a;
+
+    Diff<UserParam> diff(a, b);
+    unit_assert(!diff);
+    unit_assert(diff.a_b.empty());
+    unit_assert(diff.b_a.empty());
+
+    b.value = "value_changed";
+    a.units = UO_second;
+    unit_assert(diff(a,b));
+    if (os_) *os_ << diff << endl;
+    unit_assert(diff.a_b.name == "name");
+    unit_assert(diff.b_a.name == "name");
+    unit_assert(diff.a_b.value == "value");
+    unit_assert(diff.b_a.value == "value_changed");
+    unit_assert(diff.a_b.type.empty() && diff.b_a.type.empty());
+    unit_assert(diff.a_b.units == UO_second);
+    unit_assert(diff.b_a.units == UO_minute);
+}
+
+
+void testCVParam()
+{
+    if (os_) *os_ << "testCVParam()\n";
+
+    CVParam a, b;
+    a.cvid = MS_ionization_type; 
+    a.value = "420";
+    b = a;
+
+    Diff<CVParam> diff(a, b);
+    unit_assert(!diff);
+    unit_assert(diff.a_b.empty());
+    unit_assert(diff.b_a.empty());
+
+    b.value = "value_changed";
+    diff(a,b);
+    unit_assert(diff);
+    if (os_) *os_ << diff << endl;
+    unit_assert(diff.a_b.cvid == MS_ionization_type);
+    unit_assert(diff.b_a.cvid == MS_ionization_type);
+    unit_assert(diff.a_b.value == "420");
+    unit_assert(diff.b_a.value == "value_changed");
+}
+
+
+void testParamContainer()
+{
+    if (os_) *os_ << "testParamContainer()\n";
+
+    ParamGroupPtr pgp1(new ParamGroup("pg1"));
+    ParamGroupPtr pgp2(new ParamGroup("pg2"));
+    ParamGroupPtr pgp3(new ParamGroup("pg3"));
+ 
+    ParamContainer a, b;
+    a.userParams.push_back(UserParam("common"));
+    b.userParams.push_back(UserParam("common"));
+    a.cvParams.push_back(MS_m_z);
+    b.cvParams.push_back(MS_m_z);
+    a.paramGroupPtrs.push_back(pgp1);
+    b.paramGroupPtrs.push_back(pgp1);
+   
+    Diff<ParamContainer> diff(a, b);
+    unit_assert(!diff);
+
+    a.userParams.push_back(UserParam("different", "1"));
+    b.userParams.push_back(UserParam("different", "2"));
+    a.cvParams.push_back(MS_charge_state);
+    b.cvParams.push_back(MS_peak_intensity);
+    a.paramGroupPtrs.push_back(pgp2);
+    b.paramGroupPtrs.push_back(pgp3);
+
+    diff(a, b);
+    if (os_) *os_ << diff << endl;
+    unit_assert(diff);
+
+    unit_assert(diff.a_b.userParams.size() == 1);
+    unit_assert(diff.a_b.userParams[0] == UserParam("different","1"));
+    unit_assert(diff.b_a.userParams.size() == 1);
+    unit_assert(diff.b_a.userParams[0] == UserParam("different","2"));
+
+    unit_assert(diff.a_b.cvParams.size() == 1);
+    unit_assert(diff.a_b.cvParams[0] == MS_charge_state); 
+    unit_assert(diff.b_a.cvParams.size() == 1);
+    unit_assert(diff.b_a.cvParams[0] == MS_peak_intensity); 
+
+    unit_assert(diff.a_b.paramGroupPtrs.size() == 1);
+    unit_assert(diff.a_b.paramGroupPtrs[0]->id == "pg2"); 
+    unit_assert(diff.b_a.paramGroupPtrs.size() == 1);
+    unit_assert(diff.b_a.paramGroupPtrs[0]->id == "pg3"); 
+}
+
+
+void testParamGroup()
+{
+    if (os_) *os_ << "testParamGroup()\n";
+
+    ParamGroup a("pg"), b("pg");
+    a.userParams.push_back(UserParam("common"));
+    b.userParams.push_back(UserParam("common"));
+  
+    Diff<ParamGroup> diff(a, b);
+    unit_assert(!diff);
+
+    a.userParams.push_back(UserParam("different", "1"));
+    b.userParams.push_back(UserParam("different", "2"));
+
+    diff(a, b);
+    if (os_) *os_ << diff << endl;
+    unit_assert(diff);
+
+    unit_assert(diff.a_b.userParams.size() == 1);
+    unit_assert(diff.a_b.userParams[0] == UserParam("different","1"));
+    unit_assert(diff.b_a.userParams.size() == 1);
+    unit_assert(diff.b_a.userParams[0] == UserParam("different","2"));
+}
+
 
 void test()
 {
@@ -103,6 +265,12 @@ void test()
     testFloating<double>(1, 1.0000000001, 1e-6);
     testFloating<double>(1, 1.00001, 1e-6);
     testFloating<double>(4, 4.2, 1);
+
+    testCV();
+    testUserParam();
+    testCVParam();
+    testParamContainer();
+    testParamGroup();
 }
 
 int main(int argc, char* argv[])

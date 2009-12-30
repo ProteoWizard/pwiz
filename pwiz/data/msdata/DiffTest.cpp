@@ -21,6 +21,7 @@
 //
 
 #include "Diff.hpp"
+#include "TextWriter.hpp"
 #include "examples.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include <iostream>
@@ -29,184 +30,15 @@
 
 using namespace std;
 using namespace pwiz::util;
-using namespace pwiz;
+using namespace pwiz::cv;
+using namespace pwiz::data;
+using namespace pwiz::data::diff_impl;
 using namespace pwiz::msdata;
 using boost::shared_ptr;
+using boost::lexical_cast;
 
 
 ostream* os_ = 0;
-
-
-void testString()
-{
-    if (os_) *os_ << "testString()\n";
-
-    Diff<string> diff("goober", "goober");
-    unit_assert(diff.a_b.empty() && diff.b_a.empty());
-    unit_assert(!diff);
-
-    diff("goober", "goo");
-    unit_assert(diff);
-    if (os_) *os_ << diff << endl;
-}
-
-
-void testCV()
-{
-    if (os_) *os_ << "testCV()\n";
-
-    CV a, b;
-    a.URI = "uri";
-    a.id = "cvLabel";
-    a.fullName = "fullName";
-    a.version = "version";
-    b = a;
-
-    Diff<CV> diff;
-    diff(a,b);
-
-    unit_assert(diff.a_b.empty());
-    unit_assert(diff.b_a.empty());
-    unit_assert(!diff);
-
-    a.version = "version_changed";
-
-    diff(a,b); 
-    if (os_) *os_ << diff << endl;
-    unit_assert(diff);
-    unit_assert(diff.a_b.URI.empty() && diff.b_a.URI.empty());
-    unit_assert(diff.a_b.id.empty() && diff.b_a.id.empty());
-    unit_assert(diff.a_b.fullName.empty() && diff.b_a.fullName.empty());
-    unit_assert(diff.a_b.version == "version_changed");
-    unit_assert(diff.b_a.version == "version");
-}
-
-
-void testUserParam()
-{
-    if (os_) *os_ << "testUserParam()\n";
-
-    UserParam a, b;
-    a.name = "name";
-    a.value = "value";
-    a.type = "type";
-    a.units = UO_minute;
-    b = a;
-
-    Diff<UserParam> diff(a, b);
-    unit_assert(!diff);
-    unit_assert(diff.a_b.empty());
-    unit_assert(diff.b_a.empty());
-
-    b.value = "value_changed";
-    a.units = UO_second;
-    unit_assert(diff(a,b));
-    if (os_) *os_ << diff << endl;
-    unit_assert(diff.a_b.name == "name");
-    unit_assert(diff.b_a.name == "name");
-    unit_assert(diff.a_b.value == "value");
-    unit_assert(diff.b_a.value == "value_changed");
-    unit_assert(diff.a_b.type.empty() && diff.b_a.type.empty());
-    unit_assert(diff.a_b.units == UO_second);
-    unit_assert(diff.b_a.units == UO_minute);
-}
-
-
-void testCVParam()
-{
-    if (os_) *os_ << "testCVParam()\n";
-
-    CVParam a, b;
-    a.cvid = MS_ionization_type; 
-    a.value = "420";
-    b = a;
-
-    Diff<CVParam> diff(a, b);
-    unit_assert(!diff);
-    unit_assert(diff.a_b.empty());
-    unit_assert(diff.b_a.empty());
-
-    b.value = "value_changed";
-    diff(a,b);
-    unit_assert(diff);
-    if (os_) *os_ << diff << endl;
-    unit_assert(diff.a_b.cvid == MS_ionization_type);
-    unit_assert(diff.b_a.cvid == MS_ionization_type);
-    unit_assert(diff.a_b.value == "420");
-    unit_assert(diff.b_a.value == "value_changed");
-}
-
-
-void testParamContainer()
-{
-    if (os_) *os_ << "testParamContainer()\n";
-
-    ParamGroupPtr pgp1(new ParamGroup("pg1"));
-    ParamGroupPtr pgp2(new ParamGroup("pg2"));
-    ParamGroupPtr pgp3(new ParamGroup("pg3"));
- 
-    ParamContainer a, b;
-    a.userParams.push_back(UserParam("common"));
-    b.userParams.push_back(UserParam("common"));
-    a.cvParams.push_back(MS_m_z);
-    b.cvParams.push_back(MS_m_z);
-    a.paramGroupPtrs.push_back(pgp1);
-    b.paramGroupPtrs.push_back(pgp1);
-   
-    Diff<ParamContainer> diff(a, b);
-    unit_assert(!diff);
-
-    a.userParams.push_back(UserParam("different", "1"));
-    b.userParams.push_back(UserParam("different", "2"));
-    a.cvParams.push_back(MS_charge_state);
-    b.cvParams.push_back(MS_peak_intensity);
-    a.paramGroupPtrs.push_back(pgp2);
-    b.paramGroupPtrs.push_back(pgp3);
-
-    diff(a, b);
-    if (os_) *os_ << diff << endl;
-    unit_assert(diff);
-
-    unit_assert(diff.a_b.userParams.size() == 1);
-    unit_assert(diff.a_b.userParams[0] == UserParam("different","1"));
-    unit_assert(diff.b_a.userParams.size() == 1);
-    unit_assert(diff.b_a.userParams[0] == UserParam("different","2"));
-
-    unit_assert(diff.a_b.cvParams.size() == 1);
-    unit_assert(diff.a_b.cvParams[0] == MS_charge_state); 
-    unit_assert(diff.b_a.cvParams.size() == 1);
-    unit_assert(diff.b_a.cvParams[0] == MS_peak_intensity); 
-
-    unit_assert(diff.a_b.paramGroupPtrs.size() == 1);
-    unit_assert(diff.a_b.paramGroupPtrs[0]->id == "pg2"); 
-    unit_assert(diff.b_a.paramGroupPtrs.size() == 1);
-    unit_assert(diff.b_a.paramGroupPtrs[0]->id == "pg3"); 
-}
-
-
-void testParamGroup()
-{
-    if (os_) *os_ << "testParamGroup()\n";
-
-    ParamGroup a("pg"), b("pg");
-    a.userParams.push_back(UserParam("common"));
-    b.userParams.push_back(UserParam("common"));
-  
-    Diff<ParamGroup> diff(a, b);
-    unit_assert(!diff);
-
-    a.userParams.push_back(UserParam("different", "1"));
-    b.userParams.push_back(UserParam("different", "2"));
-
-    diff(a, b);
-    if (os_) *os_ << diff << endl;
-    unit_assert(diff);
-
-    unit_assert(diff.a_b.userParams.size() == 1);
-    unit_assert(diff.a_b.userParams[0] == UserParam("different","1"));
-    unit_assert(diff.b_a.userParams.size() == 1);
-    unit_assert(diff.b_a.userParams[0] == UserParam("different","2"));
-}
 
 
 void testFileContent()
@@ -217,7 +49,7 @@ void testFileContent()
     a.userParams.push_back(UserParam("common"));
     b.userParams.push_back(UserParam("common"));
   
-    Diff<FileContent> diff(a, b);
+    Diff<FileContent, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     a.userParams.push_back(UserParam("different", "1"));
@@ -242,7 +74,7 @@ void testSourceFile()
     a.userParams.push_back(UserParam("common"));
     b.userParams.push_back(UserParam("common"));
   
-    Diff<SourceFile> diff(a, b);
+    Diff<SourceFile, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     b.location = "location2";
@@ -281,7 +113,7 @@ void testFileDescription()
     a.sourceFilePtrs.push_back(source1);
     b.sourceFilePtrs.push_back(source1);
 
-    Diff<FileDescription> diff(a, b);
+    Diff<FileDescription, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     a.contacts.push_back(contact3);
@@ -314,7 +146,7 @@ void testSample()
     a.userParams.push_back(UserParam("common"));
     b.userParams.push_back(UserParam("common"));
   
-    Diff<Sample> diff(a, b);
+    Diff<Sample, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     a.cvParams.push_back(MS_peak_intensity); 
@@ -332,7 +164,7 @@ void testComponent()
     a.userParams.push_back(UserParam("common"));
     b.userParams.push_back(UserParam("common"));
   
-    Diff<Component> diff(a, b);
+    Diff<Component, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     a.order = 420;
@@ -351,7 +183,7 @@ void testSource()
     a.userParams.push_back(UserParam("common"));
     b.userParams.push_back(UserParam("common"));
   
-    Diff<Component> diff(a, b);
+    Diff<Component, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     a.order = 420;
@@ -378,7 +210,7 @@ void testComponentList()
     a[0].userParams.push_back(UserParam("common"));
     b[0].userParams.push_back(UserParam("common"));
 
-    Diff<ComponentList> diff(a, b);
+    Diff<ComponentList, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     a[1].userParams.push_back(UserParam("common"));
@@ -406,7 +238,7 @@ void testSoftware()
     a.set(MS_ionization_type);
     b = a;
 
-    Diff<Software> diff(a, b);
+    Diff<Software, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     b.version = "4.21";
@@ -436,7 +268,7 @@ void testInstrumentConfiguration()
     b.softwarePtr = SoftwarePtr(new Software("XCalibur"));
     b.softwarePtr->version = "4.20";
 
-    Diff<InstrumentConfiguration> diff(a, b);
+    Diff<InstrumentConfiguration, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     b.set(MS_reflectron_off);
@@ -457,7 +289,7 @@ void testProcessingMethod()
     a.userParams.push_back(UserParam("common"));
     b.userParams.push_back(UserParam("common"));
   
-    Diff<ProcessingMethod> diff(a, b);
+    Diff<ProcessingMethod, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     a.order = 420;
@@ -504,7 +336,7 @@ void testDataProcessing()
     b.processingMethods.push_back(pm2);
     b.processingMethods.push_back(pm1);
   
-    Diff<DataProcessing> diff(a, b);
+    Diff<DataProcessing, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     pm2.softwarePtr = SoftwarePtr(new Software("Xcalibur")); 
@@ -526,7 +358,7 @@ void testScanSettings()
 
     b = a;
 
-    Diff<ScanSettings> diff(a, b);
+    Diff<ScanSettings, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     b.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("source file")));
@@ -556,7 +388,7 @@ void testPrecursor()
     a.cvParams.push_back(MS_reflectron_off);
     b = a; 
 
-    Diff<Precursor> diff(a, b);
+    Diff<Precursor, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     a.cvParams.push_back(MS_reflectron_on); 
@@ -584,7 +416,7 @@ void testProduct()
     a.isolationWindow.set(MS_ionization_type, 420);
     b = a; 
 
-    Diff<Product> diff(a, b);
+    Diff<Product, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     b.isolationWindow.set(MS_m_z, 200);
@@ -612,7 +444,7 @@ void testScan()
     a.scanWindows.push_back(ScanWindow());
     b = a; 
 
-    Diff<Scan> diff(a, b);
+    Diff<Scan, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     b.scanWindows.push_back(ScanWindow(250.0, 2000.0, MS_m_z));
@@ -643,7 +475,7 @@ void testScanList()
     b.scans.push_back(a2);
     b.scans.push_back(a1);
 
-    Diff<ScanList> diff(a, b);
+    Diff<ScanList, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     a.cvParams.push_back(MS_reflectron_on); 
@@ -676,7 +508,7 @@ void testBinaryDataArray()
     // we want to verify relative precision diff (1e-5),
     // not absolute diff (1e5)
 
-    Diff<BinaryDataArray> diff(a, b, config);
+    Diff<BinaryDataArray, DiffConfig> diff(a, b, config);
     if (diff && os_) *os_ << diff << endl;
     unit_assert(!diff);
 
@@ -709,7 +541,7 @@ void testSpectrum()
 
     DiffConfig config;
     config.precision = 1e-6;
-    Diff<Spectrum> diff(a, b, config);
+    Diff<Spectrum, DiffConfig> diff(a, b, config);
     if (diff) cout << diff;
     unit_assert(!diff);
 
@@ -784,7 +616,7 @@ void testChromatogram()
 
     DiffConfig config;
     config.precision = 1e-6;
-    Diff<Chromatogram> diff(a, b, config);
+    Diff<Chromatogram, DiffConfig> diff(a, b, config);
     if (diff) cout << diff;
     unit_assert(!diff);
 
@@ -823,7 +655,7 @@ void testSpectrumList()
     SpectrumList& a = aSimple;
     SpectrumList& b = bSimple;
 
-    Diff<SpectrumList> diff(a, b);
+    Diff<SpectrumList, DiffConfig, SpectrumListSimple> diff(a, b);
     unit_assert(!diff);
 
     // check: dataProcessingPtr
@@ -834,7 +666,7 @@ void testSpectrumList()
 
     DiffConfig config_ignore;
     config_ignore.ignoreDataProcessing = true;
-    Diff<SpectrumList> diff_ignore(a, b, config_ignore);
+    Diff<SpectrumList, DiffConfig, SpectrumListSimple> diff_ignore(a, b, config_ignore);
     unit_assert(!diff_ignore);
 
     aSimple.dp = DataProcessingPtr();
@@ -883,11 +715,11 @@ void testSpectrumList()
     DiffConfig config;
     config.precision = 1e-6;
 
-    Diff<SpectrumList> diffWide(a, b, config);
+    Diff<SpectrumList, DiffConfig, SpectrumListSimple> diffWide(a, b, config);
     unit_assert(!diffWide);
 
     config.precision = 1e-12;
-    Diff<SpectrumList> diffNarrow(a, b, config);
+    Diff<SpectrumList, DiffConfig, SpectrumListSimple> diffNarrow(a, b, config);
     if (os_) *os_ << diffNarrow << endl;
     unit_assert(diffNarrow);
 }
@@ -911,11 +743,11 @@ void testChromatogramList()
     ChromatogramList& a = aSimple;
     ChromatogramList& b = bSimple;
     
-    Diff<ChromatogramList> diff(a, b);
+    Diff<ChromatogramList, DiffConfig, ChromatogramListSimple> diff(a, b);
     DiffConfig config_ignore;
     config_ignore.ignoreChromatograms = true;
 
-    Diff<ChromatogramList> diffIgnore(a, b, config_ignore);
+    Diff<ChromatogramList, DiffConfig, ChromatogramListSimple> diffIgnore(a, b, config_ignore);
     unit_assert(!diff);
     unit_assert(!diffIgnore);
 
@@ -927,7 +759,7 @@ void testChromatogramList()
 
     DiffConfig config_ignore_dp;
     config_ignore_dp.ignoreDataProcessing = true;
-    Diff<ChromatogramList> diff_ignore_dp(a, b, config_ignore_dp);
+    Diff<ChromatogramList, DiffConfig, ChromatogramListSimple> diff_ignore_dp(a, b, config_ignore_dp);
     unit_assert(!diff_ignore_dp);
 
     aSimple.dp = DataProcessingPtr();
@@ -983,11 +815,11 @@ void testChromatogramList()
     DiffConfig config;
     config.precision = 1e-6;
 
-    Diff<ChromatogramList> diffWide(a, b, config);
+    Diff<ChromatogramList, DiffConfig, ChromatogramListSimple> diffWide(a, b, config);
     unit_assert(!diffWide);
 
     config.precision = 1e-12;
-    Diff<ChromatogramList> diffNarrow(a, b, config);
+    Diff<ChromatogramList, DiffConfig, ChromatogramListSimple> diffNarrow(a, b, config);
     if (os_) *os_ << diffNarrow << endl;
     unit_assert(diffNarrow);
 
@@ -1007,7 +839,7 @@ void testRun()
     b.id = "goober";
     b.startTimeStamp = "20 April 2004 4:20pm";  
 
-    Diff<Run> diff(a, b);
+    Diff<Run, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     b.id = "raisinet";        
@@ -1065,7 +897,7 @@ void testMSData()
     a.id = "goober";
     b.id = "goober";
 
-    Diff<MSData> diff(a, b);
+    Diff<MSData, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     a.accession = "different";
@@ -1136,7 +968,7 @@ void testMSData_allDataProcessingPtrs()
     a.run.spectrumListPtr = sl1;
     b.run.spectrumListPtr = sl2;
 
-    Diff<MSData> diff(a, b);
+    Diff<MSData, DiffConfig> diff(a, b);
     if (os_ && diff) *os_ << diff << endl;
     unit_assert(!diff);
 
@@ -1215,15 +1047,29 @@ void testBinaryDataOnly()
         TextWriter(*os_,0)(tinier);
     }
 
-    Diff<MSData> diff_full(tiny, tinier);
+    Diff<MSData, DiffConfig> diff_full(tiny, tinier);
     unit_assert(diff_full);
 
     DiffConfig config;
     config.ignoreMetadata = true;
 
-    Diff<MSData> diff_data(tiny, tinier, config);
+    Diff<MSData, DiffConfig> diff_data(tiny, tinier, config);
     if (os_ && diff_data) *os_ << diff_data << endl;
     unit_assert(!diff_data); 
+}
+
+
+static const char* userParamName_MaxBinaryDataArrayDifference_ = "Maximum binary data array difference";
+
+// gets value of MaxBinaryDataArrayDifference userParam if present, else 0
+template <typename list_type>
+double getMaxPrecisionDiff(const list_type& list)
+{
+    if (list.dp.get() &&
+        !list.dp->processingMethods.empty() &&
+        !list.dp->processingMethods.back().userParam(userParamName_MaxBinaryDataArrayDifference_).empty())
+        return lexical_cast<double>(list.dp->processingMethods.back().userParam(userParamName_MaxBinaryDataArrayDifference_).value);
+    return 0;
 }
 
 
@@ -1256,7 +1102,7 @@ void testMaxPrecisionDiff()
   DiffConfig config;
   config.precision=1e-6;
 
-  Diff<BinaryDataArray> diff_toosmall(*e,*f,config);
+  Diff<BinaryDataArray, DiffConfig> diff_toosmall(*e,*f,config);
   
   //not diff for diff of 1e-7
   unit_assert(!diff_toosmall);
@@ -1273,7 +1119,7 @@ void testMaxPrecisionDiff()
   a->data = data1;
   b->data = data2;
 
-  Diff<BinaryDataArray> diff(*a,*b,config);
+  Diff<BinaryDataArray, DiffConfig> diff(*a,*b,config);
   
   //diff 
   unit_assert(diff);
@@ -1281,7 +1127,7 @@ void testMaxPrecisionDiff()
   if(os_) *os_<<diff<<endl;
 
 
-  Diff<BinaryDataArray> diff2(*c,*d,config);
+  Diff<BinaryDataArray, DiffConfig> diff2(*c,*d,config);
 
   //diff
   unit_assert(diff2);
@@ -1345,7 +1191,7 @@ void testMaxPrecisionDiff()
 
   // Run user param is written for both Spectrum and Chromatogram binary data array difference user params, if present, with the correct value (max of the Spectrum and Chromatogram user params over the SpectrumList/ ChromatogramList respectively)
 
-  Diff<Run> diff_run(run_a,run_b,config);
+  Diff<Run, DiffConfig> diff_run(run_a,run_b,config);
   
   // diff
   
@@ -1404,43 +1250,43 @@ void testMaxPrecisionDiff()
 
 
 
-  // test that maxPrecisionDiff is being returned correctly for a zero diff within diff_impl::diff(SpectrumList, SpectrumList, SpectrumList, SpectrumList, DiffConfig, double)
+  // test that maxPrecisionDiff is being returned correctly for a zero diff within diff_impl::diff(SpectrumList, SpectrumList, SpectrumList, SpectrumList, DiffConfig)
 
   shared_ptr<SpectrumListSimple> sls_a_a(new SpectrumListSimple);
   shared_ptr<SpectrumListSimple> sls_A_A(new SpectrumListSimple);
 
-  double maxPrecisionNonDiffSpec=0;
-  diff_impl::diff(*sls_a, *sls_a,*sls_a_a,*sls_A_A,config,maxPrecisionNonDiffSpec);
+  pwiz::data::diff_impl::diff(*sls_a, *sls_a,*sls_a_a,*sls_A_A,config);
+  double maxPrecisionNonDiffSpec = getMaxPrecisionDiff(*sls_a_a);
   unit_assert_equal(maxPrecisionNonDiffSpec,0,epsilon);
 
 
-  // test that maxPrecisionDiff is being returned correctly for a non-zero diff within diff_impl::diff(SpectrumList, SpectrumList, SpectrumList, SpectrumList, DiffConfig, double)
+  // test that maxPrecisionDiff is being returned correctly for a non-zero diff within diff_impl::diff(SpectrumList, SpectrumList, SpectrumList, SpectrumList, DiffConfig)
   
   shared_ptr<SpectrumListSimple> sls_a_b(new SpectrumListSimple);
   shared_ptr<SpectrumListSimple> sls_b_a(new SpectrumListSimple);
 
-  double maxPrecisionDiffSpec=0;
-  diff_impl::diff(*sls_a, *sls_b,*sls_a_b,*sls_b_a,config,maxPrecisionDiffSpec);
+  pwiz::data::diff_impl::diff(*sls_a, *sls_b,*sls_a_b,*sls_b_a,config);
+  double maxPrecisionDiffSpec = getMaxPrecisionDiff(*sls_a_b);
   unit_assert_equal(maxPrecisionDiffSpec,.001,epsilon);
 
 
-  // test that maxPrecisionDiff is being returned correctly for a zero diff within diff_impl::diff(ChromatogramList, ChromatogramList, ChromatogramList, ChromatogramList, DiffConfig, double)
+  // test that maxPrecisionDiff is being returned correctly for a zero diff within diff_impl::diff(ChromatogramList, ChromatogramList, ChromatogramList, ChromatogramList, DiffConfig)
 
   shared_ptr<ChromatogramListSimple> cls_a_a(new ChromatogramListSimple);
   shared_ptr<ChromatogramListSimple> cls_A_A(new ChromatogramListSimple);
 
-  double maxPrecisionNonDiffChr=0;
-  diff_impl::diff(*cls_a, *cls_a,*cls_a_a,*cls_A_A,config,maxPrecisionNonDiffChr);
+  pwiz::data::diff_impl::diff(*cls_a, *cls_a,*cls_a_a,*cls_A_A,config);
+  double maxPrecisionNonDiffChr = getMaxPrecisionDiff(*cls_a_a);
   unit_assert_equal(maxPrecisionNonDiffChr,0,epsilon);
 
-  // test that maxPrecisionDiff is being returned correctly for a non-zero diff within diff_impl::diff(ChromatogramList, ChromatogramList, ChromatogramList, ChromatogramList, DiffConfig, double)
+  // test that maxPrecisionDiff is being returned correctly for a non-zero diff within diff_impl::diff(ChromatogramList, ChromatogramList, ChromatogramList, ChromatogramList, DiffConfig)
 
   shared_ptr<ChromatogramListSimple> cls_a_b(new ChromatogramListSimple);
   shared_ptr<ChromatogramListSimple> cls_b_a(new ChromatogramListSimple);
 
-  double maxPrecisionDiffChr=0;
-  diff_impl::diff(*cls_a,*cls_b,*cls_a_b,*cls_b_a,config,maxPrecisionDiffChr);
-  unit_assert_equal(maxPrecisionDiffSpec,.001,epsilon);
+  pwiz::data::diff_impl::diff(*cls_a,*cls_b,*cls_a_b,*cls_b_a,config);
+  double maxPrecisionDiffChr = getMaxPrecisionDiff(*cls_a_b);
+  unit_assert_equal(maxPrecisionDiffChr,.001,epsilon);
 
   
 }
@@ -1456,7 +1302,7 @@ void testMSDiffUpdate()
   examples::initializeTiny(tiny1);
   examples::initializeTiny(tiny2);
 
-  Diff<MSData> diff_initial(tiny1,tiny2);
+  Diff<MSData, DiffConfig> diff_initial(tiny1,tiny2);
   unit_assert(!diff_initial);
 
   //inflict metadata differences
@@ -1480,14 +1326,14 @@ void testMSDiffUpdate()
 
   //test metadata, spectral, chromatogram differences
 
-  Diff<MSData> diff_changed(tiny1,tiny2);
+  Diff<MSData, DiffConfig> diff_changed(tiny1,tiny2);
   unit_assert(diff_changed);
 
   if(os_) *os_<<diff_changed<<endl;
 
   tiny1.run.spectrumListPtr.reset();
   
-  Diff<MSData> diff_changed_changed(tiny1,tiny2);
+  Diff<MSData, DiffConfig> diff_changed_changed(tiny1,tiny2);
   unit_assert(diff_changed_changed);
 
   if(os_) *os_<<diff_changed_changed<<endl;
@@ -1496,12 +1342,6 @@ void testMSDiffUpdate()
 
 void test()
 {
-    testString();
-    testCV();
-    testUserParam();
-    testCVParam();
-    testParamContainer();
-    testParamGroup();
     testFileContent();
     testSourceFile();
     testFileDescription();

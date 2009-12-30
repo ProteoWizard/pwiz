@@ -27,146 +27,13 @@
 
 using namespace std;
 using namespace pwiz::util;
-using namespace pwiz;
+using namespace pwiz::cv;
+using namespace pwiz::data;
 using namespace pwiz::tradata;
 using boost::shared_ptr;
 
 
 ostream* os_ = 0;
-
-
-void testString()
-{
-    if (os_) *os_ << "testString()\n";
-
-    Diff<string> diff("goober", "goober");
-    unit_assert(diff.a_b.empty() && diff.b_a.empty());
-    unit_assert(!diff);
-
-    diff("goober", "goo");
-    unit_assert(diff);
-    if (os_) *os_ << diff << endl;
-}
-
-
-void testCV()
-{
-    if (os_) *os_ << "testCV()\n";
-
-    CV a, b;
-    a.URI = "uri";
-    a.id = "cvLabel";
-    a.fullName = "fullName";
-    a.version = "version";
-    b = a;
-
-    Diff<CV> diff;
-    diff(a,b);
-
-    unit_assert(diff.a_b.empty());
-    unit_assert(diff.b_a.empty());
-    unit_assert(!diff);
-
-    a.version = "version_changed";
-
-    diff(a,b); 
-    if (os_) *os_ << diff << endl;
-    unit_assert(diff);
-    unit_assert(diff.a_b.URI.empty() && diff.b_a.URI.empty());
-    unit_assert(diff.a_b.id.empty() && diff.b_a.id.empty());
-    unit_assert(diff.a_b.fullName.empty() && diff.b_a.fullName.empty());
-    unit_assert(diff.a_b.version == "version_changed");
-    unit_assert(diff.b_a.version == "version");
-}
-
-
-void testUserParam()
-{
-    if (os_) *os_ << "testUserParam()\n";
-
-    UserParam a, b;
-    a.name = "name";
-    a.value = "value";
-    a.type = "type";
-    a.units = UO_minute;
-    b = a;
-
-    Diff<UserParam> diff(a, b);
-    unit_assert(!diff);
-    unit_assert(diff.a_b.empty());
-    unit_assert(diff.b_a.empty());
-
-    b.value = "value_changed";
-    a.units = UO_second;
-    unit_assert(diff(a,b));
-    if (os_) *os_ << diff << endl;
-    unit_assert(diff.a_b.name == "name");
-    unit_assert(diff.b_a.name == "name");
-    unit_assert(diff.a_b.value == "value");
-    unit_assert(diff.b_a.value == "value_changed");
-    unit_assert(diff.a_b.type.empty() && diff.b_a.type.empty());
-    unit_assert(diff.a_b.units == UO_second);
-    unit_assert(diff.b_a.units == UO_minute);
-}
-
-
-void testCVParam()
-{
-    if (os_) *os_ << "testCVParam()\n";
-
-    CVParam a, b;
-    a.cvid = MS_ionization_type; 
-    a.value = "420";
-    b = a;
-
-    Diff<CVParam> diff(a, b);
-    unit_assert(!diff);
-    unit_assert(diff.a_b.empty());
-    unit_assert(diff.b_a.empty());
-
-    b.value = "value_changed";
-    diff(a,b);
-    unit_assert(diff);
-    if (os_) *os_ << diff << endl;
-    unit_assert(diff.a_b.cvid == MS_ionization_type);
-    unit_assert(diff.b_a.cvid == MS_ionization_type);
-    unit_assert(diff.a_b.value == "420");
-    unit_assert(diff.b_a.value == "value_changed");
-}
-
-
-void testParamContainer()
-{
-    if (os_) *os_ << "testParamContainer()\n";
-
-    ParamContainer a, b;
-    a.userParams.push_back(UserParam("common"));
-    b.userParams.push_back(UserParam("common"));
-    a.cvParams.push_back(MS_m_z);
-    b.cvParams.push_back(MS_m_z);
-   
-    Diff<ParamContainer> diff(a, b);
-    unit_assert(!diff);
-
-    a.userParams.push_back(UserParam("different", "1"));
-    b.userParams.push_back(UserParam("different", "2"));
-    a.cvParams.push_back(MS_charge_state);
-    b.cvParams.push_back(MS_peak_intensity);
-
-    diff(a, b);
-    if (os_) *os_ << diff << endl;
-    unit_assert(diff);
-
-    unit_assert(diff.a_b.userParams.size() == 1);
-    unit_assert(diff.a_b.userParams[0] == UserParam("different","1"));
-    unit_assert(diff.b_a.userParams.size() == 1);
-    unit_assert(diff.b_a.userParams[0] == UserParam("different","2"));
-
-    unit_assert(diff.a_b.cvParams.size() == 1);
-    unit_assert(diff.a_b.cvParams[0] == MS_charge_state); 
-    unit_assert(diff.b_a.cvParams.size() == 1);
-    unit_assert(diff.b_a.cvParams[0] == MS_peak_intensity);
-}
 
 
 void testContact()
@@ -181,7 +48,7 @@ void testContact()
 
     a.id = b.id = "foo";
    
-    Diff<Contact> diff(a, b);
+    Diff<Contact, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     a.id = "bar";
@@ -204,7 +71,7 @@ void testInstrument()
 
     a.id = b.id = "foo";
    
-    Diff<Instrument> diff(a, b);
+    Diff<Instrument, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     a.id = "bar";
@@ -229,7 +96,7 @@ void testConfiguration()
     a.contactPtr = ContactPtr(new Contact("common"));
     b.contactPtr = ContactPtr(new Contact("common"));
    
-    Diff<Configuration> diff(a, b);
+    Diff<Configuration, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     a.instrumentPtr->id = "different";
@@ -252,7 +119,7 @@ void testPrediction()
     a.contactPtr = ContactPtr(new Contact("common"));
     b.contactPtr = ContactPtr(new Contact("common"));
 
-    Diff<Prediction> diff(a, b);
+    Diff<Prediction, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     a.softwarePtr = SoftwarePtr(new Software("different"));
@@ -273,7 +140,7 @@ void testValidation()
     a.cvParams.push_back(MS_m_z);
     b.cvParams.push_back(MS_m_z);
    
-    Diff<Validation> diff(a, b);
+    Diff<Validation, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     b.set(MS_peak_intensity, 42);
@@ -294,7 +161,7 @@ void testEvidence()
     a.cvParams.push_back(MS_m_z);
     b.cvParams.push_back(MS_m_z);
    
-    Diff<Evidence> diff(a, b);
+    Diff<Evidence, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     a.set(MS_peak_intensity, 42);
@@ -315,7 +182,7 @@ void testRetentionTime()
     a.cvParams.push_back(MS_m_z);
     b.cvParams.push_back(MS_m_z);
    
-    Diff<RetentionTime> diff(a, b);
+    Diff<RetentionTime, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     a.set(MS_peak_intensity, 42);
@@ -338,7 +205,7 @@ void testProtein()
     a.sequence = b.sequence = "ABCD";
     a.id = b.id = "foo";
    
-    Diff<Protein> diff(a, b);
+    Diff<Protein, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     a.sequence = "DCBA";
@@ -358,7 +225,7 @@ void testModification()
     a.monoisotopicMassDelta = b.monoisotopicMassDelta = 42;
     a.averageMassDelta = b.averageMassDelta = 42;
 
-    Diff<Modification> diff(a, b);
+    Diff<Modification, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     a.monoisotopicMassDelta = 84;
@@ -383,7 +250,7 @@ void testPeptide()
     a.sequence = b.sequence = "ABCD";
     a.id = b.id = "foo";
    
-    Diff<Peptide> diff(a, b);
+    Diff<Peptide, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     a.sequence = "DCBA";
@@ -405,7 +272,7 @@ void testCompound()
     b.cvParams.push_back(MS_m_z);
     a.id = b.id = "foo";
    
-    Diff<Compound> diff(a, b);
+    Diff<Compound, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     b.retentionTimes.push_back(RetentionTime());
@@ -433,7 +300,7 @@ void testTransition()
     a.peptidePtr = PeptidePtr(new Peptide("common"));
     b.peptidePtr = PeptidePtr(new Peptide("common"));
    
-    Diff<Transition> diff(a, b);
+    Diff<Transition, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     b.peptidePtr->sequence = "different";
@@ -458,7 +325,7 @@ void testTarget()
     a.peptidePtr = PeptidePtr(new Peptide("common"));
     b.peptidePtr = PeptidePtr(new Peptide("common"));
    
-    Diff<Target> diff(a, b);
+    Diff<Target, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     b.peptidePtr->sequence = "different";
@@ -480,7 +347,7 @@ void testSoftware()
     a.set(MS_ionization_type);
     b = a;
 
-    Diff<Software> diff(a, b);
+    Diff<Software, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     b.version = "4.21";
@@ -549,7 +416,7 @@ void testTraData()
 
     TraData a, b;
 
-    Diff<TraData> diff(a, b);
+    Diff<TraData, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     a.cvs.push_back(CV());
@@ -578,11 +445,6 @@ void testTraData()
 
 void test()
 {
-    testString();
-    testCV();
-    testUserParam();
-    testCVParam();
-    testParamContainer();
     testContact();
     testInstrument();
     testSoftware();
