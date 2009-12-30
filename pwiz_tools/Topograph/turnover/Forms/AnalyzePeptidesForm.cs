@@ -189,7 +189,10 @@ namespace pwiz.Topograph.ui.Forms
                                     {"MsDataFile", msDataFile.Id},
                                     {"PeptideAnalysis", dbPeptideAnalysis.Id},
                                     {"AutoFindPeak", true},
-                                    {"Version",1}
+                                    {"Version",1},
+                                    {"ChromatogramCount", 0},
+                                    {"PeakCount",0},
+                                    {"PeptideDistributionCount",0},
                                 }
                             ));
                         dbPeptideAnalysis.FileAnalysisCount++;
