@@ -92,8 +92,8 @@ namespace pwiz.Topograph.Data
         {
             var configuration = GetConfiguration(tpgLinkDef.DatabaseTypeEnum)
                 .SetProperty("connection.connection_string", tpgLinkDef.GetConnectionString());
-#if(DEBUG)      
-            configuration.SetProperty("show_sql", "true")
+#if(DEBUG)
+            configuration.SetProperty("show_sql", "true");
 #endif 
             if (createSchema)
             {

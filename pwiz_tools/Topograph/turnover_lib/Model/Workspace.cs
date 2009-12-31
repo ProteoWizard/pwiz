@@ -463,13 +463,22 @@ namespace pwiz.Topograph.Model
                 EnsureEntitiesChangedEventArgs().AddChangedPeptideAnalyses(peptideAnalyses);
                 foreach (var entry in peptideAnalyses)
                 {
+                    var peptideAnalysis = PeptideAnalyses.GetChild(entry.Key);
                     if (entry.Value == null)
                     {
                         PeptideAnalyses.RemoveChild(entry.Key);
+                        if (peptideAnalysis != null)
+                        {
+                            EnsureEntitiesChangedEventArgs().RemoveEntity(peptideAnalysis);
+                        }
                     }
                     else
                     {
                         PeptideAnalyses.AddChildId(entry.Key);
+                        if (peptideAnalysis != null)
+                        {
+                            EnsureEntitiesChangedEventArgs().AddChangedEntity(peptideAnalysis);
+                        }
                     }
                 }
             }

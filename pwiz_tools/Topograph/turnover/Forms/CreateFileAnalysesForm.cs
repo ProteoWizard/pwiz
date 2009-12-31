@@ -9,6 +9,7 @@ using System.Text;
 using System.Windows.Forms;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
+using pwiz.Topograph.MsData;
 using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.ui.Forms
@@ -63,6 +64,7 @@ namespace pwiz.Topograph.ui.Forms
 
         private void btnOK_Click(object sender, EventArgs e)
         {
+            TurnoverForm.Instance.EnsureDataDirectory(Workspace);
             var msDataFiles = new List<MsDataFile>();
             for (int i = 0; i < MsDataFiles.Count; i++)
             {
@@ -71,7 +73,7 @@ namespace pwiz.Topograph.ui.Forms
                     continue;
                 }
                 var msDataFile = MsDataFiles[i];
-                if (TurnoverForm.Instance.EnsureMsDataFile(msDataFile))
+                if (MsDataFileUtil.InitMsDataFile(Workspace, msDataFile))
                 {
                     msDataFiles.Add(msDataFile);
                 }
@@ -125,6 +127,7 @@ namespace pwiz.Topograph.ui.Forms
                     session.Save(new DbChangeLog(PeptideAnalysis));
                     session.Transaction.Commit();
                 }
+                PeptideAnalysis.Workspace.Reconciler.ReconcileNow();
             }
 
             public bool Cancel()

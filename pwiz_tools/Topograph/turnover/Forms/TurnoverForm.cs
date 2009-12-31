@@ -155,7 +155,7 @@ namespace pwiz.Topograph.ui.Forms
             UpdateWindowTitle();
         }
 
-        void EnsureDataDirectory(Workspace workspace)
+        public void EnsureDataDirectory(Workspace workspace)
         {
             if (!workspace.IsLoaded)
             {

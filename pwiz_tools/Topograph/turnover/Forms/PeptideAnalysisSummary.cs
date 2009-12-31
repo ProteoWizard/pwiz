@@ -112,7 +112,7 @@ namespace pwiz.Topograph.ui.Forms
             base.OnWorkspaceEntitiesChanged(args);
             if (args.GetEntities<MsDataFile>().Count > 0 || args.Contains(PeptideAnalysis))
             {
-                UpdateRows(_peptideFileAnalysisRows.Keys);
+                UpdateRows(PeptideAnalysis.FileAnalyses.ListChildren());
             }
             else
             {
