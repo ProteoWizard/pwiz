@@ -69,6 +69,12 @@ if --teamcity-test-decoration in [ modules.peek : ARGV ]
             "echo $pp\"teamcity[testFinished name='$name']\"" ;
         TEST_POSTCOMMAND = $(TEST_POSTCOMMAND:J=\n) ;
     }
+    
+    # put raw commands in global module
+    modules.poke : TEST_PRECOMMAND : $(TEST_PRECOMMAND) ;
+    modules.poke : TEST_POSTCOMMAND : $(TEST_POSTCOMMAND) ;
+    
+    # prepend commands with grist expected by testing.jam
     TEST_PRECOMMAND = <testing.precommand>$(TEST_PRECOMMAND) ;
     TEST_POSTCOMMAND = <testing.postcommand>$(TEST_POSTCOMMAND) ;
 }

@@ -28,6 +28,9 @@ if [ modules.peek : NT ]
     path-constant SKYLINE_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Skyline ;
     path-constant PWIZ_WRAPPER_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/ProteowizardWrapper ;
 
+    # read these from global module
+    TEST_PRECOMMAND = [ modules.peek : TEST_PRECOMMAND ] ;
+    TEST_POSTCOMMAND = [ modules.peek : TEST_POSTCOMMAND ] ;
 
     rule build-properties ( targets + : sources * : properties * )
     {
@@ -74,6 +77,7 @@ if [ modules.peek : NT ]
         $(TEST_PRECOMMAND)
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:Test /nologo /verbosity:minimal
         msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);OutDir=$(OUTPUT_PATH);TestProject=Test /nologo /verbosity:minimal
+        set status=%ERRORLEVEL%
         $(TEST_POSTCOMMAND)
     }
     
@@ -91,6 +95,7 @@ if [ modules.peek : NT ]
         $(TEST_PRECOMMAND)
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:TestFunctional /nologo /verbosity:minimal
         msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);OutDir=$(OUTPUT_PATH);TestProject=TestFunctional /nologo /verbosity:minimal
+        set status=%ERRORLEVEL%
         $(TEST_POSTCOMMAND)
     }
     

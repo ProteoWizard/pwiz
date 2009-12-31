@@ -28,6 +28,9 @@ if [ modules.peek : NT ]
     path-constant TOPOGRAPH_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Topograph ;
     path-constant PWIZ_WRAPPER_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/ProteowizardWrapper ;
 
+    # read these from global module
+    TEST_PRECOMMAND = [ modules.peek : TEST_PRECOMMAND ] ;
+    TEST_POSTCOMMAND = [ modules.peek : TEST_POSTCOMMAND ] ;
 
     rule build-properties ( targets + : sources * : properties * )
     {
