@@ -327,7 +327,8 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
-        /// Test of <see cref="SrmDocument.RemoveDuplicatePeptides"/> functionality
+        /// Test of functionality once performed by SrmDocument.RemoveDuplicates,
+        /// now refinement.
         /// </summary>
         [TestMethod]
         public void RemoveDuplicatePeptidesTest()
@@ -338,7 +339,8 @@ namespace pwiz.SkylineTest
             SrmDocument docFasta = document.ImportFasta(new StringReader(string.Format(TEXT_FASTA_YEAST_FRAGMENT, 1)),
                 false, IdentityPath.ROOT, out path);
             AssertEx.IsDocumentState(docFasta, 1, 1, 11, 36);
-            SrmDocument docFasta2 = docFasta.RemoveDuplicatePeptides();
+            var refinementSettings = new RefinementSettings {RemoveDuplicatePeptides = true};
+            SrmDocument docFasta2 = refinementSettings.Refine(docFasta);
             Assert.AreSame(docFasta, docFasta2);
 
             docFasta2 = docFasta.ImportFasta(new StringReader(string.Format(TEXT_FASTA_YEAST_FRAGMENT, 2)),
@@ -352,14 +354,14 @@ namespace pwiz.SkylineTest
             SrmDocument docPeptides2 = docPeptides.ImportFasta(new StringReader(TEXT_BOVINE_PEPTIDES1),
                 true, IdentityPath.ROOT, out path);            
             AssertEx.IsDocumentState(docPeptides2, 2, 2, 26, 82);
-            SrmDocument docPeptides3 = docPeptides2.RemoveDuplicatePeptides();
+            SrmDocument docPeptides3 = refinementSettings.Refine(docPeptides2);
             Assert.AreNotSame(docPeptides2, docPeptides3);
             AssertEx.IsDocumentState(docPeptides3, 3, 2, 0, 0);
 
             // Try again leaving a single peptide
             docPeptides2 = docPeptides.ImportFasta(new StringReader(TEXT_BOVINE_PEPTIDES1 + "\n" + TEXT_BOVINE_SINGLE_PEPTIDE),
                 true, IdentityPath.ROOT, out path);
-            docPeptides3 = docPeptides2.RemoveDuplicatePeptides();
+            docPeptides3 = refinementSettings.Refine(docPeptides2);
             Assert.AreNotSame(docPeptides2, docPeptides3);
             AssertEx.IsDocumentState(docPeptides3, 3, 2, 1, 3);
         }

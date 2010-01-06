@@ -412,6 +412,32 @@ namespace pwiz.Skyline.Model.Results
 
             return new Results<T>(listInfo);
         }
+
+        public float? GetAverageValue(Func<T, float?> getVal)
+        {
+            int valCount = 0;
+            double valTotal = 0;
+
+            foreach (var result in this)
+            {
+                if (result == null)
+                    continue;
+                var chromInfo = result[0];
+                if (Equals(chromInfo, default(T)))
+                    continue;
+                float? val = getVal(chromInfo);
+                if (!val.HasValue)
+                    continue;
+
+                valTotal += val.Value;
+                valCount++;
+            }
+
+            if (valCount == 0)
+                return null;
+
+            return (float)(valTotal / valCount);            
+        }
     }
 
     /// <summary>

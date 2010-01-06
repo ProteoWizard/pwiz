@@ -28,12 +28,11 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RefineDlg));
+            this.components = new System.ComponentModel.Container();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabDocument = new System.Windows.Forms.TabPage();
             this.cbRemoveRepeatedPeptides = new System.Windows.Forms.CheckBox();
             this.cbRemoveDuplicatePeptides = new System.Windows.Forms.CheckBox();
-            this.cbRemoveHeavy = new System.Windows.Forms.CheckBox();
             this.textMinTransitions = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.textMinPeptides = new System.Windows.Forms.TextBox();
@@ -53,6 +52,11 @@
             this.label3 = new System.Windows.Forms.Label();
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
+            this.textMaxPeakRank = new System.Windows.Forms.TextBox();
+            this.labelMaxPeakRank = new System.Windows.Forms.Label();
+            this.helpTip = new System.Windows.Forms.ToolTip(this.components);
+            this.comboRemoveLabelType = new System.Windows.Forms.ComboBox();
+            this.label4 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabDocument.SuspendLayout();
             this.tabResults.SuspendLayout();
@@ -70,14 +74,15 @@
             this.tabControl1.Location = new System.Drawing.Point(13, 13);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(395, 360);
+            this.tabControl1.Size = new System.Drawing.Size(395, 422);
             this.tabControl1.TabIndex = 0;
             // 
             // tabDocument
             // 
+            this.tabDocument.Controls.Add(this.label4);
+            this.tabDocument.Controls.Add(this.comboRemoveLabelType);
             this.tabDocument.Controls.Add(this.cbRemoveRepeatedPeptides);
             this.tabDocument.Controls.Add(this.cbRemoveDuplicatePeptides);
-            this.tabDocument.Controls.Add(this.cbRemoveHeavy);
             this.tabDocument.Controls.Add(this.textMinTransitions);
             this.tabDocument.Controls.Add(this.label2);
             this.tabDocument.Controls.Add(this.textMinPeptides);
@@ -85,7 +90,7 @@
             this.tabDocument.Location = new System.Drawing.Point(4, 22);
             this.tabDocument.Name = "tabDocument";
             this.tabDocument.Padding = new System.Windows.Forms.Padding(3);
-            this.tabDocument.Size = new System.Drawing.Size(387, 334);
+            this.tabDocument.Size = new System.Drawing.Size(387, 396);
             this.tabDocument.TabIndex = 0;
             this.tabDocument.Text = "Document";
             this.tabDocument.UseVisualStyleBackColor = true;
@@ -93,32 +98,25 @@
             // cbRemoveRepeatedPeptides
             // 
             this.cbRemoveRepeatedPeptides.AutoSize = true;
-            this.cbRemoveRepeatedPeptides.Location = new System.Drawing.Point(205, 115);
+            this.cbRemoveRepeatedPeptides.Location = new System.Drawing.Point(19, 107);
             this.cbRemoveRepeatedPeptides.Name = "cbRemoveRepeatedPeptides";
             this.cbRemoveRepeatedPeptides.Size = new System.Drawing.Size(154, 17);
-            this.cbRemoveRepeatedPeptides.TabIndex = 3;
-            this.cbRemoveRepeatedPeptides.Text = "Remove repeated peptides";
+            this.cbRemoveRepeatedPeptides.TabIndex = 2;
+            this.cbRemoveRepeatedPeptides.Text = "&Remove repeated peptides";
+            this.helpTip.SetToolTip(this.cbRemoveRepeatedPeptides, "All repeated peptides will be removed to leave only the\r\nfirst occurrence of any " +
+                    "peptide.");
             this.cbRemoveRepeatedPeptides.UseVisualStyleBackColor = true;
             // 
             // cbRemoveDuplicatePeptides
             // 
             this.cbRemoveDuplicatePeptides.AutoSize = true;
-            this.cbRemoveDuplicatePeptides.Location = new System.Drawing.Point(19, 115);
+            this.cbRemoveDuplicatePeptides.Location = new System.Drawing.Point(203, 107);
             this.cbRemoveDuplicatePeptides.Name = "cbRemoveDuplicatePeptides";
             this.cbRemoveDuplicatePeptides.Size = new System.Drawing.Size(155, 17);
-            this.cbRemoveDuplicatePeptides.TabIndex = 2;
-            this.cbRemoveDuplicatePeptides.Text = "Remove duplicate peptides";
+            this.cbRemoveDuplicatePeptides.TabIndex = 3;
+            this.cbRemoveDuplicatePeptides.Text = "Remove &duplicate peptides";
+            this.helpTip.SetToolTip(this.cbRemoveDuplicatePeptides, "All peptides that are not unique within the document\r\nwill be removed.");
             this.cbRemoveDuplicatePeptides.UseVisualStyleBackColor = true;
-            // 
-            // cbRemoveHeavy
-            // 
-            this.cbRemoveHeavy.AutoSize = true;
-            this.cbRemoveHeavy.Location = new System.Drawing.Point(19, 249);
-            this.cbRemoveHeavy.Name = "cbRemoveHeavy";
-            this.cbRemoveHeavy.Size = new System.Drawing.Size(194, 17);
-            this.cbRemoveHeavy.TabIndex = 6;
-            this.cbRemoveHeavy.Text = "Remove heavy precursors with light";
-            this.cbRemoveHeavy.UseVisualStyleBackColor = true;
             // 
             // textMinTransitions
             // 
@@ -126,6 +124,8 @@
             this.textMinTransitions.Name = "textMinTransitions";
             this.textMinTransitions.Size = new System.Drawing.Size(65, 20);
             this.textMinTransitions.TabIndex = 5;
+            this.helpTip.SetToolTip(this.textMinTransitions, "Precursors with fewer than this number of transitions will be\r\nremoved from the d" +
+                    "ocument.");
             // 
             // label2
             // 
@@ -134,7 +134,7 @@
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(142, 13);
             this.label2.TabIndex = 4;
-            this.label2.Text = "Min transitions per precursor:";
+            this.label2.Text = "Min &transitions per precursor:";
             // 
             // textMinPeptides
             // 
@@ -142,6 +142,8 @@
             this.textMinPeptides.Name = "textMinPeptides";
             this.textMinPeptides.Size = new System.Drawing.Size(65, 20);
             this.textMinPeptides.TabIndex = 1;
+            this.helpTip.SetToolTip(this.textMinPeptides, "Proteins with fewer than this number of peptides will be\r\nremoved from the docume" +
+                    "nt.");
             // 
             // label1
             // 
@@ -150,10 +152,12 @@
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(123, 13);
             this.label1.TabIndex = 0;
-            this.label1.Text = "Min peptides per protein:";
+            this.label1.Text = "&Min peptides per protein:";
             // 
             // tabResults
             // 
+            this.tabResults.Controls.Add(this.textMaxPeakRank);
+            this.tabResults.Controls.Add(this.labelMaxPeakRank);
             this.tabResults.Controls.Add(this.textMaxPeakFoundRatio);
             this.tabResults.Controls.Add(this.label6);
             this.tabResults.Controls.Add(this.radioRemoveMissing);
@@ -165,7 +169,7 @@
             this.tabResults.Location = new System.Drawing.Point(4, 22);
             this.tabResults.Name = "tabResults";
             this.tabResults.Padding = new System.Windows.Forms.Padding(3);
-            this.tabResults.Size = new System.Drawing.Size(387, 334);
+            this.tabResults.Size = new System.Drawing.Size(387, 396);
             this.tabResults.TabIndex = 1;
             this.tabResults.Text = "Results";
             this.tabResults.UseVisualStyleBackColor = true;
@@ -176,6 +180,8 @@
             this.textMaxPeakFoundRatio.Name = "textMaxPeakFoundRatio";
             this.textMaxPeakFoundRatio.Size = new System.Drawing.Size(65, 20);
             this.textMaxPeakFoundRatio.TabIndex = 3;
+            this.helpTip.SetToolTip(this.textMaxPeakFoundRatio, "All elements with peak found ratio above this number\r\nwill be removed from the do" +
+                    "cument:\r\n\r\nGreen = 1.0\r\nOrange >= 0.5\r\nRed < 0.5");
             // 
             // label6
             // 
@@ -184,28 +190,31 @@
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(110, 13);
             this.label6.TabIndex = 2;
-            this.label6.Text = "Max peak found ratio:";
+            this.label6.Text = "Ma&x peak found ratio:";
             // 
             // radioRemoveMissing
             // 
             this.radioRemoveMissing.AutoSize = true;
-            this.radioRemoveMissing.Location = new System.Drawing.Point(25, 101);
+            this.radioRemoveMissing.Location = new System.Drawing.Point(25, 154);
             this.radioRemoveMissing.Name = "radioRemoveMissing";
             this.radioRemoveMissing.Size = new System.Drawing.Size(167, 17);
             this.radioRemoveMissing.TabIndex = 5;
             this.radioRemoveMissing.TabStop = true;
-            this.radioRemoveMissing.Text = "Remove nodes missing results";
+            this.radioRemoveMissing.Text = "&Remove nodes missing results";
+            this.helpTip.SetToolTip(this.radioRemoveMissing, "All elements without measured results will be\r\nremoved from the document.");
             this.radioRemoveMissing.UseVisualStyleBackColor = true;
             // 
             // radioIgnoreMissing
             // 
             this.radioIgnoreMissing.AutoSize = true;
-            this.radioIgnoreMissing.Location = new System.Drawing.Point(25, 78);
+            this.radioIgnoreMissing.Checked = true;
+            this.radioIgnoreMissing.Location = new System.Drawing.Point(25, 131);
             this.radioIgnoreMissing.Name = "radioIgnoreMissing";
             this.radioIgnoreMissing.Size = new System.Drawing.Size(157, 17);
             this.radioIgnoreMissing.TabIndex = 4;
             this.radioIgnoreMissing.TabStop = true;
-            this.radioIgnoreMissing.Text = "Ignore nodes missing results";
+            this.radioIgnoreMissing.Text = "Ig&nore nodes missing results";
+            this.helpTip.SetToolTip(this.radioIgnoreMissing, "No action will be taken for elements without\r\nmeasured results.");
             this.radioIgnoreMissing.UseVisualStyleBackColor = true;
             // 
             // textMinPeakFoundRatio
@@ -214,6 +223,8 @@
             this.textMinPeakFoundRatio.Name = "textMinPeakFoundRatio";
             this.textMinPeakFoundRatio.Size = new System.Drawing.Size(65, 20);
             this.textMinPeakFoundRatio.TabIndex = 1;
+            this.helpTip.SetToolTip(this.textMinPeakFoundRatio, "All elements with peak found ratio below this number\r\nwill be removed from the do" +
+                    "cument:\r\n\r\nGreen = 1.0\r\nOrange >= 0.5\r\nRed < 0.5");
             // 
             // label5
             // 
@@ -222,19 +233,19 @@
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(107, 13);
             this.label5.TabIndex = 0;
-            this.label5.Text = "Min peak found ratio:";
+            this.label5.Text = "&Min peak found ratio:";
             // 
             // groupLibCorr
             // 
             this.groupLibCorr.Controls.Add(this.textMinDotProduct);
             this.groupLibCorr.Controls.Add(this.labelMinDotProduct);
             this.groupLibCorr.Enabled = false;
-            this.groupLibCorr.Location = new System.Drawing.Point(25, 236);
+            this.groupLibCorr.Location = new System.Drawing.Point(25, 290);
             this.groupLibCorr.Name = "groupLibCorr";
             this.groupLibCorr.Size = new System.Drawing.Size(332, 80);
-            this.groupLibCorr.TabIndex = 7;
+            this.groupLibCorr.TabIndex = 9;
             this.groupLibCorr.TabStop = false;
-            this.groupLibCorr.Text = "Spectral library correlation:";
+            this.groupLibCorr.Text = "&Spectral library correlation:";
             // 
             // textMinDotProduct
             // 
@@ -243,6 +254,8 @@
             this.textMinDotProduct.Name = "textMinDotProduct";
             this.textMinDotProduct.Size = new System.Drawing.Size(65, 20);
             this.textMinDotProduct.TabIndex = 1;
+            this.helpTip.SetToolTip(this.textMinDotProduct, "All precursors with a peak area to library spectrum\r\ndot-product below this thres" +
+                    "hold will be removed\r\nfrom the document.");
             // 
             // labelMinDotProduct
             // 
@@ -258,12 +271,12 @@
             // 
             this.groupBox1.Controls.Add(this.textRTRegressionThreshold);
             this.groupBox1.Controls.Add(this.label3);
-            this.groupBox1.Location = new System.Drawing.Point(25, 138);
+            this.groupBox1.Location = new System.Drawing.Point(25, 192);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(332, 80);
-            this.groupBox1.TabIndex = 6;
+            this.groupBox1.TabIndex = 8;
             this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Retention time outliers:";
+            this.groupBox1.Text = "Retention time &outliers:";
             // 
             // textRTRegressionThreshold
             // 
@@ -271,6 +284,9 @@
             this.textRTRegressionThreshold.Name = "textRTRegressionThreshold";
             this.textRTRegressionThreshold.Size = new System.Drawing.Size(65, 20);
             this.textRTRegressionThreshold.TabIndex = 1;
+            this.helpTip.SetToolTip(this.textRTRegressionThreshold, "Precursors will be removed from the document\r\nuntil the target value for the risi" +
+                    "duals of a linear\r\nregression with the optimal retention time calculator\r\nexceed" +
+                    " this threshold.");
             // 
             // label3
             // 
@@ -284,7 +300,7 @@
             // btnOK
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOK.Location = new System.Drawing.Point(252, 379);
+            this.btnOK.Location = new System.Drawing.Point(252, 441);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
             this.btnOK.TabIndex = 1;
@@ -296,12 +312,52 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(333, 379);
+            this.btnCancel.Location = new System.Drawing.Point(333, 441);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 2;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
+            // 
+            // textMaxPeakRank
+            // 
+            this.textMaxPeakRank.Location = new System.Drawing.Point(25, 95);
+            this.textMaxPeakRank.Name = "textMaxPeakRank";
+            this.textMaxPeakRank.Size = new System.Drawing.Size(65, 20);
+            this.textMaxPeakRank.TabIndex = 7;
+            this.helpTip.SetToolTip(this.textMaxPeakRank, "All transitions with an average area peak ranking\r\ngreater than this number will " +
+                    "be removed from the\r\ndocument.");
+            // 
+            // labelMaxPeakRank
+            // 
+            this.labelMaxPeakRank.AutoSize = true;
+            this.labelMaxPeakRank.Location = new System.Drawing.Point(22, 79);
+            this.labelMaxPeakRank.Name = "labelMaxPeakRank";
+            this.labelMaxPeakRank.Size = new System.Drawing.Size(126, 13);
+            this.labelMaxPeakRank.TabIndex = 6;
+            this.labelMaxPeakRank.Text = "Max &transition peak rank:";
+            // 
+            // comboRemoveLabelType
+            // 
+            this.comboRemoveLabelType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboRemoveLabelType.FormattingEnabled = true;
+            this.comboRemoveLabelType.Items.AddRange(new object[] {
+            "",
+            "Light",
+            "Heavy"});
+            this.comboRemoveLabelType.Location = new System.Drawing.Point(19, 290);
+            this.comboRemoveLabelType.Name = "comboRemoveLabelType";
+            this.comboRemoveLabelType.Size = new System.Drawing.Size(121, 21);
+            this.comboRemoveLabelType.TabIndex = 7;
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(19, 271);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(98, 13);
+            this.label4.TabIndex = 6;
+            this.label4.Text = "Remove l&abel type:";
             // 
             // RefineDlg
             // 
@@ -309,14 +365,16 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(420, 414);
+            this.ClientSize = new System.Drawing.Size(420, 476);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOK);
             this.Controls.Add(this.tabControl1);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "RefineDlg";
             this.ShowInTaskbar = false;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Refine";
             this.tabControl1.ResumeLayout(false);
             this.tabDocument.ResumeLayout(false);
@@ -338,7 +396,6 @@
         private System.Windows.Forms.TabPage tabResults;
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Button btnCancel;
-        private System.Windows.Forms.CheckBox cbRemoveHeavy;
         private System.Windows.Forms.TextBox textMinTransitions;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox textMinPeptides;
@@ -357,5 +414,10 @@
         private System.Windows.Forms.TextBox textMinPeakFoundRatio;
         private System.Windows.Forms.TextBox textMaxPeakFoundRatio;
         private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.TextBox textMaxPeakRank;
+        private System.Windows.Forms.Label labelMaxPeakRank;
+        private System.Windows.Forms.ToolTip helpTip;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.ComboBox comboRemoveLabelType;
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System;
+using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -13,9 +14,13 @@ namespace pwiz.Skyline.EditUI
             InitializeComponent();
 
             Icon = Resources.Skyline;
+            comboRemoveLabelType.SelectedIndex = 0;
 
             var settings = document.Settings;
-            tabResults.Visible = settings.HasResults;
+            if (!settings.HasResults)
+            {
+                tabControl1.TabPages.Remove(tabResults);
+            }
             if (settings.PeptideSettings.Libraries.HasLibraries)
             {
                 groupLibCorr.Enabled = true;
@@ -50,7 +55,14 @@ namespace pwiz.Skyline.EditUI
             }
             bool removeDuplicatePeptides = cbRemoveDuplicatePeptides.Checked;
             bool removeRepeatedPeptides = cbRemoveRepeatedPeptides.Checked;
-            bool removeHeavyWithLight = cbRemoveHeavy.Checked;
+
+            IsotopeLabelType? removeLabelType = null;
+            string removeLabelText = comboRemoveLabelType.SelectedItem.ToString();
+            if (!string.IsNullOrEmpty(removeLabelText))
+            {
+                 removeLabelType = (IsotopeLabelType)
+                     Enum.Parse(typeof(IsotopeLabelType), removeLabelText.ToLower());
+            }
 
             double? minPeakFoundRatio = null, maxPeakFoundRatio = null;
             if (!string.IsNullOrEmpty(textMinPeakFoundRatio.Text))
@@ -74,6 +86,15 @@ namespace pwiz.Skyline.EditUI
                 return;
             }
 
+            int? maxPeakRank = null;
+            if (!string.IsNullOrEmpty(textMaxPeakRank.Text))
+            {
+                int maxVal;
+                if (!helper.ValidateNumberTextBox(e, tabControl1, 1, textMaxPeakRank, 2, 10, out maxVal))
+                    return;
+                maxPeakRank = maxVal;
+            }
+
             bool removeMissingResults = radioRemoveMissing.Checked;
 
             double? rtRegressionThreshold = null;
@@ -94,22 +115,26 @@ namespace pwiz.Skyline.EditUI
                 dotProductThreshold = minVal;
             }
 
-            RefinementSettings = new RefinementSettings(minPeptidesPerProtein,
-                                                        removeDuplicatePeptides,
-                                                        removeRepeatedPeptides,
-                                                        minTransitionsPerPrecursor,
-                                                        removeHeavyWithLight,
-                                                        minPeakFoundRatio,
-                                                        maxPeakFoundRatio,
-                                                        removeMissingResults,
-                                                        rtRegressionThreshold,
-                                                        dotProductThreshold);
+            RefinementSettings = new RefinementSettings
+                                     {
+                                         MinPeptidesPerProtein = minPeptidesPerProtein,
+                                         RemoveDuplicatePeptides = removeDuplicatePeptides,
+                                         RemoveRepeatedPeptides = removeRepeatedPeptides,
+                                         MinTransitionsPepPrecursor = minTransitionsPerPrecursor,
+                                         RemoveLabelType = removeLabelType,
+                                         MinPeakFoundRatio = minPeakFoundRatio,
+                                         MaxPeakFoundRatio = maxPeakFoundRatio,
+                                         MaxPeakRank = maxPeakRank,
+                                         RemoveMissingResults = removeMissingResults,
+                                         RTRegressionThreshold = rtRegressionThreshold,
+                                         DotProductThreshold = dotProductThreshold
+                                     };
 
             DialogResult = DialogResult.OK;
             Close();
         }
 
-        private void btnOK_Click(object sender, System.EventArgs e)
+        private void btnOK_Click(object sender, EventArgs e)
         {
             OkDialog();
         }

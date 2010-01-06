@@ -132,6 +132,17 @@ namespace pwiz.Skyline.Model
             return chromInfo.PeakCountRatio;
         }
 
+        public float? AveragePeakCountRatio
+        {
+            get
+            {
+                return GetAverageResultValue(chromInfo =>
+                    chromInfo.OptimizationStep != 0 ?
+                        (float?) null :
+                        chromInfo.PeakCountRatio);
+            }
+        }
+
         public float? GetPeakAreaRatio(int i, out float? stdev)
         {
             // CONSIDER: Also specify the file index?
@@ -155,37 +166,30 @@ namespace pwiz.Skyline.Model
             return result.LibraryDotProduct;
         }
 
+        public float? AverageLibraryDotProduct
+        {
+            get
+            {
+                return GetAverageResultValue(chromInfo =>
+                    chromInfo.OptimizationStep != 0 ?
+                        (float?)null : chromInfo.LibraryDotProduct);
+            }
+        }
+
         public float? AveragePeakCenterTime
         {
             get
             {
-                int rtCount = 0;
-                double rtTotal = 0;
-
-                if (HasResults)
-                {
-                    foreach (var result in Results)
-                    {
-                        if (result == null)
-                            continue;
-
-                        foreach (var chromInfo in result)
-                        {
-                            // Only use results with at least 0.5 peak count ratio, and optimization step 0
-                            if (chromInfo == null || chromInfo.OptimizationStep != 0 || chromInfo.PeakCountRatio < 0.5)
-                                continue;
-
-                            rtTotal += (chromInfo.StartRetentionTime.Value + chromInfo.EndRetentionTime.Value) / 2;
-                            rtCount++;
-                        }
-                    }
-                }
-
-                if (rtCount == 0)
-                    return null;
-
-                return (float)(rtTotal / rtCount);                
+                return GetAverageResultValue(chromInfo =>
+                    chromInfo.OptimizationStep != 0 || chromInfo.PeakCountRatio < 0.5 ?
+                        (float?) null :
+                        (chromInfo.StartRetentionTime.Value + chromInfo.EndRetentionTime.Value) / 2);
             }
+        }
+
+        private float? GetAverageResultValue(Func<TransitionGroupChromInfo, float?> getVal)
+        {
+            return HasResults ? Results.GetAverageValue(getVal) : null;
         }
 
         /// <summary>

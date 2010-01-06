@@ -60,6 +60,7 @@ namespace pwiz.Skyline.Controls.Graphs
             LineWidth = 1;
         }
 
+        // ReSharper disable InconsistentNaming
         private FontSpec _fontSpecA;
         private FontSpec FONT_SPEC_A { get { return GetFontSpec(COLOR_A, ref _fontSpecA); } }
         private FontSpec _fontSpecX;
@@ -76,6 +77,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private FontSpec FONT_SPEC_NONE { get { return GetFontSpec(COLOR_NONE, ref _fontSpecNone); } }
         private FontSpec _fontSpecSelected;
         private FontSpec FONT_SPEC_SELECTED { get { return GetFontSpec(COLOR_SELECTED, ref _fontSpecSelected); } }
+        // ReSharper restore InconsistentNaming
 
         private FontSpec GetFontSpec(Color color, ref FontSpec fontSpec)
         {

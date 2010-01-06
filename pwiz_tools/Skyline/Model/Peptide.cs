@@ -78,6 +78,14 @@ namespace pwiz.Skyline.Model
             return result[0].PeakCountRatio;
         }
 
+        public float? AveragePeakCountRatio
+        {
+            get
+            {
+                return GetAverageResultValue(chromInfo => chromInfo.PeakCountRatio);
+            }
+        }
+
         public float? GetMeasuredRatioToStandard(int i)
         {
             var result = GetSafeChromInfo(i);
@@ -101,31 +109,16 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                int rtCount = 0;
-                double rtTotal = 0;
-
-                if (HasResults)
-                {
-                    foreach (var result in Results)
-                    {
-                        // Only use results with at least 0.5 peak count ratio
-                        if (result == null)
-                            continue;
-                        var chromInfo = result[0];
-                        if (chromInfo == null || !chromInfo.RetentionTime.HasValue ||
-                                chromInfo.PeakCountRatio < 0.5)
-                            continue;
-
-                        rtTotal += chromInfo.RetentionTime.Value;
-                        rtCount++;
-                    }
-                }
-
-                if (rtCount == 0)
-                    return null;
-
-                return (float)(rtTotal / rtCount);
+                return GetAverageResultValue(chromInfo =>
+                    !chromInfo.RetentionTime.HasValue || chromInfo.PeakCountRatio < 0.5 ?
+                        (float?) null :
+                        chromInfo.RetentionTime.Value);
             }
+        }
+
+        private float? GetAverageResultValue(Func<PeptideChromInfo, float?> getVal)
+        {
+            return HasResults ? Results.GetAverageValue(getVal) : null;
         }
 
         #region Property change methods

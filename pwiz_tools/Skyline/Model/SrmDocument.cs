@@ -438,7 +438,7 @@ namespace pwiz.Skyline.Model
             // If it is a peptide list, allow pasting to children to existing peptide list.
             if (peptideList && !(to.GetIdentity((int)Level.PeptideGroups) is FastaSequence))
             {
-                PeptideGroupDocNode nodeGroup = (PeptideGroupDocNode) FindNode(pathGroup);
+                // PeptideGroupDocNode nodeGroup = (PeptideGroupDocNode) FindNode(pathGroup);
 
                 // Add only peptides not already in this group
                 // With explicit modifications, there is now reason to add duplicates,
@@ -544,94 +544,6 @@ namespace pwiz.Skyline.Model
                 return document;
             }
             throw new InvalidOperationException("Invalid move source.");
-        }
-
-        public SrmDocument Refine(RefinementSettings settings)
-        {
-            return this;
-        }
-
-        public SrmDocument RemoveDuplicatePeptides()
-        {
-            // First just count occurances of each possible peptide for the sequences
-            // in the current document.
-            Dictionary<string, int> peptideSeqCounts = new Dictionary<string, int>();
-            foreach (PeptideGroupDocNode nodeGroup in Children)
-            {
-                // All possible peptides, not just filtered or currently chosen
-                FastaSequence fastaSeq = nodeGroup.Id as FastaSequence;
-                if (fastaSeq != null)
-                {
-                    foreach (Peptide peptide in fastaSeq.GetPeptides(Settings, false))
-                        CountSequence(peptide.Sequence, peptideSeqCounts);
-                }
-                else
-                {
-                    foreach (PeptideDocNode nodePeptide in nodeGroup.Children)
-                    {
-                        // Exclude explicitly modified peptides from this operation
-                        if (nodePeptide.HasExplicitMods)
-                            continue;
-                        CountSequence(nodePeptide.Peptide.Sequence, peptideSeqCounts);                        
-                    }
-                }
-            }
-
-            // Now check for duplicates in currently chosen peptides
-            bool duplicates = false;
-            foreach (PeptideGroupDocNode nodeGroup in Children)
-            {
-                foreach (PeptideDocNode nodePeptide in nodeGroup.Children)
-                {
-                    // Exclude explicitly modified peptides from this operation
-                    if (nodePeptide.HasExplicitMods)
-                        continue;
-                    int count;
-                    if (peptideSeqCounts.TryGetValue(nodePeptide.Peptide.Sequence, out count) && count > 1)
-                    {
-                        duplicates = true;
-                        break;
-                    }
-                }
-                if (duplicates)
-                    break;
-            }
-
-            // Nothing to do, if there are no peptides that appear multiple times.
-            if (!duplicates)
-                return this;
-
-            List<DocNode> listChildren = new List<DocNode>();
-            foreach (PeptideGroupDocNode nodeGroup in Children)
-            {
-                List<DocNode> listPeptides = new List<DocNode>();
-                foreach (PeptideDocNode nodePeptide in nodeGroup.Children)
-                {
-                    int count;
-                    if (peptideSeqCounts.TryGetValue(nodePeptide.Peptide.Sequence, out count) && count < 2)
-                        listPeptides.Add(nodePeptide);
-                }
-                if (listPeptides.Count == nodeGroup.Children.Count)
-                    listChildren.Add(nodeGroup);
-                else
-                    listChildren.Add(nodeGroup.ChangeChildren(listPeptides));
-            }
-            return (SrmDocument) ChangeChildren(listChildren);
-        }
-
-        private static void CountSequence(string seq, IDictionary<string, int> seqCounts)
-        {
-            int count;
-            if (seqCounts.TryGetValue(seq, out count))
-                seqCounts[seq] = count + 1;
-            else
-                seqCounts.Add(seq, 1);
-        }
-
-        public SrmDocument RemoveResults(string name)
-        {
-            // TODO: Implement results removal that cleans up the doc node tree.
-            return null;
         }
 
         public SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, string filePath,

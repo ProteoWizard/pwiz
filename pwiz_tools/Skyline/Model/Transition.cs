@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -112,7 +113,23 @@ namespace pwiz.Skyline.Model
             var chromInfo = GetChromInfoEntry(i);
             if (chromInfo == null)
                 return null;
-            return chromInfo.Area > 0 ? 1 : 0;
+            return GetPeakCountRatio(chromInfo);
+        }
+
+        public float? AveragePeakCountRatio
+        {
+            get
+            {
+                return GetAverageResultValue(chromInfo =>
+                    chromInfo.OptimizationStep != 0 ?
+                        (float?)null :
+                        GetPeakCountRatio(chromInfo));
+            }
+        }
+
+        private static float GetPeakCountRatio(TransitionChromInfo chromInfo)
+        {
+            return chromInfo.Area > 0 ? 1 : 0;            
         }
 
         public int? GetPeakRank(int i)
@@ -131,6 +148,21 @@ namespace pwiz.Skyline.Model
             if (chromInfo == null)
                 return null;
             return chromInfo.Ratio;
+        }
+
+        public float? AveragePeakArea
+        {
+            get
+            {
+                return GetAverageResultValue(chromInfo =>
+                    chromInfo.OptimizationStep != 0 ?
+                        (float?)null : chromInfo.Area);
+            }
+        }
+
+        private float? GetAverageResultValue(Func<TransitionChromInfo, float?> getVal)
+        {
+            return HasResults ? Results.GetAverageValue(getVal) : null;
         }
 
         #region Property change methods

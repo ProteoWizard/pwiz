@@ -1110,11 +1110,6 @@ namespace pwiz.Skyline
             }            
         }
 
-        private void removeDuplicatePeptidesMenuItem_Click(object sender, EventArgs e)
-        {
-            ModifyDocument("Remove duplicate peptides", doc => doc.RemoveDuplicatePeptides());
-        }
-
         private void manageUniquePeptidesMenuItem_Click(object sender, EventArgs e)
         {
             if (DocumentUI.Settings.PeptideSettings.BackgroundProteome.IsNone)
@@ -1181,7 +1176,7 @@ namespace pwiz.Skyline
             var refineDlg = new RefineDlg(DocumentUI);
             if (refineDlg.ShowDialog(this) == DialogResult.OK)
             {
-                ModifyDocument("Refine", doc => doc.Refine(refineDlg.RefinementSettings));                
+                ModifyDocument("Refine", doc => refineDlg.RefinementSettings.Refine(doc));                
             }
         }
 
