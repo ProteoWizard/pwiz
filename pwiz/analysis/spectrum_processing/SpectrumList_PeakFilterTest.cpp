@@ -61,6 +61,9 @@ vector<double> parseDoubleArray(const string& doubleArray)
 }
 
 
+////////////////////////////////////////////////////////////////////////////
+//  ETD/ECD Filter test
+////////////////////////////////////////////////////////////////////////////
 struct TestETDMassFilter
 {
     // space-delimited doubles
@@ -74,12 +77,11 @@ struct TestETDMassFilter
     bool removePrecursor;
     bool removeReducedChargePrecursors;
     bool removeNeutralLossPrecursors;
-    bool selectiveRemovalofPrecursors;
     bool blanketRemovalofNeutralLoss;
 };
 
-#define PRECURSOR_CHARGE 2
-#define PRECURSOR_MASS 445.34
+#define PRECURSOR_CHARGE 3
+#define PRECURSOR_MZ 445.34
 
 TestETDMassFilter testETDMassFilterData[] =
 {
@@ -88,7 +90,7 @@ TestETDMassFilter testETDMassFilterData[] =
         "10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200 210 220 230 240 250 260 270 280", 
         "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 445.34 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 1000.0", 
         "10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200 210 220 230 240 250 260 270 280", 
-        0.1234, false, false, false, false, false, false
+        0.1234, false, false, false, false, false
     }, // do nothing
 
     {    
@@ -96,47 +98,39 @@ TestETDMassFilter testETDMassFilterData[] =
         "10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200 210 220 230 240 250 260 270 280 290", 
         "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 1000.0", 
         "10 20 30 40 50 60 70 80 90 100 110 120 130 140 170 180 190 200 210 220 230 240 250 260 270 280 290", 
-        0.1234, false, true, false, false, false, false
+        0.1234, false, true, false, false, false
     }, // remove precursor only
 
     {    
+        "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 445.34 668.01 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 1000.0", 
+        "10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 155 160 170 180 190 200 210 220 230 240 250 260 270 280", 
         "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 445.34 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 1000.0", 
         "10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200 210 220 230 240 250 260 270 280", 
-        "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 445.34 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 1000.0", 
-        "10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200 210 220 230 240 250 260 280", 
-        0.1234, false, false, true, false, false, false
+        0.1234, false, false, true, false, false
     }, // remove charge reduced precursors only
 
     {    
-        "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 445.34 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 1000.0", 
-        "10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200 210 220 230 240 250 260 270 280", 
-        "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 1000.0", 
-        "10 20 30 40 50 60 70 80 90 100 110 120 130 140 160 170 180 190 200 210 220 230 240 250 260 280", 
-        0.1234, false, true, true, false, false, false
+        "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 445.34 668.01 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 1000.0", 
+        "10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 155 160 170 180 190 200 210 220 230 240 250 260 270 280", 
+        "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 1000.0", 
+        "10 20 30 40 50 60 70 80 90 100 110 120 130 140 160 170 180 190 200 210 220 230 240 250 260 270 280", 
+        0.1234, false, true, true, false, false
     }, // remove precursor and charge reduced precursors
 
     {    
-        "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 445.34 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 1000.0", 
-        "10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200 210 220 230 240 250 260 270 280", 
-        "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 1000.0", 
-        "10 20 30 40 50 60 70 80 90 100 110 120 130 140 280", 
-        0.1234, false, true, true, true, false, false
+        "100 120 445.34 667.51 668.01 1335.02 1336.02 1400.", 
+        "10 20 30 40 50 60 70 80", 
+        "100 120", 
+        "10 20", 
+        0.01, false, true, true, true, false
     }, // remove precursor charge reduced precursors, and neutral losses
 
     {    
-        "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 445.34 445.35 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 890.69 1000.0", 
-        "10 20 30 40 50 60 70 80 90 100 110 120 130 140 15000 150 160 170 180 190 200 210 220 230 240 250 260 2700 280 290", 
-        "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 445.35 890.69 1000.0", 
-        "10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 280 290", 
-        0.3, false, true, true, true, true, false
-    }, // remove precursor charge reduced precursors, and neutral losses -- most intense peak near precursor and charge reduced
-
-    {    
-        "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 445.34 445.35 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 1000.0", 
-        "10 20 30 40 50 60 70 80 90 100 110 120 130 140 15000 150 160 170 180 190 200 210 220 230 240 250 260 270 280", 
-        "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 1000.0", 
-        "10 20 30 40 50 60 70 80 90 100 110 120 130 140 280", 
-        1.0, false, true, true, true, false, true
+        "100 120 445.34 667.51 668.01 1335.02 1336.02 1400.", 
+        "10 20 30 40 50 60 70 80", 
+        "100 120", 
+        "10 20", 
+        0.01, false, true, true, true, true
     }, // remove precursor charge reduced precursors, and neutral losses -- blanket removal of neutral losses (60 Da window)
 
 };
@@ -161,20 +155,21 @@ void testMassRemoval()
 
         s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_counts);
         s->precursors.resize(1);
+        s->precursors[0].activation.set(MS_electron_transfer_dissociation);
         s->precursors[0].selectedIons.resize(1);
-        s->precursors[0].selectedIons[0].set(MS_selected_ion_m_z, PRECURSOR_MASS, MS_m_z);
+        s->precursors[0].selectedIons[0].set(MS_selected_ion_m_z, PRECURSOR_MZ, MS_m_z);
         s->precursors[0].selectedIons[0].set(MS_charge_state, PRECURSOR_CHARGE);
 
         MZTolerance tol(t.matchingTolerance, t.usePPM ? MZTolerance::PPM : MZTolerance::MZ);
         SpectrumDataFilterPtr filter;
         if (t.removeNeutralLossPrecursors)
         {
-            PrecursorMassFilter::Config params(tol, t.removePrecursor, t.removeReducedChargePrecursors, true, t.selectiveRemovalofPrecursors, t.blanketRemovalofNeutralLoss);
+            PrecursorMassFilter::Config params(tol, t.removePrecursor, t.removeReducedChargePrecursors, t.blanketRemovalofNeutralLoss);
             filter.reset(new PrecursorMassFilter(params));
         }
         else
         {
-            PrecursorMassFilter::Config params(tol, t.removePrecursor, t.removeReducedChargePrecursors, true, t.selectiveRemovalofPrecursors, t.blanketRemovalofNeutralLoss, 0);
+            PrecursorMassFilter::Config params(tol, t.removePrecursor, t.removeReducedChargePrecursors, t.blanketRemovalofNeutralLoss, 0);
             filter.reset(new PrecursorMassFilter(params));
         }
         SpectrumListPtr peakFilter(new SpectrumList_PeakFilter(originalList, filter));
@@ -193,6 +188,10 @@ void testMassRemoval()
         }
     }
 }
+
+////////////////////////////////////////////////////////////////////////////
+//  Thresholder test
+////////////////////////////////////////////////////////////////////////////
 
 struct TestThresholder
 {

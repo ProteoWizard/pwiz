@@ -144,6 +144,20 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_MSLevelSet : public SpectrumLis
     util::IntegerSet msLevelSet_;
 };
 
+class PWIZ_API_DECL SpectrumList_FilterPredicate_MS2ActivationType : public SpectrumList_Filter::Predicate
+{
+public:
+
+    SpectrumList_FilterPredicate_MS2ActivationType(const pwiz::cv::CVID filterItem, bool hasNot_ = false);
+
+    virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const {return boost::logic::indeterminate;}
+    virtual bool accept(const msdata::Spectrum& spectrum) const;
+
+    private:
+    pwiz::cv::CVID cvFilterItem;
+    bool            hasNot;
+
+};
 
 } // namespace analysis
 } // namespace pwiz

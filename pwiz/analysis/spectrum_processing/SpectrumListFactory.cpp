@@ -127,13 +127,17 @@ SpectrumListPtr filterCreator_nativeCentroid(const MSData& msd, const string& ar
                                 msLevelsToCentroid));
 }
 
+/**
+ *  Handler for --filter "ETDFilter".  There are five optional arguments for this filter:
+ *  <true|false> remove unreacted precursor
+ *  <true|false> remove charge reduced precursor
+ *  <true|false> remove neutral loss species from charge reduced precursor
+ *  float_val <MZ|PPM> matching tolerance -- floating point value, followed by units (example: 3.1 MZ)
+ */
 SpectrumListPtr filterCreator_ETDFilter(const MSData& msd, const string& arg)
 {
     istringstream parser(arg);
 
-    string removeMS1;
-    parser >> removeMS1;
-    bool bRemoveMS1 = removeMS1 == "false" ? false : true;
     string removePrecursor;
     parser >> removePrecursor;
     bool bRemPrecursor = removePrecursor == "false" ? false : true;
@@ -143,33 +147,30 @@ SpectrumListPtr filterCreator_ETDFilter(const MSData& msd, const string& arg)
     string removeNeutralLoss;
     parser >> removeNeutralLoss;
     bool bRemNeutralLoss = removeNeutralLoss == "false" ? false : true;
-    string selectiveRemoval;
-    parser >> selectiveRemoval;
-    bool bSelectiveRemoval = selectiveRemoval == "false" ? false : true;
 	string useBlanketFiltering;
 	parser >> useBlanketFiltering;
 	bool bUseBlanketFiltering = useBlanketFiltering == "false" ? false : true;
 
-    MZTolerance mzt;
-    parser >> mzt;
-
-    PrecursorMassFilter::Config params(mzt, bRemPrecursor, bRemChgRed, bRemNeutralLoss, bSelectiveRemoval, bUseBlanketFiltering);
-    SpectrumDataFilterPtr filter = SpectrumDataFilterPtr(new PrecursorMassFilter(params));
-
-    if (bRemoveMS1 == false)
+    MZTolerance mzt(3.1);
+    if (parser.good())
     {
-        return SpectrumListPtr(new 
-            SpectrumList_PeakFilter(msd.run.spectrumListPtr,
-                                    filter));
+        parser >> mzt;
+    }
+
+    SpectrumDataFilterPtr filter;
+
+    if (bRemNeutralLoss)
+    {
+        filter = SpectrumDataFilterPtr(new PrecursorMassFilter(PrecursorMassFilter::Config(mzt, bRemPrecursor, bRemChgRed, bUseBlanketFiltering)));
     }
     else
     {
-        return SpectrumListPtr(new 
-            SpectrumList_PeakFilter( 
-            SpectrumListPtr(new SpectrumList_Filter(msd.run.spectrumListPtr, 
-                                SpectrumList_FilterPredicate_MSLevelSet(IntegerSet(2)))),
-                                    filter));
+        filter = SpectrumDataFilterPtr(new PrecursorMassFilter(PrecursorMassFilter::Config(mzt, bRemPrecursor, bRemChgRed, bUseBlanketFiltering, 0)));
     }
+
+    return SpectrumListPtr(new 
+        SpectrumList_PeakFilter(msd.run.spectrumListPtr,
+                                filter));
 }
 
 struct StripIonTrapSurveyScans : public SpectrumList_Filter::Predicate
@@ -226,6 +227,43 @@ SpectrumListPtr filterCreator_msLevel(const MSData& msd, const string& arg)
                             SpectrumList_FilterPredicate_MSLevelSet(msLevelSet)));
 }
 
+/** 
+  *  filter on the basis of ms2 activation type
+  *
+  *   handler for --filter Activation option.  Use it to create
+  *   output files containing only ETD or CID ms2 data where both activation modes have been
+  *   interleaved within a given input vendor data file (eg: Thermo's Decision Tree acquisition mode).
+  */ 
+SpectrumListPtr filterCreator_ActivationType(const MSData& msd, const string& arg)
+{
+    istringstream parser(arg);
+    string sActivationType;
+    parser >> sActivationType;
+
+    // MS_collision_induced_dissociation gets used together with MS_electron_transfer_dissociation
+    // for the ETD/Supplemental Activation mode.  Our filter is for separating B/Y from C/Z ions.  
+    //
+    // Activation Type   ETD "flag"  CID "flag"  Fragment Ion Type
+    // ------------------------------------------------------------
+    //  ETD                Yes         No              C/Z
+    //  CID                No          Yes             B/Y
+    //  ETD/SA             Yes         Yes             C/Z
+    //
+    // Check for presence or absense of ETD flag only.
+
+    CVID cvID = MS_electron_transfer_dissociation;
+    bool hasNot = false;
+
+    if (sActivationType == "CID")
+    {
+        hasNot = true;
+    }
+
+    return SpectrumListPtr(new 
+    SpectrumList_Filter(msd.run.spectrumListPtr, 
+                        SpectrumList_FilterPredicate_MS2ActivationType(cvID, hasNot)));
+
+}
 
 struct JumpTableEntry
 {
@@ -247,6 +285,7 @@ JumpTableEntry jumpTable_[] =
     {"scanEvent", "int_set", filterCreator_scanEvent},
     {"scanTime", "[scanTimeLow,scanTimeHigh]", filterCreator_scanTime},
     {"stripIT", " (strip ion trap ms1 scans)", filterCreator_stripIT},
+    {"Activation", "<ETD|CID>", filterCreator_ActivationType},
 };
 
 

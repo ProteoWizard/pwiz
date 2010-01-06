@@ -23,6 +23,7 @@
 
 #define PWIZ_SOURCE
 
+#include "pwiz/data/common/cv.hpp"
 #include "SpectrumList_Filter.hpp"
 #include <stdexcept>
 #include <iostream>
@@ -32,9 +33,11 @@ namespace pwiz {
 namespace analysis {
 
 
-using namespace pwiz::util;
 using namespace pwiz;
+using namespace pwiz::cv;
+using namespace pwiz::util;
 using namespace pwiz::msdata;
+
 using namespace std;
 using boost::logic::tribool;
 using boost::lexical_cast;
@@ -255,6 +258,35 @@ PWIZ_API_DECL bool SpectrumList_FilterPredicate_MSLevelSet::accept(const msdata:
     int msLevel = lexical_cast<int>(param.value);
     bool result = msLevelSet_.contains(msLevel);
     return result;
+}
+
+//
+// SpectrumList_FilterPredicate_ActivationType
+//
+
+PWIZ_API_DECL SpectrumList_FilterPredicate_MS2ActivationType::SpectrumList_FilterPredicate_MS2ActivationType(const CVID cvidFilterItem_, bool hasNot_)
+: cvFilterItem(cvidFilterItem_), hasNot(hasNot_)
+{
+    CVTermInfo info = cvTermInfo(cvFilterItem); 
+    if (std::find(info.parentsIsA.begin(), info.parentsIsA.end(), MS_dissociation_method) == info.parentsIsA.end())
+    {
+        throw runtime_error("first argument not an activation type");
+    }
+
+}
+
+PWIZ_API_DECL bool SpectrumList_FilterPredicate_MS2ActivationType::accept(const msdata::Spectrum& spectrum) const
+{
+    if (spectrum.cvParam(MS_ms_level).valueAs<int>() > 1 &&
+            spectrum.cvParam(MS_MSn_spectrum).empty() == false &&
+            spectrum.precursors[0].empty() == false &&
+            spectrum.precursors[0].selectedIons.empty() == false &&
+            spectrum.precursors[0].selectedIons[0].empty() == false
+            )
+    {
+        bool res = spectrum.precursors[0].activation.hasCVParam(cvFilterItem);
+        return hasNot ? res == false : res;
+    }
 }
 
 
