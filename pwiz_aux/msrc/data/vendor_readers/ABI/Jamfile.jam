@@ -129,7 +129,7 @@ local generate-mzML = [ MATCH (--generate-mzML) : [ modules.peek : ARGV ] ] ;
 
 # special run target for Reader_ABI_Test, which needs external data 
 # use --preserve-test-targets to prevent bjam from deleting the executable
-run Reader_ABI_Test.cpp
+run Reader_ABI_Test.cpp $(PWIZ_ROOT_PATH)/pwiz/utility/misc/VendorReaderTestHarness.cpp
     : # args
         \"$(TEST_DATA_PATH)\" $(generate-mzML)
     : # input-files
