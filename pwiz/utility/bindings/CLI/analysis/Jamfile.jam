@@ -1,0 +1,70 @@
+#
+# $Id$
+#
+#
+# Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+#
+# Copyright 2009 Vanderbilt University - Nashville, TN 37232
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+#
+
+
+import modules ;
+
+if [ modules.peek : NT ] {
+
+project
+    : requirements
+        <toolset>msvc:<using-clr>true # requires hacked msvc.jam
+        <conditional>@msvc-requirement
+        <define>UNICODE
+        <define>_UNICODE
+    : usage-requirements
+        <define>UNICODE
+        <define>_UNICODE
+    : default-build
+        release
+	;
+
+local bound_libs =
+        <dependency>../msdata//pwiz_bindings_cli_msdata
+
+        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis//pwiz_analysis_version/<link>static/<asynch-exceptions>off
+        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/spectrum_processing/<link>static/<asynch-exceptions>off
+        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/chromatogram_processing/<link>static/<asynch-exceptions>off
+    ;
+
+obj spectrum_processing   : spectrum_processing.cpp   : $(bound_libs) <assembly-dependency>../msdata//pwiz_bindings_cli_msdata ;
+
+explicit spectrum_processing ;
+
+lib pwiz_bindings_cli_analysis
+    : # sources
+        ../common//SharedCLITest
+        spectrum_processing
+    : # requirements
+        $(bound_libs)
+        <link>shared
+        <linkflags>"/MACHINE:X86 /FIXED:No" # /KEYFILE:$(CLI_ROOT)/signature.snk"
+    : # default-build
+    : # usage-requirements
+        $(bound_libs)
+        <assembly>../msdata//pwiz_bindings_cli_msdata
+    ;
+explicit pwiz_bindings_cli_analysis ;
+
+
+unit-test spectrum_processing_test : spectrum_processing_test.cpp : <conditional>@unit-test-requirements ;
+
+}

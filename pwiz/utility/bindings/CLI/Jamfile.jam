@@ -38,13 +38,23 @@ project
 	;
 
 local bound_libs =
-        <library>../../../data/msdata//pwiz_data_msdata/<link>static/<asynch-exceptions>off
-        <library>../../../data/msdata//pwiz_data_msdata_examples/<link>static/<asynch-exceptions>off
-        <library>../../../data/proteome//pwiz_data_proteome/<link>static/<asynch-exceptions>off
-        <library>../../../analysis//pwiz_analysis_version/<link>static/<asynch-exceptions>off
-        <library>../../../../pwiz_tools/common//pwiz_tools_common/<link>static/<asynch-exceptions>off
-        <library>../../../analysis/spectrum_processing/<link>static/<asynch-exceptions>off
-        <library>../../../analysis/chromatogram_processing/<link>static/<asynch-exceptions>off
+
+        <define>PWIZ_BINDINGS_CLI_COMBINED
+        
+        # msdata
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata/<link>static/<asynch-exceptions>off
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata_examples/<link>static/<asynch-exceptions>off
+        <library>$(PWIZ_ROOT_PATH)/pwiz_tools/common//pwiz_tools_common/<link>static/<asynch-exceptions>off
+        
+        # analysis
+        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis//pwiz_analysis_version/<link>static/<asynch-exceptions>off
+        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/spectrum_processing/<link>static/<asynch-exceptions>off
+        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/chromatogram_processing/<link>static/<asynch-exceptions>off
+        
+        # proteome
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome/<link>static/<asynch-exceptions>off
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome_examples/<link>static/<asynch-exceptions>off
+        
         # HACK: not needed when using hacked tss_pe.cpp
         #<library>/ext/boost//thread/<link>shared/<asynch-exceptions>off # link=shared required for thread specific storage
         #<library>/ext/boost//thread/<link>static
@@ -52,24 +62,62 @@ local bound_libs =
 
 path-constant CLI_ROOT : . ;
 
+#
+# MCC 2009-06-01 NOTE:
+# I tried to modularize the CLI bindings and got pretty far but ran into a wall with native types
+# being private even between friend assemblies. The mechanism to make them public, "#pragma make_public",
+# doesn't work for templated types (like shared_ptr). Since pwiz shared_ptrs quite often as function parameters,
+# the native pwiz library would require considerable restructuring to make this modularization possible.
+#
+# There also might be other problems with the approach (passing native pointeres between managed assemblies):
+# http://www.codeguru.com/forum/showthread.php?t=425441
+#
+build-project-if-exists common ;
+build-project-if-exists msdata ;
+build-project-if-exists analysis ;
+build-project-if-exists proteome ;
+
+
 # build XDC documentation from source files
-obj CVParam    : CVParam.cpp    : $(bound_libs) <cxxflags>"/doc$(CLI_ROOT)/CVParam.xdc" ;
-obj Diff       : Diff.cpp       : $(bound_libs) <cxxflags>"/doc$(CLI_ROOT)/Diff.xdc" ;
-obj MSData     : MSData.cpp     : $(bound_libs) <cxxflags>"/doc$(CLI_ROOT)/MSData.xdc" ;
-obj MSDataFile : MSDataFile.cpp : $(bound_libs) <cxxflags>"/doc$(CLI_ROOT)/MSDataFile.xdc" ;
-obj Reader     : Reader.cpp     : $(bound_libs) <cxxflags>"/doc$(CLI_ROOT)/Reader.xdc" ;
-obj proteome   : proteome.cpp   : $(bound_libs) <cxxflags>"/doc$(CLI_ROOT)/proteome.xdc" ;
-obj examples   : examples.cpp   : $(bound_libs) <cxxflags>"/doc$(CLI_ROOT)/examples.xdc" ;
+path-constant DOC_PATH : $(PWIZ_BUILD_PATH)/pwiz/utility/bindings/CLI/doc ;
+SHELL "if not exist \"$(DOC_PATH)\\\" mkdir \"$(DOC_PATH)\"" ;
+
+
+obj ParamTypes       : common/ParamTypes.cpp   : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/ParamTypes.xdc" ;
+
+obj MSDataDiff       : msdata/Diff.cpp       : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/MSDataDiff.xdc" ;
+obj MSData           : msdata/MSData.cpp     : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/MSData.xdc" ;
+obj MSDataFile       : msdata/MSDataFile.cpp : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/MSDataFile.xdc" ;
+obj MSDataReader     : msdata/Reader.cpp     : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/MSDataReader.xdc" ;
+obj MSData_examples  : msdata/examples.cpp   : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/MSData_examples.xdc" ;
+
+obj spectrum_processing       : analysis/spectrum_processing.cpp       : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/spectrum_processing.xdc" ;
+obj SpectrumList_PeakFilter   : analysis/SpectrumList_PeakFilter.cpp   : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/SpectrumList_PeakFilter.xdc" ;
+
+obj proteome               : proteome/proteome.cpp         : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/proteome.xdc" ;
+obj ProteomeDataDiff       : proteome/Diff.cpp             : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/ProteomeDataDiff.xdc" ;
+obj ProteomeData           : proteome/ProteomeData.cpp     : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/ProteomeData.xdc" ;
+obj ProteomeDataFile       : proteome/ProteomeDataFile.cpp : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/ProteomeDataFile.xdc" ;
+obj ProteomeDataReader     : proteome/Reader.cpp           : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/ProteomeDataReader.xdc" ;
+obj ProteomeData_examples  : proteome/examples.cpp         : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/ProteomeData_examples.xdc" ;
+
 
 lib pwiz_bindings_cli
     : # sources
-        CVParam
-        Diff
+        ParamTypes
+        MSDataDiff
         MSData
         MSDataFile
-        Reader
+        MSDataReader
+        MSData_examples
+        spectrum_processing
+        SpectrumList_PeakFilter
         proteome
-        examples
+        ProteomeDataDiff
+        ProteomeData
+        ProteomeDataFile
+        ProteomeDataReader
+        ProteomeData_examples
     : # requirements
         $(bound_libs)
         <link>shared
@@ -78,7 +126,6 @@ lib pwiz_bindings_cli
     : # usage-requirements
         $(bound_libs)
     ;
-
 
 # merge XDC files to create XML documentation alongside the output assembly
 rule merge_xdc_files ( targets + : sources * : properties * )
@@ -93,7 +140,7 @@ actions merge_xdc_files
     IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
     IF EXIST "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86 >nul
     IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
-    xdcmake.exe /nologo $(CLI_ROOT)/*.xdc /out:$(OUTPUT_PATH)\$(<[1]:D=)
+    xdcmake.exe /nologo $(DOC_PATH)/*.xdc /out:$(OUTPUT_PATH)\$(<[1]:D=)
 }
 
 
@@ -106,58 +153,12 @@ make pwiz_bindings_cli.xml
     ;
 
 
-#
-# cvgen is a program that generates cv.hpp from .obo files (passed as args)
-# usage:
-#  bjam cv.hpp (creates cv.hpp in the source directory)
-#
-
-exe cvgen_cli
-    : # sources
-        cvgen_cli.cpp
-        $(PWIZ_ROOT_PATH)/pwiz/data/common//pwiz_data_obo
-    : # requirements
-        <library>/ext/boost//filesystem
-        <link>static
-    ;
-explicit cvgen_cli ;
-
-
-install install_cvgen_cli
-    : cvgen_cli
-    : <location>.
-    ;
-explicit install_cvgen_cli ;
-
-actions do_cvgen_cli
-{
-   echo calling bjam install_cvgen_cli
-   $(>[1]:P:T)\\..\\..\\utility\\bindings\\CLI\\cvgen_cli $(>)
-}
-
-make cv.hpp : $(PWIZ_ROOT_PATH)/pwiz/data/common/psi-ms.obo $(PWIZ_ROOT_PATH)/pwiz/data/common/unit.obo : do_cvgen_cli : <dependency>install_cvgen_cli ;
-explicit cv.hpp ;
-
-
-import package ;
-local install-requirements = <install-dependencies>on ;
-install-requirements += <install-default-prefix>"C:/Program Files/ProteoWizard/bin" ;
-
-package.install install
-    : $(install-requirements) release
-    : 
-    : pwiz_bindings_cli
-    : # no headers
-    ;
-explicit install ;
-
-
 rule unit-test-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties)
     {
-        result += <using-clr>true <dependency>pwiz_bindings_cli <assembly>pwiz_bindings_cli ;
+        result += <using-clr>true <dependency>$(CLI_ROOT)//pwiz_bindings_cli <assembly>$(CLI_ROOT)//pwiz_bindings_cli ;
     }
     else
     {
@@ -165,10 +166,5 @@ rule unit-test-requirements ( properties * )
     }
     return $(result) ;
 }
-
-unit-test MSDataTest : MSDataTest.cpp : <conditional>@unit-test-requirements ;
-unit-test DiffTest : DiffTest.cpp : <conditional>@unit-test-requirements ;
-unit-test MSDataFileTest : MSDataFileTest.cpp : <conditional>@unit-test-requirements ;
-explicit MSDataFileTest ;
 
 }

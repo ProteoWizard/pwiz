@@ -28,7 +28,7 @@
 #pragma warning( push )
 #pragma warning( disable : 4634 4635 )
 #include "MSData.hpp"
-#include "../../../data/msdata/Diff.hpp"
+#include "pwiz/data/msdata/Diff.hpp"
 #pragma warning( pop )
 
 

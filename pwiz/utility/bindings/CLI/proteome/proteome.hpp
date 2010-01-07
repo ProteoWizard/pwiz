@@ -26,15 +26,37 @@
 
 #pragma warning( push )
 #pragma warning( disable : 4634 4635 )
-#include "SharedCLI.hpp"
+
+#ifdef PWIZ_BINDINGS_CLI_COMBINED
+    #include "../common/ParamTypes.hpp"
+#else
+    #include "../common/SharedCLI.hpp"
+    #using "pwiz_bindings_cli_common.dll" as_friend
+#endif
+
 #include "pwiz/utility/chemistry/Chemistry.hpp"
 #include "pwiz/data/proteome/Peptide.hpp"
+#include "pwiz/data/proteome/Version.hpp"
 #pragma warning( pop )
 
 
 namespace pwiz {
 namespace CLI {
 namespace proteome {
+
+
+/// <summary>
+/// version information for the proteome namespace
+/// </summary>
+public ref class Version
+{
+    public:
+    static int Major() {return pwiz::proteome::Version::Major();}
+    static int Minor() {return pwiz::proteome::Version::Minor();}
+    static int Revision() {return pwiz::proteome::Version::Revision();}
+    static System::String^ LastModified() {return gcnew System::String(pwiz::proteome::Version::LastModified().c_str());}
+    static System::String^ ToString() {return gcnew System::String(pwiz::proteome::Version::str().c_str());}
+};
 
 
 public ref class Chemistry

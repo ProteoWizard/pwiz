@@ -28,6 +28,7 @@
 #include <string>
 #include <vector>
 #include <boost/shared_ptr.hpp>
+#include <boost/pointer_cast.hpp>
 #include <boost/preprocessor/stringize.hpp>
 #include "pwiz/utility/misc/Exception.hpp"
 #include "comdef.h" // for _com_error
@@ -47,6 +48,11 @@ inline std::string ToStdString(System::String^ source)
 	if(!result)
         throw gcnew System::Exception("error converting System::String to std::string");
 	return target;
+}
+
+inline System::String^ ToSystemString(const std::string& source)
+{
+    return gcnew System::String(source.c_str());
 }
 
 template<typename value_type>
@@ -107,6 +113,20 @@ public ref class ObjectStructorLog
     catch (_com_error& e) { throw gcnew Exception("[" + __FUNCTION__ + "] Unhandled COM error: " + gcnew String(e.ErrorMessage())); } \
     catch (...) { throw gcnew Exception("[" + __FUNCTION__ + "] Unknown exception"); }
 
+#ifndef INTERNAL
+#define INTERNAL internal
+#endif
+
+#ifdef PWIZ_BINDINGS_CLI_COMBINED
+#define NATIVE_POINTER_ARG(NativeType) NativeType*
+#define NATIVE_POINTER_CAST(NativeType, x) x
+#define NATIVE_POINTER_DOWNCAST(NativeType, x) ((NativeType*) (x))
+#else
+#define NATIVE_POINTER_ARG(NativeType) void*
+#define NATIVE_POINTER_CAST(NativeType, x) static_cast< NativeType* >(x)
+#define NATIVE_POINTER_DOWNCAST(NativeType, x) x
+#endif
+
 #include "vector.hpp"
 #include "map.hpp"
 #include "virtual_map.hpp"
@@ -125,62 +145,95 @@ public ref class ObjectStructorLog
 #define CLI_STRING_TO_STD_STRING(NativeType, CLIObject) ToStdString(CLIObject)
 
 
+// void* downcast is needed for cross-assembly calls;
+// native types are private by default and
+// #pragma make_public doesn't work on templated types (like boost::shared_ptr<T>);
+// could use the #pragma on the non-templated types, but for consistency
+// the void* downcast is used everywhere
+
 #define DEFINE_INTERNAL_BASE_CODE(CLIType, NativeType) \
-internal: CLIType(NativeType* base, System::Object^ owner) : base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType))} \
-          CLIType(NativeType* base) : base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType))} \
+INTERNAL: CLIType(NATIVE_POINTER_ARG(NativeType) base, System::Object^ owner) : base_(NATIVE_POINTER_CAST(NativeType, base)), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType))} \
+          CLIType(NATIVE_POINTER_ARG(NativeType) base) : base_(NATIVE_POINTER_CAST(NativeType, base)), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType))} \
           virtual ~CLIType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(CLIType), (owner_ == nullptr)) if (owner_ == nullptr) {SAFEDELETE(base_);}} \
           !CLIType() {delete this;} \
           NativeType* base_; \
-          System::Object^ owner_;
+          System::Object^ owner_; \
+          NativeType& base() {return *base_;}
 
 #define DEFINE_DERIVED_INTERNAL_BASE_CODE(ns, ClassType, BaseClassType) \
-internal: ClassType(ns::ClassType* base, System::Object^ owner) : BaseClassType(base), base_(base) {owner_ = owner; LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
-          ClassType(ns::ClassType* base) : BaseClassType(base), base_(base) {owner_ = nullptr; LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+INTERNAL: ClassType(NATIVE_POINTER_ARG(ns::ClassType) base, System::Object^ owner) : BaseClassType(base), base_(NATIVE_POINTER_CAST(ns::ClassType, base)) {owner_ = owner; LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+          ClassType(NATIVE_POINTER_ARG(ns::ClassType) base) : BaseClassType(base), base_(NATIVE_POINTER_CAST(ns::ClassType, base)) {owner_ = nullptr; LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), (owner_ == nullptr)) if (owner_ == nullptr) {SAFEDELETE(base_); BaseClassType::base_ = NULL;}} \
           !ClassType() {delete this;} \
-          ns::ClassType* base_;
+          ns::ClassType* base_; \
+          ns::ClassType& base() new {return *base_;}
 
 #define DEFINE_SHARED_INTERNAL_BASE_CODE(ns, ClassType) \
-internal: ClassType(boost::shared_ptr<ns::ClassType>* base, System::Object^ owner) : base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
-          ClassType(boost::shared_ptr<ns::ClassType>* base) : base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+INTERNAL: ClassType(NATIVE_POINTER_ARG(boost::shared_ptr<ns::ClassType>) base, System::Object^ owner) : base_(NATIVE_POINTER_CAST(boost::shared_ptr<ns::ClassType>, base)), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+          ClassType(NATIVE_POINTER_ARG(boost::shared_ptr<ns::ClassType>) base) : base_(NATIVE_POINTER_CAST(boost::shared_ptr<ns::ClassType>, base)), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), true) SAFEDELETE(base_);} \
           !ClassType() {delete this;} \
           boost::shared_ptr<ns::ClassType>* base_; \
-          System::Object^ owner_;
+          System::Object^ owner_; \
+          ns::ClassType& base() {return **base_;}
 
 #define DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(ns, ClassType, BaseClassType) \
-internal: ClassType(boost::shared_ptr<ns::ClassType>* base) : BaseClassType((ns::BaseClassType*) &**base), base_(base) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+INTERNAL: ClassType(NATIVE_POINTER_ARG(boost::shared_ptr<ns::ClassType>) base) : BaseClassType(&**NATIVE_POINTER_CAST(boost::shared_ptr<ns::ClassType>, base)), base_(NATIVE_POINTER_CAST(boost::shared_ptr<ns::ClassType>, base)) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), true) SAFEDELETE(base_); BaseClassType::base_ = NULL;} \
           !ClassType() {delete this;} \
-          boost::shared_ptr<ns::ClassType>* base_;
+          boost::shared_ptr<ns::ClassType>* base_; \
+          ns::ClassType& base() new {return **base_;}
 
 #define DEFINE_SHARED_DERIVED_INTERNAL_SHARED_BASE_CODE(ns, ClassType, BaseClassType) \
-internal: ClassType(boost::shared_ptr<ns::ClassType>* base) : BaseClassType((boost::shared_ptr<ns::BaseClassType>*) base), base_(base) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+INTERNAL: ClassType(NATIVE_POINTER_ARG(boost::shared_ptr<ns::ClassType>) base) : BaseClassType(NATIVE_POINTER_DOWNCAST(boost::shared_ptr<ns::BaseClassType>, base)), base_(NATIVE_POINTER_CAST(boost::shared_ptr<ns::ClassType>, base)) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), true) SAFEDELETE(base_); BaseClassType::base_ = NULL;} \
           !ClassType() {delete this;} \
-          boost::shared_ptr<ns::ClassType>* base_;
+          boost::shared_ptr<ns::ClassType>* base_; \
+          ns::ClassType& base() new {return **base_;}
 
-namespace pwiz { namespace CLI { namespace util {
-public ref struct tribool
-{
-    enum class value_type
-    {
-        tribool_false = 0,
-        tribool_true = 1,
-        tribool_indeterminate = 2
-    };
 
-    public:
-    value_type value;
+#define DEFINE_STRING_PROPERTY(Name) \
+property System::String^ Name \
+{ \
+    System::String^ get() {return gcnew System::String(base().Name.c_str());} \
+    void set(System::String^ value) {base().Name = ToStdString(value);} \
+}
 
-    tribool() : value(value_type::tribool_indeterminate) {}
-    tribool(bool value) : value(value ? value_type::tribool_true : value_type::tribool_false) {}
-    tribool(value_type value) : value(value) {}
+// wraps a native member variable with no indirection (and owned by the class)
+#define DEFINE_REFERENCE_PROPERTY(Type, Name) \
+property Type^ Name \
+{ \
+    Type^ get() {return gcnew Type(&base().Name, this);} \
+    void set(Type^ value) {base().Name = value->base();} \
+}
 
-    bool operator==(tribool rhs) {return value == rhs.value;}
-    operator bool() {return value == value_type::tribool_true;}
-    bool operator!() {return value == value_type::tribool_false;}
-};
-} } }
+// wraps a native member variable held by a shared pointer, but still owned by the class
+#define DEFINE_OWNED_SHARED_REFERENCE_PROPERTY(SharedPtrType, CLIType, SharedPtrName, CLIName) \
+property CLIType^ CLIName \
+{ \
+    CLIType^ get() {return ((base().SharedPtrName).get() ? gcnew CLIType(new SharedPtrType((base().SharedPtrName)), this) : nullptr);} \
+    void set(CLIType^ value) {base().SharedPtrName = *value->base_;} \
+}
+
+// wraps a native member variable held by a shared pointer with shared ownership
+#define DEFINE_SHARED_REFERENCE_PROPERTY(SharedPtrType, CLIType, SharedPtrName, CLIName) \
+property CLIType^ CLIName \
+{ \
+    CLIType^ get() {return ((base().SharedPtrName).get() ? gcnew CLIType(new SharedPtrType((base().SharedPtrName))) : nullptr);} \
+    void set(CLIType^ value) {base().SharedPtrName = *value->base_;} \
+}
+
+// wraps a native primitive member variable and casts it to/from a CLI primitive type
+#define DEFINE_PRIMITIVE_PROPERTY(NativeType, CLIType, Name) \
+property CLIType Name \
+{ \
+    CLIType get() {return (CLIType) base().Name;} \
+    void set(CLIType value) {base().Name = (NativeType) value;} \
+}
+
+// wraps a native primitive member variable without casting to a different CLI type
+#define DEFINE_SIMPLE_PRIMITIVE_PROPERTY(Type, Name) \
+    DEFINE_PRIMITIVE_PROPERTY(Type, Type, Name)
+
 
 #endif // _SHAREDCLI_HPP_

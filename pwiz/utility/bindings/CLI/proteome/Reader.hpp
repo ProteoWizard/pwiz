@@ -28,23 +28,20 @@
 
 #pragma warning( push )
 #pragma warning( disable : 4634 4635 )
-#include "MSData.hpp"
-#include "../../../data/msdata/Reader.hpp"
+#include "ProteomeData.hpp"
+#include "pwiz/data/proteome/Reader.hpp"
 #pragma warning( pop )
 
 
 namespace pwiz {
 namespace CLI {
-namespace msdata {
-
-
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(MSDataList, pwiz::msdata::MSDataPtr, MSData, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
+namespace proteome {
 
 
 /// interface for file readers
 public ref class Reader
 {
-    DEFINE_INTERNAL_BASE_CODE(Reader, pwiz::msdata::Reader);
+    DEFINE_INTERNAL_BASE_CODE(Reader, pwiz::proteome::Reader);
 
     public:
 
@@ -53,25 +50,18 @@ public ref class Reader
     virtual bool accept(System::String^ filename,
                         System::String^ head);
 
-    /// fill in the MSData structure
+    /// return file type iff Reader recognizes the file, else empty;
+	/// note: for formats requiring a 3rd party DLL identify() should
+	/// return non-empty if it recognized the format, even though reading
+	/// may fail if the 3rd party DLL isn't actually present
+    /// Reader may filter based on URI and/or contents of the file
+    virtual System::String^ identify(System::String^ filename,
+                                     System::String^ head);
+
+    /// fill in the ProteomeData structure
     virtual void read(System::String^ filename,
                       System::String^ head,
-                      MSData^ result);
-
-    /// fill in the MSData structure
-    virtual void read(System::String^ filename,
-                      System::String^ head,
-                      MSData^ result,
-                      int runIndex);
-
-    /// fill in the MSData structure
-    virtual void read(System::String^ filename,
-                      System::String^ head,
-                      MSDataList^ results);
-
-    /// fill in the MSData structure
-    virtual array<System::String^>^ readIds(System::String^ filename,
-                                            System::String^ head);
+                      ProteomeData^ result);
 };
 
 
@@ -82,7 +72,7 @@ public ref class Reader
 ///
 public ref class ReaderList : public Reader
 {
-    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::msdata, ReaderList, Reader);
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::proteome, ReaderList, Reader);
 
     public:
 
@@ -91,49 +81,22 @@ public ref class ReaderList : public Reader
 
     /// returns child name iff some child identifies, else empty string
     virtual System::String^ identify(System::String^ filename,
-                                     System::String^ head);
+                                     System::String^ head) override;
 
     /// delegates to first child that accepts
     virtual void read(System::String^ filename,
-                      MSData^ result);
-
-    /// delegates to first child that accepts
-    virtual void read(System::String^ filename,
-                      MSData^ result,
-                      int runIndex);
+                      ProteomeData^ result);
 
     /// delegates to first child that accepts
     virtual void read(System::String^ filename,
                       System::String^ head,
-                      MSData^ result) override;
+                      ProteomeData^ result) override;
 
-    /// delegates to first child that accepts
-    virtual void read(System::String^ filename,
-                      System::String^ head,
-                      MSData^ result,
-                      int runIndex) override;
-
-    /// fill in the MSDataList with MSData for all samples
-    virtual void read(System::String^ filename,
-                      MSDataList^ results);
-
-    /// fill in the MSDataList with MSData for all samples
-    virtual void read(System::String^ filename,
-                      System::String^ head,
-                      MSDataList^ results) override;
-
-    /// get MSData.Ids
-    virtual array<System::String^>^ readIds(System::String^ filename);
-
-    /// get MSData.Ids
-    virtual array<System::String^>^ readIds(System::String^ filename,
-                                            System::String^ head) override;
-
-    static property ReaderList^ FullReaderList { ReaderList^ get(); }
+    static property ReaderList^ DefaultReaderList { ReaderList^ get(); }
 };
 
 
-} // namespace msdata
+} // namespace proteome
 } // namespace CLI
 } // namespace pwiz
 

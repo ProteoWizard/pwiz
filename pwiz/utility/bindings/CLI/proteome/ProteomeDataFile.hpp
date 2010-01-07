@@ -22,46 +22,41 @@
 //
 
 
-#ifndef _MSDATAFILE_HPP_CLI_
-#define _MSDATAFILE_HPP_CLI_
+#ifndef _PROTEOMEDATAFILE_HPP_CLI_
+#define _PROTEOMEDATAFILE_HPP_CLI_
 
 
 #pragma warning( push )
 #pragma warning( disable : 4634 4635 )
-#include "MSData.hpp"
-#include "../../../data/msdata/MSDataFile.hpp"
+#include "ProteomeData.hpp"
+#include "pwiz/data/proteome/ProteomeDataFile.hpp"
 //#include "Reader.hpp"
-//#include "BinaryDataEncoder.hpp"
 #pragma warning( pop )
 
 
 namespace pwiz {
 namespace CLI {
-namespace msdata {
+namespace proteome {
 
 
 /// <summary>
-/// MSData object plus file I/O
+/// ProteomeData object plus file I/O
 /// </summary>
-public ref class MSDataFile : public MSData
+public ref class ProteomeDataFile : public ProteomeData
 {
-    DEFINE_SHARED_DERIVED_INTERNAL_SHARED_BASE_CODE(pwiz::msdata, MSDataFile, MSData);
+    DEFINE_SHARED_DERIVED_INTERNAL_SHARED_BASE_CODE(pwiz::proteome, ProteomeDataFile, ProteomeData);
 
     public:
 
     /// <summary>
-    /// constructs MSData object backed by file
+    /// constructs ProteomeData object backed by file
     /// </summary>
-    MSDataFile(System::String^ path);
+    ProteomeDataFile(System::String^ path);
 
     /// <summary>
     /// supported data formats for write()
     /// </summary>
-    enum class Format {Format_Text, Format_mzML, Format_mzXML, Format_MGF};
-
-    enum class Precision {Precision_32, Precision_64};
-    enum class ByteOrder {ByteOrder_LittleEndian, ByteOrder_BigEndian};
-    enum class Compression {Compression_None, Compression_Zlib};
+    enum class Format {Text, FASTA};
 
     /// <summary>
     /// configuration options for write()
@@ -70,25 +65,31 @@ public ref class MSDataFile : public MSData
     {
         public:
         Format format;
-        Precision precision;
-        ByteOrder byteOrder;
-        Compression compression;
         bool indexed;
+		bool gzipped; // if true, file is written as .gz
+
+        WriteConfig()
+        :   format(Format::FASTA), indexed(true), gzipped(false)
+        {}
 
         WriteConfig(Format _format)
-        :   format(_format), indexed(true)
+        :   format(_format), indexed(true), gzipped(false)
+        {}
+
+        WriteConfig(Format _format, bool _gzipped)
+        :   format(_format), indexed(true), gzipped(_gzipped)
         {}
     };
 
     /// <summary>
-    /// static write function for any MSData object with the default configuration (mzML, 64-bit, no compression)
+    /// static write function for any ProteomeData object with the default configuration (mzML, 64-bit, no compression)
     /// </summary>
-    static void write(MSData^ msd, System::String^ filename);
+    static void write(ProteomeData^ pd, System::String^ filename);
 
     /// <summary>
-    /// static write function for any MSData object with the specified configuration
+    /// static write function for any ProteomeData object with the specified configuration
     /// </summary>
-    static void write(MSData^ msd, System::String^ filename, WriteConfig^ config);
+    static void write(ProteomeData^ pd, System::String^ filename, WriteConfig^ config);
 
     /// <summary>
     /// member write function with the default configuration (mzML, 64-bit, no compression)
@@ -101,9 +102,9 @@ public ref class MSDataFile : public MSData
     void write(System::String^ filename, WriteConfig^ config);
 };
 
-} // namespace msdata
+} // namespace proteome
 } // namespace CLI
 } // namespace pwiz
 
 
-#endif // _MSDATAFILE_HPP_CLI_
+#endif // _PROTEOMEDATAFILE_HPP_CLI_

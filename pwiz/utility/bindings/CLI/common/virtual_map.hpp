@@ -20,19 +20,31 @@
 //
 
 
-#include <map>
+#include "pwiz/utility/misc/virtual_map.hpp"
 
-#define DEFINE_STD_MAP_WRAPPER(WrapperName, NativeKeyType, CLIKeyType, CLIKeyHandle, NativeKeyToCLI, CLIKeyToNative, NativeValueType, CLIValueType, CLIValueHandle, NativeValueToCLI, CLIValueToNative) \
+#ifndef INTERNAL
+#define INTERNAL internal
+#endif
+
+#define DEFINE_VIRTUAL_MAP_WRAPPER(WrapperName, NativeKeyType, CLIKeyType, CLIKeyHandle, NativeKeyToCLI, CLIKeyToNative, NativeValueType, CLIValueType, CLIValueHandle, NativeValueToCLI, CLIValueToNative) \
 public ref class WrapperName : public System::Collections::Generic::IDictionary<CLIKeyHandle, CLIValueHandle> \
 { \
-    internal: WrapperName(std::map<NativeKeyType, NativeValueType>* base, System::Object^ owner) : base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(WrapperName))} \
-              WrapperName(std::map<NativeKeyType, NativeValueType>* base) : base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(WrapperName))} \
+    INTERNAL: typedef pwiz::util::virtual_map<NativeKeyType, NativeValueType> WrappedType; \
+\
+              /* void* downcast is needed for cross-assembly calls; */ \
+              /* native types are private by default and */ \
+              /* #pragma make_public doesn't work on templated types */ \
+              WrapperName(void* base, System::Object^ owner) : base_(static_cast<WrappedType*>(base)), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(WrapperName))} \
+              WrapperName(void* base) : base_(static_cast<WrappedType*>(base)), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(WrapperName))} \
+\
               virtual ~WrapperName() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(WrapperName), (owner_ == nullptr)) if (owner_ == nullptr) SAFEDELETE(base_);} \
               !WrapperName() {delete this;} \
-              std::map<NativeKeyType, NativeValueType>* base_; \
+              WrappedType* base_; \
               System::Object^ owner_; \
+              WrappedType& base() {return *base_;} \
+              WrappedType& assign(WrapperName^ rhs) {return base() = rhs->base();} \
 \
-    public: ModificationBaseMap() : base_(new std::map<NativeKeyType, NativeValueType>()) {} \
+    public: WrapperName() : base_(new WrappedType()) {} \
 \
     property int Count { virtual int get() {return (int) base_->size();} } \
     property bool IsReadOnly { virtual bool get() {return false;} } \
@@ -48,7 +60,7 @@ public ref class WrapperName : public System::Collections::Generic::IDictionary<
         virtual System::Collections::Generic::ICollection<CLIKeyHandle>^ get() \
         { \
             System::Collections::Generic::List<CLIKeyHandle>^ keys = gcnew System::Collections::Generic::List<CLIKeyHandle>(); \
-            for(std::map<NativeKeyType, NativeValueType>::iterator itr = base_->begin(); itr != base_->end(); ++itr) \
+            for(WrappedType::iterator itr = base_->begin(); itr != base_->end(); ++itr) \
                 keys->Add(NativeKeyToCLI(NativeKeyType, CLIKeyType, itr->first)); \
             return keys; \
         } \
@@ -59,7 +71,7 @@ public ref class WrapperName : public System::Collections::Generic::IDictionary<
         virtual System::Collections::Generic::ICollection<CLIValueHandle>^ get() \
         { \
             System::Collections::Generic::List<CLIValueHandle>^ values = gcnew System::Collections::Generic::List<CLIValueHandle>(); \
-            for(std::map<NativeKeyType, NativeValueType>::iterator itr = base_->begin(); itr != base_->end(); ++itr) \
+            for(WrappedType::iterator itr = base_->begin(); itr != base_->end(); ++itr) \
                 values->Add(NativeValueToCLI(NativeValueType, CLIValueType, itr->second)); \
             return values; \
         } \
@@ -71,7 +83,7 @@ public ref class WrapperName : public System::Collections::Generic::IDictionary<
 \
     virtual bool TryGetValue(CLIKeyHandle key, CLIValueHandle % value) \
     { \
-        std::map<NativeKeyType, NativeValueType>::iterator itr = base_->find(CLIKeyToNative(NativeKeyType, key)); \
+        WrappedType::iterator itr = base_->find(CLIKeyToNative(NativeKeyType, key)); \
         if(itr != base_->end()) \
         { \
             value = NativeValueToCLI(NativeValueType, CLIValueType, itr->second); \
@@ -89,12 +101,12 @@ public ref class WrapperName : public System::Collections::Generic::IDictionary<
 \
     ref class Enumerator : System::Collections::Generic::IEnumerator< System::Collections::Generic::KeyValuePair<CLIKeyHandle, CLIValueHandle> > \
     { \
-        internal: std::map<NativeKeyType, NativeValueType>* base_; \
-                  std::map<NativeKeyType, NativeValueType>::iterator* itr_; \
+        internal: WrappedType* base_; \
+                  WrappedType::iterator* itr_; \
                   bool isReset_; \
-        \
-        public: Enumerator(std::map<NativeKeyType, NativeValueType>* base) : base_(base), itr_(new std::map<NativeKeyType, NativeValueType>::iterator), isReset_(true) {} \
-        \
+\
+        public: Enumerator(WrappedType* base) : base_(base), itr_(new WrappedType::iterator), isReset_(true) {} \
+\
         property System::Collections::Generic::KeyValuePair<CLIKeyHandle, CLIValueHandle> Current \
         { \
             virtual System::Collections::Generic::KeyValuePair<CLIKeyHandle, CLIValueHandle> get() \
@@ -104,7 +116,7 @@ public ref class WrapperName : public System::Collections::Generic::IDictionary<
                 return System::Collections::Generic::KeyValuePair<CLIKeyHandle, CLIValueHandle>(key, value); \
             } \
         } \
- \
+\
         property System::Object^ Current2 \
         { \
             virtual System::Object^ get() sealed = System::Collections::IEnumerator::Current::get \
@@ -114,7 +126,7 @@ public ref class WrapperName : public System::Collections::Generic::IDictionary<
                 return (System::Object^) System::Collections::Generic::KeyValuePair<CLIKeyHandle, CLIValueHandle>(key, value); \
             } \
         } \
- \
+\
         virtual bool MoveNext() \
         { \
             if (base_->empty()) return false; \
@@ -126,7 +138,7 @@ public ref class WrapperName : public System::Collections::Generic::IDictionary<
         virtual void Reset() {isReset_ = true; *itr_ = base_->end();} \
         ~Enumerator() {delete itr_;} \
     }; \
- \
+\
     virtual System::Collections::Generic::IEnumerator< System::Collections::Generic::KeyValuePair<CLIKeyHandle, CLIValueHandle> >^ GetEnumerator() {return gcnew Enumerator(base_);} \
     virtual System::Collections::IEnumerator^ GetEnumerator2() sealed = System::Collections::IEnumerable::GetEnumerator {return gcnew Enumerator(base_);} \
 };

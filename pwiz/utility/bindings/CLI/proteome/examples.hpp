@@ -21,33 +21,29 @@
 //
 
 
-#include "examples.hpp"
-#include "spectrum_processing.hpp"
-//#include "chromatogram_processing.hpp"
-#include "Version.hpp"
+#ifndef _PROTEOME_EXAMPLES_HPP_CLI_
+#define _PROTEOME_EXAMPLES_HPP_CLI_
 
-#pragma warning( push )
-#pragma warning( disable : 4634 4635 )
-#include "../../../data/msdata/examples.hpp"
-#pragma warning( pop )
+
+#include "ProteomeData.hpp"
+
 
 namespace pwiz {
 namespace CLI {
-namespace msdata {
+namespace proteome {
 
 
-void examples::initializeTiny(MSData^ msd)
+public ref class examples
 {
-    pwiz::msdata::examples::initializeTiny(**msd->base_);
-}
+    public:
+    static void initializeTiny(ProteomeData^ pd);
+    //static void addMIAPEExampleMetadata(ProteomeData^ pd);
+};
 
 
-void examples::addMIAPEExampleMetadata(MSData^ msd)
-{
-    pwiz::msdata::examples::addMIAPEExampleMetadata(**msd->base_);
-}
-
-
-} // namespace msdata
+} // namespace proteome
 } // namespace CLI
 } // namespace pwiz
+
+
+#endif // _PROTEOME_EXAMPLES_HPP_CLI_

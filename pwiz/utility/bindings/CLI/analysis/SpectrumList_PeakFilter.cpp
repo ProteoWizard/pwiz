@@ -1,5 +1,5 @@
 //
-// $Id: SpectrumList_PeakFilter.hpp 1191 2009-08-14 19:33:05Z chambm $
+// $Id$
 //
 //
 // Original author: Matt Chambers <matt.chambers <a.t> vanderbilt.edu>
@@ -26,7 +26,7 @@
 
 #pragma warning( push )
 #pragma warning( disable : 4635 )
-#include "SharedCLI.hpp"
+#include "spectrum_processing.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PeakFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/ThresholdFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/PrecursorMassFilter.hpp"
@@ -38,11 +38,14 @@ namespace CLI {
 namespace analysis {
 
 
+using namespace pwiz::CLI::msdata;
+
+
 public ref class SpectrumDataFilter abstract
 {
     public:
-    virtual void operator () (msdata::Spectrum^ spectrum) {(**base_)(*spectrum->base_);}
-    virtual void describe(msdata::ProcessingMethod^ method) {(*base_)->describe(*method->base_);}
+    virtual void operator () (Spectrum^ spectrum) {(**base_)(*spectrum->base_);}
+    virtual void describe(ProcessingMethod^ method) {(*base_)->describe(*method->base_);}
 
     internal:
     pwiz::analysis::SpectrumDataFilterPtr* base_;
@@ -52,7 +55,7 @@ public ref class SpectrumDataFilter abstract
 /// <summary>
 /// SpectrumList implementation to filter data points by a user-specified functor
 /// </summary>
-public ref class SpectrumList_PeakFilter : public msdata::SpectrumList
+public ref class SpectrumList_PeakFilter : public SpectrumList
 {
     internal: virtual ~SpectrumList_PeakFilter()
               {
@@ -62,14 +65,14 @@ public ref class SpectrumList_PeakFilter : public msdata::SpectrumList
 
     public:
 
-    SpectrumList_PeakFilter(msdata::SpectrumList^ inner, SpectrumDataFilter^ filterFunctor)
-    : msdata::SpectrumList(0)
+    SpectrumList_PeakFilter(SpectrumList^ inner, SpectrumDataFilter^ filterFunctor)
+    : SpectrumList(0)
     {
         base_ = new pwiz::analysis::SpectrumList_PeakFilter(*inner->base_, *filterFunctor->base_);
-        msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
+        SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
     }
 
-    static bool accept(msdata::SpectrumList^ inner)
+    static bool accept(SpectrumList^ inner)
     {return pwiz::analysis::SpectrumList_PeakFilter::accept(*inner->base_);}
 };
 

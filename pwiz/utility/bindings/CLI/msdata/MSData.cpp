@@ -35,142 +35,21 @@ namespace b = pwiz::msdata;
 
 namespace pwiz {
 namespace CLI {
-
-
-CV::CV()
-: base_(new pwiz::cv::CV()), owner_(nullptr)
-{}
-
-System::String^ CV::id::get() {return gcnew System::String(base_->id.c_str());}
-void CV::id::set(System::String^ value) {base_->id = ToStdString(value);}
-
-System::String^ CV::URI::get() {return gcnew System::String(base_->URI.c_str());}
-void CV::URI::set(System::String^ value) {base_->URI = ToStdString(value);}
-
-System::String^ CV::fullName::get() {return gcnew System::String(base_->fullName.c_str());}
-void CV::fullName::set(System::String^ value) {base_->fullName = ToStdString(value);}
-
-System::String^ CV::version::get() {return gcnew System::String(base_->version.c_str());}
-void CV::version::set(System::String^ value) {base_->version = ToStdString(value);}
-
-bool CV::empty()
-{
-    return base_->empty();
-}
-
-
 namespace msdata {
 
 
-UserParam::UserParam()
-: base_(new boost::shared_ptr<b::UserParam>(new b::UserParam())), owner_(nullptr)
-{value_ = gcnew UserParamValue(base_);}
-
-UserParam::UserParam(System::String^ _name)
-: base_(new boost::shared_ptr<b::UserParam>(new b::UserParam(ToStdString(_name)))), owner_(nullptr)
-{value_ = gcnew UserParamValue(base_);}
-
-UserParam::UserParam(System::String^ _name, System::String^ _value)
-: base_(new boost::shared_ptr<b::UserParam>(new b::UserParam(ToStdString(_name), ToStdString(_value)))), owner_(nullptr)
-{value_ = gcnew UserParamValue(base_);}
-
-UserParam::UserParam(System::String^ _name, System::String^ _value, System::String^ _type)
-: base_(new boost::shared_ptr<b::UserParam>(new b::UserParam(ToStdString(_name), ToStdString(_value), ToStdString(_type)))), owner_(nullptr)
-{value_ = gcnew UserParamValue(base_);}
-
-UserParam::UserParam(System::String^ _name, System::String^ _value, System::String^ _type, CVID _units)
-: base_(new boost::shared_ptr<b::UserParam>(new b::UserParam(ToStdString(_name), ToStdString(_value), ToStdString(_type), (pwiz::cv::CVID) _units))), owner_(nullptr)
-{value_ = gcnew UserParamValue(base_);}
-
-System::String^ UserParam::name::get() {return gcnew System::String((*base_)->name.c_str());}
-void UserParam::name::set(System::String^ value) {(*base_)->name = ToStdString(value);}
-
-System::String^ UserParam::type::get() {return gcnew System::String((*base_)->type.c_str());}
-void UserParam::type::set(System::String^ value) {(*base_)->type = ToStdString(value);}
-
-CVID UserParam::units::get() {return (CVID) (*base_)->units;}
-void UserParam::units::set(CVID value) {(*base_)->units = (pwiz::cv::CVID) value;}
-
-UserParamValue^ UserParam::value::get() {return value_;}
-
-bool UserParam::empty()
+/// <summary>
+/// version information for the msdata namespace
+/// </summary>
+public ref class Version
 {
-    return (*base_)->empty();
-}
-
-bool UserParam::operator==(UserParam^ that) {return (*base_) == *that->base_;}
-bool UserParam::operator!=(UserParam^ that) {return (*base_) != *that->base_;}
-
-
-ParamGroupList^ ParamContainer::paramGroups::get() {return gcnew ParamGroupList(&base_->paramGroupPtrs, this);}
-CVParamList^ ParamContainer::cvParams::get() {return gcnew CVParamList(&base_->cvParams, this);}
-UserParamList^ ParamContainer::userParams::get() {return gcnew UserParamList(&base_->userParams, this);}
-
-CVParam^ ParamContainer::cvParam(CVID cvid)
-{
-    return gcnew CVParam(new pwiz::data::CVParam(base_->cvParam((pwiz::cv::CVID) cvid)));
-}
-
-CVParam^ ParamContainer::cvParamChild(CVID cvid)
-{
-    return gcnew CVParam(new pwiz::data::CVParam(base_->cvParamChild((pwiz::cv::CVID) cvid)));
-}
-
-bool ParamContainer::hasCVParam(CVID cvid)
-{
-    return base_->hasCVParam((pwiz::cv::CVID) cvid);
-}
-
-bool ParamContainer::hasCVParamChild(CVID cvid)
-{
-    return base_->hasCVParamChild((pwiz::cv::CVID) cvid);
-}
-
-UserParam^ ParamContainer::userParam(System::String^ name)
-{
-    return gcnew UserParam(new pwiz::data::UserParam(base_->userParam(ToStdString(name))));
-}
-
-bool ParamContainer::empty()
-{
-    return base_->empty();
-}
-
-void ParamContainer::set(CVID cvid) {base_->set((pwiz::cv::CVID) cvid);}
-void ParamContainer::set(CVID cvid, System::String^ value) {base_->set((pwiz::cv::CVID) cvid, ToStdString(value));}
-void ParamContainer::set(CVID cvid, System::String^ value, CVID units) {base_->set((pwiz::cv::CVID) cvid, ToStdString(value), (pwiz::cv::CVID) units);}
-
-void ParamContainer::set(CVID cvid, bool value) {set(cvid, (value ? "true" : "false"));}
-void ParamContainer::set(CVID cvid, System::Int32 value) {set(cvid, value.ToString());}
-void ParamContainer::set(CVID cvid, System::Int64 value) {set(cvid, value.ToString());}
-void ParamContainer::set(CVID cvid, System::UInt32 value) {set(cvid, value.ToString());}
-void ParamContainer::set(CVID cvid, System::UInt64 value) {set(cvid, value.ToString());}
-void ParamContainer::set(CVID cvid, System::Single value) {set(cvid, value.ToString());}
-void ParamContainer::set(CVID cvid, System::Double value) {set(cvid, value.ToString());}
-
-void ParamContainer::set(CVID cvid, System::Int32 value, CVID units) {set(cvid, value.ToString(), units);}
-void ParamContainer::set(CVID cvid, System::Int64 value, CVID units) {set(cvid, value.ToString(), units);}
-void ParamContainer::set(CVID cvid, System::UInt32 value, CVID units) {set(cvid, value.ToString(), units);}
-void ParamContainer::set(CVID cvid, System::UInt64 value, CVID units) {set(cvid, value.ToString(), units);}
-void ParamContainer::set(CVID cvid, System::Single value, CVID units) {set(cvid, value.ToString(), units);}
-void ParamContainer::set(CVID cvid, System::Double value, CVID units) {set(cvid, value.ToString(), units);}
-
-
-ParamGroup::ParamGroup()
-: ParamContainer(new b::ParamGroup())
-{base_ = new boost::shared_ptr<b::ParamGroup>(static_cast<b::ParamGroup*>(ParamContainer::base_));}
-
-ParamGroup::ParamGroup(System::String^ _id)
-: ParamContainer(new b::ParamGroup(ToStdString(_id)))
-{base_ = new boost::shared_ptr<b::ParamGroup>(static_cast<b::ParamGroup*>(ParamContainer::base_));}
-
-System::String^ ParamGroup::id::get() {return gcnew System::String((*base_)->id.c_str());}
-void ParamGroup::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
-
-bool ParamGroup::empty()
-{
-    return (*base_)->empty();
-}
+    public:
+    static int Major() {return pwiz::msdata::Version::Major();}
+    static int Minor() {return pwiz::msdata::Version::Minor();}
+    static int Revision() {return pwiz::msdata::Version::Revision();}
+    static System::String^ LastModified() {return gcnew System::String(pwiz::msdata::Version::LastModified().c_str());}
+    static System::String^ ToString() {return gcnew System::String(pwiz::msdata::Version::str().c_str());}
+};
 
 
 FileContent::FileContent()
@@ -310,7 +189,7 @@ Software::Software(System::String^ _id)
 {}
 
 Software::Software(System::String^ _id, CVParam^ _softwareParam, System::String^ _softwareParamVersion)
-: base_(new boost::shared_ptr<b::Software>(new b::Software(ToStdString(_id), **_softwareParam->base_, ToStdString(_softwareParamVersion))))
+: base_(new boost::shared_ptr<b::Software>(new b::Software(ToStdString(_id), _softwareParam->base(), ToStdString(_softwareParamVersion))))
 {}
 
 System::String^ Software::id::get() {return gcnew System::String((*base_)->id.c_str());}
@@ -918,41 +797,41 @@ MSData::MSData()
 {
 }
 
-System::String^ MSData::accession::get() {return gcnew System::String((*base_)->accession.c_str());}
-void MSData::accession::set(System::String^ value) {(*base_)->accession = ToStdString(value);}
+System::String^ MSData::accession::get() {return gcnew System::String(base().accession.c_str());}
+void MSData::accession::set(System::String^ value) {base().accession = ToStdString(value);}
 
-System::String^ MSData::id::get() {return gcnew System::String((*base_)->id.c_str());}
-void MSData::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
+System::String^ MSData::id::get() {return gcnew System::String(base().id.c_str());}
+void MSData::id::set(System::String^ value) {base().id = ToStdString(value);}
 
-CVList^ MSData::cvs::get() {return gcnew CVList(&(*base_)->cvs, this);}
-void MSData::cvs::set(CVList^ value) {(*base_)->cvs = *value->base_;}
+CVList^ MSData::cvs::get() {return gcnew CVList(&base().cvs, this);}
+void MSData::cvs::set(CVList^ value) {cvs->assign(value);}
 
-FileDescription^ MSData::fileDescription::get() {return gcnew FileDescription(&(*base_)->fileDescription, this);}
-void MSData::fileDescription::set(FileDescription^ value) {(*base_)->fileDescription = *value->base_;}
+FileDescription^ MSData::fileDescription::get() {return gcnew FileDescription(&base().fileDescription, this);}
+void MSData::fileDescription::set(FileDescription^ value) {base().fileDescription = *value->base_;}
 
-ParamGroupList^ MSData::paramGroups::get() {return gcnew ParamGroupList(&(*base_)->paramGroupPtrs, this);}
-void MSData::paramGroups::set(ParamGroupList^ value) {(*base_)->paramGroupPtrs = *value->base_;}
+ParamGroupList^ MSData::paramGroups::get() {return gcnew ParamGroupList(&base().paramGroupPtrs, this);}
+void MSData::paramGroups::set(ParamGroupList^ value) {paramGroups->assign(value);}
 
-SampleList^ MSData::samples::get() {return gcnew SampleList(&(*base_)->samplePtrs, this);}
-void MSData::samples::set(SampleList^ value) {(*base_)->samplePtrs = *value->base_;}
+SampleList^ MSData::samples::get() {return gcnew SampleList(&base().samplePtrs, this);}
+void MSData::samples::set(SampleList^ value) {samples->assign(value);}
 
-InstrumentConfigurationList^ MSData::instrumentConfigurationList::get() {return gcnew InstrumentConfigurationList(&(*base_)->instrumentConfigurationPtrs, this);}
-void MSData::instrumentConfigurationList::set(InstrumentConfigurationList^ value) {(*base_)->instrumentConfigurationPtrs = *value->base_;}
+InstrumentConfigurationList^ MSData::instrumentConfigurationList::get() {return gcnew InstrumentConfigurationList(&base().instrumentConfigurationPtrs, this);}
+void MSData::instrumentConfigurationList::set(InstrumentConfigurationList^ value) {instrumentConfigurationList->assign(value);}
 
-SoftwareList^ MSData::softwareList::get() {return gcnew SoftwareList(&(*base_)->softwarePtrs, this);}
-void MSData::softwareList::set(SoftwareList^ value) {(*base_)->softwarePtrs = *value->base_;}
+SoftwareList^ MSData::softwareList::get() {return gcnew SoftwareList(&base().softwarePtrs, this);}
+void MSData::softwareList::set(SoftwareList^ value) {softwareList->assign(value);}
 
-DataProcessingList^ MSData::dataProcessingList::get() {return gcnew DataProcessingList(&(*base_)->dataProcessingPtrs, this);}
-void MSData::dataProcessingList::set(DataProcessingList^ value) {(*base_)->dataProcessingPtrs = *value->base_;}
+DataProcessingList^ MSData::dataProcessingList::get() {return gcnew DataProcessingList(&base().dataProcessingPtrs, this);}
+void MSData::dataProcessingList::set(DataProcessingList^ value) {dataProcessingList->assign(value);}
 
-ScanSettingsList^ MSData::scanSettingsList::get() {return gcnew ScanSettingsList(&(*base_)->scanSettingsPtrs, this);}
-void MSData::scanSettingsList::set(ScanSettingsList^ value) {(*base_)->scanSettingsPtrs = *value->base_;}
+ScanSettingsList^ MSData::scanSettingsList::get() {return gcnew ScanSettingsList(&base().scanSettingsPtrs, this);}
+void MSData::scanSettingsList::set(ScanSettingsList^ value) {scanSettingsList->assign(value);}
 
-Run^ MSData::run::get()  {return gcnew Run(&(*base_)->run, this);}
+Run^ MSData::run::get()  {return gcnew Run(&base().run, this);}
 //void set(Run^ value) {(*base_)->run = *value->base_;}
 
-bool MSData::empty() {return (*base_)->empty();}
-System::String^ MSData::version() {return gcnew System::String((*base_)->version().c_str());}
+bool MSData::empty() {return base().empty();}
+System::String^ MSData::version() {return gcnew System::String(base().version().c_str());}
 
 
 } // namespace msdata

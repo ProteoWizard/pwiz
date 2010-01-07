@@ -365,7 +365,7 @@ actions compile-c-c++ bind PDB_NAME
 
 actions compile-c++clr
 {
-    $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" /clr $(ASSEMBLIES) $(CC_RSPLINE))" $(.CC.FILTER)"
+    $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" /clr $(ASSEMBLY_INCLUDE_PATHS) $(ASSEMBLIES) $(CC_RSPLINE))" $(.CC.FILTER)"
 }
 
 rule compile-c-c++ ( targets + : sources * )
@@ -404,6 +404,7 @@ rule compile.c++ ( targets + : sources * : properties * )
 }
 
 
+import sequence ;
 rule set-assemblies ( target : properties * )
 {
     local assemblies-string ;
@@ -425,6 +426,30 @@ rule set-assemblies ( target : properties * )
         }
     }
     ASSEMBLIES on $(target) = $(assemblies-string) ;
+
+    # add /AI flags for each assembly-dependency's (unique) directory
+    local assembly-include-string ;
+    local assembly-dependencies = [ feature.get-values <assembly-dependency> : $(properties) ] ;
+    if $(assembly-dependencies)
+    {
+        local assembly-include-paths ;
+        for local dependency in $(assembly-dependencies)
+        {
+            local dependency-path = [ $(dependency).name ] ;
+            if ! [ path.is-rooted $(dependency-path) ]
+            {
+                dependency-path = [ path.join [ $(dependency).path ] $(dependency-path:D=) ] ;
+            }
+            dependency-path = [ path.native $(dependency-path) ] ;
+            dependency-path = $(dependency-path:D) ;
+            if ! $(dependency-path) in $(assembly-include-paths)
+            {
+                assembly-include-paths += $(dependency-path) ;
+                assembly-include-string += " /AI\"$(dependency-path)\"" ;
+            }
+        }
+    }
+    ASSEMBLY_INCLUDE_PATHS on $(target) = $(assembly-include-string) ;
 }
 
 rule compile.c++clr ( targets + : sources * : properties * )

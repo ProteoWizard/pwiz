@@ -43,7 +43,7 @@ namespace util {
 inline System::String^ unit_assert_message(const char* filename, int line, const char* expression)
 {
     System::Text::StringBuilder sb;
-    sb.AppendFormat("[{0}:{1}] Assertion failed: {3}", gcnew System::String(filename), line, gcnew System::String(expression));
+    sb.AppendFormat("[{0}:{1}] Assertion failed: {2}", gcnew System::String(filename), line, gcnew System::String(expression));
     return sb.ToString();
 }
 
