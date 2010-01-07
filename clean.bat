@@ -27,7 +27,6 @@ IF EXIST pwiz\mziddata\Version.cpp del /q pwiz\mziddata\Version.cpp
 IF EXIST pwiz\tradata\Version.cpp del /q pwiz\tradata\Version.cpp
 IF EXIST pwiz\data\proteome\Version.cpp del /q pwiz\data\proteome\Version.cpp
 
-del /q pwiz\utility\bindings\CLI\*.xdc
 del /q pwiz\utility\vendor_api\thermo\*.dll
 del /q pwiz_aux\msrc\utility\vendor_api\ABI\*.dll
 
