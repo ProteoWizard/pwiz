@@ -25,12 +25,15 @@
 #include "VendorReaderTestHarness.hpp"
 #include "pwiz/data/msdata/TextWriter.hpp"
 #include "pwiz/data/msdata/MSDataFile.hpp"
+#include "pwiz/data/msdata/Serializer_mzXML.hpp"
+#include "pwiz/data/msdata/Serializer_MGF.hpp"
 #include "pwiz/data/msdata/Diff.hpp"
 #include "pwiz/data/msdata/SpectrumListBase.hpp"
 #include "pwiz/data/msdata/ChromatogramListBase.hpp"
 #include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Stream.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include <iostream>
@@ -131,6 +134,18 @@ void hackInMemoryMSData(MSData& msd)
 }
 
 
+template<typename DiffType>
+string headDiff(const DiffType& diff, size_t maxLength)
+{
+    stringstream diffStream;
+    diffStream << diff;
+    string diffString = diffStream.str();
+    if (diffString.length() > maxLength)
+        return diffString.substr(0, maxLength) + "\n...snip...\n";
+    return diffString;
+}
+
+
 void testRead(const Reader& reader, const string& rawpath)
 {
     if (os_) *os_ << "testRead(): " << rawpath << endl;
@@ -151,10 +166,38 @@ void testRead(const Reader& reader, const string& rawpath)
         MSDataFile targetResult(targetResultFilename.string());
         hackInMemoryMSData(targetResult);
 
-        // test for 1:1 equality
+        // test for 1:1 equality with the target mzML
         Diff<MSData, DiffConfig> diff(msd, targetResult);
-        if (diff) cerr << diff << endl; 
+        if (diff) cerr << headDiff(diff, 5000) << endl;
         unit_assert(!diff);
+
+        // test serialization of this vendor format in and out of pwiz's supported open formats
+        stringstream* stringstreamPtr = new stringstream;
+        boost::shared_ptr<std::iostream> serializedStreamPtr(stringstreamPtr);
+        
+        DiffConfig diffConfig_non_mzML;
+        diffConfig_non_mzML.ignoreMetadata = true;
+        diffConfig_non_mzML.ignoreChromatograms = true;
+
+        // mzML <-> mzXML
+        MSData msd_mzXML;
+        Serializer_mzXML serializer_mzXML;
+        serializer_mzXML.write(*stringstreamPtr, msd);
+        serializer_mzXML.read(serializedStreamPtr, msd_mzXML);
+        Diff<MSData, DiffConfig> diff_mzXML(msd, msd_mzXML, diffConfig_non_mzML);
+        if (diff_mzXML) cerr << headDiff(diff_mzXML, 5000) << endl;
+        unit_assert(!diff_mzXML);
+
+        stringstreamPtr->str();
+
+        // mzML <-> MGF
+        MSData msd_MGF;
+        Serializer_MGF serializer_MGF;
+        serializer_MGF.write(*stringstreamPtr, msd);
+        serializer_MGF.read(serializedStreamPtr, msd_MGF);
+        Diff<MSData, DiffConfig> diff_MGF(msd, msd_MGF, diffConfig_non_mzML);
+        if (diff_MGF) cerr << headDiff(diff_MGF, 5000) << endl;
+        unit_assert(!diff_MGF);
     }
 }
 
