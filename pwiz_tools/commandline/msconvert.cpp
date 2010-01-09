@@ -311,6 +311,10 @@ Config parseCommandLine(int argc, const char* argv[])
         BOOST_FOREACH(const string& filename, config.filenames)
         {
             expand_pathmask(bfs::path(filename), globbedFilenames);
+			if (!globbedFilenames.size())
+			{
+				cout <<  "[msconvert] no files found matching \"" << filename << "\"";
+			}
         }
 
         config.filenames.clear();
