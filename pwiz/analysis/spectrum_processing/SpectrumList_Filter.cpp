@@ -287,6 +287,7 @@ PWIZ_API_DECL bool SpectrumList_FilterPredicate_MS2ActivationType::accept(const 
         bool res = spectrum.precursors[0].activation.hasCVParam(cvFilterItem);
         return hasNot ? res == false : res;
     }
+	return false; // even with hasNot we don't want MS1
 }
 
 
