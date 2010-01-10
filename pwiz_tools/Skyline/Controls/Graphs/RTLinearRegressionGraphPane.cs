@@ -88,17 +88,34 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public bool HasOutliers
+        {
+            get
+            {
+                var data = Data;
+                return data != null ? data.HasOutliers : false;
+            }
+        }
+
         public PeptideDocNode[] Outliers
         {
-            get { 
+            get
+            { 
                 GraphData data = Data;
                 return data == null ? null : data.Outliers;
             }
         }
 
+        public static PeptideDocNode[] CalcOutliers(SrmDocument document, double threshold)
+        {
+            var data = new GraphData(document, null, -1, threshold, true);
+            return data.Refine(() => false).Outliers;
+        }
+
         public RetentionTimeRegression RegressionRefined
         {
-            get { 
+            get
+            { 
                 GraphData data = Data;
                 return data == null ? null : data.RegressionRefined;
             }
@@ -156,15 +173,6 @@ namespace pwiz.Skyline.Controls.Graphs
             // Threadsafe update of the data
             GraphData dataPrevious = Interlocked.CompareExchange(ref _data, dataNew, dataCurrent);
             return ReferenceEquals(dataPrevious, dataCurrent);
-        }
-
-        public bool HasOutliers
-        {
-            get
-            {
-                var data = Data;
-                return data != null ? data.HasOutliers : false;
-            }
         }
 
         public override void Draw(Graphics g)
@@ -276,6 +284,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
             }
         }
+
         /// <summary>
         /// Holds the data currently displayed in the graph.
         /// </summary>

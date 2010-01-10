@@ -422,15 +422,17 @@ namespace pwiz.Skyline.Model.Results
             {
                 if (result == null)
                     continue;
-                var chromInfo = result[0];
-                if (Equals(chromInfo, default(T)))
-                    continue;
-                float? val = getVal(chromInfo);
-                if (!val.HasValue)
-                    continue;
+                foreach (var chromInfo in result)
+                {
+                    if (Equals(chromInfo, default(T)))
+                        continue;
+                    float? val = getVal(chromInfo);
+                    if (!val.HasValue)
+                        continue;
 
-                valTotal += val.Value;
-                valCount++;
+                    valTotal += val.Value;
+                    valCount++;
+                }
             }
 
             if (valCount == 0)

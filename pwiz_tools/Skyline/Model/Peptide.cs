@@ -110,9 +110,8 @@ namespace pwiz.Skyline.Model
             get
             {
                 return GetAverageResultValue(chromInfo =>
-                    !chromInfo.RetentionTime.HasValue || chromInfo.PeakCountRatio < 0.5 ?
-                        (float?) null :
-                        chromInfo.RetentionTime.Value);
+                    !chromInfo.RetentionTime.HasValue ?
+                        (float?) null : chromInfo.RetentionTime.Value);
             }
         }
 

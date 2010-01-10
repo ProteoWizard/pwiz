@@ -427,7 +427,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             if (fastaSeq == null)
             {
                 foreach (PeptideDocNode nodePeptide in DocNode.Children)
-                    sb.Append(nodePeptide.Peptide.Sequence).Append('\n');
+                    sb.Append(nodePeptide.Peptide.Sequence).AppendLine();
                 data.SetData(DataFormats.Text, sb.ToString());
             }
             else
@@ -443,36 +443,37 @@ namespace pwiz.Skyline.Controls.SeqNode
                         sb.AppendLine();
                     sb.Append(aa[i]);
                 }
+                sb.AppendLine("*");
                 data.SetData(DataFormats.Text, sb.ToString());
 
                 sb = new StringBuilder();
                 sb.Append("<b>").Append(Model.Id).Append("</b> ");
                 sb.Append("<i>");
                 if (string.IsNullOrEmpty(DocNode.Description))
-                    sb.Append(("<br/>\n"));
+                    sb.AppendLine("<br/>");
                 else
                 {
                     foreach (string desc in Descriptions)
-                        sb.Append(desc).Append("<br/>\n");
+                        sb.Append(desc).AppendLine("<br/>");
                 }
                 sb.Append("</i>");
 
                 IEnumerator<object> peptides = GetChoices(true).GetEnumerator();
                 HashSet<object> peptidesChosen = new HashSet<object>(Chosen);
-                PeptideDocNode nodePep = (PeptideDocNode)(peptides.MoveNext() ? peptides.Current : null);
-                bool chosen = peptidesChosen.Contains(nodePep);
+                Peptide peptide = (Peptide)(peptides.MoveNext() ? peptides.Current : null);
+                bool chosen = peptidesChosen.Contains(peptide);
 
                 bool inPeptide = false;
                 for (int i = 0; i < aa.Length; i++)
                 {
-                    if (nodePep != null)
+                    if (peptide != null)
                     {
-                        while (nodePep != null && i >= nodePep.Peptide.End)
+                        while (peptide != null && i >= peptide.End)
                         {
-                            nodePep = (PeptideDocNode)(peptides.MoveNext() ? peptides.Current : null);
-                            chosen = peptidesChosen.Contains(nodePep);
+                            peptide = (Peptide)(peptides.MoveNext() ? peptides.Current : null);
+                            chosen = peptidesChosen.Contains(peptide);
                         }
-                        if (nodePep != null && i >= nodePep.Peptide.Begin)
+                        if (peptide != null && i >= peptide.Begin)
                         {
                             if (!inPeptide)
                             {
@@ -491,6 +492,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                     }
                     sb.Append(aa[i]);
                 }
+                sb.AppendLine();
 
                 data.SetData(DataFormats.Html, HtmlFragment.ClipBoardText(sb.ToString()));                
             }

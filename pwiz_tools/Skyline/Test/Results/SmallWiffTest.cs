@@ -121,7 +121,9 @@ namespace pwiz.SkylineTest.Results
             docContainer.AssertComplete();
             docMzxml = docContainer.Document;
             // Verify mzXML and native contained same results
-            // TODO: Figure out why these don't match well enough to use strict compare
+            // Unfortunately mzWiff produces chromatograms with now zeros, which
+            // need to be interpolated into place.  This means a .wiff file and
+            // its mzWiff mzXML file will never be the same.
             AssertResult.MatchChromatograms(docMzxml, 0, 1, -1, 0);
             // Release all file handels
             docContainer.SetDocument(doc, docContainer.Document);

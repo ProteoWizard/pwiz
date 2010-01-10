@@ -55,8 +55,16 @@ namespace Crawdad {
         }
 
         property int TimeIndex { int get() { return _timeIndex; } }
-        property int StartIndex { int get() { return _startIndex; } }
-        property int EndIndex { int get() { return _endIndex; } }
+        property int StartIndex
+        {
+            int get() { return _startIndex; }
+            void set(int value) { _startIndex = value; }
+        }
+        property int EndIndex
+        {
+            int get() { return _endIndex; }
+            void set(int value) { _endIndex = value; }
+        }
         property int Length { int get() { return _endIndex - _startIndex + 1; } }
         property int Center { int get() { return (int)(((_startIndex + _endIndex)/2.0) + 0.5); } }
         property float Area { float get() { return _area; } }

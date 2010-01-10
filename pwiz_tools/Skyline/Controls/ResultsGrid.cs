@@ -779,7 +779,7 @@ namespace pwiz.Skyline.Controls
             var rowIds = new HashSet<RowIdentifier>();
             var settings = Document.Settings;
 
-            if (SelectedTransitionDocNode != null)
+            if (SelectedTransitionDocNode != null && SelectedTransitionDocNode.HasResults)
             {
                 for (int iReplicate = 0; iReplicate < SelectedTransitionDocNode.Results.Count; iReplicate++) 
                 {
@@ -799,7 +799,7 @@ namespace pwiz.Skyline.Controls
                 }
             }
 
-            if (SelectedTransitionGroupDocNode != null)
+            if (SelectedTransitionGroupDocNode != null && SelectedTransitionGroupDocNode.HasResults)
             {
                 for (int iReplicate = 0; iReplicate < SelectedTransitionGroupDocNode.Results.Count; iReplicate++)
                 {
@@ -824,7 +824,7 @@ namespace pwiz.Skyline.Controls
             if (rowIds.Count == 0)
             {
                 // Make sure some rows exist
-                if (SelectedPeptideDocNode == null)
+                if (SelectedPeptideDocNode == null || !SelectedPeptideDocNode.HasResults)
                 {
                     // Just a blank set of replicate rows
                     for (int iReplicate = 0; iReplicate < settings.MeasuredResults.Chromatograms.Count; iReplicate++)

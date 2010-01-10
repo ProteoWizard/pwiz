@@ -532,7 +532,7 @@ namespace pwiz.Skyline.EditUI
                                             {
                                                 Column = colTransitionPrecursorMz.Index,
                                                 Line = i,
-                                                Message = "Unable to match this M/Z."
+                                                Message = "Unable to match this m/z."
                                             });
                     return null;
                 }

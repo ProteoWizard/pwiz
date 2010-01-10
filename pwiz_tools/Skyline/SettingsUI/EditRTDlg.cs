@@ -248,6 +248,9 @@ namespace pwiz.Skyline.SettingsUI
 
             foreach (PeptideDocNode nodePeptide in document.Peptides)
             {
+                if (nodePeptide.AveragePeakCountRatio < 0.5)
+                    continue;
+
                 float? retentionTime = nodePeptide.AverageMeasuredRetentionTime;
                 if (!retentionTime.HasValue)
                     continue;

@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading;
 using pwiz.Crawdad;
@@ -96,7 +97,16 @@ namespace pwiz.Skyline.Model.Results
         {
             // Use fast version, if this is a file
             if (stream is FileStream)
-                return ReadArray(((FileStream)stream).SafeFileHandle, count);
+            {
+                try
+                {
+                    return ReadArray(((FileStream)stream).SafeFileHandle, count);
+                }
+                catch (BulkReadException)
+                {
+                    // Fall through and attempt to read the slow way.
+                }
+            }
 
             ChromGroupHeaderInfo[] results = new ChromGroupHeaderInfo[count];
             int size = sizeof(ChromGroupHeaderInfo);
@@ -138,7 +148,14 @@ namespace pwiz.Skyline.Model.Results
                 UInt32 cbReadActual = 0;
                 bool ret = Kernel32.ReadFile(file, p2, cbReadDesired, &cbReadActual, null);
                 if (!ret || cbReadActual != cbReadDesired)
-                    throw new InvalidDataException();
+                {
+                    // If nothing was read, it may be possible to recover by
+                    // reading the slow way.
+                    if (cbReadActual == 0)
+                        throw new BulkReadException();
+                    else
+                        throw new InvalidDataException();
+                }
             }
 
             return results;
@@ -194,7 +211,16 @@ namespace pwiz.Skyline.Model.Results
         {
             // Use fast version, if this is a file
             if (stream is FileStream)
-                return ReadArray(((FileStream) stream).SafeFileHandle, count);
+            {
+                try
+                {
+                    return ReadArray(((FileStream)stream).SafeFileHandle, count);
+                }
+                catch (BulkReadException)
+                {
+                    // Fall through and attempt to read the slow way
+                }
+            }
 
             // CONSIDER: Probably faster in this case to read the entire block,
             //           and convert from bytes to single float values.
@@ -238,7 +264,14 @@ namespace pwiz.Skyline.Model.Results
                 UInt32 cbReadActual = 0;
                 bool ret = Kernel32.ReadFile(file, p2, cbReadDesired, &cbReadActual, null);
                 if (!ret || cbReadActual != cbReadDesired)
-                    throw new InvalidDataException();
+                {
+                    // If nothing was read, it may be possible to recover by
+                    // reading the slow way.
+                    if (cbReadActual == 0)
+                        throw new BulkReadException();
+                    else
+                        throw new InvalidDataException();                    
+                }
             }
 
             return results;
@@ -364,7 +397,16 @@ namespace pwiz.Skyline.Model.Results
         {
             // Use fast version, if this is a file
             if (stream is FileStream)
-                return ReadArray(((FileStream)stream).SafeFileHandle, count);
+            {
+                try
+                {
+                    return ReadArray(((FileStream)stream).SafeFileHandle, count);                
+                }
+                catch (BulkReadException)
+                {
+                    // Fall through and attempt to read the slow way.
+                }
+            }
 
             ChromPeak[] results = new ChromPeak[count];
             int size = sizeof(ChromPeak);
@@ -408,7 +450,14 @@ namespace pwiz.Skyline.Model.Results
                     UInt32 cbReadActual = 0;
                     bool ret = Kernel32.ReadFile(file, p2, cbReadDesired, &cbReadActual, null);
                     if (!ret || cbReadActual != cbReadDesired)
-                        throw new InvalidDataException();
+                    {
+                        // If nothing was read, it may be possible to recover by
+                        // reading the slow way.
+                        if (cbReadActual == 0)
+                            throw new BulkReadException();
+                        else
+                            throw new InvalidDataException();                        
+                    }
                 }
             }
 
@@ -921,5 +970,13 @@ namespace pwiz.Skyline.Model.Results
             UInt32 numBytesToWrite,
             UInt32* numBytesWritten,
             NativeOverlapped* lpOverlapped);        
+    }
+
+    public class BulkReadException : IOException
+    {
+        public BulkReadException()
+            : base("Failed reading block from file.")
+        {
+        }
     }
 }

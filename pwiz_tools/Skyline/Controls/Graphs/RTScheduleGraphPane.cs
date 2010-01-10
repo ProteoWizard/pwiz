@@ -50,7 +50,7 @@ namespace pwiz.Skyline.Controls.Graphs
             : base(graphSummary)
         {
             XAxis.Title.Text = "Scheduled Time";
-            YAxis.Title.Text = "Transitions";
+            YAxis.Title.Text = "Concurrent Transitions";
             YAxis.Scale.MinAuto = false;
             YAxis.Scale.Min = 0;
         }

@@ -517,7 +517,7 @@ namespace pwiz.Skyline
                     }
                     // Next show any graph windows for results that were not previously part of
                     // the document.
-                    if (settingsNew.MeasuredResults != null)
+                    if (settingsNew.MeasuredResults != null && !deserialized)
                     {
                         // Keep changes in graph panes from stealing the focus
                         var focusStart = User32.GetFocusedControl();
@@ -2384,14 +2384,24 @@ namespace pwiz.Skyline
 
             if (order == GroupGraphsOrder.Document)
             {
+                // Populate a dictionary with the desired document order
                 var dictOrder = new Dictionary<DockableForm, int>();
                 int iOrder = 0;
                 if (_graphSpectrum != null)
                     dictOrder.Add(_graphSpectrum, iOrder++);
                 if (_graphRetentionTime != null)
                     dictOrder.Add(_graphRetentionTime, iOrder++);
-                foreach (var graphChrom in _listGraphChrom)
-                    dictOrder.Add(graphChrom, iOrder++);
+                if (_graphPeakArea != null)
+                    dictOrder.Add(_graphPeakArea, iOrder++);
+                if (DocumentUI.Settings.HasResults)
+                {
+                    foreach (var chromatograms in DocumentUI.Settings.MeasuredResults.Chromatograms)
+                    {
+                        var graphChrom = GetGraphChrom(chromatograms.Name);
+                        if (graphChrom != null)
+                            dictOrder.Add(graphChrom, iOrder++);
+                    }
+                }
                 // Make sure everything is represented, though it should
                 // already be.
                 foreach (var graph in listGraphs)
@@ -2401,6 +2411,8 @@ namespace pwiz.Skyline
                         dictOrder.Add(graph, iOrder++);
                 }
 
+                // Sort the list of visible document panes by the document order
+                // in the dictionary
                 listGraphs.Sort((g1, g2) => dictOrder[g1] - dictOrder[g2]);
                 if (reversed)
                     listGraphs.Reverse();

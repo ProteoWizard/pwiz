@@ -122,8 +122,7 @@ namespace pwiz.Skyline.Model
             {
                 return GetAverageResultValue(chromInfo =>
                     chromInfo.OptimizationStep != 0 ?
-                        (float?)null :
-                        GetPeakCountRatio(chromInfo));
+                        (float?)null : GetPeakCountRatio(chromInfo));
             }
         }
 

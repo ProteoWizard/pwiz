@@ -546,9 +546,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     var peak = info.GetPeak(j);
 
                     // Exclude any peaks between the boundaries of the chosen peak.
-                    if (transitionChromInfo != null &&
-                        transitionChromInfo.StartRetentionTime < peak.RetentionTime &&
-                        peak.RetentionTime < transitionChromInfo.EndRetentionTime)
+                    if (IntersectPeaks(peak, transitionChromInfo))
                         continue;
 
                     // Store peak intensity for dot-product
@@ -716,6 +714,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (listChromInfoSets.Count == 0 || totalOptCount == 0)
                 throw new InvalidDataException("No optimization data available.");
 
+            // Enumerate optimization steps, grouping the data into graph data by step
             var listGraphData = new List<OptimizationGraphData>();
             for (int i = 0; i < listChromInfoSets.Count; i++)
             {
@@ -771,6 +770,24 @@ namespace pwiz.Skyline.Controls.Graphs
                 AddBestPeakTimes(graphData.TransitionInfoPrimary, ref bestStartTime, ref bestEndTime);
             }
 
+            // Hide all peaks between the best peak extents
+            if (tranPeakInfo != null)
+            {
+                for (int j = 0; j < numPeaks; j++)
+                {
+                    if (maxPeakHeights[j] == 0)
+                        continue;
+                    var graphData = listGraphData[maxPeakData[j]];
+                    if (graphData.InfoPrimary == null)
+                        continue;
+
+                    ChromPeak peak = graphData.InfoPrimary.GetPeak(j);
+                    if (IntersectPeaks(peak, tranPeakInfo))
+                        maxPeakHeights[j] = 0;
+                }
+            }
+
+            // Create graph items
             int totalSteps = totalOptCount/2;
             for (int i = 0; i < listGraphData.Count; i++)
             {
@@ -952,6 +969,16 @@ namespace pwiz.Skyline.Controls.Graphs
                     graphControl.AddGraphItem(GraphPane, graphItem, false);
                 }
             }
+        }
+
+        private static bool IntersectPeaks(ChromPeak peak, TransitionChromInfo chromInfo)
+        {
+            if (chromInfo == null)
+                return false;
+
+            // Allow start and end to share the same time, but nothing more.
+            return Math.Min(chromInfo.EndRetentionTime, peak.EndTime) -
+                   Math.Max(chromInfo.StartRetentionTime, peak.StartTime) > 0;
         }
 
         private void ZoomGraph(GraphPane graphPane, double bestStartTime, double bestEndTime,
@@ -1573,11 +1600,14 @@ namespace pwiz.Skyline.Controls.Graphs
                 Color.DarkCyan,
                 Color.Green,
                 Color.Orange,
-                Color.OrangeRed,
                 Color.Navy,
                 Color.Purple,
                 Color.LimeGreen,
+                Color.Gold,
                 Color.Magenta,
+                Color.Maroon,
+                Color.OliveDrab,
+                Color.RoyalBlue,
             };
 
 //        private static readonly Color[] COLORS_HEURISTIC =

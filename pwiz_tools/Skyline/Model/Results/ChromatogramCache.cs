@@ -1529,7 +1529,7 @@ namespace pwiz.Skyline.Model.Results
                     // Mark all optimization chromatograms
                     MarkOptimizationData();
 
-//                    if (Math.Round(_listChromData[0].Key.Precursor) == 1143)
+//                    if (Math.Round(_listChromData[0].Key.Precursor) == 490)
 //                        Console.WriteLine("Issue");
 
                     // First use Crawdad to find the peaks
@@ -1558,7 +1558,7 @@ namespace pwiz.Skyline.Model.Results
                     if (listPeakSets.Count == 0)
                         return;
 
-                    // Sort by product area descending
+                    // Sort by total area descending
                     listPeakSets.Sort((p1, p2) => Comparer<double>.Default.Compare(p2.TotalArea, p1.TotalArea));
 
                     // The peak will be a signigificant spike above the norm for this
@@ -1596,6 +1596,13 @@ namespace pwiz.Skyline.Model.Results
 
                     // Sort by product score
                     listPeakSets.Sort((p1, p2) => Comparer<double>.Default.Compare(p2.ProductArea, p1.ProductArea));
+
+                    // Since Crawdad can have a tendency to pick peaks too narrow,
+                    // use the peak group information to extend the peaks to make
+                    // them wider.
+                    // TODO: Finish testing peak extension
+//                    listPeakSets = ExtendPeaks(listPeakSets);
+
                     // Pick the maximum peak by the product score
                     ChromDataPeakList peakSetMax = listPeakSets[0];
 
@@ -1604,10 +1611,19 @@ namespace pwiz.Skyline.Model.Results
 
                     // Set the processed peaks back to the chromatogram data
                     int maxPeakIndex = listPeakSets.IndexOf(peakSetMax);
+                    HashSet<ChromKey> primaryPeakKeys = new HashSet<ChromKey>();
                     for (int i = 0, len = listPeakSets.Count; i < len; i++)
                     {
                         var peakSet = listPeakSets[i];
                         var peakMax = peakSet[0].Peak;
+
+                        // Store the primary peaks that are part of this group.
+                        primaryPeakKeys.Clear();
+                        foreach (var peak in peakSet)
+                        {
+                            if (peak.Peak != null)
+                                primaryPeakKeys.Add(peak.Data.Key);
+                        }
 
                         foreach (var peak in peakSet)
                         {
@@ -1616,12 +1632,46 @@ namespace pwiz.Skyline.Model.Results
                             if (i == 0)
                                 peak.Data.MaxPeakIndex = maxPeakIndex;
 
-                            if (peak.Peak == null)
-                                peak.Data.Peaks.Add(ChromPeak.EMPTY);
-                            else
+                            // Reintegrate a new peak based on the max peak, if there is a peak in this peak
+                            // group, or this is optimization data for which the primary peak is in this set.
+                            // TODO: Add "Refined method integration" checkbox to import dialog, and always
+                            //       integrate when it is checked.
+                            if (peak.Peak != null ||
+                                    (peak.Data.IsOptimizationData && primaryPeakKeys.Contains(peak.Data.Key)))
                                 peak.Data.Peaks.Add(peak.CalcChromPeak(peakMax));
+                            else
+                                peak.Data.Peaks.Add(ChromPeak.EMPTY);
                         }
                     }
+                }
+
+                private static List<ChromDataPeakList> ExtendPeaks(IEnumerable<ChromDataPeakList> listPeakSets)
+                {
+                    var listExtendedSets = new List<ChromDataPeakList>();
+                    foreach (var peakSet in listPeakSets)
+                    {
+                        peakSet.Extend();
+                        if (!PeaksOverlap(peakSet, listExtendedSets))
+                            listExtendedSets.Add(peakSet);
+                    }
+                    return listExtendedSets;
+                }
+
+                private static bool PeaksOverlap(IList<ChromDataPeak> peakSetTest, IEnumerable<ChromDataPeakList> peakSets)
+                {
+                    foreach (var peakSet in peakSets)
+                    {
+                        if (PeaksOverlap(peakSet[0].Peak, peakSetTest[0].Peak))
+                            return true;
+                    }
+                    return false;
+                }
+
+                private static bool PeaksOverlap(CrawdadPeak peak1, CrawdadPeak peak2)
+                {
+                    // Peaks overlap, if they have intersecting area.
+                    return Math.Min(peak1.EndIndex, peak2.EndIndex) -
+                           Math.Max(peak1.StartIndex, peak2.StartIndex) > 0;
                 }
 
                 private List<ChromDataPeak> MergePeaks(List<ChromData> listChromData)
@@ -1785,7 +1835,7 @@ namespace pwiz.Skyline.Model.Results
                         }
                     }
 
-                    // Handle a bug where the ProteoWizard Reader_Thermo returns chromatograms
+                    // Handle an issue where the ProteoWizard Reader_Thermo returns chromatograms
                     // with alternating zero intensity scans with real data
                     if (ThermoZerosFix())
                     {
@@ -1819,9 +1869,7 @@ namespace pwiz.Skyline.Model.Results
                         intervalDelta = statIntervals.Min();
                     }
 
-                    // Never go smaller than 1/5 a second.
-                    if (intervalDelta < 0.2/60)
-                        intervalDelta = 0.2/60;  // For breakpoint setting
+                    intervalDelta = EnsureMinDelta(intervalDelta);
 
                     bool inferZeros = false;
                     if (_isProcessedScans && statDeltas.Max() / intervalDelta > TIME_DELTA_MAX_RATIO_THRESHOLD)
@@ -1829,20 +1877,7 @@ namespace pwiz.Skyline.Model.Results
                         inferZeros = true; // Verbose expression for easy breakpoint placement
 
                         // Try really hard to use a delta that will work for the maximum peak
-                        // TODO: Make this more reliable, and enable it for everyone
-//                        if (listMaxDeltas.Count > 0)
-//                        {
-//                            intervalDelta = listMaxDeltas[0];
-//                            for (int i = 1; i < listMaxDeltas.Count; i++)
-//                            {
-//                                double delta = listMaxDeltas[i];
-//                                // If an order of magnitude change in time intervarl is encountered stop
-//                                if (intervalDelta / 4 > delta || delta > intervalDelta*4)
-//                                    break;
-//                                // Calculate a weighted mean
-//                                intervalDelta = (intervalDelta*i + delta)/(i + 1);
-//                            }
-//                        }
+                        intervalDelta = EnsureMinDelta(GetIntervalMaxDelta(listMaxDeltas, intervalDelta));
                     }
 
                     // Create the single set of time intervals that all points for
@@ -1950,6 +1985,37 @@ namespace pwiz.Skyline.Model.Results
                         chromData.Times = timesNew;
                         chromData.Intensities = intensNew.ToArray();
                     }
+                }
+
+                private static double EnsureMinDelta(double intervalDelta)
+                {
+                    // Never go smaller than 1/5 a second.
+                    if (intervalDelta < 0.2 / 60)
+                        intervalDelta = 0.2 / 60;  // For breakpoint setting
+                    return intervalDelta;
+                }
+
+                private static double GetIntervalMaxDelta(IList<double> listMaxDeltas, double intervalDelta)
+                {
+                    const int magnitude = 8;    // 8x counted as an order of magnitude difference
+                    if (listMaxDeltas.Count > 0 && listMaxDeltas[0] / magnitude < intervalDelta)
+                    {
+                        intervalDelta = listMaxDeltas[0];
+                        for (int i = 1; i < listMaxDeltas.Count; i++)
+                        {
+                            double delta = listMaxDeltas[i];
+                            // If an order of magnitude change in time interval is encountered stop
+                            if (intervalDelta/magnitude > delta || delta > intervalDelta*magnitude)
+                                break;
+                            // Calculate a weighted mean
+                            intervalDelta = (intervalDelta*i + delta)/(i + 1);
+                        }
+                    }
+                    else if (listMaxDeltas.Count > 0 && listMaxDeltas[0] / magnitude > intervalDelta)
+                    {
+                        Console.WriteLine("Max delta {0} too much larger than {1}", listMaxDeltas[0], intervalDelta);
+                    }
+                    return intervalDelta;
                 }
 
                 // Moved to ProteoWizard
@@ -2109,7 +2175,7 @@ namespace pwiz.Skyline.Model.Results
                                 continue;
                             // If less than 2/3 of the peak is inside the max peak.
                             if (intersect * 3/2 < lenPeak)
-
+                                continue;
                             // or where either end is more than 25% of its peak width outside
                             // the max peak.
                             if (intersect != lenPeak)
@@ -2160,7 +2226,12 @@ namespace pwiz.Skyline.Model.Results
                 {
                     Finder = new CrawdadPeakFinder();
                     Finder.SetChromatogram(Times, Intensities);
-                    RawPeaks = Finder.CalcPeaks(MAX_PEAKS);                    
+                    // Don't find peaks for optimization data.  Optimization data will
+                    // have its peak extents set based on the primary data.
+                    if (IsOptimizationData)
+                        RawPeaks = new CrawdadPeak[0];
+                    else
+                        RawPeaks = Finder.CalcPeaks(MAX_PEAKS);
                 }
 
                 private CrawdadPeakFinder Finder { get; set; }
@@ -2235,6 +2306,78 @@ namespace pwiz.Skyline.Model.Results
                 private int PeakCount { get; set; }
                 public double TotalArea { get; private set; }
                 public double ProductArea { get; private set; }
+
+                public void Extend()
+                {
+                    // Only extend for peak groups with multiple peaks
+                    if (Count < 2)
+                        return;
+
+                    const int toleranceLen = 4;
+                    const float descentTol = 0.01f;
+                    const float deltaTol = 0.0001f;
+
+                    var peakPrimary = this[0];
+                    int lenIntensities = peakPrimary.Data.Intensities.Length;
+                    float height = peakPrimary.Peak.Height;
+                    double minDescent = height*descentTol;
+                    double minDelta = height*deltaTol;
+
+                    // Extend the start index backward
+                    int indexStart = peakPrimary.Peak.StartIndex;
+                    float maxIntensity, deltaIntensity;
+                    GetIntensityMetrics(indexStart, out maxIntensity, out deltaIntensity);
+                    for (int i = indexStart - 1; i > 0 && indexStart - i < toleranceLen; i--)
+                    {
+                        float maxIntensityCurrent, deltaIntensityCurrent;
+                        GetIntensityMetrics(i, out maxIntensityCurrent, out deltaIntensityCurrent);
+                        // If either 1% descent
+                        if (maxIntensity - maxIntensityCurrent > minDescent ||
+                            // Or 0.1% and 0.1% close together
+                            (maxIntensity - maxIntensityCurrent > minDelta && deltaIntensity - deltaIntensityCurrent > minDelta))
+                        {
+                            maxIntensity = maxIntensityCurrent;
+                            deltaIntensity = deltaIntensityCurrent;
+                            indexStart = i;
+                        }
+                    }
+                    // Extend the end index forward
+                    int indexEnd = peakPrimary.Peak.EndIndex;
+                    GetIntensityMetrics(indexEnd, out maxIntensity, out deltaIntensity);
+                    for (int i = indexEnd + 1; i < lenIntensities - 1 && i - indexEnd < 3; i++)
+                    {
+                        float maxIntensityCurrent, deltaIntensityCurrent;
+                        GetIntensityMetrics(i, out maxIntensityCurrent, out deltaIntensityCurrent);
+                        if (maxIntensity > maxIntensityCurrent && deltaIntensity > deltaIntensityCurrent)
+                        {
+                            maxIntensity = maxIntensityCurrent;
+                            deltaIntensity = deltaIntensityCurrent;
+                            indexEnd = i;
+                        }
+                    }
+
+                    peakPrimary.Peak.StartIndex = indexStart;
+                    peakPrimary.Peak.EndIndex = indexEnd;
+                }
+
+                private void GetIntensityMetrics(int i, out float maxIntensity, out float deltaIntensity)
+                {
+                    float minIntensity = maxIntensity = this[0].Data.Intensities[i];
+                    for (int j = 1; j < Count; j++)
+                    {
+                        var peakData = this[j];
+                        // If this transition doesn't have a measured peak, then skip it.
+                        if (peakData.Peak == null)
+                            continue;
+
+                        float currentIntensity = peakData.Data.Intensities[i];
+                        if (currentIntensity > maxIntensity)
+                            maxIntensity = currentIntensity;
+                        else if (currentIntensity < minIntensity)
+                            minIntensity = currentIntensity;
+                    }
+                    deltaIntensity = maxIntensity - minIntensity;
+                }
 
                 private void AddPeak(ChromDataPeak dataPeak)
                 {

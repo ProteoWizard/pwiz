@@ -33,11 +33,17 @@ namespace pwiz.Skyline.FileUI
     {
         private const string DEFAULT_NAME = "Chromatograms";
 
+        // Number of transitions below which the user gets a warning about
+        // multiple injection features.
+        private const int MIN_MULTIPLE_TRANSITIONS = 60;
+
         private readonly string _documentSavedPath;
+        private readonly bool _warnOnMultiInjection;
 
         public ImportResultsDlg(SrmDocument document, string savedPath)
         {
             _documentSavedPath = savedPath;
+            _warnOnMultiInjection = (document.TransitionCount < MIN_MULTIPLE_TRANSITIONS);
 
             InitializeComponent();
 
@@ -79,7 +85,9 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        bool IsMultiple { get { return radioCreateMultiple.Checked || radioCreateMultipleMulti.Checked; } }
+        private bool IsMultiple { get { return radioCreateMultiple.Checked || radioCreateMultipleMulti.Checked; } }
+
+        private bool IsOptimizing { get { return comboOptimizing.SelectedIndex != -1; } }
 
         public KeyValuePair<string, string[]>[] NamedPathSets { get; private set; }
 
@@ -108,18 +116,23 @@ namespace pwiz.Skyline.FileUI
                 if (comboName.SelectedIndex == -1)
                 {
                     MessageBox.Show(this, "You must select an existing set of results to which to append new data.", Program.Name);
-                    e.Cancel = true;
                     comboName.Focus();
                     return;
                 }
+
+                if (!CanCreateMultiInjectionMethods())
+                    return;
+
                 NamedPathSets = GetDataSourcePathsFile(comboName.SelectedItem.ToString());
             }
             else if (radioCreateMultiple.Checked)
             {
-                    NamedPathSets = GetDataSourcePathsFile(null);
+                NamedPathSets = GetDataSourcePathsFile(null);
             }
             else if (radioCreateMultipleMulti.Checked)
             {
+                if (!CanCreateMultiInjectionMethods())
+                    return;
                 NamedPathSets = GetDataSourcePathsDir();                    
             }
             else
@@ -128,7 +141,7 @@ namespace pwiz.Skyline.FileUI
                     return;
                 else if (name.IndexOfAny(Path.GetInvalidFileNameChars()) != -1)
                 {
-                    helper.ShowTextBoxError(e, textName, "A result name may not contain the any of the characters '{0}'.", Path.GetInvalidFileNameChars());
+                    helper.ShowTextBoxError(e, textName, "A result name may not contain any of the characters '{0}'.", Path.GetInvalidFileNameChars());
                     return;
                 }
                 else if (ResultsExist(name))
@@ -138,13 +151,26 @@ namespace pwiz.Skyline.FileUI
                 }                        
 
                 NamedPathSets = GetDataSourcePathsFile(name);
+
+                if (NamedPathSets == null)
+                    return;
+
+                foreach (var namedPathSet in NamedPathSets)
+                {
+                    // Look for a multiple injection replicate
+                    if (namedPathSet.Value.Length > 1)
+                    {
+                        // Make sure they are allowed
+                        if (!CanCreateMultiInjectionMethods())
+                            return;
+                        // If so, then no need to check any others
+                        break;
+                    }
+                }
             }
 
             if (NamedPathSets == null)
-            {
-                e.Cancel = true;
                 return;
-            }
 
             if (NamedPathSets.Length > 1)
             {
@@ -155,7 +181,6 @@ namespace pwiz.Skyline.FileUI
                     var result = dlgName.ShowDialog(this);
                     if (result == DialogResult.Cancel)
                     {
-                        e.Cancel = true;
                         return;
                     }
                     else if (result == DialogResult.Yes)
@@ -178,6 +203,18 @@ namespace pwiz.Skyline.FileUI
             
             DialogResult = DialogResult.OK;
             Close();
+        }
+
+        private bool CanCreateMultiInjectionMethods()
+        {
+            if (_warnOnMultiInjection && !IsOptimizing)
+            {
+                if (MessageBox.Show(this,
+                                "The current document does not appear to have enough transitions to require multiple injections.\nAre you sure you want to continue?",
+                                Program.Name, MessageBoxButtons.YesNo, MessageBoxIcon.None, MessageBoxDefaultButton.Button2) == DialogResult.No)
+                    return false;
+            }
+            return true;
         }
 
         private KeyValuePair<string, string[]>[] GetDataSourcePathsFile(string name)
@@ -483,15 +520,44 @@ namespace pwiz.Skyline.FileUI
                     textName.Text = DefaultNewName;
             }
 
-            if (radioCreateNew.Checked)
+            if (radioCreateMultipleMulti.Checked)
             {
-                comboOptimizing.Enabled = labelOptimizing.Enabled = true;
-                comboOptimizing.SelectedIndex = 0;
+                if (comboOptimizing.Top > radioCreateNew.Top)
+                {
+                    int shiftHeight = radioAddExisting.Top - labelOptimizing.Top;
+                    textName.Top += shiftHeight;
+                    labelNameNew.Top += shiftHeight;
+                    radioCreateNew.Top += shiftHeight;
+                    shiftHeight = radioCreateNew.Top - labelOptimizing.Top - shiftHeight;
+                    labelOptimizing.Top += shiftHeight;
+                    comboOptimizing.Top += shiftHeight;
+                    comboOptimizing.Enabled = labelOptimizing.Enabled = true;
+                    comboOptimizing.SelectedIndex = 0;
+                }
             }
             else
             {
-                comboOptimizing.Enabled = labelOptimizing.Enabled = false;
-                comboOptimizing.SelectedIndex = -1;
+                // Make sure optimizing combo is below radioCreateNew
+                if (comboOptimizing.Top < radioCreateNew.Top)
+                {
+                    int shiftHeight = radioCreateNew.Top - labelOptimizing.Top;
+                    radioCreateNew.Top -= shiftHeight;
+                    labelNameNew.Top -= shiftHeight;
+                    textName.Top -= shiftHeight;
+                    shiftHeight = radioAddExisting.Top - labelOptimizing.Top - shiftHeight;
+                    labelOptimizing.Top += shiftHeight;
+                    comboOptimizing.Top += shiftHeight;
+                }
+                if (radioCreateNew.Checked)
+                {
+                    comboOptimizing.Enabled = labelOptimizing.Enabled = true;
+                    comboOptimizing.SelectedIndex = 0;
+                }
+                else
+                {
+                    comboOptimizing.Enabled = labelOptimizing.Enabled = false;
+                    comboOptimizing.SelectedIndex = -1;
+                }
             }
         }
 

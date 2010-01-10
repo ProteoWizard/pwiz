@@ -89,7 +89,7 @@ namespace pwiz.Skyline.Model.V01
 
                     foreach (XmlPeptide peptide in seq.Peptides)
                     {
-                        // TODO: For now just skip peptides with too few transitions.
+                        // OLD_DO: For now just skip peptides with too few transitions.
                         //       Consider if there is a better way, or if the setting should
                         //       be moved to the ExportTransitionListDlg class.
                         if (peptide.Transitions.Length < MinTransitions)
@@ -248,7 +248,7 @@ namespace pwiz.Skyline.Model.V01
             writer.Write(transition.FragmentType.ToString().ToLower());
             writer.Write(transition.FragmentOrdinal);
             writer.Write('.');
-            // TODO: Support for heavy
+            // OLD_DO: Support for heavy
             writer.Write("light");
             writer.Write(',');
 

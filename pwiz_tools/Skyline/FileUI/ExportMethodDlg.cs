@@ -362,7 +362,7 @@ namespace pwiz.Skyline.FileUI
                 string ceNameDefault = _instrumentType;
                 if (ceNameDefault.IndexOf(' ') != -1)
                     ceNameDefault = ceNameDefault.Substring(0, ceNameDefault.IndexOf(' '));
-                bool ceInSynch = Equals(ceName, ceNameDefault);
+                bool ceInSynch = ceName != null && ceName.StartsWith(ceNameDefault);
 
                 var dp = predict.DeclusteringPotential;
                 string dpName = (dp != null ? dp.Name : null);
@@ -371,7 +371,7 @@ namespace pwiz.Skyline.FileUI
                     dpNameDefault = dpNameDefault.Substring(0, dpNameDefault.IndexOf(' '));
                 bool dpInSynch = true;
                 if (_instrumentType == ExportInstrumentType.ABI)
-                    dpInSynch = Equals(dpName, dpNameDefault);
+                    dpInSynch = dpName != null && dpName.StartsWith(dpNameDefault);
                 else
                     dpNameDefault = null; // Ignored for all other types
 
@@ -379,7 +379,7 @@ namespace pwiz.Skyline.FileUI
                     (!dpInSynch && Settings.Default.DeclusterPotentialList.ContainsKey(dpNameDefault)))
                 {
                     var sb =
-                        new StringBuilder("The settings for this document do not match the defaults for ").Append(
+                        new StringBuilder("The settings for this document do not match the instrument type ").Append(
                             _instrumentType).Append(":\n\n");
                     if (!ceInSynch)
                         sb.Append("Collision Energy: ").Append(ceName).Append("\n");

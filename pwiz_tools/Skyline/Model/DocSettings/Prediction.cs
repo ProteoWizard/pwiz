@@ -343,7 +343,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 double delta;
                 if (peptidesTimes[i].RetentionTime == 0)
                     delta = double.MaxValue;    // Make sure zero times are always outliers
-                else if (!outIndexes.Contains(i))
+                else if (!outIndexes.Contains(i) && iNextStat < listPredictions.Count)
                 {
                     delta = Math.Abs(listPredictions[iNextStat] - listTimes[iNextStat]);
                     iNextStat++;
@@ -429,9 +429,11 @@ namespace pwiz.Skyline.Model.DocSettings
                         throw new OperationCanceledException();
                     var regression = RecalcRegression(worstIn, peptidesTimes, statisticsResult, scoreCache,
                         ref statisticsResult, ref outIndexes);
-                    if (IsAboveThreshold(statisticsResult.R, threshold))
+                    // If there are only 2 left, then this is the best we can do and still have
+                    // a linear equation.
+                    if (worstIn == 2 || IsAboveThreshold(statisticsResult.R, threshold))
                         return regression;
-                    worstIn--;                        
+                    worstIn--;
                 }
             }
 

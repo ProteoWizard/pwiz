@@ -170,6 +170,7 @@ namespace pwiz.SkylineTest.Results
             docContainer.AssertComplete();
             docResults = docContainer.Document;
             // Make sure all groups have at least 5 transitions (of 6) with ratios
+            int ratioGroupMissingCount = 0;
             foreach (var nodeGroup in docResults.TransitionGroups)
             {
                 if (nodeGroup.TransitionGroup.LabelType == IsotopeLabelType.light)
@@ -184,8 +185,16 @@ namespace pwiz.SkylineTest.Results
                 }
                 else
                 {
+                    int minTranRatio = 5;
                     foreach (var result in nodeGroup.Results)
-                        Assert.IsTrue(result[0].Ratio.HasValue, "Heavy group found without a ratio");
+                    {
+                        if (!result[0].Ratio.HasValue)
+                        {
+                            ratioGroupMissingCount++;
+                            // Still must have at least three ratios
+                            minTranRatio = 3;
+                        }
+                    }
                     int ratioCount = 0;
                     foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                     {
@@ -193,10 +202,12 @@ namespace pwiz.SkylineTest.Results
                             if (resultTran[0].Ratio.HasValue)
                                 ratioCount++;
                     }
-                    Assert.IsFalse(ratioCount < 5,
+                    Assert.IsFalse(ratioCount < minTranRatio,
                                    string.Format("Only {0} ratios found, expecting at least 5", ratioCount));
                 }
             }
+            // Only one group missing a ratio
+            Assert.AreEqual(1, ratioGroupMissingCount);
 
             // Remove the first light transition, checking that this removes the ratio
             // from the corresponding heavy transition, but not the entire group, until

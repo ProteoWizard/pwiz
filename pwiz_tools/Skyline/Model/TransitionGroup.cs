@@ -138,8 +138,7 @@ namespace pwiz.Skyline.Model
             {
                 return GetAverageResultValue(chromInfo =>
                     chromInfo.OptimizationStep != 0 ?
-                        (float?) null :
-                        chromInfo.PeakCountRatio);
+                        (float?) null : chromInfo.PeakCountRatio);
             }
         }
 
@@ -426,6 +425,9 @@ namespace pwiz.Skyline.Model
                                 // how many entries were returned.
                                 int offset = infos.Length/2 - numSteps;
                                 int countInfos = numSteps*2 + 1;
+                                // Make sure nothing gets added when no measurements are present
+                                if (infos.Length == 0)
+                                    countInfos = 0;
                                 for (int i = 0; i < countInfos; i++)
                                 {
                                     ChromatogramInfo info = null;

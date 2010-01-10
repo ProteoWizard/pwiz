@@ -144,10 +144,10 @@ namespace pwiz.SkylineTest.Results
                             Assert.AreEqual(MaxPeakTime(chromGroupInfo1[0]), MaxPeakTime(chromGroupInfo2[0]), 0.1);
                     }
                 }
-                else // TODO: Remove this if possible
+                else
                 {
-                    Assert.IsTrue(chromGroupInfo1[0].NumPeaks > 1);
-                    Assert.IsTrue(chromGroupInfo2[0].NumPeaks > 1);
+                    Assert.IsTrue(chromGroupInfo1[0].NumPeaks >= 1);
+                    Assert.IsTrue(chromGroupInfo2[0].NumPeaks >= 1);
                 }
                 if (chromGroupInfo1[0].MaxPeakIndex < 0 || chromGroupInfo2[0].MaxPeakIndex < 0)
                     missingPeaks++;

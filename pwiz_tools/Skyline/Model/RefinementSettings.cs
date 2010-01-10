@@ -18,6 +18,7 @@
  */
 using System.Collections;
 using System.Collections.Generic;
+using pwiz.Skyline.Controls.Graphs;
 
 namespace pwiz.Skyline.Model
 {
@@ -50,6 +51,16 @@ namespace pwiz.Skyline.Model
 
         public SrmDocument Refine(SrmDocument document)
         {
+            HashSet<int> outlierIds = new HashSet<int>();
+            if (RTRegressionThreshold.HasValue)
+            {
+                var outliers = RTLinearRegressionGraphPane.CalcOutliers(document,
+                    RTRegressionThreshold.Value);
+
+                foreach (var nodePep in outliers)
+                    outlierIds.Add(nodePep.Id.GlobalIndex);
+            }
+
             HashSet<string> includedPeptides = (RemoveRepeatedPeptides ? new HashSet<string>() : null);
             HashSet<string> repeatedPeptides = (RemoveDuplicatePeptides ? new HashSet<string>() : null);
 
@@ -60,7 +71,7 @@ namespace pwiz.Skyline.Model
             foreach (PeptideGroupDocNode nodePepGroup in document.Children)
             {
                 PeptideGroupDocNode nodePepGroupRefined =
-                    Refine(nodePepGroup, document, includedPeptides, repeatedPeptides);
+                    Refine(nodePepGroup, document, outlierIds, includedPeptides, repeatedPeptides);
 
                 if (nodePepGroupRefined.Children.Count < minPeptides)
                     continue;
@@ -85,7 +96,7 @@ namespace pwiz.Skyline.Model
                     }
 
                     PeptideGroupDocNode nodePepGroupRefined = (PeptideGroupDocNode)
-                        nodePepGroup.ChangeChildrenChecked(listPeptides.ToArray());
+                        nodePepGroup.ChangeChildrenChecked(listPeptides.ToArray(), true);
 
                     if (nodePepGroupRefined.Children.Count < minPeptides)
                         continue;
@@ -96,19 +107,23 @@ namespace pwiz.Skyline.Model
                 listPepGroups = listPepGroupsFiltered;                
             }
 
-            return (SrmDocument) document.ChangeChildrenChecked(listPepGroups.ToArray());
+            return (SrmDocument) document.ChangeChildrenChecked(listPepGroups.ToArray(), true);
         }
 
 // ReSharper disable SuggestBaseTypeForParameter
         private PeptideGroupDocNode Refine(PeptideGroupDocNode nodePepGroup,
 // ReSharper restore SuggestBaseTypeForParameter
                                            SrmDocument document,
-                                           HashSet<string> includedPeptides,
-                                           HashSet<string> repeatedPeptides)
+                                           ICollection<int> outlierIds,
+                                           ICollection<string> includedPeptides,
+                                           ICollection<string> repeatedPeptides)
         {
             var listPeptides = new List<PeptideDocNode>();
             foreach (PeptideDocNode nodePep in nodePepGroup.Children)
             {
+                if (outlierIds.Contains(nodePep.Id.GlobalIndex))
+                    continue;
+
                 float? peakFoundRatio = nodePep.AveragePeakCountRatio;
                 if (!peakFoundRatio.HasValue)
                 {
@@ -152,7 +167,7 @@ namespace pwiz.Skyline.Model
                 listPeptides.Add(nodePepRefined);
             }
 
-            return (PeptideGroupDocNode)nodePepGroup.ChangeChildrenChecked(listPeptides.ToArray());
+            return (PeptideGroupDocNode)nodePepGroup.ChangeChildrenChecked(listPeptides.ToArray(), true);
         }
 
 // ReSharper disable SuggestBaseTypeForParameter
@@ -204,7 +219,7 @@ namespace pwiz.Skyline.Model
                 listGroups.Add(nodeGroupRefined);
             }
 
-            return (PeptideDocNode) nodePep.ChangeChildrenChecked(listGroups.ToArray());
+            return (PeptideDocNode) nodePep.ChangeChildrenChecked(listGroups.ToArray(), true);
         }
 
 // ReSharper disable SuggestBaseTypeForParameter
@@ -238,7 +253,7 @@ namespace pwiz.Skyline.Model
             }
 
             TransitionGroupDocNode nodeGroupRefined = (TransitionGroupDocNode)
-                nodeGroup.ChangeChildrenChecked(listTrans.ToArray());
+                nodeGroup.ChangeChildrenChecked(listTrans.ToArray(), true);
 
             if (MaxPeakRank.HasValue)
             {
@@ -269,7 +284,7 @@ namespace pwiz.Skyline.Model
                 }
 
                 nodeGroupRefined = (TransitionGroupDocNode)
-                    nodeGroupRefined.ChangeChildrenChecked(listTrans.ToArray());
+                    nodeGroupRefined.ChangeChildrenChecked(listTrans.ToArray(), true);
             }
 
             return nodeGroupRefined;

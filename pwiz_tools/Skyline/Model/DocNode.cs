@@ -70,7 +70,6 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Returns a clone of this with a different property value.
         /// </summary>
-        /// <param name="noteProp">Value for the property on the new instance</param>
         /// <returns>New instance</returns>
         public DocNode ChangeAnnotations(Annotations annotations)
         {
@@ -726,10 +725,20 @@ namespace pwiz.Skyline.Model
 
         public DocNodeParent ChangeChildrenChecked(IList<DocNode> children)
         {
+            return ChangeChildrenChecked(children, false);
+        }
+
+        public DocNodeParent ChangeChildrenChecked(IList<DocNode> children, bool changeAutoManage)
+        {
             if (ArrayUtil.ReferencesEqual(children, Children))
                 return this;
 
-            return ChangeChildren(children);
+            var nodeChanged = ChangeChildren(children);
+            // If the children changed, and this should impact the AutoManageChildren
+            // property, then turn it off.
+            if (changeAutoManage && nodeChanged.AutoManageChildren)
+                nodeChanged = nodeChanged.ChangeAutoManageChildren(false);
+            return nodeChanged;
         }
 
         /// <summary>

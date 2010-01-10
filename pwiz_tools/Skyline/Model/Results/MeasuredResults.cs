@@ -456,7 +456,9 @@ namespace pwiz.Skyline.Model.Results
                         }
                         catch (Exception x)
                         {
-                            Fail(x);
+                            string message = string.Format("Failure reading the data file {0}.\n{1}",
+                                                           cachePath, x.Message);
+                            Fail(new IOException(message, x));
                             return;
                         }
                     }
