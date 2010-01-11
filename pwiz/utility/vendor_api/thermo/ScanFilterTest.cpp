@@ -220,6 +220,13 @@ const TestScanFilter testScanFilters[] =
      IonizationType_NSI, AccurateMass_Unknown, ScanType_Full, ActivationType_Unknown,
      TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
      TriBool_True, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown},    
+
+    {"ITMS + c NSI d w sa Full ms2 375.01@etd66.67 [50.00-1890.00]",
+     "375.01", "66.67", "50", "1890", 2,
+     ScanFilterMassAnalyzerType_ITMS, PolarityType_Positive, DataPointType_Centroid,
+     IonizationType_NSI, AccurateMass_Unknown, ScanType_Full, ActivationType_ETD,
+     TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown, TriBool_Unknown,
+     TriBool_Unknown, TriBool_True, TriBool_True, TriBool_True},    
 };
 
 const size_t testScanFiltersSize = sizeof(testScanFilters) / sizeof(TestScanFilter);

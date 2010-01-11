@@ -587,21 +587,6 @@ ScanFilter::parse(string filterLine)
 		advance = false;
 	}
 
-
-    // supplemental CID activation
-    if (w == "SA") {
-        supplementalCIDOn_ = TriBool_True;
-        advance = true;
-    }
-    if (advance) {
-        if (s.eof()) {
-            return true;
-        }
-        s >> w;
-        advance = false;
-    }
-
-
 	// wideband
 	if (w == "!W") {
 		widebandOn_ = TriBool_False;
@@ -619,6 +604,18 @@ ScanFilter::parse(string filterLine)
 		advance = false;
 	}
 
+    // supplemental CID activation
+    if (w == "SA") {
+        supplementalCIDOn_ = TriBool_True;
+        advance = true;
+    }
+    if (advance) {
+        if (s.eof()) {
+            return true;
+        }
+        s >> w;
+        advance = false;
+    }
 
 	accurateMassType_ = parseAccurateMassType(w);
 	if (accurateMassType_ > AccurateMass_Unknown) {
