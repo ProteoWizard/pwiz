@@ -129,6 +129,10 @@ void fillInCommonMetadata(const string& filename, MSData& msd)
     ChromatogramListBase* cl = dynamic_cast<ChromatogramListBase*>(msd.run.chromatogramListPtr.get());
     if (sl) sl->setDataProcessingPtr(dpPwiz);
     if (cl) cl->setDataProcessingPtr(dpPwiz);
+
+    // the file-level ids can't be empty
+    if (msd.id.empty() || msd.run.id.empty())
+        msd.id = msd.run.id = bfs::basename(filename);
 }
 
 class Reader_mzML : public Reader
@@ -239,6 +243,8 @@ class Reader_mzXML : public Reader
             Serializer_mzXML serializer;
             serializer.read(is, result);
             fillInCommonMetadata(filename, result);
+            result.fileDescription.sourceFilePtrs.back()->set(MS_scan_number_only_nativeID_format);
+            result.fileDescription.sourceFilePtrs.back()->set(MS_ISB_mzXML_file);
             return;
         }
         catch (SpectrumList_mzXML::index_not_found&)
@@ -287,7 +293,6 @@ class Reader_MGF : public Reader
         Serializer_MGF serializer;
         serializer.read(is, result);
         fillInCommonMetadata(filename, result);
-        result.id = result.run.id = bfs::basename(filename);
         result.fileDescription.sourceFilePtrs.back()->set(MS_multiple_peak_list_nativeID_format);
         result.fileDescription.sourceFilePtrs.back()->set(MS_Mascot_MGF_file);
         return;

@@ -641,7 +641,7 @@ class PWIZ_API_DECL SpectrumList
     /// returns the number of spectra
     virtual size_t size() const = 0;
 
-    /// returns true iff (size() == 0)
+    /// returns true iff (size() == 0) and (dataProcessingPtr.get() == NULL)
     virtual bool empty() const;
 
     /// access to a spectrum index
@@ -721,7 +721,7 @@ class PWIZ_API_DECL ChromatogramList
     /// returns the number of chromatograms 
     virtual size_t size() const = 0;
 
-    /// returns true iff (size() == 0)
+    /// returns true iff (size() == 0) and (dataProcessingPtr.get() == NULL)
     bool empty() const;
 
     /// access to a chromatogram index

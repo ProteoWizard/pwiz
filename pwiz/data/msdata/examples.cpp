@@ -256,7 +256,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     precursor.isolationWindow.set(MS_isolation_window_upper_offset, .5, MS_m_z);
     precursor.selectedIons.resize(1);
     precursor.selectedIons[0].set(MS_selected_ion_m_z, 445.34, MS_m_z);
-    precursor.selectedIons[0].set(MS_peak_intensity, 120053);
+    precursor.selectedIons[0].set(MS_peak_intensity, 120053, MS_number_of_counts);
     precursor.selectedIons[0].set(MS_charge_state, 2);
     precursor.activation.set(MS_collision_induced_dissociation);
     precursor.activation.set(MS_collision_energy, 35.00, UO_electronvolt);

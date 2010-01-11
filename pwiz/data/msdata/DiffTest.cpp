@@ -1008,7 +1008,6 @@ void testBinaryDataOnly()
 
         // copy "important" scan metadata
 
-        to->index = from->index;
         to->defaultArrayLength = from->defaultArrayLength;
         to->scanList = from->scanList;
 
@@ -1037,7 +1036,6 @@ void testBinaryDataOnly()
 
         // copy "important" scan metadata
 
-        to->index = from->index;
         to->defaultArrayLength = from->defaultArrayLength;
     }
 
@@ -1052,6 +1050,7 @@ void testBinaryDataOnly()
 
     DiffConfig config;
     config.ignoreMetadata = true;
+    config.ignoreIdentity = true;
 
     Diff<MSData, DiffConfig> diff_data(tiny, tinier, config);
     if (os_ && diff_data) *os_ << diff_data << endl;

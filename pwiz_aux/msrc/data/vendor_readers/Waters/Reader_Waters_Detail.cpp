@@ -55,6 +55,7 @@ void translateFunctionType(FunctionType functionType,
             spectrumType = MS_MSn_spectrum;
             break;
 
+        case FunctionType_Daughters:
         case FunctionType_MSMS:
         case FunctionType_MS2:
         case FunctionType_TOF_Daughter:
@@ -86,9 +87,11 @@ void translateFunctionType(FunctionType functionType,
             spectrumType = MS_constant_neutral_gain_spectrum;
             break;
 
+        case FunctionType_Parents:
         case FunctionType_Scan:
         case FunctionType_Q1F:
         case FunctionType_TOF:
+        case FunctionType_TOF_MS:
         case FunctionType_TOF_Survey:
         case FunctionType_TOF_Parent:
         case FunctionType_MALDI_TOF:
@@ -100,8 +103,6 @@ void translateFunctionType(FunctionType functionType,
             FunctionType_Delay
             FunctionType_Concatenated
             FunctionType_Off
-            FunctionType_Parents
-            FunctionType_Daughters
             FunctionType_Diode_Array
             FunctionType_TOF_PSD
             FunctionType_Voltage_Scan

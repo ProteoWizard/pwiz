@@ -41,8 +41,8 @@ namespace msdata {
 namespace detail {
 
 
-SpectrumList_Waters::SpectrumList_Waters(RawDataPtr rawdata)
-:   rawdata_(rawdata)
+SpectrumList_Waters::SpectrumList_Waters(MSData& msd, RawDataPtr rawdata)
+:   msd_(msd), rawdata_(rawdata)
 {
     createIndex();
     size_ = index_.size();
@@ -63,64 +63,15 @@ PWIZ_API_DECL const SpectrumIdentity& SpectrumList_Waters::spectrumIdentity(size
     return index_[index];
 }
 
-/*
+
 PWIZ_API_DECL size_t SpectrumList_Waters::find(const string& id) const
 {
-    vector<string> tokens;
-    bal::split(tokens, id, bal::is_any_of(","));
-    if (tokens.size() != 2)
-        return size();
-
-    short function;
-    long scan;
-    try
-    {
-        function = lexical_cast<short>(bal::trim_left_copy_if(tokens[0], bal::is_any_of("S")));
-        scan = lexical_cast<long>(tokens[1]);
-    }
-    catch (bad_lexical_cast&)
-    {
-        return size();
-    }
-
-    map<short, map<long, size_t> >::const_iterator funcItr = nativeIdToIndexMap_.find(function);
-    if (funcItr == nativeIdToIndexMap_.end())
-        return size();
-    map<long, size_t>::const_iterator scanItr = funcItr->second.find(scan);
-    if (scanItr == funcItr->second.end())
-        return size();
+    map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
+    if (scanItr == idToIndexMap_.end())
+        return size_;
     return scanItr->second;
 }
 
-
-PWIZ_API_DECL size_t SpectrumList_Waters::findNative(const string& nativeID) const
-{
-    vector<string> tokens;
-    bal::split(tokens, nativeID, bal::is_any_of(","));
-    if (tokens.size() != 2)
-        return size();
-
-    short function;
-    long scan;
-    try
-    {
-        function = lexical_cast<short>(tokens[0]);
-        scan = lexical_cast<long>(tokens[1]);
-    }
-    catch (bad_lexical_cast&)
-    {
-        return size();
-    }
-
-    map<short, map<long, size_t> >::const_iterator funcItr = nativeIdToIndexMap_.find(function);
-    if (funcItr == nativeIdToIndexMap_.end())
-        return size();
-    map<long, size_t>::const_iterator scanItr = funcItr->second.find(scan);
-    if (scanItr == funcItr->second.end())
-        return size();
-    return scanItr->second;
-}
-*/
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBinaryData) const
 {
@@ -148,6 +99,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
     result->scanList.set(MS_no_combination);
     result->scanList.scans.push_back(Scan());
     Scan& scan = result->scanList.scans[0];
+    scan.instrumentConfigurationPtr = msd_.run.defaultInstrumentConfigurationPtr;
 
     //scan.instrumentConfigurationPtr = 
         //findInstrumentConfiguration(msd_, translate(scanInfo->massAnalyzerType()));

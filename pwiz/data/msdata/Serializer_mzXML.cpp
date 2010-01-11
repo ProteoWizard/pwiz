@@ -109,7 +109,7 @@ void start_msRun(XMLWriter& xmlWriter, const MSData& msd)
         const SpectrumList& sl = *msd.run.spectrumListPtr;
         scanCount = lexical_cast<string>(sl.size());
 
-        if (!sl.empty())
+        if (sl.size() > 0)
         {
             SpectrumPtr spectrum = sl.spectrum(0);
             if (!spectrum->scanList.scans.empty())
@@ -129,48 +129,143 @@ void start_msRun(XMLWriter& xmlWriter, const MSData& msd)
 }
 
 
+string translate_SourceFileTypeToRunID(const SourceFile& sf, CVID sourceFileType)
+{
+    string nameExtension = bal::to_lower_copy(bfs::extension(sf.name));
+    string locationExtension = bal::to_lower_copy(bfs::extension(sf.location));
+
+    switch (sourceFileType)
+    {
+        // location="file://path/to" name="source.RAW"
+        case MS_Thermo_RAW_file:
+            if (nameExtension == ".raw")
+                return bfs::basename(sf.name);
+            return "";
+
+        // sane: location="file://path/to/source.raw" name="_FUNC001.DAT"
+        // insane: location="file://path/to" name="source.raw"
+        case MS_Waters_raw_file:
+            if (nameExtension == ".dat" && locationExtension == ".raw")
+                return bfs::basename(bfs::path(sf.location).leaf());
+            else if (nameExtension == ".raw")
+                return bfs::basename(sf.name);
+            return "";
+
+        // location="file://path/to/source.d" name="Analysis.yep"
+        case MS_Bruker_Agilent_YEP_file:
+            if (nameExtension == ".yep" && locationExtension == ".d")
+                return bfs::basename(bfs::path(sf.location).leaf());
+            return "";
+            
+        // location="file://path/to/source.d" name="Analysis.baf"
+        case MS_Bruker_BAF_file:
+            if (nameExtension == ".baf" && locationExtension == ".d")
+                return bfs::basename(bfs::path(sf.location).leaf());
+            return "";
+
+        // location="file://path/to/source.d/AcqData" name="msprofile.bin"
+        case MS_Agilent_MassHunter_file:
+            if (nameExtension == ".bin" && bfs::path(sf.location).leaf() == "AcqData")
+                return bfs::basename(bfs::path(sf.location).parent_path().leaf());
+            return "";
+
+        // location="file://path/to" name="source.mzXML"
+        // location="file://path/to" name="source.mz.xml"
+        // location="file://path/to" name="source.d" (ambiguous)
+        case MS_ISB_mzXML_file:
+            if (nameExtension == ".mzxml" || nameExtension == ".d")
+                return bfs::basename(sf.name);
+            else if (bal::iends_with(sf.name, ".mz.xml"))
+                return sf.name.substr(0, sf.name.length()-7);
+            return "";
+
+        // location="file://path/to" name="source.mzData"
+        // location="file://path/to" name="source.mz.data" ???
+        case MS_PSI_mzData_file:
+            if (nameExtension == ".mzdata")
+                return bfs::basename(sf.name);
+            return "";
+
+        // location="file://path/to" name="source.mgf"
+        case MS_Mascot_MGF_file:
+            if (nameExtension == ".mgf")
+                return bfs::basename(sf.name);
+            return "";
+
+        // location="file://path/to" name="source.wiff"
+        case MS_ABI_WIFF_file:
+            if (nameExtension == ".wiff")
+                return bfs::basename(sf.name);
+            return "";
+
+        // location="file://path/to/source/maldi-spot/1/1SRef" name="fid"
+        // location="file://path/to/source/1/1SRef" name="fid"
+        case MS_Bruker_FID_file:
+            // need the full list of FIDs to create a run ID (from the common prefix)
+            return bfs::path(sf.location).parent_path().parent_path().string();
+
+        // location="file://path/to/source" name="spectrum-id.t2d"
+        // location="file://path/to/source/MS" name="spectrum-id.t2d"
+        // location="file://path/to/source/MSMS" name="spectrum-id.t2d"
+        case MS_AB_SCIEX_TOF_TOF_T2D_file:
+            // need the full list of T2Ds to create a run ID (from the common prefix)
+            return sf.location;
+
+        default:
+            return "";
+    }
+}
+
+
 void write_parentFile(XMLWriter& xmlWriter, const MSData& msd)
 {
-    SourceFilePtr sourceFilePtr = msd.run.defaultSourceFilePtr;
-    if (!sourceFilePtr.get() && !msd.fileDescription.empty())
-        sourceFilePtr = msd.fileDescription.sourceFilePtrs[0];
-
-    if (!sourceFilePtr.get())
-        return;
-
-    const SourceFile& sf = *sourceFilePtr;
-
-    CVID nativeIdFormat = sf.cvParamChild(MS_nativeID_format).cvid;
-    if (nativeIdFormat == CVID_Unknown || nativeIdFormat == MS_no_nativeID_format)
-        return;
-
-    string fileName, fileType, fileSha1;
-
-    fileName = sf.location + "/" + sf.name;
-    switch (nativeIdFormat)
+    BOOST_FOREACH(const SourceFilePtr& sourceFilePtr, msd.fileDescription.sourceFilePtrs)
     {
-        // nativeID formats from processed data file types
-        case MS_scan_number_only_nativeID_format:
-        case MS_spectrum_identifier_nativeID_format:
-        case MS_multiple_peak_list_nativeID_format:
-        case MS_single_peak_list_nativeID_format:
-            fileType = "processedData";
-            break;
+        const SourceFile& sf = *sourceFilePtr;
 
-        // consider other formats to be raw
-        default:
-            fileType = "RAWData";
-            break;
+        // skip files with unknown source file type
+        CVID sourceFileType = sf.cvParamChild(MS_mass_spectrometer_file_format).cvid;
+        if (sourceFileType == CVID_Unknown)
+            continue;
+
+        // skip files with no nativeID format (like acquisition settings)
+        CVID nativeIdFormat = sf.cvParamChild(MS_nativeID_format).cvid;
+        if (nativeIdFormat == MS_no_nativeID_format)
+            continue;
+
+        // if we can't translate the file to a run ID, skip it as a parentFile
+        string runID = translate_SourceFileTypeToRunID(sf, sourceFileType);
+        if (runID.empty())
+            continue;
+
+        string fileName, fileType, fileSha1;
+
+        fileName = sf.location + "/" + sf.name;
+        switch (nativeIdFormat)
+        {
+            // nativeID formats from processed data file types
+            case MS_scan_number_only_nativeID_format:
+            case MS_spectrum_identifier_nativeID_format:
+            case MS_multiple_peak_list_nativeID_format:
+            case MS_single_peak_list_nativeID_format:
+                fileType = "processedData";
+                break;
+
+            // consider other formats to be raw
+            default:
+                fileType = "RAWData";
+                break;
+        }
+        fileSha1 = sf.cvParam(MS_SHA_1).value;
+
+        XMLWriter::Attributes attributes;
+        attributes.push_back(make_pair("fileName", fileName));
+        attributes.push_back(make_pair("fileType", fileType));
+        attributes.push_back(make_pair("fileSha1", fileSha1));
+        xmlWriter.pushStyle(XMLWriter::StyleFlag_AttributesOnMultipleLines);
+        xmlWriter.startElement("parentFile", attributes, XMLWriter::EmptyElement);
+        xmlWriter.popStyle();
     }
-    fileSha1 = sf.cvParam(MS_SHA_1).value;
-
-    XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("fileName", fileName));
-    attributes.push_back(make_pair("fileType", fileType));
-    attributes.push_back(make_pair("fileSha1", fileSha1));
-    xmlWriter.pushStyle(XMLWriter::StyleFlag_AttributesOnMultipleLines);
-    xmlWriter.startElement("parentFile", attributes, XMLWriter::EmptyElement);
-    xmlWriter.popStyle();
 }
 
 
@@ -282,7 +377,8 @@ struct PrecursorInfo
 
 
 vector<PrecursorInfo> getPrecursorInfo(const Spectrum& spectrum, 
-                                       const SpectrumListPtr spectrumListPtr)
+                                       const SpectrumListPtr spectrumListPtr,
+                                       CVID nativeIdFormat)
 {
     vector<PrecursorInfo> result;
 
@@ -291,7 +387,10 @@ vector<PrecursorInfo> getPrecursorInfo(const Spectrum& spectrum,
     {
         PrecursorInfo info;
         if (!it->spectrumID.empty())
-            info.scanNum = id::value(it->spectrumID, "scan");
+        {
+            // mzXML scanNumber takes a different form depending on the source's nativeID format
+            info.scanNum = id::translateNativeIDToScanNumber(nativeIdFormat, it->spectrumID);
+        }
         if (!it->selectedIons.empty())
         { 
             info.mz = it->selectedIons[0].cvParam(MS_selected_ion_m_z).value;
@@ -427,7 +526,7 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
     string totIonCurrent = spectrum.cvParam(MS_total_ion_current).value;
     bool isCentroided = spectrum.hasCVParam(MS_centroid_spectrum);
 
-    vector<PrecursorInfo> precursorInfo = getPrecursorInfo(spectrum, spectrumListPtr);
+    vector<PrecursorInfo> precursorInfo = getPrecursorInfo(spectrum, spectrumListPtr, nativeIdFormat);
 
     vector<MZIntensityPair> mzIntensityPairs;
     spectrum.getMZIntensityPairs(mzIntensityPairs);
@@ -571,7 +670,7 @@ void Serializer_mzXML::Impl::write(ostream& os, const MSData& msd,
 
     stream_offset indexOffset = xmlWriter.positionNext();
 
-    if (config_.indexed)
+    if (config_.indexed && msd.run.spectrumListPtr->size() > 0)
     {
         write_index(xmlWriter, index);
 
@@ -622,40 +721,36 @@ CVID translate_parentFilenameToSourceFileType(const string& name)
     // check for known vendor formats
     if (fileExtension == ".raw")
     {
-        // hack: only way to tell the difference between thermo and waters
-        //       is Thermo uses .RAW (and a file) and Waters uses .raw (and a directory)
-        //       there is no way to tell file v. dirctory here, so casing must
-        //       be used.
-        string fileExtensionCase = bfs::extension(name);
-        if (fileExtensionCase == ".raw")
-            return MS_Waters_raw_file;
-        
-        // Use Thermo for anything but all lowercase
+        // (Mass)Wolf-MRM or other non-compliant Waters converters might
+        // conflict with this case, i.e. the extension could be from a Waters .raw directory
+        // instead of a Thermo RAW file; these aberrant cases will be fixed globally by fillInMetadata()
         return MS_Thermo_RAW_file;
     }
+    else if (fileExtension == ".dat")                           return MS_Waters_raw_file;
     else if (fileExtension == ".wiff")                          return MS_ABI_WIFF_file;
     else if (fileExtension == ".yep")                           return MS_Bruker_Agilent_YEP_file;
     else if (fileExtension == ".baf")                           return MS_Bruker_BAF_file;
-    // TODO(mchambers): This case cannot throw, but MS_Agilent_MassHunter_file doesn't appear to exist
-    else if (fileExtension == ".d")                             return MS_Thermo_RAW_file; // MS_Agilent_MassHunter_file;
     else if (name == "fid")                                     return MS_Bruker_FID_file;
-    //else if (name == "msprofile.bin" || name == "mspeak.bin") return MS_Agilent_MassHunter_file);
+    else if (bal::iequals(name, "msprofile.bin"))               return MS_Agilent_MassHunter_file;
+    else if (bal::iequals(name, "mspeak.bin"))                  return MS_Agilent_MassHunter_file;
+    else if (bal::iequals(name, "msscan.bin"))                  return MS_Agilent_MassHunter_file;
+    else if (fileExtension == ".t2d")                           return MS_AB_SCIEX_TOF_TOF_T2D_file;
 
     // check for known open formats
     else if (fileExtension == ".mzdata")                        return MS_PSI_mzData_file;
     else if (fileExtension == ".mgf")                           return MS_Mascot_MGF_file;
-    else if (fileExtension == ".mzxml" ||
-             (fileExtension == ".xml" && /* TPP uses ".mz.xml" */
-              bal::to_lower_copy(bfs::extension(bfs::basename(name))) == ".mz"))
-    {
-        return MS_ISB_mzXML_file;
-    }
-    else if (fileExtension == ".mzml")
-    {
-        throw runtime_error("[Serializer_mzXML::translate_parentFileExtensionToSourceFileType] mzML parentFile not implemented");
-    }
-    else
-        throw runtime_error("[Serializer_mzXML::translate_parentFileExtensionToSourceFileType] unknown file extension for parentFile \"" + name + "\"");
+    else if (fileExtension == ".mzxml")                         return MS_ISB_mzXML_file;
+    else if (bal::iends_with(name, ".mz.xml"))                  return MS_ISB_mzXML_file;
+    else if (fileExtension == ".mzml")                          return MS_mzML_file;
+
+    // This case is nasty for two reasons:
+    // 1) a .d suffix almost certainly indicates a directory, not a file (so no SHA-1)
+    // 2) the same suffix is used by multiple different formats (Agilent/Bruker YEP, Bruker BAF, Agilent ms*.bin)
+    // 3) all the formats use the same nativeID style ("scan=123") so just treat it like an mzXML source
+    // Therefore this "file" extension is quite useless.
+    else if (fileExtension == ".d")                             return MS_ISB_mzXML_file;
+
+    else                                                        return CVID_Unknown;
 }
 
 
@@ -665,7 +760,6 @@ CVID translateSourceFileTypeToNativeIdFormat(CVID sourceFileType)
     {
         // for these sources we treat the scan number as the nativeID
         case MS_Thermo_RAW_file:            return MS_Thermo_nativeID_format;
-        case MS_Waters_raw_file:            return MS_Waters_nativeID_format;
         case MS_Bruker_Agilent_YEP_file:    return MS_Bruker_Agilent_YEP_nativeID_format;
         case MS_Bruker_BAF_file:            return MS_Bruker_BAF_nativeID_format;
         case MS_ISB_mzXML_file:             return MS_scan_number_only_nativeID_format;
@@ -676,7 +770,13 @@ CVID translateSourceFileTypeToNativeIdFormat(CVID sourceFileType)
         // for these sources we must assume the scan number came from the index
         case MS_ABI_WIFF_file:
         case MS_Bruker_FID_file:
+        case MS_AB_SCIEX_TOF_TOF_T2D_file:
+        case MS_Waters_raw_file:
             return MS_scan_number_only_nativeID_format;
+
+        // in other cases, assume the source file doesn't contain instrument data
+        case CVID_Unknown:
+            return MS_no_nativeID_format;
 
         default:
             throw runtime_error("[Serializer_mzXML::translateSourceFileTypeToNativeIdFormat] unknown file type");
@@ -697,23 +797,11 @@ void process_parentFile(const string& fileName, const string& fileType,
     sf.name = name;
     sf.location = location;
 
-    if (fileType == "RAWData" || fileType == "processedData")
-    {
-        CVID sourceFileType = translate_parentFilenameToSourceFileType(name);
-        sf.set(sourceFileType);
-        sf.set(translateSourceFileTypeToNativeIdFormat(sourceFileType));
-    }
-    else
+    if (fileType != "RAWData" && fileType != "processedData")
         throw runtime_error("[Serializer_mzXML::process_parentFile] invalid value for fileType attribute");
 
+    // TODO: if fileSha1 is empty or invalid, log a warning
     sf.set(MS_SHA_1, fileSha1);
-
-    // the file level IDs can't be left empty so we set them to be the filename
-    if (msd.id.empty() || msd.run.id.empty())
-    {
-        msd.id = bfs::basename(sf.name);
-        msd.run.id = msd.id;
-    }
 }
 
 
@@ -748,6 +836,85 @@ SoftwarePtr registerSoftware(MSData& msd,
     adapter.type(type);
 
     return result;
+}
+
+
+template <typename SequenceT>
+string longestCommonPrefix(const SequenceT& strings)
+{
+    if (strings.empty())
+        return "";
+
+    typename SequenceT::const_iterator itr = strings.begin();
+    string result = *itr;
+    for (++itr; itr != strings.end(); ++itr)
+    {
+        const string& target = *itr;
+
+        if (result.empty())
+            return "";
+
+        for (size_t j=0; j < target.length() && j < result.length(); ++j)
+            if (target[j] != result[j])
+            {
+                result.resize(0, j);
+                break;
+            }
+    }
+    return result;
+}
+
+
+void fillInMetadata(MSData& msd)
+{
+    // check for (Mass)Wolf-MRM metadata: multiple parentFiles with the same .raw URI
+    set<string> uniqueURIs;
+    BOOST_FOREACH(SourceFilePtr& sf, msd.fileDescription.sourceFilePtrs)
+    {
+        pair<set<string>::iterator, bool> ir = uniqueURIs.insert((sf->location.empty() ? "" : sf->location + '/') + sf->name);
+        if (!ir.second)
+        {
+            // found duplicate URI: remove all the .raw sourceFiles (leave only the mzXML)
+            msd.fileDescription.sourceFilePtrs.assign(1, msd.fileDescription.sourceFilePtrs[0]);
+            break;
+        }
+    }
+
+    // add nativeID type and source file type to the remaining source files
+    set<string> uniqueIDs;
+    BOOST_FOREACH(SourceFilePtr& sf, msd.fileDescription.sourceFilePtrs)
+    {
+        CVID sourceFileType = translate_parentFilenameToSourceFileType(sf->name);
+        // TODO: if sourceFileType is CVID_Unknown, log a warning
+        sf->set(sourceFileType);
+        sf->set(translateSourceFileTypeToNativeIdFormat(sourceFileType));
+
+        if (sourceFileType == MS_Bruker_FID_file || sourceFileType == MS_AB_SCIEX_TOF_TOF_T2D_file)
+        {       
+            // each source file is translated to a run ID and added to a set of potential ids;
+            // if they all have a common prefix, that is used as the id, otherwise it stays empty
+            string runId = translate_SourceFileTypeToRunID(*sf, sourceFileType);
+            if (!runId.empty())
+                uniqueIDs.insert(runId);
+        }
+        else
+        {
+            if (msd.id.empty())
+                msd.id = msd.run.id = translate_SourceFileTypeToRunID(*sf, sourceFileType);
+        }
+    }
+
+    string lcp = longestCommonPrefix(uniqueIDs);
+    if (!lcp.empty())
+    {
+        // part of the prefix after the source name might need to be trimmed off, e.g.:
+        // path/to/source/1A/1/1SRef/fid, path/to/source/1B/1/1SRef/fid, lcp: path/to/source/1, run id: source (not "1")
+        // path/to/source/1A/1/1SRef/fid, path/to/source/2A/1/1SRef/fid, lcp: path/to/source/, run id: source
+        if (*lcp.rbegin() == '/')
+            msd.id = msd.run.id = bfs::path(lcp).leaf();
+        else
+            msd.id = msd.run.id = bfs::path(lcp).parent_path().leaf();
+    }
 }
 
 
@@ -902,7 +1069,7 @@ struct Handler_dataProcessing : public SAXParser::Handler
             return Status::Ok;
         }
 
-        throw runtime_error(("[SpectrumList_mzXML::Handler_dataProcessing] Unexpected element name: " + name).c_str());
+        throw runtime_error(("[Serializer_mzXML::Handler_dataProcessing] Unexpected element name: " + name).c_str());
     }
 
     private:
@@ -953,12 +1120,15 @@ class Handler_mzXML : public SAXParser::Handler
         {
             return Status(Status::Delegate, &handler_dataProcessing_);
         }
-        else if (name == "scan")
+        else if (name == "scan" || name == "index" || name == "sha1")
         {
+            // all file-level metadata has been parsed, but there are some gaps to fill
+            fillInMetadata(msd_);
+
             return Status::Done;
         }
 
-        throw runtime_error(("[SpectrumList_mzXML::Handler_mzXML] Unexpected element name: " + name).c_str());
+        throw runtime_error(("[Serializer_mzXML::Handler_mzXML] Unexpected element name: " + name).c_str());
     }
 
     private:
@@ -974,6 +1144,8 @@ void Serializer_mzXML::Impl::read(shared_ptr<istream> is, MSData& msd) const
 {
     if (!is.get() || !*is)
         throw runtime_error("[Serializer_mzXML::read()] Bad istream.");
+
+    is->seekg(0);
 
     Handler_mzXML handler(msd, cvTranslator_);
     SAXParser::parse(*is, handler); 

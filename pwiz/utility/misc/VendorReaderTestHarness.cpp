@@ -30,6 +30,7 @@
 #include "pwiz/data/msdata/Diff.hpp"
 #include "pwiz/data/msdata/SpectrumListBase.hpp"
 #include "pwiz/data/msdata/ChromatogramListBase.hpp"
+#include "pwiz/data/msdata/SpectrumListWrapper.hpp"
 #include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/misc/String.hpp"
@@ -67,11 +68,22 @@ void testAccept(const Reader& reader, const string& rawpath)
 }
 
 
-void mangleSourceFileLocations(vector<SourceFilePtr>& sourceFiles)
+void mangleSourceFileLocations(const string& sourceName, vector<SourceFilePtr>& sourceFiles)
 {
     // mangling the absolute paths is necessary for the test to work from any path
-    for (size_t i=0; i < sourceFiles.size(); ++i)
-        sourceFiles[i]->location = "file:///";
+    BOOST_FOREACH(SourceFilePtr& sourceFilePtr, sourceFiles)
+    {
+        // if the sourceName is in the location, preserve it (erase everything preceding it)
+        size_t sourceNameInLocation = sourceFilePtr->location.find(sourceName);
+        if (sourceNameInLocation != string::npos)
+        {
+            sourceFilePtr->location.erase(0, sourceNameInLocation);
+            sourceFilePtr->location = "file:///" + sourceFilePtr->location;
+        }
+        else
+            sourceFilePtr->location = "file:///";
+    }
+
 }
 
 
@@ -117,13 +129,13 @@ void calculateSourceFileChecksums(vector<SourceFilePtr>& sourceFiles)
 }
 
 
-void hackInMemoryMSData(MSData& msd)
+void hackInMemoryMSData(const string& sourceName, MSData& msd)
 {
     // remove metadata ptrs appended on read
     vector<SourceFilePtr>& sfs = msd.fileDescription.sourceFilePtrs;
     if (!sfs.empty()) sfs.erase(sfs.end()-1);
 
-    mangleSourceFileLocations(sfs);
+    mangleSourceFileLocations(sourceName, sfs);
     manglePwizSoftware(msd);
 
     // remove current DataProcessing created on read
@@ -146,25 +158,88 @@ string headDiff(const DiffType& diff, size_t maxLength)
 }
 
 
+string headStream(istream& is, size_t maxLength)
+{
+    is.clear();
+    is.seekg(0);
+    string buf(maxLength, '\0');
+    size_t bytesRead = is.readsome(&buf[0], maxLength);
+    buf.resize(bytesRead);
+    if (bytesRead > maxLength)
+        return buf + "\n...snip...\n";
+    return buf;
+}
+
+
+// filters out non-MSn spectra, MS1 spectra, and filters the metadata from MSn spectra
+class SpectrumList_MGF_Filter : public SpectrumListWrapper
+{
+    vector<size_t> msnIndex;
+
+    public:
+
+    SpectrumList_MGF_Filter(const SpectrumListPtr& inner) : SpectrumListWrapper(inner)
+    {
+        for (size_t index=0; index < inner->size(); ++index)
+        {
+            string msLevel = inner->spectrum(index)->cvParam(MS_ms_level).value;
+            if (!msLevel.empty() && msLevel != "1")
+                msnIndex.push_back(index);
+        }
+    }
+
+    virtual size_t size() const {return msnIndex.size();}
+    virtual bool empty() const {return msnIndex.empty();}
+    virtual const SpectrumIdentity& spectrumIdentity(size_t index) const {return inner_->spectrumIdentity(msnIndex[index]);}
+    virtual SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const
+    {
+        SpectrumPtr result = inner_->spectrum(msnIndex[index], getBinaryData);
+
+        // replace profile term with centroid (MGF is always considered to be centroid)
+        vector<CVParam>& cvParams = result->cvParams;
+        vector<CVParam>::iterator itr = std::find(cvParams.begin(), cvParams.end(), MS_profile_spectrum);
+        if (itr != cvParams.end())
+        {
+            *itr = MS_centroid_spectrum;
+
+            // take only the first 100 points (100k points in MGF is not fun)
+            vector<double>& mzArray = result->getMZArray()->data;
+            vector<double>& intensityArray = result->getIntensityArray()->data;
+            if (result->defaultArrayLength > 100)
+            {
+                result->defaultArrayLength = 100;
+                mzArray.resize(100);
+                intensityArray.resize(100);
+            }
+        }
+
+        return result;
+    }
+};
+
+
 void testRead(const Reader& reader, const string& rawpath)
 {
     if (os_) *os_ << "testRead(): " << rawpath << endl;
 
     // read file into MSData object
     vector<MSDataPtr> msds;
-    reader.read(rawpath, pwiz::util::read_file_header(rawpath, 512), msds);
+    string rawheader = pwiz::util::read_file_header(rawpath, 512);
+    reader.read(rawpath, rawheader, msds);
+
+    string sourceName = bfs::path(rawpath).filename();
 
     for (size_t i=0; i < msds.size(); ++i)
     {
         MSData& msd = *msds[i];
         calculateSourceFileChecksums(msd.fileDescription.sourceFilePtrs);
-        mangleSourceFileLocations(msd.fileDescription.sourceFilePtrs);
+        mangleSourceFileLocations(sourceName, msd.fileDescription.sourceFilePtrs);
         manglePwizSoftware(msd);
         if (os_) TextWriter(*os_,0)(msd);
 
         bfs::path targetResultFilename = bfs::path(rawpath).parent_path() / (msd.run.id + ".mzML");
         MSDataFile targetResult(targetResultFilename.string());
-        hackInMemoryMSData(targetResult);
+        hackInMemoryMSData(sourceName, targetResult);
 
         // test for 1:1 equality with the target mzML
         Diff<MSData, DiffConfig> diff(msd, targetResult);
@@ -179,23 +254,38 @@ void testRead(const Reader& reader, const string& rawpath)
         diffConfig_non_mzML.ignoreMetadata = true;
         diffConfig_non_mzML.ignoreChromatograms = true;
 
+        // check if the file type is one that loses nativeIDs in translation
+        string fileType = reader.identify(rawpath, rawheader);
+        if (bal::contains(fileType, "WIFF") ||
+            bal::contains(fileType, "Waters") ||
+            fileType == "Bruker FID")
+            diffConfig_non_mzML.ignoreIdentity = true;
+
         // mzML <-> mzXML
         MSData msd_mzXML;
         Serializer_mzXML serializer_mzXML;
         serializer_mzXML.write(*stringstreamPtr, msd);
+        if (os_) *os_ << stringstreamPtr->str() << endl;
         serializer_mzXML.read(serializedStreamPtr, msd_mzXML);
+
         Diff<MSData, DiffConfig> diff_mzXML(msd, msd_mzXML, diffConfig_non_mzML);
+        if (diff_mzXML && !os_) cerr << headStream(*serializedStreamPtr, 5000) << endl;
         if (diff_mzXML) cerr << headDiff(diff_mzXML, 5000) << endl;
         unit_assert(!diff_mzXML);
 
-        stringstreamPtr->str();
+        stringstreamPtr->str("");
 
         // mzML <-> MGF
+        msd.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_MGF_Filter(msd.run.spectrumListPtr));
         MSData msd_MGF;
         Serializer_MGF serializer_MGF;
         serializer_MGF.write(*stringstreamPtr, msd);
+        if (os_) *os_ << stringstreamPtr->str() << endl;
         serializer_MGF.read(serializedStreamPtr, msd_MGF);
+
+        diffConfig_non_mzML.ignoreIdentity = true;
         Diff<MSData, DiffConfig> diff_MGF(msd, msd_MGF, diffConfig_non_mzML);
+        if (diff_MGF && !os_) cerr << headStream(*serializedStreamPtr, 5000) << endl;
         if (diff_MGF) cerr << headDiff(diff_MGF, 5000) << endl;
         unit_assert(!diff_MGF);
     }

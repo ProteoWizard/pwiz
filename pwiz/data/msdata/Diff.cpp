@@ -417,15 +417,19 @@ void diff(const Spectrum& a,
     a_b = Spectrum();
     b_a = Spectrum();
 
+    if (!config.ignoreIdentity)
+    {
+        diff(a.id, b.id, a_b.id, b_a.id, config);
+        diff_integral(a.index, b.index, a_b.index, b_a.index, config);
+    }
+
     // important scan metadata
-    diff_integral(a.index, b.index, a_b.index, b_a.index, config);
     diff_integral(a.defaultArrayLength, b.defaultArrayLength, a_b.defaultArrayLength, b_a.defaultArrayLength, config);
     vector_diff_diff(a.precursors, b.precursors, a_b.precursors, b_a.precursors, config);
     vector_diff_diff(a.products, b.products, a_b.products, b_a.products, config);
 
     if (!config.ignoreMetadata)
     {
-        diff(a.id, b.id, a_b.id, b_a.id, config);
         ptr_diff(a.dataProcessingPtr, b.dataProcessingPtr, a_b.dataProcessingPtr, b_a.dataProcessingPtr, config);
         ptr_diff(a.sourceFilePtr, b.sourceFilePtr, a_b.sourceFilePtr, b_a.sourceFilePtr, config);
         diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
@@ -462,8 +466,10 @@ void diff(const Spectrum& a,
     // provide context
     if (!a_b.empty() || !b_a.empty()) 
     {
-        a_b.id = a.id; 
-        b_a.id = b.id; 
+        a_b.id = a.id;
+        b_a.id = b.id;
+        a_b.index = a.index;
+        b_a.index = b.index;
     }
 }
 
@@ -478,13 +484,17 @@ void diff(const Chromatogram& a,
     a_b = Chromatogram();
     b_a = Chromatogram();
 
+    if (!config.ignoreIdentity)
+    {
+        diff(a.id, b.id, a_b.id, b_a.id, config);
+        diff_integral(a.index, b.index, a_b.index, b_a.index, config);
+    }
+
     // important scan metadata
-    diff_integral(a.index, b.index, a_b.index, b_a.index, config);
     diff_integral(a.defaultArrayLength, b.defaultArrayLength, a_b.defaultArrayLength, b_a.defaultArrayLength, config);
 
     if (!config.ignoreMetadata)
     {
-        diff(a.id, b.id, a_b.id, b_a.id, config);
         ptr_diff(a.dataProcessingPtr, b.dataProcessingPtr, a_b.dataProcessingPtr, b_a.dataProcessingPtr, config);
         diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
         diff(a.precursor, b.precursor, a_b.precursor, b_a.precursor, config);
@@ -521,8 +531,10 @@ void diff(const Chromatogram& a,
     // provide context
     if (!a_b.empty() || !b_a.empty()) 
     {
-        a_b.id = a.id; 
-        b_a.id = b.id; 
+        a_b.id = a.id;
+        b_a.id = b.id;
+        a_b.index = a.index;
+        b_a.index = b.index;
     }
 }
 

@@ -204,10 +204,12 @@ namespace msdata {
 /// configuration struct for diffing MSData types
 struct PWIZ_API_DECL DiffConfig : public pwiz::data::BaseDiffConfig
 {
+    /// ignore members of SpectrumIdentity and ChromatogramIdentity
+    bool ignoreIdentity;
+
     /// ignore all file level metadata, and most scan level metadata,
     /// i.e. verify scan binary data, plus important scan metadata:
-    ///  - msLevel 
-    ///  - scanNumber 
+    ///  - msLevel
     ///  - precursor.ionSelection
     bool ignoreMetadata;
 
@@ -216,7 +218,8 @@ struct PWIZ_API_DECL DiffConfig : public pwiz::data::BaseDiffConfig
     bool ignoreDataProcessing;
 
     DiffConfig()
-    :   pwiz::data::BaseDiffConfig(), 
+    :   pwiz::data::BaseDiffConfig(),
+        ignoreIdentity(false),
         ignoreMetadata(false),
         ignoreChromatograms(false),
         ignoreDataProcessing(false)

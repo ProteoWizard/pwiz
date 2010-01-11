@@ -388,7 +388,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
                     if (c->size() == 0)
                         throw runtime_error("[SpectrumList_Thermo::spectrum()] No chromatogram time points for the scan time.");
 
-                    selectedIon.set(MS_peak_intensity, c->data()[0].intensity, MS_number_of_counts);
+                    if (c->data()[0].intensity > 0)
+                        selectedIon.set(MS_peak_intensity, c->data()[0].intensity, MS_number_of_counts);
                 }
             }
 

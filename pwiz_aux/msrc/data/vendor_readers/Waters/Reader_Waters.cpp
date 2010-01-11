@@ -160,7 +160,7 @@ void Reader_Waters::read(const string& filename,
         throw ReaderFail("[Reader_Waters::read] multiple runs not supported");
 
     RawDataPtr rawdata = RawData::create(filename);
-    result.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_Waters(rawdata));
+    result.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_Waters(result, rawdata));
     result.run.chromatogramListPtr = ChromatogramListPtr(new ChromatogramList_Waters(rawdata));
 
     fillInMetadata(filename, rawdata, result);

@@ -65,10 +65,12 @@ class SpectrumList_mzXMLImpl : public SpectrumList_mzXML
     vector<SpectrumIdentity> index_;
     map<string,size_t> idToIndex_;
 
+    mutable vector<int> scanMsLevelCache_;
+
     bool readIndex(); // return false if index is not present
     void createIndex();
     void createMaps();
-    string getPrecursorID(size_t index) const;
+    string getPrecursorID(int precursorMsLevel, size_t index) const;
 };
 
 
@@ -80,6 +82,8 @@ SpectrumList_mzXMLImpl::SpectrumList_mzXMLImpl(shared_ptr<istream> is, const MSD
         gotIndex = readIndex(); 
     if (!gotIndex)
         createIndex();
+
+    scanMsLevelCache_.resize(index_.size());
 
     createMaps();
 }
@@ -104,6 +108,7 @@ size_t SpectrumList_mzXMLImpl::find(const string& id) const
 struct HandlerPrecursor : public SAXParser::Handler
 {
     Precursor* precursor;
+    CVID nativeIdFormat;
 
     HandlerPrecursor()
     :   precursor(0)
@@ -118,19 +123,20 @@ struct HandlerPrecursor : public SAXParser::Handler
 
         if (name == "precursorMz")
         {
-            string precursorScanNum("0"), precursorIntensity, precursorCharge;
+            string precursorScanNum("0"), precursorIntensity, precursorCharge,
+                possibleCharges, activationMethod;
             getAttribute(attributes, "precursorScanNum", precursorScanNum);
             getAttribute(attributes, "precursorIntensity", precursorIntensity);
             getAttribute(attributes, "precursorCharge", precursorCharge);
-			string possibleCharges;
             getAttribute(attributes, "possibleCharges", possibleCharges);
-            
-            precursor->spectrumID = "scan=" + precursorScanNum;
+            getAttribute(attributes, "activationMethod", activationMethod);
+
+            precursor->spectrumID = id::translateScanNumberToNativeID(nativeIdFormat, precursorScanNum);
 
             precursor->selectedIons.push_back(SelectedIon());
 
-            if (!precursorIntensity.empty())
-                precursor->selectedIons.back().cvParams.push_back(CVParam(MS_peak_intensity, precursorIntensity));
+            if (!precursorIntensity.empty() && precursorIntensity != "0")
+                precursor->selectedIons.back().cvParams.push_back(CVParam(MS_peak_intensity, precursorIntensity, MS_number_of_counts));
 
             if (!precursorCharge.empty())
                 precursor->selectedIons.back().cvParams.push_back(CVParam(MS_charge_state, precursorCharge));
@@ -145,6 +151,18 @@ struct HandlerPrecursor : public SAXParser::Handler
 					precursor->selectedIons.back().cvParams.push_back(CVParam(MS_possible_charge_state, lexical_cast<int>(charge)));
 				}
 			}
+
+            if (activationMethod.empty() || activationMethod == "CID")
+            {
+                // TODO: is it reasonable to assume CID if activation method is unspecified (i.e. older mzXMLs)?
+                precursor->activation.set(MS_CID);
+            }
+            else if (activationMethod == "ETD")
+                precursor->activation.set(MS_ETD);
+            else if (activationMethod == "ECD")
+                precursor->activation.set(MS_ECD);
+            //else
+                // TODO: log about invalid attribute value
 
             return Status::Ok;
         }
@@ -272,8 +290,11 @@ class HandlerScan : public SAXParser::Handler
         spectrum_(spectrum), 
         getBinaryData_(getBinaryData),
         handlerPeaks_(spectrum),
+        handlerPrecursor_(),
         nativeIdFormat_(id::getDefaultNativeIDFormat(msd))
-    {}
+    {
+        handlerPrecursor_.nativeIdFormat = nativeIdFormat_;
+    }
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
@@ -315,9 +336,8 @@ class HandlerScan : public SAXParser::Handler
             spectrum_.sourceFilePosition = position;
 
             if (msLevel.empty())
-                spectrum_.set(MS_ms_level, 1);
-            else
-                spectrum_.set(MS_ms_level, msLevel);
+                msLevel = "1";
+            spectrum_.set(MS_ms_level, msLevel);
 
             handlerPeaks_.peaksCount = lexical_cast<unsigned int>(peaksCount);
 
@@ -416,8 +436,10 @@ class HandlerScan : public SAXParser::Handler
         {
             spectrum_.precursors.push_back(Precursor());
             Precursor& precursor = spectrum_.precursors.back();
+
             if (!collisionEnergy_.empty())
-                precursor.activation.set(MS_collision_energy, collisionEnergy_);
+                precursor.activation.set(MS_collision_energy, collisionEnergy_, UO_electronvolt);
+
             handlerPrecursor_.precursor = &precursor; 
             return Status(Status::Delegate, &handlerPrecursor_);
         }
@@ -482,9 +504,12 @@ SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, bool getBinaryData) c
     HandlerScan handler(msd_, *result, getBinaryData);
     SAXParser::parse(*is_, handler);
 
+    int msLevel = lexical_cast<int>(msLevel);
+    scanMsLevelCache_[index] = msLevel;
+
     // hack to get parent scanNumber if precursorScanNum wasn't set
 
-    if (result->cvParam(MS_ms_level).valueAs<int>() > 1 &&
+    if (msLevel > 1 &&
         !result->precursors.empty() &&
         result->precursors.front().spectrumID.empty())
     {
@@ -494,7 +519,7 @@ SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, bool getBinaryData) c
         if (result->precursors.front().spectrumID == "0")
             result->precursors.front().spectrumID.clear();
         else
-            result->precursors.front().spectrumID = getPrecursorID(index);
+            result->precursors.front().spectrumID = getPrecursorID(msLevel-1, index);
     }
 
     // resolve any references into the MSData object
@@ -720,16 +745,25 @@ void SpectrumList_mzXMLImpl::createMaps()
 }
 
 
-string SpectrumList_mzXMLImpl::getPrecursorID(size_t index) const
+string SpectrumList_mzXMLImpl::getPrecursorID(int precursorMsLevel, size_t index) const
 {
+    // for MSn spectra (n > 1): return first scan with MSn-1
+
     while (index > 0)
     {
-        SpectrumPtr s = spectrum(index-1, false);
-        if (s->cvParam(MS_ms_level).valueAs<int>() == 1) return s->id;
-        index--;
+	    --index;
+        int& cachedMsLevel = scanMsLevelCache_[index];
+        if (cachedMsLevel == 0)
+        {
+            // populate the missing MS level
+            SpectrumPtr s = spectrum(index-1, false);
+	        cachedMsLevel = s->cvParam(MS_ms_level).valueAs<int>();
+        }
+        if (cachedMsLevel == precursorMsLevel)
+            return lexical_cast<string>(index);
     }
 
-    throw runtime_error("[SpectrumList_mzXML::getPrecursorScanNumber()] Precursor scan number not found."); 
+    return "";
 }
 
 
