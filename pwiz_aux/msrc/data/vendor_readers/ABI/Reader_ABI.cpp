@@ -254,15 +254,25 @@ void Reader_ABI::read(const string& filename,
         int sampleCount = wifffile->getSampleCount();
         for (int i=1; i <= sampleCount; ++i)
         {
-            results.push_back(MSDataPtr(new MSData));
-            MSData& result = *results.back();
+            try
+            {
+                MSDataPtr msDataPtr = MSDataPtr(new MSData);
+                MSData& result = *msDataPtr;
 
-            SpectrumList_ABI* sl = new SpectrumList_ABI(result, wifffile, i);
-            ChromatogramList_ABI* cl = new ChromatogramList_ABI(result, wifffile, i);
-            result.run.spectrumListPtr = SpectrumListPtr(sl);
-            result.run.chromatogramListPtr = ChromatogramListPtr(cl);
+                SpectrumList_ABI* sl = new SpectrumList_ABI(result, wifffile, i);
+                ChromatogramList_ABI* cl = new ChromatogramList_ABI(result, wifffile, i);
+                result.run.spectrumListPtr = SpectrumListPtr(sl);
+                result.run.chromatogramListPtr = ChromatogramListPtr(cl);
 
-            fillInMetadata(filename, result, wifffile, i);
+                fillInMetadata(filename, result, wifffile, i);
+
+                results.push_back(msDataPtr);
+            }
+            catch (exception& e)
+            {
+                // TODO: make this a critical logged warning
+                cerr << "[Reader_ABI::read] Error opening run " << i << " in " << bfs::path(filename).leaf() << ":\n" << e.what() << endl;
+            }
         }
     }
     catch (std::exception& e)

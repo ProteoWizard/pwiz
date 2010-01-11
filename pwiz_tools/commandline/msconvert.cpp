@@ -467,31 +467,37 @@ void processFile(const string& filename, const Config& config, const ReaderList&
     for (size_t i=0; i < msdList.size(); ++i)
     {
         MSData& msd = *msdList[i];
+        try
+        {
+            // calculate SHA1 checksum
+            if (!msd.fileDescription.sourceFilePtrs.empty())
+                calculateSourceFileSHA1(*msd.fileDescription.sourceFilePtrs.back());
 
-        // calculate SHA1 checksum
-        if (!msd.fileDescription.sourceFilePtrs.empty())
-            calculateSourceFileSHA1(*msd.fileDescription.sourceFilePtrs.back());
+            // process the data 
 
-        // process the data 
+            if (!config.contactFilename.empty())
+                addContactInfo(msd, config.contactFilename);
 
-        if (!config.contactFilename.empty())
-            addContactInfo(msd, config.contactFilename);
+            SpectrumListFactory::wrap(msd, config.filters);
 
-        SpectrumListFactory::wrap(msd, config.filters);
+            // handle progress updates if requested
 
-        // handle progress updates if requested
+            IterationListenerRegistry iterationListenerRegistry;
+            UserFeedbackIterationListener feedback;
+            // update on the first spectrum, the last spectrum, the 100th spectrum, the 200th spectrum, etc.
+            const size_t iterationPeriod = 100;
+            iterationListenerRegistry.addListener(feedback, iterationPeriod);
+            IterationListenerRegistry* pILR = config.verbose ? &iterationListenerRegistry : 0; 
 
-        IterationListenerRegistry iterationListenerRegistry;
-        UserFeedbackIterationListener feedback;
-        // update on the first spectrum, the last spectrum, the 100th spectrum, the 200th spectrum, etc.
-        const size_t iterationPeriod = 100;
-        iterationListenerRegistry.addListener(feedback, iterationPeriod);
-        IterationListenerRegistry* pILR = config.verbose ? &iterationListenerRegistry : 0; 
-
-        // write out the new data file
-        string outputFilename = config.outputFilename(filename, msd);
-        cout << "writing output file: " << outputFilename << endl;
-        MSDataFile::write(msd, outputFilename, config.writeConfig, pILR);
+            // write out the new data file
+            string outputFilename = config.outputFilename(filename, msd);
+            cout << "writing output file: " << outputFilename << endl;
+            MSDataFile::write(msd, outputFilename, config.writeConfig, pILR);
+        }
+        catch (exception& e)
+        {
+            cerr << "Error writing run " << (i+1) << " in " << bfs::path(filename).leaf() << ":\n" << e.what() << endl;
+        }
     }
     cout << endl;
 }

@@ -109,23 +109,29 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, b
             int sampleCount = wifffile_->getSampleCount();
             for (int i=1; i <= sampleCount; ++i)
             {
-
-                int periodCount = wifffile_->getPeriodCount(i);
-                for (int ii=1; ii <= periodCount; ++ii)
+                try
                 {
-                    //Console::WriteLine("Sample {0}, Period {1}", i, ii);
-
-                    int experimentCount = wifffile_->getExperimentCount(i, ii);
-                    for (int iii=1; iii <= experimentCount; ++iii)
+                    int periodCount = wifffile_->getPeriodCount(i);
+                    for (int ii=1; ii <= periodCount; ++ii)
                     {
-                        ExperimentPtr msExperiment = wifffile_->getExperiment(i, ii, iii);
+                        //Console::WriteLine("Sample {0}, Period {1}", i, ii);
 
-                        // add current experiment TIC to full file TIC
-                        vector<double> times, intensities;
-                        msExperiment->getTIC(times, intensities);
-                        for (int iiii = 0, end = intensities.size(); iiii < end; ++iiii)
-                            fullFileTIC[times[iiii]] += intensities[iiii];
+                        int experimentCount = wifffile_->getExperimentCount(i, ii);
+                        for (int iii=1; iii <= experimentCount; ++iii)
+                        {
+                            ExperimentPtr msExperiment = wifffile_->getExperiment(i, ii, iii);
+
+                            // add current experiment TIC to full file TIC
+                            vector<double> times, intensities;
+                            msExperiment->getTIC(times, intensities);
+                            for (int iiii = 0, end = intensities.size(); iiii < end; ++iiii)
+                                fullFileTIC[times[iiii]] += intensities[iiii];
+                        }
                     }
+                }
+                catch (exception& e)
+                {
+                    // TODO: log warning
                 }
             }
 

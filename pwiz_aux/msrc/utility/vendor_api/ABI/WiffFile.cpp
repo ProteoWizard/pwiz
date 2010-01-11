@@ -225,7 +225,7 @@ WiffFileImpl::~WiffFileImpl()
 
 int WiffFileImpl::getSampleCount() const
 {
-    CATCH_AND_FORWARD(return (sampleNames.size() == 0 ? reader->SampleCount : sampleNames.size());)
+    CATCH_AND_FORWARD(return getSampleNames().size();)
 }
 
 int WiffFileImpl::getPeriodCount(int sample) const
@@ -265,14 +265,23 @@ const vector<string>& WiffFileImpl::getSampleNames() const
             // e.g. foo, bar, foo (2), foobar, bar (2), foo (3)
             map<string, int> duplicateCountMap;
             array<System::String^>^ sampleNamesManaged = reader->SampleNames;
-            sampleNames.resize(sampleNamesManaged->Length);
+            sampleNames.resize(sampleNamesManaged->Length, "");
             for (int i=0; i < sampleNamesManaged->Length; ++i)
-            {
                 sampleNames[i] = ToStdString(sampleNamesManaged[i]);
+
+            // inexplicably, some files have more samples than sample names;
+            // pad the name vector with duplicates of the last sample name;
+            // if there are no names, use empty string
+            while (sampleNames.size() < (size_t) reader->SampleCount)
+                sampleNames.push_back(sampleNames.back());
+
+            for (size_t i=0; i < sampleNames.size(); ++i)
+            {
                 int duplicateCount = duplicateCountMap[sampleNames[i]]++; // increment after getting current count
                 if (duplicateCount)
                     sampleNames[i] += " (" + lexical_cast<string>(duplicateCount+1) + ")";
             }
+
         }
         return sampleNames;
     //)
