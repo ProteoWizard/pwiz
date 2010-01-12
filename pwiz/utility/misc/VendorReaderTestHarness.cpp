@@ -182,8 +182,10 @@ class SpectrumList_MGF_Filter : public SpectrumListWrapper
     {
         for (size_t index=0; index < inner->size(); ++index)
         {
-            string msLevel = inner->spectrum(index)->cvParam(MS_ms_level).value;
-            if (!msLevel.empty() && msLevel != "1")
+            SpectrumPtr s = inner->spectrum(index);
+            string msLevel = s->cvParam(MS_ms_level).value;
+            if (!msLevel.empty() && msLevel != "1" &&
+                !s->precursors.empty() && !s->precursors[0].selectedIons.empty())
                 msnIndex.push_back(index);
         }
     }
@@ -263,29 +265,37 @@ void testRead(const Reader& reader, const string& rawpath)
 
         // mzML <-> mzXML
         MSData msd_mzXML;
-        Serializer_mzXML serializer_mzXML;
+        Serializer_mzXML::Config config;
+        if (os_)
+        {
+            config.binaryDataEncoderConfig.compression = BinaryDataEncoder::Compression_Zlib;
+            config.binaryDataEncoderConfig.precision = BinaryDataEncoder::Precision_32;
+        }
+        Serializer_mzXML serializer_mzXML(config);
         serializer_mzXML.write(*stringstreamPtr, msd);
-        if (os_) *os_ << stringstreamPtr->str() << endl;
+        if (os_) *os_ << "mzXML:\n" << stringstreamPtr->str() << endl;
         serializer_mzXML.read(serializedStreamPtr, msd_mzXML);
 
         Diff<MSData, DiffConfig> diff_mzXML(msd, msd_mzXML, diffConfig_non_mzML);
-        if (diff_mzXML && !os_) cerr << headStream(*serializedStreamPtr, 5000) << endl;
+        if (diff_mzXML && !os_) cerr << "mzXML:\n" << headStream(*serializedStreamPtr, 5000) << endl;
         if (diff_mzXML) cerr << headDiff(diff_mzXML, 5000) << endl;
         unit_assert(!diff_mzXML);
 
-        stringstreamPtr->str("");
+        stringstreamPtr->str(" ");
+        stringstreamPtr->clear();
+        stringstreamPtr->seekp(0);
 
         // mzML <-> MGF
         msd.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_MGF_Filter(msd.run.spectrumListPtr));
         MSData msd_MGF;
         Serializer_MGF serializer_MGF;
         serializer_MGF.write(*stringstreamPtr, msd);
-        if (os_) *os_ << stringstreamPtr->str() << endl;
+        if (os_) *os_ << "MGF:\n" << stringstreamPtr->str() << endl;
         serializer_MGF.read(serializedStreamPtr, msd_MGF);
 
         diffConfig_non_mzML.ignoreIdentity = true;
         Diff<MSData, DiffConfig> diff_MGF(msd, msd_MGF, diffConfig_non_mzML);
-        if (diff_MGF && !os_) cerr << headStream(*serializedStreamPtr, 5000) << endl;
+        if (diff_MGF && !os_) cerr << "MGF:\n" << headStream(*serializedStreamPtr, 5000) << endl;
         if (diff_MGF) cerr << headDiff(diff_MGF, 5000) << endl;
         unit_assert(!diff_MGF);
     }
