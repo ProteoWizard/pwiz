@@ -47,11 +47,7 @@
             this.graphControl.EditModifierKeys = System.Windows.Forms.Keys.None;
             msGraphPane1.AllowCurveOverlap = false;
             msGraphPane1.BaseDimension = 8F;
-            msGraphPane1.Border = ((ZedGraph.Border)(resources.GetObject("msGraphPane1.Border")));
             msGraphPane1.CurrentItemType = pwiz.MSGraph.MSGraphItemType.Unknown;
-            msGraphPane1.CurveList = ((ZedGraph.CurveList)(resources.GetObject("msGraphPane1.CurveList")));
-            msGraphPane1.Fill = ((ZedGraph.Fill)(resources.GetObject("msGraphPane1.Fill")));
-            msGraphPane1.GraphObjList = ((ZedGraph.GraphObjList)(resources.GetObject("msGraphPane1.GraphObjList")));
             msGraphPane1.IsAlignGrids = false;
             msGraphPane1.IsBoundedRanges = false;
             msGraphPane1.IsFontsScaled = false;
@@ -59,7 +55,6 @@
             msGraphPane1.IsIgnoreMissing = false;
             msGraphPane1.IsPenWidthScaled = false;
             msGraphPane1.LineType = ZedGraph.LineType.Normal;
-            msGraphPane1.Margin = ((ZedGraph.Margin)(resources.GetObject("msGraphPane1.Margin")));
             msGraphPane1.Rect = ((System.Drawing.RectangleF)(resources.GetObject("msGraphPane1.Rect")));
             msGraphPane1.Tag = null;
             msGraphPane1.TitleGap = 0.5F;
