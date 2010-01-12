@@ -119,8 +119,8 @@ if [ modules.peek : NT ]
         echo Unit testing Topograph in $(CONFIGURATION:L) configuration...
         set name="Topograph unit test"
         $(TEST_PRECOMMAND)
-        msbuild $(TOPOGRAPH_PATH)/turnover.sln /p:Configuration=$(CONFIGURATION);OutDir=$(TEST_OUTPUT_PATH) /t:TopographTestProject /nologo /verbosity:minimal
-        msbuild $(TOPOGRAPH_PATH)/Topograph.test.proj /p:SolutionDir=$(TOPOGRAPH_PATH);OutDir=$(TEST_OUTPUT_PATH);TestProject=TopographTestProject /nologo /verbosity:minimal
+        msbuild $(TOPOGRAPH_PATH)/turnover.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:TopographTestProject /nologo /verbosity:minimal
+        msbuild $(TOPOGRAPH_PATH)/Topograph.test.proj /p:SolutionDir=$(TOPOGRAPH_PATH);OutDir=$(OUTPUT_PATH);TestProject=TopographTestProject /nologo /verbosity:minimal
         set status=%ERRORLEVEL%
         $(TEST_POSTCOMMAND)
     }
