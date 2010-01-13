@@ -36,9 +36,11 @@ namespace proteome {
 
 
 /// default Reader list
-PWIZ_API_DECL DefaultReaderList::DefaultReaderList()
+PWIZ_API_DECL DefaultReaderList::DefaultReaderList(bool indexed /*= false*/)
 {
-    push_back(ReaderPtr(new Reader_FASTA));
+    Reader_FASTA::Config fastaConfig;
+    fastaConfig.indexed = indexed;
+    push_back(ReaderPtr(new Reader_FASTA(fastaConfig)));
 }
 
 

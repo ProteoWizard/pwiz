@@ -28,6 +28,8 @@
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Container.hpp"
 #include "pwiz/utility/misc/Exception.hpp"
+#include <boost/thread/thread.hpp>
+#include <boost/thread/mutex.hpp>
 
 
 using boost::shared_ptr;
@@ -51,6 +53,8 @@ class ProteinList_FASTA : public ProteinList
     IndexPtr indexPtr_;
 
     string delimiters_;
+
+    mutable boost::mutex io_mutex;
 
     void createIndex()
     {
@@ -121,6 +125,8 @@ class ProteinList_FASTA : public ProteinList
 
         const Index::Entry& entry = *entryPtr;
 
+        boost::mutex::scoped_lock io_lock(io_mutex);
+
         fsPtr_->clear();
         fsPtr_->seekg(entry.offset);
 
@@ -141,12 +147,12 @@ class ProteinList_FASTA : public ProteinList
             {
                 if (buf.empty() || buf[0] == '\r') // skip blank lines
                     continue;
-			    if (buf[0] == '>') // signifies the next protein record in a FASTA file
+		        if (buf[0] == '>') // signifies the next protein record in a FASTA file
                     break;
                 size_t lineEnd = std::min(buf.length(), buf.find_first_of("\r\n"));
                 sequence.append(buf.begin(), buf.begin()+lineEnd);
             }
-        return ProteinPtr(new Protein(entry.id, index, description, sequence));
+       return ProteinPtr(new Protein(entry.id, index, description, sequence));
     }
 };
 

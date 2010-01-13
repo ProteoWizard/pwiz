@@ -30,7 +30,7 @@
 #pragma warning( disable : 4634 4635 )
 #include "ProteomeData.hpp"
 #include "pwiz/data/proteome/ProteomeDataFile.hpp"
-//#include "Reader.hpp"
+#include "Reader.hpp"
 #pragma warning( pop )
 
 
@@ -49,9 +49,19 @@ public ref class ProteomeDataFile : public ProteomeData
     public:
 
     /// <summary>
-    /// constructs ProteomeData object backed by file
+    /// constructs ProteomeData object backed by file using the default reader list (without indexing)
     /// </summary>
     ProteomeDataFile(System::String^ path);
+
+    /// <summary>
+    /// constructs ProteomeData object backed by file using the default reader list
+    /// </summary>
+    ProteomeDataFile(System::String^ path, bool indexed);
+
+    /// <summary>
+    /// constructs ProteomeData object backed by file using the specified reader
+    /// </summary>
+    ProteomeDataFile(System::String^ path, Reader^ reader);
 
     /// <summary>
     /// supported data formats for write()

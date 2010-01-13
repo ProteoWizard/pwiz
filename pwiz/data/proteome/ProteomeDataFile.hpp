@@ -39,8 +39,11 @@ namespace proteome {
 struct PWIZ_API_DECL ProteomeDataFile : public ProteomeData
 {
     /// constructs ProteomeData object backed by file;
-    /// reader==0 -> use DefaultReaderList 
-    ProteomeDataFile(const std::string& uri, const Reader* reader = 0);
+    /// indexed==true -> uses DefaultReaderList with indexing
+    ProteomeDataFile(const std::string& uri, bool indexed = false);
+
+    /// constructs ProteomeData object backed by file using the specified reader
+    ProteomeDataFile(const std::string& uri, const Reader& reader);
 
     /// data format for write()
     enum PWIZ_API_DECL Format {Format_FASTA, Format_Text};

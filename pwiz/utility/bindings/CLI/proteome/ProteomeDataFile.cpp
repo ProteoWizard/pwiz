@@ -64,6 +64,45 @@ ProteomeDataFile::ProteomeDataFile(System::String^ path)
 }
 
 
+ProteomeDataFile::ProteomeDataFile(System::String^ path, bool indexed)
+: ProteomeData(0)
+{
+    try
+    {
+        b::DefaultReaderList readerList(indexed);
+        base_ = new boost::shared_ptr<b::ProteomeDataFile>(new b::ProteomeDataFile(ToStdString(path), readerList));
+        ProteomeData::base_ = reinterpret_cast<boost::shared_ptr<b::ProteomeData>*>(base_);
+    }
+    catch(exception& e)
+    {
+        throw gcnew System::Exception(gcnew System::String(e.what()));
+    }
+    catch(...)
+    {
+        throw gcnew System::Exception("[ProteomeDataFile::ProteomeDataFile()] Unhandled exception");
+    }
+}
+
+
+ProteomeDataFile::ProteomeDataFile(System::String^ path, Reader^ reader)
+: ProteomeData(0)
+{
+    try
+    {
+        base_ = new boost::shared_ptr<b::ProteomeDataFile>(new b::ProteomeDataFile(ToStdString(path), (b::Reader*) &reader->base()));
+        ProteomeData::base_ = reinterpret_cast<boost::shared_ptr<b::ProteomeData>*>(base_);
+    }
+    catch(exception& e)
+    {
+        throw gcnew System::Exception(gcnew System::String(e.what()));
+    }
+    catch(...)
+    {
+        throw gcnew System::Exception("[ProteomeDataFile::ProteomeDataFile()] Unhandled exception");
+    }
+}
+
+
 void ProteomeDataFile::write(ProteomeData^ pd, System::String^ filename)
 {
     write(pd, filename, gcnew WriteConfig());

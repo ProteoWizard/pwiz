@@ -27,6 +27,8 @@
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Stream.hpp"
 #include "pwiz/utility/misc/Exception.hpp"
+#include <boost/thread/thread.hpp>
+#include <boost/thread/mutex.hpp>
 
 
 using boost::shared_ptr;
@@ -252,6 +254,7 @@ class BinaryIndexStream::Impl
     typedef stream_vector_const_iterator<Entry, EntryReader> IndexStreamIterator;
 
     EntryReader entryReader_;
+    mutable boost::mutex io_mutex;
 
 
     public:
@@ -353,19 +356,22 @@ class BinaryIndexStream::Impl
         EntryPtr entryPtr(new Entry); entryPtr->id = id;
         const stream_offset indexBegin = sizeof(streamLength_) + sizeof(maxIdLength_) + entrySize_ * size_;
         const stream_offset indexEnd = streamLength_;
+      
+        {
+            boost::mutex::scoped_lock io_lock(io_mutex);
+            isPtr_->clear();
 
-        isPtr_->clear();
+            // binary search is done directly on the index stream
+            IndexStreamIterator itr(isPtr_, entrySize_, entryReader_, indexBegin, indexEnd);
+            itr = lower_bound(itr, IndexStreamIterator(), *entryPtr, EntryIdLessThan());
 
-        // binary search is done directly on the index stream
-        IndexStreamIterator itr(isPtr_, entrySize_, entryReader_, indexBegin, indexEnd);
-        itr = lower_bound(itr, IndexStreamIterator(), *entryPtr, EntryIdLessThan());
+            // return null if search went to indexEnd
+            if (itr == IndexStreamIterator())
+                return EntryPtr();
 
-        // return null if search went to indexEnd
-        if (itr == IndexStreamIterator())
-            return EntryPtr();
-
-        // update entry from iterator
-        *entryPtr = *itr;
+            // update entry from iterator
+            *entryPtr = *itr;
+        }
 
         // return null if the returned iterator isn't exactly equal to the queried one
         if (entryPtr->id != id)
@@ -383,9 +389,12 @@ class BinaryIndexStream::Impl
         const stream_offset indexBegin = sizeof(streamLength_) + sizeof(maxIdLength_);
         const stream_offset entryOffset = indexBegin + index * entrySize_;
 
-        isPtr_->clear();
-        isPtr_->seekg(entryOffset);
-        entryReader_(*isPtr_, *entryPtr);
+        {
+            boost::mutex::scoped_lock io_lock(io_mutex);
+            isPtr_->clear();
+            isPtr_->seekg(entryOffset);
+            entryReader_(*isPtr_, *entryPtr);
+        }
         return entryPtr;
     }
 };

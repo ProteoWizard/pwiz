@@ -54,8 +54,10 @@ lib pwiz_data_common
         diff_std.cpp
         CVTranslator.cpp
     : # requirements
+        <library>/ext/boost//thread
     : # default-build
     : # usage-requirements
+        <library>/ext/boost//thread
     ;
 
 

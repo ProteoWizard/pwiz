@@ -63,24 +63,18 @@ void readFile(const string& uri, ProteomeData& pd, const Reader& reader)
 }
 
 
-shared_ptr<DefaultReaderList> defaultReaderList_;
-
-
 } // namespace
 
 
-PWIZ_API_DECL ProteomeDataFile::ProteomeDataFile(const string& uri, const Reader* reader)
+PWIZ_API_DECL ProteomeDataFile::ProteomeDataFile(const string& uri, bool indexed)
 {
-    if (reader)
-    {
-        readFile(uri, *this, *reader); 
-    }
-    else
-    {
-        if (!defaultReaderList_.get())
-            defaultReaderList_ = shared_ptr<DefaultReaderList>(new DefaultReaderList);
-        readFile(uri, *this, *defaultReaderList_);
-    }
+    readFile(uri, *this, DefaultReaderList(indexed));
+}
+
+
+PWIZ_API_DECL ProteomeDataFile::ProteomeDataFile(const string& uri, const Reader& reader)
+{
+    readFile(uri, *this, reader);
 }
 
 

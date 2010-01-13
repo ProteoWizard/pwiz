@@ -37,7 +37,7 @@ namespace proteome {
 class PWIZ_API_DECL DefaultReaderList : public ReaderList
 {
     public:
-    DefaultReaderList();
+    DefaultReaderList(bool indexed = false);
 };
 
 
