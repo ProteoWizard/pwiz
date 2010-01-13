@@ -73,7 +73,7 @@ void validateWriteRead(const ProteomeDataFile::WriteConfig& writeConfig,
         }
 
         // read back into an ProteomeDataFile object
-        ProteomeDataFile pd1(filename1, reader.get());
+        ProteomeDataFile pd1(filename1, *reader);
 
         // compare
         Diff<ProteomeData, DiffConfig> diff(tiny, pd1, diffConfig);
@@ -84,7 +84,7 @@ void validateWriteRead(const ProteomeDataFile::WriteConfig& writeConfig,
         pd1.write(filename2, writeConfig);
 
         // read back into another ProteomeDataFile object
-        ProteomeDataFile pd2(filename2, reader.get());
+        ProteomeDataFile pd2(filename2, *reader);
 
         // compare
         diff(tiny, pd2);
@@ -95,7 +95,7 @@ void validateWriteRead(const ProteomeDataFile::WriteConfig& writeConfig,
         bio::filtering_istream tinyGZ(bio::gzip_compressor() | bio::file_descriptor_source(filename1));
         bio::copy(tinyGZ, bio::file_descriptor_sink(filename1+".gz", ios::out|ios::binary));
 
-        ProteomeDataFile pd3(filename1+".gz", reader.get());
+        ProteomeDataFile pd3(filename1+".gz", *reader);
 
         // compare
         diff(tiny, pd3);
@@ -180,7 +180,7 @@ void testReader()
 
     // open the file with our Reader
     TestReader reader;
-    ProteomeDataFile pd(filename, &reader);
+    ProteomeDataFile pd(filename, reader);
 
     // verify that our reader got called properly
     unit_assert(reader.count == 2);
