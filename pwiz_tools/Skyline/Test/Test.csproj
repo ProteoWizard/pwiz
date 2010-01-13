@@ -82,6 +82,7 @@
     <Compile Include="LibraryLoadTest.cs" />
     <Compile Include="LibrarySettingsTest.cs" />
     <Compile Include="Proteome\ProteomeDbTest.cs" />
+    <Compile Include="RefineTest.cs" />
     <Compile Include="Reporting\PivotTypeTest.cs" />
     <Compile Include="Reporting\ReportTest.cs" />
     <Compile Include="Results\AgilentMixTest.cs" />
@@ -128,6 +129,7 @@
   <ItemGroup>
     <None Include="Proteome\high_ipi.Human.20060111.zip" />
     <EmbeddedResource Include="Reporting\Study9p_template_0721_2009_v3.skyr" />
+    <None Include="Refine.zip" />
     <None Include="Results\AgilentMix.zip" />
     <None Include="Results\SmallWiff.zip" />
     <None Include="Results\ThermoQuant.zip" />

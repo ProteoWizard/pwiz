@@ -153,6 +153,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.peptideSettingsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transitionSettingsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator37 = new System.Windows.Forms.ToolStripSeparator();
             this.annotationsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.statusGeneral = new System.Windows.Forms.ToolStripStatusLabel();
@@ -272,7 +273,6 @@ namespace pwiz.Skyline
             this.areaPercentViewContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaLogScaleContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCvsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator37 = new System.Windows.Forms.ToolStripSeparator();
             this.menuMain.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.contextMenuTreeNode.SuspendLayout();
@@ -451,33 +451,33 @@ namespace pwiz.Skyline
             // homeMenuItem
             // 
             this.homeMenuItem.Name = "homeMenuItem";
-            this.homeMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.homeMenuItem.Size = new System.Drawing.Size(116, 22);
             this.homeMenuItem.Text = "&Home";
             this.homeMenuItem.Click += new System.EventHandler(this.homeMenuItem_Click);
             // 
             // supportMenuItem
             // 
             this.supportMenuItem.Name = "supportMenuItem";
-            this.supportMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.supportMenuItem.Size = new System.Drawing.Size(116, 22);
             this.supportMenuItem.Text = "&Support";
             this.supportMenuItem.Click += new System.EventHandler(this.supportMenuItem_Click);
             // 
             // issuesMenuItem
             // 
             this.issuesMenuItem.Name = "issuesMenuItem";
-            this.issuesMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.issuesMenuItem.Size = new System.Drawing.Size(116, 22);
             this.issuesMenuItem.Text = "&Issues";
             this.issuesMenuItem.Click += new System.EventHandler(this.issuesMenuItem_Click);
             // 
             // toolStripSeparator29
             // 
             this.toolStripSeparator29.Name = "toolStripSeparator29";
-            this.toolStripSeparator29.Size = new System.Drawing.Size(149, 6);
+            this.toolStripSeparator29.Size = new System.Drawing.Size(113, 6);
             // 
             // aboutMenuItem
             // 
             this.aboutMenuItem.Name = "aboutMenuItem";
-            this.aboutMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.aboutMenuItem.Size = new System.Drawing.Size(116, 22);
             this.aboutMenuItem.Text = "&About";
             this.aboutMenuItem.Click += new System.EventHandler(this.aboutMenuItem_Click);
             // 
@@ -1333,6 +1333,11 @@ namespace pwiz.Skyline
             this.transitionSettingsMenuItem.Size = new System.Drawing.Size(181, 22);
             this.transitionSettingsMenuItem.Text = "&Transition Settings...";
             this.transitionSettingsMenuItem.Click += new System.EventHandler(this.transitionSettingsMenuItem_Click);
+            // 
+            // toolStripSeparator37
+            // 
+            this.toolStripSeparator37.Name = "toolStripSeparator37";
+            this.toolStripSeparator37.Size = new System.Drawing.Size(178, 6);
             // 
             // annotationsToolStripMenuItem
             // 
@@ -2354,11 +2359,6 @@ namespace pwiz.Skyline
             this.areaCvsContextMenuItem.Size = new System.Drawing.Size(135, 22);
             this.areaCvsContextMenuItem.Text = "Area CVs";
             this.areaCvsContextMenuItem.Click += new System.EventHandler(this.areaCvsContextMenuItem_Click);
-            // 
-            // toolStripSeparator37
-            // 
-            this.toolStripSeparator37.Name = "toolStripSeparator37";
-            this.toolStripSeparator37.Size = new System.Drawing.Size(178, 6);
             // 
             // SkylineWindow
             // 
