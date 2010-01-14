@@ -145,7 +145,8 @@ namespace pwiz.Skyline.Model
                 }
 
                 PeptideDocNode nodePepRefined = Refine(nodePep);
-                if (nodePepRefined.Children.Count == 0)
+                // Always remove peptides if all precursors have been removed by refinement
+                if (!ReferenceEquals(nodePep, nodePepRefined) && nodePepRefined.Children.Count == 0)
                     continue;
 
                 if (includedPeptides != null)

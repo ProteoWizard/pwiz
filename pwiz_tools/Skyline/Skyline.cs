@@ -1176,8 +1176,32 @@ namespace pwiz.Skyline
             var refineDlg = new RefineDlg(DocumentUI);
             if (refineDlg.ShowDialog(this) == DialogResult.OK)
             {
-                ModifyDocument("Refine", doc => refineDlg.RefinementSettings.Refine(doc));                
+                ModifyDocument("Refine", doc => refineDlg.RefinementSettings.Refine(doc));
             }
+        }
+
+        private void removeEmptyProteinsMenuItem_Click(object sender, EventArgs e)
+        {
+            var refinementSettings = new RefinementSettings {MinPeptidesPerProtein = 1};
+            ModifyDocument("Remove empty proteins", refinementSettings.Refine);
+        }
+
+        private void removeDuplicatePeptidesMenuItem_Click(object sender, EventArgs e)
+        {
+            var refinementSettings = new RefinementSettings {RemoveDuplicatePeptides = true};
+            ModifyDocument("Remove duplicate peptides", refinementSettings.Refine);
+        }
+
+        private void removeRepeatedPeptidesMenuItem_Click(object sender, EventArgs e)
+        {
+            var refinementSettings = new RefinementSettings {RemoveRepeatedPeptides = true};
+            ModifyDocument("Remove repeated peptides", refinementSettings.Refine);
+        }
+
+        private void removeMissingResultsMenuItem_Click(object sender, EventArgs e)
+        {
+            var refinementSettings = new RefinementSettings {RemoveMissingResults = true};
+            ModifyDocument("Remove missing results", refinementSettings.Refine);
         }
 
         #endregion // Edit menu
