@@ -1,7 +1,24 @@
-﻿using System;
-using System.IO;
-using System.Text;
+﻿/*
+ * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2009 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
@@ -11,7 +28,6 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 
@@ -67,21 +83,18 @@ namespace pwiz.SkylineTestFunctional
             // Turn on the annotations
             chooseAnnotationsDlg = ShowDialog<ChooseAnnotationsDlg>(SkylineWindow.ShowAnnotationsDialog);
             RunUI(() =>
-            {
-                    var checkedListBox = chooseAnnotationsDlg.AnnotationsCheckedListBox;
-                    for (int i = 0; i < checkedListBox.Items.Count; i++)
-                    {
-                        checkedListBox.SetItemChecked(i, true);
-                    }
-                });
+                      {
+                          var checkedListBox = chooseAnnotationsDlg.AnnotationsCheckedListBox;
+                          for (int i = 0; i < checkedListBox.Items.Count; i++)
+                          {
+                              checkedListBox.SetItemChecked(i, true);
+                          }
+                      });
             OkDialog(chooseAnnotationsDlg, chooseAnnotationsDlg.OkDialog);
-            // Edit the note on the root node.
+            // Edit the _note_ on the root node.
             var editNoteDlg = ShowDialog<EditNoteDlg>(SkylineWindow.EditNote);
             Assert.IsNull(SkylineWindow.Document.PeptideGroups.First().Annotations.GetAnnotation("proteinText"));
-            RunUI(() =>
-                      {
-                          SetAnnotationValue(editNoteDlg, "proteinText", "proteinTextValue");
-                      });
+            RunUI(() => SetAnnotationValue(editNoteDlg, "proteinText", "proteinTextValue"));
             OkDialog(editNoteDlg, ()=>editNoteDlg.DialogResult = DialogResult.OK);
             Assert.AreEqual("proteinTextValue",
                             SkylineWindow.Document.PeptideGroups.First().Annotations.GetAnnotation("proteinText"));
@@ -109,6 +122,8 @@ namespace pwiz.SkylineTestFunctional
                     AnnotationDef.AnnotationPrefix + "precursorResultItems"];
             // Set the annotation value on the first two rows in the ResultsGrid.
             // The annotation is a dropdown with values {blank, "a", "b", "c"}
+            Assert.IsNotNull(colPrecursorResultItems);
+            Debug.Assert(colPrecursorResultItems != null);  // For ReSharper
             RunUI(()=>
                       {
                           var cell = resultsGrid.Rows[0].Cells[colPrecursorResultItems.Index];
@@ -130,7 +145,7 @@ namespace pwiz.SkylineTestFunctional
                 .Annotations.GetAnnotation("precursorResultItems"));
         }
 
-        private void DefineAnnotation(EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef> dialog,
+        private static void DefineAnnotation(EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef> dialog,
             String name, AnnotationDef.AnnotationTarget targets, AnnotationDef.AnnotationType type, IList<string> items)
         {
             var defineAnnotationDlg = ShowDialog<DefineAnnotationDlg>(dialog.AddItem);
@@ -144,7 +159,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(defineAnnotationDlg, defineAnnotationDlg.OkDialog);
         }
 
-        private void SetAnnotationValue(EditNoteDlg editNoteDlg, String annotationName, String value)
+        private static void SetAnnotationValue(EditNoteDlg editNoteDlg, String annotationName, String value)
         {
             for (int i = 0; i < editNoteDlg.DataGridView.Rows.Count; i++)
             {
@@ -159,7 +174,7 @@ namespace pwiz.SkylineTestFunctional
             throw new ArgumentException("Could not find annotation " + annotationName);
         }
 
-        private void WaitForGraphPanesToUpdate()
+        private static void WaitForGraphPanesToUpdate()
         {
             while (true)
             {

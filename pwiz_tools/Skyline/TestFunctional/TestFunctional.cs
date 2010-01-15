@@ -165,33 +165,56 @@ namespace pwiz.SkylineTestFunctional
 
                 if (TestFilesZip == null)
                 {
-                    RunTest();
+                    try
+                    {
+                        RunTest();
+                    }
+                    catch (Exception x)
+                    {
+                        _testExceptions.Add(x);
+                    }
                 }
                 else
                 {
                     TestFilesDir = new TestFilesDir(TestContext, TestFilesZip);
-                    RunTest();
-                    TestFilesDir.Dispose();
+                    try
+                    {
+                        RunTest();
+                        TestFilesDir.Dispose();
+                    }
+                    catch (Exception x)
+                    {
+                        _testExceptions.Add(x);
+                    }
                 }
             }
-            catch (Exception exception)
+            catch (Exception x)
             {
-                _testExceptions.Add(exception);
+                // An exception occurred outside RunTest
+                _testExceptions.Add(x);
+                EndTest();
             }
         }
 
         private void RunTest()
         {
             DoTest();
+            EndTest();
+        }
 
+        private void EndTest()
+        {
             var skylineWindow = Program.MainWindow;
+            if (skylineWindow == null)
+                return;
+
             // Release all resources by setting the document to something that
             // holds no file handles.
             var docNew = new SrmDocument(SrmSettingsList.GetDefault());
             RunUI(() => SkylineWindow.SwitchDocument(docNew, null));
             // Close the Skyline window
-            _testCompleted = true; 
-            skylineWindow.Invoke(new Action(skylineWindow.Close));            
+            _testCompleted = true;
+            skylineWindow.Invoke(new Action(skylineWindow.Close));                        
         }
 
         protected abstract void DoTest();
