@@ -347,6 +347,11 @@ namespace pwiz.MSGraph
         }
         #endregion
 
+        [
+            Bindable(false), 
+            Browsable(false), 
+            DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)
+        ]
         public new MSGraphPane GraphPane
         {
             get

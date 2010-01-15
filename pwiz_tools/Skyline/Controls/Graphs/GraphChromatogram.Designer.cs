@@ -29,8 +29,6 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            pwiz.MSGraph.MSGraphPane msGraphPane1 = new pwiz.MSGraph.MSGraphPane();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(GraphChromatogram));
             this.graphControl = new pwiz.MSGraph.MSGraphControl();
             this.toolBar = new System.Windows.Forms.ToolStrip();
             this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
@@ -45,18 +43,6 @@
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.graphControl.EditButtons = System.Windows.Forms.MouseButtons.Left;
             this.graphControl.EditModifierKeys = System.Windows.Forms.Keys.None;
-            msGraphPane1.AllowCurveOverlap = false;
-            msGraphPane1.BaseDimension = 8F;
-            msGraphPane1.IsAlignGrids = false;
-            msGraphPane1.IsBoundedRanges = false;
-            msGraphPane1.IsFontsScaled = false;
-            msGraphPane1.IsIgnoreInitial = false;
-            msGraphPane1.IsIgnoreMissing = false;
-            msGraphPane1.IsPenWidthScaled = false;
-            msGraphPane1.LineType = ZedGraph.LineType.Normal;
-            msGraphPane1.Tag = null;
-            msGraphPane1.TitleGap = 0.5F;
-            this.graphControl.GraphPane = msGraphPane1;
             this.graphControl.IsEnableVPan = false;
             this.graphControl.IsEnableVZoom = false;
             this.graphControl.Location = new System.Drawing.Point(0, 0);
