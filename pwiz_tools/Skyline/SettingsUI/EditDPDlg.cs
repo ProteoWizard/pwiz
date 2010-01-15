@@ -147,7 +147,7 @@ namespace pwiz.Skyline.SettingsUI
             var graphData = new RegressionGraphData
             {
                 Title = "Declustering Potential Regression",
-                LabelX = "Precursor M/Z",
+                LabelX = "Precursor m/z",
                 LabelY = "Declustering Potential",
                 XValues = regressionData.PrecursorMzValues,
                 YValues = regressionData.BestValues,

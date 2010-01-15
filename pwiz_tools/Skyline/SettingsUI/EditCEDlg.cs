@@ -313,7 +313,7 @@ namespace pwiz.Skyline.SettingsUI
                 listGraphData.Add(new RegressionGraphData
                                       {
                                           Title = string.Format("Collision Energy Regression Charge {0}", charge),
-                                          LabelX = "Precursor M/Z",
+                                          LabelX = "Precursor m/z",
                                           LabelY = "Collision Energy",
                                           XValues = regressionData.PrecursorMzValues,
                                           YValues = regressionData.BestValues,

@@ -18,6 +18,7 @@
  */
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -42,6 +43,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             var masterPane = graphControl.MasterPane;
             masterPane.PaneList.Clear();
+            masterPane.Border.IsVisible = false;
 
             foreach (var graphData in regressionGraphDatas)
             {
@@ -60,8 +62,8 @@ namespace pwiz.Skyline.Controls.Graphs
     public sealed class RegressionGraphPane : GraphPane
     {
         public static readonly Color COLOR_REGRESSION = Color.DarkBlue;
-        public static readonly Color COLOR_LINE_REGRESSION = Color.Black;
-        public static readonly Color COLOR_LINE_REGRESSION_CURRENT = Color.DarkGray;
+        public static readonly Color COLOR_LINE_REGRESSION = Color.DarkBlue;
+        public static readonly Color COLOR_LINE_REGRESSION_CURRENT = Color.Black;
 
         private readonly RegressionGraphData _graphData;
         private readonly string _labelRegression;
@@ -89,6 +91,8 @@ namespace pwiz.Skyline.Controls.Graphs
             YAxis.MinorTic.IsOpposite = false;
             IsFontsScaled = false;
             YAxis.Scale.MaxGrace = 0.1;
+
+//            Legend.FontSpec.Size = 12;
 
             var curve = AddCurve("Values", graphData.XValues, graphData.YValues,
                                            Color.Black, SymbolType.Diamond);
@@ -145,6 +149,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 curve = AddCurve("Current", lineX, lineY, COLOR_LINE_REGRESSION_CURRENT);
                 curve.Line.IsAntiAlias = true;
                 curve.Line.IsOptimizedDraw = true;
+                curve.Line.Style = DashStyle.Dash;
 
                 _labelRegressionCurrent = string.Format("slope = {0:F04}, intercept = {1:F04}",
                     regressionLineCurrent.Slope, regressionLineCurrent.Intercept);
@@ -180,6 +185,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     ZOrder = ZOrder.E_BehindCurves,
                     FontSpec = GraphSummary.CreateFontSpec(COLOR_LINE_REGRESSION),
                 };
+//                text.FontSpec.Size = 12;
                 GraphObjList.Add(text);
 
                 if (_labelRegressionCurrent != null)
@@ -195,6 +201,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         ZOrder = ZOrder.E_BehindCurves,
                         FontSpec = GraphSummary.CreateFontSpec(COLOR_LINE_REGRESSION_CURRENT),
                     };
+//                    text.FontSpec.Size = 12;
                     GraphObjList.Add(text);
                 }
             }
