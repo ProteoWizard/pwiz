@@ -110,7 +110,7 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
 PWIZ_API_DECL
 vector<InstrumentConfiguration> createInstrumentConfigurations(RawFile& rawfile)
 {
-    InstrumentModelType model = parseInstrumentModelType(rawfile.value(InstModel));
+    InstrumentModelType model = rawfile.getInstrumentModel();
 
     // source common to all configurations (TODO: handle multiple sources in a single run?)
     ScanInfoPtr firstScanInfo = rawfile.getScanInfo(1);
