@@ -218,9 +218,11 @@ class stream_vector_const_iterator
 class BinaryIndexStream::Impl
 {
     shared_ptr<iostream> isPtr_;
-    stream_offset streamLength_;
-    size_t size_, maxIdLength_;
 
+    stream_offset streamLength_;
+    boost::uint64_t maxIdLength_;
+
+    size_t size_;
     size_t entrySize_; // space-padded so entries are constant-length
 
     struct EntryIdLessThan { bool operator() (const Entry& lhs, const Entry& rhs) const {return lhs.id < rhs.id;} };
@@ -239,7 +241,7 @@ class BinaryIndexStream::Impl
 
     struct EntryReader
     {
-        EntryReader(size_t maxIdLength = 0) : maxIdLength_(maxIdLength) {}
+        EntryReader(boost::uint64_t maxIdLength = 0) : maxIdLength_(maxIdLength) {}
         istream& operator() (istream& is, Entry& entry) const
         {
             is >> entry.id;
@@ -248,7 +250,7 @@ class BinaryIndexStream::Impl
             is.read(reinterpret_cast<char*>(&entry.offset), sizeof(entry.offset));
             return is;
         }
-        private: size_t maxIdLength_;
+        private: boost::uint64_t maxIdLength_;
     };
 
     typedef stream_vector_const_iterator<Entry, EntryReader> IndexStreamIterator;
@@ -271,7 +273,7 @@ class BinaryIndexStream::Impl
         if (*isPtr_)
         {
             // calculate entry size (depends on max. id length)
-            entrySize_ = maxIdLength_ + sizeof(size_t) + sizeof(stream_offset);
+            entrySize_ = maxIdLength_ + sizeof(streamLength_) + sizeof(maxIdLength_);
 
             size_t headerSize = sizeof(streamLength_) + sizeof(maxIdLength_);
 
@@ -295,11 +297,11 @@ class BinaryIndexStream::Impl
         // determine max. id length
         maxIdLength_ = 0;
         BOOST_FOREACH(const Entry& entry, entries)
-            maxIdLength_ = std::max(maxIdLength_, entry.id.length());
+            maxIdLength_ = std::max(maxIdLength_, (boost::uint64_t) entry.id.length());
         ++maxIdLength_; // space-terminated
 
         // entry size depends on max. id length
-        entrySize_ = maxIdLength_ + sizeof(size_t) + sizeof(stream_offset);
+        entrySize_ = maxIdLength_ + sizeof(streamLength_) + sizeof(maxIdLength_);
 
         size_t headerSize = sizeof(streamLength_) + sizeof(maxIdLength_);
 

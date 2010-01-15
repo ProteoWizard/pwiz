@@ -28,6 +28,7 @@
 #include <vector>
 #include <boost/iostreams/positioning.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/cstdint.hpp>
 
 
 namespace pwiz {
@@ -45,7 +46,7 @@ class PWIZ_API_DECL Index
     struct PWIZ_API_DECL Entry
     {
         std::string id;
-        size_t index;
+        boost::uint64_t index;
         stream_offset offset;
     };
 
