@@ -38,7 +38,7 @@ namespace pwiz {
 namespace msdata {
 
 
-using namespace data;
+	using namespace pwiz::data;
 
 
 PWIZ_API_DECL std::vector<CV> defaultCVList();
