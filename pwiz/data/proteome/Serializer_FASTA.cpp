@@ -31,10 +31,16 @@
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 
+// HACK: boost::regex::mark_count() is bugged, always returns the real count + 1
+#include <boost/regex.hpp>
+
 
 using boost::shared_ptr;
 using namespace pwiz::data;
 using namespace pwiz::util;
+using boost::regex;
+using boost::smatch;
+using boost::regex_search;
 
 
 namespace pwiz {
@@ -52,7 +58,7 @@ class ProteinList_FASTA : public ProteinList
 
     IndexPtr indexPtr_;
 
-    string delimiters_;
+    vector<regex> idAndDescriptionRegexes_;
 
     mutable boost::mutex io_mutex;
 
@@ -67,6 +73,9 @@ class ProteinList_FASTA : public ProteinList
         Index::stream_offset indexOffset = 0;
         while (getline(*fsPtr_, buf))
         {
+            size_t bufLength = buf.length() + 1; // include newline
+            indexOffset += bufLength;
+
             if (buf.empty())
                 continue;
 
@@ -75,13 +84,24 @@ class ProteinList_FASTA : public ProteinList
                 index.push_back(Index::Entry());
                 Index::Entry& ie = index.back();
 
-                size_t idEnd = std::min(buf.length(), buf.find_first_of(delimiters_));
-                ie.id = buf.substr(1, idEnd-1);
-                ie.index = index.size()-1;
-                ie.offset = indexOffset;
-			}
+                bal::trim_right_if(buf, bal::is_any_of(" \r"));
 
-            indexOffset += buf.length() + 1; // include newline
+                BOOST_FOREACH(regex& idAndDescriptionRegex, idAndDescriptionRegexes_)
+                {
+                    smatch match;
+                    if (regex_match(buf, match, idAndDescriptionRegex))
+                    {
+                        ie.id = match[1].str();
+                        break;
+                    }
+                }
+
+                if (ie.id.empty())
+                    throw runtime_error("[ProteinList_FASTA::createIndex] could not parse id from entry \"" + buf + "\"");
+
+                ie.index = index.size()-1;
+                ie.offset = indexOffset - bufLength;
+			}
 		}
         indexPtr_->create(index);
     }
@@ -92,20 +112,24 @@ class ProteinList_FASTA : public ProteinList
         return entryPtr.get() ? entryPtr->index : indexPtr_->size();
     }
 
-    void setDelimiters()
-    {
-        if (delimiters_.find(' ') == string::npos) delimiters_ += ' ';
-        if (delimiters_.find('\t') == string::npos) delimiters_ += '\t';
-        if (delimiters_.find('\r') == string::npos) delimiters_ += '\r';
-        if (delimiters_.find('\n') == string::npos) delimiters_ += '\n';
-    }
 
     public:
 
-    ProteinList_FASTA(shared_ptr<istream> fsPtr, IndexPtr indexPtr, string delimiters = " \t")
-        : fsPtr_(fsPtr), indexPtr_(indexPtr), delimiters_(delimiters)
+    ProteinList_FASTA(shared_ptr<istream> fsPtr, IndexPtr indexPtr, const vector<string>& idAndDescriptionRegexes)
+        : fsPtr_(fsPtr), indexPtr_(indexPtr)
     {
-        setDelimiters();
+        BOOST_FOREACH(const string& regexString, idAndDescriptionRegexes)
+        {
+            regex idAndDescriptionRegex(regexString);
+            if (idAndDescriptionRegex.mark_count() == 2)
+            {
+                // TODO: log warning about only capturing id
+            }
+            else if (idAndDescriptionRegex.mark_count() != 3)
+                throw runtime_error("[ProteinList_FASTA::ctor] regular expressions for capturing id and description must contain 1 or 2 capture groups; \"" + regexString + "\" has " + lexical_cast<string>(idAndDescriptionRegex.mark_count()-1));
+
+            idAndDescriptionRegexes_.push_back(idAndDescriptionRegex);
+        }
 
         if (indexPtr->size() == 0)
             createIndex();
@@ -136,10 +160,23 @@ class ProteinList_FASTA : public ProteinList
         if (buf.empty() || buf[0] != '>')
             throw runtime_error("[ProteinList_FASTA::protein] Invalid index offset");
 
+        bal::trim_right_if(buf, bal::is_any_of(" \r"));
+
         string description;
-        if (buf.length() > entry.id.length()+1) // the rest of buf after the id+1 is the description
-            description = buf.substr(entry.id.length()+2);
-        bal::trim_right_if(description, bal::is_any_of("\r"));
+        BOOST_FOREACH(const regex& idAndDescriptionRegex, idAndDescriptionRegexes_)
+        {
+            if (idAndDescriptionRegex.mark_count() == 3)
+            {
+                smatch match;
+                if (regex_match(buf, match, idAndDescriptionRegex))
+                {
+                    description = match[2].str();
+                    break;
+                }
+                //else
+                    // TODO: exception is too harsh, log warning if none of the regexes match
+            }
+        }
 
         string sequence;
         if (getSequence)
@@ -185,7 +222,11 @@ PWIZ_API_DECL void Serializer_FASTA::read(shared_ptr<istream> is, ProteomeData& 
     if (!is.get() || !*is)
         throw runtime_error("[Serializer_FASTA::read()] Bad istream.");
 
-    pd.proteinListPtr.reset(new ProteinList_FASTA(is, config_.indexPtr));
+    // TODO: make these regexes user-configurable
+    vector<string> idAndDescriptionRegexes;
+    idAndDescriptionRegexes.push_back(">(\\S*?IPI\\S+?)(?:\\s|\\|)(.*)");
+    idAndDescriptionRegexes.push_back(">(\\S+)\\s?(.*)");
+    pd.proteinListPtr.reset(new ProteinList_FASTA(is, config_.indexPtr, idAndDescriptionRegexes));
 }
 
 
