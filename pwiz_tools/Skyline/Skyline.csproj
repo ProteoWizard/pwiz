@@ -126,7 +126,7 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
-    <Reference Include="ZedGraph, Version=5.1.5.28844, Culture=neutral, PublicKeyToken=02a83cbd123fcd60, processorArchitecture=MSIL">
+    <Reference Include="ZedGraph, Version=5.1.5.28844, Culture=neutral, PublicKeyToken=1a70eed8f3b670b9, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\ZedGraph.dll</HintPath>
     </Reference>
@@ -263,6 +263,9 @@
     </Compile>
     <Compile Include="EditUI\ChromChartPropertyDlg.Designer.cs">
       <DependentUpon>ChromChartPropertyDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditUI\CopyEmfToolStripMenuItem.cs">
+      <SubType>Component</SubType>
     </Compile>
     <Compile Include="EditUI\RefineDlg.cs">
       <SubType>Form</SubType>

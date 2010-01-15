@@ -54,7 +54,6 @@
             msGraphPane1.IsIgnoreMissing = false;
             msGraphPane1.IsPenWidthScaled = false;
             msGraphPane1.LineType = ZedGraph.LineType.Normal;
-            msGraphPane1.Rect = ((System.Drawing.RectangleF)(resources.GetObject("msGraphPane1.Rect")));
             msGraphPane1.Tag = null;
             msGraphPane1.TitleGap = 0.5F;
             this.graphControl.GraphPane = msGraphPane1;

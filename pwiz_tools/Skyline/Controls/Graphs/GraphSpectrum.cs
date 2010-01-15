@@ -53,7 +53,7 @@ namespace pwiz.Skyline.Controls.Graphs
             IList<IonType> ShowIonTypes { get; }
             IList<int> ShowIonCharges { get; }
 
-            void BuildSpectrumMenu(ContextMenuStrip menuStrip);
+            void BuildSpectrumMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip);
         }
 
         private class DefaultStateProvider : IStateProvider
@@ -61,7 +61,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public TreeNode SelectedNode { get { return null; } }
             public IList<IonType> ShowIonTypes { get { return new[] { IonType.y }; } }
             public IList<int> ShowIonCharges { get { return new[] { 1 }; } }
-            public void BuildSpectrumMenu(ContextMenuStrip menuStrip) {}
+            public void BuildSpectrumMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip) { }
         }
 
         private readonly IDocumentUIContainer _documentContainer;
@@ -258,7 +258,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender,
                                                      ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
-            _stateProvider.BuildSpectrumMenu(menuStrip);
+            _stateProvider.BuildSpectrumMenu(sender, menuStrip);
         }
 
         protected override void OnClosed(System.EventArgs e)

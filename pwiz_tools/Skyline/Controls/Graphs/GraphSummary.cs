@@ -62,14 +62,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
             int SelectedResultsIndex { get; set; }
 
-            void BuildGraphMenu(ContextMenuStrip menuStrip, Point mousPt, IController controller);
+            void BuildGraphMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip, Point mousPt, IController controller);
         }
 
         private class DefaultStateProvider : IStateProvider
         {
             public TreeNode SelectedNode { get { return null; } }
             public IdentityPath SelectedPath { get { return IdentityPath.ROOT; } set { } }
-            public void BuildGraphMenu(ContextMenuStrip menuStrip, Point mousePt, IController controller) { }
+            public void BuildGraphMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip, Point mousePt, IController controller) { }
             public int SelectedResultsIndex { get; set; }
         }
 
@@ -190,7 +190,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
-            _stateProvider.BuildGraphMenu(menuStrip, mousePt, _controller);
+            _stateProvider.BuildGraphMenu(sender, menuStrip, mousePt, _controller);
         }
 
         private bool graphControl_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)

@@ -35,6 +35,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
+using ZedGraph;
 
 namespace pwiz.Skyline
 {
@@ -239,7 +240,7 @@ namespace pwiz.Skyline
             UpdateSpectrumGraph();
         }
 
-        void GraphSpectrum.IStateProvider.BuildSpectrumMenu(ContextMenuStrip menuStrip)
+        void GraphSpectrum.IStateProvider.BuildSpectrumMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
         {
             // Store original menuitems in an array, and insert a separator
             ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
@@ -295,6 +296,7 @@ namespace pwiz.Skyline
                 if (tag == "set_default" || tag == "show_val")
                     menuStrip.Items.Remove(item);
             }
+            CopyEmfToolStripMenuItem.AddToContextMenu(zedGraphControl, menuStrip);
         }
 
         private void duplicatesContextMenuItem_Click(object sender, EventArgs e)
@@ -905,7 +907,7 @@ namespace pwiz.Skyline
 
         #region Chromatogram graphs
 
-        void GraphChromatogram.IStateProvider.BuildChromatogramMenu(ContextMenuStrip menuStrip)
+        void GraphChromatogram.IStateProvider.BuildChromatogramMenu(ZedGraph.ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
         {
             // Store original menuitems in an array, and insert a separator
             ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
@@ -1018,6 +1020,7 @@ namespace pwiz.Skyline
                 if (tag == "set_default" || tag == "show_val")
                     menuStrip.Items.Remove(item);
             }
+            CopyEmfToolStripMenuItem.AddToContextMenu(zedGraphControl, menuStrip);
         }
 
 // ReSharper disable SuggestBaseTypeForParameter
@@ -1651,13 +1654,14 @@ namespace pwiz.Skyline
             _graphRetentionTime = null;
         }
 
-        void GraphSummary.IStateProvider.BuildGraphMenu(ContextMenuStrip menuStrip, Point mousePt,
+        void GraphSummary.IStateProvider.BuildGraphMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip, Point mousePt,
             GraphSummary.IController controller)
         {
             if (controller is RTGraphController)
                 BuildRTGraphMenu(menuStrip, mousePt, (RTGraphController) controller);
             else if (controller is AreaGraphController)
                 BuildAreaGraphMenu(menuStrip);
+            CopyEmfToolStripMenuItem.AddToContextMenu(zedGraphControl, menuStrip);
         }
 
         public TreeNode SelectedNode

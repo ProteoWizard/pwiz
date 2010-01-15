@@ -2113,6 +2113,11 @@ namespace pwiz.Skyline
             var dlg = new ChooseAnnotationsDlg(this);
             dlg.ShowDialog(this);
         }
+
+        private void copyEMFToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            
+        }
     }
 }
 

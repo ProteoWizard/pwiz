@@ -77,13 +77,13 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             TreeNode SelectedNode { get; }
 
-            void BuildChromatogramMenu(ContextMenuStrip menuStrip);
+            void BuildChromatogramMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip);
         }
 
         private class DefaultStateProvider : IStateProvider
         {
             public TreeNode SelectedNode { get { return null; } }
-            public void BuildChromatogramMenu(ContextMenuStrip menuStrip) {}
+            public void BuildChromatogramMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip) {}
         }
 
         private readonly string _nameChromatogramSet;
@@ -1571,7 +1571,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender,
                                                      ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
-            _stateProvider.BuildChromatogramMenu(menuStrip);
+            _stateProvider.BuildChromatogramMenu(sender, menuStrip);
         }
 
         protected override void OnClosed(EventArgs e)
