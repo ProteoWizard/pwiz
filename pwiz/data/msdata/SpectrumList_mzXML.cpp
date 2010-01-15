@@ -302,6 +302,11 @@ class HandlerScan : public SAXParser::Handler
     {
         if (name == "scan")
         {
+            if (scanNumber_.length())
+            {
+                // we're in a nested scan declaration, we can quit
+                return Status::Done;
+            }
             string scanEvent, msLevel, peaksCount, polarity,
                 retentionTime, lowMz, highMz, basePeakMz, basePeakIntensity, totIonCurrent,
                 msInstrumentID, centroided, deisotoped, chargeDeconvoluted, scanType,
