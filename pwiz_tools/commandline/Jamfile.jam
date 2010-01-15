@@ -96,6 +96,7 @@ exe chainsaw
     : chainsaw.cpp
       ../../pwiz/data/proteome//pwiz_data_proteome
       /ext/boost//program_options
+      /ext/boost//filesystem
     : <include>../../..
     ;
 
