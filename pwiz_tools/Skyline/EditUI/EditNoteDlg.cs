@@ -101,5 +101,10 @@ namespace pwiz.Skyline.EditUI
             }
             return new Annotations(textNote.Text, annotations);
         }
+        
+        /// <summary>
+        /// Returns the grid view on this form.  Used for testing.
+        /// </summary>
+        public DataGridView DataGridView { get { return dataGridView1; } }
     }
 }

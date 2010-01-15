@@ -24,6 +24,7 @@ using System.Reflection;
 using System.Text;
 using NHibernate.Engine;
 using NHibernate.Properties;
+using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Hibernate
 {
@@ -33,7 +34,7 @@ namespace pwiz.Skyline.Model.Hibernate
     /// </summary>
     public class AnnotationPropertyAccessor : IPropertyAccessor
     {
-        public const string AnnotationPrefix = "annotation_";
+        public const string AnnotationPrefix = AnnotationDef.AnnotationPrefix;
         public IGetter GetGetter(Type theClass, string propertyName)
         {
             return new Getter(propertyName.Substring(AnnotationPrefix.Length));

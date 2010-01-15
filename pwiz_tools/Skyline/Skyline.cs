@@ -885,26 +885,31 @@ namespace pwiz.Skyline
 
         private void editNoteMenuItem_Click(object sender, EventArgs e)
         {
+            EditNote();
+        }
+
+        public void EditNote()
+        {
             SrmTreeNode nodeTree = sequenceTree.SelectedNode as SrmTreeNode;
             if (nodeTree != null)
             {
                 EditNoteDlg dlg = new EditNoteDlg
-                    {
-                        Text = string.Format("Edit Note {0} {1}", nodeTree.Heading, nodeTree.Text)
-                    };
+                {
+                    Text = string.Format("Edit Note {0} {1}", nodeTree.Heading, nodeTree.Text)
+                };
                 dlg.Init(nodeTree.Document, nodeTree.Model.AnnotationTarget, nodeTree.Model.Annotations);
 
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     var annotations = dlg.GetAnnotations();
                     ModifyDocument("Edit note", doc =>
-                                                    {
-                                                        doc = (SrmDocument)
-                                                            doc.ReplaceChild(nodeTree.Path.Parent,
-                                                                             nodeTree.Model.ChangeAnnotations(
-                                                                                 annotations));
-                                                        return doc;
-                                                    });
+                    {
+                        doc = (SrmDocument)
+                            doc.ReplaceChild(nodeTree.Path.Parent,
+                                             nodeTree.Model.ChangeAnnotations(
+                                                 annotations));
+                        return doc;
+                    });
                 }
             }
         }
@@ -2100,6 +2105,10 @@ namespace pwiz.Skyline
             ComboHelper.AutoSizeDropDown(comboResults);
         }
         private void annotationsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowAnnotationsDialog();
+        }
+        public void ShowAnnotationsDialog()
         {
             var dlg = new ChooseAnnotationsDlg(this);
             dlg.ShowDialog(this);

@@ -37,6 +37,11 @@ namespace pwiz.Skyline.Model.DocSettings
     [XmlRoot("annotation")]    
     public sealed class AnnotationDef : XmlNamedElement
     {
+        /// <summary>
+        /// A prefix that is often prepended to annotation names when annotations coexist 
+        /// with other built in columns or attributes.
+        /// </summary>
+        public const string AnnotationPrefix = "annotation_";
         public AnnotationDef(String name, AnnotationTarget annotationTargets, AnnotationType type, IList<String> items) : base(name)
         {
             AnnotationTargets = annotationTargets;

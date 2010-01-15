@@ -116,7 +116,7 @@ namespace pwiz.Skyline
             }
         }
         
-        private bool OpenFile(string path)
+        public bool OpenFile(string path)
         {
             try
             {

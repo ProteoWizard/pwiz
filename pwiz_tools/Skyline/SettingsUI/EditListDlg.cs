@@ -103,6 +103,11 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
+            AddItem();
+        }
+
+        public void AddItem()
+        {
             TItem item = _editor.NewItem(GetAll(), TagEx);
             if (!Equals(item, default(TItem)))
             {
@@ -190,10 +195,14 @@ namespace pwiz.Skyline.SettingsUI
 
             if (result == DialogResult.Yes)
             {
-                _list.Clear();
-                _list.AddRange(_model.GetDefaults());
-                ReloadList();
+                ResetList();
             }
+        }
+        public void ResetList()
+        {
+            _list.Clear();
+            _list.AddRange(_model.GetDefaults());
+            ReloadList();
         }
     }
 }

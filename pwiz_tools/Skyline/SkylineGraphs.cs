@@ -713,6 +713,28 @@ namespace pwiz.Skyline
             }
         }
 
+        /// <summary>
+        /// Returns true if the graph panels still need to be updated to show the current selection.
+        /// Used for testing. 
+        /// </summary>
+        public bool GraphsRequireUpdating
+        {
+            get
+            {
+                // The implementation of "UpdateGraphs" is such that this question should only be
+                // asked on the event thread
+                if (InvokeRequired)
+                {
+                    throw new InvalidOperationException("Must be called from event thread");
+                }
+                if (_timerGraphs.Enabled)
+                {
+                    return true;
+                }
+                return false;
+            }
+        }
+
         #region Spectrum graph
 
         private void ShowGraphSpectrum(bool show)
@@ -2116,7 +2138,7 @@ namespace pwiz.Skyline
             ShowResultsGrid(Settings.Default.ShowResultsGrid = resultsGridMenuItem.Checked);
         }
 
-        private void ShowResultsGrid(bool show)
+        public void ShowResultsGrid(bool show)
         {
             if (show)
             {

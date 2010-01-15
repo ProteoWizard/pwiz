@@ -67,6 +67,11 @@ namespace pwiz.Skyline.Controls
 
         private void chooseColumnsToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            ChooseColumns();
+        }
+
+        public void ChooseColumns()
+        {
             var columnChooserForm = new ColumnChooser();
             var columns = resultsGrid.GetAvailableColumns();
             var columnLabels = new List<String>();
@@ -97,5 +102,10 @@ namespace pwiz.Skyline.Controls
         {
             synchronizeSelectionContextMenuItem.Checked = SynchronizeSelection;
         }
+
+        /// <summary>
+        /// Returns the grid on this form.  Used for testing.
+        /// </summary>
+        public ResultsGrid ResultsGrid { get { return resultsGrid;}}
     }
 }

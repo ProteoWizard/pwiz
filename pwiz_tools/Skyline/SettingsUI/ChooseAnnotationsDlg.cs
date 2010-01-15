@@ -47,10 +47,20 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnEditAnnotationList_Click(object sender, EventArgs e)
         {
+            EditList();
+        }
+
+        public void EditList()
+        {
             _annotationsListBoxDriver.EditList();
         }
 
         private void btnOK_Click(object sender, EventArgs e)
+        {
+            OkDialog();
+        }
+
+        public void OkDialog()
         {
             _parent.ModifyDocument("Change Annotation Settings", ChangeAnnotationDefs);
             Close();
@@ -205,6 +215,9 @@ namespace pwiz.Skyline.SettingsUI
             }
             return result;
         }
-
+        public CheckedListBox AnnotationsCheckedListBox
+        {
+            get { return checkedListBoxAnnotations; }
+        }
     }
 }

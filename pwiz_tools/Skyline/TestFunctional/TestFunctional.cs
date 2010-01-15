@@ -139,19 +139,6 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(form);
         }
 
-        public String GetDataDirectory()
-        {
-            for (String directory = TestContext.TestDir; directory.Length > 10; directory = Path.GetDirectoryName(directory) )
-            {
-                String testDataDirectory = Path.Combine(directory, "TestData");
-                if (Directory.Exists(testDataDirectory))
-                {
-                    return testDataDirectory;
-                }
-            }
-            return null;
-        }
-
         /// <summary>
         /// Starts up Skyline, and runs the <see cref="DoTest"/> test method.
         /// </summary>

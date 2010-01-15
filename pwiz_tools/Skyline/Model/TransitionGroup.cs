@@ -690,7 +690,10 @@ namespace pwiz.Skyline.Model
 
             private int TransitionCount { get; set; }
             private List<TransitionGroupChromInfoCalculator> Calculators { get; set; }
-
+            private static int IndexOfTransitionGroupChromInfo(ChromInfoList<TransitionGroupChromInfo> listChromInfo, int fileIndex, int optStep)
+            {
+                return listChromInfo.IndexOf(info => info.FileIndex == fileIndex && info.OptimizationStep == optStep);
+            }
             public void AddChromInfoList(IEnumerable<TransitionChromInfo> listInfo)
             {
                 if (listInfo == null)
@@ -711,7 +714,7 @@ namespace pwiz.Skyline.Model
                         TransitionGroupChromInfo chromInfoGroup = null;
                         if (_listChromInfo != null)
                         {
-                            int iFile = ChromInfoList<TransitionGroupChromInfo>.IndexOfFile(_listChromInfo, fileIndex);
+                            int iFile = IndexOfTransitionGroupChromInfo(_listChromInfo, fileIndex, step);
                             if (iFile != -1)
                                 chromInfoGroup = _listChromInfo[iFile];
                         }

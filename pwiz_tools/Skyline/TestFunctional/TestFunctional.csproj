@@ -82,6 +82,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AnnotationTest.cs" />
     <Compile Include="LibraryBuildTest.cs" />
     <Compile Include="TestFunctional.cs" />
     <Compile Include="BackgroundProteomeTest.cs" />

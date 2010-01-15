@@ -462,13 +462,6 @@ namespace pwiz.Skyline.Model.Results
             : base(elements)
         {
         }
-        
-        // Must be static because of the VS Issue noted above
-        public static int IndexOfFile<TInfo>(ChromInfoList<TInfo> listChromInfo, int fileIndex)
-            where TInfo : ChromInfo
-        {
-            return listChromInfo.IndexOf(info => info.FileIndex == fileIndex);
-        }
     }
 
     /// <summary>

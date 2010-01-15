@@ -47,55 +47,100 @@ namespace pwiz.Skyline.SettingsUI
         public void SetAnnotationDef(AnnotationDef annotationDef)
         {
             _annotationDef = annotationDef;
-            tbxValues.Text = "";
             if (annotationDef == null)
             {
-                tbxName.Text = "";
-                comboType.SelectedIndex = 0;
-                for (int i = 0; i < checkedListBoxAppliesTo.Items.Count; i++)
-                {
-                    checkedListBoxAppliesTo.SetItemChecked(i, false);
-                }
+                AnnotationName = "";
+                AnnotationType = AnnotationDef.AnnotationType.text;
+                AnnotationTargets = 0;
+                Items = new string[0];
             }
             else
             {
-                tbxName.Text = annotationDef.Name;
-                comboType.SelectedIndex = (int) annotationDef.Type;
-                tbxValues.Text = string.Join("\r\n", annotationDef.Items.ToArray());
+                AnnotationName = annotationDef.Name;
+                AnnotationType = annotationDef.Type;
+                AnnotationTargets = annotationDef.AnnotationTargets;
+                Items = annotationDef.Items;
+            }
+        }
+
+        public String AnnotationName
+        {
+            get
+            {
+                return tbxName.Text;
+            }
+            set
+            {
+                tbxName.Text = value;
+            }
+        }
+
+        public AnnotationDef.AnnotationType AnnotationType
+        {
+            get
+            {
+                return (AnnotationDef.AnnotationType) comboType.SelectedIndex;
+            }
+            set
+            {
+                comboType.SelectedIndex = (int) value;
+            }
+        }
+
+        public AnnotationDef.AnnotationTarget AnnotationTargets
+        {
+            get
+            {
+                AnnotationDef.AnnotationTarget targets = 0;
                 for (int i = 0; i < checkedListBoxAppliesTo.Items.Count; i++)
                 {
-                    checkedListBoxAppliesTo.SetItemChecked(i, ((int)annotationDef.AnnotationTargets & (1 << i)) != 0);
+                    if (checkedListBoxAppliesTo.GetItemChecked(i))
+                    {
+                        targets |= (AnnotationDef.AnnotationTarget)(1 << i);
+                    }
                 }
+                return targets;
+            }
+            set
+            {
+                for (int i = 0; i < checkedListBoxAppliesTo.Items.Count; i++)
+                {
+                    checkedListBoxAppliesTo.SetItemChecked(i, ((int)value & (1 << i)) != 0);
+                }
+            }
+        }
+
+        public IList<String> Items {
+            get
+            {
+                if (string.IsNullOrEmpty(tbxValues.Text))
+                {
+                    return new string[0];
+                }
+                return tbxValues.Text.Split(new[] {"\r\n"}, StringSplitOptions.None);
+            }
+            set
+            {
+                tbxValues.Text = string.Join("\r\n", value.ToArray());
             }
         }
 
         public AnnotationDef GetAnnotationDef()
         {
-            IList<string> values = new string[0];
-            if (!string.IsNullOrEmpty(tbxValues.Text))
-            {
-                values = tbxValues.Text.Split(new[] { "\r\n" }, StringSplitOptions.None);
-            }
-
-            AnnotationDef.AnnotationTarget targets = 0;
-            for (int i = 0; i < checkedListBoxAppliesTo.Items.Count; i++)
-            {
-                if (checkedListBoxAppliesTo.GetItemChecked(i))
-                {
-                    targets |= (AnnotationDef.AnnotationTarget) (1 << i);
-                }
-            }
-            return new AnnotationDef(tbxName.Text, targets, 
-                (AnnotationDef.AnnotationType) comboType.SelectedIndex, values);
+            return new AnnotationDef(AnnotationName, AnnotationTargets, AnnotationType, Items);
         }
 
         private void comboType_SelectedIndexChanged(object sender, EventArgs e)
         {
-            tbxValues.Enabled = comboType.SelectedIndex == (int) AnnotationDef.AnnotationType.value_list;
+            tbxValues.Enabled = AnnotationType == AnnotationDef.AnnotationType.value_list;
         }
 
         private void btnOK_Click(object sender, EventArgs e)
         {
+            OkDialog();
+        }
+
+        public void OkDialog() {
             var messageBoxHelper = new MessageBoxHelper(this);
             var cancelEventArgs = new CancelEventArgs();
             string name;

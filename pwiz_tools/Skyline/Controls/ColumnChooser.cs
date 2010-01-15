@@ -52,5 +52,9 @@ namespace pwiz.Skyline.Controls
             }
             return result;
         }
+        /// <summary>
+        /// Used for testing
+        /// </summary>
+        public CheckedListBox CheckedListBox { get { return checkedListBox1; } }
     }
 }

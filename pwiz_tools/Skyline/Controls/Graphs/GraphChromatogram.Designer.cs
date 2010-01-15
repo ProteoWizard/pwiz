@@ -47,7 +47,6 @@
             this.graphControl.EditModifierKeys = System.Windows.Forms.Keys.None;
             msGraphPane1.AllowCurveOverlap = false;
             msGraphPane1.BaseDimension = 8F;
-            msGraphPane1.CurrentItemType = pwiz.MSGraph.MSGraphItemType.Unknown;
             msGraphPane1.IsAlignGrids = false;
             msGraphPane1.IsBoundedRanges = false;
             msGraphPane1.IsFontsScaled = false;
