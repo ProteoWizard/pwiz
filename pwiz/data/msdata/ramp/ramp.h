@@ -66,7 +66,10 @@ typedef float RAMPREAL;
 
 typedef enum { mzInt = 0 , mzRuler } e_contentType;
 
-
+#ifdef SWIG
+%apply long long {ramp_fileoffset_t};
+#else
+#ifndef RAMP_STRUCT_DECL_ONLY  // useful for pwiz, which only wants to mimic ramp structs
 //
 // we use this struct instead of FILE* so we can track what kind of files we're parsing
 //
@@ -74,13 +77,16 @@ typedef struct {
    ramp_filehandle_t fileHandle;
    int bIsMzData; // mzXML or mzData?
 } RAMPFILE;
+#endif
 
 #ifndef _LARGEFILE_SOURCE // use MSFT API for 64 bit file pointers
 typedef __int64 ramp_fileoffset_t;
 #define ramp_fseek(a,b,c) _lseeki64((a)->fileHandle,b,c)
 #define ramp_ftell(a) _lseeki64((a)->fileHandle,0,SEEK_CUR)
 #define ramp_fread(buf,len,handle) read((handle)->fileHandle,buf,len)
+#ifndef RAMP_STRUCT_DECL_ONLY  // useful for pwiz, which only wants to mimic ramp structs
 RAP_EXTERN_C char *ramp_fgets(char *buf,int len,RAMPFILE *handle);
+#endif
 #define ramp_feof(handle) eof((handle)->fileHandle)
 #define atoll(a) _atoi64(a)
 
@@ -92,6 +98,7 @@ typedef off_t ramp_fileoffset_t;
 #define ramp_fgets(buf,len,handle) fgets(buf, len, (handle)->fileHandle)
 #define ramp_feof(handle) feof((handle)->fileHandle)
 #endif
+#endif // not SWIG
 
 #include <string.h>
 #include <ctype.h>
@@ -152,6 +159,7 @@ typedef struct InstrumentStruct
    //char msType[INSTRUMENT_LENGTH];
 } InstrumentStruct;
 
+#ifndef RAMP_STRUCT_DECL_ONLY  // useful for pwiz, which only wants to mimic ramp structs
 // file open/close
 RAMPFILE *rampOpenFile(const char *filename);
 void rampCloseFile(RAMPFILE *pFI);
@@ -249,6 +257,8 @@ void clearScanCache(struct ScanCacheStruct* cache);
 struct ScanHeaderStruct* readHeaderCached(struct ScanCacheStruct* cache, int seqNum, RAMPFILE* pFI, ramp_fileoffset_t lScanIndex);
 int readMsLevelCached(struct ScanCacheStruct* cache, int seqNum, RAMPFILE* pFI, ramp_fileoffset_t lScanIndex);
 RAMPREAL *readPeaksCached(struct ScanCacheStruct* cache, int seqNum, RAMPFILE* pFI, ramp_fileoffset_t lScanIndex);
+
+#endif // ifndef RAMP_STRUCT_DECL_ONLY  useful for pwiz, which only wants to mimic ramp structs
 
 #ifdef __cplusplus
 }
