@@ -574,6 +574,15 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
     write_precursors(xmlWriter, precursorInfo);
     write_peaks(xmlWriter, mzIntensityPairs, config);
 
+    // write userParams as arbitrary nameValue elements
+    BOOST_FOREACH(const UserParam& userParam, spectrum.userParams)
+    {
+        attributes.clear();
+        attributes.push_back(make_pair("name", userParam.name));
+        attributes.push_back(make_pair("value", userParam.value));
+        xmlWriter.startElement("nameValue", attributes, XMLWriter::EmptyElement);
+    }
+
     xmlWriter.endElement(); // scan
 
     return result;
@@ -1066,6 +1075,11 @@ struct Handler_dataProcessing : public SAXParser::Handler
         }
         else if (name == "processingOperation")
         {   // ignore its only attribute, which is "comment"
+            return Status::Ok;
+        }
+        else if (name == "comment")
+        {
+            // just ignore
             return Status::Ok;
         }
 

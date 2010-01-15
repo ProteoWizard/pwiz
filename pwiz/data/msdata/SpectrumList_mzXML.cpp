@@ -454,12 +454,26 @@ class HandlerScan : public SAXParser::Handler
 
             return Status(Status::Delegate, &handlerPeaks_);
         }
+        else if (name == "nameValue")
+        {
+            // arbitrary name value pairs are converted to UserParams
+            string name, value;
+            getAttribute(attributes, "name", name);
+            getAttribute(attributes, "value", value);
+            spectrum_.userParams.push_back(UserParam(name, value, "xsd:string"));
+            return Status::Ok;
+        }
         else if (name == "scanOrigin")
         {
             // just ignore
             return Status::Ok;
         }
         else if (name == "nativeScanRef" || name == "coordinate") // mzXML 3.0 beta tags
+        {
+            // just ignore
+            return Status::Ok;
+        }
+        else if (name == "comment")
         {
             // just ignore
             return Status::Ok;

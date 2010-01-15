@@ -188,6 +188,21 @@ void test(bool indexed)
     unit_assert(pairs.size() == 10);
     for (int i=0; i<10; i++)
         unit_assert(pairs[i].mz==2*i && pairs[i].intensity==(10-i)*2);
+
+    
+    // check scan 21 (for userParam <-> nameValue)
+
+    unit_assert(sl->spectrumIdentity(2).index == 2);
+    unit_assert(sl->spectrumIdentity(2).id == "scan=21");
+
+    s = sl->spectrum(2, false);
+    unit_assert(s.get());
+    unit_assert(s->id == "scan=21");
+    UserParam exampleUserParam = s->userParam("example");
+    unit_assert(!exampleUserParam.empty());
+    unit_assert(exampleUserParam.name == "example");
+    unit_assert(exampleUserParam.value == "spectrum with no data");
+    unit_assert(exampleUserParam.type == "xsd:string");
 }
 
 
