@@ -43,6 +43,7 @@ namespace pwiz.Skyline.Model.Hibernate
         {
             Configuration configuration = new Configuration()
                 .SetProperty("dialect", typeof(NHibernate.Dialect.SQLiteDialect).AssemblyQualifiedName)
+                .SetProperty("proxyfactory.factory_class", typeof(NHibernate.ByteCode.Castle.ProxyFactoryFactory).AssemblyQualifiedName)
                 .SetProperty("connection.connection_string", new SQLiteConnectionStringBuilder
                 {
                     DataSource = path

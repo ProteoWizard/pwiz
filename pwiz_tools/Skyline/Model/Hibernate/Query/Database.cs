@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             configuration.SetProperty("connection.release_mode", "on_close");
             _sessionFactory = configuration.BuildSessionFactory();
             _session = _sessionFactory.OpenSession();
-            new SchemaExport(configuration).Execute(false, true, false, true, _session.Connection, null);
+            new SchemaExport(configuration).Execute(false, true, false, _session.Connection, null);
         }
 
 

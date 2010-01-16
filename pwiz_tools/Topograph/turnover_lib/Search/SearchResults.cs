@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml;
 
 namespace pwiz.Topograph.Search
 {
@@ -141,6 +142,20 @@ namespace pwiz.Topograph.Search
                 }
             }
             return results;
+        }
+
+        public static List<SearchResult> ReadPepXml(String filename, FileStream stream, Func<int, bool> progressMonitor)
+        {
+            var results = new List<SearchResult>();
+            var xmlReader = XmlReader.Create(stream);
+            xmlReader.Read();
+            xmlReader.ReadStartElement("msms_pipeline_analysis");
+            xmlReader.ReadStartElement("msms_run_summary");
+            while(xmlReader.ReadToNextSibling("spectrum_query"))
+            {
+//                if (xmlReader.IsStartElement())
+            }
+            throw new NotImplementedException();
         }
     }
 

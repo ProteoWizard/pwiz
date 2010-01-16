@@ -68,6 +68,8 @@ namespace pwiz.Topograph.Data
                 .SetProperty("connection.driver_class", GetDriverClass(databaseTypeEnum).AssemblyQualifiedName)
                 .SetProperty("connection.provider",
                              typeof (NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName)
+                .SetProperty("proxyfactory.factory_class",
+                typeof(NHibernate.ByteCode.Castle.ProxyFactoryFactory).AssemblyQualifiedName)
                 .AddInputStream(assembly.GetManifestResourceStream("pwiz.Topograph.Data.mapping.xml"));
             return configuration;
             
@@ -92,23 +94,9 @@ namespace pwiz.Topograph.Data
         {
             var configuration = GetConfiguration(tpgLinkDef.DatabaseTypeEnum)
                 .SetProperty("connection.connection_string", tpgLinkDef.GetConnectionString());
-#if(DEBUG)
-            configuration.SetProperty("show_sql", "true");
-#endif 
             if (createSchema)
             {
                 configuration.SetProperty("hbm2ddl.auto", "create");
-            }
-            return configuration.BuildSessionFactory();
-        }
-        public static ISessionFactory GetSessionFactoryWithoutIdGenerators(TpgLinkDef tpgLinkDef)
-        {
-            var configuration = GetConfiguration(tpgLinkDef.DatabaseTypeEnum)
-                .SetProperty("show_sql", "true")
-                .SetProperty("connection.connection_string", tpgLinkDef.GetConnectionString());
-            foreach (var classMapping in configuration.ClassMappings)
-            {
-                classMapping.IdentifierProperty.Generation = PropertyGeneration.Never;
             }
             return configuration.BuildSessionFactory();
         }

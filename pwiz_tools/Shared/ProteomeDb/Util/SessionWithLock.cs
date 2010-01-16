@@ -506,138 +506,28 @@ namespace pwiz.ProteomeDatabase.Util
         {
             get { return _session.Statistics; }
         }
-    }
-    public class StatelessSessionWithLock : IStatelessSession
-    {
-        private readonly IStatelessSession _session;
-        private readonly ReaderWriterLock _lock;
-        private readonly bool _writeLock;
 
-        public StatelessSessionWithLock(
-            IStatelessSession statelessSession, ReaderWriterLock readerWriterLock, bool writeLock)
+        public object Load(string entityName, object id, LockMode lockMode)
         {
-            _session = statelessSession;
-            _lock = readerWriterLock;
-            _writeLock = writeLock;
-            if (_writeLock)
-            {
-                if (_lock.IsReaderLockHeld)
-                {
-                    throw new InvalidOperationException(
-                        "Can't acquire write lock while holding read lock.");
-                }
-                _lock.AcquireWriterLock(int.MaxValue);
-            }
-            else
-            {
-                _lock.AcquireReaderLock(int.MaxValue);
-            }
+            return _session.Load(entityName, id, lockMode);
         }
 
-        public void Dispose()
+        public object Load(string entityName, object id)
         {
-            _session.Dispose();
-            if (_writeLock)
-            {
-                _lock.ReleaseWriterLock();
-            }
-            else
-            {
-                _lock.ReleaseReaderLock();
-            }
+            return _session.Load(entityName, id);
         }
 
-        public void Close()
+        public void Delete(string entityName, object obj)
         {
-            _session.Close();
+            _session.Delete(entityName, obj);
         }
 
-        public object Insert(object entity)
-        {
-            return _session.Insert(entity);
-        }
-
-        public object Insert(string entityName, object entity)
-        {
-            return _session.Insert(entityName, entity);
-        }
-
-        public void Update(object entity)
-        {
-            _session.Update(entity);
-        }
-
-        public void Update(string entityName, object entity)
-        {
-            _session.Update(entityName, entity);
-        }
-
-        public void Delete(object entity)
-        {
-            _session.Delete(entity);
-        }
-
-        public void Delete(string entityName, object entity)
-        {
-            _session.Delete(entityName, entity);
-        }
-
-        public object Get(string entityName, object id)
-        {
-            return _session.Get(entityName, id);
-        }
-
-        public T Get<T>(object id)
-        {
-            return _session.Get<T>(id);
-        }
-
-        public object Get(string entityName, object id, LockMode lockMode)
-        {
-            return _session.Get(entityName, id, lockMode);
-        }
-
-        public T Get<T>(object id, LockMode lockMode)
-        {
-            return _session.Get<T>(id, lockMode);
-        }
-
-        public void Refresh(object entity)
-        {
-            _session.Refresh(entity);
-        }
-
-        public void Refresh(string entityName, object entity)
-        {
-            _session.Refresh(entityName, entity);
-        }
-
-        public void Refresh(object entity, LockMode lockMode)
-        {
-            _session.Refresh(entity, lockMode);
-        }
-
-        public void Refresh(string entityName, object entity, LockMode lockMode)
-        {
-            _session.Refresh(entityName, entity, lockMode);
-        }
-
-        public IQuery CreateQuery(string queryString)
-        {
-            return _session.CreateQuery(queryString);
-        }
-
-        public IQuery GetNamedQuery(string queryName)
-        {
-            return _session.GetNamedQuery(queryName);
-        }
-
-        public ICriteria CreateCriteria<T>()
+        public ICriteria CreateCriteria<T>() where T : class
         {
             return _session.CreateCriteria<T>();
         }
 
-        public ICriteria CreateCriteria<T>(string alias)
+        public ICriteria CreateCriteria<T>(string alias) where T : class
         {
             return _session.CreateCriteria<T>(alias);
         }
@@ -652,24 +542,9 @@ namespace pwiz.ProteomeDatabase.Util
             return _session.CreateCriteria(entityName, alias);
         }
 
-        public ISQLQuery CreateSQLQuery(string queryString)
+        public EntityMode ActiveEntityMode
         {
-            return _session.CreateSQLQuery(queryString);
-        }
-
-        public ITransaction BeginTransaction()
-        {
-            return _session.BeginTransaction();
-        }
-
-        public ITransaction Transaction
-        {
-            get { return _session.Transaction; }
-        }
-
-        public IDbConnection Connection
-        {
-            get { return _session.Connection; }
+            get { return _session.ActiveEntityMode; }
         }
     }
 }

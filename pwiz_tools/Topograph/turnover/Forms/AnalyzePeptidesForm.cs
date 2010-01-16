@@ -167,7 +167,7 @@ namespace pwiz.Topograph.ui.Forms
                         session.Save(dbPeptideAnalysis);
                         newAnalysis = true;
                     }
-                    var sqlStatementBuilder = new SqlStatementBuilder(session.SessionFactory.Dialect);
+                    var sqlStatementBuilder = new SqlStatementBuilder(session.GetSessionImplementation().Factory.Dialect);
                     var insertStatements = new List<string>();
                     foreach (var peptideSearchResult in searchResults)
                     {

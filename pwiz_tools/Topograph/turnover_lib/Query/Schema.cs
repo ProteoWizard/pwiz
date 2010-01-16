@@ -18,10 +18,6 @@ namespace pwiz.Topograph.Query
 
         public IClassMetadata GetClassMetadata(Type type)
         {
-            if (!_sessionFactory.GetAllClassMetadata().Contains(type))
-            {
-                return null;
-            }
             return _sessionFactory.GetClassMetadata(type);
         }
 
@@ -72,9 +68,10 @@ namespace pwiz.Topograph.Query
         public IList<Type> GetTables()
         {
             List<Type> result = new List<Type>();
-            foreach (Type table in _sessionFactory.GetAllClassMetadata().Keys)
+
+            foreach (var entry in _sessionFactory.GetAllClassMetadata())
             {
-                result.Add(table);
+                result.Add(entry.Value.GetMappedClass(EntityMode.Poco));
             }
             return result;
         }

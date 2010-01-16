@@ -79,10 +79,12 @@
 								<xs:enumeration value="cache.use_second_level_cache" />
 								<xs:enumeration value="cache.region_prefix" />
 								<xs:enumeration value="cache.use_minimal_puts" />
+								<xs:enumeration value="cache.default_expiration" />
 								<xs:enumeration value="query.substitutions" />
 								<xs:enumeration value="query.factory_class" />
 								<xs:enumeration value="query.imports" />
 								<xs:enumeration value="hbm2ddl.auto" />
+								<xs:enumeration value="hbm2ddl.keywords" />
 								<xs:enumeration value="sql_exception_converter" />
 								<xs:enumeration value="adonet.wrap_result_sets" />
 								<xs:enumeration value="prepare_sql" />
@@ -97,6 +99,10 @@
 								<xs:enumeration value="proxyfactory.factory_class" />
 								<xs:enumeration value="adonet.factory_class" />
 								<xs:enumeration value="default_batch_fetch_size" />
+								<xs:enumeration value="default_entity_mode" />
+								<xs:enumeration value="use_sql_comments" />
+								<xs:enumeration value="format_sql" />
+								<xs:enumeration value="collectiontype.factory_class" />
 							</xs:restriction>
 						</xs:simpleType>
 					</xs:attribute>
@@ -177,6 +183,12 @@
 			<xs:enumeration value="post-commit-update" />
 			<xs:enumeration value="post-commit-insert" />
 			<xs:enumeration value="post-commit-delete" />
+			<xs:enumeration value="pre-collection-recreate" />
+			<xs:enumeration value="pre-collection-remove" />
+			<xs:enumeration value="pre-collection-update" />
+			<xs:enumeration value="post-collection-recreate" />
+			<xs:enumeration value="post-collection-remove" />
+			<xs:enumeration value="post-collection-update" />
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:element name="bytecode-provider">

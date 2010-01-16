@@ -491,5 +491,44 @@ namespace pwiz.Topograph.Util
         {
             get { return _session.Statistics; }
         }
+        public object Load(string entityName, object id, LockMode lockMode)
+        {
+            return _session.Load(entityName, id, lockMode);
+        }
+
+        public object Load(string entityName, object id)
+        {
+            return _session.Load(entityName, id);
+        }
+
+        public void Delete(string entityName, object obj)
+        {
+            _session.Delete(entityName, obj);
+        }
+
+        public ICriteria CreateCriteria<T>() where T : class
+        {
+            return _session.CreateCriteria<T>();
+        }
+
+        public ICriteria CreateCriteria<T>(string alias) where T : class
+        {
+            return _session.CreateCriteria<T>(alias);
+        }
+
+        public ICriteria CreateCriteria(string entityName)
+        {
+            return _session.CreateCriteria(entityName);
+        }
+
+        public ICriteria CreateCriteria(string entityName, string alias)
+        {
+            return _session.CreateCriteria(entityName, alias);
+        }
+
+        public EntityMode ActiveEntityMode
+        {
+            get { return _session.ActiveEntityMode; }
+        }
     }
 }

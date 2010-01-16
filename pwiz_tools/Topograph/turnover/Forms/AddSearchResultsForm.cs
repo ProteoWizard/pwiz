@@ -231,7 +231,7 @@ namespace pwiz.Topograph.ui.Forms
             var searchResultsToUpdate = new Dictionary<SearchResultKey, DbPeptideSearchResult>();
             using (var session = Workspace.OpenWriteSession())
             {
-                var statementBuilder = new SqlStatementBuilder(session.SessionFactory.Dialect);
+                var statementBuilder = new SqlStatementBuilder(session.GetSessionImplementation().Factory.Dialect);
                 var dbWorkspace = Workspace.LoadDbWorkspace(session);
                 session.BeginTransaction();
                 var searchResultCountsBySequence = SearchResultCountsBySequence(searchResults);
@@ -253,6 +253,7 @@ namespace pwiz.Topograph.ui.Forms
                                                              {"FullSequence", searchResult.Sequence},
                                                              {"SearchResultCount", searchResultCountsBySequence[trimmedSequence]},
                                                              {"Version",1},
+                                                             {"ValidationStatus",0}
                                                          });
                 }
                 if (newPeptides.Count > 0)

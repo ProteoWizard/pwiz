@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Model.Hibernate
             return new Setter(propertyName.Substring(AnnotationPrefix.Length));
         }
 
-        public bool CanAccessTroughReflectionOptimizer
+        public bool CanAccessThroughReflectionOptimizer
         {
             get { return false; }
         }
@@ -130,7 +130,7 @@ namespace pwiz.Skyline.Model.Hibernate
             return new Setter(propertyName.Substring(AnnotationPrefix.Length));
         }
 
-        public bool CanAccessTroughReflectionOptimizer
+        public bool CanAccessThroughReflectionOptimizer
         {
             get { return false; }
         }

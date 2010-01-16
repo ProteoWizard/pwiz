@@ -22,7 +22,7 @@
       <generator class="native" />
     </id>
     <version name="Version" generated="never"/>
-    <property name="ValidationStatus" />
+    <property name="ValidationStatus" not-null="true"/>
     <property name="Note" />
 
     <many-to-one name="Workspace" not-null="true" unique-key="WorkspaceName"/>
@@ -40,7 +40,7 @@
       <generator class="native" />
     </id>
     <version name="Version" generated="never"/>
-    <property name="ValidationStatus" />
+    <property name="ValidationStatus" not-null="true"/>
     <property name="Note" />
 
     <many-to-one name="Workspace" not-null="true" unique-key="PeptideSequence"/>
@@ -60,7 +60,7 @@
       <generator class="native" />
     </id>
     <version name="Version" generated="never"/>
-    <property name="ValidationStatus" />
+    <property name="ValidationStatus" not-null="true"/>
     <property name="Note" />
 
     <many-to-one name="MsDataFile" unique-key="MsDataFilePeptide" not-null="true"/>
@@ -96,25 +96,25 @@
     </id>
     <version name="Version" generated="never"/>
     
-    <bag name="MsDataFiles">
+    <bag name="MsDataFiles" inverse="true">
       <key column="Workspace" />
       <one-to-many class="DbMsDataFile"/>
     </bag>
     <property name="MsDataFileCount" />
     
-    <bag name="Peptides">
+    <bag name="Peptides" inverse="true" lazy="true">
       <key column="Workspace"/>
       <one-to-many class="DbPeptide"/>
     </bag>
     <property name="PeptideCount" />
     
-    <bag name="PeptideAnalyses">
+    <bag name="PeptideAnalyses" inverse="true">
       <key column="Workspace" />
       <one-to-many class="DbPeptideAnalysis"/>
     </bag>
     <property name="PeptideAnalysisCount" />
     
-    <bag name="Modifications">
+    <bag name="Modifications" inverse="true">
       <key column="Workspace"/>
       <one-to-many class="DbModification"/>
     </bag>
@@ -178,7 +178,7 @@
       <generator class="native" />
     </id>
     <version name="Version" generated="never"/>
-    <property name="ValidationStatus" />
+    <property name="ValidationStatus" not-null="true"/>
     <property name="Note" />
 
     <many-to-one name="PeptideAnalysis" unique-key="PeptideAnalysis" not-null="true"/>
@@ -218,7 +218,7 @@
       <generator class="native" />
     </id>
     <version name="Version" generated="never"/>
-    <property name="ValidationStatus" />
+    <property name="ValidationStatus" not-null="true"/>
     <property name="Note" />
 
     <many-to-one name="Workspace" not-null="true" unique-key="PeptideAnalysis" />
