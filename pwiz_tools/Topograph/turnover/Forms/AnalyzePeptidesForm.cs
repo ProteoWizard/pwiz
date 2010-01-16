@@ -156,6 +156,10 @@ namespace pwiz.Topograph.ui.Forms
                             }
                         }
                     }
+                    if (searchResults.Count == 0)
+                    {
+                        continue;
+                    }
                     session.BeginTransaction();
                     bool newAnalysis;
                     if (dbPeptideAnalysis.Id.HasValue)
