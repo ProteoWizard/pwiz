@@ -247,8 +247,9 @@ namespace pwiz.Skyline.Controls
                 if (_resultsIndex != value)
                 {
                     _resultsIndex = value;
-
-                    UpdateNodeStates(Nodes);                    
+                    BeginUpdate();
+                    UpdateNodeStates(Nodes);
+                    EndUpdate();
                 }
             }
         }
