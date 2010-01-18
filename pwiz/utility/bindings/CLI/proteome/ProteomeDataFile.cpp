@@ -50,7 +50,7 @@ ProteomeDataFile::ProteomeDataFile(System::String^ path)
     try
     {
         initializeReaderList();
-        base_ = new boost::shared_ptr<b::ProteomeDataFile>(new b::ProteomeDataFile(ToStdString(path), (b::Reader*) readerList.get()));
+        base_ = new boost::shared_ptr<b::ProteomeDataFile>(new b::ProteomeDataFile(ToStdString(path), *readerList));
         ProteomeData::base_ = reinterpret_cast<boost::shared_ptr<b::ProteomeData>*>(base_);
     }
     catch(exception& e)
@@ -89,7 +89,7 @@ ProteomeDataFile::ProteomeDataFile(System::String^ path, Reader^ reader)
 {
     try
     {
-        base_ = new boost::shared_ptr<b::ProteomeDataFile>(new b::ProteomeDataFile(ToStdString(path), (b::Reader*) &reader->base()));
+        base_ = new boost::shared_ptr<b::ProteomeDataFile>(new b::ProteomeDataFile(ToStdString(path), reader->base()));
         ProteomeData::base_ = reinterpret_cast<boost::shared_ptr<b::ProteomeData>*>(base_);
     }
     catch(exception& e)
