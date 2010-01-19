@@ -76,12 +76,6 @@ namespace pwiz.Skyline
             }
         }
 
-        private bool IsGraphChromVisible(string name)
-        {
-            int iGraph = _listGraphChrom.IndexOf(graph => Equals(graph.NameSet, name));
-            return iGraph != -1 && !_listGraphChrom[iGraph].IsHidden;
-        }
-
         private void dockPanel_ActiveDocumentChanged(object sender, EventArgs e)
         {
             var settings = DocumentUI.Settings;
@@ -100,228 +94,6 @@ namespace pwiz.Skyline
         private void graphsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ShowGraphSpectrum(Settings.Default.ShowSpectra = graphsToolStripMenuItem.Checked);
-        }
-
-        private void chromatogramsMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            ToolStripMenuItem menu = chromatogramsMenuItem;
-            if (!DocumentUI.Settings.HasResults)
-            {
-                // Strange problem in .NET where a dropdown will show when
-                // its menuitem is disabled.
-                chromatogramsMenuItem.HideDropDown();
-                return;                
-            }
-
-            // If MeasuredResults is null, then this menuitem is incorrectly enabled
-            var chromatograms = DocumentUI.Settings.MeasuredResults.Chromatograms;
-
-            int i = 0;
-            foreach (var chrom in chromatograms)
-            {
-                string name = chrom.Name;
-                ToolStripMenuItem item = null;
-                if (i < menu.DropDownItems.Count)
-                    item = menu.DropDownItems[i] as ToolStripMenuItem;
-                if (item == null || name != item.Name)
-                {
-                    // Remove the rest of the existing items
-                    while (!ReferenceEquals(menu.DropDownItems[i], toolStripSeparatorReplicates))
-                        menu.DropDownItems.RemoveAt(i);
-
-                    ShowChromHandler handler = new ShowChromHandler(this, chrom.Name);
-                    item = new ToolStripMenuItem(chrom.Name, null,
-                        handler.menuItem_Click);
-                    menu.DropDownItems.Insert(i, item);
-                }
-
-                if (IsGraphChromVisible(name))
-                    item.Checked = true;
-                i++;
-            }
-
-            // Remove the rest of the existing items
-            while (!ReferenceEquals(menu.DropDownItems[i], toolStripSeparatorReplicates))
-                menu.DropDownItems.RemoveAt(i);
-        }
-
-        private class ShowChromHandler
-        {
-            private readonly SkylineWindow _skyline;
-            private readonly string _nameChromatogram;
-
-            public ShowChromHandler(SkylineWindow skyline, string nameChromatogram)
-            {
-                _skyline = skyline;
-                _nameChromatogram = nameChromatogram;
-            }
-
-            public void menuItem_Click(object sender, EventArgs e)
-            {
-                _skyline.ShowGraphChrom(_nameChromatogram,
-                    !_skyline.IsGraphChromVisible(_nameChromatogram));
-            }
-        }
-
-        private void aMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.ShowAIons = !Settings.Default.ShowAIons;
-            UpdateSpectrumGraph();
-        }
-
-        private void bMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.ShowBIons = !Settings.Default.ShowBIons;
-            UpdateSpectrumGraph();
-        }
-
-        private void cMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.ShowCIons = !Settings.Default.ShowCIons;
-            UpdateSpectrumGraph();
-        }
-
-        private void xMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.ShowXIons = !Settings.Default.ShowXIons;
-            UpdateSpectrumGraph();
-        }
-
-        private void yMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.ShowYIons = !Settings.Default.ShowYIons;
-            UpdateSpectrumGraph();
-        }
-
-        private void zMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.ShowZIons = !Settings.Default.ShowZIons;
-            UpdateSpectrumGraph();
-        }
-
-        private void ionTypesMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            var set = Settings.Default;
-            aMenuItem.Checked = aionsContextMenuItem.Checked = set.ShowAIons;
-            bMenuItem.Checked = bionsContextMenuItem.Checked = set.ShowBIons;
-            cMenuItem.Checked = cionsContextMenuItem.Checked = set.ShowCIons;
-            xMenuItem.Checked = xionsContextMenuItem.Checked = set.ShowXIons;
-            yMenuItem.Checked = yionsContextMenuItem.Checked = set.ShowYIons;
-            zMenuItem.Checked = zionsContextMenuItem.Checked = set.ShowZIons;
-        }
-
-        private void charge1MenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.ShowCharge1 = !Settings.Default.ShowCharge1;
-            UpdateSpectrumGraph();
-        }
-
-        private void charge2MenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.ShowCharge2 = !Settings.Default.ShowCharge2;
-            UpdateSpectrumGraph();
-        }
-
-        private void chargesMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            var set = Settings.Default;
-            charge1MenuItem.Checked = charge1ContextMenuItem.Checked = set.ShowCharge1;
-            charge2MenuItem.Checked = charge2ContextMenuItem.Checked = set.ShowCharge2;
-        }
-
-        private void viewToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
-        {
-            ranksMenuItem.Checked = ranksContextMenuItem.Checked = Settings.Default.ShowRanks;
-        }
-
-        private void ranksMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.ShowRanks = !Settings.Default.ShowRanks;
-            UpdateSpectrumGraph();
-        }
-
-        void GraphSpectrum.IStateProvider.BuildSpectrumMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
-        {
-            // Store original menuitems in an array, and insert a separator
-            ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
-            int iUnzoom = -1;
-            for (int i = 0; i < items.Length; i++)
-            {
-                items[i] = menuStrip.Items[i];
-                string tag = (string)items[i].Tag;
-                if (tag == "unzoom")
-                    iUnzoom = i;
-            }
-
-            if (iUnzoom != -1)
-                menuStrip.Items.Insert(iUnzoom, toolStripSeparator15);
-
-            // Insert skyline specific menus
-            var set = Settings.Default;
-            int iInsert = 0;
-            aionsContextMenuItem.Checked = set.ShowAIons;
-            menuStrip.Items.Insert(iInsert++, aionsContextMenuItem);
-            bionsContextMenuItem.Checked = set.ShowBIons;
-            menuStrip.Items.Insert(iInsert++, bionsContextMenuItem);
-            cionsContextMenuItem.Checked = set.ShowCIons;
-            menuStrip.Items.Insert(iInsert++, cionsContextMenuItem);
-            xionsContextMenuItem.Checked = set.ShowXIons;
-            menuStrip.Items.Insert(iInsert++, xionsContextMenuItem);
-            yionsContextMenuItem.Checked = set.ShowYIons;
-            menuStrip.Items.Insert(iInsert++, yionsContextMenuItem);
-            zionsContextMenuItem.Checked = set.ShowZIons;
-            menuStrip.Items.Insert(iInsert++, zionsContextMenuItem);
-            menuStrip.Items.Insert(iInsert++, toolStripSeparator11);
-            charge1ContextMenuItem.Checked = set.ShowCharge1;
-            menuStrip.Items.Insert(iInsert++, charge1ContextMenuItem);
-            charge2ContextMenuItem.Checked = set.ShowCharge2;
-            menuStrip.Items.Insert(iInsert++, charge2ContextMenuItem);
-            menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
-            ranksContextMenuItem.Checked = set.ShowRanks;
-            menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
-            duplicatesContextMenuItem.Checked = set.ShowDuplicateIons;
-            menuStrip.Items.Insert(iInsert++, duplicatesContextMenuItem);
-            menuStrip.Items.Insert(iInsert++, toolStripSeparator13);
-            lockYaxisContextMenuItem.Checked = set.LockYAxis;
-            menuStrip.Items.Insert(iInsert++, lockYaxisContextMenuItem);
-            menuStrip.Items.Insert(iInsert++, toolStripSeparator14);
-            menuStrip.Items.Insert(iInsert++, spectrumPropsContextMenuItem);
-            menuStrip.Items.Insert(iInsert, toolStripSeparator15);
-
-            // Remove some ZedGraph menu items not of interest
-            for (int i = 0; i < items.Length; i++)
-            {
-                var item = items[i];
-                string tag = (string)item.Tag;
-                if (tag == "set_default" || tag == "show_val")
-                    menuStrip.Items.Remove(item);
-            }
-            CopyEmfToolStripMenuItem.AddToContextMenu(zedGraphControl, menuStrip);
-        }
-
-        private void duplicatesContextMenuItem_Click(object sender, EventArgs e)
-        {
-            Settings.Default.ShowDuplicateIons = duplicatesContextMenuItem.Checked;
-            UpdateSpectrumGraph();
-        }
-
-        private void lockYaxisContextMenuItem_Click(object sender, EventArgs e)
-        {
-            // Avoid updating the rest of the graph just to change the y-axis lock state
-            _graphSpectrum.LockYAxis(Settings.Default.LockYAxis = lockYaxisContextMenuItem.Checked);
-        }
-
-        private void spectrumPropsContextMenuItem_Click(object sender, EventArgs e)
-        {
-            var dlg = new SpectrumChartPropertyDlg();
-            if (dlg.ShowDialog(this) == DialogResult.OK)
-                UpdateSpectrumGraph();
-        }
-
-        private void zoomSpectrumContextMenuItem_Click(object sender, EventArgs e)
-        {
-            if (_graphSpectrum != null)
-                _graphSpectrum.ZoomSpectrumToSettings();
         }
 
         private class DockPanelLayoutLock : IDisposable
@@ -719,7 +491,7 @@ namespace pwiz.Skyline
         /// Returns true if the graph panels still need to be updated to show the current selection.
         /// Used for testing. 
         /// </summary>
-        public bool GraphsRequireUpdating
+        public bool IsGraphUpdatePending
         {
             get
             {
@@ -738,6 +510,167 @@ namespace pwiz.Skyline
         }
 
         #region Spectrum graph
+
+        private void aMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowAIons = !Settings.Default.ShowAIons;
+            UpdateSpectrumGraph();
+        }
+
+        private void bMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowBIons = !Settings.Default.ShowBIons;
+            UpdateSpectrumGraph();
+        }
+
+        private void cMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowCIons = !Settings.Default.ShowCIons;
+            UpdateSpectrumGraph();
+        }
+
+        private void xMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowXIons = !Settings.Default.ShowXIons;
+            UpdateSpectrumGraph();
+        }
+
+        private void yMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowYIons = !Settings.Default.ShowYIons;
+            UpdateSpectrumGraph();
+        }
+
+        private void zMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowZIons = !Settings.Default.ShowZIons;
+            UpdateSpectrumGraph();
+        }
+
+        private void ionTypesMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            var set = Settings.Default;
+            aMenuItem.Checked = aionsContextMenuItem.Checked = set.ShowAIons;
+            bMenuItem.Checked = bionsContextMenuItem.Checked = set.ShowBIons;
+            cMenuItem.Checked = cionsContextMenuItem.Checked = set.ShowCIons;
+            xMenuItem.Checked = xionsContextMenuItem.Checked = set.ShowXIons;
+            yMenuItem.Checked = yionsContextMenuItem.Checked = set.ShowYIons;
+            zMenuItem.Checked = zionsContextMenuItem.Checked = set.ShowZIons;
+        }
+
+        private void charge1MenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowCharge1 = !Settings.Default.ShowCharge1;
+            UpdateSpectrumGraph();
+        }
+
+        private void charge2MenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowCharge2 = !Settings.Default.ShowCharge2;
+            UpdateSpectrumGraph();
+        }
+
+        private void chargesMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            var set = Settings.Default;
+            charge1MenuItem.Checked = charge1ContextMenuItem.Checked = set.ShowCharge1;
+            charge2MenuItem.Checked = charge2ContextMenuItem.Checked = set.ShowCharge2;
+        }
+
+        private void viewToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            ranksMenuItem.Checked = ranksContextMenuItem.Checked = Settings.Default.ShowRanks;
+        }
+
+        private void ranksMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowRanks = !Settings.Default.ShowRanks;
+            UpdateSpectrumGraph();
+        }
+
+        void GraphSpectrum.IStateProvider.BuildSpectrumMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
+        {
+            // Store original menuitems in an array, and insert a separator
+            ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
+            int iUnzoom = -1;
+            for (int i = 0; i < items.Length; i++)
+            {
+                items[i] = menuStrip.Items[i];
+                string tag = (string)items[i].Tag;
+                if (tag == "unzoom")
+                    iUnzoom = i;
+            }
+
+            if (iUnzoom != -1)
+                menuStrip.Items.Insert(iUnzoom, toolStripSeparator15);
+
+            // Insert skyline specific menus
+            var set = Settings.Default;
+            int iInsert = 0;
+            aionsContextMenuItem.Checked = set.ShowAIons;
+            menuStrip.Items.Insert(iInsert++, aionsContextMenuItem);
+            bionsContextMenuItem.Checked = set.ShowBIons;
+            menuStrip.Items.Insert(iInsert++, bionsContextMenuItem);
+            cionsContextMenuItem.Checked = set.ShowCIons;
+            menuStrip.Items.Insert(iInsert++, cionsContextMenuItem);
+            xionsContextMenuItem.Checked = set.ShowXIons;
+            menuStrip.Items.Insert(iInsert++, xionsContextMenuItem);
+            yionsContextMenuItem.Checked = set.ShowYIons;
+            menuStrip.Items.Insert(iInsert++, yionsContextMenuItem);
+            zionsContextMenuItem.Checked = set.ShowZIons;
+            menuStrip.Items.Insert(iInsert++, zionsContextMenuItem);
+            menuStrip.Items.Insert(iInsert++, toolStripSeparator11);
+            charge1ContextMenuItem.Checked = set.ShowCharge1;
+            menuStrip.Items.Insert(iInsert++, charge1ContextMenuItem);
+            charge2ContextMenuItem.Checked = set.ShowCharge2;
+            menuStrip.Items.Insert(iInsert++, charge2ContextMenuItem);
+            menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
+            ranksContextMenuItem.Checked = set.ShowRanks;
+            menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
+            duplicatesContextMenuItem.Checked = set.ShowDuplicateIons;
+            menuStrip.Items.Insert(iInsert++, duplicatesContextMenuItem);
+            menuStrip.Items.Insert(iInsert++, toolStripSeparator13);
+            lockYaxisContextMenuItem.Checked = set.LockYAxis;
+            menuStrip.Items.Insert(iInsert++, lockYaxisContextMenuItem);
+            menuStrip.Items.Insert(iInsert++, toolStripSeparator14);
+            menuStrip.Items.Insert(iInsert++, spectrumPropsContextMenuItem);
+            menuStrip.Items.Insert(iInsert, toolStripSeparator15);
+
+            // Remove some ZedGraph menu items not of interest
+            for (int i = 0; i < items.Length; i++)
+            {
+                var item = items[i];
+                string tag = (string)item.Tag;
+                if (tag == "set_default" || tag == "show_val")
+                    menuStrip.Items.Remove(item);
+            }
+            CopyEmfToolStripMenuItem.AddToContextMenu(zedGraphControl, menuStrip);
+        }
+
+        private void duplicatesContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowDuplicateIons = duplicatesContextMenuItem.Checked;
+            UpdateSpectrumGraph();
+        }
+
+        private void lockYaxisContextMenuItem_Click(object sender, EventArgs e)
+        {
+            // Avoid updating the rest of the graph just to change the y-axis lock state
+            _graphSpectrum.LockYAxis(Settings.Default.LockYAxis = lockYaxisContextMenuItem.Checked);
+        }
+
+        private void spectrumPropsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            var dlg = new SpectrumChartPropertyDlg();
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+                UpdateSpectrumGraph();
+        }
+
+        private void zoomSpectrumContextMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_graphSpectrum != null)
+                _graphSpectrum.ZoomSpectrumToSettings();
+        }
 
         private void ShowGraphSpectrum(bool show)
         {
@@ -907,7 +840,68 @@ namespace pwiz.Skyline
 
         #region Chromatogram graphs
 
-        void GraphChromatogram.IStateProvider.BuildChromatogramMenu(ZedGraph.ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
+        private void chromatogramsMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            ToolStripMenuItem menu = chromatogramsMenuItem;
+            if (!DocumentUI.Settings.HasResults)
+            {
+                // Strange problem in .NET where a dropdown will show when
+                // its menuitem is disabled.
+                chromatogramsMenuItem.HideDropDown();
+                return;
+            }
+
+            // If MeasuredResults is null, then this menuitem is incorrectly enabled
+            var chromatograms = DocumentUI.Settings.MeasuredResults.Chromatograms;
+
+            int i = 0;
+            foreach (var chrom in chromatograms)
+            {
+                string name = chrom.Name;
+                ToolStripMenuItem item = null;
+                if (i < menu.DropDownItems.Count)
+                    item = menu.DropDownItems[i] as ToolStripMenuItem;
+                if (item == null || name != item.Name)
+                {
+                    // Remove the rest of the existing items
+                    while (!ReferenceEquals(menu.DropDownItems[i], toolStripSeparatorReplicates))
+                        menu.DropDownItems.RemoveAt(i);
+
+                    ShowChromHandler handler = new ShowChromHandler(this, chrom.Name);
+                    item = new ToolStripMenuItem(chrom.Name, null,
+                        handler.menuItem_Click);
+                    menu.DropDownItems.Insert(i, item);
+                }
+
+                if (IsGraphChromVisible(name))
+                    item.Checked = true;
+                i++;
+            }
+
+            // Remove the rest of the existing items
+            while (!ReferenceEquals(menu.DropDownItems[i], toolStripSeparatorReplicates))
+                menu.DropDownItems.RemoveAt(i);
+        }
+
+        private class ShowChromHandler
+        {
+            private readonly SkylineWindow _skyline;
+            private readonly string _nameChromatogram;
+
+            public ShowChromHandler(SkylineWindow skyline, string nameChromatogram)
+            {
+                _skyline = skyline;
+                _nameChromatogram = nameChromatogram;
+            }
+
+            public void menuItem_Click(object sender, EventArgs e)
+            {
+                _skyline.ShowGraphChrom(_nameChromatogram,
+                    !_skyline.IsGraphChromVisible(_nameChromatogram));
+            }
+        }
+
+        void GraphChromatogram.IStateProvider.BuildChromatogramMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
         {
             // Store original menuitems in an array, and insert a separator
             ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
@@ -1232,6 +1226,11 @@ namespace pwiz.Skyline
 
         private void singleTranMenuItem_Click(object sender, EventArgs e)
         {
+            ShowSingleTransition();
+        }
+
+        public void ShowSingleTransition()
+        {
             Settings.Default.ShowTransitionGraphs = DisplayTypeChrom.single.ToString();
             UpdateChromGraphs();
             UpdateRetentionTimeGraph();
@@ -1240,6 +1239,11 @@ namespace pwiz.Skyline
 
         private void allTranMenuItem_Click(object sender, EventArgs e)
         {
+            ShowAllTransitions();
+        }
+
+        public void ShowAllTransitions()
+        {
             Settings.Default.ShowTransitionGraphs = DisplayTypeChrom.all.ToString();
             UpdateChromGraphs();
             UpdateRetentionTimeGraph();
@@ -1247,6 +1251,11 @@ namespace pwiz.Skyline
         }
 
         private void totalTranMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowTotalTransitions();
+        }
+
+        public void ShowTotalTransitions()
         {
             Settings.Default.ShowTransitionGraphs = DisplayTypeChrom.total.ToString();
             UpdateChromGraphs();
@@ -1327,11 +1336,21 @@ namespace pwiz.Skyline
 
         private void autoZoomNoneMenuItem_Click(object sender, EventArgs e)
         {
+            AutoZoomNone();
+        }
+
+        public void AutoZoomNone()
+        {
             Settings.Default.AutoZoomChromatogram = AutoZoomChrom.none.ToString();
             UpdateChromGraphs();
         }
 
         private void autoZoomBestPeakMenuItem_Click(object sender, EventArgs e)
+        {
+            AutoZoomBestPeak();
+        }
+
+        public void AutoZoomBestPeak()
         {
             Settings.Default.AutoZoomChromatogram = AutoZoomChrom.peak.ToString();
             UpdateChromGraphs();
@@ -1339,11 +1358,21 @@ namespace pwiz.Skyline
 
         private void autoZoomRTWindowMenuItem_Click(object sender, EventArgs e)
         {
+            AutoZoomRTWindow();
+        }
+
+        public void AutoZoomRTWindow()
+        {
             Settings.Default.AutoZoomChromatogram = AutoZoomChrom.window.ToString();
             UpdateChromGraphs();
         }
 
         private void autoZoomBothMenuItem_Click(object sender, EventArgs e)
+        {
+            AutoZoomBoth();
+        }
+
+        public void AutoZoomBoth()
         {
             Settings.Default.AutoZoomChromatogram = AutoZoomChrom.both.ToString();
             UpdateChromGraphs();
@@ -1372,10 +1401,16 @@ namespace pwiz.Skyline
             }
         }
 
-        private GraphChromatogram GetGraphChrom(string name)
+        public GraphChromatogram GetGraphChrom(string name)
         {
             int iGraph = _listGraphChrom.IndexOf(graph => Equals(graph.NameSet, name));
             return (iGraph != -1 ? _listGraphChrom[iGraph] : null);
+        }
+
+        private bool IsGraphChromVisible(string name)
+        {
+            int iGraph = _listGraphChrom.IndexOf(graph => Equals(graph.NameSet, name));
+            return iGraph != -1 && !_listGraphChrom[iGraph].IsHidden;
         }
 
         private string SelectedGraphChromName
@@ -1572,12 +1607,14 @@ namespace pwiz.Skyline
 
         #region Retention time graph
 
+        public GraphSummary GraphRetentionTime { get { return _graphRetentionTime; } }
+
         private void retentionTimesMenuItem_Click(object sender, EventArgs e)
         {
             ShowGraphRetentionTime(Settings.Default.ShowRetentionTimeGraph = retentionTimesMenuItem.Checked);
         }
 
-        private void ShowGraphRetentionTime(bool show)
+        public void ShowGraphRetentionTime(bool show)
         {
             if (show)
             {
@@ -1783,6 +1820,11 @@ namespace pwiz.Skyline
 
         private void linearRegressionMenuItem_Click(object sender, EventArgs e)
         {
+            ShowRTLinearRegressionGraph();
+        }
+
+        public void ShowRTLinearRegressionGraph()
+        {
             Settings.Default.RTGraphType = GraphTypeRT.regression.ToString();
             ShowGraphRetentionTime(true);
             UpdateRetentionTimeGraph();
@@ -1790,12 +1832,22 @@ namespace pwiz.Skyline
 
         private void replicateComparisonMenuItem_Click(object sender, EventArgs e)
         {
+            ShowRTReplicateGraph();
+        }
+
+        public void ShowRTReplicateGraph()
+        {
             Settings.Default.RTGraphType = GraphTypeRT.replicate.ToString();
             ShowGraphRetentionTime(true);
             UpdateRetentionTimeGraph();
         }
 
         private void schedulingMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowRTSchedulingGraph();
+        }
+
+        public void ShowRTSchedulingGraph()
         {
             Settings.Default.RTGraphType = GraphTypeRT.schedule.ToString();
             ShowGraphRetentionTime(true);
@@ -1895,12 +1947,14 @@ namespace pwiz.Skyline
 
         #region Peak area graph
 
+        public GraphSummary GraphPeakArea { get { return _graphPeakArea; } }
+
         private void peakAreasMenuItem_Click(object sender, EventArgs e)
         {
             ShowGraphPeakArea(Settings.Default.ShowPeakAreaGraph = peakAreasMenuItem.Checked);
         }
 
-        private void ShowGraphPeakArea(bool show)
+        public void ShowGraphPeakArea(bool show)
         {
             if (show)
             {
@@ -2226,6 +2280,11 @@ namespace pwiz.Skyline
 
         private void arrangeTiledMenuItem_Click(object sender, EventArgs e)
         {
+            ArrangeGraphsTiled();
+        }
+
+        public void ArrangeGraphsTiled()
+        {
             var listGraphs = GetArrangeableGraphs();
             if (listGraphs.Count < 2)
                 return;
@@ -2236,6 +2295,11 @@ namespace pwiz.Skyline
         }
 
         private void arrangeTabbedMenuItem_Click(object sender, EventArgs e)
+        {
+            ArrangeGraphsTabbed();
+        }
+
+        public void ArrangeGraphsTabbed()
         {
             var listGraphs = GetArrangeableGraphs();
             if (listGraphs.Count < 2)

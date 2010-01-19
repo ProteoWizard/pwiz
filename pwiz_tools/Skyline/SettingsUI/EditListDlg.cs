@@ -101,6 +101,11 @@ namespace pwiz.Skyline.SettingsUI
             btnDown.Enabled = enable;
         }
 
+        public void SelectItem(string name)
+        {
+            listBox.SelectedItem = name;
+        }
+
         private void btnAdd_Click(object sender, EventArgs e)
         {
             AddItem();
@@ -121,6 +126,11 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnCopy_Click(object sender, EventArgs e)
         {
+            CopyItem();
+        }
+
+        public void CopyItem()
+        {
             int i = listBox.SelectedIndex;
             TItem item = _editor.EditItem(_editor.CopyItem(_list[i]), GetAll(), TagEx);
             if (!Equals(item, default(TItem)))
@@ -134,6 +144,11 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         private void btnEdit_Click(object sender, EventArgs e)
+        {
+            EditItem();
+        }
+
+        public void EditItem()
         {
             int i = listBox.SelectedIndex;
             TItem item = _editor.EditItem(_list[i], GetAll(), TagEx);
@@ -198,11 +213,23 @@ namespace pwiz.Skyline.SettingsUI
                 ResetList();
             }
         }
+
         public void ResetList()
         {
             _list.Clear();
             _list.AddRange(_model.GetDefaults());
             ReloadList();
+        }
+
+        private void btnOk_Click(object sender, EventArgs e)
+        {
+            OkDialog();
+        }
+
+        public void OkDialog()
+        {
+            DialogResult = DialogResult.OK;
+            Close();
         }
     }
 }

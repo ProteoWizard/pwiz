@@ -243,6 +243,11 @@ namespace pwiz.Skyline.FileUI
         public string OptimizeType
         {
             get { return _optimizeType; }
+            set
+            {
+                _optimizeType = value;
+                comboOptimizing.SelectedItem = _optimizeType;
+            }
         }
 
         public double OptimizeStepSize

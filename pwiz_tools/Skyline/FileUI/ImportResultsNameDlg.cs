@@ -36,18 +36,39 @@ namespace pwiz.Skyline.FileUI
 
         public string Prefix { get { return textPrefix.Text; } }
 
-        protected override void OnClosing(CancelEventArgs e)
+        private void OkDialog(DialogResult result)
         {
             if (DialogResult != DialogResult.Cancel)
             {
                 if (!_prefixInitial.StartsWith(Prefix))
                 {
                     MessageBox.Show(this, string.Format("The text '{0}' is not a prefix of the files chosen.", Prefix), Program.Name);
-                    e.Cancel = true;
                     return;
                 }
             }
-            base.OnClosing(e);
+
+            DialogResult = result;
+            Close();
+        }
+
+        public void YesDialog()
+        {
+            OkDialog(DialogResult.Yes);
+        }
+
+        public void NoDialog()
+        {
+            OkDialog(DialogResult.No);
+        }
+
+        private void btnRemove_Click(object sender, EventArgs e)
+        {
+            YesDialog();
+        }
+
+        private void btnDoNotRemove_Click(object sender, EventArgs e)
+        {
+            NoDialog();
         }
 
         private void textPrefix_TextChanged(object sender, EventArgs e)

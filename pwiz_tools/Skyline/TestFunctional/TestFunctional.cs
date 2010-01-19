@@ -112,6 +112,7 @@ namespace pwiz.SkylineTestFunctional
                 Program.MainWindow.Invoke(new Action(() => isOpen = IsFormOpen(formClose)));
                 if (!isOpen)
                     return;
+                Thread.Sleep(100);
             }
         }
 
@@ -125,9 +126,20 @@ namespace pwiz.SkylineTestFunctional
             for (int i = 0; i < 100; i ++)
             {
                 if (func())
-                {
                     return true;
-                }
+                Thread.Sleep(100);
+            }
+            return false;
+        }
+
+        public static bool WaitForConditionUI(Func<bool> func)
+        {
+            for (int i = 0; i < 100; i++)
+            {
+                bool isCondition = false;
+                Program.MainWindow.Invoke(new Action(() => isCondition = func()));                
+                if (isCondition)
+                    return true;
                 Thread.Sleep(100);
             }
             return false;
@@ -165,27 +177,13 @@ namespace pwiz.SkylineTestFunctional
 
                 if (TestFilesZip == null)
                 {
-                    try
-                    {
-                        RunTest();
-                    }
-                    catch (Exception x)
-                    {
-                        _testExceptions.Add(x);
-                    }
+                    RunTest();
                 }
                 else
                 {
                     TestFilesDir = new TestFilesDir(TestContext, TestFilesZip);
-                    try
-                    {
-                        RunTest();
-                        TestFilesDir.Dispose();
-                    }
-                    catch (Exception x)
-                    {
-                        _testExceptions.Add(x);
-                    }
+                    RunTest();
+                    TestFilesDir.Dispose();
                 }
             }
             catch (Exception x)

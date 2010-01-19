@@ -179,10 +179,14 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             public override DocNode CreateChildNode(Identity childId)
             {
-                TransitionGroup group = (TransitionGroup) childId;
+                TransitionGroup tranGroup = (TransitionGroup) childId;
                 ExplicitMods mods = _nodePeptide.ExplicitMods;
-                double massH = Settings.GetPrecursorMass(group.LabelType, group.Peptide.Sequence, mods);
-                var nodeGroup = new TransitionGroupDocNode(group, massH, new TransitionDocNode[0]);
+                double massH = Settings.GetPrecursorMass(tranGroup.LabelType, tranGroup.Peptide.Sequence, mods);
+                TransitionDocNode[] transitions = _nodePeptide.GetMatchingTransitions(
+                    tranGroup, Settings, mods);
+
+                var nodeGroup = new TransitionGroupDocNode(tranGroup, massH,
+                    transitions ?? new TransitionDocNode[0], transitions == null);
                 return nodeGroup.ChangeSettings(Settings, mods, SrmSettingsDiff.ALL);
             }
 

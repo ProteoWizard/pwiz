@@ -89,7 +89,7 @@ namespace pwiz.Skyline.FileUI
 
         private bool IsOptimizing { get { return comboOptimizing.SelectedIndex != -1; } }
 
-        public KeyValuePair<string, string[]>[] NamedPathSets { get; private set; }
+        public KeyValuePair<string, string[]>[] NamedPathSets { get; set; }
 
         public string OptimizationName
         {
@@ -101,6 +101,20 @@ namespace pwiz.Skyline.FileUI
                            :
                                ExportOptimize.NONE;
             }
+
+            set
+            {
+                // If optimizing, make sure one of the options that allows
+                // optimizing is checked.
+                if (!Equals(ExportOptimize.NONE, value))
+                {
+                    if (NamedPathSets != null && NamedPathSets.Length > 1)
+                        radioCreateMultipleMulti.Checked = true;
+                    else
+                        radioCreateNew.Checked = true;
+                }
+                comboOptimizing.SelectedItem = value;
+            }
         }
 
         public void OkDialog()
@@ -111,60 +125,63 @@ namespace pwiz.Skyline.FileUI
 
             string name;
 
-            if (radioAddExisting.Checked)
+            if (NamedPathSets == null)
             {
-                if (comboName.SelectedIndex == -1)
+                if (radioAddExisting.Checked)
                 {
-                    MessageBox.Show(this, "You must select an existing set of results to which to append new data.", Program.Name);
-                    comboName.Focus();
-                    return;
-                }
-
-                if (!CanCreateMultiInjectionMethods())
-                    return;
-
-                NamedPathSets = GetDataSourcePathsFile(comboName.SelectedItem.ToString());
-            }
-            else if (radioCreateMultiple.Checked)
-            {
-                NamedPathSets = GetDataSourcePathsFile(null);
-            }
-            else if (radioCreateMultipleMulti.Checked)
-            {
-                if (!CanCreateMultiInjectionMethods())
-                    return;
-                NamedPathSets = GetDataSourcePathsDir();                    
-            }
-            else
-            {
-                if (!helper.ValidateNameTextBox(e, textName, out name))
-                    return;
-                else if (name.IndexOfAny(Path.GetInvalidFileNameChars()) != -1)
-                {
-                    helper.ShowTextBoxError(e, textName, "A result name may not contain any of the characters '{0}'.", Path.GetInvalidFileNameChars());
-                    return;
-                }
-                else if (ResultsExist(name))
-                {
-                    helper.ShowTextBoxError(e, textName, "The specified name already exists for this document.");
-                    return;
-                }                        
-
-                NamedPathSets = GetDataSourcePathsFile(name);
-
-                if (NamedPathSets == null)
-                    return;
-
-                foreach (var namedPathSet in NamedPathSets)
-                {
-                    // Look for a multiple injection replicate
-                    if (namedPathSet.Value.Length > 1)
+                    if (comboName.SelectedIndex == -1)
                     {
-                        // Make sure they are allowed
-                        if (!CanCreateMultiInjectionMethods())
-                            return;
-                        // If so, then no need to check any others
-                        break;
+                        MessageBox.Show(this, "You must select an existing set of results to which to append new data.", Program.Name);
+                        comboName.Focus();
+                        return;
+                    }
+
+                    if (!CanCreateMultiInjectionMethods())
+                        return;
+
+                    NamedPathSets = GetDataSourcePathsFile(comboName.SelectedItem.ToString());
+                }
+                else if (radioCreateMultiple.Checked)
+                {
+                    NamedPathSets = GetDataSourcePathsFile(null);
+                }
+                else if (radioCreateMultipleMulti.Checked)
+                {
+                    if (!CanCreateMultiInjectionMethods())
+                        return;
+                    NamedPathSets = GetDataSourcePathsDir();
+                }
+                else
+                {
+                    if (!helper.ValidateNameTextBox(e, textName, out name))
+                        return;
+                    else if (name.IndexOfAny(Path.GetInvalidFileNameChars()) != -1)
+                    {
+                        helper.ShowTextBoxError(e, textName, "A result name may not contain any of the characters '{0}'.", Path.GetInvalidFileNameChars());
+                        return;
+                    }
+                    else if (ResultsExist(name))
+                    {
+                        helper.ShowTextBoxError(e, textName, "The specified name already exists for this document.");
+                        return;
+                    }
+
+                    NamedPathSets = GetDataSourcePathsFile(name);
+
+                    if (NamedPathSets == null)
+                        return;
+
+                    foreach (var namedPathSet in NamedPathSets)
+                    {
+                        // Look for a multiple injection replicate
+                        if (namedPathSet.Value.Length > 1)
+                        {
+                            // Make sure they are allowed
+                            if (!CanCreateMultiInjectionMethods())
+                                return;
+                            // If so, then no need to check any others
+                            break;
+                        }
                     }
                 }
             }
@@ -386,6 +403,17 @@ namespace pwiz.Skyline.FileUI
 
             Settings.Default.SrmResultsDirectory = dirRoot;
 
+            KeyValuePair<string, string[]>[] namedPaths = GetDataSourcePathsDir(dirRoot);
+            if (namedPaths.Length == 0)
+            {
+                MessageBox.Show(this, string.Format("No results found in the folder {0}.", dirRoot), Program.Name);
+                return null;
+            }
+            return namedPaths;
+        }
+
+        public static KeyValuePair<string, string[]>[] GetDataSourcePathsDir(string dirRoot)
+        {
             var listNamedPaths = new List<KeyValuePair<string, string[]>>();
             var dirRootInfo = new DirectoryInfo(dirRoot);
             foreach (var subDirInfo in dirRootInfo.GetDirectories())
@@ -405,12 +433,7 @@ namespace pwiz.Skyline.FileUI
                     continue;
 
                 listNamedPaths.Add(new KeyValuePair<string, string[]>(
-                    subDirInfo.Name, listDataPaths.ToArray()));
-            }
-            if (listNamedPaths.Count == 0)
-            {
-                MessageBox.Show(this, string.Format("No results found in the folder {0}.", dirRoot), Program.Name);
-                return null;
+                                       subDirInfo.Name, listDataPaths.ToArray()));
             }
             return listNamedPaths.ToArray();
         }

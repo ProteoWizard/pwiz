@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -56,6 +57,17 @@ namespace pwiz.Skyline.Controls.Graphs
                 masterPane.SetLayout(g, PaneLayout.SingleColumn);
                 graphControl.AxisChange();
             }
+        }
+
+        private void btnClose_Click(object sender, EventArgs e)
+        {
+            CloseDialog();
+        }
+
+        public void CloseDialog()
+        {
+            DialogResult = DialogResult.Cancel;
+            Close();
         }
     }
 
@@ -120,25 +132,29 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            // Recalculate the y values based on the maximum x values
-            // and the regression.
-            lineY[0] = graphData.RegressionLine.GetY(lineX[0]);
-            lineY[1] = graphData.RegressionLine.GetY(lineX[1]);
+            if (graphData.RegressionLine != null)
+            {
+                // Recalculate the y values based on the maximum x values
+                // and the regression.
+                lineY[0] = graphData.RegressionLine.GetY(lineX[0]);
+                lineY[1] = graphData.RegressionLine.GetY(lineX[1]);
 
-            curve = AddCurve("Regression", lineX, lineY, COLOR_LINE_REGRESSION);
-            curve.Line.IsAntiAlias = true;
-            curve.Line.IsOptimizedDraw = true;
+                curve = AddCurve("Regression", lineX, lineY, COLOR_LINE_REGRESSION);
+                curve.Line.IsAntiAlias = true;
+                curve.Line.IsOptimizedDraw = true;
 
-            Statistics statsX = new Statistics(_graphData.XValues);
-            Statistics statsY = new Statistics(_graphData.YValues);
-            double slope = statsY.Slope(statsX);
-            double intercept = statsY.Intercept(statsX);
+                Statistics statsX = new Statistics(_graphData.XValues);
+                Statistics statsY = new Statistics(_graphData.YValues);
+                double slope = statsY.Slope(statsX);
+                double intercept = statsY.Intercept(statsX);
 
-            _labelRegression = string.Format("slope = {0:F04}, intercept = {1:F04}\n" +
-                                      "r = {2:F02}",
-                                      slope,
-                                      intercept,
-                                      statsY.R(statsX));
+                _labelRegression = string.Format("slope = {0:F04}, intercept = {1:F04}\n" +
+                                          "r = {2:F02}",
+                                          slope,
+                                          intercept,
+                                          statsY.R(statsX));
+
+            }
 
             var regressionLineCurrent = graphData.RegressionLineCurrent;
             if (regressionLineCurrent != null)
@@ -174,27 +190,31 @@ namespace pwiz.Skyline.Controls.Graphs
                 XAxis.Scale.SetupScaleData(this, XAxis);
                 YAxis.Scale.SetupScaleData(this, YAxis);
 
-                // Add regression text
                 float yNext = ptTop.Y;
                 double left = XAxis.Scale.ReverseTransform(ptTop.X + 8);
-                double top = YAxis.Scale.ReverseTransform(yNext);
-                TextObj text = new TextObj(_labelRegression, left, top,
-                                           CoordType.AxisXYScale, AlignH.Left, AlignV.Top)
+                FontSpec fontSpec = GraphSummary.CreateFontSpec(COLOR_LINE_REGRESSION);
+                if (_labelRegression != null)
                 {
-                    IsClippedToChartRect = true,
-                    ZOrder = ZOrder.E_BehindCurves,
-                    FontSpec = GraphSummary.CreateFontSpec(COLOR_LINE_REGRESSION),
-                };
-//                text.FontSpec.Size = 12;
-                GraphObjList.Add(text);
+                    // Add regression text
+                    double top = YAxis.Scale.ReverseTransform(yNext);
+                    TextObj text = new TextObj(_labelRegression, left, top,
+                                               CoordType.AxisXYScale, AlignH.Left, AlignV.Top)
+                    {
+                        IsClippedToChartRect = true,
+                        ZOrder = ZOrder.E_BehindCurves,
+                        FontSpec = fontSpec,
+                    };
+                    //                text.FontSpec.Size = 12;
+                    GraphObjList.Add(text);
+                }
 
                 if (_labelRegressionCurrent != null)
                 {
                     // Add text for current regression
-                    SizeF sizeLabel = text.FontSpec.MeasureString(g, _labelRegression, CalcScaleFactor());
+                    SizeF sizeLabel = fontSpec.MeasureString(g, _labelRegression, CalcScaleFactor());
                     yNext += sizeLabel.Height + 3;
-                    top = YAxis.Scale.ReverseTransform(yNext);
-                    text = new TextObj(_labelRegressionCurrent, left, top,
+                    double top = YAxis.Scale.ReverseTransform(yNext);
+                    TextObj text = new TextObj(_labelRegressionCurrent, left, top,
                                                CoordType.AxisXYScale, AlignH.Left, AlignV.Top)
                     {
                         IsClippedToChartRect = true,

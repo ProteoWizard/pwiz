@@ -179,7 +179,7 @@ namespace pwiz.SkylineTestFunctional
             while (true)
             {
                 bool graphsNeedUpdating = false;
-                RunUI(() => graphsNeedUpdating = SkylineWindow.GraphsRequireUpdating);
+                RunUI(() => graphsNeedUpdating = SkylineWindow.IsGraphUpdatePending);
                 if (!graphsNeedUpdating)
                 {
                     return;

@@ -321,6 +321,47 @@ namespace pwiz.Skyline.SettingsUI
             set { textMaxMz.Text = value; }
         }
 
+        public string RegressionCE
+        {
+            get { return comboCollisionEnergy.SelectedItem.ToString(); }
+            set { comboCollisionEnergy.SelectedItem = value; }
+        }
+
+        public string RegressionDP
+        {
+            get { return comboDeclusterPotential.SelectedItem.ToString(); }
+            set { comboDeclusterPotential.SelectedItem = value; }
+        }
+
+        public void EditCEList()
+        {
+            _driverCE.EditList();
+        }
+
+        public void EditDPList()
+        {
+            _driverDP.EditList();
+        }
+
+        public bool UseOptimized
+        {
+            get { return cbUseOptimized.Checked; }
+            set { cbUseOptimized.Checked = value; }
+        }
+
+        public string OptimizeType
+        {
+            get
+            {
+                return comboOptimizeType.SelectedIndex != -1 ?
+                    comboOptimizeType.SelectedItem.ToString() : null;
+            }
+            set
+            {
+                comboOptimizeType.SelectedItem = value;
+            }
+        }
+
         #endregion
     }
 }

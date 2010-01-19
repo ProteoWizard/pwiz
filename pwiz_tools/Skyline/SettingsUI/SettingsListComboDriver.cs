@@ -89,42 +89,53 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (AddItemSelected())
             {
-                T itemNew = List.NewItem(null, null);
-                if (!Equals(itemNew, default(T)))
-                {
-                    List.Add(itemNew);
-                    LoadList(itemNew.GetKey());
-                }
-                else
-                {
-                    // Reset the selected index before edit was chosen.
-                    Combo.SelectedIndex = _selectedIndexLast;
-                }
+                AddItem();
             }
             else if (EditListSelected())
             {
-                IEnumerable<T> listNew = List.EditList(null);
-                if (listNew != null)
-                {
-                    string selectedItemLast = Combo.Items[_selectedIndexLast].ToString();
-                    if (!List.ExcludeDefault)
-                        List.Clear();
-                    else
-                    {
-                        // If the default item was excluded from editing,
-                        // then make sure it is preserved as the first item.
-                        T itemDefault = List[0];
-                        List.Clear();
-                        List.Add(itemDefault);
-                    }
-                    List.AddRange(listNew);
-                    LoadList(selectedItemLast);
-                }
+                EditList();
+            }
+        }
+
+        public void AddItem()
+        {
+            T itemNew = List.NewItem(null, null);
+            if (!Equals(itemNew, default(T)))
+            {
+                List.Add(itemNew);
+                LoadList(itemNew.GetKey());
+            }
+            else
+            {
+                // Reset the selected index before edit was chosen.
+                Combo.SelectedIndex = _selectedIndexLast;
+            }
+            _selectedIndexLast = Combo.SelectedIndex;
+        }
+
+        public void EditList()
+        {
+            IEnumerable<T> listNew = List.EditList(null);
+            if (listNew != null)
+            {
+                string selectedItemLast = Combo.Items[_selectedIndexLast].ToString();
+                if (!List.ExcludeDefault)
+                    List.Clear();
                 else
                 {
-                    // Reset the selected index before edit was chosen.
-                    Combo.SelectedIndex = _selectedIndexLast;
+                    // If the default item was excluded from editing,
+                    // then make sure it is preserved as the first item.
+                    T itemDefault = List[0];
+                    List.Clear();
+                    List.Add(itemDefault);
                 }
+                List.AddRange(listNew);
+                LoadList(selectedItemLast);
+            }
+            else
+            {
+                // Reset the selected index before edit was chosen.
+                Combo.SelectedIndex = _selectedIndexLast;
             }
             _selectedIndexLast = Combo.SelectedIndex;
         }

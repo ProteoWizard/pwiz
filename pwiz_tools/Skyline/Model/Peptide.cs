@@ -183,21 +183,24 @@ namespace pwiz.Skyline.Model
                 IList<DocNode> childrenNew = new List<DocNode>();
 
                 Dictionary<Identity, DocNode> mapIdToChild = CreateIdContentToChildMap();
-                foreach (TransitionGroup group in Peptide.GetTransitionGroups(settingsNew, explicitMods, true))
+                foreach (TransitionGroup tranGroup in Peptide.GetTransitionGroups(settingsNew, explicitMods, true))
                 {
                     TransitionGroupDocNode nodeGroup;
                     SrmSettingsDiff diffNode = diff;
 
                     DocNode existing;
                     // Add values that existed before the change.
-                    if (mapIdToChild.TryGetValue(group, out existing))
+                    if (mapIdToChild.TryGetValue(tranGroup, out existing))
                         nodeGroup = (TransitionGroupDocNode)existing;
                     // Add new node
                     else
-                    {                        
-                        nodeGroup = new TransitionGroupDocNode(group,
-                            settingsNew.GetPrecursorMass(group.LabelType, Peptide.Sequence, explicitMods),
-                            new TransitionDocNode[0]);
+                    {
+                        TransitionDocNode[] transitions = GetMatchingTransitions(
+                            tranGroup, settingsNew, explicitMods);
+
+                        nodeGroup = new TransitionGroupDocNode(tranGroup,
+                            settingsNew.GetPrecursorMass(tranGroup.LabelType, Peptide.Sequence, explicitMods),
+                            transitions ?? new TransitionDocNode[0], transitions == null);
                         diffNode = SrmSettingsDiff.ALL;
                     }
 
@@ -253,6 +256,27 @@ namespace pwiz.Skyline.Model
                 nodeResult = nodeResult.UpdateResults(settingsNew /*, diff*/);
 
             return nodeResult;
+        }
+
+        public TransitionDocNode[] GetMatchingTransitions(TransitionGroup tranGroup, SrmSettings settings, ExplicitMods explicitMods)
+        {
+            int iMatch = Children.IndexOf(nodeGroup =>
+                ((TransitionGroupDocNode)nodeGroup).TransitionGroup.PrecursorCharge == tranGroup.PrecursorCharge);
+            if (iMatch == -1)
+                return null;
+            TransitionGroupDocNode nodeGroupMatching = (TransitionGroupDocNode) Children[iMatch];
+            if (nodeGroupMatching.AutoManageChildren)
+                return null;
+            var listTrans = new List<TransitionDocNode>();
+            foreach (TransitionDocNode nodeTran in nodeGroupMatching.Children)
+            {
+                var transition = nodeTran.Transition;
+                var tranNew = new Transition(tranGroup,
+                    transition.IonType, transition.CleavageOffset, transition.Charge);
+                double massH = settings.GetFragmentMass(tranGroup.LabelType, explicitMods, tranNew);
+                listTrans.Add(new TransitionDocNode(tranNew, massH, null));
+            }
+            return listTrans.ToArray();
         }
 
         private PeptideDocNode UpdateResults(SrmSettings settingsNew /*, SrmSettingsDiff diff*/)

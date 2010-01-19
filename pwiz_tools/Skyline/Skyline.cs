@@ -1457,6 +1457,17 @@ namespace pwiz.Skyline
             return true;
         }
 
+        private void annotationsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowAnnotationsDialog();
+        }
+
+        public void ShowAnnotationsDialog()
+        {
+            var dlg = new ChooseAnnotationsDlg(this);
+            dlg.ShowDialog(this);
+        }
+
         #endregion // Settings menu
 
         #region Help menu
@@ -2103,20 +2114,6 @@ namespace pwiz.Skyline
         {
             comboResults.Width = toolBarResults.Width - labelResults.Width - 6;
             ComboHelper.AutoSizeDropDown(comboResults);
-        }
-        private void annotationsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowAnnotationsDialog();
-        }
-        public void ShowAnnotationsDialog()
-        {
-            var dlg = new ChooseAnnotationsDlg(this);
-            dlg.ShowDialog(this);
-        }
-
-        private void copyEMFToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            
         }
     }
 }

@@ -47,6 +47,12 @@ namespace pwiz.Skyline.SettingsUI
             btnShowGraph.Enabled = btnUseCurrent.Enabled;
         }
 
+        public string RegressionName
+        {
+            get { return textName.Text; }
+            set { textName.Text = value; }
+        }
+
         public DeclusteringPotentialRegression Regression
         {
             get { return _regression; }
@@ -59,8 +65,8 @@ namespace pwiz.Skyline.SettingsUI
                     textName.Text = "";
                     textSlope.Text = "";
                     textIntercept.Text = "";
-                    textStepSize.Text = "";
-                    textStepCount.Text = "";
+                    textStepSize.Text = DeclusteringPotentialRegression.DEFAULT_STEP_SIZE.ToString();
+                    textStepCount.Text = DeclusteringPotentialRegression.DEFAULT_STEP_COUNT.ToString();
                 }
                 else
                 {
@@ -124,6 +130,11 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnUseCurrent_Click(object sender, EventArgs e)
         {
+            UseCurrentData();
+        }
+
+        public void UseCurrentData()
+        {
             DPRegressionData regressionData = GetRegressionData();
             if (regressionData == null)
                 return;
@@ -132,7 +143,7 @@ namespace pwiz.Skyline.SettingsUI
             if (regressionLine == null)
             {
                 MessageDlg.Show(this, "Insufficient data found to calculate a new regression.");
-                return;                
+                return;
             }
 
             textSlope.Text = string.Format("{0:F04}", regressionLine.Slope);
@@ -141,19 +152,24 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnShowGraph_Click(object sender, EventArgs e)
         {
+            ShowGraph();
+        }
+
+        public void ShowGraph()
+        {
             DPRegressionData regressionData = GetRegressionData();
             if (regressionData == null)
                 return;
             var graphData = new RegressionGraphData
-            {
-                Title = "Declustering Potential Regression",
-                LabelX = "Precursor m/z",
-                LabelY = "Declustering Potential",
-                XValues = regressionData.PrecursorMzValues,
-                YValues = regressionData.BestValues,
-                RegressionLine = regressionData.RegressionLine,
-                RegressionLineCurrent = regressionData.RegressionLineSetting
-            };
+                                {
+                                    Title = "Declustering Potential Regression",
+                                    LabelX = "Precursor m/z",
+                                    LabelY = "Declustering Potential",
+                                    XValues = regressionData.PrecursorMzValues,
+                                    YValues = regressionData.BestValues,
+                                    RegressionLine = regressionData.RegressionLine,
+                                    RegressionLineCurrent = regressionData.RegressionLineSetting
+                                };
             var dlg = new GraphRegression(new[] { graphData });
             dlg.ShowDialog(this);
         }

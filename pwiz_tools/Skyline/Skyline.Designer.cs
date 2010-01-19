@@ -72,6 +72,11 @@ namespace pwiz.Skyline
             this.insertPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.insertTransitionListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.refineToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.removeEmptyProteinsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.removeDuplicatePeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.removeRepeatedPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.removeMissingResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.refineAdvancedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.manageUniquePeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator8 = new System.Windows.Forms.ToolStripSeparator();
             this.editNoteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -273,11 +278,6 @@ namespace pwiz.Skyline
             this.areaPercentViewContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaLogScaleContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCvsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.removeDuplicatePeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.removeRepeatedPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.removeEmptyProteinsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.removeMissingResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.refineAdvancedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuMain.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.contextMenuTreeNode.SuspendLayout();
@@ -649,6 +649,41 @@ namespace pwiz.Skyline
             this.refineToolStripMenuItem.Name = "refineToolStripMenuItem";
             this.refineToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
             this.refineToolStripMenuItem.Text = "&Refine";
+            // 
+            // removeEmptyProteinsMenuItem
+            // 
+            this.removeEmptyProteinsMenuItem.Name = "removeEmptyProteinsMenuItem";
+            this.removeEmptyProteinsMenuItem.Size = new System.Drawing.Size(218, 22);
+            this.removeEmptyProteinsMenuItem.Text = "Remove &Empty Proteins";
+            this.removeEmptyProteinsMenuItem.Click += new System.EventHandler(this.removeEmptyProteinsMenuItem_Click);
+            // 
+            // removeDuplicatePeptidesMenuItem
+            // 
+            this.removeDuplicatePeptidesMenuItem.Name = "removeDuplicatePeptidesMenuItem";
+            this.removeDuplicatePeptidesMenuItem.Size = new System.Drawing.Size(218, 22);
+            this.removeDuplicatePeptidesMenuItem.Text = "Remove &Duplicate Peptides";
+            this.removeDuplicatePeptidesMenuItem.Click += new System.EventHandler(this.removeDuplicatePeptidesMenuItem_Click);
+            // 
+            // removeRepeatedPeptidesMenuItem
+            // 
+            this.removeRepeatedPeptidesMenuItem.Name = "removeRepeatedPeptidesMenuItem";
+            this.removeRepeatedPeptidesMenuItem.Size = new System.Drawing.Size(218, 22);
+            this.removeRepeatedPeptidesMenuItem.Text = "&Remove Repeated Peptides";
+            this.removeRepeatedPeptidesMenuItem.Click += new System.EventHandler(this.removeRepeatedPeptidesMenuItem_Click);
+            // 
+            // removeMissingResultsMenuItem
+            // 
+            this.removeMissingResultsMenuItem.Name = "removeMissingResultsMenuItem";
+            this.removeMissingResultsMenuItem.Size = new System.Drawing.Size(218, 22);
+            this.removeMissingResultsMenuItem.Text = "Remove &Missing Results";
+            this.removeMissingResultsMenuItem.Click += new System.EventHandler(this.removeMissingResultsMenuItem_Click);
+            // 
+            // refineAdvancedMenuItem
+            // 
+            this.refineAdvancedMenuItem.Name = "refineAdvancedMenuItem";
+            this.refineAdvancedMenuItem.Size = new System.Drawing.Size(218, 22);
+            this.refineAdvancedMenuItem.Text = "&Advanced...";
+            this.refineAdvancedMenuItem.Click += new System.EventHandler(this.refineMenuItem_Click);
             // 
             // manageUniquePeptidesMenuItem
             // 
@@ -2369,41 +2404,6 @@ namespace pwiz.Skyline
             this.areaCvsContextMenuItem.Size = new System.Drawing.Size(135, 22);
             this.areaCvsContextMenuItem.Text = "Area CVs";
             this.areaCvsContextMenuItem.Click += new System.EventHandler(this.areaCvsContextMenuItem_Click);
-            // 
-            // removeDuplicatePeptidesMenuItem
-            // 
-            this.removeDuplicatePeptidesMenuItem.Name = "removeDuplicatePeptidesMenuItem";
-            this.removeDuplicatePeptidesMenuItem.Size = new System.Drawing.Size(218, 22);
-            this.removeDuplicatePeptidesMenuItem.Text = "Remove &Duplicate Peptides";
-            this.removeDuplicatePeptidesMenuItem.Click += new System.EventHandler(this.removeDuplicatePeptidesMenuItem_Click);
-            // 
-            // removeRepeatedPeptidesMenuItem
-            // 
-            this.removeRepeatedPeptidesMenuItem.Name = "removeRepeatedPeptidesMenuItem";
-            this.removeRepeatedPeptidesMenuItem.Size = new System.Drawing.Size(218, 22);
-            this.removeRepeatedPeptidesMenuItem.Text = "&Remove Repeated Peptides";
-            this.removeRepeatedPeptidesMenuItem.Click += new System.EventHandler(this.removeRepeatedPeptidesMenuItem_Click);
-            // 
-            // removeEmptyProteinsMenuItem
-            // 
-            this.removeEmptyProteinsMenuItem.Name = "removeEmptyProteinsMenuItem";
-            this.removeEmptyProteinsMenuItem.Size = new System.Drawing.Size(218, 22);
-            this.removeEmptyProteinsMenuItem.Text = "Remove &Empty Proteins";
-            this.removeEmptyProteinsMenuItem.Click += new System.EventHandler(this.removeEmptyProteinsMenuItem_Click);
-            // 
-            // removeMissingResultsMenuItem
-            // 
-            this.removeMissingResultsMenuItem.Name = "removeMissingResultsMenuItem";
-            this.removeMissingResultsMenuItem.Size = new System.Drawing.Size(218, 22);
-            this.removeMissingResultsMenuItem.Text = "Remove &Missing Results";
-            this.removeMissingResultsMenuItem.Click += new System.EventHandler(this.removeMissingResultsMenuItem_Click);
-            // 
-            // refineAdvancedMenuItem
-            // 
-            this.refineAdvancedMenuItem.Name = "refineAdvancedMenuItem";
-            this.refineAdvancedMenuItem.Size = new System.Drawing.Size(218, 22);
-            this.refineAdvancedMenuItem.Text = "&Advanced...";
-            this.refineAdvancedMenuItem.Click += new System.EventHandler(this.refineMenuItem_Click);
             // 
             // SkylineWindow
             // 

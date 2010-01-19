@@ -48,6 +48,12 @@ namespace pwiz.Skyline.SettingsUI
             btnShowGraph.Enabled = btnUseCurrent.Enabled;
         }
 
+        public string RegressionName
+        {
+            get { return textName.Text; }
+            set { textName.Text = value; }
+        }
+
         public CollisionEnergyRegression Regression
         {
             get { return _regression; }
@@ -59,12 +65,13 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     textName.Text = "";
                     gridRegression.Rows.Clear();
-                    textStepSize.Text = "";
-                    textStepCount.Text = "";
+                    textStepSize.Text = CollisionEnergyRegression.DEFAULT_STEP_SIZE.ToString();
+                    textStepCount.Text = CollisionEnergyRegression.DEFAULT_STEP_COUNT.ToString();
                 }
                 else
                 {
                     textName.Text = _regression.Name;
+                    gridRegression.Rows.Clear();
                     foreach (ChargeRegressionLine r in _regression.Conversions)
                     {
                         gridRegression.Rows.Add(r.Charge.ToString(),
@@ -262,6 +269,11 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnUseCurrent_Click(object sender, EventArgs e)
         {
+            UseCurrentData();
+        }
+
+        public void UseCurrentData()
+        {
             CERegressionData[] arrayData = GetRegressionDatas();
             if (arrayData == null)
                 return;
@@ -290,15 +302,20 @@ namespace pwiz.Skyline.SettingsUI
                 if (regressionLine == null)
                     continue;
                 gridRegression.Rows.Add(new[]
-                    {
-                        i.ToString(),
-                        string.Format("{0:F04}", regressionLine.Slope),
-                        string.Format("{0:F04}", regressionLine.Intercept)
-                    });
+                                            {
+                                                i.ToString(),
+                                                string.Format("{0:F04}", regressionLine.Slope),
+                                                string.Format("{0:F04}", regressionLine.Intercept)
+                                            });
             }
         }
 
         private void btnShowGraph_Click(object sender, EventArgs e)
+        {
+            ShowGraph();
+        }
+
+        public void ShowGraph()
         {
             CERegressionData[] arrayData = GetRegressionDatas();
             if (arrayData == null)

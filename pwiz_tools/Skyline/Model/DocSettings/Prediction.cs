@@ -1175,6 +1175,20 @@ namespace pwiz.Skyline.Model.DocSettings
 
         protected abstract int DefaultStepCount { get; }
 
+        #region Property change methods
+
+        public OptimizableRegression ChangeStepSize(double prop)
+        {
+            return ChangeProp(ImClone(this), im => im.StepSize = prop);
+        }
+
+        public OptimizableRegression ChangeStepCount(int prop)
+        {
+            return ChangeProp(ImClone(this), im => im.StepCount = prop);
+        }        
+
+        #endregion
+
         #region Implementation of IXmlSerializable
 
         enum ATTR

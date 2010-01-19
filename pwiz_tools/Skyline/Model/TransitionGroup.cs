@@ -37,6 +37,12 @@ namespace pwiz.Skyline.Model
         {
         }
 
+        public TransitionGroupDocNode(TransitionGroup id, double massH, TransitionDocNode[] children,
+                bool autoManageChildren)
+            : this(id, Annotations.Empty, massH, null, null, children, autoManageChildren)
+        {
+        }
+
         public TransitionGroupDocNode(TransitionGroup id, Annotations annotations, double massH,
                 SpectrumHeaderInfo libInfo, Results<TransitionGroupChromInfo> results, TransitionDocNode[] children,
                 bool autoManageChildren)
@@ -54,6 +60,8 @@ namespace pwiz.Skyline.Model
         }
 
         public TransitionGroup TransitionGroup { get { return (TransitionGroup) Id; }}
+
+        public bool IsLight { get { return TransitionGroup.LabelType == IsotopeLabelType.light; } }
 
         public override AnnotationDef.AnnotationTarget AnnotationTarget { get { return AnnotationDef.AnnotationTarget.precursor; } }
 

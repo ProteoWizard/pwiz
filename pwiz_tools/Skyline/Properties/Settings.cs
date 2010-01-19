@@ -1082,17 +1082,10 @@ namespace pwiz.Skyline.Properties
 
     public sealed class GridColumnsList : XmlMappedList<string, GridColumns>
     {
-        public GridColumnsList()
-        {
-        }
     }
 
     public sealed class AnnotationDefList : SettingsList<AnnotationDef>, IListSerializer<AnnotationDef>
     {
-        public AnnotationDefList()
-        {
-        }
-
         public override IEnumerable<AnnotationDef> GetDefaults()
         {
             return new AnnotationDef[0];

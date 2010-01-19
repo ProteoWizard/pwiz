@@ -120,6 +120,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public string NameSet { get { return _nameChromatogramSet; } }
 
+        public int CurveCount { get { return GraphPane.CurveList.Count; } }
+
         private SrmDocument DocumentUI { get { return _documentContainer.DocumentUI; } }
 
         private MSGraphPane GraphPane { get { return (MSGraphPane) graphControl.MasterPane[0]; } }

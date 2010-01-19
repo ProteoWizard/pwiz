@@ -288,7 +288,7 @@ namespace pwiz.Skyline
             return true;
         }
 
-        private bool SaveDocument()
+        public bool SaveDocument()
         {
             string fileName = DocumentFilePath;
             if (string.IsNullOrEmpty(fileName))
@@ -520,13 +520,17 @@ namespace pwiz.Skyline
 
         private void exportTransitionListMenuItem_Click(object sender, EventArgs e)
         {
-            ExportMethodDlg dlg = new ExportMethodDlg(DocumentUI, ExportFileType.List);
-            dlg.ShowDialog(this);
+            ShowExportDialog(ExportFileType.List);
         }
 
         private void exportMethodMenuItem_Click(object sender, EventArgs e)
         {
-            ExportMethodDlg dlg = new ExportMethodDlg(DocumentUI, ExportFileType.Method);
+            ShowExportDialog(ExportFileType.Method);
+        }
+
+        public void ShowExportDialog(ExportFileType fileType)
+        {
+            ExportMethodDlg dlg = new ExportMethodDlg(DocumentUI, fileType);
             dlg.ShowDialog(this);
         }
 
@@ -652,6 +656,11 @@ namespace pwiz.Skyline
 
         private void importResultsMenuItem_Click(object sender, EventArgs e)
         {
+            ImportResults();
+        }
+
+        public void ImportResults()
+        {
             if (string.IsNullOrEmpty(DocumentFilePath))
             {
                 if (MessageBox.Show("You must save this document before importing results.", Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
@@ -659,7 +668,7 @@ namespace pwiz.Skyline
                 if (!SaveDocument())
                     return;
             }
-            
+
             ImportResultsDlg dlg = new ImportResultsDlg(DocumentUI, DocumentFilePath);
 
             if (dlg.ShowDialog(this) == DialogResult.OK)

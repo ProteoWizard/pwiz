@@ -146,6 +146,8 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public int CurveCount { get { return GraphPane.CurveList.Count; } }
+
         internal SummaryGraphPane GraphPane
         {
             get { return graphControl.MasterPane[0] as SummaryGraphPane; }
