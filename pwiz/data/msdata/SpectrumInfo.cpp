@@ -65,10 +65,17 @@ PWIZ_API_DECL void SpectrumInfo::update(const Spectrum& spectrum, bool getBinary
     Scan dummy;
     const Scan& scan = spectrum.scanList.scans.empty() ? dummy : spectrum.scanList.scans[0];
 
-    massAnalyzerType = scan.instrumentConfigurationPtr.get() ? 
-                       scan.instrumentConfigurationPtr->componentList.analyzer(0)
-                           .cvParamChild(MS_mass_analyzer_type).cvid :
-                       CVID_Unknown;
+    massAnalyzerType = CVID_Unknown;
+    if (scan.instrumentConfigurationPtr.get())
+        try
+        {
+            massAnalyzerType = scan.instrumentConfigurationPtr->componentList.analyzer(0)
+                                        .cvParamChild(MS_mass_analyzer_type).cvid;
+        }
+        catch (out_of_range&)
+        {
+            // ignore out-of-range exception
+        }
 
     scanEvent = scan.cvParam(MS_preset_scan_configuration).valueAs<int>(); 
     msLevel = spectrum.cvParam(MS_ms_level).valueAs<int>();
