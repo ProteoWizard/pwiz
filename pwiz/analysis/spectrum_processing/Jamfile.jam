@@ -50,6 +50,7 @@ lib pwiz_analysis_spectrum_processing
         SpectrumList_PeakFilter.cpp
         SpectrumList_ChargeStateCalculator.cpp
         SpectrumList_MZWindow.cpp
+        SpectrumList_MetadataFixer.cpp
         PrecursorRecalculatorDefault.cpp
         PrecursorMassFilter.cpp
         ThresholdFilter.cpp
@@ -80,6 +81,7 @@ unit-test SpectrumList_PeakFilterTest : SpectrumList_PeakFilterTest.cpp pwiz_ana
 unit-test SpectrumList_ChargeStateCalculatorTest : SpectrumList_ChargeStateCalculatorTest.cpp pwiz_analysis_spectrum_processing ;
 unit-test SpectrumListFactoryTest : SpectrumListFactoryTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
 unit-test SpectrumList_MZWindowTest : SpectrumList_MZWindowTest.cpp pwiz_analysis_spectrum_processing ;
+unit-test SpectrumList_MetadataFixerTest : SpectrumList_MetadataFixerTest.cpp pwiz_analysis_spectrum_processing ;
 
 
 # Special run targets for tests with data files.

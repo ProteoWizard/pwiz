@@ -29,6 +29,7 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_ChargeStateCalculator.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PrecursorRecalculator.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_MZWindow.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_MetadataFixer.hpp"
 #include "pwiz/analysis/spectrum_processing/PrecursorMassFilter.hpp"
 #include "pwiz/data/msdata/SpectrumInfo.hpp"
 #include <iostream>
@@ -227,6 +228,13 @@ SpectrumListPtr filterCreator_msLevel(const MSData& msd, const string& arg)
                             SpectrumList_FilterPredicate_MSLevelSet(msLevelSet)));
 }
 
+
+SpectrumListPtr filterCreator_metadataFixer(const MSData& msd, const string& arg)
+{
+    return SpectrumListPtr(new SpectrumList_MetadataFixer(msd.run.spectrumListPtr));
+}
+
+
 /** 
   *  filter on the basis of ms2 activation type
   *
@@ -286,6 +294,7 @@ JumpTableEntry jumpTable_[] =
     {"scanTime", "[scanTimeLow,scanTimeHigh]", filterCreator_scanTime},
     {"stripIT", " (strip ion trap ms1 scans)", filterCreator_stripIT},
     {"Activation", "<ETD|CID>", filterCreator_ActivationType},
+    {"metadataFixer", " (add/replace TIC/BPI metadata)", filterCreator_metadataFixer}
 };
 
 
