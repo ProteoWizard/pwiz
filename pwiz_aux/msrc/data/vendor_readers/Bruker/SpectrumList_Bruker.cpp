@@ -195,7 +195,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
 
         double scanTime = spectrum->getRetentionTime();
         if (scanTime > 0)
-            scan.set(MS_scan_start_time, scanTime, UO_minute);
+            scan.set(MS_scan_start_time, scanTime, UO_second);
 
         IonPolarity polarity = spectrum->getPolarity();
         switch (polarity)
