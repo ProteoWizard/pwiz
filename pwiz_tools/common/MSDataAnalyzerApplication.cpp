@@ -24,7 +24,7 @@
 #define PWIZ_SOURCE
 
 #include "MSDataAnalyzerApplication.hpp"
-#include "pwiz/data/vendor_readers/ExtendedReaderList.hpp"
+#include "FullReaderList.hpp"
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumListFactory.hpp"
 #include "boost/filesystem/path.hpp"
@@ -135,7 +135,7 @@ PWIZ_API_DECL void MSDataAnalyzerApplication::run(MSDataAnalyzer& analyzer, ostr
     if (!filenames.empty())
         bfs::create_directories(outputDirectory);
 
-    ExtendedReaderList readers;
+    FullReaderList readers;
 
     for (vector<string>::const_iterator it=filenames.begin(); it!=filenames.end(); ++it)
     {
