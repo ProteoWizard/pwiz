@@ -25,6 +25,7 @@
 
 
 #include "SpectrumInfo.hpp"
+#include "pwiz/utility/misc/Exception.hpp"
 #include <iterator>
 
 
