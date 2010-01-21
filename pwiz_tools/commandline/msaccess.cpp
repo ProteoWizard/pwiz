@@ -76,7 +76,7 @@ void initializeAnalyzers(MSDataAnalyzerContainer& analyzers,
         }
         else if (name == analyzer_strings<SpectrumTable>::id())
         {
-            MSDataAnalyzerPtr anal(new SpectrumTable(*cache));
+            MSDataAnalyzerPtr anal(new SpectrumTable(*cache, args));
             analyzers.push_back(anal);
         }
         else if (name == analyzer_strings<SpectrumBinaryData>::id())
