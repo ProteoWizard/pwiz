@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
@@ -511,39 +512,54 @@ namespace pwiz.Skyline
 
         #region Spectrum graph
 
-        private void aMenuItem_Click(object sender, EventArgs e)
+        public GraphSpectrum GraphSpectrum { get { return _graphSpectrum; } }
+
+        private void aMenuItem_Click(object sender, EventArgs e) { ToggleAIons(); }
+        public void ToggleAIons()
         {
             Settings.Default.ShowAIons = !Settings.Default.ShowAIons;
             UpdateSpectrumGraph();
         }
 
-        private void bMenuItem_Click(object sender, EventArgs e)
+        private void bMenuItem_Click(object sender, EventArgs e) { ToggleBIons(); }
+        public void ToggleBIons()
         {
             Settings.Default.ShowBIons = !Settings.Default.ShowBIons;
             UpdateSpectrumGraph();
         }
 
-        private void cMenuItem_Click(object sender, EventArgs e)
+        private void cMenuItem_Click(object sender, EventArgs e) { ToggleCIons(); }
+        public void ToggleCIons()
         {
             Settings.Default.ShowCIons = !Settings.Default.ShowCIons;
             UpdateSpectrumGraph();
         }
 
-        private void xMenuItem_Click(object sender, EventArgs e)
+        private void xMenuItem_Click(object sender, EventArgs e) { ToggleXIons(); }
+        public void ToggleXIons()
         {
             Settings.Default.ShowXIons = !Settings.Default.ShowXIons;
             UpdateSpectrumGraph();
         }
 
-        private void yMenuItem_Click(object sender, EventArgs e)
+        private void yMenuItem_Click(object sender, EventArgs e) { ToggleYIons(); }
+        public void ToggleYIons()
         {
             Settings.Default.ShowYIons = !Settings.Default.ShowYIons;
             UpdateSpectrumGraph();
         }
 
-        private void zMenuItem_Click(object sender, EventArgs e)
+        private void zMenuItem_Click(object sender, EventArgs e) { ToggleZIons(); }
+        public void ToggleZIons()
         {
             Settings.Default.ShowZIons = !Settings.Default.ShowZIons;
+            UpdateSpectrumGraph();
+        }
+
+        private void precursorIonMenuItem_Click(object sender, EventArgs e) { TogglePrecursorIon(); }
+        public void TogglePrecursorIon()
+        {
+            Settings.Default.ShowPrecursorIon = !Settings.Default.ShowPrecursorIon;
             UpdateSpectrumGraph();
         }
 
@@ -556,6 +572,7 @@ namespace pwiz.Skyline
             xMenuItem.Checked = xionsContextMenuItem.Checked = set.ShowXIons;
             yMenuItem.Checked = yionsContextMenuItem.Checked = set.ShowYIons;
             zMenuItem.Checked = zionsContextMenuItem.Checked = set.ShowZIons;
+            precursorIonMenuItem.Checked = precursorIonContextMenuItem.Checked = set.ShowPrecursorIon;
         }
 
         private void charge1MenuItem_Click(object sender, EventArgs e)
@@ -619,6 +636,8 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert++, yionsContextMenuItem);
             zionsContextMenuItem.Checked = set.ShowZIons;
             menuStrip.Items.Insert(iInsert++, zionsContextMenuItem);
+            precursorIonContextMenuItem.Checked = set.ShowPrecursorIon;
+            menuStrip.Items.Insert(iInsert++, precursorIonContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator11);
             charge1ContextMenuItem.Checked = set.ShowCharge1;
             menuStrip.Items.Insert(iInsert++, charge1ContextMenuItem);
@@ -782,6 +801,8 @@ namespace pwiz.Skyline
                     types.Add(IonType.x);
                 if (Settings.Default.ShowAIons)
                     types.Add(IonType.a);
+                if (Settings.Default.ShowPrecursorIon)
+                    types.Add(IonType.precursor);
                 return types;
             }
         }

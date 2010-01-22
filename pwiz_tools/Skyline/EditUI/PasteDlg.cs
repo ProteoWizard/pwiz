@@ -537,10 +537,12 @@ namespace pwiz.Skyline.EditUI
                     return null;
                 }
                 var calc = document.Settings.GetFragmentCalc(isotopeLabelType, null);
+                double productPrecursorMass = calc.GetPrecursorFragmentMass(peptideSequence);
                 double[,] productMasses = calc.GetFragmentIonMasses(peptideSequence);
                 IonType? ionType;
                 int? ordinal;
-                int productCharge = TransitionCalc.CalcProductCharge(productMasses, productMz, mzMatchTolerance, out ionType, out ordinal);
+                int productCharge = TransitionCalc.CalcProductCharge(productPrecursorMass, productMasses,
+                    productMz, mzMatchTolerance, out ionType, out ordinal);
                 if (productCharge < 1)
                 {
                     ShowTransitionError(new PasteError

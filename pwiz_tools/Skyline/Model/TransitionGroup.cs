@@ -1113,6 +1113,10 @@ namespace pwiz.Skyline.Model
             var calcPredict = settings.GetFragmentCalc(LabelType, mods);
 
             string sequence = Peptide.Sequence;
+            double precursorMassPredict = calcPredict.GetPrecursorFragmentMass(sequence);
+            if (!useFilter)
+                yield return CreateTransitionNode(precursorMassPredict, transitionRanks);
+
             double[,] massesPredict = calcPredict.GetFragmentIonMasses(sequence);
             int len = massesPredict.GetLength(1);
             if (len == 0)
@@ -1215,6 +1219,13 @@ namespace pwiz.Skyline.Model
                     }
                 }
             }
+        }
+
+        private TransitionDocNode CreateTransitionNode(double precursorMassH, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks)
+        {
+            Transition transition = new Transition(this);
+            var info = TransitionDocNode.GetLibInfo(transition, precursorMassH, transitionRanks);
+            return new TransitionDocNode(transition, precursorMassH, info);
         }
 
         private TransitionDocNode CreateTransitionNode(IonType type, int cleavageOffset, int charge, double massH, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks)

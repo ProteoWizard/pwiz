@@ -91,6 +91,26 @@ namespace pwiz.Skyline.Controls.Graphs
         private SrmDocument DocumentUI { get { return _documentContainer.DocumentUI; } }
 
         private MSGraphPane GraphPane { get { return (MSGraphPane) graphControl.MasterPane[0]; } }
+        
+        private SpectrumGraphItem GraphItem { get; set; }
+
+        public string LibraryName { get { return GraphItem.LibraryName; } }
+        public int PeaksCount { get { return GraphItem.PeaksCount; } }
+        public int PeaksMatchedCount { get { return GraphItem.PeaksMatchedCount; } }
+        public int PeaksRankedCount { get { return GraphItem.PeaksRankedCount; } }        
+        public string SelectedIonLabel
+        {
+            get
+            {
+                foreach (var graphObj in GraphPane.GraphObjList)
+                {
+                    var label = graphObj as TextObj;
+                    if (label != null && label.FontSpec.FontColor == SpectrumGraphItem.COLOR_SELECTED)
+                        return label.Text;
+                }
+                return null;
+            }
+        }
 
         public void OnDocumentUIChanged(object sender, DocumentChangedEventArgs e)
         {
@@ -199,7 +219,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                                           rankCharges,
                                                                           rankTypes);
 
-                        var graphItem = new SpectrumGraphItem(nodeGroup, transition, spectrumInfoR)
+                        GraphItem = new SpectrumGraphItem(nodeGroup, transition, spectrumInfoR)
                                             {
                                                 ShowTypes = types,
                                                 ShowCharges = charges,
@@ -210,7 +230,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                             };
                         graphControl.IsEnableVPan = graphControl.IsEnableVZoom =
                                                     !Settings.Default.LockYAxis;
-                        AddGraphItem(graphPane, graphItem);
+                        AddGraphItem(graphPane, GraphItem);
                         available = true;
                     }
                 }

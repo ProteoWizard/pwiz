@@ -76,7 +76,8 @@ namespace pwiz.Skyline
             return name;
         }
 
-        private void newMenuItem_Click(object sender, EventArgs e)
+        private void newMenuItem_Click(object sender, EventArgs e) { NewDocument(); }
+        public void NewDocument()
         {
             if (!CheckSaveDocument())
                 return;
@@ -499,22 +500,27 @@ namespace pwiz.Skyline
             if (!saved && !SaveDocument())
                 return;
 
+            ShareDocument(dlg.FileName, completeSharing);
+        }
+
+        public void ShareDocument(string fileDest, bool completeSharing)
+        {
             try
             {
                 var longWaitDlg = new LongWaitDlg
-                                  {
-                                      Text = "Compressing Files",
-                                  };
-                var sharing = new SrmDocumentSharing(document, fileName, dlg.FileName, completeSharing);
+                {
+                    Text = "Compressing Files",
+                };
+                var sharing = new SrmDocumentSharing(DocumentUI, DocumentFilePath, fileDest, completeSharing);
                 longWaitDlg.PerformWork(this, 1000, sharing.Share);
             }
             catch (IOException x)
             {
-                MessageDlg.Show(this, string.Format("Failed attempting to create sharing file {0}.\n{1}", dlg.FileName, x.Message));
+                MessageDlg.Show(this, string.Format("Failed attempting to create sharing file {0}.\n{1}", fileDest, x.Message));
             }
             catch (Exception)
             {
-                MessageDlg.Show(this, string.Format("Failed attempting to create sharing file {0}.", dlg.FileName));
+                MessageDlg.Show(this, string.Format("Failed attempting to create sharing file {0}.", fileDest));
             }
         }
 

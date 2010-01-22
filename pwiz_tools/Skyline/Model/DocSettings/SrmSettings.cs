@@ -688,6 +688,7 @@ namespace pwiz.Skyline.Model.DocSettings
         double[,] GetFragmentIonMasses(string seq);
         double GetFragmentMass(Transition transition);
         double GetFragmentMass(string seq, IonType type, int ordinal);
+        double GetPrecursorFragmentMass(string seq);
     }
 
     /// <summary>

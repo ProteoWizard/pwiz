@@ -56,6 +56,12 @@ namespace pwiz.SkylineTestFunctional
             SkylineWindow.Invoke(act);
         }
 
+        protected static void SelectNode(SrmDocument.Level level, int iNode)
+        {
+            var pathSelect = SkylineWindow.Document.GetPathTo((int)level, iNode);
+            RunUI(() => SkylineWindow.SequenceTree.SelectedPath = pathSelect);
+        }
+
         public static T FindOpenForm<T>() where T : Form
         {
             while (true) {
@@ -143,6 +149,11 @@ namespace pwiz.SkylineTestFunctional
                 Thread.Sleep(100);
             }
             return false;
+        }
+
+        public static void WaitForGraphs()
+        {
+            WaitForConditionUI(() => !SkylineWindow.IsGraphUpdatePending);
         }
 
         public static void OkDialog(Form form, Action okAction)
@@ -244,8 +255,8 @@ namespace pwiz.SkylineTestFunctional
 
         public static void ExtractTestFiles(this TestContext testContext, string relativePathZip, string destDir)
         {
-            string wiffZip = testContext.GetProjectDirectory(relativePathZip);
-            using (ZipFile zipFile = ZipFile.Read(wiffZip))
+            string zipPath = testContext.GetProjectDirectory(relativePathZip);
+            using (ZipFile zipFile = ZipFile.Read(zipPath))
             {
                 foreach (ZipEntry zipEntry in zipFile)
                     zipEntry.Extract(destDir, ExtractExistingFileAction.OverwriteSilently);

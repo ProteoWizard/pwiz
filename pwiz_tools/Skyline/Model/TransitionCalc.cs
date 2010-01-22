@@ -17,10 +17,7 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 
 namespace pwiz.Skyline.Model
 {
@@ -78,15 +75,27 @@ namespace pwiz.Skyline.Model
                 Transition.MAX_PRODUCT_CHARGE);
         }
 
-        public static int CalcProductCharge(double[,] productMasses, double productMz, double tolerance,
+        public static int CalcProductCharge(double productPrecursorMass, double[,] productMasses, double productMz, double tolerance,
             out IonType? ionType, out int? ordinal)
         {
+            // Get length of fragment ion mass array
             int len = productMasses.GetLength(1);
+
+            // Check to see if it is the precursor
+            int charge = CalcProductCharge(productPrecursorMass, productMz, tolerance);
+            if (charge > 0)
+            {
+                ionType = IonType.precursor;
+                ordinal = len + 1;
+                return charge;
+            }
+
+            // Check all possible ion types and offsets
             foreach (IonType type in Transition.ALL_TYPES)
             {
                 for (int offset = 0; offset < len; offset++)
                 {
-                    int charge = CalcProductCharge(productMasses[(int)type, offset], productMz, tolerance);
+                    charge = CalcProductCharge(productMasses[(int)type, offset], productMz, tolerance);
                     if (charge > 0)
                     {
                         ionType = type;

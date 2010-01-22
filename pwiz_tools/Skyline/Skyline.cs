@@ -649,7 +649,8 @@ namespace pwiz.Skyline
                 provider.ProvideData();
         }
 
-        private void pasteMenuItem_Click(object sender, EventArgs e)
+        private void pasteMenuItem_Click(object sender, EventArgs e) { Paste(); }
+        public void Paste()
         {
             if (StatementCompletionAction(textBox => textBox.Paste()))
                 return;
@@ -873,21 +874,18 @@ namespace pwiz.Skyline
             return sb.ToString();
         }
 
-        private void deleteMenuItem_Click(object sender, EventArgs e)
+        private void deleteMenuItem_Click(object sender, EventArgs e) { EditDelete(); }
+        public void EditDelete()
         {
             SrmTreeNode node = sequenceTree.SelectedNode as SrmTreeNode;
             if (node != null)
             {
                 IdentityPath path = node.Path.Parent;
-                ModifyDocument("Delete " + node.Text, doc => (SrmDocument) doc.RemoveChild(path, node.Model));
+                ModifyDocument("Delete " + node.Text, doc => (SrmDocument)doc.RemoveChild(path, node.Model));
             }
         }
 
-        private void editNoteMenuItem_Click(object sender, EventArgs e)
-        {
-            EditNote();
-        }
-
+        private void editNoteMenuItem_Click(object sender, EventArgs e) { EditNote(); }
         public void EditNote()
         {
             SrmTreeNode nodeTree = sequenceTree.SelectedNode as SrmTreeNode;
@@ -1224,7 +1222,8 @@ namespace pwiz.Skyline
             modifyPeptideContextMenuItem.Visible = (sequenceTree.SelectedNode is PeptideTreeNode);
         }
 
-        private void pickChildrenContextMenuItem_Click(object sender, EventArgs e)
+        private void pickChildrenContextMenuItem_Click(object sender, EventArgs e) { ShowPickChildren(); }
+        public void ShowPickChildren()
         {
             sequenceTree.ShowPickList();
         }

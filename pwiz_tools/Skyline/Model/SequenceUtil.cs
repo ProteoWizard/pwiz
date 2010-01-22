@@ -435,6 +435,11 @@ namespace pwiz.Skyline.Model
                 transition.IonType, transition.Ordinal, mods);
         }
 
+        public double GetPrecursorFragmentMass(string seq)
+        {
+            return GetFragmentMass(seq, IonType.precursor, seq.Length);
+        }
+
         public double GetFragmentMass(string seq, IonType type, int ordinal)
         {
             return GetFragmentMass(seq, type, ordinal, null);
@@ -442,6 +447,9 @@ namespace pwiz.Skyline.Model
 
         public double GetFragmentMass(string seq, IonType type, int ordinal, IList<double> mods)
         {
+            if (Transition.IsPrecursor(type))
+                return GetPrecursorMass(seq, mods);
+
             int len = seq.Length - 1;
 
             double mass = GetTermMass(type) + BioMassCalc.MassProton;
@@ -597,6 +605,11 @@ namespace pwiz.Skyline.Model
         public double GetFragmentMass(string seq, IonType type, int ordinal)
         {
             return _massCalcBase.GetFragmentMass(seq, type, ordinal, _mods);
+        }
+
+        public double GetPrecursorFragmentMass(string seq)
+        {
+            return _massCalcBase.GetPrecursorFragmentMass(seq);
         }
     }
 }

@@ -305,8 +305,9 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 }
             }
 
-            var listLibrarySpecs = new List<LibrarySpec>();
             var listLibraries = new List<Library>();
+            var listLibrarySpecs = new List<LibrarySpec>();
+            var dictOldNameToNew = new Dictionary<string, string>();
             if (setUsedLibrarySpecs.Count > 0)
             {
                 Directory.CreateDirectory(pathDirectory);
@@ -321,13 +322,30 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     string baseName = Path.GetFileNameWithoutExtension(librarySpec.FilePath);
                     string fileName = GetUniqueName(baseName, usedNames) + BiblioSpecLiteSpec.EXT;
                     var blibDb = CreateBlibDb(Path.Combine(pathDirectory, fileName));
-                    string nameMin = string.Format("{0} ({1})", librarySpec.Name, nameModifier);
+                    string nameMin = librarySpec.Name;
+                    // Avoid adding the modifier a second time, if it has
+                    // already been done once.
+                    if (!nameMin.EndsWith(nameModifier + ")"))
+                        nameMin = string.Format("{0} ({1})", librarySpec.Name, nameModifier);
                     var librarySpecMin = new BiblioSpecLiteSpec(nameMin, blibDb.FilePath);
 
                     listLibraries.Add(blibDb.MinimizeLibrary(librarySpecMin,
                         pepLibraries.Libraries[i], document));
                     listLibrarySpecs.Add(librarySpecMin);
+                    dictOldNameToNew.Add(librarySpec.Name, librarySpecMin.Name);
                 }
+
+                document = (SrmDocument) document.ChangeAll(node =>
+                    {
+                        var nodeGroup = node as TransitionGroupDocNode;
+                        if (nodeGroup == null || !nodeGroup.HasLibInfo)
+                            return node;
+
+                        string libName = nodeGroup.LibInfo.LibraryName;
+                        var libInfo = nodeGroup.LibInfo.ChangeLibraryName(dictOldNameToNew[libName]);
+                        return nodeGroup.ChangeLibInfo(libInfo);
+                    },
+                    (int) SrmDocument.Level.TransitionGroups);
             }
 
             return document.ChangeSettingsNoDiff(settings.ChangePeptideLibraries(

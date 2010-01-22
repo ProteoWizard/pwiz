@@ -108,10 +108,16 @@ namespace pwiz.Skyline.Controls.SeqNode
         public static string GetLabel(TransitionDocNode nodeTran, string resultsText)
         {
             Transition tran = nodeTran.Transition;
+            string labelPrefix;
+            if (tran.IsPrecursor())
+                labelPrefix = "precursor";
+            else
+                labelPrefix = string.Format("{0} [{1}]", tran.AA, tran.FragmentIonName);
+
             if (!nodeTran.HasLibInfo)
             {
-                return string.Format("{0} [{1}] - {2:F04}{3}{4}{5}",
-                                     tran.AA, tran.FragmentIonName,
+                return string.Format("{0} - {1:F04}{2}{3}{4}",
+                                     labelPrefix,
                                      nodeTran.Mz,
                                      Transition.GetChargeIndicator(tran.Charge),
                                      resultsText,
@@ -119,8 +125,8 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
             else
             {
-                return string.Format("{0} [{1}] - {2:F04}{3} (rank {4}){5}{6}",
-                                     tran.AA, tran.FragmentIonName,
+                return string.Format("{0} - {1:F04}{2} (rank {3}){4}{5}",
+                                     labelPrefix,
                                      nodeTran.Mz,
                                      Transition.GetChargeIndicator(tran.Charge),
                                      nodeTran.LibInfo.Rank,

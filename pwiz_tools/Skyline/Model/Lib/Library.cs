@@ -500,7 +500,7 @@ namespace pwiz.Skyline.Model.Lib
         public override string ToString() { return Label; }
     }
 
-    public abstract class SpectrumHeaderInfo : IXmlSerializable
+    public abstract class SpectrumHeaderInfo : Immutable, IXmlSerializable
     {
         protected SpectrumHeaderInfo(string libraryName)
         {
@@ -508,6 +508,11 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public string LibraryName { get; private set; }
+
+        public SpectrumHeaderInfo ChangeLibraryName(string prop)
+        {
+            return ChangeProp(ImClone(this), im => im.LibraryName = prop);
+        }
 
         /// <summary>
         /// Value used in ranking peptides.
@@ -720,10 +725,15 @@ namespace pwiz.Skyline.Model.Lib
             var calcPredict = settings.GetFragmentCalc(group.LabelType, mods);
             rp.precursorMz = SequenceMassCalc.GetMZ(calcMatchPre.GetPrecursorMass(rp.sequence),
                 rp.precursorCharge);
+            rp.massPreMatch = calcMatch.GetPrecursorFragmentMass(rp.sequence);
+            rp.massPrePredict = rp.massPreMatch;
             rp.massesMatch = calcMatch.GetFragmentIonMasses(rp.sequence);
             rp.massesPredict = rp.massesMatch;
             if (!ReferenceEquals(calcPredict, calcMatch))
+            {
+                rp.massPrePredict = calcPredict.GetPrecursorFragmentMass(rp.sequence);
                 rp.massesPredict = calcPredict.GetFragmentIonMasses(rp.sequence);
+            }
 
             // Get values of interest from the settings.
             var tranSettings = settings.TransitionSettings;
@@ -907,6 +917,8 @@ namespace pwiz.Skyline.Model.Lib
             public string sequence { get; set; }
             public int precursorCharge { get; set; }
             public double precursorMz { get; set; }
+            public double massPreMatch { get; set; }
+            public double massPrePredict { get; set; }
             public double[,] massesMatch { get; set; }
             public double[,] massesPredict { get; set; }
             public IEnumerable<int> charges { get; set; }
@@ -992,6 +1004,20 @@ namespace pwiz.Skyline.Model.Lib
                 int len = rp.massesMatch.GetLength(1);
                 foreach (IonType type in rp.types)
                 {
+                    if (Transition.IsPrecursor(type))
+                    {
+                        if (!MatchNext(rp, type, len, rp.precursorCharge, len+1, filter, len, len))
+                        {
+                            // If matched return.  Otherwise look for other ion types.
+                            if (rp.matched)
+                            {
+                                rp.Clean();
+                                return;
+                            }
+                        }
+                        continue;
+                    }
+
                     foreach (int charge in rp.charges)
                     {
                         // Product ion charge can never be lower than precursor.
@@ -1047,7 +1073,9 @@ namespace pwiz.Skyline.Model.Lib
 
             private bool MatchNext(RankParams rp, IonType type, int offset, int charge, int len, bool filter, int end, int start)
             {
-                double ionMz = SequenceMassCalc.GetMZ(rp.massesMatch[(int)type, offset], charge);
+                bool precursorMatch = Transition.IsPrecursor(type);
+                double ionMass = !precursorMatch ? rp.massesMatch[(int)type, offset] : rp.massPreMatch;
+                double ionMz = SequenceMassCalc.GetMZ(ionMass, charge);
                 // Unless trying to match everything, stop looking outside the instrument range
                 if (!rp.matchAll && ionMz > rp.maxMz)
                     return false;
@@ -1073,7 +1101,9 @@ namespace pwiz.Skyline.Model.Lib
                     else
                     {
                         // Avoid using the same predicted m/z on two different peaks
-                        double predictedMz = SequenceMassCalc.GetMZ(rp.massesPredict[(int)type, offset], charge);
+                        double predictedMass = !precursorMatch ?
+                            rp.massesPredict[(int)type, offset] : rp.massPrePredict;
+                        double predictedMz = SequenceMassCalc.GetMZ(predictedMass, charge);
                         if (predictedMz == ionMz || !rp.IsSeen(predictedMz))
                         {
                             rp.Seen(predictedMz);
@@ -1090,7 +1120,7 @@ namespace pwiz.Skyline.Model.Lib
                             Charge = charge;
                             Ordinal = ordinal;
                             PredictedMz = predictedMz;
-                                rp.matched = (!rp.matchAll);
+                            rp.matched = (!rp.matchAll);
                             return rp.matchAll;
                         }
                     }

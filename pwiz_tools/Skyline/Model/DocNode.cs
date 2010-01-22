@@ -73,7 +73,7 @@ namespace pwiz.Skyline.Model
         /// <returns>New instance</returns>
         public DocNode ChangeAnnotations(Annotations annotations)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.Annotations = v, annotations);            
+            return ChangeProp(ImClone(this), im => im.Annotations = annotations);            
         }
 
         /// <summary>
@@ -202,9 +202,15 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
-        /// 
+        /// True if children of this node should be automatically updated with
+        /// changes to the document settings.
         /// </summary>
         public bool AutoManageChildren { get; private set; }
+
+        public DocNodeParent ChangeAutoManageChildren(bool autoManageChildren)
+        {
+            return ChangeProp(ImClone(this), im => im.AutoManageChildren = autoManageChildren);
+        }
 
         /// <summary>
         /// Adds all children to a map by their <see cref="Identity"/> itself,
@@ -708,9 +714,17 @@ namespace pwiz.Skyline.Model
             return traversal.Traverse(parent, descendentsRemove, AddAll, parent.AddAll);
         }
 
-        public DocNodeParent ChangeAutoManageChildren(bool autoManageChildren)
+        public DocNodeParent ChangeAll(Func<DocNode, DocNode> change, int depth)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.AutoManageChildren = v, autoManageChildren);
+            var listChildrenNew = new List<DocNode>();
+            foreach (var child in Children)
+            {
+                var childNew = change(child);
+                if (depth > 0)
+                    childNew = ((DocNodeParent) childNew).ChangeAll(change, depth - 1);
+                listChildrenNew.Add(childNew);
+            }
+            return ChangeChildrenChecked(listChildrenNew);
         }
 
         /// <summary>
@@ -751,7 +765,7 @@ namespace pwiz.Skyline.Model
         /// <returns>A new parent node</returns>
         private DocNodeParent ChangeChildren(IList<DocNode> children, IList<int> counts)
         {
-            DocNodeParent clone = ChangeProp(ImClone(this), (im, v) => im.Children = v, children);
+            DocNodeParent clone = ChangeProp(ImClone(this), im => im.Children = children);
             clone._nodeCountStack = counts;
             var childrenNew = OnChangingChildren(clone);
             if (!ArrayUtil.ReferencesEqual(childrenNew, clone.Children))

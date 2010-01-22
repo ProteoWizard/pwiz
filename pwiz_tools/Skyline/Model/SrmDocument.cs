@@ -1321,9 +1321,15 @@ namespace pwiz.Skyline.Model
             TransitionInfo info = new TransitionInfo();
             info.ReadXml(reader, Settings);
 
-            int offset = Transition.OrdinalToOffset(info.IonType,
-                info.Ordinal, group.Peptide.Length);
-            Transition transition = new Transition(group, info.IonType, offset, info.Charge);
+            Transition transition;
+            if (Transition.IsPrecursor(info.IonType))
+                transition = new Transition(group);
+            else
+            {
+                int offset = Transition.OrdinalToOffset(info.IonType,
+                    info.Ordinal, group.Peptide.Length);
+                transition = new Transition(group, info.IonType, offset, info.Charge);
+            }
 
             double massH = Settings.GetFragmentMass(group.LabelType, mods, transition);
 
@@ -1747,11 +1753,14 @@ namespace pwiz.Skyline.Model
         {
             Transition transition = nodeTransition.Transition;
             writer.WriteAttribute(ATTR.fragment_type, transition.IonType);
-            writer.WriteAttribute(ATTR.fragment_ordinal, transition.Ordinal);
-            double massH = SequenceMassCalc.GetMH(nodeTransition.Mz, transition.Charge);
-            writer.WriteAttribute(ATTR.calc_neutral_mass,
-                SequenceMassCalc.PersistentNeutral(massH));
-            writer.WriteAttribute(ATTR.product_charge, transition.Charge);
+            if (!transition.IsPrecursor())
+            {
+                writer.WriteAttribute(ATTR.fragment_ordinal, transition.Ordinal);
+                double massH = SequenceMassCalc.GetMH(nodeTransition.Mz, transition.Charge);
+                writer.WriteAttribute(ATTR.calc_neutral_mass,
+                    SequenceMassCalc.PersistentNeutral(massH));
+                writer.WriteAttribute(ATTR.product_charge, transition.Charge);
+            }
 
             WriteAnnotations(writer, nodeTransition.Annotations);
 

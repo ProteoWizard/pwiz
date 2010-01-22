@@ -36,8 +36,9 @@ namespace pwiz.Skyline.Controls.Graphs
         private static readonly Color COLOR_Y = Color.Blue;
         private static readonly Color COLOR_C = Color.Orange;
         private static readonly Color COLOR_Z = Color.OrangeRed;
+        private static readonly Color COLOR_PRECURSOR = Color.DarkCyan;
         private static readonly Color COLOR_NONE = Color.Gray;
-        private static readonly Color COLOR_SELECTED = Color.Red;
+        public static readonly Color COLOR_SELECTED = Color.Red;
 
         private static FontSpec CreateFontSpec(Color color, float size)
         {
@@ -72,6 +73,8 @@ namespace pwiz.Skyline.Controls.Graphs
         private FontSpec _fontSpecC;
         private FontSpec FONT_SPEC_C { get { return GetFontSpec(COLOR_C, ref _fontSpecC); } }
         private FontSpec _fontSpecZ;
+        private FontSpec FONT_SPEC_PRECURSOR { get { return GetFontSpec(COLOR_PRECURSOR, ref _fontSpecPrecursor); } }
+        private FontSpec _fontSpecPrecursor;
         private FontSpec FONT_SPEC_Z { get { return GetFontSpec(COLOR_Z, ref _fontSpecZ); } }
         private FontSpec _fontSpecNone;
         private FontSpec FONT_SPEC_NONE { get { return GetFontSpec(COLOR_NONE, ref _fontSpecNone); } }
@@ -96,6 +99,11 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool ShowDuplicates { get; set; }
         public int LineWidth { get; set; }
         public float FontSize { get; set; }
+
+        public string LibraryName { get { return TransitionGroupNode.LibInfo.LibraryName; } }
+        public int PeaksCount { get { return SpectrumInfo.Peaks.Count; } }
+        public int PeaksMatchedCount { get { return SpectrumInfo.PeaksMatched.Count(); } }
+        public int PeaksRankedCount { get { return SpectrumInfo.PeaksRanked.Count(); } }
 
         public override void CustomizeCurve(CurveItem curveItem)
         {
@@ -151,6 +159,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     case IonType.y: color = COLOR_Y; break;
                     case IonType.c: color = COLOR_C; break;
                     case IonType.z: color = COLOR_Z; break;
+                    case IonType.precursor: color = COLOR_PRECURSOR; break;
                 }
                 if (TransitionNode != null && rmi.PredictedMz == TransitionNode.Mz)
                     color = COLOR_SELECTED;
@@ -195,6 +204,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 case IonType.y: fontSpec = FONT_SPEC_Y; break;
                 case IonType.c: fontSpec = FONT_SPEC_C; break;
                 case IonType.z: fontSpec = FONT_SPEC_Z; break;
+                case IonType.precursor: fontSpec = FONT_SPEC_PRECURSOR; break;
             }
             if (TransitionNode != null && rmi.PredictedMz == TransitionNode.Mz)
                 fontSpec = FONT_SPEC_SELECTED;
@@ -204,10 +214,12 @@ namespace pwiz.Skyline.Controls.Graphs
         private string GetLabel(IonType type, int ordinal, int charge, int rank)
         {
             string chargeIndicator = (charge == 1 ? "" : Transition.GetChargeIndicator(charge));
+            string label = type.ToString();
+            if (!Transition.IsPrecursor(type))
+                label = label + ordinal + chargeIndicator;
             if (rank > 0 && ShowRanks)
-                return string.Format("{0}{1}{2} (rank {3})", type, ordinal, chargeIndicator, rank);
-            else
-                return string.Format("{0}{1}{2}", type, ordinal, chargeIndicator);            
+                label = string.Format("{0} (rank {1})", label, rank);
+            return label;
         }
 
         private bool IsVisibleIon(LibraryRankedSpectrumInfo.RankedMI rmi)

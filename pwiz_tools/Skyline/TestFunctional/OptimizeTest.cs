@@ -222,12 +222,6 @@ namespace pwiz.SkylineTestFunctional
             VerifyGraphs();
         }
 
-        private static void SelectNode(SrmDocument.Level level, int iNode)
-        {
-            var pathSelect = SkylineWindow.Document.GetPathTo((int) level, iNode);
-            RunUI(() => SkylineWindow.SequenceTree.SelectedPath = pathSelect);            
-        }
-
         private static void VerifyGraphs()
         {
             RunUI(SkylineWindow.ShowAllTransitions);
@@ -260,11 +254,6 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(1, SkylineWindow.GetGraphChrom(chromSet.Name).CurveCount);
             Assert.AreEqual(1, SkylineWindow.GraphPeakArea.CurveCount);
             Assert.AreEqual(1, SkylineWindow.GraphRetentionTime.CurveCount);
-        }
-
-        private static void WaitForGraphs()
-        {
-            WaitForConditionUI(() => !SkylineWindow.IsGraphUpdatePending);
         }
 
         private const int COL_PREC_MZ = 0;
@@ -330,15 +319,15 @@ namespace pwiz.SkylineTestFunctional
 
         private static void ExportCETransitionList(string filePath, string fileCompare)
         {
-            var exportDialog1 = ShowDialog<ExportMethodDlg>(() =>
+            var exportDialog = ShowDialog<ExportMethodDlg>(() =>
                 SkylineWindow.ShowExportDialog(ExportFileType.List));
 
             // Export CE optimization transition list
             RunUI(() =>
             {
-                exportDialog1.ExportStrategy = ExportStrategy.Single;
-                exportDialog1.MethodType = ExportMethodType.Standard;
-                exportDialog1.OkDialog(filePath);
+                exportDialog.ExportStrategy = ExportStrategy.Single;
+                exportDialog.MethodType = ExportMethodType.Standard;
+                exportDialog.OkDialog(filePath);
             });
             VerifyCETransitionList(filePath, fileCompare, SkylineWindow.Document);
         }

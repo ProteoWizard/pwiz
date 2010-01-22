@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Controls
         public static Size SizeAll { get { return new Size(375, 243); } }
 
         private readonly IChildPicker _picker;
-        private List<object> _chosenAtStart;
+        private readonly List<object> _chosenAtStart;
         private List<PickListChoice> _choices;
         private List<int> _indexListChoices;
         private bool _closing;
@@ -76,6 +76,15 @@ namespace pwiz.Skyline.Controls
             // change what is picked.
             _autoManageChildren = _picker.AutoManageChildren;
             UpdateAutoManageUI();
+        }
+
+        public IEnumerable<string> ItemNames
+        {
+            get
+            {
+                foreach (var item in pickListMulti.Items)
+                    yield return item.ToString();
+            }
         }
 
         public bool AutoManageChildren
@@ -151,7 +160,7 @@ namespace pwiz.Skyline.Controls
             ShowChoices();
         }
 
-        public void ShowChoices()
+        private void ShowChoices()
         {
             pickListMulti.BeginUpdate();
             _indexListChoices = new List<int>();
@@ -252,15 +261,36 @@ namespace pwiz.Skyline.Controls
         private void tbbFilter_Click(object sender, EventArgs e)
         {
             bool filter = _picker.Filtered = tbbFilter.Checked;
+            ApplyFilter(filter);
+        }
+
+        public void ApplyFilter(bool filter)
+        {
             SetChoices(_picker.GetChoices(filter), _chosenAtStart);
         }
 
         private void tbbAutoManageChildren_Click(object sender, EventArgs e)
         {
+            ToggleAutoManageChildren();
+        }
+
+        public void ToggleAutoManageChildren()
+        {
             AutoManageChildren = tbbAutoManageChildren.Checked;
         }
 
+        public string SearchString
+        {
+            get { return textSearch.Text; }
+            set { textSearch.Text = value; }
+        }
+
         private void tbbFind_Click(object sender, EventArgs e)
+        {
+            ToggleFind();
+        }
+
+        public void ToggleFind()
         {
             if (textSearch.Focused)
             {
@@ -274,6 +304,16 @@ namespace pwiz.Skyline.Controls
                 textSearch.Focus();
                 ShowChoices();
             }
+        }
+
+        public bool GetItemChecked(int i)
+        {
+            return pickListMulti.GetItemChecked(i);
+        }
+
+        public void SetItemChecked(int i, bool checkItem)
+        {
+            pickListMulti.SetItemChecked(i, checkItem);
         }
 
         private void cbItems_CheckedChanged(object sender, EventArgs e)

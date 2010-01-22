@@ -28,7 +28,7 @@ namespace pwiz.Skyline.Model
 {
     public enum IonType
     {
-        a, b, c, x, y, z
+        precursor = -1, a, b, c, x, y, z
     }
 
     public class TransitionDocNode : DocNode
@@ -286,12 +286,17 @@ namespace pwiz.Skyline.Model
 
         public static bool IsNTerminal(IonType type)
         {
-            return type == IonType.a || type == IonType.b || type == IonType.c;
+            return type == IonType.a || type == IonType.b || type == IonType.c || type == IonType.precursor;
         }
 
         public static bool IsCTerminal(IonType type)
         {
             return type == IonType.x || type == IonType.y || type == IonType.z;
+        }
+
+        public static bool IsPrecursor(IonType type)
+        {
+            return type == IonType.precursor;
         }
 
         public static IonType[] GetTypePairs(ICollection<IonType> types)
@@ -343,6 +348,15 @@ namespace pwiz.Skyline.Model
 
         private readonly TransitionGroup _group;
 
+        /// <summary>
+        /// Creates a precursor transition
+        /// </summary>
+        /// <param name="group">The <see cref="TransitionGroup"/> which the transition represents</param>
+        public Transition(TransitionGroup group)
+            : this(group, IonType.precursor, group.Peptide.Length - 1, group.PrecursorCharge)
+        {            
+        }
+
         public Transition(TransitionGroup group, IonType type, int offset, int charge)
         {
             _group = group;
@@ -373,7 +387,16 @@ namespace pwiz.Skyline.Model
         public int Ordinal { get; private set; }
         public char AA { get; private set; }
 
-        public string FragmentIonName { get { return IonType.ToString() + Ordinal; } }
+        public string FragmentIonName
+        {
+            get
+            {
+                string ionName = IonType.ToString();
+                if (!IsPrecursor())
+                    ionName += Ordinal;
+                return ionName;
+            }
+        }
 
         public bool IsNTerminal()
         {
@@ -383,6 +406,11 @@ namespace pwiz.Skyline.Model
         public bool IsCTerminal()
         {
             return IsCTerminal(IonType);
+        }
+
+        public bool IsPrecursor()
+        {
+            return IsPrecursor(IonType);
         }
 
         public char FragmentNTermAA
@@ -405,7 +433,12 @@ namespace pwiz.Skyline.Model
 
             if (Ordinal < 1)
                 throw new InvalidDataException(string.Format("Fragment ordinal {0} may not be less than 1.", Ordinal));
-            if (Ordinal > Group.Peptide.Length - 1)
+            if (IsPrecursor())
+            {
+                if (Ordinal != Group.Peptide.Length)
+                    throw new InvalidDataException(string.Format("Precursor ordinal must be the lenght of the peptide."));
+            }
+            else if (Ordinal > Group.Peptide.Length - 1)
             {
                 throw new InvalidDataException(string.Format("Fragment ordinal {0} exceeds the maximum {1} for the peptide {2}.",
                                                              Ordinal, Group.Peptide.Length - 1, Group.Peptide.Sequence));
@@ -446,6 +479,9 @@ namespace pwiz.Skyline.Model
 
         public override string ToString()
         {
+            if (IsPrecursor())
+                return "precursor" + GetChargeIndicator(Charge);
+
             return string.Format("{0} - {1}{2}{3}", AA,
                 IonType.ToString().ToLower(), Ordinal, GetChargeIndicator(Charge));
         }

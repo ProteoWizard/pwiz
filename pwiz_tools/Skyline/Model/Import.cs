@@ -399,10 +399,12 @@ namespace pwiz.Skyline.Model
                 }
                 else
                 {
+                    double productPrecursorMass = calc.GetPrecursorFragmentMass(seq);
                     double[,] productMasses = calc.GetFragmentIonMasses(seq);
                     IonType? ionType;
                     int? ordinal;
-                    info.ProductCharge = CalcProductCharge(productMasses, productMz, MzMatchTolerance, out ionType, out ordinal);
+                    info.ProductCharge = CalcProductCharge(productPrecursorMass, productMasses,
+                        productMz, MzMatchTolerance, out ionType, out ordinal);
                     if (info.ProductCharge > 0)
                     {
                         info.IonType = ionType;
@@ -433,10 +435,11 @@ namespace pwiz.Skyline.Model
                 return TransitionCalc.CalcPrecursorCharge(precursorMassH, precursorMz, tolerance);
             }
 
-            private static int CalcProductCharge(double[,] productMasses, double productMz, double tolerance,
-                out IonType? ionType, out int? ordinal)
+            private static int CalcProductCharge(double productPrecursorMass, double[,] productMasses,
+                double productMz, double tolerance, out IonType? ionType, out int? ordinal)
             {
-                return TransitionCalc.CalcProductCharge(productMasses, productMz, tolerance, out ionType, out ordinal);
+                return TransitionCalc.CalcProductCharge(productPrecursorMass, productMasses,
+                    productMz, tolerance, out ionType, out ordinal);
             }
 
             private static bool MatchMz(double mz1, double mz2, double tolerance)
@@ -487,7 +490,9 @@ namespace pwiz.Skyline.Model
                 IsotopeLabelType labelType, int iSequence, int iPrecursor, double tolerance,
                 IFormatProvider provider, SrmSettings settings)
             {
-                double[,] productMasses = settings.GetFragmentCalc(labelType, null).GetFragmentIonMasses(sequence);
+                var calc = settings.GetFragmentCalc(labelType, null);
+                double productPrecursorMass = calc.GetPrecursorFragmentMass(sequence);
+                double[,] productMasses = calc.GetFragmentIonMasses(sequence);
 
                 for (int i = 0; i < fields.Length; i++)
                 {
@@ -500,7 +505,8 @@ namespace pwiz.Skyline.Model
 
                     IonType? ionType;
                     int? ordinal;
-                    int charge = CalcProductCharge(productMasses, productMz, tolerance, out ionType, out ordinal);
+                    int charge = CalcProductCharge(productPrecursorMass, productMasses,
+                        productMz, tolerance, out ionType, out ordinal);
                     if (charge > 0)
                         return i;
                 }
