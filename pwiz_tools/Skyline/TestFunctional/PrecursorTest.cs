@@ -32,7 +32,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class PrecursorTest : AbstractFunctionalTest
     {
-        [TestMethod]
+        //[TestMethod]
         public void TestPrecursorIon()
         {
             TestFilesZip = @"TestFunctional\PrecursorTest.zip";
