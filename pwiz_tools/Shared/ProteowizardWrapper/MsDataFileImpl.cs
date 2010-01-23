@@ -204,10 +204,22 @@ namespace pwiz.ProteowizardWrapper
             }            
         }
 
+        /// <summary>
+        /// Gets the retention times from the first chromatogram in the data file.
+        /// Returns null if there are no chromatograms in the file.
+        /// </summary>
         public double[] GetScanTimes()
         {
+            if (ChromatogramList == null)
+            {
+                return null;
+            }
             using (var chromatogram = ChromatogramList.chromatogram(0, true))
             {
+                if (chromatogram == null)
+                {
+                    return null;
+                }
                 TimeIntensityPairList timeIntensityPairList = new TimeIntensityPairList();
                 chromatogram.getTimeIntensityPairs(ref timeIntensityPairList);
                 double[] times = new double[timeIntensityPairList.Count];
@@ -216,6 +228,25 @@ namespace pwiz.ProteowizardWrapper
                     times[i] = timeIntensityPairList[i].time;
                 }
                 return times;
+            }
+        }
+
+        /// <summary>
+        /// Walks the spectrum list, and fills in the retention time and MS level of each scan.
+        /// Some data files do not have any chromatograms in them, so GetScanTimes
+        /// cannot be used.
+        /// </summary>
+        public void GetScanTimesAndMsLevels(out double[] times, out byte[] msLevels)
+        {
+            times = new double[SpectrumCount];
+            msLevels = new byte[times.Length];
+            for (int i = 0; i < times.Length; i++)
+            {
+                using (var spectrum = SpectrumList.spectrum(i))
+                {
+                    times[i] = spectrum.scanList.scans[0].cvParam(CVID.MS_scan_start_time).timeInSeconds();
+                    msLevels[i] = (byte) (int) spectrum.cvParam(CVID.MS_ms_level).value;
+                }
             }
         }
 

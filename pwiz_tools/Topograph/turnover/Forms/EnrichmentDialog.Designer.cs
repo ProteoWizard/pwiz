@@ -353,8 +353,8 @@
             this.Controls.Add(this.tbxTracerSymbol);
             this.Controls.Add(this.label1);
             this.Name = "EnrichmentDialog";
-            this.TabText = "Edit Enrichment";
-            this.Text = "Edit Enrichment";
+            this.TabText = "Edit Tracer Definitions";
+            this.Text = "Edit Tracer Definitions";
             this.ResumeLayout(false);
             this.PerformLayout();
 

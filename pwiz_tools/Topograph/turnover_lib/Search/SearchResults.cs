@@ -148,14 +148,51 @@ namespace pwiz.Topograph.Search
         {
             var results = new List<SearchResult>();
             var xmlReader = XmlReader.Create(stream);
-            xmlReader.Read();
-            xmlReader.ReadStartElement("msms_pipeline_analysis");
-            xmlReader.ReadStartElement("msms_run_summary");
-            while(xmlReader.ReadToNextSibling("spectrum_query"))
+            while (xmlReader.ReadToFollowing("spectrum_query"))
             {
-//                if (xmlReader.IsStartElement())
+                if (!progressMonitor.Invoke((int)(100 * stream.Position / stream.Length)))
+                {
+                    return null;
+                }
+                var startScan = int.Parse(xmlReader.GetAttribute("start_scan"));
+                var charge = int.Parse(xmlReader.GetAttribute("assumed_charge"));
+                if (!xmlReader.ReadToDescendant("search_hit"))
+                {
+                    continue;
+                }
+                var peptide = xmlReader.GetAttribute("peptide");
+                var prevAA = xmlReader.GetAttribute("peptide_prev_aa");
+                var nextAA = xmlReader.GetAttribute("peptide_next_aa");
+                if (prevAA != null)
+                {
+                    peptide = prevAA + "." + peptide;
+                }
+                if (nextAA != null)
+                {
+                    peptide = peptide + "." + nextAA;
+                }
+                var searchResult = new SearchResult(peptide)
+                                       {
+                                           Protein = xmlReader.GetAttribute("protein"),
+                                           Filename = filename,
+                                           Charge = charge,
+                                           ScanIndex = startScan,
+                                       };
+                if (xmlReader.ReadToDescendant("search_score"))
+                {
+                    do
+                    {
+                        var name = xmlReader.GetAttribute("name");
+                        var value = xmlReader.GetAttribute("value");
+                        if (name == "xcorr")
+                        {
+                            searchResult.XCorr = double.Parse(value);
+                        }
+                    } while (xmlReader.ReadToNextSibling("search_score"));
+                }
+                results.Add(searchResult);
             }
-            throw new NotImplementedException();
+            return results;
         }
     }
 

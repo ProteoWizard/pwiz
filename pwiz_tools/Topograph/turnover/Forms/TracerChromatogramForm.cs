@@ -50,18 +50,21 @@ namespace pwiz.Topograph.ui.Forms
                                 };
                 msGraphControl.AddGraphItem(msGraphControl.GraphPane, curve);
             }
-            double selStart = PeptideFileAnalysis.TimeFromScanIndex(PeptideFileAnalysis.PeakStart.Value);
-            double selEnd = PeptideFileAnalysis.TimeFromScanIndex(PeptideFileAnalysis.PeakEnd.Value);
-            const double selectionBoxHeight = int.MaxValue;
-            selectionBoxObj = new BoxObj(selStart, selectionBoxHeight,
-                                             selEnd - selStart,
-                                             selectionBoxHeight, Color.Goldenrod,
-                                             Color.Goldenrod)
+            if (PeptideFileAnalysis.PeakStart.HasValue)
             {
-                IsClippedToChartRect = true,
-                ZOrder = ZOrder.F_BehindGrid,
-            };
-            msGraphControl.GraphPane.GraphObjList.Add(selectionBoxObj);
+                double selStart = PeptideFileAnalysis.TimeFromScanIndex(PeptideFileAnalysis.PeakStart.Value);
+                double selEnd = PeptideFileAnalysis.TimeFromScanIndex(PeptideFileAnalysis.PeakEnd.Value);
+                const double selectionBoxHeight = int.MaxValue;
+                selectionBoxObj = new BoxObj(selStart, selectionBoxHeight,
+                                                 selEnd - selStart,
+                                                 selectionBoxHeight, Color.Goldenrod,
+                                                 Color.Goldenrod)
+                {
+                    IsClippedToChartRect = true,
+                    ZOrder = ZOrder.F_BehindGrid,
+                };
+                msGraphControl.GraphPane.GraphObjList.Add(selectionBoxObj);
+            }
             msGraphControl.Invalidate();
         }
 

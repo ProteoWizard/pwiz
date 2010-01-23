@@ -112,17 +112,20 @@ namespace pwiz.Topograph.ui.Forms
                     return;
                 }
                 ShowChromatograms();
-                double selStart = TimeFromScanIndex(PeptideFileAnalysis.PeakStart.Value);
-                double selEnd = TimeFromScanIndex(PeptideFileAnalysis.PeakEnd.Value);
-                selectionBoxObj = new BoxObj(selStart, int.MaxValue,
-                                                 selEnd - selStart,
-                                                 int.MaxValue, Color.Goldenrod,
-                                                 Color.Goldenrod)
+                if (PeptideFileAnalysis.PeakStart.HasValue)
                 {
-                    IsClippedToChartRect = true,
-                    ZOrder = ZOrder.F_BehindGrid
-                };
-                msGraphControl.GraphPane.GraphObjList.Add(selectionBoxObj);
+                    double selStart = TimeFromScanIndex(PeptideFileAnalysis.PeakStart.Value);
+                    double selEnd = TimeFromScanIndex(PeptideFileAnalysis.PeakEnd.Value);
+                    selectionBoxObj = new BoxObj(selStart, int.MaxValue,
+                                                     selEnd - selStart,
+                                                     int.MaxValue, Color.Goldenrod,
+                                                     Color.Goldenrod)
+                    {
+                        IsClippedToChartRect = true,
+                        ZOrder = ZOrder.F_BehindGrid
+                    };
+                    msGraphControl.GraphPane.GraphObjList.Add(selectionBoxObj);
+                }
                 var backgroundLine = new LineObj(Color.DarkGray, times[0], PeptideFileAnalysis.Background, times[times.Count - 1], PeptideFileAnalysis.Background);
                 msGraphControl.GraphPane.GraphObjList.Add(backgroundLine);
                 double detectedLineHeight = msGraphControl.GraphPane.YAxis.Scale.Max * .9;

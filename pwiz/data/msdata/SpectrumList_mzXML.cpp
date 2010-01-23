@@ -523,7 +523,7 @@ SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, bool getBinaryData) c
     HandlerScan handler(msd_, *result, getBinaryData);
     SAXParser::parse(*is_, handler);
 
-    int msLevel = lexical_cast<int>(msLevel);
+    int msLevel = result->cvParam(MS_ms_level).valueAs<int>();
     scanMsLevelCache_[index] = msLevel;
 
     // hack to get parent scanNumber if precursorScanNum wasn't set

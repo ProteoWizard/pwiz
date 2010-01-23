@@ -269,11 +269,12 @@ namespace pwiz.Topograph.ui.Forms
                 return;
             }
             _workspaceVersion = Workspace.WorkspaceVersion;
-            if (PeptideFileAnalysis.GetChromatograms() != null)
+            if (PeptideFileAnalysis.GetChromatograms() == null)
             {
-                times = PeptideFileAnalysis.Times ?? new double[0];
-                Recalc();
+                return;
             }
+            times = PeptideFileAnalysis.Times ?? new double[0];
+            Recalc();
         }
 
         protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)

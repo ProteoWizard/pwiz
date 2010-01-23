@@ -60,7 +60,14 @@ namespace pwiz.Topograph.Model
             if (_times == null)
             {
                 _times = msDataFileImpl.GetScanTimes();
-                _msLevels = new byte[_times.Length];
+                if (_times == null)
+                {
+                    msDataFileImpl.GetScanTimesAndMsLevels(out _times, out _msLevels);
+                }
+                else
+                {
+                    _msLevels = new byte[_times.Length];
+                }
             }
             OnChange();
         }

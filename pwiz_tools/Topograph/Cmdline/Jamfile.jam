@@ -1,8 +1,6 @@
 project
     : requirements
         <library>../../common
-        <library>../../../pwiz/analysis/spectrum_processing//pwiz_analysis_spectrum_processing
-        <library>../../../pwiz/analysis//pwiz_analysis_version
     ;
 
 exe chromatogramgenerator 

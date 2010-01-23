@@ -187,7 +187,7 @@ namespace pwiz.Topograph.MsData
                 msDataFiles = EntitiesWithIdGreaterThan<DbMsDataFile>(session, _lastMsDataFileId);
                 peptideAnalyses = EntitiesWithIdGreaterThan<DbPeptideAnalysis>(session, _lastPeptideAnalysisId);
 
-                foreach (long id in session.CreateQuery("SELECT T.Id FROM " + typeof(DbPeptideAnalysis) + " T WHERE T.Id > " + _lastPeptideId).List())
+                foreach (long id in session.CreateQuery("SELECT T.Id FROM " + typeof(DbPeptideAnalysis) + " T WHERE T.Id > " + _lastPeptideAnalysisId).List())
                 {
                     peptideAnalysisIds.Add(id);
                 }

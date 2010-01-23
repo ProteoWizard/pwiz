@@ -37,65 +37,81 @@ struct ChromatogramSetSpec {
     shared_ptr<ostream> postream;
 };
 size_t FindScanIndex(vector<TimeIntensityPair> &timeIntensityPairs, double time);
-void GenerateChromatograms(MSDataFile msDataFile, vector<ChromatogramSetSpec> &chromatogramSpecs);
+void GenerateChromatograms(MSDataFile &msDataFile, vector<ChromatogramSetSpec> &chromatogramSpecs);
 void GetCentroidedSpectrum(SpectrumPtr spectrumPtr, vector<MZIntensityPair> &centroidedMzIntensityPairs);
 vector<MZIntensityPair> GetChromatogramPoint(const vector<MZIntensityPair> mzIntensityPairs, double minMz, double maxMz);
+boost::shared_ptr<FullReaderList> readerList;
+void initializeReaderList()
+{
+    if (!readerList.get())
+        readerList.reset(new FullReaderList);
+}
 
 
 
 int main(int argc, char **argv) {
-	if (argc == 1 || argc > 3) {
-		fprintf(stderr, "Usage: %s rawfile [chromatogramsfile]", argv[0]);
-		return 1;
-	}
-    ifstream ifstreamChromatograms;
-	if (argc == 3) {
-        ifstreamChromatograms.open(argv[2]);
-	}
-    vector<ChromatogramSetSpec> chromatogramSets;
-	while(true) {
-		string line;
-		if (ifstreamChromatograms.is_open()) {
-			while (!ifstreamChromatograms.eof() && line.length() == 0) {
-				getline(ifstreamChromatograms, line);
-			}
-		} else {
-			while (!cin.eof() && line.length() == 0) {
-				getline(cin, line);
-			}
+	try {
+		if (argc == 1 || argc > 3) {
+			fprintf(stderr, "Usage: %s rawfile [chromatogramsfile]", argv[0]);
+			return 1;
 		}
-		if (line.length() == 0) {
-			break;
+	    ifstream ifstreamChromatograms;
+		if (argc == 3) {
+	        ifstreamChromatograms.open(argv[2]);
 		}
-	    ChromatogramSetSpec chromatogramSetSpec;
-	    string::size_type nextPos = line.find('\t');
-	    chromatogramSetSpec.name = line.substr(0, nextPos);
-	    string::size_type pos = nextPos + 1;
-        nextPos = line.find('\t', pos);
-	    chromatogramSetSpec.minTime = atof(line.substr(pos, nextPos - pos).c_str());
-	    pos = nextPos + 1;
-	    nextPos = line.find('\t', pos);
-	    chromatogramSetSpec.maxTime = atof(line.substr(pos, nextPos - pos).c_str());
-	    while (true) {
-	        pos = nextPos + 1;
+	    vector<ChromatogramSetSpec> chromatogramSets;
+		while(true) {
+			string line;
+			if (ifstreamChromatograms.is_open()) {
+				while (!ifstreamChromatograms.eof() && line.length() == 0) {
+					getline(ifstreamChromatograms, line);
+				}
+			} else {
+				while (!cin.eof() && line.length() == 0) {
+					getline(cin, line);
+				}
+			}
+			if (line.length() == 0) {
+				break;
+			}
+		    ChromatogramSetSpec chromatogramSetSpec;
+		    string::size_type nextPos = line.find('\t');
+		    chromatogramSetSpec.name = line.substr(0, nextPos);
+		    string::size_type pos = nextPos + 1;
 	        nextPos = line.find('\t', pos);
-	        ChromatogramSpec chromatogramSpec;
-	        chromatogramSpec.mzMin = atof(line.substr(pos, nextPos - pos).c_str());
-	        pos = nextPos + 1;
-	        nextPos = line.find('\t', pos);
-	        if (nextPos == string.npos) {
-	            break;
-	        }
-	        chromatogramSpec.mzMax = atof(line.substr(pos, nextPos - pos).c_str());
-	        chromatogramSetSpec.chromatogramSpecs.push_back(chromatogramSpec);
-	    }
-	    chromatogramSets.push_back(chromatogramSetSpec);
-	}
-	GenerateChromatograms(MSDataFile(argv[1]), chromatogramSets);
-	return 0;
+		    chromatogramSetSpec.minTime = atof(line.substr(pos, nextPos - pos).c_str());
+		    pos = nextPos + 1;
+		    nextPos = line.find('\t', pos);
+		    chromatogramSetSpec.maxTime = atof(line.substr(pos, nextPos - pos).c_str());
+		    while (true) {
+		        pos = nextPos + 1;
+		        nextPos = line.find('\t', pos);
+		        ChromatogramSpec chromatogramSpec;
+		        chromatogramSpec.mzMin = atof(line.substr(pos, nextPos - pos).c_str());
+		        pos = nextPos + 1;
+		        nextPos = line.find('\t', pos);
+		        if (nextPos == string.npos) {
+		            break;
+		        }
+		        chromatogramSpec.mzMax = atof(line.substr(pos, nextPos - pos).c_str());
+		        chromatogramSetSpec.chromatogramSpecs.push_back(chromatogramSpec);
+		    }
+		    chromatogramSets.push_back(chromatogramSetSpec);
+		}
+		
+		initializeReaderList();
+		MSDataFile msDataFile(argv[1], (Reader *) readerList.get());
+		GenerateChromatograms(msDataFile, chromatogramSets);
+		return 0;
+	} catch (exception& e)    {
+        cerr << e.what() << endl;
+    } catch (...) {
+        cerr << "[" << argv[0] << "] Caught unknown exception.\n";
+    }
+    return 1;
 }
 
-void GenerateChromatograms(MSDataFile msDataFile, vector<ChromatogramSetSpec> &chromatogramSpecs) {
+void GenerateChromatograms(MSDataFile &msDataFile, vector<ChromatogramSetSpec> &chromatogramSpecs) {
     vector<ChromatogramSetSpec *> remainingChromatograms;
     SpectrumListPtr spectrumListPtr = msDataFile.run.spectrumListPtr;
     size_t totalScanCount = spectrumListPtr->size();

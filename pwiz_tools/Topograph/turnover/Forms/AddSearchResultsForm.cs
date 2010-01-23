@@ -215,6 +215,13 @@ namespace pwiz.Topograph.ui.Forms
                     searchResults = SearchResults.ReadSQT(msDataFileName, stream, ProgressMonitor);
                     searchResults = FilterSearchResults(peptides, searchResults);
                 }
+                else if (file.ToLower().EndsWith(".pep.xml"))
+                {
+                    msDataFileName = Path.GetFileName(file);
+                    msDataFileName = msDataFileName.Substring(0, msDataFileName.Length - 8);
+                    searchResults = SearchResults.ReadPepXml(msDataFileName, stream, ProgressMonitor);
+                    searchResults = FilterSearchResults(peptides, searchResults);
+                }
                 else
                 {
                     msDataFileName = null;
@@ -364,7 +371,8 @@ namespace pwiz.Topograph.ui.Forms
                             {"LastDetectedScan", dbPeptideSearchResult.LastDetectedScan},
                             {"FirstTracerCount", dbPeptideSearchResult.FirstTracerCount},
                             {"LastTracerCount", dbPeptideSearchResult.LastTracerCount},
-                            {"Version",1}
+                            {"Version",1},
+                            {"ValidationStatus", 0},
                         }));
                 }
                 foreach (var dbPeptideSearchResult in searchResultsToUpdate.Values)
@@ -526,11 +534,20 @@ namespace pwiz.Topograph.ui.Forms
 
         private void btnChooseFiles_Click(object sender, EventArgs e)
         {
+            if (cbxOnlyExistingPeptides.Checked)
+            {
+                if (Workspace.Peptides.ChildCount == 0)
+                {
+                    MessageBox.Show(this, "This workspace does not contain any peptides.  Either uncheck the 'Only existing peptides' checkbox, or add DTASelect search results first.", Program.AppName);
+                    return;
+                }
+            }
             Settings.Default.Reload();
             var openFileDialog = new OpenFileDialog
             {
                 Filter =
-                    "Sequest search results (*.sqt)|*.sqt|All Files|*.*",
+                    "Search results(*.sqt;*.pep.xml)|*.sqt;*.pep.xml",
+
                 Multiselect = true,
                 InitialDirectory = Settings.Default.SearchResultsDirectory
             };
@@ -548,7 +565,7 @@ namespace pwiz.Topograph.ui.Forms
             Settings.Default.Reload();
             var openFileDialog = new OpenFileDialog
                                      {
-                                         Filter = "DTASelect Filter Files (*filter*.txt|*filter*.txt|All Files|*.*",
+                                         Filter = "DTASelect Filter Files (*filter*.txt)|*filter*.txt|All Files|*.*",
                                          Multiselect = true,
                                          InitialDirectory = Settings.Default.SearchResultsDirectory
                                      };

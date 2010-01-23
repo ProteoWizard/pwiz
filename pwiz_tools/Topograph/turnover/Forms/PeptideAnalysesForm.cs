@@ -33,6 +33,7 @@ namespace pwiz.Topograph.ui.Forms
 {
     public partial class PeptideAnalysesForm : WorkspaceForm
     {
+        private const string Title = "Peptide Analyses";
         private bool _initialQueryCompleted;
         private readonly Dictionary<long, DataGridViewRow> _peptideAnalysisRows = new Dictionary<long, DataGridViewRow>();
         private readonly object _requeryLock = new object();
@@ -44,7 +45,7 @@ namespace pwiz.Topograph.ui.Forms
         public PeptideAnalysesForm(Workspace workspace) : base(workspace)
         {
             InitializeComponent();
-            TabText = Name = "Peptide Analyses";
+            TabText = Name = Title + " (loading)";
             deleteMenuItem.Click += _deleteAnalysesMenuItem_Click;
             
             colMinScoreTracerCount.DefaultCellStyle.Format = "0.####";
@@ -248,6 +249,7 @@ namespace pwiz.Topograph.ui.Forms
 
         private void UpdateRows(Dictionary<long, PeptideAnalysisRow> rows)
         {
+            Text = TabText = Title;
             if (rows.Count == 0)
             {
                 return;

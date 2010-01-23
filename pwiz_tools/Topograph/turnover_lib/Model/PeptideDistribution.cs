@@ -102,7 +102,7 @@ namespace pwiz.Topograph.Model
         }
 
         public double Score { get; set; }
-        public double TotalAmount
+        public double TotalPercentAmount
         {
             get
             {
@@ -152,7 +152,7 @@ namespace pwiz.Topograph.Model
         {
             get
             {
-                return 100*(1 - GetChild("").PercentAmountValue/TotalAmount);
+                return 100*(1 - GetChild("").PercentAmountValue/TotalPercentAmount);
             }
         }
         public PeptideQuantity PeptideQuantity { get; private set; }

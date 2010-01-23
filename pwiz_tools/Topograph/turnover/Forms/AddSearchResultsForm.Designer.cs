@@ -263,7 +263,7 @@
             this.groupBox2.Size = new System.Drawing.Size(380, 226);
             this.groupBox2.TabIndex = 9;
             this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "Sequest";
+            this.groupBox2.Text = "Sequest or .pep.xml";
             // 
             // label6
             // 
@@ -273,8 +273,8 @@
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(357, 33);
             this.label6.TabIndex = 6;
-            this.label6.Text = "You can specify restrictions on which peptides are added from a Sequest search re" +
-                "sults file";
+            this.label6.Text = "You can specify restrictions on which peptides are added from a Sequest (.sqt) or" +
+                " pep.xml search results file";
             // 
             // AddSearchResultsForm
             // 
