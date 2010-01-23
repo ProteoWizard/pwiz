@@ -39,6 +39,7 @@
             this.graphControl.Dock = System.Windows.Forms.DockStyle.Fill;
             this.graphControl.EditButtons = System.Windows.Forms.MouseButtons.Left;
             this.graphControl.EditModifierKeys = System.Windows.Forms.Keys.None;
+            this.graphControl.IsShowCopyMessage = false;
             msGraphPane1.AllowCurveOverlap = false;
             msGraphPane1.BaseDimension = 8F;
             msGraphPane1.CurrentItemType = pwiz.MSGraph.MSGraphItemType.Unknown;

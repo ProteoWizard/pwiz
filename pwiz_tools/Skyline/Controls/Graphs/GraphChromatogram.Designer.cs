@@ -45,6 +45,7 @@
             this.graphControl.EditModifierKeys = System.Windows.Forms.Keys.None;
             this.graphControl.IsEnableVPan = false;
             this.graphControl.IsEnableVZoom = false;
+            this.graphControl.IsShowCopyMessage = false;
             this.graphControl.Location = new System.Drawing.Point(0, 0);
             this.graphControl.Name = "graphControl";
             this.graphControl.ScrollGrace = 0;
