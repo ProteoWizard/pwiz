@@ -50,7 +50,7 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestLibraryBuild()
         {
-            TestFilesZip = @"TestFunctional\LibraryBuild.zip";
+            TestFilesZip = @"TestFunctional\LibraryBuildTest.zip";
             RunFunctionalTest();
         }
 

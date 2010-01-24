@@ -43,7 +43,7 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestBackgroundProteome()
         {
-            TestFilesZip = @"TestFunctional\BackgroundProteome.zip";
+            TestFilesZip = @"TestFunctional\BackgroundProteomeTest.zip";
             RunFunctionalTest();
         }
 

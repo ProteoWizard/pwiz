@@ -102,8 +102,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="BackgroundProteome.zip" />
-    <None Include="LibraryBuild.zip" />
+    <None Include="AnnotationTest.zip" />
+    <None Include="BackgroundProteomeTest.zip" />
+    <None Include="LibraryBuildTest.zip" />
     <None Include="OptimizeTest.zip" />
     <None Include="PrecursorTest.zip" />
   </ItemGroup>

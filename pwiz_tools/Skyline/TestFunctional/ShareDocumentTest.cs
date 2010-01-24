@@ -63,7 +63,7 @@ namespace pwiz.SkylineTestFunctional
             string shareCompletePath = TestFilesDir.GetTestPath("ShareComplete.zip");
             Share(shareCompletePath, true, origFileSet, newFileSet);
             WaitForLibraries();
-/*
+
             const string blibLibName = "Michrom_QTRAP_v4.blib";
             string nistLibName = "YeastMini.msp";
             var nistLibEntry = origFileSet[nistLibName];
@@ -76,7 +76,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(origFileSet[blibLibName].UncompressedSize,
                 newFileSet[blibLibName].UncompressedSize);
             WaitForLibraries();
-
+/*
             SelectNode(SrmDocument.Level.Peptides, 0);
             WaitForGraphs();
             string prefix = Path.GetFileNameWithoutExtension(DOCUMENT_NAME);
