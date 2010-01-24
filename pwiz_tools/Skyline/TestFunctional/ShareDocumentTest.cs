@@ -16,14 +16,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Collections.Generic;
 using System.IO;
 using Ionic.Zip;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.SettingsUI;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -33,7 +31,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class ShareDocumentTest : AbstractFunctionalTest
     {
-        //[TestMethod]
+        [TestMethod]
         public void TestDocumentSharing()
         {
             TestFilesZip = @"TestFunctional\PrecursorTest.zip";
