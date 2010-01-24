@@ -200,6 +200,12 @@
     <Compile Include="Forms\AddSearchResultsForm.Designer.cs">
       <DependentUpon>AddSearchResultsForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\ErrorForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\ErrorForm.Designer.cs">
+      <DependentUpon>ErrorForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\GridFilterForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -384,6 +390,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\EnrichmentDialog.resx">
       <DependentUpon>EnrichmentDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\ErrorForm.resx">
+      <DependentUpon>ErrorForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\HalfLifeForm.resx">
       <DependentUpon>HalfLifeForm.cs</DependentUpon>

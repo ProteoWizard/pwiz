@@ -52,6 +52,38 @@ namespace pwiz.Topograph.ui.Forms
             Instance = this;
         }
 
+        void ErrorHandler_ErrorAdded(Topograph.Util.Error error)
+        {
+            try
+            {
+                BeginInvoke(new Action(delegate
+                                           {
+                                               var form = Program.FindOpenForm<ErrorForm>();
+                                               if (form != null)
+                                               {
+                                                   return;
+                                               }
+                                               new ErrorForm().Show(this);
+                                           }));
+            }
+            catch
+            {
+                
+            }
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            ErrorHandler.ErrorAdded += ErrorHandler_ErrorAdded;
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            ErrorHandler.ErrorAdded -= ErrorHandler_ErrorAdded;
+            base.OnHandleDestroyed(e);
+        }
+
         private IList<ToolStripMenuItem> WorkspaceOpenMenuItems
         {
             get
@@ -799,6 +831,17 @@ namespace pwiz.Topograph.ui.Forms
             {
                 Workspace = OpenWorkspace(workspace.DatabasePath);
             }
+        }
+
+        private void errorsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var form = Program.FindOpenForm<ErrorForm>();
+            if (form != null)
+            {
+                form.Activate();
+                return;
+            }
+            new ErrorForm().Show(this);
         }
     }
 }

@@ -5,6 +5,7 @@ using System.Threading;
 using System.Windows.Forms;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.ui.Forms;
+using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.ui
 {
@@ -25,8 +26,7 @@ namespace pwiz.Topograph.ui
         }
         public static void Application_ThreadExceptionEventHandler(Object sender, ThreadExceptionEventArgs e)
         {
-            Console.Out.WriteLine(e.Exception);
-            MessageBox.Show("Unhandled exception: " + e.Exception);
+            ErrorHandler.LogException("Topograph", "Unhandled exception", e.Exception);
         }
         public static T FindOpenForm<T>() where T : Form
         {

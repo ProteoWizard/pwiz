@@ -36,6 +36,7 @@
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.newOnlineWorkspaceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openOnlineWorkspaceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.outputWorkspaceSQLToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.saveWorkspaceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.closeWorkspaceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -57,7 +58,7 @@
             this.updateProteinNamesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.machineSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dataDirectoryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.outputWorkspaceSQLToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.errorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -135,6 +136,14 @@
             this.openOnlineWorkspaceToolStripMenuItem.Text = "Connect to Online Workspace...";
             this.openOnlineWorkspaceToolStripMenuItem.Click += new System.EventHandler(this.openOnlineWorkspaceToolStripMenuItem_Click);
             // 
+            // outputWorkspaceSQLToolStripMenuItem
+            // 
+            this.outputWorkspaceSQLToolStripMenuItem.Enabled = false;
+            this.outputWorkspaceSQLToolStripMenuItem.Name = "outputWorkspaceSQLToolStripMenuItem";
+            this.outputWorkspaceSQLToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
+            this.outputWorkspaceSQLToolStripMenuItem.Text = "Export Workspace SQL...";
+            this.outputWorkspaceSQLToolStripMenuItem.Click += new System.EventHandler(this.outputWorkspaceSQLToolStripMenuItem_Click);
+            // 
             // toolStripSeparator3
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
@@ -186,7 +195,8 @@
             this.queryToolStripMenuItem,
             this.mercuryToolStripMenuItem,
             this.halfLivesToolStripMenuItem,
-            this.locksToolStripMenuItem});
+            this.locksToolStripMenuItem,
+            this.errorsToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "View";
@@ -307,13 +317,12 @@
             this.dataDirectoryToolStripMenuItem.Text = "Data Directory...";
             this.dataDirectoryToolStripMenuItem.Click += new System.EventHandler(this.dataDirectoryToolStripMenuItem_Click);
             // 
-            // outputWorkspaceSQLToolStripMenuItem
+            // errorsToolStripMenuItem
             // 
-            this.outputWorkspaceSQLToolStripMenuItem.Enabled = false;
-            this.outputWorkspaceSQLToolStripMenuItem.Name = "outputWorkspaceSQLToolStripMenuItem";
-            this.outputWorkspaceSQLToolStripMenuItem.Size = new System.Drawing.Size(241, 22);
-            this.outputWorkspaceSQLToolStripMenuItem.Text = "Export Workspace SQL...";
-            this.outputWorkspaceSQLToolStripMenuItem.Click += new System.EventHandler(this.outputWorkspaceSQLToolStripMenuItem_Click);
+            this.errorsToolStripMenuItem.Name = "errorsToolStripMenuItem";
+            this.errorsToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.errorsToolStripMenuItem.Text = "Errors";
+            this.errorsToolStripMenuItem.Click += new System.EventHandler(this.errorsToolStripMenuItem_Click);
             // 
             // TurnoverForm
             // 
@@ -364,5 +373,6 @@
         private System.Windows.Forms.ToolStripMenuItem dataDirectoryToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem locksToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem outputWorkspaceSQLToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem errorsToolStripMenuItem;
     }
 }

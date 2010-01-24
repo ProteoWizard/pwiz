@@ -255,7 +255,7 @@ namespace pwiz.Topograph.MsData
                 catch (Exception exception)
                 {
                     _eventWaitHandle.Reset();
-                    Console.Out.WriteLine(exception);
+                    ErrorHandler.LogException("Result Calculator", "Exception", exception);
                 }
             }
         }

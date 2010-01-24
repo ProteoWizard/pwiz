@@ -286,7 +286,7 @@ namespace pwiz.Topograph.MsData
                 catch(Exception exception)
                 {
                     _eventWaitHandle.Set();
-                    Console.Out.WriteLine(exception);
+                    ErrorHandler.LogException("Chromatogram generator", "Error finding next task", exception);
                     _eventWaitHandle.WaitOne();
                     continue;
                 }
@@ -339,14 +339,15 @@ namespace pwiz.Topograph.MsData
                         chromatogramTask.BeginLock();
                         GenerateChromatograms(chromatogramTask);
                     }
-                    catch (OutOfMemoryException)
-                    {
-                        maxConcurrentAnalyses /= 2;
-                        maxConcurrentAnalyses = Math.Max(maxConcurrentAnalyses, 1);
-                    }
                     catch (Exception exception)
                     {
-                        Console.Out.WriteLine(exception);
+
+                        ErrorHandler.LogException("Chromatogram Generator", "Exception generating chromatograms", exception);
+                        if (exception is OutOfMemoryException)
+                        {
+                            maxConcurrentAnalyses /= 2;
+                            maxConcurrentAnalyses = Math.Max(maxConcurrentAnalyses, 1);
+                        }
                     }
                 }
             }
@@ -400,13 +401,14 @@ namespace pwiz.Topograph.MsData
             var msDataFile = chromatogramTask.MsDataFile;
             var analyses = new List<AnalysisChromatograms>(chromatogramTask.AnalysisChromatograms);
             MsDataFileImpl pwizMsDataFileImpl;
+            var path = _workspace.GetDataFilePath(msDataFile.Name);
             try
             {
-                pwizMsDataFileImpl = new MsDataFileImpl(_workspace.GetDataFilePath(msDataFile.Name));
+                pwizMsDataFileImpl = new MsDataFileImpl(path);
             }
             catch (Exception exception)
             {
-                ErrorLog.LogException(exception);
+                ErrorHandler.LogException("Chromatogram Generator", "Error opening " + path, exception);
                 _rejectedMsDataFileIds.Add(msDataFile.Id.Value);
                 return;
             }

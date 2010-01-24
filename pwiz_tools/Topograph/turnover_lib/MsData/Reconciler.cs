@@ -83,7 +83,7 @@ namespace pwiz.Topograph.MsData
                 }
                 catch (Exception exception)
                 {
-                    ErrorLog.LogException(exception);
+                    ErrorHandler.LogException("Reconciler", "Exception", exception);
                 }
             }
         }

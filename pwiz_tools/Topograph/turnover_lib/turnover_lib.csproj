@@ -198,7 +198,6 @@
     <Compile Include="Enrichment\ChargedPeptide.cs" />
     <Compile Include="Enrichment\PeakFinder.cs" />
     <Compile Include="Enrichment\TurnoverCalculator.cs" />
-    <Compile Include="MsData\ErrorLog.cs" />
     <Compile Include="MsData\MsDataFiles.cs" />
     <Compile Include="MsData\HalfLifeCalculator.cs" />
     <Compile Include="MsData\Reconciler.cs" />
@@ -217,6 +216,8 @@
     <Compile Include="Util\AutoLock.cs" />
     <Compile Include="Util\ConvertHelper.cs" />
     <Compile Include="Util\Dictionaries.cs" />
+    <Compile Include="Util\Error.cs" />
+    <Compile Include="Util\ErrorHandler.cs" />
     <Compile Include="Util\Lists.cs" />
     <Compile Include="Util\LongOperation.cs" />
     <Compile Include="Util\PeakDivider.cs" />
