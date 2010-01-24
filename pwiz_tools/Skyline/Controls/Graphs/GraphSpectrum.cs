@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -98,6 +99,19 @@ namespace pwiz.Skyline.Controls.Graphs
         public int PeaksCount { get { return GraphItem.PeaksCount; } }
         public int PeaksMatchedCount { get { return GraphItem.PeaksMatchedCount; } }
         public int PeaksRankedCount { get { return GraphItem.PeaksRankedCount; } }        
+        public IEnumerable<string> IonLabels
+        {
+            get
+            {
+                foreach (var graphObj in GraphPane.GraphObjList)
+                {
+                    var label = graphObj as TextObj;
+                    if (label != null)
+                        yield return label.Text;
+                }
+            }
+        }
+
         public string SelectedIonLabel
         {
             get

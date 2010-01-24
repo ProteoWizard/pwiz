@@ -19,7 +19,7 @@
     <GenerateManifests>true</GenerateManifests>
     <TargetZone>LocalIntranet</TargetZone>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
-    <SignManifests>false</SignManifests>
+    <SignManifests>true</SignManifests>
     <SignAssembly>false</SignAssembly>
     <PublishUrl>C:\Program Files\LabKey Server\root\software\Skyline-daily\</PublishUrl>
     <Install>true</Install>
@@ -37,8 +37,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>1528</ApplicationRevision>
-    <ApplicationVersion>0.5.1.1528</ApplicationVersion>
+    <ApplicationRevision>1643</ApplicationRevision>
+    <ApplicationVersion>0.5.1.1643</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>

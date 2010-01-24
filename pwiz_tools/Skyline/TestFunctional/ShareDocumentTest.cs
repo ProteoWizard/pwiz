@@ -31,9 +31,10 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class ShareDocumentTest : AbstractFunctionalTest
     {
-        [TestMethod]
+//        [TestMethod]
         public void TestDocumentSharing()
         {
+            TestDirectoryName = "ShareDocumentTest";
             TestFilesZip = @"TestFunctional\PrecursorTest.zip";
             RunFunctionalTest();
         }

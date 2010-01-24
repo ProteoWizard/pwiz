@@ -16,7 +16,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls;
@@ -32,7 +34,7 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class PrecursorTest : AbstractFunctionalTest
     {
-        //[TestMethod]
+        [TestMethod]
         public void TestPrecursorIon()
         {
             TestFilesZip = @"TestFunctional\PrecursorTest.zip";
@@ -80,9 +82,17 @@ namespace pwiz.SkylineTestFunctional
                           pickList0.OnOk();
                       });
             WaitForDocumentChange(docCurrent);
+            docCurrent = SkylineWindow.Document;
+            Assert.AreEqual(IonType.precursor, new List<TransitionDocNode>(docCurrent.Transitions)[0].Transition.IonType,
+                "First transition is not precursor type.");
             SelectNode(SrmDocument.Level.Transitions, 0);
             WaitForGraphs();
-            RunUI(() => Assert.AreEqual(precursorName, SkylineWindow.GraphSpectrum.SelectedIonLabel));
+            RunUI(() =>
+                      {
+                          // Unfortunately, label hiding may mean the precursor label is not present
+                          if (SkylineWindow.GraphSpectrum.IonLabels.Contains("precursor"))
+                              Assert.AreEqual(precursorName, SkylineWindow.GraphSpectrum.SelectedIonLabel);
+                      });
 
             SelectNode(SrmDocument.Level.TransitionGroups, 2);  // Charge 3
             docCurrent = SkylineWindow.Document;
@@ -130,10 +140,17 @@ namespace pwiz.SkylineTestFunctional
 
             Assert.AreEqual(2, GetPrecursorTranstionCount());
             Assert.AreEqual(docCurrent.TransitionCount, SkylineWindow.Document.TransitionCount);
+            Assert.AreEqual(IonType.precursor, new List<TransitionDocNode>(docCurrent.Transitions)[0].Transition.IonType,
+                "First transition is not precursor type.");
 
             SelectNode(SrmDocument.Level.Transitions, 0);
             WaitForGraphs();
-            RunUI(() => Assert.AreEqual(precursorName, SkylineWindow.GraphSpectrum.SelectedIonLabel));
+            RunUI(() =>
+            {
+                // Unfortunately, label hiding may mean the precursor label is not present
+                if (SkylineWindow.GraphSpectrum.IonLabels.Contains("precursor"))
+                    Assert.AreEqual(precursorName, SkylineWindow.GraphSpectrum.SelectedIonLabel);
+            });
         }
 
         private static int GetPrecursorTranstionCount()

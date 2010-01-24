@@ -37,7 +37,8 @@ namespace pwiz.SkylineTestFunctional
         ///</summary>
         public TestContext TestContext { get; set; }
         public string TestFilesZip { get; set; }
-        public TestFilesDir TestFilesDir { get; private set; }
+        public string TestDirectoryName { get; set; }
+        public TestFilesDir TestFilesDir { get; set; }
         private readonly List<Exception> _testExceptions = new List<Exception>();
         private bool _testCompleted;
 
@@ -124,7 +125,9 @@ namespace pwiz.SkylineTestFunctional
 
         public static bool WaitForDocumentChange(SrmDocument docCurrent)
         {
-            return WaitForCondition(() => !ReferenceEquals(docCurrent, SkylineWindow.Document));
+            // Make sure the document changes on the UI thread, since tests are mostly
+            // interested in interacting with the document on the UI thread.
+            return WaitForConditionUI(() => !ReferenceEquals(docCurrent, SkylineWindow.DocumentUI));
         }
 
         public static bool WaitForCondition(Func<bool> func)
@@ -192,7 +195,7 @@ namespace pwiz.SkylineTestFunctional
                 }
                 else
                 {
-                    TestFilesDir = new TestFilesDir(TestContext, TestFilesZip);
+                    TestFilesDir = new TestFilesDir(TestContext, TestFilesZip, TestDirectoryName);
                     RunTest();
                     TestFilesDir.Dispose();
                 }
@@ -278,10 +281,13 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         /// <param name="testContext">The test context for the test creating the directory</param>
         /// <param name="relativePathZip">A root project relative path to the ZIP file</param>
-        public TestFilesDir(TestContext testContext, string relativePathZip)
+        /// <param name="directoryName">Name of directory to create in the test results</param>
+        public TestFilesDir(TestContext testContext, string relativePathZip, string directoryName)
         {
             TestContext = testContext;
-            FullPath = TestContext.GetTestPath(Path.GetFileNameWithoutExtension(relativePathZip));
+            if (directoryName == null)
+                directoryName = Path.GetFileNameWithoutExtension(relativePathZip);
+            FullPath = TestContext.GetTestPath(directoryName);
             TestContext.ExtractTestFiles(relativePathZip, FullPath);
         }
 
