@@ -86,13 +86,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(IonType.precursor, new List<TransitionDocNode>(docCurrent.Transitions)[0].Transition.IonType,
                 "First transition is not precursor type.");
             SelectNode(SrmDocument.Level.Transitions, 0);
-            WaitForGraphs();
-            RunUI(() =>
-                      {
-                          // Unfortunately, label hiding may mean the precursor label is not present
-                          if (SkylineWindow.GraphSpectrum.IonLabels.Contains("precursor"))
-                              Assert.AreEqual(precursorName, SkylineWindow.GraphSpectrum.SelectedIonLabel);
-                      });
+            VerifySelectedIon(precursorName);
 
             SelectNode(SrmDocument.Level.TransitionGroups, 2);  // Charge 3
             docCurrent = SkylineWindow.Document;
@@ -144,13 +138,24 @@ namespace pwiz.SkylineTestFunctional
                 "First transition is not precursor type.");
 
             SelectNode(SrmDocument.Level.Transitions, 0);
+            VerifySelectedIon(precursorName);
+        }
+
+        private static void VerifySelectedIon(string ionName)
+        {
             WaitForGraphs();
             RunUI(() =>
-            {
-                // Unfortunately, label hiding may mean the precursor label is not present
-                if (SkylineWindow.GraphSpectrum.IonLabels.Contains("precursor"))
-                    Assert.AreEqual(precursorName, SkylineWindow.GraphSpectrum.SelectedIonLabel);
-            });
+                      {
+                          // Unfortunately, label hiding may mean the precursor label is not present
+                          string ionSelected = SkylineWindow.GraphSpectrum.SelectedIonLabel;
+                          if (SkylineWindow.GraphSpectrum.IonLabels.Contains("precursor"))
+                              Assert.AreEqual(ionName, ionSelected);
+                          else
+                          {
+                              Assert.IsNull(ionSelected,
+                                  string.Format("Precursor label missing but selected ion label '{0}' found.", ionSelected));                              
+                          }
+                      });
         }
 
         private static int GetPrecursorTranstionCount()
