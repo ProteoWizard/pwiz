@@ -85,7 +85,7 @@ namespace pwiz.SkylineTestFunctional
                           Assert.AreEqual("Michrom_QTRAP_v4 (" + prefix + ")", SkylineWindow.GraphSpectrum.LibraryName);
                           Assert.IsTrue(SkylineWindow.GraphSpectrum.PeaksRankedCount > 0);
                       });
-            SelectNode(SrmDocument.Level.Peptides, SkylineWindow.DocumentUI.PeptideCount - 1);
+/*            SelectNode(SrmDocument.Level.Peptides, SkylineWindow.DocumentUI.PeptideCount - 1);
             WaitForGraphs();
             RunUI(() =>
                       {
