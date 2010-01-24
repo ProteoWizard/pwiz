@@ -97,7 +97,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(SkylineWindow.EditDelete);
             SelectNode(SrmDocument.Level.PeptideGroups, 1);
             RunUI(SkylineWindow.EditDelete);
-
+/*
             // Deleting the only peptide used by the NIST library should have
             // gotten rid of it.
             origFileSet.Remove(nistLibName);
@@ -107,7 +107,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(origFileSet[blibLibName].UncompressedSize >
                 newFileSet[blibLibName].UncompressedSize);
             WaitForLibraries();
-/*
+//
             SelectNode(SrmDocument.Level.Transitions, 0);
             WaitForGraphs();
 
