@@ -76,7 +76,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(origFileSet[blibLibName].UncompressedSize,
                 newFileSet[blibLibName].UncompressedSize);
             WaitForLibraries();
-/*
+
             SelectNode(SrmDocument.Level.Peptides, 0);
             WaitForGraphs();
             string prefix = Path.GetFileNameWithoutExtension(DOCUMENT_NAME);
@@ -107,7 +107,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(origFileSet[blibLibName].UncompressedSize >
                 newFileSet[blibLibName].UncompressedSize);
             WaitForLibraries();
-
+/*
             SelectNode(SrmDocument.Level.Transitions, 0);
             WaitForGraphs();
 
