@@ -85,7 +85,7 @@ namespace pwiz.SkylineTestFunctional
                           Assert.AreEqual("Michrom_QTRAP_v4 (" + prefix + ")", SkylineWindow.GraphSpectrum.LibraryName);
                           Assert.IsTrue(SkylineWindow.GraphSpectrum.PeaksRankedCount > 0);
                       });
-            SelectNode(SrmDocument.Level.Peptides, SkylineWindow.DocumentUI.PeptideCount - 1);
+/*            SelectNode(SrmDocument.Level.Peptides, SkylineWindow.DocumentUI.PeptideCount - 1);
             WaitForGraphs();
             RunUI(() =>
                       {
@@ -93,10 +93,9 @@ namespace pwiz.SkylineTestFunctional
                           Assert.IsTrue(SkylineWindow.GraphSpectrum.PeaksRankedCount > 0);
                       });
 /*
-            SelectNode(SrmDocument.Level.PeptideGroups, 2);
-            RunUI(SkylineWindow.EditDelete);
-            SelectNode(SrmDocument.Level.PeptideGroups, 1);
-            RunUI(SkylineWindow.EditDelete);
+            DeleteLastProtein();
+            DeleteLastProtein();
+
 /*
             // Deleting the only peptide used by the NIST library should have
             // gotten rid of it.
@@ -165,6 +164,14 @@ namespace pwiz.SkylineTestFunctional
         private static void WaitForLibraries()
         {
             WaitForConditionUI(() => SkylineWindow.DocumentUI.Settings.PeptideSettings.Libraries.IsLoaded);
+        }
+
+        private static void DeleteLastProtein()
+        {
+            var docCurrent = SkylineWindow.Document;
+            SelectNode(SrmDocument.Level.PeptideGroups, SkylineWindow.Document.PeptideGroupCount - 1);
+            RunUI(SkylineWindow.EditDelete);
+            WaitForDocumentChange(docCurrent);
         }
     }
 }
