@@ -217,8 +217,9 @@ namespace pwiz.Skyline
         {
             get
             {
-                // Can only be accessed from the UI thread.
-                Debug.Assert(!InvokeRequired);
+                // May only be accessed from the UI thread.
+                if (InvokeRequired)
+                    throw new InvalidOperationException("The DocumentUI property may only be accessed on the UI thread.");
 
                 return _documentUI;
             }
