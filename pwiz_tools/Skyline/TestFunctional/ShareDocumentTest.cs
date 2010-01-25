@@ -86,17 +86,17 @@ namespace pwiz.SkylineTestFunctional
                           Assert.IsTrue(SkylineWindow.GraphSpectrum.PeaksRankedCount > 0);
                       });
             SelectNode(SrmDocument.Level.Peptides, SkylineWindow.Document.PeptideCount - 1);
-/*            WaitForGraphs();
+//*
+            WaitForGraphs();
             RunUI(() =>
                       {
                           Assert.AreEqual("YeastMini (" + prefix + ")", SkylineWindow.GraphSpectrum.LibraryName);
                           Assert.IsTrue(SkylineWindow.GraphSpectrum.PeaksRankedCount > 0);
                       });
-/*
+
             DeleteLastProtein();
             DeleteLastProtein();
 
-/*
             // Deleting the only peptide used by the NIST library should have
             // gotten rid of it.
             origFileSet.Remove(nistLibName);
@@ -106,7 +106,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsTrue(origFileSet[blibLibName].UncompressedSize >
                 newFileSet[blibLibName].UncompressedSize);
             WaitForLibraries();
-//
+
             SelectNode(SrmDocument.Level.Transitions, 0);
             WaitForGraphs();
 
