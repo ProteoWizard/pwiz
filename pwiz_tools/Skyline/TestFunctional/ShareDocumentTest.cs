@@ -85,7 +85,7 @@ namespace pwiz.SkylineTestFunctional
                           Assert.AreEqual("Michrom_QTRAP_v4 (" + prefix + ")", SkylineWindow.GraphSpectrum.LibraryName);
                           Assert.IsTrue(SkylineWindow.GraphSpectrum.PeaksRankedCount > 0);
                       });
-            SelectNode(SrmDocument.Level.Peptides, SkylineWindow.DocumentUI.PeptideCount - 1);
+            SelectNode(SrmDocument.Level.Peptides, SkylineWindow.Document.PeptideCount - 1);
 /*            WaitForGraphs();
             RunUI(() =>
                       {
@@ -169,7 +169,7 @@ namespace pwiz.SkylineTestFunctional
         private static void DeleteLastProtein()
         {
             var docCurrent = SkylineWindow.Document;
-            SelectNode(SrmDocument.Level.PeptideGroups, SkylineWindow.Document.PeptideGroupCount - 1);
+            SelectNode(SrmDocument.Level.PeptideGroups, docCurrent.PeptideGroupCount - 1);
             RunUI(SkylineWindow.EditDelete);
             WaitForDocumentChange(docCurrent);
         }
