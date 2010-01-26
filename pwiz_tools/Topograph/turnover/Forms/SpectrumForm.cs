@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -25,8 +25,8 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
-using MSGraph;
 using pwiz.Common.Chemistry;
+using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
@@ -224,7 +224,7 @@ namespace pwiz.Topograph.ui.Forms
             return new PointAnnotation();
         }
 
-        public void AddAnnotations(MSPointList pointList, GraphObjList annotations)
+        public void AddAnnotations(MSGraphPane graphPane, Graphics g, MSPointList pointList, GraphObjList annotations)
         {
         }
 

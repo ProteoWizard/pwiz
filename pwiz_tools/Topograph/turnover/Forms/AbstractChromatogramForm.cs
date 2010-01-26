@@ -26,7 +26,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
-using MSGraph;
+using pwiz.MSGraph;
 using NHibernate;
 using NHibernate.Criterion;
 using pwiz.Topograph.Data;
@@ -359,7 +359,7 @@ namespace pwiz.Topograph.ui.Forms
             return new PointAnnotation();
         }
 
-        public void AddAnnotations(MSPointList pointList, GraphObjList annotations)
+        public void AddAnnotations(MSGraphPane graphPane, Graphics g, MSPointList pointList, GraphObjList annotations)
         {
         }
 

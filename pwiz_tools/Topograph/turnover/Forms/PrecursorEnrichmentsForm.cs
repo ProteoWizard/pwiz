@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -25,7 +25,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
-using MSGraph;
+using pwiz.MSGraph;
 using pwiz.Common.Chemistry;
 using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;

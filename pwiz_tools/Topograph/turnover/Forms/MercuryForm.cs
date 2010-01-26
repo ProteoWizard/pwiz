@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -6,7 +6,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using MSGraph;
+using pwiz.MSGraph;
 using pwiz.Common.Chemistry;
 using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;
@@ -180,7 +180,7 @@ namespace pwiz.Topograph.ui.Forms
                 return new PointAnnotation(Math.Round(point.X, 4).ToString());
             }
 
-            public void AddAnnotations(MSPointList pointList, GraphObjList annotations)
+            public void AddAnnotations(MSGraphPane graphPane, Graphics g, MSPointList pointList, GraphObjList annotations)
             {
             }
 
