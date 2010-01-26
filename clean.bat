@@ -38,6 +38,6 @@ IF EXIST pwiz_aux\msrc\data\vendor_readers\Bruker\Reader_Bruker_Test.data rmdir 
 
 call pwiz_tools\SeeMS\CleanSeeMS.bat
 call pwiz_tools\Skyline\CleanSkyline.bat
-call pwiz_tools\Skyline\CleanTopograph.bat
+call pwiz_tools\Topograph\CleanTopograph.bat
 
 popd
