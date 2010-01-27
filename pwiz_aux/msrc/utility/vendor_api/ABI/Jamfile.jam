@@ -56,7 +56,6 @@ rule vendor-api-requirements ( properties * )
     if <toolset>msvc in $(properties) &&
        $(.hasDLLs)
     {
-        result += <assembly>$(API_PATH)/Interop.DataExplorer.dll ;
         result += <assembly>$(API_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll ;
         result += <assembly>$(API_PATH)/Clearcore.dll ;
         result += <assembly>$(API_PATH)/ClearCore.Storage.dll ;
@@ -73,7 +72,6 @@ rule vendor-api-requirements ( properties * )
 lib pwiz_vendor_api_abi
     : # sources
         WiffFile.cpp
-        T2D_Data.cpp
     : # requirements
 
         # - when boost::thread is link=static, the exe header is tweaked to call
@@ -103,15 +101,6 @@ exe WiffFileTest
     ;
 
 explicit WiffFileTest ;
-
-
-# a test utility, not a unit test
-exe T2D_Data_Test
-    : T2D_Data_Test.cpp
-      pwiz_vendor_api_abi
-    ;
-
-explicit T2D_Data_Test ;
 
 
 install install_pwiz_vendor_api_abi
