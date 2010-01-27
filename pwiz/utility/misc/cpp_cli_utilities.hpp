@@ -33,7 +33,7 @@ namespace pwiz {
 namespace util {
 
 
-std::string ToStdString(System::String^ source)
+inline std::string ToStdString(System::String^ source)
 {
     if (System::String::IsNullOrEmpty(source))
         return std::string();
@@ -53,7 +53,7 @@ std::string ToStdString(System::String^ source)
 }
 
 
-System::String^ ToSystemString(const std::string& source)
+inline System::String^ ToSystemString(const std::string& source)
 {
     return gcnew System::String(source.c_str());
 }
