@@ -27,8 +27,13 @@ IF EXIST pwiz\mziddata\Version.cpp del /q pwiz\mziddata\Version.cpp
 IF EXIST pwiz\tradata\Version.cpp del /q pwiz\tradata\Version.cpp
 IF EXIST pwiz\data\proteome\Version.cpp del /q pwiz\data\proteome\Version.cpp
 
-del /q pwiz\utility\vendor_api\thermo\*.dll
-del /q pwiz_aux\msrc\utility\vendor_api\ABI\*.dll
+IF EXIST pwiz\utility\vendor_api\thermo\MSFileReader.XRawfile2.dll del /q pwiz\utility\vendor_api\thermo\MSFileReader.XRawfile2.dll
+IF EXIST pwiz\utility\vendor_api\thermo\fregistry.dll del /q pwiz\utility\vendor_api\thermo\fregistry.dll
+IF EXIST pwiz\utility\vendor_api\thermo\fileio.dll del /q pwiz\utility\vendor_api\thermo\fileio.dll
+IF EXIST pwiz_aux\msrc\utility\vendor_api\ABI\ABSciex.DataAccess.WiffFileDataReader.dll del /q pwiz_aux\msrc\utility\vendor_api\ABI\ABSciex.DataAccess.WiffFileDataReader.dll
+IF EXIST pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore.dll del /q pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore.dll
+IF EXIST pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore.Storage.dll del /q pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore.Storage.dll
+IF EXIST pwiz_aux\msrc\utility\vendor_api\ABI\rscoree.dll del /q pwiz_aux\msrc\utility\vendor_api\ABI\rscoree.dll
 
 IF EXIST pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data rmdir /s /q pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data
 IF EXIST pwiz\data\vendor_readers\Agilent\Reader_Agilent_Test.data rmdir /s /q pwiz\data\vendor_readers\Agilent\Reader_Agilent_Test.data
