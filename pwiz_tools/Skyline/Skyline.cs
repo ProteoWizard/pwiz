@@ -127,7 +127,6 @@ namespace pwiz.Skyline
             {
                 toolBarToolStripMenuItem_Click(this, new EventArgs());
             }
-            graphsToolStripMenuItem.Checked = Settings.Default.ShowSpectra;
             // Hide graph panel by default, since doing this in the designer
             // makes the UI hard to work with. The first document update will
             // update the collapsed state to match the document
@@ -431,14 +430,10 @@ namespace pwiz.Skyline
             // User will want to restore whatever was displayed in the UI at the time.
             SrmDocument docReplaced = DocumentUI;
 
-            // TODO: Kill background processing
-
             bool replaced = SetDocument(docUndo, Document);
 
             // If no background processing exists, this should succeed.
             Debug.Assert(replaced);
-
-            // TODO: Restart background processing based on the current document.
 
             return docReplaced;
         }

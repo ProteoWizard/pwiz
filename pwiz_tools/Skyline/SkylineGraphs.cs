@@ -24,7 +24,6 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
@@ -94,7 +93,7 @@ namespace pwiz.Skyline
 
         private void graphsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ShowGraphSpectrum(Settings.Default.ShowSpectra = graphsToolStripMenuItem.Checked);
+            ShowGraphSpectrum(Settings.Default.ShowSpectra = true);
         }
 
         private class DockPanelLayoutLock : IDisposable
@@ -232,13 +231,13 @@ namespace pwiz.Skyline
                     }
                 }
                 enable = DocumentUI.Settings.HasResults;
-                if (retentionTimesMenuItem.Enabled != enable)
+                bool enableSchedule = enable || DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime != null;
+                if (retentionTimesMenuItem.Enabled != enableSchedule || replicateComparisonMenuItem.Enabled != enable)
                 {
-                    retentionTimesMenuItem.Enabled = enable;
-                    timeGraphMenuItem.Enabled = enable;
+                    retentionTimesMenuItem.Enabled = enableSchedule;
                     linearRegressionMenuItem.Enabled = enable;
                     replicateComparisonMenuItem.Enabled = enable;
-                    schedulingMenuItem.Enabled = enable;
+                    schedulingMenuItem.Enabled = enableSchedule;
 
                     if (!deserialized)
                     {
@@ -258,7 +257,6 @@ namespace pwiz.Skyline
                 if (peakAreasMenuItem.Enabled != enable)
                 {
                     peakAreasMenuItem.Enabled = enable;
-                    areaGraphMenuItem.Enabled = enable;
                     areaReplicateComparisonMenuItem.Enabled = enable;
                     areaPeptideComparisonMenuItem.Enabled = enable;
 
@@ -718,7 +716,7 @@ namespace pwiz.Skyline
                 // Close the spectrum graph window
                 _graphSpectrum.Hide();
                 // Restore setting and menuitem from saved value
-                Settings.Default.ShowSpectra = graphsToolStripMenuItem.Checked = show;
+                Settings.Default.ShowSpectra = show;
             }
         }
 
@@ -745,14 +743,14 @@ namespace pwiz.Skyline
 
         private void graphSpectrum_VisibleChanged(object sender, EventArgs e)
         {
-            Settings.Default.ShowSpectra = graphsToolStripMenuItem.Checked = _graphSpectrum.Visible;
+            Settings.Default.ShowSpectra = _graphSpectrum.Visible;
             splitMain.Panel2Collapsed = !VisibleDockContent;
         }
 
         private void graphSpectrum_FormClosed(object sender, FormClosedEventArgs e)
         {
             // Update settings and menu check
-            Settings.Default.ShowSpectra = graphsToolStripMenuItem.Checked = false;
+            Settings.Default.ShowSpectra = false;
 
             // Hide the dock panel, if this is its last graph pane.
             if (dockPanel.Contents.Count == 0 ||
@@ -894,8 +892,6 @@ namespace pwiz.Skyline
                     menu.DropDownItems.Insert(i, item);
                 }
 
-                if (IsGraphChromVisible(name))
-                    item.Checked = true;
                 i++;
             }
 
@@ -917,8 +913,7 @@ namespace pwiz.Skyline
 
             public void menuItem_Click(object sender, EventArgs e)
             {
-                _skyline.ShowGraphChrom(_nameChromatogram,
-                    !_skyline.IsGraphChromVisible(_nameChromatogram));
+                _skyline.ShowGraphChrom(_nameChromatogram, true);
             }
         }
 
@@ -1630,11 +1625,6 @@ namespace pwiz.Skyline
 
         public GraphSummary GraphRetentionTime { get { return _graphRetentionTime; } }
 
-        private void retentionTimesMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowGraphRetentionTime(Settings.Default.ShowRetentionTimeGraph = retentionTimesMenuItem.Checked);
-        }
-
         public void ShowGraphRetentionTime(bool show)
         {
             if (show)
@@ -1670,7 +1660,7 @@ namespace pwiz.Skyline
                 // Close the spectrum graph window
                 _graphRetentionTime.Hide();
                 // Restore setting and menuitem from saved value
-                Settings.Default.ShowRetentionTimeGraph = retentionTimesMenuItem.Checked = show;
+                Settings.Default.ShowRetentionTimeGraph = show;
             }
         }
 
@@ -1695,7 +1685,7 @@ namespace pwiz.Skyline
 
         private void graphRetentionTime_VisibleChanged(object sender, EventArgs e)
         {
-            Settings.Default.ShowRetentionTimeGraph = retentionTimesMenuItem.Checked =
+            Settings.Default.ShowRetentionTimeGraph =
                 (_graphRetentionTime != null && _graphRetentionTime.Visible);
             splitMain.Panel2Collapsed = !VisibleDockContent;
         }
@@ -1703,7 +1693,7 @@ namespace pwiz.Skyline
         private void graphRetentinTime_FormClosed(object sender, FormClosedEventArgs e)
         {
             // Update settings and menu check
-            Settings.Default.ShowRetentionTimeGraph = retentionTimesMenuItem.Checked = false;
+            Settings.Default.ShowRetentionTimeGraph = false;
 
             // Hide the dock panel, if this is its last graph pane.
             if (dockPanel.Contents.Count == 0 ||
@@ -1831,12 +1821,9 @@ namespace pwiz.Skyline
         private void timeGraphMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             GraphTypeRT graphType = RTGraphController.GraphType;
-            linearRegressionMenuItem.Checked = linearRegressionContextMenuItem.Checked =
-                (graphType == GraphTypeRT.regression);
-            replicateComparisonMenuItem.Checked =  replicateComparisonContextMenuItem.Checked =
-                (graphType == GraphTypeRT.replicate);
-            schedulingContextMenuItem.Checked = schedulingMenuItem.Checked = 
-                (graphType == GraphTypeRT.schedule);
+            linearRegressionContextMenuItem.Checked = (graphType == GraphTypeRT.regression);
+            replicateComparisonContextMenuItem.Checked = (graphType == GraphTypeRT.replicate);
+            schedulingContextMenuItem.Checked = (graphType == GraphTypeRT.schedule);
         }
 
         private void linearRegressionMenuItem_Click(object sender, EventArgs e)
@@ -1970,11 +1957,6 @@ namespace pwiz.Skyline
 
         public GraphSummary GraphPeakArea { get { return _graphPeakArea; } }
 
-        private void peakAreasMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowGraphPeakArea(Settings.Default.ShowPeakAreaGraph = peakAreasMenuItem.Checked);
-        }
-
         public void ShowGraphPeakArea(bool show)
         {
             if (show)
@@ -2010,7 +1992,7 @@ namespace pwiz.Skyline
                 // Close the spectrum graph window
                 _graphPeakArea.Hide();
                 // Restore setting and menuitem from saved value
-                Settings.Default.ShowPeakAreaGraph = peakAreasMenuItem.Checked = show;
+                Settings.Default.ShowPeakAreaGraph = show;
             }
         }
 
@@ -2035,15 +2017,14 @@ namespace pwiz.Skyline
 
         private void graphPeakArea_VisibleChanged(object sender, EventArgs e)
         {
-            Settings.Default.ShowPeakAreaGraph = peakAreasMenuItem.Checked =
-                (_graphPeakArea != null && _graphPeakArea.Visible);
+            Settings.Default.ShowPeakAreaGraph = (_graphPeakArea != null && _graphPeakArea.Visible);
             splitMain.Panel2Collapsed = !VisibleDockContent;
         }
 
         private void graphPeakArea_FormClosed(object sender, FormClosedEventArgs e)
         {
             // Update settings and menu check
-            Settings.Default.ShowPeakAreaGraph = peakAreasMenuItem.Checked = false;
+            Settings.Default.ShowPeakAreaGraph = false;
 
             // Hide the dock panel, if this is its last graph pane.
             if (dockPanel.Contents.Count == 0 ||
@@ -2134,10 +2115,8 @@ namespace pwiz.Skyline
         private void areaGraphMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             GraphTypeArea graphType = AreaGraphController.GraphType;
-            areaReplicateComparisonMenuItem.Checked = areaReplicateComparisonContextMenuItem.Checked =
-                (graphType == GraphTypeArea.replicate);
-            areaPeptideComparisonMenuItem.Checked = areaPeptideComparisonContextMenuItem.Checked =
-                (graphType == GraphTypeArea.peptide);
+            areaReplicateComparisonContextMenuItem.Checked = (graphType == GraphTypeArea.replicate);
+            areaPeptideComparisonContextMenuItem.Checked = (graphType == GraphTypeArea.peptide);
         }
 
         private void areaReplicateComparisonMenuItem_Click(object sender, EventArgs e)
@@ -2214,7 +2193,7 @@ namespace pwiz.Skyline
 
         private void resultsGridMenuItem_Click(object sender, EventArgs e)
         {
-            ShowResultsGrid(Settings.Default.ShowResultsGrid = resultsGridMenuItem.Checked);
+            ShowResultsGrid(Settings.Default.ShowResultsGrid = true);
         }
 
         public void ShowResultsGrid(bool show)
@@ -2259,7 +2238,7 @@ namespace pwiz.Skyline
         {
             _resultsGridForm = new ResultsGridForm(this, SequenceTree);
             _resultsGridForm.FormClosed += resultsGrid_FormClosed;
-            _resultsGridForm.VisibleChanged += graphPeakArea_VisibleChanged;
+            _resultsGridForm.VisibleChanged += resultsGrid_VisibleChanged;
             return _resultsGridForm;
         }
 
@@ -2276,15 +2255,14 @@ namespace pwiz.Skyline
 
         private void resultsGrid_VisibleChanged(object sender, EventArgs e)
         {
-            Settings.Default.ShowResultsGrid = resultsGridMenuItem.Checked =
-                (_resultsGridForm != null && _resultsGridForm.Visible);
+            Settings.Default.ShowResultsGrid = (_resultsGridForm != null && _resultsGridForm.Visible);
             splitMain.Panel2Collapsed = !VisibleDockContent;
         }
 
         void resultsGrid_FormClosed(object sender, FormClosedEventArgs e)
         {
             // Update settings and menu check
-            Settings.Default.ShowResultsGrid = resultsGridMenuItem.Checked = false;
+            Settings.Default.ShowResultsGrid = false;
 
             // Hide the dock panel, if this is its last graph pane.
             if (dockPanel.Contents.Count == 0 ||
