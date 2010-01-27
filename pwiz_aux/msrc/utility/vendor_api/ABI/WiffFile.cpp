@@ -34,7 +34,9 @@
 #include "pwiz/utility/misc/Container.hpp"
 
 #pragma managed
-#include <gcroot.h>
+#include "pwiz/utility/misc/cpp_cli_utilities.hpp"
+using namespace pwiz::util;
+
 
 using System::String;
 using System::Math;
@@ -49,43 +51,6 @@ using ClearCore::Obsolete::MSExperiment;
 using ClearCore::Utility::ZeroBasedInt;
 using ClearCore::Utility::OneBasedInt;
 using namespace System;
-
-
-// forwards managed exception to unmanaged code
-#define CATCH_AND_FORWARD(x) \
-    try \
-    { x } \
-    catch (System::ApplicationException^ e) \
-    { throw std::runtime_error(ToStdString(e->Message)); }
-
-#include <vcclr.h>
-namespace {
-
-std::string ToStdString(System::String^ source)
-{
-	int len = (( source->Length+1) * 2);
-	char *ch = new char[ len ];
-	bool result ;
-	{
-		pin_ptr<const wchar_t> wch = PtrToStringChars( source );
-		result = wcstombs( ch, wch, len ) != -1;
-	}
-	std::string target = ch;
-	delete ch;
-	if(!result)
-        throw gcnew System::Exception("error converting System::String to std::string");
-	return target;
-}
-
-template<typename value_type>
-std::vector<value_type> ToStdVector(cli::array<value_type>^ valueArray)
-{
-    pin_ptr<value_type> pin = &valueArray[0];
-    value_type* begin = (value_type*) pin;
-    return std::vector<value_type>(begin, begin + valueArray->Length);
-}
-
-}
 
 
 namespace pwiz {
@@ -211,11 +176,12 @@ typedef boost::shared_ptr<SpectrumImpl> SpectrumImplPtr;
 WiffFileImpl::WiffFileImpl(const string& wiffpath)
 : currentSample(-1), currentPeriod(-1), currentExperiment(-1), currentCycle(-1)
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         reader = gcnew DataReader();
         reader->FilePath = gcnew String(wiffpath.c_str());
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 WiffFileImpl::~WiffFileImpl()
@@ -225,40 +191,43 @@ WiffFileImpl::~WiffFileImpl()
 
 int WiffFileImpl::getSampleCount() const
 {
-    CATCH_AND_FORWARD(return getSampleNames().size();)
+    try {return getSampleNames().size();} CATCH_AND_FORWARD
 }
 
 int WiffFileImpl::getPeriodCount(int sample) const
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         setSample(sample);
         return reader->Provider->PeriodCount;
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 int WiffFileImpl::getExperimentCount(int sample, int period) const
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         setPeriod(sample, period);
         return reader->ExperimentCount;
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 int WiffFileImpl::getCycleCount(int sample, int period, int experiment) const
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         setExperiment(sample, period, experiment);
         return reader->MSExperiment->GetRetentionTimes(0, Double::MaxValue)->Length;
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 const vector<string>& WiffFileImpl::getSampleNames() const
 {
-    //CATCH_AND_FORWARD
-    //(
+    try
+    {
         if (sampleNames.size() == 0)
         {
             // make duplicate sample names unique by appending the duplicate count
@@ -284,73 +253,80 @@ const vector<string>& WiffFileImpl::getSampleNames() const
 
         }
         return sampleNames;
-    //)
+    }
+    CATCH_AND_FORWARD
 }
 
 InstrumentModel WiffFileImpl::getInstrumentModel() const
 {
-    CATCH_AND_FORWARD(return (InstrumentModel) reader->Provider->InstrumentModel;)
+    try {return (InstrumentModel) reader->Provider->InstrumentModel;} CATCH_AND_FORWARD
 }
 
 InstrumentType WiffFileImpl::getInstrumentType() const
 {
-    CATCH_AND_FORWARD(return (InstrumentType) reader->Provider->InstrumentType;)
+    try {return (InstrumentType) reader->Provider->InstrumentType;} CATCH_AND_FORWARD
 }
 
 IonSourceType WiffFileImpl::getIonSourceType() const
 {
-    CATCH_AND_FORWARD(return (IonSourceType) reader->Provider->IonSource;)
+    try {return (IonSourceType) reader->Provider->IonSource;} CATCH_AND_FORWARD
 }
 
 blt::local_date_time WiffFileImpl::getSampleAcquisitionTime() const
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         bpt::ptime pt(bdt::time_from_OADATE<bpt::ptime>(reader->Provider->SampleAcquisitionDateTime.ToOADate()));
         return blt::local_date_time(pt, blt::time_zone_ptr()); // keep time as UTC
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 
 ExperimentPtr WiffFileImpl::getExperiment(int sample, int period, int experiment) const
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         setExperiment(sample, period, experiment);
         ExperimentImplPtr msExperiment(new ExperimentImpl(this, sample, period, experiment));
         return msExperiment;
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 
 ExperimentImpl::ExperimentImpl(const WiffFileImpl* wifffile, int sample, int period, int experiment)
 : wifffile_(wifffile), sample(sample), period(period), experiment(experiment)
 {
-    wifffile_->setExperiment(sample, period, experiment);
-    msExperiment = wifffile_->reader->MSExperiment;
-
-    array<RetentionTime>^ retentionTimes = msExperiment->GetRetentionTimes(0, Double::MaxValue);
-    cycleStartTimes.resize(retentionTimes->Length);
-    for (int i=0; i < retentionTimes->Length; ++i)
-        cycleStartTimes[i] = retentionTimes[i];
-
-    for (int i=0; i < msExperiment->MRMTransitions->Count; ++i)
+    try
     {
-        MRMTransition^ transition = msExperiment->MRMTransitions[i];
-        pair<int, int>& e = transitionParametersMap[make_pair(transition->Q1Mass->MassAsDouble, transition->Q3Mass->MassAsDouble)];
-        e.first = i;
-        e.second = -1;
-    }
+        wifffile_->setExperiment(sample, period, experiment);
+        msExperiment = wifffile_->reader->MSExperiment;
 
-    MRMTransitionsForAcquisitionCollection^ transitions = wifffile_->reader->Provider->GetMRMTransitionsForAcquisition();
-    for (int i=0; i < transitions->Count; ++i)
-    {
-        MRMTransition^ transition = transitions[i]->Transition;
-        pair<int, int>& e = transitionParametersMap[make_pair(transition->Q1Mass->MassAsDouble, transition->Q3Mass->MassAsDouble)];
-        if (e.second != -1) // this Q1/Q3 wasn't added by the MRMTransitions loop
-            e.first = -1;
-        e.second = i;
+        array<RetentionTime>^ retentionTimes = msExperiment->GetRetentionTimes(0, Double::MaxValue);
+        cycleStartTimes.resize(retentionTimes->Length);
+        for (int i=0; i < retentionTimes->Length; ++i)
+            cycleStartTimes[i] = retentionTimes[i];
+
+        for (int i=0; i < msExperiment->MRMTransitions->Count; ++i)
+        {
+            MRMTransition^ transition = msExperiment->MRMTransitions[i];
+            pair<int, int>& e = transitionParametersMap[make_pair(transition->Q1Mass->MassAsDouble, transition->Q3Mass->MassAsDouble)];
+            e.first = i;
+            e.second = -1;
+        }
+
+        MRMTransitionsForAcquisitionCollection^ transitions = wifffile_->reader->Provider->GetMRMTransitionsForAcquisition();
+        for (int i=0; i < transitions->Count; ++i)
+        {
+            MRMTransition^ transition = transitions[i]->Transition;
+            pair<int, int>& e = transitionParametersMap[make_pair(transition->Q1Mass->MassAsDouble, transition->Q3Mass->MassAsDouble)];
+            if (e.second != -1) // this Q1/Q3 wasn't added by the MRMTransitions loop
+                e.first = -1;
+            e.second = i;
+        }
     }
+    CATCH_AND_FORWARD
 }
 
 double ExperimentImpl::getCycleStartTime(int cycle) const
@@ -360,19 +336,19 @@ double ExperimentImpl::getCycleStartTime(int cycle) const
 
 size_t ExperimentImpl::getSRMSize() const
 {
-    CATCH_AND_FORWARD(return msExperiment->MRMTransitions->Count;)
+    try {return msExperiment->MRMTransitions->Count;} CATCH_AND_FORWARD
 }
 
 void ExperimentImpl::getSRM(size_t index, Target& target) const
 {
-    if (index > (size_t) msExperiment->MRMTransitions->Count)
-        throw std::out_of_range("[Experiment::getSRM()] index out of range");
+    try
+    {
+        if (index > (size_t) msExperiment->MRMTransitions->Count)
+            throw std::out_of_range("[Experiment::getSRM()] index out of range");
 
-    MRMTransition^ transition = msExperiment->MRMTransitions[index];
-    const pair<int, int>& e = transitionParametersMap.find(make_pair(transition->Q1Mass->MassAsDouble, transition->Q3Mass->MassAsDouble))->second;
+        MRMTransition^ transition = msExperiment->MRMTransitions[index];
+        const pair<int, int>& e = transitionParametersMap.find(make_pair(transition->Q1Mass->MassAsDouble, transition->Q3Mass->MassAsDouble))->second;
 
-    CATCH_AND_FORWARD
-    (
         target.type = TargetType_SRM;
         target.Q1 = transition->Q1Mass->MassAsDouble;
         target.Q3 = transition->Q3Mass->MassAsDouble;
@@ -393,13 +369,14 @@ void ExperimentImpl::getSRM(size_t index, Target& target) const
             target.collisionEnergy = 0;
             target.declusteringPotential = 0;
         };
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 void ExperimentImpl::getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities) const
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         if (index > (size_t) msExperiment->MRMTransitions->Count)
             throw std::out_of_range("[Experiment::getSIC()] index out of range");
 
@@ -447,32 +424,34 @@ void ExperimentImpl::getSIC(size_t index, std::vector<double>& times, std::vecto
             times[i] = cp[iPoint]->X;
             intensities[i] = cp[iPoint]->Y;
         }
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 void ExperimentImpl::getAcquisitionMassRange(double& startMz, double& stopMz) const
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         startMz = msExperiment->AcquisitionMassRange->StartMZ;
         stopMz = msExperiment->AcquisitionMassRange->StopMZ;
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 ScanType ExperimentImpl::getScanType() const
 {
-    CATCH_AND_FORWARD(return (ScanType) msExperiment->ScanType->ScanTypeEnumeration;)
+    try {return (ScanType) msExperiment->ScanType->ScanTypeEnumeration;} CATCH_AND_FORWARD
 }
 
 Polarity ExperimentImpl::getPolarity() const
 {
-    CATCH_AND_FORWARD(return (Polarity) msExperiment->Polarity->PolarityEnumeration;)
+    try {return (Polarity) msExperiment->Polarity->PolarityEnumeration;} CATCH_AND_FORWARD
 }
 
 void ExperimentImpl::getTIC(std::vector<double>& times, std::vector<double>& intensities) const
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         Chromatogram^ tic = msExperiment->Tic;
         times.resize(tic->Points->Count);
         intensities.resize(tic->Points->Count);
@@ -481,7 +460,8 @@ void ExperimentImpl::getTIC(std::vector<double>& times, std::vector<double>& int
             times[i] = tic->Points[i]->X;
             intensities[i] = tic->Points[i]->Y;
         }
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 
@@ -490,8 +470,8 @@ SpectrumImpl::SpectrumImpl(ExperimentImplPtr experiment, int cycle)
   sumY(0), bpX(0), bpY(0), minX(0), maxX(0),
   selectedMz(0)
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         experiment->wifffile_->reader->SetCycles((OneBasedInt^)cycle);
         spectrum = experiment->wifffile_->reader->MassSpectrum;
         //spectrum = experiment->msExperiment->SpectrumAt((OneBasedInt^)cycle);
@@ -529,7 +509,8 @@ SpectrumImpl::SpectrumImpl(ExperimentImplPtr experiment, int cycle)
             intensity = 0;
             charge = precursor->Charge;
         }
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 bool SpectrumImpl::getHasIsolationInfo() const
@@ -560,24 +541,25 @@ double SpectrumImpl::getStartTime() const
 
 bool SpectrumImpl::getDataIsContinuous() const
 {
-    CATCH_AND_FORWARD(return pointsAreContinuous;)
+    try {return pointsAreContinuous;} CATCH_AND_FORWARD
 }
 
 size_t SpectrumImpl::getDataSize(bool doCentroid) const
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         if (doCentroid && pointsAreContinuous && spectrum->AllPeakCount > 0)
             return (size_t) spectrum->AllPeakCount;
         else
             return x.size();
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 void SpectrumImpl::getData(bool doCentroid, std::vector<double>& mz, std::vector<double>& intensities) const
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         if (doCentroid)
             doCentroid = pointsAreContinuous && spectrum->AllPeakCount > 0;
 
@@ -599,46 +581,50 @@ void SpectrumImpl::getData(bool doCentroid, std::vector<double>& mz, std::vector
             mz.assign(x.begin(), x.end());
             intensities.assign(y.begin(), y.end());
         }
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 
 SpectrumPtr WiffFileImpl::getSpectrum(int sample, int period, int experiment, int cycle) const
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         ExperimentPtr msExperiment = getExperiment(sample, period, experiment);
         return getSpectrum(msExperiment, cycle);
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 SpectrumPtr WiffFileImpl::getSpectrum(ExperimentPtr experiment, int cycle) const
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         SpectrumImplPtr spectrum(new SpectrumImpl(boost::static_pointer_cast<ExperimentImpl>(experiment), cycle));
         return spectrum;
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 
 void WiffFileImpl::setSample(int sample) const
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         if (sample != currentSample)
         {
             reader->SampleNum = sample;
             currentSample = sample;
         }
         // TODO: refresh other experiments?
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 void WiffFileImpl::setPeriod(int sample, int period) const
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         setSample(sample);
 
         if (period != currentPeriod)
@@ -646,13 +632,14 @@ void WiffFileImpl::setPeriod(int sample, int period) const
             reader->PeriodNum = period;
             currentPeriod = period;
         }
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 void WiffFileImpl::setExperiment(int sample, int period, int experiment) const
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         setPeriod(sample, period);
 
         if (experiment != currentExperiment)
@@ -660,13 +647,14 @@ void WiffFileImpl::setExperiment(int sample, int period, int experiment) const
             reader->ExperimentNum = experiment;
             currentExperiment = experiment;
         }
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 void WiffFileImpl::setCycle(int sample, int period, int experiment, int cycle) const
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         setExperiment(sample, period, experiment);
 
         if (cycle != currentCycle)
@@ -674,7 +662,8 @@ void WiffFileImpl::setCycle(int sample, int period, int experiment, int cycle) c
             reader->SetCycles(cycle);
             currentCycle = cycle;
         }
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 

@@ -30,62 +30,13 @@
 
 
 #pragma managed
-#include <gcroot.h>
+#include "pwiz/utility/misc/cpp_cli_utilities.hpp"
+using namespace pwiz::util;
+
 
 using System::String;
 using System::Math;
 namespace MHDAC = Agilent::MassSpectrometry::DataAnalysis;
-
-// forwards managed exception to unmanaged code
-#define CATCH_AND_FORWARD(x) \
-    try \
-    { x } \
-    catch (System::ApplicationException^ e) \
-    { throw std::runtime_error(ToStdString(e->Message)); }
-
-#include <vcclr.h>
-namespace {
-
-std::string ToStdString(System::String^ source)
-{
-	int len = (( source->Length+1) * 2);
-	char *ch = new char[ len ];
-	bool result ;
-	{
-		pin_ptr<const wchar_t> wch = PtrToStringChars( source );
-		result = wcstombs( ch, wch, len ) != -1;
-	}
-	std::string target = ch;
-	delete ch;
-	if(!result)
-        throw gcnew System::Exception("error converting System::String to std::string");
-	return target;
-}
-
-System::String^ ToSystemString(const std::string& source)
-{
-    return gcnew System::String(source.c_str());
-}
-
-template<typename managed_value_type, typename native_value_type>
-void ToStdVector(cli::array<managed_value_type>^ managedArray, std::vector<native_value_type>& stdVector)
-{
-    stdVector.resize(managedArray->Length);
-    for (int i=0; i < managedArray->Length; ++i)
-        stdVector[i] = static_cast<native_value_type>(managedArray[i]);
-}
-
-template<typename managed_value_type, typename native_value_type>
-void ToAutomationVector(cli::array<managed_value_type>^ managedArray, automation_vector<native_value_type>& automationArray)
-{
-    VARIANT v;
-    ::VariantInit(&v);
-    System::IntPtr vPtr = (System::IntPtr) &v;
-    System::Runtime::InteropServices::Marshal::GetNativeVariantForObject((System::Object^) managedArray, vPtr);
-    automationArray.attach(v);
-}
-
-}
 
 
 namespace pwiz {
@@ -236,8 +187,8 @@ MassHunterDataPtr MassHunterData::create(const string& path)
 
 MassHunterDataImpl::MassHunterDataImpl(const std::string& path)
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         reader_ = gcnew MHDAC::MassSpecDataReader();
         if (!reader_->OpenDataFile(gcnew String(path.c_str())))
             throw std::runtime_error("[MassHunterDataImpl::ctor()] Error opening source path.");
@@ -314,62 +265,58 @@ MassHunterDataImpl::MassHunterDataImpl(const std::string& path)
             transitionToChromatogramIndexMap_[t] = transitions_.size() - mrmCount;
             transitions_.insert(t);
         }
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 MassHunterDataImpl::~MassHunterDataImpl()
 {
-    CATCH_AND_FORWARD
-    (
-        reader_->CloseDataFile();
-    )
+    try {reader_->CloseDataFile();} CATCH_AND_FORWARD
 }
 
 std::string MassHunterDataImpl::getVersion() const
 {
-    CATCH_AND_FORWARD( return ToStdString(reader_->Version); )
+    try {return ToStdString(reader_->Version);} CATCH_AND_FORWARD
 }
 
 DeviceType MassHunterDataImpl::getDeviceType() const
 {
-    CATCH_AND_FORWARD( return (DeviceType) scanFileInfo_->DeviceType; )
+    try {return (DeviceType) scanFileInfo_->DeviceType;} CATCH_AND_FORWARD
 }
 
 std::string MassHunterDataImpl::getDeviceName(DeviceType deviceType) const
 {
-    CATCH_AND_FORWARD
-    (
-        return ToStdString(reader_->FileInformation->GetDeviceName((MHDAC::DeviceType) deviceType));
-    )
+    try {return ToStdString(reader_->FileInformation->GetDeviceName((MHDAC::DeviceType) deviceType));} CATCH_AND_FORWARD
 }
 
 blt::local_date_time MassHunterDataImpl::getAcquisitionTime() const
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         bpt::ptime pt(bdt::time_from_OADATE<bpt::ptime>(reader_->FileInformation->AcquisitionTime.ToUniversalTime().ToOADate()));
         return blt::local_date_time(pt, blt::time_zone_ptr()); // keep time as UTC
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 IonizationMode MassHunterDataImpl::getIonModes() const
 {
-    CATCH_AND_FORWARD( return (IonizationMode) scanFileInfo_->IonModes; )
+    try {return (IonizationMode) scanFileInfo_->IonModes;} CATCH_AND_FORWARD
 }
 
 MSScanType MassHunterDataImpl::getScanTypes() const
 {
-    CATCH_AND_FORWARD( return (MSScanType) scanFileInfo_->ScanTypes; )
+    try {return (MSScanType) scanFileInfo_->ScanTypes;} CATCH_AND_FORWARD
 }
 
 MSStorageMode MassHunterDataImpl::getSpectraFormat() const
 {
-    CATCH_AND_FORWARD( return (MSStorageMode) scanFileInfo_->SpectraFormat; )
+    try {return (MSStorageMode) scanFileInfo_->SpectraFormat;} CATCH_AND_FORWARD
 }
 
 int MassHunterDataImpl::getTotalScansPresent() const
 {
-    CATCH_AND_FORWARD( return (int) scanFileInfo_->TotalScansPresent; )
+    try {return (int) scanFileInfo_->TotalScansPresent;} CATCH_AND_FORWARD
 }
 
 const set<Transition>& MassHunterDataImpl::getTransitions() const
@@ -399,21 +346,22 @@ const automation_vector<float>& MassHunterDataImpl::getBpcIntensities() const
 
 ChromatogramPtr MassHunterDataImpl::getChromatogram(const Transition& transition) const
 {
-//    CATCH_AND_FORWARD
-//    (
-    MHDAC::IBDAChromFilter^ filter = gcnew MHDAC::BDAChromFilter();
-    filter->ChromatogramType = transition.type == Transition::MRM ? MHDAC::ChromType::MultipleReactionMode
-                                                                  : MHDAC::ChromType::SelectedIonMonitoring;
-    filter->ExtractOneChromatogramPerScanSegment = true;
-    filter->DoCycleSum = false;
+    try
+    {
+        MHDAC::IBDAChromFilter^ filter = gcnew MHDAC::BDAChromFilter();
+        filter->ChromatogramType = transition.type == Transition::MRM ? MHDAC::ChromType::MultipleReactionMode
+                                                                      : MHDAC::ChromType::SelectedIonMonitoring;
+        filter->ExtractOneChromatogramPerScanSegment = true;
+        filter->DoCycleSum = false;
 
-    if (!transitionToChromatogramIndexMap_.count(transition))
-        throw std::runtime_error("[MassHunterData::getChromatogram()] No chromatogram corresponds to the transition.");
+        if (!transitionToChromatogramIndexMap_.count(transition))
+            throw std::runtime_error("[MassHunterData::getChromatogram()] No chromatogram corresponds to the transition.");
 
-    int index = transitionToChromatogramIndexMap_.find(transition)->second;
-    ChromatogramImplPtr chromatogramPtr(new ChromatogramImpl(reader_->GetChromatogram(filter)[index]));
-    return chromatogramPtr;
-//    )
+        int index = transitionToChromatogramIndexMap_.find(transition)->second;
+        ChromatogramImplPtr chromatogramPtr(new ChromatogramImpl(reader_->GetChromatogram(filter)[index]));
+        return chromatogramPtr;
+    }
+    CATCH_AND_FORWARD
 }
 
 SpectrumPtr MassHunterDataImpl::getProfileSpectrumByRow(int rowNumber) const
@@ -423,27 +371,35 @@ SpectrumPtr MassHunterDataImpl::getProfileSpectrumByRow(int rowNumber) const
 
 SpectrumPtr MassHunterDataImpl::getPeakSpectrumByRow(int rowNumber, PeakFilterPtr peakFilter /*= PeakFilterPtr()*/) const
 {
-    // MHDAC doesn't support post-acquisition centroiding of non-TOF spectra
-    MHDAC::IMsdrPeakFilter^ msdrPeakFilter_ = nullptr;
-    if (scanFileInfo_->DeviceType != MHDAC::DeviceType::Quadrupole &&
-        scanFileInfo_->DeviceType != MHDAC::DeviceType::TandemQuadrupole)
-        msdrPeakFilter_ = msdrPeakFilter(peakFilter);
-    return SpectrumPtr(new SpectrumImpl(reader_->GetSpectrum(rowNumber, msdrPeakFilter_, msdrPeakFilter_, MHDAC::DesiredMSStorageType::PeakElseProfile)));
+    try
+    {
+        // MHDAC doesn't support post-acquisition centroiding of non-TOF spectra
+        MHDAC::IMsdrPeakFilter^ msdrPeakFilter_ = nullptr;
+        if (scanFileInfo_->DeviceType != MHDAC::DeviceType::Quadrupole &&
+            scanFileInfo_->DeviceType != MHDAC::DeviceType::TandemQuadrupole)
+            msdrPeakFilter_ = msdrPeakFilter(peakFilter);
+        return SpectrumPtr(new SpectrumImpl(reader_->GetSpectrum(rowNumber, msdrPeakFilter_, msdrPeakFilter_, MHDAC::DesiredMSStorageType::PeakElseProfile)));
+    }
+    CATCH_AND_FORWARD
 }
 
 SpectrumPtr MassHunterDataImpl::getProfileSpectrumById(int scanId) const
 {
-    return SpectrumPtr(new SpectrumImpl(reader_->GetSpectrum(bdaSpecFilterForScanId(scanId, true), nullptr)[0]));
+    try {return SpectrumPtr(new SpectrumImpl(reader_->GetSpectrum(bdaSpecFilterForScanId(scanId, true), nullptr)[0]));} CATCH_AND_FORWARD
 }
 
 SpectrumPtr MassHunterDataImpl::getPeakSpectrumById(int scanId, PeakFilterPtr peakFilter /*= PeakFilterPtr()*/) const
 {
-    // MHDAC doesn't support post-acquisition centroiding of non-TOF spectra
-    MHDAC::IMsdrPeakFilter^ msdrPeakFilter_ = nullptr;
-    if (scanFileInfo_->DeviceType != MHDAC::DeviceType::Quadrupole &&
-        scanFileInfo_->DeviceType != MHDAC::DeviceType::TandemQuadrupole)
-        msdrPeakFilter_ = msdrPeakFilter(peakFilter);
-    return SpectrumPtr(new SpectrumImpl(reader_->GetSpectrum(bdaSpecFilterForScanId(scanId), msdrPeakFilter_)[0]));
+    try
+    {
+        // MHDAC doesn't support post-acquisition centroiding of non-TOF spectra
+        MHDAC::IMsdrPeakFilter^ msdrPeakFilter_ = nullptr;
+        if (scanFileInfo_->DeviceType != MHDAC::DeviceType::Quadrupole &&
+            scanFileInfo_->DeviceType != MHDAC::DeviceType::TandemQuadrupole)
+            msdrPeakFilter_ = msdrPeakFilter(peakFilter);
+        return SpectrumPtr(new SpectrumImpl(reader_->GetSpectrum(bdaSpecFilterForScanId(scanId), msdrPeakFilter_)[0]));
+    }
+    CATCH_AND_FORWARD
 }
 
 
@@ -458,80 +414,81 @@ SpectrumImpl::~SpectrumImpl()
 
 MSScanType SpectrumImpl::getMSScanType() const
 {
-    CATCH_AND_FORWARD( return (MSScanType) specData_->MSScanType; )
+    try {return (MSScanType) specData_->MSScanType;} CATCH_AND_FORWARD
 }
 
 MSStorageMode SpectrumImpl::getMSStorageMode() const
 {
-    CATCH_AND_FORWARD( return (MSStorageMode) specData_->MSStorageMode; )
+    try {return (MSStorageMode) specData_->MSStorageMode;} CATCH_AND_FORWARD
 }
 
 IonPolarity SpectrumImpl::getIonPolarity() const
 {
-    CATCH_AND_FORWARD( return (IonPolarity) specData_->IonPolarity; )
+    try {return (IonPolarity) specData_->IonPolarity;} CATCH_AND_FORWARD
 }
 
 DeviceType SpectrumImpl::getDeviceType() const
 {
-    CATCH_AND_FORWARD( return (DeviceType) specData_->DeviceType; )
+    try {return (DeviceType) specData_->DeviceType;} CATCH_AND_FORWARD
 }
 
 MassRange SpectrumImpl::getMeasuredMassRange() const
 {
-    CATCH_AND_FORWARD
-    ( 
+    try
+    {
         MHDAC::IRange^ massRange = specData_->MeasuredMassRange;
         MassRange mr;
         mr.start = massRange->Start;
         mr.end = massRange->End;
         return mr;
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 int SpectrumImpl::getParentScanId() const
 {
-    CATCH_AND_FORWARD( return (int) specData_->ParentScanId; )
+    try {return (int) specData_->ParentScanId;} CATCH_AND_FORWARD
 }
 
 void SpectrumImpl::getPrecursorIons(vector<double>& precursorIons) const
 {
     int count;
-    CATCH_AND_FORWARD( return ToStdVector(specData_->GetPrecursorIon(count), precursorIons); )
+    try {return ToStdVector(specData_->GetPrecursorIon(count), precursorIons);} CATCH_AND_FORWARD
 }
 
 bool SpectrumImpl::getPrecursorCharge(int& charge) const
 {
-    CATCH_AND_FORWARD( return specData_->GetPrecursorCharge(charge); )
+    try {return specData_->GetPrecursorCharge(charge);} CATCH_AND_FORWARD
 }
 
 bool SpectrumImpl::getPrecursorIntensity(double& precursorIntensity) const
 {
-    CATCH_AND_FORWARD( return specData_->GetPrecursorIntensity(precursorIntensity); )
+    try {return specData_->GetPrecursorIntensity(precursorIntensity);} CATCH_AND_FORWARD
 }
 
 double SpectrumImpl::getCollisionEnergy() const
 {
-    CATCH_AND_FORWARD( return specData_->CollisionEnergy; )
+    try {return specData_->CollisionEnergy;} CATCH_AND_FORWARD
 }
 
 int SpectrumImpl::getScanId() const
 {
-    CATCH_AND_FORWARD( return specData_->ScanId; )
+    try {return specData_->ScanId;} CATCH_AND_FORWARD
 }
 
 int SpectrumImpl::getTotalDataPoints() const
 {
-    CATCH_AND_FORWARD( return specData_->TotalDataPoints; )
+    try {return specData_->TotalDataPoints;} CATCH_AND_FORWARD
 }
 
 void SpectrumImpl::getXArray(automation_vector<double>& x) const
 {
-    CATCH_AND_FORWARD( return ToAutomationVector(specData_->XArray, x); )
+    try {return ToAutomationVector(specData_->XArray, x);} CATCH_AND_FORWARD
 }
 
 void SpectrumImpl::getYArray(automation_vector<float>& y) const
 {
-    CATCH_AND_FORWARD( return ToAutomationVector(specData_->YArray, y); )
+    try {return ToAutomationVector(specData_->YArray, y);} CATCH_AND_FORWARD
 }
 
 
@@ -546,22 +503,22 @@ ChromatogramImpl::~ChromatogramImpl()
 
 double ChromatogramImpl::getCollisionEnergy() const
 {
-    CATCH_AND_FORWARD( return chromData_->CollisionEnergy; )
+    try {return chromData_->CollisionEnergy;} CATCH_AND_FORWARD
 }
 
 int ChromatogramImpl::getTotalDataPoints() const
 {
-    CATCH_AND_FORWARD( return chromData_->TotalDataPoints; )
+    try {return chromData_->TotalDataPoints;} CATCH_AND_FORWARD
 }
 
 void ChromatogramImpl::getXArray(automation_vector<double>& x) const
 {
-    CATCH_AND_FORWARD( return ToAutomationVector(chromData_->XArray, x); )
+    try {return ToAutomationVector(chromData_->XArray, x);} CATCH_AND_FORWARD
 }
 
 void ChromatogramImpl::getYArray(automation_vector<float>& y) const
 {
-    CATCH_AND_FORWARD( return ToAutomationVector(chromData_->YArray, y); )
+    try {return ToAutomationVector(chromData_->YArray, y);} CATCH_AND_FORWARD
 }
 
 
