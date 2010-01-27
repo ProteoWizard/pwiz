@@ -31,6 +31,7 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_MZWindow.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_MetadataFixer.hpp"
 #include "pwiz/analysis/spectrum_processing/PrecursorMassFilter.hpp"
+#include "pwiz/analysis/spectrum_processing/ThresholdFilter.hpp"
 #include "pwiz/data/msdata/SpectrumInfo.hpp"
 #include <iostream>
 
@@ -273,6 +274,44 @@ SpectrumListPtr filterCreator_ActivationType(const MSData& msd, const string& ar
 
 }
 
+
+SpectrumListPtr filterCreator_thresholdFilter(const MSData& msd, const string& arg)
+{
+    istringstream parser(arg);
+    string byTypeArg, orientationArg;
+    double threshold;
+
+    parser >> byTypeArg >> threshold >> orientationArg;
+
+    ThresholdFilter::ThresholdingBy_Type byType;
+    if (byTypeArg == "count")
+        byType = ThresholdFilter::ThresholdingBy_Count;
+    else if (byTypeArg == "count-after-ties")
+        byType = ThresholdFilter::ThresholdingBy_CountAfterTies;
+    else if (byTypeArg == "absolute")
+        byType = ThresholdFilter::ThresholdingBy_AbsoluteIntensity;
+    else if (byTypeArg == "bpi-relative")
+        byType = ThresholdFilter::ThresholdingBy_FractionOfBasePeakIntensity;
+    else if (byTypeArg == "tic-relative")
+        byType = ThresholdFilter::ThresholdingBy_FractionOfTotalIntensity;
+    else if (byTypeArg == "tic-cutoff")
+        byType = ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff;
+    else
+        return SpectrumListPtr();
+
+    ThresholdFilter::ThresholdingOrientation orientation;
+    if (orientationArg == "most-intense")
+        orientation = ThresholdFilter::Orientation_MostIntense;
+    else if (orientationArg == "least-intense")
+        orientation = ThresholdFilter::Orientation_LeastIntense;
+    else
+        return SpectrumListPtr();
+
+    SpectrumDataFilterPtr filter(new ThresholdFilter(byType, threshold, orientation));
+    return SpectrumListPtr(new SpectrumList_PeakFilter(msd.run.spectrumListPtr, filter));
+}
+
+
 struct JumpTableEntry
 {
     const char* command;
@@ -294,7 +333,8 @@ JumpTableEntry jumpTable_[] =
     {"scanTime", "[scanTimeLow,scanTimeHigh]", filterCreator_scanTime},
     {"stripIT", " (strip ion trap ms1 scans)", filterCreator_stripIT},
     {"Activation", "<ETD|CID>", filterCreator_ActivationType},
-    {"metadataFixer", " (add/replace TIC/BPI metadata)", filterCreator_metadataFixer}
+    {"metadataFixer", " (add/replace TIC/BPI metadata)", filterCreator_metadataFixer},
+    {"threshold", "<count|count-after-ties|absolute|bpi-relative|tic-relative|tic-cutoff> <threshold> <most-intense|least-intense>", filterCreator_thresholdFilter}
 };
 
 
