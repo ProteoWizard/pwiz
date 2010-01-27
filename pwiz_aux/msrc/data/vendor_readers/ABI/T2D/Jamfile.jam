@@ -4,7 +4,7 @@
 #
 # Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
 #
-# Copyright 2009 Vanderbilt University - Nashville, TN 37232
+# Copyright 2010 Vanderbilt University - Nashville, TN 37232
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); 
 # you may not use this file except in compliance with the License. 
@@ -20,10 +20,9 @@
 #
 
 
-# ABI WIFF support status:
-# - DLLs are .NET and thus MSVC only
-# - cannot redistribute DLLs and we can't compile the API without them
-
+# ABI T2D support status:
+# - depends on COM API in ABI's Data Explorer executable
+# - cannot redistribute Data Explorer but we can compile the API without it
 
 project
     : requirements 
@@ -34,27 +33,16 @@ project
 
 path-constant READER_PATH : . ;
 path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI ;
-path-constant TEST_DATA_PATH : ./Reader_ABI_Test.data ;
-
-
-import os common ;
-local ProgramFiles = [ os.environ ProgramFiles ] ;
-ProgramFiles ?= "C:\\Program Files" ;
-local ProteinPilot = "$(ProgramFiles)\\Applied Biosystems MDS Analytical Technologies\\ProteinPilot" ;
-if [ path.exists $(API_PATH)\\ABSciex.DataAccess.WiffFileDataReader.dll ] ||
-   [ path.exists $(ProteinPilot)\\ABSciex.DataAccess.WiffFileDataReader.dll ]
-{
-    .hasDLLs = true ;
-}
+path-constant TEST_DATA_PATH : ./Reader_ABI_T2D_Test.data ;
 
 
 import path ;
 rule vendor-api-requirements ( properties * )
 {
     local result ;
-    if <toolset>msvc in $(properties) && $(.hasDLLs)
+    if <toolset>msvc in $(properties)
     {
-        result += <source>Reader_ABI_Detail.cpp ;
+        result += <source>Reader_ABI_T2D_Detail.cpp ;
     }
     return $(result) [ vendor-api-usage-requirements $(properties) ] ;
 }
@@ -62,9 +50,9 @@ rule vendor-api-requirements ( properties * )
 rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
-    if <toolset>msvc in $(properties) && [ project-exists $(API_PATH) ] && $(.hasDLLs)
+    if <toolset>msvc in $(properties) && [ project-exists $(API_PATH) ]
     {
-        result += <define>PWIZ_READER_ABI ;
+        result += <define>PWIZ_READER_ABI_T2D ;
         result += <library>$(API_PATH)//pwiz_vendor_api_abi ;
     }
     else if ! $(.warn-once)
@@ -72,25 +60,21 @@ rule vendor-api-usage-requirements ( properties * )
         .warn-once = true ;
         if ! <toolset>msvc in $(properties)
         {
-            echo "[pwiz_aux/msrc/data/vendor_readers/ABI] Non-MSVC build: Reader_ABI can only identify WIFF files, not read them." ;
+            echo "[pwiz_aux/msrc/data/vendor_readers/ABI/T2D] Non-MSVC build: Reader_ABI_T2D can only identify T2D files, not read them." ;
         }
         else if ! [ project-exists $(API_PATH) ]
         {
-            echo "[pwiz_aux/msrc/data/vendor_readers/ABI] Missing ABI API: Reader_ABI can only identify WIFF files, not read them." ;
-        }
-        else if ! $(.hasDLLs)
-        {
-            echo "[pwiz_aux/msrc/data/vendor_readers/ABI] Missing WiffFileDataReader DLL: Reader_ABI can only identify WIFF files, not read them." ;
+            echo "[pwiz_aux/msrc/data/vendor_readers/ABI/T2D] Missing ABI API: Reader_ABI_T2D can only identify T2D files, not read them." ;
         }
     }
     return $(result) ;
 }
 
-lib pwiz_aux_msrc_reader_abi
+lib pwiz_aux_msrc_reader_abi_t2d
     : # sources
-        Reader_ABI.cpp
-        SpectrumList_ABI.cpp
-        ChromatogramList_ABI.cpp
+        Reader_ABI_T2D.cpp
+        SpectrumList_ABI_T2D.cpp
+        #ChromatogramList_ABI.cpp
     : # requirements
         <conditional>@vendor-api-requirements
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
@@ -100,6 +84,8 @@ lib pwiz_aux_msrc_reader_abi
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
     ;
 
+
+local generate-mzML = [ MATCH (--generate-mzML) : [ modules.peek : ARGV ] ] ;
 
 import tar ;
 rule test-requirements ( properties * )
@@ -113,31 +99,29 @@ rule test-requirements ( properties * )
     }
 
     local result ;
-    if ! [ path.exists $(TEST_DATA_PATH) ]
+    if ! ( [ path.exists $(TEST_DATA_PATH) ] || $(generate-mzML:E=false) = "false" )
     {
         if ! $(.warn-once)
         {
             .warn-once = true ;
-            echo "[pwiz_aux/msrc/data/vendor_readers/ABI] Missing ABI WIFF test data." ;
+            echo "[pwiz_aux/msrc/data/vendor_readers/ABI/T2D] Missing ABI T2D test data." ;
         }
         result += <build>no ;
     }
     return $(result) ;
 }
 
-local generate-mzML = [ MATCH (--generate-mzML) : [ modules.peek : ARGV ] ] ;
-
-# special run target for Reader_ABI_Test, which needs external data 
+# special run target for Reader_ABI_T2D_Test, which needs external data 
 # use --preserve-test-targets to prevent bjam from deleting the executable
-run Reader_ABI_Test.cpp $(PWIZ_ROOT_PATH)/pwiz/utility/misc/VendorReaderTestHarness.cpp
+run Reader_ABI_T2D_Test.cpp $(PWIZ_ROOT_PATH)/pwiz/utility/misc/VendorReaderTestHarness.cpp
     : # args
         \"$(TEST_DATA_PATH)\" $(generate-mzML)
     : # input-files
     : # requirements
-        <library>pwiz_aux_msrc_reader_abi
+        <library>pwiz_aux_msrc_reader_abi_t2d
         <conditional>@test-requirements
     : # target name
-        Reader_ABI_Test 
+        Reader_ABI_T2D_Test 
     : # default-build
     ;
 

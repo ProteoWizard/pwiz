@@ -64,7 +64,7 @@ PWIZ_API_DECL size_t SpectrumList_ABI::size() const
 PWIZ_API_DECL const SpectrumIdentity& SpectrumList_ABI::spectrumIdentity(size_t index) const
 {
     boost::call_once(indexInitialized_, boost::bind(&SpectrumList_ABI::createIndex, this));
-    if (index>size_)
+    if (index >= size_)
         throw runtime_error(("[SpectrumList_ABI::spectrumIdentity()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
     return index_[index];
@@ -99,7 +99,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, bool getBinar
     IndexEntry& ie = index_[index];
     SpectrumPtr result = SpectrumPtr(new Spectrum);
     if (!result.get())
-        throw std::runtime_error("[SpectrumList_Thermo::spectrum()] Allocation error.");
+        throw std::runtime_error("[SpectrumList_ABI::spectrum()] Allocation error.");
 
     result->index = index;
     result->id = ie.id;

@@ -30,6 +30,7 @@
 #include "pwiz/data/vendor_readers/Agilent/SpectrumList_Agilent.hpp"
 #include "pwiz_aux/msrc/data/vendor_readers/Bruker/SpectrumList_Bruker.hpp"
 #include "pwiz_aux/msrc/data/vendor_readers/ABI/SpectrumList_ABI.hpp"
+#include "pwiz_aux/msrc/data/vendor_readers/ABI/T2D/SpectrumList_ABI_T2D.hpp"
 
 
 namespace pwiz {
@@ -76,6 +77,12 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(
         {
             mode_ = 4;
         }
+
+        detail::SpectrumList_ABI_T2D* abi_t2d = dynamic_cast<detail::SpectrumList_ABI_T2D*>(&*inner);
+        if (abi_t2d)
+        {
+            mode_ = 5;
+        }
     }
 
     // add processing methods to the copy of the inner SpectrumList's data processing
@@ -90,6 +97,8 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(
         method.userParams.push_back(UserParam("ABI/Analyst peak picking"));
     else if (mode_ == 4)
         method.userParams.push_back(UserParam("Agilent/MassHunter peak picking"));
+    else if (mode_ == 5)
+        method.userParams.push_back(UserParam("ABI/DataExplorer peak picking"));
     //else
     //    method.userParams.push_back(algorithm->name());
     dp_->processingMethods.push_back(method);
@@ -115,12 +124,17 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_PeakPicker::spectrum(size_t index, bool g
         case 2:
             s = dynamic_cast<detail::SpectrumList_Bruker*>(&*inner_)->spectrum(index, getBinaryData, msLevelsToPeakPick_);
             break;
+
         case 3:
             s = dynamic_cast<detail::SpectrumList_ABI*>(&*inner_)->spectrum(index, getBinaryData, msLevelsToPeakPick_);
             break;
 
         case 4:
             s = dynamic_cast<detail::SpectrumList_Agilent*>(&*inner_)->spectrum(index, getBinaryData, msLevelsToPeakPick_);
+            break;
+
+        case 5:
+            s = dynamic_cast<detail::SpectrumList_ABI_T2D*>(&*inner_)->spectrum(index, getBinaryData, msLevelsToPeakPick_);
             break;
 
         case 0:
