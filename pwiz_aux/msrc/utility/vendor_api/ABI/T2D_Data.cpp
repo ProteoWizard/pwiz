@@ -51,6 +51,9 @@ namespace {
 
 std::string ToStdString(System::String^ source)
 {
+    if (String::IsNullOrEmpty(source))
+        return "";
+
 	int len = (( source->Length+1) * 2);
 	char *ch = new char[ len ];
 	bool result ;
@@ -121,6 +124,8 @@ class DataImpl : public Data
         }
         else
         pwiz::util::expand_pathmask(real_datapath / "*.t2d", t2d_filepaths);
+        pwiz::util::expand_pathmask(real_datapath / "MS/*.t2d", t2d_filepaths);
+        pwiz::util::expand_pathmask(real_datapath / "MSMS/*.t2d", t2d_filepaths);
         std::sort(t2d_filepaths.begin(), t2d_filepaths.end());
         if (t2d_filepaths.empty())
             throw runtime_error("[T2D::Data::ctor] directory contains no T2D files: " + real_datapath.string());
@@ -131,7 +136,7 @@ class DataImpl : public Data
     virtual size_t getSpectrumCount() const {return t2d_filepaths.size();}
     virtual SpectrumPtr getSpectrum(size_t index) const;
 
-    const vector<bfs::path>& getSpectrumFilenames() const {return t2d_filepaths;}
+    virtual const vector<bfs::path>& getSpectrumFilenames() const {return t2d_filepaths;}
 
     virtual blt::local_date_time getSampleAcquisitionTime() const {return blt::local_date_time(bdt::not_a_date_time);}
 
@@ -162,6 +167,8 @@ struct SpectrumImpl : public Spectrum
           t2d_filepath_(t2d_filepath)
     {
         bfs::path t2d_filepath_copy = t2d_filepath;
+
+        // TODO: come up with a fallback plan if the T2Ds are in a read-only location
 
         // delete processing history file
         bfs::remove(t2d_filepath_copy.replace_extension(".cts"));
@@ -229,6 +236,13 @@ struct SpectrumImpl : public Spectrum
         }
     }
 
+    virtual IonMode getPolarity() const
+    {
+        int value;
+        document_->InstrumentSettings->GetState(DE::DeInstrumentStateType::deIonMode, 0, value);
+        return value < 0 || value > 2 ? IonMode_Unknown : (IonMode) value;
+    }
+
     virtual size_t getPeakDataSize() const
     {
         System::Object^ peakDataObject;
@@ -285,8 +299,21 @@ struct SpectrumImpl : public Spectrum
     }
 
     virtual void getBasePeak(double& mz, double& intensity) const {specView_->GetBasePeak(mz, intensity);}
-    virtual double getMinMz() const {return 0;}
-    virtual double getMaxMz() const {return 0;}
+
+    virtual string getInstrumentStringParam(InstrumentStringParam param) const
+    {
+        String^ value;
+        document_->InstrumentSettings->GetStringParam((DE::DeInstrumentStringParamType) param, 0, value);
+        return ToStdString(value);
+    }
+
+    virtual double getInstrumentSetting(InstrumentSetting setting) const
+    {
+        double value;
+        document_->InstrumentSettings->GetSetting((DE::DeInstrumentSettingType) setting, 0, value);
+        return value;
+    }
+
 
     private:
 

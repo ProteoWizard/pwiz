@@ -70,6 +70,7 @@ enum PWIZ_API_DECL InstrumentSetting
 
 enum PWIZ_API_DECL IonMode
 {
+    IonMode_Unknown = -1,
     IonMode_Off = 0,
     IonMode_Positive = 1,
     IonMode_Negative = 2
@@ -89,6 +90,7 @@ struct PWIZ_API_DECL Spectrum
 {
     virtual SpectrumType getType() const = 0;
     virtual int getMsLevel() const = 0;
+    virtual IonMode getPolarity() const = 0;
 
     virtual size_t getPeakDataSize() const = 0;
     virtual void getPeakData(std::vector<double>& mz, std::vector<double>& intensities) const = 0;
@@ -98,14 +100,16 @@ struct PWIZ_API_DECL Spectrum
 
     virtual double getTIC() const = 0;
     virtual void getBasePeak(double& mz, double& intensity) const = 0;
-    virtual double getMinMz() const = 0;
-    virtual double getMaxMz() const = 0;
+
+    virtual std::string getInstrumentStringParam(InstrumentStringParam param) const = 0;
+    virtual double getInstrumentSetting(InstrumentSetting setting) const = 0;
 
     virtual ~Spectrum() {}
 };
 
-
 typedef boost::shared_ptr<Spectrum> SpectrumPtr;
+
+
 class PWIZ_API_DECL Data
 {
     public:

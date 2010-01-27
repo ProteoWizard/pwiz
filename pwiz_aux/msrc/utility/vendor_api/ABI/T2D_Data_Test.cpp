@@ -45,6 +45,14 @@ void summarizeMzIntensityPairs(ostream& os, const vector<double>& mz, const vect
         os << '(' << mz[mz.size()-i] << ',' << intensities[mz.size()-i] << ") ";
 }
 
+#define PRINT_INSTRUMENT_SETTING(setting) \
+    {double value = spectrumPtr->getInstrumentSetting(InstrumentSetting_##setting); \
+    if (value >= 0) cout << "\t\t" << BOOST_STRINGIZE(setting) << " = " << value << endl;}
+
+#define PRINT_INSTRUMENT_STRING_PARAM(param) \
+    {string value = spectrumPtr->getInstrumentStringParam(InstrumentStringParam_##param); \
+    if (!value.empty()) cout << "\t\t" << BOOST_STRINGIZE(param) << " = " << value << endl;}
+
 void test(const string& rawpath)
 {
     DataPtr dataPtr = Data::create(rawpath);
@@ -58,7 +66,33 @@ void test(const string& rawpath)
 
         cout << "\tgetType: " << spectrumPtr->getType() << endl;
         cout << "\tgetMsLevel: " << spectrumPtr->getMsLevel() << endl;
+        cout << "\tgetPolarity: " << spectrumPtr->getPolarity() << endl;
         cout << "\tgetTIC: " << spectrumPtr->getTIC() << endl;
+
+        cout << "\tInstrumentSettings:" << endl;
+        PRINT_INSTRUMENT_SETTING(NozzlePotential);
+        PRINT_INSTRUMENT_SETTING(MinimumAnalyzerMass);
+        PRINT_INSTRUMENT_SETTING(MaximumAnalyzerMass);
+        PRINT_INSTRUMENT_SETTING(Skimmer1Potential);
+        PRINT_INSTRUMENT_SETTING(SpectrumXPosAbs);
+        PRINT_INSTRUMENT_SETTING(SpectrumYPosAbs);
+        PRINT_INSTRUMENT_SETTING(SpectrumXPosRel);
+        PRINT_INSTRUMENT_SETTING(SpectrumYPosRel);
+        PRINT_INSTRUMENT_SETTING(PulsesAccepted);
+        PRINT_INSTRUMENT_SETTING(DigitizerStartTime);
+        PRINT_INSTRUMENT_SETTING(DigitzerBinSize);
+        PRINT_INSTRUMENT_SETTING(SourcePressure);
+        PRINT_INSTRUMENT_SETTING(MirrorPressure);
+        PRINT_INSTRUMENT_SETTING(TC2Pressure);
+        PRINT_INSTRUMENT_SETTING(PreCursorIon);
+
+        cout << "\tInstrumentStringParams:" << endl;
+        PRINT_INSTRUMENT_STRING_PARAM(SampleWell);
+        PRINT_INSTRUMENT_STRING_PARAM(PlateID);
+        PRINT_INSTRUMENT_STRING_PARAM(InstrumentName);
+        PRINT_INSTRUMENT_STRING_PARAM(SerialNumber);
+        PRINT_INSTRUMENT_STRING_PARAM(PlateTypeFilename);
+        PRINT_INSTRUMENT_STRING_PARAM(LabName);
 
         double bpmz, bpi;
         spectrumPtr->getBasePeak(bpmz, bpi);
