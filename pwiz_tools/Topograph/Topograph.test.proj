@@ -19,7 +19,7 @@
       <Output TaskParameter="Lines" ItemName="lines"/>
     </ReadLinesFromFile>
     <WriteLinesToFile File="@(TestPassedFile)" Lines="@(Lines)" Overwrite="false" />
-    <RemoveDir Directories="$(TestResultsDir)" />
+<!--    <RemoveDir Directories="$(TestResultsDir)" /> -->
 
   </Target>
   <Target Name="MSTest:CleanAll">
