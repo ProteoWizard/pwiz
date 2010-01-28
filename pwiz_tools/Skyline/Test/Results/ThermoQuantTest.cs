@@ -130,8 +130,8 @@ namespace pwiz.SkylineTest.Results
             Assert.IsTrue(docContainer.SetDocument(doc, docResults, true));
             Assert.IsTrue(docContainer.LastProgress.IsCanceled);
 
-            // Wait up to 1 second for the cache to be removed
-            for (int i = 0; i < 10; i++)
+            // Wait up to 10 seconds for the cache to be removed
+            for (int i = 0; i < 100; i++)
             {
                 if (Directory.GetFiles(dirPath).IndexOf(IsCacheOrTempFile) == -1)
                     break;

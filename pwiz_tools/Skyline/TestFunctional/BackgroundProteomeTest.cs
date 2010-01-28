@@ -77,6 +77,10 @@ namespace pwiz.SkylineTestFunctional
                 }
                 Thread.Sleep(100);
             }
+            // Make sure digestion was successful
+            var peptideSettingsFinal = Program.ActiveDocument.Settings.PeptideSettings;
+            Assert.IsNotNull(peptideSettingsFinal.BackgroundProteome.GetDigestion(peptideSettingsFinal));
+
             RunUI(() =>
                 {
                     SequenceTree sequenceTree = SkylineWindow.SequenceTree;
@@ -86,10 +90,14 @@ namespace pwiz.SkylineTestFunctional
                     sequenceTree.BeginEdit(false);
                     sequenceTree.StatementCompletionEditBox.TextBox.Text = "TISEVIAQGK";
                 });
+
             var statementCompletionForm = WaitForOpenForm<StatementCompletionForm>();
+            Assert.IsNotNull(statementCompletionForm);
+
             RunUI(() =>
                 {
                     SequenceTree sequenceTree = SkylineWindow.SequenceTree;
+                    Assert.IsNotNull(sequenceTree.StatementCompletionEditBox);
                     sequenceTree.StatementCompletionEditBox.OnSelectionMade(
                         (StatementCompletionItem) statementCompletionForm.ListView.Items[0].Tag);
                 });
