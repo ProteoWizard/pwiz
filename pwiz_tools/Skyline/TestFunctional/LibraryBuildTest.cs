@@ -342,7 +342,7 @@ namespace pwiz.SkylineTestFunctional
                 AssertEx.Contains(messageDlg.Message, inputFile, "line");
             else
                 AssertEx.Contains(messageDlg.Message, messageParts);
-            RunUI(messageDlg.OkDialog);           
+            OkDialog(messageDlg, messageDlg.OkDialog);           
             CheckLibraryExistence(TestFilesDir.GetTestPath(_libraryName + BiblioSpecLiteSpec.EXT_REDUNDANT), false);
             CheckLibraryExistence(TestFilesDir.GetTestPath(_libraryName + BiblioSpecLiteSpec.EXT), false);
         }

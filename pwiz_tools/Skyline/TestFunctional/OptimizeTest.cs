@@ -185,6 +185,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Recalculate the CE optimization regression from this data
             const string reoptimizeCEName = "Thermo Reoptimized";
+            docCurrent = SkylineWindow.Document;
             var transitionSettingsUI4 = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             var editList4 = ShowDialog<EditListDlg<SettingsListBase<CollisionEnergyRegression>, CollisionEnergyRegression>>(transitionSettingsUI4.EditCEList);
             var editCE4 = ShowDialog<EditCEDlg>(editList4.AddItem);
@@ -204,6 +205,7 @@ namespace pwiz.SkylineTestFunctional
                 transitionSettingsUI4.OptimizeType = OptimizedMethodType.None.ToString();
                 transitionSettingsUI4.OkDialog();
             });
+            WaitForDocumentChange(docCurrent);
 
             // Make sure new settings are in document
             var reoptimizeRegression = SkylineWindow.Document.Settings.TransitionSettings.Prediction.CollisionEnergy;
