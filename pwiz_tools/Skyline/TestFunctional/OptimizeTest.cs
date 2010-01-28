@@ -127,6 +127,8 @@ namespace pwiz.SkylineTestFunctional
             Settings.Default.HeavyModList.Add(new StaticMod(heavyK, 'K', ModTerminus.C, null, labelAtoms, null, null));
             Settings.Default.HeavyModList.Add(new StaticMod(heavyR, 'R', ModTerminus.C, null, labelAtoms, null, null));
 
+            docCurrent = SkylineWindow.Document;
+
             var peptideSettingsUI1 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
 
             RunUI(() =>
@@ -135,6 +137,8 @@ namespace pwiz.SkylineTestFunctional
                           peptideSettingsUI1.OkDialog();
                       });
 
+            // First make sure the first settings change occurs
+            WaitForDocumentChange(docCurrent);
             // Wait until everything is loaded
             WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
 
