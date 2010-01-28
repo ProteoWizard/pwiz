@@ -59,7 +59,6 @@ if [ modules.peek : NT ]
         IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
         IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
         echo Building Skyline in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);OutDir=$(OUTPUT_PATH);TestProject=Test /t:MSTest:CleanAll /nologo /verbosity:minimal
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:Skyline /nologo /verbosity:minimal
     }
     
