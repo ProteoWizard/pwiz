@@ -89,6 +89,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
     result->index = ie.index;
     result->id = ie.id;
 
+    // TODO: fix Serializer_mzXML so it supports non-default sourceFilePtrs
+    //size_t sourceFileIndex = ie.functionPtr->getFunctionNumber() - 1;
+    //result->sourceFilePtr = msd_.fileDescription.sourceFilePtrs[sourceFileIndex];
+
     /*float laserAimX = pExScanStats_->LaserAimXPos;
     float laserAimY = pExScanStats_->LaserAimYPos;
     //if (scanInfo->ionizationType() == IonizationType_MALDI)

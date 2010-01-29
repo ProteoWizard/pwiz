@@ -102,6 +102,8 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile, i
     sourceFile->set(MS_ABI_WIFF_file);
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 
+    msd.run.defaultSourceFilePtr = sourceFile;
+
     // add a SourceFile for the .scan file if it exists
     bfs::path wiffscan = wiffpath + ".scan";
     if (bfs::exists(wiffscan))

@@ -164,6 +164,9 @@ void fillInMetadata(const string& rawpath, MassHunterDataPtr rawfile, MSData& ms
         sourceFile->set(MS_Agilent_MassHunter_nativeID_format);
         sourceFile->set(MS_Agilent_MassHunter_file);
         msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
+
+        if (ext == ".bin")
+            msd.run.defaultSourceFilePtr = sourceFile;
     }
 
     msd.id = bfs::basename(p);

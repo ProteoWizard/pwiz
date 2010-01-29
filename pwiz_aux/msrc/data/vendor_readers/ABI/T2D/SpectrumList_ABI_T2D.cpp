@@ -96,13 +96,16 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI_T2D::spectrum(size_t index, bool getB
 
     result->index = index;
     result->id = ie.id;
+    result->sourceFilePtr = msd_.fileDescription.sourceFilePtrs[index];
 
     result->scanList.set(MS_no_combination);
     result->scanList.scans.push_back(Scan());
-    //Scan& scan = result->scanList.scans[0];
+    Scan& scan = result->scanList.scans[0];
+    scan.instrumentConfigurationPtr = msd_.run.defaultInstrumentConfigurationPtr;
 
     pwiz::vendor_api::ABI::T2D::SpectrumPtr spectrum = t2d_data_->getSpectrum(index);
 
+    // TODO: use file's last modified time to get scan start time?
     /*double scanTime = msExperiment->getCycleStartTime(ie.cycle);
     if (scanTime > 0)
         scan.set(MS_scan_start_time, scanTime, UO_minute);*/
