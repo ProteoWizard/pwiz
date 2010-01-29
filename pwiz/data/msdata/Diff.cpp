@@ -689,56 +689,62 @@ void diff(const Run& a,
         diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
     }
 
-    // special handling for SpectrumList diff
-    shared_ptr<SpectrumListSimple> temp_a_b(new SpectrumListSimple); 
-    shared_ptr<SpectrumListSimple> temp_b_a(new SpectrumListSimple);
-    a_b.spectrumListPtr = temp_a_b;
-    b_a.spectrumListPtr = temp_b_a; 
-    SpectrumListPtr temp_a = a.spectrumListPtr.get() ? a.spectrumListPtr : SpectrumListPtr(new SpectrumListSimple);
-    SpectrumListPtr temp_b = b.spectrumListPtr.get() ? b.spectrumListPtr : SpectrumListPtr(new SpectrumListSimple);
-    diff(*temp_a, *temp_b, *temp_a_b, *temp_b_a, config);
-
-    double maxPrecisionDiffSpec = 0;
-    DataProcessingPtr sl_a_b_dp = temp_a_b->dp;
-    if (sl_a_b_dp.get() &&
-        !sl_a_b_dp->processingMethods.empty() &&
-        !sl_a_b_dp->processingMethods.back().userParam(userParamName_MaxBinaryDataArrayDifference_).empty())
-        maxPrecisionDiffSpec = lexical_cast<double>(sl_a_b_dp->processingMethods.back().userParam(userParamName_MaxBinaryDataArrayDifference_).value);
-
-    if (maxPrecisionDiffSpec>(config.precision+numeric_limits<double>::epsilon()))
+    if (!config.ignoreSpectra)
     {
-        a_b.userParams.push_back(UserParam("Spectrum binary data array difference",
-            lexical_cast<string>(maxPrecisionDiffSpec),
-            "xsd:float"));
-        b_a.userParams.push_back(UserParam("Spectrum binary data array difference",
-            lexical_cast<string>(maxPrecisionDiffSpec),
-            "xsd:float"));
+        // special handling for SpectrumList diff
+        shared_ptr<SpectrumListSimple> temp_a_b(new SpectrumListSimple); 
+        shared_ptr<SpectrumListSimple> temp_b_a(new SpectrumListSimple);
+        a_b.spectrumListPtr = temp_a_b;
+        b_a.spectrumListPtr = temp_b_a; 
+        SpectrumListPtr temp_a = a.spectrumListPtr.get() ? a.spectrumListPtr : SpectrumListPtr(new SpectrumListSimple);
+        SpectrumListPtr temp_b = b.spectrumListPtr.get() ? b.spectrumListPtr : SpectrumListPtr(new SpectrumListSimple);
+        diff(*temp_a, *temp_b, *temp_a_b, *temp_b_a, config);
+
+        double maxPrecisionDiffSpec = 0;
+        DataProcessingPtr sl_a_b_dp = temp_a_b->dp;
+        if (sl_a_b_dp.get() &&
+            !sl_a_b_dp->processingMethods.empty() &&
+            !sl_a_b_dp->processingMethods.back().userParam(userParamName_MaxBinaryDataArrayDifference_).empty())
+            maxPrecisionDiffSpec = lexical_cast<double>(sl_a_b_dp->processingMethods.back().userParam(userParamName_MaxBinaryDataArrayDifference_).value);
+
+        if (maxPrecisionDiffSpec>(config.precision+numeric_limits<double>::epsilon()))
+        {
+            a_b.userParams.push_back(UserParam("Spectrum binary data array difference",
+                lexical_cast<string>(maxPrecisionDiffSpec),
+                "xsd:float"));
+            b_a.userParams.push_back(UserParam("Spectrum binary data array difference",
+                lexical_cast<string>(maxPrecisionDiffSpec),
+                "xsd:float"));
+        }
     }
 
-    // special handling for ChromatogramList diff
-    shared_ptr<ChromatogramListSimple> cl_temp_a_b(new ChromatogramListSimple); 
-    shared_ptr<ChromatogramListSimple> cl_temp_b_a(new ChromatogramListSimple);
-    a_b.chromatogramListPtr = cl_temp_a_b;
-    b_a.chromatogramListPtr = cl_temp_b_a; 
-    ChromatogramListPtr cl_temp_a = a.chromatogramListPtr.get() ? a.chromatogramListPtr : ChromatogramListPtr(new ChromatogramListSimple);
-    ChromatogramListPtr cl_temp_b = b.chromatogramListPtr.get() ? b.chromatogramListPtr : ChromatogramListPtr(new ChromatogramListSimple);
-    diff(*cl_temp_a, *cl_temp_b, *cl_temp_a_b, *cl_temp_b_a, config);
-
-    double maxPrecisionDiffChr = 0;
-    DataProcessingPtr cl_a_b_dp = temp_a_b->dp;
-    if (cl_a_b_dp.get() &&
-        !cl_a_b_dp->processingMethods.empty() &&
-        !cl_a_b_dp->processingMethods.back().userParam(userParamName_MaxBinaryDataArrayDifference_).empty())
-        maxPrecisionDiffChr = lexical_cast<double>(cl_a_b_dp->processingMethods.back().userParam(userParamName_MaxBinaryDataArrayDifference_).value);
-
-    if (maxPrecisionDiffChr>(config.precision+numeric_limits<double>::epsilon()))
+    if (!config.ignoreChromatograms)
     {
-        a_b.userParams.push_back(UserParam("Chromatogram binary data array difference",
-            lexical_cast<string>(maxPrecisionDiffChr),
-            "xsd:float"));
-        b_a.userParams.push_back(UserParam("Chromatogram binary data array difference",
-            lexical_cast<string>(maxPrecisionDiffChr),
-            "xsd:float"));
+        // special handling for ChromatogramList diff
+        shared_ptr<ChromatogramListSimple> cl_temp_a_b(new ChromatogramListSimple); 
+        shared_ptr<ChromatogramListSimple> cl_temp_b_a(new ChromatogramListSimple);
+        a_b.chromatogramListPtr = cl_temp_a_b;
+        b_a.chromatogramListPtr = cl_temp_b_a; 
+        ChromatogramListPtr cl_temp_a = a.chromatogramListPtr.get() ? a.chromatogramListPtr : ChromatogramListPtr(new ChromatogramListSimple);
+        ChromatogramListPtr cl_temp_b = b.chromatogramListPtr.get() ? b.chromatogramListPtr : ChromatogramListPtr(new ChromatogramListSimple);
+        diff(*cl_temp_a, *cl_temp_b, *cl_temp_a_b, *cl_temp_b_a, config);
+
+        double maxPrecisionDiffChr = 0;
+        DataProcessingPtr cl_a_b_dp = cl_temp_a_b->dp;
+        if (cl_a_b_dp.get() &&
+            !cl_a_b_dp->processingMethods.empty() &&
+            !cl_a_b_dp->processingMethods.back().userParam(userParamName_MaxBinaryDataArrayDifference_).empty())
+            maxPrecisionDiffChr = lexical_cast<double>(cl_a_b_dp->processingMethods.back().userParam(userParamName_MaxBinaryDataArrayDifference_).value);
+
+        if (maxPrecisionDiffChr>(config.precision+numeric_limits<double>::epsilon()))
+        {
+            a_b.userParams.push_back(UserParam("Chromatogram binary data array difference",
+                lexical_cast<string>(maxPrecisionDiffChr),
+                "xsd:float"));
+            b_a.userParams.push_back(UserParam("Chromatogram binary data array difference",
+                lexical_cast<string>(maxPrecisionDiffChr),
+                "xsd:float"));
+        }
     }
 
     // provide context

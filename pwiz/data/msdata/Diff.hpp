@@ -213,6 +213,7 @@ struct PWIZ_API_DECL DiffConfig : public pwiz::data::BaseDiffConfig
     ///  - precursor.ionSelection
     bool ignoreMetadata;
 
+    bool ignoreSpectra;
     bool ignoreChromatograms;
 
     bool ignoreDataProcessing;
@@ -221,6 +222,7 @@ struct PWIZ_API_DECL DiffConfig : public pwiz::data::BaseDiffConfig
     :   pwiz::data::BaseDiffConfig(),
         ignoreIdentity(false),
         ignoreMetadata(false),
+        ignoreSpectra(false),
         ignoreChromatograms(false),
         ignoreDataProcessing(false)
     {}
