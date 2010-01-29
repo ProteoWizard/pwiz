@@ -848,32 +848,6 @@ SoftwarePtr registerSoftware(MSData& msd,
 }
 
 
-template <typename SequenceT>
-string longestCommonPrefix(const SequenceT& strings)
-{
-    if (strings.empty())
-        return "";
-
-    typename SequenceT::const_iterator itr = strings.begin();
-    string result = *itr;
-    for (++itr; itr != strings.end(); ++itr)
-    {
-        const string& target = *itr;
-
-        if (result.empty())
-            return "";
-
-        for (size_t j=0; j < target.length() && j < result.length(); ++j)
-            if (target[j] != result[j])
-            {
-                result.resize(0, j);
-                break;
-            }
-    }
-    return result;
-}
-
-
 void fillInMetadata(MSData& msd)
 {
     // check for (Mass)Wolf-MRM metadata: multiple parentFiles with the same .raw URI

@@ -92,6 +92,19 @@ std::string encode_xml_datetime(const time_type& t)
 }
 
 
+/// converts an xsd:datetime attribute to a local_date_time
+inline blt::local_date_time decode_xml_datetime(const std::string& t)
+{
+    blt::local_time_input_facet* input_facet = new blt::local_time_input_facet;
+    input_facet->format("%Y-%m-%dT%H:%M:%SZ");
+    std::stringstream ss(t);
+    ss.imbue(std::locale(std::locale::classic(), input_facet));
+    blt::local_date_time result(bdt::not_a_date_time);
+    ss >> result;
+    return blt::local_date_time(result.utc_time(), blt::time_zone_ptr());
+}
+
+
 } // namespace util
 } // namespace pwiz
 

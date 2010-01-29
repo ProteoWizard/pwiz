@@ -41,4 +41,39 @@ using boost::lexical_cast;
 using boost::bad_lexical_cast;
 using boost::format;
 
+
+namespace pwiz {
+namespace util {
+
+
+template <typename SequenceT>
+std::string longestCommonPrefix(const SequenceT& strings)
+{
+    if (strings.empty())
+        return "";
+
+    typename SequenceT::const_iterator itr = strings.begin();
+    std::string result = *itr;
+    for (++itr; itr != strings.end(); ++itr)
+    {
+        const std::string& target = *itr;
+
+        if (result.empty())
+            return "";
+
+        for (size_t j=0; j < target.length() && j < result.length(); ++j)
+            if (target[j] != result[j])
+            {
+                result.resize(j);
+                break;
+            }
+    }
+    return result;
+}
+
+
+} // namespace util
+} // namespace pwiz
+
+
 #endif // _STRING_HPP_
