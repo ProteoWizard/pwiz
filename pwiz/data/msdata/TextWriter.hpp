@@ -355,6 +355,8 @@ class PWIZ_API_DECL TextWriter
             ("id: " + spectrum.id);
         if (!spectrum.spotID.empty())
             child()("spotID: " + spectrum.spotID);
+        if (spectrum.sourceFilePtr.get())
+            child()(spectrum.sourceFilePtr);
         child()
             ("defaultArrayLength: " + boost::lexical_cast<std::string>(spectrum.defaultArrayLength))
             (spectrum.dataProcessingPtr)
