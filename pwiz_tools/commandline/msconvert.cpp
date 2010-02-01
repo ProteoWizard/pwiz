@@ -23,6 +23,7 @@
 
 #include "pwiz_tools/common/FullReaderList.hpp"
 #include "pwiz/data/msdata/MSDataFile.hpp"
+#include "pwiz/data/msdata/MSDataMerger.hpp"
 #include "pwiz/data/msdata/IO.hpp"
 #include "pwiz/data/msdata/SpectrumInfo.hpp"
 #include "pwiz/utility/misc/IterationListener.hpp"
@@ -57,9 +58,10 @@ struct Config
     bool verbose;
     MSDataFile::WriteConfig writeConfig;
     string contactFilename;
+    bool merge;
 
     Config()
-    :   outputPath("."), verbose(false)
+    :   outputPath("."), verbose(false), merge(false)
     {}
 
     string outputFilename(const string& inputFilename, const MSData& inputMSData) const;
@@ -204,7 +206,10 @@ Config parseCommandLine(int argc, const char* argv[])
 			": gzip entire output file (adds .gz to filename)")
         ("filter",
             po::value< vector<string> >(&config.filters),
-			(": add a spectrum list filter\n" + SpectrumListFactory::usage()).c_str())
+			": add a spectrum list filter")
+        ("merge",
+            po::value<bool>(&config.merge)->zero_tokens(),
+            ": create a single output file from multiple input files by merging file-level metadata and concatenating spectrum lists")
         ;
 
     // append options description to usage string
@@ -212,6 +217,8 @@ Config parseCommandLine(int argc, const char* argv[])
     usage << od_config;
 
     // extra usage
+
+    usage << SpectrumListFactory::usage() << endl;
 
     usage << "Examples:\n"
           << endl
@@ -455,6 +462,70 @@ class UserFeedbackIterationListener : public IterationListener
 };
 
 
+void calculateSourceFilePtrSHA1(const SourceFilePtr& sourceFilePtr)
+{
+    calculateSourceFileSHA1(*sourceFilePtr);
+}
+
+
+int mergeFiles(const vector<string>& filenames, const Config& config, const ReaderList& readers)
+{
+    vector<MSDataPtr> msdList;
+    int failedFileCount = 0;
+
+    BOOST_FOREACH(const string& filename, filenames)
+    {
+        try
+        {
+            cout << "processing file: " << filename << endl;
+            readers.read(filename, msdList);
+        }
+        catch (exception& e)
+        {
+            ++failedFileCount;
+            cerr << "Error reading file " << filename << ":\n" << e.what() << endl;
+        }
+    }
+
+    // handle progress updates if requested
+
+    IterationListenerRegistry iterationListenerRegistry;
+    UserFeedbackIterationListener feedback;
+    // update on the first spectrum, the last spectrum, the 100th spectrum, the 200th spectrum, etc.
+    const size_t iterationPeriod = 100;
+    iterationListenerRegistry.addListener(feedback, iterationPeriod);
+    IterationListenerRegistry* pILR = config.verbose ? &iterationListenerRegistry : 0;
+
+    try
+    {
+        MSDataMerger msd(msdList);
+
+        cout << "calculating source file checksums" << endl;
+        // calculate SHA1 checksums
+        for_each(msd.fileDescription.sourceFilePtrs.begin(),
+                 msd.fileDescription.sourceFilePtrs.end(),
+                 &calculateSourceFilePtrSHA1);
+
+        if (!config.contactFilename.empty())
+            addContactInfo(msd, config.contactFilename);
+
+        SpectrumListFactory::wrap(msd, config.filters);
+
+        string outputFilename = config.outputFilename("merged-spectra", msd);
+        cout << "writing output file: " << outputFilename << endl;
+
+        MSDataFile::write(msd, outputFilename, config.writeConfig, pILR);
+    }
+    catch (exception& e)
+    {
+        failedFileCount = filenames.size();
+        cerr << "Error merging files: " << e.what() << endl;
+    }
+
+    return failedFileCount;
+}
+
+
 void processFile(const string& filename, const Config& config, const ReaderList& readers)
 {
     // read in data file
@@ -469,9 +540,10 @@ void processFile(const string& filename, const Config& config, const ReaderList&
         MSData& msd = *msdList[i];
         try
         {
-            // calculate SHA1 checksum
-            if (!msd.fileDescription.sourceFilePtrs.empty())
-                calculateSourceFileSHA1(*msd.fileDescription.sourceFilePtrs.back());
+            // calculate SHA1 checksums
+            for_each(msd.fileDescription.sourceFilePtrs.begin(),
+                     msd.fileDescription.sourceFilePtrs.end(),
+                     &calculateSourceFilePtrSHA1);
 
             // process the data 
 
@@ -508,26 +580,32 @@ int go(const Config& config)
     cout << config;
 
     boost::filesystem::create_directories(config.outputPath);
-//cin.get();
+
     FullReaderList readers;
 
     int failedFileCount = 0;
 
-    for (vector<string>::const_iterator it=config.filenames.begin(); 
-         it!=config.filenames.end(); ++it)
+    if (config.merge)
+        failedFileCount = mergeFiles(config.filenames, config, readers);
+    else
     {
-        try
+
+        for (vector<string>::const_iterator it=config.filenames.begin(); 
+             it!=config.filenames.end(); ++it)
         {
-            processFile(*it, config, readers);
-        }
-        catch (exception& e)
-        {
-            failedFileCount++;
-            cout << e.what() << endl;
-            cout << "Error processing file " << *it << "\n\n"; 
+            try
+            {
+                processFile(*it, config, readers);
+            }
+            catch (exception& e)
+            {
+                failedFileCount++;
+                cout << e.what() << endl;
+                cout << "Error processing file " << *it << "\n\n"; 
+            }
         }
     }
-//cin.get();
+
     return failedFileCount;
 }
 

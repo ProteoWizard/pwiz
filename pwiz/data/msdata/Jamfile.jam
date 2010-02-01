@@ -46,8 +46,9 @@ lib pwiz_data_msdata
         Diff.cpp
         IO.cpp
         LegacyAdapter.cpp
-        MSData.cpp 
-        MSDataFile.cpp 
+        MSData.cpp
+        MSDataFile.cpp
+        MSDataMerger.cpp
         Serializer_mzML.cpp
         Serializer_mzXML.cpp
         Serializer_MGF.cpp
@@ -103,6 +104,7 @@ unit-test MSDataTest : MSDataTest.cpp pwiz_data_msdata ; # MSData.cpp cv.cpp ;
 unit-test LegacyAdapterTest : LegacyAdapterTest.cpp pwiz_data_msdata ; # LegacyAdapter.cpp CVTranslator.cpp MSData.cpp cv.cpp ;
 unit-test SpectrumIteratorTest : SpectrumIteratorTest.cpp pwiz_data_msdata ; # SpectrumIterator.cpp MSData.cpp cv.cpp ../util ;
 unit-test DiffTest : DiffTest.cpp pwiz_data_msdata_examples ; # Diff.cpp MSData.cpp cv.cpp ;
+unit-test MSDataMergerTest : MSDataMergerTest.cpp pwiz_data_msdata pwiz_data_msdata_examples ;
 unit-test ReferencesTest : ReferencesTest.cpp pwiz_data_msdata ; # References.cpp MSData.cpp cv.cpp ;
 unit-test IOTest : IOTest.cpp pwiz_data_msdata ; # IO.cpp MSData.cpp Diff.cpp cv.cpp References.cpp BinaryDataEncoder.cpp ../minimxml ../util ;
 unit-test SpectrumList_mzML_Test : SpectrumList_mzML_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples ; # SpectrumList_mzML.cpp examples.cpp Serializer_mzML.cpp  References.cpp IO.cpp BinaryDataEncoder.cpp MSData.cpp cv.cpp ../minimxml ../util ;

@@ -325,14 +325,14 @@ JumpTableEntry jumpTable_[] =
     {"index", "int_set", filterCreator_index},
     {"msLevel", "int_set", filterCreator_msLevel},
     {"mzWindow", "[mzLow,mzHigh]", filterCreator_mzWindow},
-    {"peakPicking", "prefer_vendor:<true|false>  int_set(MS levels)", filterCreator_nativeCentroid},
-    {"ETDFilter", "removeMS2:<true|false> removePrecursor:<true|false> removeChargeReduced:<true|false> removeNeutralLoss:<true|false> mostIntenseInWindow:<true|false> blanketRemoval<true|false> MatchingTolerance:(val <PPM|MZ>)", filterCreator_ETDFilter},
+    {"peakPicking", "prefer vendor algorithm:<true|false>   int_set(MS levels)", filterCreator_nativeCentroid},
+    {"ETDFilter", "remove precursor:<true|false>   remove charge reduced:<true|false>   remove neutral loss:<true|false>   blanket removal:<true|false>   matching tolerance:(<value> <PPM|MZ>)", filterCreator_ETDFilter},
     {"precursorRecalculation", " (based on ms1 data)", filterCreator_precursorRecalculation},
     {"scanNumber", "int_set", filterCreator_scanNumber},
     {"scanEvent", "int_set", filterCreator_scanEvent},
     {"scanTime", "[scanTimeLow,scanTimeHigh]", filterCreator_scanTime},
     {"stripIT", " (strip ion trap ms1 scans)", filterCreator_stripIT},
-    {"Activation", "<ETD|CID>", filterCreator_ActivationType},
+    {"activation", "<ETD|CID>", filterCreator_ActivationType},
     {"metadataFixer", " (add/replace TIC/BPI metadata)", filterCreator_metadataFixer},
     {"threshold", "<count|count-after-ties|absolute|bpi-relative|tic-relative|tic-cutoff> <threshold> <most-intense|least-intense>", filterCreator_thresholdFilter}
 };
@@ -400,7 +400,7 @@ string SpectrumListFactory::usage()
 {
     ostringstream oss;
 
-    oss << "\nfilter options:\n\n";
+    oss << "\nFilter options:\n\n";
 
     for (JumpTableEntry* it=jumpTable_; it!=jumpTableEnd_; ++it)
         oss << it->command << " " << it->usage << endl;

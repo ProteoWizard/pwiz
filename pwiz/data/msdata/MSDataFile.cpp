@@ -195,6 +195,10 @@ PWIZ_API_DECL void calculateSourceFileSHA1(SourceFile& sourceFile)
     bfs::path p(sourceFile.location.substr(uriPrefix.size()));
     p /= sourceFile.name;
 
+    if (!bfs::exists(p))
+        // TODO: log warning
+        return;
+
     string sha1 = SHA1Calculator::hashFile(p.string());
     sourceFile.set(MS_SHA_1, sha1); 
 }
