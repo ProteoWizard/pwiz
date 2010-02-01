@@ -59,13 +59,13 @@ namespace pwiz.SkylineTestFunctional
                     buildBackgroundProteomeDlg.BackgroundProteomePath =
                         TestFilesDir.GetTestPath(_backgroundProteomeName + ".protdb");
                     buildBackgroundProteomeDlg.AddFastaFile(TestFilesDir.GetTestPath("celegans_mini.fasta"));
-                    buildBackgroundProteomeDlg.OkDialog();
                 });
+            OkDialog(buildBackgroundProteomeDlg, buildBackgroundProteomeDlg.OkDialog);
             RunUI(() =>
                 {
                     peptideSettingsUI.MissedCleavages = 3;
-                    peptideSettingsUI.OkDialog();                          
                 });
+            OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
             // Wait until proteome digestion is done
             for (int i = 0; i < 1000; i ++ )
             {
