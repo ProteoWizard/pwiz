@@ -16,24 +16,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Collections.Generic;
 using System.IO;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Proteome
 {
     public sealed class BackgroundProteomeManager : BackgroundLoader
     {
+        private readonly object _lockLoadBackgroundProteome = new object();
+
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
             if (previous == null)
             {
                 return true;
             }
-            if (!Equals(GetBackgroundProteome(document), GetBackgroundProteome(previous)))
+            if (!ReferenceEquals(GetBackgroundProteome(document), GetBackgroundProteome(previous)))
             {
                 return true;
             }
@@ -49,7 +51,7 @@ namespace pwiz.Skyline.Model.Proteome
             return IsLoaded(document, GetBackgroundProteome(document));
         }
 
-        private bool IsLoaded(SrmDocument document, BackgroundProteome backgroundProteome)
+        private static bool IsLoaded(SrmDocument document, BackgroundProteome backgroundProteome)
         {
             if (backgroundProteome.IsNone)
             {
@@ -63,15 +65,15 @@ namespace pwiz.Skyline.Model.Proteome
             {
                 return true;
             }
-            var enzyme = document.Settings.PeptideSettings.Enzyme;
-            var digestSettings = document.Settings.PeptideSettings.DigestSettings;
-            return backgroundProteome.GetDigestion(enzyme, digestSettings) != null;
+            var peptideSettings = document.Settings.PeptideSettings;
+            return backgroundProteome.GetDigestion(peptideSettings) != null;
         }
         
         private static BackgroundProteome GetBackgroundProteome(SrmDocument document)
         {
             return document.Settings.PeptideSettings.BackgroundProteome;
         }
+
         private static Enzyme GetEnzyme(SrmDocument document)
         {
             return document.Settings.PeptideSettings.Enzyme;
@@ -87,47 +89,114 @@ namespace pwiz.Skyline.Model.Proteome
             return false;
         }
 
-        private SrmDocument ChangeBackgroundProteome(SrmDocument document, BackgroundProteome backgroundProteome)
+        private static SrmDocument ChangeBackgroundProteome(SrmDocument document, BackgroundProteome backgroundProteome)
         {
             return document.ChangeSettings(
-                document.Settings.ChangePeptideSettings(
-                    document.Settings.PeptideSettings.ChangeBackgroundProteome(backgroundProteome)));
+                document.Settings.ChangePeptideSettings(setP => setP.ChangeBackgroundProteome(backgroundProteome)));
         }
 
         protected override bool LoadBackground(IDocumentContainer container, SrmDocument document, SrmDocument docCurrent)
         {
-            BackgroundProteome originalBackgroundProteome = GetBackgroundProteome(docCurrent);
-            // Check to see whether the Digestion already exists but has not been queried yet.
-            BackgroundProteome backgroundProteomeWithDigestions = new BackgroundProteome(originalBackgroundProteome, true);
-            if (IsLoaded(docCurrent, backgroundProteomeWithDigestions))
+            // Only allow one background proteome to load at a time.  This can
+            // get tricky, if the user performs an undo and then a redo across
+            // a change in background proteome.
+            lock (_lockLoadBackgroundProteome)
             {
-                return CompleteProcessing(container, ChangeBackgroundProteome(docCurrent, backgroundProteomeWithDigestions), docCurrent);
-            }
-            using (FileSaver fs = new FileSaver(originalBackgroundProteome.DatabasePath, StreamManager))
-            {
-                File.Copy(originalBackgroundProteome.DatabasePath, fs.SafeName, true);
-                var proteomeDb = ProteomeDb.OpenProteomeDb(fs.SafeName);
-                var enzyme = docCurrent.Settings.PeptideSettings.Enzyme;
-                var protease = new ProteaseImpl(enzyme);
-                string name = originalBackgroundProteome.Name;
-                string nameEnzyme = enzyme.Name;
-                ProgressStatus progressStatus = new ProgressStatus(
-                    string.Format("Digesting {0} proteome with {1}", name, nameEnzyme));
-                var digestion = proteomeDb.Digest(protease, (s, i) =>
+                BackgroundProteome originalBackgroundProteome = GetBackgroundProteome(docCurrent);
+                // Check to see whether the Digestion already exists but has not been queried yet.
+                BackgroundProteome backgroundProteomeWithDigestions = new BackgroundProteome(originalBackgroundProteome, true);
+                if (IsLoaded(docCurrent, backgroundProteomeWithDigestions))
                 {
-                    UpdateProgress(progressStatus.ChangePercentComplete(i));
+                    CompleteProcessing(container, backgroundProteomeWithDigestions);
                     return true;
-                });
-                if (digestion != null)
+                }
+
+                using (FileSaver fs = new FileSaver(originalBackgroundProteome.DatabasePath, StreamManager))
                 {
-                    if (!fs.Commit())
+                    string name = originalBackgroundProteome.Name;
+                    ProgressStatus progressStatus = new ProgressStatus(string.Format("Digesting {0} proteome", name));
+                    File.Copy(originalBackgroundProteome.DatabasePath, fs.SafeName, true);
+                    var digestHelper = new DigestHelper(this, container, docCurrent, name, fs.SafeName);
+                    var digestion = digestHelper.Digest(ref progressStatus);
+
+                    if (digestion == null)
                     {
+                        // Processing was canceled
+                        EndProcessing(docCurrent);
+                        UpdateProgress(progressStatus.Cancel());
                         return false;
                     }
+                    if (!fs.Commit())
+                    {
+                        EndProcessing(docCurrent);
+                        string message = string.Format("Failed updating background proteome file {0}.", fs.RealName);
+                        UpdateProgress(progressStatus.ChangeErrorException(new IOException(message)));
+                        return false;
+                    }
+
+                    CompleteProcessing(container, new BackgroundProteome(originalBackgroundProteome, true));
+                    UpdateProgress(progressStatus.Complete());
+                    return true;
                 }
-                return CompleteProcessing(container, 
-                    ChangeBackgroundProteome(docCurrent, new BackgroundProteome(originalBackgroundProteome, true)), 
-                    docCurrent);
+            }
+        }
+
+        private void CompleteProcessing(IDocumentContainer container, BackgroundProteome backgroundProteomeWithDigestions)
+        {
+            SrmDocument docCurrent;
+            SrmDocument docNew;
+            do
+            {
+                docCurrent = container.Document;
+                docNew = ChangeBackgroundProteome(docCurrent, backgroundProteomeWithDigestions);
+            }
+            while (!CompleteProcessing(container, docNew, docCurrent));
+        }
+
+        private sealed class DigestHelper
+        {
+            private readonly BackgroundProteomeManager _manager;
+            private readonly IDocumentContainer _container;
+            private readonly SrmDocument _document;
+            private readonly string _nameProteome;
+            private readonly string _pathProteome;
+
+            private ProgressStatus _progressStatus;
+
+            public DigestHelper(BackgroundProteomeManager manager,
+                                IDocumentContainer container,
+                                SrmDocument document,
+                                string nameProteome,
+                                string pathProteome)
+            {
+                _manager = manager;
+                _container = container;
+                _document = document;
+                _nameProteome = nameProteome;
+                _pathProteome = pathProteome;
+            }
+
+            public Digestion Digest(ref ProgressStatus progressStatus)
+            {
+                var proteomeDb = ProteomeDb.OpenProteomeDb(_pathProteome);
+                var enzyme = _document.Settings.PeptideSettings.Enzyme;
+                
+                _progressStatus = new ProgressStatus(
+                    string.Format("Digesting {0} proteome with {1}", _nameProteome, enzyme.Name));
+                var digestion = proteomeDb.Digest(new ProteaseImpl(enzyme), Progress);
+                progressStatus = _progressStatus;
+
+                return digestion;
+            }
+
+            private bool Progress(string taskname, int progress)
+            {
+                // Cancel if the document state has changed since the digestion started.
+                if (_manager.StateChanged(_container.Document, _document))
+                    return false;
+
+                _manager.UpdateProgress(_progressStatus = _progressStatus.ChangePercentComplete(progress));
+                return true;
             }
         }
     }
