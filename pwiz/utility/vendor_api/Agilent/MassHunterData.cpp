@@ -190,8 +190,8 @@ MassHunterDataImpl::MassHunterDataImpl(const std::string& path)
     try
     {
         reader_ = gcnew MHDAC::MassSpecDataReader();
-        if (!reader_->OpenDataFile(gcnew String(path.c_str())))
-            throw std::runtime_error("[MassHunterDataImpl::ctor()] Error opening source path.");
+        if (!reader_->OpenDataFile(ToSystemString(path)))
+            throw gcnew System::Exception("[MassHunterDataImpl::ctor()] Error opening source path.");
 
         scanFileInfo_ = reader_->MSScanFileInformation;
 
@@ -355,7 +355,7 @@ ChromatogramPtr MassHunterDataImpl::getChromatogram(const Transition& transition
         filter->DoCycleSum = false;
 
         if (!transitionToChromatogramIndexMap_.count(transition))
-            throw std::runtime_error("[MassHunterData::getChromatogram()] No chromatogram corresponds to the transition.");
+            throw gcnew System::Exception("[MassHunterData::getChromatogram()] No chromatogram corresponds to the transition.");
 
         int index = transitionToChromatogramIndexMap_.find(transition)->second;
         ChromatogramImplPtr chromatogramPtr(new ChromatogramImpl(reader_->GetChromatogram(filter)[index]));
