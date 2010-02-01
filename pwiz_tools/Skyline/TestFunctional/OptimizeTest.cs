@@ -58,11 +58,11 @@ namespace pwiz.SkylineTestFunctional
             ExportCEOptimizingTransitionList(filePath);
 
             // Create new CE regression for different transition list
+            var docCurrent = SkylineWindow.Document;
+
             var transitionSettingsUI1 = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             var editList = ShowDialog<EditListDlg<SettingsListBase<CollisionEnergyRegression>, CollisionEnergyRegression>>(transitionSettingsUI1.EditCEList);
             RunUI(() => editList.SelectItem("Thermo"));
-
-            var docCurrent = SkylineWindow.Document;
 
             var editCE = ShowDialog<EditCEDlg>(editList.CopyItem);
             const string newCEName = "Thermo (Wide CE)";
@@ -74,14 +74,14 @@ namespace pwiz.SkylineTestFunctional
                                                                               .ChangeStepSize(newStepSize)
                                                                               .ChangeStepCount(newStepCount)
                                                                               .ChangeName(newCEName);
-                          editCE.OkDialog();
                       });
-            RunUI(editList.OkDialog);
+            OkDialog(editCE, editCE.OkDialog);
+            OkDialog(editList, editList.OkDialog);
             RunUI(() =>
                       {
                           transitionSettingsUI1.RegressionCE = newCEName;
-                          transitionSettingsUI1.OkDialog();
                       });
+            OkDialog(transitionSettingsUI1, transitionSettingsUI1.OkDialog);
 
             WaitForDocumentChange(docCurrent);
 
@@ -139,8 +139,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
                       {
                           peptideSettingsUI1.PickedHeavyMods = new[] {heavyK, heavyR};
-                          peptideSettingsUI1.OkDialog();
                       });
+            OkDialog(peptideSettingsUI1, peptideSettingsUI1.OkDialog);
 
             // First make sure the first settings change occurs
             WaitForDocumentChange(docCurrent);
@@ -173,8 +173,8 @@ namespace pwiz.SkylineTestFunctional
                       {
                           transitionSettingsUI2.UseOptimized = true;
                           transitionSettingsUI2.OptimizeType = OptimizedMethodType.Precursor.ToString();
-                          transitionSettingsUI2.OkDialog();
                       });
+            OkDialog(transitionSettingsUI2, transitionSettingsUI2.OkDialog);
             string precursorPath = TestFilesDir.GetTestPath("PrecursorCE.csv");
             ExportCETransitionList(precursorPath, normalPath);
 
@@ -183,8 +183,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
                       {
                           transitionSettingsUI3.OptimizeType = OptimizedMethodType.Transition.ToString();
-                          transitionSettingsUI3.OkDialog();
                       });
+            OkDialog(transitionSettingsUI3, transitionSettingsUI3.OkDialog);
             string transitionPath = TestFilesDir.GetTestPath("TransitionCE.csv");
             ExportCETransitionList(transitionPath, precursorPath);
 
@@ -201,15 +201,15 @@ namespace pwiz.SkylineTestFunctional
                       {
                           editCE4.RegressionName = reoptimizeCEName;
                           editCE4.UseCurrentData();
-                          editCE4.OkDialog();
                       });
-            RunUI(editList4.OkDialog);
+            OkDialog(editCE4, editCE4.OkDialog);
+            OkDialog(editList4, editList4.OkDialog);
             RunUI(() =>
             {
                 transitionSettingsUI4.RegressionCE = reoptimizeCEName;
                 transitionSettingsUI4.OptimizeType = OptimizedMethodType.None.ToString();
-                transitionSettingsUI4.OkDialog();
             });
+            OkDialog(transitionSettingsUI4, transitionSettingsUI4.OkDialog);
             WaitForDocumentChange(docCurrent);
 
             // Make sure new settings are in document
