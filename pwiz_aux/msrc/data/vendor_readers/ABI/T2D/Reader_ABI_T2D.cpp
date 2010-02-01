@@ -59,9 +59,8 @@ PWIZ_API_DECL std::string pwiz::msdata::Reader_ABI_T2D::identify(const std::stri
 
 
 #ifdef PWIZ_READER_ABI_T2D
-#include "pwiz_aux/msrc/utility/vendor_api/ABI/T2D_Data.hpp"
-#include "SpectrumList_ABI_T2D.hpp"
 #include "Reader_ABI_T2D_Detail.hpp"
+#include "SpectrumList_ABI_T2D.hpp"
 
 
 namespace pwiz {

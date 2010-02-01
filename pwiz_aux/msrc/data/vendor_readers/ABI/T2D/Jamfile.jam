@@ -32,7 +32,7 @@ project
 
 
 path-constant READER_PATH : . ;
-path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI ;
+path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D ;
 path-constant TEST_DATA_PATH : ./Reader_ABI_T2D_Test.data ;
 
 
@@ -53,7 +53,7 @@ rule vendor-api-usage-requirements ( properties * )
     if <toolset>msvc in $(properties) && [ project-exists $(API_PATH) ]
     {
         result += <define>PWIZ_READER_ABI_T2D ;
-        result += <library>$(API_PATH)//pwiz_vendor_api_abi ;
+        result += <library>$(API_PATH)//pwiz_vendor_api_abi_t2d ;
     }
     else if ! $(.warn-once)
     {

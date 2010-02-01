@@ -28,7 +28,7 @@
 #include <vector>
 
 #ifdef PWIZ_READER_ABI_T2D
-#include "pwiz_aux/msrc/utility/vendor_api/ABI/T2D_Data.hpp"
+#include "pwiz_aux/msrc/utility/vendor_api/ABI/T2D/T2D_Data.hpp"
 
 namespace pwiz {
 namespace msdata {
