@@ -62,6 +62,8 @@ namespace pwiz.SkylineTestFunctional
             var editList = ShowDialog<EditListDlg<SettingsListBase<CollisionEnergyRegression>, CollisionEnergyRegression>>(transitionSettingsUI1.EditCEList);
             RunUI(() => editList.SelectItem("Thermo"));
 
+            var docCurrent = SkylineWindow.Document;
+
             var editCE = ShowDialog<EditCEDlg>(editList.CopyItem);
             const string newCEName = "Thermo (Wide CE)";
             const double newStepSize = 2;
@@ -80,6 +82,9 @@ namespace pwiz.SkylineTestFunctional
                           transitionSettingsUI1.RegressionCE = newCEName;
                           transitionSettingsUI1.OkDialog();
                       });
+
+            WaitForDocumentChange(docCurrent);
+
             // Make sure new settings are in document
             var newRegression = SkylineWindow.Document.Settings.TransitionSettings.Prediction.CollisionEnergy;
             Assert.AreEqual(newCEName, newRegression.Name);
@@ -92,7 +97,7 @@ namespace pwiz.SkylineTestFunctional
             // Undo the change of CE regression
             RunUI(SkylineWindow.Undo);
 
-            var docCurrent = SkylineWindow.Document;
+            docCurrent = SkylineWindow.Document;
 
             var importResults = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
 
