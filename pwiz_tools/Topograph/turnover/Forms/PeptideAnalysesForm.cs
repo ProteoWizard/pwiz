@@ -273,6 +273,7 @@ namespace pwiz.Topograph.ui.Forms
                     if (row == null)
                     {
                         row = dataGridView.Rows[dataGridView.Rows.Add()];
+                        _peptideAnalysisRows.Add(entry.Key, row);
                         row.Tag = entry.Value.Id;
                     }
                     row.Cells[colProtein.Name].Value = entry.Value.Protein;
