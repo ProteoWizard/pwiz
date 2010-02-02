@@ -20,6 +20,10 @@
 #
 
 
+// TODO: get Data Explorer on TeamCity build agent so this will work
+// build-project T2D ;
+
+
 # ABI WIFF support status:
 # - DLLs are .NET and thus MSVC only
 # - cannot redistribute DLLs and we can't compile the API without them
