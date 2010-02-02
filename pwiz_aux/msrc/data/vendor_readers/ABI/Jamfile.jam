@@ -20,8 +20,8 @@
 #
 
 
-// TODO: get Data Explorer on TeamCity build agent so this will work
-// build-project T2D ;
+# TODO: get Data Explorer on TeamCity build agent so this will work
+# build-project T2D ;
 
 
 # ABI WIFF support status:
