@@ -57,6 +57,9 @@ PWIZ_API_DECL string Reader_FASTA::identify(const string& uri, shared_ptr<istrea
     if (!uriStreamPtr.get())
         throw runtime_error("[Reader_FASTA::identify] Must have a valid stream to identify");
 
+    uriStreamPtr->clear();
+    uriStreamPtr->seekg(0);
+
     // first non-blank line in the stream should begin with '>'
     string buf;
     while (getline(*uriStreamPtr, buf))
