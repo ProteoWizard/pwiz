@@ -69,6 +69,7 @@
 
 namespace pwiz {
 namespace CLI {
+namespace cv {
 
 
 /// <summary>enumeration of controlled vocabulary (CV) terms, generated from OBO file(s)</summary>
@@ -5756,6 +5757,7 @@ public ref class CVTermInfo
 };
 
 
+} // namespace cv
 } // namespace CLI
 } // namespace pwiz
 

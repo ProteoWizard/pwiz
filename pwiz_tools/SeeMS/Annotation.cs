@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
 using System.Drawing;
+using pwiz.CLI.cv;
 using pwiz.CLI.proteome;
 using ZedGraph;
 
@@ -731,11 +732,11 @@ namespace seems
             var spectrum = ( item as MassSpectrum ).Element;
             if( spectrum.precursors.Count > 0 &&
                 spectrum.precursors[0].selectedIons.Count > 0 &&
-                spectrum.precursors[0].selectedIons[0].hasCVParam( pwiz.CLI.CVID.MS_selected_ion_m_z ) &&
-                spectrum.precursors[0].selectedIons[0].hasCVParam( pwiz.CLI.CVID.MS_charge_state ) )
+                spectrum.precursors[0].selectedIons[0].hasCVParam( CVID.MS_selected_ion_m_z ) &&
+                spectrum.precursors[0].selectedIons[0].hasCVParam( CVID.MS_charge_state ) )
             {
-                double selectedMz = (double) spectrum.precursors[0].selectedIons[0].cvParam( pwiz.CLI.CVID.MS_selected_ion_m_z ).value;
-                int chargeState = (int) spectrum.precursors[0].selectedIons[0].cvParam( pwiz.CLI.CVID.MS_charge_state ).value;
+                double selectedMz = (double) spectrum.precursors[0].selectedIons[0].cvParam( CVID.MS_selected_ion_m_z ).value;
+                int chargeState = (int) spectrum.precursors[0].selectedIons[0].cvParam( CVID.MS_charge_state ).value;
                 double calculatedMass = ( precursorMassType == 0 ? peptide.monoisotopicMass( chargeState ) : peptide.molecularWeight( chargeState ) ) * chargeState;
                 double observedMass = selectedMz * chargeState;
                 annotationPanels.peptideInfoGridView.Rows.Add( "Calculated mass:", calculatedMass, "Mass error (daltons):", observedMass - calculatedMass );

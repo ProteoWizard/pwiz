@@ -29,7 +29,8 @@ using System.Windows.Forms;
 using System.IO;
 using System.Xml;
 using System.Threading;
-using pwiz.CLI;
+using pwiz.CLI.cv;
+using pwiz.CLI.data;
 using pwiz.CLI.msdata;
 using pwiz.MSGraph;
 

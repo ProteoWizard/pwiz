@@ -29,6 +29,7 @@ namespace b = pwiz::data;
 
 namespace pwiz {
 namespace CLI {
+namespace cv {
 
 
 CV::CV()
@@ -53,7 +54,10 @@ bool CV::empty()
 }
 
 
-namespace msdata {
+} // namespace cv
+
+
+namespace data {
 
 
 CVParamValue::CVParamValue(boost::shared_ptr<b::CVParam>* base)
@@ -301,6 +305,6 @@ bool ParamGroup::empty()
 }
 
 
-} // namespace msdata
+} // namespace data
 } // namespace CLI
 } // namespace pwiz

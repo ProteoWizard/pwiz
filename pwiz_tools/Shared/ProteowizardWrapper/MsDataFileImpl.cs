@@ -19,7 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using pwiz.CLI;
+using pwiz.CLI.cv;
+using pwiz.CLI.data;
 using pwiz.CLI.analysis;
 using pwiz.CLI.msdata;
 

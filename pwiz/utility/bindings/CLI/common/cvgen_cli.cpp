@@ -87,13 +87,15 @@ string includeGuardString(const string& basename)
 void namespaceBegin(ostream& os, const string& name)
 {
     os << "namespace pwiz {\n"
-       << "namespace CLI {\n\n\n";
+       << "namespace CLI {\n"
+       << "namespace cv {\n\n\n";
 }
 
 
 void namespaceEnd(ostream& os, const string& name)
 {
-    os << "} // namespace CLI\n"
+    os << "} // namespace cv\n"
+       << "} // namespace CLI\n"
        << "} // namespace pwiz\n\n\n";
 }
 

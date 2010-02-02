@@ -25,7 +25,8 @@ using System.Collections.ObjectModel;
 using System.Text;
 using System.Drawing;
 using System.Windows.Forms;
-using pwiz.CLI;
+using pwiz.CLI.cv;
+using pwiz.CLI.data;
 using pwiz.CLI.msdata;
 
 public class Pair<T1, T2>

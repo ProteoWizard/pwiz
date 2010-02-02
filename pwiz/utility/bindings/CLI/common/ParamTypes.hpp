@@ -40,6 +40,7 @@
 
 namespace pwiz {
 namespace CLI {
+namespace cv {
 
 
 /// <summary>
@@ -97,7 +98,13 @@ public ref class CV
 };
 
 
-namespace msdata {
+} // namespace cv
+
+
+namespace data {
+
+
+using namespace cv;
 
 
 /// <summary>
@@ -579,7 +586,7 @@ DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(CVParamList, pwiz::data::CVParam, C
 DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(UserParamList, pwiz::data::UserParam, UserParam, NATIVE_REFERENCE_TO_CLI, CLI_SHARED_PTR_TO_NATIVE_REFERENCE);
 
 
-} // namespace msdata
+} // namespace data
 
 
 namespace util {

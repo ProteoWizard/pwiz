@@ -24,8 +24,8 @@
 
 
 using namespace pwiz::CLI::util;
-using namespace pwiz::CLI;
-using namespace pwiz::CLI::msdata;
+using namespace pwiz::CLI::cv;
+using namespace pwiz::CLI::data;
 using System::String;
 
 void test()

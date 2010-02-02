@@ -26,7 +26,7 @@
 
 
 using namespace pwiz::util;
-using namespace pwiz::CLI;
+using namespace pwiz::CLI::cv;
 using namespace pwiz::CLI::proteome;
 using System::Console;
 typedef System::String string;
