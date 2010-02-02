@@ -157,7 +157,15 @@ namespace pwiz.SkylineTestFunctional
                 foreach (var chromInfoList in nodeTran.Results)
                 {
                     if (nodeTran.Transition.Group.LabelType == IsotopeLabelType.light)
-                        Assert.AreEqual(11, chromInfoList.Count);                    
+                    {
+                        Assert.IsNotNull(chromInfoList,
+                            string.Format("Peptide {0}{1}, fragment {2}{3} missing results",
+                                nodeTran.Transition.Group.Peptide.Sequence,
+                                Transition.GetChargeIndicator(nodeTran.Transition.Group.PrecursorCharge),
+                                nodeTran.Transition.FragmentIonName,
+                                Transition.GetChargeIndicator(nodeTran.Transition.Charge)));
+                        Assert.AreEqual(11, chromInfoList.Count);
+                    }
                     else
                         Assert.IsNull(chromInfoList);
                 }
