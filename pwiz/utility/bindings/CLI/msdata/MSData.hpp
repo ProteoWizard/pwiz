@@ -1701,6 +1701,51 @@ public ref class MSData
 };
 
 
+public ref class id {
+
+/// parses an id string into a map<string,string>
+// TODO: std::map<std::string,std::string> parse(const std::string& id);
+
+/// <summary>
+/// convenience function to extract a named value from an id string
+/// </summary>
+public: static System::String^ value(System::String^ id, System::String^ name);
+
+/// <summary>
+/// returns the nativeID format from the defaultSourceFilePtr if set,
+/// or from sourceFilePtrs[0] if the list isn't empty,
+/// or CVID_Unknown
+/// </summary>
+public: static CVID getDefaultNativeIDFormat(MSData^ msd);
+
+/// <summary>
+/// translates a "scan number" to a string that is correct for the given nativeID format;
+/// semantic validity requires that scanNumber be parseable as an integer;
+/// some nativeID formats cannot be translated to and will always return an empty string
+/// currently supported formats: Thermo, Bruker/Agilent YEP, Bruker BAF, mzXML, MGF, and mzData
+/// </summary>
+public: static System::String^ translateScanNumberToNativeID(CVID nativeIDFormat, System::String^ scanNumber);
+
+/// <summary>
+/// translates a nativeID in the given nativeID format to a simple integer "scan number";
+/// some nativeID formats cannot be translated from and will always return an empty string
+/// currently supported formats: Thermo, Bruker/Agilent YEP, Bruker BAF, mzXML, MGF, and mzData
+/// </summary>
+public: static System::String^ translateNativeIDToScanNumber(CVID nativeIDFormat, System::String^ id);
+
+/// <summary>
+/// abbreviates a nativeID ("name1=value1 name2=value2" translates to "value1.value2")
+/// </summary>
+public: static System::String^ abbreviate(System::String^ id);
+
+/// <summary>
+/// abbreviates a nativeID ("name1=value1 name2=value2" translates to "value1.value2")
+/// </summary>
+public: static System::String^ abbreviate(System::String^ id, char delimiter);
+
+};
+
+
 } // namespace msdata
 } // namespace CLI
 } // namespace pwiz

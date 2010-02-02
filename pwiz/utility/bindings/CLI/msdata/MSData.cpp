@@ -834,6 +834,39 @@ bool MSData::empty() {return base().empty();}
 System::String^ MSData::version() {return gcnew System::String(base().version().c_str());}
 
 
+
+
+System::String^ id::value(System::String^ id, System::String^ name)
+{
+    return ToSystemString(b::id::value(ToStdString(id), ToStdString(name)));
+}
+
+CVID id::getDefaultNativeIDFormat(MSData^ msd)
+{
+    return (CVID) b::id::getDefaultNativeIDFormat(msd->base());
+}
+
+System::String^ id::translateScanNumberToNativeID(CVID nativeIDFormat, System::String^ scanNumber)
+{
+    return ToSystemString(b::id::translateScanNumberToNativeID((b::CVID) nativeIDFormat, ToStdString(scanNumber)));
+}
+
+System::String^ id::translateNativeIDToScanNumber(CVID nativeIDFormat, System::String^ id)
+{
+    return ToSystemString(b::id::translateNativeIDToScanNumber((b::CVID) nativeIDFormat, ToStdString(id)));
+}
+
+System::String^ id::abbreviate(System::String^ id)
+{
+    return ToSystemString(b::id::abbreviate(ToStdString(id)));
+}
+
+System::String^ id::abbreviate(System::String^ id, char delimiter)
+{
+    return ToSystemString(b::id::abbreviate(ToStdString(id), delimiter));
+}
+
+
 } // namespace msdata
 } // namespace CLI
 } // namespace pwiz
