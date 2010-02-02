@@ -391,6 +391,12 @@ namespace pwiz.SkylineTestFunctional
 
         private static void CheckLibraryExistence(string libPath, bool libExist)
         {
+            // Wait for journal to be removed
+            string libJournalPath = libPath + BiblioSpecLiteBuilder.EXT_SQLITE_JOURNAL;
+            WaitForCondition(() => !File.Exists(libJournalPath));
+            Assert.IsFalse(File.Exists(libJournalPath),
+                string.Format("Unexpected library journal {0} found", libJournalPath));            
+
             if (libExist)
             {
                 Assert.IsFalse(File.Exists(libPath),
@@ -401,9 +407,6 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsFalse(File.Exists(libPath),
                     string.Format("Unexpected library {0} found", libPath));                
             }
-            string libJournalPath = libPath + BiblioSpecLiteBuilder.EXT_SQLITE_JOURNAL;
-            Assert.IsFalse(File.Exists(libJournalPath),
-                string.Format("Unexpected library journal {0} found", libJournalPath));            
         }
     }
 }
