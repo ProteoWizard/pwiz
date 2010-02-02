@@ -280,17 +280,22 @@ namespace pwiz.SkylineTestFunctional
         private const int COL_CE = 2;
         private static void ExportCEOptimizingTransitionList(string filePath)
         {
-            var exportDialog1 = ShowDialog<ExportMethodDlg>(() =>
+            File.Delete(filePath);
+
+            var exportDialog = ShowDialog<ExportMethodDlg>(() =>
                 SkylineWindow.ShowExportDialog(ExportFileType.List));
 
             // Export CE optimization transition list
             RunUI(() =>
             {
-                exportDialog1.ExportStrategy = ExportStrategy.Single;
-                exportDialog1.MethodType = ExportMethodType.Standard;
-                exportDialog1.OptimizeType = ExportOptimize.CE;
-                exportDialog1.OkDialog(filePath);
+                exportDialog.ExportStrategy = ExportStrategy.Single;
+                exportDialog.MethodType = ExportMethodType.Standard;
+                exportDialog.OptimizeType = ExportOptimize.CE;
             });
+            OkDialog(exportDialog, () => exportDialog.OkDialog(filePath));
+
+            WaitForCondition(() => File.Exists(filePath));
+
             VerifyCEOptimizingTransitionList(filePath, SkylineWindow.Document);            
         }
 
