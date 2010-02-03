@@ -118,6 +118,7 @@ class ProteinList_FASTA : public ProteinList
     ProteinList_FASTA(shared_ptr<istream> fsPtr, IndexPtr indexPtr, const vector<string>& idAndDescriptionRegexes)
         : fsPtr_(fsPtr), indexPtr_(indexPtr)
     {
+        // HACK: boost::regex::mark_count() is bugged, always returns the real count + 1
         BOOST_FOREACH(const string& regexString, idAndDescriptionRegexes)
         {
             regex idAndDescriptionRegex(regexString);
@@ -147,24 +148,45 @@ class ProteinList_FASTA : public ProteinList
         if (!entryPtr.get())
             throw out_of_range("[ProteinList_FASTA::protein] Index out of range");
 
-        const Index::Entry& entry = *entryPtr;
-
         boost::mutex::scoped_lock io_lock(io_mutex);
 
         fsPtr_->clear();
-        fsPtr_->seekg(entry.offset);
+        fsPtr_->seekg(entryPtr->offset);
 
         string buf;
         getline(*fsPtr_, buf);
 
+        // test that the index offset is valid
         if (buf.empty() || buf[0] != '>')
-            throw runtime_error("[ProteinList_FASTA::protein] Invalid index offset");
+        {
+            // TODO: log notice about stale index
 
+            // recreate the index
+            const_cast<ProteinList_FASTA&>(*this).createIndex();
+
+            entryPtr = indexPtr_->find(index);
+
+            if (!entryPtr.get())
+                throw out_of_range("[ProteinList_FASTA::protein] Index out of range");
+
+            fsPtr_->clear();
+            fsPtr_->seekg(entryPtr->offset);
+
+            string buf;
+            getline(*fsPtr_, buf);
+
+            // if the offset is still invalid, throw
+            if (buf.empty() || buf[0] != '>')
+                throw runtime_error("[ProteinList_FASTA::protein] Invalid index offset");
+        }
+
+        // trim whitespace and carriage returns from the end of the line
         bal::trim_right_if(buf, bal::is_any_of(" \r"));
 
         string description;
         BOOST_FOREACH(const regex& idAndDescriptionRegex, idAndDescriptionRegexes_)
         {
+            // HACK: boost::regex::mark_count() is bugged, always returns the real count + 1
             if (idAndDescriptionRegex.mark_count() == 3)
             {
                 smatch match;
@@ -189,7 +211,7 @@ class ProteinList_FASTA : public ProteinList
                 size_t lineEnd = std::min(buf.length(), buf.find_first_of("\r\n"));
                 sequence.append(buf.begin(), buf.begin()+lineEnd);
             }
-       return ProteinPtr(new Protein(entry.id, index, description, sequence));
+       return ProteinPtr(new Protein(entryPtr->id, index, description, sequence));
     }
 };
 
