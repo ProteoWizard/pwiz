@@ -191,7 +191,7 @@ MassHunterDataImpl::MassHunterDataImpl(const std::string& path)
     {
         reader_ = gcnew MHDAC::MassSpecDataReader();
         if (!reader_->OpenDataFile(ToSystemString(path)))
-            throw gcnew System::Exception("[MassHunterDataImpl::ctor()] Error opening source path.");
+        {}    // TODO: log warning about incomplete acquisition, possibly indicating corrupt data
 
         scanFileInfo_ = reader_->MSScanFileInformation;
 
