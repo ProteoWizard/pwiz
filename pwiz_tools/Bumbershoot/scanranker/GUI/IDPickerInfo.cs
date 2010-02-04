@@ -4,6 +4,7 @@ namespace ScanRanker
 {
     public class IDPickerInfo
     {
+        public string PepXMLFileDir;
         public string PepXMLFile;
         public string DBFile;
         public string DecoyPrefix;

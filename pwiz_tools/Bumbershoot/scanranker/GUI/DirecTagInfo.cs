@@ -50,7 +50,6 @@ namespace ScanRanker
                  + "MaxTagScore = 20" + "\r\n"
                  + "TicCutoffPercentage = 1" + "\r\n"
                  + "ContextScoreWeight = 0" + "\r\n"
-                 + "TagLength = 3" + "\r\n"
                  + "DeisotopingMode = 1" + "\r\n"
                  + "OnLongestPathScoreWeight = 0" + "\r\n"
                  + "OutputSuffix = \"\"";
@@ -79,6 +78,13 @@ namespace ScanRanker
         {
             get {return isotopeMzTolerance;}
             set { isotopeMzTolerance = value;}
+        }
+
+        private int tagLength;
+        public int TagLength
+        {
+            get { return tagLength; }
+            set { tagLength = value; }
         }
 
         private int useAvgMassOfSequences;
@@ -174,10 +180,12 @@ namespace ScanRanker
                 {
                     //TextWriter tw = new StreamWriter("directag.cfg");
 
-                    tw.WriteLine("NumChargeStates = {0}", numChargeStates);
+
                     tw.WriteLine("PrecursorMzTolerance = {0}", precursorMzTolerance);
                     tw.WriteLine("FragmentMzTolerance = {0}", fragmentMzTolerance);
                     tw.WriteLine("IsotopeMzTolerance = {0}", isotopeMzTolerance);
+                    tw.WriteLine("TagLength = {0}", tagLength);
+                    tw.WriteLine("NumChargeStates = {0}", numChargeStates);
                     tw.WriteLine("UseAvgMassOfSequences = {0}", useAvgMassOfSequences);
                     tw.WriteLine("UseChargeStateFromMS = {0}", useChargeStateFromMS);
                     tw.WriteLine("UseMultipleProcessors = {0}", useMultipleProcessors);
@@ -185,9 +193,9 @@ namespace ScanRanker
                     tw.WriteLine();
                     tw.WriteLine("WriteOutTags = {0}", writeOutTags);
                     tw.WriteLine("WriteScanRankerMetrics = {0}", writeScanRankerMetrics);
-                    tw.WriteLine("ScanRankerMetricsFileName = \"{0}\"", scanRankerMetricsFileName);
+                    //tw.WriteLine("ScanRankerMetricsFileName = \"{0}\"", scanRankerMetricsFileName);
                     tw.WriteLine("WriteHighQualSpectra = {0}", writeHighQualSpectra);
-                    tw.WriteLine("HighQualSpecFileName = \"{0}\"", highQualSpecFileName);
+                    //tw.WriteLine("HighQualSpecFileName = \"{0}\"", highQualSpecFileName);
                     tw.WriteLine("OutputFormat = \"{0}\"", outputFormat);
                     tw.WriteLine("HighQualSpecCutoff = {0}", highQualSpecCutoff);
                     tw.WriteLine();

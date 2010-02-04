@@ -52,13 +52,14 @@ namespace ScanRanker
 
         private void btnStop_Click(object sender, EventArgs e)
         {
-            if (MessageBox.Show("Really quit the current session?", "Confirm Quit", MessageBoxButtons.YesNo) == DialogResult.Yes)
+            if (MessageBox.Show("Quit and restart?", "Confirm Quit", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
                 //if (frmMain.bgDirectagRun.IsBusy)
                 //{
                 //    MessageBox.Show("directag bgw busy");
                 //    frmMain.bgDirectagRun.WorkerSupportsCancellation = true;
                 //    frmMain.bgDirectagRun.CancelAsync();
+                //    MessageBox.Show("directag bgw cancelled");
                 //}
                 //if (frmMain.bgWriteSpectra.IsBusy)
                 //{
@@ -71,12 +72,13 @@ namespace ScanRanker
                 //    frmMain.bgAddLabels.CancelAsync();
                 //}
 
-                frmMain.CancelBgWorker();
+                //frmMain.CancelBgWorker();
 
                 FindAndKillProcess("directag");
                 FindAndKillProcess("idpqonvert");
-               // Close();   // closing current form won't release bg worker
-               Application.Exit();
+                //Close();   // closing current form won't release bg worker
+               //Application.Exit();
+               Application.Restart();
             }
             else
             {

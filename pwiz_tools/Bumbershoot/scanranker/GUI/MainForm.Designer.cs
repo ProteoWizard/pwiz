@@ -29,16 +29,16 @@
         private void InitializeComponent()
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
-            this.lblInputFileName = new System.Windows.Forms.Label();
-            this.tbInputFile = new System.Windows.Forms.TextBox();
+            this.lblInputFileDir = new System.Windows.Forms.Label();
+            this.tbSrcDir = new System.Windows.Forms.TextBox();
             this.btnSrcFileBrowse = new System.Windows.Forms.Button();
             this.gbAssessment = new System.Windows.Forms.GroupBox();
-            this.tbOutputMetrics = new System.Windows.Forms.TextBox();
-            this.lblOutputMetrics = new System.Windows.Forms.Label();
+            this.tbOutputMetricsSuffix = new System.Windows.Forms.TextBox();
+            this.lblOutputMetricsSurfix = new System.Windows.Forms.Label();
             this.gbDtgConfig = new System.Windows.Forms.GroupBox();
             this.cbWriteOutTags = new System.Windows.Forms.CheckBox();
-            this.tbIsotopeTolerance = new System.Windows.Forms.TextBox();
-            this.lblIsotopeTolerance = new System.Windows.Forms.Label();
+            this.tbTagLength = new System.Windows.Forms.TextBox();
+            this.lblTagLength = new System.Windows.Forms.Label();
             this.cbUseMultipleProcessors = new System.Windows.Forms.CheckBox();
             this.cbUseChargeStateFromMS = new System.Windows.Forms.CheckBox();
             this.rbMono = new System.Windows.Forms.RadioButton();
@@ -54,24 +54,33 @@
             this.lblPrecursorTolerance = new System.Windows.Forms.Label();
             this.cbAssessement = new System.Windows.Forms.CheckBox();
             this.gbRemoval = new System.Windows.Forms.GroupBox();
-            this.btnMetricsFileBrowseForRemoval = new System.Windows.Forms.Button();
             this.cmbOutputFileFormat = new System.Windows.Forms.ComboBox();
-            this.tbOutFileNameForRemoval = new System.Windows.Forms.TextBox();
-            this.lblOutFileNameForRemoval = new System.Windows.Forms.Label();
+            this.tbOutFileNameSuffixForRemoval = new System.Windows.Forms.TextBox();
+            this.lblOutFileNameSurrfixForRemoval = new System.Windows.Forms.Label();
             this.lblOutFileFormat = new System.Windows.Forms.Label();
             this.lblPercentSpectra = new System.Windows.Forms.Label();
             this.tbRemovalCutoff = new System.Windows.Forms.TextBox();
             this.lblRetain = new System.Windows.Forms.Label();
-            this.tbMetricsFileForRemoval = new System.Windows.Forms.TextBox();
-            this.lblMetricsFileForRemoval = new System.Windows.Forms.Label();
+            this.tbMetricsFileSuffixForRemoval = new System.Windows.Forms.TextBox();
+            this.lblMetricsFileSuffixForRemoval = new System.Windows.Forms.Label();
             this.cbRemoval = new System.Windows.Forms.CheckBox();
             this.gbRecovery = new System.Windows.Forms.GroupBox();
-            this.btnMetricsFileBrowseForRecovery = new System.Windows.Forms.Button();
-            this.btnSetIDPicker = new System.Windows.Forms.Button();
-            this.tbOutFileNameForRecovery = new System.Windows.Forms.TextBox();
-            this.lblOutFileNameForRecovery = new System.Windows.Forms.Label();
-            this.tbMetricsFileForRecovery = new System.Windows.Forms.TextBox();
-            this.lblMetricsFileForRecovery = new System.Windows.Forms.Label();
+            this.cbOptimizeScoreWeights = new System.Windows.Forms.CheckBox();
+            this.cmbScoreWeights = new System.Windows.Forms.ComboBox();
+            this.cbNormSearchScores = new System.Windows.Forms.CheckBox();
+            this.tbDecoyPrefix = new System.Windows.Forms.TextBox();
+            this.tbMaxFDR = new System.Windows.Forms.TextBox();
+            this.lblDecoyPrefix = new System.Windows.Forms.Label();
+            this.lblSearchScoreWeights = new System.Windows.Forms.Label();
+            this.lblMaxFDR = new System.Windows.Forms.Label();
+            this.btnDBBrowse = new System.Windows.Forms.Button();
+            this.tbDBFile = new System.Windows.Forms.TextBox();
+            this.lblDBFile = new System.Windows.Forms.Label();
+            this.tbPepXMLDir = new System.Windows.Forms.TextBox();
+            this.btnPepXMLBrowse = new System.Windows.Forms.Button();
+            this.lblPepXMLDir = new System.Windows.Forms.Label();
+            this.tbOutFileNameSuffixForRecovery = new System.Windows.Forms.TextBox();
+            this.lblOutFileNameSuffixForRecovery = new System.Windows.Forms.Label();
             this.cbRecovery = new System.Windows.Forms.CheckBox();
             this.btnRun = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -81,71 +90,75 @@
             this.bgDirectagRun = new System.ComponentModel.BackgroundWorker();
             this.bgWriteSpectra = new System.ComponentModel.BackgroundWorker();
             this.bgAddLabels = new System.ComponentModel.BackgroundWorker();
+            this.tvSelDirs = new System.Windows.Forms.TreeView();
+            this.lblInputFileFilters = new System.Windows.Forms.Label();
+            this.tbInputFileFilters = new System.Windows.Forms.TextBox();
+            this.btnListFiles = new System.Windows.Forms.Button();
             this.gbAssessment.SuspendLayout();
             this.gbDtgConfig.SuspendLayout();
             this.gbRemoval.SuspendLayout();
             this.gbRecovery.SuspendLayout();
             this.SuspendLayout();
             // 
-            // lblInputFileName
+            // lblInputFileDir
             // 
-            this.lblInputFileName.AutoSize = true;
-            this.lblInputFileName.Location = new System.Drawing.Point(23, 30);
-            this.lblInputFileName.Name = "lblInputFileName";
-            this.lblInputFileName.Size = new System.Drawing.Size(84, 13);
-            this.lblInputFileName.TabIndex = 0;
-            this.lblInputFileName.Text = "Input File Name:";
+            this.lblInputFileDir.AutoSize = true;
+            this.lblInputFileDir.Location = new System.Drawing.Point(23, 23);
+            this.lblInputFileDir.Name = "lblInputFileDir";
+            this.lblInputFileDir.Size = new System.Drawing.Size(79, 13);
+            this.lblInputFileDir.TabIndex = 0;
+            this.lblInputFileDir.Text = "Input Directory:";
             // 
-            // tbInputFile
+            // tbSrcDir
             // 
-            this.tbInputFile.Location = new System.Drawing.Point(113, 27);
-            this.tbInputFile.Name = "tbInputFile";
-            this.tbInputFile.Size = new System.Drawing.Size(496, 20);
-            this.tbInputFile.TabIndex = 1;
+            this.tbSrcDir.Location = new System.Drawing.Point(115, 19);
+            this.tbSrcDir.Name = "tbSrcDir";
+            this.tbSrcDir.Size = new System.Drawing.Size(496, 20);
+            this.tbSrcDir.TabIndex = 1;
             // 
             // btnSrcFileBrowse
             // 
-            this.btnSrcFileBrowse.Location = new System.Drawing.Point(615, 26);
+            this.btnSrcFileBrowse.Location = new System.Drawing.Point(617, 19);
             this.btnSrcFileBrowse.Name = "btnSrcFileBrowse";
             this.btnSrcFileBrowse.Size = new System.Drawing.Size(73, 21);
-            this.btnSrcFileBrowse.TabIndex = 2;
+            this.btnSrcFileBrowse.TabIndex = 1;
             this.btnSrcFileBrowse.Text = "Browse";
             this.btnSrcFileBrowse.UseVisualStyleBackColor = true;
             this.btnSrcFileBrowse.Click += new System.EventHandler(this.btnSrcFileBrowse_Click);
             // 
             // gbAssessment
             // 
-            this.gbAssessment.Controls.Add(this.tbOutputMetrics);
-            this.gbAssessment.Controls.Add(this.lblOutputMetrics);
+            this.gbAssessment.Controls.Add(this.tbOutputMetricsSuffix);
+            this.gbAssessment.Controls.Add(this.lblOutputMetricsSurfix);
             this.gbAssessment.Controls.Add(this.gbDtgConfig);
             this.gbAssessment.Controls.Add(this.cbAssessement);
-            this.gbAssessment.Location = new System.Drawing.Point(26, 97);
+            this.gbAssessment.Location = new System.Drawing.Point(38, 280);
             this.gbAssessment.Name = "gbAssessment";
-            this.gbAssessment.Size = new System.Drawing.Size(662, 152);
+            this.gbAssessment.Size = new System.Drawing.Size(264, 374);
             this.gbAssessment.TabIndex = 3;
             this.gbAssessment.TabStop = false;
             // 
-            // tbOutputMetrics
+            // tbOutputMetricsSuffix
             // 
-            this.tbOutputMetrics.Location = new System.Drawing.Point(120, 129);
-            this.tbOutputMetrics.Name = "tbOutputMetrics";
-            this.tbOutputMetrics.Size = new System.Drawing.Size(521, 20);
-            this.tbOutputMetrics.TabIndex = 4;
+            this.tbOutputMetricsSuffix.Location = new System.Drawing.Point(139, 339);
+            this.tbOutputMetricsSuffix.Name = "tbOutputMetricsSuffix";
+            this.tbOutputMetricsSuffix.Size = new System.Drawing.Size(109, 20);
+            this.tbOutputMetricsSuffix.TabIndex = 4;
             // 
-            // lblOutputMetrics
+            // lblOutputMetricsSurfix
             // 
-            this.lblOutputMetrics.AutoSize = true;
-            this.lblOutputMetrics.Location = new System.Drawing.Point(16, 136);
-            this.lblOutputMetrics.Name = "lblOutputMetrics";
-            this.lblOutputMetrics.Size = new System.Drawing.Size(98, 13);
-            this.lblOutputMetrics.TabIndex = 2;
-            this.lblOutputMetrics.Text = "Output Metrics File:";
+            this.lblOutputMetricsSurfix.AutoSize = true;
+            this.lblOutputMetricsSurfix.Location = new System.Drawing.Point(6, 342);
+            this.lblOutputMetricsSurfix.Name = "lblOutputMetricsSurfix";
+            this.lblOutputMetricsSurfix.Size = new System.Drawing.Size(127, 13);
+            this.lblOutputMetricsSurfix.TabIndex = 2;
+            this.lblOutputMetricsSurfix.Text = "Quality Metrics File Suffix:";
             // 
             // gbDtgConfig
             // 
             this.gbDtgConfig.Controls.Add(this.cbWriteOutTags);
-            this.gbDtgConfig.Controls.Add(this.tbIsotopeTolerance);
-            this.gbDtgConfig.Controls.Add(this.lblIsotopeTolerance);
+            this.gbDtgConfig.Controls.Add(this.tbTagLength);
+            this.gbDtgConfig.Controls.Add(this.lblTagLength);
             this.gbDtgConfig.Controls.Add(this.cbUseMultipleProcessors);
             this.gbDtgConfig.Controls.Add(this.cbUseChargeStateFromMS);
             this.gbDtgConfig.Controls.Add(this.rbMono);
@@ -159,9 +172,9 @@
             this.gbDtgConfig.Controls.Add(this.lblFragmentTolerance);
             this.gbDtgConfig.Controls.Add(this.tbPrecursorTolerance);
             this.gbDtgConfig.Controls.Add(this.lblPrecursorTolerance);
-            this.gbDtgConfig.Location = new System.Drawing.Point(19, 23);
+            this.gbDtgConfig.Location = new System.Drawing.Point(18, 23);
             this.gbDtgConfig.Name = "gbDtgConfig";
-            this.gbDtgConfig.Size = new System.Drawing.Size(622, 99);
+            this.gbDtgConfig.Size = new System.Drawing.Size(229, 306);
             this.gbDtgConfig.TabIndex = 1;
             this.gbDtgConfig.TabStop = false;
             this.gbDtgConfig.Text = "Sequence Tagging Configuration";
@@ -169,34 +182,34 @@
             // cbWriteOutTags
             // 
             this.cbWriteOutTags.AutoSize = true;
-            this.cbWriteOutTags.Location = new System.Drawing.Point(424, 71);
+            this.cbWriteOutTags.Location = new System.Drawing.Point(25, 274);
             this.cbWriteOutTags.Name = "cbWriteOutTags";
             this.cbWriteOutTags.Size = new System.Drawing.Size(98, 17);
             this.cbWriteOutTags.TabIndex = 17;
             this.cbWriteOutTags.Text = "Write Out Tags";
             this.cbWriteOutTags.UseVisualStyleBackColor = true;
             // 
-            // tbIsotopeTolerance
+            // tbTagLength
             // 
-            this.tbIsotopeTolerance.Location = new System.Drawing.Point(152, 69);
-            this.tbIsotopeTolerance.Name = "tbIsotopeTolerance";
-            this.tbIsotopeTolerance.Size = new System.Drawing.Size(40, 20);
-            this.tbIsotopeTolerance.TabIndex = 16;
-            this.tbIsotopeTolerance.Text = "0.25";
+            this.tbTagLength.Location = new System.Drawing.Point(152, 84);
+            this.tbTagLength.Name = "tbTagLength";
+            this.tbTagLength.Size = new System.Drawing.Size(45, 20);
+            this.tbTagLength.TabIndex = 16;
+            this.tbTagLength.Text = "3";
             // 
-            // lblIsotopeTolerance
+            // lblTagLength
             // 
-            this.lblIsotopeTolerance.AutoSize = true;
-            this.lblIsotopeTolerance.Location = new System.Drawing.Point(22, 72);
-            this.lblIsotopeTolerance.Name = "lblIsotopeTolerance";
-            this.lblIsotopeTolerance.Size = new System.Drawing.Size(117, 13);
-            this.lblIsotopeTolerance.TabIndex = 15;
-            this.lblIsotopeTolerance.Text = "Isotope m/z Tolerance:";
+            this.lblTagLength.AutoSize = true;
+            this.lblTagLength.Location = new System.Drawing.Point(22, 87);
+            this.lblTagLength.Name = "lblTagLength";
+            this.lblTagLength.Size = new System.Drawing.Size(117, 13);
+            this.lblTagLength.TabIndex = 15;
+            this.lblTagLength.Text = "Sequence Tag Length:";
             // 
             // cbUseMultipleProcessors
             // 
             this.cbUseMultipleProcessors.AutoSize = true;
-            this.cbUseMultipleProcessors.Location = new System.Drawing.Point(424, 47);
+            this.cbUseMultipleProcessors.Location = new System.Drawing.Point(25, 247);
             this.cbUseMultipleProcessors.Name = "cbUseMultipleProcessors";
             this.cbUseMultipleProcessors.Size = new System.Drawing.Size(142, 17);
             this.cbUseMultipleProcessors.TabIndex = 10;
@@ -206,7 +219,7 @@
             // cbUseChargeStateFromMS
             // 
             this.cbUseChargeStateFromMS.AutoSize = true;
-            this.cbUseChargeStateFromMS.Location = new System.Drawing.Point(424, 24);
+            this.cbUseChargeStateFromMS.Location = new System.Drawing.Point(25, 218);
             this.cbUseChargeStateFromMS.Name = "cbUseChargeStateFromMS";
             this.cbUseChargeStateFromMS.Size = new System.Drawing.Size(152, 17);
             this.cbUseChargeStateFromMS.TabIndex = 7;
@@ -216,7 +229,7 @@
             // rbMono
             // 
             this.rbMono.AutoSize = true;
-            this.rbMono.Location = new System.Drawing.Point(348, 71);
+            this.rbMono.Location = new System.Drawing.Point(150, 185);
             this.rbMono.Name = "rbMono";
             this.rbMono.Size = new System.Drawing.Size(52, 17);
             this.rbMono.TabIndex = 6;
@@ -225,7 +238,7 @@
             // 
             // tbNumChargeStates
             // 
-            this.tbNumChargeStates.Location = new System.Drawing.Point(355, 46);
+            this.tbNumChargeStates.Location = new System.Drawing.Point(157, 146);
             this.tbNumChargeStates.Name = "tbNumChargeStates";
             this.tbNumChargeStates.Size = new System.Drawing.Size(40, 20);
             this.tbNumChargeStates.TabIndex = 12;
@@ -235,7 +248,7 @@
             // 
             this.rbAverage.AutoSize = true;
             this.rbAverage.Checked = true;
-            this.rbAverage.Location = new System.Drawing.Point(285, 70);
+            this.rbAverage.Location = new System.Drawing.Point(87, 184);
             this.rbAverage.Name = "rbAverage";
             this.rbAverage.Size = new System.Drawing.Size(65, 17);
             this.rbAverage.TabIndex = 5;
@@ -246,7 +259,7 @@
             // lblUseMass
             // 
             this.lblUseMass.AutoSize = true;
-            this.lblUseMass.Location = new System.Drawing.Point(220, 72);
+            this.lblUseMass.Location = new System.Drawing.Point(22, 186);
             this.lblUseMass.Name = "lblUseMass";
             this.lblUseMass.Size = new System.Drawing.Size(57, 13);
             this.lblUseMass.TabIndex = 4;
@@ -255,7 +268,7 @@
             // lblNumChargeStates
             // 
             this.lblNumChargeStates.AutoSize = true;
-            this.lblNumChargeStates.Location = new System.Drawing.Point(220, 48);
+            this.lblNumChargeStates.Location = new System.Drawing.Point(22, 152);
             this.lblNumChargeStates.Name = "lblNumChargeStates";
             this.lblNumChargeStates.Size = new System.Drawing.Size(129, 13);
             this.lblNumChargeStates.TabIndex = 11;
@@ -263,7 +276,7 @@
             // 
             // tbStaticMods
             // 
-            this.tbStaticMods.Location = new System.Drawing.Point(292, 21);
+            this.tbStaticMods.Location = new System.Drawing.Point(94, 117);
             this.tbStaticMods.Name = "tbStaticMods";
             this.tbStaticMods.Size = new System.Drawing.Size(103, 20);
             this.tbStaticMods.TabIndex = 9;
@@ -272,7 +285,7 @@
             // lblStaticMods
             // 
             this.lblStaticMods.AutoSize = true;
-            this.lblStaticMods.Location = new System.Drawing.Point(220, 25);
+            this.lblStaticMods.Location = new System.Drawing.Point(22, 121);
             this.lblStaticMods.Name = "lblStaticMods";
             this.lblStaticMods.Size = new System.Drawing.Size(66, 13);
             this.lblStaticMods.TabIndex = 8;
@@ -280,16 +293,16 @@
             // 
             // tbFragmentTolerance
             // 
-            this.tbFragmentTolerance.Location = new System.Drawing.Point(152, 45);
+            this.tbFragmentTolerance.Location = new System.Drawing.Point(152, 55);
             this.tbFragmentTolerance.Name = "tbFragmentTolerance";
-            this.tbFragmentTolerance.Size = new System.Drawing.Size(40, 20);
+            this.tbFragmentTolerance.Size = new System.Drawing.Size(45, 20);
             this.tbFragmentTolerance.TabIndex = 3;
             this.tbFragmentTolerance.Text = "0.5";
             // 
             // lblFragmentTolerance
             // 
             this.lblFragmentTolerance.AutoSize = true;
-            this.lblFragmentTolerance.Location = new System.Drawing.Point(22, 49);
+            this.lblFragmentTolerance.Location = new System.Drawing.Point(22, 58);
             this.lblFragmentTolerance.Name = "lblFragmentTolerance";
             this.lblFragmentTolerance.Size = new System.Drawing.Size(126, 13);
             this.lblFragmentTolerance.TabIndex = 2;
@@ -297,16 +310,16 @@
             // 
             // tbPrecursorTolerance
             // 
-            this.tbPrecursorTolerance.Location = new System.Drawing.Point(152, 22);
+            this.tbPrecursorTolerance.Location = new System.Drawing.Point(152, 25);
             this.tbPrecursorTolerance.Name = "tbPrecursorTolerance";
-            this.tbPrecursorTolerance.Size = new System.Drawing.Size(40, 20);
+            this.tbPrecursorTolerance.Size = new System.Drawing.Size(45, 20);
             this.tbPrecursorTolerance.TabIndex = 1;
             this.tbPrecursorTolerance.Text = "1.25";
             // 
             // lblPrecursorTolerance
             // 
             this.lblPrecursorTolerance.AutoSize = true;
-            this.lblPrecursorTolerance.Location = new System.Drawing.Point(22, 25);
+            this.lblPrecursorTolerance.Location = new System.Drawing.Point(22, 28);
             this.lblPrecursorTolerance.Name = "lblPrecursorTolerance";
             this.lblPrecursorTolerance.Size = new System.Drawing.Size(127, 13);
             this.lblPrecursorTolerance.TabIndex = 0;
@@ -327,32 +340,21 @@
             // 
             // gbRemoval
             // 
-            this.gbRemoval.Controls.Add(this.btnMetricsFileBrowseForRemoval);
             this.gbRemoval.Controls.Add(this.cmbOutputFileFormat);
-            this.gbRemoval.Controls.Add(this.tbOutFileNameForRemoval);
-            this.gbRemoval.Controls.Add(this.lblOutFileNameForRemoval);
+            this.gbRemoval.Controls.Add(this.tbOutFileNameSuffixForRemoval);
+            this.gbRemoval.Controls.Add(this.lblOutFileNameSurrfixForRemoval);
             this.gbRemoval.Controls.Add(this.lblOutFileFormat);
             this.gbRemoval.Controls.Add(this.lblPercentSpectra);
             this.gbRemoval.Controls.Add(this.tbRemovalCutoff);
             this.gbRemoval.Controls.Add(this.lblRetain);
-            this.gbRemoval.Controls.Add(this.tbMetricsFileForRemoval);
-            this.gbRemoval.Controls.Add(this.lblMetricsFileForRemoval);
+            this.gbRemoval.Controls.Add(this.tbMetricsFileSuffixForRemoval);
+            this.gbRemoval.Controls.Add(this.lblMetricsFileSuffixForRemoval);
             this.gbRemoval.Controls.Add(this.cbRemoval);
-            this.gbRemoval.Location = new System.Drawing.Point(26, 273);
+            this.gbRemoval.Location = new System.Drawing.Point(329, 280);
             this.gbRemoval.Name = "gbRemoval";
-            this.gbRemoval.Size = new System.Drawing.Size(320, 204);
+            this.gbRemoval.Size = new System.Drawing.Size(361, 156);
             this.gbRemoval.TabIndex = 4;
             this.gbRemoval.TabStop = false;
-            // 
-            // btnMetricsFileBrowseForRemoval
-            // 
-            this.btnMetricsFileBrowseForRemoval.Location = new System.Drawing.Point(228, 23);
-            this.btnMetricsFileBrowseForRemoval.Name = "btnMetricsFileBrowseForRemoval";
-            this.btnMetricsFileBrowseForRemoval.Size = new System.Drawing.Size(73, 21);
-            this.btnMetricsFileBrowseForRemoval.TabIndex = 8;
-            this.btnMetricsFileBrowseForRemoval.Text = "Browse";
-            this.btnMetricsFileBrowseForRemoval.UseVisualStyleBackColor = true;
-            this.btnMetricsFileBrowseForRemoval.Click += new System.EventHandler(this.btnMetricsFileBrowseForRemoval_Click);
             // 
             // cmbOutputFileFormat
             // 
@@ -361,33 +363,32 @@
             "mzML",
             "mzXML",
             "mgf"});
-            this.cmbOutputFileFormat.Location = new System.Drawing.Point(145, 113);
+            this.cmbOutputFileFormat.Location = new System.Drawing.Point(149, 85);
             this.cmbOutputFileFormat.Name = "cmbOutputFileFormat";
             this.cmbOutputFileFormat.Size = new System.Drawing.Size(121, 21);
             this.cmbOutputFileFormat.TabIndex = 15;
             this.cmbOutputFileFormat.Text = "mzML";
-            this.cmbOutputFileFormat.SelectedIndexChanged += new System.EventHandler(this.cmbOutputFileFormat_SelectedIndexChanged);
             // 
-            // tbOutFileNameForRemoval
+            // tbOutFileNameSuffixForRemoval
             // 
-            this.tbOutFileNameForRemoval.Location = new System.Drawing.Point(19, 169);
-            this.tbOutFileNameForRemoval.Name = "tbOutFileNameForRemoval";
-            this.tbOutFileNameForRemoval.Size = new System.Drawing.Size(282, 20);
-            this.tbOutFileNameForRemoval.TabIndex = 14;
+            this.tbOutFileNameSuffixForRemoval.Location = new System.Drawing.Point(149, 118);
+            this.tbOutFileNameSuffixForRemoval.Name = "tbOutFileNameSuffixForRemoval";
+            this.tbOutFileNameSuffixForRemoval.Size = new System.Drawing.Size(205, 20);
+            this.tbOutFileNameSuffixForRemoval.TabIndex = 14;
             // 
-            // lblOutFileNameForRemoval
+            // lblOutFileNameSurrfixForRemoval
             // 
-            this.lblOutFileNameForRemoval.AutoSize = true;
-            this.lblOutFileNameForRemoval.Location = new System.Drawing.Point(16, 146);
-            this.lblOutFileNameForRemoval.Name = "lblOutFileNameForRemoval";
-            this.lblOutFileNameForRemoval.Size = new System.Drawing.Size(92, 13);
-            this.lblOutFileNameForRemoval.TabIndex = 13;
-            this.lblOutFileNameForRemoval.Text = "Output File Name:";
+            this.lblOutFileNameSurrfixForRemoval.AutoSize = true;
+            this.lblOutFileNameSurrfixForRemoval.Location = new System.Drawing.Point(16, 121);
+            this.lblOutFileNameSurrfixForRemoval.Name = "lblOutFileNameSurrfixForRemoval";
+            this.lblOutFileNameSurrfixForRemoval.Size = new System.Drawing.Size(121, 13);
+            this.lblOutFileNameSurrfixForRemoval.TabIndex = 13;
+            this.lblOutFileNameSurrfixForRemoval.Text = "Output File Name Suffix:";
             // 
             // lblOutFileFormat
             // 
             this.lblOutFileFormat.AutoSize = true;
-            this.lblOutFileFormat.Location = new System.Drawing.Point(16, 115);
+            this.lblOutFileFormat.Location = new System.Drawing.Point(16, 88);
             this.lblOutFileFormat.Name = "lblOutFileFormat";
             this.lblOutFileFormat.Size = new System.Drawing.Size(96, 13);
             this.lblOutFileFormat.TabIndex = 10;
@@ -396,7 +397,7 @@
             // lblPercentSpectra
             // 
             this.lblPercentSpectra.AutoSize = true;
-            this.lblPercentSpectra.Location = new System.Drawing.Point(120, 84);
+            this.lblPercentSpectra.Location = new System.Drawing.Point(120, 58);
             this.lblPercentSpectra.Name = "lblPercentSpectra";
             this.lblPercentSpectra.Size = new System.Drawing.Size(180, 13);
             this.lblPercentSpectra.TabIndex = 9;
@@ -404,7 +405,7 @@
             // 
             // tbRemovalCutoff
             // 
-            this.tbRemovalCutoff.Location = new System.Drawing.Point(80, 81);
+            this.tbRemovalCutoff.Location = new System.Drawing.Point(80, 55);
             this.tbRemovalCutoff.Name = "tbRemovalCutoff";
             this.tbRemovalCutoff.Size = new System.Drawing.Size(36, 20);
             this.tbRemovalCutoff.TabIndex = 8;
@@ -414,27 +415,27 @@
             // lblRetain
             // 
             this.lblRetain.AutoSize = true;
-            this.lblRetain.Location = new System.Drawing.Point(16, 84);
+            this.lblRetain.Location = new System.Drawing.Point(16, 58);
             this.lblRetain.Name = "lblRetain";
             this.lblRetain.Size = new System.Drawing.Size(60, 13);
             this.lblRetain.TabIndex = 7;
             this.lblRetain.Text = "Retain Top";
             // 
-            // tbMetricsFileForRemoval
+            // tbMetricsFileSuffixForRemoval
             // 
-            this.tbMetricsFileForRemoval.Location = new System.Drawing.Point(19, 47);
-            this.tbMetricsFileForRemoval.Name = "tbMetricsFileForRemoval";
-            this.tbMetricsFileForRemoval.Size = new System.Drawing.Size(282, 20);
-            this.tbMetricsFileForRemoval.TabIndex = 6;
+            this.tbMetricsFileSuffixForRemoval.Location = new System.Drawing.Point(149, 26);
+            this.tbMetricsFileSuffixForRemoval.Name = "tbMetricsFileSuffixForRemoval";
+            this.tbMetricsFileSuffixForRemoval.Size = new System.Drawing.Size(205, 20);
+            this.tbMetricsFileSuffixForRemoval.TabIndex = 6;
             // 
-            // lblMetricsFileForRemoval
+            // lblMetricsFileSuffixForRemoval
             // 
-            this.lblMetricsFileForRemoval.AutoSize = true;
-            this.lblMetricsFileForRemoval.Location = new System.Drawing.Point(16, 27);
-            this.lblMetricsFileForRemoval.Name = "lblMetricsFileForRemoval";
-            this.lblMetricsFileForRemoval.Size = new System.Drawing.Size(98, 13);
-            this.lblMetricsFileForRemoval.TabIndex = 5;
-            this.lblMetricsFileForRemoval.Text = "Quality Metrics File:";
+            this.lblMetricsFileSuffixForRemoval.AutoSize = true;
+            this.lblMetricsFileSuffixForRemoval.Location = new System.Drawing.Point(16, 29);
+            this.lblMetricsFileSuffixForRemoval.Name = "lblMetricsFileSuffixForRemoval";
+            this.lblMetricsFileSuffixForRemoval.Size = new System.Drawing.Size(127, 13);
+            this.lblMetricsFileSuffixForRemoval.TabIndex = 5;
+            this.lblMetricsFileSuffixForRemoval.Text = "Quality Metrics File Suffix:";
             // 
             // cbRemoval
             // 
@@ -451,71 +452,177 @@
             // 
             // gbRecovery
             // 
-            this.gbRecovery.Controls.Add(this.btnMetricsFileBrowseForRecovery);
-            this.gbRecovery.Controls.Add(this.btnSetIDPicker);
-            this.gbRecovery.Controls.Add(this.tbOutFileNameForRecovery);
-            this.gbRecovery.Controls.Add(this.lblOutFileNameForRecovery);
-            this.gbRecovery.Controls.Add(this.tbMetricsFileForRecovery);
-            this.gbRecovery.Controls.Add(this.lblMetricsFileForRecovery);
+            this.gbRecovery.Controls.Add(this.cbOptimizeScoreWeights);
+            this.gbRecovery.Controls.Add(this.cmbScoreWeights);
+            this.gbRecovery.Controls.Add(this.cbNormSearchScores);
+            this.gbRecovery.Controls.Add(this.tbDecoyPrefix);
+            this.gbRecovery.Controls.Add(this.tbMaxFDR);
+            this.gbRecovery.Controls.Add(this.lblDecoyPrefix);
+            this.gbRecovery.Controls.Add(this.lblSearchScoreWeights);
+            this.gbRecovery.Controls.Add(this.lblMaxFDR);
+            this.gbRecovery.Controls.Add(this.btnDBBrowse);
+            this.gbRecovery.Controls.Add(this.tbDBFile);
+            this.gbRecovery.Controls.Add(this.lblDBFile);
+            this.gbRecovery.Controls.Add(this.tbPepXMLDir);
+            this.gbRecovery.Controls.Add(this.btnPepXMLBrowse);
+            this.gbRecovery.Controls.Add(this.lblPepXMLDir);
+            this.gbRecovery.Controls.Add(this.tbOutFileNameSuffixForRecovery);
+            this.gbRecovery.Controls.Add(this.lblOutFileNameSuffixForRecovery);
             this.gbRecovery.Controls.Add(this.cbRecovery);
-            this.gbRecovery.Location = new System.Drawing.Point(368, 273);
+            this.gbRecovery.Location = new System.Drawing.Point(329, 448);
             this.gbRecovery.Name = "gbRecovery";
-            this.gbRecovery.Size = new System.Drawing.Size(320, 204);
+            this.gbRecovery.Size = new System.Drawing.Size(361, 206);
             this.gbRecovery.TabIndex = 5;
             this.gbRecovery.TabStop = false;
             this.gbRecovery.Text = " ";
             // 
-            // btnMetricsFileBrowseForRecovery
+            // cbOptimizeScoreWeights
             // 
-            this.btnMetricsFileBrowseForRecovery.Location = new System.Drawing.Point(226, 23);
-            this.btnMetricsFileBrowseForRecovery.Name = "btnMetricsFileBrowseForRecovery";
-            this.btnMetricsFileBrowseForRecovery.Size = new System.Drawing.Size(73, 21);
-            this.btnMetricsFileBrowseForRecovery.TabIndex = 16;
-            this.btnMetricsFileBrowseForRecovery.Text = "Browse";
-            this.btnMetricsFileBrowseForRecovery.UseVisualStyleBackColor = true;
-            this.btnMetricsFileBrowseForRecovery.Click += new System.EventHandler(this.btnMetricsFileBrowseForRecovery_Click);
+            this.cbOptimizeScoreWeights.AutoSize = true;
+            this.cbOptimizeScoreWeights.Checked = true;
+            this.cbOptimizeScoreWeights.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbOptimizeScoreWeights.Location = new System.Drawing.Point(206, 139);
+            this.cbOptimizeScoreWeights.Name = "cbOptimizeScoreWeights";
+            this.cbOptimizeScoreWeights.Size = new System.Drawing.Size(142, 17);
+            this.cbOptimizeScoreWeights.TabIndex = 16;
+            this.cbOptimizeScoreWeights.Text = "Optimize Score Weights ";
+            this.cbOptimizeScoreWeights.UseVisualStyleBackColor = true;
             // 
-            // btnSetIDPicker
+            // cmbScoreWeights
             // 
-            this.btnSetIDPicker.Location = new System.Drawing.Point(17, 87);
-            this.btnSetIDPicker.Name = "btnSetIDPicker";
-            this.btnSetIDPicker.Size = new System.Drawing.Size(282, 40);
-            this.btnSetIDPicker.TabIndex = 16;
-            this.btnSetIDPicker.Text = "Click to Configurate IDPicker";
-            this.btnSetIDPicker.UseVisualStyleBackColor = true;
-            this.btnSetIDPicker.Click += new System.EventHandler(this.btnSetIDPicker_Click);
+            this.cmbScoreWeights.FormattingEnabled = true;
+            this.cmbScoreWeights.Items.AddRange(new object[] {
+            "mvh 1 mzFidelity 1",
+            "xcorr 1 deltacn 1",
+            "hyperscore 1 expect -1",
+            "ionscore 1 identityscore -1"});
+            this.cmbScoreWeights.Location = new System.Drawing.Point(17, 137);
+            this.cmbScoreWeights.Name = "cmbScoreWeights";
+            this.cmbScoreWeights.Size = new System.Drawing.Size(166, 21);
+            this.cmbScoreWeights.TabIndex = 17;
             // 
-            // tbOutFileNameForRecovery
+            // cbNormSearchScores
             // 
-            this.tbOutFileNameForRecovery.Location = new System.Drawing.Point(17, 169);
-            this.tbOutFileNameForRecovery.Name = "tbOutFileNameForRecovery";
-            this.tbOutFileNameForRecovery.Size = new System.Drawing.Size(282, 20);
-            this.tbOutFileNameForRecovery.TabIndex = 15;
+            this.cbNormSearchScores.AutoSize = true;
+            this.cbNormSearchScores.Checked = true;
+            this.cbNormSearchScores.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbNormSearchScores.Location = new System.Drawing.Point(206, 120);
+            this.cbNormSearchScores.Name = "cbNormSearchScores";
+            this.cbNormSearchScores.Size = new System.Drawing.Size(148, 17);
+            this.cbNormSearchScores.TabIndex = 15;
+            this.cbNormSearchScores.Text = "Normalize Search Scores ";
+            this.cbNormSearchScores.UseVisualStyleBackColor = true;
             // 
-            // lblOutFileNameForRecovery
+            // tbDecoyPrefix
             // 
-            this.lblOutFileNameForRecovery.AutoSize = true;
-            this.lblOutFileNameForRecovery.Location = new System.Drawing.Point(14, 146);
-            this.lblOutFileNameForRecovery.Name = "lblOutFileNameForRecovery";
-            this.lblOutFileNameForRecovery.Size = new System.Drawing.Size(92, 13);
-            this.lblOutFileNameForRecovery.TabIndex = 15;
-            this.lblOutFileNameForRecovery.Text = "Output File Name:";
+            this.tbDecoyPrefix.Location = new System.Drawing.Point(282, 85);
+            this.tbDecoyPrefix.Name = "tbDecoyPrefix";
+            this.tbDecoyPrefix.Size = new System.Drawing.Size(72, 20);
+            this.tbDecoyPrefix.TabIndex = 23;
+            this.tbDecoyPrefix.Text = "rev_";
             // 
-            // tbMetricsFileForRecovery
+            // tbMaxFDR
             // 
-            this.tbMetricsFileForRecovery.Location = new System.Drawing.Point(17, 47);
-            this.tbMetricsFileForRecovery.Name = "tbMetricsFileForRecovery";
-            this.tbMetricsFileForRecovery.Size = new System.Drawing.Size(282, 20);
-            this.tbMetricsFileForRecovery.TabIndex = 15;
+            this.tbMaxFDR.Location = new System.Drawing.Point(75, 85);
+            this.tbMaxFDR.Name = "tbMaxFDR";
+            this.tbMaxFDR.Size = new System.Drawing.Size(72, 20);
+            this.tbMaxFDR.TabIndex = 22;
+            this.tbMaxFDR.Text = "0.05";
             // 
-            // lblMetricsFileForRecovery
+            // lblDecoyPrefix
             // 
-            this.lblMetricsFileForRecovery.AutoSize = true;
-            this.lblMetricsFileForRecovery.Location = new System.Drawing.Point(14, 27);
-            this.lblMetricsFileForRecovery.Name = "lblMetricsFileForRecovery";
-            this.lblMetricsFileForRecovery.Size = new System.Drawing.Size(98, 13);
-            this.lblMetricsFileForRecovery.TabIndex = 15;
-            this.lblMetricsFileForRecovery.Text = "Quality Metrics File:";
+            this.lblDecoyPrefix.AutoSize = true;
+            this.lblDecoyPrefix.Location = new System.Drawing.Point(203, 88);
+            this.lblDecoyPrefix.Name = "lblDecoyPrefix";
+            this.lblDecoyPrefix.Size = new System.Drawing.Size(70, 13);
+            this.lblDecoyPrefix.TabIndex = 21;
+            this.lblDecoyPrefix.Text = "Decoy Prefix:";
+            // 
+            // lblSearchScoreWeights
+            // 
+            this.lblSearchScoreWeights.AutoSize = true;
+            this.lblSearchScoreWeights.Location = new System.Drawing.Point(14, 118);
+            this.lblSearchScoreWeights.Name = "lblSearchScoreWeights";
+            this.lblSearchScoreWeights.Size = new System.Drawing.Size(169, 13);
+            this.lblSearchScoreWeights.TabIndex = 14;
+            this.lblSearchScoreWeights.Text = "Database Search Score Weights: ";
+            // 
+            // lblMaxFDR
+            // 
+            this.lblMaxFDR.AutoSize = true;
+            this.lblMaxFDR.Location = new System.Drawing.Point(14, 88);
+            this.lblMaxFDR.Name = "lblMaxFDR";
+            this.lblMaxFDR.Size = new System.Drawing.Size(55, 13);
+            this.lblMaxFDR.TabIndex = 20;
+            this.lblMaxFDR.Text = "Max FDR:";
+            // 
+            // btnDBBrowse
+            // 
+            this.btnDBBrowse.Location = new System.Drawing.Point(281, 50);
+            this.btnDBBrowse.Name = "btnDBBrowse";
+            this.btnDBBrowse.Size = new System.Drawing.Size(73, 21);
+            this.btnDBBrowse.TabIndex = 19;
+            this.btnDBBrowse.Text = "Browse";
+            this.btnDBBrowse.UseVisualStyleBackColor = true;
+            this.btnDBBrowse.Click += new System.EventHandler(this.btnDBBrowse_Click);
+            // 
+            // tbDBFile
+            // 
+            this.tbDBFile.Location = new System.Drawing.Point(120, 51);
+            this.tbDBFile.Name = "tbDBFile";
+            this.tbDBFile.Size = new System.Drawing.Size(155, 20);
+            this.tbDBFile.TabIndex = 18;
+            // 
+            // lblDBFile
+            // 
+            this.lblDBFile.AutoSize = true;
+            this.lblDBFile.Location = new System.Drawing.Point(14, 58);
+            this.lblDBFile.Name = "lblDBFile";
+            this.lblDBFile.Size = new System.Drawing.Size(75, 13);
+            this.lblDBFile.TabIndex = 17;
+            this.lblDBFile.Text = "Database File:";
+            // 
+            // tbPepXMLDir
+            // 
+            this.tbPepXMLDir.Location = new System.Drawing.Point(120, 25);
+            this.tbPepXMLDir.Name = "tbPepXMLDir";
+            this.tbPepXMLDir.Size = new System.Drawing.Size(155, 20);
+            this.tbPepXMLDir.TabIndex = 14;
+            // 
+            // btnPepXMLBrowse
+            // 
+            this.btnPepXMLBrowse.Location = new System.Drawing.Point(281, 25);
+            this.btnPepXMLBrowse.Name = "btnPepXMLBrowse";
+            this.btnPepXMLBrowse.Size = new System.Drawing.Size(73, 21);
+            this.btnPepXMLBrowse.TabIndex = 14;
+            this.btnPepXMLBrowse.Text = "Browse";
+            this.btnPepXMLBrowse.UseVisualStyleBackColor = true;
+            this.btnPepXMLBrowse.Click += new System.EventHandler(this.btnPepXMLBrowse_Click);
+            // 
+            // lblPepXMLDir
+            // 
+            this.lblPepXMLDir.AutoSize = true;
+            this.lblPepXMLDir.Location = new System.Drawing.Point(14, 29);
+            this.lblPepXMLDir.Name = "lblPepXMLDir";
+            this.lblPepXMLDir.Size = new System.Drawing.Size(100, 13);
+            this.lblPepXMLDir.TabIndex = 16;
+            this.lblPepXMLDir.Text = "pepXMLs Directory:";
+            // 
+            // tbOutFileNameSuffixForRecovery
+            // 
+            this.tbOutFileNameSuffixForRecovery.Location = new System.Drawing.Point(147, 171);
+            this.tbOutFileNameSuffixForRecovery.Name = "tbOutFileNameSuffixForRecovery";
+            this.tbOutFileNameSuffixForRecovery.Size = new System.Drawing.Size(207, 20);
+            this.tbOutFileNameSuffixForRecovery.TabIndex = 15;
+            // 
+            // lblOutFileNameSuffixForRecovery
+            // 
+            this.lblOutFileNameSuffixForRecovery.AutoSize = true;
+            this.lblOutFileNameSuffixForRecovery.Location = new System.Drawing.Point(14, 174);
+            this.lblOutFileNameSuffixForRecovery.Name = "lblOutFileNameSuffixForRecovery";
+            this.lblOutFileNameSuffixForRecovery.Size = new System.Drawing.Size(121, 13);
+            this.lblOutFileNameSuffixForRecovery.TabIndex = 15;
+            this.lblOutFileNameSuffixForRecovery.Text = "Output File Name Suffix:";
             // 
             // cbRecovery
             // 
@@ -530,7 +637,7 @@
             // 
             // btnRun
             // 
-            this.btnRun.Location = new System.Drawing.Point(510, 483);
+            this.btnRun.Location = new System.Drawing.Point(515, 660);
             this.btnRun.Name = "btnRun";
             this.btnRun.Size = new System.Drawing.Size(80, 23);
             this.btnRun.TabIndex = 6;
@@ -540,7 +647,7 @@
             // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(608, 483);
+            this.btnCancel.Location = new System.Drawing.Point(608, 660);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(80, 23);
             this.btnCancel.TabIndex = 7;
@@ -551,7 +658,7 @@
             // lblOutputDir
             // 
             this.lblOutputDir.AutoSize = true;
-            this.lblOutputDir.Location = new System.Drawing.Point(23, 65);
+            this.lblOutputDir.Location = new System.Drawing.Point(23, 245);
             this.lblOutputDir.Name = "lblOutputDir";
             this.lblOutputDir.Size = new System.Drawing.Size(87, 13);
             this.lblOutputDir.TabIndex = 8;
@@ -559,14 +666,14 @@
             // 
             // tbOutputDir
             // 
-            this.tbOutputDir.Location = new System.Drawing.Point(113, 62);
+            this.tbOutputDir.Location = new System.Drawing.Point(113, 242);
             this.tbOutputDir.Name = "tbOutputDir";
             this.tbOutputDir.Size = new System.Drawing.Size(496, 20);
             this.tbOutputDir.TabIndex = 9;
             // 
             // btnOutputDirBrowse
             // 
-            this.btnOutputDirBrowse.Location = new System.Drawing.Point(615, 61);
+            this.btnOutputDirBrowse.Location = new System.Drawing.Point(615, 241);
             this.btnOutputDirBrowse.Name = "btnOutputDirBrowse";
             this.btnOutputDirBrowse.Size = new System.Drawing.Size(73, 21);
             this.btnOutputDirBrowse.TabIndex = 10;
@@ -586,11 +693,51 @@
             // 
             this.bgAddLabels.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bgAddLabels_DoWork);
             // 
+            // tvSelDirs
+            // 
+            this.tvSelDirs.CheckBoxes = true;
+            this.tvSelDirs.Location = new System.Drawing.Point(26, 77);
+            this.tvSelDirs.Name = "tvSelDirs";
+            this.tvSelDirs.Size = new System.Drawing.Size(662, 158);
+            this.tvSelDirs.TabIndex = 11;
+            this.tvSelDirs.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.tvSelDirs_AfterCheck);
+            // 
+            // lblInputFileFilters
+            // 
+            this.lblInputFileFilters.AutoSize = true;
+            this.lblInputFileFilters.Location = new System.Drawing.Point(23, 52);
+            this.lblInputFileFilters.Name = "lblInputFileFilters";
+            this.lblInputFileFilters.Size = new System.Drawing.Size(83, 13);
+            this.lblInputFileFilters.TabIndex = 12;
+            this.lblInputFileFilters.Text = "Input File Filters:";
+            // 
+            // tbInputFileFilters
+            // 
+            this.tbInputFileFilters.Location = new System.Drawing.Point(115, 49);
+            this.tbInputFileFilters.Name = "tbInputFileFilters";
+            this.tbInputFileFilters.Size = new System.Drawing.Size(496, 20);
+            this.tbInputFileFilters.TabIndex = 13;
+            this.tbInputFileFilters.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbInputFileFilters_KeyPress);
+            // 
+            // btnListFiles
+            // 
+            this.btnListFiles.Location = new System.Drawing.Point(617, 48);
+            this.btnListFiles.Name = "btnListFiles";
+            this.btnListFiles.Size = new System.Drawing.Size(73, 21);
+            this.btnListFiles.TabIndex = 1;
+            this.btnListFiles.Text = "List Files";
+            this.btnListFiles.UseVisualStyleBackColor = true;
+            this.btnListFiles.Click += new System.EventHandler(this.btnListFiles_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(718, 526);
+            this.ClientSize = new System.Drawing.Size(729, 695);
+            this.Controls.Add(this.btnListFiles);
+            this.Controls.Add(this.tbInputFileFilters);
+            this.Controls.Add(this.lblInputFileFilters);
+            this.Controls.Add(this.tvSelDirs);
             this.Controls.Add(this.btnOutputDirBrowse);
             this.Controls.Add(this.tbOutputDir);
             this.Controls.Add(this.lblOutputDir);
@@ -600,8 +747,8 @@
             this.Controls.Add(this.gbRemoval);
             this.Controls.Add(this.gbAssessment);
             this.Controls.Add(this.btnSrcFileBrowse);
-            this.Controls.Add(this.tbInputFile);
-            this.Controls.Add(this.lblInputFileName);
+            this.Controls.Add(this.tbSrcDir);
+            this.Controls.Add(this.lblInputFileDir);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "MainForm";
             this.Text = "ScanRanker";
@@ -621,33 +768,30 @@
 
         #endregion
 
-        private System.Windows.Forms.Label lblInputFileName;
-        private System.Windows.Forms.TextBox tbInputFile;
+        private System.Windows.Forms.Label lblInputFileDir;
+        private System.Windows.Forms.TextBox tbSrcDir;
         private System.Windows.Forms.Button btnSrcFileBrowse;
         private System.Windows.Forms.GroupBox gbAssessment;
         private System.Windows.Forms.CheckBox cbAssessement;
         private System.Windows.Forms.GroupBox gbDtgConfig;
-        private System.Windows.Forms.TextBox tbOutputMetrics;
-        private System.Windows.Forms.Label lblOutputMetrics;
+        private System.Windows.Forms.TextBox tbOutputMetricsSuffix;
+        private System.Windows.Forms.Label lblOutputMetricsSurfix;
         private System.Windows.Forms.GroupBox gbRemoval;
         private System.Windows.Forms.CheckBox cbRemoval;
         private System.Windows.Forms.GroupBox gbRecovery;
         private System.Windows.Forms.Label lblRetain;
-        private System.Windows.Forms.TextBox tbMetricsFileForRemoval;
-        private System.Windows.Forms.Label lblMetricsFileForRemoval;
+        private System.Windows.Forms.TextBox tbMetricsFileSuffixForRemoval;
+        private System.Windows.Forms.Label lblMetricsFileSuffixForRemoval;
         private System.Windows.Forms.CheckBox cbRecovery;
         private System.Windows.Forms.Button btnRun;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Label lblOutFileFormat;
         private System.Windows.Forms.Label lblPercentSpectra;
         private System.Windows.Forms.TextBox tbRemovalCutoff;
-        private System.Windows.Forms.Label lblOutFileNameForRemoval;
-        private System.Windows.Forms.TextBox tbOutFileNameForRemoval;
-        private System.Windows.Forms.TextBox tbMetricsFileForRecovery;
-        private System.Windows.Forms.Label lblMetricsFileForRecovery;
-        private System.Windows.Forms.TextBox tbOutFileNameForRecovery;
-        private System.Windows.Forms.Label lblOutFileNameForRecovery;
-        private System.Windows.Forms.Button btnSetIDPicker;
+        private System.Windows.Forms.Label lblOutFileNameSurrfixForRemoval;
+        private System.Windows.Forms.TextBox tbOutFileNameSuffixForRemoval;
+        private System.Windows.Forms.TextBox tbOutFileNameSuffixForRecovery;
+        private System.Windows.Forms.Label lblOutFileNameSuffixForRecovery;
         private System.Windows.Forms.Label lblPrecursorTolerance;
         private System.Windows.Forms.Label lblUseMass;
         private System.Windows.Forms.TextBox tbFragmentTolerance;
@@ -661,11 +805,9 @@
         private System.Windows.Forms.CheckBox cbUseMultipleProcessors;
         private System.Windows.Forms.TextBox tbStaticMods;
         private System.Windows.Forms.Label lblStaticMods;
-        private System.Windows.Forms.TextBox tbIsotopeTolerance;
-        private System.Windows.Forms.Label lblIsotopeTolerance;
+        private System.Windows.Forms.TextBox tbTagLength;
+        private System.Windows.Forms.Label lblTagLength;
         private System.Windows.Forms.ComboBox cmbOutputFileFormat;
-        private System.Windows.Forms.Button btnMetricsFileBrowseForRemoval;
-        private System.Windows.Forms.Button btnMetricsFileBrowseForRecovery;
         private System.Windows.Forms.Label lblOutputDir;
         private System.Windows.Forms.TextBox tbOutputDir;
         private System.Windows.Forms.Button btnOutputDirBrowse;
@@ -673,6 +815,24 @@
         public System.ComponentModel.BackgroundWorker bgDirectagRun;
         public System.ComponentModel.BackgroundWorker bgWriteSpectra;
         public System.ComponentModel.BackgroundWorker bgAddLabels;
+        private System.Windows.Forms.TreeView tvSelDirs;
+        private System.Windows.Forms.Label lblInputFileFilters;
+        private System.Windows.Forms.TextBox tbInputFileFilters;
+        private System.Windows.Forms.Button btnListFiles;
+        private System.Windows.Forms.Button btnPepXMLBrowse;
+        private System.Windows.Forms.Label lblPepXMLDir;
+        private System.Windows.Forms.TextBox tbPepXMLDir;
+        private System.Windows.Forms.Label lblDBFile;
+        private System.Windows.Forms.Button btnDBBrowse;
+        private System.Windows.Forms.TextBox tbDBFile;
+        private System.Windows.Forms.TextBox tbMaxFDR;
+        private System.Windows.Forms.Label lblDecoyPrefix;
+        private System.Windows.Forms.Label lblMaxFDR;
+        private System.Windows.Forms.TextBox tbDecoyPrefix;
+        private System.Windows.Forms.CheckBox cbOptimizeScoreWeights;
+        private System.Windows.Forms.ComboBox cmbScoreWeights;
+        private System.Windows.Forms.CheckBox cbNormSearchScores;
+        private System.Windows.Forms.Label lblSearchScoreWeights;
 
 
         

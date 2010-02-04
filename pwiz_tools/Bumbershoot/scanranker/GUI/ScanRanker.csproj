@@ -70,13 +70,8 @@
   <ItemGroup>
     <Compile Include="AddSpectraLabelAction.cs" />
     <Compile Include="DirecTagInfo.cs" />
-    <Compile Include="IDPCfgForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="IDPCfgForm.Designer.cs">
-      <DependentUpon>IDPCfgForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="IDPickerInfo.cs" />
+    <Compile Include="InputFileTag.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -85,10 +80,6 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="IDPCfgForm.resx">
-      <DependentUpon>IDPCfgForm.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
       <SubType>Designer</SubType>

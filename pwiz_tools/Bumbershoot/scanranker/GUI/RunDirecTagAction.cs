@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 //using System.Linq;
 using System.Text;
@@ -10,23 +11,37 @@ namespace ScanRanker
 {
     class RunDirecTagAction
     {
-        private string inFile;
-        public string InFile
+        private ArrayList inFileList;
+        public ArrayList InFileList
         {
-            get { return inFile; }
-            set { inFile = value; }
+            get { return inFileList; }
+            set { inFileList = value; }
         }
-        private string outMetricsFile;
-        public string OutMetricsFile
+
+        //private string inFile;
+        //public string InFile
+        //{
+        //    get { return inFile; }
+        //    set { inFile = value; }
+        //}
+        private string outMetricsSuffix;
+        public string OutMetricsSuffix
         {
-            get { return outMetricsFile; }
-            set { outMetricsFile = value; }
+            get { return outMetricsSuffix; }
+            set { outMetricsSuffix = value; }
         }
         private string outputDir;
         public string OutputDir
         {
             get { return outputDir; }
             set { outputDir = value; }
+        }
+
+        private string outputFormat;
+        public string OutputFormat
+        {
+            get { return outputFormat; }
+            set { outputFormat = value; }
         }
 
         private bool addLabel;
@@ -43,71 +58,92 @@ namespace ScanRanker
             set { idpickerCfg = value; }
         }
 
-        private string outputFilenameForRecovery;
-        public string OutputFilenameForRecovery
+        private string outputFilenameSuffixForRemoval;
+        public string OutputFilenameSuffixForRemoval
         {
-            get { return outputFilenameForRecovery; }
-            set { outputFilenameForRecovery = value; }
+            get { return outputFilenameSuffixForRemoval; }
+            set { outputFilenameSuffixForRemoval = value; }
+        }
+
+        private string outputFilenameSuffixForRecovery;
+        public string OutputFilenameSuffixForRecovery
+        {
+            get { return outputFilenameSuffixForRecovery; }
+            set { outputFilenameSuffixForRecovery = value; }
         }
 
         public RunDirecTagAction()
         {
             addLabel = false;
             idpickerCfg = null;
-            outputFilenameForRecovery = string.Empty;
+            outputFilenameSuffixForRecovery = string.Empty;
         }
 
+        /// <summary>
+        /// run directag.exe to assess spectrum quality, generate a subset of high quality spectra
+        /// run AddSpectraLabel() to label identified spectra if configured
+        /// </summary
         public void RunDirectag()
         {
-            string EXE = @"directag.exe";
-            string BIN_DIR = Path.GetDirectoryName(Application.ExecutablePath);
-            string pathAndExeFile = BIN_DIR + "\\" + EXE;
-            string args = " -cfg directag.cfg " + "\"" + inFile + "\"";
-
-            Workspace.SetText("Start assessing spectral quality ...\r\n\r\n");
-
-            try
+            foreach (FileInfo file in inFileList)
             {
-                if (File.Exists(outMetricsFile))
+                string fileBaseName = Path.GetFileNameWithoutExtension(file.FullName);
+                string outMetricsFileName = fileBaseName + outMetricsSuffix + ".txt";
+                string outHighQualSpecFileName = fileBaseName + outputFilenameSuffixForRemoval + "." + outputFormat;
+                string outLabelFileName = fileBaseName + outputFilenameSuffixForRecovery + ".txt";
+
+                string EXE = @"directag.exe";
+                string BIN_DIR = Path.GetDirectoryName(Application.ExecutablePath);
+                string pathAndExeFile = BIN_DIR + "\\" + EXE;
+                string args = " -cfg directag.cfg " + " -ScanRankerMetricsFileName " + outMetricsFileName +
+                    " -HighQualSpecFileName " + outHighQualSpecFileName + " \"" + file.FullName + "\"";
+
+                Workspace.SetText("Start assessing spectral quality for file: " + file.Name + " ...\r\n\r\n");
+
+                try
                 {
-                    File.Delete(outMetricsFile);
+                    if (File.Exists(outMetricsFileName))
+                    {
+                        File.Delete(outMetricsFileName);
+                    }
+
+                    Workspace.RunProcess(pathAndExeFile, args, outputDir);
+                }
+                catch (Exception exc)
+                {
+                    //throw new Exception("Error running DirecTag\r\n", exc);
+                    Workspace.SetText("\r\nError in running DirecTag\r\n");
+                    throw new Exception(exc.Message);
                 }
 
-                Workspace.RunProcess(pathAndExeFile, args, outputDir);
-            }
-            catch (Exception exc)
-            {
-                //throw new Exception("Error running DirecTag\r\n", exc);
-                Workspace.SetText("\r\nError in running DirecTag\r\n");
-                throw new Exception(exc.Message);
-            }
+                //if (!File.Exists(outMetricsFile))
+                //{
+                //    MessageBox.Show("Error in running DirecTag, no metrics file generated");
+                //}
 
-            //if (!File.Exists(outMetricsFile))
-            //{
-            //    MessageBox.Show("Error in running DirecTag, no metrics file generated");
-            //}
+                if (File.Exists("directag_intensity_ranksum_bins.cache"))
+                {
+                    File.Delete("directag_intensity_ranksum_bins.cache");
+                }
+                Workspace.SetText("\r\nFinished spectral quality assessment for file: " + file.Name + "\r\n\r\n");
 
-            if (File.Exists("directag_intensity_ranksum_bins.cache"))
-            {
-                File.Delete("directag_intensity_ranksum_bins.cache");
+                if (addLabel)
+                {
+                    //Workspace.SetText("\r\nStart adding spectra labels ...\r\n\r\n");
+                    AddSpectraLabelAction addSpectraLabelAction = new AddSpectraLabelAction();
+                    addSpectraLabelAction.SpectraFileName = file.Name;
+                    addSpectraLabelAction.MetricsFileName = outMetricsFileName;
+                    addSpectraLabelAction.IdpCfg = idpickerCfg;
+                    addSpectraLabelAction.OutDir = outputDir;
+                    addSpectraLabelAction.OutFileName = outLabelFileName;
+                    addSpectraLabelAction.AddSpectraLabel();
+                    //Workspace.SetText("\r\nFinished adding spectra labels\r\n\r\n");
+                }
+
+                Workspace.ChangeButtonTo("Close");
+                //Workspace.statusForm.btnStop.Visible = false;
+                //Workspace.statusForm.btnClose.Visible = true;
             }
-            Workspace.SetText("\r\nFinished spectral quality assessment\r\n\r\n");
-
-            if (addLabel)
-            {
-                //Workspace.SetText("\r\nStart adding spectra labels ...\r\n\r\n");
-                AddSpectraLabelAction addSpectraLabelAction = new AddSpectraLabelAction();
-                addSpectraLabelAction.MetricsFile = outMetricsFile;
-                addSpectraLabelAction.IdpCfg = idpickerCfg;
-                addSpectraLabelAction.OutDir = outputDir;
-                addSpectraLabelAction.OutFilename = outputFilenameForRecovery;
-                addSpectraLabelAction.AddSpectraLable();
-                //Workspace.SetText("\r\nFinished adding spectra labels\r\n\r\n");
-            }
-
-            Workspace.ChangeButton();
-            //Workspace.statusForm.btnStop.Visible = false;
-            //Workspace.statusForm.btnClose.Visible = true;
         }
     }
 }

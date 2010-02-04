@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 //using System.Linq;
@@ -13,12 +14,34 @@ namespace ScanRanker
 {
     public class AddSpectraLabelAction
     {
-        private string metricsFile;
-        public string MetricsFile
+        //private ArrayList inFileList;
+        //public ArrayList InFileList
+        //{
+        //    get { return inFileList; }
+        //    set { inFileList = value; }
+        //}
+
+        //private string metricsFileSuffix;
+        //public string MetricsFileSuffix
+        //{
+        //    get { return metricsFileSuffix; }
+        //    set { metricsFileSuffix = value; }
+        //}
+
+        private string spectraFileName;
+        public string SpectraFileName
         {
-            get { return metricsFile; }
-            set { metricsFile = value; }
+            get { return spectraFileName; }
+            set { spectraFileName = value; }
         }
+
+        private string metricsFileName;
+        public string MetricsFileName
+        {
+            get { return metricsFileName; }
+            set { metricsFileName = value; }
+        }
+
         private IDPickerInfo idpCfg;
         public IDPickerInfo IdpCfg
         {
@@ -31,14 +54,25 @@ namespace ScanRanker
             get { return outDir; }
             set { outDir = value; }
         }
-        private string outFilename;
-        public string OutFilename
+        //private string outFileSuffix;
+        //public string OutFileSuffix
+        //{
+        //    get { return outFileSuffix; }
+        //    set { outFileSuffix = value; }
+        //}
+
+        private string outFileName;
+        public string OutFileName
         {
-            get { return outFilename; }
-            set { outFilename = value; }
+            get { return outFileName; }
+            set { outFileName = value; }
         }
 
-
+        /// <summary>
+        /// run idpQonvert to create idpXML file to determine identified spectra
+        /// </summary>
+        /// <param name="idpCfg"></param>
+        /// <param name="outDir"></param>
         private void runIdpQonvert(IDPickerInfo idpCfg, string outDir)
         {
             // run idpQonvert and create idpXML file
@@ -69,6 +103,7 @@ namespace ScanRanker
             {
                 //throw new Exception("Error running idpQonvert\r\n", exc);
                 Workspace.SetText("\r\nError in running idpQonvert\r\n");
+                Workspace.ChangeButtonTo("Close");
                 throw new Exception(exc.Message);
             }
 
@@ -79,7 +114,14 @@ namespace ScanRanker
 
         }
 
-        // code copied from IDPicker project
+        /// <summary>
+        /// get attribute from xml file, copied from IDPicker project 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="reader"></param>
+        /// <param name="attribute"></param>
+        /// <param name="throwIfAbsent"></param>
+        /// <returns></returns>
         private T getAttributeAs<T>(XmlTextReader reader, string attribute, bool throwIfAbsent)
         {
             if (reader.MoveToAttribute(attribute))
@@ -99,15 +141,45 @@ namespace ScanRanker
                 return default(T);
         }
 
-        public void AddSpectraLable()
+        /// <summary>
+        /// add spectra labels to ScanRanker metrics file
+        /// identified spectra ids stored in idpXML file by idqQonvert 
+        /// </summary>
+        public void AddSpectraLabel()
         {
-            Workspace.SetText("\r\nStart adding spectra labels to a metrics file ...\r\n\r\n");
+            string fileBaseName = Path.GetFileNameWithoutExtension(spectraFileName);
+            idpCfg.PepXMLFile = idpCfg.PepXMLFileDir + "\\" + fileBaseName + ".pepXML";  // pepXML file has to be the same basename
 
-            runIdpQonvert(idpCfg, outDir);
+            Workspace.SetText("\r\nStart adding spectra labels to a metrics file: " + metricsFileName + " ...\r\n\r\n");
+
+            if (!File.Exists(idpCfg.PepXMLFile))
+            {
+                Workspace.SetText("\r\nError: Cannot find pepXML file: " + idpCfg.PepXMLFile );
+                Workspace.SetText("\r\nPlease check IDPicker configurations and make sure pepXML files have the same basenames as spectra files");
+                Workspace.ChangeButtonTo("Close");
+                return;
+            }
+            try
+            {
+                runIdpQonvert(idpCfg, outDir);
+            }
+            catch (Exception exc)
+            {
+                Workspace.SetText("\r\nError in running idpQonvert\r\n");
+                Workspace.ChangeButtonTo("Close");
+                throw new Exception(exc.Message);
+            }
 
             // read idpxml, extract spectra id.charge, save to a dictionary
             Dictionary<string, int> idtScanDict = new Dictionary<string, int>();
             string idpXMLFilename = Path.GetFileNameWithoutExtension(idpCfg.PepXMLFile) + ".idpXML";
+            if (!File.Exists(idpXMLFilename))
+            {
+                Workspace.SetText("\r\nError: Cannot create idpXML file: " + idpXMLFilename + " in output directory!");
+                Workspace.SetText("\r\nPlease check IDPicker configurations and the database file");
+                Workspace.ChangeButtonTo("Close");
+                return;
+            }
             try
             {
                 using (XmlTextReader reader = new XmlTextReader(idpXMLFilename))
@@ -136,21 +208,22 @@ namespace ScanRanker
             catch (Exception exc)
             {
                 Workspace.SetText("\r\nError in reading idpXML file, please check IDPicker configuration and try again\r\n");
+                Workspace.ChangeButtonTo("Close");
                 throw new Exception(exc.Message);
             }
 
             // open metrics file, check existence of scan id in dictionary, add label, write to a new file
             try
             {
-                if (File.Exists(outFilename))
+                if (File.Exists(outFileName))
                 {
-                    File.Delete(outFilename);
+                    File.Delete(outFileName);
                 }
 
                 int count = 0;
-                using (TextReader r = File.OpenText(metricsFile))
+                using (TextReader r = File.OpenText(metricsFileName))
                 {
-                    using (TextWriter w = File.CreateText(outFilename))
+                    using (TextWriter w = File.CreateText(outFileName))
                     {
                         string header = r.ReadLine();  // read the header line but do nothing
                         w.WriteLine(header + "\tLabel" + "\tCumsumLabel");
@@ -171,7 +244,7 @@ namespace ScanRanker
                             {
                                 count += 1;
                                 w.WriteLine(line + "\t1\t" + count);
-                             
+
                             }
                             else
                             {
@@ -185,12 +258,12 @@ namespace ScanRanker
             {
                 //throw new Exception("Error in creating spectra lable file\r\n", exc);
                 Workspace.SetText("\r\nError in creating a file with spectra labels, please check the ScanRanker metrics file\r\n");
+                Workspace.ChangeButtonTo("Close");
                 throw new Exception(exc.Message);
             }
 
-            Workspace.SetText("\r\nFinished adding spectra labels\r\n\r\n");
-            Workspace.ChangeButton();
+            Workspace.SetText("\r\nFinished adding spectra labels for file: " + metricsFileName + " \r\n\r\n");
+            Workspace.ChangeButtonTo("Close");
         }
-
     }
 }

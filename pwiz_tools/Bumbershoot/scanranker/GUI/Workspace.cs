@@ -92,6 +92,10 @@ namespace ScanRanker
 
         //}
 
+        /// <summary>
+        /// send text to status form
+        /// </summary>
+        /// <param name="text"></param>
         delegate void SetTextCallback(string text);
         public static void SetText(string text)
         {
@@ -109,25 +113,42 @@ namespace ScanRanker
             }
         }
 
-        delegate void ChangeButtonCallback();
-        public static void ChangeButton()
+        /// <summary>
+        /// change button in status form to "close" or "stop"
+        /// </summary>
+        /// <param name="btn"></param>
+        delegate void ChangeButtonCallback(string btn);
+        public static void ChangeButtonTo(string btn)
         {
             if (statusForm.btnStop.InvokeRequired)
             {
-                ChangeButtonCallback d = new ChangeButtonCallback(ChangeButton);
-                statusForm.Invoke(d, new object[] { });
+                ChangeButtonCallback d = new ChangeButtonCallback(ChangeButtonTo);
+                statusForm.Invoke(d, new object[] { btn });
             }
             else
             {
                 //statusForm.btnClose.Visible = !(statusForm.btnClose.Visible);
                 //statusForm.btnStop.Visible = !(statusForm.btnStop.Visible);
-                statusForm.btnStop.Visible = false;
-                statusForm.btnClose.Visible = true;
+                if (btn.Equals("Stop"))
+                {
+                    statusForm.btnStop.Visible = true;
+                    statusForm.btnClose.Visible = false;
+                }
+                else
+                {
+                    statusForm.btnStop.Visible = false;
+                    statusForm.btnClose.Visible = true;
+                }
             }
 
         }
 
-
+        /// <summary>
+        /// run a process and send standard output and standard error to status form
+        /// </summary>
+        /// <param name="pathAndExeFile"></param>
+        /// <param name="args"></param>
+        /// <param name="outputDir"></param>
         public static void RunProcess(string pathAndExeFile, string args, string outputDir)
         {
             Process RunProc = new Process();
