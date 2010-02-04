@@ -111,6 +111,8 @@
             // 
             // tbSrcDir
             // 
+            this.tbSrcDir.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.tbSrcDir.Location = new System.Drawing.Point(115, 19);
             this.tbSrcDir.Name = "tbSrcDir";
             this.tbSrcDir.Size = new System.Drawing.Size(496, 20);
@@ -118,6 +120,7 @@
             // 
             // btnSrcFileBrowse
             // 
+            this.btnSrcFileBrowse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSrcFileBrowse.Location = new System.Drawing.Point(617, 19);
             this.btnSrcFileBrowse.Name = "btnSrcFileBrowse";
             this.btnSrcFileBrowse.Size = new System.Drawing.Size(73, 21);
@@ -128,6 +131,7 @@
             // 
             // gbAssessment
             // 
+            this.gbAssessment.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.gbAssessment.Controls.Add(this.tbOutputMetricsSuffix);
             this.gbAssessment.Controls.Add(this.lblOutputMetricsSurfix);
             this.gbAssessment.Controls.Add(this.gbDtgConfig);
@@ -340,6 +344,7 @@
             // 
             // gbRemoval
             // 
+            this.gbRemoval.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.gbRemoval.Controls.Add(this.cmbOutputFileFormat);
             this.gbRemoval.Controls.Add(this.tbOutFileNameSuffixForRemoval);
             this.gbRemoval.Controls.Add(this.lblOutFileNameSurrfixForRemoval);
@@ -452,6 +457,7 @@
             // 
             // gbRecovery
             // 
+            this.gbRecovery.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.gbRecovery.Controls.Add(this.cbOptimizeScoreWeights);
             this.gbRecovery.Controls.Add(this.cmbScoreWeights);
             this.gbRecovery.Controls.Add(this.cbNormSearchScores);
@@ -637,6 +643,7 @@
             // 
             // btnRun
             // 
+            this.btnRun.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnRun.Location = new System.Drawing.Point(515, 660);
             this.btnRun.Name = "btnRun";
             this.btnRun.Size = new System.Drawing.Size(80, 23);
@@ -647,6 +654,7 @@
             // 
             // btnCancel
             // 
+            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.Location = new System.Drawing.Point(608, 660);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(80, 23);
@@ -657,6 +665,7 @@
             // 
             // lblOutputDir
             // 
+            this.lblOutputDir.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lblOutputDir.AutoSize = true;
             this.lblOutputDir.Location = new System.Drawing.Point(23, 245);
             this.lblOutputDir.Name = "lblOutputDir";
@@ -666,6 +675,8 @@
             // 
             // tbOutputDir
             // 
+            this.tbOutputDir.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.tbOutputDir.Location = new System.Drawing.Point(113, 242);
             this.tbOutputDir.Name = "tbOutputDir";
             this.tbOutputDir.Size = new System.Drawing.Size(496, 20);
@@ -673,6 +684,7 @@
             // 
             // btnOutputDirBrowse
             // 
+            this.btnOutputDirBrowse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOutputDirBrowse.Location = new System.Drawing.Point(615, 241);
             this.btnOutputDirBrowse.Name = "btnOutputDirBrowse";
             this.btnOutputDirBrowse.Size = new System.Drawing.Size(73, 21);
@@ -695,6 +707,9 @@
             // 
             // tvSelDirs
             // 
+            this.tvSelDirs.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.tvSelDirs.CheckBoxes = true;
             this.tvSelDirs.Location = new System.Drawing.Point(26, 77);
             this.tvSelDirs.Name = "tvSelDirs";
@@ -713,6 +728,8 @@
             // 
             // tbInputFileFilters
             // 
+            this.tbInputFileFilters.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.tbInputFileFilters.Location = new System.Drawing.Point(115, 49);
             this.tbInputFileFilters.Name = "tbInputFileFilters";
             this.tbInputFileFilters.Size = new System.Drawing.Size(496, 20);
@@ -721,6 +738,7 @@
             // 
             // btnListFiles
             // 
+            this.btnListFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnListFiles.Location = new System.Drawing.Point(617, 48);
             this.btnListFiles.Name = "btnListFiles";
             this.btnListFiles.Size = new System.Drawing.Size(73, 21);
