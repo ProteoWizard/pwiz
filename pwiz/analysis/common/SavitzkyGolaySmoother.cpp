@@ -215,10 +215,13 @@ void SavitzkyGolaySmoother::smooth(const std::vector<double>& x,
     }
     ySmoothed.insert(ySmoothed.end(), yCopy.begin(), yCopy.begin()+flank);
 
-    /*ofstream foo("points.txt");
-    foo.precision(15);
+    /*ofstream xpoints("xpoints.txt"), ypoints("ypoints.txt");
+    xpoints.precision(15); ypoints.precision(15);
     for (size_t i=0; i < ySmoothed.size(); ++i)
-        foo << (format("%1% %|20t|%2%\n") % xSmoothed[i] % ySmoothed[i]).str();*/
+    {
+        xpoints << xSmoothed[i] << " ";
+        ypoints << ySmoothed[i] << " ";
+    }*/
 }
 
 
