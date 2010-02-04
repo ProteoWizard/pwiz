@@ -21,6 +21,7 @@
 #
 
 
+build-project-if-exists common ;
 build-project-if-exists frequency ;
 build-project-if-exists passive ;
 build-project-if-exists peakdetect ;
