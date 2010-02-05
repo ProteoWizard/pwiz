@@ -628,14 +628,9 @@ ScanFilter::parse(string filterLine)
 
 	scanType_ = parseScanType(w);
 	if (scanType_ > ScanType_Unknown) {
-		if (scanType_ == ScanType_Q1MS)
+		if (scanType_ == ScanType_Q1MS || scanType_ == ScanType_Q3MS)
         {
 			msLevel_ = 1;
-            scanType_ = ScanType_Full;
-        }
-        else if (scanType_ == ScanType_Q3MS)
-        {
-            msLevel_ = 2;
             scanType_ = ScanType_Full;
         }
 
