@@ -85,6 +85,12 @@ string Config::outputFilename(const string& filename, const MSData& msd) const
             runId = bfs::basename(runId);
     }
 
+    // this list is for Windows; it's a superset of the POSIX list
+    string illegalFilename = "\\/*:?<>|\"";
+    BOOST_FOREACH(char& c, runId)
+        if (illegalFilename.find(c) != string::npos)
+            c = '_';
+
     bfs::path newFilename = runId + extension;
     bfs::path fullPath = bfs::path(outputPath) / newFilename;
     return fullPath.string(); 
