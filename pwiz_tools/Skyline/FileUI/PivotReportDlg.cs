@@ -147,7 +147,7 @@ namespace pwiz.Skyline.FileUI
             if (report is PivotReport)
             {
                 PivotReport pivotReport = (PivotReport) report;
-                var testColumns = pivotReport.Columns.Union(pivotReport.GroupByColumns).ToArray();
+                var testColumns = pivotReport.Columns.Union(pivotReport.CrossTabValues).ToArray();
                 foreach(var id in pivotReport.CrossTabHeaders)
                 {
                     if (id.Equals(PivotType.REPLICATE.GetCrosstabHeader(testColumns)))
