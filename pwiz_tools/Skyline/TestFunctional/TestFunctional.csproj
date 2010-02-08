@@ -84,6 +84,7 @@
   <ItemGroup>
     <Compile Include="AnnotationTest.cs" />
     <Compile Include="PrecursorTest.cs" />
+    <Compile Include="ReportSummaryTest.cs" />
     <Compile Include="ShareDocumentTest.cs" />
     <Compile Include="LibraryBuildTest.cs" />
     <Compile Include="OptimizeTest.cs" />
@@ -107,6 +108,7 @@
     <None Include="LibraryBuildTest.zip" />
     <None Include="OptimizeTest.zip" />
     <None Include="PrecursorTest.zip" />
+    <None Include="ReportSummaryTest.zip" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

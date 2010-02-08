@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         {
             var columnInfo = new ColumnInfo
             {
-                Identifier = new Identifier(column),
+                ReportColumn = new ReportColumn(table, new Identifier(column)),
                 Caption = column
             };
             if (column.StartsWith(AnnotationPropertyAccessor.AnnotationPrefix))
@@ -70,19 +70,22 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                     columnInfo.Caption = attr.FullName ?? columnInfo.Caption;
                     columnInfo.Format = attr.Format ?? columnInfo.Format;
                     columnInfo.ColumnType = propertyInfo.PropertyType;
+                    columnInfo.IsHidden = attr.IsHidden;
                 }
             }
             return columnInfo;
         }
-        public ColumnInfo GetColumnInfo(Type table, Identifier column)
+
+        public ColumnInfo GetColumnInfo(ReportColumn reportColumn)
         {
             Type lastTable;
             String columnName;
-            Resolve(table, column, out lastTable, out columnName);
+            Resolve(reportColumn.Table, reportColumn.Column, out lastTable, out columnName);
             ColumnInfo result = GetColumnInfo(lastTable, columnName);
-            result.Identifier = column;
+            result.ReportColumn = reportColumn;
             return result;
         }
+
         public IList<Type> GetTables()
         {
             List<Type> result = new List<Type>();
@@ -92,6 +95,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             }
             return result;
         }
+
         public bool Resolve(Type table, Identifier identifier, out Type resultTable, out String column)
         {
             if (identifier.Parts.Count == 1)

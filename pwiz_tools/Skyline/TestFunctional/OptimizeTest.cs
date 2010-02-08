@@ -283,7 +283,7 @@ namespace pwiz.SkylineTestFunctional
             File.Delete(filePath);
 
             var exportDialog = ShowDialog<ExportMethodDlg>(() =>
-                SkylineWindow.ShowExportDialog(ExportFileType.List));
+                SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
 
             // Export CE optimization transition list
             RunUI(() =>
@@ -344,7 +344,7 @@ namespace pwiz.SkylineTestFunctional
         private static void ExportCETransitionList(string filePath, string fileCompare)
         {
             var exportDialog = ShowDialog<ExportMethodDlg>(() =>
-                SkylineWindow.ShowExportDialog(ExportFileType.List));
+                SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
 
             // Export CE optimization transition list
             RunUI(() =>

@@ -20,12 +20,14 @@ using System;
 
 namespace pwiz.Skyline.Model.Hibernate
 {
+    [QueryTable(TableType = TableType.result)]
     public class DbProteinResult : DbEntity
     {
         public override Type EntityClass { get { return typeof (DbProteinResult); } }
         public virtual DbProtein Protein { get; set;}
         public virtual DbResultFile ResultFile { get; set; }
         public virtual String ReplicateName { get; set; }
+        public virtual String ReplicatePath { get; set; }
         public virtual String FileName { get; set; }
         public virtual String SampleName { get; set; }
     }

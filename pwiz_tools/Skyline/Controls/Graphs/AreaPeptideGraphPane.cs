@@ -393,12 +393,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 return CreatePointPair(iGroup, listAreas, ref maxY);
             }
 
-            private static PointPair CreatePointPair(int iGroup, List<double> listAreas, ref double maxY)
+            private static PointPair CreatePointPair(int iGroup, ICollection<double> listAreas, ref double maxY)
             {
                 if (listAreas.Count == 0)
                     return PointPairMissing(iGroup);
 
-                var statAreas = new Statistics(listAreas.ToArray());
+                var statAreas = new Statistics(listAreas);
 
                 PointPair pointPair;
                 if (Settings.Default.AreaPeptideCV)
@@ -516,8 +516,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         TimeGroup = meanTime;
                     }
                 }
-                AreaPep = (areas.Count > 0 ? new Statistics(areas.ToArray()).Mean() : 0);
-                TimePep = (times.Count > 0 ? new Statistics(times.ToArray()).Mean() : 0);
+                AreaPep = (areas.Count > 0 ? new Statistics(areas).Mean() : 0);
+                TimePep = (times.Count > 0 ? new Statistics(times).Mean() : 0);
             }
 
             private static void CalcStats(TransitionGroupDocNode nodeGroup, out double meanArea, out double meanTime)
@@ -531,8 +531,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (chromInfo.RetentionTime.HasValue)
                         times.Add(chromInfo.RetentionTime.Value);
                 }
-                meanArea = (areas.Count > 0 ? new Statistics(areas.ToArray()).Mean() : 0);
-                meanTime = (times.Count > 0 ? new Statistics(times.ToArray()).Mean() : 0);
+                meanArea = (areas.Count > 0 ? new Statistics(areas).Mean() : 0);
+                meanTime = (times.Count > 0 ? new Statistics(times).Mean() : 0);
             }
         }
     }

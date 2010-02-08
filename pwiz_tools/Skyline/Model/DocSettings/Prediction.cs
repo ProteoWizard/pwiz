@@ -120,8 +120,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 listRetentionTimes.Add(peptideTime.RetentionTime);
             }
 
-            Statistics statRT = new Statistics(listRetentionTimes.ToArray());
-            Statistics statScores = new Statistics(listHydroScores.ToArray());
+            Statistics statRT = new Statistics(listRetentionTimes);
+            Statistics statScores = new Statistics(listHydroScores);
             double r = statRT.R(statScores);
 
             return new RetentionTimeStatistics(r, listPeptides, listHydroScores,
@@ -280,8 +280,8 @@ namespace pwiz.Skyline.Model.DocSettings
             double r = double.MinValue;
             Statistics[] aStatValues = new Statistics[calcs];
             for (int i = 0; i < calcs; i++)
-                aStatValues[i] = new Statistics(alistValues[i].ToArray());
-            Statistics statRT = new Statistics(listRT.ToArray());
+                aStatValues[i] = new Statistics(alistValues[i]);
+            Statistics statRT = new Statistics(listRT);
 
             RetentionScoreCalculator calcBest = null;
             Statistics statBest = null;

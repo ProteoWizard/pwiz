@@ -416,8 +416,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (_bestValues.Count < OptimizableRegression.MIN_RECALC_REGRESSION_VALUES)
                     return null;
-                Statistics statCE = new Statistics(_bestValues.ToArray());
-                Statistics statMz = new Statistics(_precursorMzValues.ToArray());
+                Statistics statCE = new Statistics(_bestValues);
+                Statistics statMz = new Statistics(_precursorMzValues);
                 return new RegressionLine(statCE.Slope(statMz), statCE.Intercept(statMz));
             }
         }

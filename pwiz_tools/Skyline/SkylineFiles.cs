@@ -526,21 +526,26 @@ namespace pwiz.Skyline
 
         private void exportTransitionListMenuItem_Click(object sender, EventArgs e)
         {
-            ShowExportDialog(ExportFileType.List);
+            ShowExportMethodDialog(ExportFileType.List);
         }
 
         private void exportMethodMenuItem_Click(object sender, EventArgs e)
         {
-            ShowExportDialog(ExportFileType.Method);
+            ShowExportMethodDialog(ExportFileType.Method);
         }
 
-        public void ShowExportDialog(ExportFileType fileType)
+        public void ShowExportMethodDialog(ExportFileType fileType)
         {
             ExportMethodDlg dlg = new ExportMethodDlg(DocumentUI, fileType);
             dlg.ShowDialog(this);
         }
 
         private void exportReportMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowExportReportDialog();
+        }
+
+        public void ShowExportReportDialog()
         {
             ExportReportDlg dlg = new ExportReportDlg(this);
             dlg.ShowDialog(this);

@@ -6,6 +6,7 @@
       <generator class="native" />
     </id>
     <property name="Replicate" />
+    <property name="ReplicatePath"/>
   </class>
   <class name="DbResultFile">
     <id name="Id">
@@ -43,6 +44,7 @@
     <many-to-one class="DbProtein" name="Protein"/>
     <many-to-one class="DbResultFile" name="ResultFile" />
     <property name="ReplicateName" />
+    <property name="ReplicatePath" />
     <property name="FileName"/>
     <property name="SampleName"/>
   </class>
@@ -101,6 +103,28 @@
     <property name="OptDeclusteringPotential" />
     <property name="Note" length="10000" />
   </class>
+  <class name="DbPrecursorResultSummary">
+    <id name="Id">
+      <generator class="native" />
+    </id>
+    <many-to-one class="DbPrecursor" name="Precursor" />
+    <property name="ReplicatePath" />
+    <property name="MinBestRetentionTime" />
+    <property name="MaxBestRetentionTime" />
+    <property name="RangeBestRetentionTime" />
+    <property name="MeanBestRetentionTime" />
+    <property name="StdevBestRetentionTime" />
+    <property name="CvBestRetentionTime" />
+    <property name="MeanMaxFwhm" />
+    <property name="StdevMaxFwhm" />
+    <property name="CvMaxFwhm" />
+    <property name="MeanTotalArea" />
+    <property name="StdevTotalArea" />
+    <property name="CvTotalArea" />
+    <property name="MeanTotalAreaRatio" />
+    <property name="StdevTotalAreaRatio" />
+    <property name="CvTotalAreaRatio" />
+  </class>
   <class name="DbTransition">
     <id name="Id">
       <generator class="native" />
@@ -137,5 +161,28 @@
     <property name="PeakRank" />
     <property name="UserSetPeak" />
     <property name="Note" length="10000" />
+  </class>
+  <class name="DbTransitionResultSummary">
+    <id name="Id">
+      <generator class="native" />
+    </id>
+    <many-to-one class="DbTransition" name="Transition" />
+    <many-to-one class="DbPrecursorResultSummary" name="PrecursorResultSummary" />
+    <property name="ReplicatePath" />
+    <property name="MinRetentionTime" />
+    <property name="MaxRetentionTime" />
+    <property name="RangeRetentionTime" />
+    <property name="MeanRetentionTime" />
+    <property name="StdevRetentionTime" />
+    <property name="CvRetentionTime" />
+    <property name="MeanFwhm" />
+    <property name="StdevFwhm" />
+    <property name="CvFwhm" />
+    <property name="MeanArea" />
+    <property name="StdevArea" />
+    <property name="CvArea" />
+    <property name="MeanAreaRatio" />
+    <property name="StdevAreaRatio" />
+    <property name="CvAreaRatio" />
   </class>
 </hibernate-mapping>

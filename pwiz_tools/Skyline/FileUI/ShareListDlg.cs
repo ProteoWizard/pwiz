@@ -61,6 +61,24 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        public IEnumerable<string> ChosenNames
+        {
+            get
+            {
+                foreach (var item in listboxListItems.CheckedItems)
+                    yield return item.ToString();
+            }
+
+            set
+            {
+                for (int i = 0; i < listboxListItems.Items.Count; i++)
+                {
+                    listboxListItems.SetItemChecked(i,
+                        value.Contains(listboxListItems.Items[i].ToString()));
+                }
+            }
+        }
+
         private ListBox ListBox { get { return listboxListItems; } }
 
         public void LoadList()
@@ -95,10 +113,12 @@ namespace pwiz.Skyline.FileUI
                 Filter = Filter
             };
             saveFileDialog.ShowDialog(this);
-            if (string.IsNullOrEmpty(saveFileDialog.FileName))
-            {
-                return;
-            }
+            if (!string.IsNullOrEmpty(saveFileDialog.FileName))
+                OkDialog(saveFileDialog.FileName);
+        }
+
+        public void OkDialog(string fileName)
+        {
             ICollection<TItem> listSave = List.CreateEmptyList();
             foreach (string itemName in listboxListItems.CheckedItems)
             {
@@ -109,7 +129,7 @@ namespace pwiz.Skyline.FileUI
             try
             {
                 XmlSerializer xmlSerializer = new XmlSerializer(List.SerialType);
-                using (FileSaver fs = new FileSaver(saveFileDialog.FileName))
+                using (FileSaver fs = new FileSaver(fileName))
                 {
                     if (!fs.CanSave(true))
                         return;
@@ -119,14 +139,14 @@ namespace pwiz.Skyline.FileUI
                         xmlSerializer.Serialize(stream, listSave);
                         stream.Close();
                         fs.Commit();
-                    }                    
+                    }
                 }
             }
             catch (Exception exception)
             {
                 MessageBox.Show(this, "An error occurred: " + exception.Message, Program.Name);
             }
-            Close();
+            Close();            
         }
 
         private TItem GetItem(string name)
@@ -161,9 +181,10 @@ namespace pwiz.Skyline.FileUI
 
         public static bool Import(IWin32Window parent, T listDest)
         {
-            return Import(parent, listDest, SETTINGS_DEFINITION_FILTER);
+            return ImportFile(parent, listDest, GetImportFileName(parent, SETTINGS_DEFINITION_FILTER));
         }
-        public static bool Import(IWin32Window parent, T listDest, string filter)
+
+        public static string GetImportFileName(IWin32Window parent, string filter)
         {
             OpenFileDialog dialog = new OpenFileDialog
             {
@@ -171,16 +192,21 @@ namespace pwiz.Skyline.FileUI
                 CheckPathExists = true,
                 Filter = filter
             };
-            if (dialog.ShowDialog(parent) == DialogResult.Cancel || string.IsNullOrEmpty(dialog.FileName))
-            {
+            if (dialog.ShowDialog(parent) == DialogResult.Cancel)
+                return null;
+            return dialog.FileName;
+        }
+
+        public static bool ImportFile(IWin32Window parent, T listDest, string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName))
                 return false;
-            }
 
             XmlSerializer xmlSerializer = new XmlSerializer(listDest.SerialType);
             T loadedItems;
             try
             {
-                using (var stream = File.OpenRead(dialog.FileName))
+                using (var stream = File.OpenRead(fileName))
                 {
                     loadedItems = (T)xmlSerializer.Deserialize(stream);
                 }
@@ -188,8 +214,8 @@ namespace pwiz.Skyline.FileUI
             catch (Exception exception)
             {
                 MessageBoxHelper.ShowXmlParsingError(parent,
-                    string.Format("Failure loading {0}.", dialog.FileName),
-                    dialog.FileName, exception);
+                                                     string.Format("Failure loading {0}.", fileName),
+                                                     fileName, exception);
                 return false;
             }
 
@@ -201,8 +227,8 @@ namespace pwiz.Skyline.FileUI
             if (existing.Count > 0)
             {
                 string messageFormat = existing.Count == 1 ?
-                    "The name '{0}' already exists. Do you want to replace it?" :
-                    "The following names already exist:\n\n{0}\n\nDo you want to replace them?";
+                   "The name '{0}' already exists. Do you want to replace it?" :
+                   "The following names already exist:\n\n{0}\n\nDo you want to replace them?";
                 var result = MessageBox.Show(string.Format(messageFormat, string.Join("\n", existing.ToArray())),
                                              Program.Name, MessageBoxButtons.YesNoCancel, MessageBoxIcon.None,
                                              MessageBoxDefaultButton.Button2);

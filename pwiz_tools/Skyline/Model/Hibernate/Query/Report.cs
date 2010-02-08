@@ -50,8 +50,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             {
                 simpleReport = new SimpleReport();
             }
-            simpleReport.Table = reportSpec.Table;
-            simpleReport.Columns = new List<Identifier>(reportSpec.Select);
+            simpleReport.Columns = reportSpec.Select;
             return simpleReport;
         }
     }
@@ -60,25 +59,22 @@ namespace pwiz.Skyline.Model.Hibernate.Query
     /// </summary>
     public class SimpleReport : Report
     {
-        public Type Table { get; set; }
-        public List<Identifier> Columns { get; set; }
+        public IList<ReportColumn> Columns { get; set; }
         public SimpleReport()
         {
-            Columns = new List<Identifier>();
+            Columns = new List<ReportColumn>();
         }
 
         public override ReportSpec GetReportSpec(String name)
         {
             return new ReportSpec(name, new QueryDef
                                             {
-                                                Table = Table,
                                                 Select = Columns
                                             });
         }
         public override ResultSet Execute(Database database)
         {
-            return database.ExecuteQuery(Table, Columns);
+            return database.ExecuteQuery(Columns);
         }
     }
-
 }

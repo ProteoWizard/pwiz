@@ -33,8 +33,6 @@ namespace pwiz.Skyline.FileUI
         private readonly IDocumentUIContainer _documentUiContainer;
         private Database _database;
 
-        private bool _clickedOk;
-
         public ExportReportDlg(IDocumentUIContainer documentUiContainer)
         {
             _documentUiContainer = documentUiContainer;
@@ -45,6 +43,12 @@ namespace pwiz.Skyline.FileUI
 
             if (listboxReports.Items.Count > 0)
                 listboxReports.SelectedIndex = 0;
+        }
+
+        public string ReportName
+        {
+            get { return ListBox.SelectedItem != null ? ListBox.SelectedItem.ToString() : null; }
+            set { ListBox.SelectedItem = value; }
         }
 
         private ListBox ListBox { get { return listboxReports; } }
@@ -101,59 +105,54 @@ namespace pwiz.Skyline.FileUI
             btnOk.Enabled = selReport;
         }
 
-        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        public void OkDialog()
         {
-            if (_clickedOk)
+            SaveFileDialog dlg = new SaveFileDialog
             {
-                _clickedOk = false; // Reset in case of failure.
-
-                SaveFileDialog dlg = new SaveFileDialog
+                Title = "Export Report",
+                InitialDirectory = Settings.Default.ExportDirectory,
+                OverwritePrompt = true,
+                DefaultExt = "csv",
+                Filter = string.Join("|", new[]
                 {
-                    Title = "Export Report",
-                    InitialDirectory = Settings.Default.ExportDirectory,
-                    OverwritePrompt = true,
-                    DefaultExt = "csv",
-                    Filter = string.Join("|", new[]
-                    {
-                        "CSV (Comma delimited) (*.csv)|*.csv",
-                        "TSV (Tab delimited) (*.tsv)|*.tsv",
-                        "All Files (*.*)|*.*"
-                    })
-                };
-                if (!string.IsNullOrEmpty(_documentUiContainer.DocumentFilePath))
-                    dlg.FileName = Path.GetFileNameWithoutExtension(_documentUiContainer.DocumentFilePath) + ".csv";
+                    "CSV (Comma delimited) (*.csv)|*.csv",
+                    "TSV (Tab delimited) (*.tsv)|*.tsv",
+                    "All Files (*.*)|*.*"
+                })
+            };
+            if (!string.IsNullOrEmpty(_documentUiContainer.DocumentFilePath))
+                dlg.FileName = Path.GetFileNameWithoutExtension(_documentUiContainer.DocumentFilePath) + ".csv";
 
-                if (dlg.ShowDialog(this) == DialogResult.Cancel)
-                {
-                    e.Cancel = true;
-                    return;
-                }
-                else
-                {
-                    Settings.Default.ExportDirectory = Path.GetDirectoryName(dlg.FileName);
+            if (dlg.ShowDialog(this) == DialogResult.Cancel)
+                return;
 
-                    bool success;
-                    // 1-based index
-                    switch (dlg.FilterIndex)
-                    {
-                        // TSV
-                        case 2:
-                            success = ExportReport(dlg.FileName, '\t');
-                            break;
-                        // CSV
-                        default:
-                            success = ExportReport(dlg.FileName, ',');
-                            break;
-                    }
-                    if (!success)
-                    {
-                        e.Cancel = true;
-                        return;
-                    }
-                }
+            string fileName = dlg.FileName;
+            char separator;
+            // 1-based index
+            switch (dlg.FilterIndex)
+            {
+                // TSV
+                case 2:
+                    separator = '\t';
+                    break;
+                // CSV
+                default:
+                    separator = ',';
+                    break;
             }
 
-            base.OnClosing(e);
+            OkDialog(fileName, separator);
+        }
+
+        public void OkDialog(string fileName, char separator)
+        {
+            Settings.Default.ExportDirectory = Path.GetDirectoryName(fileName);
+
+            if (!ExportReport(fileName, separator))
+                return;
+
+            DialogResult = DialogResult.OK;
+            Close();
         }
 
         private bool ExportReport(string fileName, char separator)
@@ -245,6 +244,11 @@ namespace pwiz.Skyline.FileUI
             ListBox.EndUpdate();
         }
 
+        private void btnEdit_Click(object sender, EventArgs e)
+        {
+            EditList();
+        }
+
         public void EditList()
         {
             IEnumerable<ReportSpec> listNew = List.EditList(this);
@@ -258,12 +262,12 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private void btnEdit_Click(object sender, EventArgs e)
+        private void btnPreview_Click(object sender, EventArgs e)
         {
-            EditList();
+            ShowPreview();
         }
 
-        private void btnPreview_Click(object sender, EventArgs e)
+        public void ShowPreview()
         {
             try
             {
@@ -277,14 +281,14 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private void btnOk_Click(object sender, EventArgs e)
-        {
-            _clickedOk = true;
-        }
-
         private const string REPORT_DEFINITION_FILTER = "Skyline Reports (*.skyr)|*.skyr|All Files|*.*";
 
         private void btnShare_Click(object sender, EventArgs e)
+        {
+            ShowShare();
+        }
+
+        public void ShowShare()
         {
             var dlg = new ShareListDlg<ReportSpecList, ReportSpec>(Settings.Default.ReportSpecList)
                           {
@@ -296,15 +300,25 @@ namespace pwiz.Skyline.FileUI
 
         private void btnImport_Click(object sender, EventArgs e)
         {
-            if (ShareListDlg<ReportSpecList, ReportSpec>.Import(this,
-                    Settings.Default.ReportSpecList, REPORT_DEFINITION_FILTER))
+            Import(ShareListDlg<ReportSpecList, ReportSpec>.GetImportFileName(this,
+                REPORT_DEFINITION_FILTER));
+        }
+
+        public void Import(string fileName)
+        {
+            if (ShareListDlg<ReportSpecList, ReportSpec>.ImportFile(this,
+                    Settings.Default.ReportSpecList, fileName))
                 LoadList();
         }
 
         private void listboxReports_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            btnOk_Click(sender, new EventArgs());
-            Close();
+            OkDialog();
+        }
+
+        private void btnOk_Click(object sender, EventArgs e)
+        {
+            OkDialog();
         }
     }
 }

@@ -19,6 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Hibernate.Query
 {
@@ -27,7 +29,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
     /// </summary>
     public abstract class PivotType
     {
-        public static readonly Identifier REPLICATE_NAME_COLUMN 
+        public static readonly Identifier REPLICATE_NAME_ID 
             = new Identifier("ResultFile", "Replicate", "Replicate");
 
         public static readonly PivotType REPLICATE = new ReplicatePivotType();
@@ -37,12 +39,12 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         /// Returns the column whose values supply the names going across horizontally
         /// in the crosstab.
         /// </summary>
-        public abstract Identifier GetCrosstabHeader(Type table);
+        public abstract ReportColumn GetCrosstabHeader(IList<ReportColumn> columns);
         /// <summary>
         /// Returns the set of columns which, along with the column returned by GetCrosstabHeader,
         /// uniquely identifier rows in the table.
         /// </summary>
-        public abstract ICollection<Identifier> GetGroupByColumns(Type table);
+        public abstract IList<ReportColumn> GetGroupByColumns(IList<ReportColumn> columns);
         /// <summary>
         /// Returns true if the column is one which should be duplicated horizontally in the
         /// crosstab.  That is, its value potentially depends on the value in the column 
@@ -54,11 +56,11 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         /// Given a list of columns, returns true if the specified other column is redundant in
         /// terms of specifying a unique index on a table.
         /// </summary>
-        private static bool Contains(IEnumerable<Identifier> list, Identifier key)
+        protected static bool StartsWith(IEnumerable<ReportColumn> list, ReportColumn key)
         {
-            foreach (Identifier id in list)
+            foreach (ReportColumn id in list)
             {
-                if (key.StartsWith(id))
+                if (Equals(key.Table, id.Table) && key.Column.StartsWith(id.Column))
                 {
                     return true;
                 }
@@ -70,9 +72,9 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         /// Given two lists, each of which uniquely identify rows in a table, returns a list
         /// with redundant entries removed.
         /// </summary>
-        public static ICollection<Identifier> Intersect(
-            ICollection<Identifier> list1, 
-            ICollection<Identifier> list2)
+        public static ICollection<ReportColumn> Intersect(
+            ICollection<ReportColumn> list1,
+            ICollection<ReportColumn> list2)
         {
             if (list1.Count == 0)
             {
@@ -82,22 +84,27 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             {
                 return list1;
             }
-            HashSet<Identifier> result = new HashSet<Identifier>();
-            foreach (Identifier id in list1)
+            HashSet<ReportColumn> result = new HashSet<ReportColumn>();
+            foreach (ReportColumn id in list1)
             {
-                if (Contains(list2, id))
+                if (StartsWith(list2, id))
                 {
                     result.Add(id);
                 }
             }
-            foreach (Identifier id in list2)
+            foreach (ReportColumn id in list2)
             {
-                if (Contains(list1, id))
+                if (StartsWith(list1, id))
                 {
                     result.Add(id);
                 }
             }
             return result;
+        }
+
+        protected static bool Contains(IEnumerable<ReportColumn> columns, Type table)
+        {
+            return columns.Contains(column => Equals(table, column.Table));
         }
 
         protected static IEnumerable<Identifier> AddPrefix(IEnumerable<Identifier> source, Identifier prefix)
@@ -112,10 +119,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 
         protected static bool IsResultTable(Type table)
         {
-            return table == typeof(DbPeptideResult)
-                   || table == typeof(DbPrecursorResult)
-                   || table == typeof(DbProteinResult)
-                   || table == typeof(DbTransitionResult);
+            return ReportColumn.GetTableType(table) == TableType.result;
         }
     }
     /// <summary>
@@ -124,35 +128,36 @@ namespace pwiz.Skyline.Model.Hibernate.Query
     /// </summary>
     public class ReplicatePivotType : PivotType
     {
-        public override Identifier GetCrosstabHeader(Type table)
+        public override ReportColumn GetCrosstabHeader(IList<ReportColumn> columns)
         {
-            if (IsResultTable(table))
+            int i = columns.IndexOf(column => IsResultTable(column.Table));
+            if (i != -1)
             {
-                return REPLICATE_NAME_COLUMN;
+                return new ReportColumn(columns[i].Table, REPLICATE_NAME_ID);
             }
             return null;
         }
 
-        public override ICollection<Identifier> GetGroupByColumns(Type table)
+        public override IList<ReportColumn> GetGroupByColumns(IList<ReportColumn> columns)
         {
-            List<Identifier> result = new List<Identifier>();
-            if (table == typeof(DbProteinResult))
+            var result = new List<ReportColumn>();
+            if (Contains(columns, typeof(DbProteinResult)))
             {
-                result.Add(new Identifier("Protein"));
+                result.Add(new ReportColumn(typeof(DbProteinResult), "Protein"));
             }
-            else if (table == typeof(DbPeptideResult))
+            else if (Contains(columns, typeof(DbPeptideResult)))
             {
-                result.Add(new Identifier("Peptide"));
+                result.Add(new ReportColumn(typeof(DbPeptideResult), "Peptide"));
             } 
-            else if (table == typeof(DbPrecursorResult))
+            else if (Contains(columns, typeof(DbPrecursorResult)))
             {
-                result.Add(new Identifier("Precursor"));
-                result.Add(new Identifier("OptStep"));
+                result.Add(new ReportColumn(typeof(DbPrecursorResult), "Precursor"));
+                result.Add(new ReportColumn(typeof(DbPrecursorResult), "OptStep"));
             }
-            else if (table == typeof(DbTransitionResult))
+            else if (Contains(columns, typeof(DbTransitionResult)))
             {
-                result.Add(new Identifier("Transition"));
-                result.Add(new Identifier("PrecursorResult", "OptStep"));
+                result.Add(new ReportColumn(typeof(DbTransitionResult), "Transition"));
+                result.Add(new ReportColumn(typeof(DbTransitionResult), "PrecursorResult", "OptStep"));
             }
             return result;
         }
@@ -173,51 +178,55 @@ namespace pwiz.Skyline.Model.Hibernate.Query
     /// </summary>
     public class IsotopeLabelPivotType : PivotType
     {
-        public override Identifier GetCrosstabHeader(Type table)
+        public override ReportColumn GetCrosstabHeader(IList<ReportColumn> columns)
         {
-            if (table == typeof(DbPrecursor))
+            if (columns.Count > 0)
             {
-                return new Identifier("IsotopeLabelType");
-            }
-            if (table == typeof(DbTransition) || table == typeof(DbPrecursorResult))
-            {
-                return new Identifier("Precursor", GetCrosstabHeader(typeof(DbPrecursor)));
-            }
-            if (table == typeof(DbTransitionResult))
-            {
-                return new Identifier("Transition", GetCrosstabHeader(typeof(DbTransition)));
+                if (columns.Contains(column => IsPrecursorType(column.Table)))
+                    return new ReportColumn(typeof(DbPrecursor), "IsotopeLabelType");
+                if (columns.Contains(column => IsTransitionType(column.Table)))
+                    return new ReportColumn(typeof(DbTransition), "Precursor", "IsotopeLabelType");
             }
             return null;
         }
 
-        public override ICollection<Identifier> GetGroupByColumns(Type table)
+        private static bool IsPrecursorType(Type table)
         {
-            List<Identifier> result = new List<Identifier>();
-            if (table == typeof (DbPrecursor))
+            return table == typeof (DbPrecursor) ||
+                   table == typeof (DbPrecursorResult);
+        }
+
+        private static bool IsTransitionType(Type table)
+        {
+            return table == typeof(DbTransition) ||
+                   table == typeof(DbTransitionResult);
+        }
+
+        public override IList<ReportColumn> GetGroupByColumns(IList<ReportColumn> columns)
+        {
+            var result = new List<ReportColumn>();
+            if (Contains(columns, typeof (DbPrecursor)))
             {
-                result.Add(new Identifier("Peptide"));
-                result.Add(new Identifier("Charge"));
+                result.Add(new ReportColumn(typeof (DbPrecursor), "Peptide"));
+                result.Add(new ReportColumn(typeof (DbPrecursor), "Charge"));
             } 
-            else if (table == typeof (DbTransition))
+            else if (Contains(columns, typeof (DbTransition)))
             {
-                result.Add(new Identifier("ProductCharge"));
-                result.Add(new Identifier("FragmentIon"));
-                result.AddRange(AddPrefix(
-                    GetGroupByColumns(typeof(DbPrecursor)), new Identifier("Precursor")));
+                result.Add(new ReportColumn(typeof (DbTransition), "ProductCharge"));
+                result.Add(new ReportColumn(typeof (DbTransition), "FragmentIon"));
+                result.Add(new ReportColumn(typeof (DbTransition), "Precursor", "Peptide"));
+                result.Add(new ReportColumn(typeof (DbTransition), "Precursor", "Charge"));
             } 
-            else if (table == typeof(DbPrecursorResult))
+
+            if (Contains(columns, typeof(DbPrecursorResult)))
             {
-                result.AddRange(AddPrefix(
-                    GetGroupByColumns(typeof(DbPrecursor)), new Identifier("Precursor")));
-                result.Add(REPLICATE_NAME_COLUMN);
-                result.Add(new Identifier("OptStep"));
+                result.Add(new ReportColumn(typeof (DbPrecursorResult), REPLICATE_NAME_ID));
+                result.Add(new ReportColumn(typeof (DbPrecursorResult), "OptStep"));
             } 
-            else if (table == typeof(DbTransitionResult))
+            else if (Contains(columns, typeof(DbTransitionResult)))
             {
-                result.AddRange(AddPrefix(
-                    GetGroupByColumns(typeof(DbTransition)), new Identifier("Transition")));
-                result.Add(REPLICATE_NAME_COLUMN);
-                result.Add(new Identifier("PrecursorResult", "OptStep"));
+                result.Add(new ReportColumn(typeof(DbTransitionResult), REPLICATE_NAME_ID));
+                result.Add(new ReportColumn(typeof(DbTransitionResult), "PrecursorResult", "OptStep"));
             }
             return result;
         }
@@ -237,7 +246,15 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 );
 
         public static readonly IList<String> TRANSITION_CROSSTAB_VALUES
-            = new ReadOnlyCollection<String>(new[] {"ProductNeutralMass", "ProductMz", "Note"});
+            = new ReadOnlyCollection<String>(
+                new[]
+                    {
+                        "ProductNeutralMass",
+                        "ProductMz",
+                        "Note"
+                    }
+                );
+
         public override bool IsCrosstabValue(Type table, String column)
         {
             if (table == typeof(DbPrecursorResult) || table == typeof(DbTransitionResult))

@@ -112,24 +112,27 @@ namespace pwiz.SkylineTest.Reporting
             Database database = new Database();
             database.AddSrmDocument(srmDocument);
             PivotReport pivotReport = new PivotReport
-                                          {
-                                              Table = typeof(DbTransitionResult),
-                                              Columns = new List<Identifier>
-                                                            {
-                                                                new Identifier("Transition", "Precursor", "Peptide",
-                                                                               "Sequence"),
-                                                                new Identifier("Transition", "Precursor", "Charge"),
-                                                                new Identifier("Transition", "FragmentIon"),
-                                                            },
-                                              GroupByColumns =
-                                                  new List<Identifier>(
-                                                  PivotType.ISOTOPE_LABEL.GetGroupByColumns(typeof(DbTransitionResult))),
-                                              CrossTabHeaders =
-                                                  new List<Identifier> { new Identifier("Transition", "Precursor", "IsotopeLabelType") },
-                                              CrossTabValues =
-                                                  new List<Identifier> { new Identifier("Area"), new Identifier("Background") }
-
-                                          };
+                {
+                    Columns = new []
+                                {
+                                    new ReportColumn(typeof(DbTransition), "Precursor", "Peptide",
+                                                   "Sequence"),
+                                    new ReportColumn(typeof(DbTransition), "Precursor", "Charge"),
+                                    new ReportColumn(typeof(DbTransition), "FragmentIon"),
+                                },
+                    GroupByColumns =
+                              PivotType.ISOTOPE_LABEL.GetGroupByColumns(new[]
+                                    { new ReportColumn(typeof(DbTransitionResult), "Id") }),
+                    CrossTabHeaders = new[]
+                                        {
+                                            new ReportColumn(typeof(DbTransition), "Precursor", "IsotopeLabelType")
+                                        },
+                    CrossTabValues = new[]
+                                       {
+                                           new ReportColumn(typeof(DbTransitionResult), "Area"),
+                                           new ReportColumn(typeof(DbTransitionResult), "Background")
+                                       }
+                };
             ResultSet resultSet = pivotReport.Execute(database);
             Assert.AreEqual(7, resultSet.ColumnInfos.Count);
             // Assert that "light" appears earlier in the crosstab columns than "heavy".
@@ -155,14 +158,13 @@ namespace pwiz.SkylineTest.Reporting
             database.AddSrmDocument(srmDocument);
             SimpleReport report = new SimpleReport
                                       {
-                                          Table = typeof (DbTransitionResult),
-                                          Columns = new List<Identifier>
+                                          Columns = new []
                                                         {
-                                                            new Identifier("PrecursorResult", "PeptideResult",
-                                                                           "ProteinResult", "ReplicateName"),
-                                                            new Identifier("Transition","Precursor","Peptide","Protein","Name"),
-                                                            new Identifier("Transition","Precursor","Peptide","Sequence"),
-                                                            new Identifier("Area"),
+                                                            new ReportColumn(typeof (DbTransitionResult),
+                                                                "PrecursorResult", "PeptideResult", "ProteinResult", "ReplicateName"),
+                                                            new ReportColumn(typeof (DbTransition),"Precursor","Peptide","Protein","Name"),
+                                                            new ReportColumn(typeof (DbTransition),"Precursor","Peptide","Sequence"),
+                                                            new ReportColumn(typeof (DbTransitionResult), "Area"),
                                                         },
                                       };
             ColumnSet columnSet = ColumnSet.GetTransitionsColumnSet(database.GetSchema());

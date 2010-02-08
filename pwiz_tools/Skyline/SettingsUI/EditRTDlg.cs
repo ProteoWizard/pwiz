@@ -379,7 +379,7 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             RetentionTimeStatistics statistics;
-            var regression = RetentionTimeRegression.CalcRegression(textName.Text, nameCalc,
+            var regression = RetentionTimeRegression.CalcRegression("Recalc", nameCalc,
                 peptidesTimes, out statistics);
 
             double r = 0.0;

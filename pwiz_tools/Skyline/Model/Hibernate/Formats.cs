@@ -27,5 +27,6 @@ namespace pwiz.Skyline.Model.Hibernate
         public const String STANDARD_RATIO = "0.####";
         public const String PEAK_AREA = "0";
         public const String OPT_PARAMETER = "0.#";
+        public const String CV = "0.#%";
     }
 }

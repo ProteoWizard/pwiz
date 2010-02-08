@@ -28,7 +28,6 @@ namespace pwiz.Skyline.FileUI
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PivotReportDlg));
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.treeView = new System.Windows.Forms.TreeView();
             this.panel1 = new System.Windows.Forms.Panel();
@@ -43,11 +42,11 @@ namespace pwiz.Skyline.FileUI
             this.label2 = new System.Windows.Forms.Label();
             this.btnExecute = new System.Windows.Forms.Button();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.cbxPivotIsotopeLabel = new System.Windows.Forms.CheckBox();
             this.cbxPivotReplicate = new System.Windows.Forms.CheckBox();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
             this.panel4 = new System.Windows.Forms.Panel();
-            this.cbxPivotIsotopeLabel = new System.Windows.Forms.CheckBox();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -216,6 +215,16 @@ namespace pwiz.Skyline.FileUI
             this.panel2.Size = new System.Drawing.Size(625, 46);
             this.panel2.TabIndex = 2;
             // 
+            // cbxPivotIsotopeLabel
+            // 
+            this.cbxPivotIsotopeLabel.AutoSize = true;
+            this.cbxPivotIsotopeLabel.Location = new System.Drawing.Point(147, 6);
+            this.cbxPivotIsotopeLabel.Name = "cbxPivotIsotopeLabel";
+            this.cbxPivotIsotopeLabel.Size = new System.Drawing.Size(117, 17);
+            this.cbxPivotIsotopeLabel.TabIndex = 3;
+            this.cbxPivotIsotopeLabel.Text = "Pivot Isotope Label";
+            this.cbxPivotIsotopeLabel.UseVisualStyleBackColor = true;
+            // 
             // cbxPivotReplicate
             // 
             this.cbxPivotReplicate.AutoSize = true;
@@ -240,7 +249,6 @@ namespace pwiz.Skyline.FileUI
             // btnOk
             // 
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnOk.Location = new System.Drawing.Point(456, 11);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
@@ -256,16 +264,6 @@ namespace pwiz.Skyline.FileUI
             this.panel4.Name = "panel4";
             this.panel4.Size = new System.Drawing.Size(16, 310);
             this.panel4.TabIndex = 3;
-            // 
-            // cbxPivotIsotopeLabel
-            // 
-            this.cbxPivotIsotopeLabel.AutoSize = true;
-            this.cbxPivotIsotopeLabel.Location = new System.Drawing.Point(147, 6);
-            this.cbxPivotIsotopeLabel.Name = "cbxPivotIsotopeLabel";
-            this.cbxPivotIsotopeLabel.Size = new System.Drawing.Size(117, 17);
-            this.cbxPivotIsotopeLabel.TabIndex = 3;
-            this.cbxPivotIsotopeLabel.Text = "Pivot Isotope Label";
-            this.cbxPivotIsotopeLabel.UseVisualStyleBackColor = true;
             // 
             // PivotReportDlg
             // 

@@ -27,5 +27,6 @@ namespace pwiz.Skyline.Model.Hibernate
             get { return typeof(DbReplicate); }
         }
         public virtual string Replicate { get; set; }
+        public virtual string ReplicatePath { get; set; }
     }
 }

@@ -755,7 +755,7 @@ namespace pwiz.Skyline
                     peptideList = true;
                 else
                 {
-                    Statistics stats = new Statistics(lineLengths.ToArray());
+                    Statistics stats = new Statistics(lineLengths);
                     // All lines smaller than the peptide filter
                     if (stats.Max() <= filter.MaxPeptideLength ||
                             // 3 out of 4 are peptide length

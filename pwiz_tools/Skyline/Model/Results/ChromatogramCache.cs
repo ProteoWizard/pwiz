@@ -1572,8 +1572,8 @@ namespace pwiz.Skyline.Model.Results
                     // And there must be at least 5 peaks in the line to qualify for removal
                     for (int i = 0, len = listAreas.Count; i < len - 4; i++)
                     {
-                        var statsRank = new Statistics(listRank.ToArray());
-                        var statsArea = new Statistics(listAreas.ToArray());
+                        var statsRank = new Statistics(listRank);
+                        var statsArea = new Statistics(listAreas);
                         double rvalue = statsArea.R(statsRank);
                         //                Console.WriteLine("i = {0}, r = {1}", i, rvalue);
                         if (Math.Abs(rvalue) > NOISE_CORRELATION_THRESHOLD)
@@ -1856,7 +1856,7 @@ namespace pwiz.Skyline.Model.Results
 
                     // Interpolate the existing points onto time intervals evently spaced
                     // by the minimum interval observed in the measuered data.
-                    var statDeltas = new Statistics(listDeltas.ToArray());
+                    var statDeltas = new Statistics(listDeltas);
                     double[] bestDeltas = statDeltas.Modes();
                     double intervalDelta;
                     if (bestDeltas.Length == 0 || bestDeltas.Length > listDeltas.Count/2)

@@ -619,8 +619,8 @@ namespace pwiz.Skyline.Model
                         return (float)ratios[0];
                 }
 
-                var stats = new Statistics(ratios.ToArray());
-                var statsW = new Statistics(weights.ToArray());
+                var stats = new Statistics(ratios);
+                var statsW = new Statistics(weights);
                 stdev = (float)stats.StdDev(statsW);
                 double mean = areaTotal/standardAreaTotal;
                 Debug.Assert(Math.Abs(mean - stats.Mean(statsW)) < 0.0001);

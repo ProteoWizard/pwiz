@@ -19,10 +19,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using NHibernate;
 using NHibernate.Metadata;
 using NHibernate.Type;
+using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Hibernate.Query
 {
@@ -43,6 +45,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             public String Name { get; set; }
             public Type PersistentClass { get; set; }
             public Type ResultsClass { get; set; }
+            public Type ResultsSummaryClass { get; set; }
             public ParentRelationship Parent { get; set; }
         }
 
@@ -75,6 +78,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                            MostManyTable = GetTransitionsTable()
                        };
         }
+
         private static Table GetTransitionsTable()
         {
             Table protein = new Table
@@ -100,6 +104,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                       Name = "Precursor",
                                       PersistentClass = typeof (DbPrecursor),
                                       ResultsClass = typeof (DbPrecursorResult),
+                                      ResultsSummaryClass = typeof (DbPrecursorResultSummary),
                                       Parent = new ParentRelationship
                                                    {
                                                        ChildrenName = "Precursors",
@@ -112,6 +117,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                        Name = "Transition",
                                        PersistentClass = typeof (DbTransition),
                                        ResultsClass = typeof (DbTransitionResult),
+                                       ResultsSummaryClass = typeof (DbTransitionResultSummary),
                                        Parent = new ParentRelationship
                                                     {
                                                         ChildrenName = "Transitions",
@@ -121,10 +127,10 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                    };
             return transition;
         }
+
         /// <summary>
         /// Return the TreeNodes that should be displayed in the column picker UI.
         /// </summary>
-        /// <returns></returns>
         public List<TreeNode> GetTreeNodes()
         {
             Table table = MostManyTable;
@@ -171,6 +177,16 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 }
                 treeNodes.Add(resultsNode);
             }
+            if (table.ResultsSummaryClass != null)
+            {
+                TreeNode resultsSummaryNode = new TreeNode { Name = "ResultsSummary", Text = "ResultsSummary" };
+                foreach (TreeNode treeNode in GetTreeNodes(Schema.GetClassMetadata(table.ResultsSummaryClass), identifier))
+                {
+                    ((NodeData)treeNode.Tag).ResultsSummary = true;
+                    resultsSummaryNode.Nodes.Add(treeNode);
+                }
+                treeNodes.Add(resultsSummaryNode);
+            }
             treeNodes.AddRange(GetTreeNodes(classMetadata, identifier));
             return treeNodes;
         }
@@ -206,13 +222,14 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             }
             return result;
         }
+
         protected NodeData CreateColumnInfo(Identifier parentIdentifier, IClassMetadata classMetadata, String propertyName)
         {
             Type type = classMetadata.GetMappedClass(EntityMode.Poco);
             ColumnInfo columnInfo = Schema.GetColumnInfo(type, propertyName);
             NodeData nodeData = new NodeData
                                         {
-                                            Identifier = new Identifier(parentIdentifier, propertyName),
+                                            ReportColumn = new ReportColumn(type, new Identifier(parentIdentifier, propertyName)),
                                             Caption = columnInfo.Caption,
                                             Format = columnInfo.Format,
                                             ColumnType = columnInfo.ColumnType,
@@ -220,17 +237,18 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                         };
             return nodeData;
         }
-        public static Identifier GetCommonPrefix(List<NodeData> columnInfos)
+
+        private static Identifier GetCommonPrefix(IList<NodeData> columnInfos)
         {
             if (columnInfos.Count == 0)
             {
                 return null;
             }
             
-            Identifier commonPrefix = columnInfos[0].Identifier.Parent;
+            Identifier commonPrefix = columnInfos[0].ReportColumn.Column.Parent;
             for (int i = 1; i < columnInfos.Count; i++ )
             {
-                Identifier identifier = columnInfos[i].Identifier;
+                Identifier identifier = columnInfos[i].ReportColumn.Column;
                 while (commonPrefix != null && !identifier.StartsWith(commonPrefix))
                 {
                     commonPrefix = commonPrefix.Parent;
@@ -239,31 +257,21 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             return commonPrefix;
         }
 
-        /// <summary>
-        /// Returns true if any of the ColumnInfo's in the list come from a Results table.
-        /// </summary>
-        public static bool HasResults(List<NodeData> columnInfos)
-        {
-            foreach (NodeData columnInfo in columnInfos)
-            {
-                if (columnInfo.Results)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
         public void ResolveColumn(NodeData nodeData, out Type table, out String column)
         {
             if (nodeData.Results)
             {
-                Schema.Resolve(MostManyTable.ResultsClass, ToResultsIdentifier(nodeData.Identifier), out table,
+                Schema.Resolve(MostManyTable.ResultsClass, ToResultsIdentifier(nodeData.ReportColumn.Column), out table,
+                               out column);
+            }
+            else if (nodeData.ResultsSummary)
+            {
+                Schema.Resolve(MostManyTable.ResultsSummaryClass, ToResultsSummaryIdentifier(nodeData.ReportColumn.Column), out table,
                                out column);
             }
             else
             {
-                Schema.Resolve(MostManyTable.PersistentClass, nodeData.Identifier, out table, out column);
+                Schema.Resolve(MostManyTable.PersistentClass, nodeData.ReportColumn.Column, out table, out column);
             }
         }
 
@@ -278,53 +286,33 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         /// </summary>
         public static Identifier ToResultsIdentifier(Identifier identifier)
         {
+            return ToResultsIdentifier(identifier, "Result");
+        }
+
+        public static Identifier ToResultsSummaryIdentifier(Identifier identifier)
+        {
+            return ToResultsIdentifier(identifier, "ResultSummary");
+        }
+
+        private static Identifier ToResultsIdentifier(Identifier identifier, string suffix)
+        {
             List<String> parts = new List<String>();
             for (int i = 0; i < identifier.Parts.Count - 1; i++)
             {
-                parts.Add(identifier.Parts[i] + "Result");
+                parts.Add(identifier.Parts[i] + suffix);
             }
             parts.Add(identifier.Parts[identifier.Parts.Count - 1]);
             return new Identifier(parts);
         }
 
         /// <summary>
-        /// Walks the tree to find the NodeData.
+        /// Finds a NodeData element searching the entire tree.
         /// </summary>
-        private static NodeData FindNodeData(TreeNode root, Identifier identifier, bool results)
-        {
-            NodeData nodeData = root.Tag as NodeData;
-            if (nodeData != null)
-            {
-                if (results)
-                {
-                    if (nodeData.Results && ToResultsIdentifier(nodeData.Identifier).Equals(identifier))
-                    {
-                        return nodeData;
-                    }
-                }
-                else
-                {
-                    if (!nodeData.Results && nodeData.Identifier.Equals(identifier))
-                    {
-                        return nodeData;
-                    }
-                }
-            }
-            foreach (TreeNode child in root.Nodes)
-            {
-                NodeData result = FindNodeData(child, identifier, results);
-                if (result != null)
-                {
-                    return result;
-                }
-            }
-            return null;
-        }
-        private static NodeData FindNodeData(TreeView root, Identifier identifier, bool results)
+        private static NodeData FindNodeData(TreeView root, Identifier reportColumn)
         {
             foreach (TreeNode node in root.Nodes)
             {
-                NodeData nodeData = FindNodeData(node, identifier, results);
+                NodeData nodeData = FindNodeData(node, reportColumn);
                 if (nodeData != null)
                 {
                     return nodeData;
@@ -332,107 +320,139 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             }
             return null;
         }
+
+        /// <summary>
+        /// Walks the tree to find the NodeData.
+        /// </summary>
+        private static NodeData FindNodeData(TreeNode root, Identifier identifier)
+        {
+            NodeData nodeData = root.Tag as NodeData;
+            if (nodeData != null)
+            {
+                if (nodeData.Results)
+                {
+                    if (Equals(identifier, ToResultsIdentifier(nodeData.ReportColumn.Column)))
+                        return nodeData;
+                }
+                else if (nodeData.ResultsSummary)
+                {
+                    if (Equals(identifier, ToResultsSummaryIdentifier(nodeData.ReportColumn.Column)))
+                        return nodeData;
+                }
+                else if (Equals(nodeData.ReportColumn.Column, identifier))
+                {
+                    return nodeData;
+                }
+            }
+            foreach (TreeNode child in root.Nodes)
+            {
+                NodeData result = FindNodeData(child, identifier);
+                if (result != null)
+                    return result;
+            }
+            return null;
+        }
+
         /// <summary>
         /// Used when loading a saved Report, this method figures out what to display in the UI.
         /// The saved Report just has the information necessary to execute the query, which 
-        /// is the set of columns to query, and which table.
+        /// is the set of columns to query, and paired with the tables to query.
         /// This then needs to be transformed back into which columns in the big tree view were
         /// selected, and whether the "Pivot Results" checkbox was checked.
         /// </summary>
         public void GetColumnInfos(Report report, TreeView treeView, out List<NodeData> columnInfos)
         {
+            // CONSIDER: Why have the base class?
             if (!(report is SimpleReport))
             {
-                throw new InvalidDataException("Must be a SimpleReport");
+                throw new InvalidOperationException("Must be a SimpleReport");
             }
             SimpleReport simpleReport = (SimpleReport) report;
             columnInfos = new List<NodeData>();
             if (simpleReport.Columns.Count == 0)
             {
                 return;
-            } 
-            Type persistentClass = simpleReport.Table;
+            }
+            var allColumns = new List<ReportColumn>(simpleReport.Columns);
+            if (simpleReport is PivotReport)
+            {
+                allColumns.AddRange(((PivotReport)simpleReport).CrossTabValues);
+            }
+            var allTables = new HashSet<Type>(from reportColumn in allColumns
+                                              select reportColumn.Table);
+
             Table table = MostManyTable;
-            bool resultsTable = false;
             Identifier prefix = null;
             while (table != null)
             {
-                if (table.PersistentClass == persistentClass)
+                if (allTables.Contains(table.PersistentClass) ||
+                    allTables.Contains(table.ResultsClass) ||
+                    allTables.Contains(table.ResultsSummaryClass))
                 {
-                    break;
-                }
-                if (table.ResultsClass == persistentClass)
-                {
-                    resultsTable = true;
                     break;
                 }
                 if (table.Parent == null)
                 {
-                    throw new InvalidDataException("Unable to find table for " + persistentClass);
+                    string tableNames = string.Join(", ", (from reportTable in allTables
+                                                           select reportTable.ToString()).ToArray());
+                    throw new InvalidDataException(string.Format("Unable to find table for {0}", tableNames));
                 }
                 table = table.Parent.ParentTable;
                 prefix = new Identifier(prefix, table.Name);
             }
-            List<Identifier> allColumns = new List<Identifier>(simpleReport.Columns);
-            if (simpleReport is PivotReport)
+
+            foreach (var unqualifiedId in allColumns)
             {
-                allColumns.AddRange(((PivotReport) simpleReport).CrossTabValues);
-            }
-            foreach (Identifier unqualifiedId in allColumns)
-            {
-                bool results;
                 Identifier identifier;
-                if (resultsTable)
+                switch (ReportColumn.GetTableType(unqualifiedId.Table))
                 {
-                    if (unqualifiedId.Parts[0].Equals(table.Name))
-                    {
-                        results = false;
-                        identifier = unqualifiedId.RemovePrefix(1);
-                    }
-                    else
-                    {
-                        results = true;
-                        identifier = unqualifiedId;
-                    }
+                    case TableType.result:
+                        identifier = JoinIds(prefix, unqualifiedId.Column, ToResultsIdentifier);
+                        break;
+                    case TableType.summary:
+                        identifier = JoinIds(prefix, unqualifiedId.Column, ToResultsSummaryIdentifier);
+                        break;
+                    default:
+                        identifier = JoinIds(prefix, unqualifiedId.Column);
+                        break;
                 }
-                else
-                {
-                    results = false;
-                    identifier = unqualifiedId;
-                }
-                if (results)
-                {
-                    identifier = new Identifier(ToResultsIdentifier(new Identifier(prefix, identifier.Parts[0])), identifier.RemovePrefix(1));
-                }
-                else
-                {
-                    identifier = new Identifier(prefix, identifier);
-                }
-                columnInfos.Add(FindNodeData(treeView, identifier, results));
+
+                columnInfos.Add(FindNodeData(treeView, identifier));
             }
+        }
+
+        private static Identifier JoinIds(Identifier prefix, Identifier suffix)
+        {
+            return new Identifier(prefix, suffix);
+        }
+
+        private static Identifier JoinIds(Identifier prefix, Identifier suffix,
+            Func<Identifier, Identifier> modPrefix)
+        {
+            return new Identifier(modPrefix(new Identifier(prefix, suffix.Parts[0])), suffix.RemovePrefix(1));
         }
 
         private SimpleReport Pivot(SimpleReport simpleReport, IEnumerable<PivotType> pivotTypes)
         {
-            ICollection<Identifier> groupByColumns = new List<Identifier>();
-            List<Identifier> crossTabHeaders = new List<Identifier>();
+            ICollection<ReportColumn> groupByColumns = new List<ReportColumn>();
+            var crossTabHeaders = new List<ReportColumn>();
             foreach (PivotType pivotType in pivotTypes)
             {
-                groupByColumns = PivotType.Intersect(groupByColumns, 
-                    pivotType.GetGroupByColumns(simpleReport.Table));
-                crossTabHeaders.Add(pivotType.GetCrosstabHeader(simpleReport.Table));
+                var pivotGroupByColumns = pivotType.GetGroupByColumns(simpleReport.Columns);
+                groupByColumns = PivotType.Intersect(groupByColumns, pivotGroupByColumns);
+                crossTabHeaders.Add(pivotType.GetCrosstabHeader(simpleReport.Columns));
             }
-            foreach (Identifier id in crossTabHeaders)
+            foreach (ReportColumn id in crossTabHeaders)
             {
                 groupByColumns.Remove(id);
             }
-            List<Identifier> normalColumns = new List<Identifier>();
-            List<Identifier> crossTabColumns = new List<Identifier>();
-            foreach (Identifier id in simpleReport.Columns)
+            var normalColumns = new List<ReportColumn>();
+            var crossTabColumns = new List<ReportColumn>();
+            foreach (ReportColumn id in simpleReport.Columns)
             {
                 Type table;
                 String column;
-                Schema.Resolve(simpleReport.Table, id, out table, out column);
+                Schema.Resolve(id.Table, id.Column, out table, out column);
                 bool crossTabColumn = false;
                 foreach (PivotType pivotType in pivotTypes)
                 {
@@ -457,9 +477,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             }
             return new PivotReport
                        {
-                           Table = simpleReport.Table,
                            Columns = normalColumns,
-                           GroupByColumns = new List<Identifier>(groupByColumns),
+                           GroupByColumns = new List<ReportColumn>(groupByColumns),
                            CrossTabHeaders = crossTabHeaders,
                            CrossTabValues = crossTabColumns
                        };
@@ -473,6 +492,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         /// </summary>
         public Report GetReport(List<NodeData> columnInfos, IList<PivotType> pivotTypes)
         {
+            // Get the common prefix, and the ancestor table it represents
             Identifier commonPrefix = GetCommonPrefix(columnInfos);
             Table table = MostManyTable;
             int prefixLength = 0;
@@ -484,38 +504,38 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                     table = table.Parent.ParentTable;
                 }
             }
-            bool hasResults = HasResults(columnInfos);
-            List<Identifier> displayColumns = new List<Identifier>();
+            // Calculate the list of ReportColumns from the NodeData
+            var displayColumns = new List<ReportColumn>();
             foreach(NodeData columnInfo in columnInfos)
             {
-                Identifier identifier = columnInfo.Identifier.RemovePrefix(prefixLength);
+                Identifier identifier = columnInfo.ReportColumn.Column.RemovePrefix(prefixLength);
                 if (columnInfo.Results)
                 {
-                    identifier = ToResultsIdentifier(identifier);
+                    displayColumns.Add(new ReportColumn(table.ResultsClass, ToResultsIdentifier(identifier)));
+                }
+                else if (columnInfo.ResultsSummary)
+                {
+                    displayColumns.Add(new ReportColumn(table.ResultsSummaryClass, ToResultsSummaryIdentifier(identifier)));
                 }
                 else
                 {
-                    if (hasResults)
-                    {
-                        identifier = new Identifier(table.Name, identifier);
-                    }
+                    displayColumns.Add(new ReportColumn(table.PersistentClass, identifier));
                 }
-                displayColumns.Add(identifier);
             }
-            Type persistentClass = hasResults ? table.ResultsClass : table.PersistentClass;
             SimpleReport simpleReport = new SimpleReport
                            {
-                               Table = persistentClass,
                                Columns = displayColumns
                            };
             return Pivot(simpleReport, pivotTypes);
         }
     }
+
     /// <summary>
     /// Tree node tag data.
     /// </summary>
     public class NodeData : ColumnInfo
     {
         public bool Results { get; set; }
+        public bool ResultsSummary { get; set; }
     }
 }

@@ -37,8 +37,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>1643</ApplicationRevision>
-    <ApplicationVersion>0.5.1.1643</ApplicationVersion>
+    <ApplicationRevision>1740</ApplicationRevision>
+    <ApplicationVersion>0.5.1.1740</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -277,6 +277,8 @@
     <Compile Include="EditUI\RefineDlg.Designer.cs">
       <DependentUpon>RefineDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Model\Hibernate\DbPrecursorResultSummary.cs" />
+    <Compile Include="Model\Hibernate\DbTransitionResultSummary.cs" />
     <Compile Include="Model\Lib\BlibData\BlibDb.cs" />
     <Compile Include="Model\Lib\BlibData\DbEntity.cs" />
     <Compile Include="Model\Lib\BlibData\DbLibInfo.cs" />

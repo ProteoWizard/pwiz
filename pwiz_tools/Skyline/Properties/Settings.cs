@@ -22,6 +22,7 @@ using System.Xml.Serialization;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
@@ -937,50 +938,52 @@ namespace pwiz.Skyline.Properties
     {
         public override IEnumerable<ReportSpec> GetDefaults()
         {
+            Type tablePep = typeof (DbPeptide);
+            Type tablePepRes = typeof (DbPeptideResult);
+            Type tableTran = typeof (DbTransition);
+            Type tableTranRes = typeof (DbTransitionResult);
+
             return new[]
                        {
                 new ReportSpec("Peptide Ratio Results", 
                     new QueryDef
                         {
-                            Table = typeof (Model.Hibernate.DbPeptideResult),
                             Select = new[] {
-                               new Identifier("Peptide", "Sequence"),
-                               new Identifier("Peptide", "Protein", "Name"),
-                               new Identifier("ProteinResult","ReplicateName"),
-                               new Identifier("PeptidePeakFoundRatio"),
-                               new Identifier("PeptideRetentionTime"),
-                               new Identifier("RatioToStandard"),
+                               new ReportColumn(tablePep, "Sequence"),
+                               new ReportColumn(tablePep, "Protein", "Name"),
+                               new ReportColumn(tablePepRes, "ProteinResult","ReplicateName"),
+                               new ReportColumn(tablePepRes, "PeptidePeakFoundRatio"),
+                               new ReportColumn(tablePepRes, "PeptideRetentionTime"),
+                               new ReportColumn(tablePepRes, "RatioToStandard"),
                            }
                         }),
                 new ReportSpec("Peptide RT Results",
                     new QueryDef 
                     {
-                        Table = typeof(Model.Hibernate.DbPeptideResult),
                         Select = new[] {
-                            new Identifier("Peptide","Sequence"), 
-                            new Identifier("Peptide","Protein","Name"), 
-                            new Identifier("ProteinResult","ReplicateName"), 
-                            new Identifier("Peptide","PredictedRetentionTime"), 
-                            new Identifier("PeptideRetentionTime"), 
-                            new Identifier("PeptidePeakFoundRatio"),
+                            new ReportColumn(tablePep,"Sequence"), 
+                            new ReportColumn(tablePep,"Protein","Name"), 
+                            new ReportColumn(tablePepRes, "ProteinResult","ReplicateName"), 
+                            new ReportColumn(tablePep,"PredictedRetentionTime"), 
+                            new ReportColumn(tablePepRes, "PeptideRetentionTime"), 
+                            new ReportColumn(tablePepRes, "PeptidePeakFoundRatio"),
                     }}),
                 new ReportSpec("Transition Results",
                     new QueryDef
                     {
-                        Table = typeof(Model.Hibernate.DbTransitionResult),
                         Select = new[] {
-                            new Identifier("Transition","Precursor","Peptide","Sequence"),
-                            new Identifier("Transition","Precursor","Peptide","Protein","Name"), 
-                            new Identifier("PrecursorResult","PeptideResult","ProteinResult","ReplicateName"), 
-                            new Identifier("Transition","Precursor","Mz"), 
-                            new Identifier("Transition","Precursor","Charge"), 
-                            new Identifier("Transition","ProductMz"), 
-                            new Identifier("Transition","ProductCharge"),
-                            new Identifier("Transition","FragmentIon"),
-                            new Identifier("RetentionTime"),
-                            new Identifier("Area"),
-                            new Identifier("Background"),
-                            new Identifier("PeakRank"), 
+                            new ReportColumn(tableTran,"Precursor","Peptide","Sequence"),
+                            new ReportColumn(tableTran,"Precursor","Peptide","Protein","Name"), 
+                            new ReportColumn(tableTranRes, "PrecursorResult","PeptideResult","ProteinResult","ReplicateName"), 
+                            new ReportColumn(tableTran,"Precursor","Mz"), 
+                            new ReportColumn(tableTran,"Precursor","Charge"), 
+                            new ReportColumn(tableTran,"ProductMz"), 
+                            new ReportColumn(tableTran,"ProductCharge"),
+                            new ReportColumn(tableTran,"FragmentIon"),
+                            new ReportColumn(tableTranRes, "RetentionTime"),
+                            new ReportColumn(tableTranRes, "Area"),
+                            new ReportColumn(tableTranRes, "Background"),
+                            new ReportColumn(tableTranRes, "PeakRank"), 
                     }})
             };
         }

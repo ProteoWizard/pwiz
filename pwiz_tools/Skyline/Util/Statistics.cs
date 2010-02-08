@@ -21,6 +21,11 @@ namespace pwiz.Skyline.Util
         {
             _list = list;
         }
+        
+        public Statistics(IEnumerable<double> list)
+        {
+            _list = list.ToArray();
+        }
 
         /// <summary>
         /// Change the set of numbers for which statistics are to be computed.
@@ -624,7 +629,7 @@ namespace pwiz.Skyline.Util
             List<double> residuals = new List<double>();
             for (int i = 0; i < x.Length; i++)
                 residuals.Add(y._list[i] - (a*x._list[i] + b));
-            return new Statistics(residuals.ToArray());
+            return new Statistics(residuals);
         }
 
         /// <summary>
@@ -789,10 +794,10 @@ namespace pwiz.Skyline.Util
         {
             var listNormal1 = new List<double>(_list);
             listNormal1 = listNormal1.ConvertAll(val => Math.Sqrt(val));
-            var stat1 = new Statistics(listNormal1.ToArray());
+            var stat1 = new Statistics(listNormal1);
             var listNormal2 = new List<double>(s._list);
             listNormal2 = listNormal2.ConvertAll(val => Math.Sqrt(val));
-            var stat2 = new Statistics(listNormal2.ToArray());
+            var stat2 = new Statistics(listNormal2);
 
             return stat1.Angle(stat2);
         }
@@ -937,7 +942,7 @@ namespace pwiz.Skyline.Util
             for (int i = 0; i < listNewValues.Count; i++)
                 listNewValues[i] = -listNewValues[i];
             // And re-rank
-            return new Statistics(listNewValues.ToArray()).Rank();
+            return new Statistics(listNewValues).Rank();
         }
     }
 }

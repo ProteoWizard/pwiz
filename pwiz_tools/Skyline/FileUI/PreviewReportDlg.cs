@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System.Collections.Generic;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Properties;
@@ -32,6 +33,17 @@ namespace pwiz.Skyline.FileUI
             InitializeComponent();
 
             Icon = Resources.Skyline;
+        }
+
+        public DataGridView DataGridView { get { return dataGridView; } }
+        public int RowCount { get { return dataGridView.RowCount; } }
+        public IEnumerable<string> ColumnHeaderNames
+        {
+            get
+            {
+                foreach (DataGridViewColumn column in dataGridView.Columns)
+                    yield return column.HeaderText;
+            }
         }
 
         public void SetResults(ResultSet resultSet)
@@ -73,6 +85,11 @@ namespace pwiz.Skyline.FileUI
             }
 
             base.OnKeyDown(e);
+        }
+
+        public void OkDialog()
+        {
+            Close();
         }
     }
 }

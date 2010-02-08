@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
@@ -41,9 +42,6 @@ namespace pwiz.Skyline.FileUI
 
         private readonly List<NodeData> _columns = new List<NodeData>();
 
-        private readonly MessageBoxHelper _helper;
-        private bool _clickedOk;
-
         public PivotReportDlg(IEnumerable<ReportSpec> existing)
         {
             _existing = existing;
@@ -51,8 +49,60 @@ namespace pwiz.Skyline.FileUI
             InitializeComponent();
 
             Icon = Resources.Skyline;
+        }
 
-            _helper = new MessageBoxHelper(this);
+        public string ReportName
+        {
+            get { return textName.Text; }
+            set { textName.Text = value; }
+        }
+
+        public bool PivotReplicate
+        {
+            get { return cbxPivotReplicate.Checked; }
+            set { cbxPivotReplicate.Checked = value; }
+        }
+
+        public bool PivotIsotopeLabelType
+        {
+            get { return cbxPivotIsotopeLabel.Checked; }
+            set { cbxPivotIsotopeLabel.Checked = value; }
+        }
+
+        public int ColumnCount { get { return _columns.Count; } }
+
+        public IEnumerable<string> ColumnNames
+        {
+            get
+            {
+                foreach (var column in _columns)
+                    yield return column.Caption;
+            }
+        }
+
+        public void Select(Identifier id)
+        {
+            treeView.SelectedNode = FindNode(treeView.Nodes, id);
+        }
+
+        private static TreeNode FindNode(TreeNodeCollection nodes, Identifier id)
+        {
+            if (id.Parts.Count > 0)
+            {
+                foreach (TreeNode node in nodes)
+                {
+                    if (Equals(node.Text, id.Parts[0]))
+                    {
+                        if (id.Parts.Count == 1)
+                            return node;
+                        if (node.Nodes.Count == 0)
+                            return null;
+
+                        return FindNode(node.Nodes, id.RemovePrefix(1));
+                    }
+                }
+            }
+            return null;
         }
 
         public void SetDatabase(Database database)
@@ -97,13 +147,14 @@ namespace pwiz.Skyline.FileUI
             if (report is PivotReport)
             {
                 PivotReport pivotReport = (PivotReport) report;
+                var testColumns = pivotReport.Columns.Union(pivotReport.GroupByColumns).ToArray();
                 foreach(var id in pivotReport.CrossTabHeaders)
                 {
-                    if (id.Equals(PivotType.REPLICATE.GetCrosstabHeader(pivotReport.Table)))
+                    if (id.Equals(PivotType.REPLICATE.GetCrosstabHeader(testColumns)))
                     {
                         cbxPivotReplicate.Checked = true;
                     }
-                    if (id.Equals(PivotType.ISOTOPE_LABEL.GetCrosstabHeader(pivotReport.Table)))
+                    if (id.Equals(PivotType.ISOTOPE_LABEL.GetCrosstabHeader(testColumns)))
                     {
                         cbxPivotIsotopeLabel.Checked = true;
                     }
@@ -127,40 +178,42 @@ namespace pwiz.Skyline.FileUI
         }
 
 
-        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        public void OkDialog()
         {
-            if (_clickedOk)
+            var helper = new MessageBoxHelper(this);
+            var e = new CancelEventArgs();
+
+            string name;
+            if (!helper.ValidateNameTextBox(e, textName, out name))
+                return;
+
+            if (_columns.Count == 0)
             {
-                _clickedOk = false; // Reset in case of failure.
-
-                string name;
-                if (!_helper.ValidateNameTextBox(e, textName, out name))
-                    return;
-
-                if (_columns.Count == 0)
-                {
-                    MessageBox.Show(this, "A report must have at least one column.", Program.Name);
-                    e.Cancel = true;
-                    return;
-                }
-
-                ReportSpec reportSpec = GetReport().GetReportSpec(name);
-
-                if ((_reportSpec == null || !Equals(reportSpec.Name, _reportSpec.Name)) &&
-                        _existing.Contains(reportSpec, new NameComparer<ReportSpec>()))
-                {
-                    _helper.ShowTextBoxError(textName, "The report '{0}' already exists.", name);
-                    e.Cancel = true;
-                    return;                    
-                }
-
-                _reportSpec = reportSpec;
+                MessageBox.Show(this, "A report must have at least one column.", Program.Name);
+                return;
             }
 
-            base.OnClosing(e);
+            ReportSpec reportSpec = GetReport().GetReportSpec(name);
+
+            if ((_reportSpec == null || !Equals(reportSpec.Name, _reportSpec.Name)) &&
+                    _existing.Contains(reportSpec, new NameComparer<ReportSpec>()))
+            {
+                helper.ShowTextBoxError(textName, "The report '{0}' already exists.", name);
+                return;                    
+            }
+
+            _reportSpec = reportSpec;
+
+            DialogResult = DialogResult.OK;
+            Close();
         }
 
         private void btnExecute_Click(object sender, EventArgs e)
+        {
+            ShowPreview();
+        }
+
+        public void ShowPreview()
         {
             Report report = GetReport();
             ResultSet resultSet = report.Execute(_database);
@@ -189,7 +242,15 @@ namespace pwiz.Skyline.FileUI
 
         private void btnAdd_Click(object sender, EventArgs e)
         {
-            NodeData nodeData = GetNodeData(treeView.SelectedNode);
+            AddSelectedColumn();
+        }
+
+        public void AddSelectedColumn()
+        {
+            TreeNode node = treeView.SelectedNode;
+            if (node == null)
+                return;
+            NodeData nodeData = GetNodeData(node);
             AddColumn(nodeData);
             treeView.SelectedNode = treeView.SelectedNode.NextNode;
             treeView.Focus();
@@ -216,7 +277,7 @@ namespace pwiz.Skyline.FileUI
             cbxPivotIsotopeLabel.Enabled = IsEnabled(PivotType.ISOTOPE_LABEL);
         }
 
-        private NodeData GetNodeData(TreeNode treeNode)
+        private static NodeData GetNodeData(TreeNode treeNode)
         {
             return treeNode.Tag as NodeData;
         }
@@ -263,7 +324,7 @@ namespace pwiz.Skyline.FileUI
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            _clickedOk = true;
+            OkDialog();
         }
 
         private void lbxColumns_SelectedIndexChanged(object sender, EventArgs e)

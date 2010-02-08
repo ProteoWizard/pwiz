@@ -19,21 +19,22 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Hibernate.Query
 {
     public class ResultSet
     {
         private readonly List<Object[]> _rows;
-        private readonly Dictionary<Identifier, int> _columnIndexes;
+        private readonly Dictionary<ReportColumn, int> _columnIndexes;
         public ResultSet(IList<ColumnInfo> columns, IList rows)
         {
             ColumnInfos = columns;
             _rows = new List<Object[]>(rows.Count);
-            _columnIndexes = new Dictionary<Identifier, int>();
+            _columnIndexes = new Dictionary<ReportColumn, int>();
             for (int i = 0; i < columns.Count; i++ )
             {
-                _columnIndexes.Add(columns[i].Identifier, i);
+                _columnIndexes.Add(columns[i].ReportColumn, i);
             }
             foreach (var row in rows)
             {
@@ -87,7 +88,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             }
             return value.ToString();
         }
-        public Object GetValue(int rowIndex, Identifier identifier)
+        public Object GetValue(int rowIndex, ReportColumn identifier)
         {
             return GetValue(rowIndex, _columnIndexes[identifier]);
         }
@@ -95,14 +96,15 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         {
             return (ColumnInfos[columnIndex].IsNumeric ? "#N/A" : defaultValue);
         }
-        public ColumnInfo GetColumnInfo(Identifier identifier)
+        public ColumnInfo GetColumnInfo(ReportColumn identifier)
         {
             return ColumnInfos[_columnIndexes[identifier]];
         }
     }
+
     public class ColumnInfo
     {
-        public Identifier Identifier { get; set; }
+        public ReportColumn ReportColumn { get; set; }
         public String Format { get; set; }
         public String Caption { get; set; }
         public Type ColumnType { get; set; }

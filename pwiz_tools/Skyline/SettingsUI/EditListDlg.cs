@@ -161,6 +161,11 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnRemove_Click(object sender, EventArgs e)
         {
+            RemoveItem();
+        }
+
+        public void RemoveItem()
+        {
             int i = listBox.SelectedIndex;
             _list.RemoveAt(i);
             listBox.Items.RemoveAt(i);

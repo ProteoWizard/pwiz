@@ -105,7 +105,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Export a transition list
             string tranListPath = TestFilesDir.GetTestPath("TransitionList.csv");
-            var exportDialog = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportDialog(ExportFileType.List));
+            var exportDialog = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
             RunUI(() =>
                       {
                           exportDialog.ExportStrategy = ExportStrategy.Single;

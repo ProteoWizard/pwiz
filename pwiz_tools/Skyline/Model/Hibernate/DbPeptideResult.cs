@@ -20,6 +20,7 @@ using System;
 
 namespace pwiz.Skyline.Model.Hibernate
 {
+    [QueryTable(TableType = TableType.result)]
     public class DbPeptideResult : DbEntity
     {
         public override Type EntityClass

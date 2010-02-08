@@ -19,12 +19,15 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using System.Reflection;
 using System.Text;
 using NHibernate;
 using NHibernate.Tool.hbm2ddl;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Hibernate.Query
 {
@@ -59,23 +62,101 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             return new Schema(SessionFactory, _dataSettings);
         }
 
-        public ResultSet ExecuteQuery(Type table, IList<Identifier> columns)
+        public ResultSet ExecuteQuery(IList<ReportColumn> columns)
         {
             Schema schema = new Schema(SessionFactory, _dataSettings);
             StringBuilder hql = new StringBuilder("SELECT ");
             String comma = "";
-            List<ColumnInfo> columnInfos = new List<ColumnInfo>();
-            foreach (Identifier column in columns)
+            var columnInfos = new List<ColumnInfo>();
+            var dictTableAlias = new Dictionary<Type, string>();
+            foreach (ReportColumn column in columns)
             {
                 hql.Append(comma);
-                comma = ",";
-                hql.Append("T.");
-                hql.Append(column);
-                columnInfos.Add(schema.GetColumnInfo(table, column));
+                comma = ", ";
+                hql.Append(column.GetHql(dictTableAlias));
+
+                columnInfos.Add(schema.GetColumnInfo(column));
             }
-            hql.Append("\nFROM " + table + " T");
+            hql.Append("\nFROM ");
+            comma = "";
+            var listTableAlias = new List<KeyValuePair<Type, string>>(ReportColumn.Order(dictTableAlias));
+            foreach (var tableAlias in listTableAlias)
+            {
+                hql.Append(comma);
+                comma = ", ";
+                hql.Append(tableAlias.Key);
+                hql.Append(" ");
+                hql.Append(tableAlias.Value);
+            }
+            if (dictTableAlias.Count > 1)
+            {
+                hql.Append("\nWHERE ");
+                string and = "";
+                for (int i = 0; i < listTableAlias.Count - 1; i++)
+                {
+                    for (int j = i + 1; j < listTableAlias.Count; j++)
+                    {
+                        hql.Append(and);
+                        and = " AND\n";
+                        Join(hql, listTableAlias[i], listTableAlias[j]);
+                    }
+                }
+            }
             IQuery query = Session.CreateQuery(hql.ToString());
             return new ResultSet(columnInfos, query.List());
+        }
+
+        private static void Join(StringBuilder hql, KeyValuePair<Type, string> table1, KeyValuePair<Type, string> table2)
+        {
+            TableType tableType1 = ReportColumn.GetTableType(table1.Key);
+            TableType tableType2 = ReportColumn.GetTableType(table2.Key);
+            if (tableType1 == tableType2)
+                throw new InvalidOperationException("Cannot join tables of same type.");
+            if (tableType2 == TableType.node)
+            {
+                Helpers.Swap(ref table1, ref table2);
+                Helpers.Swap(ref tableType1, ref tableType2);
+            }
+            if (tableType1 == TableType.node)
+            {
+                // Join node Id to the node column Id in the result table
+                // Node Id
+                hql.Append(table1.Value);
+                hql.Append(".Id = ");
+                // Result node Id
+                hql.Append(table2.Value);
+                hql.Append(".");
+                hql.Append(GetJoinColumn(table2, table1));
+                hql.Append(".Id");
+            }
+            else
+            {
+                if (tableType2 == TableType.result)
+                    Helpers.Swap(ref table1, ref table2);
+                // Join all entries for which their replicate path starts with the summary path
+                hql.Append("substring(");
+                // Result replicate path
+                hql.Append(table1.Value);
+                hql.Append(".ResultFile.Replicate.ReplicatePath, 1, length(");
+                // Summary path
+                hql.Append(table2.Value);
+                hql.Append(".ReplicatePath)) = ");
+                hql.Append(table2.Value);
+                hql.Append(".ReplicatePath");
+            }
+        }
+
+        private static string GetJoinColumn(KeyValuePair<Type, string> table2, KeyValuePair<Type, string> table1)
+        {
+            MemberInfo[] memberInfo = table2.Key.FindMembers(MemberTypes.Property,
+                BindingFlags.Public | BindingFlags.Instance,
+                (info, o) => Equals(((PropertyInfo)info).PropertyType, o),
+                table1.Key);
+
+            if (memberInfo.Length < 1)
+                throw new InvalidOperationException(string.Format("The type {0} must have a column of type {1}", table2.Key, table1.Key));
+
+            return memberInfo[0].Name;
         }
 
         public ISession Session
@@ -119,7 +200,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                                                     Protein = dbProtein,
                                                                     FileName = replicateFile.FileName,
                                                                     SampleName = replicateFile.SampleName,
-                                                                    ReplicateName = replicateFile.Replicate.Replicate
+                                                                    ReplicateName = replicateFile.Replicate.Replicate,
+                                                                    ReplicatePath = replicateFile.Replicate.ReplicatePath
                                                                 };
                             _session.Save(proteinResult);
                             proteinResults.Add(replicateFile, proteinResult);
@@ -152,7 +234,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 
             foreach (ChromatogramSet chromatogramSet in docInfo.MeasuredResults.Chromatograms)
             {
-                DbReplicate dbReplicate = new DbReplicate {Replicate = chromatogramSet.Name};
+                DbReplicate dbReplicate = new DbReplicate {Replicate = chromatogramSet.Name, ReplicatePath = "/"};
                 session.Save(dbReplicate);
 
                 var listResultFiles = new List<DbResultFile>();
@@ -307,9 +389,13 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             var precursorResults = new Dictionary<ResultKey, DbPrecursorResult>();
             docInfo.PrecursorResults.Add(dbPrecursor, precursorResults);
             var peptideResults = docInfo.PeptideResults[dbPeptide];
+            DbPrecursorResultSummary precursorResultSummary = null;
 
             if (nodeGroup.HasResults)
             {
+                // Values for summary statistics
+                var precursorSummaryValues = new PrecursorSummaryValues();
+
                 var enumReplicates = docInfo.ReplicateResultFiles.GetEnumerator();
                 for (int i = 0; i < nodeGroup.Results.Count; i++)
                 {
@@ -373,22 +459,34 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                         }
                         session.Save(precursorResult);
                         precursorResults.Add(new ResultKey(resultFile, chromInfo.OptimizationStep), precursorResult);
+                        precursorSummaryValues.Add(precursorResult);
                     }
-                }                
+                }
+                
+                precursorResultSummary = new DbPrecursorResultSummary
+                {
+                    Precursor = dbPrecursor
+                };
+
+                precursorSummaryValues.CalculateStatistics(precursorResultSummary);
+                session.Save(precursorResultSummary);
             }
             session.Flush();
             session.Clear();
             foreach (TransitionDocNode nodeTran in nodeGroup.Children)
             {
-                SaveTransition(session, docInfo, dbPrecursor, nodeTran);
+                SaveTransition(session, docInfo, dbPrecursor, precursorResultSummary, nodeTran);
             }
         }
 
         /// <summary>
         /// Inserts rows for the transition and all of results.
         /// </summary>
-        private static void SaveTransition(ISession session, DocInfo docInfo,
-            DbPrecursor dbPrecursor, TransitionDocNode nodeTran)
+        private static void SaveTransition(ISession session,
+                                           DocInfo docInfo,
+                                           DbPrecursor dbPrecursor,
+                                           DbPrecursorResultSummary precursorResultSummary,
+                                           TransitionDocNode nodeTran)
         {
             Transition transition = nodeTran.Transition;
             DbTransition dbTransition = new DbTransition
@@ -414,6 +512,9 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             var precursorResults = docInfo.PrecursorResults[dbPrecursor];
             if (nodeTran.HasResults)
             {
+                // Values for summary statistics
+                var transitionSummaryValues = new TransitionSummaryValues();
+
                 var enumReplicates = docInfo.ReplicateResultFiles.GetEnumerator();
                 foreach (var results in nodeTran.Results)
                 {
@@ -456,8 +557,18 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             transitionResult.PeakRank = chromInfo.Rank;
                         }
                         session.Save(transitionResult);
+                        transitionSummaryValues.Add(transitionResult);
                     }
-                }                                
+                }
+
+                var transitionResultSummary = new DbTransitionResultSummary
+                {
+                    Transition = dbTransition,
+                    PrecursorResultSummary = precursorResultSummary
+                };
+
+                transitionSummaryValues.CalculateStatistics(transitionResultSummary);
+                session.Save(transitionResultSummary);
             }
             session.Flush();
             session.Clear();
@@ -493,7 +604,200 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             public Dictionary<DbPrecursor, Dictionary<ResultKey, DbPrecursorResult>> PrecursorResults { get; private set; }
         }
 
+        class PrecursorSummaryValues
+        {
+            private readonly List<DbPrecursorResult> _results = new List<DbPrecursorResult>();
+
+            public void Add(DbPrecursorResult result)
+            {
+                _results.Add(result);
+            }
+
+            private Statistics BestRetentionTimeStats
+            {
+                get
+                {
+                    return new Statistics(from result in _results
+                                          where result.BestRetentionTime.HasValue
+                                          select result.BestRetentionTime.Value);
+                }
+            }
+
+            private Statistics MaxFwhmStats
+            {
+                get
+                {
+                    return new Statistics(from result in _results
+                                          where result.MaxFwhm.HasValue
+                                          select result.MaxFwhm.Value);
+                }
+            }
+
+            private Statistics TotalAreaStats
+            {
+                get
+                {
+                    return new Statistics(from result in _results
+                                          where result.TotalArea.HasValue
+                                          select result.TotalArea.Value);
+                }
+            }
+
+            private Statistics TotalAreaRatioStats
+            {
+                get
+                {
+                    return new Statistics(from result in _results
+                                          where result.TotalAreaRatio.HasValue
+                                          select result.TotalAreaRatio.Value);
+                }
+            }
+
+            public void CalculateStatistics(DbPrecursorResultSummary precursorResultSummary)
+            {
+                precursorResultSummary.ReplicatePath = "/";
+                var bestRetentionTimeStats = BestRetentionTimeStats;
+                if (bestRetentionTimeStats.Length > 0)
+                {
+                    double minBestRetentionTime = bestRetentionTimeStats.Min();
+                    double maxBestRetentionTime = bestRetentionTimeStats.Max();
+
+                    precursorResultSummary.MinBestRetentionTime = minBestRetentionTime;
+                    precursorResultSummary.MaxBestRetentionTime = maxBestRetentionTime;
+                    precursorResultSummary.RangeBestRetentionTime = maxBestRetentionTime - minBestRetentionTime;
+                }
+                CalcSummary(bestRetentionTimeStats, (mean, stdev, cv) =>
+                                              {
+                                                  precursorResultSummary.MeanBestRetentionTime = mean;
+                                                  precursorResultSummary.StdevBestRetentionTime = stdev;
+                                                  precursorResultSummary.CvBestRetentionTime = cv;
+                                              });
+                CalcSummary(MaxFwhmStats, (mean, stdev, cv) =>
+                                              {
+                                                  precursorResultSummary.MeanMaxFwhm = mean;
+                                                  precursorResultSummary.StdevMaxFwhm = stdev;
+                                                  precursorResultSummary.CvMaxFwhm = cv;
+                                              });
+                CalcSummary(TotalAreaStats, (mean, stdev, cv) =>
+                                              {
+                                                  precursorResultSummary.MeanTotalArea = mean;
+                                                  precursorResultSummary.StdevTotalArea = stdev;
+                                                  precursorResultSummary.CvTotalArea = cv;
+                                              });
+                CalcSummary(TotalAreaRatioStats, (mean, stdev, cv) =>
+                                              {
+                                                  precursorResultSummary.MeanTotalAreaRatio = mean;
+                                                  precursorResultSummary.StdevTotalAreaRatio = stdev;
+                                                  precursorResultSummary.CvTotalAreaRatio = cv;
+                                              });
+            }
+        }
+
+        class TransitionSummaryValues
+        {
+            private readonly List<DbTransitionResult> _results = new List<DbTransitionResult>();
+
+            public void Add(DbTransitionResult result)
+            {
+                _results.Add(result);
+            }
+
+            private Statistics RetentionTimeStats
+            {
+                get
+                {
+                    return new Statistics(from result in _results
+                                          where result.RetentionTime.HasValue
+                                          select result.RetentionTime.Value);
+                }
+            }
+
+            private Statistics FwhmStats
+            {
+                get
+                {
+                    return new Statistics(from result in _results
+                                          where result.Fwhm.HasValue
+                                          select result.Fwhm.Value);
+                }
+            }
+
+            private Statistics AreaStats
+            {
+                get
+                {
+                    return new Statistics(from result in _results
+                                          where result.Area.HasValue
+                                          select result.Area.Value);
+                }
+            }
+
+            private Statistics AreaRatioStats
+            {
+                get
+                {
+                    return new Statistics(from result in _results
+                                          where result.AreaRatio.HasValue
+                                          select result.AreaRatio.Value);
+                }
+            }
+
+            public void CalculateStatistics(DbTransitionResultSummary transitionResultSummary)
+            {
+                transitionResultSummary.ReplicatePath = "/";
+                var retentionTimeStats = RetentionTimeStats;
+                if (retentionTimeStats.Length > 0)
+                {
+                    double minRetentionTime = retentionTimeStats.Min();
+                    double maxRetentionTime = retentionTimeStats.Max();
+
+                    transitionResultSummary.MinRetentionTime = minRetentionTime;
+                    transitionResultSummary.MaxRetentionTime = maxRetentionTime;
+                    transitionResultSummary.RangeRetentionTime = maxRetentionTime - minRetentionTime;
+                }
+                CalcSummary(retentionTimeStats, (mean, stdev, cv) =>
+                {
+                    transitionResultSummary.MeanRetentionTime = mean;
+                    transitionResultSummary.StdevRetentionTime = stdev;
+                    transitionResultSummary.CvRetentionTime = cv;
+                });
+                CalcSummary(FwhmStats, (mean, stdev, cv) =>
+                {
+                    transitionResultSummary.MeanFwhm = mean;
+                    transitionResultSummary.StdevFwhm = stdev;
+                    transitionResultSummary.CvFwhm = cv;
+                });
+                CalcSummary(AreaStats, (mean, stdev, cv) =>
+                {
+                    transitionResultSummary.MeanArea = mean;
+                    transitionResultSummary.StdevArea = stdev;
+                    transitionResultSummary.CvArea = cv;
+                });
+                CalcSummary(AreaRatioStats, (mean, stdev, cv) =>
+                {
+                    transitionResultSummary.MeanAreaRatio = mean;
+                    transitionResultSummary.StdevAreaRatio = stdev;
+                    transitionResultSummary.CvAreaRatio = cv;
+                });
+            }
+        }
+
+        public static void CalcSummary(Statistics stats, Action<double?, double?, double?> setStats)
+        {
+            double? mean = null, stdev = null, cv = null;
+            if (stats.Length > 0)
+            {
+                mean = stats.Mean();
+                if (stats.Length > 1)
+                {
+                    stdev = stats.StdDev();
+                    cv = stdev / mean;
+                }
+            }
+            setStats(mean, stdev, cv);
+        }
     }
+
     struct ResultKey
     {
         public readonly DbResultFile ResultFile;

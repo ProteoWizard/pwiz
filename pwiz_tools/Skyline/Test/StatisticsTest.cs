@@ -325,7 +325,7 @@ namespace pwiz.SkylineTest
                 yList.Add((double) peptideResults[i, 2]);
             }
             _xValues = new Statistics(xList.ToArray());
-            _yValues = new Statistics(yList.ToArray());
+            _yValues = new Statistics(yList);
             _xMember = (double) peptideResults[10, 1];
             _yMember = (double) peptideResults[10, 2];
 

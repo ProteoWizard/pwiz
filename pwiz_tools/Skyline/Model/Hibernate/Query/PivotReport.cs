@@ -26,14 +26,13 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 {
     public class PivotReport : SimpleReport
     {
-        public IList<Identifier> CrossTabHeaders { get; set; }
-        public IList<Identifier> CrossTabValues { get; set; }
-        public IList<Identifier> GroupByColumns { get; set; }
+        public IList<ReportColumn> CrossTabHeaders { get; set; }
+        public IList<ReportColumn> CrossTabValues { get; set; }
+        public IList<ReportColumn> GroupByColumns { get; set; }
         public override ReportSpec GetReportSpec(String name)
         {
             return new ReportSpec(name, new QueryDef
                                             {
-                                                Table = Table,
                                                 Select = Columns,
                                                 GroupBy = GroupByColumns,
                                                 CrossTabHeaders = CrossTabHeaders,
@@ -42,16 +41,16 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         }
         public override ResultSet Execute(Database database)
         {
-            List<Identifier> selectColumns = UnionAll(
+            List<ReportColumn> selectColumns = UnionAll(
                 Columns, GroupByColumns, CrossTabHeaders, CrossTabValues);
-            ResultSet flatResultSet = database.ExecuteQuery(Table, selectColumns);
+            ResultSet flatResultSet = database.ExecuteQuery(selectColumns);
             return new Pivoter(this, flatResultSet).GetPivotedResultSet();
         }
 
-        private static List<Identifier> UnionAll(params IList<Identifier>[] lists)
+        private static List<ReportColumn> UnionAll(params IList<ReportColumn>[] lists)
         {
-            List<Identifier> result = new List<Identifier>();
-            HashSet<Identifier> set = new HashSet<Identifier>();
+            List<ReportColumn> result = new List<ReportColumn>();
+            HashSet<ReportColumn> set = new HashSet<ReportColumn>();
             foreach (var list in lists)
             {
                 foreach (var id in list)
@@ -74,8 +73,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             private readonly List<RowKey> _pivotNames;
             private readonly IList<ColumnInfo> _normalColumns;
             private readonly IList<ColumnInfo> _pivotColumns;
-            private readonly IList<Identifier> _crosstabColumns;
-            private readonly IList<Identifier> _groupByColumns;
+            private readonly IList<ReportColumn> _crosstabColumns;
+            private readonly IList<ReportColumn> _groupByColumns;
             private readonly ResultSet _pivotedResultSet;
 
             public Pivoter(PivotReport pivotReport, ResultSet plainResultSet)
@@ -85,13 +84,13 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 _pivotColumns = new List<ColumnInfo>();
                 _groupByColumns = pivotReport.GroupByColumns;
                 _crosstabColumns = pivotReport.CrossTabHeaders;
-                foreach (Identifier identifier in pivotReport.Columns)
+                foreach (ReportColumn reportColumn in pivotReport.Columns)
                 {
-                    _normalColumns.Add(plainResultSet.GetColumnInfo(identifier));
+                    _normalColumns.Add(plainResultSet.GetColumnInfo(reportColumn));
                 }
-                foreach (Identifier identifier in pivotReport.CrossTabValues)
+                foreach (ReportColumn reportColumn in pivotReport.CrossTabValues)
                 {
-                    _pivotColumns.Add(plainResultSet.GetColumnInfo(identifier));
+                    _pivotColumns.Add(plainResultSet.GetColumnInfo(reportColumn));
                 }
                 Dictionary<RowKey, Dictionary<RowKey, int>> rowsById
                     = new Dictionary<RowKey, Dictionary<RowKey, int>>();
@@ -99,14 +98,14 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 for (int i = 0; i < plainResultSet.RowCount; i++)
                 {
                     RowKey groupByKey = new RowKey();
-                    foreach(var id in _groupByColumns)
+                    foreach(var reportColumn in _groupByColumns)
                     {
-                        groupByKey.Add(plainResultSet.GetValue(i, id));
+                        groupByKey.Add(plainResultSet.GetValue(i, reportColumn));
                     }
                     RowKey crossTabKey = new RowKey();
-                    foreach (var id in _crosstabColumns)
+                    foreach (var reportColumn in _crosstabColumns)
                     {
-                        crossTabKey.Add(plainResultSet.GetValue(i, id));
+                        crossTabKey.Add(plainResultSet.GetValue(i, reportColumn));
                     }
                     Dictionary<RowKey, int> pivotNameDict;
                     if (!rowsById.TryGetValue(groupByKey, out pivotNameDict))
@@ -139,7 +138,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             /// <summary>
             /// Returns the set of ColumnInfos for the transformed ResultSet.
             /// </summary>
-            List<ColumnInfo> GetPivotedColumnInfos()
+            private List<ColumnInfo> GetPivotedColumnInfos()
             {
                 List<ColumnInfo> result = new List<ColumnInfo>();
                 result.AddRange(_normalColumns);
@@ -158,7 +157,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             /// in the ColumnInfo will be unique in the new ResultSet, and prepends the
             /// crosstab name to the ColumnInfo caption.
             /// </summary>
-            ColumnInfo QualifyColumnInfo(ColumnInfo columnInfo, RowKey rowKey)
+            private static ColumnInfo QualifyColumnInfo(ColumnInfo columnInfo, RowKey rowKey)
             {
                 List<String> parts = new List<string>();
                 String caption = "";
@@ -170,7 +169,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                     parts.Add(str);
                     caption += str + " ";
                 }
-                parts.AddRange(columnInfo.Identifier.Parts);
+                parts.AddRange(columnInfo.ReportColumn.Column.Parts);
                 Identifier identifier = new Identifier(parts);
 
                 // TODO(nicksh): Something more general
@@ -188,7 +187,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 return new ColumnInfo
                 {
                     Format = columnInfo.Format,
-                    Identifier = identifier,
+                    ReportColumn = new ReportColumn(columnInfo.ReportColumn.Table, identifier),
                     Caption = caption + columnInfo.Caption,
                     ColumnType = columnInfo.ColumnType,
                     IsHidden = hidden
@@ -209,7 +208,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 int firstRow = rows.Values.First();
                 foreach (ColumnInfo columnInfo in _normalColumns)
                 {
-                    values.Add(_plainResultSet.GetValue(firstRow, columnInfo.Identifier));
+                    values.Add(_plainResultSet.GetValue(firstRow, columnInfo.ReportColumn));
                 }
                 // Then, for each of the crosstab values, add the additional columns.
                 foreach (RowKey pivotName in _pivotNames)
@@ -224,7 +223,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                         Object value = null;
                         if (rowIndex.HasValue)
                         {
-                            value = _plainResultSet.GetValue(rowIndex.Value, columnInfo.Identifier);
+                            value = _plainResultSet.GetValue(rowIndex.Value, columnInfo.ReportColumn);
                         }
                         values.Add(value);
                     }
@@ -251,7 +250,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 
             public override int GetHashCode()
             {
-                return ArrayUtil.GetHashCodeDeep(this);
+                return this.GetHashCodeDeep();
             }
 
             /// <summary>

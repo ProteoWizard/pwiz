@@ -24,5 +24,13 @@ namespace pwiz.Skyline.Model.Hibernate
     {
         public String Format { get; set; }
         public String FullName { get; set; }
+        public bool IsHidden { get; set; }
+    }
+
+    public enum TableType { unknown, node, result, summary }
+
+    public class QueryTable : Attribute
+    {
+        public TableType TableType { get; set; }
     }
 }

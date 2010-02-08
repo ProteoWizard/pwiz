@@ -39,6 +39,7 @@ namespace pwiz.SkylineTest.Reporting
             AssertValidProperties(typeof(DbTransition), 
                 IsotopeLabelPivotType.TRANSITION_CROSSTAB_VALUES);
         }
+
         [TestMethod]
         public void TestGroupByColumns()
         {
@@ -48,25 +49,29 @@ namespace pwiz.SkylineTest.Reporting
             {
                 foreach (Type table in schema.GetTables())
                 {
-                    var columns = pivotType.GetGroupByColumns(table);
+                    var reportColumns = new[] {new ReportColumn(table, "Id")};
+                    var columns = pivotType.GetGroupByColumns(reportColumns);
                     if (columns.Count == 0)
                     {
-                        Assert.IsNull(pivotType.GetCrosstabHeader(table));
+                        Assert.IsNull(pivotType.GetCrosstabHeader(reportColumns),
+                            string.Format("No groupby columns, but crosstab headers for table {0} and pivot type {1}", table, pivotType.GetType()));
                         continue;
                     }
                     foreach (var column in columns)
                     {
-                        Assert.IsNotNull(schema.GetColumnInfo(table, column));
+                        Assert.IsNotNull(schema.GetColumnInfo(column));
                     }
-                    Assert.IsNotNull(schema.GetColumnInfo(table, pivotType.GetCrosstabHeader(table)));
+                    Assert.IsNotNull(schema.GetColumnInfo(pivotType.GetCrosstabHeader(reportColumns)));
                 }
             }
         }
+
         private static void AssertValidProperty(Type type, String property)
         {
             Assert.IsNotNull(type.GetProperty(property),
                 "No such property " + property + " on type " + type);
         }
+
         private static void AssertValidProperties(Type type, ICollection<String> properties)
         {
             foreach (String property in properties)
