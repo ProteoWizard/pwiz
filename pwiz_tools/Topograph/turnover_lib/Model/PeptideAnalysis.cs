@@ -71,7 +71,7 @@ namespace pwiz.Topograph.Model
                 m => m.ExcludedMzs.ToByteArray(),
                 (m, v) => (m).ExcludedMzs.SetByteArray(v),
                 e => e.ExcludedMasses ?? new byte[0],
-                (e,v)=>e.ExcludedMasses = v == null || v.Length == 0 ? null : v);
+                (e,v)=>e.ExcludedMasses = ArrayConverter.ZeroLengthToNull(v));
             yield return Property<PeptideAnalysis, double?>(
                 m => m._massAccuracy, (m, v) => m._massAccuracy = v, 
                 e => e.MassAccuracy, (e, v) => e.MassAccuracy = v);

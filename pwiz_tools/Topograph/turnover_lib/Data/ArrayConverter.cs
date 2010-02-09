@@ -82,5 +82,19 @@ namespace pwiz.Topograph.Data
                 throw new IOException("Failure uncompressing data.");
             return uncompressed;
         }
+
+        /// <summary>
+        /// Workaround for MySQL driver/NHibernate issue.
+        /// NHibernate has trouble selecting zero-length arrays from MySQL.
+        /// bug #NH-2096
+        /// </summary>
+        public static T[] ZeroLengthToNull<T>(T[] array)
+        {
+            if (array == null || array.Length == 0)
+            {
+                return null;
+            }
+            return array;
+        }
     }
 }

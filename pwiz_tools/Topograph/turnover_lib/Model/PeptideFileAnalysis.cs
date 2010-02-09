@@ -73,7 +73,7 @@ namespace pwiz.Topograph.Model
                 m => m._excludedMzs.ToByteArray(), 
                 (m, v) => m._excludedMzs.SetByteArray(v),
                 e => e.ExcludedMasses ?? new byte[0],
-                (e, v) => e.ExcludedMasses = v == null || v.Length == 0 ? null : v);
+                (e, v) => e.ExcludedMasses = ArrayConverter.ZeroLengthToNull(v));
             yield return Property<PeptideFileAnalysis, bool>(
                 m => m._autoFindPeak,
                 (m, v) => m._autoFindPeak = v,
@@ -127,7 +127,8 @@ namespace pwiz.Topograph.Model
             dbPeptideFileAnalysis.AutoFindPeak = AutoFindPeak;
             if (OverrideExcludedMzs && _excludedMzs != null)
             {
-                dbPeptideFileAnalysis.ExcludedMasses = _excludedMzs.ToByteArray();
+                dbPeptideFileAnalysis.ExcludedMasses 
+                    = ArrayConverter.ZeroLengthToNull(_excludedMzs.ToByteArray());
             }
             else
             {
