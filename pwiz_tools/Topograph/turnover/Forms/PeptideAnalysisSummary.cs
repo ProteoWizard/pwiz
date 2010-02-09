@@ -93,6 +93,11 @@ namespace pwiz.Topograph.ui.Forms
             row.Cells[colDataFileLabel.Name].Value = peptideFileAnalysis.MsDataFile.Label;
             row.Cells[colPeakStart.Name].Value = peptideFileAnalysis.PeakStartTime;
             row.Cells[colPeakEnd.Name].Value = peptideFileAnalysis.PeakEndTime;
+            row.Cells[colPeakStart.Index].Style.Font 
+                = row.Cells[colPeakEnd.Index].Style.Font
+                = peptideFileAnalysis.AutoFindPeak
+                    ? row.DataGridView.Font
+                    : new Font(row.DataGridView.Font, FontStyle.Bold);
             var peptideDistribution =
                 peptideFileAnalysis.PeptideDistributions.GetChild(Workspace.GetDefaultPeptideQuantity());
             if (peptideDistribution != null)
