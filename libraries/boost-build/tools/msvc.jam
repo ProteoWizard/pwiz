@@ -521,7 +521,7 @@ rule copy-assemblies ( target : properties * )
                 common.copy $(target-filepath) : $(assembly-path) ;
                 DEPENDS $(target-filepath) : $(target-path) ;
                 DEPENDS $(target) : $(target-filepath) ;
-                JAM_SEMAPHORE on $(target-filepath) = "dotNetSemaphore" ;
+                #JAM_SEMAPHORE on $(target-filepath) = "dotNetSemaphore" ;
                 JAM_SEMAPHORE on $(target) = "dotNetSemaphore" ;
             }
         }
