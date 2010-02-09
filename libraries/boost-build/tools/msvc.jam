@@ -522,7 +522,7 @@ rule copy-assemblies ( target : properties * )
                 DEPENDS $(target-filepath) : $(target-path) ;
                 DEPENDS $(target) : $(target-filepath) ;
                 #JAM_SEMAPHORE on $(target-filepath) = "dotNetSemaphore" ;
-                JAM_SEMAPHORE on $(target) = "dotNetSemaphore" ;
+                #JAM_SEMAPHORE on $(target) = "dotNetSemaphore" ;
             }
         }
     }
