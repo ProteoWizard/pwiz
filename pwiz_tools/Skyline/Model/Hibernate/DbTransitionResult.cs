@@ -45,7 +45,9 @@ namespace pwiz.Skyline.Model.Hibernate
         public virtual double? Background { get; set; }
         [QueryColumn(Format = Formats.STANDARD_RATIO)]
         public virtual double? AreaRatio { get; set; }
-//        [QueryColumn(Format = Formats.PEAK_AREA)]
+        [QueryColumn(Format = Formats.PEAK_AREA_NORMALIZED)]
+        public virtual double? AreaNormalized { get; set; }
+        //        [QueryColumn(Format = Formats.PEAK_AREA)]
 //        public virtual double SignalToNoise { get; set; }
         [QueryColumn(Format = Formats.PEAK_AREA)]
         public virtual double? Height { get; set; }

@@ -31,6 +31,10 @@ namespace pwiz.SkylineTestFunctional
 {
     public abstract class AbstractFunctionalTest
     {
+        private const int SLEEP_INTERVAL = 100;
+        private const int WAIT_TIME = 30000;    // 30 seconds
+        private const int WAIT_CYCLES = WAIT_TIME/SLEEP_INTERVAL;
+
         /// <summary>
         ///Gets or sets the test context which provides
         ///information about and functionality for the current test run.
@@ -88,13 +92,13 @@ namespace pwiz.SkylineTestFunctional
 
         public static T WaitForOpenForm<T>() where T : Form
         {
-            for (int i = 0; i < 100; i ++ )
+            for (int i = 0; i < WAIT_CYCLES; i ++ )
             {
                 T tForm = FindOpenForm<T>();
                 if (tForm != null)
                     return tForm;
 
-                Thread.Sleep(100);
+                Thread.Sleep(SLEEP_INTERVAL);
             }
             return null;
         }
@@ -113,13 +117,13 @@ namespace pwiz.SkylineTestFunctional
 
         public static void WaitForClosedForm(Form formClose)
         {
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < WAIT_CYCLES; i++)
             {
                 bool isOpen = true;
                 Program.MainWindow.Invoke(new Action(() => isOpen = IsFormOpen(formClose)));
                 if (!isOpen)
                     return;
-                Thread.Sleep(100);
+                Thread.Sleep(SLEEP_INTERVAL);
             }
         }
 
@@ -132,24 +136,24 @@ namespace pwiz.SkylineTestFunctional
 
         public static bool WaitForCondition(Func<bool> func)
         {
-            for (int i = 0; i < 100; i ++)
+            for (int i = 0; i < WAIT_CYCLES; i ++)
             {
                 if (func())
                     return true;
-                Thread.Sleep(100);
+                Thread.Sleep(SLEEP_INTERVAL);
             }
             return false;
         }
 
         public static bool WaitForConditionUI(Func<bool> func)
         {
-            for (int i = 0; i < 100; i++)
+            for (int i = 0; i < WAIT_CYCLES; i++)
             {
                 bool isCondition = false;
                 Program.MainWindow.Invoke(new Action(() => isCondition = func()));                
                 if (isCondition)
                     return true;
-                Thread.Sleep(100);
+                Thread.Sleep(SLEEP_INTERVAL);
             }
             return false;
         }
@@ -185,7 +189,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 while (Program.MainWindow == null || !Program.MainWindow.IsHandleCreated)
                 {
-                    Thread.Sleep(100);
+                    Thread.Sleep(SLEEP_INTERVAL);
                 }
                 Settings.Default.Reset();
 

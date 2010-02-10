@@ -57,6 +57,8 @@ namespace pwiz.Skyline.Model
             : base(group.TransitionGroup, group.Annotations, children, group.AutoManageChildren)
         {
             PrecursorMz = precursorMz;
+            LibInfo = group.LibInfo;
+            Results = group.Results;
         }
 
         public TransitionGroup TransitionGroup { get { return (TransitionGroup) Id; }}
@@ -289,9 +291,11 @@ namespace pwiz.Skyline.Model
                 foreach (TransitionDocNode nodeTransition in Children)
                 {
                     var tran = nodeTransition.Transition;
+                    var annotations = nodeTransition.Annotations;   // Don't lose annotations
+                    var results = nodeTransition.Results;           // Results changes happen later
                     double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran);
                     var info = TransitionDocNode.GetLibInfo(tran, massH, transitionRanks);
-                    var nodeNew = new TransitionDocNode(tran, massH, info);
+                    var nodeNew = new TransitionDocNode(tran, annotations, massH, info, results);
 
                     Helpers.AssignIfEquals(ref nodeNew, nodeTransition);
                     childrenNew.Add(nodeNew);

@@ -1516,6 +1516,7 @@ namespace pwiz.Skyline.Model.Results
                 private const double NOISE_CORRELATION_THRESHOLD = 0.95;
                 private const double TIME_DELTA_VARIATION_THRESHOLD = 0.001;
                 private const double TIME_DELTA_MAX_RATIO_THRESHOLD = 25;
+                private const int MINIMUM_DELTAS_PER_CHROM = 4;
                 private const int MINIMUM_PEAKS = 3;
 
                 public void PickChromatogramPeaks()
@@ -1851,28 +1852,33 @@ namespace pwiz.Skyline.Model.Results
 
                     // If time deltas are sufficiently evenly spaced, then no further processing
                     // is necessary.
-                    if (!foundVariation)
+                    if (!foundVariation && listDeltas.Count > 0)
                         return;
 
                     // Interpolate the existing points onto time intervals evently spaced
                     // by the minimum interval observed in the measuered data.
+                    double intervalDelta = 0;
                     var statDeltas = new Statistics(listDeltas);
-                    double[] bestDeltas = statDeltas.Modes();
-                    double intervalDelta;
-                    if (bestDeltas.Length == 0 || bestDeltas.Length > listDeltas.Count/2)
-                        intervalDelta = statDeltas.Min();
-                    else if (bestDeltas.Length == 1)
-                        intervalDelta = bestDeltas[0];
-                    else
+                    if (statDeltas.Length > 0)
                     {
-                        var statIntervals = new Statistics(bestDeltas);
-                        intervalDelta = statIntervals.Min();
+                        double[] bestDeltas = statDeltas.Modes();
+                        if (bestDeltas.Length == 0 || bestDeltas.Length > listDeltas.Count / 2)
+                            intervalDelta = statDeltas.Min();
+                        else if (bestDeltas.Length == 1)
+                            intervalDelta = bestDeltas[0];
+                        else
+                        {
+                            var statIntervals = new Statistics(bestDeltas);
+                            intervalDelta = statIntervals.Min();
+                        }
                     }
 
                     intervalDelta = EnsureMinDelta(intervalDelta);
 
                     bool inferZeros = false;
-                    if (_isProcessedScans && statDeltas.Max() / intervalDelta > TIME_DELTA_MAX_RATIO_THRESHOLD)
+                    if (_isProcessedScans &&
+                            (statDeltas.Length < _listChromData.Count*MINIMUM_DELTAS_PER_CHROM ||
+                             statDeltas.Max() / intervalDelta > TIME_DELTA_MAX_RATIO_THRESHOLD))
                     {
                         inferZeros = true; // Verbose expression for easy breakpoint placement
 
@@ -2011,10 +2017,10 @@ namespace pwiz.Skyline.Model.Results
                             intervalDelta = (intervalDelta*i + delta)/(i + 1);
                         }
                     }
-                    else if (listMaxDeltas.Count > 0 && listMaxDeltas[0] / magnitude > intervalDelta)
-                    {
-                        Console.WriteLine("Max delta {0} too much larger than {1}", listMaxDeltas[0], intervalDelta);
-                    }
+//                    else if (listMaxDeltas.Count > 0 && listMaxDeltas[0] / magnitude > intervalDelta)
+//                    {
+//                        Console.WriteLine("Max delta {0} too much larger than {1}", listMaxDeltas[0], intervalDelta);
+//                    }
                     return intervalDelta;
                 }
 

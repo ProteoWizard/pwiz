@@ -95,6 +95,7 @@
     <property name="TotalBackground"/>
     <property name="TotalAreaRatio" />
     <!-- <property name="StdevAreaRatio" /> -->
+    <property name="TotalAreaNormalized" />
     <property name="LibraryDotProduct" />
     <!-- <property name="TotalSignalToNoise" /> -->
     <property name="UserSetTotal" />
@@ -124,6 +125,9 @@
     <property name="MeanTotalAreaRatio" />
     <property name="StdevTotalAreaRatio" />
     <property name="CvTotalAreaRatio" />
+    <property name="MeanTotalAreaNormalized" />
+    <property name="StdevTotalAreaNormalized" />
+    <property name="CvTotalAreaNormalized" />
   </class>
   <class name="DbTransition">
     <id name="Id">
@@ -156,6 +160,7 @@
     <property name="Area" />
     <property name="Background" />
     <property name="AreaRatio" />
+    <property name="AreaNormalized" />
     <!--    <property name="SignalToNoise" /> -->
     <property name="Height" />
     <property name="PeakRank" />
@@ -184,5 +189,8 @@
     <property name="MeanAreaRatio" />
     <property name="StdevAreaRatio" />
     <property name="CvAreaRatio" />
+    <property name="MeanAreaNormalized" />
+    <property name="StdevAreaNormalized" />
+    <property name="CvAreaNormalized" />
   </class>
 </hibernate-mapping>

@@ -401,6 +401,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 {
                     var results = nodeGroup.Results[i];
                     var optFunction = docInfo.MeasuredResults.Chromatograms[i].OptimizationFunction;
+                    var replicateSummary = docInfo.ReplicateSummaries[i];
 
                     bool success = enumReplicates.MoveNext();   // synch with loop
                     Debug.Assert(success);
@@ -438,6 +439,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             // optimization data will join with those with it.
                             OptStep = chromInfo.OptimizationStep,
                         };
+                        if (chromInfo.Area.HasValue && replicateSummary.SumTotalArea != 0)
+                            precursorResult.TotalAreaNormalized = chromInfo.Area/replicateSummary.SumTotalArea;
                         AddAnnotations(precursorResult, chromInfo.Annotations);
                         // Set the optimization step no matter what, so that replicates without
                         // optimization data will join with those with it.
@@ -459,7 +462,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                         }
                         session.Save(precursorResult);
                         precursorResults.Add(new ResultKey(resultFile, chromInfo.OptimizationStep), precursorResult);
-                        precursorSummaryValues.Add(precursorResult);
+                        if (chromInfo.OptimizationStep == 0)
+                            precursorSummaryValues.Add(precursorResult);
                     }
                 }
                 
@@ -516,8 +520,11 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 var transitionSummaryValues = new TransitionSummaryValues();
 
                 var enumReplicates = docInfo.ReplicateResultFiles.GetEnumerator();
-                foreach (var results in nodeTran.Results)
+                for (int i = 0; i < nodeTran.Results.Count; i++)
                 {
+                    var results = nodeTran.Results[i];
+                    var replicateSummary = docInfo.ReplicateSummaries[i];
+
                     bool success = enumReplicates.MoveNext();   // synch with foreach
                     Debug.Assert(success);
 
@@ -549,6 +556,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             transitionResult.StartTime = chromInfo.StartRetentionTime;
                             transitionResult.EndTime = chromInfo.EndRetentionTime;
                             transitionResult.Area = chromInfo.Area;
+                            if (replicateSummary.SumTotalArea != 0)
+                                transitionResult.AreaNormalized = chromInfo.Area/replicateSummary.SumTotalArea;
                             transitionResult.Background = chromInfo.BackgroundArea;
                             // transitionResult.SignalToNoise = SignalToNoise(chromInfo.Area, chromInfo.BackgroundArea);
                             transitionResult.Height = chromInfo.Height;
@@ -557,7 +566,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             transitionResult.PeakRank = chromInfo.Rank;
                         }
                         session.Save(transitionResult);
-                        transitionSummaryValues.Add(transitionResult);
+                        if (chromInfo.OptimizationStep == 0)
+                            transitionSummaryValues.Add(transitionResult);
                     }
                 }
 
@@ -590,6 +600,29 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             {
                 Settings = srmDocument.Settings;
 
+                // Create replicate summaries
+                ReplicateSummaries = new List<ReplicateSummaryValues>();
+                if (Settings.HasResults)
+                {
+                    for (int i = 0; i < MeasuredResults.Chromatograms.Count; i++)
+                    {
+                        double sumTotalArea = 0;
+                        foreach (var nodeGroup in srmDocument.TransitionGroups)
+                        {
+                            // It should not be possible to not have results when
+                            // the settings have results, but just to be safe
+                            if (!nodeGroup.HasResults || nodeGroup.Results[i] == null)
+                                continue;
+
+                            foreach (var chromInfo in nodeGroup.Results[i])
+                            {
+                                if (chromInfo.OptimizationStep == 0)
+                                    sumTotalArea += chromInfo.Area ?? 0;
+                            }
+                        }
+                        ReplicateSummaries.Add(new ReplicateSummaryValues(sumTotalArea));
+                    }
+                }
                 ReplicateResultFiles = new List<List<DbResultFile>>();
                 ProteinResults = new Dictionary<DbProtein, Dictionary<DbResultFile, DbProteinResult>>();
                 PeptideResults = new Dictionary<DbPeptide, Dictionary<DbResultFile, DbPeptideResult>>();
@@ -598,10 +631,21 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             public SrmSettings Settings { get; private set; }
             public PeptidePrediction PeptidePrediction { get { return Settings.PeptideSettings.Prediction; } }
             public MeasuredResults MeasuredResults { get { return Settings.MeasuredResults; } }
+            public List<ReplicateSummaryValues> ReplicateSummaries { get; private set; }
             public List<List<DbResultFile>> ReplicateResultFiles { get; private set; }
             public Dictionary<DbProtein, Dictionary<DbResultFile, DbProteinResult>> ProteinResults { get; private set; }
             public Dictionary<DbPeptide, Dictionary<DbResultFile, DbPeptideResult>> PeptideResults { get; private set; }
             public Dictionary<DbPrecursor, Dictionary<ResultKey, DbPrecursorResult>> PrecursorResults { get; private set; }
+        }
+
+        class ReplicateSummaryValues
+        {
+            public ReplicateSummaryValues(double sumTotalArea)
+            {
+                SumTotalArea = sumTotalArea;
+            }
+
+            public double SumTotalArea { get; private set; }
         }
 
         class PrecursorSummaryValues
@@ -653,6 +697,16 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 }
             }
 
+            private Statistics TotalAreaNormalizedStats
+            {
+                get
+                {
+                    return new Statistics(from result in _results
+                                          where result.TotalAreaNormalized.HasValue
+                                          select result.TotalAreaNormalized.Value);
+                }
+            }
+
             public void CalculateStatistics(DbPrecursorResultSummary precursorResultSummary)
             {
                 precursorResultSummary.ReplicatePath = "/";
@@ -667,29 +721,35 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                     precursorResultSummary.RangeBestRetentionTime = maxBestRetentionTime - minBestRetentionTime;
                 }
                 CalcSummary(bestRetentionTimeStats, (mean, stdev, cv) =>
-                                              {
-                                                  precursorResultSummary.MeanBestRetentionTime = mean;
-                                                  precursorResultSummary.StdevBestRetentionTime = stdev;
-                                                  precursorResultSummary.CvBestRetentionTime = cv;
-                                              });
+                {
+                    precursorResultSummary.MeanBestRetentionTime = mean;
+                    precursorResultSummary.StdevBestRetentionTime = stdev;
+                    precursorResultSummary.CvBestRetentionTime = cv;
+                });
                 CalcSummary(MaxFwhmStats, (mean, stdev, cv) =>
-                                              {
-                                                  precursorResultSummary.MeanMaxFwhm = mean;
-                                                  precursorResultSummary.StdevMaxFwhm = stdev;
-                                                  precursorResultSummary.CvMaxFwhm = cv;
-                                              });
+                {
+                    precursorResultSummary.MeanMaxFwhm = mean;
+                    precursorResultSummary.StdevMaxFwhm = stdev;
+                    precursorResultSummary.CvMaxFwhm = cv;
+                });
                 CalcSummary(TotalAreaStats, (mean, stdev, cv) =>
-                                              {
-                                                  precursorResultSummary.MeanTotalArea = mean;
-                                                  precursorResultSummary.StdevTotalArea = stdev;
-                                                  precursorResultSummary.CvTotalArea = cv;
-                                              });
+                {
+                    precursorResultSummary.MeanTotalArea = mean;
+                    precursorResultSummary.StdevTotalArea = stdev;
+                    precursorResultSummary.CvTotalArea = cv;
+                });
                 CalcSummary(TotalAreaRatioStats, (mean, stdev, cv) =>
-                                              {
-                                                  precursorResultSummary.MeanTotalAreaRatio = mean;
-                                                  precursorResultSummary.StdevTotalAreaRatio = stdev;
-                                                  precursorResultSummary.CvTotalAreaRatio = cv;
-                                              });
+                {
+                    precursorResultSummary.MeanTotalAreaRatio = mean;
+                    precursorResultSummary.StdevTotalAreaRatio = stdev;
+                    precursorResultSummary.CvTotalAreaRatio = cv;
+                });
+                CalcSummary(TotalAreaNormalizedStats, (mean, stdev, cv) =>
+                {
+                    precursorResultSummary.MeanTotalAreaNormalized = mean;
+                    precursorResultSummary.StdevTotalAreaNormalized = stdev;
+                    precursorResultSummary.CvTotalAreaNormalized = cv;
+                });
             }
         }
 
@@ -742,6 +802,16 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 }
             }
 
+            private Statistics AreaNormalizedStats
+            {
+                get
+                {
+                    return new Statistics(from result in _results
+                                          where result.AreaNormalized.HasValue
+                                          select result.AreaNormalized.Value);
+                }
+            }
+
             public void CalculateStatistics(DbTransitionResultSummary transitionResultSummary)
             {
                 transitionResultSummary.ReplicatePath = "/";
@@ -778,6 +848,12 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                     transitionResultSummary.MeanAreaRatio = mean;
                     transitionResultSummary.StdevAreaRatio = stdev;
                     transitionResultSummary.CvAreaRatio = cv;
+                });
+                CalcSummary(AreaNormalizedStats, (mean, stdev, cv) =>
+                {
+                    transitionResultSummary.MeanAreaNormalized = mean;
+                    transitionResultSummary.StdevAreaNormalized = stdev;
+                    transitionResultSummary.CvAreaNormalized = cv;
                 });
             }
         }
