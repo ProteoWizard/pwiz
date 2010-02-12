@@ -29,6 +29,7 @@
 #include "boost/iostreams/positioning.hpp"
 #include <iostream>
 #include <fstream>
+#include <cstring>
 
 
 using namespace std;

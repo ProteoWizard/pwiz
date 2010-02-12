@@ -31,6 +31,7 @@
 #include "pwiz/utility/misc/Base64.hpp"
 #include <iostream>
 #include <iterator>
+#include <cstring>
 
 
 using namespace std;

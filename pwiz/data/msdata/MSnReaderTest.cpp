@@ -29,6 +29,7 @@
 #include "boost/foreach.hpp"
 #include <iostream>
 #include <vector>
+#include <cstring>
 
 
 using namespace pwiz::data;
