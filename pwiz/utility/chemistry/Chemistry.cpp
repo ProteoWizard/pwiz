@@ -98,8 +98,13 @@ class RecordData : public boost::singleton<RecordData>
             record.atomicNumber = it->atomicNumber;
             record.atomicWeight = it->atomicWeight;
             
+            record.monoisotope.abundance = 0;
             for (detail::Isotope* p=it->isotopes; p<it->isotopes+it->isotopesSize; ++p)
-                record.isotopes.push_back(MassAbundance(p->mass, p->abundance));        
+            {
+                record.isotopes.push_back(MassAbundance(p->mass, p->abundance));
+                if (p->abundance > record.monoisotope.abundance)
+                    record.monoisotope = record.isotopes.back();
+            }
 
             data_[it->type] = record;        
         }
@@ -123,7 +128,7 @@ PWIZ_API_DECL const Info::Record& Info::record(Type type) {return RecordData::in
 
 PWIZ_API_DECL ostream& operator<<(ostream& os, const Info::Record& r)
 {
-    cout << r.symbol << " " << r.atomicNumber << " " << r.atomicWeight << " ";
+    cout << r.symbol << " " << r.atomicNumber << " " << r.atomicWeight << " " << r.monoisotope << " ";
     copy(r.isotopes.begin(), r.isotopes.end(), ostream_iterator<MassAbundance>(cout, " "));
     return os;
 }
@@ -182,7 +187,7 @@ class Formula::Impl
                 {
                     const Element::Info::Record& r = Element::Info::record(Element::Type(i));
                     if (!r.isotopes.empty())
-                        monoMass += r.isotopes[0].mass * count;
+                        monoMass += r.monoisotope.mass * count;
                     avgMass += r.atomicWeight * count;
                 }
             }
@@ -196,7 +201,7 @@ class Formula::Impl
                 {
                     const Element::Info::Record& r = Element::Info::record(it->first);
                     if (!r.isotopes.empty())
-                        monoMass += r.isotopes[0].mass * it->second;
+                        monoMass += r.monoisotope.mass * it->second;
                     avgMass += r.atomicWeight * it->second;
                 }
             }
@@ -264,7 +269,7 @@ Formula::Impl::Impl(const string& formula)
 
         const Element::Info::Record& r = Element::Info::record(type);
         if (!r.isotopes.empty())
-            monoMass += r.isotopes[0].mass * count;
+            monoMass += r.monoisotope.mass * count;
         avgMass += r.atomicWeight * count;
     }
 }

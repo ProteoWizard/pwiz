@@ -105,6 +105,7 @@ void RecordData::initializeRecords()
     records_[Valine] = createRecord("Valine", "Val", 'V', "C5 H9 N1 O1 S0", .066);
     records_[Tryptophan] = createRecord("Tryptophan", "Trp", 'W', "C11 H10 N2 O1 S0", .014);
     records_[Tyrosine] = createRecord("Tyrosine", "Tyr", 'Y', "C9 H9 N1 O2 S0", .032);
+    records_[Selenocysteine] = createRecord("Selenocysteine", "Sec", 'U', "C3 H7 N1 O2 Se1", .00);
     records_[AspX] = createRecord("AspX", "Asx", 'B', "C4 H6 N2 O2 S0", .00);
     records_[GlutX] = createRecord("GlutX", "Glx", 'Z', "C5 H8 N2 O2 S0", .00);
     records_[Unknown] = createRecord("Unknown", "Unk", 'X', "C5 H6 N1 O1 S0", .00);

@@ -62,6 +62,7 @@ enum PWIZ_API_DECL Type
     Valine,
     Tryptophan,
     Tyrosine,
+    Selenocysteine,
     AspX,
     GlutX,
     Unknown

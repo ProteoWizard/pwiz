@@ -92,6 +92,7 @@ TestAminoAcid testAminoAcids[] =
     { 147.068414, 147.1739, 'F' },    // Phenylalanine
     { 97.0527640, 97.11520, 'P' },    // Proline
     { 87.0320280, 87.07730, 'S' },    // Serine
+    { 168.964200, 168.0532, 'U' },    // Selenocysteine
     { 101.047679, 101.1039, 'T' },    // Threonine
     { 186.079313, 186.2099, 'W' },    // Tryptophan
     { 163.063329, 163.1733, 'Y' },    // Tyrosine
@@ -134,6 +135,7 @@ void test()
     unit_assert(AminoAcid::Info::record(Alanine).formula[O] == 2);
     unit_assert(AminoAcid::Info::record(Alanine).formula[S] == 0);
 
+    unit_assert(AminoAcid::Info::record(Selenocysteine).formula[Se] == 1);
 
     // test single amino acids
     for (int i=0; i < 22; ++i) // skip X for now

@@ -107,6 +107,7 @@ struct PWIZ_API_DECL Record
     std::string symbol;
     int atomicNumber;
     double atomicWeight;
+    MassAbundance monoisotope; /// the most abundant isotope
     MassDistribution isotopes;
 };
 
