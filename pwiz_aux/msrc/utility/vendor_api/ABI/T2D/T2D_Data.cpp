@@ -37,61 +37,17 @@
 
 
 #pragma managed
-#include <gcroot.h>
+#include "pwiz/utility/misc/cpp_cli_utilities.hpp"
+using namespace pwiz::util;
+
 
 using System::String;
 using System::Object;
 using System::IntPtr;
 using System::Runtime::InteropServices::Marshal;
 
+
 namespace DE = DataExplorer;
-
-#include <vcclr.h>
-namespace {
-
-std::string ToStdString(System::String^ source)
-{
-    if (String::IsNullOrEmpty(source))
-        return "";
-
-	int len = (( source->Length+1) * 2);
-	char *ch = new char[ len ];
-	bool result ;
-	{
-		pin_ptr<const wchar_t> wch = PtrToStringChars( source );
-		result = wcstombs( ch, wch, len ) != -1;
-	}
-	std::string target = ch;
-	delete ch;
-	if(!result)
-        throw gcnew System::Exception("error converting System::String to std::string");
-	return target;
-}
-
-System::String^ ToSystemString(const std::string& source)
-{
-    return gcnew System::String(source.c_str());
-}
-
-template<typename managed_value_type, typename native_value_type>
-void ToStdVector(cli::array<managed_value_type>^ managedArray, std::vector<native_value_type>& stdVector)
-{
-    stdVector.resize(managedArray->Length);
-    for (int i=0; i < managedArray->Length; ++i)
-        stdVector[i] = static_cast<native_value_type>(managedArray[i]);
-}
-
-template<typename managed_value_type, typename native_value_type>
-void ToAutomationVector(cli::array<managed_value_type>^ managedArray, automation_vector<native_value_type>& automationArray)
-{
-    VARIANT v;
-    ::VariantInit(&v);
-    IntPtr vPtr = (IntPtr) &v;
-    Marshal::GetNativeVariantForObject((Object^) managedArray, vPtr);
-    automationArray.attach(v);
-}
-
-} // namespace
 
 
 namespace pwiz {
@@ -466,7 +422,8 @@ SpectrumPtr DataImpl::getSpectrum(std::size_t index) const
 }
 
 
-DataPtr Data::create(const string& datapath)
+#pragma unmanaged
+PWIZ_API_DECL DataPtr Data::create(const string& datapath)
 {
     return DataPtr(new DataImpl(datapath));
 }
