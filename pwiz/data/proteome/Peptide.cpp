@@ -72,7 +72,7 @@ class Peptide::Impl
 
     Impl(const Impl& other)
         :   sequence_(other.sequence_), mods_(other.mods_ ? new ModificationMap(*other.mods_) : 0),
-            monoMass_(other.monoMass_), avgMass_(other.avgMass_)
+            monoMass_(other.monoMass_), avgMass_(other.avgMass_), valid_(other.valid_)
     {
     }
 
@@ -92,7 +92,8 @@ class Peptide::Impl
 
         string& sequence = *sequence_;
 
-        if (sequence.empty())
+        // an empty or unparsable sequence returns an empty formula
+        if (sequence.empty() || !valid_)
             return Formula();
 
         Formula formula;
@@ -180,6 +181,7 @@ class Peptide::Impl
     shared_ptr<ModificationMap> mods_;
     double monoMass_;
     double avgMass_;
+    bool valid_;
 
     inline void initMods()
     {
@@ -190,6 +192,7 @@ class Peptide::Impl
     inline void parse(ModificationParsing mp, ModificationDelimiter md)
     {
         string& sequence = *sequence_;
+        valid_ = false;
 
         // strip non-AA characters and behave according to the specified parsing style
         char startDelimiter, endDelimiter;
@@ -209,82 +212,93 @@ class Peptide::Impl
                 break;
         }
 
-        switch (mp)
+        try
         {
-            case ModificationParsing_Off:
-                for (size_t i=0, end=sequence.length(); i < end; ++i)
-                    try
-                    {
-                        AminoAcid::Info::record(sequence[i]);
-                    }
-                    catch (runtime_error&)
-                    {
-                        throw runtime_error("[Peptide::Impl::parse()] Invalid amino acid in sequence " + sequence);
-                    }
-                break;
+            switch (mp)
+            {
+                case ModificationParsing_Off:
+                    for (size_t i=0, end=sequence.length(); i < end; ++i)
+                        try
+                        {
+                            AminoAcid::Info::record(sequence[i]);
+                        }
+                        catch (runtime_error&)
+                        {
+                            throw runtime_error("[Peptide::Impl::parse()] Invalid amino acid in sequence " + sequence);
+                        }
+                    break;
 
-            case ModificationParsing_ByFormula:
-                for (size_t i=0; i < sequence.length(); ++i)
-                {
-                    char& c = sequence[i];
-                    if (c == startDelimiter)
+                case ModificationParsing_ByFormula:
+                    for (size_t i=0; i < sequence.length(); ++i)
                     {
-                        for (size_t j=i+1; j < sequence.length(); ++j)
-                            if (sequence[j] == endDelimiter)
-                            {
-                                if (parseModByFormula(sequence, i, j))
-                                    break;
-                                throw runtime_error("[Peptide::Impl::parse()] Expected a chemical formula for all modifications in sequence " + sequence);
-                            }
-                            else if (j+1 == sequence.length())
-                                throw runtime_error("[Peptide::Impl::parse()] Modification started but not ended in sequence " + sequence);
+                        char& c = sequence[i];
+                        if (c == startDelimiter)
+                        {
+                            for (size_t j=i+1; j < sequence.length(); ++j)
+                                if (sequence[j] == endDelimiter)
+                                {
+                                    if (parseModByFormula(sequence, i, j))
+                                        break;
+                                    throw runtime_error("[Peptide::Impl::parse()] Expected a chemical formula for all modifications in sequence " + sequence);
+                                }
+                                else if (j+1 == sequence.length())
+                                    throw runtime_error("[Peptide::Impl::parse()] Modification started but not ended in sequence " + sequence);
+                        }
                     }
-                }
-                break;
+                    break;
 
-            case ModificationParsing_ByMass:
-                for (size_t i=0; i < sequence.length(); ++i)
-                {
-                    char& c = sequence[i];
-                    if (c == startDelimiter)
+                case ModificationParsing_ByMass:
+                    for (size_t i=0; i < sequence.length(); ++i)
                     {
-                        for (size_t j=i+1; j < sequence.length(); ++j)
-                            if (sequence[j] == endDelimiter)
-                            {
-                                if (parseModByMass(sequence, i, j))
-                                    break;
-                                throw runtime_error("[Peptide::Impl::parse()] Expected one or two comma-separated numbers in sequence " + sequence);
-                            }
-                            else if (j+1 == sequence.length())
-                                throw runtime_error("[Peptide::Impl::parse()] Modification started but not ended in sequence " + sequence);
+                        char& c = sequence[i];
+                        if (c == startDelimiter)
+                        {
+                            for (size_t j=i+1; j < sequence.length(); ++j)
+                                if (sequence[j] == endDelimiter)
+                                {
+                                    if (parseModByMass(sequence, i, j))
+                                        break;
+                                    throw runtime_error("[Peptide::Impl::parse()] Expected one or two comma-separated numbers in sequence " + sequence);
+                                }
+                                else if (j+1 == sequence.length())
+                                    throw runtime_error("[Peptide::Impl::parse()] Modification started but not ended in sequence " + sequence);
+                        }
                     }
-                }
-                break;
+                    break;
 
-            default:
-            case ModificationParsing_Auto:
-                for (size_t i=0; i < sequence.length(); ++i)
-                {
-                    char& c = sequence[i];
-                    if (c == startDelimiter)
+                default:
+                case ModificationParsing_Auto:
+                    for (size_t i=0; i < sequence.length(); ++i)
                     {
-                        for (size_t j=i+1; j < sequence.length(); ++j)
-                            if (sequence[j] == endDelimiter)
-                            {
-                                if (parseModByFormula(sequence, i, j) ||
-                                    parseModByMass(sequence, i, j))
-                                    break;
-                                throw runtime_error("[Peptide::Impl::parse()] Modification not parseable as either a formula or a mass in sequence " + sequence);
-                            }
-                            else if (j+1 == sequence.length())
-                                throw runtime_error("[Peptide::Impl::parse()] Modification started but not ended in sequence " + sequence);
+                        char& c = sequence[i];
+                        if (c == startDelimiter)
+                        {
+                            for (size_t j=i+1; j < sequence.length(); ++j)
+                                if (sequence[j] == endDelimiter)
+                                {
+                                    if (parseModByFormula(sequence, i, j) ||
+                                        parseModByMass(sequence, i, j))
+                                        break;
+                                    throw runtime_error("[Peptide::Impl::parse()] Modification not parseable as either a formula or a mass in sequence " + sequence);
+                                }
+                                else if (j+1 == sequence.length())
+                                    throw runtime_error("[Peptide::Impl::parse()] Modification started but not ended in sequence " + sequence);
+                        }
                     }
-                }
+            }
+
+            valid_ = true;
+            Formula unmodifiedFormula = formula(false);
+            monoMass_ = unmodifiedFormula.monoisotopicMass();
+            avgMass_ = unmodifiedFormula.molecularWeight();
+        }
+        catch (exception&)
+        {
+            // TODO: log a warning about an unparsable peptide with no mass information
+            monoMass_ = 0;
+            avgMass_ = 0;
         }
 
-        Formula unmodifiedFormula = formula(false);
-        monoMass_ = unmodifiedFormula.monoisotopicMass();
-        avgMass_ = unmodifiedFormula.molecularWeight();
     }
 
     inline bool parseModByFormula(string& sequence_, size_t& i, size_t& j)
@@ -384,13 +398,15 @@ PWIZ_API_DECL Formula Peptide::formula(bool modified) const
 
 PWIZ_API_DECL double Peptide::monoisotopicMass(int charge, bool modified) const
 {
-    return charge == 0 ? impl_->monoMass(modified)
+    return impl_->monoMass(false) == 0 ? 0 :
+           charge == 0 ? impl_->monoMass(modified)
                        : (impl_->monoMass(modified) + chemistry::Proton * charge) / charge;
 }
 
 PWIZ_API_DECL double Peptide::molecularWeight(int charge, bool modified) const
 {
-    return charge == 0 ? impl_->avgMass(modified)
+    return impl_->avgMass(false) == 0 ? 0 :
+           charge == 0 ? impl_->avgMass(modified)
                        : (impl_->avgMass(modified) + chemistry::Proton * charge) / charge;
 }
 

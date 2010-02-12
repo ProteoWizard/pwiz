@@ -75,7 +75,7 @@ TestPeptide testPeptides[] =
     { "DEERLICKER", 1289.6398, 1290.6477, 645.8278, 1290.44644, 1291.4537, 646.2305 },
     { "ELVISLIVES", 1100.6329, 1101.6408, 551.3243, 1101.29052, 1102.2978, 551.6525 },
     { "THEQUICKRWNFMPSVERTHELAYDG", 3215.3820, 3216.3899, 1608.6989, 3216.42366, 3217.43156, 1609.21973 },    
-    //{ "(THEQICKBRWNFXMPSVERTHELAZYDG)", 3402.5874, 3404.7792 }
+    { "¡No?PepTidE...", 0, 0, 0, 0, 0, 0 }
 };
 
 const size_t testPeptidesSize = sizeof(testPeptides)/sizeof(TestPeptide);
