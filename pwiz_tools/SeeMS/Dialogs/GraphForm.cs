@@ -339,7 +339,10 @@ namespace seems
                 if (paneList.Count > 0 && paneList[0].Count > 0)
                 {
                     this.Text = paneList[0][0].Id;
-                    this.TabText = pwiz.CLI.msdata.id.abbreviate(paneList[0][0].Id);
+                    if (paneList[0][0].IsMassSpectrum)
+                        this.TabText = pwiz.CLI.msdata.id.abbreviate(paneList[0][0].Id);
+                    else
+                        this.TabText = this.Text;
                 }
 
                 if( pane.XAxis.Scale.MaxAuto )
