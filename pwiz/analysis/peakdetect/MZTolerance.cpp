@@ -37,7 +37,7 @@ namespace analysis {
 using namespace std;
 
 
-ostream& PWIZ_API_DECL operator<<(ostream& os, const MZTolerance& mzt)
+PWIZ_API_DECL ostream& operator<<(ostream& os, const MZTolerance& mzt)
 {
     const char* units = (mzt.units==MZTolerance::MZ) ? "mz" : "ppm";
     os << mzt.value << units;
@@ -45,7 +45,7 @@ ostream& PWIZ_API_DECL operator<<(ostream& os, const MZTolerance& mzt)
 }
 
 
-istream& PWIZ_API_DECL operator>>(istream& is, MZTolerance& mzt)
+PWIZ_API_DECL istream& operator>>(istream& is, MZTolerance& mzt)
 {
     string temp;
     is >> mzt.value >> temp;
@@ -59,13 +59,13 @@ istream& PWIZ_API_DECL operator>>(istream& is, MZTolerance& mzt)
 }
 
 
-bool PWIZ_API_DECL operator==(const MZTolerance& a, const MZTolerance& b)
+PWIZ_API_DECL bool operator==(const MZTolerance& a, const MZTolerance& b)
 {
     return a.value==b.value && a.units==b.units;
 }
 
 
-double& PWIZ_API_DECL operator+=(double& d, const MZTolerance& tolerance)
+PWIZ_API_DECL double& operator+=(double& d, const MZTolerance& tolerance)
 {
     if (tolerance.units == MZTolerance::MZ)
         d += tolerance.value;
@@ -78,7 +78,7 @@ double& PWIZ_API_DECL operator+=(double& d, const MZTolerance& tolerance)
 }
 
 
-double& PWIZ_API_DECL operator-=(double& d, const MZTolerance& tolerance)
+PWIZ_API_DECL double& operator-=(double& d, const MZTolerance& tolerance)
 {
     if (tolerance.units == MZTolerance::MZ)
         d -= tolerance.value;
@@ -91,26 +91,26 @@ double& PWIZ_API_DECL operator-=(double& d, const MZTolerance& tolerance)
 }
 
 
-double PWIZ_API_DECL operator+(double d, const MZTolerance& tolerance)
+PWIZ_API_DECL double operator+(double d, const MZTolerance& tolerance)
 {
     d += tolerance;
     return d;
 }
 
 
-double PWIZ_API_DECL operator-(double d, const MZTolerance& tolerance)
+PWIZ_API_DECL double operator-(double d, const MZTolerance& tolerance)
 {
     d -= tolerance;
     return d;
 }
 
 
-bool PWIZ_API_DECL isWithinTolerance(double a, double b, const MZTolerance& tolerance)
+PWIZ_API_DECL bool isWithinTolerance(double a, double b, const MZTolerance& tolerance)
 {
     return (a > b-tolerance) && (a < b+tolerance);
 }
 
-bool PWIZ_API_DECL lessThanTolerance(double a, double b, const MZTolerance& tolerance)
+PWIZ_API_DECL bool lessThanTolerance(double a, double b, const MZTolerance& tolerance)
 {
 	return (a < b-tolerance);
 }

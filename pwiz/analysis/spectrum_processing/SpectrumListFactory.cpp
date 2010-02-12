@@ -20,6 +20,8 @@
 // limitations under the License.
 //
 
+#define PWIZ_SOURCE
+
 
 #include "SpectrumListFactory.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
@@ -355,6 +357,7 @@ struct HasCommand
 } // namespace
 
 
+PWIZ_API_DECL
 void SpectrumListFactory::wrap(MSData& msd, const string& wrapper)
 {
     // split wrapper string into command + arg
@@ -389,6 +392,7 @@ void SpectrumListFactory::wrap(MSData& msd, const string& wrapper)
 }
 
 
+PWIZ_API_DECL
 void SpectrumListFactory::wrap(msdata::MSData& msd, const vector<string>& wrappers)
 {
     for (vector<string>::const_iterator it=wrappers.begin(); it!=wrappers.end(); ++it)
@@ -396,6 +400,7 @@ void SpectrumListFactory::wrap(msdata::MSData& msd, const vector<string>& wrappe
 }
 
 
+PWIZ_API_DECL
 string SpectrumListFactory::usage()
 {
     ostringstream oss;

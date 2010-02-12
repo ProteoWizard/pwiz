@@ -27,6 +27,8 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/utility/chemistry/Chemistry.hpp"
+#include <boost/shared_ptr.hpp>
+
 
 namespace pwiz {
 namespace proteome {
@@ -106,7 +108,7 @@ class PWIZ_API_DECL Peptide
     friend class ModificationMap; // allow ModificationMap to befriend Peptide::Impl
     friend class Fragmentation;
     class Impl;
-    std::auto_ptr<Impl> impl_;
+    boost::shared_ptr<Impl> impl_;
 };
 
 
@@ -165,7 +167,7 @@ class PWIZ_API_DECL Fragmentation
 
     private:
     class Impl;
-    std::auto_ptr<Impl> impl_;
+    boost::shared_ptr<Impl> impl_;
 };
 
 

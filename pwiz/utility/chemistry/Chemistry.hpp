@@ -28,9 +28,9 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include <iosfwd>
 #include <string>
-#include <memory>
 #include <vector>
 #include "pwiz/utility/misc/virtual_map.hpp"
+#include <boost/shared_ptr.hpp>
 
 
 namespace pwiz {
@@ -160,7 +160,7 @@ class PWIZ_API_DECL Formula
     
     private:
     class Impl;
-    std::auto_ptr<Impl> impl_;
+    boost::shared_ptr<Impl> impl_;
 };
 
 

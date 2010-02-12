@@ -33,9 +33,11 @@ lib pwiz_analysis_common
         LocalMaximumPeakDetector.cpp
     : # requirements
         <library>/ext/boost//thread
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
     : # default-build
     : # usage-requirements
         <library>/ext/boost//thread
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
     ;
 
 

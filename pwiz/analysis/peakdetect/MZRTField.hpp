@@ -45,7 +45,7 @@ namespace {
 /// lexicographic ordering, by m/z then retention time
 ///
 template <typename T>
-struct PWIZ_API_DECL LessThan_MZRT
+struct LessThan_MZRT
 {
     typedef boost::shared_ptr<T> TPtr;
 

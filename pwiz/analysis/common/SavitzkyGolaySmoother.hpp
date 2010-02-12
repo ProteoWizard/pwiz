@@ -26,7 +26,7 @@
 
 #include "Smoother.hpp"
 #include <vector>
-#include <memory>
+#include <boost/shared_ptr.hpp>
 
 
 namespace pwiz {
@@ -51,7 +51,7 @@ struct PWIZ_API_DECL SavitzkyGolaySmoother : public Smoother
 
     private:
     struct Impl;
-    std::auto_ptr<Impl> impl_;
+    boost::shared_ptr<Impl> impl_;
 };
 
 

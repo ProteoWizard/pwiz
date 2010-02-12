@@ -1,5 +1,5 @@
 //
-// automation_vector.h
+// $Id$
 //
 //
 // Original author: Andrei Alexandrescu
@@ -41,10 +41,12 @@ back and forth without adapting/copying
 #include <algorithm>
 #include <stdexcept>
 
+#include "Export.hpp"
+
 template <bool> struct static_checker;
 template <> struct static_checker<true> {};
 
-class automation_vector_base;
+class PWIZ_API_DECL automation_vector_base;
 
 template <VARENUM varenum>
 struct static_variant_info
@@ -100,7 +102,7 @@ namespace Configure
 
 template <class> class automation_vector;
 
-class automation_vector_base
+class PWIZ_API_DECL automation_vector_base
 {
     friend void trace(VARIANT &v);
     typedef automation_vector_base self;

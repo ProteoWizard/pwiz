@@ -19,6 +19,8 @@
 // limitations under the License.
 //
 
+#define PWIZ_SOURCE
+
 
 #include "pwiz/data/msdata/MSData.hpp"
 #include "PrecursorMassFilter.hpp"
@@ -56,6 +58,7 @@ struct MassLessThan
 
 // Filter params class initialization
 
+PWIZ_API_DECL
 PrecursorMassFilter::Config::Config(
     MZTolerance tolerance, 
     bool removePrecursor_, 
@@ -78,6 +81,7 @@ PrecursorMassFilter::Config::Config(
     }
 }
 
+PWIZ_API_DECL
 PrecursorMassFilter::FilterSpectrum::FilterSpectrum(const PrecursorMassFilter::Config& params_, 
                     const pwiz::msdata::SpectrumPtr spectrum_) 
                     : params(params_), 
@@ -220,8 +224,7 @@ PrecursorMassFilter::FilterSpectrum::FilterSpectrum(const PrecursorMassFilter::C
     }
 }
 
-
-void PrecursorMassFilter::describe(ProcessingMethod& method) const
+PWIZ_API_DECL void PrecursorMassFilter::describe(ProcessingMethod& method) const
 {
     method.set(MS_SpectraFilter);
     method.userParams.push_back(UserParam("remove precursor", lexical_cast<string>(params.removePrecursor)));
@@ -231,7 +234,7 @@ void PrecursorMassFilter::describe(ProcessingMethod& method) const
     method.userParams.push_back(UserParam("matching tolerance", lexical_cast<string>(params.matchingTolerance)));
 }
 
-void PrecursorMassFilter::operator () (const SpectrumPtr spectrum) const
+PWIZ_API_DECL void PrecursorMassFilter::operator () (const SpectrumPtr spectrum) const
 {
     if (spectrum->cvParam(MS_ms_level).valueAs<int>() > 1 &&
         spectrum->cvParam(MS_MSn_spectrum).empty() == false &&

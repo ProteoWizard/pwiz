@@ -113,6 +113,7 @@ const char* ThresholdFilter::byTypeLeastIntenseName[] = {"least intense count (e
     "with less intensity relative to TIC",
     "least intense TIC cutoff"};
 
+PWIZ_API_DECL
 ThresholdFilter::ThresholdFilter(ThresholdingBy_Type byType_ /* = ThresholdingBy_Count */, 
                                  double threshold_ /* = 1.0 */, 
                                  ThresholdingOrientation orientation_ /* = Orientation_MostIntense */)
@@ -123,14 +124,14 @@ ThresholdFilter::ThresholdFilter(ThresholdingBy_Type byType_ /* = ThresholdingBy
 {
 }
 
-void ThresholdFilter::describe(ProcessingMethod& method) const
+PWIZ_API_DECL void ThresholdFilter::describe(ProcessingMethod& method) const
 {
     string name = orientation == Orientation_MostIntense ? byTypeMostIntenseName[byType] 
                                                          : byTypeLeastIntenseName[byType];
     method.userParams.push_back(UserParam(name, lexical_cast<string>(threshold)));
 }
 
-void ThresholdFilter::operator () (const SpectrumPtr s) const
+PWIZ_API_DECL void ThresholdFilter::operator () (const SpectrumPtr s) const
 {
     if (byType == ThresholdingBy_Count ||
         byType == ThresholdingBy_CountAfterTies)

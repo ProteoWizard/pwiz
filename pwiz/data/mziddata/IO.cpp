@@ -358,7 +358,7 @@ struct HandlerString : public SAXParser::Handler
 // IdentifiableType
 //
 
-void write(minimxml::XMLWriter& writer, const IdentifiableType& it)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const IdentifiableType& it)
 {
     XMLWriter::Attributes attributes;
     addIdAttributes(it, attributes);
@@ -385,7 +385,7 @@ struct HandlerIdentifiableType : public SAXParser::Handler
     }
 };
 
-void read(std::istream& is, IdentifiableType& it)
+PWIZ_API_DECL void read(std::istream& is, IdentifiableType& it)
 {
     HandlerIdentifiableType handler(&it);
     SAXParser::parse(is, handler);

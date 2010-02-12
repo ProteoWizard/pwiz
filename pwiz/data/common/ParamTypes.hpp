@@ -198,6 +198,10 @@ struct PWIZ_API_DECL UserParam
               const std::string& _type = "",
               CVID _units = CVID_Unknown);
 
+    ~UserParam();
+
+    UserParam(const UserParam& other);
+    UserParam& operator=(const UserParam& rhs);
 
     /// Templated value access with type conversion
     template<typename value_type>

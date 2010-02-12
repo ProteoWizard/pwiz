@@ -112,7 +112,7 @@ typedef boost::shared_ptr<Contact> ContactPtr;
 
 struct PWIZ_API_DECL Organization : public Contact
 {
-    struct Parent
+    struct PWIZ_API_DECL Parent
     {
         Parent();
         
@@ -201,7 +201,8 @@ struct PWIZ_API_DECL Sample;
 struct PWIZ_API_DECL Sample : public Material
 {
     // SampleType schema elements
-    struct subSample{
+    struct PWIZ_API_DECL subSample
+    {
         subSample(const std::string& id_ = "",
                   const std::string& name_ = "");
         

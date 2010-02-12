@@ -19,6 +19,8 @@
 // limitations under the License.
 //
 
+#define PWIZ_SOURCE
+
 
 #include "ProteomeData.hpp"
 #include "pwiz/utility/misc/String.hpp"

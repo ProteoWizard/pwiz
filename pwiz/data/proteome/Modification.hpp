@@ -29,8 +29,9 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include "Peptide.hpp"
 #include <string>
-#include <memory>
 #include "pwiz/utility/misc/virtual_map.hpp"
+#include <boost/shared_ptr.hpp>
+
 
 namespace pwiz {
 namespace proteome {
@@ -66,7 +67,7 @@ class PWIZ_API_DECL Modification
 
     private:
     class Impl;
-    std::auto_ptr<Impl> impl_;
+    boost::shared_ptr<Impl> impl_;
 };
 
 
@@ -170,7 +171,7 @@ class PWIZ_API_DECL ModificationMap
     ModificationMap(const ModificationMap& other);
     ModificationMap& operator=(const ModificationMap&);
     class Impl;
-    std::auto_ptr<Impl> impl_;
+    boost::shared_ptr<Impl> impl_;
     virtual void swap(ModificationMap&);
     friend class Peptide::Impl; // allow only Peptide::Impl to construct a ModificationMap
 };

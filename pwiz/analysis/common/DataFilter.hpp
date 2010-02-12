@@ -24,13 +24,15 @@
 #define _DATAFILTER_HPP_ 
 
 
+#include "pwiz/utility/misc/Export.hpp"
 #include "boost/shared_ptr.hpp"
 
 
 namespace pwiz {
 namespace analysis {
 
-struct SpectrumDataFilter
+
+struct PWIZ_API_DECL SpectrumDataFilter
 {
     virtual void operator () (const pwiz::msdata::SpectrumPtr) const = 0;
     virtual void describe(pwiz::msdata::ProcessingMethod&) const = 0;
@@ -40,7 +42,7 @@ struct SpectrumDataFilter
 typedef boost::shared_ptr<SpectrumDataFilter> SpectrumDataFilterPtr;
 
 
-struct ChromatogramDataFilter
+struct PWIZ_API_DECL ChromatogramDataFilter
 {
     virtual void operator () (const pwiz::msdata::ChromatogramPtr) const = 0;
     virtual void describe(pwiz::msdata::ProcessingMethod&) const = 0;

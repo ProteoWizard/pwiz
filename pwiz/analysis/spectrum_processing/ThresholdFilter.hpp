@@ -32,10 +32,10 @@ namespace pwiz {
 namespace analysis {
 
 
-struct ThresholdFilter : public SpectrumDataFilter
+struct PWIZ_API_DECL ThresholdFilter : public SpectrumDataFilter
 {
     /// determines the method of thresholding and the meaning of the threshold value
-    enum ThresholdingBy_Type
+    PWIZ_API_DECL enum ThresholdingBy_Type
     {
         /// keep the <threshold> [most|least] intense data points
         /// - <threshold> is rounded to the nearest integer
@@ -73,7 +73,7 @@ struct ThresholdFilter : public SpectrumDataFilter
     };
 
     /// determines the orientation of the thresholding
-    enum ThresholdingOrientation
+    PWIZ_API_DECL enum ThresholdingOrientation
     {
         Orientation_MostIntense, /// thresholder removes the least intense data points
         Orientation_LeastIntense /// thresholder removes the most intense data points

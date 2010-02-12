@@ -104,7 +104,7 @@ static const char* defaultNeutralLossFormulae[] = {
 /**
  * Predicted mass value for identification and removal in ETD/ECD MS2 spectra
  */
-struct PrecursorReferenceMass
+struct PWIZ_API_DECL PrecursorReferenceMass
 {
     enum eMassType {ePrecursor, eChargeReducedPrecursor, eNeutralLoss};
 
@@ -118,7 +118,7 @@ struct PrecursorReferenceMass
     int charge;
 };
 
-struct ReferenceMassByMass
+struct PWIZ_API_DECL ReferenceMassByMass
 {
     bool operator() (const PrecursorReferenceMass& a, const PrecursorReferenceMass& b)
     {
@@ -126,10 +126,10 @@ struct ReferenceMassByMass
     }
 };
 
-struct PrecursorMassFilter : public SpectrumDataFilter
+struct PWIZ_API_DECL PrecursorMassFilter : public SpectrumDataFilter
 {
      /// PrecursorMassFilter's parameters
-    struct Config
+    struct PWIZ_API_DECL Config
     {
         Config(
             MZTolerance    tolerance = MZTolerance(0.1), 
@@ -154,7 +154,7 @@ struct PrecursorMassFilter : public SpectrumDataFilter
         bool useBlanketFiltering;
     };
 
-    struct FilterSpectrum
+    struct PWIZ_API_DECL FilterSpectrum
     {
         FilterSpectrum( const PrecursorMassFilter::Config& params_, 
                         const pwiz::msdata::SpectrumPtr spectrum_);

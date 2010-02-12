@@ -97,6 +97,20 @@ UserParam::UserParam(const string& _name,
 {}
 
 
+PWIZ_API_DECL UserParam::~UserParam() {}
+
+
+PWIZ_API_DECL UserParam::UserParam(const UserParam& other) {*this = other;}
+PWIZ_API_DECL UserParam& UserParam::operator=(const UserParam& rhs)
+{
+    name = rhs.name;
+    value = rhs.value;
+    type = rhs.type;
+    units = rhs.units;
+    return *this;
+}
+
+
 PWIZ_API_DECL bool UserParam::empty() const 
 {
     return name.empty() && value.empty() && type.empty() && units==CVID_Unknown;

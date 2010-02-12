@@ -46,14 +46,14 @@ struct PWIZ_API_DECL OrderedPair
 #pragma pack(pop)
 
 
-inline PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const OrderedPair& p)
+inline std::ostream& operator<<(std::ostream& os, const OrderedPair& p)
 {
     os << "(" << p.x << "," << p.y << ")";
     return os;
 }
 
 
-inline PWIZ_API_DECL std::istream& operator>>(std::istream& is, OrderedPair& p)
+inline std::istream& operator>>(std::istream& is, OrderedPair& p)
 {
     char open='\0', comma='\0', close='\0';
     is >>  open >> p.x >> comma >> p.y >> close;
@@ -64,13 +64,13 @@ inline PWIZ_API_DECL std::istream& operator>>(std::istream& is, OrderedPair& p)
 }
 
 
-inline PWIZ_API_DECL bool operator==(const OrderedPair& a, const OrderedPair& b)
+inline bool operator==(const OrderedPair& a, const OrderedPair& b)
 {
     return a.x==b.x && a.y==b.y;
 }
 
 
-inline PWIZ_API_DECL bool operator!=(const OrderedPair& a, const OrderedPair& b)
+inline bool operator!=(const OrderedPair& a, const OrderedPair& b)
 {
     return !(a == b);
 }

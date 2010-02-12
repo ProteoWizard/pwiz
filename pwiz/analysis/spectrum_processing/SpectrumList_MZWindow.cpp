@@ -20,6 +20,8 @@
 // limitations under the License.
 //
 
+#define PWIZ_SOURCE
+
 
 #include "SpectrumList_MZWindow.hpp"
 #include <iostream>
@@ -33,6 +35,7 @@ using namespace msdata;
 using namespace std;
 
 
+PWIZ_API_DECL
 SpectrumList_MZWindow::SpectrumList_MZWindow(const SpectrumListPtr original, double mzLow, double mzHigh)
 :   SpectrumListWrapper(original), mzLow_(mzLow), mzHigh_(mzHigh)
 {}
@@ -43,6 +46,7 @@ inline bool hasLowerMZ(const MZIntensityPair& a, const MZIntensityPair& b) {retu
 } // namespace
 
 
+PWIZ_API_DECL
 msdata::SpectrumPtr SpectrumList_MZWindow::spectrum(size_t index, bool getBinaryData) const
 {
     SpectrumPtr spectrum = inner_->spectrum(index, getBinaryData);

@@ -48,8 +48,8 @@ PWIZ_API_DECL void read(std::istream& is, CVParam& cv);
 // Novel functions
 
 // For testing purposes only
-void write(minimxml::XMLWriter& writer, const IdentifiableType& it);
-void read(std::istream& is, IdentifiableType& it);
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const IdentifiableType& it);
+PWIZ_API_DECL void read(std::istream& is, IdentifiableType& it);
 
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ContactRole& contactRole);

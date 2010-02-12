@@ -12,6 +12,7 @@
 // No license was specified in the article or in the download... permission pending?
 //
 
+#define PWIZ_SOURCE
 
 #include "automation_vector.h"
 #include <sstream>
@@ -20,6 +21,7 @@ using std::runtime_error;
 using std::string;
 using std::ostringstream;
 
+PWIZ_API_DECL
 automation_vector_base::automation_vector_base(unsigned Elements, VARENUM VarType) 
 	/*throw(std::invalid_argument, runtime_error)*/
 {
@@ -39,6 +41,7 @@ automation_vector_base::automation_vector_base(unsigned Elements, VARENUM VarTyp
 	_ASSERT(valid());
 }
 
+PWIZ_API_DECL
 automation_vector_base::~automation_vector_base() /*throw()*/
 {
 	::VariantClear(&m_Value);
@@ -47,6 +50,7 @@ automation_vector_base::~automation_vector_base() /*throw()*/
 }
 
 #ifdef _DEBUG
+PWIZ_API_DECL
 bool automation_vector_base::valid() const /*throw()*/
 {
 	if (!this || !_CrtIsValidPointer(this, sizeof(*this), false))
@@ -76,6 +80,7 @@ bool automation_vector_base::valid() const /*throw()*/
 }
 #endif
 
+PWIZ_API_DECL
 void automation_vector_base::com_enforce(HRESULT hr)
 {
 	if (SUCCEEDED(hr))
@@ -100,6 +105,7 @@ void automation_vector_base::com_enforce(HRESULT hr)
 	throw runtime_error(s.str());
 }
 
+PWIZ_API_DECL
 void automation_vector_base::get_element(const VARIANT &Array, long Index, 
 	VARIANT &v) /*throw(runtime_error)*/
 {
@@ -126,6 +132,7 @@ void automation_vector_base::get_element(const VARIANT &Array, long Index,
 	}
 }
 
+PWIZ_API_DECL
 void automation_vector_base::put_element(VARIANT &Array, long Index, const VARIANT &v) 
 	/*throw(runtime_error)*/
 {
@@ -160,12 +167,14 @@ void automation_vector_base::put_element(VARIANT &Array, long Index, const VARIA
 		const_cast<void *>(ToPut)));
 }
 
+PWIZ_API_DECL
 void automation_vector_base::attach(VARIANT &v) /*throw()*/
 {
 	clear();
 	std::swap(static_cast<VARIANT &>(m_Value), v);
 }
 
+PWIZ_API_DECL
 void automation_vector_base::detach(VARIANT &v) /*throw()*/
 {
 	_ASSERT(v.vt == VT_EMPTY);
@@ -173,7 +182,7 @@ void automation_vector_base::detach(VARIANT &v) /*throw()*/
 	std::swap(static_cast<VARIANT &>(m_Value), v);
 }
 
-
+PWIZ_API_DECL
 void automation_vector_base::resize(size_type NewSize, VARENUM Type)
 {
 	_ASSERT(valid());

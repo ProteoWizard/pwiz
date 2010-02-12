@@ -137,7 +137,6 @@ struct PWIZ_API_DECL Component : public ParamContainer
     Component() : type(ComponentType_Unknown), order(0) {}
     Component(ComponentType type, int order) : type(type), order(order) {}
     Component(CVID cvid, int order) { define(cvid, order); }
-    virtual ~Component(){}
 
     void define(CVID cvid, int order);
 
