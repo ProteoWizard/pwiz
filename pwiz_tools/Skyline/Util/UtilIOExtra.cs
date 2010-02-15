@@ -16,7 +16,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.IO;
+using System.Text;
 
 namespace pwiz.Skyline.Util
 {
@@ -64,8 +66,8 @@ namespace pwiz.Skyline.Util
     /// </summary>
     public class AdlerChecksum
     {
-        // parameters
-        #region
+        #region parameters
+
         /// <summary>
         /// ADLER_BASE is Adler-32 checksum algorithm parameter.
         /// </summary>
@@ -81,6 +83,30 @@ namespace pwiz.Skyline.Util
 
         #endregion
 
+        public static uint MakeForBuff(byte[] bytesBuff)
+        {
+            var inst = new AdlerChecksum();
+            if (!inst.TryMakeForBuff(bytesBuff))
+                throw new InvalidOperationException("Invalid byte buffer for checksum.");
+            return inst.ChecksumValue;
+        }
+
+        public static uint MakeForString(string s)
+        {
+            var inst = new AdlerChecksum();
+            if (!inst.TryMakeForString(s))
+                throw new InvalidOperationException("Invalid string for checksum.");
+            return inst.ChecksumValue;
+        }
+
+        public static uint MakeForFile(string sPath)
+        {
+            var inst = new AdlerChecksum();
+            if (!inst.TryMakeForFile(sPath))
+                throw new IOException(string.Format("Failure attempting to calculate a checksum for the file {0}", sPath));
+            return inst.ChecksumValue;
+        }
+
         /// <value>
         /// ChecksumValue is property which enables the user
         /// to get Adler-32 checksum value for the last calculation 
@@ -93,7 +119,7 @@ namespace pwiz.Skyline.Util
         /// <param name="bytesBuff">Bites array for checksum calculation</param>
         /// <param name="unAdlerCheckSum">Checksum start value (default=1)</param>
         /// <returns>Returns true if the checksum values is successflly calculated</returns>
-        public bool MakeForBuff(byte[] bytesBuff, uint unAdlerCheckSum)
+        public bool TryMakeForBuff(byte[] bytesBuff, uint unAdlerCheckSum)
         {
             if (Equals(bytesBuff, null))
             {
@@ -120,11 +146,21 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// Calculate Adler-32 checksum for buffer.
         /// </summary>
-        /// <param name="bytesBuff">Bites array for checksum calculation</param>
+        /// <param name="bytesBuff">Byte array for checksum calculation</param>
         /// <returns>Returns true if the checksum values is successflly calculated</returns>
-        public bool MakeForBuff(byte[] bytesBuff)
+        public bool TryMakeForBuff(byte[] bytesBuff)
         {
-            return MakeForBuff(bytesBuff, ADLER_START);
+            return TryMakeForBuff(bytesBuff, ADLER_START);
+        }
+
+        /// <summary>
+        /// Calculate Adler-32 checksum for string.
+        /// </summary>
+        /// <param name="s">String to convert to bytes for checksum calculation</param>
+        /// <returns>Returns true if the checksum values is successflly calculated</returns>
+        public bool TryMakeForString(string s)
+        {
+            return !string.IsNullOrEmpty(s) && TryMakeForBuff(Encoding.Default.GetBytes(s));
         }
 
         /// <summary>
@@ -132,7 +168,7 @@ namespace pwiz.Skyline.Util
         /// </summary>
         /// <param name="sPath">Path to file for checksum calculation</param>
         /// <returns>Returns true if the checksum values is successflly calculated</returns>
-        public bool MakeForFile(string sPath)
+        public bool TryMakeForFile(string sPath)
         {
             if (!File.Exists(sPath))
             {
@@ -158,7 +194,7 @@ namespace pwiz.Skyline.Util
                     bytesBuff[index] = (byte)fs.ReadByte();
                     if ((index == ADLER_BUFF - 1) || (i == fs.Length - 1))
                     {
-                        if (!MakeForBuff(bytesBuff, ChecksumValue))
+                        if (!TryMakeForBuff(bytesBuff, ChecksumValue))
                         {
                             ChecksumValue = 0;
                             return false;

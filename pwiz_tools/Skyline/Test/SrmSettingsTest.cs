@@ -131,6 +131,7 @@ namespace pwiz.SkylineTest
             "            fragment_range_first=\"y3\" fragment_range_last=\"last y-ion - 1\"\n" +
             "            include_n_proline=\"true\" include_c_glu_asp=\"true\" auto_select=\"true\" />\n" +
             "        <transition_libraries ion_match_tolerance=\"0.5\" ion_count=\"3\" pick_from=\"all\" />\n" +
+            "        <transition_integration/>" +
             "        <transition_instrument min_mz=\"52\" max_mz=\"1503\" />\n" +
             "    </transition_settings>\n" +
             "</settings_summary>";

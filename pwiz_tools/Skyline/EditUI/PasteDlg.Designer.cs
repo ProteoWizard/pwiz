@@ -34,7 +34,6 @@ namespace pwiz.Skyline.EditUI
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PasteDlg));
             this.tbxFasta = new System.Windows.Forms.TextBox();
             this.btnInsert = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();

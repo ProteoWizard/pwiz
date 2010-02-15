@@ -41,6 +41,9 @@ namespace pwiz.Skyline.Model.Results
         public MeasuredResults(IList<ChromatogramSet> chromatograms)
         {
             Chromatograms = chromatograms;
+            // The only way to get peaks with areas not normalized by
+            // time is to load an older document that was created this way.
+            IsTimeNormalArea = true;
         }
 
         public IList<ChromatogramSet> Chromatograms
@@ -48,6 +51,8 @@ namespace pwiz.Skyline.Model.Results
             get { return _chromatograms; }
             private set { _chromatograms = MakeReadOnly(value.ToArray()); }
         }
+
+        public bool IsTimeNormalArea { get; private set; }
 
         public bool IsLoaded
         {
@@ -296,10 +301,10 @@ namespace pwiz.Skyline.Model.Results
             return _chromatograms.Contains(set => Equals(name, set.Name));
         }
 
-        public void Load(string documentPath, ILoadMonitor loadMonitor,
+        public void Load(SrmDocument document, string documentPath, ILoadMonitor loadMonitor,
             Action<string, MeasuredResults> completed)
         {
-            var loader = new Loader(ImClone(this), documentPath, loadMonitor, completed);
+            var loader = new Loader(ImClone(this), document, documentPath, loadMonitor, completed);
             loader.Load();
         }
 
@@ -344,6 +349,11 @@ namespace pwiz.Skyline.Model.Results
         {
         }
 
+        private enum ATTR
+        {
+            time_normal_area
+        }
+
         public static MeasuredResults Deserialize(XmlReader reader)
         {
             return reader.Deserialize(new MeasuredResults());
@@ -357,6 +367,7 @@ namespace pwiz.Skyline.Model.Results
         public void ReadXml(XmlReader reader)
         {
             // Consume tag
+            IsTimeNormalArea = reader.GetBoolAttribute(ATTR.time_normal_area);
             reader.Read();
 
             // Read chromatogram sets
@@ -370,6 +381,7 @@ namespace pwiz.Skyline.Model.Results
 
         public void WriteXml(XmlWriter writer)
         {
+            writer.WriteAttribute(ATTR.time_normal_area, IsTimeNormalArea);
             writer.WriteElements(Chromatograms);
         }
 
@@ -403,15 +415,17 @@ namespace pwiz.Skyline.Model.Results
         private class Loader
         {
             private readonly MeasuredResults _setClone;
+            private readonly SrmDocument _document;
             private readonly string _documentPath;
             private readonly Action<string, MeasuredResults> _completed;
             private readonly ILoadMonitor _loader;
             private ProgressStatus _status;
 
-            public Loader(MeasuredResults setClone, string documentPath, ILoadMonitor loader,
-                Action<string, MeasuredResults> completed)
+            public Loader(MeasuredResults setClone, SrmDocument document, string documentPath,
+                ILoadMonitor loader, Action<string, MeasuredResults> completed)
             {
                 _setClone = setClone;
+                _document = document;
                 _documentPath = documentPath;
                 _completed = completed;
                 _loader = loader;
@@ -588,7 +602,7 @@ namespace pwiz.Skyline.Model.Results
                     //           tests, however, expose issues with coordinating progress status
                     //           and even successful completion.
                     var uncached = uncachedPaths[0];
-                    ChromatogramCache.Build(uncached.Value, new[] { uncached.Key }, _status, _loader,
+                    ChromatogramCache.Build(_document, uncached.Value, new[] { uncached.Key }, _status, _loader,
                         FinishCacheBuild);
                     return;
                 }

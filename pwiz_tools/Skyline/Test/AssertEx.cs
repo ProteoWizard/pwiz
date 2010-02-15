@@ -292,6 +292,7 @@ namespace pwiz.SkylineTest
             Cloned(target.TransitionSettings.Prediction, copy.TransitionSettings.Prediction);
             Cloned(target.TransitionSettings.Filter, copy.TransitionSettings.Filter);
             Cloned(target.TransitionSettings.Libraries, copy.TransitionSettings.Libraries);
+            Cloned(target.TransitionSettings.Integration, copy.TransitionSettings.Integration);
             Cloned(target.TransitionSettings.Instrument, copy.TransitionSettings.Instrument);
             Cloned(target.TransitionSettings, copy.TransitionSettings);
             Cloned(target, copy);

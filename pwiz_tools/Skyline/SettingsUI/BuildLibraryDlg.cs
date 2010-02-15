@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -372,7 +372,7 @@ namespace pwiz.Skyline.SettingsUI
                     if (!hasIdp || !PathEx.HasExtension(fileName, extPep))
                         inputFiles.Add(fileName);                    
                 }
-                if (broker.IsCancelled)
+                if (broker.IsCanceled)
                     return;
             }
 
@@ -382,7 +382,7 @@ namespace pwiz.Skyline.SettingsUI
             foreach (string dirSub in dirs)
             {
                 FindInputFiles(dirSub, inputFiles, broker, startSub, startSub + increment);
-                if (broker.IsCancelled)
+                if (broker.IsCanceled)
                     return;
                 startSub += increment;
                 broker.ProgressValue = (int)startSub;

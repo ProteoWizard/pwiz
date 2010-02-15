@@ -24,6 +24,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Collections.ObjectModel;
+using System.Windows.Forms;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.SettingsUI;
 
@@ -135,7 +136,7 @@ namespace pwiz.Skyline.Util
         /// Exposes ability to edit a list of items.
         /// </summary>
         /// <returns>The new list after editing, or null if the user cancelled</returns>
-        IEnumerable<T> EditList(object tag);
+        IEnumerable<T> EditList(Control owner, object tag);
     }
 
     /// <summary>
@@ -161,19 +162,23 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// Exposes the ability to create a new item for this list.
         /// </summary>
+        /// <param name="owner">Window requesting the edit</param>
+        /// <param name="existing">A list of existing items of this type</param>
+        /// <param name="tag">Object passed to the list editor for use in item editors</param>
         /// <returns>The new item, or null if the user cancelled</returns>
-        T NewItem(IEnumerable<T> existing, object tag);
+        T NewItem(Control owner, IEnumerable<T> existing, object tag);
 
         /// <summary>
         /// Exposes the ability to edit an individual item, return
         /// a new modified item.  Items are considered immutable,
         /// so successful return value will always be a new item.
         /// </summary>
+        /// <param name="owner">Window requesting the edit</param>
         /// <param name="item">The item to edit</param>
         /// <param name="existing">A list of existing items of this type</param>
         /// <param name="tag">Object passed to the list editor for use in item editors</param>
         /// <returns>The new item, or null if the user cancelled</returns>
-        T EditItem(T item, IEnumerable<T> existing, object tag);
+        T EditItem(Control owner, T item, IEnumerable<T> existing, object tag);
 
         /// <summary>
         /// Copies an item for this list, with the copied item's name reset

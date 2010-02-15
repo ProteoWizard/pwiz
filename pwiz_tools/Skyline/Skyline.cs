@@ -31,6 +31,7 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
@@ -310,7 +311,9 @@ namespace pwiz.Skyline
             // Update title and status bar.
             UpdateTitle();
             UpdateNodeCountStatus();
+
             insertProteinsMenuItem.Enabled = !DocumentUI.Settings.PeptideSettings.BackgroundProteome.IsNone;
+            integrateAllMenuItem.Checked = DocumentUI.Settings.TransitionSettings.Integration.IsIntegrateAll;
         }
 
         /// <summary>
@@ -1256,7 +1259,7 @@ namespace pwiz.Skyline
 
         private void editSettingsMenuItem_Click(object sender, EventArgs e)
         {
-            IEnumerable<SrmSettings> listNew = Settings.Default.SrmSettingsList.EditList(null);
+            IEnumerable<SrmSettings> listNew = Settings.Default.SrmSettingsList.EditList(this, null);
             if (listNew != null)
             {
                 SrmSettingsList list = Settings.Default.SrmSettingsList;
@@ -1461,6 +1464,18 @@ namespace pwiz.Skyline
         {
             var dlg = new ChooseAnnotationsDlg(this);
             dlg.ShowDialog(this);
+        }
+
+        private void integrateAllMenuItem_Click(object sender, EventArgs e)
+        {
+            IntegrateAll();
+        }
+
+        public void IntegrateAll()
+        {
+            bool integrateAll = DocumentUI.Settings.TransitionSettings.Integration.IsIntegrateAll;
+            ModifyDocument(integrateAll ? "Set integrate all" : "Clear integrate all",
+                doc => doc.ChangeSettings(doc.Settings.ChangeTransitionIntegration(i => i.ChangeIntegrateAll(!integrateAll))));
         }
 
         #endregion // Settings menu

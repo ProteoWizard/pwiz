@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -257,7 +257,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             _longWaitDlg.ProgressValue = progress;
             _longWaitDlg.Message = message;
-            return !_longWaitDlg.IsCancelled;
+            return !_longWaitDlg.IsCanceled;
         }
 
         private void btnBuild_Click(object sender, EventArgs e)

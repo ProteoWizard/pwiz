@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -205,7 +205,7 @@ namespace pwiz.Skyline.EditUI
                 HashSet<Protein> proteins = new HashSet<Protein>();
                 if (digestion != null)
                 {
-                    if (longWaitBroker.IsCancelled)
+                    if (longWaitBroker.IsCanceled)
                     {
                         return;
                     }

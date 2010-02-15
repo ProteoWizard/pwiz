@@ -16,7 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 
 namespace pwiz.Skyline.Model.DocSettings.Extensions
 {
@@ -26,62 +25,70 @@ namespace pwiz.Skyline.Model.DocSettings.Extensions
     /// </summary>
     public static class SettingsExtensions
     {
+        public delegate T ChangeFunc<T>(T value);
+
         public static SrmSettings ChangePeptideSettings(this SrmSettings settings,
-            Func<PeptideSettings, PeptideSettings> change)
+            ChangeFunc<PeptideSettings> change)
         {
             return settings.ChangePeptideSettings(change(settings.PeptideSettings));
         }
 
         public static SrmSettings ChangePeptidePrediction(this SrmSettings settings,
-            Func<PeptidePrediction, PeptidePrediction> change)
+            ChangeFunc<PeptidePrediction> change)
         {
             return settings.ChangePeptideSettings(setP => setP.ChangePrediction(change(setP.Prediction)));
         }
 
         public static SrmSettings ChangePeptideFilter(this SrmSettings settings,
-            Func<PeptideFilter, PeptideFilter> change)
+            ChangeFunc<PeptideFilter> change)
         {
             return settings.ChangePeptideSettings(setP => setP.ChangeFilter(change(setP.Filter)));
         }
 
         public static SrmSettings ChangePeptideLibraries(this SrmSettings settings,
-            Func<PeptideLibraries, PeptideLibraries> change)
+            ChangeFunc<PeptideLibraries> change)
         {
             return settings.ChangePeptideSettings(setP => setP.ChangeLibraries(change(setP.Libraries)));
         }
 
         public static SrmSettings ChangePeptideModifications(this SrmSettings settings,
-            Func<PeptideModifications, PeptideModifications> change)
+            ChangeFunc<PeptideModifications> change)
         {
             return settings.ChangePeptideSettings(setP => setP.ChangeModifications(change(setP.Modifications)));
         }
 
         public static SrmSettings ChangeTransitionSettings(this SrmSettings settings,
-            Func<TransitionSettings, TransitionSettings> change)
+            ChangeFunc<TransitionSettings> change)
         {
             return settings.ChangeTransitionSettings(change(settings.TransitionSettings));
         }
 
         public static SrmSettings ChangeTransitionPrediction(this SrmSettings settings,
-            Func<TransitionPrediction, TransitionPrediction> change)
+            ChangeFunc<TransitionPrediction> change)
         {
             return settings.ChangeTransitionSettings(setT => setT.ChangePrediction(change(setT.Prediction)));
         }
 
         public static SrmSettings ChangeTransitionFilter(this SrmSettings settings,
-            Func<TransitionFilter, TransitionFilter> change)
+            ChangeFunc<TransitionFilter> change)
         {
             return settings.ChangeTransitionSettings(setT => setT.ChangeFilter(change(setT.Filter)));
         }
 
         public static SrmSettings ChangeTransitionLibraries(this SrmSettings settings,
-            Func<TransitionLibraries, TransitionLibraries> change)
+            ChangeFunc<TransitionLibraries> change)
         {
             return settings.ChangeTransitionSettings(setT => setT.ChangeLibraries(change(setT.Libraries)));
         }
 
+        public static SrmSettings ChangeTransitionIntegration(this SrmSettings settings,
+            ChangeFunc<TransitionIntegration> change)
+        {
+            return settings.ChangeTransitionSettings(setT => setT.ChangeIntegration(change(setT.Integration)));
+        }
+
         public static SrmSettings ChangeTransitionInstrument(this SrmSettings settings,
-            Func<TransitionInstrument, TransitionInstrument> change)
+            ChangeFunc<TransitionInstrument> change)
         {
             return settings.ChangeTransitionSettings(setT => setT.ChangeInstrument(change(setT.Instrument)));
         }

@@ -34,11 +34,13 @@ namespace pwiz.Skyline.Model.DocSettings
         public TransitionSettings(TransitionPrediction prediction,
                                   TransitionFilter filter,
                                   TransitionLibraries libraries,
+                                  TransitionIntegration integration,
                                   TransitionInstrument instrument)
         {
             Prediction = prediction;
             Filter = filter;
             Libraries = libraries;
+            Integration = integration;
             Instrument = instrument;
         }
 
@@ -48,28 +50,35 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public TransitionLibraries Libraries { get; private set; }
 
+        public TransitionIntegration Integration { get; private set; }
+
         public TransitionInstrument Instrument { get; private set; }
 
         #region Property change methods
 
         public TransitionSettings ChangePrediction(TransitionPrediction prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.Prediction = v, prop);
+            return ChangeProp(ImClone(this), im => im.Prediction = prop);
         }
 
         public TransitionSettings ChangeFilter(TransitionFilter prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.Filter = v, prop);
+            return ChangeProp(ImClone(this), im => im.Filter = prop);
         }
 
         public TransitionSettings ChangeLibraries(TransitionLibraries prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.Libraries = v, prop);
-        }        
+            return ChangeProp(ImClone(this), im => im.Libraries = prop);
+        }
+
+        public TransitionSettings ChangeIntegration(TransitionIntegration prop)
+        {
+            return ChangeProp(ImClone(this), im => im.Integration = prop);
+        }
 
         public TransitionSettings ChangeInstrument(TransitionInstrument prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.Instrument = v, prop);
+            return ChangeProp(ImClone(this), im => im.Instrument = prop);
         }
 
         #endregion
@@ -106,6 +115,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 Prediction = reader.DeserializeElement<TransitionPrediction>();
                 Filter = reader.DeserializeElement<TransitionFilter>();
                 Libraries = reader.DeserializeElement<TransitionLibraries>();
+                Integration = reader.DeserializeElement<TransitionIntegration>();
                 Instrument = reader.DeserializeElement<TransitionInstrument>();
 
                 reader.ReadEndElement();                
@@ -120,6 +130,7 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteElement(Prediction);
             writer.WriteElement(Filter);
             writer.WriteElement(Libraries);
+            writer.WriteElement(Integration);
             writer.WriteElement(Instrument);
         }
 
@@ -134,6 +145,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return Equals(obj.Prediction, Prediction) &&
                    Equals(obj.Filter, Filter) &&
                    Equals(obj.Libraries, Libraries) &&
+                   Equals(obj.Integration, Integration) &&
                    Equals(obj.Instrument, Instrument);
         }
 
@@ -152,6 +164,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 int result = Prediction.GetHashCode();
                 result = (result * 397) ^ Filter.GetHashCode();
                 result = (result * 397) ^ Libraries.GetHashCode();
+                result = (result * 397) ^ Integration.GetHashCode();
                 result = (result * 397) ^ Instrument.GetHashCode();
                 return result;
             }
@@ -1209,6 +1222,83 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ (MaxTransitions.HasValue ? MaxTransitions.Value : 0);
                 return result;
             }
+        }
+
+        #endregion
+    }
+
+    [XmlRoot("transition_integration")]
+    public sealed class TransitionIntegration : Immutable, IValidating, IXmlSerializable
+    {
+        public bool IsIntegrateAll { get; private set; }
+
+        #region Property change methods
+
+        public TransitionIntegration ChangeIntegrateAll(bool prop)
+        {
+            return ChangeProp(ImClone(this), im => im.IsIntegrateAll = prop);
+        }        
+
+        #endregion
+
+        #region Implementation of IXmlSerializable
+
+        private enum ATTR
+        {
+            integrate_all,
+        }
+
+        void IValidating.Validate()
+        {
+        }
+
+        public static TransitionIntegration Deserialize(XmlReader reader)
+        {
+            return reader.Deserialize(new TransitionIntegration());
+        }
+
+        public XmlSchema GetSchema()
+        {
+            return null;
+        }
+
+        public void ReadXml(XmlReader reader)
+        {
+            // Read start tag attributes
+            IsIntegrateAll = reader.GetBoolAttribute(ATTR.integrate_all);
+
+            // Consume tag
+            reader.Read();
+        }
+
+        public void WriteXml(XmlWriter writer)
+        {
+            // Write attributes
+            writer.WriteAttribute(ATTR.integrate_all, IsIntegrateAll);
+        }
+
+        #endregion
+
+        #region object overrides
+
+        public bool Equals(TransitionIntegration other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return other.IsIntegrateAll.Equals(IsIntegrateAll);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof (TransitionIntegration)) return false;
+            return Equals((TransitionIntegration) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return IsIntegrateAll.GetHashCode();
         }
 
         #endregion

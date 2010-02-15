@@ -483,10 +483,10 @@ namespace pwiz.Skyline.Properties
                 };
         }
 
-        public override Enzyme EditItem(Enzyme item, IEnumerable<Enzyme> existing, object tag)
+        public override Enzyme EditItem(Control owner, Enzyme item, IEnumerable<Enzyme> existing, object tag)
         {
             EditEnzymeDlg editEnzyme = new EditEnzymeDlg(existing ?? this) { Enzyme = item };
-            if (editEnzyme.ShowDialog() == DialogResult.OK)
+            if (editEnzyme.ShowDialog(owner) == DialogResult.OK)
                 return editEnzyme.Enzyme;
 
             return null;
@@ -516,10 +516,11 @@ namespace pwiz.Skyline.Properties
                 };
         }
 
-        public override PeptideExcludeRegex EditItem(PeptideExcludeRegex item, IEnumerable<PeptideExcludeRegex> existing, object tag)
+        public override PeptideExcludeRegex EditItem(Control owner, PeptideExcludeRegex item,
+            IEnumerable<PeptideExcludeRegex> existing, object tag)
         {
             EditExclusionDlg editExclusion = new EditExclusionDlg(existing ?? this) { Exclusion = item };
-            if (editExclusion.ShowDialog() == DialogResult.OK)
+            if (editExclusion.ShowDialog(owner) == DialogResult.OK)
                 return editExclusion.Exclusion;
 
             return null;
@@ -542,10 +543,11 @@ namespace pwiz.Skyline.Properties
             return new LibrarySpec[0];
         }
 
-        public override LibrarySpec EditItem(LibrarySpec item, IEnumerable<LibrarySpec> existing, object tag)
+        public override LibrarySpec EditItem(Control owner, LibrarySpec item,
+            IEnumerable<LibrarySpec> existing, object tag)
         {
             EditLibraryDlg editLibrary = new EditLibraryDlg(existing ?? this) { LibrarySpec = item };
-            if (editLibrary.ShowDialog() == DialogResult.OK)
+            if (editLibrary.ShowDialog(owner) == DialogResult.OK)
                 return editLibrary.LibrarySpec;
 
             return null;
@@ -579,6 +581,7 @@ namespace pwiz.Skyline.Properties
         {
             return new[] {GetDefault()};
         }
+
         public void EnsureDefault()
         {
             // Make sure the choice of no background proteome is present.
@@ -586,11 +589,13 @@ namespace pwiz.Skyline.Properties
             if (Count == 0 || this[0].GetKey() != defaultElement.GetKey())
                 Insert(0, defaultElement);            
         }
-        public override BackgroundProteomeSpec EditItem(BackgroundProteomeSpec item, IEnumerable<BackgroundProteomeSpec> existing, object tag)
+
+        public override BackgroundProteomeSpec EditItem(Control owner, BackgroundProteomeSpec item,
+            IEnumerable<BackgroundProteomeSpec> existing, object tag)
         {
             var editBackgroundProteomeDlg = new BuildBackgroundProteomeDlg(existing ?? this)
                                                                       {BackgroundProteomeSpec = item};
-            if (editBackgroundProteomeDlg.ShowDialog() == DialogResult.OK)
+            if (editBackgroundProteomeDlg.ShowDialog(owner) == DialogResult.OK)
             {
                 return editBackgroundProteomeDlg.BackgroundProteomeSpec;
             }
@@ -599,15 +604,17 @@ namespace pwiz.Skyline.Properties
 
         public override BackgroundProteomeSpec CopyItem(BackgroundProteomeSpec item)
         {
-            return item.ChangeName("") as BackgroundProteomeSpec;
+            return (BackgroundProteomeSpec) item.ChangeName(string.Empty);
         }
 
         public override String Title { get { return "Edit Background Proteomes"; } }
         public override String Label { get { return "&Background Proteomes:"; } }
+
         protected override IXmlElementHelper<BackgroundProteomeSpec>[] GetXmlElementHelpers()
         {
             return BackgroundProteomeSpec.BackgroundProteomeHelpers;
         }
+
         public BackgroundProteomeSpec GetBackgroundProteomeSpec(String name)
         {
             foreach (var backgroundProteomeSpec in this)
@@ -641,10 +648,11 @@ namespace pwiz.Skyline.Properties
             return GetDefaultsOn();
         }
 
-        public override StaticMod EditItem(StaticMod item, IEnumerable<StaticMod> existing, object tag)
+        public override StaticMod EditItem(Control owner, StaticMod item,
+            IEnumerable<StaticMod> existing, object tag)
         {
             EditStaticModDlg editMod = new EditStaticModDlg(existing ?? this, false) { Modification = item };
-            if (editMod.ShowDialog() == DialogResult.OK)
+            if (editMod.ShowDialog(owner) == DialogResult.OK)
                 return editMod.Modification;
 
             return null;
@@ -672,14 +680,15 @@ namespace pwiz.Skyline.Properties
             return GetDefaultsOn();
         }
 
-        public override StaticMod EditItem(StaticMod item, IEnumerable<StaticMod> existing, object tag)
+        public override StaticMod EditItem(Control owner, StaticMod item,
+            IEnumerable<StaticMod> existing, object tag)
         {
             EditStaticModDlg editMod = new EditStaticModDlg(existing ?? this, true)
                                            {
                                                Text = "Edit Heavy Modification",
                                                Modification = item
                                            };
-            if (editMod.ShowDialog() == DialogResult.OK)
+            if (editMod.ShowDialog(owner) == DialogResult.OK)
                 return editMod.Modification;
 
             return null;
@@ -721,11 +730,11 @@ namespace pwiz.Skyline.Properties
             };
         }
 
-        public override CollisionEnergyRegression EditItem(CollisionEnergyRegression item,
+        public override CollisionEnergyRegression EditItem(Control owner, CollisionEnergyRegression item,
             IEnumerable<CollisionEnergyRegression> existing, object tag)
         {
             EditCEDlg editCE = new EditCEDlg(existing ?? this) { Regression = item };
-            if (editCE.ShowDialog() == DialogResult.OK)
+            if (editCE.ShowDialog(owner) == DialogResult.OK)
                 return editCE.Regression;
 
             return null;
@@ -768,11 +777,11 @@ namespace pwiz.Skyline.Properties
                 Insert(0, defaultElement);
         }
 
-        public override DeclusteringPotentialRegression EditItem(DeclusteringPotentialRegression item,
+        public override DeclusteringPotentialRegression EditItem(Control owner, DeclusteringPotentialRegression item,
             IEnumerable<DeclusteringPotentialRegression> existing, object tag)
         {
             EditDPDlg editDP = new EditDPDlg(existing ?? this) { Regression = item };
-            if (editDP.ShowDialog() == DialogResult.OK)
+            if (editDP.ShowDialog(owner) == DialogResult.OK)
                 return editDP.Regression;
 
             return null;
@@ -813,7 +822,7 @@ namespace pwiz.Skyline.Properties
                 Insert(0, defaultElement);            
         }
 
-        public override RetentionTimeRegression EditItem(RetentionTimeRegression item,
+        public override RetentionTimeRegression EditItem(Control owner, RetentionTimeRegression item,
             IEnumerable<RetentionTimeRegression> existing, object tag)
         {
             EditRTDlg editRT = new EditRTDlg(existing ?? this) { Regression = item };
@@ -891,6 +900,7 @@ namespace pwiz.Skyline.Properties
                         3,      // IonCount
                         TransitionLibraryPick.all  // Pick
                     ),
+                    new TransitionIntegration(), 
                     new TransitionInstrument
                     (
                         50,   // MinMz
@@ -931,7 +941,7 @@ namespace pwiz.Skyline.Properties
 
     public interface IReportDatabaseProvider
     {
-        Database Database { get; }
+        Database GetDatabase(Control owner);
     }
 
     public sealed class ReportSpecList : SettingsList<ReportSpec>, IListSerializer<ReportSpec>
@@ -988,17 +998,18 @@ namespace pwiz.Skyline.Properties
             };
         }
 
-        public override ReportSpec EditItem(ReportSpec item, IEnumerable<ReportSpec> existing, object tag)
+        public override ReportSpec EditItem(Control owner, ReportSpec item,
+            IEnumerable<ReportSpec> existing, object tag)
         {
-            PivotReportDlg dialog = new PivotReportDlg(existing ?? this);
+            PivotReportDlg editReport = new PivotReportDlg(existing ?? this);
 
             var databaseProvider = tag as IReportDatabaseProvider;
             if (databaseProvider != null)
-                dialog.SetDatabase(databaseProvider.Database);
-            dialog.SetReportSpec(item);
-            if (dialog.ShowDialog() == DialogResult.OK)
+                editReport.SetDatabase(databaseProvider.GetDatabase(owner));
+            editReport.SetReportSpec(item);
+            if (editReport.ShowDialog(owner) == DialogResult.OK)
             {
-                return dialog.GetReportSpec();
+                return editReport.GetReportSpec();
             }
 
             return null;
@@ -1027,12 +1038,12 @@ namespace pwiz.Skyline.Properties
     {
         #region IItemEditor<T> Members
 
-        public T NewItem(IEnumerable<T> existing, object tag)
+        public T NewItem(Control owner, IEnumerable<T> existing, object tag)
         {
-            return EditItem(default(T), existing, tag);
+            return EditItem(owner, default(T), existing, tag);
         }
 
-        public abstract T EditItem(T item, IEnumerable<T> existing, object tag);
+        public abstract T EditItem(Control owner, T item, IEnumerable<T> existing, object tag);
 
         public abstract T CopyItem(T item);
 
@@ -1060,10 +1071,10 @@ namespace pwiz.Skyline.Properties
 
         #region IListEditor<T> Members
 
-        public IEnumerable<T> EditList(object tag)
+        public IEnumerable<T> EditList(Control owner, object tag)
         {
             var dlg = new EditListDlg<SettingsListBase<T>, T>(this, tag);
-            if (dlg.ShowDialog() == DialogResult.OK)
+            if (dlg.ShowDialog(owner) == DialogResult.OK)
                 return dlg.GetAll();
             return null;
         }
@@ -1094,13 +1105,14 @@ namespace pwiz.Skyline.Properties
             return new AnnotationDef[0];
         }
 
-        public override AnnotationDef EditItem(AnnotationDef item, IEnumerable<AnnotationDef> existing, object tag)
+        public override AnnotationDef EditItem(Control owner, AnnotationDef item,
+            IEnumerable<AnnotationDef> existing, object tag)
         {
-            var dialog = new DefineAnnotationDlg(existing ?? this);
-            dialog.SetAnnotationDef(item);
-            if (dialog.ShowDialog() == DialogResult.OK)
+            var dlg = new DefineAnnotationDlg(existing ?? this);
+            dlg.SetAnnotationDef(item);
+            if (dlg.ShowDialog(owner) == DialogResult.OK)
             {
-                return dialog.GetAnnotationDef();
+                return dlg.GetAnnotationDef();
             }
 
             return null;

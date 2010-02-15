@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate.Query;
@@ -55,14 +56,15 @@ namespace pwiz.Skyline.FileUI
 
         private static ReportSpecList List { get { return Settings.Default.ReportSpecList; } }
 
-        public Database Database
+        public Database GetDatabase(Control owner)
         {
-            get
+            if (_database == null)
             {
-                EnsureDatabase();
-
-                return _database;
+                var longWait = new LongWaitDlg { Text = "Generating Report Data", Message = "Analyzing document..." };
+                longWait.PerformWork(owner, 1500, broker => EnsureDatabase(broker, 100));
             }
+
+            return _database;
         }
 
         private Report GetReport()
@@ -72,7 +74,7 @@ namespace pwiz.Skyline.FileUI
             return Report.Load(reportSpec);
         }
 
-        private Database EnsureDatabase()
+        public Database EnsureDatabase(ILongWaitBroker longWaitBroker, int percentOfWait)
         {
             var document = _documentUiContainer.Document;
             if (_database != null)
@@ -83,19 +85,14 @@ namespace pwiz.Skyline.FileUI
                 }
                 _database = null;
             }
-            Cursor cursorOld = Cursor;
-            try
-            {
-                Cursor = Cursors.WaitCursor;
-                Database database = new Database();
-                database.AddSrmDocument(document);
-                _database = database;
-                return _database;
-            }
-            finally
-            {
-                Cursor = cursorOld;
-            }
+            Database database = new Database
+                                    {
+                                        LongWaitBroker = longWaitBroker,
+                                        PercentOfWait = percentOfWait
+                                    };
+            database.AddSrmDocument(document);
+            _database = database;
+            return _database;
         }
 
         private void listboxReports_SelectedIndexChanged(object sender, EventArgs e)
@@ -121,7 +118,10 @@ namespace pwiz.Skyline.FileUI
                 })
             };
             if (!string.IsNullOrEmpty(_documentUiContainer.DocumentFilePath))
-                dlg.FileName = Path.GetFileNameWithoutExtension(_documentUiContainer.DocumentFilePath) + ".csv";
+            {
+                dlg.InitialDirectory = Path.GetDirectoryName(_documentUiContainer.DocumentFilePath);
+                dlg.FileName = Path.GetFileNameWithoutExtension(_documentUiContainer.DocumentFilePath) + ".csv";                
+            }
 
             if (dlg.ShowDialog(this) == DialogResult.Cancel)
                 return;
@@ -159,7 +159,6 @@ namespace pwiz.Skyline.FileUI
         {
             try
             {
-                using (new LongOp(this))
                 using (var saver = new FileSaver(fileName))
                 {
                     if (!saver.CanSave(true))
@@ -168,48 +167,68 @@ namespace pwiz.Skyline.FileUI
                     using (var writer = new StreamWriter(saver.SafeName))
                     {
                         Report report = GetReport();
-                        Database database = EnsureDatabase();
-                        ResultSet resultSet = report.Execute(database);
-                        for (int i = 0; i < resultSet.ColumnInfos.Count; i++)
-                        {
-                            var columnInfo = resultSet.ColumnInfos[i];
-                            if (columnInfo.IsHidden)
-                                continue;
+                        bool success = false;
 
-                            if (i > 0)
-                                writer.Write(separator);
-                            writer.Write(columnInfo.Caption);
-                        }
-                        writer.WriteLine();
-                        for (int iRow = 0; iRow < resultSet.RowCount; iRow++)
+                        var longWait = new LongWaitDlg { Text = "Generating Report" };
+                        longWait.PerformWork(this, 1500, broker =>
                         {
-                            for (int iColumn = 0; iColumn < resultSet.ColumnInfos.Count; iColumn++)
+                            broker.Message = "Analyzing document...";
+                            broker.ProgressValue = 0;
+                            Database database = EnsureDatabase(broker, 80);
+                            if (broker.IsCanceled)
+                                return;
+                            broker.Message = "Building report...";
+                            ResultSet resultSet = report.Execute(database);
+                            if (broker.IsCanceled)
+                                return;
+                            broker.ProgressValue = 95;
+                            broker.Message = "Writing report...";
+                            for (int i = 0; i < resultSet.ColumnInfos.Count; i++)
                             {
-                                var columnInfo = resultSet.ColumnInfos[iColumn];
+                                var columnInfo = resultSet.ColumnInfos[i];
                                 if (columnInfo.IsHidden)
                                     continue;
 
-                                if (iColumn > 0)
+                                if (i > 0)
                                     writer.Write(separator);
-                                string value = resultSet.FormatValue(iRow, iColumn);
-                                if (value.IndexOf(separator) == -1)
-                                    writer.Write(value);
-                                else
-                                {
-                                    // Quote fields that contain the separator value
-                                    writer.Write("\"");
-                                    writer.Write(value);
-                                    writer.Write("\"");
-                                }
+                                writer.Write(columnInfo.Caption);
                             }
                             writer.WriteLine();
-                        }
-                        writer.Flush();
-                        writer.Close();
+                            for (int iRow = 0; iRow < resultSet.RowCount; iRow++)
+                            {
+                                for (int iColumn = 0; iColumn < resultSet.ColumnInfos.Count; iColumn++)
+                                {
+                                    var columnInfo = resultSet.ColumnInfos[iColumn];
+                                    if (columnInfo.IsHidden)
+                                        continue;
 
-                        saver.Commit();
+                                    if (iColumn > 0)
+                                        writer.Write(separator);
+                                    string value = resultSet.FormatValue(iRow, iColumn);
+                                    if (value.IndexOf(separator) == -1)
+                                        writer.Write(value);
+                                    else
+                                    {
+                                        // Quote fields that contain the separator value
+                                        writer.Write("\"");
+                                        writer.Write(value);
+                                        writer.Write("\"");
+                                    }
+                                }
+                                writer.WriteLine();
+                            }
+                            writer.Flush();
+                            writer.Close();
 
-                        return true;
+                            if (broker.IsCanceled)
+                                return;
+                            broker.ProgressValue = 100;
+
+                            saver.Commit();
+                            success = true;
+                        });
+
+                        return success;
                     }
                 }
             }
@@ -251,7 +270,7 @@ namespace pwiz.Skyline.FileUI
 
         public void EditList()
         {
-            IEnumerable<ReportSpec> listNew = List.EditList(this);
+            IEnumerable<ReportSpec> listNew = List.EditList(this, this);
             if (listNew != null)
             {
                 List.Clear();
@@ -272,7 +291,7 @@ namespace pwiz.Skyline.FileUI
             try
             {
                 PreviewReportDlg previewReportDlg = new PreviewReportDlg();
-                previewReportDlg.SetResults(GetReport().Execute(EnsureDatabase()));
+                previewReportDlg.SetResults(GetReport().Execute(GetDatabase(this)));
                 previewReportDlg.Show(Owner);
             }
             catch (Exception)

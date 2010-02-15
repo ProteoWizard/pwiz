@@ -155,15 +155,15 @@ namespace pwiz.SkylineTest.Results
             Assert.AreEqual(missing, missingPeaks);
         }
 
-        private static double MaxPeakTime(ChromatogramGroupInfo chromGroupInfo2)
+        private static double MaxPeakTime(ChromatogramGroupInfo chromGroupInfo)
         {
             double maxIntensity = 0;
             double maxTime = 0;
-            int iBest = chromGroupInfo2.BestPeakIndex;
-            foreach (var chromInfo in chromGroupInfo2.TransitionPointSets)
+            int iBest = chromGroupInfo.BestPeakIndex;
+            foreach (var chromInfo in chromGroupInfo.TransitionPointSets)
             {
                 var peak = chromInfo.GetPeak(iBest);
-                if (peak.Height > maxIntensity)
+                if (!peak.IsForcedIntegration && peak.Height > maxIntensity)
                 {
                     maxIntensity = peak.Height;
                     maxTime = peak.RetentionTime;

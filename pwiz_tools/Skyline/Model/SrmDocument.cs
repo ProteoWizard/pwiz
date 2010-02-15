@@ -551,7 +551,7 @@ namespace pwiz.Skyline.Model
         {
             return ChangePeak(groupPath, nameSet, filePath, false,
                 (node, info, tol, iSet, iFile, reg) =>
-                    node.ChangePeak(info, tol, iSet, iFile, reg, tranId, retentionTime));
+                    node.ChangePeak(Settings, info, tol, iSet, iFile, reg, tranId, retentionTime));
         }
 
         public SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, string filePath,
@@ -559,7 +559,7 @@ namespace pwiz.Skyline.Model
         {
             return ChangePeak(groupPath, nameSet, filePath, true,
                 (node, info, tol, iSet, iFile, reg) =>
-                    node.ChangePeak(info, tol, iSet, iFile, reg, transition, startTime, endTime));
+                    node.ChangePeak(Settings, info, tol, iSet, iFile, reg, transition, startTime, endTime));
         }
 
         private delegate DocNode ChangeNodePeak(TransitionGroupDocNode nodeGroup,

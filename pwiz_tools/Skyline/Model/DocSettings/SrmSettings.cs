@@ -595,10 +595,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
                 TransitionFilter filter = TransitionSettings.Filter ?? defTran.Filter;
                 TransitionLibraries libraries = TransitionSettings.Libraries ?? defTran.Libraries;
+                TransitionIntegration integration = TransitionSettings.Integration ?? defTran.Integration;
                 TransitionInstrument instrument = TransitionSettings.Instrument ?? defTran.Instrument;
                 TransitionSettings transitionSettings = new TransitionSettings(prediction,
                                                                                filter,
                                                                                libraries,
+                                                                               integration,
                                                                                instrument);
                 // If the above null checks result in a changed PeptideSettings object,
                 // then use the changed version.
@@ -871,6 +873,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
             // If the results changed, then update the results information which has changed
             DiffResults = !ReferenceEquals(settingsNew.MeasuredResults, settingsOld.MeasuredResults);
+            // If the integration strategy has changed, then force a full update of all results
+            if (newTran.Integration.IsIntegrateAll != oldTran.Integration.IsIntegrateAll)
+                DiffResults = DiffResultsAll = true;
             // If the match tolerance has changed, then force a full update of all results
             if (newTran.Instrument.MzMatchTolerance != oldTran.Instrument.MzMatchTolerance)
                 DiffResults = DiffResultsAll = true;

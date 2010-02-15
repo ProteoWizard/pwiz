@@ -24,6 +24,7 @@ using System.Reflection;
 using System.Text;
 using NHibernate;
 using NHibernate.Tool.hbm2ddl;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -51,6 +52,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             new SchemaExport(configuration).Execute(false, true, false, _session.Connection, null);
         }
 
+        public ILongWaitBroker LongWaitBroker { get; set; }
+        public int PercentOfWait { get; set; }
 
         public ISessionFactory SessionFactory
         {
@@ -175,6 +178,11 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             DocInfo docInfo = new DocInfo(srmDocument);
             ITransaction transaction = _session.BeginTransaction();
             SaveResults(_session, docInfo);
+
+            // Progress reporting numbers
+            int peptideCount = srmDocument.PeptideCount;
+            int peptideTotal = 0;
+
             foreach (PeptideGroupDocNode nodeGroup in srmDocument.PeptideGroups)
             {
                 PeptideGroup peptideGroup = nodeGroup.PeptideGroup;
@@ -211,6 +219,13 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 docInfo.ProteinResults.Add(dbProtein, proteinResults);
                 foreach (PeptideDocNode nodePeptide in nodeGroup.Children)
                 {
+                    if (LongWaitBroker != null)
+                    {
+                        if (LongWaitBroker.IsCanceled)
+                            return;
+                        LongWaitBroker.ProgressValue = ++peptideTotal*PercentOfWait/peptideCount;
+                    }
+
                     SavePeptide(_session, docInfo, dbProtein, nodePeptide);
                 }
                 _session.Flush();

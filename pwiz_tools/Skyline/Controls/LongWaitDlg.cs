@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Controls
         /// <summary>
         /// True if the use has canceled the long operation
         /// </summary>
-        bool IsCancelled { get; }
+        bool IsCanceled { get; }
 
         /// <summary>
         /// Percent complete in the progress indicator shown to the user
@@ -45,6 +45,8 @@ namespace pwiz.Skyline.Controls
 
     public partial class LongWaitDlg : Form, ILongWaitBroker
     {
+        private const string CANCEL_MESSAGE = " (canceled)";
+
         private Exception _exception;
         private bool _clickedCancel;
         private int _progressValue = -1;
@@ -99,7 +101,7 @@ namespace pwiz.Skyline.Controls
                     progress = (progress + 10) % 110;
                     progressBar.Value = (_progressValue != -1 ? _progressValue : progress);
                     if (_message != null && !Equals(_message, labelMessage.Text))
-                        labelMessage.Text = _message;
+                        labelMessage.Text = _message + (_clickedCancel ? CANCEL_MESSAGE : "");
 
                     result.AsyncWaitHandle.WaitOne(700);
                 }
@@ -137,14 +139,14 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-        public bool IsCancelled
+        public bool IsCanceled
         {
             get { return _clickedCancel; }
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            labelMessage.Text += " (cancelling...)";
+            labelMessage.Text += CANCEL_MESSAGE;
             _clickedCancel = true;
         }
     }

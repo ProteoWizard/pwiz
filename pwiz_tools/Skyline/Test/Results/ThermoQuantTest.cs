@@ -185,29 +185,30 @@ namespace pwiz.SkylineTest.Results
                 }
                 else
                 {
-                    int minTranRatio = 5;
+                    bool missingRatio = false;
                     foreach (var result in nodeGroup.Results)
                     {
                         if (!result[0].Ratio.HasValue)
-                        {
-                            ratioGroupMissingCount++;
-                            // Still must have at least three ratios
-                            minTranRatio = 3;
-                        }
+                            missingRatio = true;
                     }
-                    int ratioCount = 0;
+                    int ratioCount1 = 0;
+                    int ratioCount2 = 0;
                     foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                     {
-                        foreach (var resultTran in nodeTran.Results)
-                            if (resultTran[0].Ratio.HasValue)
-                                ratioCount++;
+                        if (nodeTran.Results[0][0].Ratio.HasValue)
+                            ratioCount1++;
+                        if (nodeTran.Results[1][0].Ratio.HasValue)
+                            ratioCount2++;
                     }
-                    Assert.IsFalse(ratioCount < minTranRatio,
-                                   string.Format("Only {0} ratios found, expecting at least 5", ratioCount));
+                    Assert.AreEqual(3, ratioCount1);
+                    if (ratioCount2 < 2)
+                        ratioGroupMissingCount++;
+                    else
+                        Assert.IsFalse(missingRatio, "Precursor missing ratio when transitions have ratios");
                 }
             }
-            // Only one group missing a ratio
-            Assert.AreEqual(1, ratioGroupMissingCount);
+            // Only one group with less than 2 transition ratio
+            Assert.AreEqual(2, ratioGroupMissingCount);
 
             // Remove the first light transition, checking that this removes the ratio
             // from the corresponding heavy transition, but not the entire group, until

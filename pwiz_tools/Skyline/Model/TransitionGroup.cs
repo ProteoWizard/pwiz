@@ -348,15 +348,21 @@ namespace pwiz.Skyline.Model
             else
             {
                 // Recalculate results information
+                bool integrateAll = settingsNew.TransitionSettings.Integration.IsIntegrateAll;
 
                 // Store indexes to previous results in a dictionary for lookup
                 var dictChromIdIndex = new Dictionary<int, int>();
                 var settingsOld = diff.SettingsOld;
+                
                 if (settingsOld != null && settingsOld.HasResults)
                 {
-                    int i = 0;
-                    foreach (var chromSet in settingsOld.MeasuredResults.Chromatograms)
-                        dictChromIdIndex.Add(chromSet.Id.GlobalIndex, i++);
+                    // As long as integration strategy has not changed
+                    if (integrateAll == settingsOld.TransitionSettings.Integration.IsIntegrateAll)
+                    {
+                        int i = 0;
+                        foreach (var chromSet in settingsOld.MeasuredResults.Chromatograms)
+                            dictChromIdIndex.Add(chromSet.Id.GlobalIndex, i++);
+                    }
                 }
 
                 float mzMatchTolerance = (float) settingsNew.TransitionSettings.Instrument.MzMatchTolerance;
@@ -454,6 +460,8 @@ namespace pwiz.Skyline.Model
                                     {
                                         ChromPeak peak = (info != null && info.BestPeakIndex != -1 ?
                                             info.GetPeak(info.BestPeakIndex) : ChromPeak.EMPTY);
+                                        if (!integrateAll && peak.IsForcedIntegration)
+                                            peak = ChromPeak.EMPTY;
 
                                         // Avoid creating new info objects that represent the same data
                                         // in use before.
@@ -901,10 +909,16 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), (im, v) => im.Results = v, prop);
         }
 
-        public DocNode ChangePeak(ChromatogramGroupInfo chromInfoGroup, double mzMatchTolerance,
-            int indexSet, int indexFile, OptimizableRegression regression, Identity tranId,
-            double retentionTime)
+        public DocNode ChangePeak(SrmSettings settings,
+                                  ChromatogramGroupInfo chromInfoGroup,
+                                  double mzMatchTolerance,
+                                  int indexSet,
+                                  int indexFile,
+                                  OptimizableRegression regression,
+                                  Identity tranId,
+                                  double retentionTime)
         {
+            bool integrateAll = settings.TransitionSettings.Integration.IsIntegrateAll;
             // Find the index of the peak group referenced by this retention time.
             int indexPeakBest = -1;
             // Use the peak closest to the time passed in.
@@ -919,7 +933,10 @@ namespace pwiz.Skyline.Model
                 int indexPeak = chromInfo.IndexOfPeak(retentionTime);
                 if (indexPeak == -1)
                     continue;
-                double deltaRT = Math.Abs(retentionTime - chromInfo.GetPeak(indexPeak).RetentionTime);
+                var peak = chromInfo.GetPeak(indexPeak);
+                if (!integrateAll && peak.IsForcedIntegration)
+                    continue;
+                double deltaRT = Math.Abs(retentionTime - peak.RetentionTime);
                 if (deltaRT < minDeltaRT)
                 {
                     minDeltaRT = deltaRT;
@@ -936,7 +953,7 @@ namespace pwiz.Skyline.Model
                 if (chromInfo == null)
                     continue;
                 ChromPeak peakNew = chromInfo.GetPeak(indexPeakBest);
-                if (peakNew.IsEmpty)
+                if (peakNew.IsEmpty || (!integrateAll && peakNew.IsForcedIntegration))
                     continue;
                 startMin = Math.Min(startMin, peakNew.StartTime);
                 endMax = Math.Max(endMax, peakNew.EndTime);
@@ -966,7 +983,7 @@ namespace pwiz.Skyline.Model
                         ChromPeak peakNew = chromInfo.GetPeak(indexPeakBest);
                         // If the peak is empty, but the old peak has sufficient overlap with
                         // the peaks being added, then keep it.
-                        if (peakNew.IsEmpty)
+                        if (peakNew.IsEmpty || peakNew.IsForcedIntegration)
                         {
                             var tranInfoList = nodeTran.Results[indexSet];
                             int iTran = tranInfoList.IndexOf(info =>
@@ -987,14 +1004,23 @@ namespace pwiz.Skyline.Model
             return ChangeChildrenChecked(listChildrenNew);
         }
 
-        public DocNode ChangePeak(ChromatogramGroupInfo chromInfoGroup, double mzMatchTolerance,
-            int indexSet, int indexFile, OptimizableRegression regression, Transition transition,
-            double startTime, double endTime)
+        public DocNode ChangePeak(SrmSettings settings,
+                                  ChromatogramGroupInfo chromInfoGroup,
+                                  double mzMatchTolerance,
+                                  int indexSet,
+                                  int indexFile,
+                                  OptimizableRegression regression,
+                                  Transition transition,
+                                  double startTime,
+                                  double endTime)
         {
             // Recalculate peaks based on new boundaries
             var listChildrenNew = new List<DocNode>();
             int startIndex = chromInfoGroup.IndexOfNearestTime((float)startTime);
             int endIndex = chromInfoGroup.IndexOfNearestTime((float)endTime);
+            ChromPeak.FlagValues flags = 0;
+            if (settings.MeasuredResults.IsTimeNormalArea)
+                flags = ChromPeak.FlagValues.time_normalized;
             foreach (TransitionDocNode nodeTran in Children)
             {
                 if (transition != null && !ReferenceEquals(transition, nodeTran.Transition))
@@ -1018,7 +1044,7 @@ namespace pwiz.Skyline.Model
                             var chromInfo = chromInfoArray[i];
                             int step = i - numSteps;
                             nodeTranNew = (TransitionDocNode) nodeTranNew.ChangePeak(
-                                indexSet, indexFile, step, chromInfo.CalcPeak(startIndex, endIndex));
+                                indexSet, indexFile, step, chromInfo.CalcPeak(startIndex, endIndex, flags));
                         }
                         listChildrenNew.Add(nodeTranNew);
                     }

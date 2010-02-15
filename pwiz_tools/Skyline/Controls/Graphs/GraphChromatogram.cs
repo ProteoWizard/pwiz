@@ -546,6 +546,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 for (int j = 0; j < numPeaks; j++)
                 {
                     var peak = info.GetPeak(j);
+                    if (peak.IsForcedIntegration)
+                        continue;
 
                     // Exclude any peaks between the boundaries of the chosen peak.
                     if (IntersectPeaks(peak, transitionChromInfo))
@@ -784,6 +786,9 @@ namespace pwiz.Skyline.Controls.Graphs
                         continue;
 
                     ChromPeak peak = graphData.InfoPrimary.GetPeak(j);
+                    if (peak.IsForcedIntegration)
+                        continue;
+
                     if (IntersectPeaks(peak, tranPeakInfo))
                         maxPeakHeights[j] = 0;
                 }
@@ -872,6 +877,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         transitionChromInfo.StartRetentionTime < peak.RetentionTime &&
                         peak.RetentionTime < transitionChromInfo.EndRetentionTime)
                         continue;
+                    if (peak.IsForcedIntegration)
+                        continue;
 
                     PeakHeights[i++] += peak.Height;
                 }
@@ -949,6 +956,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     for (int j = 0; j < annotateAll.Length; j++)
                     {
                         var peak = infoPrimary.GetPeak(j);
+                        if (peak.IsForcedIntegration)
+                            continue;
+
                         // Exclude any peaks between the boundaries of the chosen peak.
                         if (tranPeakInfo != null &&
                             tranPeakInfo.StartRetentionTime < peak.RetentionTime &&

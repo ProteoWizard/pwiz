@@ -113,7 +113,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddItem()
         {
-            TItem item = _editor.NewItem(GetAll(), TagEx);
+            TItem item = _editor.NewItem(this, GetAll(), TagEx);
             if (!Equals(item, default(TItem)))
             {
                 // Insert after current selection.
@@ -132,7 +132,7 @@ namespace pwiz.Skyline.SettingsUI
         public void CopyItem()
         {
             int i = listBox.SelectedIndex;
-            TItem item = _editor.EditItem(_editor.CopyItem(_list[i]), GetAll(), TagEx);
+            TItem item = _editor.EditItem(this, _editor.CopyItem(_list[i]), GetAll(), TagEx);
             if (!Equals(item, default(TItem)))
             {
                 // Insert after current selection.
@@ -151,7 +151,7 @@ namespace pwiz.Skyline.SettingsUI
         public void EditItem()
         {
             int i = listBox.SelectedIndex;
-            TItem item = _editor.EditItem(_list[i], GetAll(), TagEx);
+            TItem item = _editor.EditItem(this, _list[i], GetAll(), TagEx);
             if (!Equals(item, default(TItem)))
             {
                 _list[i] = item;

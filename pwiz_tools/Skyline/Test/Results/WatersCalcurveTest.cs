@@ -310,7 +310,7 @@ namespace pwiz.SkylineTest.Results
                         foreach (var tranInfo in chromInfo.TransitionPointSets)
                         {
                             var peakInfo = tranInfo.GetPeak(chromInfo.BestPeakIndex);
-                            if (peakInfo.IsEmpty)
+                            if (peakInfo.IsEmpty || peakInfo.IsForcedIntegration)
                                 continue;
 
                             // Check times
@@ -490,8 +490,8 @@ namespace pwiz.SkylineTest.Results
             cachePath = Path.ChangeExtension(docPath, ".skyd");
             File.Delete(cachePath);
 
-            // Then try using cached replicate files
-            // Move per-replicate cache files into place
+            // Then try using cached files
+            // Move per-file cache files into place
             var fileCacheNames = new[]
                 {
                     "160109_Mix1_calcurve_075.mzML.skyd",
@@ -508,6 +508,16 @@ namespace pwiz.SkylineTest.Results
             File.Move(fileTemp, file078);
 
             docCached = InitWatersDocument(testFilesDir, "160109_Mix1_calcurve_file.sky", out docPath);
+            // Make sure cache files exactly match the names the loader will look for
+            var listResultsFiles = new List<string>();
+            foreach (var chromatogram in docCached.Settings.MeasuredResults.Chromatograms)
+                listResultsFiles.AddRange(chromatogram.MSDataFilePaths);
+            for (int i = 0; i < fileCacheNames.Length; i++)
+            {
+                string partPath = ChromatogramCache.PartPathForName(docPath, listResultsFiles[i], null);
+                File.Move(testFilesDir.GetTestPath(fileCacheNames[i]), partPath);
+            }
+
             Assert.IsTrue(docContainer.SetDocument(docCached, doc, true));
             docContainer.AssertComplete();
             // docCached = docContainer.Document;

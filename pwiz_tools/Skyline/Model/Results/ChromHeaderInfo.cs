@@ -314,36 +314,44 @@ namespace pwiz.Skyline.Model.Results
         [Flags]
         public enum FlagValues
         {
-            degenerate_fwhm = 0x1
+            degenerate_fwhm = 0x1,
+            forced_integration = 0x2,
+            time_normalized = 0x4,
         }
 
 // ReSharper disable InconsistentNaming
         public static ChromPeak EMPTY;
 // ReSharper restore InconsistentNaming
 
-        public ChromPeak(CrawdadPeak peak, float[] times)
+        public ChromPeak(CrawdadPeak peak, FlagValues flags, float[] times)
             : this()
         {
             // Get the interval being used to convert from Crawdad index based numbers
             // to numbers that are normalized with respect to time.
             double interval = times[peak.StartIndex + 1] - times[peak.StartIndex];
-            // Normalize area numbers by time in seconds, since this will be the least
-            // dramatic change from Skyline v0.5, when the Crawdad index based areas
-            // were used directly.
-            // TODO: Implement enough backward compatibility code for this to be enabled
-//            double intervalSeconds = interval*60;
 
             RetentionTime = times[peak.TimeIndex];
             StartTime = times[peak.StartIndex];
             EndTime = times[peak.EndIndex];
 
-//            Area = (float) (peak.Area * intervalSeconds);
-//            BackgroundArea = (float) (peak.BackgroundArea * intervalSeconds);
-            Area = peak.Area;
-            BackgroundArea = peak.BackgroundArea;
+            if ((flags & FlagValues.time_normalized) == 0)
+            {
+                Area = peak.Area;
+                BackgroundArea = peak.BackgroundArea;
+            }
+            else
+            {
+                // Normalize area numbers by time in seconds, since this will be the least
+                // dramatic change from Skyline v0.5, when the Crawdad index based areas
+                // were used directly.
+                double intervalSeconds = interval * 60;
+
+                Area = (float)(peak.Area * intervalSeconds);
+                BackgroundArea = (float) (peak.BackgroundArea * intervalSeconds);
+            }
             Height = peak.Height;
             Fwhm = (float) (peak.Fwhm * interval);
-            Flags = 0;
+            Flags = flags;
             if (peak.FwhmDegenerate)
                 Flags |= FlagValues.degenerate_fwhm;
         }
@@ -367,6 +375,11 @@ namespace pwiz.Skyline.Model.Results
         public bool IsFwhmDegenerate
         {
             get { return (Flags & FlagValues.degenerate_fwhm) != 0; }
+        }
+
+        public bool IsForcedIntegration
+        {
+            get { return (Flags & FlagValues.forced_integration) != 0; }
         }
 
         public static float Intersect(ChromPeak peak1, ChromPeak peak2)
@@ -790,7 +803,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static bool IsOptimizationSpacing(double mz1, double mz2)
         {
-            double delta = Math.Abs(OPTIMIZE_SHIFT_SIZE - mz2 - mz1);
+            double delta = Math.Abs(Math.Abs(mz2 - mz1) - OPTIMIZE_SHIFT_SIZE);
             return delta < OPTIMIZE_SHIFT_THRESHOLD;
         }
 
@@ -839,7 +852,7 @@ namespace pwiz.Skyline.Model.Results
             return _allPeaks[_groupHeaderInfo.StartPeakIndex + peakIndex + (_transitionIndex * _groupHeaderInfo.NumPeaks)];
         }
 
-        public ChromPeak CalcPeak(int startIndex, int endIndex)
+        public ChromPeak CalcPeak(int startIndex, int endIndex, ChromPeak.FlagValues flags)
         {
             if (startIndex == endIndex)
                 return ChromPeak.EMPTY;
@@ -847,7 +860,7 @@ namespace pwiz.Skyline.Model.Results
             CrawdadPeakFinder finder = new CrawdadPeakFinder();
             finder.SetChromatogram(Times, Intensities);
             var peak = finder.GetPeak(startIndex, endIndex);
-            return new ChromPeak(peak, Times);
+            return new ChromPeak(peak, flags, Times);
         }
 
         public int IndexOfPeak(double retentionTime)

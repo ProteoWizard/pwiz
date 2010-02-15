@@ -106,7 +106,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (annotatePeaks[i])
                 {
                     ChromPeak peak = chromatogram.GetPeak(i);
-                    maxIndex = GetMaxIndex(peak.StartTime, peak.EndTime, ref iLastStart);
+                    if (!peak.IsForcedIntegration)
+                        maxIndex = GetMaxIndex(peak.StartTime, peak.EndTime, ref iLastStart);
                 }
                 _arrayLabelIndexes[i] = maxIndex;
                 if (maxIndex != -1 && !_annotatedTimes.ContainsKey(_times[maxIndex]))
@@ -327,6 +328,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     continue;
 
                 ChromPeak peak = Chromatogram.GetPeak(i);
+                if (peak.IsForcedIntegration)
+                    continue;
+
                 double maxIntensity = _intensities[_arrayLabelIndexes[i]];
 
                 // Show peak extent indicators, if they are far enough apart

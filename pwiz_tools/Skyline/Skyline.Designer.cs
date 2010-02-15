@@ -76,6 +76,7 @@ namespace pwiz.Skyline
             this.removeDuplicatePeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeRepeatedPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeMissingResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator35 = new System.Windows.Forms.ToolStripSeparator();
             this.refineAdvancedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.manageUniquePeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator8 = new System.Windows.Forms.ToolStripSeparator();
@@ -155,8 +156,9 @@ namespace pwiz.Skyline
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.peptideSettingsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transitionSettingsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator37 = new System.Windows.Forms.ToolStripSeparator();
             this.annotationsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator37 = new System.Windows.Forms.ToolStripSeparator();
+            this.integrateAllMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.statusGeneral = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusProgress = new System.Windows.Forms.ToolStripProgressBar();
@@ -643,6 +645,7 @@ namespace pwiz.Skyline
             this.removeDuplicatePeptidesMenuItem,
             this.removeRepeatedPeptidesMenuItem,
             this.removeMissingResultsMenuItem,
+            this.toolStripSeparator35,
             this.refineAdvancedMenuItem});
             this.refineToolStripMenuItem.Name = "refineToolStripMenuItem";
             this.refineToolStripMenuItem.Size = new System.Drawing.Size(189, 22);
@@ -675,6 +678,11 @@ namespace pwiz.Skyline
             this.removeMissingResultsMenuItem.Size = new System.Drawing.Size(218, 22);
             this.removeMissingResultsMenuItem.Text = "Remove &Missing Results";
             this.removeMissingResultsMenuItem.Click += new System.EventHandler(this.removeMissingResultsMenuItem_Click);
+            // 
+            // toolStripSeparator35
+            // 
+            this.toolStripSeparator35.Name = "toolStripSeparator35";
+            this.toolStripSeparator35.Size = new System.Drawing.Size(215, 6);
             // 
             // refineAdvancedMenuItem
             // 
@@ -1283,8 +1291,9 @@ namespace pwiz.Skyline
             this.toolStripSeparator3,
             this.peptideSettingsMenuItem,
             this.transitionSettingsMenuItem,
+            this.annotationsToolStripMenuItem,
             this.toolStripSeparator37,
-            this.annotationsToolStripMenuItem});
+            this.integrateAllMenuItem});
             this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
             this.settingsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
             this.settingsToolStripMenuItem.Text = "&Settings";
@@ -1348,17 +1357,24 @@ namespace pwiz.Skyline
             this.transitionSettingsMenuItem.Text = "&Transition Settings...";
             this.transitionSettingsMenuItem.Click += new System.EventHandler(this.transitionSettingsMenuItem_Click);
             // 
-            // toolStripSeparator37
-            // 
-            this.toolStripSeparator37.Name = "toolStripSeparator37";
-            this.toolStripSeparator37.Size = new System.Drawing.Size(178, 6);
-            // 
             // annotationsToolStripMenuItem
             // 
             this.annotationsToolStripMenuItem.Name = "annotationsToolStripMenuItem";
             this.annotationsToolStripMenuItem.Size = new System.Drawing.Size(181, 22);
             this.annotationsToolStripMenuItem.Text = "&Annotations...";
             this.annotationsToolStripMenuItem.Click += new System.EventHandler(this.annotationsToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator37
+            // 
+            this.toolStripSeparator37.Name = "toolStripSeparator37";
+            this.toolStripSeparator37.Size = new System.Drawing.Size(178, 6);
+            // 
+            // integrateAllMenuItem
+            // 
+            this.integrateAllMenuItem.Name = "integrateAllMenuItem";
+            this.integrateAllMenuItem.Size = new System.Drawing.Size(181, 22);
+            this.integrateAllMenuItem.Text = "I&ntegrate All";
+            this.integrateAllMenuItem.Click += new System.EventHandler(this.integrateAllMenuItem_Click);
             // 
             // statusStrip
             // 
@@ -2666,6 +2682,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem refineAdvancedMenuItem;
         private System.Windows.Forms.ToolStripMenuItem precursorIonMenuItem;
         private System.Windows.Forms.ToolStripMenuItem precursorIonContextMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator35;
+        private System.Windows.Forms.ToolStripMenuItem integrateAllMenuItem;
     }
 }
 

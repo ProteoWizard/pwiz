@@ -202,6 +202,9 @@ namespace pwiz.Skyline.SettingsUI
             TransitionLibraries libraries = new TransitionLibraries(ionMatchTolerance, ionCount, pick);
             Helpers.AssignIfEquals(ref libraries, Libraries);
 
+            // This dialog does not yet change integration settings
+            TransitionIntegration integration = _transitionSettings.Integration;
+
             // Validate and store instrument settings
             int minMz;
             min = TransitionInstrument.MIN_MEASUREABLE_MZ;
@@ -232,7 +235,9 @@ namespace pwiz.Skyline.SettingsUI
             TransitionInstrument instrument = new TransitionInstrument(minMz, maxMz, mzMatchTolerance, maxTrans);
             Helpers.AssignIfEquals(ref instrument, Instrument);
 
-            TransitionSettings settings = new TransitionSettings(prediction, filter, libraries, instrument);
+            TransitionSettings settings = new TransitionSettings(prediction,
+                filter, libraries, integration, instrument);
+
             // Only update, if anything changed
             if (!Equals(settings, _transitionSettings))
             {

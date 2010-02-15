@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Model.Results
                 if (results.IsLoaded)
                     return;
 
-                results.Load(documentFilePath, new LoadMonitor(_manager, _container, results),
+                results.Load(_docCurrent, documentFilePath, new LoadMonitor(_manager, _container, results),
                             FinishLoad);
             }
 

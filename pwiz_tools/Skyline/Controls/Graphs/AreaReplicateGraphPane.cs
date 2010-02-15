@@ -299,7 +299,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         for (int j = 0; j < pointPairList.Count; j++)
                         {
                             // If the regression value is missing, then normalization is not possible.
-                            if (pointPairListRegression[j].Y == PointPairBase.Missing)
+                            double regressionValue = pointPairListRegression[j].Y;
+                            if (regressionValue == PointPairBase.Missing || regressionValue == 0)
                                 pointPairList[j].Y = PointPairBase.Missing;
                             // If the value itself is not missing, then do the normalization
                             else if (pointPairList[j].Y != PointPairBase.Missing)
@@ -310,7 +311,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     for (int j = 0; j < pointPairListRegression.Count; j++)
                     {
                         // If it is missing, leave it missing.
-                        if (pointPairListRegression[j].Y != PointPairBase.Missing)
+                        double regressionValue = pointPairListRegression[j].Y;
+                        if (regressionValue != PointPairBase.Missing && regressionValue != 0)
                             pointPairListRegression[j].Y = 100;
                     }
                 }                
@@ -323,7 +325,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             protected override bool IsMissingValue(TransitionChromInfo chromInfo)
             {
-                return false;
+                return chromInfo.IsEmpty;
             }
 
             protected override PointPair CreatePointPair(int iResult, TransitionChromInfo chromInfo)

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
@@ -274,7 +273,7 @@ namespace pwiz.Skyline.EditUI
             int selectedIndexLast = listSelectedIndex[indexAA];
             if (AddItemSelected(combo))
             {
-                StaticMod itemNew = listSettingsMods.NewItem(null, null);
+                StaticMod itemNew = listSettingsMods.NewItem(this, null, null);
                 if (!Equals(itemNew, null))
                 {
                     listSettingsMods.Add(itemNew);
@@ -288,7 +287,7 @@ namespace pwiz.Skyline.EditUI
             }
             else if (EditListSelected(combo))
             {
-                IEnumerable<StaticMod> listNew = listSettingsMods.EditList(null);
+                IEnumerable<StaticMod> listNew = listSettingsMods.EditList(this, null);
                 if (listNew != null)
                 {
                     listSettingsMods.Clear();

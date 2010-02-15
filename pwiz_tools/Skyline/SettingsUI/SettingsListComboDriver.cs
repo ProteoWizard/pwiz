@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -99,7 +99,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddItem()
         {
-            T itemNew = List.NewItem(null, null);
+            T itemNew = List.NewItem(Combo.TopLevelControl, null, null);
             if (!Equals(itemNew, default(T)))
             {
                 List.Add(itemNew);
@@ -115,7 +115,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void EditList()
         {
-            IEnumerable<T> listNew = List.EditList(null);
+            IEnumerable<T> listNew = List.EditList(Combo.TopLevelControl, null);
             if (listNew != null)
             {
                 string selectedItemLast = Combo.Items[_selectedIndexLast].ToString();
