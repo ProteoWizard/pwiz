@@ -99,6 +99,7 @@ PWIZ_API_DECL void Reader_FASTA::read(const std::string& uri, shared_ptr<istream
                     try
                     {
                         result.proteinListPtr->protein(0);
+                        return;
                     }
                     catch (exception&)
                     {
@@ -115,18 +116,14 @@ PWIZ_API_DECL void Reader_FASTA::read(const std::string& uri, shared_ptr<istream
             {
                 // fall back to in-memory index
                 config.indexPtr.reset(new data::MemoryIndex);
-                Serializer_FASTA serializer(config);
-                serializer.read(uriStreamPtr, result);
             }
         }
         else // stream is ready and writable
             config.indexPtr.reset(new data::BinaryIndexStream(isPtr));
     }
-    else // use in-memory index
-    {
-        Serializer_FASTA serializer(config);
-        serializer.read(uriStreamPtr, result);
-    }
+
+    Serializer_FASTA serializer(config);
+    serializer.read(uriStreamPtr, result);
 }
 
 
