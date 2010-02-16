@@ -83,13 +83,50 @@ PWIZ_API_DECL void Reader_FASTA::read(const std::string& uri, shared_ptr<istream
     {
         {ofstream((uri + ".index").c_str(), ios::app);} // make sure the file exists
         shared_ptr<iostream> isPtr(new fstream((uri + ".index").c_str(), ios::in | ios::out | ios::binary));
-        if(!*isPtr)
-            throw runtime_error("[Reader_FASTA::read] Failed to open index file \"" + uri + ".index\"");
-        config.indexPtr.reset(new data::BinaryIndexStream(isPtr));
-    }
 
-    Serializer_FASTA serializer(config);
-    serializer.read(uriStreamPtr, result);
+        if (!*isPtr) // stream is unavailable or read only
+        {
+            isPtr.reset(new fstream((uri + ".index").c_str(), ios::in | ios::binary));
+            bool canOpenReadOnly = !!*isPtr;
+            if (canOpenReadOnly)
+            {
+                // check that the index is up to date;
+                // if it isn't, a read only index is worthless
+                config.indexPtr.reset(new data::BinaryIndexStream(isPtr));
+                Serializer_FASTA serializer(config);
+                serializer.read(uriStreamPtr, result);
+                if (result.proteinListPtr->size() > 0)
+                    try
+                    {
+                        result.proteinListPtr->protein(0);
+                    }
+                    catch (exception&)
+                    {
+                        // TODO: log warning about stale read only index
+                        canOpenReadOnly = false;
+                    }
+            }
+
+            // TODO: try opening an index in other locations, e.g.:
+            // * current working directory (may be read only)
+            // * executing direcotry (may be read only)
+            // * temp directory (pretty much guaranteed to be writable)
+            if (!canOpenReadOnly)
+            {
+                // fall back to in-memory index
+                config.indexPtr.reset(new data::MemoryIndex);
+                Serializer_FASTA serializer(config);
+                serializer.read(uriStreamPtr, result);
+            }
+        }
+        else // stream is ready and writable
+            config.indexPtr.reset(new data::BinaryIndexStream(isPtr));
+    }
+    else // use in-memory index
+    {
+        Serializer_FASTA serializer(config);
+        serializer.read(uriStreamPtr, result);
+    }
 }
 
 
