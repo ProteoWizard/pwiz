@@ -1,4 +1,6 @@
-/* Boost.MultiIndex example of serialization of a MRU list.
+/* $Id$
+ *
+ * Boost.MultiIndex example of serialization of a MRU list.
  *
  * Copyright 2003-2008 Joaquin M Lopez Munoz.
  * Distributed under the Boost Software License, Version 1.0.
