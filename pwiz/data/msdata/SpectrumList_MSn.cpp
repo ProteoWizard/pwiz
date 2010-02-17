@@ -32,7 +32,7 @@
 #include "pwiz/utility/misc/Stream.hpp"
 #include "pwiz/utility/misc/Container.hpp"
 #include "pwiz/utility/misc/Exception.hpp"
-#include "libraries/zlib-1.2.3/zlib.h"
+#include "zlib.h"
 
 
 namespace pwiz {
