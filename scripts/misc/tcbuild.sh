@@ -2,7 +2,6 @@
 
 function echo_info()
 {
-    echo "##teamcity[message text='$*']"
     echo "##teamcity[progressMessage '$*']"
 }
 
@@ -31,6 +30,18 @@ fi
 echo_info "Running quickbuild for debug variant..."
 if ! /bin/bash quickbuild.sh --teamcity-test-decoration -j4 debug; then
 	  echo_error "Error running quickbuild for debug variant! See full build log for more details."
+	  EXIT=1
+fi
+
+echo_info "Running quickbuild for shared release variant..."
+if ! /bin/bash quickbuild.sh --teamcity-test-decoration -j4 release link=shared; then
+	  echo_error "Error running quickbuild for shared release variant! See full build log for more details."
+	  EXIT=1
+fi
+
+echo_info "Running quickbuild for shared debug variant..."
+if ! /bin/bash quickbuild.sh --teamcity-test-decoration -j4 debug link=shared; then
+	  echo_error "Error running quickbuild for shared debug variant! See full build log for more details."
 	  EXIT=1
 fi
 
