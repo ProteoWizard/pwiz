@@ -21,16 +21,15 @@
 #
 
 
-project
-    : requirements
+alias mstool-requirements : : : :
         <library>../common
         <library>../../pwiz/analysis/spectrum_processing//pwiz_analysis_spectrum_processing
-        <library>../../pwiz/analysis//pwiz_analysis_version
-    ;
+        <library>../../pwiz/analysis//pwiz_analysis_version ;
 
 exe msdiff 
     : msdiff.cpp
       /ext/boost//program_options
+      mstool-requirements
     : <include>../../..
     ;
 
@@ -39,16 +38,17 @@ exe msconvert
     : msconvert.cpp
       /ext/boost//program_options
       /ext/boost//filesystem
+      mstool-requirements
     : <include>../../..
     ;
 
 
 exe msdir
     : msdir.cpp
-      ../../pwiz/data/msdata//pwiz_data_msdata
       /ext/boost//program_options
       /ext/boost//filesystem
       /ext/boost//date_time
+      mstool-requirements
     : <include>../../..
     ;
 
@@ -58,6 +58,7 @@ exe msaccess
       ../../pwiz/analysis/passive//pwiz_analysis_passive
       ../../pwiz/analysis/peptideid//pwiz_analysis_peptideid
       ../../pwiz/utility/misc//pwiz_utility_image
+      mstool-requirements
     : <include>../../..
     ;
 
@@ -67,6 +68,7 @@ exe mspicture
       ../../pwiz/analysis/passive//pwiz_analysis_passive
       ../../pwiz/analysis/peptideid//pwiz_analysis_peptideid
       ../../pwiz/utility/misc//pwiz_utility_image
+      mstool-requirements
     : <include>../../..
     ;
 
@@ -75,12 +77,14 @@ exe pepsum
     : pepsum.cpp
       ../../pwiz/analysis/peptideid//pwiz_analysis_peptideid
       ../../pwiz/utility/misc//pwiz_utility_image
+      mstool-requirements
     : <include>../../..
     ;
 
 
 exe peakaboo
     : peakaboo.cpp
+      mstool-requirements
     : <include>../../..
     ;
 
@@ -88,6 +92,7 @@ exe peakaboo
 exe msistats
     : msistats.cpp
       ../../pwiz/utility/misc//pwiz_utility_misc
+      mstool-requirements
     : <include>../../..
     ;
 
@@ -95,6 +100,7 @@ exe msistats
 exe chainsaw
     : chainsaw.cpp
       ../../pwiz/data/proteome//pwiz_data_proteome
+      ../../pwiz//pwiz_version
       /ext/boost//program_options
       /ext/boost//filesystem
     : <include>../../..
@@ -111,6 +117,7 @@ exe chainsaw
 exe pep2mzid
     : pep2mzid.cpp
       ../../pwiz/data/mziddata//pwiz_data_mzid
+      /ext/boost//program_options
     : <include>../../..
     ;
 

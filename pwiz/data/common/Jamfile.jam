@@ -55,9 +55,11 @@ lib pwiz_data_common
         CVTranslator.cpp
     : # requirements
         <library>/ext/boost//thread
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
     : # default-build
     : # usage-requirements
         <library>/ext/boost//thread
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
     ;
 
 

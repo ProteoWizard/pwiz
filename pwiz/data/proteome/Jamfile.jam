@@ -21,6 +21,23 @@
 #
 
 
+project
+    : requirements
+        <toolset>gcc:<cxxflags>-fno-strict-aliasing
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+        <toolset>msvc:<cxxflags>/wd4702                 # warning: unreachable code (boost::iostreams)
+    ;
+
+
+# -fno-strict-aliasing necessary to avoid warnings from gcc 4.1+
+#  with regards to float <-> dword conversions during en/decoding 
+# gcc 4.1.2 regression bug: 
+# -O2 without -fno-strict-aliasing causes miscompilation in MSRunPeaksEncoder.cpp 
+
+
+lib pwiz_data_proteome_version : Version.cpp : <link>static <conditional>@static-with-fpic ;
+
+
 lib pwiz_data_proteome
     : # sources
         AminoAcid.cpp
@@ -34,9 +51,8 @@ lib pwiz_data_proteome
         Reader_FASTA.cpp
         DefaultReaderList.cpp
         ProteomeDataFile.cpp
-        Version.cpp
     : # requirements
-        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+        <library>pwiz_data_proteome_version
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/chemistry//pwiz_utility_chemistry
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/common//pwiz_data_common
@@ -47,6 +63,7 @@ lib pwiz_data_proteome
         <library>/ext/zlib//z
     : # default-build
     : # usage-requirements
+        <library>pwiz_data_proteome_version
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/chemistry//pwiz_utility_chemistry
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/common//pwiz_data_common
@@ -58,7 +75,12 @@ lib pwiz_data_proteome
     ;
 
 
-lib pwiz_data_proteome_examples : examples.cpp pwiz_data_proteome ;
+lib pwiz_data_proteome_examples
+    :   examples.cpp
+    :   <library>pwiz_data_proteome
+    :
+    :	<library>pwiz_data_proteome
+    ;
 
 
 unit-test AminoAcidTest : AminoAcidTest.cpp pwiz_data_proteome ;

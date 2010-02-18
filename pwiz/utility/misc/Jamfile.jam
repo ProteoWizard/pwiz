@@ -59,6 +59,7 @@ lib pwiz_utility_misc
         <library>/ext/boost//filesystem
         <library>/ext/zlib//z
         <toolset>msvc:<library>ole32
+        <toolset>msvc:<library>oleaut32
     ;
 
 
@@ -73,6 +74,19 @@ lib pwiz_utility_image
     : # usage-requirements
         <library>../../..//gd
         <library>pwiz_utility_misc
+    ;
+
+
+lib pwiz_utility_vendor_reader_test_harness
+    : # sources
+        VendorReaderTestHarness.cpp
+    : # requirements
+        <library>pwiz_utility_misc
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+    : # default-build
+    : # usage-requirements
+        <library>pwiz_utility_misc
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
     ;
 
 

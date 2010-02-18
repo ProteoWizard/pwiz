@@ -37,28 +37,38 @@ project
         release
 	;
 
+
+# The DLL is forced to be <link>shared, but its dependencies may be static or shared depending on
+# the build request. The default is link=static, so the command-line is tested for link=shared.
+local linkage = <link>static ;
+if link=shared in [ modules.peek : ARGV ]
+{
+    linkage = <link>shared ;
+}
+
 local bound_libs =
 
         <define>PWIZ_BINDINGS_CLI_COMBINED
-        
+
         # msdata
-        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata/<link>static/<asynch-exceptions>off
-        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata_examples/<link>static/<asynch-exceptions>off
-        <library>$(PWIZ_ROOT_PATH)/pwiz_tools/common//pwiz_tools_common/<link>static/<asynch-exceptions>off
-        
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata/<asynch-exceptions>off/$(linkage)
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata_examples/<asynch-exceptions>off/$(linkage)
+        <library>$(PWIZ_ROOT_PATH)/pwiz_tools/common//pwiz_tools_common/<asynch-exceptions>off/$(linkage)
+
         # analysis
-        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis//pwiz_analysis_version/<link>static/<asynch-exceptions>off
-        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/spectrum_processing/<link>static/<asynch-exceptions>off
-        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/chromatogram_processing/<link>static/<asynch-exceptions>off
-        
+        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis//pwiz_analysis_version/<asynch-exceptions>off/$(linkage)
+        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/spectrum_processing/<asynch-exceptions>off/$(linkage)
+        <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/chromatogram_processing/<asynch-exceptions>off/$(linkage)
+
         # proteome
-        <library>$(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome/<link>static/<asynch-exceptions>off
-        <library>$(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome_examples/<link>static/<asynch-exceptions>off
-        
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome/<asynch-exceptions>off/$(linkage)
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome_examples/<asynch-exceptions>off/$(linkage)
+
         # HACK: not needed when using hacked tss_pe.cpp
         #<library>/ext/boost//thread/<link>shared/<asynch-exceptions>off # link=shared required for thread specific storage
         #<library>/ext/boost//thread/<link>static
     ;
+
 
 path-constant CLI_ROOT : . ;
 

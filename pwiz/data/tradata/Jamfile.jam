@@ -34,6 +34,9 @@ project
 # -O2 without -fno-strict-aliasing causes miscompilation in MSRunPeaksEncoder.cpp 
 
 
+lib pwiz_data_tradata_version : Version.cpp : <link>static <conditional>@static-with-fpic ;
+
+
 lib pwiz_data_tradata 
     :   # sources
         TraData.cpp
@@ -44,8 +47,8 @@ lib pwiz_data_tradata
         Reader.cpp
         DefaultReaderList.cpp
         TraDataFile.cpp
-        Version.cpp
     : # requirements
+        <library>pwiz_data_tradata_version
         <library>../common//pwiz_data_common
 		<library>../../utility/misc//pwiz_utility_misc
         <library>../../utility/minimxml//pwiz_utility_minimxml
@@ -53,6 +56,7 @@ lib pwiz_data_tradata
         <library>/ext/boost//regex
     : # default-build
     : # usage-requirements
+        <library>pwiz_data_tradata_version
         <library>../common//pwiz_data_common
 		<library>../../utility/misc//pwiz_utility_misc
         <library>../../utility/minimxml//pwiz_utility_minimxml
@@ -80,5 +84,4 @@ unit-test IOTest : IOTest.cpp pwiz_data_tradata pwiz_data_tradata_examples ; # I
 unit-test Serializer_traML : Serializer_traML_Test.cpp pwiz_data_tradata pwiz_data_tradata_examples ;
 unit-test TraDataFileTest : TraDataFileTest.cpp pwiz_data_tradata pwiz_data_tradata_examples /ext/boost//filesystem ;
 unit-test ReaderTest : ReaderTest.cpp pwiz_data_tradata ;
-
 

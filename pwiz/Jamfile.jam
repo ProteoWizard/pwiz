@@ -30,5 +30,5 @@ lib pwiz_version
     : # sources
         Version.cpp
     : # requirements
-        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+        <link>static
 ;

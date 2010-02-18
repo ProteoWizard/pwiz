@@ -33,36 +33,8 @@
 #include "pwiz/utility/misc/Exception.hpp"
 #include "comdef.h" // for _com_error
 
-
-inline std::string ToStdString(System::String^ source)
-{
-	int len = (( source->Length+1) * 2);
-	char *ch = new char[ len ];
-	bool result ;
-	{
-		pin_ptr<const wchar_t> wch = PtrToStringChars( source );
-		result = wcstombs( ch, wch, len ) != -1;
-	}
-	std::string target = ch;
-	delete ch;
-	if(!result)
-        throw gcnew System::Exception("error converting System::String to std::string");
-	return target;
-}
-
-inline System::String^ ToSystemString(const std::string& source)
-{
-    return gcnew System::String(source.c_str());
-}
-
-template<typename value_type>
-std::vector<value_type> ToStdVector(cli::array<value_type>^ valueArray)
-{
-    pin_ptr<value_type> pin = &valueArray[0];
-    value_type* begin = (value_type*) pin;
-    return std::vector<value_type>(begin, begin + valueArray->Length);
-}
-
+#include "pwiz/utility/misc/cpp_cli_utilities.hpp"
+using namespace pwiz::util;
 
 //#define GC_DEBUG
 
@@ -105,9 +77,9 @@ public ref class ObjectStructorLog
 #define SAFEDELETE(x) if(x) {delete x; x = NULL;}
 
 // catch a C++ or COM exception and rethrow it as a .NET Exception
-#define CATCH_AND_FORWARD(x) \
-    try { x } \
-    /* runtime_error has been rethrown by pwiz so don't prepend the forwarding function */ \
+// runtime_error has been rethrown by pwiz so don't prepend the forwarding function
+#undef CATCH_AND_FORWARD
+#define CATCH_AND_FORWARD \
     catch (std::runtime_error& e) { throw gcnew Exception(gcnew String(e.what())); } \
     catch (std::exception& e) { throw gcnew Exception("[" + __FUNCTION__ + "] Unhandled exception: " + gcnew String(e.what())); } \
     catch (_com_error& e) { throw gcnew Exception("[" + __FUNCTION__ + "] Unhandled COM error: " + gcnew String(e.ErrorMessage())); } \

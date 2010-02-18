@@ -39,6 +39,7 @@ rule init ( boost-root : build-dir ? : requirements * )
             /ext/boost//prg_exec_monitor
         : # requirements
             <variant>release
+            <link>static
             $(requirements)
         ;
     }
@@ -78,52 +79,44 @@ class bcp-generator : generator
 {
     import path property-set ;
 
-    rule recurse-to-sources ( roots * )
+    rule collect-targets ( targets * )
     {
-        local real-sources ;
-        for local r in $(roots)
+        # Find subvariants
+        local s ;
+        for local t in $(targets)
         {
-            #echo "r: " [ $(r).str ] ;
-            local temp = [ virtual-target.traverse $(r) : include-root : include-sources ] ;
-            if $(temp[2])
+            s += [ $(t).creating-subvariant ] ;
+        }
+        s = [ sequence.unique $(s) ] ;
+        
+        local result = [ new set ] ;
+        $(result).add $(targets) ;
+        
+        for local i in $(s)
+        {
+            $(i).all-referenced-targets $(result) ;
+        }
+        local result2 ;
+        for local r in [ $(result).list ]
+        {
+            if $(r:G) != <use>
             {
-                for local t in $(temp[2-])
-                {
-                    #echo "t: " [ $(t).str ] ;
-                    if ! $(t) = $(r) &&
-                       [ type.is-derived [ $(t).type ] EXE ] ||
-                       [ type.is-derived [ $(t).type ] LIB ] ||
-                       [ type.is-derived [ $(t).type ] OBJ ] ||
-                       [ type.is-derived [ $(t).type ] UNIT_TEST ] ||
-                       [ type.is-derived [ $(t).type ] TEST ]
-                    {
-                        real-sources += [ recurse-to-sources $(t) ] ;
-                    }
-                    else if [ type.is-derived [ $(t).type ] CPP ] ||
-                            [ type.is-derived [ $(t).type ] HPP ] ||
-                            [ type.is-derived [ $(t).type ] C ] ||
-                            [ type.is-derived [ $(t).type ] H ]
-                    {
-                        if ! $(t) in $(real-sources) { real-sources += $(t) ; }
-                    }
-                    else
-                    {
-                        echo "Warning: ignoring dependency with unknown type:" [ $(t).str ] ;
-                    }
-                }
-            }
-            else
-            {
-                if ! $(r) in $(real-sources) { real-sources += $(r) ; }
+                result2 += $(r:G=) ;
             }
         }
-        return $(real-sources) ;
+        DELETE_MODULE $(result) ;
+        result = [ sequence.unique $(result2) ] ;
+    }
+
+    rule is-source-file ( target )
+    {
+        if [ $(target).type ] in C CPP H HPP { return true ; }
     }
 
     rule generated-targets ( sources + : property-set : project name ? )
     {
         #for local r in $(sources) { echo "Input source: " [ $(r).actualize [ type.get-scanner [ $(r).type ] : $(property-set) ] ] [ $(r).dependencies ] ; }
-        local real-sources = [ recurse-to-sources $(sources) ] ;
+        local real-sources = [ sequence.filter is-source-file : [ collect-targets $(sources) ] ] ;
         #for local r in $(real-sources) { echo "Real source: " $(r) ; }
 
         local pwd = [ path.make [ path.pwd ] ] ;

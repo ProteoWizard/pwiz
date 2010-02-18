@@ -53,7 +53,7 @@ lib pwiz_vendor_api_waters
     : # sources
         RawData.cpp
     : # requirements
-        <link>shared:<define>RAWDATA_DYN_LINK
+        <link>shared:<define>PWIZ_DYN_LINK
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
         <conditional>@vendor-api-requirements
         <conditional>@msvc-requirement

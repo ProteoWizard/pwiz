@@ -38,6 +38,9 @@ project
 # -O2 without -fno-strict-aliasing causes miscompilation in MSRunPeaksEncoder.cpp 
 
 
+lib pwiz_data_msdata_version : Version.cpp : <link>static <conditional>@static-with-fpic ;
+
+
 lib pwiz_data_msdata
     : # sources
         BinaryDataEncoder.cpp
@@ -64,8 +67,8 @@ lib pwiz_data_msdata
         RAMPAdapter.cpp
         Reader.cpp
         References.cpp
-        Version.cpp
     : # requirements
+        <library>pwiz_data_msdata_version
         <library>../common//pwiz_data_common
         <library>../..//pwiz_version
 		<library>../../utility/misc//pwiz_utility_misc
@@ -73,9 +76,11 @@ lib pwiz_data_msdata
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
         <library>/ext/boost//filesystem
         <library>/ext/boost//thread
+        <library>/ext/boost//regex
         <library>/ext/zlib//z
     : # default-build
     : # usage-requirements
+        <library>pwiz_data_msdata_version
         <library>../common//pwiz_data_common
         <library>../..//pwiz_version
 		<library>../../utility/misc//pwiz_utility_misc
@@ -83,6 +88,7 @@ lib pwiz_data_msdata
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
         <library>/ext/boost//filesystem
         <library>/ext/boost//thread
+        <library>/ext/boost//regex
         <library>/ext/zlib//z
     ;
 

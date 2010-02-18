@@ -47,7 +47,7 @@ static array<System::String^>^ vectorToStringArray(const std::vector<std::string
 
 bool Reader::accept(System::String^ filename, System::String^ head)
 {
-    CATCH_AND_FORWARD(return base_->accept(ToStdString(filename), ToStdString(head));)
+    try {return base_->accept(ToStdString(filename), ToStdString(head));} CATCH_AND_FORWARD
 }
 
 void Reader::read(System::String^ filename, System::String^ head, MSData^ result)
@@ -57,32 +57,33 @@ void Reader::read(System::String^ filename, System::String^ head, MSData^ result
 
 void Reader::read(System::String^ filename, System::String^ head, MSData^ result, int sampleIndex)
 {
-    CATCH_AND_FORWARD(base_->read(ToStdString(filename), ToStdString(head), **result->base_, sampleIndex);)
+    try {base_->read(ToStdString(filename), ToStdString(head), **result->base_, sampleIndex);} CATCH_AND_FORWARD
 }
 
 void Reader::read(System::String^ filename, System::String^ head, MSDataList^ results)
 {
-    CATCH_AND_FORWARD(base_->read(ToStdString(filename), ToStdString(head), *results->base_);)
+    try {base_->read(ToStdString(filename), ToStdString(head), *results->base_);} CATCH_AND_FORWARD
 }
 
 array<System::String^>^ Reader::readIds(System::String^ filename, System::String^ head)
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         std::vector<std::string> ids;
         base_->readIds(ToStdString(filename), ToStdString(head), ids);
         return vectorToStringArray(ids);
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 System::String^ ReaderList::identify(System::String^ filename)
 {    
-    CATCH_AND_FORWARD(return gcnew System::String(base_->identify(ToStdString(filename)).c_str());)
+    try {return gcnew System::String(base_->identify(ToStdString(filename)).c_str());} CATCH_AND_FORWARD
 }
 
 System::String^ ReaderList::identify(System::String^ filename, System::String^ head)
 {    
-    CATCH_AND_FORWARD(return gcnew System::String(base_->identify(ToStdString(filename), ToStdString(head)).c_str());)
+    try {return gcnew System::String(base_->identify(ToStdString(filename), ToStdString(head)).c_str());} CATCH_AND_FORWARD
 }
 
 void ReaderList::read(System::String^ filename, System::String^ head, MSData^ result)
@@ -92,22 +93,23 @@ void ReaderList::read(System::String^ filename, System::String^ head, MSData^ re
 
 void ReaderList::read(System::String^ filename, System::String^ head, MSData^ result, int sampleIndex)
 {    
-    CATCH_AND_FORWARD(base_->read(ToStdString(filename), ToStdString(head), **result->base_, sampleIndex);)
+    try {base_->read(ToStdString(filename), ToStdString(head), **result->base_, sampleIndex);} CATCH_AND_FORWARD
 }
 
 void ReaderList::read(System::String^ filename, System::String^ head, MSDataList^ results)
 {    
-    CATCH_AND_FORWARD(base_->read(ToStdString(filename), ToStdString(head), *results->base_);)
+    try {base_->read(ToStdString(filename), ToStdString(head), *results->base_);} CATCH_AND_FORWARD
 }
 
 array<System::String^>^ ReaderList::readIds(System::String^ filename, System::String^ head)
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         std::vector<std::string> ids;
         base_->readIds(ToStdString(filename), ToStdString(head), ids);
         return vectorToStringArray(ids);
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 void ReaderList::read(System::String^ filename, MSData^ result)
@@ -117,22 +119,23 @@ void ReaderList::read(System::String^ filename, MSData^ result)
 
 void ReaderList::read(System::String^ filename, MSData^ result, int sampleIndex)
 {    
-    CATCH_AND_FORWARD(base_->read(ToStdString(filename), **result->base_, sampleIndex);)
+    try {base_->read(ToStdString(filename), **result->base_, sampleIndex);} CATCH_AND_FORWARD
 }
 
 void ReaderList::read(System::String^ filename, MSDataList^ results)
 {    
-    CATCH_AND_FORWARD(base_->read(ToStdString(filename), *results->base_);)
+    try {base_->read(ToStdString(filename), *results->base_);} CATCH_AND_FORWARD
 }
 
 array<System::String^>^ ReaderList::readIds(System::String^ filename)
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         std::vector<std::string> ids;
         base_->readIds(ToStdString(filename), ids);
         return vectorToStringArray(ids);
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 namespace {
@@ -151,11 +154,12 @@ struct FullReaderListSingleton : public boost::mutexed_singleton<FullReaderListS
 
 ReaderList^ ReaderList::FullReaderList::get()
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         pwiz::msdata::FullReaderList* list = new pwiz::msdata::FullReaderList();
         return gcnew ReaderList(list, gcnew System::Object());
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 

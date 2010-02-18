@@ -2,7 +2,7 @@
 // $Id$
 //
 //
-// Original author: Barbara Frewen <frewen@u.washington.edu>
+// Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
 //
 // Copyright 2008 Vanderbilt University - Nashville, TN 37232
 //
@@ -19,14 +19,14 @@
 // limitations under the License.
 //
 
-#ifndef _SERIALIZER_MSn_HPP_
-#define _SERIALIZER_MSn_HPP_
+#ifndef _SERIALIZER_MSN_HPP_
+#define _SERIALIZER_MSN_HPP_
+
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "MSData.hpp"
 #include "BinaryDataEncoder.hpp"
 #include "pwiz/utility/misc/IterationListener.hpp"
-#include "SpectrumList_MSn.hpp"
 
 
 namespace pwiz {
@@ -39,14 +39,16 @@ class PWIZ_API_DECL Serializer_MSn
     public:
 
     /// constructor
-  Serializer_MSn(MSn_Type filetype);
+    Serializer_MSn();
 
-    /// write MSData object to ostream as MSn;
+    /// write MSData object to ostream as MS1 or MS2, depending on what kind of spectrum types
+    /// are in fileContent: if only MS1 or if both MS1 and MSn spectra, the output is MS1
+    /// (MSn spectra are skipped), otherwise the output is MS2 (MS1 spectra are skipped);
     /// iterationListenerRegistry may be used to receive progress updates
     void write(std::ostream& os, const MSData& msd,
                const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0) const;
 
-    /// read in MSData object from an MGF istream 
+    /// read in MSData object from an MS1 or MS2 istream
     /// note: istream may be managed by MSData's SpectrumList, to allow for 
     /// lazy evaluation of Spectrum data
     void read(boost::shared_ptr<std::istream> is, MSData& msd) const;
@@ -62,4 +64,5 @@ class PWIZ_API_DECL Serializer_MSn
 } // namespace msdata
 } // namespace pwiz
 
-#endif // _SERIALIZER_MSn_HPP_
+
+#endif // _SERIALIZER_MSN_HPP_

@@ -2,7 +2,7 @@
 // $Id$
 //
 //
-// Original author: Barbara Frewen <frewen@u.washington.edu>
+// Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
 //
 // Copyright 2008 Vanderbilt University - Nashville, TN 37232
 //
@@ -19,21 +19,17 @@
 // limitations under the License.
 //
 
-// TODO: once write is implemented for each MSn_Type_MS2, test write and read
 
 #include "Serializer_MSn.hpp"
 #include "Serializer_mzML.hpp"
 #include "Diff.hpp"
-#include "TextWriter.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "boost/iostreams/positioning.hpp"
-#include <iostream>
-#include <fstream>
-#include <cstring>
+#include "pwiz/utility/misc/Filesystem.hpp"
 
 
 using namespace std;
 using namespace pwiz::util;
+using namespace pwiz;
 using namespace pwiz::msdata;
 using boost::shared_ptr;
 
@@ -48,8 +44,8 @@ void initializeTinyMSn(MSData& msd)
     fc.set(MS_centroid_spectrum);
 
     SourceFilePtr sourceFile(new SourceFile);
-    sourceFile->set(MS_scan_number_only_nativeID_format);
-    sourceFile->set(MS_MS2_file);
+    sourceFile->set(MS_multiple_peak_list_nativeID_format);
+    // TODO: sourceFile->set(MS_Matrix_Science_MSn_file);
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 
     shared_ptr<SpectrumListSimple> spectrumList(new SpectrumListSimple);
@@ -74,9 +70,10 @@ void initializeTinyMSn(MSData& msd)
     Precursor& precursor = s20.precursors.front();
     precursor.selectedIons.resize(1);
     precursor.selectedIons[0].set(MS_selected_ion_m_z, 445.34, MS_m_z);
-    precursor.selectedIons[0].set(MS_peak_intensity, 120053, MS_number_of_counts);
+    precursor.selectedIons[0].set(MS_intensity, 120053);
     precursor.selectedIons[0].set(MS_charge_state, 2);
 
+    s20.scanList.set(MS_no_combination);
     s20.scanList.scans.push_back(Scan());
     Scan& s20scan = s20.scanList.scans.back();
     s20scan.set(MS_scan_start_time, 4, UO_second);
@@ -98,7 +95,7 @@ void initializeTinyMSn(MSData& msd)
 
 void testWriteRead(const MSData& msd)
 {
-  Serializer_MSn serializer(MSn_Type_MS2);
+    Serializer_MSn serializer;
 
     ostringstream oss;
     serializer.write(oss, msd);
@@ -109,7 +106,11 @@ void testWriteRead(const MSData& msd)
     MSData msd2;
     serializer.read(iss, msd2);
 
-    Diff<MSData, DiffConfig> diff(msd, msd2);
+    DiffConfig diffConfig;
+    diffConfig.ignoreMetadata = true;
+    diffConfig.ignoreChromatograms = true;
+
+    Diff<MSData> diff(msd, msd2, diffConfig);
     if (os_ && diff) *os_ << diff << endl; 
     unit_assert(!diff);
 
@@ -134,7 +135,7 @@ void testWriteRead()
     MSData msd;
     initializeTinyMSn(msd);
 
-    //    testWriteRead(msd);
+    testWriteRead(msd);
 }
 
 

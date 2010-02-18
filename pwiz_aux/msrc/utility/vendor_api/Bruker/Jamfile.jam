@@ -37,6 +37,19 @@ rule vendor-api-requirements ( properties * )
     if <toolset>msvc in $(properties) &&
        [ path.exists $(API_PATH)/Interop.EDAL.dll ]
     {
+        # Even though the vendor API is forced to <link>static and <asynch-exceptions>on,
+        # its pwiz and boost dependencies should not follow suit.
+        # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
+        if <link>shared in $(properties) || link=shared in [ modules.peek : ARGV ]
+        {
+            result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<asynch-exceptions>off/<link>shared ;
+        }
+        else
+        {
+            result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<asynch-exceptions>off ;
+        }
+
+        result += <define>BOOST_DATE_TIME_NO_LIB=1 ; # prevent MSVC auto-link
         result += <assembly>$(API_PATH)/Interop.EDAL.dll ;
         result += <assembly>$(API_PATH)/BDal.CXt.Lc.dll ;
         result += <assembly>$(API_PATH)/BDal.CXt.Lc.Factory.dll ;
@@ -69,13 +82,12 @@ lib pwiz_vendor_api_bruker
         #<link>shared
         
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
-        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
         <conditional>@vendor-api-requirements
         <conditional>@msvc-requirement
-        <toolset>msvc:<using-clr>true # requires hacked msvc.jam
+        <using-clr>true # requires hacked msvc.jam
+        <link>static # <using-clr>true and <link>shared don't mix
     : # default-build
     : # usage-requirements
-        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
         <conditional>@vendor-api-requirements
     ;
 

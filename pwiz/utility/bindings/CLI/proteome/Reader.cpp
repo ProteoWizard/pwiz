@@ -42,40 +42,40 @@ namespace proteome {
 bool Reader::accept(String^ filename, String^ head)
 {
     boost::shared_ptr<stringstream> tmp(new stringstream(ToStdString(head)));
-    CATCH_AND_FORWARD(return base_->accept(ToStdString(filename), tmp);)
+    try {return base_->accept(ToStdString(filename), tmp);} CATCH_AND_FORWARD
 }
 
 String^ Reader::identify(String^ filename, String^ head)
 {
     boost::shared_ptr<stringstream> tmp(new stringstream(ToStdString(head)));
-    CATCH_AND_FORWARD(return ToSystemString(base_->identify(ToStdString(filename), tmp));)
+    try {return ToSystemString(base_->identify(ToStdString(filename), tmp));} CATCH_AND_FORWARD
 }
 
 void Reader::read(String^ filename, String^ head, ProteomeData^ result)
 {
-    CATCH_AND_FORWARD(base_->read(ToStdString(filename), result->base());)
+    try {base_->read(ToStdString(filename), result->base());} CATCH_AND_FORWARD
 }
 
 String^ ReaderList::identify(String^ filename)
 {
-    CATCH_AND_FORWARD(return ToSystemString(base_->identify(ToStdString(filename)));)
+    try {return ToSystemString(base_->identify(ToStdString(filename)));} CATCH_AND_FORWARD
 }
 
 String^ ReaderList::identify(String^ filename, String^ head)
 {
     boost::shared_ptr<stringstream> tmp(new stringstream(ToStdString(head)));
-    CATCH_AND_FORWARD(return ToSystemString(base_->identify(ToStdString(filename), tmp));)
+    try {return ToSystemString(base_->identify(ToStdString(filename), tmp));} CATCH_AND_FORWARD
 }
 
 void ReaderList::read(String^ filename, String^ head, ProteomeData^ result)
 {
     boost::shared_ptr<stringstream> tmp(new stringstream(ToStdString(head)));
-    CATCH_AND_FORWARD(base_->read(ToStdString(filename), tmp, result->base());)
+    try {base_->read(ToStdString(filename), tmp, result->base());} CATCH_AND_FORWARD
 }
 
 void ReaderList::read(String^ filename, ProteomeData^ result)
 {
-    CATCH_AND_FORWARD(base_->read(ToStdString(filename), result->base());)
+    try {base_->read(ToStdString(filename), result->base());} CATCH_AND_FORWARD
 }
 
 
@@ -95,11 +95,12 @@ struct FullReaderListSingleton : public boost::mutexed_singleton<FullReaderListS
 
 ReaderList^ ReaderList::DefaultReaderList::get()
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         pwiz::proteome::DefaultReaderList* list = new pwiz::proteome::DefaultReaderList();
         return gcnew ReaderList(list, gcnew System::Object());
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 

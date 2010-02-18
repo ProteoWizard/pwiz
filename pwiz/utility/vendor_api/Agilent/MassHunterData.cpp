@@ -158,7 +158,7 @@ struct ChromatogramImpl : public Chromatogram
 
 typedef boost::shared_ptr<ChromatogramImpl> ChromatogramImplPtr;
 
-
+#pragma unmanaged
 PWIZ_API_DECL
 bool Transition::operator< (const Transition& rhs) const
 {
@@ -185,6 +185,7 @@ MassHunterDataPtr MassHunterData::create(const string& path)
     return boost::static_pointer_cast<MassHunterData>(dataReader);
 }
 
+#pragma managed
 MassHunterDataImpl::MassHunterDataImpl(const std::string& path)
 {
     try

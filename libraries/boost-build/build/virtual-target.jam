@@ -1071,6 +1071,61 @@ rule register-actual-name ( actual-name : virtual-target )
     }
 }
 
+class traverser 
+{
+    rule __init__ ( )
+    {
+        self.result = ;
+    }
+    
+    rule add-to-result ( targets * )
+    {
+        for local t in $(targets)
+        {
+            if ! $($(t))
+            {
+                self.result += $(t) ;
+            }            
+        }        
+    }
+        
+    rule traverse ( target : include-roots ? : include-sources ? )
+    {
+        if [ $(target).action ]
+        {
+            local action = [ $(target).action ] ;              
+            # This includes the 'target' as well.
+            add-to-result [ $(action).targets ] ;
+
+            for local t in [ $(action).sources ]
+            {
+                if ! $($(t)-seen)
+                {
+                    $(t)-seen = 1 ;
+                    if ! [ $(t).root ]
+                    {
+                        traverse $(t) : $(include-roots) : $(include-sources) ;
+                    }
+                    else if $(include-roots)
+                    {
+                        add-to-result $(t) ;
+                    }                                        
+                }                
+            }
+        }
+        else if $(include-sources)
+        {
+            add-to-result $(target) ;
+        }
+    }
+    
+    rule result ( )
+    {
+        return $(self.result) ;
+    }    
+}
+
+
 
 # Traverses the dependency graph of 'target' and return all targets that will be
 # created before this one is created. If the root of some dependency graph is
@@ -1080,29 +1135,10 @@ rule register-actual-name ( actual-name : virtual-target )
 #
 rule traverse ( target : include-roots ? : include-sources ? )
 {
-    local result ;
-    if [ $(target).action ]
-    {
-        local action = [ $(target).action ] ;
-        # This includes the 'target' as well.
-        result += [ $(action).targets ] ;
-
-        for local t in [ $(action).sources ]
-        {
-            if ! [ $(t).root ]
-            {
-                result += [ traverse $(t) : $(include-roots) : $(include-sources) ] ;
-            }
-            else if $(include-roots)
-            {
-                result += $(t) ;
-            }
-        }
-    }
-    else if $(include-sources)
-    {
-        result = $(target) ;
-    }
+    local traverser = [ new traverser ] ;
+    $(traverser).traverse $(target) : $(include-roots) : $(include-sources) ;
+    local result = [ $(traverser).result ] ;
+    DELETE_MODULE $(traverser) ;
     return $(result) ;
 }
 
@@ -1218,7 +1254,7 @@ class subvariant
     # referred to using the dependency property are returned as properties, not
     # targets.
     #
-    rule all-referenced-targets ( )
+    rule all-referenced-targets ( theset )
     {
         # Find directly referenced targets.
         local deps = [ $(self.build-properties).dependency ] ;
@@ -1228,17 +1264,20 @@ class subvariant
         local r ;
         for local t in $(all-targets)
         {
+            if ! [ $(theset).contains $(t) ]
+            {
+                $(theset).add $(t) ;
             r += [ $(t:G=).creating-subvariant ] ;
+            }            
         }
         r = [ sequence.unique $(r) ] ;
         for local s in $(r)
         {
             if $(s) != $(__name__)
             {
-                all-targets += [ $(s).all-referenced-targets ] ;
+                $(s).all-referenced-targets $(theset) ;
             }
         }
-        return $(all-targets) ;
     }
 
     # Returns the properties specifying implicit include paths to generated

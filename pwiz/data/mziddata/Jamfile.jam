@@ -35,6 +35,9 @@ project
 # -O2 without -fno-strict-aliasing causes miscompilation in MSRunPeaksEncoder.cpp 
 
 
+lib pwiz_data_mzid_version : Version.cpp : <link>static <conditional>@static-with-fpic ;
+
+
 lib pwiz_data_mzid 
     :   # sources
         Diff.cpp
@@ -46,18 +49,21 @@ lib pwiz_data_mzid
         Serializer_mzid.cpp
         Pep2MzIdent.cpp
         References.cpp
-        Version.cpp
     : # requirements
+        <library>pwiz_data_mzid_version
         <library>../common//pwiz_data_common
         <library>../misc//pwiz_data_misc
-        <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
         <library>../../utility/chemistry//pwiz_utility_chemistry
+        <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
+        <library>/ext/boost//regex
     : # default-build
     : # usage-requirements
+        <library>pwiz_data_mzid_version
         <library>../common//pwiz_data_common
         <library>../misc//pwiz_data_misc
-        <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
         <library>../../utility/chemistry//pwiz_utility_chemistry
+        <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
+        <library>/ext/boost//regex
     ;
 
 

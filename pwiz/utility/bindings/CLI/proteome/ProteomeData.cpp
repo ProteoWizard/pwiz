@@ -47,24 +47,25 @@ bool Protein::empty() {return base().empty();}
 
 int ProteinList::size() {return (int) (*base_)->size();}
 bool ProteinList::empty() {return (*base_)->empty();}
-int ProteinList::find(String^ id) {CATCH_AND_FORWARD(return (int) (*base_)->find(ToStdString(id));)}
+int ProteinList::find(String^ id) {try {return (int) (*base_)->find(ToStdString(id));} CATCH_AND_FORWARD}
 
 IndexList^ ProteinList::findKeyword(String^ keyword) {return findKeyword(keyword, true);}
 IndexList^ ProteinList::findKeyword(String^ keyword, bool caseSensitive)
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         b::IndexList indexList = (*base_)->findKeyword(ToStdString(keyword), caseSensitive);
         std::vector<size_t>* ownedIndexListPtr = new std::vector<size_t>();
         ownedIndexListPtr->swap(indexList);
         return gcnew IndexList(ownedIndexListPtr);
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 Protein^ ProteinList::protein(int index) {return protein(index, true);}
 Protein^ ProteinList::protein(int index, bool getSequence)
 {
-    CATCH_AND_FORWARD(return gcnew Protein(new b::ProteinPtr((*base_)->protein((size_t) index, getSequence)));)
+    try {return gcnew Protein(new b::ProteinPtr((*base_)->protein((size_t) index, getSequence)));} CATCH_AND_FORWARD
 }
 
 
@@ -80,7 +81,7 @@ bool ProteinListSimple::empty() {return (*base_)->empty();}
 Protein^ ProteinListSimple::protein(int index) {return protein(index, true);}
 Protein^ ProteinListSimple::protein(int index, bool getSequence)
 {
-    CATCH_AND_FORWARD(return gcnew Protein(new b::ProteinPtr((*base_)->protein((size_t) index, getSequence)));)
+    try {return gcnew Protein(new b::ProteinPtr((*base_)->protein((size_t) index, getSequence)));} CATCH_AND_FORWARD
 }
 
 

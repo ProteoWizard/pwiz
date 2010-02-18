@@ -489,22 +489,23 @@ void Spectrum::binaryDataArrays::set(BinaryDataArrayList^ value) {(*base_)->bina
 
 void Spectrum::getMZIntensityPairs(MZIntensityPairList^% output)
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         std::vector<b::MZIntensityPair>* p = new std::vector<b::MZIntensityPair>();
         (*base_)->getMZIntensityPairs(*p);
         output = gcnew MZIntensityPairList(p);
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 BinaryDataArray^ Spectrum::getMZArray()
 {
-    CATCH_AND_FORWARD(return gcnew BinaryDataArray(new b::BinaryDataArrayPtr((*base_)->getMZArray()));)
+    try {return gcnew BinaryDataArray(new b::BinaryDataArrayPtr((*base_)->getMZArray()));} CATCH_AND_FORWARD
 }
 
 BinaryDataArray^ Spectrum::getIntensityArray()
 {
-    CATCH_AND_FORWARD(return gcnew BinaryDataArray(new b::BinaryDataArrayPtr((*base_)->getIntensityArray()));)
+    try {return gcnew BinaryDataArray(new b::BinaryDataArrayPtr((*base_)->getIntensityArray()));} CATCH_AND_FORWARD
 }
 
 void Spectrum::setMZIntensityPairs(MZIntensityPairList^ input)
@@ -584,17 +585,18 @@ void Chromatogram::binaryDataArrays::set(BinaryDataArrayList^ value) {(*base_)->
 
 void Chromatogram::getTimeIntensityPairs(TimeIntensityPairList^% output)
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         std::vector<b::TimeIntensityPair>* p = new std::vector<b::TimeIntensityPair>();
         (*base_)->getTimeIntensityPairs(*p);
         output = gcnew TimeIntensityPairList(p);
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 void Chromatogram::setTimeIntensityPairs(TimeIntensityPairList^ input, CVID timeUnits, CVID intensityUnits)
 {
-    CATCH_AND_FORWARD((*base_)->setTimeIntensityPairs(*input->base_, (pwiz::cv::CVID) timeUnits, (pwiz::cv::CVID) intensityUnits);)
+    try {(*base_)->setTimeIntensityPairs(*input->base_, (pwiz::cv::CVID) timeUnits, (pwiz::cv::CVID) intensityUnits);} CATCH_AND_FORWARD
 }
 
 bool Chromatogram::empty()
@@ -615,23 +617,24 @@ bool SpectrumList::empty()
 
 SpectrumIdentity^ SpectrumList::spectrumIdentity(int index)
 {
-    CATCH_AND_FORWARD(return gcnew SpectrumIdentity(&const_cast<b::SpectrumIdentity&>((*base_)->spectrumIdentity((size_t) index)), this);)
+    try {return gcnew SpectrumIdentity(&const_cast<b::SpectrumIdentity&>((*base_)->spectrumIdentity((size_t) index)), this);} CATCH_AND_FORWARD
 }
 
 int SpectrumList::find(System::String^ id)
 {
-    CATCH_AND_FORWARD(return (int) (*base_)->find(ToStdString(id));)
+    try {return (int) (*base_)->find(ToStdString(id));} CATCH_AND_FORWARD
 }
 
 IndexList^ SpectrumList::findNameValue(System::String^ name, System::String^ value)
 {
-    CATCH_AND_FORWARD
-    (
+    try
+    {
         b::IndexList indexList = (*base_)->findNameValue(ToStdString(name), ToStdString(value));
         std::vector<size_t>* ownedIndexListPtr = new std::vector<size_t>();
         ownedIndexListPtr->swap(indexList);
         return gcnew IndexList(ownedIndexListPtr);
-    )
+    }
+    CATCH_AND_FORWARD
 }
 
 
@@ -642,7 +645,7 @@ Spectrum^ SpectrumList::spectrum(int index)
 
 Spectrum^ SpectrumList::spectrum(int index, bool getBinaryData)
 {
-    CATCH_AND_FORWARD(return gcnew Spectrum(new b::SpectrumPtr((*base_)->spectrum((size_t) index, getBinaryData)));)
+    try {return gcnew Spectrum(new b::SpectrumPtr((*base_)->spectrum((size_t) index, getBinaryData)));} CATCH_AND_FORWARD
 }
 
 DataProcessing^ SpectrumList::dataProcessing()
@@ -684,7 +687,7 @@ Spectrum^ SpectrumListSimple::spectrum(int index)
 
 Spectrum^ SpectrumListSimple::spectrum(int index, bool getBinaryData)
 {
-    CATCH_AND_FORWARD(return gcnew Spectrum(new b::SpectrumPtr((*base_)->spectrum((size_t) index, getBinaryData)));)
+    try {return gcnew Spectrum(new b::SpectrumPtr((*base_)->spectrum((size_t) index, getBinaryData)));} CATCH_AND_FORWARD
 }
 
 
@@ -700,12 +703,12 @@ bool ChromatogramList::empty()
 
 ChromatogramIdentity^ ChromatogramList::chromatogramIdentity(int index)
 {
-    CATCH_AND_FORWARD(return gcnew ChromatogramIdentity(&const_cast<b::ChromatogramIdentity&>((*base_)->chromatogramIdentity((size_t) index)), this);)
+    try {return gcnew ChromatogramIdentity(&const_cast<b::ChromatogramIdentity&>((*base_)->chromatogramIdentity((size_t) index)), this);} CATCH_AND_FORWARD
 }
 
 int ChromatogramList::find(System::String^ id)
 {
-    CATCH_AND_FORWARD(return (int) (*base_)->find(ToStdString(id));)
+    try {return (int) (*base_)->find(ToStdString(id));} CATCH_AND_FORWARD
 }
 
 Chromatogram^ ChromatogramList::chromatogram(int index)
@@ -715,7 +718,7 @@ Chromatogram^ ChromatogramList::chromatogram(int index)
 
 Chromatogram^ ChromatogramList::chromatogram(int index, bool getBinaryData)
 {
-    CATCH_AND_FORWARD(return gcnew Chromatogram(new b::ChromatogramPtr((*base_)->chromatogram((size_t) index, getBinaryData)));)
+    try {return gcnew Chromatogram(new b::ChromatogramPtr((*base_)->chromatogram((size_t) index, getBinaryData)));} CATCH_AND_FORWARD
 }
 
 DataProcessing^ ChromatogramList::dataProcessing()
@@ -747,7 +750,7 @@ bool ChromatogramListSimple::empty()
 
 ChromatogramIdentity^ ChromatogramListSimple::chromatogramIdentity(int index)
 {
-    CATCH_AND_FORWARD(return gcnew ChromatogramIdentity(&const_cast<b::ChromatogramIdentity&>((*base_)->chromatogramIdentity((size_t) index)), this);)
+    try {return gcnew ChromatogramIdentity(&const_cast<b::ChromatogramIdentity&>((*base_)->chromatogramIdentity((size_t) index)), this);} CATCH_AND_FORWARD
 }
 
 Chromatogram^ ChromatogramListSimple::chromatogram(int index)
@@ -757,7 +760,7 @@ Chromatogram^ ChromatogramListSimple::chromatogram(int index)
 
 Chromatogram^ ChromatogramListSimple::chromatogram(int index, bool getBinaryData)
 {
-    CATCH_AND_FORWARD(return gcnew Chromatogram(new b::ChromatogramPtr((*base_)->chromatogram((size_t) index, getBinaryData)));)
+    try {return gcnew Chromatogram(new b::ChromatogramPtr((*base_)->chromatogram((size_t) index, getBinaryData)));} CATCH_AND_FORWARD
 }
 
 
@@ -838,32 +841,32 @@ System::String^ MSData::version() {return gcnew System::String(base().version().
 
 System::String^ id::value(System::String^ id, System::String^ name)
 {
-    return ToSystemString(b::id::value(ToStdString(id), ToStdString(name)));
+    try {return ToSystemString(b::id::value(ToStdString(id), ToStdString(name)));} CATCH_AND_FORWARD
 }
 
 CVID id::getDefaultNativeIDFormat(MSData^ msd)
 {
-    return (CVID) b::id::getDefaultNativeIDFormat(msd->base());
+    try {return (CVID) b::id::getDefaultNativeIDFormat(msd->base());} CATCH_AND_FORWARD
 }
 
 System::String^ id::translateScanNumberToNativeID(CVID nativeIDFormat, System::String^ scanNumber)
 {
-    return ToSystemString(b::id::translateScanNumberToNativeID((b::CVID) nativeIDFormat, ToStdString(scanNumber)));
+    try {return ToSystemString(b::id::translateScanNumberToNativeID((b::CVID) nativeIDFormat, ToStdString(scanNumber)));} CATCH_AND_FORWARD
 }
 
 System::String^ id::translateNativeIDToScanNumber(CVID nativeIDFormat, System::String^ id)
 {
-    return ToSystemString(b::id::translateNativeIDToScanNumber((b::CVID) nativeIDFormat, ToStdString(id)));
+    try {return ToSystemString(b::id::translateNativeIDToScanNumber((b::CVID) nativeIDFormat, ToStdString(id)));} CATCH_AND_FORWARD
 }
 
 System::String^ id::abbreviate(System::String^ id)
 {
-    return ToSystemString(b::id::abbreviate(ToStdString(id)));
+    try {return ToSystemString(b::id::abbreviate(ToStdString(id)));} CATCH_AND_FORWARD
 }
 
 System::String^ id::abbreviate(System::String^ id, char delimiter)
 {
-    return ToSystemString(b::id::abbreviate(ToStdString(id), delimiter));
+    try {return ToSystemString(b::id::abbreviate(ToStdString(id), delimiter));} CATCH_AND_FORWARD
 }
 
 

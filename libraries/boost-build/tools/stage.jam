@@ -28,7 +28,6 @@ feature.feature <so-version>           :        : free incidental ;
 # Unix builds only.
 feature.feature <install-no-version-symlinks> : on : optional incidental ;
 
-
 class install-target-class : basic-target
 {
     import feature ;
@@ -246,20 +245,23 @@ class install-target-class : basic-target
             s += [ $(t).creating-subvariant ] ;
         }
         s = [ sequence.unique $(s) ] ;
-
-        local result = $(targets) ;
+        
+        local result = [ new set ] ;
+        $(result).add $(targets) ;
+        
         for local i in $(s)
         {
-            result += [ $(i).all-referenced-targets ] ;
+            $(i).all-referenced-targets $(result) ;
         }
         local result2 ;
-        for local r in $(result)
+        for local r in [ $(result).list ]
         {
             if $(r:G) != <use>
             {
                 result2 += $(r:G=) ;
             }
         }
+        DELETE_MODULE $(result) ;
         result = [ sequence.unique $(result2) ] ;
     }
 
