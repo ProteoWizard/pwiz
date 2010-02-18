@@ -68,7 +68,6 @@ rule vendor-api-requirements ( properties * )
             result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<asynch-exceptions>off ;
         }
 
-        result += <define>BOOST_DATE_TIME_NO_LIB=1 ; # prevent MSVC auto-link
         result += <assembly>$(API_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll ;
         result += <assembly>$(API_PATH)/Clearcore.dll ;
         result += <assembly>$(API_PATH)/ClearCore.Storage.dll ;

@@ -22,6 +22,7 @@
 #ifndef _DATETIME_HPP_
 #define _DATETIME_HPP_
 
+#define BOOST_DATE_TIME_NO_LIB // prevent MSVC auto-link
 #include <boost/date_time/local_time/local_time.hpp>
 #include <boost/math/special_functions/modf.hpp>
 

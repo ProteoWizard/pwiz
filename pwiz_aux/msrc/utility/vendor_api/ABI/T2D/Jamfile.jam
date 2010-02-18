@@ -50,7 +50,6 @@ rule vendor-api-requirements ( properties * )
             result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<asynch-exceptions>off ;
         }
 
-        result += <define>BOOST_DATE_TIME_NO_LIB=1 ; # prevent MSVC auto-link
         result += <assembly>$(API_PATH)/Interop.DataExplorer.dll ;
         result += <define>PWIZ_READER_ABI_T2D ;
     }
