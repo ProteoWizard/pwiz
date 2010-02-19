@@ -249,6 +249,12 @@ Config parseCommandLine(int argc, const char* argv[])
           << "# extract ms^n scans for n>1\n"
           << "msconvert data.RAW --filter \"msLevel 2-\"\n"
           << endl
+          << "# apply ETD precursor mass filter\n"
+          << "msconvert data.RAW --filter ETDFilter\n"
+          << endl
+          << "# keep only HCD spectra from a decision tree data file\n"
+          << "msconvert data.RAW --filter \"Activation HCD\"\n"
+          << endl
           << "# multiple filters: select scan numbers and recalculate precursors\n"
           << "msconvert data.RAW --filter \"scanNumber [500,1000]\" --filter \"precursorRecalculation\"\n"
           << endl

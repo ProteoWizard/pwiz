@@ -25,6 +25,7 @@
 
 #include "pwiz/data/common/cv.hpp"
 #include "SpectrumList_Filter.hpp"
+#include "boost/foreach.hpp"
 #include <stdexcept>
 #include <iostream>
 
@@ -264,13 +265,18 @@ PWIZ_API_DECL bool SpectrumList_FilterPredicate_MSLevelSet::accept(const msdata:
 // SpectrumList_FilterPredicate_ActivationType
 //
 
-PWIZ_API_DECL SpectrumList_FilterPredicate_MS2ActivationType::SpectrumList_FilterPredicate_MS2ActivationType(const CVID cvidFilterItem_, bool hasNot_)
-: cvFilterItem(cvidFilterItem_), hasNot(hasNot_)
+PWIZ_API_DECL SpectrumList_FilterPredicate_MS2ActivationType::SpectrumList_FilterPredicate_MS2ActivationType(const set<CVID> cvFilterItems_, bool hasNoneOf_)
+: hasNoneOf(hasNoneOf_)
 {
-    CVTermInfo info = cvTermInfo(cvFilterItem); 
-    if (std::find(info.parentsIsA.begin(), info.parentsIsA.end(), MS_dissociation_method) == info.parentsIsA.end())
+    BOOST_FOREACH(const CVID cvid, cvFilterItems_)
     {
-        throw runtime_error("first argument not an activation type");
+        CVTermInfo info = cvTermInfo(cvid); 
+        if (std::find(info.parentsIsA.begin(), info.parentsIsA.end(), MS_dissociation_method) == info.parentsIsA.end())
+        {
+            throw runtime_error("first argument not an activation type");
+        }
+
+        cvFilterItems.insert(cvid);
     }
 
 }
@@ -284,10 +290,18 @@ PWIZ_API_DECL bool SpectrumList_FilterPredicate_MS2ActivationType::accept(const 
             spectrum.precursors[0].selectedIons[0].empty() == false
             )
     {
-        bool res = spectrum.precursors[0].activation.hasCVParam(cvFilterItem);
-        return hasNot ? res == false : res;
+        bool res = true;
+        BOOST_FOREACH(const CVID cvid, cvFilterItems)
+        {
+            if (hasNoneOf)
+                res &= !spectrum.precursors[0].activation.hasCVParam(cvid);
+            else
+                res &= spectrum.precursors[0].activation.hasCVParam(cvid);
+        }
+
+        return res;
     }
-	return false; // even with hasNot we don't want MS1
+	return false; // even with hasNoneOf we don't want MS1
 }
 
 

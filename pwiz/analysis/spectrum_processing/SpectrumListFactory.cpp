@@ -262,17 +262,33 @@ SpectrumListPtr filterCreator_ActivationType(const MSData& msd, const string& ar
     //
     // Check for presence or absense of ETD flag only.
 
-    CVID cvID = MS_electron_transfer_dissociation;
+    set<CVID> cvIDs;
+
     bool hasNot = false;
 
-    if (sActivationType == "CID")
+    if (sActivationType == "CID") // HACK: CID means neither of HCD or ETD
     {
         hasNot = true;
+        cvIDs.insert(MS_electron_transfer_dissociation);
+        cvIDs.insert(MS_high_energy_collision_induced_dissociation);
+    }
+    else if (sActivationType == "SA")
+    {
+        cvIDs.insert(MS_electron_transfer_dissociation);
+        cvIDs.insert(MS_collision_induced_dissociation);
+    }
+    else if (sActivationType == "HCD")
+    {
+        cvIDs.insert(MS_high_energy_collision_induced_dissociation);
+    }
+    else if (sActivationType == "ETD")
+    {
+        cvIDs.insert(MS_electron_transfer_dissociation);
     }
 
     return SpectrumListPtr(new 
     SpectrumList_Filter(msd.run.spectrumListPtr, 
-                        SpectrumList_FilterPredicate_MS2ActivationType(cvID, hasNot)));
+                        SpectrumList_FilterPredicate_MS2ActivationType(cvIDs, hasNot)));
 
 }
 
@@ -326,17 +342,17 @@ JumpTableEntry jumpTable_[] =
 {
     {"index", "int_set", filterCreator_index},
     {"msLevel", "int_set", filterCreator_msLevel},
-    {"mzWindow", "[mzLow,mzHigh]", filterCreator_mzWindow},
-    {"peakPicking", "prefer vendor algorithm:<true|false>   int_set(MS levels)", filterCreator_nativeCentroid},
-    {"ETDFilter", "remove precursor:<true|false>   remove charge reduced:<true|false>   remove neutral loss:<true|false>   blanket removal:<true|false>   matching tolerance:(<value> <PPM|MZ>)", filterCreator_ETDFilter},
     {"precursorRecalculation", " (based on ms1 data)", filterCreator_precursorRecalculation},
+    {"peakPicking", "prefer_vendor:<true|false>  int_set(MS levels)", filterCreator_nativeCentroid},
     {"scanNumber", "int_set", filterCreator_scanNumber},
     {"scanEvent", "int_set", filterCreator_scanEvent},
     {"scanTime", "[scanTimeLow,scanTimeHigh]", filterCreator_scanTime},
     {"stripIT", " (strip ion trap ms1 scans)", filterCreator_stripIT},
-    {"activation", "<ETD|CID>", filterCreator_ActivationType},
     {"metadataFixer", " (add/replace TIC/BPI metadata)", filterCreator_metadataFixer},
-    {"threshold", "<count|count-after-ties|absolute|bpi-relative|tic-relative|tic-cutoff> <threshold> <most-intense|least-intense>", filterCreator_thresholdFilter}
+    // MS2 Spectrum Processing/Filtering
+    {"mzWindow", "[mzLow,mzHigh]\n", filterCreator_mzWindow},
+    {"ETDFilter", "removePrecursor:<true|false> (default:true) removeChargeReduced:<true|false> (default:true) removeNeutralLoss:<true|false> (default:true) blanketRemoval<true|false> (default:true) MatchingTolerance:(val <PPM|MZ>) (default:3.1 MZ)\n", filterCreator_ETDFilter},
+    {"Activation", "<ETD|CID|SA|HCD> (Precursor Activation Type)", filterCreator_ActivationType},
 };
 
 

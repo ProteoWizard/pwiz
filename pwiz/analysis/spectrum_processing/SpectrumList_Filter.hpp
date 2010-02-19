@@ -30,6 +30,7 @@
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "boost/logic/tribool.hpp"
 
+#include <set>
 
 namespace pwiz {
 namespace analysis {
@@ -148,14 +149,14 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_MS2ActivationType : public Spec
 {
 public:
 
-    SpectrumList_FilterPredicate_MS2ActivationType(const pwiz::cv::CVID filterItem, bool hasNot_ = false);
+    SpectrumList_FilterPredicate_MS2ActivationType(const std::set<pwiz::cv::CVID> filterItem, bool hasNoneOf_ = false);
 
     virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const {return boost::logic::indeterminate;}
     virtual bool accept(const msdata::Spectrum& spectrum) const;
 
     private:
-    pwiz::cv::CVID cvFilterItem;
-    bool            hasNot;
+    std::set<pwiz::cv::CVID> cvFilterItems;
+    bool                     hasNoneOf;
 
 };
 
