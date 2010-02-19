@@ -467,11 +467,9 @@ rule seems-dependency ( properties * )
 
 rule gcc-install-dll-path ( properties * )
 {
-    if <toolset>gcc in $(properties) && <link>shared in $(properties)
+    if <toolset>gcc in $(properties) && <link>shared in $(properties) && <target-os>linux in $(properties)
     {
-        local location = [ install-location $(properties) ] ;
-        location = $(location:G=) ;
-        return <dll-path>$(location) ;
+        return <linkflags>-Wl,-rpath,'${ORIGIN}' ;
     }
 }
 
