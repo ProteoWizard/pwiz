@@ -25,6 +25,11 @@
 #define _T2D_DATA_HPP_
 
 
+#ifndef BOOST_DATE_TIME_NO_LIB
+#define BOOST_DATE_TIME_NO_LIB // prevent MSVC auto-link
+#endif
+
+
 #include "pwiz/utility/misc/Export.hpp"
 #include <string>
 #include <vector>
