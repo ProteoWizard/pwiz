@@ -37,12 +37,14 @@ namespace pwiz.Skyline.SettingsUI
         private readonly BioMassCalc _monoMassCalc = new BioMassCalc(MassType.Monoisotopic);
         private readonly BioMassCalc _averageMassCalc = new BioMassCalc(MassType.Average);
 
+        private bool _heavy;
         private bool _showLoss = true; // Design mode with loss UI showing
         private TextBox _textFormulaActive;
 
         public EditStaticModDlg(IEnumerable<StaticMod> existing, bool heavy)
         {
             _existing = existing;
+            _heavy = heavy;
 
             InitializeComponent();
 
@@ -54,6 +56,21 @@ namespace pwiz.Skyline.SettingsUI
             bm.MakeTransparent(Color.Fuchsia);
             btnFormulaPopup.Image = bm;
             btnLossFormulaPopup.Image = bm;
+
+            if (heavy)
+            {
+                
+                labelRelativeRT.Left = labelAA.Left;
+                comboRelativeRT.Left = comboAA.Left;
+                comboRelativeRT.Items.Add(RelativeRT.Same.ToString());
+                comboRelativeRT.Items.Add(RelativeRT.Before.ToString());
+                comboRelativeRT.SelectedIndex = 0;
+            }
+            else
+            {
+                labelRelativeRT.Visible = false;
+                comboRelativeRT.Visible = false;
+            }
 
             ShowLoss = false;
             // TODO: Implement handling of modifications with neutral loss
@@ -82,6 +99,8 @@ namespace pwiz.Skyline.SettingsUI
                     textLossFormula.Text = "";
                     textLossMonoMass.Text = "";
                     textLossAverageMass.Text = "";
+                    if (comboRelativeRT.Items.Count > 0)
+                        comboRelativeRT.SelectedIndex = 0;
                 }
                 else
                 {
@@ -116,6 +135,9 @@ namespace pwiz.Skyline.SettingsUI
                     cb15N.Checked = _modification.Label15N;
                     cb18O.Checked = _modification.Label18O;
                     cb2H.Checked = _modification.Label2H;
+
+                    if (comboRelativeRT.Items.Count > 0)
+                        comboRelativeRT.SelectedItem = _modification.RelativeRT.ToString();
 
                     if (_modification.FormulaLoss != null)
                     {
@@ -167,6 +189,7 @@ namespace pwiz.Skyline.SettingsUI
 
                 // Update UI
                 panelLossFormula.Visible =
+                    labelLossFormula.Visible = 
                     textLossMonoMass.Visible =
                     textLossAverageMass.Visible = _showLoss;
 
@@ -180,7 +203,9 @@ namespace pwiz.Skyline.SettingsUI
 
         private void ResizeForLoss()
         {
-            int delta = textLossMonoMass.Bottom - btnLoss.Bottom;
+            int bottomControl = _heavy ? comboRelativeRT.Bottom : btnLoss.Bottom;
+
+            int delta = textLossMonoMass.Bottom - bottomControl;
             Height += (ShowLoss ? delta : -delta);
         }
 
@@ -292,8 +317,20 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
-            Modification = new StaticMod(name, aa, term, formula, labelAtoms, monoMass, avgMass,
-                formulaLoss, monoLoss, avgLoss);
+            RelativeRT relativeRT = (RelativeRT) Enum.Parse(typeof (RelativeRT),
+                comboRelativeRT.SelectedItem.ToString());
+
+            Modification = new StaticMod(name,
+                                         aa,
+                                         term,
+                                         formula,
+                                         labelAtoms,
+                                         relativeRT,
+                                         monoMass,
+                                         avgMass,
+                                         formulaLoss,
+                                         monoLoss,
+                                         avgLoss);
 
             // Store state of the chemical formula checkbox for next use.
             if (cbChemicalFormula.Visible)

@@ -22,10 +22,12 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using pwiz.Crawdad;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -1189,7 +1191,7 @@ namespace pwiz.Skyline.Model.Results
                     else
                     {
                         PostChromDataSet(chromDataSet, false);
-                        chromDataSet = new ChromDataSet(chromData);
+                        chromDataSet = new ChromDataSet(IsTimeNormalArea, chromData);
                     }
                     lastChromId = chromId;
                 }
@@ -1393,6 +1395,37 @@ namespace pwiz.Skyline.Model.Results
                 public List<float> Intensities { get; private set; }
             }
 
+//            private sealed class PeptideChromDataSets
+//            {
+//                
+//            }
+//
+//            private sealed class PeptideChargeChromDataSets
+//            {
+//                public PeptideChargeChromDataSets(int precursorCharge)
+//                {
+//                    PrecursorCharge = precursorCharge;
+//                    HeavyDataSets = new List<HeavyChromDataSet>();
+//                }
+//
+//                public int PrecursorCharge { get; private set; }
+//
+//                public ChromDataSet LightDataSet { get; set; }
+//                public IList<HeavyChromDataSet> HeavyDataSets { get; private set; }
+//            }
+//
+//            private sealed class HeavyChromDataSet
+//            {
+//                public HeavyChromDataSet(RelativeRT relativeRT, ChromDataSet dataSet)
+//                {
+//                    RelativeRT = relativeRT;
+//                    DataSet = dataSet;
+//                }
+//
+//                public RelativeRT RelativeRT { get; private set; }
+//                public ChromDataSet DataSet { get; private set; }
+//            }
+//
             private sealed class ChromDataSet
             {
                 private readonly List<ChromData> _listChromData = new List<ChromData>();
@@ -1405,8 +1438,9 @@ namespace pwiz.Skyline.Model.Results
                     _isTimeNormalArea = isTimeNormalArea;
                 }
 
-                public ChromDataSet(params ChromData[] arrayChromData)
+                public ChromDataSet(bool isTimeNormalArea, params ChromData[] arrayChromData)
                 {
+                    _isTimeNormalArea = isTimeNormalArea;
                     _listChromData.AddRange(arrayChromData);
                 }
 
@@ -1480,7 +1514,7 @@ namespace pwiz.Skyline.Model.Results
                         foreach (var chromData in _listChromData)
                         {
                             if (chromData.RawTimes.Length > 0)
-                                max = Math.Max(max, chromData.Times[chromData.Times.Length - 1]);
+                                max = Math.Max(max, chromData.RawTimes[chromData.RawTimes.Length - 1]);
                         }
                         return max;
                     }
@@ -1494,7 +1528,7 @@ namespace pwiz.Skyline.Model.Results
                         foreach (var chromData in _listChromData)
                         {
                             if (chromData.RawTimes.Length > 0)
-                                min = Math.Min(min, chromData.Times[chromData.Times.Length - 1]);                            
+                                min = Math.Min(min, chromData.RawTimes[chromData.RawTimes.Length - 1]);                            
                         }
                         return min;
                     }                    
@@ -1551,8 +1585,8 @@ namespace pwiz.Skyline.Model.Results
                     // Mark all optimization chromatograms
                     MarkOptimizationData();
 
-//                    if (Math.Round(_listChromData[0].Key.Precursor) == 404)
-//                        Console.WriteLine("Issue");
+                    if (Math.Round(_listChromData[0].Key.Precursor) == 585)
+                        Console.WriteLine("Issue");
 
                     // First use Crawdad to find the peaks
                     _listChromData.ForEach(chromData => chromData.FindPeaks());
@@ -1687,7 +1721,16 @@ namespace pwiz.Skyline.Model.Results
                     foreach (var peakSet in peakSets)
                     {
                         if (PeaksOverlap(peakSet[0].Peak, peakSetTest[0].Peak))
-                            return true;
+                        {
+                            // Check peaks where their largest peaks overlap to make
+                            // sure they have transitions with measured signal in common.
+                            var sharedPeaks = from dataPeak in peakSet
+                                              join dataPeakTest in peakSetTest on
+                                                   dataPeak.Data.Key equals dataPeakTest.Data.Key
+                                              where dataPeak.Peak != null && dataPeakTest.Peak != null
+                                              select dataPeak;
+                            return sharedPeaks.Count() > 0;
+                        }
                     }
                     return false;
                 }
@@ -2145,13 +2188,16 @@ namespace pwiz.Skyline.Model.Results
                         // Make sure the intensity arrays are not just empty to avoid
                         // an infinite loop.
                         bool seenData = false;
-                        // Check for interleaving zeros
+                        // Check for interleaving zeros and non-zero values
                         foreach (var chromData in _listChromData)
                         {
                             var intensities = chromData.Intensities;
                             for (int i = (intensities.Length > 0 && intensities[0] == 0 ? 0 : 1); i < intensities.Length; i += 2)
                             {
                                 if (intensities[i] != 0)
+                                    return false;
+                                // Because WIFF files have lots of zeros
+                                if (i < intensities.Length - 1 && intensities[i + 1] == 0)
                                     return false;
                                 seenData = true;
                             }
@@ -2210,20 +2256,26 @@ namespace pwiz.Skyline.Model.Results
                             int factor = (intersect == lenPeak ? 4 : 2);
                             if (intersect * factor < widthMax)
                                 continue;
-                            // If less than 2/3 of the peak is inside the max peak.
-                            if (intersect * 3/2 < lenPeak)
-                                continue;
-                            // or where either end is more than 25% of its peak width outside
-                            // the max peak.
-                            if (intersect != lenPeak)
+                            int delta = Math.Abs(timeIndex - centerMax);
+                            // If apex delta and FWHM are not very close to the max peak, make further checks
+                            if (delta * 4.0 > deltaMax || Math.Abs(peak.Peak.Fwhm - peakMax.Fwhm)/peakMax.Fwhm > 0.05)
                             {
-                                factor = (intersect == widthMax ? 2 : 4);
-                                if ((peak.Peak.StartIndex - startMax) * factor > lenPeak ||
-                                        (endMax - peak.Peak.EndIndex) * factor > lenPeak)
+                                // If less than 2/3 of the peak is inside the max peak, or 1/2 if the
+                                // peak entirely contains the max peak.
+                                double dFactor = (intersect == widthMax ? 2.0 : 1.5);
+                                if (intersect * dFactor < lenPeak)
                                     continue;
+                                // or where either end is more than 2/3 of the intersect width outside
+                                // the max peak.
+                                if (intersect != lenPeak)
+                                {
+                                    dFactor = 1.5;
+                                    if ((startMax - peak.Peak.StartIndex) * dFactor > intersect ||
+                                            (peak.Peak.EndIndex - endMax) * dFactor > intersect)
+                                        continue;
+                                }
                             }
 
-                            int delta = Math.Abs(timeIndex - centerMax);
                             if (delta <= deltaNearest)
                             {
                                 deltaNearest = delta;
@@ -2268,7 +2320,11 @@ namespace pwiz.Skyline.Model.Results
                     if (IsOptimizationData)
                         RawPeaks = new CrawdadPeak[0];
                     else
+                    {
                         RawPeaks = Finder.CalcPeaks(MAX_PEAKS);
+                        // Calculate smoothing for later use in extendint the Crawdad peaks
+                        IntensitiesSmooth = ChromatogramInfo.SavitzkyGolaySmooth(Intensities);
+                    }
                 }
 
                 private CrawdadPeakFinder Finder { get; set; }
@@ -2280,6 +2336,8 @@ namespace pwiz.Skyline.Model.Results
 
                 public float[] Times { get; set; }
                 public float[] Intensities { get; set; }
+                public float[] IntensitiesExtents { get { return IntensitiesSmooth; } }
+                private float[] IntensitiesSmooth { get; set; }
                 public IList<ChromPeak> Peaks { get; private set; }
                 public int MaxPeakIndex { get; set; }
                 public bool IsOptimizationData { get; set; }
@@ -2406,7 +2464,7 @@ namespace pwiz.Skyline.Model.Results
 
                 private void GetIntensityMetrics(int i, out float maxIntensity, out float deltaIntensity)
                 {
-                    float minIntensity = maxIntensity = this[0].Data.Intensities[i];
+                    float minIntensity = maxIntensity = this[0].Data.IntensitiesExtents[i];
                     for (int j = 1; j < Count; j++)
                     {
                         var peakData = this[j];
@@ -2414,7 +2472,7 @@ namespace pwiz.Skyline.Model.Results
                         if (peakData.Peak == null)
                             continue;
 
-                        float currentIntensity = peakData.Data.Intensities[i];
+                        float currentIntensity = peakData.Data.IntensitiesExtents[i];
                         if (currentIntensity > maxIntensity)
                             maxIntensity = currentIntensity;
                         else if (currentIntensity < minIntensity)

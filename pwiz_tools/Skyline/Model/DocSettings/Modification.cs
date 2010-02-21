@@ -40,6 +40,8 @@ namespace pwiz.Skyline.Model.DocSettings
         O18 = 0x4,
         H2 = 0x8
     }
+
+    public enum RelativeRT { Same, Before }
 // ReSharper restore InconsistentNaming
 
     /// <summary>
@@ -62,20 +64,29 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public StaticMod(string name, char? aa, ModTerminus? term,
             string formula, LabelAtoms labelAtoms, double? monoMass, double? avgMass)
-            : this(name, aa, term, formula, labelAtoms, monoMass, avgMass, null, null, null)
+            : this(name, aa, term, formula, labelAtoms, RelativeRT.Same, monoMass, avgMass, null, null, null)
         {
             
         }
 
-        public StaticMod(string name, char? aa, ModTerminus? term,
-            string formula, LabelAtoms labelAtoms, double? monoMass, double? avgMass,
-            string formulaLoss, double? monoLoss, double? avgLoss)
+        public StaticMod(string name,
+                         char? aa,
+                         ModTerminus? term,
+                         string formula,
+                         LabelAtoms labelAtoms,
+                         RelativeRT relativeRT,
+                         double? monoMass,
+                         double? avgMass,
+                         string formulaLoss,
+                         double? monoLoss,
+                         double? avgLoss)
             : base(name)
         {
             AA = aa;
             Terminus = term;
             Formula = formula;
             LabelAtoms = labelAtoms;
+            RelativeRT = relativeRT;
 
             // Only allow masses, if formula is not specified.
             if (string.IsNullOrEmpty(formula))
@@ -108,6 +119,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool Label15N { get { return (LabelAtoms & LabelAtoms.N15) != 0; } }
         public bool Label18O { get { return (LabelAtoms & LabelAtoms.O18) != 0; } }
         public bool Label2H { get { return (LabelAtoms & LabelAtoms.H2) != 0; } }
+        public RelativeRT RelativeRT { get; private set; }
 
         public double? MonoisotopicMass { get; private set; }
         public double? MonoisotopicLoss { get; private set; }
@@ -175,6 +187,7 @@ namespace pwiz.Skyline.Model.DocSettings
             label_18O,
             label_2H,
 // ReSharper restore InconsistentNaming
+            relative_rt,
             massdiff_monoisotopic,
             massloss_monoisotopic,
             massdiff_average,
@@ -275,6 +288,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 LabelAtoms |= LabelAtoms.O18;
             if (reader.GetBoolAttribute(ATTR.label_2H))
                 LabelAtoms |= LabelAtoms.H2;
+            RelativeRT = reader.GetEnumAttribute(ATTR.relative_rt, RelativeRT.Same);
 
             // Allow specific masses always, but they will generate an error,
             // in Validate() if there is already a formula.
@@ -303,6 +317,7 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttribute(ATTR.label_15N, Label15N);
             writer.WriteAttribute(ATTR.label_18O, Label18O);
             writer.WriteAttribute(ATTR.label_2H, Label2H);
+            writer.WriteAttribute(ATTR.relative_rt, RelativeRT, RelativeRT.Same);
             writer.WriteAttributeNullable(ATTR.massdiff_monoisotopic, MonoisotopicMass);
             writer.WriteAttributeNullable(ATTR.massloss_monoisotopic, MonoisotopicLoss);
             writer.WriteAttributeNullable(ATTR.massdiff_average, AverageMass);
@@ -327,6 +342,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 Equals(obj.Formula, Formula) &&
                 Equals(obj.FormulaLoss, FormulaLoss) &&
                 Equals(obj.LabelAtoms, LabelAtoms) &&
+                Equals(obj.RelativeRT, RelativeRT) &&
                 obj.MonoisotopicMass.Equals(MonoisotopicMass) &&
                 obj.MonoisotopicLoss.Equals(MonoisotopicLoss) &&
                 obj.Terminus.Equals(Terminus);
@@ -359,6 +375,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ (FormulaLoss != null ? FormulaLoss.GetHashCode() : 0);
                 result = (result*397) ^ IsExplicit.GetHashCode();
                 result = (result*397) ^ LabelAtoms.GetHashCode();
+                result = (result*397) ^ RelativeRT.GetHashCode();
                 result = (result*397) ^ (MonoisotopicMass.HasValue ? MonoisotopicMass.Value.GetHashCode() : 0);
                 result = (result*397) ^ (MonoisotopicLoss.HasValue ? MonoisotopicLoss.Value.GetHashCode() : 0);
                 result = (result*397) ^ (Terminus.HasValue ? Terminus.Value.GetHashCode() : 0);

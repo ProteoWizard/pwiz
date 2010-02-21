@@ -946,11 +946,16 @@ namespace pwiz.Skyline.Model.Results
 
         public void SavitzkyGolaySmooth()
         {
-            if (Intensities == null || Intensities.Length < 9)
-                return;
-            var intRaw = Intensities;
+            Intensities = SavitzkyGolaySmooth(Intensities);
+        }
+
+        public static float[] SavitzkyGolaySmooth(float[] intensities)
+        {
+            if (intensities == null || intensities.Length < 9)
+                return intensities;
+            var intRaw = intensities;
             var intSmooth = new float[intRaw.Length];
-            Array.Copy(Intensities, intSmooth, 4);
+            Array.Copy(intensities, intSmooth, 4);
             for (int i = 4; i < intRaw.Length - 4; i++)
             {
                 double sum = 59 * intRaw[i] +
@@ -961,7 +966,7 @@ namespace pwiz.Skyline.Model.Results
                 intSmooth[i] = (float)(sum / 231);
             }
             Array.Copy(intRaw, intRaw.Length - 4, intSmooth, intSmooth.Length - 4, 4);
-            Intensities = intSmooth;
+            return intSmooth;
         }
     }
 

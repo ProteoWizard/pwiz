@@ -325,7 +325,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
             protected override bool IsMissingValue(TransitionChromInfo chromInfo)
             {
-                return chromInfo.IsEmpty;
+                // TODO: Understand why chromInfo.IsEmpty breaks the area graphs
+                return false; // chromInfo.IsEmpty;
             }
 
             protected override PointPair CreatePointPair(int iResult, TransitionChromInfo chromInfo)

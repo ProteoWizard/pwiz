@@ -153,6 +153,12 @@ namespace pwiz.Skyline.Util
             writer.WriteAttributeString(name, value.ToString());
         }
 
+        public static void WriteAttribute<T>(this XmlWriter writer, Enum name, T value, T defaultValue)
+        {
+            if (!Equals(value, defaultValue))
+                writer.WriteAttributeString(name, value.ToString());
+        }
+
         public static void WriteAttribute(this XmlWriter writer, Enum name, bool value)
         {
             WriteAttribute(writer, name, value, false);

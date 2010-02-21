@@ -86,7 +86,7 @@ namespace pwiz.SkylineTest.Results
             AssertResult.MatchChromatograms(docContainer,
                                         testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.RAW"),
                                         testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.mzXML"),
-                                        1, 0);
+                                        2, 0);
             // Release file handles
             docContainer.SetDocument(doc, docContainer.Document);                
             testFilesDir.Dispose();
@@ -208,7 +208,7 @@ namespace pwiz.SkylineTest.Results
                 }
             }
             // Only one group with less than 2 transition ratio
-            Assert.AreEqual(2, ratioGroupMissingCount);
+            Assert.AreEqual(1, ratioGroupMissingCount);
 
             // Remove the first light transition, checking that this removes the ratio
             // from the corresponding heavy transition, but not the entire group, until

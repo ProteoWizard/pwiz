@@ -425,7 +425,16 @@ namespace pwiz.Skyline.Model
 
         private void Validate()
         {
-            if (MIN_PRODUCT_CHARGE > Charge || Charge > MAX_PRODUCT_CHARGE)
+            if (IsPrecursor())
+            {
+                if (TransitionGroup.MIN_PRECURSOR_CHARGE > Charge || Charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
+                {
+                    throw new InvalidDataException(string.Format("Precursor charge {0} must be between {1} and {2}.",
+                        Charge, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE));                    
+                }
+
+            }
+            else if (MIN_PRODUCT_CHARGE > Charge || Charge > MAX_PRODUCT_CHARGE)
             {
                 throw new InvalidDataException(string.Format("Product ion charge {0} must be between {1} and {2}.",
                                                              Charge, MIN_PRODUCT_CHARGE, MAX_PRODUCT_CHARGE));
