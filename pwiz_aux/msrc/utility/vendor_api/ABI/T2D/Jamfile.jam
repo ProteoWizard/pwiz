@@ -49,7 +49,7 @@ rule vendor-api-requirements ( properties * )
         {
             result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<asynch-exceptions>off ;
         }
-
+        result += <linkflags>/FORCE:MULTIPLE ; # HACK HACK HACK: the duplicate date_time symbols must be fixed, but how?!
         result += <assembly>$(API_PATH)/Interop.DataExplorer.dll ;
         result += <define>PWIZ_READER_ABI_T2D ;
     }

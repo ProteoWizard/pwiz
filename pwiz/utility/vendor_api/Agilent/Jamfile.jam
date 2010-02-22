@@ -49,18 +49,7 @@ rule vendor-api-usage-requirements ( properties * )
     if <toolset>msvc in $(properties) &&
        [ path.exists $(API_PATH)/MassSpecDataReader.dll ]
     {
-        # Even though the vendor API is forced to <link>static and <asynch-exceptions>on,
-        # its pwiz and boost dependencies should not follow suit.
-        # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
-        if <link>shared in $(properties) || link=shared in [ modules.peek : ARGV ]
-        {
-            result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<asynch-exceptions>off/<link>shared ;
-        }
-        else
-        {
-            result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<asynch-exceptions>off ;
-        }
-
+        result += <linkflags>/FORCE:MULTIPLE ; # HACK HACK HACK: the duplicate date_time symbols must be fixed, but how?!
         result += <cxxflags>/wd4945 ; # warning C4945: 'x' : cannot import symbol from 'some.dll': as 'x' has already been imported from another assembly
         result += <assembly>$(API_PATH)/MassSpecDataReader.dll ;
         result += <assembly>$(API_PATH)/BaseCommon.dll ;
