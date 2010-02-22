@@ -469,7 +469,7 @@ rule gcc-install-dll-path ( properties * )
 {
     if <toolset>gcc in $(properties) && <link>shared in $(properties) && <target-os>linux in $(properties)
     {
-        return <linkflags>-Wl,-rpath,'${ORIGIN}' ;
+        return <dll-path>'$ORIGIN' ;
     }
 }
 

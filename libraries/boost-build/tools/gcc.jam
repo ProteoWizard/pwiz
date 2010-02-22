@@ -25,6 +25,7 @@ import rc ;
 import regex ;
 import set ;
 import unix ;
+import fortran ;
 
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
@@ -224,6 +225,7 @@ if [ os.name ] = NT
 generators.register-c-compiler gcc.compile.c++ : CPP : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.c   : C   : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.asm : ASM : OBJ : <toolset>gcc ;
+generators.register-fortran-compiler gcc.compile.fortran : FORTRAN FORTRAN90 : OBJ : <toolset>gcc ;
 
 # pch support
 
@@ -394,12 +396,19 @@ if [ os.name ] != NT && [ os.name ] != OSF && [ os.name ] != HPUX && [ os.name ]
     SONAME_OPTION = -h ;
 }
 
+# HPUX, for some reason, seem to use '+h', not '-h'.
+if [ os.name ] = HPUX
+{
+    HAVE_SONAME   = "" ;
+    SONAME_OPTION = +h ;
+}
 
 toolset.flags gcc.compile USER_OPTIONS <cflags> ;
 toolset.flags gcc.compile.c++ USER_OPTIONS <cxxflags> ;
 toolset.flags gcc.compile DEFINES <define> ;
 toolset.flags gcc.compile INCLUDES <include> ;
 toolset.flags gcc.compile.c++ TEMPLATE_DEPTH <c++-template-depth> ;
+toolset.flags gcc.compile.fortran USER_OPTIONS <fflags> ;
 
 rule compile.c++.pch ( targets * : sources * : properties * )
 {
@@ -471,6 +480,10 @@ rule compile.c ( targets * : sources * : properties * )
     DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
 }
 
+rule compile.fortran
+{
+}
+
 actions compile.c++ bind PCH_FILE
 {
     "$(CONFIG_COMMAND)" $(LANG) -ftemplate-depth-$(TEMPLATE_DEPTH) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" -c -o "$(<:W)" "$(>:W)"
@@ -479,6 +492,11 @@ actions compile.c++ bind PCH_FILE
 actions compile.c bind PCH_FILE
 {
     "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+}
+
+actions compile.fortran
+{
+  "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
 }
 
 rule compile.asm
@@ -781,6 +799,23 @@ rule init-link-flags ( toolset linker condition )
     }
 }
 
+# Enclose the RPATH variable on 'targets' in (double) quotes,
+# unless it's already enclosed in single quotes.
+# This special casing is done because it's common to pass
+# '$ORIGIN' to linker -- and it has to have single quotes
+# to prevent expansion by shell -- and if we add double
+# quotes then preventing properties of single quotes disappear.
+rule quote-rpath ( targets * )
+{
+    local r = [ on $(targets[1]) return $(RPATH) ] ;
+    if ! [ MATCH "('.*')" : $(r) ] 
+    {
+        r = "\"$(r)\"" ;
+        ECHO "Yeah" $(r) ;
+    }
+    RPATH on $(targets) = $(r) ;
+}
+
 # Declare actions for linking.
 rule link ( targets * : sources * : properties * )
 {
@@ -791,11 +826,12 @@ rule link ( targets * : sources * : properties * )
     # parallel is just slower. For now, serialize only gcc links, it might be a
     # good idea to serialize all links.
     JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
+    quote-rpath $(targets) ;
 }
 
 actions link bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,$(RPATH) -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
 
 }
 
@@ -853,12 +889,13 @@ rule link.dll ( targets * : sources * : properties * )
     setup-address-model $(targets) : $(sources) : $(properties) ;
     SPACE on $(targets) = " " ;
     JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
+    quote-rpath $(targets) ;
 }
 
 # Differs from 'link' above only by -shared.
 actions link.dll bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,"$(RPATH)" "$(.IMPLIB-COMMAND)$(<[1])" -o "$(<[-1])" $(HAVE_SONAME)-Wl,$(SONAME_OPTION)$(SPACE)-Wl,$(<[-1]:D=) -shared $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,$(RPATH) "$(.IMPLIB-COMMAND)$(<[1])" -o "$(<[-1])" $(HAVE_SONAME)-Wl,$(SONAME_OPTION)$(SPACE)-Wl,$(<[-1]:D=) -shared $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
 }
 
 rule setup-threading ( targets * : sources * : properties * )
