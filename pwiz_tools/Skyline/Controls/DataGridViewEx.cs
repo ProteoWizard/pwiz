@@ -17,7 +17,10 @@
  * limitations under the License.
  */
 using System;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using DigitalRune.Windows.Docking;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
 {
@@ -57,5 +60,42 @@ namespace pwiz.Skyline.Controls
         /// in this class.
         /// </summary>
         public event EventHandler<KeyEventArgs> DataGridViewKey;
+
+        /// <summary>
+        /// If this control is a child of the SkylineWindow (not a popup), then returns the
+        /// SkylineWindow.  Otherwise returns null.
+        /// </summary>
+        protected SkylineWindow FindParentSkylineWindow()
+        {
+            for (Control control = this; control != null; control = control.Parent)
+            {
+                var skylineWindow = control as SkylineWindow;
+                if (skylineWindow != null)
+                {
+                    return skylineWindow;
+                }
+            }
+            return null;
+        }
+
+        protected override void OnEnter(EventArgs e)
+        {
+            base.OnEnter(e);
+            var skylineWindow = FindParentSkylineWindow();
+            if (skylineWindow != null)
+            {
+                skylineWindow.ClipboardControlGotFocus(this);
+            }
+        }
+
+        protected override void OnLeave(EventArgs e)
+        {
+            base.OnLeave(e);
+            var skylineWindow = FindParentSkylineWindow();
+            if (skylineWindow != null)
+            {
+                skylineWindow.ClipboardControlLostFocus(this);
+            }
+        }
     }
 }

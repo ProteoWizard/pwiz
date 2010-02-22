@@ -818,7 +818,8 @@ namespace pwiz.Skyline.Controls
 
         private void RepositionEditTextBox()
         {
-            _editTextBox.TextBox.Location = SelectedNode.Bounds.Location;
+            _editTextBox.TextBox.Location = new Point(SelectedNode.Bounds.Location.X + Location.X, 
+                SelectedNode.Bounds.Location.Y + Location.Y);
             _editTextBox.MinimumWidth = 80;
             _editTextBox.MaximumWidth = Bounds.Width - 1 - SelectedNode.Bounds.Left;
             _editTextBox.AutoSizeWidth = true;

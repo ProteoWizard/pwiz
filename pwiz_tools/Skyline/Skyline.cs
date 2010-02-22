@@ -603,12 +603,9 @@ namespace pwiz.Skyline
             sequenceTree.HideEffects();
 
             // Update edit menus
+            UpdateClipboardMenuItems();
             SrmTreeNode nodeTree = sequenceTree.SelectedNode as SrmTreeNode;
-            bool enabled = (nodeTree as IClipboardDataProvider) != null;
-            copyToolBarButton.Enabled = copyMenuItem.Enabled = enabled;
-            cutToolBarButton.Enabled = cutMenuItem.Enabled = enabled;
-            enabled = nodeTree != null;
-            deleteMenuItem.Enabled = enabled;
+            var enabled = nodeTree != null;
             editNoteToolStripMenuItem.Enabled = enabled;
             manageUniquePeptidesMenuItem.Enabled = enabled;
             modifyPeptideMenuItem.Enabled = sequenceTree.GetNodeOfType<PeptideTreeNode>() != null;
@@ -640,7 +637,6 @@ namespace pwiz.Skyline
         {
             if (StatementCompletionAction(textBox => textBox.Copy()))
                 return;
-
             
             IClipboardDataProvider provider =
                 sequenceTree.SelectedNode as IClipboardDataProvider;
@@ -2124,6 +2120,40 @@ namespace pwiz.Skyline
         {
             comboResults.Width = toolBarResults.Width - labelResults.Width - 6;
             ComboHelper.AutoSizeDropDown(comboResults);
+        }
+
+        private Control _activeClipboardControl;
+        public void ClipboardControlGotFocus(Control clipboardControl)
+        {
+            _activeClipboardControl = clipboardControl;
+            UpdateClipboardMenuItems();
+        }
+        public void ClipboardControlLostFocus(Control clipboardControl)
+        {
+            if (_activeClipboardControl == clipboardControl)
+            {
+                _activeClipboardControl = null;
+            }
+            UpdateClipboardMenuItems();
+        }
+        private void UpdateClipboardMenuItems()
+        {
+            if (_activeClipboardControl != null)
+            {
+                // If some other control wants to handle these commands, then we disable
+                // the menu items so the keystrokes don't get eaten up by TranslateMessage
+                cutToolBarButton.Enabled = cutMenuItem.Enabled = false;
+                copyToolBarButton.Enabled = copyMenuItem.Enabled = false;
+                pasteToolBarButton.Enabled = pasteMenuItem.Enabled = false;
+                deleteMenuItem.Enabled = false;
+                return;
+            }
+            SrmTreeNode nodeTree = sequenceTree.SelectedNode as SrmTreeNode;
+            bool enabled = (nodeTree as IClipboardDataProvider) != null;
+            cutToolBarButton.Enabled = cutMenuItem.Enabled = enabled;
+            copyToolBarButton.Enabled = copyMenuItem.Enabled = enabled;
+            pasteToolBarButton.Enabled = pasteMenuItem.Enabled = true;
+            deleteMenuItem.Enabled = nodeTree != null;
         }
     }
 }

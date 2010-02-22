@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Controls
     /// <summary>
     /// Displays results in a grid
     /// </summary>
-    public class ResultsGrid : DataGridView
+    public class ResultsGrid : DataGridViewEx
     {
         private readonly Dictionary<RowIdentifier, DataGridViewRow> _chromInfoRows 
             = new Dictionary<RowIdentifier, DataGridViewRow>();
