@@ -104,6 +104,13 @@ exe write_mzid_example_files
     ;
 
 
+exe write_proteome_example_files
+    : write_proteome_example_files.cpp
+      ../../pwiz/data/proteome
+    : <include>../../..
+    ;
+
+
 #
 # local install for testing
 #
