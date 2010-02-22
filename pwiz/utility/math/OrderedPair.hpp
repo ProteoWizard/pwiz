@@ -36,7 +36,7 @@ namespace math {
 
 
 #pragma pack(push, 1)
-struct PWIZ_API_DECL OrderedPair
+struct OrderedPair
 {
     double x;
     double y;
