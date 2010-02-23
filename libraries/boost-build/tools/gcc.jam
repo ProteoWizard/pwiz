@@ -811,7 +811,6 @@ rule quote-rpath ( targets * )
     if ! [ MATCH "('.*')" : $(r) ] 
     {
         r = "\"$(r)\"" ;
-        ECHO "Yeah" $(r) ;
     }
     RPATH on $(targets) = $(r) ;
 }
