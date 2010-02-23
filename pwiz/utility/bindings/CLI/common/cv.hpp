@@ -34,13 +34,13 @@
 
 // [psi-ms.obo]
 //   format-version: 1.2
-//   date: 19:08:2009 0:07
+//   date: 15:02:2010 10:00
 //   saved-by: andreas_bertsch
 //   auto-generated-by: OBO-Edit 1.101
 //   default-namespace: MS
 //   remark: namespace: MS
-//   remark: version: 2.30.0
-//   remark: release date: 2009-12-30
+//   remark: version: 2.33.1
+//   remark: release date: 2010-02-23
 //   remark: coverage: Mass spectrometer output files and spectra interpretation
 //   remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 //   remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
@@ -52,7 +52,7 @@
 //
 // [unit.obo]
 //   format-version: 1.2
-//   date: 18:12:2009 10:12
+//   date: 11:02:2010 10:12
 //   saved-by: George Gkoutos
 //   auto-generated-by: OBO-Edit 2.000-beta55
 //   subsetdef: abnormal_slim "Abnormal/normal slim"
@@ -3299,6 +3299,9 @@ public enum class CVID
     /// <summary>ATAQS: Software suite used to predict, select, and optimize transitions as well as analyze the results of selected reaction monitoring runs developed and distributed by the Institute for Systems Biology.</summary>
     MS_ATAQS = 1000925,
 
+    /// <summary>product interpretation rank: The integer rank given an interpretation of an observed product ion. For example, if y8 is selected as the most likely interpretation of a peak, then it is assigned a rank of 1.</summary>
+    MS_product_interpretation_rank = 1000926,
+
     /// <summary>spectrum interpretation: Collection of terms from the PSI Proteome Informatics standards describing the interpretation of spectra.</summary>
     MS_spectrum_interpretation = 1001000,
 
@@ -3872,19 +3875,19 @@ public enum class CVID
     /// <summary>sequest:PeptideIdnumber: The SEQUEST result 'Id#' in out file (peptide).</summary>
     MS_sequest_PeptideIdnumber = 1001219,
 
-    /// <summary>frag: y ion: Type of fragment: y ion.</summary>
+    /// <summary>frag: y ion: Fragmentation information, type of product: y ion.</summary>
     MS_frag__y_ion = 1001220,
 
     /// <summary>fragmentation information: Fragmentation information like ion types.</summary>
     MS_fragmentation_information = 1001221,
 
-    /// <summary>frag: b ion - H2O: Type of fragment: b ion without water.</summary>
+    /// <summary>frag: b ion - H2O: Fragmentation information, type of product: b ion without water.</summary>
     MS_frag__b_ion___H2O = 1001222,
 
-    /// <summary>frag: y ion - H2O: Type of fragment: y ion without water.</summary>
+    /// <summary>frag: y ion - H2O: Fragmentation information, type of product: y ion without water.</summary>
     MS_frag__y_ion___H2O = 1001223,
 
-    /// <summary>frag: b ion: Type of fragment: b ion.</summary>
+    /// <summary>frag: b ion: Fragmentation information, type of product: b ion.</summary>
     MS_frag__b_ion = 1001224,
 
     /// <summary>product ion m/z: The m/z of the product ion.</summary>
@@ -3902,40 +3905,40 @@ public enum class CVID
     /// <summary>product ion m/z error: The product ion m/z error.</summary>
     MS_product_ion_m_z_error = 1001227,
 
-    /// <summary>frag: x ion: Type of fragment: x ion.</summary>
+    /// <summary>frag: x ion: Fragmentation information, type of product: x ion.</summary>
     MS_frag__x_ion = 1001228,
 
-    /// <summary>frag: a ion: Type of fragment: a ion.</summary>
+    /// <summary>frag: a ion: Fragmentation information, type of product: a ion.</summary>
     MS_frag__a_ion = 1001229,
 
-    /// <summary>frag: z ion: Type of fragment: z ion.</summary>
+    /// <summary>frag: z ion: Fragmentation information, type of product: z ion.</summary>
     MS_frag__z_ion = 1001230,
 
-    /// <summary>frag: c ion: Type of fragment: c ion.</summary>
+    /// <summary>frag: c ion: Fragmentation information, type of product: c ion.</summary>
     MS_frag__c_ion = 1001231,
 
-    /// <summary>frag: b ion - NH3: Type of fragment: b ion without ammonium ion.</summary>
+    /// <summary>frag: b ion - NH3: Fragmentation information, type of product: b ion without ammonium ion.</summary>
     MS_frag__b_ion___NH3 = 1001232,
 
-    /// <summary>frag: y ion - NH3: Type of fragment: y ion without ammonium ion.</summary>
+    /// <summary>frag: y ion - NH3: Fragmentation information, type of product: y ion without ammonium ion.</summary>
     MS_frag__y_ion___NH3 = 1001233,
 
-    /// <summary>frag: a ion - H2O: Type of fragment: a ion without water.</summary>
+    /// <summary>frag: a ion - H2O: Fragmentation information, type of product: a ion without water.</summary>
     MS_frag__a_ion___H2O = 1001234,
 
-    /// <summary>frag: a ion - NH3: Type of fragment: a ion without ammonium.</summary>
+    /// <summary>frag: a ion - NH3: Fragmentation information, type of product: a ion without ammonium.</summary>
     MS_frag__a_ion___NH3 = 1001235,
 
-    /// <summary>frag: d ion: Type of fragment: d ion.</summary>
+    /// <summary>frag: d ion: Fragmentation information, type of product: d ion.</summary>
     MS_frag__d_ion = 1001236,
 
-    /// <summary>frag: v ion: Type of fragment: v ion.</summary>
+    /// <summary>frag: v ion: Fragmentation information, type of product: v ion.</summary>
     MS_frag__v_ion = 1001237,
 
-    /// <summary>frag: w ion: Type of fragment: w ion.</summary>
+    /// <summary>frag: w ion: Fragmentation information, type of product: w ion.</summary>
     MS_frag__w_ion = 1001238,
 
-    /// <summary>frag: immonium ion: Type of fragment: immonium ion.</summary>
+    /// <summary>frag: immonium ion: Fragmentation information, type of product: immonium ion.</summary>
     MS_frag__immonium_ion = 1001239,
 
     /// <summary>non-identified ion: Non-identified ion.</summary>
@@ -4724,31 +4727,31 @@ public enum class CVID
     /// <summary>DB accession filter string: </summary>
     MS_DB_accession_filter_string = 1001514,
 
-    /// <summary>frag: c ion - H2O: Type of fragment: c ion without water.</summary>
+    /// <summary>frag: c ion - H2O: Fragmentation information, type of product: c ion without water.</summary>
     MS_frag__c_ion___H2O = 1001515,
 
-    /// <summary>frag: c ion - NH3: Type of fragment: c ion without ammonia.</summary>
+    /// <summary>frag: c ion - NH3: Fragmentation information, type of product: c ion without ammonia.</summary>
     MS_frag__c_ion___NH3 = 1001516,
 
-    /// <summary>frag: z ion - H2O: Type of fragment: z ion without water.</summary>
+    /// <summary>frag: z ion - H2O: Fragmentation information, type of product: z ion without water.</summary>
     MS_frag__z_ion___H2O = 1001517,
 
-    /// <summary>frag: z ion - NH3: Type of fragment: z ion without ammonia.</summary>
+    /// <summary>frag: z ion - NH3: Fragmentation information, type of product: z ion without ammonia.</summary>
     MS_frag__z_ion___NH3 = 1001518,
 
-    /// <summary>frag: x ion - H2O: Type of fragment: x ion without water.</summary>
+    /// <summary>frag: x ion - H2O: Fragmentation information, type of product: x ion without water.</summary>
     MS_frag__x_ion___H2O = 1001519,
 
-    /// <summary>frag: x ion - NH3: Type of fragment: x ion without ammonia.</summary>
+    /// <summary>frag: x ion - NH3: Fragmentation information, type of product: x ion without ammonia.</summary>
     MS_frag__x_ion___NH3 = 1001520,
 
-    /// <summary>frag: precursor ion - H2O: Type of fragment: precursor ion without water.</summary>
+    /// <summary>frag: precursor ion - H2O: Fragmentation information, type of product: precursor ion without water.</summary>
     MS_frag__precursor_ion___H2O = 1001521,
 
-    /// <summary>frag: precursor ion - NH3: Type of fragment: precursor ion without ammonia.</summary>
+    /// <summary>frag: precursor ion - NH3: Fragmentation information, type of product: precursor ion without ammonia.</summary>
     MS_frag__precursor_ion___NH3 = 1001522,
 
-    /// <summary>frag: precursor ion: Type of fragment: precursor ion.</summary>
+    /// <summary>frag: precursor ion: Fragmentation information, type of product: precursor ion.</summary>
     MS_frag__precursor_ion = 1001523,
 
     /// <summary>fragment neutral loss: This term can describe a neutral loss m/z value that is lost from an ion.</summary>
@@ -4855,6 +4858,63 @@ public enum class CVID
 
     /// <summary>AB SCIEX TOF/TOF T2D file: Applied Biosystems/MDS Analytical Technologies TOF/TOF instrument export format.</summary>
     MS_AB_SCIEX_TOF_TOF_T2D_file = 1001560,
+
+    /// <summary>Scaffold: Scaffold analysis software, see www.proteomesoftware.com.</summary>
+    MS_Scaffold = 1001561,
+
+    /// <summary>Scaffold nativeID format: Scaffold native ID format.</summary>
+    MS_Scaffold_nativeID_format = 1001562,
+
+    /// <summary>Sequest SQT: Source file for this mzIdentML was a Sequest SQT.</summary>
+    MS_Sequest_SQT = 1001563,
+
+    /// <summary>Discoverer MSF: Source file for this mzIdentML was in Thermo Scientific Discoverer MSF format.</summary>
+    MS_Discoverer_MSF = 1001564,
+
+    /// <summary>IdentityE XML: Source file for this mzIdentML was in Waters IdentityE XML format.</summary>
+    MS_IdentityE_XML = 1001565,
+
+    /// <summary>ProteinLynx XML: Source file for this mzIdentML was in Waters ProteinLynx XML format.</summary>
+    MS_ProteinLynx_XML = 1001566,
+
+    /// <summary>SpectrumMill directories: Source file for this mzIdentML was in Agilent SpectrumMill directory format.</summary>
+    MS_SpectrumMill_directories = 1001567,
+
+    /// <summary>Scaffold: Peptide Probability: Scaffold peptide probability score.</summary>
+    MS_Scaffold__Peptide_Probability = 1001568,
+
+    /// <summary>IdentityE Score: Waters IdentityE peptide score.</summary>
+    MS_IdentityE_Score = 1001569,
+
+    /// <summary>ProteinLynx: Log Likelihood: ProteinLynx log likelihood score.</summary>
+    MS_ProteinLynx__Log_Likelihood = 1001570,
+
+    /// <summary>ProteinLynx: Ladder Score: Waters ProteinLynx Ladder score.</summary>
+    MS_ProteinLynx__Ladder_Score = 1001571,
+
+    /// <summary>SpectrumMill: Score: Spectrum mill peptide score.</summary>
+    MS_SpectrumMill__Score = 1001572,
+
+    /// <summary>SpectrumMill: SPI: SpectrumMill SPI score (%).</summary>
+    MS_SpectrumMill__SPI = 1001573,
+
+    /// <summary>report only spectra assigned to identified proteins: .</summary>
+    MS_report_only_spectra_assigned_to_identified_proteins = 1001574,
+
+    /// <summary>Scaffold: Minimum Peptide Count: Minimum number of peptides a protein must have to be accepted.</summary>
+    MS_Scaffold__Minimum_Peptide_Count = 1001575,
+
+    /// <summary>Scaffold: Minimum Protein Probability: Minimum protein probability a protein must have to be accepted.</summary>
+    MS_Scaffold__Minimum_Protein_Probability = 1001576,
+
+    /// <summary>Scaffold: Minimum Peptide Probability: Minimum probability a peptide must have to be accepted for protein scoring.</summary>
+    MS_Scaffold__Minimum_Peptide_Probability = 1001577,
+
+    /// <summary>minimum number of enzymatic termini: Minimum number of enzymatic termini a pepide must have to be accepted.</summary>
+    MS_minimum_number_of_enzymatic_termini = 1001578,
+
+    /// <summary>Scaffold: Protein Probability: Scaffold protein probability score.</summary>
+    MS_Scaffold__Protein_Probability = 1001579,
 
     /// <summary>ProteinScape:ProfoundProbability: The Profound probability score stored by ProteinScape.</summary>
     MS_ProteinScape_ProfoundProbability = 1001597,
@@ -5534,8 +5594,8 @@ public enum class CVID
     /// <summary>kilowatt-hour: An energy unit which is equal to 1,000 watt-hours.</summary>
     UO_kilowatt_hour = 100000224,
 
-    /// <summary>magnetic flux: A derived unit which is a standard measure of quantity of magnetism, taking account of the strength and the extent of a magnetic field.</summary>
-    UO_magnetic_flux = 100000225,
+    /// <summary>magnetic flux unit: A derived unit which is a standard measure of quantity of magnetism, taking account of the strength and the extent of a magnetic field.</summary>
+    UO_magnetic_flux_unit = 100000225,
 
     /// <summary>weber: A magnetic flux unit which is equal to the amount of flux that when linked with a single turn of wire for an interval of one second will induce an electromotive force of one volt.</summary>
     UO_weber = 100000226,

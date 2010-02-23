@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 18:12:2009 10:12
+date: 11:02:2010 10:12
 saved-by: George Gkoutos
 auto-generated-by: OBO-Edit 2.000-beta55
 subsetdef: abnormal_slim "Abnormal/normal slim"
@@ -28,10 +28,7 @@ relationship: unit_of PATO:0000122 ! length
 relationship: unit_of PATO:0000915 ! thickness
 relationship: unit_of PATO:0000921 ! width
 relationship: unit_of PATO:0001242 ! wavelength
-relationship: unit_of PATO:0001334 ! diameter
-relationship: unit_of PATO:0001523 ! sound wavelength
 relationship: unit_of PATO:0001595 ! depth
-relationship: unit_of PATO:0001648 ! circumference
 relationship: unit_of PATO:0001711 ! perimeter
 
 [Term]
@@ -47,13 +44,8 @@ id: UO:0000003
 name: time unit
 def: "A base unit which is a standard measure of the dimension in which events occur in sequence." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
 is_a: UO:0000045 ! base unit
-relationship: unit_of PATO:0000011 ! age
-relationship: unit_of PATO:0000050 ! life span
-relationship: unit_of PATO:0000081 ! period
 relationship: unit_of PATO:0000165 ! time
 relationship: unit_of PATO:0001309 ! duration quality of a process
-relationship: unit_of PATO:0001310 ! duration of temperature
-relationship: unit_of PATO:0001486 ! chronological age
 
 [Term]
 id: UO:0000004
@@ -1083,13 +1075,8 @@ id: UO:0000149
 name: time derived unit
 def: "A derived unit which is a standard measure of the dimension in which events occur in sequence." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
 is_a: UO:0000046 ! derived unit
-relationship: unit_of PATO:0000011 ! age
-relationship: unit_of PATO:0000050 ! life span
-relationship: unit_of PATO:0000081 ! period
 relationship: unit_of PATO:0000165 ! time
 relationship: unit_of PATO:0001309 ! duration quality of a process
-relationship: unit_of PATO:0001310 ! duration of temperature
-relationship: unit_of PATO:0001486 ! chronological age
 
 [Term]
 id: UO:0000150
@@ -1565,8 +1552,6 @@ id: UO:0000217
 name: electric potential difference
 def: "A derived unit which is a standard measure of the work done per unit charge as a charge is moved between two points in an electric field." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
 is_a: UO:0000046 ! derived unit
-relationship: unit_of PATO:0001462 ! membrane potential
-relationship: unit_of PATO:0001463 ! action potential
 relationship: unit_of PATO:0001464 ! electric potential
 
 [Term]
@@ -1620,7 +1605,7 @@ is_a: UO:0000111 ! energy unit
 
 [Term]
 id: UO:0000225
-name: magnetic flux
+name: magnetic flux unit
 def: "A derived unit which is a standard measure of quantity of magnetism, taking account of the strength and the extent of a magnetic field." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
 is_a: UO:0000046 ! derived unit
 relationship: unit_of PATO:0001682 ! magnetism
