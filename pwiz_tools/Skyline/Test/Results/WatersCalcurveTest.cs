@@ -161,7 +161,7 @@ namespace pwiz.SkylineTest.Results
                 doc = docResults;
             }
 
-            Assert.AreEqual(11, outOfOrder);
+            Assert.AreEqual(11, outOfOrder, 1);
 
             // Remove the original data
             foreach (string path in replicatePaths)

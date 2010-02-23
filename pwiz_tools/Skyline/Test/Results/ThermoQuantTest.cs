@@ -82,7 +82,7 @@ namespace pwiz.SkylineTest.Results
                                         testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.RAW"),
                                         testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.mzML"),
                                         0, 0);
-            // Verify mzXML and RAW contain same results
+            // Verify mzXML and RAW contain same results (some small peaks are different)
             AssertResult.MatchChromatograms(docContainer,
                                         testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.RAW"),
                                         testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.mzXML"),

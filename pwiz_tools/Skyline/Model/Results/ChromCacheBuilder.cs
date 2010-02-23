@@ -1,3 +1,21 @@
+/*
+ * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2009 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -7,6 +25,7 @@ using System.Linq;
 using System.Threading;
 using pwiz.Crawdad;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -118,22 +137,29 @@ namespace pwiz.Skyline.Model.Results
                             _outStream = _loader.StreamManager.CreateStream(_fs.SafeName, FileMode.Create, true);
 
                         // Read and write the mass spec data
+                        ChromDataProvider provider;
                         if (inFile.ChromatogramCount > 0)
-                            ReadChromatograms(inFile);
+                            provider = CreateChromatogramProvider(inFile);
+                        else if (inFile.SpectrumCount > 0)
+                            provider = CreateSpectraChromProvider(inFile);
                         else
                         {
-                            if (inFile.SpectrumCount > 0)
-                                ReadSpectra(inFile);
-                            else
-                            {
-                                throw new InvalidDataException(String.Format("The sample {0} contains no usable data.",
-                                                                             SampleHelp.GetFileSampleName(dataFilePath)));
-                            }
+                            throw new InvalidDataException(String.Format("The sample {0} contains no usable data.",
+                                                                         SampleHelp.GetFileSampleName(dataFilePath)));
                         }
+
+                        Read(provider);
+
+                        _status = provider.Status;
                     }
 
                     if (_status.IsCanceled)
                         Complete(null);
+                }
+                catch (NoSrmDataException)
+                {
+                    Complete(new InvalidDataException(String.Format("No SRM/MRM data found in {0}.",
+                        SampleHelp.GetFileSampleName(MSDataFilePaths[_currentFileIndex]))));
                 }
                 catch (Exception x)
                 {
@@ -146,198 +172,293 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private void ReadSpectra(MsDataFileImpl dataFile)
+        private void Read(ChromDataProvider provider)
         {
-            // 10% done with this file
-            int percent = (_currentFileIndex*10 + 1)*100/MSDataFilePaths.Count/10;
-            _loader.UpdateProgress(_status = _status.ChangePercentComplete(percent));
-
-            // First read all of the spectra, building chromatogram time, intensity lists
-            var chromMap = new Dictionary<double, ChromDataCollector>();
-            int lenSpectra = dataFile.SpectrumCount;
-            int eighth = 0;
-            for (int i = 0; i < lenSpectra; i++)
-            {
-                // Update progress indicator
-                if (i*8/lenSpectra > eighth)
-                {
-                    // Check for cancellation after each integer change in percent loaded.
-                    if (_loader.IsCanceled)
-                    {
-                        _loader.UpdateProgress(_status = _status.Cancel());
-                        return;
-                    }
-                    eighth++;
-                    percent = (_currentFileIndex*10 + 1 + eighth)*100/MSDataFilePaths.Count/10;
-                    _loader.UpdateProgress(_status = _status.ChangePercentComplete(percent));
-                }
-
-                double? time, precursorMz;
-                double[] mzArray, intensityArray;
-                if (!dataFile.GetSrmSpectrum(i, out time, out precursorMz, out mzArray, out intensityArray))
-                    continue;
-                if (!time.HasValue)
-                    throw new InvalidDataException(String.Format("Scan {0} found without scan time.", dataFile.GetSpectrumId(i)));
-                if (!precursorMz.HasValue)
-                    throw new InvalidDataException(String.Format("Scan {0} found without precursor m/z.", dataFile.GetSpectrumId(i)));
-
-                ChromDataCollector collector;
-                if (!chromMap.TryGetValue(precursorMz.Value, out collector))
-                {
-                    collector = new ChromDataCollector(precursorMz.Value);
-                    chromMap.Add(precursorMz.Value, collector);
-                }
-
-                int ionCount = collector.ProductIntensityMap.Count;
-                int ionScanCount = mzArray.Length;
-                if (ionCount == 0)
-                    ionCount = ionScanCount;
-
-                int lenTimesCurrent = collector.TimeCount;
-                for (int j = 0; j < ionScanCount; j++)
-                {
-                    double productMz = mzArray[j];
-                    double intensity = intensityArray[j];
-
-                    ChromCollector tis;
-                    if (!collector.ProductIntensityMap.TryGetValue(productMz, out tis))
-                    {
-                        tis = new ChromCollector();
-                        // If more than a single ion scan, add any zeros necessary
-                        // to make this new chromatogram have an entry for each time.
-                        if (ionScanCount > 1)
-                        {
-                            for (int k = 0; k < lenTimesCurrent; k++)
-                                tis.Intensities.Add(0);
-                        }
-                        collector.ProductIntensityMap.Add(productMz, tis);
-                    }
-                    int lenTimes = tis.Times.Count;
-                    if (lenTimes == 0 || time >= tis.Times[lenTimes - 1])
-                    {
-                        tis.Times.Add((float)time);
-                        tis.Intensities.Add((float)intensity);
-                    }
-                    else
-                    {
-                        // Insert out of order time in the correct location
-                        int iGreater = tis.Times.BinarySearch((float)time);
-                        if (iGreater < 0)
-                            iGreater = ~iGreater;
-                        tis.Times.Insert(iGreater, (float)time);
-                        tis.Intensities.Insert(iGreater, (float)intensity);
-                    }
-                }
-
-                // If this was a multiple ion scan and not all ions had measurements,
-                // make sure missing ions have zero intensities in the chromatogram.
-                if (ionScanCount > 1 &&
-                    (ionCount != ionScanCount || ionCount != collector.ProductIntensityMap.Count))
-                {
-                    // Times should have gotten one longer
-                    lenTimesCurrent++;
-                    foreach (var tis in collector.ProductIntensityMap.Values)
-                    {
-                        if (tis.Intensities.Count < lenTimesCurrent)
-                        {
-                            tis.Intensities.Add(0);
-                            tis.Times.Add((float) time);
-                        }
-                    }
-                }
-            }
-
-            if (chromMap.Count == 0)
-                throw new InvalidDataException(String.Format("No SRM/MRM data found in {0}.",
-                                                             SampleHelp.GetFileSampleName(MSDataFilePaths[_currentFileIndex])));
-
-            foreach (var collector in chromMap.Values)
-            {
-                var chromDataSet = new ChromDataSet(true, IsTimeNormalArea);
-                foreach (var pair in collector.ProductIntensityMap)
-                {
-                    var key = new ChromKey(collector.PrecursorMz, pair.Key);
-                    var tis = pair.Value;
-                    chromDataSet.Add(new ChromData(key, tis.Times.ToArray(), tis.Intensities.ToArray()));
-                }
-                PostChromDataSet(chromDataSet, false);
-            }
-            PostChromDataSet(null, true);
-        }
-
-        private void ReadChromatograms(MsDataFileImpl dataFile)
-        {
-            int len = dataFile.ChromatogramCount;
-
-            var arrayKeyIndex = new List<KeyValuePair<ChromKey, int>>();
-            for (int i = 0; i < len; i++)
-            {
-                int index;
-                string id = dataFile.GetChromatogramId(i, out index);
-
-                if (!ChromKey.IsKeyId(id))
-                    continue;
-
-                var ki = new KeyValuePair<ChromKey, int>(ChromKey.FromId(id), index);
-                arrayKeyIndex.Add(ki);
-            }
-
-            if (arrayKeyIndex.Count == 0)
-                throw new InvalidDataException(String.Format("No chromatogram data found in {0}.",
-                                                             SampleHelp.GetFileSampleName(MSDataFilePaths[_currentFileIndex])));
-
+            var arrayKeyIndex = new List<KeyValuePair<ChromKey, int>>(provider.ChromIds);
             arrayKeyIndex.Sort((p1, p2) => p1.Key.CompareTo(p2.Key));
 
-            // Half-way done with this file
-            int percentStart = (_currentFileIndex*2 + 1)*100/MSDataFilePaths.Count/2;
-            int percentComplete = (_currentFileIndex + 1)*100/MSDataFilePaths.Count;
-            _loader.UpdateProgress(_status = _status.ChangePercentComplete(percentStart));
-
-            // TODO: Handle the case where multiple TransitionGroups share a single precursorMz
-            //       And different time sets for scheduled methods
-
-            string lastChromId = null;
-            var chromDataSet = new ChromDataSet(false, IsTimeNormalArea);
-//                for (int i = 0; i < len; i++)
-            int iKey = 0;
+            ChromKey lastKey = new ChromKey(0, 0);
+            ChromDataSet chromDataSet = null;
             foreach (var keyIndex in arrayKeyIndex)
             {
                 var key = keyIndex.Key;
-                // ProteoWizard data arrays have slow access, making it faster
-                // to allocate an array here, for use downstream.
-                string chromId;
+
                 float[] times;
                 float[] intensities;
-                dataFile.GetChromatogram(keyIndex.Value, out chromId, out times, out intensities);
-
-                // Update status
-                int percent = (iKey++ * (percentComplete - percentStart) / arrayKeyIndex.Count) + percentStart;
-                if (!_status.IsPercentComplete(percent))
-                {
-                    // Check for cancellation after each integer change in percent loaded.
-                    if (_loader.IsCanceled)
-                    {
-                        _loader.UpdateProgress(_status = _status.Cancel());
-                        return;
-                    }
-
-                    // If not cancelled, update progress.
-                    _loader.UpdateProgress(_status = _status.ChangePercentComplete(percent));
-                }
+                provider.GetChromatogram(keyIndex.Value, out times, out intensities);
 
                 var chromData = new ChromData(key, times, intensities);
-                if (lastChromId == null ||
-                    key.Precursor == ChromKey.FromId(lastChromId).Precursor)
+                if (chromDataSet != null && key.Precursor == lastKey.Precursor)
                     chromDataSet.Add(chromData);
                 else
                 {
-                    PostChromDataSet(chromDataSet, false);
-                    chromDataSet = new ChromDataSet(IsTimeNormalArea, chromData);
+                    if (chromDataSet != null)
+                        PostChromDataSet(chromDataSet, false);
+                    chromDataSet = new ChromDataSet(IsTimeNormalArea, provider.IsPorcessedScans, chromData);
                 }
-                lastChromId = chromId;
+                lastKey = key;
             }
 
             PostChromDataSet(chromDataSet, true);
+        }
+
+        private int StartPercent { get { return _currentFileIndex*100/MSDataFilePaths.Count; } }
+        private int EndPercent { get { return (_currentFileIndex + 1)*100/MSDataFilePaths.Count; } }
+
+        private ChromDataProvider CreateChromatogramProvider(MsDataFileImpl dataFile)
+        {
+            return new ChromatogramDataProvider(dataFile, _status, StartPercent, EndPercent, _loader);
+        }
+
+        private SpectraChromDataProvider CreateSpectraChromProvider(MsDataFileImpl dataFile)
+        {
+            return new SpectraChromDataProvider(dataFile, _status, StartPercent, EndPercent, _loader);
+        }
+
+        private abstract class ChromDataProvider
+        {
+            private readonly int _startPercent;
+            private readonly int _endPercent;
+            private readonly IProgressMonitor _loader;
+
+            protected ChromDataProvider(ProgressStatus status, int startPercent, int endPercent, IProgressMonitor loader)
+            {
+                Status = status;
+
+                _startPercent = startPercent;
+                _endPercent = endPercent;
+                _loader = loader;
+            }
+
+            protected void SetPercentComplete(int percent)
+            {
+                percent = Math.Min(_endPercent, (_endPercent - _startPercent) * percent / 100 + _startPercent);
+                if (Status.IsPercentComplete(percent))
+                    return;
+                
+                if (_loader.IsCanceled)
+                {
+                    _loader.UpdateProgress(Status = Status.Cancel());
+                    return;
+                }
+
+                _loader.UpdateProgress(Status = Status.ChangePercentComplete(percent));
+            }
+
+            public ProgressStatus Status { get; private set; }
+
+            public abstract IEnumerable<KeyValuePair<ChromKey, int>> ChromIds { get; }
+
+            public abstract void GetChromatogram(int id, out float[] times, out float[] intensities);
+
+            public abstract bool IsPorcessedScans { get; }
+        }
+
+        private sealed class SpectraChromDataProvider : ChromDataProvider
+        {
+            private readonly List<KeyValuePair<ChromKey, ChromCollector>> _chromatograms =
+                new List<KeyValuePair<ChromKey, ChromCollector>>();
+
+            public SpectraChromDataProvider(MsDataFileImpl dataFile,
+                                            ProgressStatus status,
+                                            int startPercent,
+                                            int endPercent,
+                                            IProgressMonitor loader)
+                : base(status, startPercent, endPercent, loader)
+            {
+                // 10% done with this file
+                SetPercentComplete(10);
+
+                // First read all of the spectra, building chromatogram time, intensity lists
+                var chromMap = new Dictionary<double, ChromDataCollector>();
+                int lenSpectra = dataFile.SpectrumCount;
+                int eighth = 0;
+                for (int i = 0; i < lenSpectra; i++)
+                {
+                    // Update progress indicator
+                    if (i * 8 / lenSpectra > eighth)
+                    {
+                        eighth++;
+                        SetPercentComplete((eighth + 1)*10);
+                    }
+
+                    double? time, precursorMz;
+                    double[] mzArray, intensityArray;
+                    if (!dataFile.GetSrmSpectrum(i, out time, out precursorMz, out mzArray, out intensityArray))
+                        continue;
+                    if (!time.HasValue)
+                        throw new InvalidDataException(String.Format("Scan {0} found without scan time.", dataFile.GetSpectrumId(i)));
+                    if (!precursorMz.HasValue)
+                        throw new InvalidDataException(String.Format("Scan {0} found without precursor m/z.", dataFile.GetSpectrumId(i)));
+
+                    ChromDataCollector collector;
+                    if (!chromMap.TryGetValue(precursorMz.Value, out collector))
+                    {
+                        collector = new ChromDataCollector(precursorMz.Value);
+                        chromMap.Add(precursorMz.Value, collector);
+                    }
+
+                    int ionCount = collector.ProductIntensityMap.Count;
+                    int ionScanCount = mzArray.Length;
+                    if (ionCount == 0)
+                        ionCount = ionScanCount;
+
+                    int lenTimesCurrent = collector.TimeCount;
+                    for (int j = 0; j < ionScanCount; j++)
+                    {
+                        double productMz = mzArray[j];
+                        double intensity = intensityArray[j];
+
+                        ChromCollector tis;
+                        if (!collector.ProductIntensityMap.TryGetValue(productMz, out tis))
+                        {
+                            tis = new ChromCollector();
+                            // If more than a single ion scan, add any zeros necessary
+                            // to make this new chromatogram have an entry for each time.
+                            if (ionScanCount > 1)
+                            {
+                                for (int k = 0; k < lenTimesCurrent; k++)
+                                    tis.Intensities.Add(0);
+                            }
+                            collector.ProductIntensityMap.Add(productMz, tis);
+                        }
+                        int lenTimes = tis.Times.Count;
+                        if (lenTimes == 0 || time >= tis.Times[lenTimes - 1])
+                        {
+                            tis.Times.Add((float)time);
+                            tis.Intensities.Add((float)intensity);
+                        }
+                        else
+                        {
+                            // Insert out of order time in the correct location
+                            int iGreater = tis.Times.BinarySearch((float)time);
+                            if (iGreater < 0)
+                                iGreater = ~iGreater;
+                            tis.Times.Insert(iGreater, (float)time);
+                            tis.Intensities.Insert(iGreater, (float)intensity);
+                        }
+                    }
+
+                    // If this was a multiple ion scan and not all ions had measurements,
+                    // make sure missing ions have zero intensities in the chromatogram.
+                    if (ionScanCount > 1 &&
+                        (ionCount != ionScanCount || ionCount != collector.ProductIntensityMap.Count))
+                    {
+                        // Times should have gotten one longer
+                        lenTimesCurrent++;
+                        foreach (var tis in collector.ProductIntensityMap.Values)
+                        {
+                            if (tis.Intensities.Count < lenTimesCurrent)
+                            {
+                                tis.Intensities.Add(0);
+                                tis.Times.Add((float)time);
+                            }
+                        }
+                    }
+                }
+
+                if (chromMap.Count == 0)
+                    throw new NoSrmDataException();
+
+                foreach (var collector in chromMap.Values)
+                {
+                    foreach (var pair in collector.ProductIntensityMap)
+                    {
+                        var key = new ChromKey(collector.PrecursorMz, pair.Key);
+                        _chromatograms.Add(new KeyValuePair<ChromKey, ChromCollector>(key, pair.Value));
+                    }
+                }
+            }
+
+            public override IEnumerable<KeyValuePair<ChromKey, int>> ChromIds
+            {
+                get
+                {
+                    for (int i = 0; i < _chromatograms.Count; i++)
+                        yield return new KeyValuePair<ChromKey, int>(_chromatograms[i].Key, i);
+                }
+            }
+
+            public override void GetChromatogram(int id, out float[] times, out float[] intensities)
+            {
+                var tis = _chromatograms[id].Value;
+                times = tis.Times.ToArray();
+                intensities = tis.Intensities.ToArray();
+            }
+
+            public override bool IsPorcessedScans
+            {
+                get { return true; }
+            }
+        }
+
+        private sealed class ChromatogramDataProvider : ChromDataProvider
+        {
+            private readonly IList<KeyValuePair<ChromKey, int>> _chromIds =
+                new List<KeyValuePair<ChromKey, int>>();
+
+            private readonly MsDataFileImpl _dataFile;
+            private int _readChromatograms;
+
+            public ChromatogramDataProvider(MsDataFileImpl dataFile,
+                                            ProgressStatus status,
+                                            int startPercent,
+                                            int endPercent,
+                                            IProgressMonitor loader)
+                : base(status, startPercent, endPercent, loader)
+            {
+                _dataFile = dataFile;
+
+                int len = dataFile.ChromatogramCount;
+
+                for (int i = 0; i < len; i++)
+                {
+                    int index;
+                    string id = dataFile.GetChromatogramId(i, out index);
+
+                    if (!ChromKey.IsKeyId(id))
+                        continue;
+
+                    var ki = new KeyValuePair<ChromKey, int>(ChromKey.FromId(id), index);
+                    _chromIds.Add(ki);
+                }
+
+                if (_chromIds.Count == 0)
+                    throw new NoSrmDataException();
+
+                SetPercentComplete(50);
+            }
+
+            public override IEnumerable<KeyValuePair<ChromKey, int>> ChromIds
+            {
+                get { return _chromIds; }
+            }
+
+            public override void GetChromatogram(int id, out float[] times, out float[] intensities)
+            {
+                string chromId;
+                _dataFile.GetChromatogram(id, out chromId, out times, out intensities);
+
+                // Assume that each chromatogram will be read once, though this may
+                // not always be completely true.
+                _readChromatograms++;
+                if (_readChromatograms < _chromIds.Count)
+                    SetPercentComplete(50 + _readChromatograms*50/_chromIds.Count);
+            }
+
+            public override bool IsPorcessedScans
+            {
+                get { return false; }
+            }
+        }
+
+
+        private class NoSrmDataException : IOException
+        {
+            public NoSrmDataException()
+                : base("No SRM/MRM data found")
+            {
+            }
         }
 
         private void PostChromDataSet(ChromDataSet chromatogramSet, bool complete)
@@ -536,36 +657,41 @@ namespace pwiz.Skyline.Model.Results
             public List<float> Intensities { get; private set; }
         }
 
-//            private sealed class PeptideChromDataSets
+//        private sealed class PeptideChromDataSets
+//        {
+//            public PeptideChromDataSets()
 //            {
-//                
+//                DataSets = new List<PeptideChargeChromDataSets>();
 //            }
 //
-//            private sealed class PeptideChargeChromDataSets
+//            public IList<PeptideChargeChromDataSets> DataSets { get; private set; }
+//        }
+//
+//        private sealed class PeptideChargeChromDataSets
+//        {
+//            public PeptideChargeChromDataSets(int precursorCharge)
 //            {
-//                public PeptideChargeChromDataSets(int precursorCharge)
-//                {
-//                    PrecursorCharge = precursorCharge;
-//                    HeavyDataSets = new List<HeavyChromDataSet>();
-//                }
-//
-//                public int PrecursorCharge { get; private set; }
-//
-//                public ChromDataSet LightDataSet { get; set; }
-//                public IList<HeavyChromDataSet> HeavyDataSets { get; private set; }
+//                PrecursorCharge = precursorCharge;
+//                HeavyDataSets = new List<HeavyChromDataSet>();
 //            }
 //
-//            private sealed class HeavyChromDataSet
-//            {
-//                public HeavyChromDataSet(RelativeRT relativeRT, ChromDataSet dataSet)
-//                {
-//                    RelativeRT = relativeRT;
-//                    DataSet = dataSet;
-//                }
+//            public int PrecursorCharge { get; private set; }
 //
-//                public RelativeRT RelativeRT { get; private set; }
-//                public ChromDataSet DataSet { get; private set; }
+//            public ChromDataSet LightDataSet { get; set; }
+//            public IList<HeavyChromDataSet> HeavyDataSets { get; private set; }
+//        }
+//
+//        private sealed class HeavyChromDataSet
+//        {
+//            public HeavyChromDataSet(RelativeRT relativeRT, ChromDataSet dataSet)
+//            {
+//                RelativeRT = relativeRT;
+//                DataSet = dataSet;
 //            }
+//
+//            public RelativeRT RelativeRT { get; private set; }
+//            public ChromDataSet DataSet { get; private set; }
+//        }
 //
         private sealed class ChromDataSet
         {
@@ -573,15 +699,10 @@ namespace pwiz.Skyline.Model.Results
             private readonly bool _isProcessedScans;
             private readonly bool _isTimeNormalArea;
 
-            public ChromDataSet(bool isProcessedScans, bool isTimeNormalArea)
+            public ChromDataSet(bool isTimeNormalArea, bool isProcessedScans, params ChromData[] arrayChromData)
             {
+                _isTimeNormalArea = isTimeNormalArea;
                 _isProcessedScans = isProcessedScans;
-                _isTimeNormalArea = isTimeNormalArea;
-            }
-
-            public ChromDataSet(bool isTimeNormalArea, params ChromData[] arrayChromData)
-            {
-                _isTimeNormalArea = isTimeNormalArea;
                 _listChromData.AddRange(arrayChromData);
             }
 
@@ -1545,6 +1666,7 @@ namespace pwiz.Skyline.Model.Results
             public double ProductArea { get; private set; }
 
             private const int MIN_TOLERANCE_LEN = 4;
+            private const int MIN_TOLERANCE_SMOOTH_FWHM = 3;
             private const float FRACTION_FWHM_LEN = 0.5F;
             private const float DESCENT_TOL = 0.005f;
             private const float ASCENT_TOL = 0.50f;
@@ -1557,34 +1679,49 @@ namespace pwiz.Skyline.Model.Results
 
                 var peakPrimary = this[0];
 
-                peakPrimary.Peak.StartIndex = ExtendBoundary(peakPrimary, peakPrimary.Peak.StartIndex, -1);
-                peakPrimary.Peak.EndIndex = ExtendBoundary(peakPrimary, peakPrimary.Peak.EndIndex, 1);
-            }
-
-            private int ExtendBoundary(ChromDataPeak peakPrimary, int indexBoundary, int increment)
-            {
-                float maxIntensity, deltaIntensity;
-                GetIntensityMetrics(indexBoundary, out maxIntensity, out deltaIntensity);
-
-                int lenIntensities = peakPrimary.Data.Intensities.Length;
                 // Look a number of steps dependent on the width of the peak, since interval width
                 // may vary.
                 int toleranceLen = Math.Max(MIN_TOLERANCE_LEN, (int)Math.Round(peakPrimary.Peak.Fwhm * FRACTION_FWHM_LEN));
+
+                peakPrimary.Peak.StartIndex = ExtendBoundary(peakPrimary, peakPrimary.Peak.StartIndex, -1, toleranceLen);
+                peakPrimary.Peak.EndIndex = ExtendBoundary(peakPrimary, peakPrimary.Peak.EndIndex, 1, toleranceLen);
+            }
+
+            private int ExtendBoundary(ChromDataPeak peakPrimary, int indexBoundary, int increment, int toleranceLen)
+            {
+                if (peakPrimary.Peak.Fwhm >= MIN_TOLERANCE_SMOOTH_FWHM)
+                {
+                    indexBoundary = ExtendBoundary(peakPrimary, false, indexBoundary, increment, toleranceLen);
+                }
+                // Because smoothed data can have a tendency to reach baseline one
+                // interval sooner than the raw data, do a final check to choose the
+                // boundary correctly for the raw data.
+                indexBoundary = RetractBoundary(peakPrimary, true, indexBoundary, -increment);
+                indexBoundary = ExtendBoundary(peakPrimary, true, indexBoundary, increment, toleranceLen);
+                return indexBoundary;
+            }
+
+            private int ExtendBoundary(ChromDataPeak peakPrimary, bool useRaw, int indexBoundary, int increment, int toleranceLen)
+            {
+                float maxIntensity, deltaIntensity;
+                GetIntensityMetrics(indexBoundary, useRaw, out maxIntensity, out deltaIntensity);
+
+                int lenIntensities = peakPrimary.Data.Intensities.Length;
                 // Look for a descent proportional to the height of the peak.  Because, SRM data is
-                // so low noise, just looking any descent can lead to boundaries very far away from
+                // so low noise, just looking for any descent can lead to boundaries very far away from
                 // the peak.
                 float height = peakPrimary.Peak.Height;
                 double minDescent = height * DESCENT_TOL;
                 // Put a limit on how high intensity can go before the search is terminated
                 double maxHeight = ((height - maxIntensity) * ASCENT_TOL) + maxIntensity;
 
-                // Extend the start index backward
+                // Extend the index in the direction of the increment
                 for (int i = indexBoundary + increment;
                      i > 0 && i < lenIntensities - 1 && Math.Abs(indexBoundary - i) < toleranceLen;
                      i += increment)
                 {
                     float maxIntensityCurrent, deltaIntensityCurrent;
-                    GetIntensityMetrics(i, out maxIntensityCurrent, out deltaIntensityCurrent);
+                    GetIntensityMetrics(i, useRaw, out maxIntensityCurrent, out deltaIntensityCurrent);
 
                     // If intensity goes above the maximum, stop looking
                     if (maxIntensityCurrent > maxHeight)
@@ -1597,23 +1734,59 @@ namespace pwiz.Skyline.Model.Results
                         if (indexBoundary == i)
                             maxIntensity = maxIntensityCurrent;
                         else
-                            GetIntensityMetrics(indexBoundary, out maxIntensity, out deltaIntensity);
+                            GetIntensityMetrics(indexBoundary, useRaw, out maxIntensity, out deltaIntensity);
                     }
                 }
+
                 return indexBoundary;
             }
 
-            private void GetIntensityMetrics(int i, out float maxIntensity, out float deltaIntensity)
+            private int RetractBoundary(ChromDataPeak peakPrimary, bool useRaw, int indexBoundary, int increment)
             {
-                float minIntensity = maxIntensity = this[0].Data.IntensitiesExtents[i];
+                float maxIntensity, deltaIntensity;
+                GetIntensityMetrics(indexBoundary, useRaw, out maxIntensity, out deltaIntensity);
+
+                int lenIntensities = peakPrimary.Data.Intensities.Length;
+                // Look for a descent proportional to the height of the peak.  Because, SRM data is
+                // so low noise, just looking for any descent can lead to boundaries very far away from
+                // the peak.
+                float height = peakPrimary.Peak.Height;
+                double maxAscent = height * DESCENT_TOL;
+                // Put a limit on how high intensity can go before the search is terminated
+                double maxHeight = ((height - maxIntensity) * ASCENT_TOL) + maxIntensity;
+
+                // Extend the index in the direction of the increment
+                for (int i = indexBoundary + increment; i > 0 && i < lenIntensities - 1; i += increment)
+                {
+                    float maxIntensityCurrent, deltaIntensityCurrent;
+                    GetIntensityMetrics(i, useRaw, out maxIntensityCurrent, out deltaIntensityCurrent);
+
+                    // If intensity goes above the maximum, stop looking
+                    if (maxIntensityCurrent > maxHeight || maxIntensityCurrent - maxIntensity > maxAscent)
+                        break;
+
+                    maxIntensity = maxIntensityCurrent;
+                    indexBoundary = i;
+                }
+
+                return indexBoundary;
+            }
+
+            private void GetIntensityMetrics(int i, bool useRaw, out float maxIntensity, out float deltaIntensity)
+            {
+                var peakData = this[0];
+                var intensities = (useRaw ? peakData.Data.Intensities
+                                          : peakData.Data.IntensitiesExtents);
+                float minIntensity = maxIntensity = intensities[i];
                 for (int j = 1; j < Count; j++)
                 {
-                    var peakData = this[j];
+                    peakData = this[j];
                     // If this transition doesn't have a measured peak, then skip it.
                     if (peakData.Peak == null)
                         continue;
 
-                    float currentIntensity = peakData.Data.IntensitiesExtents[i];
+                    float currentIntensity = (useRaw ? peakData.Data.Intensities[i]
+                                                     : peakData.Data.IntensitiesExtents[i]);
                     if (currentIntensity > maxIntensity)
                         maxIntensity = currentIntensity;
                     else if (currentIntensity < minIntensity)

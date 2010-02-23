@@ -21,7 +21,7 @@
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
     <SignManifests>false</SignManifests>
     <SignAssembly>false</SignAssembly>
-    <PublishUrl>C:\Program Files\LabKey Server\root\software\Skyline-daily\</PublishUrl>
+    <PublishUrl>C:\Program Files\LabKey Server\root\software\Skyline-test\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>true</UpdateEnabled>
@@ -31,14 +31,14 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <InstallUrl>https://brendanx-uw1.gs.washington.edu/software/Skyline-daily/</InstallUrl>
+    <InstallUrl>https://brendanx-uw1.gs.washington.edu/software/Skyline-test/</InstallUrl>
     <SupportUrl>https://brendanx-uw1.gs.washington.edu/labkey/project/home/support/begin.view%3f</SupportUrl>
     <ProductName>Skyline-daily</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>1802</ApplicationRevision>
-    <ApplicationVersion>0.5.1.1802</ApplicationVersion>
+    <ApplicationRevision>1825</ApplicationRevision>
+    <ApplicationVersion>0.5.1.1825</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -453,6 +453,9 @@
     <Compile Include="Model\Proteome\BackgroundProteomeSpec.cs" />
     <Compile Include="Model\Results\Chromatogram.cs" />
     <Compile Include="Model\Results\ChromatogramCache.cs" />
+    <Compile Include="Model\Results\ChromCacheBuilder.cs" />
+    <Compile Include="Model\Results\ChromCacheJoiner.cs" />
+    <Compile Include="Model\Results\ChromCacheWriter.cs" />
     <Compile Include="Model\Results\ChromHeaderInfo.cs" />
     <Compile Include="Model\Results\DocNodeChromInfo.cs" />
     <Compile Include="Model\Results\MeasuredResults.cs" />
