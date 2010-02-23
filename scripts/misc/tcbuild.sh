@@ -34,7 +34,7 @@ if ! /bin/bash quickbuild.sh --teamcity-test-decoration -j4 debug; then
 fi
 
 echo_info "Running quickbuild for shared release variant..."
-if ! /bin/bash quickbuild.sh --teamcity-test-decoration -j4 release link=shared debug-symbols=on; then
+if ! /bin/bash quickbuild.sh --teamcity-test-decoration -j4 release link=shared; then
 	  echo_error "Error running quickbuild for shared release variant! See full build log for more details."
 	  EXIT=1
 fi
