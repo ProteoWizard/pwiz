@@ -84,6 +84,8 @@ exe ExtendedReaderTest
       pwiz_data_mzid
     : <include>../..
     ;
+explicit ExtendedReaderTest ;
+
 
 #
 # unit tests (ordered by dependency)
