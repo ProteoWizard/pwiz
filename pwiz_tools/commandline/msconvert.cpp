@@ -530,7 +530,7 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
     }
     catch (exception& e)
     {
-        failedFileCount = filenames.size();
+        failedFileCount = (int)filenames.size();
         cerr << "Error merging files: " << e.what() << endl;
     }
 
