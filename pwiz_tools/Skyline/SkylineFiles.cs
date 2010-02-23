@@ -32,6 +32,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -127,6 +128,9 @@ namespace pwiz.Skyline
                     XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
                     SrmDocument document = ConnectLibrarySpecs((SrmDocument)ser.Deserialize(reader), path);
                     if (document == null)
+                        return false;
+                    document = ConnectBackgroundProteome(document, path);
+                    if (document == null)
                         return false;   // User cancelled
 
                     if (!CheckResults(document, path))
@@ -198,6 +202,50 @@ namespace pwiz.Skyline
                 return document.ChangeSettingsNoDiff(settings);
 
             return document.ChangeSettings(settings);
+        }
+
+        private SrmDocument ConnectBackgroundProteome(SrmDocument document, string documentPath)
+        {
+            var settings =
+                document.Settings.ConnectBackgroundProteome(
+                    backgroundProteomeSpec => FindBackgroundProteome(documentPath, backgroundProteomeSpec));
+            if (settings == null)
+            {
+                return null;
+            }
+            return document.ChangeSettings(settings);
+        }
+
+        private BackgroundProteomeSpec FindBackgroundProteome(string documentPath, BackgroundProteomeSpec backgroundProteomeSpec)
+        {
+            var result = Settings.Default.BackgroundProteomeList.GetBackgroundProteomeSpec(backgroundProteomeSpec.Name);
+            if (result != null)
+            {
+                return result;
+            }
+            string fileName = Path.GetFileName(backgroundProteomeSpec.DatabasePath);
+            // First look for the file name in the document directory
+            string pathBackgroundProteome = Path.Combine(Path.GetDirectoryName(documentPath), fileName);
+            if (File.Exists(pathBackgroundProteome))
+                return new BackgroundProteomeSpec(backgroundProteomeSpec.Name, pathBackgroundProteome);
+            // In the user's default library directory
+            pathBackgroundProteome = Path.Combine(Settings.Default.ProteomeDbDirectory, fileName);
+            if (File.Exists(pathBackgroundProteome))
+                return new BackgroundProteomeSpec(backgroundProteomeSpec.Name, pathBackgroundProteome);
+            var dlg = new MissingBackgroundProteomeDlg()
+            {
+                BackgroundProteomeHint = fileName,
+                BackgroundProteomeName = backgroundProteomeSpec.Name,
+            };
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+            {
+                if (dlg.BackgroundProteomePath == null)
+                {
+                    return BackgroundProteomeList.GetDefault();
+                }
+                return new BackgroundProteomeSpec(backgroundProteomeSpec.Name, dlg.BackgroundProteomePath);
+            }
+            return null;
         }
 
         private bool CheckResults(SrmDocument document, string path)

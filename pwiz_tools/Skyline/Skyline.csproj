@@ -146,6 +146,12 @@
     <Compile Include="Alerts\AboutDlg.Designer.cs">
       <DependentUpon>AboutDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Alerts\MissingBackgroundProteomeDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\MissingBackgroundProteomeDlg.Designer.cs">
+      <DependentUpon>MissingBackgroundProteomeDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Alerts\ShareTypeDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -792,6 +798,9 @@
     <Content Include="Microsoft.VC90.MFC\Microsoft.VC90.MFC.manifest">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Alerts\MissingBackgroundProteomeDlg.resx">
+      <DependentUpon>MissingBackgroundProteomeDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ShareTypeDlg.resx">
       <DependentUpon>ShareTypeDlg.cs</DependentUpon>
     </EmbeddedResource>

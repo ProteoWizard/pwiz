@@ -490,6 +490,13 @@ namespace pwiz.Skyline.Model.DocSettings
                     defSet.AnnotationDefList.Add(annotationDef);
                 }
             }
+            if (!PeptideSettings.BackgroundProteome.IsNone)
+            {
+                if (!defSet.BackgroundProteomeList.ContainsKey(PeptideSettings.BackgroundProteome.Name))
+                {
+                    defSet.BackgroundProteomeList.Add(PeptideSettings.BackgroundProteome);
+                }
+            }
         }
 
         public SrmSettings ConnectLibrarySpecs(Func<Library, LibrarySpec> findLibrarySpec)
@@ -528,6 +535,27 @@ namespace pwiz.Skyline.Model.DocSettings
 
             libraries = libraries.ChangeLibrarySpecs(librarySpecs);
             return ChangePeptideSettings(PeptideSettings.ChangeLibraries(libraries));
+        }
+
+        public SrmSettings ConnectBackgroundProteome(Func<BackgroundProteomeSpec, BackgroundProteomeSpec> findBackgroundProteome)
+        {
+            var backgroundProteome = PeptideSettings.BackgroundProteome;
+            if (backgroundProteome.IsNone)
+            {
+                return this;
+            }
+            var backgroundProteomeSpecNew = findBackgroundProteome(backgroundProteome);
+            if (backgroundProteomeSpecNew == null)
+            {
+                // cancel
+                return null;
+            }
+            if (backgroundProteomeSpecNew.DatabasePath == backgroundProteome.DatabasePath)
+            {
+                return this;
+            }
+            return ChangePeptideSettings(PeptideSettings.ChangeBackgroundProteome(
+                new BackgroundProteome(backgroundProteomeSpecNew)));
         }
 
         #region Implementation of IXmlSerializable
