@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -35,7 +36,7 @@ namespace pwiz.Skyline.Model.Results
     {
         private readonly SrmDocument _document;
         private int _currentFileIndex = -1;
-        private readonly List<ChromDataSet> _chromDataSets = new List<ChromDataSet>();
+        private readonly List<PeptideChromDataSets> _chromDataSets = new List<PeptideChromDataSets>();
         private bool _writerStarted;
         private bool _readedCompleted;
         private Exception _writeException;
@@ -174,32 +175,218 @@ namespace pwiz.Skyline.Model.Results
 
         private void Read(ChromDataProvider provider)
         {
-            var arrayKeyIndex = new List<KeyValuePair<ChromKey, int>>(provider.ChromIds);
-            arrayKeyIndex.Sort((p1, p2) => p1.Key.CompareTo(p2.Key));
+            var dictPeptideChromData = new Dictionary<int, PeptideChromDataSets>();
+            var listChromData = new List<PeptideChromDataSets>();
+
+            var listMzPrecursors = new List<KeyValuePair<double, TransitionGroupDocNode>>(Precursors);
+            listMzPrecursors.Sort((p1, p2) => p1.Key.CompareTo(p2.Key));
+
+            foreach (var chromDataSet in GetChromDataSets(provider))
+            {
+                foreach (var matchingGroup in GetMatchingGroups(chromDataSet, listMzPrecursors))
+                {
+                    AddChromDataSet(provider.IsPorcessedScans,
+                                    matchingGroup.Value,
+                                    matchingGroup.Key,
+                                    dictPeptideChromData,
+                                    listChromData);
+                }
+            }
+
+            listChromData.AddRange(dictPeptideChromData.Values);
+            listChromData.Sort((p1, p2) =>
+                Comparer.Default.Compare(p1.DataSets[0].PrecursorMz, p2.DataSets[0].PrecursorMz));
+
+            foreach (var pepChromData in listChromData)
+            {
+                pepChromData.Load(provider);
+                PostChromDataSet(pepChromData, false);
+            }
+            PostChromDataSet(null, true);
+        }
+
+        private IEnumerable<KeyValuePair<double, TransitionGroupDocNode>> Precursors
+        {
+            get
+            {
+                return from nodeGroup in _document.TransitionGroups
+                       select new KeyValuePair<double, TransitionGroupDocNode>(nodeGroup.PrecursorMz, nodeGroup);
+            }
+        }
+
+        private IEnumerable<ChromDataSet> GetChromDataSets(ChromDataProvider provider)
+        {
+            var listKeyIndex = new List<KeyValuePair<ChromKey, int>>(provider.ChromIds);
+            listKeyIndex.Sort((p1, p2) => p1.Key.CompareTo(p2.Key));
 
             ChromKey lastKey = new ChromKey(0, 0);
             ChromDataSet chromDataSet = null;
-            foreach (var keyIndex in arrayKeyIndex)
+            foreach (var keyIndex in listKeyIndex)
             {
                 var key = keyIndex.Key;
+                var chromData = new ChromData(key, keyIndex.Value);
 
-                float[] times;
-                float[] intensities;
-                provider.GetChromatogram(keyIndex.Value, out times, out intensities);
-
-                var chromData = new ChromData(key, times, intensities);
                 if (chromDataSet != null && key.Precursor == lastKey.Precursor)
                     chromDataSet.Add(chromData);
                 else
                 {
                     if (chromDataSet != null)
-                        PostChromDataSet(chromDataSet, false);
-                    chromDataSet = new ChromDataSet(IsTimeNormalArea, provider.IsPorcessedScans, chromData);
+                        yield return chromDataSet;
+
+                    chromDataSet = new ChromDataSet(IsTimeNormalArea, chromData);
                 }
                 lastKey = key;
             }
 
-            PostChromDataSet(chromDataSet, true);
+            yield return chromDataSet;
+        }
+
+        private static void AddChromDataSet(bool isProcessedScans,
+                                            ChromDataSet chromDataSet,
+                                            TransitionGroupDocNode nodeGroup,
+                                            IDictionary<int, PeptideChromDataSets> dictPeptideChromData,
+                                            ICollection<PeptideChromDataSets> listChromData)
+        {
+            // If there was no matching precursor, just add this as a stand-alone set
+            if (nodeGroup == null)
+            {
+                listChromData.Add(new PeptideChromDataSets(isProcessedScans, chromDataSet));
+                return;
+            }
+
+            // Otherwise, add it to the dictionary by its peptide GlobalIndex to make
+            // sure precursors are grouped by peptide
+            int id = nodeGroup.TransitionGroup.Peptide.GlobalIndex;
+            PeptideChromDataSets pepDataSets;
+            if (!dictPeptideChromData.TryGetValue(id, out pepDataSets))
+            {
+                pepDataSets = new PeptideChromDataSets(isProcessedScans);
+                dictPeptideChromData.Add(id, pepDataSets);
+            }
+            chromDataSet.DocNode = nodeGroup;
+            pepDataSets.DataSets.Add(chromDataSet);
+        }
+
+        private static IEnumerable<KeyValuePair<TransitionGroupDocNode, ChromDataSet>> GetMatchingGroups(
+            ChromDataSet chromDataSet, List<KeyValuePair<double, TransitionGroupDocNode>> listMzPrecursors)
+        {
+            // Find the first precursor m/z that is greater than or equal to the
+            // minimum possible match value
+            double minMzMatch = chromDataSet.PrecursorMz - TransitionInstrument.MAX_MZ_MATCH_TOLERANCE;
+            double maxMzMatch = chromDataSet.PrecursorMz + TransitionInstrument.MAX_MZ_MATCH_TOLERANCE;
+            var lookup = new KeyValuePair<double, TransitionGroupDocNode>(minMzMatch, null);
+            int i = listMzPrecursors.BinarySearch(lookup, MZ_COMPARER);
+            if (i < 0)
+                i = ~i;
+            // Enumerate all possible matching precursor values, collecting the ones
+            // with potentially matching product ions
+            var listMatchingGroups = new List<KeyValuePair<TransitionGroupDocNode, IList<ChromData>>>();
+            for (; i < listMzPrecursors.Count && listMzPrecursors[i].Key <= maxMzMatch; i++)
+            {
+                var nodeGroup = listMzPrecursors[i].Value;
+                var groupData = GetMatchingData(nodeGroup, chromDataSet);
+                if (groupData != null)
+                    listMatchingGroups.Add(new KeyValuePair<TransitionGroupDocNode, IList<ChromData>>(nodeGroup, groupData));
+            }
+
+            FilterMatchingGroups(listMatchingGroups);
+
+            if (listMatchingGroups.Count == 0)
+            {
+                // No matches found
+                yield return new KeyValuePair<TransitionGroupDocNode, ChromDataSet>(
+                    null, chromDataSet);                
+            }
+            else if (listMatchingGroups.Count == 1)
+            {
+                // If only one match is found, return product ions for the precursor, whether they
+                // all match or not.
+                yield return new KeyValuePair<TransitionGroupDocNode, ChromDataSet>(
+                    listMatchingGroups[0].Key, chromDataSet);
+            }
+            else
+            {
+                // Otherwise, split up the product ions among the precursors they matched
+                bool isTimeNormalArea = chromDataSet.IsTimeNormalArea;
+
+                foreach (var match in listMatchingGroups)
+                {
+                    var chromDataPart = new ChromDataSet(isTimeNormalArea, match.Value.ToArray());
+                    yield return new KeyValuePair<TransitionGroupDocNode, ChromDataSet>(
+                        match.Key, chromDataPart);
+                }
+            }
+        }
+
+        private static void FilterMatchingGroups(
+            ICollection<KeyValuePair<TransitionGroupDocNode, IList<ChromData>>> listMatchingGroups)
+        {
+            if (listMatchingGroups.Count < 2)
+                return;
+            // Filter for only matches that do not match a strict subset of another match.
+            // That is, if there is a precursor that matches 4 product ions, and another that
+            // matches 2 of those same 4, then we want to discard the one with only 2.
+            var listFiltered = new List<KeyValuePair<TransitionGroupDocNode, IList<ChromData>>>();
+            foreach (var match in listMatchingGroups)
+            {
+                var subset = match;
+                if (!listMatchingGroups.Contains(superset => IsMatchSubSet(subset, superset)))
+                    listFiltered.Add(match);
+            }
+        }
+
+        private static bool IsMatchSubSet(KeyValuePair<TransitionGroupDocNode, IList<ChromData>> subset,
+            KeyValuePair<TransitionGroupDocNode, IList<ChromData>> superset)
+        {
+            var subList = subset.Value;
+            var superList = superset.Value;
+            // Can't be a subset, if it doesn't have fewer element in its list
+            if (subList.Count >= superList.Count)
+                return false;
+            foreach (var chromData in subList)
+            {
+                // Not a subset, if it contains something that is not in the superset list
+                if (!superList.Contains(chromData))
+                    return false;
+            }
+            // Must be a subset
+            return true;
+        }
+
+// ReSharper disable SuggestBaseTypeForParameter
+        private static IList<ChromData> GetMatchingData(TransitionGroupDocNode nodeGroup, ChromDataSet chromDataSet)
+// ReSharper restore SuggestBaseTypeForParameter
+        {
+            // Look for potential product ion matches
+            var listMatchingData = new List<ChromData>();
+            const float tolerance = (float) TransitionInstrument.MAX_MZ_MATCH_TOLERANCE;
+            foreach (var chromData in chromDataSet.Chromatograms)
+            {
+                foreach (TransitionDocNode nodeTran in nodeGroup.Children)
+                {
+                    if (ChromKey.CompareTolerant(chromData.Key.Product,
+                            (float) nodeTran.Mz, tolerance) == 0)
+                    {
+                        listMatchingData.Add(chromData);
+                        break;
+                    }
+                }
+            }
+            // Only return a match, if at least two product ions match
+            if (listMatchingData.Count < 2)
+                return null;
+            return listMatchingData;
+        }
+
+        private static readonly MzComparer MZ_COMPARER = new MzComparer();
+
+        internal class MzComparer : IComparer<KeyValuePair<double, TransitionGroupDocNode>>
+        {
+            public int Compare(KeyValuePair<double, TransitionGroupDocNode> p1,
+                               KeyValuePair<double, TransitionGroupDocNode> p2)
+            {
+                return Comparer.Default.Compare(p1.Key, p2.Key);
+            }
         }
 
         private int StartPercent { get { return _currentFileIndex*100/MSDataFilePaths.Count; } }
@@ -461,7 +648,7 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        private void PostChromDataSet(ChromDataSet chromatogramSet, bool complete)
+        private void PostChromDataSet(PeptideChromDataSets chromDataSet, bool complete)
         {
             lock (_chromDataSets)
             {
@@ -470,9 +657,9 @@ namespace pwiz.Skyline.Model.Results
                     throw _writeException;
 
                 // Add new chromatogram data set, if not empty
-                if (chromatogramSet != null && chromatogramSet.Count > 0)
+                if (chromDataSet != null)
                 {
-                    _chromDataSets.Add(chromatogramSet);
+                    _chromDataSets.Add(chromDataSet);
                 }
                 // Update completion status
                 _readedCompleted = _readedCompleted || complete;
@@ -534,7 +721,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 for (;;)
                 {
-                    ChromDataSet chromDataSetNext;
+                    PeptideChromDataSets chromDataSetNext;
                     lock (_chromDataSets)
                     {
                         while (!_readedCompleted && _chromDataSets.Count == 0)
@@ -567,48 +754,49 @@ namespace pwiz.Skyline.Model.Results
                         _chromDataSets.RemoveAt(0);
                     }
 
-                    Debug.Assert(chromDataSetNext.Count > 0);
-
                     chromDataSetNext.PickChromatogramPeaks();
 
-                    if (_outStream == null)
-                        throw new InvalidDataException("Failure writing cache file.");
-
-                    long location = _outStream.Position;
-
-                    float[] times = chromDataSetNext.Times;
-                    float[][] intensities = chromDataSetNext.Intensities;
-                    // Write the raw chromatogram points
-                    byte[] points = ChromatogramCache.TimeIntensitiesToBytes(times, intensities);
-                    // Compress the data (can be huge for AB data with lots of zeros)
-                    byte[] peaksCompressed = points.Compress(3);
-                    int lenCompressed = peaksCompressed.Length;
-                    _outStream.Write(peaksCompressed, 0, lenCompressed);
-
-                    // Add to header list
-//                        Debug.Assert(headData.MaxPeakIndex != -1);
-
-                    var header = new ChromGroupHeaderInfo(chromDataSetNext.PrecursorMz,
-                                                          currentFileIndex,
-                                                          chromDataSetNext.Count,
-                                                          _listTransitions.Count,
-                                                          chromDataSetNext.CountPeaks,
-                                                          _listPeaks.Count,
-                                                          chromDataSetNext.MaxPeakIndex,
-                                                          times.Length,
-                                                          lenCompressed,
-                                                          location);
-
-                    foreach (var chromData in chromDataSetNext.Chromatograms)
+                    foreach (var chromDataSet in chromDataSetNext.DataSets)
                     {
-                        _listTransitions.Add(new ChromTransition(chromData.Key.Product));
+                        if (_outStream == null)
+                            throw new InvalidDataException("Failure writing cache file.");
 
-                        // Add to peaks list
-                        foreach (var peak in chromData.Peaks)
-                            _listPeaks.Add(peak);
+                        long location = _outStream.Position;
+
+                        float[] times = chromDataSet.Times;
+                        float[][] intensities = chromDataSet.Intensities;
+                        // Write the raw chromatogram points
+                        byte[] points = ChromatogramCache.TimeIntensitiesToBytes(times, intensities);
+                        // Compress the data (can be huge for AB data with lots of zeros)
+                        byte[] peaksCompressed = points.Compress(3);
+                        int lenCompressed = peaksCompressed.Length;
+                        _outStream.Write(peaksCompressed, 0, lenCompressed);
+
+                        // Add to header list
+                        //                        Debug.Assert(headData.MaxPeakIndex != -1);
+
+                        var header = new ChromGroupHeaderInfo(chromDataSet.PrecursorMz,
+                                                              currentFileIndex,
+                                                              chromDataSet.Count,
+                                                              _listTransitions.Count,
+                                                              chromDataSet.CountPeaks,
+                                                              _listPeaks.Count,
+                                                              chromDataSet.MaxPeakIndex,
+                                                              times.Length,
+                                                              lenCompressed,
+                                                              location);
+
+                        foreach (var chromData in chromDataSet.Chromatograms)
+                        {
+                            _listTransitions.Add(new ChromTransition(chromData.Key.Product));
+
+                            // Add to peaks list
+                            foreach (var peak in chromData.Peaks)
+                                _listPeaks.Add(peak);
+                        }
+
+                        _listGroups.Add(header);
                     }
-
-                    _listGroups.Add(header);
                 }
             }
             catch (Exception x)
@@ -657,52 +845,272 @@ namespace pwiz.Skyline.Model.Results
             public List<float> Intensities { get; private set; }
         }
 
-//        private sealed class PeptideChromDataSets
-//        {
-//            public PeptideChromDataSets()
-//            {
-//                DataSets = new List<PeptideChargeChromDataSets>();
-//            }
-//
-//            public IList<PeptideChargeChromDataSets> DataSets { get; private set; }
-//        }
-//
-//        private sealed class PeptideChargeChromDataSets
-//        {
-//            public PeptideChargeChromDataSets(int precursorCharge)
-//            {
-//                PrecursorCharge = precursorCharge;
-//                HeavyDataSets = new List<HeavyChromDataSet>();
-//            }
-//
-//            public int PrecursorCharge { get; private set; }
-//
-//            public ChromDataSet LightDataSet { get; set; }
-//            public IList<HeavyChromDataSet> HeavyDataSets { get; private set; }
-//        }
-//
-//        private sealed class HeavyChromDataSet
-//        {
-//            public HeavyChromDataSet(RelativeRT relativeRT, ChromDataSet dataSet)
-//            {
-//                RelativeRT = relativeRT;
-//                DataSet = dataSet;
-//            }
-//
-//            public RelativeRT RelativeRT { get; private set; }
-//            public ChromDataSet DataSet { get; private set; }
-//        }
-//
+        private sealed class PeptideChromDataSets
+        {
+            private const double TIME_DELTA_VARIATION_THRESHOLD = 0.001;
+            private const double TIME_DELTA_MAX_RATIO_THRESHOLD = 25;
+            private const int MINIMUM_DELTAS_PER_CHROM = 4;
+
+            private readonly bool _isProcessedScans;
+
+            public PeptideChromDataSets(bool isProcessedScans)
+            {
+                _isProcessedScans = isProcessedScans;
+                DataSets = new List<ChromDataSet>();
+            }
+
+            public PeptideChromDataSets(bool isProcessedScans, ChromDataSet chromDataSet)
+                : this(isProcessedScans)
+            {
+                DataSets.Add(chromDataSet);
+            }
+
+            public IList<ChromDataSet> DataSets { get; private set; }
+
+            private IEnumerable<ChromData> ChromDatas
+            {
+                get
+                {
+                    foreach (var chromDataSet in DataSets)
+                    {
+                        foreach (var chromData in chromDataSet.Chromatograms)
+                            yield return chromData;
+                    }
+                }
+            }
+
+            public void Load(ChromDataProvider provider)
+            {
+                foreach (var set in DataSets)
+                    set.Load(provider);
+            }
+
+            public void PickChromatogramPeaks()
+            {
+                // Make sure times are evenly spaced before doing any peak detection.
+                EvenlySpaceTimes();
+
+                foreach (var chromDataSet in DataSets)
+                {
+                    chromDataSet.PickChromatogramPeaks();
+                }
+            }
+
+            private bool ThermoZerosFix()
+            {
+                bool fixApplied = false;
+                foreach (var chromDataSet in DataSets)
+                    fixApplied = chromDataSet.ThermoZerosFix() || fixApplied;
+                return fixApplied;
+            }
+
+            // Moved to ProteoWizard
+// ReSharper disable UnusedMember.Local
+            private bool WiffZerosFix()
+// ReSharper restore UnusedMember.Local
+            {
+                bool fixApplied = false;
+                foreach (var chromDataSet in DataSets)
+                    fixApplied = chromDataSet.WiffZerosFix() || fixApplied;
+                return fixApplied;
+            }
+
+            private void EvenlySpaceTimes()
+            {
+                // Handle an issue where the ProteoWizard Reader_Thermo returns chromatograms
+                // with alternating zero intensity scans with real data
+                if (ThermoZerosFix())
+                {
+                    EvenlySpaceTimes();
+                    return;
+                }
+                // Moved to ProteoWizard
+//                else if (WiffZerosFix())
+//                {
+//                    EvenlySpaceTimes();
+//                    return;
+//                }
+
+                // Accumulate time deltas looking for variation that violates our ability
+                // to do valid peak detection with Crawdad.
+                bool foundVariation = false;
+
+                List<double> listDeltas = new List<double>();
+                List<double> listMaxDeltas = new List<double>();
+                double maxIntensity = 0;
+                float[] firstTimes = null;
+                double expectedTimeDelta = 0;
+                int countChromData = 0;
+                foreach (var chromData in ChromDatas)
+                {
+                    countChromData++;
+                    if (firstTimes == null)
+                    {
+                        firstTimes = chromData.Times;
+                        if (firstTimes.Length == 0)
+                            continue;
+                        expectedTimeDelta = (firstTimes[firstTimes.Length - 1] - firstTimes[0])/firstTimes.Length;
+                    }
+                    if (firstTimes.Length != chromData.Times.Length)
+                        foundVariation = true;
+
+                    double lastTime = 0;
+                    var times = chromData.Times;
+                    if (times.Length > 0)
+                        lastTime = times[0];
+                    for (int i = 1, len = chromData.Times.Length; i < len; i++)
+                    {
+                        double time = times[i];
+                        double delta = time - lastTime;
+                        lastTime = time;
+                        listDeltas.Add(Math.Round(delta, 4));
+
+                        // Collect the 10 deltas after the maximum peak
+                        if (chromData.Intensities[i] > maxIntensity)
+                        {
+                            maxIntensity = chromData.Intensities[i];
+                            listMaxDeltas.Clear();
+                            listMaxDeltas.Add(delta);
+                        }
+                        else if (0 < listMaxDeltas.Count && listMaxDeltas.Count < 10)
+                        {
+                            listMaxDeltas.Add(delta);
+                        }
+
+                        if (!foundVariation && (time != firstTimes[i] ||
+                                                Math.Abs(delta - expectedTimeDelta) > TIME_DELTA_VARIATION_THRESHOLD))
+                        {
+                            foundVariation = true;
+                        }
+                    }
+                }
+
+                // If time deltas are sufficiently evenly spaced, then no further processing
+                // is necessary.
+                if (!foundVariation && listDeltas.Count > 0)
+                    return;
+
+                // Interpolate the existing points onto time intervals evently spaced
+                // by the minimum interval observed in the measuered data.
+                double intervalDelta = 0;
+                var statDeltas = new Statistics(listDeltas);
+                if (statDeltas.Length > 0)
+                {
+                    double[] bestDeltas = statDeltas.Modes();
+                    if (bestDeltas.Length == 0 || bestDeltas.Length > listDeltas.Count/2)
+                        intervalDelta = statDeltas.Min();
+                    else if (bestDeltas.Length == 1)
+                        intervalDelta = bestDeltas[0];
+                    else
+                    {
+                        var statIntervals = new Statistics(bestDeltas);
+                        intervalDelta = statIntervals.Min();
+                    }
+                }
+
+                intervalDelta = EnsureMinDelta(intervalDelta);
+
+                bool inferZeros = false;
+                if (_isProcessedScans &&
+                    (statDeltas.Length < countChromData * MINIMUM_DELTAS_PER_CHROM ||
+                     statDeltas.Max() / intervalDelta > TIME_DELTA_MAX_RATIO_THRESHOLD))
+                {
+                    inferZeros = true; // Verbose expression for easy breakpoint placement
+
+                    // Try really hard to use a delta that will work for the maximum peak
+                    intervalDelta = EnsureMinDelta(GetIntervalMaxDelta(listMaxDeltas, intervalDelta));
+                }
+
+                // Create a master set of time intervals that all points for
+                // this peptide will be mapped onto.
+                double start, end;
+                GetExtents(inferZeros, intervalDelta, out start, out end);
+
+                var listTimesNew = new List<float>();
+                for (double t = start; t < end; t += intervalDelta)
+                    listTimesNew.Add((float)t);
+                float[] timesNew = listTimesNew.ToArray();
+
+                // Perform interpolation onto the new times
+                foreach (var chromDataSet in DataSets)
+                {
+                    // Determine what segment of the new time intervals array covers this precursor
+                    int startSet, endSet;
+                    chromDataSet.GetExtents(inferZeros, intervalDelta, timesNew, out startSet, out endSet);
+
+                    float[] timesNewPrecursor = timesNew;
+                    int countTimes = endSet - startSet + 1;  // +1 because endSet is inclusive
+                    if (countTimes != timesNewPrecursor.Length)
+                    {
+                        // Copy the segment into a new array for this precursor only
+                        timesNewPrecursor = new float[countTimes];
+                        Array.Copy(timesNew, startSet, timesNewPrecursor, 0, countTimes);
+                    }
+
+                    foreach (var chromData in chromDataSet.Chromatograms)
+                    {
+                        chromData.Interpolate(timesNewPrecursor, startSet, intervalDelta, inferZeros);
+                    }
+                }
+            }
+
+            /// <summary>
+            /// Gets extents that can contain all of the precursor sets.
+            /// </summary>
+            private void GetExtents(bool inferZeros, double intervalDelta, out double start, out double end)
+            {
+                start = double.MaxValue;
+                end = double.MinValue;
+                foreach (var chromDataSet in DataSets)
+                {
+                    double startSet, endSet;
+                    chromDataSet.GetExtents(inferZeros, intervalDelta, out startSet, out endSet);
+
+                    start = Math.Min(start, startSet);
+                    end = Math.Max(end, endSet);
+                }
+            }
+
+            private static double EnsureMinDelta(double intervalDelta)
+            {
+                // Never go smaller than 1/5 a second.
+                if (intervalDelta < 0.2 / 60)
+                    intervalDelta = 0.2 / 60;  // For breakpoint setting
+                return intervalDelta;
+            }
+
+            private static double GetIntervalMaxDelta(IList<double> listMaxDeltas, double intervalDelta)
+            {
+                const int magnitude = 8;    // 8x counted as an order of magnitude difference
+                if (listMaxDeltas.Count > 0 && listMaxDeltas[0] / magnitude < intervalDelta)
+                {
+                    intervalDelta = listMaxDeltas[0];
+                    for (int i = 1; i < listMaxDeltas.Count; i++)
+                    {
+                        double delta = listMaxDeltas[i];
+                        // If an order of magnitude change in time interval is encountered stop
+                        if (intervalDelta / magnitude > delta || delta > intervalDelta * magnitude)
+                            break;
+                        // Calculate a weighted mean
+                        intervalDelta = (intervalDelta * i + delta) / (i + 1);
+                    }
+                }
+//                else if (listMaxDeltas.Count > 0 && listMaxDeltas[0] / magnitude > intervalDelta)
+//                {
+//                    Console.WriteLine("Max delta {0} too much larger than {1}", listMaxDeltas[0], intervalDelta);
+//                }
+                return intervalDelta;
+            }
+        }
+
         private sealed class ChromDataSet
         {
             private readonly List<ChromData> _listChromData = new List<ChromData>();
-            private readonly bool _isProcessedScans;
             private readonly bool _isTimeNormalArea;
 
-            public ChromDataSet(bool isTimeNormalArea, bool isProcessedScans, params ChromData[] arrayChromData)
+            public ChromDataSet(bool isTimeNormalArea, params ChromData[] arrayChromData)
             {
                 _isTimeNormalArea = isTimeNormalArea;
-                _isProcessedScans = isProcessedScans;
                 _listChromData.AddRange(arrayChromData);
             }
 
@@ -714,6 +1122,10 @@ namespace pwiz.Skyline.Model.Results
             {
                 _listChromData.Add(chromData);
             }
+
+            public bool IsTimeNormalArea { get { return _isTimeNormalArea; } }
+
+            public TransitionGroupDocNode DocNode { get; set; }
 
             public float PrecursorMz
             {
@@ -738,6 +1150,12 @@ namespace pwiz.Skyline.Model.Results
             public float[][] Intensities
             {
                 get { return _listChromData.ConvertAll(data => data.Intensities).ToArray(); }
+            }
+
+            public void Load(ChromDataProvider provider)
+            {
+                foreach (var chromData in Chromatograms)
+                    chromData.Load(provider);
             }
 
             private float MinRawTime
@@ -812,7 +1230,7 @@ namespace pwiz.Skyline.Model.Results
                     return min;
                 return max;
             }
-                
+
             /// <summary>
             /// If the maximum time is greater than two cycles from the minimum end,
             /// then use the maximum, and interpolate other transitions to it.
@@ -830,10 +1248,65 @@ namespace pwiz.Skyline.Model.Results
                 return min;
             }
 
+            public void GetExtents(bool inferZeros, double intervalDelta, out double start, out double end)
+            {
+                if (inferZeros)
+                {
+                    // If infering zeros, make sure values start and end with zero.
+                    start = MinRawTime - intervalDelta * 2;
+                    end = MaxRawTime + intervalDelta * 2;
+                }
+                else
+                {
+                    // Otherwise, do best to use a non-zero start
+                    start = GetNonZeroStart(intervalDelta);
+                    end = GetNonZeroEnd(intervalDelta);
+                }
+            }
+
+            public void GetExtents(bool inferZeros, double intervalDelta, float[] timesNew, out int start, out int end)
+            {
+                // Get the extent times
+                double startTime, endTime;
+                GetExtents(inferZeros, intervalDelta, out startTime, out endTime);
+
+                // Search forward for the time that best matches the start time.
+                int i;
+                for (i = 0; i < timesNew.Length; i++)
+                {
+                    float time = timesNew[i];
+                    if (time == startTime)
+                        break;
+                    else if (time > startTime)
+                    {
+                        if (inferZeros)
+                            i = Math.Max(0, i - 1);
+                        break;
+                    }
+                }
+                start = i;
+                // Search backward from the end for the time that best matches the end time.
+                int lastTime = timesNew.Length - 1;
+                for (i = lastTime; i >= 0; i--)
+                {
+                    float time = timesNew[i];
+                    if (time == endTime)
+                        break;
+                    else if (time < endTime)
+                    {
+                        if (inferZeros)
+                            i = Math.Min(lastTime, i + 1);
+                        break;
+                    }
+                }
+                end = i;
+
+                // Make sure the final time interval contains at least one time.
+                if (start > end)
+                    throw new InvalidOperationException(string.Format("The time interval {0} to {1} is not valid.", start, end));
+            }
+
             private const double NOISE_CORRELATION_THRESHOLD = 0.95;
-            private const double TIME_DELTA_VARIATION_THRESHOLD = 0.001;
-            private const double TIME_DELTA_MAX_RATIO_THRESHOLD = 25;
-            private const int MINIMUM_DELTAS_PER_CHROM = 4;
             private const int MINIMUM_PEAKS = 3;
 
             public void PickChromatogramPeaks()
@@ -841,14 +1314,11 @@ namespace pwiz.Skyline.Model.Results
                 // Make sure chromatograms are in sorted order
                 _listChromData.Sort((c1, c2) => c1.Key.CompareTo(c2.Key));
 
-                // Make sure times are evenly spaced before doing any peak detection.
-                EvenlySpaceTimes();
-
                 // Mark all optimization chromatograms
                 MarkOptimizationData();
 
-                if (Math.Round(_listChromData[0].Key.Precursor) == 585)
-                    Console.WriteLine("Issue");
+//                if (Math.Round(_listChromData[0].Key.Precursor) == 585)
+//                    Console.WriteLine("Issue");
 
                 // First use Crawdad to find the peaks
                 _listChromData.ForEach(chromData => chromData.FindPeaks());
@@ -867,7 +1337,7 @@ namespace pwiz.Skyline.Model.Results
                     ChromDataPeak peak = allPeaks[0];
                     allPeaks.RemoveAt(0);
                     ChromDataPeakList peakSet = FindCoelutingPeaks(peak, allPeaks);
-                    //                Console.WriteLine("peak {0}: {1:F01}", i + 1, peakSet.TotalArea / 1000);
+//                    Console.WriteLine("peak {0}: {1:F01}", i + 1, peakSet.TotalArea / 1000);
 
                     listPeakSets.Add(peakSet);
                     listRank.Add(i);
@@ -1118,252 +1588,8 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            private void EvenlySpaceTimes()
-            {
-                // Accumulate time deltas looking for variation that violates our ability
-                // to do valid peak detection with Crawdad.
-                bool foundVariation = false;
-
-                List<double> listDeltas = new List<double>();
-                List<double> listMaxDeltas = new List<double>();
-                double maxIntensity = 0;
-                float[] firstTimes = null;
-                double expectedTimeDelta = 0;
-                foreach (var chromData in _listChromData)
-                {
-                    if (firstTimes == null)
-                    {
-                        firstTimes = chromData.Times;
-                        if (firstTimes.Length == 0)
-                            continue;
-                        expectedTimeDelta = (firstTimes[firstTimes.Length - 1] - firstTimes[0])/firstTimes.Length;
-                    }
-                    if (firstTimes.Length != chromData.Times.Length)
-                        foundVariation = true;
-
-                    double lastTime = 0;
-                    var times = chromData.Times;
-                    if (times.Length > 0)
-                        lastTime = times[0];
-                    for (int i = 1, len = chromData.Times.Length; i < len; i++)
-                    {
-                        double time = times[i];
-                        double delta = time - lastTime;
-                        lastTime = time;
-                        listDeltas.Add(Math.Round(delta, 4));
-
-                        // Collect the 10 deltas after the maximum peak
-                        if (chromData.Intensities[i] > maxIntensity)
-                        {
-                            maxIntensity = chromData.Intensities[i];
-                            listMaxDeltas.Clear();
-                            listMaxDeltas.Add(delta);
-                        }
-                        else if (0 < listMaxDeltas.Count && listMaxDeltas.Count < 10)
-                        {
-                            listMaxDeltas.Add(delta);
-                        }
-
-                        if (!foundVariation && (time != firstTimes[i] ||
-                                                Math.Abs(delta - expectedTimeDelta) > TIME_DELTA_VARIATION_THRESHOLD))
-                        {
-                            foundVariation = true;
-                        }
-                    }
-                }
-
-                // Handle an issue where the ProteoWizard Reader_Thermo returns chromatograms
-                // with alternating zero intensity scans with real data
-                if (ThermoZerosFix())
-                {
-                    EvenlySpaceTimes();
-                    return;
-                }
-                // Moved to ProteoWizard
-//                    else if (WiffZerosFix())
-//                    {
-//                        EvenlySpaceTimes();
-//                        return;
-//                    }
-
-                // If time deltas are sufficiently evenly spaced, then no further processing
-                // is necessary.
-                if (!foundVariation && listDeltas.Count > 0)
-                    return;
-
-                // Interpolate the existing points onto time intervals evently spaced
-                // by the minimum interval observed in the measuered data.
-                double intervalDelta = 0;
-                var statDeltas = new Statistics(listDeltas);
-                if (statDeltas.Length > 0)
-                {
-                    double[] bestDeltas = statDeltas.Modes();
-                    if (bestDeltas.Length == 0 || bestDeltas.Length > listDeltas.Count / 2)
-                        intervalDelta = statDeltas.Min();
-                    else if (bestDeltas.Length == 1)
-                        intervalDelta = bestDeltas[0];
-                    else
-                    {
-                        var statIntervals = new Statistics(bestDeltas);
-                        intervalDelta = statIntervals.Min();
-                    }
-                }
-
-                intervalDelta = EnsureMinDelta(intervalDelta);
-
-                bool inferZeros = false;
-                if (_isProcessedScans &&
-                    (statDeltas.Length < _listChromData.Count*MINIMUM_DELTAS_PER_CHROM ||
-                     statDeltas.Max() / intervalDelta > TIME_DELTA_MAX_RATIO_THRESHOLD))
-                {
-                    inferZeros = true; // Verbose expression for easy breakpoint placement
-
-                    // Try really hard to use a delta that will work for the maximum peak
-                    intervalDelta = EnsureMinDelta(GetIntervalMaxDelta(listMaxDeltas, intervalDelta));
-                }
-
-                // Create the single set of time intervals that all points for
-                // this precursor will be mapped onto.
-                double start, end;
-                // If infering zeros, make sure values start and end with zero.
-                if (inferZeros)
-                {
-                    start = MinRawTime - intervalDelta*2;
-                    end = MaxRawTime + intervalDelta*2;                        
-                }
-                else
-                {
-                    start = GetNonZeroStart(intervalDelta);
-                    end = GetNonZeroEnd(intervalDelta);
-                }
-                var listTimesNew = new List<float>();
-                for (double t = start; t < end; t += intervalDelta)
-                    listTimesNew.Add((float)t);
-                var timesNew = listTimesNew.ToArray();
-
-                // Perform interpolation onto the new times
-                foreach (var chromData in _listChromData)
-                {
-                    var intensNew = new List<float>();
-                    var timesMeasured = chromData.RawTimes;
-                    var intensMeasured = chromData.RawIntensities;
-
-                    int iTime = 0;
-                    double timeLast = start;
-                    double intenLast = (inferZeros || intensMeasured.Length == 0 ? 0 : intensMeasured[0]);
-                    for (int i = 0; i < timesMeasured.Length && iTime < timesNew.Length; i++)
-                    {
-                        double intenNext;
-                        float time = timesMeasured[i];
-                        float inten = intensMeasured[i];
-
-                        // Continue enumerating points until one is encountered
-                        // that has a greater time value than the point being assigned.
-                        while (i < timesMeasured.Length - 1 && time < timesNew[iTime])
-                        {
-                            i++;
-                            time = timesMeasured[i];
-                            inten = intensMeasured[i];
-                        }
-
-                        if (i >= timesMeasured.Length)
-                            break;
-
-                        // If the next measured intensity is more than the new delta
-                        // away from the intensity being assigned, then interpolated
-                        // the next point toward zero, and set the last intensity to
-                        // zero.
-                        if (inferZeros && intenLast > 0 && timesNew[iTime] + intervalDelta < time)
-                        {
-                            intenNext = intenLast + (timesNew[iTime] - timeLast) * (0 - intenLast) / (timesNew[iTime] + intervalDelta - timeLast);
-                            intensNew.Add((float)intenNext);
-                            timeLast = timesNew[iTime++];
-                            intenLast = 0;
-                        }
-
-                        if (inferZeros)
-                        {
-                            // If the last intensity was zero, and the next measured time
-                            // is more than a delta away, assign zeros until within a
-                            // delta of the measured intensity.
-                            while (intenLast == 0 && iTime < timesNew.Length && timesNew[iTime] + intervalDelta < time)
-                            {
-                                intensNew.Add(0);
-                                timeLast = timesNew[iTime++];
-                            }
-                        }
-                        else
-                        {
-                            // Up to just before the current point, project the line from the
-                            // last point to the current point at each interval.
-                            while (iTime < timesNew.Length && timesNew[iTime] + intervalDelta < time)
-                            {
-                                intenNext = intenLast + (timesNew[iTime] - timeLast) * (inten - intenLast) / (time - timeLast);
-                                intensNew.Add((float)intenNext);
-                                iTime++;
-                            }
-                        }
-
-                        if (iTime >= timesNew.Length)
-                            break;
-
-                        // Interpolate from the last intensity toward the measured
-                        // intenisty now within a delta of the point being assigned.
-                        if (time == timeLast)
-                            intenNext = intenLast;
-                        else
-                            intenNext = intenLast + (timesNew[iTime] - timeLast) * (inten - intenLast) / (time - timeLast);
-                        intensNew.Add((float)intenNext);
-                        iTime++;
-                        intenLast = inten;
-                        timeLast = time;
-                    }
-
-                    // Fill any unassigned intensities with zeros.
-                    while (intensNew.Count < timesNew.Length)
-                        intensNew.Add(0);
-
-                    // Reassign times and intensities.
-                    chromData.Times = timesNew;
-                    chromData.Intensities = intensNew.ToArray();
-                }
-            }
-
-            private static double EnsureMinDelta(double intervalDelta)
-            {
-                // Never go smaller than 1/5 a second.
-                if (intervalDelta < 0.2 / 60)
-                    intervalDelta = 0.2 / 60;  // For breakpoint setting
-                return intervalDelta;
-            }
-
-            private static double GetIntervalMaxDelta(IList<double> listMaxDeltas, double intervalDelta)
-            {
-                const int magnitude = 8;    // 8x counted as an order of magnitude difference
-                if (listMaxDeltas.Count > 0 && listMaxDeltas[0] / magnitude < intervalDelta)
-                {
-                    intervalDelta = listMaxDeltas[0];
-                    for (int i = 1; i < listMaxDeltas.Count; i++)
-                    {
-                        double delta = listMaxDeltas[i];
-                        // If an order of magnitude change in time interval is encountered stop
-                        if (intervalDelta/magnitude > delta || delta > intervalDelta*magnitude)
-                            break;
-                        // Calculate a weighted mean
-                        intervalDelta = (intervalDelta*i + delta)/(i + 1);
-                    }
-                }
-//                    else if (listMaxDeltas.Count > 0 && listMaxDeltas[0] / magnitude > intervalDelta)
-//                    {
-//                        Console.WriteLine("Max delta {0} too much larger than {1}", listMaxDeltas[0], intervalDelta);
-//                    }
-                return intervalDelta;
-            }
-
             // Moved to ProteoWizard
-// ReSharper disable UnusedMember.Local
-            private bool WiffZerosFix()
-// ReSharper restore UnusedMember.Local
+            public bool WiffZerosFix()
             {
                 if (!HasFlankingZeros)
                     return false;
@@ -1414,14 +1640,14 @@ namespace pwiz.Skyline.Model.Results
                         for (int i = intensities.Length - 1; i < 10; i++)
                         {
                             if (intensities[i] != 0)
-                                return false;                                
+                                return false;
                         }
                     }
                     return true;
                 }
             }
 
-            private bool ThermoZerosFix()
+            public bool ThermoZerosFix()
             {
                 // Check for interleaving zeros
                 if (!HasThermZerosBug)
@@ -1431,8 +1657,8 @@ namespace pwiz.Skyline.Model.Results
                 {
                     var times = chromData.Times;
                     var intensities = chromData.Intensities;
-                    var timesNew = new float[intensities.Length/2];
-                    var intensitiesNew = new float[intensities.Length/2];
+                    var timesNew = new float[intensities.Length / 2];
+                    var intensitiesNew = new float[intensities.Length / 2];
                     for (int i = (intensities.Length > 0 && intensities[0] == 0 ? 1 : 0), iNew = 0; iNew < timesNew.Length; i += 2, iNew++)
                     {
                         timesNew[iNew] = times[i];
@@ -1564,13 +1790,20 @@ namespace pwiz.Skyline.Model.Results
             /// </summary>
             private const int MAX_PEAKS = 20;
 
-            public ChromData(ChromKey key, float[] times, float[] intensities)
+            public ChromData(ChromKey key, int providerId)
             {
                 Key = PrimaryKey = key;
-                RawTimes = Times = times;
-                RawIntensities = Intensities = intensities;
+                ProviderId = providerId;
                 Peaks = new List<ChromPeak>();
                 MaxPeakIndex = -1;
+            }
+
+            public void Load(ChromDataProvider provider)
+            {
+                float[] times, intensities;
+                provider.GetChromatogram(ProviderId, out times, out intensities);
+                RawTimes = Times = times;
+                RawIntensities = Intensities = intensities;
             }
 
             public void FindPeaks()
@@ -1592,14 +1825,34 @@ namespace pwiz.Skyline.Model.Results
             private CrawdadPeakFinder Finder { get; set; }
 
             public ChromKey Key { get; private set; }
+            private int ProviderId { get; set; }
             public float[] RawTimes { get; private set; }
-            public float[] RawIntensities { get; private set; }
+            private float[] RawIntensities { get; set; }
             public IEnumerable<CrawdadPeak> RawPeaks { get; private set; }
 
-            public float[] Times { get; set; }
-            public float[] Intensities { get; set; }
-            public float[] IntensitiesExtents { get { return IntensitiesSmooth; } }
-            private float[] IntensitiesSmooth { get; set; }
+            /// <summary>
+            /// Offset from zero in a hypothetical time interval array for all
+            /// precursors of the same peptide to allow peak matching across different
+            /// time arrays.
+            /// </summary>
+            public int Offset { get; private set; }
+
+            /// <summary>
+            /// Time array shared by all transitions of a precursor, and on the
+            /// same scale as all other precursors of a peptide.
+            /// </summary>
+            public float[] Times { get; private set; }
+
+            /// <summary>
+            /// Intensity array linear-interpolated to the shared time scale.
+            /// </summary>
+            public float[] Intensities { get; private set; }
+
+            /// <summary>
+            /// Intensities with Savitzky-Golay smoothing applied.
+            /// </summary>
+            public float[] IntensitiesSmooth { get; private set; }
+
             public IList<ChromPeak> Peaks { get; private set; }
             public int MaxPeakIndex { get; set; }
             public bool IsOptimizationData { get; set; }
@@ -1617,6 +1870,93 @@ namespace pwiz.Skyline.Model.Results
                 // have been extended from the Crawdad originals.
                 var peak = Finder.GetPeak(peakMax.StartIndex, peakMax.EndIndex);
                 return new ChromPeak(peak, flags, Times);
+            }
+
+            public void Interpolate(float[] timesNew, int offset, double intervalDelta, bool inferZeros)
+            {
+                var intensNew = new List<float>();
+                var timesMeasured = RawTimes;
+                var intensMeasured = RawIntensities;
+
+                int iTime = 0;
+                double timeLast = timesNew[0];
+                double intenLast = (inferZeros || intensMeasured.Length == 0 ? 0 : intensMeasured[0]);
+                for (int i = 0; i < timesMeasured.Length && iTime < timesNew.Length; i++)
+                {
+                    double intenNext;
+                    float time = timesMeasured[i];
+                    float inten = intensMeasured[i];
+
+                    // Continue enumerating points until one is encountered
+                    // that has a greater time value than the point being assigned.
+                    while (i < timesMeasured.Length - 1 && time < timesNew[iTime])
+                    {
+                        i++;
+                        time = timesMeasured[i];
+                        inten = intensMeasured[i];
+                    }
+
+                    if (i >= timesMeasured.Length)
+                        break;
+
+                    // If the next measured intensity is more than the new delta
+                    // away from the intensity being assigned, then interpolated
+                    // the next point toward zero, and set the last intensity to
+                    // zero.
+                    if (inferZeros && intenLast > 0 && timesNew[iTime] + intervalDelta < time)
+                    {
+                        intenNext = intenLast + (timesNew[iTime] - timeLast) * (0 - intenLast) / (timesNew[iTime] + intervalDelta - timeLast);
+                        intensNew.Add((float)intenNext);
+                        timeLast = timesNew[iTime++];
+                        intenLast = 0;
+                    }
+
+                    if (inferZeros)
+                    {
+                        // If the last intensity was zero, and the next measured time
+                        // is more than a delta away, assign zeros until within a
+                        // delta of the measured intensity.
+                        while (intenLast == 0 && iTime < timesNew.Length && timesNew[iTime] + intervalDelta < time)
+                        {
+                            intensNew.Add(0);
+                            timeLast = timesNew[iTime++];
+                        }
+                    }
+                    else
+                    {
+                        // Up to just before the current point, project the line from the
+                        // last point to the current point at each interval.
+                        while (iTime < timesNew.Length && timesNew[iTime] + intervalDelta < time)
+                        {
+                            intenNext = intenLast + (timesNew[iTime] - timeLast) * (inten - intenLast) / (time - timeLast);
+                            intensNew.Add((float)intenNext);
+                            iTime++;
+                        }
+                    }
+
+                    if (iTime >= timesNew.Length)
+                        break;
+
+                    // Interpolate from the last intensity toward the measured
+                    // intenisty now within a delta of the point being assigned.
+                    if (time == timeLast)
+                        intenNext = intenLast;
+                    else
+                        intenNext = intenLast + (timesNew[iTime] - timeLast) * (inten - intenLast) / (time - timeLast);
+                    intensNew.Add((float)intenNext);
+                    iTime++;
+                    intenLast = inten;
+                    timeLast = time;
+                }
+
+                // Fill any unassigned intensities with zeros.
+                while (intensNew.Count < timesNew.Length)
+                    intensNew.Add(0);
+
+                // Reassign times and intensities.
+                Offset = offset;
+                Times = timesNew;
+                Intensities = intensNew.ToArray();
             }
         }
 
@@ -1776,7 +2116,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 var peakData = this[0];
                 var intensities = (useRaw ? peakData.Data.Intensities
-                                          : peakData.Data.IntensitiesExtents);
+                                          : peakData.Data.IntensitiesSmooth);
                 float minIntensity = maxIntensity = intensities[i];
                 for (int j = 1; j < Count; j++)
                 {
@@ -1786,7 +2126,7 @@ namespace pwiz.Skyline.Model.Results
                         continue;
 
                     float currentIntensity = (useRaw ? peakData.Data.Intensities[i]
-                                                     : peakData.Data.IntensitiesExtents[i]);
+                                                     : peakData.Data.IntensitiesSmooth[i]);
                     if (currentIntensity > maxIntensity)
                         maxIntensity = currentIntensity;
                     else if (currentIntensity < minIntensity)

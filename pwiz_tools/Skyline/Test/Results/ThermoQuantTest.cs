@@ -207,8 +207,8 @@ namespace pwiz.SkylineTest.Results
                         Assert.IsFalse(missingRatio, "Precursor missing ratio when transitions have ratios");
                 }
             }
-            // Only one group with less than 2 transition ratio
-            Assert.AreEqual(1, ratioGroupMissingCount);
+            // Only three groups with less than 2 transition ratio
+            Assert.AreEqual(3, ratioGroupMissingCount);
 
             // Remove the first light transition, checking that this removes the ratio
             // from the corresponding heavy transition, but not the entire group, until
