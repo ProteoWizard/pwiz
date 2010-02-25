@@ -147,6 +147,7 @@ if [ modules.peek : NT ]
         : # actions
             @do_skyline_build
         : # requirements
+            <link>shared:<build>no
             <conditional>@no-msvc-express
             <toolset>msvc:<assembly>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli
             <conditional>@build-location
