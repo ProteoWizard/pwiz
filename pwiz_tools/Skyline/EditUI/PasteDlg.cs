@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Controls;
@@ -52,16 +53,12 @@ namespace pwiz.Skyline.EditUI
                                                   MatchTypes = ProteinMatchType.name | ProteinMatchType.description
                                               };
             _statementCompletionEditBox.SelectionMade += statementCompletionEditBox_SelectionMade;
-            gridViewProteins.DataGridViewKey += gridViewProteins_DataGridViewKey;
-            gridViewPeptides.DataGridViewKey += gridViewPeptides_DataGridViewKey;
+            gridViewProteins.DataGridViewKey += OnDataGridViewKey;
+            gridViewPeptides.DataGridViewKey += OnDataGridViewKey;
+            gridViewTransitionList.DataGridViewKey += OnDataGridViewKey;
         }
 
-        void gridViewPeptides_DataGridViewKey(object sender, KeyEventArgs e)
-        {
-            _statementCompletionEditBox.OnKeyPreview(sender, e);
-        }
-
-        void gridViewProteins_DataGridViewKey(object sender, KeyEventArgs e)
+        void OnDataGridViewKey(object sender, KeyEventArgs e)
         {
             _statementCompletionEditBox.OnKeyPreview(sender, e);
         }
@@ -314,16 +311,54 @@ namespace pwiz.Skyline.EditUI
                 {
                     continue;
                 }
-                var fastaSequence = backgroundProteome.GetFastaSequence(proteinName);
+                FastaSequence fastaSequence = null;
+                if (!backgroundProteome.IsNone)
+                {
+                    fastaSequence = backgroundProteome.GetFastaSequence(proteinName);
+                }
+                var fastaSequenceString = Convert.ToString(row.Cells[colProteinSequence.Index].Value);
+                if (!string.IsNullOrEmpty(fastaSequenceString))
+                {
+                        try
+                        {
+                            if (fastaSequence == null)
+                            {
+                                fastaSequence = new FastaSequence(proteinName, Convert.ToString(row.Cells[colProteinDescription.Index].Value), new AlternativeProtein[0], fastaSequenceString);
+                            }
+                            else
+                            {
+                                if (fastaSequence.Sequence != fastaSequenceString)
+                                {
+                                    fastaSequence = new FastaSequence(fastaSequence.Name, fastaSequence.Description, fastaSequence.Alternatives, fastaSequenceString);
+                                }
+                            }
+                        }
+                        catch (Exception exception)
+                        {
+                            ShowProteinError(new PasteError
+                                                 {
+                                                     Line = i,
+                                                     Column = colProteinDescription.Index,
+                                                     Message = "Invalid protein sequence: " + exception.Message
+                                                 });
+                            return null;
+                        }
+                }
                 if (fastaSequence == null)
                 {
                     ShowProteinError(
                         new PasteError
                         {
                                              Line = i,
-                                             Message = "This protein was not found in the background proteome database."
+                                             Message = backgroundProteome.IsNone ? "Missing protein sequence"
+                                                :   "This protein was not found in the background proteome database."
                         });
                     return null;
+                }
+                var description = Convert.ToString(row.Cells[colProteinDescription.Index].Value);
+                if (!string.IsNullOrEmpty(description) && description != fastaSequence.Description)
+                {
+                    fastaSequence = new FastaSequence(fastaSequence.Name, description, fastaSequence.Alternatives, fastaSequence.Sequence);
                 }
                 document = (SrmDocument) document.Add(
                     new PeptideGroupDocNode(fastaSequence, fastaSequence.Name, fastaSequence.Description, 
@@ -703,7 +738,19 @@ namespace pwiz.Skyline.EditUI
             }
             set
             {
-                tabControl1.SelectedTab = GetTabPage(value);
+                var tab = GetTabPage(value);
+                for (int i = tabControl1.Controls.Count - 1; i >= 0; i--)
+                {
+                    if (tabControl1.Controls[i] != tab)
+                    {
+                        tabControl1.Controls.RemoveAt(i);
+                    }
+                }
+                if (tab.Parent == null)
+                {
+                    tabControl1.Controls.Add(tab);
+                }
+                tabControl1.SelectedTab = tab;
             }
         }
 
@@ -771,7 +818,13 @@ namespace pwiz.Skyline.EditUI
             {
                 gridViewProteins.Rows.Remove(row);
             }
-            var fastaSequence = GetBackgroundProteome(DocumentUiContainer.DocumentUI).GetFastaSequence(proteinName);
+
+            FastaSequence fastaSequence = null;
+            var backgroundProteome = GetBackgroundProteome(DocumentUiContainer.DocumentUI);
+            if (!backgroundProteome.IsNone)
+            {
+                fastaSequence = backgroundProteome.GetFastaSequence(proteinName);
+            }
             if (fastaSequence == null)
             {
                 row.Cells[colProteinDescription.Index].Value = null;
@@ -832,15 +885,37 @@ namespace pwiz.Skyline.EditUI
                 row.Cells[colPeptideProteinDescription.Index].Value = fastaSequence.Description;
             }
         }
-
-        private void gridViewProteins_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
+        private void gridViewTransitionList_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
-            _statementCompletionEditBox.Attach(gridViewProteins.EditingControl as TextBox);
+            HideNoErrors();
+            if (e.ColumnIndex < 0 || e.RowIndex < 0)
+            {
+                return;
+            }
+            var column = gridViewTransitionList.Columns[e.ColumnIndex];
+            if (column != colTransitionProteinName)
+            {
+                return;
+            }
+            var row = gridViewTransitionList.Rows[e.RowIndex];
+            var proteinName = Convert.ToString(row.Cells[e.ColumnIndex].Value);
+
+            FastaSequence fastaSequence = null;
+            var backgroundProteome = GetBackgroundProteome(DocumentUiContainer.DocumentUI);
+            if (!backgroundProteome.IsNone)
+            {
+                fastaSequence = backgroundProteome.GetFastaSequence(proteinName);
+            }
+            if (fastaSequence != null)
+            {
+                row.Cells[colTransitionProteinDescription.Index].Value = fastaSequence.Description;
+            }
         }
 
-        private void gridViewPeptides_EditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
+
+        private void OnEditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
         {
-            _statementCompletionEditBox.Attach(gridViewPeptides.EditingControl as TextBox);
+            _statementCompletionEditBox.Attach(((DataGridView) sender).EditingControl as TextBox);
         }
 
         private void btnInsert_Click(object sender, EventArgs e)
@@ -893,6 +968,18 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
+        private void gridViewTransitionList_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
+        {
+            if (e.ColumnIndex == colTransitionPeptide.Index)
+            {
+                _statementCompletionEditBox.MatchTypes = ProteinMatchType.sequence;
+            }
+            else
+            {
+                _statementCompletionEditBox.MatchTypes = 0;
+            }
+        }
+
         private void gridViewProteins_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.V && e.Modifiers == Keys.Control)
@@ -907,18 +994,12 @@ namespace pwiz.Skyline.EditUI
 
         private void PasteProteins()
         {
-            TextReader reader = new StringReader(Clipboard.GetText());
-            String line;
-            while ((line = reader.ReadLine()) != null)
-            {
-                line = line.Trim();
-                if (String.IsNullOrEmpty(line))
-                {
-                    continue;
-                }
-                var row = gridViewProteins.Rows[gridViewProteins.Rows.Add()];
-                row.Cells[colProteinName.Index].Value = line;
-            }
+            Paste(gridViewProteins);
+        }
+
+        private void PasteTransitions()
+        {
+            Paste(gridViewTransitionList);
         }
 
         private void gridViewPeptides_KeyDown(object sender, KeyEventArgs e)
@@ -935,49 +1016,69 @@ namespace pwiz.Skyline.EditUI
 
         private void PastePeptides()
         {
-            TextReader reader = new StringReader(Clipboard.GetText());
-            String line;
-            while ((line = reader.ReadLine()) != null)
+            Paste(gridViewPeptides);
+        }
+
+        /// <summary>
+        /// Paste the clipboard text into the specified DataGridView.
+        /// The clipboard text is assumed to be tab separated values.
+        /// The values are matched up to the columns in the order they are displayed.
+        /// </summary>
+        private void Paste(DataGridView dataGridView)
+        {
+            var columns = new DataGridViewColumn[dataGridView.Columns.Count];
+            dataGridView.Columns.CopyTo(columns, 0);
+            Array.Sort(columns, (a,b)=>a.DisplayIndex - b.DisplayIndex);
+            foreach (var values in ParseColumnarData(Clipboard.GetText()))
             {
-                line = line.Trim();
-                if (string.IsNullOrEmpty(line))
+                var row = dataGridView.Rows[dataGridView.Rows.Add()];
+                // Temporarily remove the row to prevent ValueChanged events firing
+                dataGridView.Rows.Remove(row);
+
+                var valueEnumerator = values.GetEnumerator();
+                foreach (DataGridViewColumn column in columns)
                 {
-                    continue;
+                    if (column.ReadOnly || !column.Visible)
+                    {
+                        continue;
+                    }
+                    if (!valueEnumerator.MoveNext())
+                    {
+                        break;
+                    }
+                    row.Cells[column.Index].Value = valueEnumerator.Current;
                 }
-                String peptide, protein;
-                ParsePeptideProtein(line, out peptide, out protein);
-                var row = gridViewPeptides.Rows[gridViewPeptides.Rows.Add()];
-                row.Cells[colPeptideProtein.Index].Value = protein;
-                row.Cells[colPeptideSequence.Index].Value = peptide;
+                // Put the row back
+                dataGridView.Rows.Add(row);
             }
         }
 
-        private void ParsePeptideProtein(String line, out string peptide, out string protein)
+        IEnumerable<IList<string>> ParseColumnarData(String text)
         {
-            String[] parts = line.Split(new[] {' ', '\t'}, StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length == 1)
+            IFormatProvider formatProvider;
+            char separator;
+            Type[] types;
+
+            if (!MassListImporter.IsColumnar(text, out formatProvider, out separator, out types))
             {
-                peptide = parts[0];
-                protein = null;
-                return;
+                yield return new[] {text};
             }
-            if (parts.Length > 2)
+            else
             {
-                try
+                string line;
+                var reader = new StringReader(text);
+                while ((line = reader.ReadLine()) != null)
                 {
-                    // If the first column successfully parses as a number, then skip over it
-                    int.Parse(parts[0]);
-                    parts = new[] {parts[1], parts[2]};
-                }
-                catch
-                {
-                    // ignore exception
+                    line = line.Trim();
+                    if (string.IsNullOrEmpty(line))
+                    {
+                        continue;
+                    }
+                    yield return line.Split(new[] { separator }, StringSplitOptions.RemoveEmptyEntries);
                 }
             }
-            bool peptideFirst = colPeptideSequence.DisplayIndex < colPeptideProtein.DisplayIndex;
-            peptide = peptideFirst ? parts[0] : parts[1];
-            protein = peptideFirst ? parts[1] : parts[0];
         }
+
 
         private String GetProteinNameForPeptideSequence(String peptideSequence)
         {
@@ -1000,25 +1101,21 @@ namespace pwiz.Skyline.EditUI
             return proteins[0].Name;
         }
 
-        private void gridViewPeptides_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        private void OnCellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
             _statementCompletionEditBox.HideStatementCompletionForm();
         }
 
-        private void gridViewProteins_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        private void gridViewTransitionList_KeyDown(object sender, KeyEventArgs e)
         {
-            _statementCompletionEditBox.HideStatementCompletionForm();
-        }
-        private class MassListRow : IMassListRow
-        {
-            public string ProteinName { get; set; }
-            public string PeptideSequence { get; set; }
-            public int PrecursorCharge { get; set; }
-            public IsotopeLabelType LabelType { get; set; }
-            public IonType IonType { get; set; }
-            public int Ordinal { get; set; }
-            public int Offset { get; set; }
-            public int ProductCharge { get; set; }
+            if (e.KeyCode == Keys.V && e.Modifiers == Keys.Control)
+            {
+                if (!gridViewTransitionList.IsCurrentCellInEditMode)
+                {
+                    PasteTransitions();
+                    e.Handled = true;
+                }
+            }
         }
     }
 

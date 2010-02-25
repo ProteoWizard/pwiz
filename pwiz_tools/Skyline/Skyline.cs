@@ -312,7 +312,6 @@ namespace pwiz.Skyline
             UpdateTitle();
             UpdateNodeCountStatus();
 
-            insertProteinsMenuItem.Enabled = !DocumentUI.Settings.PeptideSettings.BackgroundProteome.IsNone;
             integrateAllMenuItem.Checked = DocumentUI.Settings.TransitionSettings.Integration.IsIntegrateAll;
         }
 

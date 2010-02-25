@@ -42,17 +42,9 @@ namespace pwiz.Skyline.EditUI
             this.tabPageFasta = new System.Windows.Forms.TabPage();
             this.label1 = new System.Windows.Forms.Label();
             this.tabPageProteinList = new System.Windows.Forms.TabPage();
-            this.gridViewProteins = new pwiz.Skyline.Controls.DataGridViewEx();
-            this.colProteinName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colProteinDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colProteinSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabPagePeptideList = new System.Windows.Forms.TabPage();
-            this.gridViewPeptides = new pwiz.Skyline.Controls.DataGridViewEx();
-            this.colPeptideSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colPeptideProtein = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colPeptideProteinDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabPageTransitionList = new System.Windows.Forms.TabPage();
-            this.gridViewTransitionList = new System.Windows.Forms.DataGridView();
+            this.gridViewTransitionList = new DataGridViewEx();
             this.colTransitionPeptide = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTransitionPrecursorMz = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTransitionProductMz = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -61,16 +53,24 @@ namespace pwiz.Skyline.EditUI
             this.panelError = new System.Windows.Forms.Panel();
             this.tbxError = new System.Windows.Forms.TextBox();
             this.panelButtons = new System.Windows.Forms.Panel();
+            this.gridViewProteins = new pwiz.Skyline.Controls.DataGridViewEx();
+            this.colProteinName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colProteinDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colProteinSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.gridViewPeptides = new pwiz.Skyline.Controls.DataGridViewEx();
+            this.colPeptideSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colPeptideProtein = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colPeptideProteinDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabControl1.SuspendLayout();
             this.tabPageFasta.SuspendLayout();
             this.tabPageProteinList.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.gridViewProteins)).BeginInit();
             this.tabPagePeptideList.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.gridViewPeptides)).BeginInit();
             this.tabPageTransitionList.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridViewTransitionList)).BeginInit();
             this.panelError.SuspendLayout();
             this.panelButtons.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.gridViewProteins)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.gridViewPeptides)).BeginInit();
             this.SuspendLayout();
             // 
             // tbxFasta
@@ -80,7 +80,7 @@ namespace pwiz.Skyline.EditUI
             this.tbxFasta.MaxLength = 2147483647;
             this.tbxFasta.Multiline = true;
             this.tbxFasta.Name = "tbxFasta";
-            this.tbxFasta.Size = new System.Drawing.Size(791, 381);
+            this.tbxFasta.Size = new System.Drawing.Size(791, 384);
             this.tbxFasta.TabIndex = 0;
             this.tbxFasta.TextChanged += new System.EventHandler(this.tbxFasta_TextChanged);
             // 
@@ -120,7 +120,6 @@ namespace pwiz.Skyline.EditUI
             // 
             // tabControl1
             // 
-            this.tabControl1.Appearance = System.Windows.Forms.TabAppearance.FlatButtons;
             this.tabControl1.Controls.Add(this.tabPageFasta);
             this.tabControl1.Controls.Add(this.tabPageProteinList);
             this.tabControl1.Controls.Add(this.tabPagePeptideList);
@@ -137,10 +136,10 @@ namespace pwiz.Skyline.EditUI
             // 
             this.tabPageFasta.Controls.Add(this.tbxFasta);
             this.tabPageFasta.Controls.Add(this.label1);
-            this.tabPageFasta.Location = new System.Drawing.Point(4, 25);
+            this.tabPageFasta.Location = new System.Drawing.Point(4, 22);
             this.tabPageFasta.Name = "tabPageFasta";
             this.tabPageFasta.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageFasta.Size = new System.Drawing.Size(797, 400);
+            this.tabPageFasta.Size = new System.Drawing.Size(797, 403);
             this.tabPageFasta.TabIndex = 0;
             this.tabPageFasta.Text = "Fasta";
             this.tabPageFasta.UseVisualStyleBackColor = true;
@@ -159,136 +158,32 @@ namespace pwiz.Skyline.EditUI
             // tabPageProteinList
             // 
             this.tabPageProteinList.Controls.Add(this.gridViewProteins);
-            this.tabPageProteinList.Location = new System.Drawing.Point(4, 25);
+            this.tabPageProteinList.Location = new System.Drawing.Point(4, 22);
             this.tabPageProteinList.Name = "tabPageProteinList";
             this.tabPageProteinList.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageProteinList.Size = new System.Drawing.Size(797, 400);
+            this.tabPageProteinList.Size = new System.Drawing.Size(797, 403);
             this.tabPageProteinList.TabIndex = 1;
             this.tabPageProteinList.Text = "Protein List";
             this.tabPageProteinList.UseVisualStyleBackColor = true;
             // 
-            // gridViewProteins
-            // 
-            this.gridViewProteins.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.gridViewProteins.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
-            this.gridViewProteins.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.gridViewProteins.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.colProteinName,
-            this.colProteinDescription,
-            this.colProteinSequence});
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.gridViewProteins.DefaultCellStyle = dataGridViewCellStyle2;
-            this.gridViewProteins.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.gridViewProteins.Location = new System.Drawing.Point(3, 3);
-            this.gridViewProteins.Name = "gridViewProteins";
-            this.gridViewProteins.Size = new System.Drawing.Size(791, 394);
-            this.gridViewProteins.TabIndex = 0;
-            this.gridViewProteins.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridViewProteins_CellValueChanged);
-            this.gridViewProteins.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.gridViewProteins_CellBeginEdit);
-            this.gridViewProteins.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridViewProteins_CellEndEdit);
-            this.gridViewProteins.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(this.gridViewProteins_EditingControlShowing);
-            this.gridViewProteins.KeyDown += new System.Windows.Forms.KeyEventHandler(this.gridViewProteins_KeyDown);
-            // 
-            // colProteinName
-            // 
-            this.colProteinName.HeaderText = "Name";
-            this.colProteinName.Name = "colProteinName";
-            // 
-            // colProteinDescription
-            // 
-            this.colProteinDescription.HeaderText = "Description";
-            this.colProteinDescription.Name = "colProteinDescription";
-            this.colProteinDescription.ReadOnly = true;
-            // 
-            // colProteinSequence
-            // 
-            this.colProteinSequence.HeaderText = "Sequence";
-            this.colProteinSequence.Name = "colProteinSequence";
-            this.colProteinSequence.ReadOnly = true;
-            // 
             // tabPagePeptideList
             // 
             this.tabPagePeptideList.Controls.Add(this.gridViewPeptides);
-            this.tabPagePeptideList.Location = new System.Drawing.Point(4, 25);
+            this.tabPagePeptideList.Location = new System.Drawing.Point(4, 22);
             this.tabPagePeptideList.Name = "tabPagePeptideList";
             this.tabPagePeptideList.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPagePeptideList.Size = new System.Drawing.Size(797, 400);
+            this.tabPagePeptideList.Size = new System.Drawing.Size(797, 403);
             this.tabPagePeptideList.TabIndex = 2;
             this.tabPagePeptideList.Text = "Peptide List";
             this.tabPagePeptideList.UseVisualStyleBackColor = true;
             // 
-            // gridViewPeptides
-            // 
-            this.gridViewPeptides.AllowUserToOrderColumns = true;
-            this.gridViewPeptides.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.gridViewPeptides.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle3;
-            this.gridViewPeptides.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.gridViewPeptides.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.colPeptideSequence,
-            this.colPeptideProtein,
-            this.colPeptideProteinDescription});
-            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.gridViewPeptides.DefaultCellStyle = dataGridViewCellStyle4;
-            this.gridViewPeptides.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.gridViewPeptides.Location = new System.Drawing.Point(3, 3);
-            this.gridViewPeptides.Name = "gridViewPeptides";
-            this.gridViewPeptides.Size = new System.Drawing.Size(791, 394);
-            this.gridViewPeptides.TabIndex = 0;
-            this.gridViewPeptides.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridViewPeptides_CellValueChanged);
-            this.gridViewPeptides.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.gridViewPeptides_CellBeginEdit);
-            this.gridViewPeptides.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridViewPeptides_CellEndEdit);
-            this.gridViewPeptides.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(this.gridViewPeptides_EditingControlShowing);
-            this.gridViewPeptides.KeyDown += new System.Windows.Forms.KeyEventHandler(this.gridViewPeptides_KeyDown);
-            // 
-            // colPeptideSequence
-            // 
-            this.colPeptideSequence.HeaderText = "Peptide Sequence";
-            this.colPeptideSequence.Name = "colPeptideSequence";
-            // 
-            // colPeptideProtein
-            // 
-            this.colPeptideProtein.HeaderText = "Protein Name";
-            this.colPeptideProtein.Name = "colPeptideProtein";
-            // 
-            // colPeptideProteinDescription
-            // 
-            this.colPeptideProteinDescription.HeaderText = "Protein Description";
-            this.colPeptideProteinDescription.Name = "colPeptideProteinDescription";
-            this.colPeptideProteinDescription.ReadOnly = true;
-            // 
             // tabPageTransitionList
             // 
             this.tabPageTransitionList.Controls.Add(this.gridViewTransitionList);
-            this.tabPageTransitionList.Location = new System.Drawing.Point(4, 25);
+            this.tabPageTransitionList.Location = new System.Drawing.Point(4, 22);
             this.tabPageTransitionList.Name = "tabPageTransitionList";
             this.tabPageTransitionList.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageTransitionList.Size = new System.Drawing.Size(797, 400);
+            this.tabPageTransitionList.Size = new System.Drawing.Size(797, 403);
             this.tabPageTransitionList.TabIndex = 3;
             this.tabPageTransitionList.Text = "Transition List";
             this.tabPageTransitionList.UseVisualStyleBackColor = true;
@@ -307,8 +202,13 @@ namespace pwiz.Skyline.EditUI
             this.gridViewTransitionList.Dock = System.Windows.Forms.DockStyle.Fill;
             this.gridViewTransitionList.Location = new System.Drawing.Point(3, 3);
             this.gridViewTransitionList.Name = "gridViewTransitionList";
-            this.gridViewTransitionList.Size = new System.Drawing.Size(791, 394);
+            this.gridViewTransitionList.Size = new System.Drawing.Size(791, 397);
             this.gridViewTransitionList.TabIndex = 0;
+            this.gridViewTransitionList.KeyDown += new System.Windows.Forms.KeyEventHandler(this.gridViewTransitionList_KeyDown);
+            this.gridViewTransitionList.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(gridViewTransitionList_CellBeginEdit);
+            this.gridViewTransitionList.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(OnCellEndEdit);
+            this.gridViewTransitionList.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(OnEditingControlShowing);
+            this.gridViewTransitionList.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(gridViewTransitionList_CellValueChanged);
             // 
             // colTransitionPeptide
             // 
@@ -367,11 +267,113 @@ namespace pwiz.Skyline.EditUI
             this.panelButtons.Size = new System.Drawing.Size(805, 44);
             this.panelButtons.TabIndex = 10;
             // 
+            // gridViewProteins
+            // 
+            this.gridViewProteins.AllowUserToOrderColumns = true;
+            this.gridViewProteins.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridViewProteins.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            this.gridViewProteins.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.gridViewProteins.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.colProteinName,
+            this.colProteinDescription,
+            this.colProteinSequence});
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.gridViewProteins.DefaultCellStyle = dataGridViewCellStyle2;
+            this.gridViewProteins.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.gridViewProteins.Location = new System.Drawing.Point(3, 3);
+            this.gridViewProteins.Name = "gridViewProteins";
+            this.gridViewProteins.Size = new System.Drawing.Size(791, 397);
+            this.gridViewProteins.TabIndex = 0;
+            this.gridViewProteins.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridViewProteins_CellValueChanged);
+            this.gridViewProteins.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.gridViewProteins_CellBeginEdit);
+            this.gridViewProteins.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.OnCellEndEdit);
+            this.gridViewProteins.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(OnEditingControlShowing);
+            this.gridViewProteins.KeyDown += new System.Windows.Forms.KeyEventHandler(this.gridViewProteins_KeyDown);
+            // 
+            // colProteinName
+            // 
+            this.colProteinName.HeaderText = "Name";
+            this.colProteinName.Name = "colProteinName";
+            // 
+            // colProteinDescription
+            // 
+            this.colProteinDescription.HeaderText = "Description";
+            this.colProteinDescription.Name = "colProteinDescription";
+            // 
+            // colProteinSequence
+            // 
+            this.colProteinSequence.HeaderText = "Sequence";
+            this.colProteinSequence.Name = "colProteinSequence";
+            // 
+            // gridViewPeptides
+            // 
+            this.gridViewPeptides.AllowUserToOrderColumns = true;
+            this.gridViewPeptides.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridViewPeptides.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            this.gridViewPeptides.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.gridViewPeptides.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.colPeptideSequence,
+            this.colPeptideProtein,
+            this.colPeptideProteinDescription});
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.gridViewPeptides.DefaultCellStyle = dataGridViewCellStyle4;
+            this.gridViewPeptides.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.gridViewPeptides.Location = new System.Drawing.Point(3, 3);
+            this.gridViewPeptides.Name = "gridViewPeptides";
+            this.gridViewPeptides.Size = new System.Drawing.Size(791, 397);
+            this.gridViewPeptides.TabIndex = 0;
+            this.gridViewPeptides.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridViewPeptides_CellValueChanged);
+            this.gridViewPeptides.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.gridViewPeptides_CellBeginEdit);
+            this.gridViewPeptides.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.OnCellEndEdit);
+            this.gridViewPeptides.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(OnEditingControlShowing);
+            this.gridViewPeptides.KeyDown += new System.Windows.Forms.KeyEventHandler(this.gridViewPeptides_KeyDown);
+            // 
+            // colPeptideSequence
+            // 
+            this.colPeptideSequence.HeaderText = "Peptide Sequence";
+            this.colPeptideSequence.Name = "colPeptideSequence";
+            // 
+            // colPeptideProtein
+            // 
+            this.colPeptideProtein.HeaderText = "Protein Name";
+            this.colPeptideProtein.Name = "colPeptideProtein";
+            // 
+            // colPeptideProteinDescription
+            // 
+            this.colPeptideProteinDescription.HeaderText = "Protein Description";
+            this.colPeptideProteinDescription.Name = "colPeptideProteinDescription";
+            this.colPeptideProteinDescription.ReadOnly = true;
+            // 
             // PasteDlg
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(805, 518);
             this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.panelButtons);
@@ -387,14 +389,14 @@ namespace pwiz.Skyline.EditUI
             this.tabPageFasta.ResumeLayout(false);
             this.tabPageFasta.PerformLayout();
             this.tabPageProteinList.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.gridViewProteins)).EndInit();
             this.tabPagePeptideList.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.gridViewPeptides)).EndInit();
             this.tabPageTransitionList.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.gridViewTransitionList)).EndInit();
             this.panelError.ResumeLayout(false);
             this.panelError.PerformLayout();
             this.panelButtons.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.gridViewProteins)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.gridViewPeptides)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -415,18 +417,18 @@ namespace pwiz.Skyline.EditUI
         private System.Windows.Forms.Panel panelButtons;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox tbxError;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinName;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinDescription;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinSequence;
         private System.Windows.Forms.DataGridViewTextBoxColumn colPeptideSequence;
         private System.Windows.Forms.DataGridViewTextBoxColumn colPeptideProtein;
         private System.Windows.Forms.DataGridViewTextBoxColumn colPeptideProteinDescription;
         private System.Windows.Forms.TabPage tabPageTransitionList;
-        private System.Windows.Forms.DataGridView gridViewTransitionList;
+        private DataGridViewEx gridViewTransitionList;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTransitionPeptide;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTransitionPrecursorMz;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTransitionProductMz;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTransitionProteinName;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTransitionProteinDescription;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinName;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinDescription;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinSequence;
     }
 }
