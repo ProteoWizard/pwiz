@@ -1153,7 +1153,7 @@ namespace pwiz.Skyline.Model
         {
             _transitions.Sort(TransitionGroup.CompareTransitions);
             // m/z calculated later
-            _transitionGroups.Add(new TransitionGroupDocNode(_activeTransitionGroup, 0, _transitions.ToArray()));
+            _transitionGroups.Add(new TransitionGroupDocNode(_activeTransitionGroup, 0, RelativeRT.Same, _transitions.ToArray()));
 
             _activeTransitionGroup = null;
             _transitions = null;

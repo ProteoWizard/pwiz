@@ -1157,8 +1157,15 @@ namespace pwiz.Skyline.Model
             }
 
             double precursorMassH = Settings.GetPrecursorMass(group.LabelType, peptide.Sequence, mods);
-            return new TransitionGroupDocNode(group, annotations, precursorMassH, libInfo, results,
-                children ?? new TransitionDocNode[0], autoManageChildren);
+            RelativeRT relativeRT = Settings.GetRelativeRT(group.LabelType, peptide.Sequence, mods);
+            return new TransitionGroupDocNode(group,
+                                              annotations,
+                                              precursorMassH,
+                                              relativeRT,
+                                              libInfo,
+                                              results,
+                                              children ?? new TransitionDocNode[0],
+                                              autoManageChildren);
         }
 
         private static SpectrumHeaderInfo ReadTransitionGroupLibInfo(XmlReader reader)
@@ -1281,12 +1288,13 @@ namespace pwiz.Skyline.Model
             }
 
             double precursorMassH = Settings.GetPrecursorMass(IsotopeLabelType.light, peptide.Sequence, mods);
+            RelativeRT relativeRT = Settings.GetRelativeRT(IsotopeLabelType.light, peptide.Sequence, mods);
 
             // Use collected information to create the DocNodes.
             var list = new List<TransitionGroupDocNode>();
             foreach (TransitionGroup group in listGroups)
             {
-                list.Add(new TransitionGroupDocNode(group, precursorMassH,
+                list.Add(new TransitionGroupDocNode(group, precursorMassH, relativeRT,
                     mapGroupToList[group].ToArray()));
             }
             return list.ToArray();

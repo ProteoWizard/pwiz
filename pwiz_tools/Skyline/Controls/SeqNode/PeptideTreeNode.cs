@@ -181,11 +181,13 @@ namespace pwiz.Skyline.Controls.SeqNode
             {
                 TransitionGroup tranGroup = (TransitionGroup) childId;
                 ExplicitMods mods = _nodePeptide.ExplicitMods;
-                double massH = Settings.GetPrecursorMass(tranGroup.LabelType, tranGroup.Peptide.Sequence, mods);
+                string seq = tranGroup.Peptide.Sequence;
+                double massH = Settings.GetPrecursorMass(tranGroup.LabelType, seq, mods);
+                RelativeRT relativeRT = Settings.GetRelativeRT(tranGroup.LabelType, seq, mods);
                 TransitionDocNode[] transitions = _nodePeptide.GetMatchingTransitions(
                     tranGroup, Settings, mods);
 
-                var nodeGroup = new TransitionGroupDocNode(tranGroup, massH,
+                var nodeGroup = new TransitionGroupDocNode(tranGroup, massH, relativeRT,
                     transitions ?? new TransitionDocNode[0], transitions == null);
                 return nodeGroup.ChangeSettings(Settings, mods, SrmSettingsDiff.ALL);
             }

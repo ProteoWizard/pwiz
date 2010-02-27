@@ -676,7 +676,9 @@ namespace pwiz.Skyline.EditUI
                 transitionGroupDocNode =
                     new TransitionGroupDocNode(
                         new TransitionGroup(peptideDocNode.Peptide, precursorCharge, isotopeLabelType),
-                        document.Settings.GetPrecursorMass(isotopeLabelType, peptideDocNode.Peptide.Sequence, null), new TransitionDocNode[0]);
+                        document.Settings.GetPrecursorMass(isotopeLabelType, peptideDocNode.Peptide.Sequence, null),
+                        document.Settings.GetRelativeRT(isotopeLabelType, peptideDocNode.Peptide.Sequence, null),
+                        new TransitionDocNode[0]);
                 
             }
             int offset = Transition.OrdinalToOffset(ionType, ordinal, peptideDocNode.Peptide.Length);

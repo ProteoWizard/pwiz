@@ -85,6 +85,29 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        public RelativeRT GetRelativeRT(IsotopeLabelType type, string seq, ExplicitMods mods)
+        {
+            if (type == IsotopeLabelType.light)
+                return RelativeRT.Same;
+            if (mods != null)
+            {
+                foreach (var mod in mods.HeavyModifications)
+                {
+                    if (mod.Modification.RelativeRT == RelativeRT.Before)
+                        return RelativeRT.Before;
+                }
+            }
+            else
+            {
+                foreach (var mod in PeptideSettings.Modifications.HeavyModifications)
+                {
+                    if (mod.IsMod(seq) && mod.RelativeRT == RelativeRT.Before)
+                        return RelativeRT.Before;
+                }
+            }
+            return RelativeRT.Same;
+        }
+        
         // Cached calculators
         private SequenceMassCalc PrecursorMassCalc { get; set; }
 

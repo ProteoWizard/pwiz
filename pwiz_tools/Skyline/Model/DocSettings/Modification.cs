@@ -152,6 +152,16 @@ namespace pwiz.Skyline.Model.DocSettings
             return true;
         }
 
+        public bool IsMod(string sequence)
+        {
+            for (int i = 0; i < sequence.Length; i++)
+            {
+                if (IsMod(sequence[i], i, sequence.Length))
+                    return true;
+            }
+            return false;
+        }
+
         public bool IsLoss
         {
             get { return FormulaLoss != null || MonoisotopicLoss.HasValue; }

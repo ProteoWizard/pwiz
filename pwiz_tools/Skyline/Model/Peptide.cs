@@ -34,8 +34,10 @@ namespace pwiz.Skyline.Model
         {
         }
 
+// ReSharper disable SuggestBaseTypeForParameter
         public PeptideDocNode(Peptide id, int? rank, Annotations annotations, ExplicitMods mods,
                 Results<PeptideChromInfo> results, TransitionGroupDocNode[] children, bool autoManageChildren)
+// ReSharper restore SuggestBaseTypeForParameter
             : base(id, annotations, children, autoManageChildren)
         {
             ExplicitMods = mods;
@@ -200,6 +202,7 @@ namespace pwiz.Skyline.Model
 
                         nodeGroup = new TransitionGroupDocNode(tranGroup,
                             settingsNew.GetPrecursorMass(tranGroup.LabelType, Peptide.Sequence, explicitMods),
+                            settingsNew.GetRelativeRT(tranGroup.LabelType, Peptide.Sequence, explicitMods),
                             transitions ?? new TransitionDocNode[0], transitions == null);
                         diffNode = SrmSettingsDiff.ALL;
                     }
@@ -524,7 +527,9 @@ namespace pwiz.Skyline.Model
 
             private Dictionary<TransitionKey, RatioToStandardCalculator> TranRatiosToStandard { get; set; }
 
+// ReSharper disable UnusedParameter.Local
             public void AddChromInfo(TransitionGroupDocNode nodeGroup, TransitionGroupChromInfo info)
+// ReSharper restore UnusedParameter.Local
             {
                 if (info == null)
                     return;

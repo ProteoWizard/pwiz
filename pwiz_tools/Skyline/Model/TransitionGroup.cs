@@ -32,31 +32,47 @@ namespace pwiz.Skyline.Model
     {
         public const int MIN_DOT_PRODUCT_TRANSITIONS = 4;
 
-        public TransitionGroupDocNode(TransitionGroup id, double massH, TransitionDocNode[] children)
-            : this(id, Annotations.Empty, massH, null, null, children, true)
+        public TransitionGroupDocNode(TransitionGroup id,
+                                      double massH,
+                                      RelativeRT relativeRT,
+                                      TransitionDocNode[] children)
+            : this(id, Annotations.Empty, massH, relativeRT, null, null, children, true)
         {
         }
 
-        public TransitionGroupDocNode(TransitionGroup id, double massH, TransitionDocNode[] children,
-                bool autoManageChildren)
-            : this(id, Annotations.Empty, massH, null, null, children, autoManageChildren)
+        public TransitionGroupDocNode(TransitionGroup id,
+                                      double massH,
+                                      RelativeRT relativeRT,
+                                      TransitionDocNode[] children,
+                                      bool autoManageChildren)
+            : this(id, Annotations.Empty, massH, relativeRT, null, null, children, autoManageChildren)
         {
         }
 
-        public TransitionGroupDocNode(TransitionGroup id, Annotations annotations, double massH,
-                SpectrumHeaderInfo libInfo, Results<TransitionGroupChromInfo> results, TransitionDocNode[] children,
-                bool autoManageChildren)
+        public TransitionGroupDocNode(TransitionGroup id,
+                                      Annotations annotations,
+                                      double massH,
+                                      RelativeRT relativeRT,
+                                      SpectrumHeaderInfo libInfo,
+                                      Results<TransitionGroupChromInfo> results,
+                                      TransitionDocNode[] children,
+                                      bool autoManageChildren)
             : base(id, annotations, children, autoManageChildren)
         {
             PrecursorMz = SequenceMassCalc.GetMZ(massH, id.PrecursorCharge);
+            RelativeRT = relativeRT;
             LibInfo = libInfo;
             Results = results;
         }
 
-        private TransitionGroupDocNode(TransitionGroupDocNode group, double precursorMz, IList<DocNode> children)
+        private TransitionGroupDocNode(TransitionGroupDocNode group,
+                                       double precursorMz,
+                                       RelativeRT relativeRT,
+                                       IList<DocNode> children)
             : base(group.TransitionGroup, group.Annotations, children, group.AutoManageChildren)
         {
             PrecursorMz = precursorMz;
+            RelativeRT = relativeRT;
             LibInfo = group.LibInfo;
             Results = group.Results;
         }
@@ -64,6 +80,8 @@ namespace pwiz.Skyline.Model
         public TransitionGroup TransitionGroup { get { return (TransitionGroup) Id; }}
 
         public bool IsLight { get { return TransitionGroup.LabelType == IsotopeLabelType.light; } }
+
+        public RelativeRT RelativeRT { get; private set; }
 
         public override AnnotationDef.AnnotationTarget AnnotationTarget { get { return AnnotationDef.AnnotationTarget.precursor; } }
 
@@ -213,12 +231,15 @@ namespace pwiz.Skyline.Model
         public TransitionGroupDocNode ChangeSettings(SrmSettings settingsNew, ExplicitMods mods, SrmSettingsDiff diff)
         {
             double precursorMz = PrecursorMz;
+            RelativeRT relativeRT = RelativeRT;
             SpectrumHeaderInfo libInfo = LibInfo;
             var transitionRanks = new Dictionary<double, LibraryRankedSpectrumInfo.RankedMI>();
             if (diff.DiffTransitionGroupProps)
             {
-                double massH = settingsNew.GetPrecursorMass(TransitionGroup.LabelType, TransitionGroup.Peptide.Sequence, mods);
+                string seq = TransitionGroup.Peptide.Sequence;
+                double massH = settingsNew.GetPrecursorMass(TransitionGroup.LabelType, seq, mods);
                 precursorMz = SequenceMassCalc.GetMZ(massH, TransitionGroup.PrecursorCharge);
+                relativeRT = settingsNew.GetRelativeRT(TransitionGroup.LabelType, seq, mods);
             }
 
             bool autoSelectTransitions = diff.DiffTransitions &&
@@ -271,11 +292,11 @@ namespace pwiz.Skyline.Model
                 }
 
                 if (!ArrayUtil.ReferencesEqual(childrenNew, Children))
-                    nodeResult = new TransitionGroupDocNode(this, precursorMz, childrenNew);
+                    nodeResult = new TransitionGroupDocNode(this, precursorMz, relativeRT, childrenNew);
                 else
                 {
                     if (precursorMz != PrecursorMz)
-                        nodeResult = new TransitionGroupDocNode(this, precursorMz, Children);
+                        nodeResult = new TransitionGroupDocNode(this, precursorMz, relativeRT, Children);
                     else
                     {
                         // If nothing changed, use this node.
@@ -303,15 +324,15 @@ namespace pwiz.Skyline.Model
 
                 // Change as little as possible
                 if (!ArrayUtil.ReferencesEqual(childrenNew, Children))
-                    nodeResult = new TransitionGroupDocNode(this, precursorMz, childrenNew);
+                    nodeResult = new TransitionGroupDocNode(this, precursorMz, relativeRT, childrenNew);
                 else if (precursorMz != PrecursorMz)
-                    nodeResult = new TransitionGroupDocNode(this, precursorMz, Children);
+                    nodeResult = new TransitionGroupDocNode(this, precursorMz, relativeRT, Children);
                 else
                     nodeResult = this;
             }
             else if (diff.DiffTransitionGroupProps)
             {
-                nodeResult = new TransitionGroupDocNode(this, precursorMz, Children);
+                nodeResult = new TransitionGroupDocNode(this, precursorMz, relativeRT, Children);
             }
 
             // One final check for a library info change
@@ -901,12 +922,12 @@ namespace pwiz.Skyline.Model
 
         public TransitionGroupDocNode ChangeLibInfo(SpectrumHeaderInfo prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.LibInfo = v, prop);
+            return ChangeProp(ImClone(this), im => im.LibInfo = prop);
         }
 
         public TransitionGroupDocNode ChangeResults(Results<TransitionGroupChromInfo> prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.Results = v, prop);
+            return ChangeProp(ImClone(this), im => im.Results = prop);
         }
 
         public DocNode ChangePeak(SrmSettings settings,
