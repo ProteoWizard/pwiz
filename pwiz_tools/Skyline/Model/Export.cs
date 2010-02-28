@@ -926,7 +926,7 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step));
             writer.Write(FieldSeparator);
-            writer.Write(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step));
+            writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1));
             writer.Write(FieldSeparator);
             if (MethodType == ExportMethodType.Scheduled)
             {
@@ -1142,9 +1142,9 @@ namespace pwiz.Skyline.Model
             writer.Write(nodeTranGroup.TransitionGroup.LabelType == IsotopeLabelType.light ? "light" : "heavy");
             writer.Write(FieldSeparator);
 
-            writer.Write(GetDeclusteringPotential(nodePep, nodeTranGroup, nodeTran, step));
+            writer.Write(Math.Round(GetDeclusteringPotential(nodePep, nodeTranGroup, nodeTran, step), 1));
             writer.Write(FieldSeparator);
-            writer.Write(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step));
+            writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1));
             writer.WriteLine();
         }
     }
@@ -1237,10 +1237,9 @@ namespace pwiz.Skyline.Model
                 writer.Write(FieldSeparator);                
             }
 
-
             writer.Write(Fragmentor);
             writer.Write(FieldSeparator);
-            writer.Write(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step));
+            writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1));
             writer.Write(FieldSeparator);
 
             if (MethodType != ExportMethodType.Standard)
@@ -1301,28 +1300,28 @@ namespace pwiz.Skyline.Model
 
         protected override void WriteHeaders(TextWriter writer)
         {
-            writer.Write("Protein");
+            writer.Write("protein.name");
             writer.Write(FieldSeparator);
-            writer.Write("Sequence");
+            writer.Write("peptide.seq");
             writer.Write(FieldSeparator);
-            writer.Write("Precursor M/Z");
+            writer.Write("precursor.mz");
             writer.Write(FieldSeparator);
-            writer.Write("Precursor Retention Time");
+            writer.Write("precursor.retT");
             writer.Write(FieldSeparator);
-            writer.Write("Product M/Z");
+            writer.Write("product.m_z");
             writer.Write(FieldSeparator);
-            writer.Write("Collision Energy");
+            writer.Write("collision_energy");
             writer.Write(FieldSeparator);
-            writer.Write("Cone Voltage");
+            writer.Write("cone_voltage");
             // Informational columns
             writer.Write(FieldSeparator);
-            writer.Write("Ion Name");
+            writer.Write("ion_name");
             writer.Write(FieldSeparator);
-            writer.Write("Library Rank");
+            writer.Write("library_rank");
             if (Document.Settings.PeptideSettings.Modifications.HasHeavyModifications)
             {
                 writer.Write(FieldSeparator);
-                writer.Write("Label Type");                
+                writer.Write("label_type");                
             }
             writer.WriteLine();
         }
@@ -1361,10 +1360,11 @@ namespace pwiz.Skyline.Model
             writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step));
             writer.Write(FieldSeparator);
 
-            writer.Write(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step));
+            // Waters only excepts integers for CE and CV
+            writer.Write((int)Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step)));
             writer.Write(FieldSeparator);
 
-            writer.Write(ConeVoltage);
+            writer.Write((int)Math.Round(ConeVoltage));
             writer.Write(FieldSeparator);
 
             // Extra information not used by instrument

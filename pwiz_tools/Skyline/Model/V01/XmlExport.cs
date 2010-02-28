@@ -192,7 +192,7 @@ namespace pwiz.Skyline.Model.V01
             writer.Write(',');
             writer.Write(transition.ProductMz);
             writer.Write(',');
-            writer.Write(transition.CollisionEnergy);
+            writer.Write(Math.Round(transition.CollisionEnergy, 1));
             writer.Write(',');
             if (MethodType == ExportMethodType.Scheduled)
             {
@@ -252,12 +252,12 @@ namespace pwiz.Skyline.Model.V01
             writer.Write("light");
             writer.Write(',');
 
-            writer.Write(transition.DeclusteringPotential ?? 0);
+            writer.Write(Math.Round(transition.DeclusteringPotential ?? 0, 1));
 //            Removed in v0.2 for test compatibility
 //            writer.Write(',');
             // EP : not used by Paulovich Lab
             writer.Write(',');
-            writer.Write(transition.CollisionEnergy);
+            writer.Write(Math.Round(transition.CollisionEnergy, 1));
 //            Removed in v0.2 for test compatibility
 //            writer.Write(',');
             // CXP : not used by Paulovich Lab
