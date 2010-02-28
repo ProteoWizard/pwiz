@@ -26,44 +26,59 @@ namespace pwiz.Skyline.EditUI
 {
     public partial class ChromChartPropertyDlg : Form
     {
-        private bool _clickedOk;
-
-        private readonly MessageBoxHelper _helper;
-
         public ChromChartPropertyDlg()
         {
             InitializeComponent();
 
-            _helper = new MessageBoxHelper(this);
-
             textLineWidth.Text = Settings.Default.ChromatogramLineWidth.ToString();
             textFontSize.Text = Settings.Default.ChromatogramFontSize.ToString();
+            if (Settings.Default.ChromatogramTimeRange != 0)
+                textTimeRange.Text = Settings.Default.ChromatogramTimeRange.ToString();
+            if (Settings.Default.ChromatogramMaxIntensity != 0)
+                textMaxIntensity.Text = Settings.Default.ChromatogramMaxIntensity.ToString();
         }
 
-        protected override void OnClosing(CancelEventArgs e)
+        public void OkDialog()
         {
-            if (_clickedOk)
+            // TODO: Remove this
+            var e = new CancelEventArgs();
+            var helper = new MessageBoxHelper(this);
+
+            int lineWidth;
+            if (!helper.ValidateNumberTextBox(e, textLineWidth, 1, 5, out lineWidth))
+                return;
+
+            int fontSize;
+            if (!helper.ValidateNumberTextBox(e, textFontSize, 6, 128, out fontSize))
+                return;
+
+            double timeRange = 0;
+            if (!string.IsNullOrEmpty(textTimeRange.Text))
             {
-                _clickedOk = false; // Reset in case of failure.
-
-                int lineWidth;
-                if (!_helper.ValidateNumberTextBox(e, textLineWidth, 1, 5, out lineWidth))
+                if (!helper.ValidateDecimalTextBox(e, textTimeRange, 0.05, 15.0, out timeRange))
                     return;
-
-                int fontSize;
-                if (!_helper.ValidateNumberTextBox(e, textFontSize, 6, 128, out fontSize))
-                    return;
-
-                Settings.Default.ChromatogramLineWidth = lineWidth;
-                Settings.Default.ChromatogramFontSize = fontSize;
             }
 
-            base.OnClosing(e);
+            double maxIntensity = 0;
+            if (!string.IsNullOrEmpty(textMaxIntensity.Text))
+            {
+                if (!helper.ValidateDecimalTextBox(e, textMaxIntensity, 5, double.MaxValue, out maxIntensity))
+                    return;
+            }
+
+            Settings.Default.ChromatogramLineWidth = lineWidth;
+            Settings.Default.ChromatogramFontSize = fontSize;
+            Settings.Default.ChromatogramTimeRange = timeRange;
+            Settings.Default.ChromatogramMaxIntensity = maxIntensity;
+            if (maxIntensity != 0)
+                Settings.Default.LockYChrom = true;
+
+            DialogResult = DialogResult.OK;
         }
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            _clickedOk = true;
+            OkDialog();
         }
     }
 }

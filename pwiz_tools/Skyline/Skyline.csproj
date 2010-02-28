@@ -37,8 +37,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>1825</ApplicationRevision>
-    <ApplicationVersion>0.5.1.1825</ApplicationVersion>
+    <ApplicationRevision>1848</ApplicationRevision>
+    <ApplicationVersion>0.5.1.1848</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -273,6 +273,12 @@
     </Compile>
     <Compile Include="EditUI\ChromChartPropertyDlg.Designer.cs">
       <DependentUpon>ChromChartPropertyDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditUI\AreaChartPropertyDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\AreaChartPropertyDlg.Designer.cs">
+      <DependentUpon>AreaChartPropertyDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="EditUI\CopyEmfToolStripMenuItem.cs">
       <SubType>Component</SubType>
@@ -848,6 +854,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\ChromChartPropertyDlg.resx">
       <DependentUpon>ChromChartPropertyDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\AreaChartPropertyDlg.resx">
+      <DependentUpon>AreaChartPropertyDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\RefineDlg.resx">

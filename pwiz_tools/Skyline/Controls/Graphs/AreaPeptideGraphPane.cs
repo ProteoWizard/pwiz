@@ -115,7 +115,27 @@ namespace pwiz.Skyline.Controls.Graphs
                 YAxis.Scale.Max = _graphData.MaxY * 1.05;
             }
             if (Settings.Default.AreaPeptideCV)
-                YAxis.Title.Text += " CV";
+            {
+                YAxis.Title.Text += " CV Percent";
+                if (Settings.Default.PeakAreaMaxCv != 0)
+                {
+                    YAxis.Scale.MaxAuto = false;
+                    YAxis.Scale.Max = Settings.Default.PeakAreaMaxCv;
+                }
+                else if (!YAxis.Scale.MaxAuto)
+                {
+                    YAxis.Scale.MaxAuto = true;
+                }
+            }
+            else if (Settings.Default.PeakAreaMaxArea != 0)
+            {
+                YAxis.Scale.MaxAuto = false;
+                YAxis.Scale.Max = Settings.Default.PeakAreaMaxArea;
+            }
+            else if (!YAxis.Scale.MaxAuto)
+            {
+                YAxis.Scale.MaxAuto = true;
+            }
 
             XAxis.Scale.TextLabels = _graphData.Labels;
             ScaleAxisLabels();
@@ -342,7 +362,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 lists.ForEach(l => { if (l.Count < maxPoints) l.Add(PointPairMissing(maxPoints - 1)); });
             }
 
+// ReSharper disable SuggestBaseTypeForParameter
             private static int GetChargeCount(PeptideDocNode nodePep)
+// ReSharper restore SuggestBaseTypeForParameter
             {
                 int chargeCount = 0;
                 bool[] chargesPresent = new bool[TransitionGroup.MAX_PRECURSOR_CHARGE];
@@ -402,7 +424,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 PointPair pointPair;
                 if (Settings.Default.AreaPeptideCV)
-                    pointPair = MeanErrorBarItem.MakePointPair(iGroup, statAreas.StdDev()/statAreas.Mean(), 0);
+                    pointPair = MeanErrorBarItem.MakePointPair(iGroup, statAreas.StdDev()/statAreas.Mean()*100, 0);
                 else
                     pointPair = MeanErrorBarItem.MakePointPair(iGroup, statAreas.Mean(), statAreas.StdDev());
                 maxY = Math.Max(maxY, MeanErrorBarItem.GetYTotal(pointPair));
@@ -500,7 +522,9 @@ namespace pwiz.Skyline.Controls.Graphs
             public double TimeGroup { get; private set; }
             public double TimePep { get; private set; }
 
+// ReSharper disable SuggestBaseTypeForParameter
             private void CalcStats(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
+// ReSharper restore SuggestBaseTypeForParameter
             {
                 var areas = new List<double>();
                 var times = new List<double>();

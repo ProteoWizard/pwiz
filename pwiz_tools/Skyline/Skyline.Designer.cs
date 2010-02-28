@@ -136,8 +136,8 @@ namespace pwiz.Skyline
             this.autoZoomBothMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator10 = new System.Windows.Forms.ToolStripSeparator();
             this.retentionTimesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.linearRegressionMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.replicateComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.linearRegressionMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.schedulingMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peakAreasMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaReplicateComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -278,6 +278,8 @@ namespace pwiz.Skyline
             this.areaPercentViewContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaLogScaleContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaCvsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator28 = new System.Windows.Forms.ToolStripSeparator();
+            this.areaPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuMain.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.contextMenuTreeNode.SuspendLayout();
@@ -1186,22 +1188,14 @@ namespace pwiz.Skyline
             // retentionTimesMenuItem
             // 
             this.retentionTimesMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.linearRegressionMenuItem,
             this.replicateComparisonMenuItem,
+            this.linearRegressionMenuItem,
             this.schedulingMenuItem});
             this.retentionTimesMenuItem.Enabled = false;
             this.retentionTimesMenuItem.Name = "retentionTimesMenuItem";
             this.retentionTimesMenuItem.Size = new System.Drawing.Size(191, 22);
             this.retentionTimesMenuItem.Text = "Retention &Times";
             this.retentionTimesMenuItem.DropDownOpening += new System.EventHandler(this.timeGraphMenuItem_DropDownOpening);
-            // 
-            // linearRegressionMenuItem
-            // 
-            this.linearRegressionMenuItem.Name = "linearRegressionMenuItem";
-            this.linearRegressionMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.F8)));
-            this.linearRegressionMenuItem.Size = new System.Drawing.Size(217, 22);
-            this.linearRegressionMenuItem.Text = "&Linear Regression";
-            this.linearRegressionMenuItem.Click += new System.EventHandler(this.linearRegressionMenuItem_Click);
             // 
             // replicateComparisonMenuItem
             // 
@@ -1210,6 +1204,14 @@ namespace pwiz.Skyline
             this.replicateComparisonMenuItem.Size = new System.Drawing.Size(217, 22);
             this.replicateComparisonMenuItem.Text = "&Replicate Comparison";
             this.replicateComparisonMenuItem.Click += new System.EventHandler(this.replicateComparisonMenuItem_Click);
+            // 
+            // linearRegressionMenuItem
+            // 
+            this.linearRegressionMenuItem.Name = "linearRegressionMenuItem";
+            this.linearRegressionMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.F8)));
+            this.linearRegressionMenuItem.Size = new System.Drawing.Size(217, 22);
+            this.linearRegressionMenuItem.Text = "&Linear Regression";
+            this.linearRegressionMenuItem.Click += new System.EventHandler(this.linearRegressionMenuItem_Click);
             // 
             // schedulingMenuItem
             // 
@@ -2314,9 +2316,11 @@ namespace pwiz.Skyline
             this.areaOrderContextMenuItem,
             this.areaPercentViewContextMenuItem,
             this.areaLogScaleContextMenuItem,
-            this.areaCvsContextMenuItem});
+            this.areaCvsContextMenuItem,
+            this.toolStripSeparator28,
+            this.areaPropsContextMenuItem});
             this.contextMenuPeakAreas.Name = "contextMenuStrip1";
-            this.contextMenuPeakAreas.Size = new System.Drawing.Size(136, 114);
+            this.contextMenuPeakAreas.Size = new System.Drawing.Size(153, 164);
             // 
             // areaGraphContextMenuItem
             // 
@@ -2324,7 +2328,7 @@ namespace pwiz.Skyline
             this.areaReplicateComparisonContextMenuItem,
             this.areaPeptideComparisonContextMenuItem});
             this.areaGraphContextMenuItem.Name = "areaGraphContextMenuItem";
-            this.areaGraphContextMenuItem.Size = new System.Drawing.Size(135, 22);
+            this.areaGraphContextMenuItem.Size = new System.Drawing.Size(152, 22);
             this.areaGraphContextMenuItem.Text = "Graph";
             this.areaGraphContextMenuItem.DropDownOpening += new System.EventHandler(this.areaGraphMenuItem_DropDownOpening);
             // 
@@ -2349,7 +2353,7 @@ namespace pwiz.Skyline
             this.areaOrderRTContextMenuItem,
             this.areaOrderAreaContextMenuItem});
             this.areaOrderContextMenuItem.Name = "areaOrderContextMenuItem";
-            this.areaOrderContextMenuItem.Size = new System.Drawing.Size(135, 22);
+            this.areaOrderContextMenuItem.Size = new System.Drawing.Size(152, 22);
             this.areaOrderContextMenuItem.Text = "Order";
             this.areaOrderContextMenuItem.DropDownOpening += new System.EventHandler(this.areaOrderContextMenuItem_DropDownOpening);
             // 
@@ -2378,7 +2382,7 @@ namespace pwiz.Skyline
             // 
             this.areaPercentViewContextMenuItem.CheckOnClick = true;
             this.areaPercentViewContextMenuItem.Name = "areaPercentViewContextMenuItem";
-            this.areaPercentViewContextMenuItem.Size = new System.Drawing.Size(135, 22);
+            this.areaPercentViewContextMenuItem.Size = new System.Drawing.Size(152, 22);
             this.areaPercentViewContextMenuItem.Text = "Normalized";
             this.areaPercentViewContextMenuItem.Click += new System.EventHandler(this.areaPercentViewContextMenuItem_Click);
             // 
@@ -2386,7 +2390,7 @@ namespace pwiz.Skyline
             // 
             this.areaLogScaleContextMenuItem.CheckOnClick = true;
             this.areaLogScaleContextMenuItem.Name = "areaLogScaleContextMenuItem";
-            this.areaLogScaleContextMenuItem.Size = new System.Drawing.Size(135, 22);
+            this.areaLogScaleContextMenuItem.Size = new System.Drawing.Size(152, 22);
             this.areaLogScaleContextMenuItem.Text = "Log Scale";
             this.areaLogScaleContextMenuItem.Click += new System.EventHandler(this.areaLogScaleContextMenuItem_Click);
             // 
@@ -2394,9 +2398,21 @@ namespace pwiz.Skyline
             // 
             this.areaCvsContextMenuItem.CheckOnClick = true;
             this.areaCvsContextMenuItem.Name = "areaCvsContextMenuItem";
-            this.areaCvsContextMenuItem.Size = new System.Drawing.Size(135, 22);
+            this.areaCvsContextMenuItem.Size = new System.Drawing.Size(152, 22);
             this.areaCvsContextMenuItem.Text = "Area CVs";
             this.areaCvsContextMenuItem.Click += new System.EventHandler(this.areaCvsContextMenuItem_Click);
+            // 
+            // toolStripSeparator28
+            // 
+            this.toolStripSeparator28.Name = "toolStripSeparator28";
+            this.toolStripSeparator28.Size = new System.Drawing.Size(149, 6);
+            // 
+            // areaPropsContextMenuItem
+            // 
+            this.areaPropsContextMenuItem.Name = "areaPropsContextMenuItem";
+            this.areaPropsContextMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.areaPropsContextMenuItem.Text = "Properties...";
+            this.areaPropsContextMenuItem.Click += new System.EventHandler(this.areaPropsContextMenuItem_Click);
             // 
             // SkylineWindow
             // 
@@ -2684,6 +2700,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem precursorIonContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator35;
         private System.Windows.Forms.ToolStripMenuItem integrateAllMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator28;
+        private System.Windows.Forms.ToolStripMenuItem areaPropsContextMenuItem;
     }
 }
 

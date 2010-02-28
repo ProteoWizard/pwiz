@@ -27,7 +27,6 @@ using DigitalRune.Windows.Docking;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
-using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -1424,11 +1423,11 @@ namespace pwiz.Skyline
             return (iGraph != -1 ? _listGraphChrom[iGraph] : null);
         }
 
-        private bool IsGraphChromVisible(string name)
-        {
-            int iGraph = _listGraphChrom.IndexOf(graph => Equals(graph.NameSet, name));
-            return iGraph != -1 && !_listGraphChrom[iGraph].IsHidden;
-        }
+//        private bool IsGraphChromVisible(string name)
+//        {
+//            int iGraph = _listGraphChrom.IndexOf(graph => Equals(graph.NameSet, name));
+//            return iGraph != -1 && !_listGraphChrom[iGraph].IsHidden;
+//        }
 
         private string SelectedGraphChromName
         {
@@ -2101,7 +2100,9 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert++, areaLogScaleContextMenuItem);
             areaLogScaleContextMenuItem.Checked = set.AreaLogScale;
 
-            menuStrip.Items.Insert(iInsert, toolStripSeparator24);
+            menuStrip.Items.Insert(iInsert++, toolStripSeparator24);
+            menuStrip.Items.Insert(iInsert++, areaPropsContextMenuItem);
+            menuStrip.Items.Insert(iInsert, toolStripSeparator28);
 
             // Remove some ZedGraph menu items not of interest
             for (int i = 0; i < items.Length; i++)
@@ -2180,6 +2181,13 @@ namespace pwiz.Skyline
         {
             Settings.Default.AreaPeptideCV = areaCvsContextMenuItem.Checked;
             UpdatePeakAreaGraph();
+        }
+
+        private void areaPropsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            var dlg = new AreaChartPropertyDlg();
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+                UpdatePeakAreaGraph();
         }
 
         private void UpdatePeakAreaGraph()

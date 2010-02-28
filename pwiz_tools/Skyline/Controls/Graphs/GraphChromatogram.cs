@@ -96,6 +96,8 @@ namespace pwiz.Skyline.Controls.Graphs
         private ChromatogramGroupInfo[][] _arrayChromInfo;
         private int _chromIndex;
         private AutoZoomChrom _zoomState;
+        private double _timeRange;
+        private double _maxIntensity;
         private bool _zoomLocked;
 
         public GraphChromatogram(string name, IDocumentUIContainer documentUIContainer)
@@ -432,9 +434,14 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (graphPane.CurveList.Count == 0)
                     graphControl.AddGraphItem(graphPane, new UnavailableChromGraphItem(), false);
             }
-            else if (changedGroupIds || _zoomState != zoom)
+            else if (changedGroupIds || _zoomState != zoom ||
+                    _timeRange != Settings.Default.ChromatogramTimeRange ||
+                    _maxIntensity != Settings.Default.ChromatogramTimeRange)
             {
                 _zoomState = zoom;
+                _timeRange = Settings.Default.ChromatogramTimeRange;
+                _maxIntensity = Settings.Default.ChromatogramMaxIntensity;
+
                 ZoomGraph(graphPane, bestStartTime, bestEndTime, listChromGraphs, zoom);
             }
 
@@ -1011,6 +1018,14 @@ namespace pwiz.Skyline.Controls.Graphs
                 case AutoZoomChrom.peak:
                     if (bestEndTime != 0)
                     {
+                        // If an explicit time range around the best peak is set, then use it.
+                        if (_timeRange != 0)
+                        {
+                            // CONSIDER: Should it be centered on the peak apex?
+                            double mid = (bestStartTime + bestEndTime)/2;
+                            bestStartTime = mid - _timeRange/2;
+                            bestEndTime = bestStartTime + _timeRange;
+                        }
                         ZoomXAxis(graphPane, bestStartTime, bestEndTime);
                     }
                     break;
@@ -1052,7 +1067,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     break;
             }
-            graphPane.YAxis.Scale.MaxAuto = true;
+            if (_maxIntensity == 0)
+                graphPane.YAxis.Scale.MaxAuto = true;
+            else
+            {
+                graphPane.YAxis.Scale.MaxAuto = false;
+                graphPane.YAxis.Scale.Max = _maxIntensity;
+            }
         }
 
         private static TransitionChromInfo GetTransitionChromInfo(TransitionDocNode nodeTran,
@@ -1095,7 +1116,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (end <= 0)
                 return;
             double start = chromInfo.StartRetentionTime;
-            double margin = (end - start) * 1.5;
+            double margin = (end - start) * 1.2;
             start -= margin;
             end += margin;
 
