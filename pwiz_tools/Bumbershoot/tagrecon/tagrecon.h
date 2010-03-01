@@ -108,7 +108,7 @@ namespace tagrecon
 		Two spectrum are said to be similar if the tag sequences match and also 
 		the total mass deviation between n-terminal and c-terminal masses that
 		sourround the tags is <= +/-maxDeviation. This comparator essentially 
-		tags that come from similar spectra together. 
+		sorts similar tags together. 
 	*/
 	class TagSetCompare {
 
@@ -134,13 +134,15 @@ namespace tagrecon
 			} else {
 				float nTerminalAbsMassDiff = fabs(lhs.nTerminusMass-rhs.nTerminusMass);
 				float cTerminalAbsMassDiff =  fabs(lhs.cTerminusMass-rhs.cTerminusMass);
-				if((nTerminalAbsMassDiff+cTerminalAbsMassDiff) > maxDeviation) {
+				//if((nTerminalAbsMassDiff+cTerminalAbsMassDiff) > maxDeviation) {
+                if(nTerminalAbsMassDiff > maxDeviation && cTerminalAbsMassDiff > maxDeviation) {
 					return lhs.nTerminusMass < rhs.nTerminusMass;
 				} else {
 					return false;
 				}
 			}
 		}
+        
 	};
 
 	// A spectra to tag map (tag to spectrum) that sorts tags based on spectral similarity
@@ -203,11 +205,11 @@ namespace tagrecon
 		int ReceiveUnpreparedSpectraBatchFromRootProcess();
 		int TransmitUnpreparedSpectraToChildProcesses();
 		int ReceiveSpectraFromRootProcess();
-		int TransmitSpectraToChildProcesses();
+		int TransmitSpectraToChildProcesses( int done );
 		int TransmitProteinsToChildProcesses();
 		int ReceiveProteinBatchFromRootProcess( int lastQueryCount );
 		int TransmitResultsToRootProcess( const searchStats& stats );
-		int ReceiveResultsFromChildProcesses( searchStats& overallSearchStats );
+		int ReceiveResultsFromChildProcesses( searchStats& overallSearchStats, bool firstBatch );
 	#endif
 
 	extern WorkerThreadMap	    g_workerThreads;

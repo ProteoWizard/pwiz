@@ -600,11 +600,32 @@ namespace freicore
 			}
 		}
 		
-        /*if(false) {
+        if(false) {
 			for(SpectraTagMap::const_iterator itr = spectraTagMapsByChargeState.begin(); itr != spectraTagMapsByChargeState.end(); ++itr) {
-				cout << itr->candidateTag << "," << itr->nTerminusMass << "," << itr->cTerminusMass << (*itr->sItr)->id.source << " " << (*itr->sItr)->id.index << endl;
+				cout << itr->candidateTag << "," << itr->nTerminusMass << "," << itr->cTerminusMass << "," << (*itr->sItr)->id.source << " " << (*itr->sItr)->nativeID << endl;
 			}
-		}*/
+		}
+
+        if(false) {
+
+            TagSetInfo tagKey("NAL", 227.303, 156.186);
+            cout << tagKey.candidateTag << "," << tagKey.nTerminusMass << "," << tagKey.cTerminusMass << endl;
+			pair< SpectraTagMap::const_iterator, SpectraTagMap::const_iterator > range = spectraTagMapsByChargeState.equal_range( tagKey );
+
+			SpectraTagMap::const_iterator cur, end = range.second;
+			
+			// Iterate over the range
+			for( cur = range.first; cur != end; ++cur )
+			{
+                string asterix;
+                float nTerminusDeviation = fabs( tagKey.nTerminusMass - cur->nTerminusMass );
+				float cTerminusDeviation = fabs( tagKey.cTerminusMass - cur->cTerminusMass );
+                if((*cur->sItr)->nativeID == "scan=9072") 
+                    asterix="*";
+                cout << "\t" << asterix << (*cur->sItr)->id.source << " " << (*cur->sItr)->nativeID << " " << (*cur->sItr)->mOfPrecursor << " " << nTerminusDeviation << " " << cTerminusDeviation << endl;
+            }
+            exit(1);
+        }
 
 		// Get minimum and maximum peptide masses observed in the dataset
 		// and determine the number of peak bins required. This 
@@ -1049,12 +1070,16 @@ namespace freicore
 	*/
 	boost::int64_t QuerySequence( const DigestedPeptide& candidate, int idx, bool estimateComparisonsOnly = false )
 	{
+        bool debug = false;
+        //if(candidate.sequence() == "KVNALR")
+        //    debug = true;
 		// Search stats
 		boost::int64_t numComparisonsDone = 0;
 		// Candidate peptide sequence and its mass
         string aSequence  = PEPTIDE_N_TERMINUS_STRING + candidate.sequence() + PEPTIDE_C_TERMINUS_STRING;
 		string seq = PEPTIDE_N_TERMINUS_STRING + candidate.sequence() + PEPTIDE_C_TERMINUS_STRING;
-		//cout << aSequence << "," << aSequence.length() << "," << candidate.sequence() << "," << candidate.sequence().length() << endl;
+        if(debug)
+		    cout << aSequence << "," << aSequence.length() << "," << candidate.sequence() << "," << candidate.sequence().length() << endl;
         float neutralMass = g_rtConfig->UseAvgMassOfSequences ? ((float) candidate.molecularWeight(0,true))
                                                        : (float) candidate.monoisotopicMass(0,true);
 
@@ -1182,15 +1207,17 @@ namespace freicore
 			// and total mass deviation between the n-terminal and c-terminal masses <= +/-
 			// MaxTagMassDeviation.
 			TagSetInfo tagKey(tag.tag, tag.nTerminusMass, tag.cTerminusMass);
-            //cout << "\t" << tagKey.candidateTag << "," << tagKey.nTerminusMass << "," << tagKey.cTerminusMass << endl;
-			pair< SpectraTagMap::const_iterator, SpectraTagMap::const_iterator > range = spectraTagMapsByChargeState.equal_range( tagKey);
+            if(debug)
+                cout << "\t" << tagKey.candidateTag << "," << tagKey.nTerminusMass << "," << tagKey.cTerminusMass << endl;
+			pair< SpectraTagMap::const_iterator, SpectraTagMap::const_iterator > range = spectraTagMapsByChargeState.equal_range( tagKey );
 
 			SpectraTagMap::const_iterator cur, end = range.second;
 			
 			// Iterate over the range
 			for( cur = range.first; cur != end; ++cur )
 			{
-				//cout << "\t\t" << (*cur->sItr)->id.source << " " << (*cur->sItr)->id.index << " " << (*cur->sItr)->mOfPrecursor << endl;
+                if(debug)
+				    cout << "\t\t" << (*cur->sItr)->id.source << " " << (*cur->sItr)->nativeID << " " << (*cur->sItr)->mOfPrecursor << endl;
 
 				// Compute the n-terminal and c-terminal mass deviation between the peptide
 				// sequence and the spectral tag-based sequence ([200.45]NST[400.65]) 
@@ -1225,22 +1252,14 @@ namespace freicore
 				spectrum = *cur->sItr;
                 // Get the spectrum charge
                 int spectrumCharge = spectrum->id.charge;
-				//cout << "\t\tComparing " << spectrum->id.source << " " << spectrum->id.index << endl;
-
-				//if( spectrum->id.charge != z+1 )
-				//	continue;
+                if(debug)
+				    cout << "\t\tComparing " << spectrum->id.source << " " << spectrum->nativeID << endl;
 
 				// If Tag and c-terminal masses match then try to put the mod
 				// on the residues that are n-terminus to the tag match. Use the
 				// total mass difference between the candidate as the mod mass.
 				float modMass = ((float)spectrum->mOfPrecursor) - neutralMass;
            
-				// Don't bother interpreting it if the mass is less than -130.0 Da
-				// -130 is close to Trp -> Gly substitution mass.
-				//if( modMass < -130.0 ) {
-				//	continue;
-				//}
-
 				// Don't bother interpreting the mod mass if it's outside the user-set
 				// limits.
 				if( modMass < -1.0*g_rtConfig->MaxModificationMassMinus || modMass > g_rtConfig->MaxModificationMassPlus ) {
@@ -1331,7 +1350,8 @@ namespace freicore
                     } 
                 }
 
-                //cout << "\t\t\t" <<modMass << "," << nTerminusDeviation << "," << cTerminusDeviation << endl;
+                if(debug)
+                    cout << "\t\t\t" << modMass << "," << nTerminusDeviation << "," << cTerminusDeviation << endl;
                 if(fabs(modMass) <= g_rtConfig->PrecursorMassTolerance[spectrumCharge-1] 
                     && nTerminusDeviation <= g_rtConfig->NTerminalMassTolerance[tagCharge-1]
                     && cTerminusDeviation <= g_rtConfig->CTerminalMassTolerance[tagCharge-1])
@@ -1340,7 +1360,8 @@ namespace freicore
 					// score the match as an unmodified sequence.
 					//comparisonDone = "DIRECT";
 					//comparisonDone = comparisonDone + "->" + aSequence;
-                    //cout << "Direct" << endl;
+                    if(debug)
+                        cout << "Direct" << endl;
                     CalculateSequenceIons( candidate, spectrum->id.charge, &sequenceIons, spectrum->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, 0, 0);
 					spectrum->ScoreSequenceVsSpectrum( result, aSequence, sequenceIons );
 
@@ -1583,7 +1604,53 @@ namespace freicore
 		return stats;
 	}
 
+    // Shared pointer to SpectraList.
+    typedef boost::shared_ptr<SpectraList> SpectraListPtr;
+    /**
+    This function takes a spectra list and splits them into small batches as dictated by
+    ResultsPerBatch variable. This function also checks to make sure that the last batch
+    is not smaller than 1000 spectra.
+    */
+    inline vector<SpectraListPtr> estimateSpectralBatches()
+    {
+        int estimatedResultsSize = 0;
 
+        // Shuffle the spectra so that there is a 
+        // proper load balancing between batches.
+        spectra.random_shuffle();
+
+        vector<SpectraListPtr> batches;
+        SpectraListPtr current(new SpectraList());
+        // For each spectrum
+        for( SpectraList::const_iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr ) 
+        {
+            // Check the result size, if it exceeds the limit, then push back the
+            // current list into the vector and get a fresh list
+            estimatedResultsSize += g_rtConfig->MaxResults;
+            if(estimatedResultsSize>g_rtConfig->ResultsPerBatch) 
+            {
+                batches.push_back(current);
+                current.reset(new SpectraList());
+                estimatedResultsSize = g_rtConfig->MaxResults;
+            }
+            current->push_back((*sItr));
+        }
+        // Make sure you push back the last batch
+        if(current->size()>0)
+            batches.push_back(current);
+        // Check to see if the last batch is not a tiny batch
+        if(batches.back()->size()<1000 && batches.size()>1) 
+        {
+            SpectraListPtr last = batches.back(); batches.pop_back();
+            SpectraListPtr penultimate = batches.back(); batches.pop_back();
+            penultimate->insert(last->begin(),last->end(),penultimate->end());
+            batches.push_back(penultimate);
+            last->clear( false );
+        }
+        //for(vector<SpectraListPtr>::const_iterator bItr = batches.begin(); bItr != batches.end(); ++bItr)
+        //    cout << (*bItr)->size() << endl;
+        return batches;
+    }
 	/**!
 		ProcessHandler function reads the input files and protein database to perform the search.
 		The function preprocess the spectra, splits the protein database according to the number
@@ -1664,6 +1731,8 @@ namespace freicore
 
 				// Clear the spectra object
 				spectra.clear();
+                // Clears the tag map
+                spectraTagMapsByChargeState.clear();
 
 				cout << g_hostString << " is reading spectra from file \"" << *fItr << "\"" << endl;
 				finishedFiles.insert( *fItr );
@@ -1745,6 +1814,7 @@ namespace freicore
 							TransmitUnpreparedSpectraToChildProcesses();
 
 							spectra.clear();
+                            spectraTagMapsByChargeState.clear();
 
 							ReceivePreparedSpectraFromChildProcesses();
 
@@ -1779,62 +1849,112 @@ namespace freicore
 								cout << g_hostString << " filtered out " << filter * 100.0f << "% of peaks." << endl;
 
 								cout << g_hostString << " has " << spectra.size() << " spectra prepared now; " << prepareTime.End() << " seconds elapsed." << endl;
-								cout << g_hostString << " is reading tags for " << spectra.size() << " prepared spectra." << endl;
-								size_t totalTags = 0;
-								// Read the tags in the input file
-								spectra.readTags( *fItr, g_rtConfig->StartSpectraScanNum, g_rtConfig->EndSpectraScanNum, false);
-								// For each spectrum in the input file
-								for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
-								{
-									// Get number of tags in the spectrum
-									(*sItr)->tagList.max_size( g_rtConfig->MaxTagCount );
-									// For each tag
-									for( TagList::iterator tItr = (*sItr)->tagList.begin(); tItr != (*sItr)->tagList.end(); ++tItr ) {
-										// Replace the I/L and generate new tags
-										(*sItr)->tagList.tagExploder( *tItr );
-									}
-									totalTags += (*sItr)->tagList.size();
-								}
-								cout << g_hostString << " finished reading " << totalTags << " tags." << endl;
+                                if(!g_rtConfig->MassReconMode) 
+                                {
+								    cout << g_hostString << " is reading tags for " << spectra.size() << " prepared spectra." << endl;
+								    size_t totalTags = 0;
+								    // Read the tags in the input file
+								    spectra.readTags( *fItr, g_rtConfig->StartSpectraScanNum, g_rtConfig->EndSpectraScanNum, false);
+								    // For each spectrum in the input file
+								    for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
+								    {
+									    // Get number of tags in the spectrum
+									    (*sItr)->tagList.max_size( g_rtConfig->MaxTagCount );
+									    // For each tag
+									    for( TagList::iterator tItr = (*sItr)->tagList.begin(); tItr != (*sItr)->tagList.end(); ++tItr ) {
+										    // Replace the I/L and generate new tags
+										    (*sItr)->tagList.tagExploder( *tItr );
+									    }
+									    totalTags += (*sItr)->tagList.size();
+								    }
+								    cout << g_hostString << " finished reading " << totalTags << " tags." << endl;
 
-								cout << g_hostString << " is trimming spectra with no tags." << endl;
-								int noTagsCount = spectra.trimByTagCount();
-								cout << g_hostString << " trimmed " << noTagsCount << " spectra." << endl;
+								    cout << g_hostString << " is trimming spectra with no tags." << endl;
+								    int noTagsCount = spectra.trimByTagCount();
+								    cout << g_hostString << " trimmed " << noTagsCount << " spectra." << endl;
+                                }
 								// Initialize few global data structures. See function documentation
 								// for details
 								InitWorkerGlobals();
 
-								SpectraList finishedSpectra;
-								//do
-								{
-									cout << g_hostString << " is sending some prepared spectra to all worker nodes from a pool of " << spectra.size() << " spectra." << endl;
-									Timer sendTime(true);
-									// Send spectra to the child processes
-									numSpectra = TransmitSpectraToChildProcesses();
-									cout << g_hostString << " is finished sending " << numSpectra << " prepared spectra to all worker nodes; " <<
-											sendTime.End() << " seconds elapsed." << endl;
+                                // List to store finished spectra
+                                SpectraList finishedSpectra;
+                                // Split the spectra into batches if needed
+                                vector<SpectraListPtr> batches = estimateSpectralBatches();
+                                if(batches.size()>1)
+                                    cout << g_hostString << " is splitting spectra into " << batches.size() << " batches for search." << endl;
+                                startTime = GetTimeString(); startDate = GetDateString(); searchTime.Begin();
+                                // For each spectral batch
+                                size_t batchIndex = 0;
+                                for(vector<SpectraListPtr>::iterator bItr = batches.begin(); bItr != batches.end(); ++bItr) 
+                                {
+                                    // Variables to report batch progess to the user
+                                    ++batchIndex;
+                                    stringstream batchString;
+                                    batchString << "";
+                                    if(batches.size()>1)
+                                        batchString << " (" << batchIndex << " of " << batches.size() << " batches)";
+                                    // Clear the master list and populate it with a small batch
+                                    spectra.clear( false );
+                                    spectra.insert((*bItr)->begin(), (*bItr)->end(), spectra.end());
+                                    // Check to see if we are processing the last batch.
+                                    int lastBatch = 0;
+                                    if((*bItr) == batches.back())
+                                        lastBatch = 1;
+                                    // Transmit spectra to all children. Also tell them if this is
+                                    // the last batch of the spectra they would be getting from the parent.
+                                    cout << g_hostString << " is sending some prepared spectra to all worker nodes from a pool of " << spectra.size() << " spectra" << batchString.str() << "." << endl;
+                                    try
+                                    {
+                                        Timer sendTime(true);
+                                        numSpectra = TransmitSpectraToChildProcesses(lastBatch);
+                                        cout << g_hostString << " is finished sending " << numSpectra << " prepared spectra to all worker nodes; " <<
+                                            sendTime.End() << " seconds elapsed." << endl;
+                                    } catch( std::exception& e )
+                                    {
+                                        cout << g_hostString << " had an error transmitting prepared spectra: " << e.what() << endl;
+                                        MPI_Abort( MPI_COMM_WORLD, 1 );
+                                    }
+                                    // Transmit the proteins and start the search.
+                                    cout << g_hostString << " is commencing database search on " << numSpectra << " spectra" << batchString.str() << "." << endl;
+                                    try
+                                    {
+                                        Timer batchTimer(true); batchTimer.Begin();
+                                        TransmitProteinsToChildProcesses();
+                                        cout << g_hostString << " has finished database search; " << batchTimer.End() << " seconds elapsed" << batchString.str() << "." << endl;
+                                    } catch( std::exception& e )
+                                    {
+                                        cout << g_hostString << " had an error transmitting protein batches: " << e.what() << endl;
+                                        MPI_Abort( MPI_COMM_WORLD, 1 );
+                                    }
+                                    // Get the results
+                                    cout << g_hostString << " is receiving search results for " << numSpectra << " spectra" << batchString.str() << "." << endl;
+                                    try
+                                    {
+                                        Timer receiveTime(true);
+                                        ReceiveResultsFromChildProcesses(sumSearchStats, ((*bItr) == batches.front()));
+                                        cout << g_hostString << " is finished receiving search results; " << receiveTime.End() << " seconds elapsed." << endl;
+                                    } catch( std::exception& e )
+                                    {
+                                        cout << g_hostString << " had an error receiving results: " << e.what() << endl;
+                                        MPI_Abort( MPI_COMM_WORLD, 1 );
+                                    }
+                                    cout << g_hostString << " overall stats: " << (string) sumSearchStats << endl;
 
-									cout << g_hostString << " is commencing database search on " << numSpectra << " spectra." << endl;
-									startTime = GetTimeString(); startDate = GetDateString(); searchTime.Begin();
-									// Send proteins to the child processes
-									TransmitProteinsToChildProcesses();
-									cout << g_hostString << " has finished database search; " << searchTime.End() << " seconds elapsed." << endl;
-
-									cout << g_hostString << " is receiving search results for " << numSpectra << " spectra." << endl;
-									Timer receiveTime(true);
-									// Get the results
-									ReceiveResultsFromChildProcesses(sumSearchStats);
-									cout << g_hostString << " is finished receiving search results; " << receiveTime.End() << " seconds elapsed." << endl;
-									
-									cout << g_hostString << " overall stats: " << (string) sumSearchStats << endl;
-
-									//SpectraList::iterator lastSpectrumItr = spectra.begin();
-									//advance_to_bound( lastSpectrumItr, spectra.end(), numSpectra );
-									//finishedSpectra.insert( spectra.begin(), spectra.end(), finishedSpectra.end() );
-									//spectra.erase( spectra.begin(), spectra.end(), false );
-								}// while( spectra.size() > 0 );
-
-								//finishedSpectra.clear();
+                                    // Store the searched spectra in a list and clear the 
+                                    // master list for next batch
+                                    finishedSpectra.insert( spectra.begin(), spectra.end(), finishedSpectra.end() );
+                                    spectra.clear( false );
+                                    (*bItr)->clear( false );
+                                }
+                                searchTime.End();
+                                // Move the searched spectra from temporary list to the master list
+                                spectra.clear( false );
+                                spectra.insert(finishedSpectra.begin(), finishedSpectra.end(), spectra.end() );
+                                finishedSpectra.clear(false);
+                                // Spectra are randomly shuffled for load distribution during batching process
+                                // Sort them back by ID.
+                                spectra.sort( spectraSortByID() );
 
 								DestroyWorkerGlobals();
 							}
@@ -1992,25 +2112,39 @@ namespace freicore
 								int numBatches = 0;
 								searchStats sumSearchStats;
 								searchStats lastSearchStats;
-								// Get a batch of protein sequences from root process
-								while( ReceiveProteinBatchFromRootProcess( lastSearchStats.numComparisonsDone ) )
-								{
-									++ numBatches;
+                                try
+                                {
+                                    // Get a batch of protein sequences from root process
+                                    while( ReceiveProteinBatchFromRootProcess( lastSearchStats.numComparisonsDone ) )
+                                    {
+                                        ++ numBatches;
 
-									// Execute the search
-									lastSearchStats = ExecuteSearch();
-									sumSearchStats = sumSearchStats + lastSearchStats;
-									proteins.clear();
-								}
+                                        // Execute the search
+                                        lastSearchStats = ExecuteSearch();
+                                        sumSearchStats = sumSearchStats + lastSearchStats;
+                                        proteins.clear();
+                                    }
+                                } catch(std::exception& e )
+                                {
+                                    cout << g_hostString << " had an error receiving protein batch: " << e.what() << endl;
+                                    MPI_Abort( MPI_COMM_WORLD, 1 );
+                                }
 
 								cout << g_hostString << " stats: " << numBatches << " batches; " << (string) sumSearchStats << endl;
-
-								// Send results back to the parent process
-								TransmitResultsToRootProcess(sumSearchStats);
+                                try
+                                {
+                                    // Send results back to the parent process
+                                    TransmitResultsToRootProcess(sumSearchStats);
+                                } catch( std::exception& e )
+                                {
+                                    cout << g_hostString << " had an error transmitting results: " << e.what() << endl;
+                                    MPI_Abort( MPI_COMM_WORLD, 1 );
+                                }
 
 								// Clean up the variables.
 								DestroyWorkerGlobals();
 								spectra.clear();
+                                spectraTagMapsByChargeState.clear();
 							} while( !done );
 						}
 					}
@@ -2018,8 +2152,8 @@ namespace freicore
 					// See if we are all done. Master process sends this signal when there are
 					// no more spectra to search
 					MPI_Recv( &allDone,	1,		MPI_INT,	0,	0x00, MPI_COMM_WORLD, &st );
-				}
-			}
+				} // end of while
+			} // end of if
 		#endif
 
 		return 0;

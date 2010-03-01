@@ -408,6 +408,7 @@ namespace tagrecon
 	int ReceiveSpectraFromRootProcess()
 	{
 		int numSpectra;
+        int done;
 
 		#ifdef MPI_DEBUG
 			cout << g_hostString << " is receiving " << numSpectra << " unprepared spectra." << endl;
@@ -439,6 +440,7 @@ namespace tagrecon
 			//cout << g_hostString << " is unpacking spectra." << endl;
 			packArchive & numSpectra;
 			//cout << g_hostString << " has " << numSpectra << " spectra." << endl;
+            packArchive & done;
 
 			// Get the pointers to the spectrum objects
 			for( int j=0; j < numSpectra; ++j )
@@ -460,14 +462,14 @@ namespace tagrecon
 					receiveTime.End() << " seconds elapsed." << endl;
 		#endif
 
-		return 1;
+		return done;
 	}
 
 	/**!
 		TransmitSpectraToChildProcesses tramits spectra to the child processes using message-passing'
 		interface. This function sends the spectra to all the child processes
 	*/
-	int TransmitSpectraToChildProcesses()
+	int TransmitSpectraToChildProcesses(int done)
 	{
 		spectra.sort( spectraSortByID() );
 
@@ -478,6 +480,7 @@ namespace tagrecon
 
 		// Pack the data stream with pointers to the spectrum objects
 		packArchive & numSpectra;
+        packArchive & done;
 		for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
 		{
 			Spectrum* s = (*sItr);
@@ -637,8 +640,8 @@ namespace tagrecon
 				float proteinsPerSec = float(i+1) / totalSearchTime;
 				float estimatedTimeRemaining = float(numProteins-i) / proteinsPerSec;
 
-				cout << g_hostString << " has searched " << (i+1) << " of " <<	numProteins << " proteins; " << ((int)proteinsPerSec) <<
-						" per second, " << ((int)totalSearchTime) << " elapsed, " << ((int)estimatedTimeRemaining) << " remaining." << endl;
+				cout << g_hostString << " has searched " << i << " of " <<	numProteins << " proteins; " << proteinsPerSec <<
+						" per second, " << totalSearchTime << " elapsed, " << estimatedTimeRemaining << " remaining." << endl;
 					
 				//cout << threadInfo->workerHostString << " has searched " << curProtein << " of " <<	threadInfo->endIndex+1 <<
 				//		" proteins " << i+1 << "; " << proteinsPerSec << " per second, " << estimatedTimeRemaining << " seconds remaining." << endl;
@@ -723,7 +726,7 @@ namespace tagrecon
 			exit(1);
 		}
 
-		return 1;
+		return 1; // don't expect another batch
 	}
 
 	/**!
@@ -786,7 +789,7 @@ namespace tagrecon
 		ReceiveResultsFromChildProcesses function receives the search results from all the process. The function
 		receives the results on a first-come-first-served basis using messge-passing interface. 
 	*/
-	int ReceiveResultsFromChildProcesses(searchStats& overallSearchStats)
+	int ReceiveResultsFromChildProcesses(searchStats& overallSearchStats, bool firstBatch = false)
 	{
 		#ifdef MPI_DEBUG
 			cout << "master receiving results from child processes...." << endl;
@@ -833,7 +836,16 @@ namespace tagrecon
 				searchStats childSearchStats;
 				packArchive & numSpectra;
 				packArchive & childSearchStats;
-				overallSearchStats = overallSearchStats + childSearchStats;
+				if(firstBatch)
+                {
+				    overallSearchStats = overallSearchStats + childSearchStats;
+                }
+                else 
+                {
+                    overallSearchStats.numCandidatesQueried += childSearchStats.numCandidatesQueried;
+                    overallSearchStats.numComparisonsDone += childSearchStats.numComparisonsDone;
+                    overallSearchStats.numCandidatesSkipped += childSearchStats.numCandidatesSkipped;
+                }
 
 				#ifdef MPI_DEBUG
 					cout << g_hostString << " is unpacking results for " << numSpectra << " spectra." << endl;
