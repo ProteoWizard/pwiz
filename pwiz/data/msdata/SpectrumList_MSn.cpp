@@ -49,23 +49,11 @@ namespace {
 
 // these are the fixed sizes used to write .bms2 and .cms2 files
 // use these to read from files rather than sizeof(<type>)
-const int sizeInt       = 4;
-const int sizeFloat     = 4;   
-const int sizeDouble    = 8; 
-const int sizeCharge    = 12; // struct Charge{ int z; double mass; }
-const int sizePeak      = 12; // struct Peak{ double mz; float intensity; }
-
-struct MSnHeader 
-{
-    char header[16][128];
-    MSnHeader()
-    {
-        for(int i=0; i<16; i++)
-        {
-            header[i][0] = '\0';
-        }
-    }
-};
+const int sizeIntMSn       = 4;
+const int sizeFloatMSn     = 4;   
+const int sizeDoubleMSn    = 8; 
+const int sizeChargeMSn    = 12; // struct Charge{ int z; double mass; }
+const int sizePeakMSn      = 12; // struct Peak{ double mz; float intensity; }
 
 struct MSnScanInfo
 {
@@ -96,23 +84,23 @@ struct MSnScanInfo
 
     void readSpectrumHeader(boost::shared_ptr<istream> is, int version) 
     {
-        (*is).read(reinterpret_cast<char *>(&scanNumber), sizeInt);
-        (*is).read(reinterpret_cast<char *>(&scanNumber), sizeInt); // yes, there are two
-        (*is).read(reinterpret_cast<char *>(&mz), sizeof(double));
-        (*is).read(reinterpret_cast<char *>(&rTime), sizeof(float));
+        (*is).read(reinterpret_cast<char *>(&scanNumber), sizeIntMSn);
+        (*is).read(reinterpret_cast<char *>(&scanNumber), sizeIntMSn); // yes, there are two
+        (*is).read(reinterpret_cast<char *>(&mz), sizeDoubleMSn);
+        (*is).read(reinterpret_cast<char *>(&rTime), sizeFloatMSn);
 
         if( version == 2 )
         {
-            (*is).read(reinterpret_cast<char *>(&basePeakIntensity), sizeof(float));
-            (*is).read(reinterpret_cast<char *>(&basePeakMz), sizeof(double));
-            (*is).read(reinterpret_cast<char *>(&conversionFactorA), sizeof(double)); 
-            (*is).read(reinterpret_cast<char *>(&conversionFactorB), sizeof(double)); 
-            (*is).read(reinterpret_cast<char *>(&TIC), sizeof(double));
-            (*is).read(reinterpret_cast<char *>(&ionInjectionTime), sizeof(float));   
+            (*is).read(reinterpret_cast<char *>(&basePeakIntensity), sizeFloatMSn);
+            (*is).read(reinterpret_cast<char *>(&basePeakMz), sizeDoubleMSn);
+            (*is).read(reinterpret_cast<char *>(&conversionFactorA), sizeDoubleMSn); 
+            (*is).read(reinterpret_cast<char *>(&conversionFactorB), sizeDoubleMSn); 
+            (*is).read(reinterpret_cast<char *>(&TIC), sizeDoubleMSn);
+            (*is).read(reinterpret_cast<char *>(&ionInjectionTime), sizeFloatMSn);   
         }
 
-        (*is).read(reinterpret_cast<char *>(&numChargeStates), sizeInt);
-        (*is).read(reinterpret_cast<char *>(&numPeaks), sizeInt);
+        (*is).read(reinterpret_cast<char *>(&numChargeStates), sizeIntMSn);
+        (*is).read(reinterpret_cast<char *>(&numPeaks), sizeIntMSn);
 
     };
 };
@@ -260,7 +248,7 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
         size_t last_num_pos = lineStr.find_last_of("0123456789");
         size_t last_space_pos = lineStr.find_last_of(" \t", last_num_pos);
         precursor_mz = lexical_cast<double>(lineStr.substr(last_space_pos, last_num_pos-last_space_pos+1));
-        selectedIon.set(MS_selected_ion_m_z, precursor_mz);
+        selectedIon.set(MS_selected_ion_m_z, precursor_mz, MS_m_z);
     }
     else // eof, exit
     {
@@ -418,7 +406,7 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
     scanInfo.readSpectrumHeader(is_, version_);
 
     spectrum.id = "scan=" + lexical_cast<string>(scanInfo.scanNumber);
-    selectedIon.set(MS_selected_ion_m_z, scanInfo.mz);
+    selectedIon.set(MS_selected_ion_m_z, scanInfo.mz, MS_m_z);
 
     // get charge states
     int charge = 0;
@@ -428,17 +416,19 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
     // otherwise, the charge states are all read as "MS_possible_charge_state"
     if (1 == scanInfo.numChargeStates)
     {
-        (*is_).read(reinterpret_cast<char *>(&charge), sizeInt);
+        (*is_).read(reinterpret_cast<char *>(&charge), sizeIntMSn);
         selectedIon.set(MS_charge_state, charge);
+
+        (*is_).read(reinterpret_cast<char *>(&mass), sizeDoubleMSn);
     }
     else
     {
         for(int i=0; i<scanInfo.numChargeStates; i++)
         {
-          (*is_).read(reinterpret_cast<char *>(&charge), sizeInt);
+          (*is_).read(reinterpret_cast<char *>(&charge), sizeIntMSn);
           precursor.selectedIons.back().cvParams.push_back(CVParam(MS_possible_charge_state, charge));
 
-          (*is_).read(reinterpret_cast<char *>(&mass), sizeDouble);
+          (*is_).read(reinterpret_cast<char *>(&mass), sizeDoubleMSn);
 
           // add another selected ion
         }
@@ -455,11 +445,11 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
       int iTemp;
       
       // get length of compressed array of m/z
-      (*is_).read(reinterpret_cast<char *>(&iTemp), sizeInt);
+      (*is_).read(reinterpret_cast<char *>(&iTemp), sizeIntMSn);
       uLong mzLen = (unsigned long)iTemp;
       
       // get length of compressed array of intensities
-      (*is_).read(reinterpret_cast<char *>(&iTemp), sizeInt);
+      (*is_).read(reinterpret_cast<char *>(&iTemp), sizeIntMSn);
       uLong intensityLen = (unsigned long)iTemp;
       
       // allocate a buffer for storing the compressed data from file
@@ -467,7 +457,7 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
       
       // allocate a buffer for the uncompressed version 
       mzs = new double[scanInfo.numPeaks];
-      uLong uncompressedLen = scanInfo.numPeaks * sizeDouble;
+      uLong uncompressedLen = scanInfo.numPeaks * sizeDoubleMSn;
       
       (*is_).read(reinterpret_cast<char *>(compressedData), mzLen);
       
@@ -480,7 +470,7 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
       delete [] compressedData;
       compressedData = new Byte[intensityLen];
       intensities = new float[scanInfo.numPeaks];
-      uncompressedLen = scanInfo.numPeaks * sizeFloat;
+      uncompressedLen = scanInfo.numPeaks * sizeFloatMSn;
       (*is_).read(reinterpret_cast<char *>(compressedData), intensityLen);
       
       success = uncompress((Bytef*)intensities, &uncompressedLen, compressedData, intensityLen);
@@ -511,8 +501,8 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
         mz = mzs[i];
       }else //MSn_Type_BMS2
       {
-        (*is_).read(reinterpret_cast<char *>(&mz), sizeDouble);
-        (*is_).read(reinterpret_cast<char *>(&intensity), sizeFloat);
+        (*is_).read(reinterpret_cast<char *>(&mz), sizeDoubleMSn);
+        (*is_).read(reinterpret_cast<char *>(&intensity), sizeFloatMSn);
       }
 
       tic += intensity;
@@ -591,8 +581,8 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
     int intFileType = 0;
     MSnHeader header;
     
-    (*is_).read(reinterpret_cast<char *>(&intFileType), sizeInt);
-    (*is_).read(reinterpret_cast<char *>(&version_), sizeInt);
+    (*is_).read(reinterpret_cast<char *>(&intFileType), sizeIntMSn);
+    (*is_).read(reinterpret_cast<char *>(&version_), sizeIntMSn);
     (*is_).read(reinterpret_cast<char *>(&header), sizeof(MSnHeader));
 
     // temp varabiles for each scan
@@ -622,21 +612,21 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
       // skip to next spec
       if( filetype_ == MSn_Type_CMS2 ){
         // skip the charge states
-        (*is_).seekg(scanInfo.numChargeStates * sizeCharge, std::ios_base::cur); 
+        (*is_).seekg(scanInfo.numChargeStates * sizeChargeMSn, std::ios_base::cur); 
         // skip the peaks, first find out how far
         int iTemp;
         unsigned long mzLen, intensityLen;
-        (*is_).read(reinterpret_cast<char *>(&iTemp), sizeInt);
+        (*is_).read(reinterpret_cast<char *>(&iTemp), sizeIntMSn);
         mzLen = (unsigned long)iTemp;
-        (*is_).read(reinterpret_cast<char *>(&iTemp), sizeInt);
+        (*is_).read(reinterpret_cast<char *>(&iTemp), sizeIntMSn);
         intensityLen = (unsigned long)iTemp;
         
         (*is_).seekg(mzLen + intensityLen, std::ios_base::cur); 
       }else if( filetype_ == MSn_Type_BMS2 ){
         // skip the charge states
-        (*is_).seekg(scanInfo.numChargeStates * sizeCharge, std::ios_base::cur); 
+        (*is_).seekg(scanInfo.numChargeStates * sizeChargeMSn, std::ios_base::cur); 
         // skip the peaks
-        (*is_).seekg(scanInfo.numPeaks * sizePeak, std::ios_base::cur);
+        (*is_).seekg(scanInfo.numPeaks * sizePeakMSn, std::ios_base::cur);
         
       }
 

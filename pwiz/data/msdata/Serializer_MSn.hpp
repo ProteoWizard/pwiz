@@ -39,7 +39,7 @@ class PWIZ_API_DECL Serializer_MSn
     public:
 
     /// constructor
-  Serializer_MSn(MSn_Type filetype);
+    Serializer_MSn(MSn_Type filetype);
 
     /// write MSData object to ostream as MSn;
     /// iterationListenerRegistry may be used to receive progress updates

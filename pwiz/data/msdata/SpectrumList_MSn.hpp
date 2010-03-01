@@ -35,9 +35,19 @@
 namespace pwiz {
 namespace msdata {
 
-
 enum MSn_Type {MSn_Type_UNKNOWN, MSn_Type_MS2, MSn_Type_CMS2, MSn_Type_BMS2}; // TODO: include [bc]ms1
 
+struct MSnHeader 
+{
+    char header[16][128];
+    MSnHeader()
+    {
+        for(int i=0; i<16; i++)
+        {
+            header[i][0] = '\0';
+        }
+    }
+};
 
 /// implementation of SpectrumList, backed by an MGF file
 class PWIZ_API_DECL SpectrumList_MSn : public SpectrumListBase

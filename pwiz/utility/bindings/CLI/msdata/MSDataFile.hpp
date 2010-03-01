@@ -57,7 +57,7 @@ public ref class MSDataFile : public MSData
     /// <summary>
     /// supported data formats for write()
     /// </summary>
-    enum class Format {Format_Text, Format_mzML, Format_mzXML, Format_MGF};
+    enum class Format {Format_Text, Format_mzML, Format_mzXML, Format_MGF, Format_MS2, Format_CMS2};
 
     enum class Precision {Precision_32, Precision_64};
     enum class ByteOrder {ByteOrder_LittleEndian, ByteOrder_BigEndian};

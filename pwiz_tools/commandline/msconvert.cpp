@@ -81,7 +81,9 @@ string Config::outputFilename(const string& filename, const MSData& msd) const
         if (extension == ".mzml" ||
             extension == ".mzxml" ||
             extension == ".xml" ||
-            extension == ".mgf")
+            extension == ".mgf" ||
+            extension == ".ms2" ||
+            extension == ".cms2")
             runId = bfs::basename(runId);
     }
 
@@ -141,6 +143,8 @@ Config parseCommandLine(int argc, const char* argv[])
     bool format_mzML = false;
     bool format_mzXML = false;
     bool format_MGF = false;
+    bool format_MS2 = false;
+    bool format_CMS2 = false;
     bool precision_32 = false;
     bool precision_64 = false;
     bool mz_precision_32 = false;
@@ -164,55 +168,61 @@ Config parseCommandLine(int argc, const char* argv[])
             ": configuration file (optionName=value)")
         ("ext,e",
             po::value<string>(&config.extension)->default_value(config.extension),
-			": set extension for output files [mzML|mzXML|mgf|txt]")
+            ": set extension for output files [mzML|mzXML|mgf|txt]")
         ("mzML",
             po::value<bool>(&format_mzML)->zero_tokens(),
-			": write mzML format [default]")
+            ": write mzML format [default]")
         ("mzXML",
             po::value<bool>(&format_mzXML)->zero_tokens(),
-			": write mzXML format")
+            ": write mzXML format")
         ("mgf",
             po::value<bool>(&format_MGF)->zero_tokens(),
-			": write Mascot generic format")
+            ": write Mascot generic format")
         ("text",
             po::value<bool>(&format_text)->zero_tokens(),
-			": write ProteoWizard internal text format")
+            ": write ProteoWizard internal text format")
+        ("ms2",
+            po::value<bool>(&format_MS2)->zero_tokens(),
+            ": write MS2 format")
+        ("cms2",
+            po::value<bool>(&format_CMS2)->zero_tokens(),
+            ": write CMS2 format")
         ("verbose,v",
             po::value<bool>(&config.verbose)->zero_tokens(),
             ": display detailed progress information")
         ("64",
             po::value<bool>(&precision_64)->zero_tokens(),
-			": set default binary encoding to 64-bit precision [default]")
+            ": set default binary encoding to 64-bit precision [default]")
         ("32",
             po::value<bool>(&precision_32)->zero_tokens(),
-			": set default binary encoding to 32-bit precision")
+            ": set default binary encoding to 32-bit precision")
         ("mz64",
             po::value<bool>(&mz_precision_64)->zero_tokens(),
-			": encode m/z values in 64-bit precision [default]")
+            ": encode m/z values in 64-bit precision [default]")
         ("mz32",
             po::value<bool>(&mz_precision_32)->zero_tokens(),
-			": encode m/z values in 32-bit precision")
+            ": encode m/z values in 32-bit precision")
         ("inten64",
             po::value<bool>(&intensity_precision_64)->zero_tokens(),
-			": encode intensity values in 64-bit precision")
+            ": encode intensity values in 64-bit precision")
         ("inten32",
             po::value<bool>(&intensity_precision_32)->zero_tokens(),
-			": encode intensity values in 32-bit precision [default]")
+            ": encode intensity values in 32-bit precision [default]")
         ("noindex",
             po::value<bool>(&noindex)->zero_tokens(),
-			": do not write index")
+            ": do not write index")
         ("contactInfo,i",
             po::value<string>(&config.contactFilename),
-			": filename for contact info")
+            ": filename for contact info")
         ("zlib,z",
             po::value<bool>(&zlib)->zero_tokens(),
-			": use zlib compression for binary data")
+            ": use zlib compression for binary data")
         ("gzip,g",
             po::value<bool>(&gzip)->zero_tokens(),
-			": gzip entire output file (adds .gz to filename)")
+            ": gzip entire output file (adds .gz to filename)")
         ("filter",
             po::value< vector<string> >(&config.filters),
-			": add a spectrum list filter")
+            ": add a spectrum list filter")
         ("merge",
             po::value<bool>(&config.merge)->zero_tokens(),
             ": create a single output file from multiple input files by merging file-level metadata and concatenating spectrum lists")
@@ -330,10 +340,10 @@ Config parseCommandLine(int argc, const char* argv[])
         BOOST_FOREACH(const string& filename, config.filenames)
         {
             expand_pathmask(bfs::path(filename), globbedFilenames);
-			if (!globbedFilenames.size())
-			{
-				cout <<  "[msconvert] no files found matching \"" << filename << "\"";
-			}
+            if (!globbedFilenames.size())
+            {
+                cout <<  "[msconvert] no files found matching \"" << filename << "\"";
+            }
         }
 
         config.filenames.clear();
@@ -359,12 +369,14 @@ Config parseCommandLine(int argc, const char* argv[])
     if (config.filenames.empty())
         throw runtime_error("[msconvert] No files specified.");
 
-    int count = format_text + format_mzML + format_mzXML + format_MGF;
+    int count = format_text + format_mzML + format_mzXML + format_MGF + format_MS2 + format_CMS2;
     if (count > 1) throw runtime_error("[msconvert] Multiple format flags specified.");
     if (format_text) config.writeConfig.format = MSDataFile::Format_Text;
     if (format_mzML) config.writeConfig.format = MSDataFile::Format_mzML;
     if (format_mzXML) config.writeConfig.format = MSDataFile::Format_mzXML;
     if (format_MGF) config.writeConfig.format = MSDataFile::Format_MGF;
+    if (format_MS2) config.writeConfig.format = MSDataFile::Format_MS2;
+    if (format_CMS2) config.writeConfig.format = MSDataFile::Format_CMS2;
 
     config.writeConfig.gzipped = gzip; // if true, file is written as .gz
 
@@ -384,13 +396,19 @@ Config parseCommandLine(int argc, const char* argv[])
             case MSDataFile::Format_MGF:
                 config.extension = ".mgf";
                 break;
+            case MSDataFile::Format_MS2:
+                config.extension = ".ms2";
+                break;
+            case MSDataFile::Format_CMS2:
+                config.extension = ".cms2";
+                break;
             default:
                 throw runtime_error("[msconvert] Unsupported format."); 
         }
-		if (config.writeConfig.gzipped) 
-		{
-			config.extension += ".gz";
-		}
+        if (config.writeConfig.gzipped) 
+        {
+            config.extension += ".gz";
+        }
     }
 
     // precision defaults
