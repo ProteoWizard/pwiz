@@ -117,6 +117,8 @@ namespace pwiz.Skyline.Controls.Graphs
             if (Settings.Default.AreaPeptideCV)
             {
                 YAxis.Title.Text += " CV";
+                if (!Settings.Default.PeakAreaDecimalCv)
+                    YAxis.Title.Text += " (%)";
                 if (Settings.Default.PeakAreaMaxCv != 0)
                 {
                     YAxis.Scale.MaxAuto = false;
@@ -424,7 +426,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 PointPair pointPair;
                 if (Settings.Default.AreaPeptideCV)
-                    pointPair = MeanErrorBarItem.MakePointPair(iGroup, statAreas.StdDev()/statAreas.Mean(), 0);
+                {
+                    double cvRatio = statAreas.StdDev()/statAreas.Mean();
+                    if (!Settings.Default.PeakAreaDecimalCv)
+                        cvRatio *= 100;
+                    pointPair = MeanErrorBarItem.MakePointPair(iGroup, cvRatio, 0);
+                }
                 else
                     pointPair = MeanErrorBarItem.MakePointPair(iGroup, statAreas.Mean(), statAreas.StdDev());
                 maxY = Math.Max(maxY, MeanErrorBarItem.GetYTotal(pointPair));

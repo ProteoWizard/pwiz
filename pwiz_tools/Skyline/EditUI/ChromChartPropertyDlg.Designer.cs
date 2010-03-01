@@ -111,7 +111,7 @@
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(110, 13);
             this.label2.TabIndex = 0;
-            this.label2.Text = "Best peak time range:";
+            this.label2.Text = "&Best peak time range:";
             // 
             // label4
             // 
@@ -150,7 +150,7 @@
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(96, 13);
             this.label5.TabIndex = 3;
-            this.label5.Text = "Maximum Intensity:";
+            this.label5.Text = "&Maximum Intensity:";
             // 
             // ChromChartPropertyDlg
             // 

@@ -30,6 +30,7 @@ namespace pwiz.Skyline.EditUI
         {
             InitializeComponent();
 
+            cbDecimalCvs.Checked = Settings.Default.PeakAreaDecimalCv;
             if (Settings.Default.PeakAreaMaxArea != 0)
                 textMaxArea.Text = Settings.Default.PeakAreaMaxArea.ToString();
             if (Settings.Default.PeakAreaMaxCv != 0)
@@ -49,15 +50,21 @@ namespace pwiz.Skyline.EditUI
                     return;
             }
 
+            bool decimalCv = cbDecimalCvs.Checked;
+
             double maxCv = 0;
             if (!string.IsNullOrEmpty(textMaxCv.Text))
             {
-                if (!helper.ValidateDecimalTextBox(e, textMaxCv, 0, 500, out maxCv))
+                double maxAllowed = 500;
+                if (decimalCv)
+                    maxAllowed /= 100;
+                if (!helper.ValidateDecimalTextBox(e, textMaxCv, 0, maxAllowed, out maxCv))
                     return;
             }
 
             Settings.Default.PeakAreaMaxArea = maxArea;
             Settings.Default.PeakAreaMaxCv = maxCv;
+            Settings.Default.PeakAreaDecimalCv = decimalCv;
 
             DialogResult = DialogResult.OK;
         }
@@ -65,6 +72,15 @@ namespace pwiz.Skyline.EditUI
         private void btnOk_Click(object sender, EventArgs e)
         {
             OkDialog();
+        }
+
+        private void cbDecimalCvs_CheckedChanged(object sender, EventArgs e)
+        {
+            labelCvPercent.Visible = !cbDecimalCvs.Checked;
+            double factor = (cbDecimalCvs.Checked ? 0.01 : 100);
+            double maxCv;
+            if (double.TryParse(textMaxCv.Text, out maxCv))
+                textMaxCv.Text = (maxCv*factor).ToString();
         }
     }
 }

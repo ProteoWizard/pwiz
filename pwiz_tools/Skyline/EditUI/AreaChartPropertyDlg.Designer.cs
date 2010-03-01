@@ -33,9 +33,10 @@
             this.textMaxArea = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.cbDecimalCvs = new System.Windows.Forms.CheckBox();
+            this.labelCvPercent = new System.Windows.Forms.Label();
             this.textMaxCv = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -79,17 +80,38 @@
             // 
             // groupBox1
             // 
-            this.groupBox1.Controls.Add(this.label1);
+            this.groupBox1.Controls.Add(this.cbDecimalCvs);
+            this.groupBox1.Controls.Add(this.labelCvPercent);
             this.groupBox1.Controls.Add(this.textMaxCv);
             this.groupBox1.Controls.Add(this.label5);
             this.groupBox1.Controls.Add(this.textMaxArea);
             this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Location = new System.Drawing.Point(12, 12);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(215, 160);
+            this.groupBox1.Size = new System.Drawing.Size(215, 185);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "&Graph area dimensions:";
+            // 
+            // cbDecimalCvs
+            // 
+            this.cbDecimalCvs.AutoSize = true;
+            this.cbDecimalCvs.Location = new System.Drawing.Point(26, 152);
+            this.cbDecimalCvs.Name = "cbDecimalCvs";
+            this.cbDecimalCvs.Size = new System.Drawing.Size(150, 17);
+            this.cbDecimalCvs.TabIndex = 5;
+            this.cbDecimalCvs.Text = "&Display decimal CV values";
+            this.cbDecimalCvs.UseVisualStyleBackColor = true;
+            this.cbDecimalCvs.CheckedChanged += new System.EventHandler(this.cbDecimalCvs_CheckedChanged);
+            // 
+            // labelCvPercent
+            // 
+            this.labelCvPercent.AutoSize = true;
+            this.labelCvPercent.Location = new System.Drawing.Point(137, 121);
+            this.labelCvPercent.Name = "labelCvPercent";
+            this.labelCvPercent.Size = new System.Drawing.Size(15, 13);
+            this.labelCvPercent.TabIndex = 4;
+            this.labelCvPercent.Text = "%";
             // 
             // textMaxCv
             // 
@@ -107,22 +129,13 @@
             this.label5.TabIndex = 2;
             this.label5.Text = "Maximum &CV:";
             // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(137, 121);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(43, 13);
-            this.label1.TabIndex = 4;
-            this.label1.Text = "percent";
-            // 
             // AreaChartPropertyDlg
             // 
             this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(337, 190);
+            this.ClientSize = new System.Drawing.Size(337, 209);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
@@ -148,6 +161,7 @@
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.TextBox textMaxCv;
         private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label labelCvPercent;
+        private System.Windows.Forms.CheckBox cbDecimalCvs;
     }
 }
