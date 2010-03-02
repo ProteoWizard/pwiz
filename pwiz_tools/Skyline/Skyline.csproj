@@ -37,8 +37,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>1848</ApplicationRevision>
-    <ApplicationVersion>0.5.1.1848</ApplicationVersion>
+    <ApplicationRevision>1851</ApplicationRevision>
+    <ApplicationVersion>0.5.1.1851</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -789,10 +789,10 @@
     <Content Include="BlibFilter.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="BuildLTQMethod.exe">
+    <Content Include="Method\Thermo\BuildLTQMethod.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="BuildTSQEZMethod.exe">
+    <Content Include="Method\Thermo\BuildTSQEZMethod.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Clearcore.dll" />
@@ -801,6 +801,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="MacCossLab_CodeSigning.p12" />
+    <Content Include="Method\Waters\BuildWatersMethod.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\Waters\VerifyESkylineLibrary.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Microsoft.VC90.MFC\Microsoft.VC90.MFC.manifest">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

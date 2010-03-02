@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Skyline")]
-[assembly: AssemblyDescription("Targeted Proteomics Environment")]
+[assembly: AssemblyTitle("BuildWatersMethod")]
+[assembly: AssemblyDescription("Build Waters Methods for Skyline")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("University of Washington")]
 [assembly: AssemblyProduct("Skyline")]
-[assembly: AssemblyCopyright("Copyright © University of Washington 2008-2010")]
+[assembly: AssemblyCopyright("Copyright © University of Washington 2010")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("c21d05d4-97cd-40a2-a11e-ba57b0ce3de8")]
+[assembly: Guid("63dc00d4-4fb9-4f77-8c40-8c0d5e234972")]
 
 // Version information for an assembly consists of the following four values:
 //

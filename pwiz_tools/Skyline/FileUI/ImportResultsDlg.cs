@@ -335,7 +335,7 @@ namespace pwiz.Skyline.FileUI
             string[] dataIds = null;
             try
             {
-                longWaitDlg.PerformWork(this, 800, c => dataIds = MsDataFileImpl.ReadIds(filePath));
+                longWaitDlg.PerformWork(this, 800, () => dataIds = MsDataFileImpl.ReadIds(filePath));
             }
             catch (Exception x)
             {

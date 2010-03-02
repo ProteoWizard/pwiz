@@ -19,6 +19,7 @@
 using System;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
 {
@@ -41,7 +42,7 @@ namespace pwiz.Skyline.Controls
         /// Message shown to the user
         /// </summary>
         string Message { set; }
-    }
+    }    
 
     public partial class LongWaitDlg : Form, ILongWaitBroker
     {
@@ -67,6 +68,19 @@ namespace pwiz.Skyline.Controls
         {
             get { return Interlocked.Exchange(ref _progressValue, _progressValue); }
             set { Interlocked.Exchange(ref _progressValue, value); }
+        }
+
+        public void PerformWork(Control parent, int delayMillis, Action performWork)
+        {
+            var indefiniteWaitBroker = new IndefiniteWaitBroker(performWork);
+            PerformWork(parent, delayMillis, indefiniteWaitBroker.PerformWork);
+        }
+
+        public ProgressStatus PerformWork(Control parent, int delayMillis, Action<IProgressMonitor> performWork)
+        {
+            var progressWaitBroker = new ProgressWaitBroker(performWork);
+            PerformWork(parent, delayMillis, progressWaitBroker.PerformWork);
+            return progressWaitBroker.Status;
         }
 
         public void PerformWork(Control parent, int delayMillis, Action<ILongWaitBroker> performWork)
@@ -148,6 +162,52 @@ namespace pwiz.Skyline.Controls
         {
             labelMessage.Text += CANCEL_MESSAGE;
             _clickedCancel = true;
+        }
+
+        private sealed class IndefiniteWaitBroker
+        {
+            private readonly Action _performWork;
+
+            public IndefiniteWaitBroker(Action performWork)
+            {
+                _performWork = performWork;
+            }
+
+            public void PerformWork(ILongWaitBroker broker)
+            {
+                _performWork();
+            }
+        }
+
+        private sealed class ProgressWaitBroker : IProgressMonitor
+        {
+            private readonly Action<IProgressMonitor> _performWork;
+            private ILongWaitBroker _broker;
+
+            public ProgressWaitBroker(Action<IProgressMonitor> performWork)
+            {
+                _performWork = performWork;
+            }
+
+            public void PerformWork(ILongWaitBroker broker)
+            {
+                _broker = broker;
+                _performWork(this);
+            }
+
+            public ProgressStatus Status { get; private set; }
+
+            public bool IsCanceled
+            {
+                get { return _broker.IsCanceled; }
+            }
+
+            public void UpdateProgress(ProgressStatus status)
+            {
+                _broker.ProgressValue = status.PercentComplete;
+                _broker.Message = status.Message;
+                Status = status;
+            }
         }
     }
 }

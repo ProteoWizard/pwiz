@@ -194,7 +194,7 @@ void MethodBuilder::readTransitions(istream& instream, string outputMethod)
         }
         else
         {
-            // Only one file, if outputMethod spedified
+            // Only one file, if outputMethod specified
             if (!_vMethodTrans.empty())
                 break;
             methodTrans.outputMethod = outputMethod;

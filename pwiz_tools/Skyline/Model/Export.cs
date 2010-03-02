@@ -23,6 +23,8 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
@@ -45,6 +47,8 @@ namespace pwiz.Skyline.Model
         public const string Thermo_TSQ = "Thermo TSQ";
         public const string Thermo_LTQ = "Thermo LTQ";
         public const string Waters = "Waters";
+        public const string Waters_Xevo = "Waters Xevo";
+        public const string Waters_Quattro_Premier = "Waters Quattro Premier";
     }
     public static class ExportOptimize
     {
@@ -61,7 +65,9 @@ namespace pwiz.Skyline.Model
         public static bool IsSingleWindowInstrumentType(string type)
         {
             return Equals(type, ExportInstrumentType.ABI) ||
-                   Equals(type, ExportInstrumentType.Waters);
+                   Equals(type, ExportInstrumentType.Waters) ||
+                   Equals(type, ExportInstrumentType.Waters_Xevo) ||
+                   Equals(type, ExportInstrumentType.Waters_Quattro_Premier);
         }
 
         protected MassListExporter(SrmDocument document, DocNode node)
@@ -988,87 +994,28 @@ namespace pwiz.Skyline.Model
         }
     }
 
-    public class ThermoMassListToMethodConverter : ThermoMassListExporter
+    public class ThermoMethodExporter : ThermoMassListExporter
     {
-        public ThermoMassListToMethodConverter(SrmDocument document)
-            : base(document)
-        {
-        }
-
-        protected void ExportConvertMethod(string exeName, string fileName, string templateName)
-        {
-            // First export transition lists to map in memory
-            Export(null);
-
-            string baseName = Path.Combine(Path.GetDirectoryName(fileName),
-                                           Path.GetFileNameWithoutExtension(fileName));
-            string ext = Path.GetExtension(fileName);
-
-            var listFileSavers = new List<FileSaver>();
-            try
-            {
-                StringBuilder stdinBuilder = new StringBuilder();
-                foreach (KeyValuePair<string, StringBuilder> pair in MemoryOutput)
-                {
-                    if (stdinBuilder.Length > 0)
-                        stdinBuilder.AppendLine();
-
-                    string suffix = pair.Key.Substring(MEMORY_KEY_ROOT.Length);
-                    suffix = Path.GetFileNameWithoutExtension(suffix);
-                    string methodName = baseName + suffix + ext;
-
-                    var fs = new FileSaver(methodName);
-                    listFileSavers.Add(fs);
-
-                    stdinBuilder.AppendLine(fs.SafeName);
-                    stdinBuilder.Append(pair.Value.ToString());
-                }
-
-                List<string> argv = new List<string> { "-s", "-m", "\"" + templateName + "\"" };  // Read from stdin, multi-file format
-
-                string dirWork = Path.GetDirectoryName(fileName);
-                var psiBlibBuilder = new ProcessStartInfo(exeName)
-                {
-                    CreateNoWindow = true,
-                    UseShellExecute = false,
-                    // Common directory includes the directory separator
-                    WorkingDirectory = dirWork,
-                    Arguments = string.Join(" ", argv.ToArray()),
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    RedirectStandardInput = true
-                };
-                psiBlibBuilder.RunProcess(stdinBuilder.ToString());
-
-                foreach (var fs in listFileSavers)
-                    fs.Commit();
-            }
-            finally
-            {
-                foreach (var fs in listFileSavers)
-                    fs.Dispose();
-            }
-        }        
-    }
-
-    public class ThermoMethodExporter : ThermoMassListToMethodConverter
-    {
-        public const string EXE_BUILD_TSQ_METHOD = "BuildTSQEZMethod";
+        public const string EXE_BUILD_TSQ_METHOD = @"Method\Thermo\BuildTSQEZMethod";
 
         public ThermoMethodExporter(SrmDocument document)
             : base(document)
         {
         }
 
-        public void ExportMethod(string fileName, string templateName)
+        public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
-            ExportConvertMethod(EXE_BUILD_TSQ_METHOD, fileName, templateName);
+            // First export transition lists to map in memory
+            Export(null);
+
+            MethodExporter.ExportMethod(EXE_BUILD_TSQ_METHOD, new List<string>(),
+                fileName, templateName, MemoryOutput, progressMonitor);
         }
     }
 
-    public class ThermoLtqMethodExporter : ThermoMassListToMethodConverter
+    public class ThermoLtqMethodExporter : ThermoMassListExporter
     {
-        public const string EXE_BUILD_LTQ_METHOD = "BuildLTQMethod";
+        public const string EXE_BUILD_LTQ_METHOD = @"Method\Thermo\BuildLTQMethod";
 
         public ThermoLtqMethodExporter(SrmDocument document)
             : base(document)
@@ -1079,9 +1026,13 @@ namespace pwiz.Skyline.Model
             RunLength = 0;
         }
 
-        public void ExportMethod(string fileName, string templateName)
+        public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
-            ExportConvertMethod(EXE_BUILD_LTQ_METHOD, fileName, templateName);
+            // First export transition lists to map in memory
+            Export(null);
+
+            MethodExporter.ExportMethod(EXE_BUILD_LTQ_METHOD, new List<string>(),
+                fileName, templateName, MemoryOutput, progressMonitor);
         }
     }
 
@@ -1291,6 +1242,8 @@ namespace pwiz.Skyline.Model
         public double ConeVoltage { get; set; }
         public double RunLength { get; set; }
 
+        protected double RTWindow { get; private set; }
+
         private bool HasResults { get { return Document.Settings.HasResults; } }
 
         protected override string InstrumentType
@@ -1342,6 +1295,7 @@ namespace pwiz.Skyline.Model
 
             if (MethodType == ExportMethodType.Standard)
             {
+                RTWindow = RunLength;   // Store for later use
                 writer.Write(RunLength / 2);
             }
             else
@@ -1352,7 +1306,10 @@ namespace pwiz.Skyline.Model
                 double? predictedRT = prediction.PredictRetentionTime(nodePep, nodeTranGroup,
                     HasResults, out windowRT);
                 if (predictedRT.HasValue)
+                {
+                    RTWindow = windowRT;    // Store for later use
                     writer.Write(RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT));
+                }
             }
 
             writer.Write(FieldSeparator);
@@ -1381,6 +1338,212 @@ namespace pwiz.Skyline.Model
                     writer.Write("heavy");
             }
             writer.WriteLine();
+        }
+    }
+
+    public class WatersMethodExporter : WatersMassListExporter
+    {
+        public const string EXE_BUILD_WATERS_METHOD = @"Method\Waters\BuildWatersMethod";
+
+        public WatersMethodExporter(SrmDocument document)
+            : base(document)
+        {
+        }
+
+        public string MethodInstrumentType { get; set; }
+
+        public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
+        {
+            EnsureLibraries();
+
+            // First export transition lists to map in memory
+            Export(null);
+
+            var argv = new List<string>();
+            if (Equals(MethodInstrumentType, ExportInstrumentType.Waters_Quattro_Premier))
+                argv.Add("-q");
+            argv.Add("-w");
+            argv.Add(RTWindow.ToString());
+            MethodExporter.ExportMethod(EXE_BUILD_WATERS_METHOD,
+                argv, fileName, templateName, MemoryOutput, progressMonitor);
+        }
+
+        private const string PRIMARY_DEPENDENCY_LIBRARY = "QuantifyClassLibrary.dll";
+
+        private static readonly string[] DEPENDENCY_LIBRARIES = {
+                                                                    PRIMARY_DEPENDENCY_LIBRARY,
+                                                                    "CompoundDatabaseClassLibrary.dll",
+                                                                    "MassSpectrometerLibrary.dll",
+                                                                    "MSMethodClassLibrary.dll",
+                                                                    "ResourceClassLibrary.dll",
+                                                                    "SQLControl.dll",
+                                                                    "System.Data.SQLite.dll",
+                                                                    "UtilityClassLibrary.dll",
+                                                                    "WizardData.dll"
+                                                                };
+        private static void EnsureLibraries()
+        {
+            string skylinePath = Assembly.GetExecutingAssembly().Location;
+            if (string.IsNullOrEmpty(skylinePath))
+                throw new IOException("Waters method creation software may not be installed correctly.");
+            string buildSubdir = Path.GetDirectoryName(EXE_BUILD_WATERS_METHOD);
+            string exeDir = Path.Combine(Path.GetDirectoryName(skylinePath), buildSubdir);
+            string libraryPath = Path.Combine(exeDir, PRIMARY_DEPENDENCY_LIBRARY);
+            if (File.Exists(libraryPath))
+                return;
+
+            string dacServerPath = AdvApi.GetPathFromProgId("DACScanStats.DACScanStats");
+            if (dacServerPath == null)
+                throw new IOException("Failed to find a valid MassLynx installation.");
+
+            string massLynxDir = Path.GetDirectoryName(dacServerPath);
+            foreach (var library in DEPENDENCY_LIBRARIES)
+            {
+                string srcFile = Path.Combine(massLynxDir, library);
+                if (!File.Exists(srcFile))
+                    throw new IOException(string.Format("MassLynx may not be installed correctly.  The library {0} could not be found.", library));
+                string destFile = Path.Combine(exeDir, library);
+                File.Copy(srcFile, destFile, true);
+            }
+        }
+    }
+
+    internal class AdvApi
+    {
+        private AdvApi()
+        {            
+        }
+        [DllImport("advapi32.dll", CharSet = CharSet.Auto)]
+        public static extern int RegOpenKeyEx(
+          UIntPtr hKey,
+          string subKey,
+          int ulOptions,
+          int samDesired,
+          out UIntPtr hkResult);
+        [DllImport("advapi32.dll", CharSet = CharSet.Unicode, EntryPoint = "RegQueryValueExW", SetLastError = true)]
+        public static extern int RegQueryValueEx(
+            UIntPtr hKey,
+            string lpValueName,
+            int lpReserved,
+            out uint lpType,
+            StringBuilder lpData,
+            ref uint lpcbData);
+        [DllImport("advapi32.dll", SetLastError = true)]
+        public static extern int RegCloseKey(
+            UIntPtr hKey);
+
+// ReSharper disable InconsistentNaming
+        public static UIntPtr HKEY_LOCAL_MACHINE = new UIntPtr(0x80000002u);
+        public static UIntPtr HKEY_CURRENT_USER = new UIntPtr(0x80000001u);
+
+        public const int KEY_ALL_ACCESS = 0x3F;
+
+        public const int REG_SZ = 1;
+// ReSharper restore InconsistentNaming
+
+        public static string GetPathFromProgId(string progId)
+        {
+            String clsid = RegQueryKeyValue(HKEY_LOCAL_MACHINE, @"Software\Classes\" + progId + @"\CLSID");
+            if (clsid == null)
+                return null;
+            return RegQueryKeyValue(HKEY_LOCAL_MACHINE, @"Software\Classes\CLSID\" + clsid + @"\InprocServer32");
+        }
+
+        public static string RegQueryKeyValue(UIntPtr hKey, string path)
+        {
+            UIntPtr hKeyQuery;
+            if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, path, 0, KEY_ALL_ACCESS, out hKeyQuery) != 0)
+                return null;
+
+            uint size = 1024;
+            StringBuilder sb = new StringBuilder(1024);
+
+            try
+            {
+                uint type;
+                if (RegQueryValueEx(hKeyQuery, "", 0, out type, sb, ref size) != 0)
+                    return null;
+            }
+            finally
+            {
+                RegCloseKey(hKeyQuery);
+            }
+            return sb.ToString();
+        }
+    }
+
+    internal static class MethodExporter
+    {
+        public static void ExportMethod(string exeName,
+                                        List<string> argv,
+                                        string fileName,
+                                        string templateName,
+                                        Dictionary<string, StringBuilder> dictTranLists,
+                                        IProgressMonitor progressMonitor)
+        {
+            string baseName = Path.Combine(Path.GetDirectoryName(fileName),
+                                           Path.GetFileNameWithoutExtension(fileName));
+            string ext = Path.GetExtension(fileName);
+
+            var listFileSavers = new List<FileSaver>();
+            try
+            {
+                string methodName = "";
+                StringBuilder stdinBuilder = new StringBuilder();
+                foreach (KeyValuePair<string, StringBuilder> pair in dictTranLists)
+                {
+                    string suffix = pair.Key.Substring(MassListExporter.MEMORY_KEY_ROOT.Length);
+                    suffix = Path.GetFileNameWithoutExtension(suffix);
+                    methodName = baseName + suffix + ext;
+
+                    if (stdinBuilder.Length > 0)
+                        stdinBuilder.AppendLine();
+
+                    var fs = new FileSaver(methodName);
+                    listFileSavers.Add(fs);
+
+                    stdinBuilder.AppendLine(fs.SafeName);
+                    stdinBuilder.Append(pair.Value.ToString());
+                }
+
+                argv.AddRange(new[] { "-s", "-m", "\"" + templateName + "\"" });  // Read from stdin, multi-file format
+
+                string dirWork = Path.GetDirectoryName(fileName);
+                var psiBlibBuilder = new ProcessStartInfo(exeName)
+                {
+                    CreateNoWindow = true,
+                    UseShellExecute = false,
+                    // Common directory includes the directory separator
+                    WorkingDirectory = dirWork,
+                    Arguments = string.Join(" ", argv.ToArray()),
+                    // RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    RedirectStandardInput = true
+                };
+
+                ProgressStatus status;
+                if (dictTranLists.Count == 1)
+                    status = new ProgressStatus(string.Format("Exporting method {0}...", methodName));
+                else
+                {
+                    status = new ProgressStatus("Exporting methods...");
+                    status = status.ChangeSegments(0, dictTranLists.Count);
+                }
+                progressMonitor.UpdateProgress(status);
+
+                psiBlibBuilder.RunProcess(stdinBuilder.ToString(), progressMonitor, ref status);
+
+                if (!status.IsError && !status.IsCanceled)
+                {
+                    foreach (var fs in listFileSavers)
+                        fs.Commit();
+                }
+            }
+            finally
+            {
+                foreach (var fs in listFileSavers)
+                    fs.Dispose();
+            }
         }
     }
 

@@ -297,7 +297,7 @@ namespace pwiz.Skyline.SettingsUI
                                };
            
             _longWaitDlg.PerformWork(this, 0,
-                longWaitCancel =>
+                () =>
                 {
                     if (!File.Exists(databasePath))
                     {
@@ -374,7 +374,7 @@ namespace pwiz.Skyline.SettingsUI
                         Message = string.Format("Loading protein information from {0}", textPath.Text)
                     };
                     ProteomeDb proteomeDb = null;
-                    longWaitDlg.PerformWork(this, 1000, c => proteomeDb = ProteomeDb.OpenProteomeDb(textPath.Text));
+                    longWaitDlg.PerformWork(this, 1000, () => proteomeDb = ProteomeDb.OpenProteomeDb(textPath.Text));
                     if (proteomeDb == null)
                         throw new Exception();
 

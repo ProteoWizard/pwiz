@@ -29,6 +29,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -51,7 +52,9 @@ namespace pwiz.Skyline.FileUI
         private static readonly string[] METHOD_TYPES =
             {
                 ExportInstrumentType.Thermo_TSQ,
-                ExportInstrumentType.Thermo_LTQ
+                ExportInstrumentType.Thermo_LTQ,
+//                ExportInstrumentType.Waters_Xevo,
+//                ExportInstrumentType.Waters_Quattro_Premier,
             };
 
         private static readonly string[] TRANSITION_LIST_TYPES =
@@ -117,12 +120,17 @@ namespace pwiz.Skyline.FileUI
             // Instrument type may force method type to standard, so it must
             // be calculated after method type.
             string instrumentTypeName = document.Settings.TransitionSettings.Prediction.CollisionEnergy.Name;
-            if (instrumentTypeName != null && comboInstrument.Items.Contains(instrumentTypeName))
-                InstrumentType = instrumentTypeName;
-            else if (_fileType == ExportFileType.List)
-                InstrumentType = ExportInstrumentType.Thermo;
-            else
-                InstrumentType = ExportInstrumentType.Thermo_TSQ;
+            if (instrumentTypeName != null)
+            {
+                // Look for the first instrument type with the same prefix as the CE name
+                string instrumentTypePrefix = instrumentTypeName.Split(' ')[0];
+                var listTypePrefixes = new List<string>(listTypes).ConvertAll(t => t.Split(' ')[0]);
+                int i = listTypePrefixes.IndexOf(instrumentTypePrefix);
+                if (i != -1)
+                    InstrumentType = listTypes[i];
+            }
+            if (InstrumentType == null)
+                InstrumentType = listTypes[0];
 
             DwellTime = Settings.Default.ExportMethodDwellTime;
             RunLength = Settings.Default.ExportMethodRunLength;
@@ -186,7 +194,9 @@ namespace pwiz.Skyline.FileUI
             return Equals(type, ExportInstrumentType.Thermo) ||
                    Equals(type, ExportInstrumentType.Thermo_TSQ) ||
                    Equals(type, ExportInstrumentType.Thermo_LTQ) ||
-                   Equals(type, ExportInstrumentType.Waters);
+                   Equals(type, ExportInstrumentType.Waters) ||
+                   Equals(type, ExportInstrumentType.Waters_Xevo) ||
+                   Equals(type, ExportInstrumentType.Waters_Quattro_Premier);
         }
 
         public bool IsAlwaysScheduledInstrument
@@ -196,8 +206,10 @@ namespace pwiz.Skyline.FileUI
 
         private static bool IsAlwaysScheduledInstrumentType(string type)
         {
-            return Equals(type, ExportInstrumentType.Waters) ||
-                Equals(type, ExportInstrumentType.Thermo_TSQ);
+            return Equals(type, ExportInstrumentType.Thermo_TSQ) ||
+                   Equals(type, ExportInstrumentType.Waters) ||
+                   Equals(type, ExportInstrumentType.Waters_Xevo) ||
+                   Equals(type, ExportInstrumentType.Waters_Quattro_Premier);
         }
 
         public bool CanScheduleInstrument
@@ -489,17 +501,23 @@ namespace pwiz.Skyline.FileUI
 
                 if (_fileType != ExportFileType.List)
                 {
+                    dlg.Title = string.Format("Export {0} Method", _instrumentType);
+
                     if (Equals(_instrumentType, ExportInstrumentType.Thermo_TSQ) ||
                         Equals(_instrumentType, ExportInstrumentType.Thermo_LTQ))
                     {
-                        dlg.Title = string.Format("Export {0} Method", _instrumentType);
                         dlg.DefaultExt = "meth";
-                        dlg.Filter = string.Join("|", new[]
+                    }
+                    else if (Equals(_instrumentType, ExportInstrumentType.Waters_Xevo) ||
+                        Equals(_instrumentType, ExportInstrumentType.Waters_Quattro_Premier))
+                    {
+                        dlg.DefaultExt = "exp";
+                    }
+                    dlg.Filter = string.Join("|", new[]
                                      {
-                                         "Method File (*.meth)|*.meth",
+                                         string.Format("Method File (*.{0})|*.{0}", dlg.DefaultExt),
                                          "All Files (*.*)|*.*"
                                      });
-                    }
                 }
 
                 if (dlg.ShowDialog(this) == DialogResult.Cancel)
@@ -533,7 +551,14 @@ namespace pwiz.Skyline.FileUI
                         ExportThermoLtqMethod(documentExport, outputPath, templateName);
                         break;
                     case ExportInstrumentType.Waters:
-                        ExportWatersCsv(documentExport, outputPath);
+                    case ExportInstrumentType.Waters_Xevo:
+                        if (_fileType == ExportFileType.List)
+                            ExportWatersCsv(documentExport, outputPath);
+                        else
+                            ExportWatersMethod(documentExport, outputPath, templateName);
+                        break;
+                    case ExportInstrumentType.Waters_Quattro_Premier:
+                        ExportWatersQMethod(documentExport, outputPath, templateName);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -653,6 +678,22 @@ namespace pwiz.Skyline.FileUI
             exporter.Export(fileName);
         }
 
+        private void ExportThermoMethod(SrmDocument document, string fileName, string templateName)
+        {
+            var exporter = InitExporter(new ThermoMethodExporter(document));
+            if (MethodType == ExportMethodType.Standard)
+                exporter.RunLength = RunLength;
+
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+        }
+
+        private void ExportThermoLtqMethod(SrmDocument document, string fileName, string templateName)
+        {
+            var exporter = InitExporter(new ThermoLtqMethodExporter(document));
+
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+        }
+
         private void ExportWatersCsv(SrmDocument document, string fileName)
         {
             var exporter = InitExporter(new WatersMassListExporter(document));
@@ -661,18 +702,40 @@ namespace pwiz.Skyline.FileUI
             exporter.Export(fileName);
         }
 
-        private void ExportThermoMethod(SrmDocument document, string fileName, string templateName)
+        private void ExportWatersMethod(SrmDocument document, string fileName, string templateName)
         {
-            var exporter = InitExporter(new ThermoMethodExporter(document));
+            var exporter = InitExporter(new WatersMethodExporter(document));
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
-            exporter.ExportMethod(fileName, templateName);
+
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
         }
 
-        private void ExportThermoLtqMethod(SrmDocument document, string fileName, string templateName)
+        private void ExportWatersQMethod(SrmDocument document, string fileName, string templateName)
         {
-            var exporter = InitExporter(new ThermoLtqMethodExporter(document));
-            exporter.ExportMethod(fileName, templateName);
+            var exporter = InitExporter(new WatersMethodExporter(document)
+                                            {
+                                                MethodInstrumentType = ExportInstrumentType.Waters_Quattro_Premier
+                                            });
+            if (MethodType == ExportMethodType.Standard)
+                exporter.RunLength = RunLength;
+
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+        }
+
+        private void PerformLongExport(Action<IProgressMonitor> performExport)
+        {
+            var longWait = new LongWaitDlg { Text = "Exporting Methods" };
+            try
+            {
+                var status = longWait.PerformWork(this, 800, performExport);
+                if (status.IsError)
+                    MessageBox.Show(this, status.ErrorException.Message);
+            }
+            catch (Exception x)
+            {
+                MessageBox.Show(this, string.Format("An error occurred attempting to export.\n{0}", x.Message), Program.Name);
+            }
         }
 
         private T InitExporter<T>(T exporter)
@@ -813,6 +876,11 @@ namespace pwiz.Skyline.FileUI
                 Equals(InstrumentType, ExportInstrumentType.Thermo_LTQ))
             {
                 listFileTypes.Add(InstrumentType + " Method (*.meth)|*.meth");
+            }
+            else if (Equals(InstrumentType, ExportInstrumentType.Waters_Xevo) ||
+                Equals(InstrumentType, ExportInstrumentType.Waters_Quattro_Premier))
+            {
+                listFileTypes.Add(InstrumentType + " Method (*.exp)|*.exp");
             }
             listFileTypes.Add("All Files (*.*)|*.*");
             openFileDialog.Filter = string.Join("|", listFileTypes.ToArray());
