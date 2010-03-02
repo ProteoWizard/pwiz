@@ -348,7 +348,6 @@ void Serializer_MSn::Impl::read(shared_ptr<istream> is, MSData& msd) const
     msd.fileDescription.fileContent.set(MS_MSn_spectrum);
     msd.fileDescription.fileContent.set(MS_centroid_spectrum);
     msd.fileDescription.fileContent.set(MS_scan_number_only_nativeID_format);
-    msd.fileDescription.fileContent.set(MS_MS2_file);
     msd.run.spectrumListPtr = SpectrumList_MSn::create(is, msd, _filetype);
     msd.run.chromatogramListPtr.reset(new ChromatogramListSimple);
 

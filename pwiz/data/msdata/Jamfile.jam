@@ -73,6 +73,7 @@ lib pwiz_data_msdata
         <library>../..//pwiz_version
 		<library>../../utility/misc//pwiz_utility_misc
         <library>../../utility/minimxml//pwiz_utility_minimxml
+        <library>../../utility/chemistry//pwiz_utility_chemistry
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
         <library>/ext/boost//filesystem
         <library>/ext/boost//thread
