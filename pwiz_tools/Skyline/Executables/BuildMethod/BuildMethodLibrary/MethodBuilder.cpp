@@ -191,6 +191,10 @@ void MethodBuilder::readTransitions(istream& instream, string outputMethod)
             getline(instream, line);
             trim(line);
             methodTrans.outputMethod = line;
+            // Read final file path from a line in the file
+            getline(instream, line);
+            trim(line);
+            methodTrans.finalMethod = line;
         }
         else
         {
@@ -198,6 +202,7 @@ void MethodBuilder::readTransitions(istream& instream, string outputMethod)
             if (!_vMethodTrans.empty())
                 break;
             methodTrans.outputMethod = outputMethod;
+            methodTrans.finalMethod = outputMethod;
         }
         readTransitions(instream, methodTrans.tableTranList);
         if (methodTrans.tableTranList.empty())
@@ -229,8 +234,11 @@ void MethodBuilder::readTransitions(istream& instream, vector<vector<string>>& t
 void MethodBuilder::build()
 {
     vector<MethodTransitions>::iterator it = _vMethodTrans.begin();
+    int iWritten = 0;
     for (; it != _vMethodTrans.end(); it++)
     {
+        cerr << "Exporting method " << it->finalMethod.substr(it->finalMethod.find_last_of("\\")) << endl;
+
         // Copy the template into place, because ILCQMethod::SaveAs() strips
         // auto-sampler and LC pump settings.
         string outputMethod = it->outputMethod;
@@ -250,5 +258,8 @@ void MethodBuilder::build()
         outputStream.close();
 
         createMethod(_templateMethod, outputMethod, it->tableTranList);
+
+        iWritten++;
+        cerr << iWritten * 100.0 / _vMethodTrans.size() << endl;
     }
 }

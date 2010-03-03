@@ -83,13 +83,15 @@ namespace BuildWatersMethod
 
     internal sealed class MethodTransitions
     {
-        public MethodTransitions(string outputMethod, string transitionList)
+        public MethodTransitions(string outputMethod, string finalMethod, string transitionList)
         {
             OutputMethod = outputMethod;
+            FinalMethod = finalMethod;
             TransitionList = transitionList;
         }
 
         public string OutputMethod { get; private set; }
+        public string FinalMethod { get; private set; }
         public string TransitionList { get; private set; }
     }
 
@@ -249,6 +251,7 @@ namespace BuildWatersMethod
         private void readTransitions(TextReader instream, string outputMethod)
         {
             string outputMethodCurrent = outputMethod;
+            string finalMethod = outputMethod;
             StringBuilder sb = new StringBuilder();
 
             string line;
@@ -268,11 +271,15 @@ namespace BuildWatersMethod
 
                     // Read output file path from a line in the file
                     outputMethodCurrent = line;
+                    finalMethod = instream.ReadLine();
+                    if (finalMethod == null)
+                        throw new IOException(string.Format("Empty transition list found."));
+                    
                     sb = new StringBuilder();
                 }
                 else if (string.IsNullOrEmpty(line))
                 {
-                    MethodTrans.Add(new MethodTransitions(outputMethodCurrent, sb.ToString()));
+                    MethodTrans.Add(new MethodTransitions(outputMethodCurrent, finalMethod, sb.ToString()));
                     outputMethodCurrent = null;
                 }
                 else
@@ -284,7 +291,7 @@ namespace BuildWatersMethod
             // Add the last method, if there is one
             if (!string.IsNullOrEmpty(outputMethodCurrent))
             {
-                MethodTrans.Add(new MethodTransitions(outputMethodCurrent, sb.ToString()));
+                MethodTrans.Add(new MethodTransitions(outputMethodCurrent, finalMethod, sb.ToString()));
             }
 
             // Read remaining contents of stream, in case it is stdin
@@ -295,10 +302,12 @@ namespace BuildWatersMethod
 
         public void build()
         {
+            int writtenMethods = 0;
             foreach (var methodTranList in MethodTrans)
             {
+                Console.Error.WriteLine(string.Format("Exporting method {0}", Path.GetFileName(methodTranList.FinalMethod)));
                 if (string.IsNullOrEmpty(methodTranList.TransitionList))
-                    throw new IOException(string.Format("Failure creating method file {0}.  The transition list is empty.", methodTranList.OutputMethod));
+                    throw new IOException(string.Format("Failure creating method file {0}.  The transition list is empty.", methodTranList.FinalMethod));
 
 //                OperationManager.GenerateMRMMethodFromString(methodTranList.TransitionList,
 //                    methodTranList.OutputMethod,
@@ -324,7 +333,11 @@ namespace BuildWatersMethod
                 }
 
                 if (!File.Exists(methodTranList.OutputMethod))
-                    throw new IOException(string.Format("Failure creating method file {0}.", methodTranList.OutputMethod));
+                    throw new IOException(string.Format("Failure creating method file {0}.", methodTranList.FinalMethod));
+
+                // Simulate final percentage reported by VerifyESkylineLibrary.dll
+                writtenMethods++;
+                Console.Error.WriteLine("100%");
             }
         }
     }

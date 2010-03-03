@@ -1503,6 +1503,7 @@ namespace pwiz.Skyline.Model
                     listFileSavers.Add(fs);
 
                     stdinBuilder.AppendLine(fs.SafeName);
+                    stdinBuilder.AppendLine(fs.RealName);
                     stdinBuilder.Append(pair.Value.ToString());
                 }
 

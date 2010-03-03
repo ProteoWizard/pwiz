@@ -73,12 +73,14 @@ namespace pwiz.Skyline.Util.Extensions
 
                     if (line.EndsWith("%"))
                     {
-                        int percent;
+                        double percent;
                         string[] parts = line.Split(' ');
                         string percentPart = parts[parts.Length - 1];
-                        if (int.TryParse(percentPart.Substring(0, percentPart.Length - 1), out percent))
+                        if (double.TryParse(percentPart.Substring(0, percentPart.Length - 1), out percent))
                         {
-                            status = status.ChangePercentComplete(percent);
+                            status = status.ChangePercentComplete((int)percent);
+                            if (percent >= 100 && status.SegmentCount > 0)
+                                status = status.NextSegment();
                             progress.UpdateProgress(status);
                         }
                     }

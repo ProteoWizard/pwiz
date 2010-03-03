@@ -32,6 +32,7 @@ using namespace std;
 struct MethodTransitions
 {
     string outputMethod;
+    string finalMethod;
     vector<vector<string>> tableTranList;
 };
 
