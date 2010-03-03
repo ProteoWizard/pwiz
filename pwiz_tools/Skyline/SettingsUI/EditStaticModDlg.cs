@@ -37,7 +37,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly BioMassCalc _monoMassCalc = new BioMassCalc(MassType.Monoisotopic);
         private readonly BioMassCalc _averageMassCalc = new BioMassCalc(MassType.Average);
 
-        private bool _heavy;
+        private readonly bool _heavy;
         private bool _showLoss = true; // Design mode with loss UI showing
         private TextBox _textFormulaActive;
 
@@ -62,8 +62,10 @@ namespace pwiz.Skyline.SettingsUI
                 
                 labelRelativeRT.Left = labelAA.Left;
                 comboRelativeRT.Left = comboAA.Left;
-                comboRelativeRT.Items.Add(RelativeRT.Same.ToString());
-                comboRelativeRT.Items.Add(RelativeRT.Before.ToString());
+                comboRelativeRT.Items.Add(RelativeRT.Matching.ToString());
+                comboRelativeRT.Items.Add(RelativeRT.Overlapping.ToString());
+                comboRelativeRT.Items.Add(RelativeRT.Preceding.ToString());
+                comboRelativeRT.Items.Add(RelativeRT.Unknown.ToString());
                 comboRelativeRT.SelectedIndex = 0;
             }
             else

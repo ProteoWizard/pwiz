@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Model.DocSettings
         H2 = 0x8
     }
 
-    public enum RelativeRT { Same, Before }
+    public enum RelativeRT { Matching, Overlapping, Preceding, Unknown }
 // ReSharper restore InconsistentNaming
 
     /// <summary>
@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public StaticMod(string name, char? aa, ModTerminus? term,
             string formula, LabelAtoms labelAtoms, double? monoMass, double? avgMass)
-            : this(name, aa, term, formula, labelAtoms, RelativeRT.Same, monoMass, avgMass, null, null, null)
+            : this(name, aa, term, formula, labelAtoms, RelativeRT.Matching, monoMass, avgMass, null, null, null)
         {
             
         }
@@ -298,7 +298,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 LabelAtoms |= LabelAtoms.O18;
             if (reader.GetBoolAttribute(ATTR.label_2H))
                 LabelAtoms |= LabelAtoms.H2;
-            RelativeRT = reader.GetEnumAttribute(ATTR.relative_rt, RelativeRT.Same);
+            RelativeRT = reader.GetEnumAttribute(ATTR.relative_rt, RelativeRT.Matching);
 
             // Allow specific masses always, but they will generate an error,
             // in Validate() if there is already a formula.
@@ -327,7 +327,7 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttribute(ATTR.label_15N, Label15N);
             writer.WriteAttribute(ATTR.label_18O, Label18O);
             writer.WriteAttribute(ATTR.label_2H, Label2H);
-            writer.WriteAttribute(ATTR.relative_rt, RelativeRT, RelativeRT.Same);
+            writer.WriteAttribute(ATTR.relative_rt, RelativeRT, RelativeRT.Matching);
             writer.WriteAttributeNullable(ATTR.massdiff_monoisotopic, MonoisotopicMass);
             writer.WriteAttributeNullable(ATTR.massloss_monoisotopic, MonoisotopicLoss);
             writer.WriteAttributeNullable(ATTR.massdiff_average, AverageMass);

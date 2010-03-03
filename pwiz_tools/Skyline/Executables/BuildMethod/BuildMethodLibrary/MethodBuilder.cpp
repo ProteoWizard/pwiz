@@ -234,10 +234,9 @@ void MethodBuilder::readTransitions(istream& instream, vector<vector<string>>& t
 void MethodBuilder::build()
 {
     vector<MethodTransitions>::iterator it = _vMethodTrans.begin();
-    int iWritten = 0;
     for (; it != _vMethodTrans.end(); it++)
     {
-        cerr << "Exporting method " << it->finalMethod.substr(it->finalMethod.find_last_of("\\")) << endl;
+        cerr << "MESSAGE: Exporting method " << it->finalMethod.substr(it->finalMethod.find_last_of("\\")) << endl;
 
         // Copy the template into place, because ILCQMethod::SaveAs() strips
         // auto-sampler and LC pump settings.
@@ -259,7 +258,8 @@ void MethodBuilder::build()
 
         createMethod(_templateMethod, outputMethod, it->tableTranList);
 
-        iWritten++;
-        cerr << iWritten * 100.0 / _vMethodTrans.size() << endl;
+        // Skyline uses a segmented progress status, which expects 100% for each
+        // segment, with one segment per file.
+        cerr << "100%" << endl;
     }
 }

@@ -258,8 +258,8 @@ namespace BuildWatersMethod
             while ((line = instream.ReadLine()) != null)
             {
                 line = line.Trim();
-                if (line.StartsWith("protein.name,"))
-                    continue;
+//                if (line.StartsWith("protein.name,"))
+//                    continue;
 
                 if (string.IsNullOrEmpty(outputMethodCurrent))
                 {
@@ -302,42 +302,22 @@ namespace BuildWatersMethod
 
         public void build()
         {
-            int writtenMethods = 0;
             foreach (var methodTranList in MethodTrans)
             {
-                Console.Error.WriteLine(string.Format("Exporting method {0}", Path.GetFileName(methodTranList.FinalMethod)));
+                Console.Error.WriteLine(string.Format("MESSAGE: Exporting method {0}", Path.GetFileName(methodTranList.FinalMethod)));
                 if (string.IsNullOrEmpty(methodTranList.TransitionList))
                     throw new IOException(string.Format("Failure creating method file {0}.  The transition list is empty.", methodTranList.FinalMethod));
 
-//                OperationManager.GenerateMRMMethodFromString(methodTranList.TransitionList,
-//                    methodTranList.OutputMethod,
-//                    TemplateMethod,
-//                    InstrumentType,
-//                    RTWindow,
-//                    DwellMode,
-//                    DwellTime);
-
-                using (var tempFile = new TempFile())
-                {
-                    File.WriteAllText(tempFile.Name, methodTranList.TransitionList);
-                    OperationManager.GenerateMRMMethod(tempFile.Name,
-                        methodTranList.OutputMethod,
-                        TemplateMethod,
-                        1,
-                        RTWindow ?? 2,
-                        0,
-                        InstrumentType,
-                        0.005,
-                        DwellMode ?? 0,
-                        DwellTime ?? 0.05);
-                }
+                OperationManager.GenerateMRMMethodFromString(methodTranList.TransitionList,
+                    methodTranList.OutputMethod,
+                    TemplateMethod,
+                    InstrumentType,
+                    RTWindow,
+                    DwellMode,
+                    DwellTime);
 
                 if (!File.Exists(methodTranList.OutputMethod))
                     throw new IOException(string.Format("Failure creating method file {0}.", methodTranList.FinalMethod));
-
-                // Simulate final percentage reported by VerifyESkylineLibrary.dll
-                writtenMethods++;
-                Console.Error.WriteLine("100%");
             }
         }
     }

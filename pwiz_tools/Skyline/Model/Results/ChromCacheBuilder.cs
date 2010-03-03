@@ -1118,10 +1118,6 @@ namespace pwiz.Skyline.Model.Results
                 if (allPeakGroups.Count == 0)
                     return;
 
-                double precursorMz = Math.Round(_dataSets[0].DocNode.PrecursorMz);
-                if (precursorMz == 565 || precursorMz == 569)
-                    Console.Write("Issue");
-
                 // Create coeluting groups
                 var listPeakSets = new List<PeptideChromDataPeakList>();
                 while (allPeakGroups.Count > 0)
@@ -1188,7 +1184,7 @@ namespace pwiz.Skyline.Model.Results
                         // If the peaks are supposed to have the same elution time,
                         // then be more strict about how they overlap
                         if (nodeGroup.TransitionGroup.PrecursorCharge == nodeGroupMax.TransitionGroup.PrecursorCharge &&
-                            nodeGroup.RelativeRT == RelativeRT.Same && nodeGroupMax.RelativeRT == RelativeRT.Same)
+                            nodeGroup.RelativeRT == RelativeRT.Matching && nodeGroupMax.RelativeRT == RelativeRT.Matching)
                         {
                             int timeIndex = peak.Peak.TimeIndex + offset;
                             if (startMax >= timeIndex || timeIndex >= endMax)
@@ -2121,8 +2117,8 @@ namespace pwiz.Skyline.Model.Results
 
             private bool IsSameRT(ChromDataSet chromDataSet)
             {
-                return DocNode.RelativeRT == RelativeRT.Same &&
-                    chromDataSet.DocNode.RelativeRT == RelativeRT.Same;
+                return DocNode.RelativeRT == RelativeRT.Matching &&
+                    chromDataSet.DocNode.RelativeRT == RelativeRT.Matching;
             }
         }
 

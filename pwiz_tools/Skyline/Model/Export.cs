@@ -1255,7 +1255,7 @@ namespace pwiz.Skyline.Model
         {
             writer.Write("protein.name");
             writer.Write(FieldSeparator);
-            writer.Write("peptide.seq");
+            writer.Write("peptide.seq");    // modified sequence to support 1:1 requirement with precursor m/z
             writer.Write(FieldSeparator);
             writer.Write("precursor.mz");
             writer.Write(FieldSeparator);
@@ -1267,6 +1267,8 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.Write("cone_voltage");
             // Informational columns
+            writer.Write(FieldSeparator);
+            writer.Write("peptide_unmod.seq");
             writer.Write(FieldSeparator);
             writer.Write("ion_name");
             writer.Write(FieldSeparator);
@@ -1288,7 +1290,16 @@ namespace pwiz.Skyline.Model
         {
             writer.Write(nodePepGroup.Name);
             writer.Write(FieldSeparator);
-            writer.Write(nodePep.Peptide.Sequence);
+            // Write special ID to ensure 1-to-1 relationship between this ID and precursor m/z
+            writer.Write(Document.Settings.GetModifiedSequence(nodePep.Peptide.Sequence,
+                nodeTranGroup.TransitionGroup.LabelType, nodePep.ExplicitMods));
+            writer.Write('.');
+            writer.Write(nodeTranGroup.TransitionGroup.PrecursorCharge);
+            if (step != 0)
+            {
+                writer.Write('.');                
+                writer.Write(step);
+            }
             writer.Write(FieldSeparator);
             writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz));
             writer.Write(FieldSeparator);
@@ -1320,11 +1331,12 @@ namespace pwiz.Skyline.Model
             // Waters only excepts integers for CE and CV
             writer.Write((int)Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step)));
             writer.Write(FieldSeparator);
-
             writer.Write((int)Math.Round(ConeVoltage));
             writer.Write(FieldSeparator);
 
             // Extra information not used by instrument
+            writer.Write(nodePep.Peptide.Sequence);
+            writer.Write(FieldSeparator);
             writer.Write(nodeTran.Transition.FragmentIonName);
             writer.Write(FieldSeparator);
             if (nodeTran.HasLibInfo)
@@ -1510,14 +1522,14 @@ namespace pwiz.Skyline.Model
                 argv.AddRange(new[] { "-s", "-m", "\"" + templateName + "\"" });  // Read from stdin, multi-file format
 
                 string dirWork = Path.GetDirectoryName(fileName);
-                var psiBlibBuilder = new ProcessStartInfo(exeName)
+                var psiExporter = new ProcessStartInfo(exeName)
                 {
                     CreateNoWindow = true,
                     UseShellExecute = false,
                     // Common directory includes the directory separator
                     WorkingDirectory = dirWork,
                     Arguments = string.Join(" ", argv.ToArray()),
-                    // RedirectStandardOutput = true,
+                    RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     RedirectStandardInput = true
                 };
@@ -1532,7 +1544,7 @@ namespace pwiz.Skyline.Model
                 }
                 progressMonitor.UpdateProgress(status);
 
-                psiBlibBuilder.RunProcess(stdinBuilder.ToString(), progressMonitor, ref status);
+                psiExporter.RunProcess(stdinBuilder.ToString(), "MESSAGE: ", progressMonitor, ref status);
 
                 if (!status.IsError && !status.IsCanceled)
                 {

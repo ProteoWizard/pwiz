@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -88,24 +88,24 @@ namespace pwiz.Skyline.Model.DocSettings
         public RelativeRT GetRelativeRT(IsotopeLabelType type, string seq, ExplicitMods mods)
         {
             if (type == IsotopeLabelType.light)
-                return RelativeRT.Same;
+                return RelativeRT.Matching;
             if (mods != null)
             {
                 foreach (var mod in mods.HeavyModifications)
                 {
-                    if (mod.Modification.RelativeRT == RelativeRT.Before)
-                        return RelativeRT.Before;
+                    if (mod.Modification.RelativeRT == RelativeRT.Preceding)
+                        return RelativeRT.Preceding;
                 }
             }
             else
             {
                 foreach (var mod in PeptideSettings.Modifications.HeavyModifications)
                 {
-                    if (mod.IsMod(seq) && mod.RelativeRT == RelativeRT.Before)
-                        return RelativeRT.Before;
+                    if (mod.IsMod(seq) && mod.RelativeRT == RelativeRT.Preceding)
+                        return RelativeRT.Preceding;
                 }
             }
-            return RelativeRT.Same;
+            return RelativeRT.Matching;
         }
         
         // Cached calculators

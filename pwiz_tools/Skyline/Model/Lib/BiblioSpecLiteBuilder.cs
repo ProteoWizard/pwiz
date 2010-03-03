@@ -121,7 +121,7 @@ namespace pwiz.Skyline.Model.Lib
                                      };
             try
             {
-                psiBlibBuilder.RunProcess(stdinBuilder.ToString(), progress, ref status);
+                psiBlibBuilder.RunProcess(stdinBuilder.ToString(), null, progress, ref status);
             }
             catch (IOException x)
             {

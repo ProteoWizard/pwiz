@@ -53,8 +53,8 @@ namespace pwiz.Skyline.FileUI
             {
                 ExportInstrumentType.Thermo_TSQ,
                 ExportInstrumentType.Thermo_LTQ,
-//                ExportInstrumentType.Waters_Xevo,
-//                ExportInstrumentType.Waters_Quattro_Premier,
+                ExportInstrumentType.Waters_Xevo,
+                ExportInstrumentType.Waters_Quattro_Premier,
             };
 
         private static readonly string[] TRANSITION_LIST_TYPES =
