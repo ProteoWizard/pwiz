@@ -212,11 +212,11 @@ namespace pepitome
         {
             switch( dissociationType )
             {
-                case pwiz::MS_CID:
+                case pwiz::cv::MS_CID:
                     fragmentTypes[FragmentType_B] = true;
                     fragmentTypes[FragmentType_Y] = true;
                     break;
-                case pwiz::MS_ETD:
+                case pwiz::cv::MS_ETD:
                     fragmentTypes[FragmentType_C] = true;
                     fragmentTypes[FragmentType_Z_Radical] = true;
                     break;

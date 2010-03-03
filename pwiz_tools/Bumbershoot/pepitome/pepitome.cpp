@@ -23,7 +23,7 @@
 #include "stdafx.h"
 #include "pepitome.h"
 #include "pwiz/data/msdata/Version.hpp"
-#include "pwiz/utility/proteome/Version.hpp"
+#include "pwiz/data/proteome/Version.hpp"
 #include "PTMVariantList.h"
 #include "svnrev.hpp"
 #include "WuManber.h"
@@ -372,7 +372,8 @@ namespace freicore
                 s->computeSecondaryScores();
 
                 s->resultSet.calculateRanks();
-                s->resultSet.convertProteinIndexesToNames( proteins.indexToName );
+                //s->resultSet.convertProteinIndexesToNames( proteins.indexToName );
+                s->resultSet.convertProteinIndexesToNames( proteins );
 
                 if( g_rtConfig->MakeScoreHistograms )
                 {
@@ -1117,7 +1118,8 @@ namespace freicore
                     Timer readTime(true);
                     try
                     {
-                        proteins.readFASTA( g_dbFilename, g_rtConfig->StartProteinIndex, g_rtConfig->EndProteinIndex );
+                        //proteins.readFASTA( g_dbFilename, g_rtConfig->StartProteinIndex, g_rtConfig->EndProteinIndex );
+                        proteins.readFASTA( g_dbFilename );
                     } catch( std::exception& e )
                     {
                         cout << g_hostString << " had an error: " << e.what() << endl;
