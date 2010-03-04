@@ -22,3 +22,4 @@
 
 
 build-project-if-exists CLI ;
+build-project-if-exists SWIG ;
