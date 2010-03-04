@@ -7,7 +7,7 @@ using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public enum GraphTypeRT { regression, replicate, schedule }
+    public enum GraphTypeRT { regression, replicate, schedule, peptide }
 
     public sealed class RTGraphController : GraphSummary.IController
     {
@@ -88,6 +88,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (!(GraphSummary.GraphPane is RTReplicateGraphPane))
                         GraphSummary.GraphPane = new RTReplicateGraphPane(GraphSummary);
                     break;
+                case GraphTypeRT.peptide:
+                    if (!(GraphSummary.GraphPane is RTPeptideGraphPane))
+                        GraphSummary.GraphPane = new RTPeptideGraphPane(GraphSummary);
+                    break;
                 case GraphTypeRT.schedule:
                     if (!(GraphSummary.GraphPane is RTScheduleGraphPane))
                         GraphSummary.GraphPane = new RTScheduleGraphPane(GraphSummary);
@@ -99,20 +103,20 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             switch (e.KeyCode)
             {
-                case Keys.D2:
-                    if (e.Alt)
-                    {
-                        GraphSummary.Hide();
-                        return true;
-                    }
-                    break;
+//                case Keys.D2:
+//                    if (e.Alt)
+//                    {
+//                        GraphSummary.Hide();
+//                        return true;
+//                    }
+//                    break;
                 case Keys.F8:
                     if (!e.Alt && !(e.Shift && e.Control))
                     {
                         if (e.Shift)
                             GraphType = GraphTypeRT.regression;
                         else if (e.Control)
-                            GraphType = GraphTypeRT.schedule;
+                            GraphType = GraphTypeRT.peptide;
                         else
                             GraphType = GraphTypeRT.replicate;
                         GraphSummary.UpdateUI();

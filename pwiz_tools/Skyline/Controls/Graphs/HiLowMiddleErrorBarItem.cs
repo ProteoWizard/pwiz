@@ -27,6 +27,11 @@ namespace pwiz.Skyline.Controls.Graphs
     /// </summary>
     public class HiLowMiddleErrorBarItem : HiLowBarItem
     {
+        public static bool IsHiLoMiddleErrorList(PointPairList pointPairList)
+        {
+            return pointPairList.Count > 0 && pointPairList[0].Tag is MiddleErrorTag;
+        }
+
         public static PointPair MakePointPair(double xValue, double highValue, double lowValue,
                                               double middleValue, double errorValue)
         {

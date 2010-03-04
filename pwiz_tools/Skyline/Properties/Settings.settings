@@ -245,7 +245,7 @@
     <Setting Name="AreaPeptideOrderEnum" Type="System.String" Scope="User">
       <Value Profile="(Default)">document</Value>
     </Setting>
-    <Setting Name="AreaPeptideCV" Type="System.Boolean" Scope="User">
+    <Setting Name="ShowPeptideCV" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
     <Setting Name="ResultsGridSynchSelection" Type="System.Boolean" Scope="User">
@@ -272,8 +272,20 @@
     <Setting Name="PeakAreaMaxCv" Type="System.Double" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
-    <Setting Name="PeakAreaDecimalCv" Type="System.Boolean" Scope="User">
+    <Setting Name="PeakDecimalCv" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="RTPeptideValue" Type="System.String" Scope="User">
+      <Value Profile="(Default)">All</Value>
+    </Setting>
+    <Setting Name="PeakTimeMax" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="PeakTimeMin" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="PeakTimeMaxCv" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0</Value>
     </Setting>
   </Settings>
 </SettingsFile>

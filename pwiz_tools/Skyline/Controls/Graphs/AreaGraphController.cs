@@ -56,10 +56,10 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             switch (e.KeyCode)
             {
-                case Keys.D3:
-                    if (e.Alt)
-                        GraphSummary.Hide();
-                    break;
+//                case Keys.D3:
+//                    if (e.Alt)
+//                        GraphSummary.Hide();
+//                    break;
                 case Keys.F7:
                     if (!e.Alt && !(e.Shift && e.Control))
                     {

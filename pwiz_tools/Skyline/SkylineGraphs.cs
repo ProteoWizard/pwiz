@@ -235,8 +235,9 @@ namespace pwiz.Skyline
                 if (retentionTimesMenuItem.Enabled != enableSchedule || replicateComparisonMenuItem.Enabled != enable)
                 {
                     retentionTimesMenuItem.Enabled = enableSchedule;
-                    linearRegressionMenuItem.Enabled = enable;
                     replicateComparisonMenuItem.Enabled = enable;
+                    timePeptideComparisonMenuItem.Enabled = enable;
+                    linearRegressionMenuItem.Enabled = enable;
                     schedulingMenuItem.Enabled = enableSchedule;
 
                     if (!deserialized)
@@ -1759,6 +1760,16 @@ namespace pwiz.Skyline
             var set = Settings.Default;
             int iInsert = 0;
             menuStrip.Items.Insert(iInsert++, timeGraphContextMenuItem);
+            if (timeGraphContextMenuItem.DropDownItems.Count == 0)
+            {
+                timeGraphContextMenuItem.DropDownItems.AddRange(new[]
+                {
+                    replicateComparisonContextMenuItem,
+                    timePeptideComparisonContextMenuItem,
+                    linearRegressionContextMenuItem,
+                    schedulingContextMenuItem
+                });
+            }
 
             GraphTypeRT graphType = RTGraphController.GraphType;
             if (graphType == GraphTypeRT.regression)
@@ -1788,9 +1799,23 @@ namespace pwiz.Skyline
                         menuStrip.Items.Insert(iInsert++, removeRTOutliersContextMenuItem);
                 }
             }
-            else if (graphType == GraphTypeRT.replicate)
+            else if (graphType != GraphTypeRT.schedule)
             {
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator16);
+                if (graphType == GraphTypeRT.peptide)
+                {
+                    menuStrip.Items.Insert(iInsert++, peptideRTValueMenuItem);
+                    if (peptideRTValueMenuItem.DropDownItems.Count == 0)
+                    {
+                        peptideRTValueMenuItem.DropDownItems.AddRange(new[]
+                        {
+                            allRTValueContextMenuItem,
+                            timeRTValueContextMenuItem,
+                            fwhmRTValueContextMenuItem,
+                            fwbRTValueContextMenuItem
+                        });
+                    }
+                }
                 menuStrip.Items.Insert(iInsert++, transitionsContextMenuItem);
                 // Sometimes child menuitems are stripped from the parent
                 if (transitionsContextMenuItem.DropDownItems.Count == 0)
@@ -1802,8 +1827,25 @@ namespace pwiz.Skyline
                         totalTranContextMenuItem
                     });
                 }
+                if (graphType == GraphTypeRT.peptide)
+                {
+                    menuStrip.Items.Insert(iInsert++, peptideOrderContextMenuItem);
+                    if (peptideOrderContextMenuItem.DropDownItems.Count == 0)
+                    {
+                        peptideOrderContextMenuItem.DropDownItems.AddRange(new[]
+                        {
+                            peptideOrderDocumentContextMenuItem,
+                            peptideOrderRTContextMenuItem,
+                            peptideOrderAreaContextMenuItem
+                        });
+                    }
+                    menuStrip.Items.Insert(iInsert++, peptideCvsContextMenuItem);
+                    peptideCvsContextMenuItem.Checked = set.ShowPeptideCV;                    
+                }
                 selectionContextMenuItem.Checked = set.ShowReplicateSelection;
                 menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
+                menuStrip.Items.Insert(iInsert++, toolStripSeparator38);
+                menuStrip.Items.Insert(iInsert++, timePropsContextMenuItem);
             }
 
             menuStrip.Items.Insert(iInsert, toolStripSeparator24);
@@ -1823,6 +1865,7 @@ namespace pwiz.Skyline
             GraphTypeRT graphType = RTGraphController.GraphType;
             linearRegressionContextMenuItem.Checked = (graphType == GraphTypeRT.regression);
             replicateComparisonContextMenuItem.Checked = (graphType == GraphTypeRT.replicate);
+            timePeptideComparisonMenuItem.Checked = (graphType == GraphTypeRT.peptide);
             schedulingContextMenuItem.Checked = (graphType == GraphTypeRT.schedule);
         }
 
@@ -1834,6 +1877,18 @@ namespace pwiz.Skyline
         public void ShowRTLinearRegressionGraph()
         {
             Settings.Default.RTGraphType = GraphTypeRT.regression.ToString();
+            ShowGraphRetentionTime(true);
+            UpdateRetentionTimeGraph();
+        }
+
+        private void timePeptideComparisonMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowRTPeptideGraph();
+        }
+
+        public void ShowRTPeptideGraph()
+        {
+            Settings.Default.RTGraphType = GraphTypeRT.peptide.ToString();
             ShowGraphRetentionTime(true);
             UpdateRetentionTimeGraph();
         }
@@ -1865,8 +1920,7 @@ namespace pwiz.Skyline
         private void selectionContextMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowReplicateSelection = selectionContextMenuItem.Checked;
-            UpdateRetentionTimeGraph();
-            UpdatePeakAreaGraph();
+            UpdateSummaryGraphs();
         }
 
         private void refineRTContextMenuItem_Click(object sender, EventArgs e)
@@ -1943,6 +1997,48 @@ namespace pwiz.Skyline
         private void removeRTContextMenuItem_Click(object sender, EventArgs e)
         {
             deleteMenuItem_Click(sender, e);
+        }
+
+        private void peptideRTValueMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            RTPeptideValue rtValue = RTPeptideGraphPane.RTValue;
+            allRTValueContextMenuItem.Checked = (rtValue == RTPeptideValue.All);
+            timeRTValueContextMenuItem.Checked = (rtValue == RTPeptideValue.Retention);
+            fwhmRTValueContextMenuItem.Checked = (rtValue == RTPeptideValue.FWHM);
+            fwbRTValueContextMenuItem.Checked = (rtValue == RTPeptideValue.FWB);
+        }
+
+        private void allRTValueContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.RTPeptideValue = RTPeptideValue.All.ToString();
+            UpdateRetentionTimeGraph();
+        }
+
+        private void timeRTValueContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.RTPeptideValue = RTPeptideValue.Retention.ToString();
+            UpdateRetentionTimeGraph();
+        }
+
+        private void fwhmRTValueContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.RTPeptideValue = RTPeptideValue.FWHM.ToString();
+            UpdateRetentionTimeGraph();
+        }
+
+        private void fwbRTValueContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.RTPeptideValue = RTPeptideValue.FWB.ToString();
+            UpdateRetentionTimeGraph();
+        }
+
+        private void timePropsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            var dlg = new RTChartPropertyDlg();
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+            {
+                UpdateSummaryGraphs();
+            }
         }
 
         private void UpdateRetentionTimeGraph()
@@ -2077,28 +2173,28 @@ namespace pwiz.Skyline
             }
             if (graphType == GraphTypeArea.replicate)
             {
-                selectionContextMenuItem.Checked = set.ShowReplicateSelection;
-                menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
                 areaPercentViewContextMenuItem.Checked = set.AreaPercentView;
                 menuStrip.Items.Insert(iInsert++, areaPercentViewContextMenuItem);
             }
             else if (graphType == GraphTypeArea.peptide)
             {
-                menuStrip.Items.Insert(iInsert++, areaOrderContextMenuItem);
-                if (areaOrderContextMenuItem.DropDownItems.Count == 0)
+                menuStrip.Items.Insert(iInsert++, peptideOrderContextMenuItem);
+                if (peptideOrderContextMenuItem.DropDownItems.Count == 0)
                 {
-                    areaOrderContextMenuItem.DropDownItems.AddRange(new[]
+                    peptideOrderContextMenuItem.DropDownItems.AddRange(new[]
                         {
-                            areaOrderDocumentContextMenuItem,
-                            areaOrderRTContextMenuItem,
-                            areaOrderAreaContextMenuItem
+                            peptideOrderDocumentContextMenuItem,
+                            peptideOrderRTContextMenuItem,
+                            peptideOrderAreaContextMenuItem
                         });
                 }
-                menuStrip.Items.Insert(iInsert++, areaCvsContextMenuItem);
-                areaCvsContextMenuItem.Checked = set.AreaPeptideCV;
+                menuStrip.Items.Insert(iInsert++, peptideCvsContextMenuItem);
+                peptideCvsContextMenuItem.Checked = set.ShowPeptideCV;
             }
-            menuStrip.Items.Insert(iInsert++, areaLogScaleContextMenuItem);
-            areaLogScaleContextMenuItem.Checked = set.AreaLogScale;
+            menuStrip.Items.Insert(iInsert++, peptideLogScaleContextMenuItem);
+            peptideLogScaleContextMenuItem.Checked = set.AreaLogScale;
+            selectionContextMenuItem.Checked = set.ShowReplicateSelection;
+            menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
 
             menuStrip.Items.Insert(iInsert++, toolStripSeparator24);
             menuStrip.Items.Insert(iInsert++, areaPropsContextMenuItem);
@@ -2135,30 +2231,30 @@ namespace pwiz.Skyline
             UpdatePeakAreaGraph();
         }
 
-        private void areaOrderContextMenuItem_DropDownOpening(object sender, EventArgs e)
+        private void peptideOrderContextMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            AreaPeptideOrder peptideOrder = AreaPeptideGraphPane.PeptideOrder;
-            areaOrderDocumentContextMenuItem.Checked = (peptideOrder == AreaPeptideOrder.document);
-            areaOrderRTContextMenuItem.Checked = (peptideOrder == AreaPeptideOrder.time);
-            areaOrderAreaContextMenuItem.Checked = (peptideOrder == AreaPeptideOrder.area);
+            SummaryPeptideOrder peptideOrder = SummaryPeptideGraphPane.PeptideOrder;
+            peptideOrderDocumentContextMenuItem.Checked = (peptideOrder == SummaryPeptideOrder.document);
+            peptideOrderRTContextMenuItem.Checked = (peptideOrder == SummaryPeptideOrder.time);
+            peptideOrderAreaContextMenuItem.Checked = (peptideOrder == SummaryPeptideOrder.area);
         }
 
-        private void areaOrderDocumentContextMenuItem_Click(object sender, EventArgs e)
+        private void peptideOrderDocumentContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.AreaPeptideOrderEnum = AreaPeptideOrder.document.ToString();
-            UpdatePeakAreaGraph();
+            Settings.Default.AreaPeptideOrderEnum = SummaryPeptideOrder.document.ToString();
+            UpdateSummaryGraphs();
         }
 
-        private void areaOrderRTContextMenuItem_Click(object sender, EventArgs e)
+        private void peptideOrderRTContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.AreaPeptideOrderEnum = AreaPeptideOrder.time.ToString();
-            UpdatePeakAreaGraph();
+            Settings.Default.AreaPeptideOrderEnum = SummaryPeptideOrder.time.ToString();
+            UpdateSummaryGraphs();
         }
 
-        private void areaOrderAreaContextMenuItem_Click(object sender, EventArgs e)
+        private void peptideOrderAreaContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.AreaPeptideOrderEnum = AreaPeptideOrder.area.ToString();
-            UpdatePeakAreaGraph();
+            Settings.Default.AreaPeptideOrderEnum = SummaryPeptideOrder.area.ToString();
+            UpdateSummaryGraphs();
         }
 
         private void areaPercentViewContextMenuItem_Click(object sender, EventArgs e)
@@ -2166,34 +2262,42 @@ namespace pwiz.Skyline
             Settings.Default.AreaPercentView = areaPercentViewContextMenuItem.Checked;
             if (areaPercentViewContextMenuItem.Checked)
                 Settings.Default.AreaLogScale = false;
-            UpdatePeakAreaGraph();
+            UpdateSummaryGraphs();
         }
 
-        private void areaLogScaleContextMenuItem_Click(object sender, EventArgs e)
+        private void peptideLogScaleContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.AreaLogScale = areaLogScaleContextMenuItem.Checked;
-            if (areaLogScaleContextMenuItem.Checked)
+            Settings.Default.AreaLogScale = peptideLogScaleContextMenuItem.Checked;
+            if (peptideLogScaleContextMenuItem.Checked)
                 Settings.Default.AreaPercentView = false;
-            UpdatePeakAreaGraph();
+            UpdateSummaryGraphs();
         }
 
-        private void areaCvsContextMenuItem_Click(object sender, EventArgs e)
+        private void peptideCvsContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.AreaPeptideCV = areaCvsContextMenuItem.Checked;
-            UpdatePeakAreaGraph();
+            Settings.Default.ShowPeptideCV = peptideCvsContextMenuItem.Checked;
+            UpdateSummaryGraphs();
         }
 
         private void areaPropsContextMenuItem_Click(object sender, EventArgs e)
         {
             var dlg = new AreaChartPropertyDlg();
             if (dlg.ShowDialog(this) == DialogResult.OK)
-                UpdatePeakAreaGraph();
+            {
+                UpdateSummaryGraphs();
+            }
         }
 
         private void UpdatePeakAreaGraph()
         {
             if (_graphPeakArea != null)
                 _graphPeakArea.UpdateUI();
+        }
+
+        private void UpdateSummaryGraphs()
+        {
+            UpdateRetentionTimeGraph();
+            UpdatePeakAreaGraph();            
         }
 
         #endregion

@@ -150,7 +150,7 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.Refresh();
         }
 
-        private void GraphSpectrum_VisibleChanged(object sender, System.EventArgs e)
+        private void GraphSpectrum_VisibleChanged(object sender, EventArgs e)
         {
             UpdateUI();
         }
@@ -295,7 +295,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _stateProvider.BuildSpectrumMenu(sender, menuStrip);
         }
 
-        protected override void OnClosed(System.EventArgs e)
+        protected override void OnClosed(EventArgs e)
         {
             _documentContainer.UnlistenUI(OnDocumentUIChanged);
         }

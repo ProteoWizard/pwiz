@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Linq;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
-using pwiz.Skyline.Properties;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
@@ -31,14 +30,6 @@ namespace pwiz.Skyline.Controls.Graphs
     /// </summary>
     internal abstract class SummaryReplicateGraphPane : SummaryBarGraphPaneBase
     {
-        protected static bool ShowSelection
-        {
-            get
-            {
-                return Settings.Default.ShowReplicateSelection;
-            }
-        }
-
         protected DocNode _parentNode;
 
         protected SummaryReplicateGraphPane(GraphSummary graphSummary)

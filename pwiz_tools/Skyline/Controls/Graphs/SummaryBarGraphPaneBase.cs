@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
 
@@ -10,6 +11,14 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     internal abstract class SummaryBarGraphPaneBase : SummaryGraphPane
     {
+        protected static bool ShowSelection
+        {
+            get
+            {
+                return Settings.Default.ShowReplicateSelection;
+            }
+        }
+
         protected static readonly Color[] COLORS_TRANSITION = GraphChromatogram.COLORS_LIBRARY;
         protected static readonly Color[] COLORS_GROUPS = GraphChromatogram.COLORS_GROUPS;
 

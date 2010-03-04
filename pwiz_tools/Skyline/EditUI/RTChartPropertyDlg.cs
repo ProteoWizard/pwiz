@@ -1,21 +1,3 @@
-﻿/*
- * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
- *                  MacCoss Lab, Department of Genome Sciences, UW
- *
- * Copyright 2009 University of Washington - Seattle, WA
- * 
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 using System;
 using System.ComponentModel;
 using System.Windows.Forms;
@@ -24,17 +6,19 @@ using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class AreaChartPropertyDlg : Form
+    public partial class RTChartPropertyDlg : Form
     {
-        public AreaChartPropertyDlg()
+        public RTChartPropertyDlg()
         {
             InitializeComponent();
 
             cbDecimalCvs.Checked = Settings.Default.PeakDecimalCv;
-            if (Settings.Default.PeakAreaMaxArea != 0)
-                textMaxArea.Text = Settings.Default.PeakAreaMaxArea.ToString();
-            if (Settings.Default.PeakAreaMaxCv != 0)
-                textMaxCv.Text = Settings.Default.PeakAreaMaxCv.ToString();
+            if (Settings.Default.PeakTimeMax != 0)
+                textMaxTime.Text = Settings.Default.PeakTimeMax.ToString();
+            if (Settings.Default.PeakTimeMin != 0)
+                textMinTime.Text = Settings.Default.PeakTimeMin.ToString();
+            if (Settings.Default.PeakTimeMaxCv != 0)
+                textMaxCv.Text = Settings.Default.PeakTimeMaxCv.ToString();
         }
 
         public void OkDialog()
@@ -43,10 +27,16 @@ namespace pwiz.Skyline.EditUI
             var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
-            double maxArea = 0;
-            if (!string.IsNullOrEmpty(textMaxArea.Text))
+            double maxTime = 0;
+            if (!string.IsNullOrEmpty(textMaxTime.Text))
             {
-                if (!helper.ValidateDecimalTextBox(e, textMaxArea, 5, double.MaxValue, out maxArea))
+                if (!helper.ValidateDecimalTextBox(e, textMaxTime, 5, 1000, out maxTime))
+                    return;
+            }
+            double minTime = 0;
+            if (!string.IsNullOrEmpty(textMinTime.Text))
+            {
+                if (!helper.ValidateDecimalTextBox(e, textMinTime, 0, 1000, out minTime))
                     return;
             }
 
@@ -62,8 +52,9 @@ namespace pwiz.Skyline.EditUI
                     return;
             }
 
-            Settings.Default.PeakAreaMaxArea = maxArea;
-            Settings.Default.PeakAreaMaxCv = maxCv;
+            Settings.Default.PeakTimeMax = maxTime;
+            Settings.Default.PeakTimeMin = minTime;
+            Settings.Default.PeakTimeMaxCv = maxCv;
             Settings.Default.PeakDecimalCv = decimalCv;
 
             DialogResult = DialogResult.OK;

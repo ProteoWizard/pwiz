@@ -196,7 +196,9 @@
       <DependentUpon>GraphRegression.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\Graphs\RTGraphController.cs" />
+    <Compile Include="Controls\Graphs\RTPeptideGraphPane.cs" />
     <Compile Include="Controls\Graphs\SummaryBarGraphPaneBase.cs" />
+    <Compile Include="Controls\Graphs\SummaryPeptideGraphPane.cs" />
     <Compile Include="Controls\Graphs\SummaryReplicateGraphPane.cs" />
     <Compile Include="Controls\Graphs\SummaryGraphPane.cs" />
     <Compile Include="Controls\Graphs\GraphSummary.cs">
@@ -288,6 +290,12 @@
     </Compile>
     <Compile Include="EditUI\RefineDlg.Designer.cs">
       <DependentUpon>RefineDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditUI\RTChartPropertyDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\RTChartPropertyDlg.Designer.cs">
+      <DependentUpon>RTChartPropertyDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Model\Hibernate\DbPrecursorResultSummary.cs" />
     <Compile Include="Model\Hibernate\DbTransitionResultSummary.cs" />
@@ -868,6 +876,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\RefineDlg.resx">
       <DependentUpon>RefineDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\RTChartPropertyDlg.resx">
+      <DependentUpon>RTChartPropertyDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\ShowRTThresholdDlg.resx">
       <DependentUpon>ShowRTThresholdDlg.cs</DependentUpon>
