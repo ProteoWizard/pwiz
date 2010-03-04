@@ -349,10 +349,12 @@ JumpTableEntry jumpTable_[] =
     {"scanTime", "[scanTimeLow,scanTimeHigh]", filterCreator_scanTime},
     {"stripIT", " (strip ion trap ms1 scans)", filterCreator_stripIT},
     {"metadataFixer", " (add/replace TIC/BPI metadata)", filterCreator_metadataFixer},
-    // MS2 Spectrum Processing/Filtering
-    {"mzWindow", "[mzLow,mzHigh]\n", filterCreator_mzWindow},
-    {"ETDFilter", "removePrecursor:<true|false> (default:true) removeChargeReduced:<true|false> (default:true) removeNeutralLoss:<true|false> (default:true) blanketRemoval<true|false> (default:true) MatchingTolerance:(val <PPM|MZ>) (default:3.1 MZ)\n", filterCreator_ETDFilter},
-    {"Activation", "<ETD|CID|SA|HCD> (Precursor Activation Type)", filterCreator_ActivationType},
+    {"threshold", "<count|count-after-ties|absolute|bpi-relative|tic-relative|tic-cutoff> <threshold> <most-intense|least-intense>", filterCreator_thresholdFilter},
+    {"mzWindow", "[mzLow,mzHigh]", filterCreator_mzWindow},
+
+    // MSn Spectrum Processing/Filtering
+    {"ETDFilter", "removePrecursor:<default:true|false>  removeChargeReduced:<default:true|false>  removeNeutralLoss:<default:true|false>  blanketRemoval:<default:true|false>  MatchingTolerance:(val <PPM|MZ>) (default:3.1 MZ)", filterCreator_ETDFilter},
+    {"activation", "<ETD|CID|SA|HCD> (filter by precursor activation type)", filterCreator_ActivationType},
 };
 
 

@@ -250,23 +250,32 @@ Config parseCommandLine(int argc, const char* argv[])
           << "# extract scan indices 5...10 and 20...25\n"
           << "msconvert data.RAW --filter \"index [5,10] [20,25]\"\n"
           << endl
-          << "# extract ms1 scans only\n"
+          << "# extract MS1 scans only\n"
           << "msconvert data.RAW --filter \"msLevel 1\"\n"
           << endl
-          << "# extract ms2 and ms3 scans only\n"
+          << "# extract MS2 and MS3 scans only\n"
           << "msconvert data.RAW --filter \"msLevel 2-3\"\n"
           << endl
-          << "# extract ms^n scans for n>1\n"
+          << "# extract MSn scans for n>1\n"
           << "msconvert data.RAW --filter \"msLevel 2-\"\n"
           << endl
           << "# apply ETD precursor mass filter\n"
           << "msconvert data.RAW --filter ETDFilter\n"
           << endl
           << "# keep only HCD spectra from a decision tree data file\n"
-          << "msconvert data.RAW --filter \"Activation HCD\"\n"
+          << "msconvert data.RAW --filter \"activation HCD\"\n"
+          << endl
+          << "# keep the top 42 peaks or samples (depending on whether spectra are centroid or profile):\n"
+          << "msconvert data.RAW --filter \"threshold count 42 most-intense\"\n"
           << endl
           << "# multiple filters: select scan numbers and recalculate precursors\n"
           << "msconvert data.RAW --filter \"scanNumber [500,1000]\" --filter \"precursorRecalculation\"\n"
+          << endl
+          << "# multiple filters: apply peak picking and then keep the bottom 100 peaks:\n"
+          << "msconvert data.RAW --filter \"peakPicking true 1-\" --filter \"threshold count 100 least-intense\"\n"
+          << endl
+          << "# multiple filters: apply peak picking and then keep all peaks that are at least 50% of the intensity of the base peak:\n"
+          << "msconvert data.RAW --filter \"peakPicking true 1-\" --filter \"threshold bpi-relative .5 most-intense\"\n"
           << endl
           << "# use a configuration file\n"
           << "msconvert data.RAW -c config.txt\n"
