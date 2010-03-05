@@ -1,6 +1,8 @@
 /* This is a SWIG interface file for exposing pwiz library function points to java via
    SWIG (could also be used for Python, Perl, etc).
 
+   $Id: $
+
    There are two sections - declarations of things you want literally included in
    the wrapper code, and things you want magically turned into java (or python etc).
    These lists tend to be the same, but its possible that you'd need to include some
@@ -32,7 +34,8 @@ namespace std {
 %{
   /* everything in this section (including this comment) appears in the generated
      wrapper code, so here's where you declare the C/C++ functions that the wrapper
-     will find in the DLL 
+     will find in the DLL.
+     $Id: $
      Note that if there are things in your headers that you don't want SWIG to deal
 	 with, just surround them #ifndef SWIG / #endif .  
 	 */

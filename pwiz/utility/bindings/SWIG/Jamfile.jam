@@ -22,10 +22,9 @@
 import os ;
 local JAVA_HOME = [ os.environ JAVA_HOME ] ;
 
-
-
-if ("" != $(JAVA_HOME))
+if "" != $(JAVA_HOME)
 {
+
 
 # The DLL is forced to be <link>shared, but its dependencies may be static or shared depending on
 # the build request. The default is link=static, so the command-line is tested for link=shared.
@@ -54,5 +53,5 @@ lib pwiz_swigbindings
 
 
 } else {
-echo "JAVA_HOME not set, pwiz_swigbindings not built". ;
+echo "note: JAVA_HOME not set, pwiz_swigbindings not built.  This is not necessarily an error." ;
 }
