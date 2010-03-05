@@ -319,7 +319,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private static void FilterMatchingGroups(
-            ICollection<KeyValuePair<TransitionGroupDocNode, IList<ChromData>>> listMatchingGroups)
+                List<KeyValuePair<TransitionGroupDocNode, IList<ChromData>>> listMatchingGroups)
         {
             if (listMatchingGroups.Count < 2)
                 return;
@@ -333,6 +333,8 @@ namespace pwiz.Skyline.Model.Results
                 if (!listMatchingGroups.Contains(superset => IsMatchSubSet(subset, superset)))
                     listFiltered.Add(match);
             }
+            listMatchingGroups.Clear();
+            listMatchingGroups.AddRange(listFiltered);
         }
 
         private static bool IsMatchSubSet(KeyValuePair<TransitionGroupDocNode, IList<ChromData>> subset,
@@ -2100,9 +2102,11 @@ namespace pwiz.Skyline.Model.Results
                     }
 
                     // If there is still no peak to add, create an empty one
+                    // A completely empty peak is somewhat problematic, so just stay with
+                    // the current best peak.
                     if (peakAdd == null)
                     {
-                        peakAdd = new ChromDataPeak(_listChromData[0], null);
+                        return; // peakAdd = new ChromDataPeak(_listChromData[0], null);
                     }
 
                     _listPeakSets.Insert(0,
