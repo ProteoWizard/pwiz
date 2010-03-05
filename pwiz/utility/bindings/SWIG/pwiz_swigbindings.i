@@ -1,7 +1,7 @@
 /* This is a SWIG interface file for exposing pwiz library function points to java via
    SWIG (could also be used for Python, Perl, etc).
 
-   $Id: $
+   $Id$
 
    There are two sections - declarations of things you want literally included in
    the wrapper code, and things you want magically turned into java (or python etc).
