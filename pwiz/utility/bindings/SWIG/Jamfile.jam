@@ -42,6 +42,7 @@ lib pwiz_swigbindings
         pwiz_swigbindings_wrap.cxx
     : # requirements
 	  <include>$(JAVA_HOME)/include
+	  <include>$(JAVA_HOME)/include/linux
 	  <include>$(JAVA_HOME)/include/win32
 	  <include>$(PWIZ_ROOT_PATH)/pwiz/data/msdata/ramp
   	  <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata/$(linkage)
