@@ -53,5 +53,5 @@ lib pwiz_swigbindings
 
 
 } else {
-echo "note: JAVA_HOME not set, pwiz_swigbindings not built.  This is not necessarily an error." ;
+echo "note: JAVA_HOME not set, pwiz_swigbindings not built.  This may be intentional." ;
 }
