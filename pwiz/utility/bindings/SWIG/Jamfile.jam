@@ -46,8 +46,8 @@ lib pwiz_swigbindings
 	  <include>$(JAVA_HOME)/include/win32
 	  <include>$(PWIZ_ROOT_PATH)/pwiz/data/msdata/ramp
   	  <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata/$(linkage)
-      <toolset>gcc:<cxxflags>"-Wl,--add-stdcall-alias,--kill-at" 
-	  <toolset>gcc:<cxxflags>"-D_LARGEFILE_SOURCE"
+      <toolset>gcc:<cxxflags>"-Wl --add-stdcall-alias --kill-at -D_LARGEFILE_SOURCE" 
+      <toolset>darwin:<cxxflags>"-Wl --add-stdcall-alias --kill-at -D_LARGEFILE_SOURCE" 
     : # default-build
 	   <link>shared
 	: # usage-requirements
