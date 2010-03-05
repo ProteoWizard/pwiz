@@ -24,7 +24,7 @@
 #ifndef _RAMPADAPTER_HPP_
 #define _RAMPADAPTER_HPP_
 
-
+#include <stdlib.h>
 #include "pwiz/utility/misc/Export.hpp"
 #include "ramp.h"
 #include "boost/shared_ptr.hpp"
