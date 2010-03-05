@@ -182,6 +182,7 @@ if [ modules.peek : NT ]
         : # requirements
             <conditional>@no-msvc-express
             <conditional>@build-location
+            <dependency>Skyline.exe
             <dependency>Test.dll
             <dependency>TestFunctional.dll
         ;
