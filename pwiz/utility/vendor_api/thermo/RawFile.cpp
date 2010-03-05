@@ -181,6 +181,15 @@ RawFileImpl::RawFileImpl(const string& filename)
     filename_(filename),
     instrumentModel_(InstrumentModelType_Unknown)
 {
+    // XRawfile requires '.' as a decimal separator
+    int decimalSeparatorLength = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, 0, 0);
+    char* buf = new char[decimalSeparatorLength];
+    GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, buf, decimalSeparatorLength);
+    string decimalSeparator = buf;
+    delete buf;
+    if (decimalSeparator != ".")
+        throw runtime_error("[RawFile::ctor] Reading Thermo RAW files requires the decimal separator to be '.' - adjust regional/language settings in the Control Panel.");
+
     COMInitializer::initialize();
 
     // get the filepath of the calling .exe using WinAPI
