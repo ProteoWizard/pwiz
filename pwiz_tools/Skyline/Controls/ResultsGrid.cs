@@ -299,6 +299,9 @@ namespace pwiz.Skyline.Controls
             _inCommitEdit = true;
             try
             {
+                if (DocumentUiContainer.InUndoRedo)
+                    return;
+
                 var row = Rows[e.RowIndex];
                 var rowIdentifier = row.Tag as RowIdentifier;
                 if (rowIdentifier == null)

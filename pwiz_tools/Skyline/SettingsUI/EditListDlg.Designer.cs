@@ -157,6 +157,7 @@
             // 
             // btnCopy
             // 
+            this.btnCopy.Enabled = false;
             this.btnCopy.Location = new System.Drawing.Point(199, 58);
             this.btnCopy.Name = "btnCopy";
             this.btnCopy.Size = new System.Drawing.Size(75, 23);

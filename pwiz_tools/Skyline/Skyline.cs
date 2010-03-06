@@ -417,6 +417,8 @@ namespace pwiz.Skyline
             return _undoManager.BeginTransaction(description);
         }
 
+        public bool InUndoRedo { get { return _undoManager.InUndoRedo; } }
+
         /// <summary>
         /// Kills all background processing, and then restores a specific document
         /// as the current document.  After which background processing is restarted

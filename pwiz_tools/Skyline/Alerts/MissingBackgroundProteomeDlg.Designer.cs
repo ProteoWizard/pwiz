@@ -40,7 +40,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(316, 102);
+            this.btnCancel.Location = new System.Drawing.Point(321, 101);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 8;
@@ -50,7 +50,7 @@
             // btnBrowse
             // 
             this.btnBrowse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnBrowse.Location = new System.Drawing.Point(235, 102);
+            this.btnBrowse.Location = new System.Drawing.Point(240, 101);
             this.btnBrowse.Name = "btnBrowse";
             this.btnBrowse.Size = new System.Drawing.Size(75, 23);
             this.btnBrowse.TabIndex = 7;
@@ -65,7 +65,7 @@
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.BackColor = System.Drawing.SystemColors.Window;
             this.panel1.Controls.Add(this.labelMessage);
-            this.panel1.Location = new System.Drawing.Point(-7, 1);
+            this.panel1.Location = new System.Drawing.Point(-2, 0);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(412, 89);
             this.panel1.TabIndex = 6;
@@ -83,7 +83,7 @@
             // btnOpen
             // 
             this.btnOpen.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOpen.Location = new System.Drawing.Point(154, 102);
+            this.btnOpen.Location = new System.Drawing.Point(159, 101);
             this.btnOpen.Name = "btnOpen";
             this.btnOpen.Size = new System.Drawing.Size(75, 23);
             this.btnOpen.TabIndex = 5;
@@ -95,13 +95,17 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(398, 126);
+            this.ClientSize = new System.Drawing.Size(408, 136);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnBrowse);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.btnOpen);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "MissingBackgroundProteomeDlg";
-            this.Text = "MissingBackgroundProteomeDlg";
+            this.ShowInTaskbar = false;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.ResumeLayout(false);
