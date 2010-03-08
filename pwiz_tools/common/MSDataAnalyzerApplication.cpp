@@ -27,10 +27,10 @@
 #include "FullReaderList.hpp"
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumListFactory.hpp"
-#include "boost/filesystem/path.hpp"
-#include "boost/filesystem/convenience.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include "boost/program_options.hpp"
-#include <fstream>
+#include <iostream>
+#include <boost/foreach.hpp>
 
 
 namespace pwiz {
@@ -38,6 +38,7 @@ namespace analysis {
 
 
 using namespace std;
+using namespace pwiz::util;
 
 
 //
@@ -46,7 +47,7 @@ using namespace std;
 
 
 PWIZ_API_DECL MSDataAnalyzerApplication::MSDataAnalyzerApplication(int argc, const char* argv[])
-:   outputDirectory(".")
+:   outputDirectory("."), verbose(false)
 {
     namespace po = boost::program_options;
 
@@ -70,6 +71,9 @@ PWIZ_API_DECL MSDataAnalyzerApplication::MSDataAnalyzerApplication(int argc, con
         ("filter",
             po::value< vector<string> >(&filters),
 			(": add a spectrum list filter\n" + SpectrumListFactory::usage()).c_str())
+        ("verbose,v",
+            po::value<bool>(&verbose)->zero_tokens(),
+            ": print progress messages")
         ;
 
     // save options description
@@ -111,7 +115,24 @@ PWIZ_API_DECL MSDataAnalyzerApplication::MSDataAnalyzerApplication(int argc, con
     // remember filenames from command line
 
     if (vm.count(label_args))
+    {
         filenames = vm[label_args].as< vector<string> >();
+
+        // expand the filenames by globbing to handle wildcards
+        vector<bfs::path> globbedFilenames;
+        BOOST_FOREACH(const string& filename, filenames)
+        {
+            expand_pathmask(bfs::path(filename), globbedFilenames);
+            if (!globbedFilenames.size())
+            {
+                cout <<  "[MSDataAnalyzerApplication] no files found matching \"" << filename << "\"";
+            }
+        }
+
+        filenames.clear();
+        BOOST_FOREACH(const bfs::path& filename, globbedFilenames)
+            filenames.push_back(filename.string());
+    }
 
     // parse filelist if required
 
@@ -137,17 +158,20 @@ PWIZ_API_DECL void MSDataAnalyzerApplication::run(MSDataAnalyzer& analyzer, ostr
 
     FullReaderList readers;
 
-    for (vector<string>::const_iterator it=filenames.begin(); it!=filenames.end(); ++it)
+    if (!verbose)
+        log = NULL;
+
+    BOOST_FOREACH(const string& filename, filenames)
     {
         try
         {
-            if (log) *log << "[MSDataAnalyzerApplication] Analyzing file: " << *it << endl;
+            if (log) *log << "[MSDataAnalyzerApplication] Analyzing file: " << filename << endl;
 
-            MSDataFile msd(*it, &readers);
+            MSDataFile msd(filename, &readers);
             SpectrumListFactory::wrap(msd, filters);
 
             MSDataAnalyzer::DataInfo dataInfo(msd);
-            dataInfo.sourceFilename = bfs::path(*it).leaf();
+            dataInfo.sourceFilename = bfs::path(filename).leaf();
             dataInfo.outputDirectory = outputDirectory;
             dataInfo.log = log;
 
