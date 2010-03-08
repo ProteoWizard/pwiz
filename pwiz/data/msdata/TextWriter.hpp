@@ -41,11 +41,19 @@ class PWIZ_API_DECL TextWriter
 {
     public:
 
-    TextWriter(std::ostream& os, int depth = 0)
-    :   os_(os), depth_(depth), indent_(depth*2, ' ')
+    /// constructs a TextWriter for MSData types
+    /// @param os  The ostream to write to.
+    /// @param depth  The number of indentations to prefix to each output line.
+    /// @param arrayExampleCount  The number of example values to print for arrays (i.e. m/z and intensity); -1 for unlimited
+    TextWriter(std::ostream& os, int depth = 0, int arrayExampleCount = 3)
+        :   os_(os),
+            depth_(depth),
+            arrayExampleCount_(arrayExampleCount < 0 ? std::numeric_limits<size_t>::max()
+                                                     : (size_t) arrayExampleCount),
+            indent_(depth*2, ' ')
     {}
 
-    TextWriter child() {return TextWriter(os_, depth_+1);}
+    TextWriter child() {return TextWriter(os_, depth_+1, arrayExampleCount_);}
 
     TextWriter& operator()(const std::string& text)
     {
@@ -406,9 +414,10 @@ class PWIZ_API_DECL TextWriter
         std::stringstream oss;
         oss << "[" << boost::lexical_cast<std::string>(p->data.size()) << "] ";
         oss.precision(12);
-        for (unsigned int i=0; i<3 && i<p->data.size(); i++)
+        for (size_t i=0; i < arrayExampleCount_ && i < p->data.size(); i++)
             oss << p->data[i] << " ";
-        oss << "...";
+        if (p->data.size() > arrayExampleCount_)
+            oss << "...";
 
         (*this)("binaryDataArray:");
         child() (static_cast<const ParamContainer&>(*p));
@@ -485,6 +494,7 @@ class PWIZ_API_DECL TextWriter
     private:
     std::ostream& os_;
     int depth_;
+    size_t arrayExampleCount_;
     std::string indent_;
 };
 

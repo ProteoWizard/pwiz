@@ -138,7 +138,7 @@ void writeStream(ostream& os, const MSData& msd, const MSDataFile::WriteConfig& 
     {
         case MSDataFile::Format_Text:
         {
-            TextWriter(os,0)(msd);
+            TextWriter(os, 0, -1)(msd);
             break;
         }
         case MSDataFile::Format_mzML:
