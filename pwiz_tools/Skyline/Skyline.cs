@@ -2129,6 +2129,7 @@ namespace pwiz.Skyline
             _activeClipboardControl = clipboardControl;
             UpdateClipboardMenuItems();
         }
+
         public void ClipboardControlLostFocus(Control clipboardControl)
         {
             if (_activeClipboardControl == clipboardControl)
@@ -2137,6 +2138,7 @@ namespace pwiz.Skyline
             }
             UpdateClipboardMenuItems();
         }
+
         private void UpdateClipboardMenuItems()
         {
             if (_activeClipboardControl != null)

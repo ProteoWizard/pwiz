@@ -274,8 +274,22 @@ namespace pwiz.Skyline
                     foreach (var graphChromatogram in _listGraphChrom.ToArray())
                     {
                         string name = graphChromatogram.NameSet;
+                        // Look for mathcing chromatogram sets across the documents
+                        ChromatogramSet chromSetOld;
+                        ChromatogramSet chromSetNew;
+                        int index;
+                        if (settingsOld.HasResults &&
+                            settingsOld.MeasuredResults.TryGetChromatogramSet(name, out chromSetOld, out index) &&
+                            settingsNew.HasResults &&
+                            settingsNew.MeasuredResults.TryGetChromatogramSet(chromSetOld.Id.GlobalIndex, out chromSetNew, out index))
+                        {
+                            // If matching chromatogram found, but name has changed, then
+                            // update the graph pane
+                            if (!Equals(chromSetNew.Name, chromSetOld.Name))
+                                name = graphChromatogram.NameSet = chromSetNew.Name;
+                        }
                         var results = settingsNew.MeasuredResults;
-                        if (results == null || results.Chromatograms.IndexOf(chrom => Equals(chrom.Name, name)) == -1)
+                        if (results == null || !results.Chromatograms.Contains(chrom => Equals(chrom.Name, name)))
                         {
                             layoutLock.EnsureLocked();
                             ShowGraphChrom(graphChromatogram.NameSet, false);

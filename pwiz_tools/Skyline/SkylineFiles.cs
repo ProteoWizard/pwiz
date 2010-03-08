@@ -872,6 +872,29 @@ namespace pwiz.Skyline
             }
         }
 
+        private void manageResultsMenuItem_Click(object sender, EventArgs e)
+        {
+            var documentUI = DocumentUI;
+            if (!documentUI.Settings.HasResults)
+                return;
+
+            ManageResultsDlg dlg = new ManageResultsDlg(documentUI);
+            if (dlg.ShowDialog() == DialogResult.OK)
+            {
+                ModifyDocument("Manage results", doc =>
+                {
+                    var results = doc.Settings.MeasuredResults;
+                    if (results == null)
+                        return doc;
+                    var listChrom = new List<ChromatogramSet>(dlg.Chromatograms);
+                    if (ArrayUtil.ReferencesEqual(results.Chromatograms, listChrom))
+                        return doc;
+                    results = listChrom.Count > 0 ? results.ChangeChromatograms(listChrom.ToArray()) : null;
+                    return doc.ChangeMeasuredResults(results);
+                });
+            }
+        }
+
         private class MruChosenHandler
         {
             private readonly SkylineWindow _skyline;

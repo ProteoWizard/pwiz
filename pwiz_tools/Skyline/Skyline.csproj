@@ -297,6 +297,18 @@
     <Compile Include="EditUI\RTChartPropertyDlg.Designer.cs">
       <DependentUpon>RTChartPropertyDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="FileUI\ManageResultsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\ManageResultsDlg.Designer.cs">
+      <DependentUpon>ManageResultsDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\RenameResultDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\RenameResultDlg.Designer.cs">
+      <DependentUpon>RenameResultDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Model\Hibernate\DbPrecursorResultSummary.cs" />
     <Compile Include="Model\Hibernate\DbTransitionResultSummary.cs" />
     <Compile Include="Model\Lib\BlibData\BlibDb.cs" />
@@ -900,8 +912,15 @@
       <DependentUpon>SpectrumChartPropertyDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\ManageResultsDlg.resx">
+      <DependentUpon>ManageResultsDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ExportOptimizeDlg.resx">
       <DependentUpon>ExportOptimizeDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\RenameResultDlg.resx">
+      <DependentUpon>RenameResultDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ShareListDlg.resx">
       <DependentUpon>ShareListDlg.cs</DependentUpon>

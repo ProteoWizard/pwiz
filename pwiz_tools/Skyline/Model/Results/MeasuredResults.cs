@@ -207,24 +207,23 @@ namespace pwiz.Skyline.Model.Results
             return results;
         }
 
-        public bool TryGetChromatogramSet(string name, out ChromatogramSet chomatogramSet, out int index)
+        public bool TryGetChromatogramSet(string name, out ChromatogramSet chromatogramSet, out int index)
         {
-            index = 0;
-            foreach (var set in _chromatograms)
-            {
-                if (Equals(name, set.Name))
-                {
-                    chomatogramSet = set;
-                    return true;
-                }
-                index++;
-            }
-
-            chomatogramSet = null;
-            index = -1;
-            return false;
+            index = _chromatograms.IndexOf(chrom => Equals(name, chrom.Name));
+            return ChromatogramSetForIndex(index, out chromatogramSet);
         }
 
+        public bool TryGetChromatogramSet(int setId, out ChromatogramSet chromatogramSet, out int index)
+        {
+            index = _chromatograms.IndexOf(chrom => Equals(setId, chrom.Id.GlobalIndex));
+            return ChromatogramSetForIndex(index, out chromatogramSet);
+        }
+
+        private bool ChromatogramSetForIndex(int index, out ChromatogramSet chromatogramSet)
+        {
+            chromatogramSet = (index != -1 ? _chromatograms[index] : null);
+            return index != -1;            
+        }
         
         public bool TryLoadChromatogram(int index,
                                         TransitionGroupDocNode nodeGroup,

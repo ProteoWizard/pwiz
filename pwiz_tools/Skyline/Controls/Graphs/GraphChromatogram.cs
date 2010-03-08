@@ -86,7 +86,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public void BuildChromatogramMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip) {}
         }
 
-        private readonly string _nameChromatogramSet;
+        private string _nameChromatogramSet;
         private readonly IDocumentUIContainer _documentContainer;
         private readonly IStateProvider _stateProvider;
 
@@ -104,7 +104,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             InitializeComponent();
 
-            TabText = name;
+            NameSet = name;
             Icon = Resources.SkylineData;
 
             graphControl.MasterPane.Border.IsVisible = false;
@@ -120,7 +120,11 @@ namespace pwiz.Skyline.Controls.Graphs
                              new DefaultStateProvider();
         }
 
-        public string NameSet { get { return _nameChromatogramSet; } }
+        public string NameSet
+        {
+            get { return _nameChromatogramSet; }
+            set { TabText = _nameChromatogramSet = value; }
+        }
 
         public int CurveCount { get { return GraphPane.CurveList.Count; } }
 
@@ -454,7 +458,7 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.Refresh();
         }
 
-        private void DisplayFailureGraph(MSGraphPane graphPane, TransitionGroupDocNode[] nodeGroups, Exception x)
+        private void DisplayFailureGraph(MSGraphPane graphPane, IEnumerable<TransitionGroupDocNode> nodeGroups, Exception x)
         {
             if (nodeGroups != null)
             {
