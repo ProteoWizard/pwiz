@@ -232,7 +232,7 @@ namespace pwiz.Skyline
             pathBackgroundProteome = Path.Combine(Settings.Default.ProteomeDbDirectory, fileName);
             if (File.Exists(pathBackgroundProteome))
                 return new BackgroundProteomeSpec(backgroundProteomeSpec.Name, pathBackgroundProteome);
-            var dlg = new MissingBackgroundProteomeDlg()
+            var dlg = new MissingBackgroundProteomeDlg
             {
                 BackgroundProteomeHint = fileName,
                 BackgroundProteomeName = backgroundProteomeSpec.Name,
@@ -844,32 +844,6 @@ namespace pwiz.Skyline
         {
             return (results == null ? null :
                 results.Chromatograms.FirstOrDefault(set => Equals(name, set.Name)));
-        }
-
-        private void removeResultsMenuItem_Click(object sender, EventArgs e)
-        {
-            var documentUI = DocumentUI;
-            if (!documentUI.Settings.HasResults)
-                return;
-
-            RemoveResultsDlg dlg = new RemoveResultsDlg(documentUI);
-            if (dlg.ShowDialog() == DialogResult.OK)
-            {
-                ModifyDocument("Remove results", doc =>
-                {
-                    var results = doc.Settings.MeasuredResults;
-                    if (results == null)
-                        return doc;
-                    var listChrom = new List<ChromatogramSet>();
-                    foreach (var set in results.Chromatograms)
-                    {
-                        if (!dlg.RemoveNames.Contains(set.Name))
-                            listChrom.Add(set);
-                    }
-                    results = listChrom.Count > 0 ? results.ChangeChromatograms(listChrom.ToArray()) : null;
-                    return doc.ChangeMeasuredResults(results);
-                });
-            }
         }
 
         private void manageResultsMenuItem_Click(object sender, EventArgs e)

@@ -94,7 +94,6 @@ namespace pwiz.Skyline
             this.findPeptideMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.modifyPeptideMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator30 = new System.Windows.Forms.ToolStripSeparator();
-            this.removeResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.manageResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.arrangeGraphsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -535,7 +534,6 @@ namespace pwiz.Skyline
             this.findPeptideMenuItem,
             this.modifyPeptideMenuItem,
             this.toolStripSeparator30,
-            this.removeResultsMenuItem,
             this.manageResultsMenuItem});
             this.editToolStripMenuItem.ImageTransparentColor = System.Drawing.Color.Fuchsia;
             this.editToolStripMenuItem.Name = "editToolStripMenuItem";
@@ -826,14 +824,6 @@ namespace pwiz.Skyline
             // 
             this.toolStripSeparator30.Name = "toolStripSeparator30";
             this.toolStripSeparator30.Size = new System.Drawing.Size(204, 6);
-            // 
-            // removeResultsMenuItem
-            // 
-            this.removeResultsMenuItem.Name = "removeResultsMenuItem";
-            this.removeResultsMenuItem.Size = new System.Drawing.Size(207, 22);
-            this.removeResultsMenuItem.Text = "Remove Re&sults...";
-            this.removeResultsMenuItem.Visible = false;
-            this.removeResultsMenuItem.Click += new System.EventHandler(this.removeResultsMenuItem_Click);
             // 
             // manageResultsMenuItem
             // 
@@ -2656,7 +2646,6 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem autoZoomNoneContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem autoZoomBestPeakContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem autoZoomRTWindowContextMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem removeResultsMenuItem;
         private System.Windows.Forms.ToolStrip toolBarResults;
         private System.Windows.Forms.ToolStripLabel labelResults;
         private System.Windows.Forms.ToolStripComboBox comboResults;
