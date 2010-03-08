@@ -125,13 +125,16 @@ PWIZ_API_DECL MSDataAnalyzerApplication::MSDataAnalyzerApplication(int argc, con
             expand_pathmask(bfs::path(filename), globbedFilenames);
             if (!globbedFilenames.size())
             {
-                cout <<  "[MSDataAnalyzerApplication] no files found matching \"" << filename << "\"";
+                cout <<  "[MSDataAnalyzerApplication] no files found matching \"" << filename << "\"" << endl;
             }
         }
 
-        filenames.clear();
-        BOOST_FOREACH(const bfs::path& filename, globbedFilenames)
-            filenames.push_back(filename.string());
+        if (!globbedFilenames.empty())
+        {
+            filenames.clear();
+            BOOST_FOREACH(const bfs::path& filename, globbedFilenames)
+                filenames.push_back(filename.string());
+        }
     }
 
     // parse filelist if required
