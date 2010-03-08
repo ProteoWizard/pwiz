@@ -53,6 +53,7 @@ struct PWIZ_API_DECL SpectrumInfo
     CVID massAnalyzerType;
     int scanEvent;
     int msLevel;
+    bool isZoomScan;
     double retentionTime; // seconds
     std::string filterString;
     double mzLow;
@@ -62,6 +63,7 @@ struct PWIZ_API_DECL SpectrumInfo
     double totalIonCurrent;
     double thermoMonoisotopicMZ;
     std::vector<PrecursorInfo> precursors;
+    size_t dataSize;
     std::vector<MZIntensityPair> data;
 
     SpectrumInfo();

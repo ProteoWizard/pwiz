@@ -40,14 +40,14 @@ using boost::bad_lexical_cast;
 
 PWIZ_API_DECL SpectrumInfo::SpectrumInfo()
 :   index((size_t)-1), scanNumber(0), massAnalyzerType(CVID_Unknown), scanEvent(0), 
-    msLevel(0), retentionTime(0), mzLow(0), mzHigh(0), basePeakMZ(0), 
+    msLevel(0), isZoomScan(false), retentionTime(0), mzLow(0), mzHigh(0), basePeakMZ(0), 
     basePeakIntensity(0), totalIonCurrent(0), thermoMonoisotopicMZ(0)
 {}
 
 
 PWIZ_API_DECL SpectrumInfo::SpectrumInfo(const Spectrum& spectrum)
 :   index((size_t)-1), scanNumber(0), massAnalyzerType(CVID_Unknown), scanEvent(0), 
-    msLevel(0), retentionTime(0), mzLow(0), mzHigh(0), basePeakMZ(0), 
+    msLevel(0), isZoomScan(false), retentionTime(0), mzLow(0), mzHigh(0), basePeakMZ(0), 
     basePeakIntensity(0), totalIonCurrent(0), thermoMonoisotopicMZ(0)
 {
     update(spectrum);
@@ -80,6 +80,7 @@ PWIZ_API_DECL void SpectrumInfo::update(const Spectrum& spectrum, bool getBinary
 
     scanEvent = scan.cvParam(MS_preset_scan_configuration).valueAs<int>(); 
     msLevel = spectrum.cvParam(MS_ms_level).valueAs<int>();
+    isZoomScan = spectrum.hasCVParam(MS_zoom_scan);
     retentionTime = scan.cvParam(MS_scan_start_time).timeInSeconds();
     filterString = scan.cvParam(MS_filter_string).value;
     mzLow = spectrum.cvParam(MS_lowest_observed_m_z).valueAs<double>();        
@@ -105,6 +106,7 @@ PWIZ_API_DECL void SpectrumInfo::update(const Spectrum& spectrum, bool getBinary
         precursors.push_back(precursorInfo);
     }
 
+    dataSize = spectrum.defaultArrayLength;
     if (getBinaryData && !spectrum.binaryDataArrayPtrs.empty())
         spectrum.getMZIntensityPairs(data);
 }
