@@ -24,6 +24,7 @@
 #include "pwiz_tools/common/MSDataAnalyzerApplication.hpp"
 #include "pwiz/analysis/passive/MSDataCache.hpp"
 #include "pwiz/analysis/passive/MetadataReporter.hpp"
+#include "pwiz/analysis/passive/RunSummary.hpp"
 #include "pwiz/analysis/passive/SpectrumTable.hpp"
 #include "pwiz/analysis/passive/SpectrumBinaryData.hpp"
 #include "pwiz/analysis/passive/RegionSlice.hpp"
@@ -72,6 +73,11 @@ void initializeAnalyzers(MSDataAnalyzerContainer& analyzers,
         if (name == analyzer_strings<MetadataReporter>::id())
         {
             MSDataAnalyzerPtr anal(new MetadataReporter);
+            analyzers.push_back(anal);
+        }
+        else if (name == analyzer_strings<RunSummary>::id())
+        {
+            MSDataAnalyzerPtr anal(new RunSummary(*cache, args));
             analyzers.push_back(anal);
         }
         else if (name == analyzer_strings<SpectrumTable>::id())
@@ -127,6 +133,7 @@ string usage(const MSDataAnalyzerApplication& app)
         << "\n";
 
     printCommandUsage<MetadataReporter>(oss);
+    printCommandUsage<RunSummary>(oss);
     printCommandUsage<SpectrumTable>(oss);
     printCommandUsage<SpectrumBinaryData>(oss);
     printCommandUsage<RegionSlice>(oss);

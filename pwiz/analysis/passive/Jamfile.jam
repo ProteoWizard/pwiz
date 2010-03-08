@@ -43,6 +43,7 @@ lib pwiz_analysis_passive_core
 lib pwiz_analysis_passive
     : # sources 
         MetadataReporter.cpp
+        RunSummary.cpp
         SpectrumTable.cpp
         SpectrumBinaryData.cpp
         RegionAnalyzer.cpp
