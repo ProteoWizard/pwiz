@@ -19,10 +19,10 @@
 # limitations under the License.
 #
 
-import os ;
+import os path ;
 local JAVA_HOME = [ os.environ JAVA_HOME ] ;
 
-if "" != $(JAVA_HOME)
+if $(JAVA_HOME) && [ path.exists $(JAVA_HOME)/include/jni.h ]
 {
 
 
@@ -48,12 +48,13 @@ lib pwiz_swigbindings
   	  <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata/$(linkage)
       <toolset>gcc:<cxxflags>"-Wl,--add-stdcall-alias,--kill-at -D_LARGEFILE_SOURCE" 
       <toolset>darwin:<cxxflags>"-Wl,--add-stdcall-alias,--kill-at -D_LARGEFILE_SOURCE" 
+      <conditional>@static-with-fpic
+	  <link>shared
     : # default-build
-	   <link>shared
 	: # usage-requirements
     ;
 
 
 } else {
-echo "note: JAVA_HOME not set, pwiz_swigbindings not built.  This may be intentional." ;
+echo "note: JAVA_HOME not set or $(JAVA_HOME)/include/jni.h not found; pwiz_swigbindings not built.  This may be intentional." ;
 }
