@@ -29,6 +29,7 @@
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Stream.hpp"
 #include "pwiz/utility/misc/Exception.hpp"
+#include <boost/iostreams/copy.hpp>
 #include <boost/shared_ptr.hpp>
 
 
@@ -84,6 +85,15 @@ PWIZ_API_DECL void Reader_FASTA::read(const std::string& uri, shared_ptr<istream
         {ofstream((uri + ".index").c_str(), ios::app);} // make sure the file exists
         shared_ptr<iostream> isPtr(new fstream((uri + ".index").c_str(), ios::in | ios::out | ios::binary));
 
+        // indexes smaller than 200mb are loaded entirely into memory
+        boost::uintmax_t indexSize = bfs::file_size(uri + ".index");
+        if (indexSize > 0 && indexSize < 200000000)
+        {
+            stringstream* indexFileStream = new stringstream();
+            bio::copy(*isPtr, *indexFileStream);
+            isPtr.reset(indexFileStream);
+        }
+
         if (!*isPtr) // stream is unavailable or read only
         {
             isPtr.reset(new fstream((uri + ".index").c_str(), ios::in | ios::binary));
@@ -110,7 +120,7 @@ PWIZ_API_DECL void Reader_FASTA::read(const std::string& uri, shared_ptr<istream
 
             // TODO: try opening an index in other locations, e.g.:
             // * current working directory (may be read only)
-            // * executing direcotry (may be read only)
+            // * executing directory (may be read only)
             // * temp directory (pretty much guaranteed to be writable)
             if (!canOpenReadOnly)
             {
