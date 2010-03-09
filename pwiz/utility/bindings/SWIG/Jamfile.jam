@@ -22,7 +22,7 @@
 import os path ;
 local JAVA_HOME = [ os.environ JAVA_HOME ] ;
 
-if $(JAVA_HOME) && [ path.exists $(JAVA_HOME)/include/jni.h ]
+if $(JAVA_HOME) && ( [ path.exists $(JAVA_HOME)/include/jni.h ] || [ path.exists $(JAVA_HOME)/../Headers/jni.h ] )
 {
 
 
@@ -42,6 +42,7 @@ lib pwiz_swigbindings
         pwiz_swigbindings_wrap.cxx
     : # requirements
 	  <include>$(JAVA_HOME)/include
+	  <include>$(JAVA_HOME)/../Headers
 	  <include>$(JAVA_HOME)/include/linux
 	  <include>$(JAVA_HOME)/include/win32
 	  <include>$(PWIZ_ROOT_PATH)/pwiz/data/msdata/ramp
@@ -56,5 +57,5 @@ lib pwiz_swigbindings
 
 
 } else {
-echo "note: JAVA_HOME not set or $(JAVA_HOME)/include/jni.h not found; pwiz_swigbindings not built.  This may be intentional." ;
+echo "note: JAVA_HOME not set or jni.h not found; pwiz_swigbindings not built.  This may be intentional." ;
 }
