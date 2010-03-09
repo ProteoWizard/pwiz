@@ -27,6 +27,7 @@ using DigitalRune.Windows.Docking;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -1432,6 +1433,8 @@ namespace pwiz.Skyline
             }
         }
 
+        public IEnumerable<GraphChromatogram> GraphChromatograms { get { return _listGraphChrom; } }
+
         public GraphChromatogram GetGraphChrom(string name)
         {
             int iGraph = _listGraphChrom.IndexOf(graph => Equals(graph.NameSet, name));
@@ -2437,6 +2440,11 @@ namespace pwiz.Skyline
         }
 
         private void arrangeGroupedMenuItem_Click(object sender, EventArgs e)
+        {
+            ArrangeGraphsGrouped();
+        }
+
+        public void ArrangeGraphsGrouped()
         {
             var order = Helpers.ParseEnum(Settings.Default.ArrangeGraphsOrder, GroupGraphsOrder.Position);
             bool reversed = Settings.Default.ArrangeGraphsReversed;

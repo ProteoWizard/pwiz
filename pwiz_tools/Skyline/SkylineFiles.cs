@@ -848,6 +848,11 @@ namespace pwiz.Skyline
 
         private void manageResultsMenuItem_Click(object sender, EventArgs e)
         {
+            ManageResults();
+        }
+
+        public void ManageResults()
+        {
             var documentUI = DocumentUI;
             if (!documentUI.Settings.HasResults)
                 return;

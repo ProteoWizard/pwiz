@@ -61,6 +61,13 @@ namespace pwiz.SkylineTestFunctional
             SkylineWindow.Invoke(act);
         }
 
+        protected static void RunDlg<T>(Action show, Action<T> act) where T : Form
+        {
+            T dlg = ShowDialog<T>(show);
+            RunUI(() => act(dlg));
+            WaitForClosedForm(dlg);
+        }
+
         protected static void SelectNode(SrmDocument.Level level, int iNode)
         {
             var pathSelect = SkylineWindow.Document.GetPathTo((int)level, iNode);

@@ -37,7 +37,16 @@ namespace pwiz.Skyline.FileUI
 
         private IEnumerable<string> ExistingNames { get; set; }
 
-        public string ReplicateName { get { return textName.Text; } }
+        public string ReplicateName
+        {
+            get { return textName.Text; }
+            set
+            {
+                if (ExistingNames.Contains(value))
+                    throw new InvalidOperationException(string.Format("The name {0} is already in use.", value));
+                textName.Text = value;
+            }
+        }
 
         private void btnOk_Click(object sender, EventArgs e)
         {

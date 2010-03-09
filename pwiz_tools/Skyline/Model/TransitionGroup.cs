@@ -389,7 +389,7 @@ namespace pwiz.Skyline.Model
                 float mzMatchTolerance = (float) settingsNew.TransitionSettings.Instrument.MzMatchTolerance;
                 var measuredResults = settingsNew.MeasuredResults;
                 var listChromSets = measuredResults.Chromatograms;
-                var resultsCalc = new TransitionGroupResultsCalculator(this);
+                var resultsCalc = new TransitionGroupResultsCalculator(this, listChromSets, dictChromIdIndex);
                 foreach (var chromatograms in listChromSets)
                 {
                     ChromatogramGroupInfo[] arrayChromInfo;
@@ -567,10 +567,18 @@ namespace pwiz.Skyline.Model
             private readonly TransitionGroupDocNode _nodeGroup;
             private readonly List<TransitionGroupChromInfoListCalculator> _listResultCalcs;
             private readonly List<IList<TransitionChromInfo>>[] _arrayChromInfoSets;
+            // Allow look-up of former result position
+            private readonly IList<ChromatogramSet> _listChromSets;
+            private readonly Dictionary<int, int> _dictChromIdIndex;
 
-            public TransitionGroupResultsCalculator(TransitionGroupDocNode nodeGroup)
+            public TransitionGroupResultsCalculator(TransitionGroupDocNode nodeGroup,
+                                                    IList<ChromatogramSet> listChromSets,
+                                                    Dictionary<int, int> dictChromIdIndex)
             {
                 _nodeGroup = nodeGroup;
+                _listChromSets = listChromSets;
+                _dictChromIdIndex = dictChromIdIndex;
+
                 // Shouldn't be necessary to create one of these, if there are
                 // no transitions
                 int countTransitions = nodeGroup.Children.Count;
@@ -591,14 +599,29 @@ namespace pwiz.Skyline.Model
                 while (_listResultCalcs.Count <= iNext)
                 {
                     int transitionCount = _arrayChromInfoSets.Length;
-                    int iResult = _listResultCalcs.Count;
                     ChromInfoList<TransitionGroupChromInfo> listChromInfo = null;
-                    if (_nodeGroup.HasResults && iResult < _nodeGroup.Results.Count)
-                        listChromInfo = _nodeGroup.Results[iResult];
+                    int iResult = _listResultCalcs.Count;
+                    if (_nodeGroup.HasResults)
+                    {
+                        int iResultOld = GetOldPosition(iResult);
+                        if (iResultOld != -1)
+                            listChromInfo = _nodeGroup.Results[iResultOld];
+                    }
                     _listResultCalcs.Add(new TransitionGroupChromInfoListCalculator(transitionCount, listChromInfo));
                 }
                 // Add the iNext entry
                 _listResultCalcs[iNext].AddChromInfoList(info);
+            }
+
+            private int GetOldPosition(int iResult)
+            {
+                if (iResult < _listChromSets.Count)
+                {
+                    int iResultOld;
+                    if (_dictChromIdIndex.TryGetValue(_listChromSets[iResult].Id.GlobalIndex, out iResultOld))
+                        return iResultOld;
+                }
+                return -1;
             }
 
             public TransitionGroupDocNode UpdateTransitionGroupNode(TransitionGroupDocNode nodeGroup)

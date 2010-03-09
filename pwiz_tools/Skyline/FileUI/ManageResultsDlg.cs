@@ -54,6 +54,22 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        public IEnumerable<ChromatogramSet> SelectedChromatograms
+        {
+            get
+            {
+                foreach (var i in SelectedIndices)
+                    yield return (ChromatogramSet) listResults.Items[i];
+            }
+
+            set
+            {
+                listResults.SelectedItems.Clear();
+                foreach (var chromSet in value)
+                    listResults.SelectedItems.Add(chromSet);
+            }
+        }
+
         public int[] SelectedIndices
         {
             get
@@ -77,6 +93,11 @@ namespace pwiz.Skyline.FileUI
         }
 
         private void btnRemove_Click(object sender, EventArgs e)
+        {
+            Remove();
+        }
+
+        public void Remove()
         {
             using (new UpdateList(this))
             {
@@ -112,6 +133,11 @@ namespace pwiz.Skyline.FileUI
 
         private void btnRemoveAll_Click(object sender, EventArgs e)
         {
+            RemoveAll();
+        }
+
+        public void RemoveAll()
+        {
             using (new UpdateList(this))
             {
                 listResults.Items.Clear();
@@ -122,6 +148,11 @@ namespace pwiz.Skyline.FileUI
 
         private void btnUp_Click(object sender, EventArgs e)
         {
+            MoveUp();
+        }
+
+        public void MoveUp()
+        {
             using (new UpdateList(this))
             {
                 MoveSelected(-1);
@@ -129,6 +160,11 @@ namespace pwiz.Skyline.FileUI
         }
 
         private void btnDown_Click(object sender, EventArgs e)
+        {
+            MoveDown();
+        }
+
+        public void MoveDown()
         {
             using (new UpdateList(this))
             {
@@ -178,7 +214,7 @@ namespace pwiz.Skyline.FileUI
             RenameResult();
         }
 
-        private void RenameResult()
+        public void RenameResult()
         {
             int iFirst = SelectedIndices[0];
             listResults.SelectedIndices.Clear();

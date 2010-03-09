@@ -869,6 +869,16 @@ namespace pwiz.Skyline.Model.Results
 
             public IList<ChromDataSet> DataSets { get { return _dataSets; } }
 
+            public IEnumerable<ChromDataSet> ComparableDataSets
+            {
+                get
+                {
+                    return from dataSet in DataSets
+                           where dataSet.DocNode.RelativeRT != RelativeRT.Unknown
+                           select dataSet;
+                }
+            }
+
             private IEnumerable<ChromData> ChromDatas
             {
                 get
@@ -1112,7 +1122,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 // Only possible to improve upon individual precursor peak picking,
                 // if there are more than one precursor
-                if (DataSets.Count < 2)
+                if (ComparableDataSets.Count() < 2)
                     return;
 
                 // Merge all the peaks into a single set
@@ -1142,6 +1152,11 @@ namespace pwiz.Skyline.Model.Results
                     PeptideChromDataPeak peakBest = null;
                     foreach (var peak in chargePeakGroup)
                     {
+                        // Ignore precursors with unknown relative RT. They do not participate
+                        // in peptide peak matching.
+                        if (peak.Data.DocNode.RelativeRT == RelativeRT.Unknown)
+                            continue;
+
                         peak.Data.SetBestPeak(peak.PeakGroup, peakBest);
                         if (peakBest == null)
                             peakBest = peak;
@@ -1215,7 +1230,9 @@ namespace pwiz.Skyline.Model.Results
             private IList<PeptideChromDataPeak> MergePeakGroups()
             {
                 List<PeptideChromDataPeak> allPeaks = new List<PeptideChromDataPeak>();
-                var listEnumerators = _dataSets.ConvertAll(item => item.PeakSets.GetEnumerator());
+                var listEnumerators = ComparableDataSets.ToList().ConvertAll(
+                    dataSet => dataSet.PeakSets.GetEnumerator());
+
                 // Merge with list of chrom data that will match the enumerators
                 // list, as completed enumerators are removed.
                 var listUnmerged = new List<ChromDataSet>(_dataSets);

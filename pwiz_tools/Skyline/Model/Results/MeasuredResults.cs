@@ -312,29 +312,49 @@ namespace pwiz.Skyline.Model.Results
         public MeasuredResults ChangeChromatograms(IList<ChromatogramSet> prop)
         {
             var results = ChangeProp(ImClone(this), (im, v) => im.Chromatograms = v, prop);
-
-            // Cache is no longer final
-            var listPartialCaches = new List<ChromatogramCache>();
-            if (_listPartialCaches != null)
-                listPartialCaches.AddRange(results._listPartialCaches);
-            // Check for any caches that contain files no longer in the set, or that
-            // have changed, and get rid of them
-            foreach (var cache in listPartialCaches.ToArray())
+            if (RequiresCacheUpdate(results))
             {
-                if (!IsValidCache(cache, true))
+                // Cache is no longer final
+                var listPartialCaches = new List<ChromatogramCache>();
+                if (_listPartialCaches != null)
+                    listPartialCaches.AddRange(results._listPartialCaches);
+                // Check for any caches that contain files no longer in the set, or that
+                // have changed, and get rid of them
+                foreach (var cache in listPartialCaches.ToArray())
                 {
-                    cache.ReadStream.CloseStream();
-                    File.Delete(cache.CachePath);
-                    listPartialCaches.Remove(cache);
+                    if (!IsValidCache(cache, true))
+                    {
+                        cache.ReadStream.CloseStream();
+                        File.Delete(cache.CachePath);
+                        listPartialCaches.Remove(cache);
+                    }
                 }
+                // Always take the existing final cache forward.  It will be optimized
+                // on save.
+                if (results._cacheFinal != null)
+                    listPartialCaches.Insert(0, results._cacheFinal);
+                results._cacheFinal = null;
+                results._listPartialCaches = (listPartialCaches.Count == 0 ? null : listPartialCaches.AsReadOnly());
             }
-            // Always take the existing final cache forward.  It will be optimized
-            // on save.
-            if (results._cacheFinal != null)
-                listPartialCaches.Insert(0, results._cacheFinal);
-            results._cacheFinal = null;
-            results._listPartialCaches = (listPartialCaches.Count == 0 ? null : listPartialCaches.AsReadOnly());
             return results;
+        }
+
+        private bool RequiresCacheUpdate(MeasuredResults results)
+        {
+            var dicExistingIdToSet = new Dictionary<int, ChromatogramSet>();
+            foreach (var chromSet in Chromatograms)
+                dicExistingIdToSet.Add(chromSet.Id.GlobalIndex, chromSet);
+            foreach (var chromSet in results.Chromatograms)
+            {
+                ChromatogramSet chromSetExisting;
+                // If there is a new chromatogram set, then update the cache
+                if (!dicExistingIdToSet.TryGetValue(chromSet.Id.GlobalIndex, out chromSetExisting))
+                    return true;
+                // If a previously existing set has changed files, then updat the cache
+                if (!ArrayUtil.EqualsDeep(chromSet.MSDataFilePaths, chromSetExisting.MSDataFilePaths))
+                    return true;
+            }
+            return false;
         }
 
         #endregion

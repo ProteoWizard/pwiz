@@ -51,7 +51,11 @@ namespace pwiz.Skyline.EditUI
         public int Groups
         {
             get { return Settings.Default.ArrangeGraphsGroups; }
-            set { Settings.Default.ArrangeGraphsGroups = value; }
+            set
+            {
+                textGroups.Text = value.ToString();
+                Settings.Default.ArrangeGraphsGroups = value;
+            }
         }
 
         public GroupGraphsType GroupType
@@ -62,6 +66,10 @@ namespace pwiz.Skyline.EditUI
             }
             set
             {
+                if (value == GroupGraphsType.separated)
+                    radioSeparate.Checked = true;
+                else
+                    radioDistribute.Checked = true;
                 Settings.Default.ArrangeGraphsType = value.ToString();
             }
         }
@@ -74,13 +82,19 @@ namespace pwiz.Skyline.EditUI
             }
             set
             {
-                Settings.Default.ArrangeGraphsOrder = value.ToString();
+                comboSortOrder.SelectedItem = 
+                    Settings.Default.ArrangeGraphsOrder = value.ToString();
             }
         }
 
         public bool Reversed { get; private set; }
 
         private void btnOk_Click(object sender, EventArgs e)
+        {
+            OkDialog();
+        }
+
+        public void OkDialog()
         {
             var helper = new MessageBoxHelper(this);
             int countGroups;
@@ -101,7 +115,6 @@ namespace pwiz.Skyline.EditUI
                 Settings.Default.ArrangeGraphsReversed = Reversed;
 
             DialogResult = DialogResult.OK;
-            Close();
         }
     }
 }
