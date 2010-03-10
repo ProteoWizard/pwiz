@@ -20,10 +20,10 @@
 //
 
 
+#include "pwiz/utility/misc/unit.hpp"
 #include "MSDataMerger.hpp"
 #include "examples.hpp"
 #include "TextWriter.hpp"
-#include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include <iostream>
 

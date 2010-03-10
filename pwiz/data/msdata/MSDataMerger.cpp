@@ -84,7 +84,12 @@ class SpectrumListMerger : public SpectrumList
                 ie.index = index_.size();
                 ie.originalIndex = i;
                 ie.spectrumListPtr = input->run.spectrumListPtr;
-                ie.sourceFilePtr = oldIdentity.sourceFilePtr.get() ? oldIdentity.sourceFilePtr : input->run.defaultSourceFilePtr;
+
+                // because of the high chance of duplicate ids, sourceFilePtrs are always explicit
+                SourceFilePtr oldSourceFilePtr = oldIdentity.sourceFilePtr.get() ? oldIdentity.sourceFilePtr : input->run.defaultSourceFilePtr;
+                if (oldSourceFilePtr.get())
+                    ie.sourceFilePtr = SourceFilePtr(new SourceFile(input->run.id + "_" + oldSourceFilePtr->id));
+
                 index_.push_back(ie);
             }
     }
@@ -146,7 +151,7 @@ PWIZ_API_DECL MSDataMerger::MSDataMerger(const vector<MSDataPtr>& inputs)
         // merge fileDescription/sourceFilePtrs (prepend each source file with its source run id)
         BOOST_FOREACH(const SourceFilePtr& sourceFilePtr, msd.fileDescription.sourceFilePtrs)
         {
-            this->fileDescription.sourceFilePtrs.push_back(sourceFilePtr);
+            this->fileDescription.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile(*sourceFilePtr)));
             SourceFile& sf = *this->fileDescription.sourceFilePtrs.back();
             sf.id = msd.run.id + "_" + sf.id;
         }
