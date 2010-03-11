@@ -699,6 +699,8 @@ namespace pwiz.Skyline.Model.Lib
             IEnumerable<int> rankCharges, IEnumerable<IonType> rankTypes,
             bool useFilter, bool matchAll, int minPeaks)
         {
+            LabelType = typeInfo;
+
             if (!useFilter)
             {
                 if (charges == null)
@@ -838,6 +840,8 @@ namespace pwiz.Skyline.Model.Lib
 
             _spectrum = MakeReadOnly(arrayResult);
         }
+
+        public IsotopeLabelType LabelType { get; private set; }
 
         private static void FindIntensityCutoff(IEnumerable<SpectrumPeaksInfo.MI> listMI, float left, float right, int minPeaks, int calls, ref float cutoff, ref int len)
         {

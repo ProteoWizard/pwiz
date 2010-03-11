@@ -14,7 +14,7 @@ namespace pwiz.Skyline.EditUI
             InitializeComponent();
 
             Icon = Resources.Skyline;
-            comboRemoveLabelType.SelectedIndex = 0;
+            comboRefineLabelType.SelectedIndex = 0;
 
             var settings = document.Settings;
             if (!settings.HasResults)
@@ -56,13 +56,14 @@ namespace pwiz.Skyline.EditUI
             bool removeDuplicatePeptides = cbRemoveDuplicatePeptides.Checked;
             bool removeRepeatedPeptides = cbRemoveRepeatedPeptides.Checked;
 
-            IsotopeLabelType? removeLabelType = null;
-            string removeLabelText = comboRemoveLabelType.SelectedItem.ToString();
-            if (!string.IsNullOrEmpty(removeLabelText))
+            IsotopeLabelType? refineLabelType = null;
+            string refineLabelText = comboRefineLabelType.SelectedItem.ToString();
+            if (!string.IsNullOrEmpty(refineLabelText))
             {
-                 removeLabelType = (IsotopeLabelType)
-                     Enum.Parse(typeof(IsotopeLabelType), removeLabelText.ToLower());
+                 refineLabelType = (IsotopeLabelType)
+                     Enum.Parse(typeof(IsotopeLabelType), refineLabelText.ToLower());
             }
+            bool addLabelType = cbAdd.Checked;
 
             double? minPeakFoundRatio = null, maxPeakFoundRatio = null;
             if (!string.IsNullOrEmpty(textMinPeakFoundRatio.Text))
@@ -121,7 +122,8 @@ namespace pwiz.Skyline.EditUI
                                          RemoveDuplicatePeptides = removeDuplicatePeptides,
                                          RemoveRepeatedPeptides = removeRepeatedPeptides,
                                          MinTransitionsPepPrecursor = minTransitionsPerPrecursor,
-                                         RemoveLabelType = removeLabelType,
+                                         RefineLabelType = refineLabelType,
+                                         AddLabelType = addLabelType,
                                          MinPeakFoundRatio = minPeakFoundRatio,
                                          MaxPeakFoundRatio = maxPeakFoundRatio,
                                          MaxPeakRank = maxPeakRank,
@@ -137,6 +139,11 @@ namespace pwiz.Skyline.EditUI
         private void btnOK_Click(object sender, EventArgs e)
         {
             OkDialog();
+        }
+
+        private void cbAdd_CheckedChanged(object sender, EventArgs e)
+        {
+            labelLabelType.Text = (cbAdd.Checked ? "Add la&bel type:" : "Remove la&bel type:");
         }
     }
 }

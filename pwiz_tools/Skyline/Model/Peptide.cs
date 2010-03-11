@@ -268,7 +268,10 @@ namespace pwiz.Skyline.Model
             if (iMatch == -1)
                 return null;
             TransitionGroupDocNode nodeGroupMatching = (TransitionGroupDocNode) Children[iMatch];
-            if (nodeGroupMatching.AutoManageChildren)
+            // If the matching node is auto-managed, and auto-select is on in the settings,
+            // then returning no transitions should allow transitions to be chosen correctly
+            // automatically.
+            if (nodeGroupMatching.AutoManageChildren && settings.TransitionSettings.Filter.AutoSelect)
                 return null;
             var listTrans = new List<TransitionDocNode>();
             foreach (TransitionDocNode nodeTran in nodeGroupMatching.Children)

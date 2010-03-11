@@ -18,7 +18,9 @@
  */
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model
 {
@@ -41,7 +43,8 @@ namespace pwiz.Skyline.Model
         }
         public bool RemoveRepeatedPeptides { get; set; }
         public int? MinTransitionsPepPrecursor { get; set; }
-        public IsotopeLabelType? RemoveLabelType { get; set; }
+        public IsotopeLabelType? RefineLabelType { get; set; }
+        public bool AddLabelType { get; set; }
         public double? MinPeakFoundRatio { get; set; }
         public double? MaxPeakFoundRatio { get; set; }
         public double? MaxPeakRank { get; set; }
@@ -144,7 +147,7 @@ namespace pwiz.Skyline.Model
                     }
                 }
 
-                PeptideDocNode nodePepRefined = Refine(nodePep);
+                PeptideDocNode nodePepRefined = Refine(nodePep, document);
                 // Always remove peptides if all precursors have been removed by refinement
                 if (!ReferenceEquals(nodePep, nodePepRefined) && nodePepRefined.Children.Count == 0)
                     continue;
@@ -172,15 +175,16 @@ namespace pwiz.Skyline.Model
         }
 
 // ReSharper disable SuggestBaseTypeForParameter
-        private PeptideDocNode Refine(PeptideDocNode nodePep)
+        private PeptideDocNode Refine(PeptideDocNode nodePep, SrmDocument document)
 // ReSharper restore SuggestBaseTypeForParameter
         {
             int minTrans = MinTransitionsPepPrecursor ?? 0;
 
+            bool addedGroups = false;
             var listGroups = new List<TransitionGroupDocNode>();
             foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
             {
-                if (RemoveLabelType.HasValue && RemoveLabelType.Value == nodeGroup.TransitionGroup.LabelType)
+                if (!AddLabelType && RefineLabelType != null && RefineLabelType.Value == nodeGroup.TransitionGroup.LabelType)
                     continue;
 
                 double? peakFoundRatio = nodeGroup.AveragePeakCountRatio;
@@ -217,10 +221,70 @@ namespace pwiz.Skyline.Model
                     }
                 }
 
+                // If this precursor node is going to be added, check to see if it
+                // should be added with another matching isotope label type.
+                if (IsLabelTypeRequired(nodePep, nodeGroup, listGroups))
+                {
+                    // CONSIDER: This is a lot like some code in PeptideDocNode.ChangeSettings
+                    Debug.Assert(RefineLabelType != null);  // Keep ReSharper from warning
+                    var tranGroup = new TransitionGroup(nodePep.Peptide, nodeGroup.TransitionGroup.PrecursorCharge,
+                                                        RefineLabelType.Value);
+                    var settings = document.Settings;
+                    string sequence = nodePep.Peptide.Sequence;
+                    var explicitMods = nodePep.ExplicitMods;
+                    TransitionDocNode[] transitions = nodePep.GetMatchingTransitions(
+                        tranGroup, settings, explicitMods);
+
+                    var nodeGroupMatch = new TransitionGroupDocNode(tranGroup,
+                        settings.GetPrecursorMass(tranGroup.LabelType, sequence, explicitMods),
+                        settings.GetRelativeRT(tranGroup.LabelType, sequence, explicitMods),
+                        transitions ?? new TransitionDocNode[0], transitions == null);
+
+                    nodeGroupMatch = nodeGroupMatch.ChangeSettings(settings, explicitMods, SrmSettingsDiff.ALL);
+
+                    // Make sure it is measurable before adding it
+                    if (settings.TransitionSettings.Instrument.IsMeasurable(nodeGroupMatch.PrecursorMz))
+                    {
+                        listGroups.Add(nodeGroupMatch);
+                        addedGroups = true;
+                    }
+                }
+
                 listGroups.Add(nodeGroupRefined);
             }
 
+            // If groups were added, make sure everything is in the right order.
+            if (addedGroups)
+                listGroups.Sort(Peptide.CompareGroups);
+
             return (PeptideDocNode) nodePep.ChangeChildrenChecked(listGroups.ToArray(), true);
+        }
+
+// ReSharper disable SuggestBaseTypeForParameter
+        private bool IsLabelTypeRequired(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup,
+            IEnumerable<TransitionGroupDocNode> listGroups)
+// ReSharper restore SuggestBaseTypeForParameter
+        {
+            // If not adding a label type, or this precursor is already the label type being added,
+            // then no further work is required
+            if (!AddLabelType || !RefineLabelType.HasValue || RefineLabelType.Value == nodeGroup.TransitionGroup.LabelType)
+                return false;
+
+            // If either the peptide or the list of new groups already contains the
+            // label type to be added, then do not add
+            foreach (TransitionGroupDocNode nodeGroupChild in nodePep.Children)
+            {
+                if (nodeGroupChild.TransitionGroup.PrecursorCharge == nodeGroup.TransitionGroup.PrecursorCharge &&
+                        nodeGroupChild.TransitionGroup.LabelType == RefineLabelType.Value)
+                    return false;
+            }
+            foreach (TransitionGroupDocNode nodeGroupAdded in listGroups)
+            {
+                if (nodeGroupAdded.TransitionGroup.PrecursorCharge == nodeGroup.TransitionGroup.PrecursorCharge &&
+                        nodeGroupAdded.TransitionGroup.LabelType == RefineLabelType.Value)
+                    return false;
+            }
+            return true;
         }
 
 // ReSharper disable SuggestBaseTypeForParameter

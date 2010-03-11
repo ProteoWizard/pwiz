@@ -31,6 +31,8 @@
             this.components = new System.ComponentModel.Container();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabDocument = new System.Windows.Forms.TabPage();
+            this.labelLabelType = new System.Windows.Forms.Label();
+            this.comboRefineLabelType = new System.Windows.Forms.ComboBox();
             this.cbRemoveRepeatedPeptides = new System.Windows.Forms.CheckBox();
             this.cbRemoveDuplicatePeptides = new System.Windows.Forms.CheckBox();
             this.textMinTransitions = new System.Windows.Forms.TextBox();
@@ -38,6 +40,8 @@
             this.textMinPeptides = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.tabResults = new System.Windows.Forms.TabPage();
+            this.textMaxPeakRank = new System.Windows.Forms.TextBox();
+            this.labelMaxPeakRank = new System.Windows.Forms.Label();
             this.textMaxPeakFoundRatio = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
             this.radioRemoveMissing = new System.Windows.Forms.RadioButton();
@@ -52,11 +56,8 @@
             this.label3 = new System.Windows.Forms.Label();
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
-            this.textMaxPeakRank = new System.Windows.Forms.TextBox();
-            this.labelMaxPeakRank = new System.Windows.Forms.Label();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
-            this.comboRemoveLabelType = new System.Windows.Forms.ComboBox();
-            this.label4 = new System.Windows.Forms.Label();
+            this.cbAdd = new System.Windows.Forms.CheckBox();
             this.tabControl1.SuspendLayout();
             this.tabDocument.SuspendLayout();
             this.tabResults.SuspendLayout();
@@ -79,8 +80,9 @@
             // 
             // tabDocument
             // 
-            this.tabDocument.Controls.Add(this.label4);
-            this.tabDocument.Controls.Add(this.comboRemoveLabelType);
+            this.tabDocument.Controls.Add(this.cbAdd);
+            this.tabDocument.Controls.Add(this.labelLabelType);
+            this.tabDocument.Controls.Add(this.comboRefineLabelType);
             this.tabDocument.Controls.Add(this.cbRemoveRepeatedPeptides);
             this.tabDocument.Controls.Add(this.cbRemoveDuplicatePeptides);
             this.tabDocument.Controls.Add(this.textMinTransitions);
@@ -94,6 +96,28 @@
             this.tabDocument.TabIndex = 0;
             this.tabDocument.Text = "Document";
             this.tabDocument.UseVisualStyleBackColor = true;
+            // 
+            // labelLabelType
+            // 
+            this.labelLabelType.AutoSize = true;
+            this.labelLabelType.Location = new System.Drawing.Point(19, 271);
+            this.labelLabelType.Name = "labelLabelType";
+            this.labelLabelType.Size = new System.Drawing.Size(98, 13);
+            this.labelLabelType.TabIndex = 6;
+            this.labelLabelType.Text = "Remove la&bel type:";
+            // 
+            // comboRefineLabelType
+            // 
+            this.comboRefineLabelType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboRefineLabelType.FormattingEnabled = true;
+            this.comboRefineLabelType.Items.AddRange(new object[] {
+            "",
+            "Light",
+            "Heavy"});
+            this.comboRefineLabelType.Location = new System.Drawing.Point(19, 290);
+            this.comboRefineLabelType.Name = "comboRefineLabelType";
+            this.comboRefineLabelType.Size = new System.Drawing.Size(121, 21);
+            this.comboRefineLabelType.TabIndex = 7;
             // 
             // cbRemoveRepeatedPeptides
             // 
@@ -173,6 +197,24 @@
             this.tabResults.TabIndex = 1;
             this.tabResults.Text = "Results";
             this.tabResults.UseVisualStyleBackColor = true;
+            // 
+            // textMaxPeakRank
+            // 
+            this.textMaxPeakRank.Location = new System.Drawing.Point(25, 95);
+            this.textMaxPeakRank.Name = "textMaxPeakRank";
+            this.textMaxPeakRank.Size = new System.Drawing.Size(65, 20);
+            this.textMaxPeakRank.TabIndex = 7;
+            this.helpTip.SetToolTip(this.textMaxPeakRank, "All transitions with an average area peak ranking\r\ngreater than this number will " +
+                    "be removed from the\r\ndocument.");
+            // 
+            // labelMaxPeakRank
+            // 
+            this.labelMaxPeakRank.AutoSize = true;
+            this.labelMaxPeakRank.Location = new System.Drawing.Point(22, 79);
+            this.labelMaxPeakRank.Name = "labelMaxPeakRank";
+            this.labelMaxPeakRank.Size = new System.Drawing.Size(126, 13);
+            this.labelMaxPeakRank.TabIndex = 6;
+            this.labelMaxPeakRank.Text = "Max &transition peak rank:";
             // 
             // textMaxPeakFoundRatio
             // 
@@ -319,45 +361,16 @@
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
-            // textMaxPeakRank
+            // cbAdd
             // 
-            this.textMaxPeakRank.Location = new System.Drawing.Point(25, 95);
-            this.textMaxPeakRank.Name = "textMaxPeakRank";
-            this.textMaxPeakRank.Size = new System.Drawing.Size(65, 20);
-            this.textMaxPeakRank.TabIndex = 7;
-            this.helpTip.SetToolTip(this.textMaxPeakRank, "All transitions with an average area peak ranking\r\ngreater than this number will " +
-                    "be removed from the\r\ndocument.");
-            // 
-            // labelMaxPeakRank
-            // 
-            this.labelMaxPeakRank.AutoSize = true;
-            this.labelMaxPeakRank.Location = new System.Drawing.Point(22, 79);
-            this.labelMaxPeakRank.Name = "labelMaxPeakRank";
-            this.labelMaxPeakRank.Size = new System.Drawing.Size(126, 13);
-            this.labelMaxPeakRank.TabIndex = 6;
-            this.labelMaxPeakRank.Text = "Max &transition peak rank:";
-            // 
-            // comboRemoveLabelType
-            // 
-            this.comboRemoveLabelType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboRemoveLabelType.FormattingEnabled = true;
-            this.comboRemoveLabelType.Items.AddRange(new object[] {
-            "",
-            "Light",
-            "Heavy"});
-            this.comboRemoveLabelType.Location = new System.Drawing.Point(19, 290);
-            this.comboRemoveLabelType.Name = "comboRemoveLabelType";
-            this.comboRemoveLabelType.Size = new System.Drawing.Size(121, 21);
-            this.comboRemoveLabelType.TabIndex = 7;
-            // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(19, 271);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(98, 13);
-            this.label4.TabIndex = 6;
-            this.label4.Text = "Remove l&abel type:";
+            this.cbAdd.AutoSize = true;
+            this.cbAdd.Location = new System.Drawing.Point(158, 292);
+            this.cbAdd.Name = "cbAdd";
+            this.cbAdd.Size = new System.Drawing.Size(45, 17);
+            this.cbAdd.TabIndex = 8;
+            this.cbAdd.Text = "&Add";
+            this.cbAdd.UseVisualStyleBackColor = true;
+            this.cbAdd.CheckedChanged += new System.EventHandler(this.cbAdd_CheckedChanged);
             // 
             // RefineDlg
             // 
@@ -417,7 +430,8 @@
         private System.Windows.Forms.TextBox textMaxPeakRank;
         private System.Windows.Forms.Label labelMaxPeakRank;
         private System.Windows.Forms.ToolTip helpTip;
-        private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.ComboBox comboRemoveLabelType;
+        private System.Windows.Forms.Label labelLabelType;
+        private System.Windows.Forms.ComboBox comboRefineLabelType;
+        private System.Windows.Forms.CheckBox cbAdd;
     }
 }

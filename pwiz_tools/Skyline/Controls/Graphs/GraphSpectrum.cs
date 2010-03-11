@@ -162,6 +162,11 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!Visible || IsDisposed)
                 return;
 
+            // Clear existing data from the graph pane
+            var graphPane = (MSGraphPane)graphControl.MasterPane[0];
+            graphPane.CurveList.Clear();
+            graphPane.GraphObjList.Clear();
+
             // Try to find a tree node with spectral library info associated
             // with the current selection.
             var nodeTree = _stateProvider.SelectedNode as SrmTreeNode;
@@ -175,19 +180,23 @@ namespace pwiz.Skyline.Controls.Graphs
             if (nodeGroup == null)
             {
                 nodePepTree = nodeTree as PeptideTreeNode;
-                if (nodePepTree != null && SameChargeGroups(nodePepTree))
-                    nodeGroup = nodePepTree.ChildDocNodes[0] as TransitionGroupDocNode;
+                if (nodePepTree != null)
+                {
+                    var listInfoGroups = GetLibraryInfoChargeGroups(nodePepTree);
+                    if (listInfoGroups.Length == 1)
+                        nodeGroup = listInfoGroups[0];
+                    else if (listInfoGroups.Length > 1)
+                    {
+                        AddGraphItem(graphPane, new NoDataMSGraphItem("Multiple charge states with library spectra"));
+                        return;
+                    }
+                }
             }
             else
             {
                 nodePepTree = nodeGroupTree.Parent as PeptideTreeNode;
             }
             ExplicitMods mods = (nodePepTree != null ? nodePepTree.DocNode.ExplicitMods : null);
-
-            // Clear existing data from the graph pane
-            var graphPane = (MSGraphPane)graphControl.MasterPane[0];
-            graphPane.CurveList.Clear();
-            graphPane.GraphObjList.Clear();
 
             // Check for appropriate spectrum to load
             bool available = false;
@@ -273,20 +282,22 @@ namespace pwiz.Skyline.Controls.Graphs
             graphControl.Refresh();
         }
 
-        private static bool SameChargeGroups(PeptideTreeNode nodeTree)
+// ReSharper disable SuggestBaseTypeForParameter
+        private static TransitionGroupDocNode[] GetLibraryInfoChargeGroups(PeptideTreeNode nodeTree)
+// ReSharper restore SuggestBaseTypeForParameter
         {
-            // Check to see if all transition groups under a peptide tree node
-            // have the same precursor charge.
-            int charge = 0;
-            foreach (TransitionGroupDocNode nodeGroup in nodeTree.DocNode.Children)
+            // Return the first group of each charge stat that has library info.
+            var listGroups = new List<TransitionGroupDocNode>();
+            foreach (TransitionGroupDocNode nodeGroup in nodeTree.ChildDocNodes)
             {
-                if (charge == 0)
-                    charge = nodeGroup.TransitionGroup.PrecursorCharge;
-                else if (charge != nodeGroup.TransitionGroup.PrecursorCharge)
-                    return false;
+                if (!nodeGroup.HasLibInfo)
+                    continue;
+
+                int precursorCharge = nodeGroup.TransitionGroup.PrecursorCharge;
+                if (!listGroups.Contains(g => g.TransitionGroup.PrecursorCharge == precursorCharge))
+                    listGroups.Add(nodeGroup);
             }
-            // True only if there was at least one group
-            return (charge != 0);
+            return listGroups.ToArray();
         }
 
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender,

@@ -1,9 +1,11 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTest
@@ -68,17 +70,17 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(document.TransitionGroupCount - 1, refineSettings.Refine(document).TransitionGroupCount);
             refineSettings.MinTransitionsPepPrecursor = null;
             // Remove the heavy precursor
-            refineSettings.RemoveLabelType = IsotopeLabelType.heavy;
+            refineSettings.RefineLabelType = IsotopeLabelType.heavy;
             Assert.AreEqual(document.TransitionGroupCount - 1, refineSettings.Refine(document).TransitionGroupCount);
             // Remove everything but the heavy precursor
-            refineSettings.RemoveLabelType = IsotopeLabelType.light;
+            refineSettings.RefineLabelType = IsotopeLabelType.light;
             var docRefined = refineSettings.Refine(document);
             AssertEx.IsDocumentState(docRefined, 1, 1, 1, 1, 4);
             // Perform the operation again without protein removal
             refineSettings.MinPeptidesPerProtein = null;
             docRefined = refineSettings.Refine(document);
             AssertEx.IsDocumentState(docRefined, 1, 4, 1, 1, 4);
-            refineSettings.RemoveLabelType = null;
+            refineSettings.RefineLabelType = null;
             // Remove repeated peptides
             refineSettings.RemoveRepeatedPeptides = true;
             Assert.AreEqual(document.PeptideCount - 2, refineSettings.Refine(document).PeptideCount);
@@ -186,6 +188,35 @@ namespace pwiz.SkylineTest
                 }
             }
 
+            // Add heavy labeled precursors for everything
+            var settingsNew = docRefineMaxPeaks.Settings.ChangeTransitionFilter(f => f.ChangeAutoSelect(false));
+            settingsNew = settingsNew.ChangePeptideModifications(m => m.ChangeHeavyModifications(new[]
+                {
+                    new StaticMod("13C K", 'K', ModTerminus.C, null, LabelAtoms.C13, null, null),
+                    new StaticMod("13C R", 'R', ModTerminus.C, null, LabelAtoms.C13, null, null),
+                }));
+            var docPrepareAdd = docRefineMaxPeaks.ChangeSettings(settingsNew);
+            refineSettings = new RefinementSettings {RefineLabelType = IsotopeLabelType.heavy, AddLabelType = true};
+            var docHeavy = refineSettings.Refine(docPrepareAdd);
+            Assert.AreEqual(docRefineMaxPeaks.TransitionCount*2, docHeavy.TransitionCount);
+            // Verify that the precursors were added with the right transitions
+            foreach (var nodePep in docHeavy.Peptides)
+            {
+                Assert.AreEqual(2, nodePep.Children.Count);
+                var lightGroup = (TransitionGroupDocNode) nodePep.Children[0];
+                Assert.AreEqual(IsotopeLabelType.light, lightGroup.TransitionGroup.LabelType);
+                var heavyGroup = (TransitionGroupDocNode)nodePep.Children[1];
+                Assert.AreEqual(IsotopeLabelType.heavy, heavyGroup.TransitionGroup.LabelType);
+                Assert.AreEqual(lightGroup.TransitionGroup.PrecursorCharge,
+                    heavyGroup.TransitionGroup.PrecursorCharge);
+                Assert.AreEqual(lightGroup.Children.Count, heavyGroup.Children.Count);
+                for (int i = 0; i < lightGroup.Children.Count; i++)
+                {
+                    var lightTran = (TransitionDocNode) lightGroup.Children[i];
+                    var heavyTran = (TransitionDocNode) heavyGroup.Children[i];
+                    Assert.AreEqual(lightTran.Transition.FragmentIonName, heavyTran.Transition.FragmentIonName);
+                }
+            }
             testFilesDir.Dispose();
         }
 

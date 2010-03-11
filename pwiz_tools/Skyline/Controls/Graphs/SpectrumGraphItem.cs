@@ -121,7 +121,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 TransitionGroup transitionGroup = TransitionGroupNode.TransitionGroup;
                 string sequence = transitionGroup.Peptide.Sequence;
                 int charge = transitionGroup.PrecursorCharge;
-                var type = transitionGroup.LabelType;
+                var type = SpectrumInfo.LabelType;
                 if (type == IsotopeLabelType.light)
                     return string.Format("{0}{1}, Charge {2}", libraryNamePrefix, sequence, charge);
                 else
