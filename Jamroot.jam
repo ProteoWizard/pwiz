@@ -521,7 +521,7 @@ rule static-with-fpic ( properties * )
     if ( <toolset>gcc in $(properties) || <toolset>darwin in $(properties) ) &&
        <link>static in $(properties)
     {
-        return <cxxflags>-fPIC <linkflags>-fPIC ;
+        return <cflags>-fPIC <linkflags>-fPIC ;
     }
 }
 
