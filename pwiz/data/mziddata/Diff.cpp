@@ -295,8 +295,8 @@ void diff(const ProteinDetectionHypothesis& a,
         a_b.passThreshold = a.passThreshold;
         b_a.passThreshold = b.passThreshold;
     }
-    vector_diff(a.peptideHypothesis, b.peptideHypothesis,
-                a_b.peptideHypothesis, b_a.peptideHypothesis);
+    vector_diff_deep(a.peptideHypothesis, b.peptideHypothesis,
+                     a_b.peptideHypothesis, b_a.peptideHypothesis, config);
     diff(a.paramGroup, b.paramGroup, a_b.paramGroup, b_a.paramGroup, config);
 }
 

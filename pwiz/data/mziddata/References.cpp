@@ -263,10 +263,35 @@ PWIZ_API_DECL void resolve(vector<ProteinDetectionProtocolPtr>& vpdp, MzIdentML&
 }
 
 
+void fillPeptideEvidence(vector<SpectrumIdentificationListPtr>& sil, vector<PeptideEvidencePtr>& pe)
+{
+    typedef vector<SpectrumIdentificationListPtr>::const_iterator sil_iterator;
+    typedef vector<SpectrumIdentificationResultPtr>::const_iterator sir_iterator;
+    typedef vector<SpectrumIdentificationItemPtr>::const_iterator sii_iterator;
+    
+    for (sil_iterator sili=sil.begin(); sili != sil.end(); sili++)
+    {
+        vector<SpectrumIdentificationResultPtr>& sir = (*sili)->spectrumIdentificationResult;
+        for(sir_iterator siri=sir.begin(); siri!=sir.end(); siri++)
+        {
+            vector<SpectrumIdentificationItemPtr>& sii=(*siri)->spectrumIdentificationItem;
+            for(sii_iterator siii=sii.begin(); siii!=sii.end(); siii++)
+            {
+                for (vector<PeptideEvidencePtr>::const_iterator blah=
+                         (*siii)->peptideEvidence.begin();
+                     blah!=(*siii)->peptideEvidence.end(); blah++)
+                    pe.push_back(*blah);
+            }
+        }
+    }
+}
+
 PWIZ_API_DECL void resolve(DataCollection& dc, MzIdentML& mzid)
 {
-    for (vector<SpectrumIdentificationListPtr>::iterator it=dc.analysisData.spectrumIdentificationList.begin();
-         it != dc.analysisData.spectrumIdentificationList.end(); it++)
+    vector<SpectrumIdentificationListPtr>& sil = dc.analysisData.spectrumIdentificationList;
+    typedef vector<SpectrumIdentificationListPtr>::iterator sil_iterator;
+
+    for (sil_iterator it=sil.begin(); it != sil.end(); it++)
     {
         resolve(*it, mzid);
     }
@@ -276,14 +301,33 @@ PWIZ_API_DECL void resolve(DataCollection& dc, MzIdentML& mzid)
         return;
 
     ProteinDetectionListPtr pdl=dc.analysisData.proteinDetectionListPtr;
-    for (vector<ProteinAmbiguityGroupPtr>::iterator pg=pdl->proteinAmbiguityGroup.begin();
-         pg != pdl->proteinAmbiguityGroup.end(); pg++)
+
+    // Fill the vector of PeptideEvidencePtr's to make it easy to
+    // resolve references
+    vector<PeptideEvidencePtr> peptideEvidence;
+    fillPeptideEvidence(
+        mzid.analysisCollection.proteinDetection.inputSpectrumIdentifications,
+        peptideEvidence);
+    
+    vector<ProteinAmbiguityGroupPtr>& pag = pdl->proteinAmbiguityGroup;
+    typedef vector<ProteinAmbiguityGroupPtr>::iterator pag_iterator;
+    
+    for (pag_iterator pg=pag.begin(); pg != pag.end(); pg++)
     {
-        for (vector<ProteinDetectionHypothesisPtr>::iterator pdh=(*pg)->proteinDetectionHypothesis.begin();
-             pdh!=(*pg)->proteinDetectionHypothesis.begin(); pdh++)
+        vector<ProteinDetectionHypothesisPtr>& pdh = (*pg)->proteinDetectionHypothesis;
+        typedef vector<ProteinDetectionHypothesisPtr>::iterator pdh_iterator;
+        for (pdh_iterator pdhi=pdh.begin(); pdhi!=pdh.end(); pdhi++)
         {
-            resolve((*pdh)->dbSequencePtr,
+            resolve((*pdhi)->dbSequencePtr,
                     mzid.sequenceCollection.dbSequences);
+
+            vector<PeptideEvidencePtr>& pe = (*pdhi)->peptideHypothesis;
+            typedef vector<PeptideEvidencePtr>::iterator pe_iterator;
+            
+            for(pe_iterator pei=pe.begin(); pei!=pe.end(); pei++)
+            {
+                resolve((*pei), peptideEvidence);
+            }
         }
     }
 }

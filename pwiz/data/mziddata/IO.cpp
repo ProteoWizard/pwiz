@@ -3421,11 +3421,11 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetectionHypo
     attributes.push_back(make_pair("passThreshold", pdh.passThreshold ? "true" : "false"));
 
     writer.startElement("ProteinDetectionHypothesis", attributes);
-    for(vector<string>::const_iterator it=pdh.peptideHypothesis.begin();
+    for(vector<PeptideEvidencePtr>::const_iterator it=pdh.peptideHypothesis.begin();
         it != pdh.peptideHypothesis.end(); it++)
     {
         XMLWriter::Attributes pepAttrs;
-        pepAttrs.push_back(make_pair("PeptideEvidence_Ref", *it));
+        pepAttrs.push_back(make_pair("PeptideEvidence_Ref", (*it)->id));
         writer.startElement("PeptideHypothesis", pepAttrs, XMLWriter::EmptyElement);
     }
     writeParamContainer(writer, pdh.paramGroup);
@@ -3465,7 +3465,7 @@ struct HandlerProteinDetectionHypothesis : public HandlerIdentifiableType
         {
             string value;
             getAttribute(attributes, "PeptideEvidence_Ref", value);
-            pdh->peptideHypothesis.push_back(value);
+            pdh->peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence(value)));
         }
         else if (name == "cvParam" ||
             name == "userParam")

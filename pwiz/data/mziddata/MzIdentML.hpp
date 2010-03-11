@@ -707,8 +707,7 @@ struct PWIZ_API_DECL ProteinDetectionHypothesis : public IdentifiableType
     // written out in the PeptideEvidence_Ref attribute of the
     // PeptideHypothesis tag
 
-    // TODO replace this with vector<PeptideEvidencePtr>
-    std::vector<std::string> peptideHypothesis;
+    std::vector<PeptideEvidencePtr> peptideHypothesis;
     ParamContainer paramGroup;
 
     bool empty() const;

@@ -348,8 +348,8 @@ void testProteinDetectionHypothesis()
     b.dbSequencePtr = DBSequencePtr(new DBSequence("fer_ecneuqeSBD"));
     a.passThreshold = true;
     b.passThreshold = false;
-    a.peptideHypothesis.push_back("marjoram");
-    b.peptideHypothesis.push_back("thyme");
+    a.peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence("marjoram")));
+    b.peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence("thyme")));
     a.paramGroup.set(MS_mascot_expectation_value);
 
     diff(a,b);
@@ -367,8 +367,8 @@ void testProteinDetectionHypothesis()
     unit_assert(diff.b_a.passThreshold == false);
     unit_assert(diff.a_b.peptideHypothesis.size() == 1);
     unit_assert(diff.b_a.peptideHypothesis.size() == 1);
-    unit_assert(diff.a_b.peptideHypothesis.back() == "marjoram");
-    unit_assert(diff.b_a.peptideHypothesis.back() ==  "thyme");
+    unit_assert(diff.a_b.peptideHypothesis.back()->id == "marjoram");
+    unit_assert(diff.b_a.peptideHypothesis.back()->id ==  "thyme");
     unit_assert(diff.a_b.paramGroup.cvParams.size() == 1);
     unit_assert(diff.b_a.paramGroup.cvParams.size() == 0);
     unit_assert(diff.a_b.paramGroup.hasCVParam(MS_mascot_expectation_value));

@@ -425,8 +425,8 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     pdhp->id="PDH_Bombessin";
     pdhp->dbSequencePtr=DBSequencePtr(new DBSequence("DBSeq_Bombessin"));
     pdhp->passThreshold=true;
-    pdhp->peptideHypothesis.push_back("PE_19_1_Bombessin_0");
-    pdhp->peptideHypothesis.push_back("PE_20_1_Bombessin_0");
+    pdhp->peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence("PE_19_1_Bombessin_0")));
+    pdhp->peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence("PE_20_1_Bombessin_0")));
     pdhp->paramGroup.set(MS_mascot_score, "164.4");
     pdhp->paramGroup.set(MS_sequence_coverage, "100");
     pdhp->paramGroup.set(MS_distinct_peptide_sequences, "7");
@@ -436,7 +436,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     pdhp->id="PDH_HSP71_RAT";
     pdhp->dbSequencePtr=DBSequencePtr(new DBSequence("DBSeq_HSP71_RAT"));
     pdhp->passThreshold="false";
-    pdhp->peptideHypothesis.push_back("PE_2_1_HSP71_RAT_0");
+    pdhp->peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence("PE_2_1_HSP71_RAT_0")));
     pdhp->paramGroup.set(MS_mascot_score, "40.95");
     pdhp->paramGroup.set(MS_sequence_coverage, "2");
     pdhp->paramGroup.set(MS_distinct_peptide_sequences, "1");

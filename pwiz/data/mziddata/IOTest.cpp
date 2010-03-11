@@ -731,7 +731,7 @@ void testProteinDetectionHypothesis()
     a.dbSequencePtr = DBSequencePtr(new DBSequence("dbs_ref"));
     a.passThreshold = "pt";
 
-    a.peptideHypothesis.push_back("test");
+    a.peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence("test")));
     a.paramGroup.set(MS_mascot_score, "164.4");
 
     testObject(a);
