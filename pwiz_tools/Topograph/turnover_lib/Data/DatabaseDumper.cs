@@ -120,7 +120,7 @@ namespace pwiz.Topograph.Data
         public void Run(LongOperationBroker longOperationBroker)
         {
             _longOperationBroker = longOperationBroker;
-            _targetConfiguration = SessionFactoryFactory.GetConfiguration(DatabaseTypeEnum);
+            _targetConfiguration = SessionFactoryFactory.GetConfiguration(DatabaseTypeEnum, 0);
             var schemaExport = new SchemaExport(_targetConfiguration);
             schemaExport.SetOutputFile(Path);
             schemaExport.SetDelimiter(";");

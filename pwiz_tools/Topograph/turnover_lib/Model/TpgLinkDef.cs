@@ -152,12 +152,12 @@ namespace pwiz.Topograph.Model
                 cmd.CommandText = "CREATE DATABASE " + Database;
                 cmd.ExecuteNonQuery();
             }
-            return SessionFactoryFactory.CreateSessionFactory(this, true);
+            return SessionFactoryFactory.CreateSessionFactory(this, SessionFactoryFlags.create_schema);
         }
 
         public ISessionFactory OpenSessionFactory()
         {
-            return SessionFactoryFactory.CreateSessionFactory(this, false);
+            return SessionFactoryFactory.CreateSessionFactory(this, 0);
         }
 
         public static TpgLinkDef Load(String path)
@@ -174,5 +174,13 @@ namespace pwiz.Topograph.Model
         mysql,
         postgresql,
         sqlite,
+    }
+
+    [Flags]
+    public enum SessionFactoryFlags
+    {
+        show_sql = 0x1,
+        remove_binary_columns = 0x2,
+        create_schema = 0x4,
     }
 }

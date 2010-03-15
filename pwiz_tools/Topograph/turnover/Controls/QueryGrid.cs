@@ -129,7 +129,7 @@ namespace pwiz.Topograph.ui.Controls
         {
             columnNames = new List<string>();
             rows = new List<object[]>();
-            using (var session = Workspace.OpenSession())
+            using (var session = Workspace.OpenQuerySession())
             {
                 var entities = new List<IDbEntity>();
                 var entityTypesToQuery = new HashSet<String>();
@@ -164,7 +164,7 @@ namespace pwiz.Topograph.ui.Controls
                 {
                     entityTypesToQuery.Add(typeof(DbPeptideAnalysis).ToString());
                     entityTypesToQuery.Add(typeof(DbMsDataFile).ToString());
-                    session.CreateCriteria(typeof(DbPeptideFileAnalysis)).List();
+                    entityTypesToQuery.Add(typeof (DbPeptideFileAnalysis).ToString());
                 }
                 if (entityTypesToQuery.Contains(typeof(DbPeptideAnalysis).ToString()))
                 {

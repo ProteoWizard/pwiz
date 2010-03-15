@@ -62,11 +62,15 @@ namespace pwiz.Topograph.Model
             if (Path.GetExtension(path) == TpgLinkDef.Extension)
             {
                 TpgLinkDef = TpgLinkDef.Load(path);
-                SessionFactory = TpgLinkDef.OpenSessionFactory();
+                SessionFactory = SessionFactoryFactory.CreateSessionFactory(TpgLinkDef, 0);
+                QuerySessionFactory = SessionFactoryFactory.CreateSessionFactory(
+                    TpgLinkDef, SessionFactoryFlags.remove_binary_columns);
             }
             else
             {
-                SessionFactory = SessionFactoryFactory.CreateSessionFactory(path, false);
+                SessionFactory = SessionFactoryFactory.CreateSessionFactory(path, 0);
+                QuerySessionFactory = SessionFactoryFactory.CreateSessionFactory(
+                    path, SessionFactoryFlags.remove_binary_columns);
             }
             _chromatogramGenerator = new ChromatogramGenerator(this);
             _resultCalculator = new ResultCalculator(this);
@@ -99,11 +103,23 @@ namespace pwiz.Topograph.Model
         {
             return SessionFactory.OpenSession();
         }
+        /// <summary>
+        /// Returns an ISession which has some binary columns removed so that some queries
+        /// run faster.
+        /// </summary>
+        public ISession OpenQuerySession()
+        {
+            return QuerySessionFactory.OpenSession();
+        }
         public ISession OpenWriteSession()
         {
             return SessionFactory.OpenSession();
         }
         public ISessionFactory SessionFactory
+        {
+            get; private set;
+        }
+        public ISessionFactory QuerySessionFactory
         {
             get; private set;
         }

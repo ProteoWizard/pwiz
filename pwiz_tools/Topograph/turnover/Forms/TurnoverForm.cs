@@ -326,7 +326,7 @@ namespace pwiz.Topograph.ui.Forms
             {
                 File.Delete(filename);
             }
-            using(ISessionFactory sessionFactory = SessionFactoryFactory.CreateSessionFactory(filename, true))
+            using(ISessionFactory sessionFactory = SessionFactoryFactory.CreateSessionFactory(filename, SessionFactoryFlags.create_schema))
             {
                 InitWorkspace(sessionFactory);
             }
@@ -682,7 +682,7 @@ namespace pwiz.Topograph.ui.Forms
                     }
                     continue;
                 }
-                using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(tpgLinkDef, true))
+                using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(tpgLinkDef, SessionFactoryFlags.create_schema))
                 {
                     InitWorkspace(sessionFactory);
                 }

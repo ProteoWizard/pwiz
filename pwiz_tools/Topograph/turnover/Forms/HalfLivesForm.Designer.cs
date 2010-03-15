@@ -41,6 +41,8 @@
             this.tbxFinalTracerPercent = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.btnSave = new System.Windows.Forms.Button();
+            this.findBox = new pwiz.Common.Controls.FindBox();
+            this.label4 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -113,7 +115,7 @@
             // 
             // btnRequery
             // 
-            this.btnRequery.Location = new System.Drawing.Point(435, 12);
+            this.btnRequery.Location = new System.Drawing.Point(434, 4);
             this.btnRequery.Name = "btnRequery";
             this.btnRequery.Size = new System.Drawing.Size(75, 23);
             this.btnRequery.TabIndex = 4;
@@ -156,7 +158,7 @@
             // btnSave
             // 
             this.btnSave.Enabled = false;
-            this.btnSave.Location = new System.Drawing.Point(525, 12);
+            this.btnSave.Location = new System.Drawing.Point(515, 4);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(75, 23);
             this.btnSave.TabIndex = 9;
@@ -164,11 +166,30 @@
             this.btnSave.UseVisualStyleBackColor = true;
             this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
             // 
+            // findBox
+            // 
+            this.findBox.DataGridView = this.dataGridView1;
+            this.findBox.Location = new System.Drawing.Point(487, 33);
+            this.findBox.Name = "findBox";
+            this.findBox.Size = new System.Drawing.Size(206, 23);
+            this.findBox.TabIndex = 10;
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(431, 33);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(30, 13);
+            this.label4.TabIndex = 11;
+            this.label4.Text = "Find:";
+            // 
             // HalfLivesForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(760, 411);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.findBox);
             this.Controls.Add(this.btnSave);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.tbxFinalTracerPercent);
@@ -203,5 +224,7 @@
         private System.Windows.Forms.TextBox tbxFinalTracerPercent;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button btnSave;
+        private pwiz.Common.Controls.FindBox findBox;
+        private System.Windows.Forms.Label label4;
     }
 }

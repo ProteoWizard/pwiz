@@ -60,7 +60,7 @@ namespace pwiz.Topograph.Data
             }
             throw new ArgumentException();
         }
-        public static Configuration GetConfiguration(DatabaseTypeEnum databaseTypeEnum)
+        public static Configuration GetConfiguration(DatabaseTypeEnum databaseTypeEnum, SessionFactoryFlags flags)
         {
             Assembly assembly = typeof(SessionFactoryFactory).Assembly;
             var configuration = new Configuration()
@@ -71,30 +71,63 @@ namespace pwiz.Topograph.Data
                 .SetProperty("proxyfactory.factory_class",
                 typeof(NHibernate.ByteCode.Castle.ProxyFactoryFactory).AssemblyQualifiedName)
                 .AddInputStream(assembly.GetManifestResourceStream("pwiz.Topograph.Data.mapping.xml"));
+            if (0 == (flags & SessionFactoryFlags.remove_binary_columns))
+            {
+                var classMapping = configuration.GetClassMapping(typeof (DbPeptideFileAnalysis));
+                var timesColumn = new Column("TimesBytes")
+                                 {
+                                     Length = 1000000,
+                                     SqlType = "BinaryBlob",
+                                 };
+                classMapping.Table.AddColumn(timesColumn);
+                var timesValue = new SimpleValue(classMapping.Table)
+                                     {
+                                         TypeName = "BinaryBlob"
+                                     };
+                timesValue.AddColumn(timesColumn);
+                classMapping.AddProperty(new Property(timesValue)
+                                             {
+                                                 Name = "TimesBytes"
+                                             });
+                var scanIndexesColumn = new Column("ScanIndexesBytes")
+                                 {
+                                     Length = 1000000,
+                                     SqlType = "BinaryBlob",
+                                 };
+                classMapping.Table.AddColumn(scanIndexesColumn);
+                var scanIndexesValue = new SimpleValue(classMapping.Table)
+                                           {
+                                               TypeName = "BinaryBlob"
+                                           };
+                scanIndexesValue.AddColumn(scanIndexesColumn);
+                classMapping.AddProperty(new Property(scanIndexesValue)
+                                             {
+                                                 Name = "ScanIndexesBytes"
+                                             });
+            }
             return configuration;
-            
         }
 
-        public static ISessionFactory CreateSessionFactory(String path, bool createSchema)
+        public static ISessionFactory CreateSessionFactory(String path, SessionFactoryFlags flags)
         {
 
-            var configuration = GetConfiguration(DatabaseTypeEnum.sqlite)
+            var configuration = GetConfiguration(DatabaseTypeEnum.sqlite, flags)
                 .SetProperty("connection.connection_string", new SQLiteConnectionStringBuilder
                                                                  {
                                                                      DataSource = path
                                                                  }.ToString());
-            if (createSchema)
+            if (0 != (flags & SessionFactoryFlags.create_schema))
             {
                 configuration.SetProperty("hbm2ddl.auto", "create");
             }
             return configuration.BuildSessionFactory();
         }
 
-        public static ISessionFactory CreateSessionFactory(TpgLinkDef tpgLinkDef, bool createSchema)
+        public static ISessionFactory CreateSessionFactory(TpgLinkDef tpgLinkDef, SessionFactoryFlags flags)
         {
-            var configuration = GetConfiguration(tpgLinkDef.DatabaseTypeEnum)
+            var configuration = GetConfiguration(tpgLinkDef.DatabaseTypeEnum, flags)
                 .SetProperty("connection.connection_string", tpgLinkDef.GetConnectionString());
-            if (createSchema)
+            if (0 != (flags & SessionFactoryFlags.create_schema))
             {
                 configuration.SetProperty("hbm2ddl.auto", "create");
             }

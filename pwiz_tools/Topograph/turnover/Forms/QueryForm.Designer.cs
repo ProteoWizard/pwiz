@@ -50,6 +50,9 @@ namespace pwiz.Topograph.ui.Forms
             this.btnExport = new System.Windows.Forms.Button();
             this.btnSaveQuery = new System.Windows.Forms.Button();
             this.btnExecuteQuery = new System.Windows.Forms.Button();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.findBox = new pwiz.Common.Controls.FindBox();
+            this.label2 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.pageDesign.SuspendLayout();
             this.splitContainer2.Panel1.SuspendLayout();
@@ -64,6 +67,7 @@ namespace pwiz.Topograph.ui.Forms
             this.panelName.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.panel1.SuspendLayout();
+            this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // tabControl1
@@ -204,6 +208,7 @@ namespace pwiz.Topograph.ui.Forms
             // 
             this.splitContainer1.Panel2.Controls.Add(this.dataGridView1);
             this.splitContainer1.Panel2.Controls.Add(this.panel1);
+            this.splitContainer1.Panel2.Controls.Add(this.tableLayoutPanel1);
             this.splitContainer1.Size = new System.Drawing.Size(653, 416);
             this.splitContainer1.SplitterDistance = 218;
             this.splitContainer1.TabIndex = 1;
@@ -244,7 +249,7 @@ namespace pwiz.Topograph.ui.Forms
             this.dataGridView1.Location = new System.Drawing.Point(0, 27);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
-            this.dataGridView1.Size = new System.Drawing.Size(653, 167);
+            this.dataGridView1.Size = new System.Drawing.Size(653, 138);
             this.dataGridView1.TabIndex = 0;
             this.dataGridView1.Workspace = null;
             // 
@@ -289,6 +294,42 @@ namespace pwiz.Topograph.ui.Forms
             this.btnExecuteQuery.UseVisualStyleBackColor = true;
             this.btnExecuteQuery.Click += new System.EventHandler(this.btnExecuteQuery_Click);
             // 
+            // tableLayoutPanel1
+            // 
+            this.tableLayoutPanel1.ColumnCount = 2;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 83F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel1.Controls.Add(this.findBox, 1, 0);
+            this.tableLayoutPanel1.Controls.Add(this.label2, 0, 0);
+            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 165);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            this.tableLayoutPanel1.RowCount = 1;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(653, 29);
+            this.tableLayoutPanel1.TabIndex = 2;
+            // 
+            // findBox
+            // 
+            this.findBox.DataGridView = this.dataGridView1;
+            this.findBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.findBox.Location = new System.Drawing.Point(86, 3);
+            this.findBox.Name = "findBox";
+            this.findBox.Size = new System.Drawing.Size(564, 23);
+            this.findBox.TabIndex = 2;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.label2.Location = new System.Drawing.Point(3, 0);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(77, 29);
+            this.label2.TabIndex = 3;
+            this.label2.Text = "Find:";
+            this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
             // QueryForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -314,6 +355,8 @@ namespace pwiz.Topograph.ui.Forms
             this.panelName.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.panel1.ResumeLayout(false);
+            this.tableLayoutPanel1.ResumeLayout(false);
+            this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -340,5 +383,8 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnExport;
         private System.Windows.Forms.Button btnSaveQuery;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private pwiz.Common.Controls.FindBox findBox;
+        private System.Windows.Forms.Label label2;
     }
 }

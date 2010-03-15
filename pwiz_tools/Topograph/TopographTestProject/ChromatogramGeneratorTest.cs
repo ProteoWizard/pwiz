@@ -51,7 +51,7 @@ namespace pwiz.Topograph.Test
         public void TestChromatogramGenerator()
         {
             String dbPath = Path.Combine(TestContext.TestDir, "test" + Guid.NewGuid() + ".tpg");
-            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(dbPath, true))
+            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(dbPath, SessionFactoryFlags.create_schema))
             {
                 using (var session = sessionFactory.OpenSession())
                 {

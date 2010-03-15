@@ -172,7 +172,7 @@
     <property name="PeakStart" />
     <property name="PeakEnd" />
   </class>
-  <class name="DbPeptideFileAnalysis">
+  <class name="DbPeptideFileAnalysis" lazy="true">
     <id name="Id">
       <column name="Id" not-null="true"/>
       <generator class="native" />
@@ -208,8 +208,8 @@
     <property name="PeakStartTime" />
     <property name="PeakEnd" />
     <property name="PeakEndTime" />
-    <property name="TimesBytes" length="1000000" type="BinaryBlob"/>
-    <property name="ScanIndexesBytes" length="1000000" type="BinaryBlob"/>
+    <!--<property name="TimesBytes" length="1000000" type="BinaryBlob" />
+    <property name="ScanIndexesBytes" length="1000000" type="BinaryBlob"/>-->
     <property name="ExcludedMasses" type="BinaryBlob" />
   </class>
   <class name="DbPeptideAnalysis">
