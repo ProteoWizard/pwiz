@@ -869,12 +869,12 @@ namespace pwiz.Skyline.Model.Results
 
             public IList<ChromDataSet> DataSets { get { return _dataSets; } }
 
-            public IEnumerable<ChromDataSet> ComparableDataSets
+            private IEnumerable<ChromDataSet> ComparableDataSets
             {
                 get
                 {
                     return from dataSet in DataSets
-                           where dataSet.DocNode.RelativeRT != RelativeRT.Unknown
+                           where dataSet.DocNode != null && dataSet.DocNode.RelativeRT != RelativeRT.Unknown
                            select dataSet;
                 }
             }
@@ -1171,6 +1171,7 @@ namespace pwiz.Skyline.Model.Results
                 int offset = dataPeakMax.Data.Offset;
                 int startMax = peakMax.StartIndex + offset;
                 int endMax = peakMax.EndIndex + offset;
+                int timeMax = peakMax.TimeIndex + offset;
 
                 var listPeaks = new PeptideChromDataPeakList(dataPeakMax);
                 foreach (var chromData in _dataSets)
@@ -1198,14 +1199,32 @@ namespace pwiz.Skyline.Model.Results
                         if (Math.Min(endPeak, endMax) - Math.Max(startPeak, startMax) <= 0)
                             continue;
 
-                        // If the peaks are supposed to have the same elution time,
-                        // then be more strict about how they overlap
-                        if (nodeGroup.TransitionGroup.PrecursorCharge == nodeGroupMax.TransitionGroup.PrecursorCharge &&
-                            nodeGroup.RelativeRT == RelativeRT.Matching && nodeGroupMax.RelativeRT == RelativeRT.Matching)
+                        if (nodeGroup.TransitionGroup.PrecursorCharge == nodeGroupMax.TransitionGroup.PrecursorCharge)
                         {
                             int timeIndex = peak.Peak.TimeIndex + offset;
-                            if (startMax >= timeIndex || timeIndex >= endMax)
-                                continue;                            
+                            if (nodeGroup.RelativeRT == RelativeRT.Matching && nodeGroupMax.RelativeRT == RelativeRT.Matching)
+                            {
+                                // If the peaks are supposed to have the same elution time,
+                                // then be more strict about how they overlap
+                                if (startMax >= timeIndex || timeIndex >= endMax)
+                                    continue;
+                            }
+                            else if (nodeGroup.RelativeRT == RelativeRT.Matching && nodeGroupMax.RelativeRT == RelativeRT.Preceding)
+                            {
+                                // If the maximum is supposed to precede this, look for any
+                                // indication that this relationship holds, by testing the peak apex
+                                // and the peak center.
+                                if (timeIndex < timeMax && (startPeak + endPeak)/2 < (startMax + endMax)/2)
+                                    continue;
+                            }
+                            else if (nodeGroup.RelativeRT == RelativeRT.Preceding && nodeGroupMax.RelativeRT == RelativeRT.Matching)
+                            {
+                                // If this peak is supposed to precede the maximum, look for any
+                                // indication that this relationship holds, by testing the peak apex
+                                // and the peak center.
+                                if (timeIndex > timeMax && (startPeak + endPeak)/2 > (startMax + endMax)/2)
+                                    continue;
+                            }
                         }
 
                         // Choose the next best peak that overlaps
@@ -1680,7 +1699,9 @@ namespace pwiz.Skyline.Model.Results
                 ChromDataPeakList peakSetMax = _listPeakSets[0];
 
                 // Sort them back into retention time order
-                _listPeakSets.Sort((l1, l2) => l1[0].Peak.StartIndex - l2[0].Peak.StartIndex);
+                _listPeakSets.Sort((l1, l2) =>
+                    (l1[0].Peak != null ? l1[0].Peak.StartIndex : 0) -
+                    (l2[0].Peak != null ? l2[0].Peak.StartIndex : 0));
 
                 // Set the processed peaks back to the chromatogram data
                 int maxPeakIndex = _listPeakSets.IndexOf(peakSetMax);
@@ -2103,27 +2124,23 @@ namespace pwiz.Skyline.Model.Results
                 {
                     ChromDataPeak peakAdd = null;
 
-                    // If the best peptide peak is supposed to have the same retention
-                    // time charachteristics, attempt to add a newly integrated peak
-                    if (IsSameRT(bestPeptidePeak.Data))
+                    // If no overlapping peak was found for this precursor, then create
+                    // a peak with the same extents as the best peak.  This peak will
+                    // appear as missing, if Integrate All is not selected.
+                    var peakBest = bestPeptidePeak.PeakGroup[0].Peak;
+                    int offsetBest = bestPeptidePeak.Data.Offset;
+                    int startIndex = Math.Max(0, GetIndex(peakBest.StartIndex + offsetBest));
+                    int endIndex = Math.Min(Times.Length - 1, GetIndex(peakBest.EndIndex + offsetBest));
+                    if (startIndex < endIndex)
                     {
-                        var peakBest = bestPeptidePeak.PeakGroup[0].Peak;
-                        int offsetBest = bestPeptidePeak.Data.Offset;
-                        int startIndex = Math.Max(0, GetIndex(peakBest.StartIndex + offsetBest));
-                        int endIndex = Math.Min(Times.Length - 1, GetIndex(peakBest.EndIndex + offsetBest));
-                        if (startIndex < endIndex)
-                        {
-                            var chromData = _listChromData[0];
-                            peakAdd = new ChromDataPeak(chromData, chromData.CalcPeak(startIndex, endIndex));
-                        }                        
-                    }
+                        var chromData = _listChromData[0];
+                        peakAdd = new ChromDataPeak(chromData, chromData.CalcPeak(startIndex, endIndex));
+                    }                        
 
                     // If there is still no peak to add, create an empty one
-                    // A completely empty peak is somewhat problematic, so just stay with
-                    // the current best peak.
                     if (peakAdd == null)
                     {
-                        return; // peakAdd = new ChromDataPeak(_listChromData[0], null);
+                        peakAdd = new ChromDataPeak(_listChromData[0], null);
                     }
 
                     _listPeakSets.Insert(0,

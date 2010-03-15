@@ -38,14 +38,17 @@ namespace pwiz.Skyline.Alerts
             this.labelSoftwareVersion = new System.Windows.Forms.Label();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
+            this.pictureProteoWizardIcon = new System.Windows.Forms.PictureBox();
+            this.linkProteoWizard = new System.Windows.Forms.LinkLabel();
+            this.label3 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.pictureSkylineIcon)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureProteoWizardIcon)).BeginInit();
             this.SuspendLayout();
             // 
             // linkProteome
             // 
-            this.linkProteome.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.linkProteome.AutoSize = true;
-            this.linkProteome.Location = new System.Drawing.Point(12, 284);
+            this.linkProteome.Location = new System.Drawing.Point(14, 201);
             this.linkProteome.Name = "linkProteome";
             this.linkProteome.Size = new System.Drawing.Size(143, 13);
             this.linkProteome.TabIndex = 0;
@@ -57,7 +60,7 @@ namespace pwiz.Skyline.Alerts
             // 
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOk.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnOk.Location = new System.Drawing.Point(401, 279);
+            this.btnOk.Location = new System.Drawing.Point(424, 305);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 1;
@@ -69,14 +72,14 @@ namespace pwiz.Skyline.Alerts
             this.pictureSkylineIcon.Image = global::pwiz.Skyline.Properties.Resources.SkylineImg;
             this.pictureSkylineIcon.Location = new System.Drawing.Point(15, 12);
             this.pictureSkylineIcon.Name = "pictureSkylineIcon";
-            this.pictureSkylineIcon.Size = new System.Drawing.Size(115, 150);
+            this.pictureSkylineIcon.Size = new System.Drawing.Size(142, 186);
             this.pictureSkylineIcon.TabIndex = 2;
             this.pictureSkylineIcon.TabStop = false;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(139, 35);
+            this.label1.Location = new System.Drawing.Point(163, 40);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(339, 91);
             this.label1.TabIndex = 3;
@@ -85,31 +88,61 @@ namespace pwiz.Skyline.Alerts
             // labelSoftwareVersion
             // 
             this.labelSoftwareVersion.AutoSize = true;
-            this.labelSoftwareVersion.Location = new System.Drawing.Point(139, 12);
+            this.labelSoftwareVersion.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelSoftwareVersion.Location = new System.Drawing.Point(162, 12);
             this.labelSoftwareVersion.Name = "labelSoftwareVersion";
-            this.labelSoftwareVersion.Size = new System.Drawing.Size(41, 13);
+            this.labelSoftwareVersion.Size = new System.Drawing.Size(66, 20);
             this.labelSoftwareVersion.TabIndex = 4;
             this.labelSoftwareVersion.Text = "Skyline";
             // 
             // textBox1
             // 
-            this.textBox1.Location = new System.Drawing.Point(139, 163);
+            this.textBox1.Location = new System.Drawing.Point(163, 168);
             this.textBox1.Multiline = true;
             this.textBox1.Name = "textBox1";
             this.textBox1.ReadOnly = true;
             this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBox1.Size = new System.Drawing.Size(322, 101);
+            this.textBox1.Size = new System.Drawing.Size(322, 112);
             this.textBox1.TabIndex = 5;
             this.textBox1.Text = resources.GetString("textBox1.Text");
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(139, 148);
+            this.label2.Location = new System.Drawing.Point(163, 153);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(151, 13);
             this.label2.TabIndex = 6;
             this.label2.Text = "Software Dependency Credits:";
+            // 
+            // pictureProteoWizardIcon
+            // 
+            this.pictureProteoWizardIcon.Image = global::pwiz.Skyline.Properties.Resources.ProteoWizard;
+            this.pictureProteoWizardIcon.Location = new System.Drawing.Point(15, 240);
+            this.pictureProteoWizardIcon.Name = "pictureProteoWizardIcon";
+            this.pictureProteoWizardIcon.Size = new System.Drawing.Size(142, 72);
+            this.pictureProteoWizardIcon.TabIndex = 7;
+            this.pictureProteoWizardIcon.TabStop = false;
+            // 
+            // linkProteoWizard
+            // 
+            this.linkProteoWizard.AutoSize = true;
+            this.linkProteoWizard.Location = new System.Drawing.Point(14, 315);
+            this.linkProteoWizard.Name = "linkProteoWizard";
+            this.linkProteoWizard.Size = new System.Drawing.Size(144, 13);
+            this.linkProteoWizard.TabIndex = 8;
+            this.linkProteoWizard.TabStop = true;
+            this.linkProteoWizard.Text = "proteowizard.sourceforge.net";
+            this.linkProteoWizard.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkProteoWizard_LinkClicked);
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(166, 298);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(136, 13);
+            this.label3.TabIndex = 9;
+            this.label3.Text = "A ProteoWizard Application";
             // 
             // AboutDlg
             // 
@@ -117,7 +150,10 @@ namespace pwiz.Skyline.Alerts
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnOk;
-            this.ClientSize = new System.Drawing.Size(488, 314);
+            this.ClientSize = new System.Drawing.Size(511, 344);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.linkProteoWizard);
+            this.Controls.Add(this.pictureProteoWizardIcon);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.labelSoftwareVersion);
@@ -133,6 +169,7 @@ namespace pwiz.Skyline.Alerts
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "About Skyline";
             ((System.ComponentModel.ISupportInitialize)(this.pictureSkylineIcon)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureProteoWizardIcon)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -147,5 +184,8 @@ namespace pwiz.Skyline.Alerts
         private System.Windows.Forms.Label labelSoftwareVersion;
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.PictureBox pictureProteoWizardIcon;
+        private System.Windows.Forms.LinkLabel linkProteoWizard;
+        private System.Windows.Forms.Label label3;
     }
 }

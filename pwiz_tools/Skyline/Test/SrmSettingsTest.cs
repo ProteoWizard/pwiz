@@ -513,6 +513,38 @@ namespace pwiz.SkylineTest
                 "</predict_collision_energy>");
         }
 
+        [TestMethod]
+        public void SerializeCollisionEnergyListTest()
+        {
+            XmlSerializer ser = new XmlSerializer(typeof(CollisionEnergyList));
+            using (TextReader reader = new StringReader(
+                "<CollisionEnergyList>\n" +
+                "    <predict_collision_energy name=\"Thermo\">\n" +
+                "        <regression_ce charge=\"2\" slope=\"0.034\" intercept=\"3.314\" />\n" +
+                "        <regression_ce charge=\"3\" slope=\"0.044\" intercept=\"3.314\" />\n" +
+                "    </predict_collision_energy>\n" +
+                "    <predict_collision_energy name=\"ABI\">\n" +
+                "        <regression_ce charge=\"2\" slope=\"0.0431\" intercept=\"4.7556\" />\n" +
+                "    </predict_collision_energy>\n" +
+                "</CollisionEnergyList>"))
+            {
+                var listCE = (CollisionEnergyList) ser.Deserialize(reader);
+
+                Assert.AreEqual(5, listCE.Count);
+                Assert.AreEqual(1, listCE.RevisionIndexCurrent);
+
+                int i = 0;
+                foreach (var regressionCE in listCE.GetDefaults(1))
+                {
+                    // Check the first 3 items in the defaults, which should be new
+                    if (i++ >= 3)
+                        break;
+                    CollisionEnergyRegression regressionTmp;
+                    Assert.IsTrue(listCE.TryGetValue(regressionCE.GetKey(), out regressionTmp));
+                }
+            }
+        }        
+
         /// <summary>
         /// Test error handling in XML deserialization of <see cref="DeclusteringPotentialRegression"/>.
         /// </summary>

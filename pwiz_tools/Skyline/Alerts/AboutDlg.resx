@@ -118,13 +118,13 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="label1.Text" xml:space="preserve">
-    <value>Copyright © 2008-2009 University of Washington, all rights reserved
+    <value>Copyright © 2008-2010 University of Washington, all rights reserved
 
 MacCoss Lab, Department of Genome Sciences, UW
 
 This software was created by the MacCoss Lab under a subcontract
 from Vanderbilt University under NIH/NCI grant number U24CA126479
-for the CPTAC program.</value>
+for the NCI CPTAC program.</value>
   </data>
   <data name="textBox1.Text" xml:space="preserve">
     <value>Agilent Technologies
@@ -143,6 +143,14 @@ DigitalRune Software
 Docking Windows
 http://www.digitalrune.com
 
+DotNetZip Library
+ZIP compression &amp; extraction
+http://www.codeplex.com/DotNetZip
+
+JetBrains Software
+Development tools: ReSharper and dotTrace
+http://www.jetbrains.com/index.html
+
 NHibernate
 Object Relational Mapping
 http://www.nhibernate.org
@@ -158,6 +166,16 @@ http://www.sqlite.org
 SQLite.NET
 ADO.NET Provider for SQLite
 http://sqlite.phxsoftware.com
+
+Thermo Fisher Scientific
+MSFileReader file reading tool
+Copyright © 2009 by Thermo Fisher Scientific, Inc.
+All rights reserved.
+http://www.thermo.com
+
+Waters Technologies Corportation
+Method export library
+http://www.waters.com
 
 ZedGraph
 Chart Plotting

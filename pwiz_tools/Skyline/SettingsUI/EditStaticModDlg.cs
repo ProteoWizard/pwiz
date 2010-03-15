@@ -319,8 +319,12 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
-            RelativeRT relativeRT = (RelativeRT) Enum.Parse(typeof (RelativeRT),
-                comboRelativeRT.SelectedItem.ToString());
+            RelativeRT relativeRT = RelativeRT.Matching;
+            if (comboRelativeRT.Visible && comboRelativeRT.SelectedItem != null)
+            {
+                relativeRT = (RelativeRT)Enum.Parse(typeof(RelativeRT),
+                    comboRelativeRT.SelectedItem.ToString());
+            }
 
             Modification = new StaticMod(name,
                                          aa,

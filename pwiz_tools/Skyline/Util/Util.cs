@@ -90,10 +90,15 @@ namespace pwiz.Skyline.Util
     public interface IListDefaults<T>
     {
         /// <summary>
+        /// Gets the current revision index for this list
+        /// </summary>
+        int RevisionIndexCurrent { get; }
+
+        /// <summary>
         /// Gets the default collection as an enumerable list.
         /// </summary>
         /// <returns>The default collection</returns>
-        IEnumerable<T> GetDefaults();
+        IEnumerable<T> GetDefaults(int revisionIndex);
     }
 
     /// <summary>

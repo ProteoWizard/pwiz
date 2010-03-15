@@ -1288,7 +1288,7 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
-            writer.Write(nodePepGroup.Name);
+            writer.Write(nodePepGroup.Name.Replace(' ', '_'));  // Quanpedia can't handle spaces
             writer.Write(FieldSeparator);
             // Write special ID to ensure 1-to-1 relationship between this ID and precursor m/z
             writer.Write(Document.Settings.GetModifiedSequence(nodePep.Peptide.Sequence,
@@ -1341,6 +1341,8 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             if (nodeTran.HasLibInfo)
                 writer.Write(nodeTran.LibInfo.Rank);
+            else
+                writer.Write(-1);   // Because VerifyE can't deal with an empty field
             if (Document.Settings.PeptideSettings.Modifications.HasHeavyModifications)
             {
                 writer.Write(FieldSeparator);

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -222,7 +222,7 @@ namespace pwiz.Skyline.SettingsUI
         public void ResetList()
         {
             _list.Clear();
-            _list.AddRange(_model.GetDefaults());
+            _list.AddRange(_model.GetDefaults(_model.RevisionIndexCurrent));
             ReloadList();
         }
 

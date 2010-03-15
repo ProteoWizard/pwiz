@@ -82,7 +82,7 @@ namespace pwiz.SkylineTest
             var dpRegress = regressions["ABI"];
             var collisions = new CollisionEnergyList();
             collisions.AddDefaults();
-            var ceRegress = collisions["ABI"];
+            var ceRegress = collisions["ABI 4000 QTrap"];
             var calcNames = RetentionTimeRegression.GetRetentionScoreCalcNames().ToArray();
             var rtRegress = new RetentionTimeRegression("Test", calcNames[0], 3.5, 10.4, 12.8,
                 new MeasuredRetentionTime[0]);

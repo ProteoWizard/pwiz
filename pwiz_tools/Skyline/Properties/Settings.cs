@@ -453,7 +453,7 @@ namespace pwiz.Skyline.Properties
             return new Enzyme("Trypsin", "KR", "P");
         }
 
-        public override IEnumerable<Enzyme> GetDefaults()
+        public override IEnumerable<Enzyme> GetDefaults(int revisionIndex)
         {
             return new[]
                 {
@@ -504,7 +504,7 @@ namespace pwiz.Skyline.Properties
 
     public sealed class PeptideExcludeList : SettingsList<PeptideExcludeRegex>
     {
-        public override IEnumerable<PeptideExcludeRegex> GetDefaults()
+        public override IEnumerable<PeptideExcludeRegex> GetDefaults(int revisionIndex)
         {
             return new[]
                 {
@@ -538,7 +538,7 @@ namespace pwiz.Skyline.Properties
 
     public sealed class SpectralLibraryList : SettingsList<LibrarySpec>
     {
-        public override IEnumerable<LibrarySpec> GetDefaults()
+        public override IEnumerable<LibrarySpec> GetDefaults(int revisionIndex)
         {
             return new LibrarySpec[0];
         }
@@ -577,7 +577,7 @@ namespace pwiz.Skyline.Properties
             return NONE;
         }
 
-        public override IEnumerable<BackgroundProteomeSpec> GetDefaults()
+        public override IEnumerable<BackgroundProteomeSpec> GetDefaults(int revisionIndex)
         {
             return new[] {GetDefault()};
         }
@@ -643,7 +643,7 @@ namespace pwiz.Skyline.Properties
                 };            
         }
 
-        public override IEnumerable<StaticMod> GetDefaults()
+        public override IEnumerable<StaticMod> GetDefaults(int revisionIndex)
         {
             return GetDefaultsOn();
         }
@@ -675,7 +675,7 @@ namespace pwiz.Skyline.Properties
             return new StaticMod[0];
         }
 
-        public override IEnumerable<StaticMod> GetDefaults()
+        public override IEnumerable<StaticMod> GetDefaults(int revisionIndex)
         {
             return GetDefaultsOn();
         }
@@ -706,28 +706,57 @@ namespace pwiz.Skyline.Properties
 
     public sealed class CollisionEnergyList : SettingsList<CollisionEnergyRegression>
     {
+        public override int RevisionIndexCurrent { get { return 1; } }
+
         public static CollisionEnergyRegression GetDefault()
         {
-            var thermoRegressions = new []
-            {
-                new ChargeRegressionLine(2, 0.034, 3.314),
-                new ChargeRegressionLine(3, 0.044, 3.314)
-            };
-            return new CollisionEnergyRegression("Thermo", thermoRegressions);
+            var thermoRegressions = new[]
+                                {
+                                    new ChargeRegressionLine(2, 0.03, 2.786),
+                                    new ChargeRegressionLine(3, 0.038, 2.183)
+                                };
+            return new CollisionEnergyRegression("Thermo TSQ Vantage", thermoRegressions);
         }
 
-        public override IEnumerable<CollisionEnergyRegression> GetDefaults()
+        public override IEnumerable<CollisionEnergyRegression> GetDefaults(int revisionIndex)
         {
-            return new[]
+            switch (revisionIndex)
             {
-                GetDefault(),
-                new CollisionEnergyRegression("ABI", new[]
-                    { new ChargeRegressionLine(2, 0.0431, 4.7556), }),
-                new CollisionEnergyRegression("Agilent", new[]
-                    { new ChargeRegressionLine(2, 0.036, -4.8), }),
-                new CollisionEnergyRegression("Waters", new[]
-                    { new ChargeRegressionLine(2, 0.034, 3.314), }),
-            };
+                case 0: // v0.5
+                    return new[]
+                        {
+                            new CollisionEnergyRegression("Thermo", new []
+                                {
+                                    new ChargeRegressionLine(2, 0.034, 3.314),
+                                    new ChargeRegressionLine(3, 0.044, 3.314)
+                                }), 
+                            new CollisionEnergyRegression("ABI", new[]
+                                { new ChargeRegressionLine(2, 0.0431, 4.7556), }),
+                            new CollisionEnergyRegression("Agilent", new[]
+                                { new ChargeRegressionLine(2, 0.036, -4.8), }),
+                            new CollisionEnergyRegression("Waters", new[]
+                                { new ChargeRegressionLine(2, 0.034, 3.314), }),
+                        };
+                default:    // v0.6
+                    return new[]
+                        {
+                            GetDefault(), 
+                            new CollisionEnergyRegression("Thermo TSQ Ultra", new []
+                                {
+                                    new ChargeRegressionLine(2, 0.035, 1.643),
+                                    new ChargeRegressionLine(3, 0.037, 3.265)
+                                }), 
+                            new CollisionEnergyRegression("ABI 4000 QTrap", new []
+                                {
+                                    new ChargeRegressionLine(2, 0.057, 4.453),
+                                    new ChargeRegressionLine(3, 0.03, 7.692)
+                                }), 
+                            new CollisionEnergyRegression("Agilent", new[]
+                                { new ChargeRegressionLine(2, 0.036, -4.8), }),
+                            new CollisionEnergyRegression("Waters", new[]
+                                { new ChargeRegressionLine(2, 0.034, 3.314), }),
+                        };
+            }
         }
 
         public override CollisionEnergyRegression EditItem(Control owner, CollisionEnergyRegression item,
@@ -760,7 +789,7 @@ namespace pwiz.Skyline.Properties
             return NONE;
         }
 
-        public override IEnumerable<DeclusteringPotentialRegression> GetDefaults()
+        public override IEnumerable<DeclusteringPotentialRegression> GetDefaults(int revisionIndex)
         {
             return new[]
             {
@@ -809,7 +838,7 @@ namespace pwiz.Skyline.Properties
             return NONE;
         }
 
-        public override IEnumerable<RetentionTimeRegression> GetDefaults()
+        public override IEnumerable<RetentionTimeRegression> GetDefaults(int revisionIndex)
         {
             return new[] { GetDefault() };
         }
@@ -922,7 +951,7 @@ namespace pwiz.Skyline.Properties
             return DEFAULT;
         }
 
-        public override IEnumerable<SrmSettings> GetDefaults()
+        public override IEnumerable<SrmSettings> GetDefaults(int revisionIndex)
         {
             return new[] { GetDefault() };
         }
@@ -946,7 +975,7 @@ namespace pwiz.Skyline.Properties
 
     public sealed class ReportSpecList : SettingsList<ReportSpec>, IListSerializer<ReportSpec>
     {
-        public override IEnumerable<ReportSpec> GetDefaults()
+        public override IEnumerable<ReportSpec> GetDefaults(int revisionIndex)
         {
             Type tablePep = typeof (DbPeptide);
             Type tablePepRes = typeof (DbPeptideResult);
@@ -1032,67 +1061,6 @@ namespace pwiz.Skyline.Properties
         }
     }
 
-    public abstract class SettingsList<T>
-        : SettingsListBase<T>, IItemEditor<T>
-        where T : IKeyContainer<string>, IXmlSerializable
-    {
-        #region IItemEditor<T> Members
-
-        public T NewItem(Control owner, IEnumerable<T> existing, object tag)
-        {
-            return EditItem(owner, default(T), existing, tag);
-        }
-
-        public abstract T EditItem(Control owner, T item, IEnumerable<T> existing, object tag);
-
-        public abstract T CopyItem(T item);
-
-        #endregion
-
-        public override bool AllowReset { get { return true; } }
-
-        public override bool ExcludeDefault { get { return false; } }
-    }
-
-    public abstract class SettingsListBase<T>
-        : XmlMappedList<string, T>, IListDefaults<T>, IListEditor<T>, IListEditorSupport
-        where T : IKeyContainer<string>, IXmlSerializable
-    {
-        public virtual void AddDefaults()
-        {
-            AddRange(GetDefaults());
-        }
-
-        #region IListDefaults<TValue> Members
-
-        public abstract IEnumerable<T> GetDefaults();
-
-        #endregion
-
-        #region IListEditor<T> Members
-
-        public IEnumerable<T> EditList(Control owner, object tag)
-        {
-            var dlg = new EditListDlg<SettingsListBase<T>, T>(this, tag);
-            if (dlg.ShowDialog(owner) == DialogResult.OK)
-                return dlg.GetAll();
-            return null;
-        }
-
-        #endregion
-
-        #region IListEditorSupport Members
-
-        public abstract string Title { get; }
-
-        public abstract string Label { get; }
-
-        public virtual bool AllowReset { get { return false; } }
-
-        public virtual bool ExcludeDefault { get { return true; } }
-
-        #endregion
-    }
 
     public sealed class GridColumnsList : XmlMappedList<string, GridColumns>
     {
@@ -1100,7 +1068,7 @@ namespace pwiz.Skyline.Properties
 
     public sealed class AnnotationDefList : SettingsList<AnnotationDef>, IListSerializer<AnnotationDef>
     {
-        public override IEnumerable<AnnotationDef> GetDefaults()
+        public override IEnumerable<AnnotationDef> GetDefaults(int revisionIndex)
         {
             return new AnnotationDef[0];
         }
@@ -1133,6 +1101,100 @@ namespace pwiz.Skyline.Properties
         {
             return new AnnotationDefList();
         }
+    }
 
+    public abstract class SettingsList<T>
+        : SettingsListBase<T>, IItemEditor<T>
+        where T : IKeyContainer<string>, IXmlSerializable
+    {
+        #region IItemEditor<T> Members
+
+        public T NewItem(Control owner, IEnumerable<T> existing, object tag)
+        {
+            return EditItem(owner, default(T), existing, tag);
+        }
+
+        public abstract T EditItem(Control owner, T item, IEnumerable<T> existing, object tag);
+
+        public abstract T CopyItem(T item);
+
+        #endregion
+
+        public override bool AllowReset { get { return true; } }
+
+        public override bool ExcludeDefault { get { return false; } }
+    }
+
+    public abstract class SettingsListBase<T>
+        : XmlMappedList<string, T>, IListDefaults<T>, IListEditor<T>, IListEditorSupport
+        where T : IKeyContainer<string>, IXmlSerializable
+    {
+        public virtual void AddDefaults()
+        {
+            AddRange(GetDefaults());
+        }
+
+        public IEnumerable<T> GetDefaults()
+        {
+            return GetDefaults(RevisionIndexCurrent);
+        }
+
+        #region IListDefaults<TValue> Members
+
+        public virtual int RevisionIndexCurrent { get { return 0; } }
+
+        public abstract IEnumerable<T> GetDefaults(int revisionIndex);
+
+        #endregion
+
+        #region IListEditor<T> Members
+
+        public IEnumerable<T> EditList(Control owner, object tag)
+        {
+            var dlg = new EditListDlg<SettingsListBase<T>, T>(this, tag);
+            if (dlg.ShowDialog(owner) == DialogResult.OK)
+                return dlg.GetAll();
+            return null;
+        }
+
+        #endregion
+
+        #region IListEditorSupport Members
+
+        public abstract string Title { get; }
+
+        public abstract string Label { get; }
+
+        public virtual bool AllowReset { get { return false; } }
+
+        public virtual bool ExcludeDefault { get { return true; } }
+
+        #endregion
+
+        #region IXmlSerializable
+
+        protected override void ValidateLoad()
+        {
+            // If the current revision index has changed, since the list was saved,
+            // merge in any new elements that were added between the old version
+            // and the new.
+            if (RevisionIndex != RevisionIndexCurrent)
+            {
+                MergeDifferences(GetDefaults(RevisionIndexCurrent), GetDefaults(RevisionIndex));
+                RevisionIndex = RevisionIndexCurrent;
+            }
+        }
+
+        private void MergeDifferences(IEnumerable<T> itemsNew, IEnumerable<T> itemsOld)
+        {
+            foreach (var item in itemsNew)
+            {
+                var keyNew = item.GetKey();
+                if (!itemsOld.Contains(itemOld => Equals(keyNew, itemOld.GetKey())))
+                    Add(item);
+            }
+        }
+
+        #endregion
     }
 }

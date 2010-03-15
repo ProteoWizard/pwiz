@@ -89,23 +89,40 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (type == IsotopeLabelType.light)
                 return RelativeRT.Matching;
+            // Default is matching
+            RelativeRT relativeRT = RelativeRT.Matching;
+            // One unkown modification makes everything unknown
+            // One preceding modification with no unknowns make relative RT preceding
+            // Overlapping overrides matching
             if (mods != null)
             {
                 foreach (var mod in mods.HeavyModifications)
                 {
-                    if (mod.Modification.RelativeRT == RelativeRT.Preceding)
-                        return RelativeRT.Preceding;
+                    if (mod.Modification.RelativeRT == RelativeRT.Unknown)
+                        return RelativeRT.Unknown;
+                    else if (mod.Modification.RelativeRT == RelativeRT.Preceding)
+                        relativeRT = RelativeRT.Preceding;
+                    else if (mod.Modification.RelativeRT == RelativeRT.Overlapping &&
+                            relativeRT == RelativeRT.Matching)
+                        relativeRT = RelativeRT.Overlapping;
                 }
             }
             else
             {
                 foreach (var mod in PeptideSettings.Modifications.HeavyModifications)
                 {
-                    if (mod.IsMod(seq) && mod.RelativeRT == RelativeRT.Preceding)
-                        return RelativeRT.Preceding;
+                    if (!mod.IsMod(seq))
+                        continue;
+                    if (mod.RelativeRT == RelativeRT.Unknown)
+                        return RelativeRT.Unknown;
+                    else if (mod.RelativeRT == RelativeRT.Preceding)
+                        relativeRT = RelativeRT.Preceding;
+                    else if (mod.RelativeRT == RelativeRT.Overlapping &&
+                            relativeRT == RelativeRT.Matching)
+                        relativeRT = RelativeRT.Overlapping;
                 }
             }
-            return RelativeRT.Matching;
+            return relativeRT;
         }
         
         // Cached calculators

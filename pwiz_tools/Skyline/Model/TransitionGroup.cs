@@ -325,7 +325,7 @@ namespace pwiz.Skyline.Model
                 // Change as little as possible
                 if (!ArrayUtil.ReferencesEqual(childrenNew, Children))
                     nodeResult = new TransitionGroupDocNode(this, precursorMz, relativeRT, childrenNew);
-                else if (precursorMz != PrecursorMz)
+                else if (precursorMz != PrecursorMz || relativeRT != RelativeRT)
                     nodeResult = new TransitionGroupDocNode(this, precursorMz, relativeRT, Children);
                 else
                     nodeResult = this;

@@ -37,8 +37,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>1883</ApplicationRevision>
-    <ApplicationVersion>0.5.9.1883</ApplicationVersion>
+    <ApplicationRevision>1888</ApplicationRevision>
+    <ApplicationVersion>0.5.9.1888</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -1033,6 +1033,7 @@
     <EmbeddedResource Include="Resources\FragmentLib.bmp" />
     <None Include="Resources\Wand.bmp" />
     <None Include="Resources\WandProhibit.bmp" />
+    <Content Include="Resources\ProteoWizard.bmp" />
     <Content Include="SkylineData.ico" />
     <Content Include="SkylineDoc.ico" />
   </ItemGroup>

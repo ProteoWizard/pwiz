@@ -38,7 +38,31 @@ namespace pwiz.Skyline.Util
         : MappedList<TKey, TValue>, IXmlSerializable
         where TValue : IKeyContainer<TKey>, IXmlSerializable
     {
+        /// <summary>
+        /// Monotonically increasing revision number, supporting the ability
+        /// to upgrade the elements in a settings list.
+        /// </summary>
+        public int RevisionIndex { get; set; }
+
         #region IXmlSerializable Members
+
+        /// <summary>
+        /// Provides a place to handle any post read validation or upgrading
+        /// of values.
+        /// </summary>
+        protected virtual void ValidateLoad()
+        {            
+        }
+
+        private enum EL
+        {
+            revision
+        }
+
+        private enum ATTR
+        {
+            index
+        }
 
         public XmlSchema GetSchema()
         {
@@ -50,6 +74,11 @@ namespace pwiz.Skyline.Util
             // Read past the property element
             reader.Read();
 
+            if (reader.IsStartElement(EL.revision))
+            {
+                RevisionIndex = reader.GetIntAttribute(ATTR.index);
+                reader.Read();  // Consume tag
+            }
             var helpers = GetXmlElementHelpers();
             var helper = reader.FindHelper(helpers);
 
@@ -77,10 +106,20 @@ namespace pwiz.Skyline.Util
             }
             Clear();
             AddRange(list);                
+
+            // Perform final list specific updates
+            ValidateLoad();
         }
 
         public void WriteXml(XmlWriter writer)
         {
+            // Write non-zero revision index
+            if (RevisionIndex != 0)
+            {
+                writer.WriteStartElement(EL.revision);
+                writer.WriteAttribute(ATTR.index, RevisionIndex);
+                writer.WriteEndElement();
+            }
             // Write child elements directly into the property tag.
             writer.WriteElements(this, GetXmlElementHelpers());
         }

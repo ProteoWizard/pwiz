@@ -39,5 +39,10 @@ namespace pwiz.Skyline.Alerts
         {
             Process.Start("http://proteome.gs.washington.edu");
         }
+
+        private void linkProteoWizard_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            Process.Start("http://proteowizard.sourceforge.net/");
+        }
     }
 }
