@@ -129,7 +129,9 @@ TestModification testModifications[] =
     { "(E", "N-1H-3", -17.02655, -17.0306, true }, // Pyroglutamic acid from E at the N terminus
     { "N!G", "N-1H-3", -17.02655, -17.0306, true }, // Succinimide from N when N terminal to G
     //{ "[NQ]", "O1N-1H-2", 0.98402, 0.9847, true }, // Deamidation of N or Q
-    { "[STY]!{STY}", "H1P1O3", 79.96633, 79.9799, true } // Phosphorylation of S, T, or Y when not N terminal to S, T, or Y
+    { "[STY]!{STY}", "H1P1O3", 79.96633, 79.9799, true }, // Phosphorylation of S, T, or Y when not N terminal to S, T, or Y
+    { "(", "C2H2O1", 42.010565, 42.0367, true }, // N-terminal acetylation
+    { "[ED)]", "C2H5N1", 43.042199, 43.0678, true }, // Carboxyl modification with ethanolamine
 };
 
 struct TestModifiedPeptide
@@ -384,6 +386,26 @@ TestModifiedPeptide testModifiedPeptides[] =
       ModificationDelimiter_Brackets,
       1303.55365, 1304.3413,
       0
+    },
+
+    // N-terminal +42
+    { "PINGPNG",
+      "6 n",
+      true,
+      ModificationParsing_Off,
+      ModificationDelimiter_Brackets,
+      709.339545, 709.7479,
+      0
+    },
+
+    // C-terminal +43
+    { "PINGPNG",
+      "7 c",
+      true,
+      ModificationParsing_Off,
+      ModificationDelimiter_Brackets,
+      710.371179, 710.779,
+      0
     }
 };
 
@@ -420,10 +442,19 @@ void modificationTest()
                     for (size_t i=0; i < tokens.size(); i+=2)
                     {
                         TestModification& mod = testModifications[lexical_cast<size_t>(tokens[i])];
-                        if (p.modsHaveFormulas)
-                            modMap[lexical_cast<int>(tokens[i+1])].push_back(Modification(mod.formula));
+
+                        int modOffset;
+                        if (tokens[i+1] == "n")
+                            modOffset = ModificationMap::NTerminus();
+                        else if (tokens[i+1] == "c")
+                            modOffset = ModificationMap::CTerminus();
                         else
-                            modMap[lexical_cast<int>(tokens[i+1])].push_back(Modification(mod.deltaMonoMass, mod.deltaAvgMass));
+                            modOffset = lexical_cast<int>(tokens[i+1]);
+
+                        if (p.modsHaveFormulas)
+                            modMap[modOffset].push_back(Modification(mod.formula));
+                        else
+                            modMap[modOffset].push_back(Modification(mod.deltaMonoMass, mod.deltaAvgMass));
                         monoDeltaMass += mod.deltaMonoMass;
                         avgDeltaMass += mod.deltaAvgMass;
                     }
@@ -439,7 +470,16 @@ void modificationTest()
                 for (size_t i=0; i < tokens.size(); i+=2)
                 {
                     TestModification& mod = testModifications[lexical_cast<size_t>(tokens[i])];
-                    ModificationMap::const_iterator itr = modMap.find(lexical_cast<int>(tokens[i+1]));
+                    
+                    int modOffset;
+                    if (tokens[i+1] == "n")
+                        modOffset = ModificationMap::NTerminus();
+                    else if (tokens[i+1] == "c")
+                        modOffset = ModificationMap::CTerminus();
+                    else
+                        modOffset = lexical_cast<int>(tokens[i+1]);
+
+                    ModificationMap::const_iterator itr = modMap.find(modOffset);
                     unit_assert(itr != modMap.end());
                     const ModificationList& modList = itr->second;
                     if (p.modsHaveFormulas)

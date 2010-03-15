@@ -137,7 +137,7 @@ class Peptide::Impl
 
         // add C terminus formula and modifications
         formula += O1H1;
-        if (mods_.get() && modified && modItr != mods_->end() && modItr->first == ModificationMap::NTerminus())
+        if (mods_.get() && modified && modItr != mods_->end() && modItr->first == ModificationMap::CTerminus())
         {
             const ModificationList& modList = modItr->second;
             for (size_t i=0, end=modList.size(); i < end; ++i)
