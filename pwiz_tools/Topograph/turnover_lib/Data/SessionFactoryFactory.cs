@@ -69,7 +69,8 @@ namespace pwiz.Topograph.Data
                 .SetProperty("connection.provider",
                              typeof (NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName)
                 .SetProperty("proxyfactory.factory_class",
-                typeof(NHibernate.ByteCode.Castle.ProxyFactoryFactory).AssemblyQualifiedName)
+                             typeof(NHibernate.ByteCode.Castle.ProxyFactoryFactory).AssemblyQualifiedName)
+                .SetProperty("command_timeout", "600")
                 .AddInputStream(assembly.GetManifestResourceStream("pwiz.Topograph.Data.mapping.xml"));
             if (0 == (flags & SessionFactoryFlags.remove_binary_columns))
             {
