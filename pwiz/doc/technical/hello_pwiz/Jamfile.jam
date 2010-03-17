@@ -1,0 +1,10 @@
+exe hello_pwiz
+: hello_pwiz.cpp
+  ../pwiz/data/msdata//pwiz_data_msdata
+: <include>..
+;
+
+install hello_pwiz_install
+: hello_pwiz
+: <location>. # this puts the executable in this directory 
+;

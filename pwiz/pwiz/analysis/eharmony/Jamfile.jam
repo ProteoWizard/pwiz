@@ -1,0 +1,119 @@
+#
+# $Id$
+#
+#
+# Original author: Kate Hoff <katherine.hoff .@. proteowizard.org>
+#
+# Copyright 2009 Center for Applied Molecular Medicine
+#   University of Southern California, Los Angeles, CA
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+
+
+lib pwiz_analysis_eharmony
+    : AMTDatabase.cpp
+      Bin.hpp 
+      FeatureSequenced.cpp
+      Feature_dataFetcher.cpp
+      PeptideID_dataFetcher.cpp
+      DataFetcherContainer.cpp
+      PeptideMatcher.cpp
+      SearchNeighborhoodCalculator.cpp
+      Feature2PeptideMatcher.cpp
+      WarpFunction.cpp
+      AMTContainer.cpp
+      Exporter.cpp
+      Matrix.cpp
+      NeighborJoiner.cpp
+      DistanceAttributes.cpp
+      DatabaseQuery.cpp
+      MSIAMTData.cpp
+      ../../data/misc//pwiz_data_misc
+      ../../utility/chemistry//pwiz_utility_chemistry
+      ;
+
+### UNIT TESTS ###
+
+unit-test AMTDatabase : AMTDatabaseTest.cpp pwiz_analysis_eharmony ;
+
+unit-test Bin : BinTest.cpp pwiz_analysis_eharmony ;
+
+unit-test Feature_dataFetcher : Feature_dataFetcherTest.cpp pwiz_analysis_eharmony ;
+
+unit-test PeptideID_dataFetcher : PeptideID_dataFetcherTest.cpp pwiz_analysis_eharmony ;
+
+unit-test DataFetcherContainer : DataFetcherContainerTest.cpp pwiz_analysis_eharmony ;
+
+unit-test PeptideMatcher : PeptideMatcherTest.cpp pwiz_analysis_eharmony ;
+
+unit-test SearchNeighborhoodCalculator : SearchNeighborhoodCalculatorTest.cpp pwiz_analysis_eharmony ;
+
+unit-test Feature2PeptideMatcher : Feature2PeptideMatcherTest.cpp pwiz_analysis_eharmony ;
+
+unit-test WarpFunction : WarpFunctionTest.cpp pwiz_analysis_eharmony ;
+
+unit-test Matrix : MatrixTest.cpp pwiz_analysis_eharmony ;
+
+unit-test NeighborJoiner : NeighborJoinerTest.cpp pwiz_analysis_eharmony ;
+
+unit-test DistanceAttributes : DistanceAttributesTest.cpp pwiz_analysis_eharmony ;
+
+unit-test MSIAMTData : MSIAMTDataTest.cpp pwiz_analysis_eharmony ;
+
+unit-test DatabaseQuery : DatabaseQueryTest.cpp pwiz_analysis_eharmony ;
+
+exe eharmony
+    : eharmony.cpp
+      /ext/boost//program_options
+      /ext/boost//filesystem	
+      ../../data/misc//pwiz_data_misc
+      pwiz_analysis_eharmony
+    ;
+
+exe mscupid
+    : mscupid.cpp
+      pwiz_analysis_eharmony
+      /ext/boost//program_options
+      /ext/boost//filesystem
+    ;
+
+exe PeptideHog
+    : PeptideHog.cpp
+      pwiz_analysis_eharmony
+      /ext/boost//program_options
+      /ext/boost//filesystem
+    ;
+
+exe PeptideProfile
+    : PeptideProfile.cpp
+      pwiz_analysis_eharmony
+      /ext/boost//program_options
+      /ext/boost//filesystem
+    ;
+
+exe PeptideVenn
+    : PeptideVenn.cpp
+      pwiz_analysis_eharmony
+      /ext/boost//program_options
+      /ext/boost//filesystem
+    ;
+
+install bin      
+    : eharmony
+      mscupid
+      PeptideHog
+      PeptideProfile
+      PeptideVenn
+    : <location>.
+    ;

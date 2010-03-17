@@ -1,0 +1,126 @@
+#
+# $Id$
+#
+#
+# Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+#
+# Copyright 2009 Vanderbilt University - Nashville, TN 37232
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+
+
+# Bruker support status
+# - DLLs are mixed COM and .NET and thus MSVC only
+# - we can redistribute DLLs with a Vanderbilt license, but it requires dependent
+#   projects to be non-commercial
+
+
+project
+    : requirements 
+        <toolset>gcc:<cxxflags>-fno-strict-aliasing
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+    ;
+
+
+path-constant READER_PATH : . ;
+path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Bruker ;
+path-constant TEST_DATA_PATH : ./Reader_Bruker_Test.data ;
+
+
+rule vendor-api-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties) &&
+       [ project-exists $(API_PATH) ] &&
+       [ path.exists $(API_PATH)/Interop.EDAL.dll ]
+    {
+        result += <library>$(API_PATH)//pwiz_vendor_api_bruker ;
+        result += <define>PWIZ_READER_BRUKER ;
+    }
+    else if ! $(.warn-once)
+    {
+        .warn-once = true ;
+        if ! <toolset>msvc in $(properties)
+        {
+            echo "[pwiz_aux/msrc/data/vendor_readers/Bruker] Non-MSVC build: Reader_Bruker can only identify Bruker directories, not read them." ;
+        }
+        else if ! [ project-exists $(API_PATH) ]
+        {
+            echo "[pwiz_aux/msrc/data/vendor_readers/Bruker] Missing Bruker API: Reader_Bruker can only identify Bruker directories, not read them." ;
+        }
+        else if ! [ path.exists $(API_PATH)/Interop.EDAL.dll ]
+        {
+            echo "[pwiz_aux/msrc/data/vendor_readers/Bruker] Missing CompassXtract DLLs: Reader_Bruker can only identify Bruker directories, not read them." ;
+        }
+    }
+    return $(result) ;
+}
+
+
+lib pwiz_aux_msrc_reader_bruker
+    : # sources
+        Reader_Bruker.cpp
+        Reader_Bruker_Detail.cpp
+        SpectrumList_Bruker.cpp
+        ChromatogramList_Bruker.cpp
+    : # requirements
+		<library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+		<conditional>@vendor-api-requirements
+    : # default-build
+    : # usage-requirements
+		<library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+		<conditional>@vendor-api-requirements
+    ;
+
+
+rule test-requirements ( properties * )
+{
+    # decompress test data if available (on any platform)
+    if ! $(.extract-once) && [ path.exists $(TEST_DATA_PATH).tar.bz2 ]
+    {
+        .extract-once = true ;
+        import tar ;
+        tar.extract $(TEST_DATA_PATH).tar.bz2 : : : : check-last-file-only ;
+    }
+
+    local result ;
+    if ! [ path.exists $(TEST_DATA_PATH) ]
+    {
+        if ! $(.warn-once)
+        {
+            .warn-once = true ;
+            echo "[pwiz_aux/msrc/data/vendor_readers/Bruker] Missing Bruker CompassXtract test data." ;
+        }
+        result += <build>no ;
+    }
+    return $(result) ;
+}
+
+local generate-mzML = [ MATCH (--generate-mzML) : [ modules.peek : ARGV ] ] ;
+
+# special run target for Reader_Thermo_Test, which needs external data 
+# use --preserve-test-targets to prevent bjam from deleting the executable
+run Reader_Bruker_Test.cpp $(PWIZ_ROOT_PATH)/pwiz/utility/misc/VendorReaderTestHarness.cpp
+    : # args
+        \"$(TEST_DATA_PATH)\" $(generate-mzML)
+    : # input-files
+    : # requirements
+        <library>pwiz_aux_msrc_reader_bruker
+        <conditional>@test-requirements
+    : # target name
+        Reader_Bruker_Test 
+    : # default-build
+    ;
+
+

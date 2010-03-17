@@ -1,0 +1,10 @@
+project
+    : requirements
+        <library>../../common
+    ;
+
+exe chromatogramgenerator 
+    : ChromatogramGenerator.cpp
+    /ext/boost//program_options
+    : <include>../../../..
+    ;

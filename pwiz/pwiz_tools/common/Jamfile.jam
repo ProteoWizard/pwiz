@@ -1,0 +1,66 @@
+#
+# $Id$
+#
+#
+# Original author: Darren Kessner <darren@proteowizard.org>
+#
+# Copyright 2007 Spielberg Family Center for Applied Proteomics
+#   Cedars-Sinai Medical Center, Los Angeles, California  90048
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+
+
+project
+    : requirements 
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+    ;
+
+
+rule vendor-reader-libraries ( properties * )
+{
+    local libraries ;
+    local core_vendor_reader_path = $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers ;
+    local msrc_vendor_reader_path = $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/data/vendor_readers ;
+    if [ project-exists $(core_vendor_reader_path) ] { libraries += <library>$(core_vendor_reader_path)//pwiz_data_vendor_readers ; }
+    if [ project-exists $(msrc_vendor_reader_path)/ABI ] { libraries += <library>$(msrc_vendor_reader_path)/ABI//pwiz_aux_msrc_reader_abi ; }
+    if [ project-exists $(msrc_vendor_reader_path)/ABI/T2D ] { libraries += <library>$(msrc_vendor_reader_path)/ABI/T2D//pwiz_aux_msrc_reader_abi_t2d ; }
+    if [ project-exists $(msrc_vendor_reader_path)/Bruker ] { libraries += <library>$(msrc_vendor_reader_path)/Bruker//pwiz_aux_msrc_reader_bruker ; }
+    if [ project-exists $(msrc_vendor_reader_path)/Waters ] { libraries += <library>$(msrc_vendor_reader_path)/Waters//pwiz_aux_msrc_reader_waters ; }
+    return $(libraries) ;
+}
+
+
+lib pwiz_tools_common
+    : # sources
+        FullReaderList.cpp 
+        MSDataAnalyzerApplication.cpp
+    : # requirements
+        <library>/ext/boost//program_options
+        <library>/ext/boost//filesystem
+        <library>../../pwiz/data/msdata//pwiz_data_msdata_examples
+        <library>../../pwiz/analysis/passive//pwiz_analysis_passive_core
+        <library>../../pwiz/analysis/spectrum_processing
+        <conditional>@vendor-reader-libraries
+: # default-build
+    : # usage-requirements
+        <library>/ext/boost//program_options
+        <library>/ext/boost//filesystem
+        <library>../../pwiz/data/msdata//pwiz_data_msdata_examples
+        <library>../../pwiz/analysis/passive//pwiz_analysis_passive_core
+        <library>../../pwiz/analysis/spectrum_processing
+        <conditional>@vendor-reader-libraries
+    ;
+
+unit-test MSDataAnalyzerApplicationTest : MSDataAnalyzerApplicationTest.cpp pwiz_tools_common  ;
+

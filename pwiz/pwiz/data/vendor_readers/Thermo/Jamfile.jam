@@ -1,0 +1,158 @@
+#
+# $Id$
+#
+# $Revision: 1190 $
+# $Date: 2009-08-14 12:48:37 -0500 (Fri, 14 Aug 2009) $
+#
+# Original author: Darren Kessner <darren@proteowizard.org>
+#
+# Copyright 2007 Spielberg Family Center for Applied Proteomics
+#   Cedars-Sinai Medical Center, Los Angeles, California  90048
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+
+
+# Thermo support status:
+# - DLLs are COM and thus MSVC only
+# - cannot redistribute DLLs, but we can compile without them:
+#   * if MSVC:
+#       * if DLLs are present: PWIZ_READER_THERMO is defined for all dependents
+#       * else:
+#           * PWIZ_READER_THERMO is not defined for Reader_Thermo_Test
+#           * PWIZ_READER_THERMO is defined for all other dependents
+#   * else: PWIZ_READER_THERMO is never defined
+
+
+project
+    : requirements 
+        <toolset>gcc:<cxxflags>-fno-strict-aliasing
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+    ;
+
+
+path-constant READER_PATH : . ;
+path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/thermo ;
+path-constant TEST_DATA_PATH : ./Reader_Thermo_Test.data ;
+
+
+import os common ;
+local ProgramFiles = [ os.environ ProgramFiles ] ;
+ProgramFiles ?= "C:\\Program Files" ;
+local MSFileReader = "$(ProgramFiles)\\Thermo\\MSFileReader" ;
+if [ path.exists $(API_PATH)\\MSFileReader.XRawfile2.dll ] ||
+   [ path.exists $(MSFileReader)\\XRawfile2.dll ]
+{
+    .hasDLLs = true ;
+}
+
+
+rule vendor-api-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties) &&
+       [ project-exists $(API_PATH) ]
+    {
+        result += <source>Reader_Thermo_Detail.cpp ;
+    }
+    return $(result) [ vendor-api-usage-requirements $(properties) ] ;
+}
+
+rule vendor-api-usage-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties) &&
+       [ project-exists $(API_PATH) ]
+    {
+        result += <library>$(API_PATH)//pwiz_vendor_api_thermo ;
+        result += <define>PWIZ_READER_THERMO ;
+    }
+    else if ! $(.warn-once)
+    {
+        .warn-once = true ;
+        if ! <toolset>msvc in $(properties)
+        {
+            echo "[data/vendor_readers/Thermo] Non-MSVC build: Reader_Thermo can only identify RAW files, not read them." ;
+        }
+        else if ! [ project-exists $(API_PATH) ]
+        {
+            echo "[data/vendor_readers/Thermo] Missing RawFile API: Reader_Thermo can only identify RAW files, not read them." ;
+        }
+    }
+    return $(result) ;
+}
+
+lib pwiz_reader_thermo
+    : # sources
+        Reader_Thermo.cpp
+        SpectrumList_Thermo.cpp
+        ChromatogramList_Thermo.cpp
+    : # requirements
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+        <conditional>@vendor-api-requirements
+    : # default-build
+    : # usage-requirements
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+        <conditional>@vendor-api-usage-requirements
+    ;
+
+
+rule test-requirements ( properties * )
+{
+    # decompress test data if available (on any platform)
+    if ! $(.extract-once) && [ path.exists $(TEST_DATA_PATH).tar.bz2 ]
+    {
+        .extract-once = true ;
+        import tar ;
+        tar.extract $(TEST_DATA_PATH).tar.bz2 : : : : check-last-file-only ;
+    }
+
+    local result ;
+    if ! [ path.exists $(TEST_DATA_PATH) ]
+    {
+        if ! $(.warn-once)
+        {
+            .warn-once = true ;
+            echo "[data/vendor_readers/Thermo] Missing Thermo RAW test data." ;
+        }
+        result += <build>no ;
+    }
+    else if ! <toolset>msvc in $(properties)
+    {
+        echo "[data/vendor_readers/Thermo] Non-MSVC build: Reader_Thermo_Test is only testing that RAW files can be identified, not read." ;
+        result += <define>PWIZ_READER_THERMO_TEST_ACCEPT_ONLY ;
+    }
+    else if ! $(.hasDLLs)
+    {
+        echo "[data/vendor_readers/Thermo] Missing MSFileReader.XRawfile2.dll: Reader_Thermo_Test is only testing that RAW files can be identified, not read." ;
+        result += <define>PWIZ_READER_THERMO_TEST_ACCEPT_ONLY ;
+    }
+
+    return $(result) ;
+}
+
+local generate-mzML = [ MATCH (--generate-mzML) : [ modules.peek : ARGV ] ] ;
+
+# special run target for Reader_Thermo_Test, which needs external data 
+# use --preserve-test-targets to prevent bjam from deleting the executable
+run Reader_Thermo_Test.cpp $(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_vendor_reader_test_harness
+    : # args
+        \"$(TEST_DATA_PATH)\" $(generate-mzML)
+    : # input-files
+    : # requirements
+        <library>pwiz_reader_thermo
+        <conditional>@test-requirements
+    : # target name
+        Reader_Thermo_Test 
+    : # default-build
+    ;

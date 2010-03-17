@@ -1,0 +1,127 @@
+#
+# $Id$
+#
+#
+# Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+#
+# Copyright 2009 Vanderbilt University - Nashville, TN 37232
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+
+
+project
+    : requirements 
+        <toolset>gcc:<cxxflags>-fno-strict-aliasing
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+    ;
+
+
+path-constant READER_PATH : . ;
+path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/Agilent ;
+path-constant TEST_DATA_PATH : ./Reader_Agilent_Test.data ;
+
+
+rule vendor-api-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties) &&
+       [ project-exists $(API_PATH) ]
+    {
+        result += <source>Reader_Agilent_Detail.cpp ;
+    }
+    return $(result) [ vendor-api-usage-requirements $(properties) ] ;
+}
+
+rule vendor-api-usage-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties) &&
+       [ project-exists $(API_PATH) ] &&
+       [ path.exists $(API_PATH)/MassSpecDataReader.dll ]
+    {
+        result += <library>$(API_PATH)//pwiz_vendor_api_agilent ;
+        result += <define>PWIZ_READER_AGILENT ;
+    }
+    else if ! $(.warn-once)
+    {
+        .warn-once = true ;
+        if ! <toolset>msvc in $(properties)
+        {
+            echo "[data/vendor_readers/Agilent] Non-MSVC build: Reader_Agilent can only identify MassHunter directories, not read them." ;
+        }
+        else if ! [ project-exists $(API_PATH) ]
+        {
+            echo "[data/vendor_readers/Agilent] Missing MassHunter API: Reader_Agilent can only identify MassHunter directories, not read them." ;
+        }
+        else if ! [ path.exists $(API_PATH)/MassSpecDataReader.dll ]
+        {
+            echo "[data/vendor_readers/Agilent] Missing MassHunter DLLs: Reader_Agilent can only identify MassHunter directories, not read them." ;
+        }
+    }
+    return $(result) ;
+}
+
+lib pwiz_reader_agilent
+    : # sources
+        Reader_Agilent.cpp
+        SpectrumList_Agilent.cpp
+        ChromatogramList_Agilent.cpp
+    : # requirements
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+        <conditional>@vendor-api-requirements
+    : # default-build
+    : # usage-requirements
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+        <conditional>@vendor-api-usage-requirements
+    ;
+
+
+rule test-requirements ( properties * )
+{
+    # decompress test data if available (on any platform)
+    if ! $(.extract-once) && [ path.exists $(TEST_DATA_PATH).tar.bz2 ]
+    {
+        .extract-once = true ;
+        import tar ;
+        tar.extract $(TEST_DATA_PATH).tar.bz2 : : : : check-last-file-only ;
+    }
+
+    local result ;
+    if ! [ path.exists $(TEST_DATA_PATH) ]
+    {
+        if ! $(.warn-once)
+        {
+            .warn-once = true ;
+            echo "[data/vendor_readers/Agilent] Missing Agilent MassHunter test data." ;
+        }
+        result += <build>no ;
+    }
+    return $(result) ;
+}
+
+local generate-mzML = [ MATCH (--generate-mzML) : [ modules.peek : ARGV ] ] ;
+
+# special run target for Reader_Agilent_Test, which needs external data 
+# use --preserve-test-targets to prevent bjam from deleting the executable
+run Reader_Agilent_Test.cpp $(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_vendor_reader_test_harness
+    : # args
+        \"$(TEST_DATA_PATH)\" $(generate-mzML)
+    : # input-files
+    : # requirements
+        <library>pwiz_reader_agilent
+        <conditional>@test-requirements
+    : # target name
+        Reader_Agilent_Test 
+    : # default-build
+    ;

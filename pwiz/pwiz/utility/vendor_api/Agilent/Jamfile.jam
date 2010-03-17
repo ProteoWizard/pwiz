@@ -1,0 +1,101 @@
+#
+# $Id$
+#
+#
+# Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+#
+# Copyright 2009 Vanderbilt University - Nashville, TN 37232
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+
+
+import modules ;
+import path ;
+
+
+path-constant API_PATH : . ;
+
+
+if [ modules.peek : NT ]
+{
+
+rule vendor-api-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties) &&
+       [ path.exists $(API_PATH)/MassSpecDataReader.dll ]
+    {
+        result += <source>MassHunterData.cpp ;
+        result += <using-clr>true ; # requires hacked msvc.jam
+        result += <link>static ; # <using-clr>true and <link>shared don't mix
+    }
+    return $(result) [ vendor-api-usage-requirements $(properties) ] ;
+}
+
+rule vendor-api-usage-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties) &&
+       [ path.exists $(API_PATH)/MassSpecDataReader.dll ]
+    {
+        result += <linkflags>/FORCE:MULTIPLE ; # HACK HACK HACK: the duplicate date_time symbols must be fixed, but how?!
+        result += <cxxflags>/wd4945 ; # warning C4945: 'x' : cannot import symbol from 'some.dll': as 'x' has already been imported from another assembly
+        result += <assembly>$(API_PATH)/MassSpecDataReader.dll ;
+        result += <assembly>$(API_PATH)/BaseCommon.dll ;
+        result += <assembly>$(API_PATH)/BaseDataAccess.dll ;
+        result += <assembly>$(API_PATH)/BaseError.dll ;
+        result += <assembly>$(API_PATH)/BaseTof.dll ;
+        result += <assembly-dependency>$(API_PATH)/agtsampleinforw.dll ;
+    }
+    return $(result) ;
+}
+
+lib pwiz_vendor_api_agilent
+    : # sources
+    : # requirements
+
+        # - when boost::thread is link=static, the exe header is tweaked to call
+        #   thread-local storage initialization routines (before main())
+        # - when a /clr object is link=static, the exe header is similarly tweaked
+        #   to initialize the CLR
+        # - these two tweaks are incompatible: either boost::thread must be link=shared,
+        #   or the CLR object must be
+        # HACK: not needed when using hacked tss_pe.cpp
+        #<link>shared
+        
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+        <conditional>@vendor-api-requirements
+        <conditional>@msvc-requirement
+    : # default-build
+    : # usage-requirements
+        <conditional>@vendor-api-usage-requirements
+    ;
+
+
+# a test utility, not a unit test
+exe MassHunterDataTest
+    : MassHunterDataTest.cpp
+      pwiz_vendor_api_agilent
+    ;
+
+explicit MassHunterDataTest ;
+
+
+install install_pwiz_vendor_api_agilent
+    : [ path.glob $(API_PATH) : *.dll *.manifest ]
+    ;
+
+explicit install_pwiz_vendor_api_agilent ;
+
+}

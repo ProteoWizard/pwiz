@@ -1,0 +1,88 @@
+<html>
+
+<head>
+    <title>ProteoWizard Documentation: hello_pwiz tutorial</title>
+    <link rel="stylesheet" href="main.css" type="text/css" media="screen" />
+</head>
+
+<body>
+
+<p>
+<i>(Contributed by Jarrett Egertson)</i>
+</p>
+
+<p align="center"><font size="3" face="Liberation Serif"><u>MSConvert 
+in a Linux Environment</u></font> <br></p>
+<ol type="1">
+  <li><font size="3" face="Liberation Serif"><b>Download the 
+  windows build of proteowizard</b></font></li>
+
+  <ol type="1">
+    <li><font size="3" face="Liberation Serif">extract it: <i>
+    tar vxf pwiz-bin-windows-x86-vc90-1_6_<WBR>1534.tar.bz2</i></font></li>
+    <li><font size="3" face="Liberation Serif">After extracting, 
+    msconvert.exe should be present</font></li>
+    </ol>
+  <li><font size="3" face="Liberation Serif"><b>Install and 
+  configure WINE</b></font></li>
+
+</ol>
+<p><font size="3" face="Liberation Serif">There are two ways to go about 
+this: building from source or installing a binary, if you have a more 
+common distribution (such as Ubuntu) installing a binary should work 
+fine and be easier.  If it&#39;s necessary to install from source, 
+that&#39;s easy to do on a 32-bit system, but on a 64-bit system things 
+get tricky....this page should help: </font><a href="http://wiki.winehq.org/WineOn64bit" target="_blank"><font color="#000080" size="3" face="Liberation Serif">http://wiki.winehq.org/<WBR>WineOn64bit</font></a><font size="3" face="Liberation Serif">  </font></p>
+<ol type="1" start="3">
+  <li><font size="3" face="Liberation Serif"><b>Install the 
+  cabextract linux package</b></font></li>
+  <ol type="1">
+    <li><font size="3" face="Liberation Serif">This package is 
+    required for step 4, a google search for ¿cabextract &lt;your distribution 
+    name&gt;¿ should suffice</font></li>
+
+    </ol>
+  <li><font size="3" face="Liberation Serif"><b>Use winetricks 
+  to set up the windows environment to work with msconvert</b></font></li>
+  <ol type="1">
+    <li><font size="3" face="Liberation Serif">Download winetricks 
+    from </font><a href="http://wiki.winehq.org/winetricks" target="_blank"><font color="#000080" size="3" face="Liberation Serif">http://wiki.winehq.org/<WBR>winetricks</font></a><font size="3" face="Liberation Serif"> </font></li>
+    <li><font size="3" face="Liberation Serif">Install the vcrun2008 
+    and dotnet20 tricks:</font></li>
+    <ol type="1">
+
+      <li><font size="3" face="Liberation Serif"><i>sh winetricks</i> <i>
+      vcrun2008 dotnet20</i></font></li>
+      </ol></ol>
+  <li><font size="3" face="Liberation Serif"><b>Move the proteowizard 
+  libraries to the WINE environment</b></font></li>
+  <ol type="1">
+    <li><font size="3" face="Liberation Serif">The libaries are 
+    in the proteowizard archive, move all of the .dll files over to the 
+    WINE system_32 folder, on my system this was ~/.wine/drive_c/windows/<WBR>system32</font></li>
+
+    </ol>
+  <li><font size="3" face="Liberation Serif"><b>Call msconvert.exe 
+  using WINE </b></font></li>
+  <ol type="1">
+    <li><font size="3" face="Liberation Serif">Change directories 
+    to where you extracted proteowizard and move msconvert.exe over to the 
+    WINE environment&#39;s program files directory (mv msconvert.exe ~/.wine/drive_c/Program\ 
+    Files)</font></li>
+    <li><font size="3" face="Liberation Serif">Call msconvert.exe 
+    using the follwing syntax wine "command"</font></li>
+    <ol type="1">
+      <li><font size="3" face="Liberation Serif">Example: wine "C:\Program 
+      Files\msconvert.exe data.RAW" </font></li>
+
+</ol></ol></ol><br/>
+
+<hr/>
+<a href="index.html">Technical documentation home</a>
+
+
+</body>
+
+
+</html>
+

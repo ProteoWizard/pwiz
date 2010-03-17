@@ -1,0 +1,157 @@
+#
+# $Id$
+#
+#
+# Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+#
+# Copyright 2009 Vanderbilt University - Nashville, TN 37232
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+
+
+# Waters support status:
+# - DLLs are COM and thus MSVC only
+# - cannot redistribute DLLs, but we can compile without them:
+#   * if MSVC:
+#       * if DLLs are present: PWIZ_READER_WATERS is defined for all dependents
+#       * else:
+#           * PWIZ_READER_WATERS is not defined for Reader_Waters_Test
+#           * PWIZ_READER_WATERS is defined for all other dependents
+#   * else: PWIZ_READER_WATERS is never defined
+
+
+project
+    : requirements 
+        <toolset>gcc:<cxxflags>-fno-strict-aliasing
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+    ;
+
+
+path-constant READER_PATH : . ;
+path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Waters ;
+path-constant TEST_DATA_PATH : ./Reader_Waters_Test.data ;
+
+
+rule vendor-api-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties) &&
+       [ project-exists $(API_PATH) ]
+    {
+        result += <source>Reader_Waters_Detail.cpp ;
+    }
+    return $(result) [ vendor-api-usage-requirements $(properties) ] ;
+}
+
+rule vendor-api-usage-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties) &&
+       [ project-exists $(API_PATH) ]
+    {
+        result += <library>$(API_PATH)//pwiz_vendor_api_waters ;
+        result += <define>PWIZ_READER_WATERS ;
+    }
+    else if ! $(.warn-once)
+    {
+        .warn-once = true ;
+        if ! <toolset>msvc in $(properties)
+        {
+            echo "[pwiz_aux/msrc/data/vendor_readers/Waters] Non-MSVC build: Reader_Waters can only identify .raw directories, not read them." ;
+        }
+        else if ! [ project-exists $(API_PATH) ]
+        {
+            echo "[pwiz_aux/msrc/data/vendor_readers/Waters] Missing RawData API: Reader_Waters can only identify .raw directories, not read them." ;
+        }
+        else if ! [ path.exists $(API_PATH)/DACServer.dll ]
+        {
+            echo "[pwiz_aux/msrc/data/vendor_readers/Waters] Missing Waters DAC: Reader_Waters can only identify .raw directories, not read them." ;
+        }
+    }
+    return $(result) ;
+}
+
+lib pwiz_aux_msrc_reader_waters
+    : # sources
+        Reader_Waters.cpp
+        SpectrumList_Waters.cpp
+        ChromatogramList_Waters.cpp
+    : # requirements
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+        <conditional>@vendor-api-requirements
+    : # default-build
+    : # usage-requirements
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+        <conditional>@vendor-api-usage-requirements
+    ;
+
+
+rule test-requirements ( properties * )
+{
+    # decompress test data if available (on any platform)
+    if ! $(.extract-once) && [ path.exists $(TEST_DATA_PATH).tar.bz2 ]
+    {
+        .extract-once = true ;
+        import tar ;
+        tar.extract $(TEST_DATA_PATH).tar.bz2 : : : : check-last-file-only ;
+    }
+
+    local result ;
+
+    if ! [ path.exists $(TEST_DATA_PATH) ]
+    {
+        if ! $(.warn-once)
+        {
+            .warn-once = true ;
+            echo "[pwiz_aux/msrc/data/vendor_readers/Waters] Missing Waters RAW test data." ;
+        }
+        result += <build>no ;
+    }
+    else if <toolset>msvc in $(properties)
+    {
+        result += <source>Reader_Waters.cpp ;
+        result += <source>SpectrumList_Waters.cpp ;
+        result += <source>ChromatogramList_Waters.cpp ;
+        result += <source>Reader_Waters_Detail.cpp ;
+        result += <library>$(API_PATH)//pwiz_vendor_api_waters ;
+        if [ path.exists $(API_PATH)/DACServer.dll ]
+        {
+            result += <define>PWIZ_READER_WATERS ;
+        }
+        else if ! $(.warn-once)
+        {
+            .warn-once = true ;
+            echo "[pwiz_aux/msrc/data/vendor_readers/Waters] Missing DACServer.dll: Reader_Waters_Test is only testing that Waters .raw directories can be identified, not read." ;
+        }
+    }
+
+    return $(result) ;
+}
+
+local generate-mzML = [ MATCH (--generate-mzML) : [ modules.peek : ARGV ] ] ;
+
+# special run target for Reader_Waters_Test, which needs external data 
+# use --preserve-test-targets to prevent bjam from deleting the executable
+run Reader_Waters_Test.cpp $(PWIZ_ROOT_PATH)/pwiz/utility/misc/VendorReaderTestHarness.cpp
+    : # args
+        \"$(TEST_DATA_PATH)\" $(generate-mzML)
+    : # input-files
+    : # requirements
+        <source>Reader_Waters.cpp
+        <conditional>@test-requirements
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+    : # target name
+        Reader_Waters_Test
+    : # default-build
+    ;

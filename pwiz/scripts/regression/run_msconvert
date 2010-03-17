@@ -1,0 +1,48 @@
+#!/bin/bash
+
+if [ $# -ne 3 ]
+then
+    echo Usage: run_msconvert bindir datadir outdir
+    exit 1
+fi
+
+bindir=$1
+datadir=$2
+outdir=$3
+msconvert_exe=$bindir/msconvert
+
+if uname | grep -iq cygwin
+then
+    msconvert_exe+=.exe
+fi
+
+if [ ! -f $msconvert_exe ]
+then
+    echo $msconvert_exe not found.
+    exit 1
+fi
+
+mkdir -p $outdir
+log=$outdir/log
+
+date | tee -a $log
+echo | tee -a $log
+
+echo bindir: $bindir | tee -a $log
+echo datadir: $datadir | tee -a $log
+echo outdir: $outdir | tee -a $log
+echo | tee -a $log
+
+ls -l $msconvert_exe | tee -a $log
+echo | tee -a $log
+
+#
+# run msconvert on all files in datadir, in a separate output dir for each command line variant
+#
+
+outdir_base=$outdir/$(basename $datadir)
+$msconvert_exe $datadir/* -o $outdir_base.default | tee -a $log
+$msconvert_exe $datadir/* -o $outdir_base.precursor --precursorRecalculation | tee -a $log
+$msconvert_exe $datadir/* -o $outdir_base.zlib --zlib | tee -a $log
+$msconvert_exe $datadir/* -o $outdir_base.mzxml --mzXML| tee -a $log
+$msconvert_exe $datadir/* -o $outdir_base.mzxml32 --mzXML --32 | tee -a $log
