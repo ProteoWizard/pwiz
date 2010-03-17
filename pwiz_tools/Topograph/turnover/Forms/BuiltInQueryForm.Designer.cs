@@ -47,7 +47,7 @@ namespace pwiz.Topograph.ui.Forms
             this.dataGridView1.AllowUserToOrderColumns = true;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView1.Location = new System.Drawing.Point(0, 0);
+            this.dataGridView1.Location = new System.Drawing.Point(0, 29);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
             this.dataGridView1.Size = new System.Drawing.Size(833, 353);
@@ -56,9 +56,9 @@ namespace pwiz.Topograph.ui.Forms
             // 
             // btnExportResults
             // 
-            this.btnExportResults.Location = new System.Drawing.Point(12, 4);
+            this.btnExportResults.Location = new System.Drawing.Point(3, 3);
             this.btnExportResults.Name = "btnExportResults";
-            this.btnExportResults.Size = new System.Drawing.Size(107, 23);
+            this.btnExportResults.Size = new System.Drawing.Size(94, 23);
             this.btnExportResults.TabIndex = 1;
             this.btnExportResults.Text = "Export Results...";
             this.btnExportResults.UseVisualStyleBackColor = true;
@@ -66,7 +66,7 @@ namespace pwiz.Topograph.ui.Forms
             // 
             // btnRequery
             // 
-            this.btnRequery.Location = new System.Drawing.Point(125, 4);
+            this.btnRequery.Location = new System.Drawing.Point(110, 3);
             this.btnRequery.Name = "btnRequery";
             this.btnRequery.Size = new System.Drawing.Size(75, 23);
             this.btnRequery.TabIndex = 2;
@@ -76,14 +76,17 @@ namespace pwiz.Topograph.ui.Forms
             // 
             // tableLayoutPanel1
             // 
-            this.tableLayoutPanel1.ColumnCount = 2;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 83F));
+            this.tableLayoutPanel1.ColumnCount = 4;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 107F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 85F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 102F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.Controls.Add(this.findBox, 1, 0);
-            this.tableLayoutPanel1.Controls.Add(this.label2, 0, 0);
-            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 353);
+            this.tableLayoutPanel1.Controls.Add(this.btnExportResults, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.btnRequery, 1, 0);
+            this.tableLayoutPanel1.Controls.Add(this.findBox, 3, 0);
+            this.tableLayoutPanel1.Controls.Add(this.label2, 2, 0);
+            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 1;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
@@ -94,18 +97,18 @@ namespace pwiz.Topograph.ui.Forms
             // 
             this.findBox.DataGridView = this.dataGridView1;
             this.findBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.findBox.Location = new System.Drawing.Point(86, 3);
+            this.findBox.Location = new System.Drawing.Point(297, 3);
             this.findBox.Name = "findBox";
-            this.findBox.Size = new System.Drawing.Size(744, 23);
+            this.findBox.Size = new System.Drawing.Size(533, 23);
             this.findBox.TabIndex = 2;
             // 
             // label2
             // 
             this.label2.AutoSize = true;
             this.label2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label2.Location = new System.Drawing.Point(3, 0);
+            this.label2.Location = new System.Drawing.Point(195, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(77, 29);
+            this.label2.Size = new System.Drawing.Size(96, 29);
             this.label2.TabIndex = 3;
             this.label2.Text = "Find:";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -115,8 +118,6 @@ namespace pwiz.Topograph.ui.Forms
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(833, 382);
-            this.Controls.Add(this.btnRequery);
-            this.Controls.Add(this.btnExportResults);
             this.Controls.Add(this.dataGridView1);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "BuiltInQueryForm";

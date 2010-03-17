@@ -293,7 +293,7 @@ namespace pwiz.Topograph.ui.Forms
 
                 var modification = new DbModification
                                        {
-                                           DeltaMass = 57.02,
+                                           DeltaMass = 57.021461,
                                            Symbol = "C",
                                            Workspace = dbWorkspace
                                        };

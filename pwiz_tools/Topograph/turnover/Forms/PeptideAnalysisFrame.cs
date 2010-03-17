@@ -26,6 +26,7 @@ using System.Text;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Topograph.Model;
+using pwiz.Topograph.ui.Controls;
 
 namespace pwiz.Topograph.ui.Forms
 {
@@ -35,7 +36,7 @@ namespace pwiz.Topograph.ui.Forms
         public PeptideAnalysisFrame(PeptideAnalysis peptideAnalysis) : base(peptideAnalysis)
         {
             InitializeComponent();
-            _dockPanel = new DockPanel
+            _dockPanel = new DockPanelEx
                              {
                                  Dock = DockStyle.Fill
                              };
@@ -47,6 +48,10 @@ namespace pwiz.Topograph.ui.Forms
             base.OnHandleCreated(e);
             PeptideAnalysis.IncChromatogramRefCount();
             OnPeptideAnalysisChanged();
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
             if (PeptideAnalysisSummary == null)
             {
                 PeptideAnalysisSummary = new PeptideAnalysisSummary(PeptideAnalysis);
@@ -69,6 +74,7 @@ namespace pwiz.Topograph.ui.Forms
 
         protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
         {
+            base.OnWorkspaceEntitiesChanged(args);
             if (args.IsRemoved(PeptideAnalysis))
             {
                 Close();

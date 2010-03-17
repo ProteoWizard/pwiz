@@ -77,7 +77,6 @@ namespace pwiz.Topograph.Data
                 var timesColumn = new Column("TimesBytes")
                                  {
                                      Length = 1000000,
-                                     SqlType = "BinaryBlob",
                                  };
                 classMapping.Table.AddColumn(timesColumn);
                 var timesValue = new SimpleValue(classMapping.Table)
@@ -92,7 +91,6 @@ namespace pwiz.Topograph.Data
                 var scanIndexesColumn = new Column("ScanIndexesBytes")
                                  {
                                      Length = 1000000,
-                                     SqlType = "BinaryBlob",
                                  };
                 classMapping.Table.AddColumn(scanIndexesColumn);
                 var scanIndexesValue = new SimpleValue(classMapping.Table)

@@ -54,12 +54,14 @@ namespace pwiz.Topograph.ui.Forms
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
+            base.OnFormClosing(e);
             if (!LongOperationBroker.Cancel())
             {
                 e.Cancel = true;
                 return;
             }
-            LongOperationBroker.WaitUntilFinished();            
+            LongOperationBroker.WaitUntilFinished();
+            timer1.Tick -= timer1_Tick;
         }
 
         private void btnCancel_Click(object sender, EventArgs e)

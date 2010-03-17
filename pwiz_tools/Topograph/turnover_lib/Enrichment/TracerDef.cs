@@ -168,7 +168,7 @@ namespace pwiz.Topograph.Enrichment
                        {
                            AtomCount = 3,
                            AtomPercentEnrichment = 99.5,
-                           DeltaMass = 3.018,
+                           DeltaMass = 3.0188325,
                            TracerSymbol = "Leu",
                            IsotopesEluteEarlier = true,
                            IsotopesEluteLater = false,

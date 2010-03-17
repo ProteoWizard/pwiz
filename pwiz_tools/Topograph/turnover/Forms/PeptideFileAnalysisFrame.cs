@@ -29,6 +29,7 @@ using DigitalRune.Windows.Docking;
 using NHibernate;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
+using pwiz.Topograph.ui.Controls;
 
 namespace pwiz.Topograph.ui.Forms
 {
@@ -42,7 +43,7 @@ namespace pwiz.Topograph.ui.Forms
         private PeptideFileAnalysisFrame(PeptideFileAnalysis peptideFileAnalysis) : base(peptideFileAnalysis)
         {
             InitializeComponent();
-            dockPanel = new DockPanel
+            dockPanel = new DockPanelEx
                             {
                                 Dock = DockStyle.Fill
                             };
