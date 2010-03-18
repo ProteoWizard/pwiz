@@ -340,7 +340,10 @@ namespace pwiz.Skyline.Model.Lib
                 {"Amide", SequenceMassCalc.GetModDiffDescription(-0.984016)},
                 {"Phospho", SequenceMassCalc.GetModDiffDescription(79.9663)},
                 {"Methyl", SequenceMassCalc.GetModDiffDescription(14.0157)},
-                {"Carbamyl", SequenceMassCalc.GetModDiffDescription(43.00581)},                                                                                         
+                {"Carbamyl", SequenceMassCalc.GetModDiffDescription(43.00581)},
+                // Found in the wild
+                {"Gln->pyro-Glu", SequenceMassCalc.GetModDiffDescription(-17.0265)},
+                {"Glu->pyro-Glu", SequenceMassCalc.GetModDiffDescription(-18.0106)},
             };
 
         private NistSpectrumInfo[] _libraryEntries;
