@@ -1034,9 +1034,6 @@ namespace pwiz.Skyline.EditUI
             foreach (var values in ParseColumnarData(Clipboard.GetText()))
             {
                 var row = dataGridView.Rows[dataGridView.Rows.Add()];
-                // Temporarily remove the row to prevent ValueChanged events firing
-                dataGridView.Rows.Remove(row);
-
                 var valueEnumerator = values.GetEnumerator();
                 foreach (DataGridViewColumn column in columns)
                 {
@@ -1050,8 +1047,6 @@ namespace pwiz.Skyline.EditUI
                     }
                     row.Cells[column.Index].Value = valueEnumerator.Current;
                 }
-                // Put the row back
-                dataGridView.Rows.Add(row);
             }
         }
 
@@ -1063,7 +1058,17 @@ namespace pwiz.Skyline.EditUI
 
             if (!MassListImporter.IsColumnar(text, out formatProvider, out separator, out types))
             {
-                yield return new[] {text};
+                string line;
+                var reader = new StringReader(text);
+                while ((line = reader.ReadLine()) != null)
+                {
+                    line = line.Trim();
+                    if (string.IsNullOrEmpty(line))
+                    {
+                        continue;
+                    }
+                    yield return new[] {line};
+                }
             }
             else
             {
