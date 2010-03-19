@@ -34,8 +34,10 @@
     #using "pwiz_bindings_cli_common.dll" as_friend
 #endif
 
+#include "pwiz/data/common/cv.hpp"
 #include "pwiz/utility/chemistry/Chemistry.hpp"
 #include "pwiz/data/proteome/Peptide.hpp"
+#include "pwiz/data/proteome/Digestion.hpp"
 #include "pwiz/data/proteome/Version.hpp"
 #pragma warning( pop )
 
@@ -43,6 +45,9 @@
 namespace pwiz {
 namespace CLI {
 namespace proteome {
+
+
+using namespace pwiz::CLI::cv;
 
 
 /// <summary>
@@ -347,6 +352,217 @@ public ref class ModificationMap : public ModificationBaseMap
     /// </summary>
     static int CTerminus();
 };
+
+
+/// <summary>
+/// peptide subclass that contains extra metadata provided by digestion
+/// </summary>
+public ref class DigestedPeptide : public Peptide
+{
+    DEFINE_DERIVED_INTERNAL_BASE_CODE(pwiz::proteome, DigestedPeptide, Peptide)
+
+    public:
+    DigestedPeptide(System::String^ sequence);
+
+    DigestedPeptide(System::String^ sequence,
+                    int offset,
+                    int missedCleavages,
+                    bool NTerminusIsSpecific,
+                    bool CTerminusIsSpecific);
+
+    /// <summary>
+    /// returns the offset of the N terminus of the peptide
+    /// in the polypeptide from which it was digested
+    /// </summary>
+    int offset();
+
+    /// <summary>
+    /// returns the number of missed cleavage sites in the peptide
+    /// </summary>
+    int missedCleavages();
+
+    /// <summary>
+    /// returns the number of termini that matched to the digestion rules
+    /// </summary>
+    int specificTermini();
+
+    /// <summary>
+    /// returns true iff the N terminus matched the digestion rules
+    /// </summary>
+    bool NTerminusIsSpecific();
+
+    /// <summary>
+    /// returns true iff the C terminus matched the digestion rules
+    /// </summary>
+    bool CTerminusIsSpecific();
+
+    /// <summary>
+    /// returns residue preceding digestion site
+    /// </summary>
+    System::String^ nTermPrefix();
+
+    /// <summary>
+    /// returns residue following digestion site
+    /// </summary>
+    System::String^ cTermSuffix();
+};
+
+
+/// <summary>
+/// enumerates the peptides from proteolytic digestion of a polypeptide or protein;
+/// </summary>
+public ref class Digestion : public System::Collections::Generic::IEnumerable<DigestedPeptide^>
+{
+    DEFINE_INTERNAL_BASE_CODE(Digestion, pwiz::proteome::Digestion)
+
+    public:
+
+    /// <summary>
+    /// sets the number of peptide termini that must match to a digestion motif
+    /// note: castable to int; i.e. non=0, semi=1, fully=2
+    /// </summary>
+    enum class Specificity
+    {
+        NonSpecific = 0, /// neither termini must match digestion motif(s)
+        SemiSpecific = 1, /// either or both termini must match digestion motif(s)
+        FullySpecific = 2 /// both termini must match digestion motif(s)
+    };
+
+    /// <summary>
+    /// sets constraints for valid peptides produced by iterating the digestion
+    /// </summary>
+    ref class Config
+    {
+        public:
+        int maximumMissedCleavages;
+
+        //double minimumMass;
+        //double maximumMass;
+
+        int minimumLength;
+        int maximumLength;
+
+        Specificity minimumSpecificity; 
+
+        /// <summary>
+        /// creates the default config:
+        /// * 100000 missed cleavages
+        /// * no minimum length
+        /// * 100000 maximum length
+        /// * full terminal specificity
+        /// </summary>
+        Config();
+
+        Config(int maximumMissedCleavages,
+               int minimumLength,
+               int maximumLength,
+               Specificity minimumSpecificity);
+    };
+
+    /// <summary>
+    /// returns the set of predefined cleavage agents defined in the PSI-MS CV
+    /// </summary>
+    static initonly System::Collections::Generic::List<CVID>^ getCleavageAgents();
+
+    /// <summary>
+    /// returns the names of the set of predefined cleavage agents defined in the PSI-MS CV
+    /// </summary>
+    static initonly System::Collections::Generic::List<System::String^>^ getCleavageAgentNames();
+
+    /// <summary>
+    /// returns the cvid of the specified cleavage agent using a case-insensitive search,
+    /// or CVID_Unknown if the agent is not found
+    /// </summary>
+    static CVID getCleavageAgentByName(System::String^ agentName);
+
+    /// <summary>
+    /// returns the Perl regular expression defining the places in a
+    /// polypeptide or protein that the agent will cut.
+    /// </summary>
+    static System::String^ getCleavageAgentRegex(CVID agentCvid);
+
+    /// <summary>
+    /// specifies digestion occurs by a commonly used cleavage agent
+    /// </summary>
+    Digestion(Peptide^ peptide, CVID cleavageAgent);
+
+    /// <summary>
+    /// specifies digestion occurs by a commonly used cleavage agent
+    /// </summary>
+    Digestion(Peptide^ peptide, CVID cleavageAgent, Config^ config);
+
+    /// <summary>
+    /// specifies digestion occurs by a combination of commonly used cleavage agents
+    /// </summary>
+    Digestion(Peptide^ peptide, System::Collections::Generic::IEnumerable<CVID>^ cleavageAgents);
+
+    /// <summary>
+    /// specifies digestion occurs by a combination of commonly used cleavage agents
+    /// </summary>
+    Digestion(Peptide^ peptide, System::Collections::Generic::IEnumerable<CVID>^ cleavageAgents, Config^ config);
+
+    /// <summary>
+    /// specifies digestion occurs by a user-specified, zero-width Perl regular expression 
+    /// example: "(?<=K)" means "cleaves after K"
+    /// example: "((?<=D))|((?=D))" means "cleaves before or after D"
+    /// example: "(?=[DE])" means "cleaves before D or E"
+    /// example: "(?<=[FYWLKR])(?!P)" means "cleaves after any single residue from FYWLKR except when it is followed by P"
+    /// </summary>
+    Digestion(Peptide^ peptide, System::String^ cleavageAgentRegex);
+
+    /// <summary>
+    /// specifies digestion occurs by a user-specified, zero-width Perl regular expression 
+    /// example: "(?<=K)" means "cleaves after K"
+    /// example: "((?<=D))|((?=D))" means "cleaves before or after D"
+    /// example: "(?=[DE])" means "cleaves before D or E"
+    /// example: "(?<=[FYWLKR])(?!P)" means "cleaves after any single residue from FYWLKR except when it is followed by P"
+    /// </summary>
+    Digestion(Peptide^ peptide, System::String^ cleavageAgentRegex, Config^ config);
+
+    /// <summary>
+    /// provides forward-only, read-only iteration to enumerate peptides
+    /// </summary>
+    ref class Enumerator : public System::Collections::Generic::IEnumerator<DigestedPeptide^>
+    {
+        internal: pwiz::proteome::Digestion* base_;
+                  pwiz::proteome::Digestion::const_iterator* itr_;
+                  bool isReset_;
+
+        public: Enumerator(pwiz::proteome::Digestion* base) : base_(base), itr_(new pwiz::proteome::Digestion::const_iterator(base->end())), isReset_(true) {}
+
+        property DigestedPeptide^ Current
+        {
+            virtual DigestedPeptide^ get()
+            {
+                // make a copy of the native DigestedPeptide because the reference is transient
+                return gcnew DigestedPeptide(new pwiz::proteome::DigestedPeptide(**itr_));
+            }
+        }
+
+        property System::Object^ Current2
+        {
+            virtual System::Object^ get() sealed = System::Collections::IEnumerator::Current::get
+            {
+                return (System::Object^) this->Current;
+            }
+        }
+
+        virtual bool MoveNext()
+        {
+            if (isReset_) {isReset_ = false; *itr_ = base_->begin();}
+            else if (*itr_ == base_->end()) return false;
+            else ++*itr_;
+            return *itr_ != base_->end();
+        }
+
+        virtual void Reset() {isReset_ = true; *itr_ = base_->end();}
+        ~Enumerator() {delete itr_;}
+    };
+
+    virtual System::Collections::Generic::IEnumerator<DigestedPeptide^>^ GetEnumerator() {return gcnew Enumerator(base_);}
+    virtual System::Collections::IEnumerator^ GetEnumerator2() sealed = System::Collections::IEnumerable::GetEnumerator {return gcnew Enumerator(base_);}
+};
+
 
 } // namespace proteome
 } // namespace CLI

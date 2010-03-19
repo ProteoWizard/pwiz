@@ -74,6 +74,7 @@ lib pwiz_bindings_cli_proteome
 explicit pwiz_bindings_cli_proteome ;
 
 
+unit-test proteome_test : proteome_test.cpp : <conditional>@unit-test-requirements ;
 unit-test ProteomeDataTest : ProteomeDataTest.cpp : <conditional>@unit-test-requirements ;
 unit-test DiffTest : DiffTest.cpp : <conditional>@unit-test-requirements ;
 unit-test ProteomeDataFileTest : ProteomeDataFileTest.cpp : <conditional>@unit-test-requirements ;

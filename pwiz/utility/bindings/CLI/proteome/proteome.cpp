@@ -21,10 +21,17 @@
 
 
 #include "proteome.hpp"
+#include <boost/foreach.hpp>
+#include <boost/regex.hpp>
 
 using System::String;
+using namespace System::Collections::Generic;
 
 namespace b = pwiz::proteome;
+
+// HACK: this suppresses a "TypeRef without TypeDef" error apparently caused by
+// nested pimpl classes, but Enumerator still works, so it should be innocuous
+class pwiz::proteome::Digestion::const_iterator::Impl {};
 
 namespace pwiz {
 namespace CLI {
@@ -132,6 +139,124 @@ ModificationMap::ModificationMap() {}
 
 int ModificationMap::NTerminus() {return b::ModificationMap::NTerminus();}
 int ModificationMap::CTerminus() {return b::ModificationMap::CTerminus();}
+
+
+DigestedPeptide::DigestedPeptide(String^ sequence)
+: base_(new b::DigestedPeptide(ToStdString(sequence)))
+{owner_ = nullptr;}
+
+DigestedPeptide::DigestedPeptide(String^ sequence, int offset, int missedCleavages, bool NTerminusIsSpecific, bool CTerminusIsSpecific)
+{
+    std::string sequenceNative = ToStdString(sequence);
+    base_ = new b::DigestedPeptide(sequenceNative.begin(), sequenceNative.end(), (size_t) offset, (size_t) missedCleavages, NTerminusIsSpecific, CTerminusIsSpecific);
+    owner_ = nullptr;
+}
+
+int DigestedPeptide::offset() {return (int) base_->offset();}
+int DigestedPeptide::missedCleavages() {return (int) base_->missedCleavages();}
+int DigestedPeptide::specificTermini() {return (int) base_->specificTermini();}
+bool DigestedPeptide::NTerminusIsSpecific() {return base_->NTerminusIsSpecific();}
+bool DigestedPeptide::CTerminusIsSpecific() {return base_->CTerminusIsSpecific();}
+String^ DigestedPeptide::nTermPrefix() {return ToSystemString(base_->nTermPrefix());}
+String^ DigestedPeptide::cTermSuffix() {return ToSystemString(base_->cTermSuffix());}
+
+
+Digestion::Config::Config()
+{
+    b::Digestion::Config defaultConfig;
+    maximumMissedCleavages = defaultConfig.maximumMissedCleavages;
+    minimumLength = defaultConfig.minimumLength;
+    maximumLength = defaultConfig.maximumLength;
+    minimumSpecificity = (Specificity) defaultConfig.minimumSpecificity;
+}
+
+Digestion::Config::Config(int maximumMissedCleavages,
+                          int minimumLength,
+                          int maximumLength,
+                          Specificity minimumSpecificity)
+{
+    this->maximumMissedCleavages = maximumMissedCleavages;
+    this->minimumLength = minimumLength;
+    this->maximumLength = maximumLength;
+    this->minimumSpecificity = minimumSpecificity;
+}
+
+
+Digestion::Digestion(Peptide^ peptide, CVID cleavageAgent)
+{
+    base_ = new b::Digestion(peptide->base(), (pwiz::cv::CVID) cleavageAgent);
+}
+
+Digestion::Digestion(Peptide^ peptide, CVID cleavageAgent, Config^ config)
+{
+    base_ = new b::Digestion(peptide->base(), (pwiz::cv::CVID) cleavageAgent,
+                                 b::Digestion::Config(config->maximumMissedCleavages,
+                                                      config->minimumLength,
+                                                      config->maximumLength,
+                                                      (b::Digestion::Specificity) config->minimumSpecificity));
+}
+
+Digestion::Digestion(Peptide^ peptide, IEnumerable<CVID>^ cleavageAgents)
+{
+    std::vector<pwiz::cv::CVID> cleavageAgentsNative;
+    for each (CVID cvid in cleavageAgents)
+        cleavageAgentsNative.push_back((pwiz::cv::CVID) cvid);
+
+    base_ = new b::Digestion(peptide->base(), cleavageAgentsNative);
+}
+
+Digestion::Digestion(Peptide^ peptide, IEnumerable<CVID>^ cleavageAgents, Config^ config)
+{
+    std::vector<pwiz::cv::CVID> cleavageAgentsNative;
+    for each (CVID cvid in cleavageAgents)
+        cleavageAgentsNative.push_back((pwiz::cv::CVID) cvid);
+
+    base_ = new b::Digestion(peptide->base(), cleavageAgentsNative,
+                                 b::Digestion::Config(config->maximumMissedCleavages,
+                                                      config->minimumLength,
+                                                      config->maximumLength,
+                                                      (b::Digestion::Specificity) config->minimumSpecificity));
+}
+
+Digestion::Digestion(Peptide^ peptide, System::String^ cleavageAgentRegex)
+{
+    base_ = new b::Digestion(peptide->base(), ToStdString(cleavageAgentRegex));
+}
+
+Digestion::Digestion(Peptide^ peptide, System::String^ cleavageAgentRegex, Config^ config)
+{
+    base_ = new b::Digestion(peptide->base(), boost::regex(ToStdString(cleavageAgentRegex)),
+                                 b::Digestion::Config(config->maximumMissedCleavages,
+                                                      config->minimumLength,
+                                                      config->maximumLength,
+                                                      (b::Digestion::Specificity) config->minimumSpecificity));
+}
+
+CVID Digestion::getCleavageAgentByName(System::String^ agentName)
+{
+    return (CVID) b::Digestion::getCleavageAgentByName(ToStdString(agentName));
+}
+
+List<String^>^ Digestion::getCleavageAgentNames()
+{
+    List<String^>^ cleavageAgentNames = gcnew List<String^>();
+    BOOST_FOREACH(const std::string& s, b::Digestion::getCleavageAgentNames())
+        cleavageAgentNames->Add(ToSystemString(s));
+    return cleavageAgentNames;
+}
+
+String^ Digestion::getCleavageAgentRegex(CVID agentCvid)
+{
+    return ToSystemString(b::Digestion::getCleavageAgentRegex((pwiz::cv::CVID) agentCvid));
+}
+
+List<CVID>^ Digestion::getCleavageAgents()
+{
+    List<CVID>^ cleavageAgents = gcnew List<CVID>();
+    BOOST_FOREACH(const pwiz::cv::CVID& cvid, b::Digestion::getCleavageAgents())
+        cleavageAgents->Add((CVID) cvid);
+    return cleavageAgents;
+}
 
 
 } // namespace proteome
