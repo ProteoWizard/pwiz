@@ -11,6 +11,7 @@ namespace pwiz.Common.Controls
 {
     public partial class FindBox : UserControl
     {
+        private Timer _timer;
         public FindBox()
         {
             InitializeComponent();
@@ -18,8 +19,36 @@ namespace pwiz.Common.Controls
 
         public DataGridView DataGridView { get; set; }
 
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            base.OnHandleDestroyed(e);
+            if (_timer != null)
+            {
+                _timer.Dispose();
+                _timer = null;
+            }
+        }
+
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
+            if (_timer == null)
+            {
+                _timer = new Timer
+                             {
+                                 Interval = 2000,
+                             };
+                _timer.Tick += _timer_Tick;
+            }
+            _timer.Start();
+        }
+
+        void _timer_Tick(object sender, EventArgs e)
+        {
+            if (_timer == null)
+            {
+                return;
+            }
+            _timer.Stop();
             var dataGridView = DataGridView;
             if (dataGridView == null)
             {

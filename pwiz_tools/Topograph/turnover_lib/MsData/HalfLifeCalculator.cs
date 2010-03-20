@@ -29,6 +29,11 @@ namespace pwiz.Topograph.MsData
             get; set;
         }
 
+        public bool FixedInitialPercent
+        {
+            get; set;
+        }
+
         private List<RowData> Query()
         {
             var hql = "SELECT T.TracerPercent, "
@@ -148,14 +153,28 @@ namespace pwiz.Topograph.MsData
             }
             var statsTimePoints = new Statistics(timePoints.ToArray());
             var statsLogValues = new Statistics(logValues.ToArray());
-            double rateConstant = statsLogValues.SlopeWithoutIntercept(statsTimePoints);
-            double stDevRateConstant = Statistics.StdDevSlopeWithoutIntercept(statsLogValues, statsTimePoints);
-            double rateConstantError = stDevRateConstant * GetErrorFactor(timePoints.Count - 1);
+            double rateConstant, stDevRateConstant, rateConstantError, yIntercept;
+            if (FixedInitialPercent)
+            {
+                rateConstant = statsLogValues.SlopeWithoutIntercept(statsTimePoints);
+                stDevRateConstant = Statistics.StdDevSlopeWithoutIntercept(statsLogValues, statsTimePoints);
+                rateConstantError = stDevRateConstant * GetErrorFactor(timePoints.Count - 1);
+                yIntercept = 0;
+            }
+            else
+            {
+                rateConstant = statsLogValues.Slope(statsTimePoints);
+                stDevRateConstant = Statistics.StdDevB(statsLogValues, statsTimePoints);
+                rateConstantError = stDevRateConstant*GetErrorFactor(timePoints.Count - 2);
+                yIntercept = Statistics.Intercept(statsLogValues, statsTimePoints);
+            }
+
             return new ResultData
                 {
                     RateConstant = rateConstant,
                     RateConstantError = rateConstantError,
                     PointCount = timePoints.Count,
+                    YIntercept = yIntercept,
                 };
         }
 
@@ -245,6 +264,7 @@ namespace pwiz.Topograph.MsData
 
         public class ResultData
         {
+            public double YIntercept { get; set; }
             public double RateConstant { get; set; }
             public double RateConstantError { get; set; }
             public int PointCount { get; set; }

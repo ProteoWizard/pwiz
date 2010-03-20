@@ -55,6 +55,7 @@ namespace pwiz.Topograph.ui.Forms
                                      MinScore = minScore,
                                      InitialPercent = double.Parse(tbxInitialTracerPercent.Text),
                                      FinalPercent = double.Parse(tbxFinalTracerPercent.Text),
+                                     FixedInitialPercent = cbxFixYIntercept.Checked,
                                  };
             var longOperationBroker = new LongOperationBroker(calculator,
                                                               new LongWaitDialog(this, "Calculating Half Lives"));
@@ -182,6 +183,7 @@ namespace pwiz.Topograph.ui.Forms
                                                MinScore = MinScore,
                                                InitialPercent = double.Parse(tbxInitialTracerPercent.Text),
                                                FinalPercent = double.Parse(tbxFinalTracerPercent.Text),
+                                               FixedInitialPercent = cbxFixYIntercept.Checked,
                                            };
                     halfLifeForm.Show(DockPanel, DockState);
                 }

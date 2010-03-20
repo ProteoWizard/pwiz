@@ -124,6 +124,17 @@ namespace pwiz.Topograph.ui.Forms
                 tbxFinalPercent.Text = value.ToString();
             }
         }
+        public bool FixedInitialPercent
+        {
+            get
+            {
+                return cbxFixedInitialPercent.Checked;
+            }
+            set
+            {
+                cbxFixedInitialPercent.Checked = value;
+            }
+        }
 
         private static double ParseDouble(String value)
         {
@@ -293,7 +304,8 @@ namespace pwiz.Topograph.ui.Forms
             var peptideRateCalculator = new HalfLifeCalculator(Workspace)
                                             {
                                                 InitialPercent = InitialPercent,
-                                                FinalPercent = FinalPercent
+                                                FinalPercent = FinalPercent,
+                                                FixedInitialPercent = FixedInitialPercent,
                                             };
             _zedGraphControl.GraphPane.CurveList.Clear();
             _zedGraphControl.GraphPane.GraphObjList.Clear();
@@ -317,9 +329,9 @@ namespace pwiz.Topograph.ui.Forms
             var pointsCurve = _zedGraphControl.GraphPane.AddCurve(null, xValues.ToArray(), yValues.ToArray(), Color.Black);
             pointsCurve.Line.IsVisible = false;
             var halfLife = peptideRateCalculator.CalculateHalfLife(peptideFileAnalyses);
-            Func<double,double> funcMiddle = x => halfLife.RateConstant*x;
-            Func<double,double> funcMin = x => (halfLife.RateConstant - halfLife.RateConstantError)*x;
-            Func<double, double> funcMax = x => (halfLife.RateConstant + halfLife.RateConstantError)*x;
+            Func<double,double> funcMiddle = x => halfLife.YIntercept + halfLife.RateConstant*x;
+            Func<double, double> funcMin = x => halfLife.YIntercept + (halfLife.RateConstant - halfLife.RateConstantError) * x;
+            Func<double, double> funcMax = x => halfLife.YIntercept + (halfLife.RateConstant + halfLife.RateConstantError) * x;
             if (LogPlot)
             {
                 AddFunction(funcMiddle, Color.Black);
@@ -470,6 +482,11 @@ namespace pwiz.Topograph.ui.Forms
                     peptideFileAnalysis.ValidationStatus = (ValidationStatus) cell.Value;
                 }
             }
+        }
+
+        private void cbxFixedInitialPercent_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateRows();
         }
     }
 }

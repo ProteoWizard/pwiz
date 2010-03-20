@@ -61,7 +61,7 @@ namespace pwiz.Topograph.ui.Forms
                 return;
             }
             LongOperationBroker.WaitUntilFinished();
-            timer1.Tick -= timer1_Tick;
+            timer1.Dispose();
         }
 
         private void btnCancel_Click(object sender, EventArgs e)

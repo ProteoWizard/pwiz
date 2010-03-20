@@ -48,10 +48,6 @@ namespace pwiz.Topograph.ui.Forms
             base.OnHandleCreated(e);
             PeptideAnalysis.IncChromatogramRefCount();
             OnPeptideAnalysisChanged();
-        }
-
-        protected override void OnShown(EventArgs e)
-        {
             if (PeptideAnalysisSummary == null)
             {
                 PeptideAnalysisSummary = new PeptideAnalysisSummary(PeptideAnalysis);

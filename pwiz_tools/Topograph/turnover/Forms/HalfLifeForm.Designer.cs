@@ -60,6 +60,7 @@ namespace pwiz.Topograph.ui.Forms
             this.colTracerPercent = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colScore = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
+            this.cbxFixedInitialPercent = new System.Windows.Forms.CheckBox();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -107,6 +108,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tableLayoutPanel1.Controls.Add(this.label9, 0, 9);
             this.tableLayoutPanel1.Controls.Add(this.tbxRateConstant, 1, 8);
             this.tableLayoutPanel1.Controls.Add(this.tbxHalfLife, 1, 9);
+            this.tableLayoutPanel1.Controls.Add(this.cbxFixedInitialPercent, 0, 10);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -398,6 +400,19 @@ namespace pwiz.Topograph.ui.Forms
             this.splitContainer2.SplitterDistance = 299;
             this.splitContainer2.TabIndex = 1;
             // 
+            // cbxFixedInitialPercent
+            // 
+            this.cbxFixedInitialPercent.AutoSize = true;
+            this.tableLayoutPanel1.SetColumnSpan(this.cbxFixedInitialPercent, 2);
+            this.cbxFixedInitialPercent.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.cbxFixedInitialPercent.Location = new System.Drawing.Point(3, 253);
+            this.cbxFixedInitialPercent.Name = "cbxFixedInitialPercent";
+            this.cbxFixedInitialPercent.Size = new System.Drawing.Size(278, 19);
+            this.cbxFixedInitialPercent.TabIndex = 19;
+            this.cbxFixedInitialPercent.Text = "Hold Initial Percent Constant";
+            this.cbxFixedInitialPercent.UseVisualStyleBackColor = true;
+            this.cbxFixedInitialPercent.CheckedChanged += new System.EventHandler(this.cbxFixedInitialPercent_CheckedChanged);
+            // 
             // HalfLifeForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -451,5 +466,6 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.TextBox tbxRateConstant;
         private System.Windows.Forms.TextBox tbxHalfLife;
+        private System.Windows.Forms.CheckBox cbxFixedInitialPercent;
     }
 }
