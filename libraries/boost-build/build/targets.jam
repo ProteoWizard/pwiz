@@ -288,7 +288,7 @@ class project-target : abstract-target
         local self-location = [ get location ] ;
         for local pn in [ get projects-to-build ]
         {
-            result += [ find $(pn) ] ;
+            result += [ find $(pn)/ ] ;
         }
 
         return $(result) ;
