@@ -51,28 +51,36 @@ using namespace pwiz::data::pepxml;
 int main(int argc, char* argv[])
 {
     namespace pepxml = pwiz::data::pepxml;
-    
-    string inFile, outFile;
-    
-    if (argc<3)
+
+    try
     {
-        string usage = "usage: ";
-        usage += argv[0];
-        usage += " <in> <out>";
-        throw runtime_error(usage.c_str());
+        string inFile, outFile;
+        
+        if (argc<3)
+        {
+            string usage = "usage: ";
+            usage += argv[0];
+            usage += " <in> <out>";
+            throw runtime_error(usage.c_str());
+        }
+
+        inFile = argv[1];
+        outFile = argv[2];
+
+        ifstream in(inFile.c_str());
+        
+        MSMSPipelineAnalysis msmsPA;
+        msmsPA.read(in);
+
+        Pep2MzIdent p2m(msmsPA);
+
+        MzIdentMLFile::write(*p2m.getMzIdentML(), outFile);
+        
+        return 0;
     }
-
-    inFile = argv[1];
-    outFile = argv[2];
-
-    ifstream in(inFile.c_str());
-    
-    MSMSPipelineAnalysis msmsPA;
-    msmsPA.read(in);
-
-    Pep2MzIdent p2m(msmsPA);
-
-    MzIdentMLFile::write(*p2m.getMzIdentML(), outFile);
-    
-    return 0;
+    catch (exception& e)
+    {
+        cerr << e.what() << endl;
+        return 1;
+    }
 }
