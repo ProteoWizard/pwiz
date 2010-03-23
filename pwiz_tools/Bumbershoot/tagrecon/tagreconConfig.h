@@ -72,8 +72,6 @@ using namespace pwiz;
     RTCONFIG_VARIABLE( bool,			AllowPartialSequences,		true			) \
     RTCONFIG_VARIABLE( int,				MaxTagCount,				0				) \
     RTCONFIG_VARIABLE( int,				MaxTagLength,				3				) \
-    RTCONFIG_VARIABLE( bool,			FindUnknownMods,			false			) \
-    RTCONFIG_VARIABLE( bool,			FindSequenceVariations,		false			) \
     RTCONFIG_VARIABLE( int,				BlosumThreshold,			0				) \
     RTCONFIG_VARIABLE( bool,			CalculateRelativeScores,	false			) \
     RTCONFIG_VARIABLE( bool,			MakeSpectrumGraphs,			false			) \
@@ -89,14 +87,19 @@ using namespace pwiz;
     RTCONFIG_VARIABLE( double,			NTerminusMzTolerance,		0.75 			) \
     RTCONFIG_VARIABLE( double,			CTerminusMzTolerance,		0.5	    		) \
     RTCONFIG_VARIABLE( bool,            MassReconMode,              false           ) \
-    RTCONFIG_VARIABLE( int,				ResultsPerBatch, 		    200000		    )
-    
+    RTCONFIG_VARIABLE( int,				ResultsPerBatch, 		    200000		    ) \
+    RTCONFIG_VARIABLE( string,			PreferredDeltaMasses,	    ""   		    ) \
+    RTCONFIG_VARIABLE( int, 			MaxNumPreferredDeltaMasses,	1   		    ) \
+    RTCONFIG_VARIABLE( string,			ExplainUnknownMassShiftsAs,  ""   		    ) \
+    RTCONFIG_VARIABLE( int,			    MaxAmbResultsForBlindMods,  2   		    )
 
 
 namespace freicore
 {
 namespace tagrecon
 {
+
+        enum UnknownMassShiftSearchMode {BLIND_PTMS, MUTATIONS, PREFERRED_MASS_SHITS, INACTIVE};
 
         struct RunTimeConfig : public BaseRunTimeConfig
         {
@@ -108,7 +111,11 @@ namespace tagrecon
             boost::regex cleavageAgentRegex;
             Digestion::Config digestionConfig;
 
+            PreferredDeltaMassesList preferredDeltaMasses;
+
             FragmentTypesBitset defaultFragmentTypes;
+
+            UnknownMassShiftSearchMode unknownMassShiftSearchMode;
 
             int				SpectraBatchSize;
             int				ProteinBatchSize;
@@ -124,10 +131,16 @@ namespace tagrecon
             vector<float>   CTerminalMassTolerance;
             bool			tagMutexesInitialized;
             int             maxChargeStateFromSpectra;
+            int             maxResultsForInternalUse;
+
+            
 
         private:
             void finalize()
             {
+                //maxResultsForInternalUse = 50;
+                maxResultsForInternalUse = MaxResults; 
+
                 tagMutexesInitialized = false;
 
                 path pathToUnimodXML(UnimodXML);
@@ -148,7 +161,6 @@ namespace tagrecon
                 if( CleavageRules.find(' ') == string::npos )
                 {
                     // a single token must be either a cleavage agent name or regex
-
                     // first try to parse the token as the name of an agent
                     CVID cleavageAgent = Digestion::getCleavageAgentByName(CleavageRules);
                     if( cleavageAgent == CVID_Unknown )
@@ -183,6 +195,25 @@ namespace tagrecon
                     cleavageAgentRegex = boost::regex(tmpRuleSet.asCleavageAgentRegex());
                 }
 
+                // Preferred mass shifts to be used in the unknown PTM search mode
+                preferredDeltaMasses = PreferredDeltaMassesList( PreferredDeltaMasses, MaxNumPreferredDeltaMasses );
+
+                // Set the unknown mass shift search mode
+                unknownMassShiftSearchMode = INACTIVE;
+                if(ExplainUnknownMassShiftsAs.size()>0)
+                {
+                    to_lower(ExplainUnknownMassShiftsAs);
+                    if(ExplainUnknownMassShiftsAs.compare("blindptms")==0)
+                        unknownMassShiftSearchMode = BLIND_PTMS;
+                    else if(ExplainUnknownMassShiftsAs.compare("mutations")==0)
+                        unknownMassShiftSearchMode = MUTATIONS;
+                    else if(ExplainUnknownMassShiftsAs.compare("preferredptms")==0)
+                    {
+                        if(preferredDeltaMasses.size()==0)
+                            throw runtime_error("Preferred mass shifts must be defined when \"PreferredPTMs\" search mode is selected.");
+                        unknownMassShiftSearchMode = PREFERRED_MASS_SHITS;
+                    }
+                }
 
                 int maxMissedCleavages = NumMaxMissedCleavages < 0 ? 100000 : NumMaxMissedCleavages;
                 Digestion::Specificity specificity = (Digestion::Specificity) NumMinTerminiCleavages;

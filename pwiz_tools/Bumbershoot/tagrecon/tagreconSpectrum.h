@@ -141,14 +141,16 @@ namespace tagrecon
 		Spectrum()
 			:	BaseSpectrum(), PeakSpectrum<PeakInfo>(), SearchSpectrum<SearchResult>(), TaggingSpectrum()
 		{
-			resultSet.max_size( g_rtConfig->MaxResults );
+			//resultSet.max_size( g_rtConfig->MaxResults );
+            resultSet.max_size( g_rtConfig->maxResultsForInternalUse );
 			simplethread_create_mutex( &mutex );
 		}
 
 		Spectrum( const Spectrum& old )
 			:	BaseSpectrum( old ), PeakSpectrum<PeakInfo>( old ), SearchSpectrum<SearchResult>( old ), TaggingSpectrum( old )
 		{
-			resultSet.max_size( g_rtConfig->MaxResults );
+			//resultSet.max_size( g_rtConfig->MaxResults );
+            resultSet.max_size( g_rtConfig->maxResultsForInternalUse );
 			simplethread_create_mutex( &mutex );
 		}
 

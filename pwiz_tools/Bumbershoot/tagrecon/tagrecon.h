@@ -103,6 +103,39 @@ namespace tagrecon
         int tagChargeState;
 	};
 
+    struct TagMatchInfo
+    {
+
+        TagMatchInfo() {}
+
+        TagMatchInfo(Spectrum* spec, float modMass, TermMassMatch nTerm, TermMassMatch cTerm)
+        {
+            spectrum = spec;
+            modificationMass = modMass;
+            nTermMatch = nTerm;
+            cTermMatch = cTerm;
+        }
+
+        bool operator < (const TagMatchInfo& rhs) const
+        {
+            if(spectrum->id==rhs.spectrum->id)
+                if(nTermMatch == rhs.nTermMatch)
+                    if(cTermMatch == rhs.cTermMatch)
+                        return modificationMass < rhs.modificationMass;
+                    else
+                        return cTermMatch < rhs.cTermMatch;
+                else
+                    return nTermMatch < rhs.nTermMatch;
+            else
+                return spectrum->id < rhs.spectrum->id;
+        }
+
+        Spectrum* spectrum;
+        float modificationMass;
+        TermMassMatch nTermMatch;
+        TermMassMatch cTermMatch;
+    };
+
 	/**
 		Class TagMapCompare sorts tag to spectrum map based on spectral similarity.
 		Two spectrum are said to be similar if the tag sequences match and also 

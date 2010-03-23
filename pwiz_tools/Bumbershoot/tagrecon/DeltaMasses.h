@@ -114,7 +114,7 @@ namespace freicore {
 		public:
 			DeltaMasses(vector <UnimodModification> mods) {
 				modifications = mods;
-				if(g_rtConfig->FindSequenceVariations) {
+				if(g_rtConfig->unknownMassShiftSearchMode == MUTATIONS) {
 					// Parse out the blosum matrix
 					blosumMatrix = new BlosumMatrix(g_rtConfig->Blosum);
 					blosumMatrix->parseBlosumMatrix();

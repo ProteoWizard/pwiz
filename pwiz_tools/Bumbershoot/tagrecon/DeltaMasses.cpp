@@ -81,7 +81,7 @@ namespace freicore {
             }
 
             // Add the substitutions
-            if(g_rtConfig->FindSequenceVariations) {
+            if(g_rtConfig->unknownMassShiftSearchMode == MUTATIONS) {
                 // Iterate over all amino acids
                 for(AminoAcidNameLookup::const_iterator from = aaLookup.begin(); from != aaLookup.end(); ++from) {
                     // Find out if the from amino acid can have static modifications
@@ -141,7 +141,7 @@ namespace freicore {
 				modificationInterpretation.push_back((*lowEnd).second);
 				lowEnd++;
 			}
-			if(modificationInterpretation.size()==0 && g_rtConfig->FindUnknownMods) {
+			if(modificationInterpretation.size()==0 && g_rtConfig->unknownMassShiftSearchMode == BLIND_PTMS) {
 				UnimodModification unknown("unknown "+lexical_cast<string>(deltaMass)+ " on " + aminoAcid,"unknown");
 				unknown.setModificationMasses(deltaMass, deltaMass);
 				unknown.addASpecificity(aminoAcid,"Any where","Post-translational");

@@ -31,6 +31,7 @@
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/zlib.hpp>
+#include <pwiz/data/proteome/Serializer_FASTA.hpp>
 
 namespace freicore
 {
@@ -569,12 +570,13 @@ namespace tagrecon
 			try
 			{
 				packArchive & pOffset;
-
+                string proteinStream;
 				for( int j = i; j < i + batchSize; ++j )
 				{
-					//cout << "Sending protein ..." << proteins[j].name << endl;
-					packArchive & proteins[j];
+                    proteinStream += ">" + proteins[j].getName() + " " + proteins[j].getDescription() + "\n" 
+                                  + proteins[j].getSequence() + "\n";
 				}
+                packArchive & proteinStream;
 			} catch( exception& e )
 			{
 				cerr << g_hostString << " had an error: " << e.what() << endl;
@@ -710,16 +712,14 @@ namespace tagrecon
 			// Get the index offset into the protein database
 			packArchive & g_rtConfig->ProteinIndexOffset;
 
-			for( int i=0; i < batchSize; ++i )
-			{
-				//Create an empty proteinData object
-				proteins.push_back( proteinData() );
-				// Get a pointer to it
-				proteinData& p = proteins.back();
-				// Fill it with data from the data stream
-				packArchive & p;
-				//cout << "Got Protein ..." << p.name << endl;
-			}
+			string proteinString;
+            packArchive & proteinString;
+            shared_ptr<std::istream> proteinStream(new std::istringstream(proteinString));
+
+            Serializer_FASTA unpacker;
+            shared_ptr<ProteomeData> subsetProteinsPtr(new ProteomeData);
+            unpacker.read(proteinStream, *subsetProteinsPtr);
+            proteins = proteinStore(subsetProteinsPtr);
 		} catch( exception& e )
 		{
 			cerr << g_hostString << " had an error: " << typeid(e).name() << " (" << e.what() << ")" << endl;
