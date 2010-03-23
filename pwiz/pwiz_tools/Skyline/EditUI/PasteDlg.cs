@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Windows.Forms;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Controls;
@@ -44,10 +43,7 @@ namespace pwiz.Skyline.EditUI
             Icon = Resources.Skyline;
 
             DocumentUiContainer = documentUiContainer;
-            if (GetBackgroundProteome(documentUiContainer.DocumentUI).IsNone)
-            {
-                tabControl1.Controls.Remove(tabPageProteinList);
-            }
+
             _statementCompletionEditBox = new StatementCompletionTextBox(documentUiContainer)
                                               {
                                                   MatchTypes = ProteinMatchType.name | ProteinMatchType.description
@@ -655,7 +651,7 @@ namespace pwiz.Skyline.EditUI
             return document;
         }
 
-        private PeptideDocNode AddTransition(SrmDocument document, PeptideDocNode peptideDocNode, int precursorCharge, 
+        private static PeptideDocNode AddTransition(SrmDocument document, PeptideDocNode peptideDocNode, int precursorCharge, 
             IsotopeLabelType isotopeLabelType, int productCharge, IonType ionType, int ordinal)
         {
             TransitionGroupDocNode transitionGroupDocNode = null;
@@ -733,7 +729,8 @@ namespace pwiz.Skyline.EditUI
             
         }
 
-        public PasteFormat PasteFormat {
+        public PasteFormat PasteFormat
+        {
             get
             {
                 return GetPasteFormat(tabControl1.SelectedTab);
@@ -781,6 +778,7 @@ namespace pwiz.Skyline.EditUI
             }
             return PasteFormat.none;
         }
+
         private TabPage GetTabPage(PasteFormat pasteFormat)
         {
             switch (pasteFormat)
@@ -887,6 +885,7 @@ namespace pwiz.Skyline.EditUI
                 row.Cells[colPeptideProteinDescription.Index].Value = fastaSequence.Description;
             }
         }
+
         private void gridViewTransitionList_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
             HideNoErrors();
@@ -913,7 +912,6 @@ namespace pwiz.Skyline.EditUI
                 row.Cells[colTransitionProteinDescription.Index].Value = fastaSequence.Description;
             }
         }
-
 
         private void OnEditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
         {
@@ -1026,7 +1024,7 @@ namespace pwiz.Skyline.EditUI
         /// The clipboard text is assumed to be tab separated values.
         /// The values are matched up to the columns in the order they are displayed.
         /// </summary>
-        private void Paste(DataGridView dataGridView)
+        private static void Paste(DataGridView dataGridView)
         {
             var columns = new DataGridViewColumn[dataGridView.Columns.Count];
             dataGridView.Columns.CopyTo(columns, 0);
@@ -1050,7 +1048,7 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        IEnumerable<IList<string>> ParseColumnarData(String text)
+        static IEnumerable<IList<string>> ParseColumnarData(String text)
         {
             IFormatProvider formatProvider;
             char separator;
