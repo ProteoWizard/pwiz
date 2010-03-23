@@ -23,7 +23,7 @@
 #include "stdafx.h"
 #include "myrimatch.h"
 #include "pwiz/data/msdata/Version.hpp"
-#include "pwiz/utility/proteome/Version.hpp"
+#include "pwiz/data/proteome/Version.hpp"
 #include "PTMVariantList.h"
 #include "svnrev.hpp"
 
@@ -380,7 +380,7 @@ namespace myrimatch
 			s->computeSecondaryScores();
 
 			s->resultSet.calculateRanks();
-			s->resultSet.convertProteinIndexesToNames( proteins.indexToName );
+            s->resultSet.convertProteinIndexesToNames( proteins );
 
 			if( g_rtConfig->MakeScoreHistograms )
 			{
@@ -668,7 +668,7 @@ namespace myrimatch
 
 	vector< int > workerNumbers;
 
-	boost::int64_t QuerySequence( const DigestedPeptide& candidate, int idx, bool estimateComparisonsOnly = false )
+	boost::int64_t QuerySequence( const DigestedPeptide& candidate, int idx, bool isDecoy, bool estimateComparisonsOnly = false )
 	{
 		boost::int64_t numComparisonsDone = 0;
 		Spectrum* spectrum;
@@ -731,10 +731,12 @@ namespace myrimatch
 				if( g_rtConfig->UseMultipleProcessors )
 					simplethread_lock_mutex( &spectrum->mutex );
 
-                if( proteins[idx].isDecoy() )
+                START_PROFILER(13)
+                if( isDecoy )
 				    ++ spectrum->numDecoyComparisons;
                 else
                     ++ spectrum->numTargetComparisons;
+                STOP_PROFILER(13)
 
 				if( result.mvh >= g_rtConfig->MinResultScore && accumulate( result.key.begin(), result.key.end(), 0 ) > 0 )
 				{
@@ -750,6 +752,7 @@ namespace myrimatch
 					++ spectrum->mvhScoreDistribution[ (int) (result.mvh+0.5) ];
 					++ spectrum->mzFidelityDistribution[ (int) (result.mzFidelity+0.5)];
 					spectrum->resultSet.add( result );
+                    
 				}
 				if( g_rtConfig->UseMultipleProcessors )
 					simplethread_unlock_mutex( &spectrum->mutex );
@@ -762,6 +765,7 @@ namespace myrimatch
 
 	simplethread_return_t ExecuteSearchThread( simplethread_arg_t threadArg )
 	{
+        
 		simplethread_lock_mutex( &resourceMutex );
 		simplethread_id_t threadId = simplethread_get_id();
 		WorkerThreadMap* threadMap = (WorkerThreadMap*) threadArg;
@@ -797,7 +801,7 @@ namespace myrimatch
 
 			    int numProteins = (int) proteins.size();
 			    threadInfo->endIndex = ( numProteins / g_numWorkers )-1;
-
+                
 			    //simplethread_lock_mutex( &resourceMutex );
 			    //cout << threadInfo->workerHostString << " " << numProteins << " " << g_numWorkers << " " <<  threadInfo->workerNum << endl;
 			    //simplethread_unlock_mutex( &resourceMutex );
@@ -864,7 +868,7 @@ namespace myrimatch
                         {
                             //++ threadInfo->stats.numCandidatesGenerated;
                             START_PROFILER(1);
-                            boost::int64_t queryComparisonCount = QuerySequence( digestedPeptides[j], i, g_rtConfig->EstimateSearchTimeOnly );
+                            boost::int64_t queryComparisonCount = QuerySequence( digestedPeptides[j], i, proteins[i].isDecoy(), g_rtConfig->EstimateSearchTimeOnly );
                             STOP_PROFILER(1);
                             if( queryComparisonCount > 0 )
                             {
@@ -922,7 +926,6 @@ namespace myrimatch
         }
 		//i -= g_numWorkers;
 		//cout << threadInfo->workerHostString << " last searched protein " << i-1 << " (" << proteins[i].name << ")." << endl;
-
 		return 0;
 	}
 
@@ -1085,7 +1088,7 @@ namespace myrimatch
 		g_dbFilename = g_rtConfig->ProteinDatabase;
 		int numSpectra = 0;
 
-		INIT_PROFILERS(13)
+		INIT_PROFILERS(14)
 
         // If this is a parent process then read the input spectral data and 
         // protein database files
@@ -1111,7 +1114,7 @@ namespace myrimatch
 			Timer readTime(true);
 			try
 			{
-				proteins.readFASTA( g_dbFilename, g_rtConfig->StartProteinIndex, g_rtConfig->EndProteinIndex );
+                proteins.readFASTA( g_dbFilename );
 			} catch( std::exception& e )
 			{
 				cout << g_hostString << " had an error: " << e.what() << endl;
@@ -1484,7 +1487,6 @@ namespace myrimatch
 
 								    lastSearchStats = ExecuteSearch();
 								    sumSearchStats = sumSearchStats + lastSearchStats;
-								    proteins.clear();
 							    }
                             } catch( std::exception& e )
                             {

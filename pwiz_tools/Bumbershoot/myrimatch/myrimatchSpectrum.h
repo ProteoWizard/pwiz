@@ -393,9 +393,9 @@ namespace myrimatch
 				int totalClassCount = accumulate( classCounts.begin(), classCounts.end(), 0 );
 				int totalValueCount = accumulate( key.begin(), key.end(), 0 );
 				lnP -= lnCombin( totalClassCount, totalValueCount, lnFT );
-				START_PROFILER(9);
+				//START_PROFILER(9);
 				mvhProbabilities.push_back( lnP );
-				STOP_PROFILER(9);
+				//STOP_PROFILER(9);
 
 			// Create another level of variability
 			} else

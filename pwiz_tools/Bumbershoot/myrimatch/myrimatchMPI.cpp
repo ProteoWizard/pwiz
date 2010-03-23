@@ -29,6 +29,7 @@
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/zlib.hpp>
+#include <pwiz/data/proteome/Serializer_FASTA.hpp>
 
 namespace freicore
 {
@@ -475,11 +476,13 @@ namespace myrimatch
 			try
 			{
 				packArchive & pOffset;
-
+                string proteinStream;
 				for( int j = i; j < i + batchSize; ++j )
 				{
-					packArchive & proteins[j];
+                    proteinStream += ">" + proteins[j].getName() + " " + proteins[j].getDescription() + "\n" 
+                                  + proteins[j].getSequence() + "\n";
 				}
+                packArchive & proteinStream;
 			} catch( exception& e )
 			{
 				cerr << g_hostString << " had an error: " << e.what() << endl;
@@ -597,12 +600,14 @@ namespace myrimatch
 		{
 			packArchive & g_rtConfig->ProteinIndexOffset;
 
-			for( int i=0; i < batchSize; ++i )
-			{
-				proteins.push_back( proteinData() );
-				proteinData& p = proteins.back();
-				packArchive & p;
-			}
+            string proteinString;
+            packArchive & proteinString;
+            shared_ptr<std::istream> proteinStream(new std::istringstream(proteinString));
+
+            Serializer_FASTA unpacker;
+            shared_ptr<ProteomeData> subsetProteinsPtr(new ProteomeData);
+            unpacker.read(proteinStream, *subsetProteinsPtr);
+            proteins = proteinStore(subsetProteinsPtr);
 		} catch( exception& e )
 		{
 			cerr << g_hostString << " had an error: " << typeid(e).name() << " (" << e.what() << ")" << endl;
