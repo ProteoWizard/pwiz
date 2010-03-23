@@ -393,42 +393,101 @@ PWIZ_API_DECL void RunSummary::close(const DataInfo& dataInfo)
     }
     else
     {
-        /*os << "index" << delimiter
-           << "id" << delimiter
-           << "event" << delimiter
-           << "analyzer" << delimiter
-           << "msLevel" << delimiter
-           << "rt" << delimiter
-           << "mzLow" << delimiter
-           << "mzHigh" << delimiter
-           << "basePeakMZ" << delimiter
-           << "basePeakInt" << delimiter
-           << "TIC" << delimiter
-           << "charge" << delimiter
-           << "precursorMZ" << delimiter
-           << "thermo_monoMZ" << delimiter
-           << "filterStringMZ"
-           << endl;
+        stringstream columnHeaderRow;
 
-        for (vector<SpectrumInfo>::const_iterator it=cache_.begin(); it!=cache_.end(); ++it)
+        columnHeaderRow << "Filename" << delimiter;
+        columnHeaderRow << "Timestamp" << delimiter;
+        columnHeaderRow << "Vendor" << delimiter;
+        columnHeaderRow << "Model" << delimiter;
+        columnHeaderRow << "Serial#" << delimiter;
+
+        // write column headers per MS level, e.g. "MS1s  MS2s  MS3s"
+        BOOST_FOREACH(IntIntMap::const_reference kvp, msLevelCount)
+            if (config_.msLevels.contains(kvp.first))
+                columnHeaderRow << ("MS" + lexical_cast<string>(kvp.first) + "s") << delimiter;
+
+        if (config_.msLevels.size() < (size_t) numeric_limits<int>::max())
+            columnHeaderRow << "MS(others)" << delimiter;
+
+        columnHeaderRow << "Zooms" << delimiter;
+        columnHeaderRow << "Charges" << delimiter;
+
+        // write column headers per charge state, e.g. "+1s  +2s  +3s  +5s  ..."
+        BOOST_FOREACH(IntIntMap::const_reference kvp, knownChargeCount)
+            if (config_.charges.contains(kvp.first))
+                columnHeaderRow << ("+" + lexical_cast<string>(kvp.first) + "s") << delimiter;
+
+        if (config_.charges.size() < (size_t) numeric_limits<int>::max())
+            columnHeaderRow << "+(others)" << delimiter;
+
+        BOOST_FOREACH(IntDistributionInfoMap::const_reference kvp, distributionInfoByMsLevel)
         {
-            os << it->index << delimiter
-               << msdata::id::abbreviate(it->id) << delimiter
-               << it->scanEvent  << delimiter
-               << it->massAnalyzerTypeAbbreviation() << delimiter
-               << "ms" + lexical_cast<string>(it->msLevel) << delimiter
-               << fixed << setprecision(2) << it->retentionTime << delimiter
-               << fixed << setprecision(0) << it->mzLow  << delimiter
-               << fixed << setprecision(0) << it->mzHigh  << delimiter
-               << fixed << setprecision(4) << it->basePeakMZ  << delimiter
-               << fixed << setprecision(2) << it->basePeakIntensity << delimiter
-               << fixed << setprecision(2) << it->totalIonCurrent << delimiter
-               << fixed << setprecision(0) << (!it->precursors.empty() ? it->precursors[0].charge : 0) << delimiter
-               << fixed << setprecision(4) << (!it->precursors.empty() ? it->precursors[0].mz : 0) << delimiter
-               << fixed << setprecision(4) << it->thermoMonoisotopicMZ << delimiter
-               << fixed << setprecision(4) << it->mzFromFilterString()
-               << endl;
-        }*/
+            if (config_.msLevels.contains(kvp.first))
+                columnHeaderRow << ("MS" + lexical_cast<string>(kvp.first) + " PtsMean") << delimiter
+                                << ("MS" + lexical_cast<string>(kvp.first) + " PtsMin") << delimiter
+                                << ("MS" + lexical_cast<string>(kvp.first) + " PtsQ1") << delimiter
+                                << ("MS" + lexical_cast<string>(kvp.first) + " PtsQ2") << delimiter
+                                << ("MS" + lexical_cast<string>(kvp.first) + " PtsQ3") << delimiter
+                                << ("MS" + lexical_cast<string>(kvp.first) + " PtsMax") << delimiter;
+        }
+
+        columnHeaderRow << "MinRT" << delimiter;
+        columnHeaderRow << "RT@25%BPI" << delimiter;
+        columnHeaderRow << "RT@50%BPI" << delimiter;
+        columnHeaderRow << "RT@75%BPI" << delimiter;
+        columnHeaderRow << "MaxRT";
+
+        // only write the column header if it's different than the last one
+        if (columnHeaderRow.str() != lastColumnHeaderRow)
+        {
+            lastColumnHeaderRow = columnHeaderRow.str();
+            os << lastColumnHeaderRow << endl;
+        }
+
+        // now write the data row
+
+        os << dataInfo.sourceFilename << delimiter;
+        os << dataInfo.msd.run.startTimeStamp << delimiter;
+        os << instrumentInfo.vendorName << delimiter;
+        os << instrumentInfo.modelName << delimiter;
+        os << instrumentInfo.serialNumber << delimiter;
+
+        // write column per MS level
+        BOOST_FOREACH(IntIntMap::const_reference kvp, msLevelCount)
+            if (config_.msLevels.contains(kvp.first))
+                os << kvp.second << delimiter;
+
+        if (config_.msLevels.size() < (size_t) numeric_limits<int>::max())
+            os << otherMsLevels << delimiter;
+
+        os << zoomScanCount << delimiter;
+
+        os << knownCharges << delimiter;
+
+        // write column per charge state
+        BOOST_FOREACH(IntIntMap::const_reference kvp, knownChargeCount)
+            if (config_.charges.contains(kvp.first))
+                os << kvp.second << delimiter;
+
+        if (config_.charges.size() < (size_t) numeric_limits<int>::max())
+            os << otherCharges << delimiter;
+
+        BOOST_FOREACH(IntDistributionInfoMap::const_reference kvp, distributionInfoByMsLevel)
+        {
+            if (config_.msLevels.contains(kvp.first))
+                os << kvp.second.mean << delimiter
+                   << kvp.second.min << delimiter
+                   << kvp.second.Q1 << delimiter
+                   << kvp.second.Q2 << delimiter
+                   << kvp.second.Q3 << delimiter
+                   << kvp.second.max << delimiter;
+        }
+
+        os << fixed << setprecision(0) << minRT << delimiter;
+        os << fixed << setprecision(0) << q1RT << delimiter;
+        os << fixed << setprecision(0) << q2RT << delimiter;
+        os << fixed << setprecision(0) << q3RT << delimiter;
+        os << fixed << setprecision(0) << maxRT << endl;
     }
 }
 
