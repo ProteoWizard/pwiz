@@ -1472,9 +1472,10 @@ namespace freicore
 					double mass = g_rtConfig->UseAvgMassOfSequences ? itr->molecularWeight()
 						: itr->monoisotopicMass();
                     if( mass+g_rtConfig->MaxModificationMassPlus < g_rtConfig->curMinSequenceMass ||
-                            mass-g_rtConfig->MaxModificationMassMinus > g_rtConfig->curMaxSequenceMass )
+                        mass-g_rtConfig->MaxModificationMassMinus > g_rtConfig->curMaxSequenceMass ||
+                        mass == 0.0 )
 						continue;
-
+                    
                     vector<DigestedPeptide> digestedPeptides;
 					//START_PROFILER(0);
 					// Make any PTM variants if user has specified dynamic mods. This function
