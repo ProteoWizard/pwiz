@@ -367,7 +367,7 @@ ChromatogramPtr MassHunterDataImpl::getChromatogram(const Transition& transition
 
 SpectrumPtr MassHunterDataImpl::getProfileSpectrumByRow(int rowNumber) const
 {
-    return SpectrumPtr(new SpectrumImpl(reader_->GetSpectrum(rowNumber, nullptr, nullptr, MHDAC::DesiredMSStorageType::ProfileElsePeak)));
+    try {return SpectrumPtr(new SpectrumImpl(reader_->GetSpectrum(rowNumber, nullptr, nullptr, MHDAC::DesiredMSStorageType::ProfileElsePeak)));} CATCH_AND_FORWARD
 }
 
 SpectrumPtr MassHunterDataImpl::getPeakSpectrumByRow(int rowNumber, PeakFilterPtr peakFilter /*= PeakFilterPtr()*/) const

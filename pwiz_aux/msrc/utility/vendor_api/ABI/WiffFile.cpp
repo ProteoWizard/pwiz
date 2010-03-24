@@ -285,13 +285,9 @@ blt::local_date_time WiffFileImpl::getSampleAcquisitionTime() const
 
 ExperimentPtr WiffFileImpl::getExperiment(int sample, int period, int experiment) const
 {
-    try
-    {
-        setExperiment(sample, period, experiment);
-        ExperimentImplPtr msExperiment(new ExperimentImpl(this, sample, period, experiment));
-        return msExperiment;
-    }
-    CATCH_AND_FORWARD
+    setExperiment(sample, period, experiment);
+    ExperimentImplPtr msExperiment(new ExperimentImpl(this, sample, period, experiment));
+    return msExperiment;
 }
 
 
@@ -598,12 +594,8 @@ SpectrumPtr WiffFileImpl::getSpectrum(int sample, int period, int experiment, in
 
 SpectrumPtr WiffFileImpl::getSpectrum(ExperimentPtr experiment, int cycle) const
 {
-    try
-    {
-        SpectrumImplPtr spectrum(new SpectrumImpl(boost::static_pointer_cast<ExperimentImpl>(experiment), cycle));
-        return spectrum;
-    }
-    CATCH_AND_FORWARD
+    SpectrumImplPtr spectrum(new SpectrumImpl(boost::static_pointer_cast<ExperimentImpl>(experiment), cycle));
+    return spectrum;
 }
 
 
