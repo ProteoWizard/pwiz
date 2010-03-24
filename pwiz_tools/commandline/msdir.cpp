@@ -161,7 +161,7 @@ Config parseCommandLine(int argc, const char* argv[])
 
     if (help)
     {
-        cout << usage << endl;
+        cout << usage.str() << endl;
         return config; // ignore any other arguments
     }
 
