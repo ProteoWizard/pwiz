@@ -494,16 +494,16 @@ namespace pwiz.Topograph.MsData
                             incompleteAnalyses.Add(analysis);
                         }
                     }
-                    SaveChromatograms(chromatogramTask, completeAnalyses);
+                    SaveChromatograms(chromatogramTask, completeAnalyses, false);
                     completeAnalyses.Clear();
                     analyses = incompleteAnalyses;
                 }
                 completeAnalyses.AddRange(analyses);
-                SaveChromatograms(chromatogramTask, completeAnalyses);
+                SaveChromatograms(chromatogramTask, completeAnalyses, true);
             }
         }
 
-        private void SaveChromatograms(ChromatogramTask chromatogramTask, ICollection<AnalysisChromatograms> analyses)
+        private void SaveChromatograms(ChromatogramTask chromatogramTask, ICollection<AnalysisChromatograms> analyses, bool finished)
         {
             if (analyses.Count == 0)
             {
@@ -575,6 +575,10 @@ namespace pwiz.Topograph.MsData
                         _session.SaveOrUpdate(dbChromatogram);
                     }
                     _session.Save(new DbChangeLog(_workspace, dbPeptideFileAnalysis.PeptideAnalysis));
+                }
+                if (finished)
+                {
+                    chromatogramTask.MsDataFile.MsDataFileData.Save(_session);
                 }
                 chromatogramTask.UpdateLock(_session);
                 _session.Transaction.Commit();

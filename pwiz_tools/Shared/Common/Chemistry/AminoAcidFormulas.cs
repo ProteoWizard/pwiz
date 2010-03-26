@@ -86,7 +86,7 @@ namespace pwiz.Common.Chemistry
                                                                    MassShifts = new ImmutableDictionary<char,double>(new Dictionary<char, double>()),
                                                                    Formulas = DefaultFormulas,
                                                                    IsotopeAbundances = IsotopeAbundances.Default,
-                                                                   MassResolution = .01,
+                                                                   MassResolution = .001,
                                                                };
         public double MassResolution { get; private set;}
         public IDictionary<char, double> MassShifts { get; private set; }

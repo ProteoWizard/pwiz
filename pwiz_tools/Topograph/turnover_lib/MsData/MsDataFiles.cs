@@ -41,8 +41,8 @@ namespace pwiz.Topograph.MsData
             {
                 return new ChromatogramPoint();
             }
-            int imin = ClosestIndex(mzRange.Min, mzs);
-            int imax = ClosestIndex(mzRange.Max, mzs);
+            int imin = ClosestIndex(mzRange.Min - .1, mzs);
+            int imax = ClosestIndex(mzRange.Max + .1, mzs);
             var values = new List<KeyValuePair<float, float>>();
             for (int i = imin; i <= imax; i++)
             {
@@ -97,7 +97,7 @@ namespace pwiz.Topograph.MsData
             {
                 using(var cMsDataFile = new MsDataFileImpl(path))
                 {
-                    msDataFile.Init(path, cMsDataFile);
+                    msDataFile.Init(cMsDataFile);
                     using (var session = workspace.OpenWriteSession())
                     {
                         session.BeginTransaction();
