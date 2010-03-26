@@ -732,9 +732,9 @@ namespace pwiz.Skyline
                 int lineLen = 0;
                 foreach (char c in text)
                 {
-                    if (!AminoAcid.IsExAA(c) && !char.IsWhiteSpace(c) && c != '*')
+                    if (!AminoAcid.IsExAA(c) && !char.IsWhiteSpace(c) && c != '*' && c != '.')
                     {
-                        MessageBox.Show(this, string.Format("Unexpected character '{0}' found on line {1}.", c, lineLengths.Count + 1), Program.Name);
+                        MessageDlg.Show(this, string.Format("Unexpected character '{0}' found on line {1}.", c, lineLengths.Count + 1));
                         return;
                     }
                     if (c == '\n')
@@ -777,6 +777,11 @@ namespace pwiz.Skyline
                     if (text == null)
                         return; // Canceled
                 }
+                else if (text.Contains("."))
+                {
+                    MessageBox.Show(this, "Unexpected character '.' found.");
+                    return;
+                }
 
                 // Choose an unused ID
                 string seqId = GetPeptideGroupId(Document, peptideList);
@@ -814,13 +819,18 @@ namespace pwiz.Skyline
             var listAllPeptides = new List<string>();
             var listAcceptPeptides = new List<string>();
             var listFilterPeptides = new List<string>();
-            foreach (string pepSeq in pepSequences)
+            for (int i = 0; i < pepSequences.Length; i++)
             {
-                string pepSeqClean = RemoveWhitespace(pepSeq);
+                string pepSeqClean = CleanPeptideSequence(pepSequences[i]);
                 if (string.IsNullOrEmpty(pepSeqClean))
                     continue;
+                if (pepSeqClean.Contains("."))
+                {
+                    MessageBox.Show(this, string.Format("Unexpected character '.' found on line {0}.", i+1));
+                    return null;
+                }
 
-                // Make no duplicates are added during a paste
+                // Make sure no duplicates are added during a paste
                 // With explicit modifications, there is now reason to add duplicates,
                 // when multiple modified forms are desired.
                 // if (setAdded.Contains(pepSeqClean))
@@ -855,10 +865,10 @@ namespace pwiz.Skyline
         }
 
         // CONSIDER: Probably should go someplace else
-        private static string RemoveWhitespace(string s)
+        private static string CleanPeptideSequence(string s)
         {
             s = s.Trim();
-            if (s.IndexOfAny(new[] { '\n', '\r', '\t', ' ' }) == -1)
+            if (s.IndexOfAny(new[] { '\n', '\r', '\t', ' ', '.' }) == -1)
                 return s;
             // Internal whitespace
             var sb = new StringBuilder();
@@ -866,6 +876,13 @@ namespace pwiz.Skyline
             {
                 if (!char.IsWhiteSpace(c))
                     sb.Append(c);
+            }
+            // If the peptide is in the format K.PEPTIDER.C, then remove the periods
+            // and the preceding and trailing amino acids.
+            if (sb.Length > 4 && sb[1] == '.' && sb[sb.Length - 2] == '.')
+            {
+                sb.Remove(0, 2);
+                sb.Remove(sb.Length - 2, 2);
             }
             return sb.ToString();
         }
