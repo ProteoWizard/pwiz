@@ -38,25 +38,12 @@ namespace pwiz.Topograph.Model
         protected override void Load(DbMsDataFile entity)
         {
             base.Load(entity);
-            _path = entity.Path;
             _times = entity.Times;
             _msLevels = entity.MsLevels;
         }
         public MsDataFile MsDataFile { get; private set; }
-        public String Path 
+        public void Init(MsDataFileImpl msDataFileImpl)
         {
-            get
-            {
-                return _path;
-            } 
-            set
-            {
-                SetIfChanged(ref _path, value);
-            }
-        }
-        public void Init(String path, MsDataFileImpl msDataFileImpl)
-        {
-            Path = path;
             if (_times == null)
             {
                 _times = msDataFileImpl.GetScanTimes();
@@ -74,7 +61,6 @@ namespace pwiz.Topograph.Model
         protected override DbMsDataFile UpdateDbEntity(NHibernate.ISession session)
         {
             var msDataFile = base.UpdateDbEntity(session);
-            msDataFile.Path = Path;
             if (_times != null)
             {
                 msDataFile.Times = _times;

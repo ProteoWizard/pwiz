@@ -83,7 +83,6 @@ namespace pwiz.Topograph.Test
                 var dbMsDataFile = new DbMsDataFile()
                 {
                     Name = "20090724_HT3_0",
-                    Path = Path.Combine(GetDataDirectory(), "20090724_HT3_0.mzML"),
                     Workspace = workspace.LoadDbWorkspace(session),
                 };
                 session.Save(dbMsDataFile);

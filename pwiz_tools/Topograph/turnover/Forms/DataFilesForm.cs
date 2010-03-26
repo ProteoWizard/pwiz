@@ -87,7 +87,6 @@ namespace pwiz.Topograph.ui.Forms
             var dataFile = (MsDataFile) row.Tag;
             row.Cells[colName.Name].Value = dataFile.Name;
             row.Cells[colLabel.Name].Value = dataFile.Label;
-            row.Cells[colPath.Name].Value = dataFile.Path;
             row.Cells[colCohort.Name].Value = dataFile.Cohort;
             row.Cells[colTimePoint.Name].Value = dataFile.TimePoint;
             row.Cells[colStatus.Name].Value = dataFile.ValidationStatus;
@@ -141,11 +140,7 @@ namespace pwiz.Topograph.ui.Forms
             var msDataFile = (MsDataFile) row.Tag;
             var column = gridView.Columns[e.ColumnIndex];
             var cell = row.Cells[e.ColumnIndex];
-            if (column == colPath)
-            {
-                msDataFile.Path = Convert.ToString(cell.Value);
-            }
-            else if (column == colStatus)
+            if (column == colStatus)
             {
                 msDataFile.ValidationStatus = (ValidationStatus) cell.Value;
             }

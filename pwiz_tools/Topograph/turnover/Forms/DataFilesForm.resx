@@ -129,10 +129,10 @@
   <metadata name="colCohort.UserAddedColumn" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
-  <metadata name="colPath.UserAddedColumn" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-    <value>True</value>
-  </metadata>
   <metadata name="colStatus.UserAddedColumn" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
+  <data name="label2.Text" xml:space="preserve">
+    <value>This page lists the data files in this workspace.  The Time Point and Cohort values can be set here, which are used in half life calculations.  The status of a data file can be set to "reject" to exclude it from calculations.  The Label for each data file can be changed to something more descriptive or succinct than the filename.</value>
+  </data>
 </root>

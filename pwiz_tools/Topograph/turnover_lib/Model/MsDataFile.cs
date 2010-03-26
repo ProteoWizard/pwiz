@@ -40,9 +40,9 @@ namespace pwiz.Topograph.Model
 
         public MsDataFileData MsDataFileData { get; private set; }
 
-        public void Init(String path, MsDataFileImpl msDataFileImpl)
+        public void Init(MsDataFileImpl msDataFileImpl)
         {
-            MsDataFileData.Init(path, msDataFileImpl);
+            MsDataFileData.Init(msDataFileImpl);
         }
         protected override IEnumerable<ModelProperty> GetModelProperties()
         {
@@ -76,11 +76,6 @@ namespace pwiz.Topograph.Model
         }
 
         public String Name { get; private set; }
-        public String Path
-        {
-            get { return MsDataFileData.Path; }
-            set { MsDataFileData.Path = value;}
-        }
         public String Label {
             get { return _label;} 
             set {SetIfChanged(ref _label, value);}}

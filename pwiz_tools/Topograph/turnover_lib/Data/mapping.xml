@@ -28,7 +28,6 @@
     <many-to-one name="Workspace" not-null="true" unique-key="WorkspaceName"/>
     <property name="Name" not-null="true" unique-key="WorkspaceName"/>
     <property name="Label" />
-    <property name="Path" />
     <property name="Cohort" />
     <property name="TimePoint" />
     <property name="TimesBytes" length="1000000" type="BinaryBlob" />

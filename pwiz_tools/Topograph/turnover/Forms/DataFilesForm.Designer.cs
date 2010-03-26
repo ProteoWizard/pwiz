@@ -30,16 +30,22 @@ namespace pwiz.Topograph.ui.Forms
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DataFilesForm));
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.label1 = new System.Windows.Forms.Label();
+            this.findBox1 = new pwiz.Common.Controls.FindBox();
             this.gridView = new System.Windows.Forms.DataGridView();
             this.colName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colLabel = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTimePoint = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colCohort = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colPath = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colStatus = new pwiz.Topograph.ui.Controls.ValidationStatusColumn();
+            this.label2 = new System.Windows.Forms.Label();
+            this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
+            this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridView)).BeginInit();
             this.SuspendLayout();
             // 
@@ -51,12 +57,53 @@ namespace pwiz.Topograph.ui.Forms
             this.splitContainer1.Name = "splitContainer1";
             this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.tableLayoutPanel1);
+            // 
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.gridView);
-            this.splitContainer1.Size = new System.Drawing.Size(485, 264);
-            this.splitContainer1.SplitterDistance = 107;
+            this.splitContainer1.Size = new System.Drawing.Size(579, 264);
+            this.splitContainer1.SplitterDistance = 65;
             this.splitContainer1.TabIndex = 0;
+            // 
+            // tableLayoutPanel1
+            // 
+            this.tableLayoutPanel1.ColumnCount = 2;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel1.Controls.Add(this.label1, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this.findBox1, 1, 1);
+            this.tableLayoutPanel1.Controls.Add(this.label2, 0, 0);
+            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            this.tableLayoutPanel1.RowCount = 2;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 64.61539F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 35.38462F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(579, 65);
+            this.tableLayoutPanel1.TabIndex = 0;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.label1.Location = new System.Drawing.Point(3, 41);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(283, 24);
+            this.label1.TabIndex = 0;
+            this.label1.Text = "Find:";
+            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // findBox1
+            // 
+            this.findBox1.DataGridView = this.gridView;
+            this.findBox1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.findBox1.Location = new System.Drawing.Point(292, 44);
+            this.findBox1.Name = "findBox1";
+            this.findBox1.Size = new System.Drawing.Size(284, 18);
+            this.findBox1.TabIndex = 1;
             // 
             // gridView
             // 
@@ -69,12 +116,11 @@ namespace pwiz.Topograph.ui.Forms
             this.colLabel,
             this.colTimePoint,
             this.colCohort,
-            this.colPath,
             this.colStatus});
             this.gridView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.gridView.Location = new System.Drawing.Point(0, 0);
             this.gridView.Name = "gridView";
-            this.gridView.Size = new System.Drawing.Size(485, 153);
+            this.gridView.Size = new System.Drawing.Size(579, 195);
             this.gridView.TabIndex = 0;
             this.gridView.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridView_CellEndEdit);
             this.gridView.RowHeaderMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.gridView_RowHeaderMouseDoubleClick);
@@ -100,11 +146,6 @@ namespace pwiz.Topograph.ui.Forms
             this.colCohort.HeaderText = "Cohort";
             this.colCohort.Name = "colCohort";
             // 
-            // colPath
-            // 
-            this.colPath.HeaderText = "Path";
-            this.colPath.Name = "colPath";
-            // 
             // colStatus
             // 
             this.colStatus.DisplayMember = "Display";
@@ -113,17 +154,30 @@ namespace pwiz.Topograph.ui.Forms
             this.colStatus.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             this.colStatus.ValueMember = "Value";
             // 
+            // label2
+            // 
+            this.tableLayoutPanel1.SetColumnSpan(this.label2, 2);
+            this.label2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.label2.Location = new System.Drawing.Point(3, 0);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(573, 41);
+            this.label2.TabIndex = 2;
+            this.label2.Text = resources.GetString("label2.Text");
+            // 
             // DataFilesForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(485, 264);
+            this.ClientSize = new System.Drawing.Size(579, 264);
             this.Controls.Add(this.splitContainer1);
             this.Name = "DataFilesForm";
             this.TabText = "DataFilesForm";
             this.Text = "DataFilesForm";
+            this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             this.splitContainer1.ResumeLayout(false);
+            this.tableLayoutPanel1.ResumeLayout(false);
+            this.tableLayoutPanel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridView)).EndInit();
             this.ResumeLayout(false);
 
@@ -133,11 +187,14 @@ namespace pwiz.Topograph.ui.Forms
 
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.DataGridView gridView;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.Label label1;
+        private pwiz.Common.Controls.FindBox findBox1;
         private System.Windows.Forms.DataGridViewTextBoxColumn colName;
         private System.Windows.Forms.DataGridViewTextBoxColumn colLabel;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTimePoint;
         private System.Windows.Forms.DataGridViewTextBoxColumn colCohort;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colPath;
         private ValidationStatusColumn colStatus;
+        private System.Windows.Forms.Label label2;
     }
 }

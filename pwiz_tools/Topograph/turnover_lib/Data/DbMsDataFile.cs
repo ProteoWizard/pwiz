@@ -28,7 +28,6 @@ namespace pwiz.Topograph.Data
         public virtual DbWorkspace Workspace { get; set; }
         public virtual String Name { get; set; }
         public virtual String Label { get; set; }
-        public virtual String Path { get; set; }
         public virtual String Cohort { get; set; }
         public virtual double? TimePoint { get; set; }
         public virtual byte[] TimesBytes { get; set; }
