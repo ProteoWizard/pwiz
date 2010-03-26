@@ -149,6 +149,13 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
+        public Library TryGetLibrary(LibrarySpec spec)
+        {
+            Library library = null;
+            _loadedLibraries.TryGetValue(spec.Name, out library);
+            return library;
+        }
+
         public void BuildLibrary(IDocumentContainer container, ILibraryBuilder builder)
         {
             Action<IDocumentContainer, ILibraryBuilder> buildAction = BuildLibraryBackground;

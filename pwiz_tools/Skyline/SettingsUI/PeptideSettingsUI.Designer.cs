@@ -62,6 +62,7 @@ namespace pwiz.Skyline.SettingsUI
             this.textMaxLength = new System.Windows.Forms.TextBox();
             this.textMinLength = new System.Windows.Forms.TextBox();
             this.tabLibrary = new System.Windows.Forms.TabPage();
+            this.btnExplore = new System.Windows.Forms.Button();
             this.btnBuildLibrary = new System.Windows.Forms.Button();
             this.panelPick = new System.Windows.Forms.Panel();
             this.comboRank = new System.Windows.Forms.ComboBox();
@@ -401,6 +402,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // tabLibrary
             // 
+            this.tabLibrary.Controls.Add(this.btnExplore);
             this.tabLibrary.Controls.Add(this.btnBuildLibrary);
             this.tabLibrary.Controls.Add(this.panelPick);
             this.tabLibrary.Controls.Add(this.editLibraries);
@@ -413,9 +415,19 @@ namespace pwiz.Skyline.SettingsUI
             this.tabLibrary.Text = "Library";
             this.tabLibrary.UseVisualStyleBackColor = true;
             // 
+            // btnExplore
+            // 
+            this.btnExplore.Location = new System.Drawing.Point(272, 96);
+            this.btnExplore.Name = "btnExplore";
+            this.btnExplore.Size = new System.Drawing.Size(75, 23);
+            this.btnExplore.TabIndex = 5;
+            this.btnExplore.Text = "&Explore...";
+            this.btnExplore.UseVisualStyleBackColor = true;
+            this.btnExplore.Click += new System.EventHandler(this.btnExplore_Click);
+            // 
             // btnBuildLibrary
             // 
-            this.btnBuildLibrary.Location = new System.Drawing.Point(264, 66);
+            this.btnBuildLibrary.Location = new System.Drawing.Point(272, 66);
             this.btnBuildLibrary.Name = "btnBuildLibrary";
             this.btnBuildLibrary.Size = new System.Drawing.Size(75, 23);
             this.btnBuildLibrary.TabIndex = 4;
@@ -510,7 +522,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // editLibraries
             // 
-            this.editLibraries.Location = new System.Drawing.Point(264, 36);
+            this.editLibraries.Location = new System.Drawing.Point(272, 36);
             this.editLibraries.Name = "editLibraries";
             this.editLibraries.Size = new System.Drawing.Size(75, 23);
             this.editLibraries.TabIndex = 2;
@@ -533,7 +545,7 @@ namespace pwiz.Skyline.SettingsUI
             this.listLibraries.FormattingEnabled = true;
             this.listLibraries.Location = new System.Drawing.Point(28, 36);
             this.listLibraries.Name = "listLibraries";
-            this.listLibraries.Size = new System.Drawing.Size(217, 94);
+            this.listLibraries.Size = new System.Drawing.Size(226, 94);
             this.listLibraries.TabIndex = 1;
             this.listLibraries.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.listLibraries_ItemCheck);
             // 
@@ -694,5 +706,6 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.TextBox textMeasureRTWindow;
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.ComboBox comboBackgroundProteome;
+        private System.Windows.Forms.Button btnExplore;
     }
 }

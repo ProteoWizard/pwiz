@@ -1138,7 +1138,7 @@ namespace pwiz.Skyline.Model
     public class TransitionGroup : Identity
     {
         public const int MIN_PRECURSOR_CHARGE = 1;
-        public const int MAX_PRECURSOR_CHARGE = 5;
+        public const int MAX_PRECURSOR_CHARGE = 6;
 
         private readonly Peptide _peptide;
 

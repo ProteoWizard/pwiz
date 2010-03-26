@@ -98,6 +98,8 @@ namespace pwiz.Skyline.SettingsUI
             _driverBackgroundProteome = new SettingsListComboDriver<BackgroundProteomeSpec>(comboBackgroundProteome, Settings.Default.BackgroundProteomeList);
             _driverBackgroundProteome.LoadList(_peptideSettings.BackgroundProteome.Name);
 
+            btnExplore.Enabled = _driverLibrary.List.Count > 0 ? true : false;
+
             comboMatching.SelectedIndex = (int)Libraries.Pick;
 
             _lastRankId = Libraries.RankId;
@@ -313,7 +315,14 @@ namespace pwiz.Skyline.SettingsUI
         {
             _driverLibrary.EditList();
             if (listLibraries.CheckedIndices.Count == 0)
+            {
                 panelPick.Visible = false;
+                btnExplore.Enabled = false;
+            }
+            else
+            {
+                btnExplore.Enabled = true;
+            }
         }
 
         private void btnBuildLibrary_Click(object sender, EventArgs e)
@@ -483,6 +492,19 @@ namespace pwiz.Skyline.SettingsUI
             // so the saved value is cleared.
             if (textPeptideCount.Enabled)
                 _lastPeptideCount = null;
+        }
+
+        private void btnExplore_Click(object sender, EventArgs e)
+        {
+            ShowViewLibraryDlg();
+        }
+
+        public void ShowViewLibraryDlg()
+        {
+            var dlg = new ViewLibraryDlg(_libraryManager, _driverLibrary);
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+            {
+            }
         }
 
         private void btnEditStaticMods_Click(object sender, EventArgs e)
