@@ -417,7 +417,7 @@ namespace pwiz.Skyline.Model
             return AddPeptideGroups(importer.Import(reader, textSeq), false, to, out firstAdded);
         }
 
-        private SrmDocument AddPeptideGroups(IEnumerable<PeptideGroupDocNode> peptideGroupsNew, bool peptideList, IdentityPath to, out IdentityPath firstAdded)
+        public SrmDocument AddPeptideGroups(IEnumerable<PeptideGroupDocNode> peptideGroupsNew, bool peptideList, IdentityPath to, out IdentityPath firstAdded)
         {
             var peptideGroupsAdd = peptideGroupsNew.ToArray();
 

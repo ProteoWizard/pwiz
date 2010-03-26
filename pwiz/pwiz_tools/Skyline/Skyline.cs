@@ -1138,36 +1138,44 @@ namespace pwiz.Skyline
         {
             var pasteDlg = new PasteDlg(this)
             {
+                SelectedPath = SelectedPath,
                 PasteFormat = PasteFormat.fasta
             };
-            pasteDlg.ShowDialog(this);
+            if (pasteDlg.ShowDialog(this) == DialogResult.OK)
+                SelectedPath = pasteDlg.SelectedPath;
         }
 
         private void insertPeptidesToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var pasteDlg = new PasteDlg(this)
             {
+                SelectedPath = SelectedPath,
                 PasteFormat = PasteFormat.peptide_list
             };
-            pasteDlg.ShowDialog(this);
+            if (pasteDlg.ShowDialog(this) == DialogResult.OK)
+                SelectedPath = pasteDlg.SelectedPath;
         }
 
         private void insertProteinsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var pasteDlg = new PasteDlg(this)
             {
+                SelectedPath = SelectedPath,
                 PasteFormat = PasteFormat.protein_list
             };
-            pasteDlg.ShowDialog(this);
+            if (pasteDlg.ShowDialog(this) == DialogResult.OK)
+                SelectedPath = pasteDlg.SelectedPath;
         }
 
         private void insertTransitionListMenuItem_Click(object sender, EventArgs e)
         {
             var pasteDlg = new PasteDlg(this)
             {
+                SelectedPath = SelectedPath,
                 PasteFormat = PasteFormat.transition_list
             };
-            pasteDlg.ShowDialog(this);
+            if (pasteDlg.ShowDialog(this) == DialogResult.OK)
+                SelectedPath = pasteDlg.SelectedPath;
         }
 
         private void refineMenuItem_Click(object sender, EventArgs e)
@@ -1639,13 +1647,13 @@ namespace pwiz.Skyline
                         }
                         peptideGroupName = fastaSequence.Name;
                         peptideGroup = fastaSequence;
-                        if (peptideSequence != null)
+                        if (peptideSequence == null)
                         {
-                            peptideDocNodes.Add(fastaSequence.CreatePeptideDocNode(settings, peptideSequence));
+                            peptideDocNodes.AddRange(fastaSequence.CreatePeptideDocNodes(settings, true));
                         }
                         else
                         {
-                            peptideDocNodes.AddRange(fastaSequence.CreatePeptideDocNodes(settings, true));
+                            peptideDocNodes.Add(fastaSequence.CreatePeptideDocNode(settings, peptideSequence));
                         }
                         peptideDocNodes.Sort(FastaSequence.ComparePeptides);
                     }
@@ -1705,6 +1713,7 @@ namespace pwiz.Skyline
                     }
                 }
                 e.Node.Text = EmptyNode.TEXT_EMPTY;
+                e.Node.EnsureVisible();
             }
             else if (!e.CancelEdit)
             {

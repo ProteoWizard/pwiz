@@ -70,14 +70,14 @@
             this.cbLibraryPick = new System.Windows.Forms.CheckBox();
             this.label13 = new System.Windows.Forms.Label();
             this.tabInstrument = new System.Windows.Forms.TabPage();
+            this.textMaxTrans = new System.Windows.Forms.TextBox();
+            this.label17 = new System.Windows.Forms.Label();
             this.textMzMatchTolerance = new System.Windows.Forms.TextBox();
             this.label16 = new System.Windows.Forms.Label();
             this.label10 = new System.Windows.Forms.Label();
             this.label11 = new System.Windows.Forms.Label();
             this.textMaxMz = new System.Windows.Forms.TextBox();
             this.textMinMz = new System.Windows.Forms.TextBox();
-            this.label17 = new System.Windows.Forms.Label();
-            this.textMaxTrans = new System.Windows.Forms.TextBox();
             this.tabControl1.SuspendLayout();
             this.tabGeneral.SuspendLayout();
             this.tabFilter.SuspendLayout();
@@ -193,9 +193,9 @@
             this.label12.AutoSize = true;
             this.label12.Location = new System.Drawing.Point(208, 93);
             this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(113, 13);
+            this.label12.Size = new System.Drawing.Size(112, 13);
             this.label12.TabIndex = 6;
-            this.label12.Text = "&Declustering Potential:";
+            this.label12.Text = "&Declustering potential:";
             // 
             // comboCollisionEnergy
             // 
@@ -533,6 +533,22 @@
             this.tabInstrument.Text = "Instrument";
             this.tabInstrument.UseVisualStyleBackColor = true;
             // 
+            // textMaxTrans
+            // 
+            this.textMaxTrans.Location = new System.Drawing.Point(27, 160);
+            this.textMaxTrans.Name = "textMaxTrans";
+            this.textMaxTrans.Size = new System.Drawing.Size(68, 20);
+            this.textMaxTrans.TabIndex = 7;
+            // 
+            // label17
+            // 
+            this.label17.AutoSize = true;
+            this.label17.Location = new System.Drawing.Point(24, 144);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(80, 13);
+            this.label17.TabIndex = 6;
+            this.label17.Text = "M&ax transitions:";
+            // 
             // textMzMatchTolerance
             // 
             this.textMzMatchTolerance.Location = new System.Drawing.Point(27, 99);
@@ -580,22 +596,6 @@
             this.textMinMz.Name = "textMinMz";
             this.textMinMz.Size = new System.Drawing.Size(68, 20);
             this.textMinMz.TabIndex = 1;
-            // 
-            // label17
-            // 
-            this.label17.AutoSize = true;
-            this.label17.Location = new System.Drawing.Point(24, 144);
-            this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size(80, 13);
-            this.label17.TabIndex = 6;
-            this.label17.Text = "M&ax transitions:";
-            // 
-            // textMaxTrans
-            // 
-            this.textMaxTrans.Location = new System.Drawing.Point(27, 160);
-            this.textMaxTrans.Name = "textMaxTrans";
-            this.textMaxTrans.Size = new System.Drawing.Size(68, 20);
-            this.textMaxTrans.TabIndex = 7;
             // 
             // TransitionSettingsUI
             // 

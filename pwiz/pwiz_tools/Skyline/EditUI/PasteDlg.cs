@@ -23,11 +23,11 @@ using System.IO;
 using System.Windows.Forms;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -100,7 +100,23 @@ namespace pwiz.Skyline.EditUI
             DocumentUiContainer.UnlistenUI(OnDocumentUIChanged);
         }
 
-        public SrmTreeNode SelectedTreeNode { get; set; }
+        private IdentityPath _selectedPath;
+        public IdentityPath SelectedPath
+        {
+            get { return _selectedPath; }
+            set
+            {
+                _selectedPath = value;
+
+                // Handle insert node path
+                if (_selectedPath != null &&
+                    _selectedPath.Depth == (int)SrmDocument.Level.PeptideGroups &&
+                    _selectedPath.GetIdentity((int)SrmDocument.Level.PeptideGroups) == SequenceTree.NODE_INSERT_ID)
+                {
+                    _selectedPath = null;
+                }
+            }
+        }
 
         public void ShowError(PasteError pasteError)
         {
@@ -134,10 +150,18 @@ namespace pwiz.Skyline.EditUI
 
         private void btnValidate_Click(object sender, EventArgs e)
         {
-            var document = GetNewDocument(DocumentUiContainer.Document);
-            if (document != null)
+            var origPath = SelectedPath;
+            try
             {
-                ShowNoErrors();
+                var document = GetNewDocument(DocumentUiContainer.Document);
+                if (document != null)
+                {
+                    ShowNoErrors();
+                }
+            }
+            finally
+            {
+                SelectedPath = origPath;
             }
         }
 
@@ -188,7 +212,7 @@ namespace pwiz.Skyline.EditUI
             bool missingProteinName = false;
             bool anyProteinName = false;
             var backgroundProteome = GetBackgroundProteome(document);
-            for (int i = 0; i < gridViewPeptides.Rows.Count; i++)
+            for (int i = gridViewPeptides.Rows.Count - 1; i >= 0; i--)
             {
                 var row = gridViewPeptides.Rows[i];
                 var peptideSequence = Convert.ToString(row.Cells[colPeptideSequence.Index].Value);
@@ -219,7 +243,7 @@ namespace pwiz.Skyline.EditUI
                         return null;
                     }
                     missingProteinName = true;
-                    peptideGroupDocNode = GetLastPeptideGroupDocNode(document);
+                    peptideGroupDocNode = GetSelectedPeptideGroupDocNode(document);
                     if (!IsPeptideListDocNode(peptideGroupDocNode))
                     {
                         peptideGroupDocNode = null;
@@ -255,20 +279,30 @@ namespace pwiz.Skyline.EditUI
                         }
                         peptideGroupDocNode = new PeptideGroupDocNode(peptideGroup, proteinName, peptideGroup.Description, new PeptideDocNode[0]);
                     }
-                    document = (SrmDocument) document.Add(peptideGroupDocNode);
+                    // Add to the end, if no insert node
+                    var to = SelectedPath;
+                    if (to == null || to.Depth < (int)SrmDocument.Level.PeptideGroups)
+                        document = (SrmDocument)document.Add(peptideGroupDocNode);
+                    else
+                    {
+                        Identity toId = SelectedPath.GetIdentity((int) SrmDocument.Level.PeptideGroups);
+                        document = (SrmDocument) document.Insert(toId, peptideGroupDocNode);
+                    }
+                    SelectedPath = new IdentityPath(peptideGroupDocNode.Id);
                 }
-                var children = new List<PeptideDocNode>();
+                var peptides = new List<PeptideDocNode>();
                 foreach (PeptideDocNode peptideDocNode in peptideGroupDocNode.Children)
                 {
-                    children.Add(peptideDocNode);
+                    peptides.Add(peptideDocNode);
                 }
 
                 var fastaSequence = peptideGroupDocNode.PeptideGroup as FastaSequence;
                 int missedCleavages = document.Settings.PeptideSettings.Enzyme.CountCleavagePoints(peptideSequence);
+                PeptideDocNode nodePepNew;
                 if (fastaSequence != null)
                 {
-                    var peptideDocNode = fastaSequence.CreatePeptideDocNode(document.Settings, peptideSequence);
-                    if (peptideDocNode == null)
+                    nodePepNew = fastaSequence.CreatePeptideDocNode(document.Settings, peptideSequence);
+                    if (nodePepNew == null)
                     {
                         ShowPeptideError(new PasteError
                                              {
@@ -278,15 +312,19 @@ namespace pwiz.Skyline.EditUI
                                              });
                         return null;
                     }
-                    children.Add(peptideDocNode);
                 }
                 else
                 {
                     var newPeptide = new Peptide(null, peptideSequence, null, null, missedCleavages);
-                    children.Add(new PeptideDocNode(newPeptide, new TransitionGroupDocNode[0]).ChangeSettings(document.Settings, SrmSettingsDiff.ALL));
+                    nodePepNew = new PeptideDocNode(newPeptide, new TransitionGroupDocNode[0]).ChangeSettings(document.Settings, SrmSettingsDiff.ALL);
                 }
-                var newPeptideGroupDocNode = new PeptideGroupDocNode(peptideGroupDocNode.PeptideGroup, peptideGroupDocNode.Annotations, peptideGroupDocNode.Name, peptideGroupDocNode.Description, children.ToArray(), true);
-                document = (SrmDocument) document.ReplaceChild(newPeptideGroupDocNode);
+                // Avoid adding an existing peptide a second time.
+                if (!peptides.Contains(nodePep => Equals(nodePep.Peptide, nodePepNew.Peptide)))
+                {
+                    peptides.Add(nodePepNew);
+                    var newPeptideGroupDocNode = new PeptideGroupDocNode(peptideGroupDocNode.PeptideGroup, peptideGroupDocNode.Annotations, peptideGroupDocNode.Name, peptideGroupDocNode.Description, peptides.ToArray(), true);
+                    document = (SrmDocument)document.ReplaceChild(newPeptideGroupDocNode);
+                }
             }
             return document;
         }
@@ -299,7 +337,7 @@ namespace pwiz.Skyline.EditUI
         private SrmDocument AddProteins(SrmDocument document)
         {
             var backgroundProteome = GetBackgroundProteome(document);
-            for (int i = 0; i < gridViewProteins.Rows.Count; i++)
+            for (int i = gridViewProteins.Rows.Count - 1; i >= 0; i--)
             {
                 var row = gridViewProteins.Rows[i];
                 var proteinName = Convert.ToString(row.Cells[colProteinName.Index].Value);
@@ -356,9 +394,18 @@ namespace pwiz.Skyline.EditUI
                 {
                     fastaSequence = new FastaSequence(fastaSequence.Name, description, fastaSequence.Alternatives, fastaSequence.Sequence);
                 }
-                document = (SrmDocument) document.Add(
-                    new PeptideGroupDocNode(fastaSequence, fastaSequence.Name, fastaSequence.Description, 
-                    fastaSequence.CreatePeptideDocNodes(document.Settings, true).ToArray()));
+                var nodeGroupPep = new PeptideGroupDocNode(fastaSequence, fastaSequence.Name,
+                    fastaSequence.Description, new PeptideDocNode[0]);
+                nodeGroupPep = nodeGroupPep.ChangeSettings(document.Settings, SrmSettingsDiff.ALL);
+                var to = SelectedPath;
+                if (to == null || to.Depth < (int)SrmDocument.Level.PeptideGroups)
+                    document = (SrmDocument)document.Add(nodeGroupPep);
+                else
+                {
+                    Identity toId = SelectedPath.GetIdentity((int)SrmDocument.Level.PeptideGroups);
+                    document = (SrmDocument)document.Insert(toId, nodeGroupPep);
+                }
+                SelectedPath = new IdentityPath(nodeGroupPep.Id);
             }
             return document;
         }
@@ -434,10 +481,11 @@ namespace pwiz.Skyline.EditUI
             var importer = new FastaImporter(DocumentUiContainer.DocumentUI, false);
             try
             {
-                foreach (var peptideGroupDocNode in importer.Import(new StringReader(tbxFasta.Text)))
-                {
-                    document = (SrmDocument) document.Add(peptideGroupDocNode);
-                }
+                var reader = new StringReader(tbxFasta.Text);
+                IdentityPath to = SelectedPath;
+                IdentityPath firstAdded;
+                document = document.AddPeptideGroups(importer.Import(reader), false, to, out firstAdded);
+                SelectedPath = firstAdded;
             }
             catch (Exception exception)
             {
@@ -459,7 +507,7 @@ namespace pwiz.Skyline.EditUI
             bool anyProteinName = false;
             bool isHeavyAllowed = document.Settings.PeptideSettings.Modifications.HasHeavyImplicitModifications;
             var backgroundProteome = GetBackgroundProteome(document);
-            for (int i = 0; i < gridViewTransitionList.Rows.Count; i++)
+            for (int i = gridViewTransitionList.Rows.Count - 1; i >= 0; i--)
             {
                 var row = gridViewTransitionList.Rows[i];
                 var peptideSequence = Convert.ToString(row.Cells[colTransitionPeptide.Index].Value);
@@ -522,7 +570,7 @@ namespace pwiz.Skyline.EditUI
                         return null;
                     }
                     missingProteinName = true;
-                    peptideGroupDocNode = GetLastPeptideGroupDocNode(document);
+                    peptideGroupDocNode = GetSelectedPeptideGroupDocNode(document);
                     if (!IsPeptideListDocNode(peptideGroupDocNode))
                     {
                         peptideGroupDocNode = null;
@@ -592,14 +640,20 @@ namespace pwiz.Skyline.EditUI
                     }
                     else
                     {
-                        PeptideGroup peptideGroup = backgroundProteome.GetFastaSequence(proteinName);
-                        if (peptideGroup == null)
-                        {
-                            peptideGroup = new PeptideGroup();
-                        }
+                        PeptideGroup peptideGroup = backgroundProteome.GetFastaSequence(proteinName) ??
+                                                    new PeptideGroup();
                         peptideGroupDocNode = new PeptideGroupDocNode(peptideGroup, proteinName, peptideGroup.Description, new PeptideDocNode[0]);
                     }
-                    document = (SrmDocument)document.Add(peptideGroupDocNode);
+                    // Add to the end, if no insert node
+                    var to = SelectedPath;
+                    if (to == null || to.Depth < (int)SrmDocument.Level.PeptideGroups)
+                        document = (SrmDocument)document.Add(peptideGroupDocNode);
+                    else
+                    {
+                        Identity toId = SelectedPath.GetIdentity((int)SrmDocument.Level.PeptideGroups);
+                        document = (SrmDocument)document.Insert(toId, peptideGroupDocNode);
+                    }
+                    SelectedPath = new IdentityPath(peptideGroupDocNode.Id);
                 }
                 var children = new List<PeptideDocNode>();
                 bool transitionAdded = false;
@@ -634,6 +688,9 @@ namespace pwiz.Skyline.EditUI
                             });
                             return null;
                         }
+                        // Keep default transition groups from being added.
+                        peptideDocNode = (PeptideDocNode)
+                            peptideDocNode.ChangeChildren(new TransitionGroupDocNode[0]);
                     }
                     else
                     {
@@ -642,9 +699,9 @@ namespace pwiz.Skyline.EditUI
                     }
                     children.Add(AddTransition(document, peptideDocNode, precursorCharge, isotopeLabelType,
                                                       productCharge, ionType.Value, ordinal.Value));
-                
+
                 }
-                var newPeptideGroupDocNode = new PeptideGroupDocNode(peptideGroupDocNode.PeptideGroup, peptideGroupDocNode.Annotations, 
+                var newPeptideGroupDocNode = new PeptideGroupDocNode(peptideGroupDocNode.PeptideGroup, peptideGroupDocNode.Annotations,
                     peptideGroupDocNode.Name, peptideGroupDocNode.Description, children.ToArray(), true);
                 document = (SrmDocument)document.ReplaceChild(newPeptideGroupDocNode);
             }
@@ -655,7 +712,7 @@ namespace pwiz.Skyline.EditUI
             IsotopeLabelType isotopeLabelType, int productCharge, IonType ionType, int ordinal)
         {
             TransitionGroupDocNode transitionGroupDocNode = null;
-            var transitionGroups = new List<DocNode>();
+            var transitionGroups = new List<TransitionGroupDocNode>();
             foreach (TransitionGroupDocNode node in peptideDocNode.Children)
             {
                 if (node.TransitionGroup.PrecursorCharge == precursorCharge && node.TransitionGroup.LabelType == isotopeLabelType)
@@ -678,13 +735,27 @@ namespace pwiz.Skyline.EditUI
                 
             }
             int offset = Transition.OrdinalToOffset(ionType, ordinal, peptideDocNode.Peptide.Length);
-            var transitions = new List<DocNode>(transitionGroupDocNode.Children);
+            var transitions = new List<TransitionDocNode>();
+            foreach (TransitionDocNode nodeTran in transitionGroupDocNode.Children)
+                transitions.Add(nodeTran);
+
             var transition = new Transition(transitionGroupDocNode.TransitionGroup, ionType, offset, productCharge);
+            // Avoid adding the same transition multiple times
+            if (transitions.Contains(nodeTran => Equals(nodeTran.Transition, transition)))
+                return peptideDocNode;
+
             transitions.Add(new TransitionDocNode(transition, 
                 document.Settings.GetFragmentMass(transition, null), null));
-            transitionGroupDocNode = (TransitionGroupDocNode) transitionGroupDocNode.ChangeChildren(transitions);
+            transitions.Sort(TransitionGroup.CompareTransitions);
+
+            transitionGroupDocNode = (TransitionGroupDocNode) transitionGroupDocNode
+                .ChangeAutoManageChildren(false)
+                .ChangeChildren(transitions.ToArray());
+            transitionGroupDocNode = transitionGroupDocNode.ChangeSettings(document.Settings,
+                peptideDocNode.ExplicitMods, SrmSettingsDiff.PROPS);
             transitionGroups.Add(transitionGroupDocNode);
-            return (PeptideDocNode) peptideDocNode.ChangeChildren(transitionGroups);
+            transitionGroups.Sort(Peptide.CompareGroups);
+            return (PeptideDocNode) peptideDocNode.ChangeChildren(transitionGroups.ToArray());
         }
 
         private static PeptideGroupDocNode FindPeptideGroupDocNode(SrmDocument document, String name)
@@ -699,8 +770,12 @@ namespace pwiz.Skyline.EditUI
             return null;
         }
 
-        private static PeptideGroupDocNode GetLastPeptideGroupDocNode(SrmDocument document)
+        private PeptideGroupDocNode GetSelectedPeptideGroupDocNode(SrmDocument document)
         {
+            var to = SelectedPath;
+            if (to != null && to.Depth >= (int)SrmDocument.Level.PeptideGroups)
+                return (PeptideGroupDocNode) document.FindNode(to.GetIdentity((int) SrmDocument.Level.PeptideGroups));
+
             PeptideGroupDocNode lastPeptideGroupDocuNode = null;
             foreach (PeptideGroupDocNode peptideGroupDocNode in document.PeptideGroups)
             {
@@ -750,6 +825,22 @@ namespace pwiz.Skyline.EditUI
                     tabControl1.Controls.Add(tab);
                 }
                 tabControl1.SelectedTab = tab;
+                Text = "Insert " + tabControl1.Text;
+            }
+        }
+
+        public string Description
+        {
+            get
+            {
+                switch (PasteFormat)
+                {
+                    case PasteFormat.fasta: return "Insert FASTA";
+                    case PasteFormat.protein_list: return "Insert protein list";
+                    case PasteFormat.peptide_list: return "Insert peptide list";
+                    case PasteFormat.transition_list: return "Insert transition list";
+                }
+                return "Insert";
             }
         }
 
@@ -819,12 +910,7 @@ namespace pwiz.Skyline.EditUI
                 gridViewProteins.Rows.Remove(row);
             }
 
-            FastaSequence fastaSequence = null;
-            var backgroundProteome = GetBackgroundProteome(DocumentUiContainer.DocumentUI);
-            if (!backgroundProteome.IsNone)
-            {
-                fastaSequence = backgroundProteome.GetFastaSequence(proteinName);
-            }
+            FastaSequence fastaSequence = GetFastaSequence(row, proteinName);
             if (fastaSequence == null)
             {
                 row.Cells[colProteinDescription.Index].Value = null;
@@ -865,17 +951,7 @@ namespace pwiz.Skyline.EditUI
             {
                 return;
             }
-            var fastaSequence = GetBackgroundProteome(DocumentUiContainer.Document).GetFastaSequence(proteinName);
-            if (fastaSequence == null)
-            {
-                // Sometimes the protein name in the background proteome will have an extra "|" on the end.
-                // In that case, update the name of the protein to match the one in the database.
-                fastaSequence = GetBackgroundProteome(DocumentUiContainer.Document).GetFastaSequence(proteinName + "|");
-                if (fastaSequence != null)
-                {
-                    row.Cells[colPeptideProtein.Index].Value = fastaSequence.Name;
-                }
-            }
+            FastaSequence fastaSequence = GetFastaSequence(row, proteinName);
             if (fastaSequence == null)
             {
                 row.Cells[colPeptideProteinDescription.Index].Value = null;
@@ -893,24 +969,49 @@ namespace pwiz.Skyline.EditUI
             {
                 return;
             }
+            var row = gridViewTransitionList.Rows[e.RowIndex];
+            var proteinName = Convert.ToString(row.Cells[colTransitionProteinName.Index].Value);
+            var peptideSequence = Convert.ToString(row.Cells[colTransitionPeptide.Index].Value);
             var column = gridViewTransitionList.Columns[e.ColumnIndex];
+            if (column == colTransitionPeptide)
+            {
+                if (String.IsNullOrEmpty(proteinName) && !String.IsNullOrEmpty(peptideSequence))
+                {
+                    row.Cells[colTransitionProteinName.Index].Value = GetProteinNameForPeptideSequence(peptideSequence);
+                }
+                return;
+            }
             if (column != colTransitionProteinName)
             {
                 return;
             }
-            var row = gridViewTransitionList.Rows[e.RowIndex];
-            var proteinName = Convert.ToString(row.Cells[e.ColumnIndex].Value);
 
-            FastaSequence fastaSequence = null;
-            var backgroundProteome = GetBackgroundProteome(DocumentUiContainer.DocumentUI);
-            if (!backgroundProteome.IsNone)
-            {
-                fastaSequence = backgroundProteome.GetFastaSequence(proteinName);
-            }
+            FastaSequence fastaSequence = GetFastaSequence(row, proteinName);
             if (fastaSequence != null)
             {
                 row.Cells[colTransitionProteinDescription.Index].Value = fastaSequence.Description;
             }
+        }
+
+        private FastaSequence GetFastaSequence(DataGridViewRow row, string proteinName)
+        {
+            var backgroundProteome = GetBackgroundProteome(DocumentUiContainer.DocumentUI);
+            if (backgroundProteome.IsNone)
+                return null;
+
+            var fastaSequence = backgroundProteome.GetFastaSequence(proteinName);
+            if (fastaSequence == null)
+            {
+                // Sometimes the protein name in the background proteome will have an extra "|" on the end.
+                // In that case, update the name of the protein to match the one in the database.
+                fastaSequence = backgroundProteome.GetFastaSequence(proteinName + "|");
+                if (fastaSequence != null)
+                {
+                    row.Cells[colPeptideProtein.Index].Value = fastaSequence.Name;
+                }
+            }
+
+            return fastaSequence;
         }
 
         private void OnEditingControlShowing(object sender, DataGridViewEditingControlShowingEventArgs e)
@@ -920,23 +1021,28 @@ namespace pwiz.Skyline.EditUI
 
         private void btnInsert_Click(object sender, EventArgs e)
         {
+            OkDialog();
+        }
+
+        private void OkDialog()
+        {
             bool error = false;
-            Program.MainWindow.ModifyDocument("Insert", 
-                document =>
-                {
-                    var newDocument = GetNewDocument(document);
-                    if (newDocument == null)
-                    {
-                        error = true;
-                        return document;
-                    }
-                    return newDocument;
-                });
+            Program.MainWindow.ModifyDocument(Description, 
+                                              document =>
+                                                  {
+                                                      var newDocument = GetNewDocument(document);
+                                                      if (newDocument == null)
+                                                      {
+                                                          error = true;
+                                                          return document;
+                                                      }
+                                                      return newDocument;
+                                                  });
             if (error)
             {
                 return;
             }
-            Close();
+            DialogResult = DialogResult.OK;
         }
 
         private void tbxFasta_TextChanged(object sender, EventArgs e)

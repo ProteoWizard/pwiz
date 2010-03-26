@@ -61,7 +61,7 @@ namespace pwiz.Skyline.Controls
         /// <summary>
         /// Identity instance used to select the last "dummy" node in the tree.
         /// </summary>
-        private static readonly Identity NODE_INSERT_ID = new InsertId();
+        public static readonly Identity NODE_INSERT_ID = new InsertId();
 
         /// <summary>
         /// Enum of images used in the tree, in index order.
