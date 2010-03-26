@@ -589,7 +589,7 @@ namespace pwiz.SkylineTest
                 "fragment_range_first=\"y1\" fragment_range_last=\"last y-ion\" />");
             AssertEx.DeserializeError<TransitionFilter>("<transition_filter precursor_charges=\"3\" product_charges=\"4\" " +
                 "fragment_range_first=\"y1\" fragment_range_last=\"last y-ion\" />");
-            AssertEx.DeserializeError<TransitionFilter>("<transition_filter precursor_charges=\"6\" product_charges=\"2\" " +
+            AssertEx.DeserializeError<TransitionFilter>("<transition_filter precursor_charges=\"7\" product_charges=\"2\" " +
                 "fragment_range_first=\"y1\" fragment_range_last=\"last y-ion\" />");
             AssertEx.DeserializeError<TransitionFilter>("<transition_filter precursor_charges=\"\" product_charges=\"1\" " +
                 "fragment_range_first=\"y1\" fragment_range_last=\"last y-ion\" />");
