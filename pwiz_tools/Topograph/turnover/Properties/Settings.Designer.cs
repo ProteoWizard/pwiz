@@ -72,5 +72,20 @@ namespace pwiz.Topograph.ui.Properties {
                 this["ExportResultsDirectory"] = value;
             }
         }
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string FastaDirectory
+        {
+            get
+            {
+                return ((string)(this["FastaDirectory"]));
+            }
+            set
+            {
+                this["FastaDirectory"] = value;
+            }
+        }
+
     }
 }

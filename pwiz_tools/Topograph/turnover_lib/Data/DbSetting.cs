@@ -38,5 +38,6 @@ namespace pwiz.Topograph.Data
         default_peptide_quantity,
         data_directory,
         err_on_side_of_lower_abundance,
+        protein_description_key,
     }
 }

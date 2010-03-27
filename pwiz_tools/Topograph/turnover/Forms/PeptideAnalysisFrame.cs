@@ -65,7 +65,8 @@ namespace pwiz.Topograph.ui.Forms
         {
             Text = TabText = PeptideAnalysis.GetLabel();
             tbxSequence.Text = PeptideAnalysis.Peptide.FullSequence;
-            tbxProtein.Text = PeptideAnalysis.Peptide.ProteinName + " " + PeptideAnalysis.Peptide.ProteinDescription;
+            tbxProteinDescription.Text = PeptideAnalysis.Peptide.ProteinDescription;
+            tbxProteinName.Text = PeptideAnalysis.Peptide.GetProteinKey();
         }
 
         protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)

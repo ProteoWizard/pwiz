@@ -48,6 +48,7 @@ namespace pwiz.Topograph.ui.Forms
         {
             InitializeComponent();
             TabText = Name = "Peptides";
+            btnAnalyzePeptides.Enabled = Workspace.Peptides.GetChildCount() > 0;
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -58,8 +59,6 @@ namespace pwiz.Topograph.ui.Forms
 
         private void Requery()
         {
-            tbxMinTracerCount.Text = Workspace.GetMinTracerCount().ToString();
-            tbxExcludeAas.Text = Workspace.GetExcludeAas();
             dataGridView.Rows.Clear();
             peptideRows.Clear();
             AddAndUpdateRows(Workspace.Peptides.ListChildren());
@@ -129,8 +128,9 @@ namespace pwiz.Topograph.ui.Forms
         {
             var peptide = (Peptide) row.Tag;
             row.Cells[colSequence.Name].Value = peptide.FullSequence;
-            row.Cells[colProtein.Name].Value = peptide.ProteinName;
+            row.Cells[colProtein.Name].Value = peptide.GetProteinKey();
             row.Cells[colProteinDescription.Name].Value = peptide.ProteinDescription;
+            row.Cells[colProteinDescription.Index].ToolTipText = peptide.ProteinDescription;
             row.Cells[colMaxTracerCount.Name].Value = peptide.MaxTracerCount;
             row.Cells[colSearchResultCount.Name].Value = peptide.SearchResultCount;
             // TODO
@@ -150,28 +150,6 @@ namespace pwiz.Topograph.ui.Forms
                 return;
             }
             PeptideAnalysisFrame.ShowPeptideAnalysis(peptideAnalysis);
-        }
-
-        private void tbxMinTracerCount_Leave(object sender, EventArgs e)
-        {
-            int minTracerCount = Convert.ToInt32(tbxMinTracerCount.Text);
-            if (minTracerCount == Workspace.GetMinTracerCount())
-            {
-                return;
-            }
-            Workspace.SetMinTracerCount(minTracerCount);
-            Requery();
-        }
-
-        private void tbxExcludeAas_Leave(object sender, EventArgs e)
-        {
-            var excludeAas = tbxExcludeAas.Text;
-            if (excludeAas == Workspace.GetExcludeAas())
-            {
-                return;
-            }
-            Workspace.SetExcludeAas(excludeAas);
-            Requery();
         }
 
         private void btnAnalyzePeptides_Click(object sender, EventArgs e)

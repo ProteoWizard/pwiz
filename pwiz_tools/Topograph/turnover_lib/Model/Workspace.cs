@@ -24,6 +24,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using log4net;
 using NHibernate;
@@ -252,6 +253,44 @@ namespace pwiz.Topograph.Model
                 return;
             }
             _settings.SetSetting(SettingEnum.exclude_aas, excludeAas);
+        }
+
+        public String GetProteinDescriptionKey()
+        {
+            return _settings.GetSetting(SettingEnum.protein_description_key, "");
+        }
+
+        public void SetProteinDescriptionKey(String proteinDescriptionKey)
+        {
+            if (proteinDescriptionKey == GetProteinDescriptionKey())
+            {
+                return;
+            }
+            _settings.SetSetting(SettingEnum.protein_description_key, proteinDescriptionKey);
+        }
+
+        public string GetProteinKey(string proteinName, string proteinDescription)
+        {
+            String strRegex = GetProteinDescriptionKey();
+            if (string.IsNullOrEmpty(strRegex))
+            {
+                return proteinName;
+            }
+            var regex = new Regex(strRegex);
+            var parts = new List<String>();
+            for (Match match = regex.Match(proteinDescription); match.Success; match = match.NextMatch())
+            {
+                string part = match.Groups.Count == 0 ? match.ToString() : match.Groups[0].ToString();
+                if (!parts.Contains(part))
+                {
+                    parts.Add(part);
+                }
+            }
+            if (parts.Count == 0)
+            {
+                return proteinName;
+            }
+            return string.Join(" ", parts.ToArray());
         }
 
         public double GetMassAccuracy()

@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using NHibernate;
 using NHibernate.Criterion;
 using pwiz.Topograph.Data;
@@ -160,6 +161,11 @@ namespace pwiz.Topograph.Model
             {
                 SetIfChanged(ref _searchResultCount, value);
             }
+        }
+
+        public String GetProteinKey()
+        {
+            return Workspace.GetProteinKey(ProteinName, ProteinDescription);
         }
     }
 }

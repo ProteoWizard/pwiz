@@ -21,6 +21,7 @@ namespace pwiz.Topograph.ui.Forms
             comboTracerCountType.Items.Add("Precursor Enrichments");
             comboTracerCountType.SelectedIndex = (int) Workspace.GetDefaultPeptideQuantity();
             cbxWeightSignalAbsenceMore.Checked = Workspace.GetErrOnSideOfLowerAbundance();
+            tbxProteinDescriptionKey.Text = workspace.GetProteinDescriptionKey();
         }
 
         private void btnOK_Click(object sender, EventArgs e)
@@ -30,6 +31,7 @@ namespace pwiz.Topograph.ui.Forms
                 Workspace.SetMassAccuracy(Convert.ToDouble(tbxMassAccuracy.Text));
                 Workspace.SetDefaultPeptideQuantity((PeptideQuantity)comboTracerCountType.SelectedIndex);
                 Workspace.SetErrOnSideOfLowerAbundance(cbxWeightSignalAbsenceMore.Checked);
+                Workspace.SetProteinDescriptionKey(tbxProteinDescriptionKey.Text);
             }
             Close();
         }

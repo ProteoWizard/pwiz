@@ -47,18 +47,20 @@
             this.peptidesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dataFilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideAnalysesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.statusToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.queryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mercuryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.halfLivesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.locksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.enrichmentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.modificationsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.updateProteinNamesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.machineSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dataDirectoryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.errorsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.debuggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.debuggingToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.runningJobsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.databaseLocksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.errorsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -77,7 +79,8 @@
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.viewToolStripMenuItem,
-            this.settingsToolStripMenuItem});
+            this.settingsToolStripMenuItem,
+            this.debuggingToolStripMenuItem1});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(984, 24);
@@ -191,12 +194,9 @@
             this.peptidesToolStripMenuItem,
             this.dataFilesToolStripMenuItem,
             this.peptideAnalysesToolStripMenuItem,
-            this.statusToolStripMenuItem,
             this.queryToolStripMenuItem,
             this.mercuryToolStripMenuItem,
-            this.halfLivesToolStripMenuItem,
-            this.locksToolStripMenuItem,
-            this.errorsToolStripMenuItem});
+            this.halfLivesToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "View";
@@ -225,14 +225,6 @@
             this.peptideAnalysesToolStripMenuItem.Text = "Peptide Analyses";
             this.peptideAnalysesToolStripMenuItem.Click += new System.EventHandler(this.peptideAnalysesToolStripMenuItem_Click);
             // 
-            // statusToolStripMenuItem
-            // 
-            this.statusToolStripMenuItem.Enabled = false;
-            this.statusToolStripMenuItem.Name = "statusToolStripMenuItem";
-            this.statusToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
-            this.statusToolStripMenuItem.Text = "Running Jobs";
-            this.statusToolStripMenuItem.Click += new System.EventHandler(this.statusToolStripMenuItem_Click);
-            // 
             // queryToolStripMenuItem
             // 
             this.queryToolStripMenuItem.Enabled = false;
@@ -256,14 +248,6 @@
             this.halfLivesToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.halfLivesToolStripMenuItem.Text = "Half Lives";
             this.halfLivesToolStripMenuItem.Click += new System.EventHandler(this.halfLivesToolStripMenuItem_Click);
-            // 
-            // locksToolStripMenuItem
-            // 
-            this.locksToolStripMenuItem.Enabled = false;
-            this.locksToolStripMenuItem.Name = "locksToolStripMenuItem";
-            this.locksToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
-            this.locksToolStripMenuItem.Text = "Database Locks";
-            this.locksToolStripMenuItem.Click += new System.EventHandler(this.locksToolStripMenuItem_Click);
             // 
             // settingsToolStripMenuItem
             // 
@@ -317,12 +301,44 @@
             this.dataDirectoryToolStripMenuItem.Text = "Data Directory...";
             this.dataDirectoryToolStripMenuItem.Click += new System.EventHandler(this.dataDirectoryToolStripMenuItem_Click);
             // 
-            // errorsToolStripMenuItem
+            // debuggingToolStripMenuItem
             // 
-            this.errorsToolStripMenuItem.Name = "errorsToolStripMenuItem";
-            this.errorsToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
-            this.errorsToolStripMenuItem.Text = "Errors";
-            this.errorsToolStripMenuItem.Click += new System.EventHandler(this.errorsToolStripMenuItem_Click);
+            this.debuggingToolStripMenuItem.Name = "debuggingToolStripMenuItem";
+            this.debuggingToolStripMenuItem.Size = new System.Drawing.Size(32, 19);
+            this.debuggingToolStripMenuItem.Text = "Debugging";
+            // 
+            // debuggingToolStripMenuItem1
+            // 
+            this.debuggingToolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.runningJobsToolStripMenuItem,
+            this.databaseLocksToolStripMenuItem,
+            this.errorsToolStripMenuItem1});
+            this.debuggingToolStripMenuItem1.Name = "debuggingToolStripMenuItem1";
+            this.debuggingToolStripMenuItem1.Size = new System.Drawing.Size(78, 20);
+            this.debuggingToolStripMenuItem1.Text = "Debugging";
+            // 
+            // runningJobsToolStripMenuItem
+            // 
+            this.runningJobsToolStripMenuItem.Enabled = false;
+            this.runningJobsToolStripMenuItem.Name = "runningJobsToolStripMenuItem";
+            this.runningJobsToolStripMenuItem.Size = new System.Drawing.Size(155, 22);
+            this.runningJobsToolStripMenuItem.Text = "Running Jobs";
+            this.runningJobsToolStripMenuItem.Click += new System.EventHandler(this.statusToolStripMenuItem_Click);
+            // 
+            // databaseLocksToolStripMenuItem
+            // 
+            this.databaseLocksToolStripMenuItem.Enabled = false;
+            this.databaseLocksToolStripMenuItem.Name = "databaseLocksToolStripMenuItem";
+            this.databaseLocksToolStripMenuItem.Size = new System.Drawing.Size(155, 22);
+            this.databaseLocksToolStripMenuItem.Text = "Database Locks";
+            this.databaseLocksToolStripMenuItem.Click += new System.EventHandler(this.locksToolStripMenuItem_Click);
+            // 
+            // errorsToolStripMenuItem1
+            // 
+            this.errorsToolStripMenuItem1.Name = "errorsToolStripMenuItem1";
+            this.errorsToolStripMenuItem1.Size = new System.Drawing.Size(155, 22);
+            this.errorsToolStripMenuItem1.Text = "Errors";
+            this.errorsToolStripMenuItem1.Click += new System.EventHandler(this.errorsToolStripMenuItem_Click);
             // 
             // TurnoverForm
             // 
@@ -359,7 +375,6 @@
         private System.Windows.Forms.ToolStripMenuItem peptideAnalysesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem modificationsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveWorkspaceToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem statusToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem updateProteinNamesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem queryToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem machineSettingsToolStripMenuItem;
@@ -371,8 +386,11 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem dataDirectoryToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem locksToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem outputWorkspaceSQLToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem errorsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem debuggingToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem runningJobsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem debuggingToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem databaseLocksToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem errorsToolStripMenuItem1;
     }
 }

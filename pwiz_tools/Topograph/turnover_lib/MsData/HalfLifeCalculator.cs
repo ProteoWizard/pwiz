@@ -93,7 +93,7 @@ namespace pwiz.Topograph.MsData
                     rowData.PeptideSequence = peptide.Sequence;
                     rowData.ProteinName = peptide.ProteinName;
                     rowData.ProteinDescription = peptide.ProteinDescription;
-                    var key = ByProtein ? rowData.ProteinName : rowData.ProteinDescription;
+                    var key = ByProtein ? rowData.ProteinName : rowData.PeptideSequence;
                     List<RowData> list;
                     if (!groupedRowDatas.TryGetValue(key, out list))
                     {

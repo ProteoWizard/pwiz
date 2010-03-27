@@ -110,7 +110,8 @@ namespace pwiz.Topograph.ui.Forms
                 var resultRow = calculator.ResultRows[iRow];
                 var row = dataGridView1.Rows[iRow];
                 row.Cells[colPeptide.Index].Value = resultRow.PeptideSequence;
-                row.Cells[colProtein.Index].Value = resultRow.ProteinName;
+                row.Cells[colProteinName.Index].Value = resultRow.ProteinName;
+                row.Cells[colProteinKey.Index].Value = Workspace.GetProteinKey(resultRow.ProteinName, resultRow.ProteinDescription);
                 row.Cells[colProteinDescription.Index].Value = resultRow.ProteinDescription;
                 foreach (var cohort in cohorts)
                 {
@@ -178,7 +179,7 @@ namespace pwiz.Topograph.ui.Forms
                     var halfLifeForm = new HalfLifeForm(Workspace)
                                            {
                                                Peptide = Convert.ToString(row.Cells[colPeptide.Index].Value) ?? "",
-                                               ProteinName = Convert.ToString(row.Cells[colProtein.Index].Value),
+                                               ProteinName = Convert.ToString(row.Cells[colProteinName.Index].Value),
                                                Cohort = entry.Key,
                                                MinScore = MinScore,
                                                InitialPercent = double.Parse(tbxInitialTracerPercent.Text),

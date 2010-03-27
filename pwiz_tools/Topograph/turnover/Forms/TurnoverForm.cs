@@ -29,7 +29,6 @@ using DigitalRune.Windows.Docking;
 using NHibernate;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Data.Snapshot;
-using pwiz.Topograph.Fasta;
 using pwiz.Topograph.MsData;
 using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;
@@ -91,8 +90,8 @@ namespace pwiz.Topograph.ui.Forms
                 return new[]
                 {
                         closeWorkspaceToolStripMenuItem,
-                        statusToolStripMenuItem,
-                        locksToolStripMenuItem,
+                        runningJobsToolStripMenuItem,
+                        databaseLocksToolStripMenuItem,
                         outputWorkspaceSQLToolStripMenuItem,
                 };
             }
@@ -598,19 +597,22 @@ namespace pwiz.Topograph.ui.Forms
 
         private void updateProteinNamesToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            Settings.Default.Reload();
             var openFileDialog = new OpenFileDialog
                                      {
-                                         Title = "Browse for FASTA file"
+                                         Title = "Browse for FASTA file",
+                                         Multiselect = true,
+                                         InitialDirectory = Settings.Default.FastaDirectory,
                                      };
-            openFileDialog.ShowDialog(this);
-            var fileName = openFileDialog.FileName;
-            if (string.IsNullOrEmpty(fileName))
+            if (openFileDialog.ShowDialog(this) == DialogResult.Cancel || openFileDialog.FileNames.Count() == 0)
             {
                 return;
             }
+            Settings.Default.FastaDirectory = Path.GetDirectoryName(openFileDialog.FileNames[0]);
+            Settings.Default.Save();
             var updateProteinNames = new UpdateProteinNames(Workspace)
                                          {
-                                             FastaFilePath = openFileDialog.FileName
+                                             FastaFilePaths = openFileDialog.FileNames
                                          };
             updateProteinNames.ShowDialog(this);
         }

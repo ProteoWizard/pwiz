@@ -178,7 +178,7 @@ namespace pwiz.Topograph.ui.Forms
                 var peptideAnalysisRows = new Dictionary<long, PeptideAnalysisRow>();
                 using (var session = Workspace.OpenSession())
                 {
-                    String hql = "SELECT pa.Id, pa.Peptide.Protein, pa.Peptide.FullSequence, pa.Peptide.ValidationStatus, pa.Note, pa.Peptide.ProteinDescription "
+                    String hql = "SELECT pa.Id, pa.Peptide.Id, pa.Note, pa.ValidationStatus "
                                  + "\nFROM " + typeof(DbPeptideAnalysis) + " pa";
 
                     if (idsToRequery != null)
@@ -195,13 +195,9 @@ namespace pwiz.Topograph.ui.Forms
                             peptideAnalysisRow = new PeptideAnalysisRow { Id = id };
                             peptideAnalysisRows.Add(id, peptideAnalysisRow);
                         }
-                        peptideAnalysisRow.Protein = (string)rowData[1];
-                        peptideAnalysisRow.Peptide = (string)rowData[2];
+                        peptideAnalysisRow.PeptideId = (long)rowData[1];
+                        peptideAnalysisRow.Note = (string)rowData[2];
                         peptideAnalysisRow.ValidationStatus = (ValidationStatus)rowData[3];
-                        peptideAnalysisRow.Note = (string)rowData[4];
-                        peptideAnalysisRow.ProteinDescription = (string)rowData[5];
-                        peptideAnalysisRow.MaxTracers =
-                            Workspace.GetMaxTracerCount(Peptide.TrimSequence(peptideAnalysisRow.Peptide));
                     }
                     var hql2 = "SELECT pd.PeptideFileAnalysis.PeptideAnalysis.Id, pd.PeptideQuantity, Min(pd.Score), Max(pd.Score) "
                                + "\nfrom " + typeof(DbPeptideDistribution) +
@@ -276,12 +272,23 @@ namespace pwiz.Topograph.ui.Forms
                         _peptideAnalysisRows.Add(entry.Key, row);
                         row.Tag = entry.Value.Id;
                     }
-                    row.Cells[colProtein.Name].Value = entry.Value.Protein;
-                    row.Cells[colPeptide.Name].Value = entry.Value.Peptide;
+                    var peptide = Workspace.Peptides.GetChild(entry.Value.PeptideId);
+                    if (peptide == null)
+                    {
+                        row.Cells[colProteinKey.Index].Value = null;
+                        row.Cells[colPeptide.Index].Value = null;
+                        row.Cells[colProteinDescription.Index].Value = row.Cells[colProteinDescription.Index].ToolTipText = null;
+                        row.Cells[colMaxTracers.Index].Value = 0;
+                    }
+                    else
+                    {
+                        row.Cells[colProteinKey.Index].Value = peptide.GetProteinKey();
+                        row.Cells[colPeptide.Index].Value = peptide.FullSequence;
+                        row.Cells[colProteinDescription.Index].Value = row.Cells[colProteinDescription.Index].ToolTipText = peptide.ProteinDescription;
+                        row.Cells[colMaxTracers.Index].Value = peptide.MaxTracerCount;
+                    }
                     row.Cells[colStatus.Name].Value = entry.Value.ValidationStatus;
                     row.Cells[colNote.Name].Value = entry.Value.Note;
-                    row.Cells[colProteinDescription.Name].Value = entry.Value.ProteinDescription;
-                    row.Cells[colMaxTracers.Index].Value = entry.Value.MaxTracers;
                     row.Cells[colMinScoreTracerCount.Index].Value = entry.Value.MinScoreTracerAmounts;
                     row.Cells[colMaxScoreTracerCount.Index].Value = entry.Value.MaxScoreTracerAmounts;
                     row.Cells[colMinScorePrecursorEnrichment.Index].Value = entry.Value.MinScorePrecursorEnrichments;
@@ -437,12 +444,9 @@ namespace pwiz.Topograph.ui.Forms
         class PeptideAnalysisRow
         {
             public long Id;
-            public String Peptide;
+            public long PeptideId;
             public ValidationStatus ValidationStatus;
             public String Note;
-            public String Protein;
-            public String ProteinDescription;
-            public int MaxTracers;
             public double? MinScoreTracerAmounts;
             public double? MaxScoreTracerAmounts;
             public double? MinScorePrecursorEnrichments;

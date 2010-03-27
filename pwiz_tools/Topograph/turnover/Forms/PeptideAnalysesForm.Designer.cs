@@ -36,7 +36,7 @@ namespace pwiz.Topograph.ui.Forms
             this.colPeptide = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colStatus = new pwiz.Topograph.ui.Controls.ValidationStatusColumn();
             this.colNote = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colProtein = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colProteinKey = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colProteinDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colMaxTracers = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colMinScoreTracerCount = new System.Windows.Forms.DataGridViewLinkColumn();
@@ -63,7 +63,7 @@ namespace pwiz.Topograph.ui.Forms
             this.colPeptide,
             this.colStatus,
             this.colNote,
-            this.colProtein,
+            this.colProteinKey,
             this.colProteinDescription,
             this.colMaxTracers,
             this.colMinScoreTracerCount,
@@ -102,11 +102,11 @@ namespace pwiz.Topograph.ui.Forms
             this.colNote.HeaderText = "Note";
             this.colNote.Name = "colNote";
             // 
-            // colProtein
+            // colProteinKey
             // 
-            this.colProtein.HeaderText = "Protein";
-            this.colProtein.Name = "colProtein";
-            this.colProtein.ReadOnly = true;
+            this.colProteinKey.HeaderText = "Protein";
+            this.colProteinKey.Name = "colProteinKey";
+            this.colProteinKey.ReadOnly = true;
             // 
             // colProteinDescription
             // 
@@ -236,7 +236,7 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.DataGridViewLinkColumn colPeptide;
         private ValidationStatusColumn colStatus;
         private System.Windows.Forms.DataGridViewTextBoxColumn colNote;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colProtein;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinKey;
         private System.Windows.Forms.DataGridViewTextBoxColumn colProteinDescription;
         private System.Windows.Forms.DataGridViewTextBoxColumn colMaxTracers;
         private System.Windows.Forms.DataGridViewLinkColumn colMinScoreTracerCount;
