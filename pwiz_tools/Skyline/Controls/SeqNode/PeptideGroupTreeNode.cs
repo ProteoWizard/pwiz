@@ -112,6 +112,11 @@ namespace pwiz.Skyline.Controls.SeqNode
             set { Settings.Default.FilterPeptides = value; }
         }
 
+        public override bool Equivalent(object choice1, object choice2)
+        {
+            return Equals(((PeptideDocNode)choice1).Id, ((PeptideDocNode)choice2).Id);
+        }
+
         public override IEnumerable<object> GetChoices(bool useFilter)
         {
             FastaSequence fastaSeq = DocNode.Id as FastaSequence;
@@ -417,7 +422,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         #endregion
 
-        #region Implementation of IClipboardDataProvider
+        #region IClipboardDataProvider Members
 
         public void ProvideData()
         {

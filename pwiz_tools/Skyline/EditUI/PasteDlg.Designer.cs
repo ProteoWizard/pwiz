@@ -44,12 +44,6 @@ namespace pwiz.Skyline.EditUI
             this.tabPageProteinList = new System.Windows.Forms.TabPage();
             this.tabPagePeptideList = new System.Windows.Forms.TabPage();
             this.tabPageTransitionList = new System.Windows.Forms.TabPage();
-            this.gridViewTransitionList = new DataGridViewEx();
-            this.colTransitionPeptide = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colTransitionPrecursorMz = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colTransitionProductMz = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colTransitionProteinName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colTransitionProteinDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.panelError = new System.Windows.Forms.Panel();
             this.tbxError = new System.Windows.Forms.TextBox();
             this.panelButtons = new System.Windows.Forms.Panel();
@@ -61,16 +55,22 @@ namespace pwiz.Skyline.EditUI
             this.colPeptideSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colPeptideProtein = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colPeptideProteinDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.gridViewTransitionList = new pwiz.Skyline.Controls.DataGridViewEx();
+            this.colTransitionPeptide = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colTransitionPrecursorMz = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colTransitionProductMz = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colTransitionProteinName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colTransitionProteinDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.tabControl1.SuspendLayout();
             this.tabPageFasta.SuspendLayout();
             this.tabPageProteinList.SuspendLayout();
             this.tabPagePeptideList.SuspendLayout();
             this.tabPageTransitionList.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.gridViewTransitionList)).BeginInit();
             this.panelError.SuspendLayout();
             this.panelButtons.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridViewProteins)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridViewPeptides)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.gridViewTransitionList)).BeginInit();
             this.SuspendLayout();
             // 
             // tbxFasta
@@ -81,7 +81,7 @@ namespace pwiz.Skyline.EditUI
             this.tbxFasta.Multiline = true;
             this.tbxFasta.Name = "tbxFasta";
             this.tbxFasta.Size = new System.Drawing.Size(791, 384);
-            this.tbxFasta.TabIndex = 0;
+            this.tbxFasta.TabIndex = 1;
             this.tbxFasta.TextChanged += new System.EventHandler(this.tbxFasta_TextChanged);
             // 
             // btnInsert
@@ -113,7 +113,7 @@ namespace pwiz.Skyline.EditUI
             this.btnValidate.Location = new System.Drawing.Point(538, 9);
             this.btnValidate.Name = "btnValidate";
             this.btnValidate.Size = new System.Drawing.Size(93, 23);
-            this.btnValidate.TabIndex = 7;
+            this.btnValidate.TabIndex = 0;
             this.btnValidate.Text = "Check for &Errors";
             this.btnValidate.UseVisualStyleBackColor = true;
             this.btnValidate.Click += new System.EventHandler(this.btnValidate_Click);
@@ -129,7 +129,8 @@ namespace pwiz.Skyline.EditUI
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
             this.tabControl1.Size = new System.Drawing.Size(805, 429);
-            this.tabControl1.TabIndex = 8;
+            this.tabControl1.TabIndex = 0;
+            this.tabControl1.TabStop = false;
             this.tabControl1.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.tabControl1_Selecting);
             // 
             // tabPageFasta
@@ -151,7 +152,7 @@ namespace pwiz.Skyline.EditUI
             this.label1.Location = new System.Drawing.Point(3, 3);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(482, 13);
-            this.label1.TabIndex = 1;
+            this.label1.TabIndex = 0;
             this.label1.Text = "FASTA records begin with \'>\' and have the protein name followed by the optional p" +
                 "rotein description. ";
             // 
@@ -188,54 +189,6 @@ namespace pwiz.Skyline.EditUI
             this.tabPageTransitionList.Text = "Transition List";
             this.tabPageTransitionList.UseVisualStyleBackColor = true;
             // 
-            // gridViewTransitionList
-            // 
-            this.gridViewTransitionList.AllowUserToOrderColumns = true;
-            this.gridViewTransitionList.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.gridViewTransitionList.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.gridViewTransitionList.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.colTransitionPeptide,
-            this.colTransitionPrecursorMz,
-            this.colTransitionProductMz,
-            this.colTransitionProteinName,
-            this.colTransitionProteinDescription});
-            this.gridViewTransitionList.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.gridViewTransitionList.Location = new System.Drawing.Point(3, 3);
-            this.gridViewTransitionList.Name = "gridViewTransitionList";
-            this.gridViewTransitionList.Size = new System.Drawing.Size(791, 397);
-            this.gridViewTransitionList.TabIndex = 0;
-            this.gridViewTransitionList.KeyDown += new System.Windows.Forms.KeyEventHandler(this.gridViewTransitionList_KeyDown);
-            this.gridViewTransitionList.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(gridViewTransitionList_CellBeginEdit);
-            this.gridViewTransitionList.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(OnCellEndEdit);
-            this.gridViewTransitionList.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(OnEditingControlShowing);
-            this.gridViewTransitionList.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(gridViewTransitionList_CellValueChanged);
-            // 
-            // colTransitionPeptide
-            // 
-            this.colTransitionPeptide.HeaderText = "Peptide";
-            this.colTransitionPeptide.Name = "colTransitionPeptide";
-            // 
-            // colTransitionPrecursorMz
-            // 
-            this.colTransitionPrecursorMz.HeaderText = "Precursor M/Z";
-            this.colTransitionPrecursorMz.Name = "colTransitionPrecursorMz";
-            // 
-            // colTransitionProductMz
-            // 
-            this.colTransitionProductMz.HeaderText = "Product M/Z";
-            this.colTransitionProductMz.Name = "colTransitionProductMz";
-            // 
-            // colTransitionProteinName
-            // 
-            this.colTransitionProteinName.HeaderText = "Protein Name";
-            this.colTransitionProteinName.Name = "colTransitionProteinName";
-            // 
-            // colTransitionProteinDescription
-            // 
-            this.colTransitionProteinDescription.HeaderText = "Protein Description";
-            this.colTransitionProteinDescription.Name = "colTransitionProteinDescription";
-            this.colTransitionProteinDescription.ReadOnly = true;
-            // 
             // panelError
             // 
             this.panelError.Controls.Add(this.tbxError);
@@ -265,7 +218,7 @@ namespace pwiz.Skyline.EditUI
             this.panelButtons.Location = new System.Drawing.Point(0, 474);
             this.panelButtons.Name = "panelButtons";
             this.panelButtons.Size = new System.Drawing.Size(805, 44);
-            this.panelButtons.TabIndex = 10;
+            this.panelButtons.TabIndex = 1;
             // 
             // gridViewProteins
             // 
@@ -300,7 +253,7 @@ namespace pwiz.Skyline.EditUI
             this.gridViewProteins.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridViewProteins_CellValueChanged);
             this.gridViewProteins.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.gridViewProteins_CellBeginEdit);
             this.gridViewProteins.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.OnCellEndEdit);
-            this.gridViewProteins.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(OnEditingControlShowing);
+            this.gridViewProteins.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(this.OnEditingControlShowing);
             this.gridViewProteins.KeyDown += new System.Windows.Forms.KeyEventHandler(this.gridViewProteins_KeyDown);
             // 
             // colProteinName
@@ -351,7 +304,7 @@ namespace pwiz.Skyline.EditUI
             this.gridViewPeptides.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridViewPeptides_CellValueChanged);
             this.gridViewPeptides.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.gridViewPeptides_CellBeginEdit);
             this.gridViewPeptides.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.OnCellEndEdit);
-            this.gridViewPeptides.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(OnEditingControlShowing);
+            this.gridViewPeptides.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(this.OnEditingControlShowing);
             this.gridViewPeptides.KeyDown += new System.Windows.Forms.KeyEventHandler(this.gridViewPeptides_KeyDown);
             // 
             // colPeptideSequence
@@ -370,10 +323,60 @@ namespace pwiz.Skyline.EditUI
             this.colPeptideProteinDescription.Name = "colPeptideProteinDescription";
             this.colPeptideProteinDescription.ReadOnly = true;
             // 
+            // gridViewTransitionList
+            // 
+            this.gridViewTransitionList.AllowUserToOrderColumns = true;
+            this.gridViewTransitionList.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.gridViewTransitionList.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.gridViewTransitionList.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.colTransitionPeptide,
+            this.colTransitionPrecursorMz,
+            this.colTransitionProductMz,
+            this.colTransitionProteinName,
+            this.colTransitionProteinDescription});
+            this.gridViewTransitionList.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.gridViewTransitionList.Location = new System.Drawing.Point(3, 3);
+            this.gridViewTransitionList.Name = "gridViewTransitionList";
+            this.gridViewTransitionList.Size = new System.Drawing.Size(791, 397);
+            this.gridViewTransitionList.TabIndex = 0;
+            this.gridViewTransitionList.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridViewTransitionList_CellValueChanged);
+            this.gridViewTransitionList.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.gridViewTransitionList_CellBeginEdit);
+            this.gridViewTransitionList.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.OnCellEndEdit);
+            this.gridViewTransitionList.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(this.OnEditingControlShowing);
+            this.gridViewTransitionList.KeyDown += new System.Windows.Forms.KeyEventHandler(this.gridViewTransitionList_KeyDown);
+            // 
+            // colTransitionPeptide
+            // 
+            this.colTransitionPeptide.HeaderText = "Peptide";
+            this.colTransitionPeptide.Name = "colTransitionPeptide";
+            // 
+            // colTransitionPrecursorMz
+            // 
+            this.colTransitionPrecursorMz.HeaderText = "Precursor M/Z";
+            this.colTransitionPrecursorMz.Name = "colTransitionPrecursorMz";
+            // 
+            // colTransitionProductMz
+            // 
+            this.colTransitionProductMz.HeaderText = "Product M/Z";
+            this.colTransitionProductMz.Name = "colTransitionProductMz";
+            // 
+            // colTransitionProteinName
+            // 
+            this.colTransitionProteinName.HeaderText = "Protein Name";
+            this.colTransitionProteinName.Name = "colTransitionProteinName";
+            // 
+            // colTransitionProteinDescription
+            // 
+            this.colTransitionProteinDescription.HeaderText = "Protein Description";
+            this.colTransitionProteinDescription.Name = "colTransitionProteinDescription";
+            this.colTransitionProteinDescription.ReadOnly = true;
+            // 
             // PasteDlg
             // 
+            this.AcceptButton = this.btnInsert;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(805, 518);
             this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.panelButtons);
@@ -391,12 +394,12 @@ namespace pwiz.Skyline.EditUI
             this.tabPageProteinList.ResumeLayout(false);
             this.tabPagePeptideList.ResumeLayout(false);
             this.tabPageTransitionList.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.gridViewTransitionList)).EndInit();
             this.panelError.ResumeLayout(false);
             this.panelError.PerformLayout();
             this.panelButtons.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.gridViewProteins)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridViewPeptides)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.gridViewTransitionList)).EndInit();
             this.ResumeLayout(false);
 
         }

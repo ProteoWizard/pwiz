@@ -374,6 +374,16 @@ namespace pwiz.Skyline.Model
                 peptideDocNode = peptideDocNode.ChangeSettings(settings, SrmSettingsDiff.ALL);
                 peptideDocNodes.Add(peptideDocNode);
             }
+            // Rank and filter peptides by rank, if the settings say to.
+            if (settings.PeptideSettings.Libraries.RankId != null)
+            {
+                var rankedPeptideDocNodes =
+                    PeptideGroupDocNode.RankPeptides(peptideDocNodes.ToArray(), settings, useFilter);
+                peptideDocNodes.Clear();
+                foreach (PeptideDocNode nodePep in rankedPeptideDocNodes)
+                    peptideDocNodes.Add(nodePep);
+
+            }
             return peptideDocNodes;
         }
 

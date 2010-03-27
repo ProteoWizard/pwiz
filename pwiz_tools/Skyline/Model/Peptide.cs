@@ -215,6 +215,12 @@ namespace pwiz.Skyline.Model
                     }
                 }
 
+                // If only using rank limited peptides, then choose only the single
+                // highest ranked precursor charge.
+                PeptideRankId rankId = settingsNew.PeptideSettings.Libraries.RankId;
+                if (rankId != null && settingsNew.PeptideSettings.Libraries.PeptideCount.HasValue)
+                    childrenNew = FilterHighestRank(childrenNew, rankId);
+
                 nodeResult = (PeptideDocNode) ChangeChildrenChecked(childrenNew);                
             }
             else
@@ -259,6 +265,30 @@ namespace pwiz.Skyline.Model
                 nodeResult = nodeResult.UpdateResults(settingsNew /*, diff*/);
 
             return nodeResult;
+        }
+
+        private static IList<DocNode> FilterHighestRank(IList<DocNode> childrenNew, PeptideRankId rankId)
+        {
+            if (childrenNew.Count < 2)
+                return childrenNew;
+            int maxCharge = 0;
+            float maxValue = float.MinValue;
+            foreach (TransitionGroupDocNode nodeGroup in childrenNew)
+            {
+                float rankValue = nodeGroup.GetRankValue(rankId);
+                if (rankValue > maxValue)
+                {
+                    maxCharge = nodeGroup.TransitionGroup.PrecursorCharge;
+                    maxValue = rankValue;
+                }
+            }
+            var listHighestRankChildren = new List<DocNode>();
+            foreach (TransitionGroupDocNode nodeGroup in childrenNew)
+            {
+                if (nodeGroup.TransitionGroup.PrecursorCharge == maxCharge)
+                    listHighestRankChildren.Add(nodeGroup);
+            }
+            return listHighestRankChildren;
         }
 
         public TransitionDocNode[] GetMatchingTransitions(TransitionGroup tranGroup, SrmSettings settings, ExplicitMods explicitMods)

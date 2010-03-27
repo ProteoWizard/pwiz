@@ -148,11 +148,15 @@ namespace pwiz.Skyline.SettingsUI
             int max = TransitionGroup.MAX_PRECURSOR_CHARGE;
             if (!_helper.ValidateNumberListTextBox(e, textPrecursorCharges, min, max, out precursorCharges))
                 return;
+            precursorCharges = precursorCharges.Distinct().ToArray();
+
             int[] productCharges;
             min = Transition.MIN_PRODUCT_CHARGE;
             max = Transition.MAX_PRODUCT_CHARGE;
             if (!_helper.ValidateNumberListTextBox(e, textIonCharges, min, max, out productCharges))
                 return;
+            productCharges = productCharges.Distinct().ToArray();
+
             IonType[] types = ArrayUtil.Parse(textIonTypes.Text.ToLower(),
                                               v => (IonType) Enum.Parse(typeof (IonType), v), ',', new IonType[0]);
             if (types.Length == 0)
@@ -162,6 +166,8 @@ namespace pwiz.Skyline.SettingsUI
                 e.Cancel = true;
                 return;
             }
+            types = types.Distinct().ToArray();
+
             string fragmentRangeFirst = comboRangeFrom.SelectedItem.ToString();
             string fragmentRangeLast = comboRangeTo.SelectedItem.ToString();
             bool includeNProline = cbProlene.Checked;

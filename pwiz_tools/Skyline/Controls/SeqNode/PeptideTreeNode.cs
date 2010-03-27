@@ -20,13 +20,15 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.SeqNode
 {
-    public class PeptideTreeNode : SrmTreeNodeParent, ITipProvider
+    public class PeptideTreeNode : SrmTreeNodeParent, ITipProvider, IClipboardDataProvider
     {
         public const string TITLE = "Peptide";
 
@@ -205,7 +207,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         #endregion
 
-        #region Implementation of ITipProvider
+        #region ITipProvider Members
 
         public bool HasTip
         {
@@ -259,6 +261,19 @@ namespace pwiz.Skyline.Controls.SeqNode
 
                 return new Size((int)size.Width + 2, (int)size.Height + 2);
             }            
+        }
+
+        #endregion
+
+        #region IClipboardDataProvider Members
+
+        public void ProvideData()
+        {
+            DataObject data = new DataObject();
+            data.SetData(DataFormats.Text, DocNode.Peptide.Sequence);
+
+            Clipboard.Clear();
+            Clipboard.SetDataObject(data);
         }
 
         #endregion
