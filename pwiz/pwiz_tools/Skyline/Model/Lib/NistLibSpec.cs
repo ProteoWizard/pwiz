@@ -344,6 +344,8 @@ namespace pwiz.Skyline.Model.Lib
                 // Found in the wild
                 {"Gln->pyro-Glu", SequenceMassCalc.GetModDiffDescription(-17.0265)},
                 {"Glu->pyro-Glu", SequenceMassCalc.GetModDiffDescription(-18.0106)},
+                {"Carboxymethyl", SequenceMassCalc.GetModDiffDescription(58.005479)},
+                {"Deamidated", SequenceMassCalc.GetModDiffDescription(0.984016)},
             };
 
         private NistSpectrumInfo[] _libraryEntries;
@@ -567,7 +569,7 @@ namespace pwiz.Skyline.Model.Lib
                     // Add new entry
                     LibKey key = new LibKey(specSequence, 0, seqLength, charge);
                     libraryEntries[i] = new NistSpectrumInfo(key, tfRatio, totalIntensity,
-                                                              (short)copies, (short)numPeaks, (short)compressedSize, location);
+                                                              (ushort)copies, (ushort)numPeaks, compressedSize, location);
                 }
 
                 // Checksum = checksum.ChecksumValue;
@@ -698,6 +700,8 @@ namespace pwiz.Skyline.Model.Lib
 
                     if (numPeaks == 0)
                         throw new IOException(string.Format("No peaks found for peptide {0}.", sequence));
+                    if (numPeaks > ushort.MaxValue)
+                        throw new IOException(string.Format("Peak count for MS/MS spectrum excedes maximum {0}.", ushort.MaxValue));
 
                     double totalIntensity = 0;
 
@@ -738,7 +742,7 @@ namespace pwiz.Skyline.Model.Lib
                     
                     LibKey key = new LibKey(sequence, charge);
                     listInfo.Add(new NistSpectrumInfo(key, tfRatio, Convert.ToSingle(totalIntensity),
-                        (short) copies, (short) numPeaks, (short) lenCompressed, location));
+                        (ushort) copies, (ushort) numPeaks, lenCompressed, location));
                 }
 
                 listInfo.Sort(CompareSpectrumInfo);
@@ -1020,13 +1024,13 @@ namespace pwiz.Skyline.Model.Lib
         private readonly LibKey _key;
         private readonly float _tfRatio;
         private readonly float _totalIntensity;
-        private readonly short _copies;
-        private readonly short _numPeaks;
-        private readonly short _compressedSize;
+        private readonly ushort _copies;
+        private readonly ushort _numPeaks;
+        private readonly int _compressedSize;
         private readonly long _location;
 
         public NistSpectrumInfo(LibKey key, float tfRatio, float totalIntensity,
-            short copies, short numPeaks, short compressedSize, long location)
+            ushort copies, ushort numPeaks, int compressedSize, long location)
         {
             _key = key;
             _totalIntensity = totalIntensity;
