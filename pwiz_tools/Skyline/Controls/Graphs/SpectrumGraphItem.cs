@@ -27,7 +27,45 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public class SpectrumGraphItem : AbstractMSGraphItem
+    public class SpectrumGraphItem : AbstractSpectrumGraphItem
+    {
+        private TransitionGroupDocNode TransitionGroupNode { get; set; }
+        private TransitionDocNode TransitionNode { get; set; }
+        public string LibraryName { get { return TransitionGroupNode.LibInfo.LibraryName; } }
+
+        public SpectrumGraphItem(TransitionGroupDocNode transitionGroupNode, TransitionDocNode transition,
+                                 LibraryRankedSpectrumInfo spectrumInfo) : base(spectrumInfo)
+        {
+            TransitionGroupNode = transitionGroupNode;
+            TransitionNode = transition;
+        }
+
+        protected override bool IsMatch(double predictedMz)
+        {
+            return ((TransitionNode != null) && (predictedMz == TransitionNode.Mz));
+        }
+
+        public override string Title
+        {
+            get
+            {
+                string libraryNamePrefix = TransitionGroupNode.LibInfo.LibraryName;
+                if (!string.IsNullOrEmpty(libraryNamePrefix))
+                    libraryNamePrefix += " - ";
+
+                TransitionGroup transitionGroup = TransitionGroupNode.TransitionGroup;
+                string sequence = transitionGroup.Peptide.Sequence;
+                int charge = transitionGroup.PrecursorCharge;
+                var type = SpectrumInfo.LabelType;
+                if (type == IsotopeLabelType.light)
+                    return string.Format("{0}{1}, Charge {2}", libraryNamePrefix, sequence, charge);
+                else
+                    return string.Format("{0}{1}, Charge {2} ({3})", libraryNamePrefix, sequence, charge, type);
+            }
+        }
+    }
+    
+    public abstract class AbstractSpectrumGraphItem : AbstractMSGraphItem
     {
         private const string FONT_FACE = "Arial";
         private static readonly Color COLOR_A = Color.YellowGreen;
@@ -40,26 +78,17 @@ namespace pwiz.Skyline.Controls.Graphs
         private static readonly Color COLOR_NONE = Color.Gray;
         public static readonly Color COLOR_SELECTED = Color.Red;
 
-        private static FontSpec CreateFontSpec(Color color, float size)
-        {
-            return new FontSpec(FONT_FACE, size, color, false, false, false) {Border = {IsVisible = false}};
-        }
-
         private readonly Dictionary<double, LibraryRankedSpectrumInfo.RankedMI> _ionMatches;
-
-        public SpectrumGraphItem(TransitionGroupDocNode transitionGroupNode, TransitionDocNode transition,
-                                 LibraryRankedSpectrumInfo spectrumInfo)
-        {
-            TransitionGroupNode = transitionGroupNode;
-            TransitionNode = transition;
-            SpectrumInfo = spectrumInfo;
-
-            _ionMatches = spectrumInfo.PeaksMatched.ToDictionary(rmi => rmi.ObservedMz);
-
-            // Default values
-            FontSize = 10;
-            LineWidth = 1;
-        }
+        protected LibraryRankedSpectrumInfo SpectrumInfo { get; set; }
+        public int PeaksCount { get { return SpectrumInfo.Peaks.Count; } }
+        public int PeaksMatchedCount { get { return SpectrumInfo.PeaksMatched.Count(); } }
+        public int PeaksRankedCount { get { return SpectrumInfo.PeaksRanked.Count(); } }
+        public ICollection<IonType> ShowTypes { get; set; }
+        public ICollection<int> ShowCharges { get; set; }
+        public bool ShowRanks { get; set; }
+        public bool ShowDuplicates { get; set; }
+        public int LineWidth { get; set; }
+        public float FontSize { get; set; }
 
         // ReSharper disable InconsistentNaming
         private FontSpec _fontSpecA;
@@ -82,6 +111,24 @@ namespace pwiz.Skyline.Controls.Graphs
         private FontSpec FONT_SPEC_SELECTED { get { return GetFontSpec(COLOR_SELECTED, ref _fontSpecSelected); } }
         // ReSharper restore InconsistentNaming
 
+        public AbstractSpectrumGraphItem(LibraryRankedSpectrumInfo spectrumInfo)
+        {
+            SpectrumInfo = spectrumInfo;
+
+            _ionMatches = spectrumInfo.PeaksMatched.ToDictionary(rmi => rmi.ObservedMz);
+
+            // Default values
+            FontSize = 10;
+            LineWidth = 1;
+        }
+
+        protected abstract bool IsMatch(double predictedMz);
+
+        private static FontSpec CreateFontSpec(Color color, float size)
+        {
+            return new FontSpec(FONT_FACE, size, color, false, false, false) { Border = { IsVisible = false } };
+        }
+
         private FontSpec GetFontSpec(Color color, ref FontSpec fontSpec)
         {
             if (fontSpec == null)
@@ -89,44 +136,9 @@ namespace pwiz.Skyline.Controls.Graphs
             return fontSpec;
         }
 
-        private TransitionGroupDocNode TransitionGroupNode { get; set; }
-        private TransitionDocNode TransitionNode { get; set; }
-        private LibraryRankedSpectrumInfo SpectrumInfo { get; set; }
-
-        public ICollection<IonType> ShowTypes { get; set; }
-        public ICollection<int> ShowCharges { get; set; }
-        public bool ShowRanks { get; set; }
-        public bool ShowDuplicates { get; set; }
-        public int LineWidth { get; set; }
-        public float FontSize { get; set; }
-
-        public string LibraryName { get { return TransitionGroupNode.LibInfo.LibraryName; } }
-        public int PeaksCount { get { return SpectrumInfo.Peaks.Count; } }
-        public int PeaksMatchedCount { get { return SpectrumInfo.PeaksMatched.Count(); } }
-        public int PeaksRankedCount { get { return SpectrumInfo.PeaksRanked.Count(); } }
-
         public override void CustomizeCurve(CurveItem curveItem)
         {
             ((LineItem)curveItem).Line.Width = LineWidth;
-        }
-
-        public override string Title
-        {
-            get
-            {
-                string libraryNamePrefix = TransitionGroupNode.LibInfo.LibraryName;
-                if (!string.IsNullOrEmpty(libraryNamePrefix))
-                    libraryNamePrefix += " - ";
-
-                TransitionGroup transitionGroup = TransitionGroupNode.TransitionGroup;
-                string sequence = transitionGroup.Peptide.Sequence;
-                int charge = transitionGroup.PrecursorCharge;
-                var type = SpectrumInfo.LabelType;
-                if (type == IsotopeLabelType.light)
-                    return string.Format("{0}{1}, Charge {2}", libraryNamePrefix, sequence, charge);
-                else
-                    return string.Format("{0}{1}, Charge {2} ({3})", libraryNamePrefix, sequence, charge, type);
-            }
         }
 
         public override IPointList Points
@@ -161,16 +173,20 @@ namespace pwiz.Skyline.Controls.Graphs
                     case IonType.z: color = COLOR_Z; break;
                     case IonType.precursor: color = COLOR_PRECURSOR; break;
                 }
-                if (TransitionNode != null && rmi.PredictedMz == TransitionNode.Mz)
+
+                if (IsMatch(rmi.PredictedMz))
+                {
                     color = COLOR_SELECTED;
+                }
+
                 double mz = rmi.ObservedMz;
-                LineObj stick = new LineObj(color, mz, rmi.Intensity, mz, 0);
+                var stick = new LineObj(color, mz, rmi.Intensity, mz, 0);
                 stick.IsClippedToChartRect = true;
                 stick.Location.CoordinateFrame = CoordType.AxisXYScale;
                 stick.Line.Width = LineWidth + 1;
-                annotations.Add(stick);                
+                annotations.Add(stick);
             }
-            // ReSharper restore UseObjectOrCollectionInitializer
+            //ReSharper restore UseObjectOrCollectionInitializer
         }
 
         public override PointAnnotation AnnotatePoint(PointPair point)
@@ -206,7 +222,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 case IonType.z: fontSpec = FONT_SPEC_Z; break;
                 case IonType.precursor: fontSpec = FONT_SPEC_PRECURSOR; break;
             }
-            if (TransitionNode != null && rmi.PredictedMz == TransitionNode.Mz)
+            if (IsMatch(rmi.PredictedMz))
                 fontSpec = FONT_SPEC_SELECTED;
             return new PointAnnotation(sb.ToString(), fontSpec);
         }

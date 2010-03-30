@@ -21,13 +21,12 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using pwiz.MSGraph;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
@@ -53,12 +52,23 @@ namespace pwiz.Skyline.SettingsUI
     }
 
     /// <summary>
+    /// Needed by the graph object.
+    /// </summary>
+    public interface IStateProvider
+    {
+        IList<IonType> ShowIonTypes { get; }
+        IList<int> ShowIonCharges { get; }
+
+        void BuildSpectrumMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip);
+    }
+
+    /// <summary>
     /// Dialog to view the contents of the libraries in the Peptide Settings 
     /// dialog's Library tab. It allows you to select one of the libraries 
     /// from a drop-down, view and search the list of peptides, and view the
     /// spectrum for peptide selected in the list.
     /// </summary>
-    public partial class ViewLibraryDlg : Form, IGraphContainer
+    public partial class ViewLibraryDlg : Form, IGraphContainer, IStateProvider
     {
         /// <summary>
         /// Data structure used to store information about a given peptide
@@ -338,75 +348,22 @@ namespace pwiz.Skyline.SettingsUI
         /// <summary>
         /// Represents the spectrum graph for the selected peptide.
         /// </summary>
-        private class ViewLibSpectrumGraphItem : AbstractMSGraphItem
+        private class ViewLibSpectrumGraphItem : AbstractSpectrumGraphItem
         {
-            private const string FontFace = "Arial";
-            private static readonly Color ColorA = Color.YellowGreen;
-            private static readonly Color ColorX = Color.Green;
-            private static readonly Color ColorB = Color.BlueViolet;
-            private static readonly Color ColorY = Color.Blue;
-            private static readonly Color ColorC = Color.Orange;
-            private static readonly Color ColorZ = Color.OrangeRed;
-            private static readonly Color ColorPrecursor = Color.DarkCyan;
-            private static readonly Color ColorNone = Color.Gray;
-
             private readonly Library _library;
             private string LibraryName { get { return _library.Name; } }
             private TransitionGroup TransitionGroup { get; set; }
-            private LibraryRankedSpectrumInfo SpectrumInfo { get; set; }
-            private readonly Dictionary<double, LibraryRankedSpectrumInfo.RankedMI> _ionMatches;
-            public ICollection<IonType> ShowTypes { private get; set; }
-            public ICollection<int> ShowCharges { private get; set; }
-            public bool ShowRanks { private get; set; }
-            public bool ShowDuplicates { private get; set; }
-            public int LineWidth { private get; set; }
-            public float FontSize { private get; set; }
-
+            
             public ViewLibSpectrumGraphItem(LibraryRankedSpectrumInfo spectrumInfo, TransitionGroup group, Library lib)
+                : base(spectrumInfo)
             {
-                SpectrumInfo = spectrumInfo;
                 TransitionGroup = group;
                 _library = lib;
-                
-                _ionMatches = spectrumInfo.PeaksMatched.ToDictionary(rmi => rmi.ObservedMz);
-
-                // Default values
-                FontSize = 10;
-                LineWidth = 1;
             }
 
-            // ReSharper disable InconsistentNaming
-            private FontSpec _fontSpecA;
-            private FontSpec FONT_SPEC_A { get { return GetFontSpec(ColorA, ref _fontSpecA); } }
-            private FontSpec _fontSpecX;
-            private FontSpec FONT_SPEC_X { get { return GetFontSpec(ColorX, ref _fontSpecX); } }
-            private FontSpec _fontSpecB;
-            private FontSpec FONT_SPEC_B { get { return GetFontSpec(ColorB, ref _fontSpecB); } }
-            private FontSpec _fontSpecY;
-            private FontSpec FONT_SPEC_Y { get { return GetFontSpec(ColorY, ref _fontSpecY); } }
-            private FontSpec _fontSpecC;
-            private FontSpec FONT_SPEC_C { get { return GetFontSpec(ColorC, ref _fontSpecC); } }
-            private FontSpec _fontSpecZ;
-            private FontSpec FONT_SPEC_PRECURSOR { get { return GetFontSpec(ColorPrecursor, ref _fontSpecPrecursor); } }
-            private FontSpec _fontSpecPrecursor;
-            private FontSpec FONT_SPEC_Z { get { return GetFontSpec(ColorZ, ref _fontSpecZ); } }
-            private FontSpec _fontSpecNone;
-            private FontSpec FONT_SPEC_NONE { get { return GetFontSpec(ColorNone, ref _fontSpecNone); } }
-            // ReSharper restore InconsistentNaming
-
-            private static FontSpec CreateFontSpec(Color color, float size)
+            protected override bool IsMatch(double predictedMz)
             {
-                return new FontSpec(FontFace, size, color, false, false, false) { Border = { IsVisible = false } };
-            }
-
-            private FontSpec GetFontSpec(Color color, ref FontSpec fontSpec)
-            {
-                return fontSpec ?? (fontSpec = CreateFontSpec(color, FontSize));
-            }
-
-            public override void CustomizeCurve(CurveItem curveItem)
-            {
-                ((LineItem)curveItem).Line.Width = LineWidth;
+                return false;
             }
 
             public override string Title
@@ -421,167 +378,6 @@ namespace pwiz.Skyline.SettingsUI
                     int charge = TransitionGroup.PrecursorCharge;
 
                     return string.Format("{0}{1}, Charge {2}", libraryNamePrefix, sequence, charge);
-                }
-            }
-
-            public override IPointList Points
-            {
-                get
-                {
-                    return new PointPairList(SpectrumInfo.MZs.ToArray(),
-                                             SpectrumInfo.Intensities.ToArray());
-                }
-            }
-
-            public override void AddAnnotations(MSGraphPane graphPane, Graphics g, MSPointList pointList, GraphObjList annotations)
-            {
-                // ReSharper disable UseObjectOrCollectionInitializer
-                foreach (var rmi in SpectrumInfo.PeaksMatched)
-                {
-                    if (!IsVisibleIon(rmi))
-                        continue;
-
-                    IonType type = IsVisibleIon(rmi.IonType, rmi.Ordinal, rmi.Charge) ?
-                                                                                          rmi.IonType : rmi.IonType2;
-
-                    Color color;
-                    switch (type)
-                    {
-                        default: color = ColorNone; break;
-                        case IonType.a: color = ColorA; break;
-                        case IonType.x: color = ColorX; break;
-                        case IonType.b: color = ColorB; break;
-                        case IonType.y: color = ColorY; break;
-                        case IonType.c: color = ColorC; break;
-                        case IonType.z: color = ColorZ; break;
-                        case IonType.precursor: color = ColorPrecursor; break;
-                    }
-
-                    double mz = rmi.ObservedMz;
-                    var stick = new LineObj(color, mz, rmi.Intensity, mz, 0);
-                    stick.IsClippedToChartRect = true;
-                    stick.Location.CoordinateFrame = CoordType.AxisXYScale;
-                    stick.Line.Width = LineWidth + 1;
-                    annotations.Add(stick);
-                }
-                //ReSharper restore UseObjectOrCollectionInitializer
-            }
-
-            public override PointAnnotation AnnotatePoint(PointPair point)
-            {
-                LibraryRankedSpectrumInfo.RankedMI rmi;
-                if (!_ionMatches.TryGetValue(point.X, out rmi) || !IsVisibleIon(rmi))
-                    return null;
-
-                var parts = new string[2];
-                int i = 0;
-                if (IsVisibleIon(rmi.IonType, rmi.Ordinal, rmi.Charge))
-                    parts[i++] = GetLabel(rmi.IonType, rmi.Ordinal, rmi.Charge, rmi.Rank);
-                if (IsVisibleIon(rmi.IonType2, rmi.Ordinal2, rmi.Charge2))
-                    parts[i] = GetLabel(rmi.IonType2, rmi.Ordinal2, rmi.Charge2, 0);
-                var sb = new StringBuilder();
-                foreach (string part in parts)
-                {
-                    if (part == null)
-                        continue;
-                    if (sb.Length > 0)
-                        sb.Append(", ");
-                    sb.Append(part);
-                }
-                FontSpec fontSpec;
-                switch (rmi.IonType)
-                {
-                    default: fontSpec = FONT_SPEC_NONE; break;
-                    case IonType.a: fontSpec = FONT_SPEC_A; break;
-                    case IonType.x: fontSpec = FONT_SPEC_X; break;
-                    case IonType.b: fontSpec = FONT_SPEC_B; break;
-                    case IonType.y: fontSpec = FONT_SPEC_Y; break;
-                    case IonType.c: fontSpec = FONT_SPEC_C; break;
-                    case IonType.z: fontSpec = FONT_SPEC_Z; break;
-                    case IonType.precursor: fontSpec = FONT_SPEC_PRECURSOR; break;
-                }
-                
-                return new PointAnnotation(sb.ToString(), fontSpec);
-            }
-
-            private string GetLabel(IonType type, int ordinal, int charge, int rank)
-            {
-                string chargeIndicator = (charge == 1 ? "" : Transition.GetChargeIndicator(charge));
-                string label = type.ToString();
-                if (!Transition.IsPrecursor(type))
-                    label = label + ordinal + chargeIndicator;
-                if (rank > 0 && ShowRanks)
-                    label = string.Format("{0} (rank {1})", label, rank);
-                return label;
-            }
-
-            private bool IsVisibleIon(LibraryRankedSpectrumInfo.RankedMI rmi)
-            {
-                bool singleIon = (rmi.Ordinal2 == 0);
-                if (ShowDuplicates && singleIon)
-                    return false;
-                return IsVisibleIon(rmi.IonType, rmi.Ordinal, rmi.Charge) ||
-                       IsVisibleIon(rmi.IonType2, rmi.Ordinal2, rmi.Charge2);
-            }
-
-            private bool IsVisibleIon(IonType type, int ordinal, int charge)
-            {
-                return ordinal > 0 && ShowTypes.Contains(type) && ShowCharges.Contains(charge);
-            }
-        }
-
-        /// <summary>
-        /// Needed by the graph object.
-        /// </summary>
-        public interface IStateProvider
-        {
-            TreeNode SelectedNode { get; }
-            IList<IonType> ShowIonTypes { get; }
-            IList<int> ShowIonCharges { get; }
-        }
-
-        /// <summary>
-        /// IStateProvider implementation for the View Library spectrum graph.
-        /// </summary>
-        private class ViewLibStateProvider : IStateProvider
-        {
-            public TreeNode SelectedNode { get { return null; } }
-            
-            public IList<IonType> ShowIonTypes
-            {
-                get
-                {
-                    // Priority ordered
-                    var types = new List<IonType>();
-                    if (Settings.Default.ShowYIons)
-                        types.Add(IonType.y);
-                    if (Settings.Default.ShowBIons)
-                        types.Add(IonType.b);
-                    if (Settings.Default.ShowZIons)
-                        types.Add(IonType.z);
-                    if (Settings.Default.ShowCIons)
-                        types.Add(IonType.c);
-                    if (Settings.Default.ShowXIons)
-                        types.Add(IonType.x);
-                    if (Settings.Default.ShowAIons)
-                        types.Add(IonType.a);
-                    if (Settings.Default.ShowPrecursorIon)
-                        types.Add(IonType.precursor);
-                    return types;
-                }
-            }
-
-            public IList<int> ShowIonCharges
-            {
-                get
-                {
-                    // Priority ordered
-                    var charges = new List<int>();
-                    if (Settings.Default.ShowCharge1)
-                        charges.Add(1);
-                    if (Settings.Default.ShowCharge2)
-                        charges.Add(2);
-                    return charges;
                 }
             }
         }
@@ -645,7 +441,6 @@ namespace pwiz.Skyline.SettingsUI
         // peptides starting with "A" and search only within that range.
         readonly Dictionary<string, Range> _rangeTable;
         
-        private readonly IStateProvider _stateProvider;
         private MSGraphPane GraphPane { get { return (MSGraphPane)graphControl.MasterPane[0]; } }
         private ViewLibSpectrumGraphItem GraphItem { get; set; }
         public int LineWidth { get; set; }
@@ -666,7 +461,6 @@ namespace pwiz.Skyline.SettingsUI
             _driverLibrary = driverLibrary;
             _pageInfo = new PageInfo(100, 0, _currentRange);
             _rangeTable = new Dictionary<string, Range>();
-            _stateProvider = new ViewLibStateProvider();
 
             graphControl.MasterPane.Border.IsVisible = false;
             var graphPane = GraphPane;
@@ -831,7 +625,7 @@ namespace pwiz.Skyline.SettingsUI
 
         // Used to get the range of peptide indices in the peptides array that
         // match (by match, we mean "starts with") the given string.
-        private Range GetRange(string s)
+        private Range GetRange(string s, bool ignoreMod)
         {
             Range rOut;
             if (s.Length == 0)
@@ -878,7 +672,7 @@ namespace pwiz.Skyline.SettingsUI
                 // this information to the range table.
                 if (addToRangeTable)
                 {
-                    rOut = CalculateRange(s, rTemp);
+                    rOut = CalculateRange(s, rTemp, ignoreMod);
                     if (rOut.Count > 0)
                     {
                         _rangeTable.Add(s, rOut);
@@ -896,17 +690,18 @@ namespace pwiz.Skyline.SettingsUI
         // Calculates the range of peptides in the peptides array that match
         // the string passed in. If nothing is found, a range of (-1, -1) is 
         // returned. 
-        private Range CalculateRange(string s, Range r)
+        private Range CalculateRange(string s, Range r, bool ignoreMod)
         {
             var substrRange = new Range(-1, -1);
             int index;
             bool firstMatch = true;
             for (index = r.StartIndex; index <= r.EndIndex; index++)
             {
-                // See if either the modified/unmodified sequence starts with
-                // the string passed in.
-                if (_peptides[index].DisplayString.StartsWith(s, StringComparison.InvariantCultureIgnoreCase) ||
-                    _peptides[index].UnmodifiedDisplayString.StartsWith(s, StringComparison.InvariantCultureIgnoreCase))
+                // See if the unmodified display sequence starts with the 
+                // string passed in. Use the display sequence so the user can   
+                // specify the number of charge states if they like.
+                if ((!ignoreMod &&  _peptides[index].DisplayString.StartsWith(s, StringComparison.InvariantCultureIgnoreCase)) ||
+                    (ignoreMod && _peptides[index].UnmodifiedDisplayString.StartsWith(s, StringComparison.InvariantCultureIgnoreCase)))
                 {
                     if (firstMatch)
                     {
@@ -931,7 +726,10 @@ namespace pwiz.Skyline.SettingsUI
             if (_currentRange.Count > 0)
             {
                 string selPeptide = PeptideListBox.SelectedItem.ToString();
-                Range selPeptideRange = GetRange(selPeptide);
+                
+                // We don't want to ignore modifications here 
+                Range selPeptideRange = GetRange(selPeptide, false);
+                
                 if (selPeptideRange.Count > 0)
                 {
                     int start = selPeptideRange.StartIndex;
@@ -951,7 +749,9 @@ namespace pwiz.Skyline.SettingsUI
 
         private void PeptideTextBox_TextChanged(object sender, EventArgs e)
         {
-            _currentRange = GetRange(PeptideTextBox.Text);
+            // For searching purposes, we want to ignore any modification 
+            // characters the user types.
+            _currentRange = GetRange(PeptideTextBox.Text, true);
             UpdatePageInfo();
             UpdateStatusArea();
             UpdatePeptideListBox();
@@ -987,6 +787,105 @@ namespace pwiz.Skyline.SettingsUI
             UpdateUI();
         }
 
+        public IList<IonType> ShowIonTypes
+        {
+            get
+            {
+                // Priority ordered
+                var types = new List<IonType>();
+                if (Settings.Default.ShowYIons)
+                    types.Add(IonType.y);
+                if (Settings.Default.ShowBIons)
+                    types.Add(IonType.b);
+                if (Settings.Default.ShowZIons)
+                    types.Add(IonType.z);
+                if (Settings.Default.ShowCIons)
+                    types.Add(IonType.c);
+                if (Settings.Default.ShowXIons)
+                    types.Add(IonType.x);
+                if (Settings.Default.ShowAIons)
+                    types.Add(IonType.a);
+                if (Settings.Default.ShowPrecursorIon)
+                    types.Add(IonType.precursor);
+                return types;
+            }
+        }
+
+        public IList<int> ShowIonCharges
+        {
+            get
+            {
+                // Priority ordered
+                var charges = new List<int>();
+                if (Settings.Default.ShowCharge1)
+                    charges.Add(1);
+                if (Settings.Default.ShowCharge2)
+                    charges.Add(2);
+                return charges;
+            }
+        }
+
+        public void BuildSpectrumMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
+        {
+            // Store original menuitems in an array, and insert a separator
+            ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
+            int iUnzoom = -1;
+            for (int i = 0; i < items.Length; i++)
+            {
+                items[i] = menuStrip.Items[i];
+                string tag = (string)items[i].Tag;
+                if (tag == "unzoom")
+                    iUnzoom = i;
+            }
+
+            if (iUnzoom != -1)
+                menuStrip.Items.Insert(iUnzoom, toolStripSeparator15);
+
+            // Insert skyline specific menus
+            var set = Settings.Default;
+            int iInsert = 0;
+            aionsContextMenuItem.Checked = set.ShowAIons;
+            menuStrip.Items.Insert(iInsert++, aionsContextMenuItem);
+            bionsContextMenuItem.Checked = set.ShowBIons;
+            menuStrip.Items.Insert(iInsert++, bionsContextMenuItem);
+            cionsContextMenuItem.Checked = set.ShowCIons;
+            menuStrip.Items.Insert(iInsert++, cionsContextMenuItem);
+            xionsContextMenuItem.Checked = set.ShowXIons;
+            menuStrip.Items.Insert(iInsert++, xionsContextMenuItem);
+            yionsContextMenuItem.Checked = set.ShowYIons;
+            menuStrip.Items.Insert(iInsert++, yionsContextMenuItem);
+            zionsContextMenuItem.Checked = set.ShowZIons;
+            menuStrip.Items.Insert(iInsert++, zionsContextMenuItem);
+            precursorIonContextMenuItem.Checked = set.ShowPrecursorIon;
+            menuStrip.Items.Insert(iInsert++, precursorIonContextMenuItem);
+            menuStrip.Items.Insert(iInsert++, toolStripSeparator11);
+            charge1ContextMenuItem.Checked = set.ShowCharge1;
+            menuStrip.Items.Insert(iInsert++, charge1ContextMenuItem);
+            charge2ContextMenuItem.Checked = set.ShowCharge2;
+            menuStrip.Items.Insert(iInsert++, charge2ContextMenuItem);
+            menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
+            ranksContextMenuItem.Checked = set.ShowRanks;
+            menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
+            duplicatesContextMenuItem.Checked = set.ShowDuplicateIons;
+            menuStrip.Items.Insert(iInsert++, duplicatesContextMenuItem);
+            menuStrip.Items.Insert(iInsert++, toolStripSeparator13);
+            lockYaxisContextMenuItem.Checked = set.LockYAxis;
+            menuStrip.Items.Insert(iInsert++, lockYaxisContextMenuItem);
+            menuStrip.Items.Insert(iInsert++, toolStripSeparator14);
+            menuStrip.Items.Insert(iInsert++, spectrumPropsContextMenuItem);
+            menuStrip.Items.Insert(iInsert, toolStripSeparator15);
+
+            // Remove some ZedGraph menu items not of interest
+            for (int i = 0; i < items.Length; i++)
+            {
+                var item = items[i];
+                string tag = (string)item.Tag;
+                if (tag == "set_default" || tag == "show_val")
+                    menuStrip.Items.Remove(item);
+            }
+            CopyEmfToolStripMenuItem.AddToContextMenu(graphControl, menuStrip);
+        }
+
         public void LockYAxis(bool lockY)
         {
             graphControl.IsEnableVPan = graphControl.IsEnableVZoom = !lockY;
@@ -998,6 +897,17 @@ namespace pwiz.Skyline.SettingsUI
             pane.Title.Text = item.Title;
             graphControl.AddGraphItem(pane, item);
             pane.CurveList[0].Label.IsVisible = false;
+            graphControl.Refresh();
+        }
+
+        public void ZoomSpectrumToSettings()
+        {
+            var axis = GraphPane.XAxis;
+            var instrument = Program.ActiveDocumentUI.Settings.TransitionSettings.Instrument;
+            axis.Scale.Min = instrument.MinMz;
+            axis.Scale.MinAuto = false;
+            axis.Scale.Max = instrument.MaxMz;
+            axis.Scale.MaxAuto = false;
             graphControl.Refresh();
         }
 
@@ -1027,8 +937,8 @@ namespace pwiz.Skyline.SettingsUI
                         const IsotopeLabelType isotopeLabelType = IsotopeLabelType.light;
                         var group = new TransitionGroup(peptide, _peptides[index].Charge, isotopeLabelType);
 
-                        var types = _stateProvider.ShowIonTypes;
-                        var charges = _stateProvider.ShowIonCharges;
+                        var types = ShowIonTypes;
+                        var charges = ShowIonCharges;
                         var rankTypes = settings.TransitionSettings.Filter.IonTypes;
                         var rankCharges = settings.TransitionSettings.Filter.ProductCharges;
 
@@ -1126,6 +1036,113 @@ namespace pwiz.Skyline.SettingsUI
             DialogResult = DialogResult.Cancel;
             Close();
             Application.DoEvents();
+        }
+
+        private void graphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
+        {
+            BuildSpectrumMenu(sender, menuStrip);
+        }
+
+        private void PeptideTextBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Up)
+            {
+                if (PeptideListBox.SelectedIndex > 0)
+                {
+                    PeptideListBox.SelectedIndex--;
+                }
+            }
+            else if (e.KeyCode == Keys.Down)
+            {
+                if ((PeptideListBox.SelectedIndex + 1) < PeptideListBox.Items.Count)
+                {
+                    PeptideListBox.SelectedIndex++;
+                }
+            }
+        }
+
+        private void aionsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowAIons = !Settings.Default.ShowAIons;
+            UpdateUI();
+        }
+
+        private void bionsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowBIons = !Settings.Default.ShowBIons;
+            UpdateUI();
+        }
+
+        private void cionsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowCIons = !Settings.Default.ShowCIons;
+            UpdateUI();
+        }
+
+        private void xionsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowXIons = !Settings.Default.ShowXIons;
+            UpdateUI();
+        }
+
+        private void yionsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowYIons = !Settings.Default.ShowYIons;
+            UpdateUI();
+        }
+
+        private void zionsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowZIons = !Settings.Default.ShowZIons;
+            UpdateUI();
+        }
+
+        private void precursorIonContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowPrecursorIon = !Settings.Default.ShowPrecursorIon;
+            UpdateUI();
+        }
+
+        private void charge1ContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowCharge1 = !Settings.Default.ShowCharge1;
+            UpdateUI();
+        }
+
+        private void charge2ContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowCharge2 = !Settings.Default.ShowCharge2;
+            UpdateUI();
+        }
+
+        private void ranksContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowRanks = !Settings.Default.ShowRanks;
+            UpdateUI();
+        }
+
+        private void duplicatesContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowDuplicateIons = duplicatesContextMenuItem.Checked;
+            UpdateUI();
+        }
+
+        private void lockYaxisContextMenuItem_Click(object sender, EventArgs e)
+        {
+            // Avoid updating the rest of the graph just to change the y-axis lock state
+            LockYAxis(Settings.Default.LockYAxis = lockYaxisContextMenuItem.Checked);
+        }
+
+        private void spectrumPropsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            var dlg = new SpectrumChartPropertyDlg();
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+                UpdateUI();
+        }
+
+        private void zoomSpectrumContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ZoomSpectrumToSettings();
         }
     }
 }

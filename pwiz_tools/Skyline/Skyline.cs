@@ -1155,44 +1155,36 @@ namespace pwiz.Skyline
         {
             var pasteDlg = new PasteDlg(this)
             {
-                SelectedPath = SelectedPath,
                 PasteFormat = PasteFormat.fasta
             };
-            if (pasteDlg.ShowDialog(this) == DialogResult.OK)
-                SelectedPath = pasteDlg.SelectedPath;
+            pasteDlg.ShowDialog(this);
         }
 
         private void insertPeptidesToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var pasteDlg = new PasteDlg(this)
             {
-                SelectedPath = SelectedPath,
                 PasteFormat = PasteFormat.peptide_list
             };
-            if (pasteDlg.ShowDialog(this) == DialogResult.OK)
-                SelectedPath = pasteDlg.SelectedPath;
+            pasteDlg.ShowDialog(this);
         }
 
         private void insertProteinsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var pasteDlg = new PasteDlg(this)
             {
-                SelectedPath = SelectedPath,
                 PasteFormat = PasteFormat.protein_list
             };
-            if (pasteDlg.ShowDialog(this) == DialogResult.OK)
-                SelectedPath = pasteDlg.SelectedPath;
+            pasteDlg.ShowDialog(this);
         }
 
         private void insertTransitionListMenuItem_Click(object sender, EventArgs e)
         {
             var pasteDlg = new PasteDlg(this)
             {
-                SelectedPath = SelectedPath,
                 PasteFormat = PasteFormat.transition_list
             };
-            if (pasteDlg.ShowDialog(this) == DialogResult.OK)
-                SelectedPath = pasteDlg.SelectedPath;
+            pasteDlg.ShowDialog(this);
         }
 
         private void refineMenuItem_Click(object sender, EventArgs e)
@@ -1325,6 +1317,10 @@ namespace pwiz.Skyline
             {
                 // At this point the dialog does everything by itself.
             }
+
+            // In case user shows/hides things via the Spectral Library 
+            // Explorer's spectrum graph pane.
+            UpdateGraphPanes();
         }
 
         private void transitionSettingsMenuItem_Click(object sender, EventArgs e)
@@ -1664,13 +1660,13 @@ namespace pwiz.Skyline
                         }
                         peptideGroupName = fastaSequence.Name;
                         peptideGroup = fastaSequence;
-                        if (peptideSequence == null)
+                        if (peptideSequence != null)
                         {
-                            peptideDocNodes.AddRange(fastaSequence.CreatePeptideDocNodes(settings, true));
+                            peptideDocNodes.Add(fastaSequence.CreatePeptideDocNode(settings, peptideSequence));
                         }
                         else
                         {
-                            peptideDocNodes.Add(fastaSequence.CreatePeptideDocNode(settings, peptideSequence));
+                            peptideDocNodes.AddRange(fastaSequence.CreatePeptideDocNodes(settings, true));
                         }
                         peptideDocNodes.Sort(FastaSequence.ComparePeptides);
                     }
@@ -1730,7 +1726,6 @@ namespace pwiz.Skyline
                     }
                 }
                 e.Node.Text = EmptyNode.TEXT_EMPTY;
-                e.Node.EnsureVisible();
             }
             else if (!e.CancelEdit)
             {

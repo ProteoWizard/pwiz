@@ -47,6 +47,27 @@ namespace pwiz.Skyline.SettingsUI
             this.btnCancel = new System.Windows.Forms.Button();
             this.ViewLibraryPanel = new System.Windows.Forms.Panel();
             this.LibraryLabel = new System.Windows.Forms.Label();
+            this.contextMenuSpectrum = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.aionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.bionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.cionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.xionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.yionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.zionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.precursorIonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator11 = new System.Windows.Forms.ToolStripSeparator();
+            this.charge1ContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.charge2ContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator12 = new System.Windows.Forms.ToolStripSeparator();
+            this.ranksContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.duplicatesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator13 = new System.Windows.Forms.ToolStripSeparator();
+            this.lockYaxisContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator14 = new System.Windows.Forms.ToolStripSeparator();
+            this.spectrumPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator15 = new System.Windows.Forms.ToolStripSeparator();
+            this.zoomSpectrumContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator27 = new System.Windows.Forms.ToolStripSeparator();
             this.ViewLibrarySplitCcontainer.Panel1.SuspendLayout();
             this.ViewLibrarySplitCcontainer.Panel2.SuspendLayout();
             this.ViewLibrarySplitCcontainer.SuspendLayout();
@@ -58,6 +79,7 @@ namespace pwiz.Skyline.SettingsUI
             this.GraphPanel.SuspendLayout();
             this.panel2.SuspendLayout();
             this.ViewLibraryPanel.SuspendLayout();
+            this.contextMenuSpectrum.SuspendLayout();
             this.SuspendLayout();
             // 
             // ViewLibrarySplitCcontainer
@@ -210,6 +232,7 @@ namespace pwiz.Skyline.SettingsUI
             this.PeptideTextBox.Size = new System.Drawing.Size(258, 20);
             this.PeptideTextBox.TabIndex = 0;
             this.PeptideTextBox.TextChanged += new System.EventHandler(this.PeptideTextBox_TextChanged);
+            this.PeptideTextBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.PeptideTextBox_KeyDown);
             // 
             // GraphPanel
             // 
@@ -241,6 +264,7 @@ namespace pwiz.Skyline.SettingsUI
             this.graphControl.ScrollMinY2 = 0;
             this.graphControl.Size = new System.Drawing.Size(473, 329);
             this.graphControl.TabIndex = 3;
+            this.graphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.graphControl_ContextMenuBuilder);
             // 
             // panel2
             // 
@@ -280,6 +304,171 @@ namespace pwiz.Skyline.SettingsUI
             this.LibraryLabel.TabIndex = 4;
             this.LibraryLabel.Text = "Library:";
             // 
+            // contextMenuSpectrum
+            // 
+            this.contextMenuSpectrum.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.aionsContextMenuItem,
+            this.bionsContextMenuItem,
+            this.cionsContextMenuItem,
+            this.xionsContextMenuItem,
+            this.yionsContextMenuItem,
+            this.zionsContextMenuItem,
+            this.precursorIonContextMenuItem,
+            this.toolStripSeparator11,
+            this.charge1ContextMenuItem,
+            this.charge2ContextMenuItem,
+            this.toolStripSeparator12,
+            this.ranksContextMenuItem,
+            this.duplicatesContextMenuItem,
+            this.toolStripSeparator13,
+            this.lockYaxisContextMenuItem,
+            this.toolStripSeparator14,
+            this.spectrumPropsContextMenuItem,
+            this.toolStripSeparator15,
+            this.zoomSpectrumContextMenuItem,
+            this.toolStripSeparator27});
+            this.contextMenuSpectrum.Name = "contextMenuSpectrum";
+            this.contextMenuSpectrum.Size = new System.Drawing.Size(166, 370);
+            // 
+            // aionsContextMenuItem
+            // 
+            this.aionsContextMenuItem.CheckOnClick = true;
+            this.aionsContextMenuItem.Name = "aionsContextMenuItem";
+            this.aionsContextMenuItem.Size = new System.Drawing.Size(165, 22);
+            this.aionsContextMenuItem.Text = "A-ions";
+            this.aionsContextMenuItem.Click += new System.EventHandler(this.aionsContextMenuItem_Click);
+            // 
+            // bionsContextMenuItem
+            // 
+            this.bionsContextMenuItem.CheckOnClick = true;
+            this.bionsContextMenuItem.Name = "bionsContextMenuItem";
+            this.bionsContextMenuItem.Size = new System.Drawing.Size(165, 22);
+            this.bionsContextMenuItem.Text = "B-ions";
+            this.bionsContextMenuItem.Click += new System.EventHandler(this.bionsContextMenuItem_Click);
+            // 
+            // cionsContextMenuItem
+            // 
+            this.cionsContextMenuItem.CheckOnClick = true;
+            this.cionsContextMenuItem.Name = "cionsContextMenuItem";
+            this.cionsContextMenuItem.Size = new System.Drawing.Size(165, 22);
+            this.cionsContextMenuItem.Text = "C-ions";
+            this.cionsContextMenuItem.Click += new System.EventHandler(this.cionsContextMenuItem_Click);
+            // 
+            // xionsContextMenuItem
+            // 
+            this.xionsContextMenuItem.CheckOnClick = true;
+            this.xionsContextMenuItem.Name = "xionsContextMenuItem";
+            this.xionsContextMenuItem.Size = new System.Drawing.Size(165, 22);
+            this.xionsContextMenuItem.Text = "X-ions";
+            this.xionsContextMenuItem.Click += new System.EventHandler(this.xionsContextMenuItem_Click);
+            // 
+            // yionsContextMenuItem
+            // 
+            this.yionsContextMenuItem.CheckOnClick = true;
+            this.yionsContextMenuItem.Name = "yionsContextMenuItem";
+            this.yionsContextMenuItem.Size = new System.Drawing.Size(165, 22);
+            this.yionsContextMenuItem.Text = "Y-ions";
+            this.yionsContextMenuItem.Click += new System.EventHandler(this.yionsContextMenuItem_Click);
+            // 
+            // zionsContextMenuItem
+            // 
+            this.zionsContextMenuItem.CheckOnClick = true;
+            this.zionsContextMenuItem.Name = "zionsContextMenuItem";
+            this.zionsContextMenuItem.Size = new System.Drawing.Size(165, 22);
+            this.zionsContextMenuItem.Text = "Z-ions";
+            this.zionsContextMenuItem.Click += new System.EventHandler(this.zionsContextMenuItem_Click);
+            // 
+            // precursorIonContextMenuItem
+            // 
+            this.precursorIonContextMenuItem.Name = "precursorIonContextMenuItem";
+            this.precursorIonContextMenuItem.Size = new System.Drawing.Size(165, 22);
+            this.precursorIonContextMenuItem.Text = "Precursor";
+            this.precursorIonContextMenuItem.Click += new System.EventHandler(this.precursorIonContextMenuItem_Click);
+            // 
+            // toolStripSeparator11
+            // 
+            this.toolStripSeparator11.Name = "toolStripSeparator11";
+            this.toolStripSeparator11.Size = new System.Drawing.Size(162, 6);
+            // 
+            // charge1ContextMenuItem
+            // 
+            this.charge1ContextMenuItem.CheckOnClick = true;
+            this.charge1ContextMenuItem.Name = "charge1ContextMenuItem";
+            this.charge1ContextMenuItem.Size = new System.Drawing.Size(165, 22);
+            this.charge1ContextMenuItem.Text = "Charge 1";
+            this.charge1ContextMenuItem.Click += new System.EventHandler(this.charge1ContextMenuItem_Click);
+            // 
+            // charge2ContextMenuItem
+            // 
+            this.charge2ContextMenuItem.CheckOnClick = true;
+            this.charge2ContextMenuItem.Name = "charge2ContextMenuItem";
+            this.charge2ContextMenuItem.Size = new System.Drawing.Size(165, 22);
+            this.charge2ContextMenuItem.Text = "Charge 2";
+            this.charge2ContextMenuItem.Click += new System.EventHandler(this.charge2ContextMenuItem_Click);
+            // 
+            // toolStripSeparator12
+            // 
+            this.toolStripSeparator12.Name = "toolStripSeparator12";
+            this.toolStripSeparator12.Size = new System.Drawing.Size(162, 6);
+            // 
+            // ranksContextMenuItem
+            // 
+            this.ranksContextMenuItem.CheckOnClick = true;
+            this.ranksContextMenuItem.Name = "ranksContextMenuItem";
+            this.ranksContextMenuItem.Size = new System.Drawing.Size(165, 22);
+            this.ranksContextMenuItem.Text = "Ranks";
+            this.ranksContextMenuItem.Click += new System.EventHandler(this.ranksContextMenuItem_Click);
+            // 
+            // duplicatesContextMenuItem
+            // 
+            this.duplicatesContextMenuItem.CheckOnClick = true;
+            this.duplicatesContextMenuItem.Name = "duplicatesContextMenuItem";
+            this.duplicatesContextMenuItem.Size = new System.Drawing.Size(165, 22);
+            this.duplicatesContextMenuItem.Text = "Duplicate Ions";
+            this.duplicatesContextMenuItem.Click += new System.EventHandler(this.duplicatesContextMenuItem_Click);
+            // 
+            // toolStripSeparator13
+            // 
+            this.toolStripSeparator13.Name = "toolStripSeparator13";
+            this.toolStripSeparator13.Size = new System.Drawing.Size(162, 6);
+            // 
+            // lockYaxisContextMenuItem
+            // 
+            this.lockYaxisContextMenuItem.CheckOnClick = true;
+            this.lockYaxisContextMenuItem.Name = "lockYaxisContextMenuItem";
+            this.lockYaxisContextMenuItem.Size = new System.Drawing.Size(165, 22);
+            this.lockYaxisContextMenuItem.Text = "Auto-scale Y-axis";
+            this.lockYaxisContextMenuItem.Click += new System.EventHandler(this.lockYaxisContextMenuItem_Click);
+            // 
+            // toolStripSeparator14
+            // 
+            this.toolStripSeparator14.Name = "toolStripSeparator14";
+            this.toolStripSeparator14.Size = new System.Drawing.Size(162, 6);
+            // 
+            // spectrumPropsContextMenuItem
+            // 
+            this.spectrumPropsContextMenuItem.Name = "spectrumPropsContextMenuItem";
+            this.spectrumPropsContextMenuItem.Size = new System.Drawing.Size(165, 22);
+            this.spectrumPropsContextMenuItem.Text = "Properties...";
+            this.spectrumPropsContextMenuItem.Click += new System.EventHandler(this.spectrumPropsContextMenuItem_Click);
+            // 
+            // toolStripSeparator15
+            // 
+            this.toolStripSeparator15.Name = "toolStripSeparator15";
+            this.toolStripSeparator15.Size = new System.Drawing.Size(162, 6);
+            // 
+            // zoomSpectrumContextMenuItem
+            // 
+            this.zoomSpectrumContextMenuItem.Name = "zoomSpectrumContextMenuItem";
+            this.zoomSpectrumContextMenuItem.Size = new System.Drawing.Size(165, 22);
+            this.zoomSpectrumContextMenuItem.Text = "Zoom Out";
+            this.zoomSpectrumContextMenuItem.Click += new System.EventHandler(this.zoomSpectrumContextMenuItem_Click);
+            // 
+            // toolStripSeparator27
+            // 
+            this.toolStripSeparator27.Name = "toolStripSeparator27";
+            this.toolStripSeparator27.Size = new System.Drawing.Size(162, 6);
+            // 
             // ViewLibraryDlg
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -310,6 +499,7 @@ namespace pwiz.Skyline.SettingsUI
             this.GraphPanel.ResumeLayout(false);
             this.panel2.ResumeLayout(false);
             this.ViewLibraryPanel.ResumeLayout(false);
+            this.contextMenuSpectrum.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -335,6 +525,27 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Panel GraphPanel;
         private pwiz.MSGraph.MSGraphControl graphControl;
+        private System.Windows.Forms.ContextMenuStrip contextMenuSpectrum;
+        private System.Windows.Forms.ToolStripMenuItem aionsContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem bionsContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem cionsContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem xionsContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem yionsContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem zionsContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem precursorIonContextMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator11;
+        private System.Windows.Forms.ToolStripMenuItem charge1ContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem charge2ContextMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator12;
+        private System.Windows.Forms.ToolStripMenuItem ranksContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem duplicatesContextMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator13;
+        private System.Windows.Forms.ToolStripMenuItem lockYaxisContextMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator14;
+        private System.Windows.Forms.ToolStripMenuItem spectrumPropsContextMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator15;
+        private System.Windows.Forms.ToolStripMenuItem zoomSpectrumContextMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator27;
 
 
 
