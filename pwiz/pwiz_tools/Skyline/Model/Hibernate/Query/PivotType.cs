@@ -257,7 +257,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 
         public override bool IsCrosstabValue(Type table, String column)
         {
-            if (table == typeof(DbPrecursorResult) || table == typeof(DbTransitionResult))
+            if (table == typeof(DbPrecursorResult) || table == typeof(DbPrecursorResultSummary) ||
+                table == typeof(DbTransitionResult) || table == typeof(DbTransitionResultSummary))
             {
                 return true;
             }
