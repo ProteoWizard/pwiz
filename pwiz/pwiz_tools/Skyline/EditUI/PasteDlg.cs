@@ -272,11 +272,8 @@ namespace pwiz.Skyline.EditUI
                     }
                     else
                     {
-                        PeptideGroup peptideGroup = backgroundProteome.GetFastaSequence(proteinName);
-                        if (peptideGroup == null)
-                        {
-                            peptideGroup = new PeptideGroup();
-                        }
+                        PeptideGroup peptideGroup = backgroundProteome.GetFastaSequence(proteinName) ??
+                                                    new PeptideGroup();
                         peptideGroupDocNode = new PeptideGroupDocNode(peptideGroup, proteinName, peptideGroup.Description, new PeptideDocNode[0]);
                     }
                     // Add to the end, if no insert node
@@ -322,7 +319,7 @@ namespace pwiz.Skyline.EditUI
                 if (!peptides.Contains(nodePep => Equals(nodePep.Peptide, nodePepNew.Peptide)))
                 {
                     peptides.Add(nodePepNew);
-                    var newPeptideGroupDocNode = new PeptideGroupDocNode(peptideGroupDocNode.PeptideGroup, peptideGroupDocNode.Annotations, peptideGroupDocNode.Name, peptideGroupDocNode.Description, peptides.ToArray(), true);
+                    var newPeptideGroupDocNode = new PeptideGroupDocNode(peptideGroupDocNode.PeptideGroup, peptideGroupDocNode.Annotations, peptideGroupDocNode.Name, peptideGroupDocNode.Description, peptides.ToArray(), false);
                     document = (SrmDocument)document.ReplaceChild(newPeptideGroupDocNode);
                 }
             }
@@ -690,19 +687,19 @@ namespace pwiz.Skyline.EditUI
                         }
                         // Keep default transition groups from being added.
                         peptideDocNode = (PeptideDocNode)
-                            peptideDocNode.ChangeChildren(new TransitionGroupDocNode[0]);
+                            peptideDocNode.ChangeChildren(new TransitionGroupDocNode[0]).ChangeAutoManageChildren(false);
                     }
                     else
                     {
                         var newPeptide = new Peptide(null, peptideSequence, null, null, missedCleavages);
-                        peptideDocNode = new PeptideDocNode(newPeptide, new TransitionGroupDocNode[0]);
+                        peptideDocNode = new PeptideDocNode(newPeptide, new TransitionGroupDocNode[0], false);
                     }
                     children.Add(AddTransition(document, peptideDocNode, precursorCharge, isotopeLabelType,
                                                       productCharge, ionType.Value, ordinal.Value));
 
                 }
                 var newPeptideGroupDocNode = new PeptideGroupDocNode(peptideGroupDocNode.PeptideGroup, peptideGroupDocNode.Annotations,
-                    peptideGroupDocNode.Name, peptideGroupDocNode.Description, children.ToArray(), true);
+                    peptideGroupDocNode.Name, peptideGroupDocNode.Description, children.ToArray(), false);
                 document = (SrmDocument)document.ReplaceChild(newPeptideGroupDocNode);
             }
             return document;

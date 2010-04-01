@@ -1110,7 +1110,7 @@ namespace pwiz.Skyline.Model
             CompleteTransitionGroup();
 
             _transitionGroups.Sort(Peptide.CompareGroups);
-            _peptides.Add(new PeptideDocNode(_activePeptide, FinalizeTransitionGroups(_transitionGroups)));
+            _peptides.Add(new PeptideDocNode(_activePeptide, FinalizeTransitionGroups(_transitionGroups), false));
 
             _activePeptide = null;
             _transitionGroups = null;
@@ -1153,7 +1153,7 @@ namespace pwiz.Skyline.Model
         {
             _transitions.Sort(TransitionGroup.CompareTransitions);
             // m/z calculated later
-            _transitionGroups.Add(new TransitionGroupDocNode(_activeTransitionGroup, 0, RelativeRT.Matching, _transitions.ToArray()));
+            _transitionGroups.Add(new TransitionGroupDocNode(_activeTransitionGroup, 0, RelativeRT.Matching, _transitions.ToArray(), false));
 
             _activeTransitionGroup = null;
             _transitions = null;

@@ -30,7 +30,12 @@ namespace pwiz.Skyline.Model
     public class PeptideDocNode : DocNodeParent
     {
         public PeptideDocNode(Peptide id, TransitionGroupDocNode[] children)
-            : this(id, null, Annotations.Empty, null, null, children, true)
+            : this(id, children, true)
+        {
+        }
+
+        public PeptideDocNode(Peptide id, TransitionGroupDocNode[] children, bool autoManageChildren)
+            : this(id, null, Annotations.Empty, null, null, children, autoManageChildren)
         {
         }
 
