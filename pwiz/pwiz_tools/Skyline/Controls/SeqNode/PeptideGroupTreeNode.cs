@@ -49,7 +49,9 @@ namespace pwiz.Skyline.Controls.SeqNode
             return nodeTree;
         }
 
+// ReSharper disable SuggestBaseTypeForParameter
         public PeptideGroupTreeNode(SequenceTree tree, PeptideGroupDocNode group)
+// ReSharper restore SuggestBaseTypeForParameter
             : base(tree, group)
         {
         }
@@ -114,7 +116,9 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public override bool Equivalent(object choice1, object choice2)
         {
-            return Equals(((PeptideDocNode)choice1).Id, ((PeptideDocNode)choice2).Id);
+            if (choice1 is PeptideDocNode && choice2 is PeptideDocNode)
+                return Equals(((PeptideDocNode)choice1).Id, ((PeptideDocNode)choice2).Id);
+            return base.Equivalent(choice1, choice2);
         }
 
         public override IEnumerable<object> GetChoices(bool useFilter)
