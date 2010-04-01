@@ -101,10 +101,23 @@ namespace seems
 			// Add the event handler for handling non-UI thread exceptions to the event. 
 			AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler( CurrentDomain_UnhandledException );
 
-            MainForm = new seemsForm( new string[] { } );
-            MainForm.Manager.ParseArgs( args );
-            if( !MainForm.IsDisposed )
-			    Application.Run( MainForm );
+            try
+            {
+                MainForm = new seemsForm();
+                MainForm.ParseArgs(args);
+                if (!MainForm.IsDisposed)
+                    Application.Run(MainForm);
+            }
+            catch (Exception e)
+            {
+                string message = e.ToString();
+                if (e.InnerException != null)
+                    message += "\n\nAdditional information: " + e.InnerException.ToString();
+                MessageBox.Show(message,
+                                "Unhandled Exception",
+                                MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1,
+                                0, false);
+            }
 		}
 
         static void bgWorker_DoWork( object sender, DoWorkEventArgs e )
@@ -123,7 +136,7 @@ namespace seems
                         string[] args = new string[length];
                         for( int i = 0; i < length; ++i )
                             args[i] = sr.ReadLine();
-                        MainForm.Manager.ParseArgs( args );
+                        MainForm.ParseArgs( args );
                     }
 
                     //pipeServer.Disconnect();
@@ -158,7 +171,7 @@ namespace seems
 			newSeems.Start();
 			Process.GetCurrentProcess().Kill();*/
 
-			MessageBox.Show( "This is bad news.",
+			MessageBox.Show( (e.ExceptionObject is Exception ? (e.ExceptionObject as Exception).Message : "Unknown error."),
 							"Unhandled Exception",
 							MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1,
 							0, false );

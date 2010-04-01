@@ -78,8 +78,6 @@ namespace seems
         MSGraphPane focusedPane = null;
         CurveItem focusedItem = null;
 
-        private EventSpy spy;
-
         /// <summary>
         /// Occurs when the FocusedItem property changes;
         /// usually caused by a left click near a different MSGraphItem
@@ -141,10 +139,6 @@ namespace seems
 		public GraphForm()
 		{
 			InitializeComponent();
-
-            spy = new EventSpy( "GraphForm", this );
-            //spy.DumpEvents( this.GetType() );
-            spy.SpyEvent += new SpyEventHandler( seemsForm.LogSpyEvent );
 
             paneList = new PaneList();
             paneLayout = PaneLayout.SingleColumn;
