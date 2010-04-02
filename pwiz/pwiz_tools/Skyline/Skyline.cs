@@ -1965,9 +1965,10 @@ namespace pwiz.Skyline
 
         private void UpdateNodeCountStatus()
         {
-            UpdateStatusCounter(statusSequences, DocumentUI.PeptideGroupCount, "seq");
+            UpdateStatusCounter(statusSequences, DocumentUI.PeptideGroupCount, "prot");
             UpdateStatusCounter(statusPeptides, DocumentUI.PeptideCount, "pep");
-            UpdateStatusCounter(statusIons, DocumentUI.TransitionCount, "ion");
+            UpdateStatusCounter(statusPrecursors, DocumentUI.TransitionGroupCount, "prec");
+            UpdateStatusCounter(statusIons, DocumentUI.TransitionCount, "tran");
         }
 
         private static void UpdateStatusCounter(ToolStripItem label, int count, string text)
