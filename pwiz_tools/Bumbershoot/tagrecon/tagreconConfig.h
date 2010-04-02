@@ -231,8 +231,8 @@ namespace tagrecon
                 // We do not have to use NET based adjustment
                 // to the rank score when we are searching for
                 // fully enzymatic peptides.
-                if(g_rtConfig->NumMinTerminiCleavages == 2)
-                    g_rtConfig->UseNETAdjustment = false;
+                if(NumMinTerminiCleavages == 2)
+                    UseNETAdjustment = false;
 
                 vector<string> fragmentationRuleTokens;
                 split( fragmentationRuleTokens, FragmentationRule, is_any_of(":") );
