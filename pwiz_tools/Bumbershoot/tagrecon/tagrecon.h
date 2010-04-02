@@ -233,6 +233,8 @@ namespace tagrecon
     #ifdef USE_MPI
 		void TransmitConfigsToChildProcesses();
 		void ReceiveConfigsFromRootProcess();
+        void ReceiveNETRewardsFromRootProcess();
+        void TransmitNETRewardsToChildProcess();
 		int ReceivePreparedSpectraFromChildProcesses();
 		int TransmitPreparedSpectraToRootProcess( SpectraList& preparedSpectra );
 		int ReceiveUnpreparedSpectraBatchFromRootProcess();

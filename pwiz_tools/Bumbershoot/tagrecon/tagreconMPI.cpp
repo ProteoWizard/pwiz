@@ -62,6 +62,7 @@ namespace tagrecon
 		}
 	}
 
+    
 	/**!
 		ReceiveConfigsFromRootProcess receives the program parameters and residue map from the
 		root process.
@@ -83,6 +84,38 @@ namespace tagrecon
 		MPI_Recv( &g_residueMap->cfgStr[0],					len,	MPI_CHAR,			0,		0x03, MPI_COMM_WORLD, &st );
 		g_residueMap->initializeFromBuffer( g_residueMap->cfgStr );
 	}
+
+    void TransmitNETRewardsToChildProcess()
+    {
+        for( int p=0; p < g_numChildren; ++p )
+		{
+			
+            // Create a binary archive
+		    stringstream packStream;
+		    binary_oarchive packArchive( packStream );
+            packArchive & g_rtConfig->NETRewardVector;
+        
+            int len = (int) packStream.str().length();
+		    MPI_Send( &len,					                1,		MPI_INT,	        p+1,	    0x00, MPI_COMM_WORLD );
+		    MPI_Send( (void*) packStream.str().c_str(),	    len,	MPI_CHAR,	        p+1,	    0x01, MPI_COMM_WORLD );
+        }
+    }
+
+    void ReceiveNETRewardsFromRootProcess()
+    {
+        string pack;
+		int len;
+
+		// Get the binary compressed NET probability data from the root.
+		MPI_Recv( &len,					1,			MPI_INT,	0,	0x00, MPI_COMM_WORLD, &st );
+		pack.resize( len );
+		MPI_Recv( (void*) pack.data(),	len,		MPI_CHAR,	0,	0x01, MPI_COMM_WORLD, &st );
+
+		stringstream packStream;
+        packStream << pack;
+		binary_iarchive packArchive( packStream );
+        packArchive & g_rtConfig->NETRewardVector;
+    }
 
 	/**!
 		ReceivePreparedSpectraFromChildProcesses receives the prepared spectra from all the child

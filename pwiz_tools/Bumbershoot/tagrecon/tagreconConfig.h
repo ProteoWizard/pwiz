@@ -91,7 +91,10 @@ using namespace pwiz;
     RTCONFIG_VARIABLE( string,			PreferredDeltaMasses,	    ""   		    ) \
     RTCONFIG_VARIABLE( int, 			MaxNumPreferredDeltaMasses,	1   		    ) \
     RTCONFIG_VARIABLE( string,			ExplainUnknownMassShiftsAs,  ""   		    ) \
-    RTCONFIG_VARIABLE( int,			    MaxAmbResultsForBlindMods,  2   		    )
+    RTCONFIG_VARIABLE( int,			    MaxAmbResultsForBlindMods,  2   		    ) \
+    RTCONFIG_VARIABLE( int,			    MaxPeakCount,               200   		    ) \
+    RTCONFIG_VARIABLE( bool,			ComputeXCorr,               false  		    ) \
+    RTCONFIG_VARIABLE( bool,			UseNETAdjustment,           true  		    )
 
 
 namespace freicore
@@ -132,6 +135,7 @@ namespace tagrecon
             bool			tagMutexesInitialized;
             int             maxChargeStateFromSpectra;
             int             maxResultsForInternalUse;
+            vector<double>  NETRewardVector;
 
             
 
@@ -223,6 +227,12 @@ namespace tagrecon
                     MinCandidateLength,
                     maxLength,
                     specificity );
+
+                // We do not have to use NET based adjustment
+                // to the rank score when we are searching for
+                // fully enzymatic peptides.
+                if(g_rtConfig->NumMinTerminiCleavages == 2)
+                    g_rtConfig->UseNETAdjustment = false;
 
                 vector<string> fragmentationRuleTokens;
                 split( fragmentationRuleTokens, FragmentationRule, is_any_of(":") );

@@ -598,33 +598,6 @@ namespace freicore
 			}
 		}
 		
-        if(false) {
-			for(SpectraTagMap::const_iterator itr = spectraTagMapsByChargeState.begin(); itr != spectraTagMapsByChargeState.end(); ++itr) {
-				cout << itr->candidateTag << "," << itr->nTerminusMass << "," << itr->cTerminusMass << "," << (*itr->sItr)->id.source << " " << (*itr->sItr)->nativeID << endl;
-			}
-		}
-
-        if(false) {
-
-            TagSetInfo tagKey("NAL", 227.303, 156.186);
-            cout << tagKey.candidateTag << "," << tagKey.nTerminusMass << "," << tagKey.cTerminusMass << endl;
-			pair< SpectraTagMap::const_iterator, SpectraTagMap::const_iterator > range = spectraTagMapsByChargeState.equal_range( tagKey );
-
-			SpectraTagMap::const_iterator cur, end = range.second;
-			
-			// Iterate over the range
-			for( cur = range.first; cur != end; ++cur )
-			{
-                string asterix;
-                float nTerminusDeviation = fabs( tagKey.nTerminusMass - cur->nTerminusMass );
-				float cTerminusDeviation = fabs( tagKey.cTerminusMass - cur->cTerminusMass );
-                if((*cur->sItr)->nativeID == "scan=9072") 
-                    asterix="*";
-                cout << "\t" << asterix << (*cur->sItr)->id.source << " " << (*cur->sItr)->nativeID << " " << (*cur->sItr)->mOfPrecursor << " " << nTerminusDeviation << " " << cTerminusDeviation << endl;
-            }
-            exit(1);
-        }
-
 		// Get minimum and maximum peptide masses observed in the dataset
 		// and determine the number of peak bins required. This 
 		g_rtConfig->curMinSequenceMass = spectra.front()->mOfPrecursor;
@@ -697,7 +670,77 @@ namespace freicore
 	{
 	}
 
-	
+    void ComputeXCorrs(string sourceFilepath)
+    {
+        // Get total spectra size
+        int numSpectra = (int) spectra.size();
+
+        cout << g_hostString << " is reading " << numSpectra << " spectra for cross-correlation analysis." << endl;
+
+        Timer timer;
+        timer.Begin();
+
+        spectra.backFillPeaks(sourceFilepath);
+        // Parse each spectrum
+        for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
+        {
+            try
+            {
+                if((*sItr)->resultSet.size()==0)
+                    continue;
+                (*sItr)->parse();
+            } catch( exception& e )
+            {
+                stringstream msg;
+                msg << "parsing spectrum " << (*sItr)->id << ": " << e.what();
+                throw runtime_error( msg.str() );
+            } catch( ... )
+            {
+                stringstream msg;
+                msg << "parsing spectrum " << (*sItr)->id;
+                throw runtime_error( msg.str() );
+            }
+        }
+        cout << g_hostString << " finished reading its spectra; " << timer.End() << " seconds elapsed." << endl;
+        cout << g_hostString << " is preparing spectra for cross-correlation." << endl;
+
+        timer.Begin();
+        for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
+        {
+            try
+            {
+                // Preprocess the spectrum for XCorr
+                if((*sItr)->resultSet.size()==0)
+                    continue;
+                (*sItr)->PreprocessForXCorr();
+            } catch( exception& e )
+            {
+                stringstream msg;
+                msg << "preprocessing spectrum " << (*sItr)->id << ": " << e.what();
+                throw runtime_error( msg.str() );
+            } catch( ... )
+            {
+                stringstream msg;
+                msg << "preprocessing spectrum " << (*sItr)->id;
+                throw runtime_error( msg.str() );
+            }
+        }
+        cout << g_hostString << " finished preparing spectra; " << timer.End() << " seconds elapsed." << endl;
+        cout << g_hostString << " is computing cross-correlations." << endl;
+
+        timer.Begin();
+        // For each spectrum, iterate through its result set and compute the XCorr.
+        for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
+        {
+            Spectrum* s = (*sItr);
+            size_t charge = min(s->id.charge-1,1);
+            BOOST_FOREACH(const SearchResult& result, (*sItr)->resultSet)
+                s->ComputeXCorr(result,charge);
+            s->peakDataForXCorr.clear();
+        }
+        cout << g_hostString << " finished computing cross-correlations; " << timer.End() << " seconds elapsed." << endl;
+
+    }
 	/**!
 	PrepareSpectra parses out all the spectra in an input file, deterimes the
 	charge states (user configurable), preprocesses the spectra, and trims out
@@ -921,7 +964,8 @@ namespace freicore
 	inline boost::int64_t ScoreKnownModification(DigestedPeptide candidate, float mass, float modMass, 
 												size_t locStart, size_t locEnd, Spectrum* spectrum, 
 												int idx, vector<double>& sequenceIons, 
-												const bool * ionTypesToSearchFor, float massTol) {
+												const bool * ionTypesToSearchFor, float massTol, 
+                                                int NTT, bool isDecoy) {
 
 		
 		boost::int64_t numComparisonsDone = 0;
@@ -938,6 +982,7 @@ namespace freicore
             
 		if(possibleModifications.size() == 0)
             return numComparisonsDone;
+
         // Generate variants of the current peptide using the possible substitutions
         vector <DigestedPeptide> possibleVariants;
         MakePeptideVariants(candidate, possibleVariants, minCombin, maxCombin, possibleModifications, locStart, locEnd);
@@ -958,7 +1003,7 @@ namespace freicore
             SearchResult result(variant);
             // Compute the predicted spectrum and score it against the experimental spectrum
             CalculateSequenceIons( variant, spectrum->id.charge, &sequenceIons, spectrum->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, 0, 0);
-            spectrum->ScoreSequenceVsSpectrum( result, variantSequence, sequenceIons );
+            spectrum->ScoreSequenceVsSpectrum( result, variantSequence, sequenceIons, NTT );
             // Compute the true modification mass. The modMass of in the arguments is used to look up
             // the canidate mods with a certain tolerance. It's not the true modification mass of the
             // peptide.
@@ -974,7 +1019,7 @@ namespace freicore
             // Update some search stats and add the result to the
             // spectrum
             simplethread_lock_mutex( &spectrum->mutex );
-            if( proteins[idx].isDecoy() )
+            if( isDecoy )
                 ++ spectrum->numDecoyComparisons;
             else
                 ++ spectrum->numTargetComparisons;
@@ -994,7 +1039,8 @@ namespace freicore
 	inline boost::int64_t ScoreUnknownModification(DigestedPeptide candidate, float mass, float modMass, 
 												size_t locStart, size_t locEnd, Spectrum* spectrum, 
 												int idx, vector<double>& sequenceIons, 
-												const bool * ionTypesToSearchFor) {
+												const bool * ionTypesToSearchFor, int NTT,
+                                                bool isDecoy) {
 
 		
 		boost::int64_t numComparisonsDone = 0;
@@ -1026,7 +1072,7 @@ namespace freicore
 			SearchResult result(variant);
 			// Compute the predicted spectrum and score it against the experimental spectrum
             CalculateSequenceIons( variant, spectrum->id.charge, &sequenceIons, spectrum->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, 0, 0);
-			spectrum->ScoreSequenceVsSpectrum( result, variantSequence, sequenceIons );
+			spectrum->ScoreSequenceVsSpectrum( result, variantSequence, sequenceIons, NTT );
 			// Assign the modification mass and the mass error
 			// Compute the true modification mass. The modMass in the arguments is used to look up
 			// the canidate mods with a certain tolerance. It's not the true modification mass of the
@@ -1044,7 +1090,7 @@ namespace freicore
             // Save the localization result
             localizationPossibilities.insert(make_pair<double,SearchResult>(result.mvh,result));
 		}
-        
+
         // Update some search stats and add the best 
         // localization result(s) to the spectrum
         if(topMVHScore>0)
@@ -1053,7 +1099,7 @@ namespace freicore
             multimap<double,SearchResult>::const_iterator end = localizationPossibilities.upper_bound(topMVHScore);
             
 			simplethread_lock_mutex( &spectrum->mutex );
-            if( proteins[idx].isDecoy() )
+            if( isDecoy )
 				++ spectrum->numDecoyComparisons;
 			else
 				++ spectrum->numTargetComparisons;
@@ -1068,6 +1114,7 @@ namespace freicore
             }
             simplethread_unlock_mutex( &spectrum->mutex );
         }
+        
 		// Return the number of comparisons performed
 		return numComparisonsDone;
 	}
@@ -1130,6 +1177,9 @@ namespace freicore
 		Spectrum* spectrum;
         SearchResult result(candidate);
 
+        // Number of enzymatic termini
+        int NTT = candidate.specificTermini();
+
 		// Ion types to search for {y, b, [y-H2O,b-H2O], [y-NH3,b-NH3]}
 		static const bool ionTypesToSearchFor[4] = { true, true, false, false };
 
@@ -1165,7 +1215,9 @@ namespace freicore
                             numComparisonsDone +=
                                 ScoreKnownModification(candidate, neutralMass, modMass,
                                                           0, seq.length(), spectrum,
-                                                          idx, sequenceIons, ionTypesToSearchFor, g_rtConfig->PrecursorMassTolerance[spectrum->id.charge-1]);
+                                                          idx, sequenceIons, ionTypesToSearchFor, 
+                                                          g_rtConfig->PrecursorMassTolerance[spectrum->id.charge-1],
+                                                          NTT, isDecoy);
                         }
 
                         // If the user wants us to find unknown modifications.
@@ -1174,7 +1226,8 @@ namespace freicore
                             numComparisonsDone +=
                                 ScoreUnknownModification(candidate, neutralMass, modMass,
                                                          0, seq.length(), spectrum, 
-                                                         idx, sequenceIons, ionTypesToSearchFor);
+                                                         idx, sequenceIons, ionTypesToSearchFor,
+                                                         NTT, isDecoy);
                         }
                     }
                 }
@@ -1185,7 +1238,7 @@ namespace freicore
 				    // score the match as an unmodified sequence.
 
                     CalculateSequenceIons( candidate, spectrum->id.charge, &sequenceIons, spectrum->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, 0, 0);
-				    spectrum->ScoreSequenceVsSpectrum( result, aSequence, sequenceIons );
+				    spectrum->ScoreSequenceVsSpectrum( result, aSequence, sequenceIons, NTT );
 
 				    result.massError = spectrum->mOfPrecursor-neutralMass;
 				    result.lociByIndex.insert( ProteinLocusByIndex( idx + g_rtConfig->ProteinIndexOffset, candidate.offset() ) );
@@ -1297,6 +1350,16 @@ namespace freicore
                 highIndex[tagMatch] = max(tagMisMatchHighIndex, highIndex[tagMatch]);
                 substitutionLookupTolerance[tagMatch] = max(subMassTol, substitutionLookupTolerance[tagMatch]);
                 tagMatches.insert(tagMatch);
+
+                // Score the peptide without the PTM if the modificaiton mass is less than 5.0 daltons.
+                // This would catch all parent mass errors.
+                if(g_rtConfig->unknownMassShiftSearchMode != INACTIVE && fabs(modMass) <= 5.0)
+                {
+                    TagMatchInfo unmodTagMatch(spectrum, 0.0f, MASS_MATCH, MASS_MATCH);
+                    tagMatches.insert(unmodTagMatch);
+                    lowIndex[unmodTagMatch] = 0;
+                    highIndex[unmodTagMatch] = 0;
+                }
             }
         }
 
@@ -1314,7 +1377,7 @@ namespace freicore
                 // If there are no n-terminal and c-terminal delta mass differences then
                 // score the match as an unmodified sequence.
                 CalculateSequenceIons( candidate, spectrumCharge, &sequenceIons, spectrum->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, 0, 0);
-                spectrum->ScoreSequenceVsSpectrum( result, aSequence, sequenceIons );
+                spectrum->ScoreSequenceVsSpectrum( result, aSequence, sequenceIons, NTT );
 
                 result.massError = spectrum->mOfPrecursor - neutralMass;
                 result.lociByIndex.insert( ProteinLocusByIndex( idx + g_rtConfig->ProteinIndexOffset, candidate.offset() ) );	
@@ -1322,7 +1385,7 @@ namespace freicore
 
                 if( g_rtConfig->UseMultipleProcessors )
                     simplethread_lock_mutex( &spectrum->mutex );
-                if( proteins[idx].isDecoy() )
+                if( isDecoy )
                     ++ spectrum->numDecoyComparisons;
                 else
                     ++ spectrum->numTargetComparisons;
@@ -1372,7 +1435,7 @@ namespace freicore
                         numComparisonsDone += 
                             ScoreKnownModification(candidate, neutralMass, tagMatch.modificationMass, modLowIndex, 
                                                    modHighIndex,spectrum, idx, sequenceIons, ionTypesToSearchFor,
-                                                   lookupTol );
+                                                   lookupTol, NTT, isDecoy );
                     }
 
                     // If the user wants us to find unknown modifications perform some sanity checks before scoring.
@@ -1384,7 +1447,8 @@ namespace freicore
 
                         numComparisonsDone += 
                             ScoreUnknownModification(candidate,neutralMass, tagMatch.modificationMass, modLowIndex, 
-                                                     modHighIndex, spectrum, idx, sequenceIons,	ionTypesToSearchFor);
+                                                     modHighIndex, spectrum, idx, sequenceIons,	ionTypesToSearchFor,
+                                                     NTT, isDecoy);
                     }
                 } 
             }
@@ -1462,6 +1526,7 @@ namespace freicore
 
 				// Get a protein sequence
 				Peptide protein(proteins[i].getSequence());
+                bool isDecoy = proteins[i].isDecoy();
 				// Digest the protein sequence using pwiz library. The sequence is
 				// digested using cleavage rules specified in the user configuration
 				// file.
@@ -1494,7 +1559,7 @@ namespace freicore
 				    {
 					    //START_PROFILER(1);
 					    // Search the sequence against the tags and the spectra that generated the tags
-                        boost::int64_t queryComparisonCount = QuerySequence( protein, digestedPeptides[j], i, proteins[i].isDecoy() );
+                        boost::int64_t queryComparisonCount = QuerySequence( protein, digestedPeptides[j], i, isDecoy );
 					    //cout << digestedPeptides[j].sequence() << " qCC:" << queryComparisonCount <<" test:" << (boost::int64_t(1) << 40) << endl;
 					    //STOP_PROFILER(1);
 					    // Update some thread statistics
@@ -1607,6 +1672,107 @@ namespace freicore
 		return stats;
 	}
 
+    // Number of enzymatic termini (NET) probability computation variables
+    struct NETWorkerInfo
+    {
+        // Worker ID, protein index start and protein index stop
+        size_t number;
+        size_t start;
+        size_t end;
+        // Peptide NET class distribution
+        vector<double> NETStats;
+
+        NETWorkerInfo(int num, int strt, int e)
+        {
+            number = num;
+            start = strt;
+            end = e;
+            NETStats.resize(3);
+            fill(NETStats.begin(), NETStats.end(),0);
+        };
+
+        NETWorkerInfo() {};
+    };
+    size_t numNETWorkers;
+    simplethread_handle_array_t NETWorkerHandles;
+    typedef map<simplethread_id_t, NETWorkerInfo*> NETWorkerThreadMap;
+    NETWorkerThreadMap NETWorkerThreads;
+
+    simplethread_return_t ExecuteNETThread(simplethread_arg_t threadArg)
+    {
+
+        // Get a sempahore on this function
+        simplethread_lock_mutex( &resourceMutex );
+        // Get the thread ID
+        simplethread_id_t threadId = simplethread_get_id();
+        NETWorkerThreadMap* threadMap = (NETWorkerThreadMap*) threadArg;
+        // Find the data structure that is supposed to store the thread information.
+        NETWorkerInfo* threadInfo = reinterpret_cast< NETWorkerInfo* >( threadMap->find( threadId )->second );
+        // Realease the semaphore
+        simplethread_unlock_mutex( &resourceMutex );
+
+        // Digest the proteins given the thread and accumulate the total numbers 
+        // of peptides seen in each NET class
+        for(size_t index=threadInfo->start; index <= threadInfo->end; ++index)
+        {
+            Peptide protein(proteins[index].getSequence());
+            Digestion digestion( protein, g_rtConfig->cleavageAgentRegex, g_rtConfig->digestionConfig );
+            for( Digestion::const_iterator itr = digestion.begin(); itr != digestion.end(); ++itr ) 
+                ++threadInfo->NETStats[(*itr).specificTermini()];
+        }
+        return 0;
+    }
+    
+    /* This function randomly samples 
+    */
+    void ComputeNETProbabilities()
+    {
+        cout << g_hostString << " computing NET probabilities." << endl;
+        Timer timer;
+        timer.Begin();
+        
+        g_rtConfig->NETRewardVector.resize(3);
+        fill(g_rtConfig->NETRewardVector.begin(), g_rtConfig->NETRewardVector.end(), 0);
+        if(!g_rtConfig->UseNETAdjustment)
+            return;
+
+        // Shuffle the proteins, select 5% of the total, and distribute them between workers
+        proteins.random_shuffle();
+        numNETWorkers = g_numWorkers;
+        size_t eachWorkerProteinCount = (size_t) ((proteins.size() * 0.05)/numNETWorkers);
+        // Get a semaphore
+        simplethread_lock_mutex( &resourceMutex );
+        // Create a thread for each of the processor and
+        // attach the procedure that needs to be executed
+        // for each thread [i.e. the start() function].
+        size_t proteinStartIndex = 0;
+        for( size_t t = 0; t < numNETWorkers; ++t )
+        {
+            simplethread_id_t threadId;
+            simplethread_handle_t threadHandle = simplethread_create_thread( &threadId, &ExecuteNETThread, &NETWorkerThreads );
+            NETWorkerThreads[ threadId ] = new NETWorkerInfo( t, proteinStartIndex, (proteinStartIndex+eachWorkerProteinCount) );
+            NETWorkerHandles.array.push_back( threadHandle );
+            proteinStartIndex += eachWorkerProteinCount;
+        }
+        simplethread_unlock_mutex( &resourceMutex );
+
+        simplethread_join_all( &NETWorkerHandles );
+        
+        // Accumulate the total numbers of peptides in each NET class.
+        for(NETWorkerThreadMap::const_iterator itr = NETWorkerThreads.begin(); itr != NETWorkerThreads.end(); ++itr)
+            for(size_t index=0; index < (*itr).second->NETStats.size(); ++index)
+                g_rtConfig->NETRewardVector[index] += (*itr).second->NETStats[index];
+
+        // Normalize and compute the log probability of findind a peptide in each class by random chance
+        double sum = accumulate(g_rtConfig->NETRewardVector.begin(), g_rtConfig->NETRewardVector.end(), 0.0);
+        for(size_t index=0; index < g_rtConfig->NETRewardVector.size(); ++index) 
+            if(g_rtConfig->NETRewardVector[index] > 0)
+                g_rtConfig->NETRewardVector[index]=log(g_rtConfig->NETRewardVector[index]/sum);
+        
+        cout << g_hostString << " Finished computing NET probabilities; " << timer.End() << " seconds elapsed." << endl;
+
+    }
+
     // Shared pointer to SpectraList.
     typedef boost::shared_ptr<SpectraList> SpectraListPtr;
     /**
@@ -1714,7 +1880,7 @@ namespace freicore
 			cout << g_hostString << " read " << proteins.size() << " proteins; " << readTime.End() << " seconds elapsed." << endl;
 
 			proteins.random_shuffle(); // randomize order to optimize work distribution
-
+            ComputeNETProbabilities(); // Compute the penalties for a peptide's enzymatic status
 			// Split the database into multiple parts to distrubute it over the cluster
 			#ifdef USE_MPI
 				if( g_numChildren > 0 )
@@ -1795,6 +1961,8 @@ namespace freicore
 					// Send the skip variable to all child processes
 					for( int p=0; p < g_numChildren; ++p )
 						MPI_Ssend( &skip,		1,		MPI_INT,	p+1, 0x00, MPI_COMM_WORLD );
+                    
+                    TransmitNETRewardsToChildProcess();
 				#endif
 
 				Timer searchTime;
@@ -2044,6 +2212,8 @@ namespace freicore
 
 					if( !skip )
 					{
+                        if(g_rtConfig->ComputeXCorr)
+                            ComputeXCorrs(sourceFilepath);
 						// Generate an output file for each input file
 						WriteOutputToFile( *fItr, startTime, startDate, searchTime.End(), opcs, fpcs, sumSearchStats );
 						cout << g_hostString << " finished file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
@@ -2073,6 +2243,8 @@ namespace freicore
 					int skip;
 					MPI_Recv( &skip,	1,		MPI_INT,	0,	0x00, MPI_COMM_WORLD, &st );
 
+                    ReceiveNETRewardsFromRootProcess();
+
 					// If we have spectra in the input file of the root process
 					if( !skip )
 					{
@@ -2098,7 +2270,7 @@ namespace freicore
 
 						// See if we have to do the search
 						MPI_Recv( &skip,	1,		MPI_INT,	0,	0x00, MPI_COMM_WORLD, &st );
-
+                        
 						// If the root process tell you to perform the search
 						if( !skip )
 						{
