@@ -632,7 +632,6 @@ tar.create boost_1_39_0.tar.bz2
   exclude:tar.excluded # a place to put any files in these directories that shouldn't be tarballed
   exclude:pwiz_tools/Skyline
   exclude:pwiz_tools/Topograph
-  exclude:pwiz_tools/Shared/Common
   exclude:pwiz_tools/Shared/Crawdad
   exclude:pwiz_tools/Shared/ProteomeDb
   exclude:pwiz_tools/Shared/ProteowizardWrapper
