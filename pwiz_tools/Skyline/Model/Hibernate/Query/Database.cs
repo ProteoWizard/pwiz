@@ -351,6 +351,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             string seqModified = calcPre.GetModifiedSequence(seq, true);
 
             TransitionGroup tranGroup = nodeGroup.TransitionGroup;
+            IsotopeLabelType labelType = tranGroup.LabelType;
             DbPrecursor dbPrecursor = new DbPrecursor
                                         {
                                             Peptide = dbPeptide,
@@ -454,8 +455,11 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             // optimization data will join with those with it.
                             OptStep = chromInfo.OptimizationStep,
                         };
-                        if (chromInfo.Area.HasValue && replicateSummary.SumTotalArea != 0)
-                            precursorResult.TotalAreaNormalized = chromInfo.Area/replicateSummary.SumTotalArea;
+                        // Area values get normalized to the total for the precursors of the same isotope
+                        // label type, since this allows use of CVs on spiked in heavy labeled peptides.
+                        double sumTotalArea;
+                        if (chromInfo.Area.HasValue && replicateSummary.DictTotalAreas.TryGetValue(labelType, out sumTotalArea) && sumTotalArea != 0)
+                            precursorResult.TotalAreaNormalized = chromInfo.Area/sumTotalArea;
                         AddAnnotations(precursorResult, chromInfo.Annotations);
                         // Set the optimization step no matter what, so that replicates without
                         // optimization data will join with those with it.
@@ -508,6 +512,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                            TransitionDocNode nodeTran)
         {
             Transition transition = nodeTran.Transition;
+            IsotopeLabelType labelType = transition.Group.LabelType;
             DbTransition dbTransition = new DbTransition
                                           {
                                               Precursor = dbPrecursor,
@@ -571,8 +576,11 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             transitionResult.StartTime = chromInfo.StartRetentionTime;
                             transitionResult.EndTime = chromInfo.EndRetentionTime;
                             transitionResult.Area = chromInfo.Area;
-                            if (replicateSummary.SumTotalArea != 0)
-                                transitionResult.AreaNormalized = chromInfo.Area/replicateSummary.SumTotalArea;
+                            // Area values get normalized to the total for the precursors of the same isotope
+                            // label type, since this allows use of CVs on spiked in heavy labeled peptides.
+                            double sumTotalArea;
+                            if (replicateSummary.DictTotalAreas.TryGetValue(labelType, out sumTotalArea) && sumTotalArea != 0)
+                                transitionResult.AreaNormalized = chromInfo.Area/sumTotalArea;
                             transitionResult.Background = chromInfo.BackgroundArea;
                             // transitionResult.SignalToNoise = SignalToNoise(chromInfo.Area, chromInfo.BackgroundArea);
                             transitionResult.Height = chromInfo.Height;
@@ -621,7 +629,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 {
                     for (int i = 0; i < MeasuredResults.Chromatograms.Count; i++)
                     {
-                        double sumTotalArea = 0;
+                        var dictTotalAreas = new Dictionary<IsotopeLabelType, double>();
                         foreach (var nodeGroup in srmDocument.TransitionGroups)
                         {
                             // It should not be possible to not have results when
@@ -629,13 +637,20 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             if (!nodeGroup.HasResults || nodeGroup.Results[i] == null)
                                 continue;
 
+                            var labelType = nodeGroup.TransitionGroup.LabelType;
+
                             foreach (var chromInfo in nodeGroup.Results[i])
                             {
                                 if (chromInfo.OptimizationStep == 0)
-                                    sumTotalArea += chromInfo.Area ?? 0;
+                                {
+                                    double sumTotalArea;
+                                    if (!dictTotalAreas.TryGetValue(labelType, out sumTotalArea))
+                                        sumTotalArea = 0;
+                                    dictTotalAreas[labelType] = sumTotalArea + chromInfo.Area ?? 0;                                    
+                                }
                             }
                         }
-                        ReplicateSummaries.Add(new ReplicateSummaryValues(sumTotalArea));
+                        ReplicateSummaries.Add(new ReplicateSummaryValues(dictTotalAreas));
                     }
                 }
                 ReplicateResultFiles = new List<List<DbResultFile>>();
@@ -655,12 +670,12 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 
         class ReplicateSummaryValues
         {
-            public ReplicateSummaryValues(double sumTotalArea)
+            public ReplicateSummaryValues(Dictionary<IsotopeLabelType, double> dictTotalAreas)
             {
-                SumTotalArea = sumTotalArea;
+                DictTotalAreas = dictTotalAreas;
             }
 
-            public double SumTotalArea { get; private set; }
+            public Dictionary<IsotopeLabelType, double> DictTotalAreas { get; private set; }
         }
 
         class PrecursorSummaryValues

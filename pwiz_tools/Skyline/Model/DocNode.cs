@@ -662,7 +662,7 @@ namespace pwiz.Skyline.Model
             if (childrenNew.Count == Children.Count)
                 throw new IdentityNotFoundException(childRemove.Id);
 
-            return ChangeChildren(childrenNew.ToArray(), nodeCountStack);
+            return ChangeChildren(childrenNew.ToArray(), nodeCountStack).ChangeAutoManageChildren(false);
         }
 
         public DocNodeParent RemoveChild(IdentityPath path, DocNode childRemove)
@@ -701,7 +701,11 @@ namespace pwiz.Skyline.Model
                 AddCounts(childNew, nodeCountStack);
             }
 
-            return ChangeChildren(childrenNew, nodeCountStack);
+            // If no children changed, then just return this node
+            if (ArrayUtil.ReferencesEqual(Children, childrenNew))
+                return this;
+
+            return ChangeChildren(childrenNew, nodeCountStack).ChangeAutoManageChildren(false);
         }
 
         public DocNodeParent RemoveAll(IdentityPath path, ICollection<DocNode> descendentsRemove)

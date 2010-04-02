@@ -1695,6 +1695,10 @@ namespace pwiz.Skyline.Model.Results
             /// </summary>
             public void StorePeaks()
             {
+                // If there are no peaks to store, do nothing.
+                if (_listPeakSets.Count == 0)
+                    return;
+
                 // Pick the maximum peak by the product score
                 ChromDataPeakList peakSetMax = _listPeakSets[0];
 

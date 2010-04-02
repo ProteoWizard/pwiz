@@ -45,7 +45,9 @@ namespace pwiz.Skyline.Controls.SeqNode
             return nodeTree;
         }
 
+// ReSharper disable SuggestBaseTypeForParameter
         public PeptideTreeNode(SequenceTree tree, PeptideDocNode nodePeptide)
+// ReSharper restore SuggestBaseTypeForParameter
             : base(tree, nodePeptide)
         {
         }

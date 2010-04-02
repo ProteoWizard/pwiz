@@ -165,6 +165,7 @@ namespace pwiz.Skyline
             this.statusProgress = new System.Windows.Forms.ToolStripProgressBar();
             this.statusSequences = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusPeptides = new System.Windows.Forms.ToolStripStatusLabel();
+            this.statusPrecursors = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusIons = new System.Windows.Forms.ToolStripStatusLabel();
             this.contextMenuTreeNode = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.cutContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -181,6 +182,7 @@ namespace pwiz.Skyline
             this.toolBarResults = new System.Windows.Forms.ToolStrip();
             this.labelResults = new System.Windows.Forms.ToolStripLabel();
             this.comboResults = new System.Windows.Forms.ToolStripComboBox();
+            this.sequenceTree = new pwiz.Skyline.Controls.SequenceTree();
             this.dockPanel = new DigitalRune.Windows.Docking.DockPanel();
             this.contextMenuSpectrum = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.aionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -288,7 +290,6 @@ namespace pwiz.Skyline
             this.peptideCvsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator28 = new System.Windows.Forms.ToolStripSeparator();
             this.areaPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.sequenceTree = new pwiz.Skyline.Controls.SequenceTree();
             this.menuMain.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.contextMenuTreeNode.SuspendLayout();
@@ -1406,6 +1407,7 @@ namespace pwiz.Skyline
             this.statusProgress,
             this.statusSequences,
             this.statusPeptides,
+            this.statusPrecursors,
             this.statusIons});
             this.statusStrip.Location = new System.Drawing.Point(0, 492);
             this.statusStrip.Name = "statusStrip";
@@ -1416,7 +1418,7 @@ namespace pwiz.Skyline
             // 
             this.statusGeneral.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.statusGeneral.Name = "statusGeneral";
-            this.statusGeneral.Size = new System.Drawing.Size(529, 17);
+            this.statusGeneral.Size = new System.Drawing.Size(454, 17);
             this.statusGeneral.Spring = true;
             this.statusGeneral.Text = "Ready";
             this.statusGeneral.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -1433,7 +1435,7 @@ namespace pwiz.Skyline
             this.statusSequences.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.statusSequences.Name = "statusSequences";
             this.statusSequences.Size = new System.Drawing.Size(60, 17);
-            this.statusSequences.Text = "0 seq";
+            this.statusSequences.Text = "0 prot";
             this.statusSequences.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // statusPeptides
@@ -1445,12 +1447,21 @@ namespace pwiz.Skyline
             this.statusPeptides.Text = "0 pep";
             this.statusPeptides.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
+            // statusPrecursors
+            // 
+            this.statusPrecursors.AutoSize = false;
+            this.statusPrecursors.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.statusPrecursors.Name = "statusPrecursors";
+            this.statusPrecursors.Size = new System.Drawing.Size(65, 17);
+            this.statusPrecursors.Text = "0 prec";
+            this.statusPrecursors.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
             // statusIons
             // 
             this.statusIons.AutoSize = false;
             this.statusIons.Name = "statusIons";
-            this.statusIons.Size = new System.Drawing.Size(65, 17);
-            this.statusIons.Text = "0 ion";
+            this.statusIons.Size = new System.Drawing.Size(75, 17);
+            this.statusIons.Text = "0 tran";
             this.statusIons.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // contextMenuTreeNode
@@ -1599,6 +1610,34 @@ namespace pwiz.Skyline
             this.comboResults.Overflow = System.Windows.Forms.ToolStripItemOverflow.Never;
             this.comboResults.Size = new System.Drawing.Size(160, 23);
             this.comboResults.SelectedIndexChanged += new System.EventHandler(this.comboResults_SelectedIndexChanged);
+            // 
+            // sequenceTree
+            // 
+            this.sequenceTree.AllowDrop = true;
+            this.sequenceTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.sequenceTree.AutoExpandSingleNodes = true;
+            this.sequenceTree.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.sequenceTree.Cursor = System.Windows.Forms.Cursors.Arrow;
+            this.sequenceTree.HideSelection = false;
+            this.sequenceTree.LabelEdit = true;
+            this.sequenceTree.Location = new System.Drawing.Point(-1, 0);
+            this.sequenceTree.Name = "sequenceTree";
+            this.sequenceTree.ResultsIndex = 0;
+            this.sequenceTree.SelectedPath = null;
+            this.sequenceTree.Size = new System.Drawing.Size(271, 444);
+            this.sequenceTree.TabIndex = 2;
+            this.sequenceTree.PickedChildrenEvent += new System.EventHandler<pwiz.Skyline.Controls.SeqNode.PickedChildrenEventArgs>(this.sequenceTree_PickedChildrenEvent);
+            this.sequenceTree.AfterNodeEdit += new System.EventHandler<System.Windows.Forms.NodeLabelEditEventArgs>(this.sequenceTree_AfterLabelEdit);
+            this.sequenceTree.MouseUp += new System.Windows.Forms.MouseEventHandler(this.sequenceTree_MouseUp);
+            this.sequenceTree.DragDrop += new System.Windows.Forms.DragEventHandler(this.sequenceTree_DragDrop);
+            this.sequenceTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.sequenceTree_AfterSelect);
+            this.sequenceTree.SelectedNodeChanged += new System.Windows.Forms.TreeViewEventHandler(this.sequenceTree_SelectedNodeChanged);
+            this.sequenceTree.BeforeNodeEdit += new System.EventHandler<System.Windows.Forms.NodeLabelEditEventArgs>(this.sequenceTree_BeforeLabelEdit);
+            this.sequenceTree.DragEnter += new System.Windows.Forms.DragEventHandler(this.sequenceTree_DragEnter);
+            this.sequenceTree.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.sequenceTree_ItemDrag);
+            this.sequenceTree.DragOver += new System.Windows.Forms.DragEventHandler(this.sequenceTree_DragOver);
             // 
             // dockPanel
             // 
@@ -2470,34 +2509,6 @@ namespace pwiz.Skyline
             this.areaPropsContextMenuItem.Text = "Properties...";
             this.areaPropsContextMenuItem.Click += new System.EventHandler(this.areaPropsContextMenuItem_Click);
             // 
-            // sequenceTree
-            // 
-            this.sequenceTree.AllowDrop = true;
-            this.sequenceTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.sequenceTree.AutoExpandSingleNodes = true;
-            this.sequenceTree.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.sequenceTree.Cursor = System.Windows.Forms.Cursors.Arrow;
-            this.sequenceTree.HideSelection = false;
-            this.sequenceTree.LabelEdit = true;
-            this.sequenceTree.Location = new System.Drawing.Point(-1, 0);
-            this.sequenceTree.Name = "sequenceTree";
-            this.sequenceTree.ResultsIndex = 0;
-            this.sequenceTree.SelectedPath = null;
-            this.sequenceTree.Size = new System.Drawing.Size(271, 444);
-            this.sequenceTree.TabIndex = 2;
-            this.sequenceTree.PickedChildrenEvent += new System.EventHandler<pwiz.Skyline.Controls.SeqNode.PickedChildrenEventArgs>(this.sequenceTree_PickedChildrenEvent);
-            this.sequenceTree.AfterNodeEdit += new System.EventHandler<System.Windows.Forms.NodeLabelEditEventArgs>(this.sequenceTree_AfterLabelEdit);
-            this.sequenceTree.MouseUp += new System.Windows.Forms.MouseEventHandler(this.sequenceTree_MouseUp);
-            this.sequenceTree.DragDrop += new System.Windows.Forms.DragEventHandler(this.sequenceTree_DragDrop);
-            this.sequenceTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.sequenceTree_AfterSelect);
-            this.sequenceTree.SelectedNodeChanged += new System.Windows.Forms.TreeViewEventHandler(this.sequenceTree_SelectedNodeChanged);
-            this.sequenceTree.BeforeNodeEdit += new System.EventHandler<System.Windows.Forms.NodeLabelEditEventArgs>(this.sequenceTree_BeforeLabelEdit);
-            this.sequenceTree.DragEnter += new System.Windows.Forms.DragEventHandler(this.sequenceTree_DragEnter);
-            this.sequenceTree.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.sequenceTree_ItemDrag);
-            this.sequenceTree.DragOver += new System.Windows.Forms.DragEventHandler(this.sequenceTree_DragOver);
-            // 
             // SkylineWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -2567,7 +2578,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
         private System.Windows.Forms.StatusStrip statusStrip;
         private System.Windows.Forms.ToolStripStatusLabel statusSequences;
-        private System.Windows.Forms.ToolStripStatusLabel statusPeptides;
+        private System.Windows.Forms.ToolStripStatusLabel statusPrecursors;
         private System.Windows.Forms.ToolStripStatusLabel statusIons;
         private System.Windows.Forms.ToolStripStatusLabel statusGeneral;
         private System.Windows.Forms.ToolStripMenuItem expandAllToolStripMenuItem;
@@ -2795,6 +2806,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem timePropsContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator38;
         private System.Windows.Forms.ToolStripMenuItem manageResultsMenuItem;
+        private System.Windows.Forms.ToolStripStatusLabel statusPeptides;
     }
 }
 
