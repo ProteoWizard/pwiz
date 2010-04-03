@@ -683,7 +683,7 @@ namespace pwiz.Topograph.Model
                 peptideAnalysis.SetWorkspaceVersion(newWorkspaceVersion);
             }
             EnsureEntitiesChangedEventArgs();
-            IsDirty = true;
+            IsDirty = IsDirty || !WorkspaceVersion.Equals(SavedWorkspaceVersion);
         }
         public bool SaveIfNotDirty(PeptideAnalysis peptideAnalysis)
         {

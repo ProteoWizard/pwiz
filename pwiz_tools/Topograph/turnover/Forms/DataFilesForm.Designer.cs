@@ -108,7 +108,6 @@ namespace pwiz.Topograph.ui.Forms
             // gridView
             // 
             this.gridView.AllowUserToAddRows = false;
-            this.gridView.AllowUserToDeleteRows = false;
             this.gridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.gridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.gridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
@@ -124,6 +123,7 @@ namespace pwiz.Topograph.ui.Forms
             this.gridView.TabIndex = 0;
             this.gridView.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridView_CellEndEdit);
             this.gridView.RowHeaderMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.gridView_RowHeaderMouseDoubleClick);
+            this.gridView.RowsRemoved += new System.Windows.Forms.DataGridViewRowsRemovedEventHandler(this.gridView_RowsRemoved);
             // 
             // colName
             // 

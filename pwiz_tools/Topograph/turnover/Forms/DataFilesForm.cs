@@ -28,6 +28,7 @@ using DigitalRune.Windows.Docking;
 using NHibernate;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
+using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.ui.Forms
 {
@@ -171,6 +172,120 @@ namespace pwiz.Topograph.ui.Forms
             {
                 dataFileFrame.Activate();
             }
+        }
+
+        private void gridView_RowsRemoved(object sender, DataGridViewRowsRemovedEventArgs e)
+        {
+            BeginInvoke(new Action(AfterRowsRemoved));
+        }
+
+        private bool inRowsRemoved;
+        private void AfterRowsRemoved() {
+            if (inRowsRemoved)
+            {
+                return;
+            }
+            try
+            {
+                inRowsRemoved = true;
+                var deletedRows = new HashSet<DataGridViewRow>(_dataFileRows.Values);
+                for (int iRow = 0; iRow < gridView.Rows.Count; iRow++)
+                {
+                    deletedRows.Remove(gridView.Rows[iRow]);
+                }
+                if (deletedRows.Count == 0)
+                {
+                    return;
+                }
+                string message = deletedRows.Count == 1
+                                     ?
+                                         "Are you sure you want to remove this data file from the workspace?  All search results and analyses of this file will be deleted."
+                                     : "Are you sure you want to remove these " + deletedRows.Count +
+                                       " data files from the workspace?  All search results and analyses of these files will also be deleted.";
+                bool cancelled = MessageBox.Show(this, message, Program.AppName, MessageBoxButtons.OKCancel) ==
+                                 DialogResult.Cancel;
+                if (!cancelled)
+                {
+                    var dataFileIds = new List<long>();
+                    foreach (var row in deletedRows)
+                    {
+                        dataFileIds.Add(((MsDataFile) row.Tag).Id.Value);
+                    }
+                    var longWaitBroker = new LongOperationBroker((b => DeleteDataFiles(b, dataFileIds)),
+                                                                 new LongWaitDialog(this, "Deleting data files"));
+                    longWaitBroker.LaunchJob();
+                    cancelled = longWaitBroker.WasCancelled;
+                }
+
+                if (cancelled)
+                {
+                    gridView.Rows.AddRange(deletedRows.ToArray());
+                }
+                else
+                {
+                    foreach (var row in deletedRows)
+                    {
+                        _dataFileRows.Remove((MsDataFile) row.Tag);
+                    }
+                }
+            }
+            finally
+            {
+                inRowsRemoved = false;
+            }
+        }
+
+        private void DeleteDataFiles(LongOperationBroker broker, ICollection<long> dataFileIds)
+        {
+            var sqlDataFileIds = new StringBuilder("(");
+            var strComma = "";
+            foreach (var id in dataFileIds)
+            {
+                sqlDataFileIds.Append(strComma);
+                strComma = ",";
+                sqlDataFileIds.Append(id);
+            }
+            sqlDataFileIds.Append(")");
+            var sqlFileAnalysisIds = "(SELECT Id FROM DbPeptideFileAnalysis WHERE MsDataFile IN " + sqlDataFileIds + ")";
+            using (var session = Workspace.OpenSession())
+            {
+                session.BeginTransaction();
+                broker.UpdateStatusMessage("Deleting chromatograms");
+                session.CreateSQLQuery("DELETE FROM DbChromatogram WHERE PeptideFileAnalysis IN " + sqlFileAnalysisIds)
+                    .ExecuteUpdate();
+                broker.UpdateStatusMessage("Deleting peaks");
+                session.CreateSQLQuery("DELETE FROM DbPeak WHERE PeptideFileAnalysis IN " + sqlFileAnalysisIds)
+                    .ExecuteUpdate();
+                broker.UpdateStatusMessage("Deleting distributions");
+                session.CreateSQLQuery(
+                    "DELETE FROM DbPeptideAmount WHERE PeptideDistribution IN (SELECT Id FROM DbPeptideDistribution WHERE PeptideFileAnalysis IN " +
+                    sqlFileAnalysisIds + ")")
+                    .ExecuteUpdate();
+                session.CreateSQLQuery("DELETE FROM DbPeptideDistribution WHERE PeptideFileAnalysis IN " + sqlFileAnalysisIds)
+                    .ExecuteUpdate();
+                broker.UpdateStatusMessage("Deleting file analyses");
+                session.CreateSQLQuery("DELETE FROM DbPeptideFileAnalysis WHERE MsDataFile IN " + sqlDataFileIds)
+                    .ExecuteUpdate();
+                broker.UpdateStatusMessage("Deleting search results");
+                session.CreateSQLQuery("DELETE FROM DbPeptideSearchResult WHERE MsDataFile IN " + sqlDataFileIds)
+                    .ExecuteUpdate();
+                broker.UpdateStatusMessage("Deleting data files");
+                session.CreateSQLQuery("DELETE FROM DbMsDataFile WHERE Id IN " + sqlDataFileIds)
+                    .ExecuteUpdate();
+                broker.UpdateStatusMessage("Updating parent tables");
+                session.CreateSQLQuery(
+                    "UPDATE DbPeptideAnalysis SET FileAnalysisCount = (SELECT COUNT(Id) FROM DbPeptideFileAnalysis WHERE PeptideAnalysis = DbPeptideAnalysis.Id)")
+                    .ExecuteUpdate();
+                session.CreateSQLQuery("UPDATE DbPeptide SET SearchResultCount = (SELECT Count(Id) FROM DbPeptideSearchResult WHERE Peptide = DbPeptide.Id)")
+                    .ExecuteUpdate();
+                session.CreateSQLQuery(
+                    "Update DbWorkspace SET MsDataFileCount = (SELECT Count(Id) FROM DbMsDataFile WHERE Workspace = DbWorkspace.Id)")
+                    .ExecuteUpdate();
+                broker.SetIsCancelleable(false);
+                broker.UpdateStatusMessage("Committing transaction");
+                session.Transaction.Commit();
+            }
+            
         }
     }
 }
