@@ -92,13 +92,14 @@ namespace pwiz.Skyline.SettingsUI
 
             // Initialize spectral library settings
             _driverLibrary = new SettingsListBoxDriver<LibrarySpec>(listLibraries, Settings.Default.SpectralLibraryList);
-            IList<LibrarySpec> list = Libraries.LibrarySpecs;
+            IList<LibrarySpec> listLibrarySpecs = Libraries.LibrarySpecs;
 
-            _driverLibrary.LoadList(null, list);
+            _driverLibrary.LoadList(null, listLibrarySpecs);
             _driverBackgroundProteome = new SettingsListComboDriver<BackgroundProteomeSpec>(comboBackgroundProteome, Settings.Default.BackgroundProteomeList);
             _driverBackgroundProteome.LoadList(_peptideSettings.BackgroundProteome.Name);
 
-            btnExplore.Enabled = _driverLibrary.List.Count > 0 ? true : false;
+            panelPick.Visible = listLibrarySpecs.Count > 0;
+            btnExplore.Enabled = listLibraries.Items.Count > 0;
 
             comboMatching.SelectedIndex = (int)Libraries.Pick;
 
@@ -106,8 +107,6 @@ namespace pwiz.Skyline.SettingsUI
             _lastPeptideCount = Libraries.PeptideCount.ToString();
 
             UpdateRanks(null);
-
-            panelPick.Visible = (list.Count > 0);
 
             // Initialize modification settings
             _driverStaticMod = new SettingsListBoxDriver<StaticMod>(listStaticMods, Settings.Default.StaticModList);
@@ -314,15 +313,9 @@ namespace pwiz.Skyline.SettingsUI
         private void editLibraries_Click(object sender, EventArgs e)
         {
             _driverLibrary.EditList();
-            if (listLibraries.CheckedIndices.Count == 0)
-            {
-                panelPick.Visible = false;
-                btnExplore.Enabled = false;
-            }
-            else
-            {
-                btnExplore.Enabled = true;
-            }
+
+            panelPick.Visible = listLibraries.CheckedIndices.Count > 0;
+            btnExplore.Enabled = listLibraries.Items.Count > 0;
         }
 
         private void btnBuildLibrary_Click(object sender, EventArgs e)
