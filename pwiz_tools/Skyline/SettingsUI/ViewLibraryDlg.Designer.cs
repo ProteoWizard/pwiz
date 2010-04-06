@@ -42,6 +42,7 @@ namespace pwiz.Skyline.SettingsUI
             this.PeptideLabel = new System.Windows.Forms.Label();
             this.PeptideTextBox = new System.Windows.Forms.TextBox();
             this.GraphPanel = new System.Windows.Forms.Panel();
+            this.graphControl = new pwiz.MSGraph.MSGraphControl();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.aionsButton = new System.Windows.Forms.ToolStripButton();
             this.bionsButton = new System.Windows.Forms.ToolStripButton();
@@ -57,7 +58,6 @@ namespace pwiz.Skyline.SettingsUI
             this.copyButton = new System.Windows.Forms.ToolStripButton();
             this.saveButton = new System.Windows.Forms.ToolStripButton();
             this.printButton = new System.Windows.Forms.ToolStripButton();
-            this.graphControl = new pwiz.MSGraph.MSGraphControl();
             this.panel2 = new System.Windows.Forms.Panel();
             this.btnCancel = new System.Windows.Forms.Button();
             this.ViewLibraryPanel = new System.Windows.Forms.Panel();
@@ -262,6 +262,27 @@ namespace pwiz.Skyline.SettingsUI
             this.GraphPanel.Size = new System.Drawing.Size(477, 333);
             this.GraphPanel.TabIndex = 0;
             // 
+            // graphControl
+            // 
+            this.graphControl.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.graphControl.EditButtons = System.Windows.Forms.MouseButtons.Left;
+            this.graphControl.EditModifierKeys = System.Windows.Forms.Keys.None;
+            this.graphControl.IsEnableVPan = false;
+            this.graphControl.IsEnableVZoom = false;
+            this.graphControl.IsShowCopyMessage = false;
+            this.graphControl.Location = new System.Drawing.Point(0, 0);
+            this.graphControl.Name = "graphControl";
+            this.graphControl.ScrollGrace = 0;
+            this.graphControl.ScrollMaxX = 0;
+            this.graphControl.ScrollMaxY = 0;
+            this.graphControl.ScrollMaxY2 = 0;
+            this.graphControl.ScrollMinX = 0;
+            this.graphControl.ScrollMinY = 0;
+            this.graphControl.ScrollMinY2 = 0;
+            this.graphControl.Size = new System.Drawing.Size(449, 329);
+            this.graphControl.TabIndex = 3;
+            this.graphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.graphControl_ContextMenuBuilder);
+            // 
             // toolStrip1
             // 
             this.toolStrip1.Dock = System.Windows.Forms.DockStyle.Right;
@@ -428,27 +449,6 @@ namespace pwiz.Skyline.SettingsUI
             this.printButton.Text = "toolStripButton12";
             this.printButton.ToolTipText = "Print";
             this.printButton.Click += new System.EventHandler(this.printButton_Click);
-            // 
-            // graphControl
-            // 
-            this.graphControl.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.graphControl.EditButtons = System.Windows.Forms.MouseButtons.Left;
-            this.graphControl.EditModifierKeys = System.Windows.Forms.Keys.None;
-            this.graphControl.IsEnableVPan = false;
-            this.graphControl.IsEnableVZoom = false;
-            this.graphControl.IsShowCopyMessage = false;
-            this.graphControl.Location = new System.Drawing.Point(0, 0);
-            this.graphControl.Name = "graphControl";
-            this.graphControl.ScrollGrace = 0;
-            this.graphControl.ScrollMaxX = 0;
-            this.graphControl.ScrollMaxY = 0;
-            this.graphControl.ScrollMaxY2 = 0;
-            this.graphControl.ScrollMinX = 0;
-            this.graphControl.ScrollMinY = 0;
-            this.graphControl.ScrollMinY2 = 0;
-            this.graphControl.Size = new System.Drawing.Size(449, 329);
-            this.graphControl.TabIndex = 3;
-            this.graphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.graphControl_ContextMenuBuilder);
             // 
             // panel2
             // 

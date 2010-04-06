@@ -474,6 +474,7 @@ namespace pwiz.Skyline.SettingsUI
             // Order matters!!
             LoadLibrary();
             InitializePeptides();
+            _currentRange = BinaryRangeSearch(PeptideTextBox.Text, new Range(0, _peptides.Length - 1));
             UpdatePageInfo();
             UpdateStatusArea();
             UpdatePeptideListBox();
