@@ -81,6 +81,13 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
+        public static System.Drawing.Bitmap Copy_Bitmap {
+            get {
+                object obj = ResourceManager.GetObject("Copy_Bitmap", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         public static System.Drawing.Bitmap Cut {
             get {
                 object obj = ResourceManager.GetObject("Cut", resourceCulture);
@@ -207,6 +214,62 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
+        public static System.Drawing.Bitmap Ions_1 {
+            get {
+                object obj = ResourceManager.GetObject("Ions_1", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        public static System.Drawing.Bitmap Ions_2 {
+            get {
+                object obj = ResourceManager.GetObject("Ions_2", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        public static System.Drawing.Bitmap Ions_A {
+            get {
+                object obj = ResourceManager.GetObject("Ions_A", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        public static System.Drawing.Bitmap Ions_B {
+            get {
+                object obj = ResourceManager.GetObject("Ions_B", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        public static System.Drawing.Bitmap Ions_C {
+            get {
+                object obj = ResourceManager.GetObject("Ions_C", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        public static System.Drawing.Bitmap Ions_X {
+            get {
+                object obj = ResourceManager.GetObject("Ions_X", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        public static System.Drawing.Bitmap Ions_Y {
+            get {
+                object obj = ResourceManager.GetObject("Ions_Y", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        public static System.Drawing.Bitmap Ions_Z {
+            get {
+                object obj = ResourceManager.GetObject("Ions_Z", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         public static System.Drawing.Bitmap Keep {
             get {
                 object obj = ResourceManager.GetObject("Keep", resourceCulture);
@@ -287,6 +350,13 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Bitmap PopupBtn {
             get {
                 object obj = ResourceManager.GetObject("PopupBtn", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        public static System.Drawing.Bitmap Print {
+            get {
+                object obj = ResourceManager.GetObject("Print", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

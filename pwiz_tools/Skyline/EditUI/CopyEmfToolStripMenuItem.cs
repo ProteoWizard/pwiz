@@ -37,27 +37,32 @@ namespace pwiz.Skyline.EditUI
 
         void CopyEmfToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Metafile mf = ZedGraphControl.MasterPane.GetMetafile();
+            CopyEmf(ZedGraphControl);
+        }
+
+        public static void CopyEmf(ZedGraphControl zedGraphControl)
+        {
+            Metafile mf = zedGraphControl.MasterPane.GetMetafile();
             bool success = false;
-			if (OpenClipboard(ZedGraphControl.Handle))
-			{
-				if (EmptyClipboard())
-				{
-				    success = true;
-					SetClipboardData(14 /*CF_ENHMETAFILE*/, mf.GetHenhmetafile());
+            if (OpenClipboard(zedGraphControl.Handle))
+            {
+                if (EmptyClipboard())
+                {
+                    success = true;
+                    SetClipboardData(14 /*CF_ENHMETAFILE*/, mf.GetHenhmetafile());
                     // TODO (nicksh): It would be nice if we also set the CF_BITMAP
-					CloseClipboard();
-				}
-			}
-            if (ZedGraphControl.IsShowCopyMessage)
+                    CloseClipboard();
+                }
+            }
+            if (zedGraphControl.IsShowCopyMessage)
             {
                 if (success)
                 {
-                    MessageBox.Show(ZedGraphControl, "Metafile image copied to clipboard");
+                    MessageBox.Show(zedGraphControl, "Metafile image copied to clipboard");
                 }
                 else
                 {
-                    MessageBox.Show(ZedGraphControl, "Unable to copy metafile image to the clipboard.");
+                    MessageBox.Show(zedGraphControl, "Unable to copy metafile image to the clipboard.");
                 }
             }
         }

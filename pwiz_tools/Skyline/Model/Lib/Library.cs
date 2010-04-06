@@ -1209,6 +1209,33 @@ namespace pwiz.Skyline.Model.Lib
             return raw1.Length - raw2.Length;
         }
 
+        public IEnumerable<char> AminoAcids
+        {
+            get
+            {
+                for (int i = 1; i < _key.Length; i++)
+                {
+                    char aa = (char)_key[i];
+                    if (AminoAcid.IsExAA(aa))
+                        yield return aa;
+                }
+            }
+        }
+
+        public int ModificationCount
+        {
+            get
+            {
+                int count = 0;
+                for (int i = 1; i < _key.Length; i++)
+                {
+                    if (_key[i] == '[')
+                        count++;
+                }
+                return count;
+            }
+        }   
+
         #region object overrides
 
         public bool Equals(LibKey obj)

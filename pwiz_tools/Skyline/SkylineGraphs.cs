@@ -633,7 +633,7 @@ namespace pwiz.Skyline
             }
 
             if (iUnzoom != -1)
-                menuStrip.Items.Insert(iUnzoom, toolStripSeparator15);
+                menuStrip.Items.Insert(iUnzoom, toolStripSeparator27);
 
             // Insert skyline specific menus
             var set = Settings.Default;

@@ -17,10 +17,11 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Globalization;
 using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using pwiz.MSGraph;
@@ -70,92 +71,87 @@ namespace pwiz.Skyline.SettingsUI
     /// </summary>
     public partial class ViewLibraryDlg : Form, IGraphContainer, IStateProvider
     {
+        // Used to parse the modification string in a given sequence
+        private const string REGEX_MODIFICATION_PATTERN = @"\[.*?\]";
+        private const string REGEX_VALID_MODIFICATION = @"[+-]*\d+(\.\d+)*";
+
         /// <summary>
-        /// Data structure used to store information about a given peptide
-        /// in the peptides list.
+        /// Data structure containing information on a single peptide. It is
+        /// basically a very lightweight wrapper for the LibKey object.
         /// </summary>
-        private struct PeptideInfo
+        private struct PepInfo
         {
-            // Used to parse the modification string in a given sequence
-            private const string RegexModificationPattern = @"\[.*?\]";
-            private const string RegexValidModification = @"[+-]*\d+(\.\d+)*";
+            private const int PEPTIDE_CHARGE_OFFSET = 3;
+//            private const int PEPTIDE_MODIFICATION_OFFSET_LOWER = 2;
+//            private const int PEPTIDE_MODIFICATION_OFFSET_UPPER = 1;
 
-            // The peptide sequence, including the modification
-            private string _sequence;
-            public string Sequence
+            public PepInfo(LibKey key, ICollection<byte> lookupPool)
+                : this()
             {
-                get
-                {
-                    return _sequence;
-                }
-                set
-                {
-                    _sequence = value;
-                    
-                    // We want to extract a few pieces of information from the
-                    // sequence and store the information.
-
-                    // First, strip the modification string from the sequence.
-                    _unmodifiedSequence = Regex.Replace(_sequence, RegexModificationPattern, string.Empty);
-                    
-                    // Next, create the list of modifications, if any
-                    CreateModificationsList();
-                }
+                Key = key;
+                IndexLookup = lookupPool.Count;
+                foreach (char aa in key.AminoAcids)
+                    lookupPool.Add((byte)aa);
+                
+                // Order extra bytes so that a byte-by-byte comparison of the
+                // lookup bytes will order correctly.
+                lookupPool.Add((byte)key.Charge);
+                int countMods = key.ModificationCount;
+                lookupPool.Add((byte)(countMods & 0xFF));
+                lookupPool.Add((byte)((countMods >> 8) & 0xFF)); // probably never non-zero, but to be safe
+                LengthLookup = lookupPool.Count - IndexLookup;
             }
 
-            // List of modifications for this peptide
-            private IList<ModificationInfo> _modificationList;
-            public IList<ModificationInfo> Modifications { get { return _modificationList; } }
-            private void CreateModificationsList()
+            public LibKey Key { get; private set; }
+            private int IndexLookup { get; set; }
+            private int LengthLookup { get; set; }
+
+            public string DisplayString { get { return Key.ToString(); } }
+            public int Charge { get { return Key.Charge; } }
+            public string Sequence { get { return Key.Sequence; } }
+            public bool IsModified { get { return Key.IsModified; } }
+
+            private int SequenceLength { get { return LengthLookup - PEPTIDE_CHARGE_OFFSET; } }
+
+            public string GetAASequence(byte[] lookupPool)
             {
-                _modificationList = new List<ModificationInfo>();
-                foreach (Match m in Regex.Matches(Sequence, RegexModificationPattern))
-                {
-                    String str = m.ToString();
-
-                    // Strip the "[" and "]" characters 
-                    str = str.Substring(1, str.Length - 2);
-
-                    // Look up the modified amino acid preceding the "["
-                    var aminoAcid = new char[1];
-                    Sequence.CopyTo(m.Index - 1, aminoAcid, 0, 1);
-
-                    // Make sure we have a valid modification pattern.
-                    // It should be a "+" or "-" followed by a number.
-                    if (Regex.IsMatch(str, RegexValidModification))
-                    {
-                        _modificationList.Add(new ModificationInfo(aminoAcid[0], Double.Parse(str)));
-                    }
-                }
+                return Encoding.Default.GetString(lookupPool, IndexLookup, SequenceLength);
             }
 
-            // The peptide sequence MINUS the modification string.
-            private string _unmodifiedSequence;
-            public string UnmodifiedSequence { get { return _unmodifiedSequence; } }
-
-            // This is the display string that will be shown in the list. In
-            // addition to the sequence, including modification, it will also
-            // contain plus signs to indicate the charge. Example: AC[+59]D++
-            private string _displayString;
-            public string DisplayString
+            public static int Compare(PepInfo p1, PepInfo p2, IList<byte> lookupPool)
             {
-                get
+                // If they point to the same look-up index, then they are equal.
+                if (p1.IndexLookup == p2.IndexLookup)
+                    return 0;
+
+                int lenP1 = p1.SequenceLength;
+                int lenP2 = p2.SequenceLength;
+                int lenCompare;
+                // If sequences are equal length compare charge and mod count also
+                if (lenP1 == lenP2)
+                    lenCompare = p1.LengthLookup;
+                // Otherwise, just compare the length of the shorter sequence
+                else
+                    lenCompare = Math.Min(lenP1, lenP2);
+                // Compare bytes in the lookup pool
+                for (int i = 0; i < lenCompare; i++)
                 {
-                    return _displayString;
+                    byte b1 = lookupPool[p1.IndexLookup + i];
+                    byte b2 = lookupPool[p2.IndexLookup + i];
+                    // If unequal bytes are found, compare the bytes
+                    if (b1 != b2)
+                        return b1 - b2;
                 }
-                set
-                {
-                    _displayString = value;
-                    _unmodifiedDisplayString = Regex.Replace(_displayString, RegexModificationPattern, string.Empty);
-                }
+
+                // If sequence length is not equal, the shorter should be first.
+                if (lenP1 != lenP2)
+                    return lenP1 - lenP2;
+
+                // p1 and p2 have the same unmodified sequence, same number
+                // of charges, and same number of modifications. Just 
+                // compare their display strings directly in this case.
+                return Comparer.Default.Compare(p1.DisplayString, p2.DisplayString);
             }
-
-            // This is the display string from above MINUS the modification.
-            // Example: ACD++
-            private string _unmodifiedDisplayString;
-            public string UnmodifiedDisplayString { get { return _unmodifiedDisplayString; } }
-
-            public int Charge { get; set; }
         }
 
         /// <summary>
@@ -175,58 +171,31 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         /// <summary>
-        /// IComparer implementation to compare two PeptideInfo objects. This
-        /// is used to sort the array of PeptideInfo objects we load from each
-        /// library so that we can show it in alphabetical order in the list,
-        /// but also show the modified peptides right below the unmodified 
-        /// versions. Here's an example:
+        /// IComparer implementation to compare two PepInfo objects. It is used
+        /// to sort the array of PepInfo objects we load from each library so 
+        /// that we can show it in alphabetical order in the list, and also 
+        /// show the modified peptides right below the unmodified versions. 
+        /// Here's an example:
         /// DEYACR+
         /// DEYAC[+57.0]R+
         /// DEYACR++
         /// DEYAC[+57.0]R++
         /// </summary>
-        private class PeptideInfoComparer : IComparer<PeptideInfo>
+        private class PepInfoComparer : IComparer<PepInfo>
         {
-            private readonly CompareInfo _compInfo;
-            private readonly CompareOptions _compOptions = CompareOptions.None;
+            private readonly List<byte> _lookupPool;
 
             // Constructs a comparer using the specified CompareOptions.
-            public PeptideInfoComparer(CompareInfo cmpi, CompareOptions options)
+            public PepInfoComparer(List<byte> lookupPool)
             {
-                _compInfo = cmpi;
-                _compOptions = options;
+                _lookupPool = lookupPool;
             }
 
             // Compares peptides in PeptideInfo according to the CompareOptions
             // specified in the constructor.
-            public int Compare(PeptideInfo a, PeptideInfo b)
+            public int Compare(PepInfo p1, PepInfo p2)
             {
-                int ret = _compInfo.Compare(a.UnmodifiedDisplayString, b.UnmodifiedDisplayString, _compOptions);
-                if (0 == ret)
-                {
-                    // If the unmodified sequences AND the number of 
-                    // charges are the same, it gets a little more 
-                    // complicated:
-                    if( a.Modifications.Count > b.Modifications.Count )
-                    {
-                        // If a contains more modifications than b, we want
-                        // b to show up ahead of a in the list
-                        return 1;                       
-                    }
-                    if ( a.Modifications.Count < b.Modifications.Count)
-                    {
-                        // If a contains less modifications than b, we want
-                        // a to show up ahead of b in the list
-                        return -1;
-                    }
-
-                    // a and b have the same unmodified sequence, same number
-                    // of charges, and same number of modifications. Just 
-                    // compare their display strings directly in this case.
-                    return _compInfo.Compare(a.DisplayString, b.DisplayString, _compOptions);
-                }
-                    
-                return ret;
+                return PepInfo.Compare(p1, p2, _lookupPool);
             }
         }
 
@@ -240,6 +209,12 @@ namespace pwiz.Skyline.SettingsUI
             {
                 StartIndex = start;
                 EndIndex = end;
+            }
+
+            public Range(Range rangeIn)
+            {
+                StartIndex = rangeIn.StartIndex;
+                EndIndex = rangeIn.EndIndex;
             }
 
             public int StartIndex { get; set; }
@@ -418,33 +393,15 @@ namespace pwiz.Skyline.SettingsUI
         private readonly SettingsListBoxDriver<LibrarySpec> _driverLibrary;
         private Library _selectedLibrary;
         private Range _currentRange;
-        private PeptideInfo[] _peptides;
+        //private PeptideInfo[] _peptides;
         private readonly PageInfo _pageInfo;
-
-        // To improve the performance of searching for peptides, when the
-        // user types in a sequence in the edit box, if there are matches,
-        // we store the range for the matches in this table. Later, if the
-        // user types in the same sequence, or a substring of the sequence,
-        // we use the table to narrow down the search. We can do tis 
-        // because the peptides are stored in the array in alphabetical
-        // order.
-        //
-        // For example, say we have the following peptides in the list:
-        // AACD
-        // ACDA
-        // CADA
-        // DCAA
-        // 
-        // The user types in "A" in the edit box. We find the two matches
-        // starting with the letter A and store the range in the range 
-        // table. The user then types in "AA". Now we look up the range for
-        // peptides starting with "A" and search only within that range.
-        readonly Dictionary<string, Range> _rangeTable;
-        
         private MSGraphPane GraphPane { get { return (MSGraphPane)graphControl.MasterPane[0]; } }
         private ViewLibSpectrumGraphItem GraphItem { get; set; }
         public int LineWidth { get; set; }
         public float FontSize { get; set; }
+
+        private PepInfo[] _peptides;
+        private byte[] _lookupPool;
 
         /// <summary>
         /// Constructor for the View Library dialog.
@@ -460,7 +417,6 @@ namespace pwiz.Skyline.SettingsUI
             _libraryManager = libMgr;
             _driverLibrary = driverLibrary;
             _pageInfo = new PageInfo(100, 0, _currentRange);
-            _rangeTable = new Dictionary<string, Range>();
 
             graphControl.MasterPane.Border.IsVisible = false;
             var graphPane = GraphPane;
@@ -469,6 +425,8 @@ namespace pwiz.Skyline.SettingsUI
             graphPane.AllowCurveOverlap = true;
 
             Icon = Resources.Skyline;
+
+            PeptideTextBox.Focus();
         }
 
         private void ViewLibraryDlg_Load(object sender, EventArgs e)
@@ -494,11 +452,19 @@ namespace pwiz.Skyline.SettingsUI
                 LibraryComboBox.Items.Add(_driverLibrary.List[i].Name);
             }
 
-            // Set the selection to the very first library in the combobox.
-            // The "View Libraries" button is not enabled unless we have at 
-            // least ONE library, so if we are here, we must have at least 
-            // one to select.
-            LibraryComboBox.SelectedIndex = 0;
+            // If anything is checked, start on the first checked item.
+            string[] checkedNames = _driverLibrary.CheckedNames;
+            if (checkedNames.Length > 0)
+                LibraryComboBox.SelectedItem = checkedNames[0];
+            else
+            {
+                // Set the selection to the very first library in the combobox.
+                // The "View Libraries" button is not enabled unless we have at 
+                // least ONE library, so if we are here, we must have at least 
+                // one to select.
+
+                LibraryComboBox.SelectedIndex = 0;                
+            }
 
             LibraryComboBox.EndUpdate();
         }
@@ -506,7 +472,6 @@ namespace pwiz.Skyline.SettingsUI
         private void UpdateViewLibraryDlg()
         {
             // Order matters!!
-            _rangeTable.Clear();
             LoadLibrary();
             InitializePeptides();
             UpdatePageInfo();
@@ -553,18 +518,17 @@ namespace pwiz.Skyline.SettingsUI
         // for the PeptideInfoComparer above.
         private void InitializePeptides()
         {
-            // Load the entire list of peptides from the library
-            _peptides = new PeptideInfo[_selectedLibrary.Count];
+            var lookupPool = new List<byte>();
+            _peptides = new PepInfo[_selectedLibrary.Count];
             int index = 0;
             foreach (var libKey in _selectedLibrary.Keys)
             {
-                _peptides[index].Sequence = libKey.Sequence;
-                _peptides[index].Charge = libKey.Charge;
-                _peptides[index].DisplayString = libKey.ToString();
+                _peptides[index] = new PepInfo(libKey, lookupPool);
                 index++;
             }
+            Array.Sort(_peptides, new PepInfoComparer(lookupPool));
 
-            Array.Sort(_peptides, new PeptideInfoComparer(CompareInfo.GetCompareInfo("en-US"), CompareOptions.Ordinal & CompareOptions.IgnoreCase));
+            _lookupPool = lookupPool.ToArray();
             _currentRange = new Range(0, _peptides.Length - 1);
         }
 
@@ -623,100 +587,117 @@ namespace pwiz.Skyline.SettingsUI
             PeptideListBox.EndUpdate();
         }
 
-        // Used to get the range of peptide indices in the peptides array that
-        // match (by match, we mean "starts with") the given string.
-        private Range GetRange(string s, bool ignoreMod)
+        // Gets the display string for the given PepInfo object, minus the
+        // modification characters.
+        private string GetUnmodifiedDisplayString(PepInfo pep)
         {
-            Range rOut;
-            if (s.Length == 0)
-            {
-                // If the string contains nothing, this means we need to show
-                // all the peptides in the entire list.
-                rOut = new Range(0, _peptides.Length - 1);
-            }
-            else
-            {
-                String temp = s;
-                Range rTemp;
-                bool addToRangeTable = false;
-                do
-                {
-                    // Try to look up the range in the range table.
-                    if (!_rangeTable.TryGetValue(temp, out rTemp))
-                    {
-                        // The string wasn't found in the range table, so we
-                        // would like to add it to the table once we have
-                        // calculated the range.
-                        addToRangeTable = true;
-
-                        // We keep chopping the string by the last character,
-                        // then trying to look it up in the range table until 
-                        // we are left with just a single character. 
-                        if (temp.Length >= 2)
-                        {
-                            temp = temp.Remove(temp.Length - 1); // remove rightmost char
-                        }
-                        else
-                        {
-                            // If we are only left with a single character, and
-                            // we haven't found any of the substrings in the
-                            // range table yet, unfortunately, we need to
-                            // search the entire peptides array.
-                            rTemp = new Range(0, _peptides.Length - 1);
-                        }
-                    }
-                } while (rTemp == null);
-
-                // If we need to add the string to the range table, calculate
-                // the range of peptides in matches in the array and then add
-                // this information to the range table.
-                if (addToRangeTable)
-                {
-                    rOut = CalculateRange(s, rTemp, ignoreMod);
-                    if (rOut.Count > 0)
-                    {
-                        _rangeTable.Add(s, rOut);
-                    }
-                }
-                else
-                {
-                    rOut = rTemp;
-                }
-            }
-
-            return rOut;
+            return pep.GetAASequence(_lookupPool) + Transition.GetChargeIndicator(pep.Charge);
         }
 
-        // Calculates the range of peptides in the peptides array that match
-        // the string passed in. If nothing is found, a range of (-1, -1) is 
-        // returned. 
-        private Range CalculateRange(string s, Range r, bool ignoreMod)
+        // Computes each ModificationInfo for the given peptide and returns a 
+        // list of all modifications.
+        private static IList<ModificationInfo> GetModifications(PepInfo pep)
         {
-            var substrRange = new Range(-1, -1);
-            int index;
-            bool firstMatch = true;
-            for (index = r.StartIndex; index <= r.EndIndex; index++)
+            IList<ModificationInfo> modList = new List<ModificationInfo>();
+            string sequence = pep.Sequence;
+            foreach (Match m in Regex.Matches(sequence, REGEX_MODIFICATION_PATTERN))
             {
-                // See if the unmodified display sequence starts with the 
-                // string passed in. Use the display sequence so the user can   
-                // specify the number of charge states if they like.
-                if ((!ignoreMod &&  _peptides[index].DisplayString.StartsWith(s, StringComparison.InvariantCultureIgnoreCase)) ||
-                    (ignoreMod && _peptides[index].UnmodifiedDisplayString.StartsWith(s, StringComparison.InvariantCultureIgnoreCase)))
+                String str = m.ToString();
+
+                // Strip the "[" and "]" characters 
+                str = str.Substring(1, str.Length - 2);
+
+                // Look up the modified amino acid preceding the "["
+                var aminoAcid = new char[1];
+                sequence.CopyTo(m.Index - 1, aminoAcid, 0, 1);
+
+                // Make sure we have a valid modification pattern.
+                // It should be a "+" or "-" followed by a number.
+                if (Regex.IsMatch(str, REGEX_VALID_MODIFICATION))
                 {
-                    if (firstMatch)
+                    modList.Add(new ModificationInfo(aminoAcid[0], Double.Parse(str)));
+                }
+            }
+            return modList;
+        }
+ 
+        // Compares the display string minus the modification characters for 
+        // the given peptide with the string passed in.
+        private int Compare(PepInfo pep, string s)
+        {
+            return string.Compare(GetUnmodifiedDisplayString(pep), 0, s, 0, s.Length, true);
+        }
+
+        // Checks to see if the display string minus the modification
+        // characters starts with the string passed in. 
+        private bool IsMatch(PepInfo pep, string s)
+        {
+            return GetUnmodifiedDisplayString(pep).StartsWith(s, StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        // Uses binary search to find the range of peptides in the list
+        // that match the string passed in. If none is found, a range of
+        // (-1, -1) is returned.
+        private Range BinaryRangeSearch(string s, Range rangeIn)
+        {
+            // First try to find a single match for s within the peptides list
+            var searchRange = new Range(rangeIn);
+            if (s.Length > 0)
+            {
+                bool found = false;
+                int mid = 0;
+                while (searchRange.StartIndex <= searchRange.EndIndex)
+                {
+                    mid = (searchRange.StartIndex + searchRange.EndIndex) / 2;
+                    int compResult = Compare(_peptides[mid], s);
+                    if (compResult < 0)
                     {
-                        substrRange.StartIndex = index;
-                        substrRange.EndIndex = index;
-                        firstMatch = false;
+                        searchRange.StartIndex = mid + 1;
+                    }
+                    else if (compResult > 0)
+                    {
+                        searchRange.EndIndex = mid - 1;
                     }
                     else
                     {
-                        substrRange.EndIndex = index;
+                        // We've found a single match
+                        found = true;
+                        break;
+                    }
+                }
+
+                // We'll return (-1, -1) if nothing was found
+                searchRange.StartIndex = -1;
+                searchRange.EndIndex = -1;
+
+                if (found)
+                {
+                    // Now that we've found a single match, we first need to
+                    // walk up the array and find each matching peptide above
+                    // it in the peptides list.
+                    searchRange.StartIndex = mid;
+                    int previousIndex = searchRange.StartIndex - 1;
+                    while ((previousIndex >= rangeIn.StartIndex) &&
+                            IsMatch(_peptides[previousIndex],s))
+                    {
+                        searchRange.StartIndex = previousIndex;
+                        previousIndex--;
+                    }
+
+                    // Next, we walk down the array and find each matching 
+                    // peptide below it in the peptides list.
+                    searchRange.EndIndex = mid;
+                    int nextIndex = searchRange.EndIndex + 1;
+                    while ((nextIndex <= rangeIn.EndIndex) &&
+                            IsMatch(_peptides[nextIndex],s))
+                    {
+                        searchRange.EndIndex = nextIndex;
+                        nextIndex++;
                     }
                 }
             }
 
-            return substrRange;
+            return searchRange;
         }
 
         // Gets the index of the peptide in the peptides array for the selected
@@ -726,10 +707,9 @@ namespace pwiz.Skyline.SettingsUI
             if (_currentRange.Count > 0)
             {
                 string selPeptide = PeptideListBox.SelectedItem.ToString();
-                
-                // We don't want to ignore modifications here 
-                Range selPeptideRange = GetRange(selPeptide, false);
-                
+                string selPeptideAASequence = Regex.Replace(selPeptide, REGEX_MODIFICATION_PATTERN, string.Empty);
+
+                Range selPeptideRange = BinaryRangeSearch(selPeptideAASequence, new Range(_currentRange));
                 if (selPeptideRange.Count > 0)
                 {
                     int start = selPeptideRange.StartIndex;
@@ -749,9 +729,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void PeptideTextBox_TextChanged(object sender, EventArgs e)
         {
-            // For searching purposes, we want to ignore any modification 
-            // characters the user types.
-            _currentRange = GetRange(PeptideTextBox.Text, true);
+            _currentRange = BinaryRangeSearch(PeptideTextBox.Text, new Range(0, _peptides.Length - 1));
             UpdatePageInfo();
             UpdateStatusArea();
             UpdatePeptideListBox();
@@ -828,18 +806,18 @@ namespace pwiz.Skyline.SettingsUI
         public void BuildSpectrumMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
         {
             // Store original menuitems in an array, and insert a separator
-            ToolStripItem[] items = new ToolStripItem[menuStrip.Items.Count];
+            var items = new ToolStripItem[menuStrip.Items.Count];
             int iUnzoom = -1;
             for (int i = 0; i < items.Length; i++)
             {
                 items[i] = menuStrip.Items[i];
-                string tag = (string)items[i].Tag;
+                var tag = (string)items[i].Tag;
                 if (tag == "unzoom")
                     iUnzoom = i;
             }
 
             if (iUnzoom != -1)
-                menuStrip.Items.Insert(iUnzoom, toolStripSeparator15);
+                menuStrip.Items.Insert(iUnzoom, toolStripSeparator27);
 
             // Insert skyline specific menus
             var set = Settings.Default;
@@ -876,10 +854,9 @@ namespace pwiz.Skyline.SettingsUI
             menuStrip.Items.Insert(iInsert, toolStripSeparator15);
 
             // Remove some ZedGraph menu items not of interest
-            for (int i = 0; i < items.Length; i++)
+            foreach (var item in items)
             {
-                var item = items[i];
-                string tag = (string)item.Tag;
+                var tag = (string)item.Tag;
                 if (tag == "set_default" || tag == "show_val")
                     menuStrip.Items.Remove(item);
             }
@@ -928,12 +905,11 @@ namespace pwiz.Skyline.SettingsUI
                 int index = GetIndexOfSelectedPeptide();
                 if (-1 != index)
                 {
-                    var lkey = new LibKey(_peptides[index].Sequence, _peptides[index].Charge);
                     SpectrumPeaksInfo spectrum;
-                    if (_selectedLibrary.TryLoadSpectrum(lkey, out spectrum))
+                    if (_selectedLibrary.TryLoadSpectrum(_peptides[index].Key, out spectrum))
                     {
                         SrmSettings settings =  Program.ActiveDocumentUI.Settings;
-                        var peptide = new Peptide(null, _peptides[index].UnmodifiedSequence, null, null, 0);
+                        var peptide = new Peptide(null, _peptides[index].GetAASequence(_lookupPool), null, null, 0);
                         const IsotopeLabelType isotopeLabelType = IsotopeLabelType.light;
                         var group = new TransitionGroup(peptide, _peptides[index].Charge, isotopeLabelType);
 
@@ -943,11 +919,11 @@ namespace pwiz.Skyline.SettingsUI
                         var rankCharges = settings.TransitionSettings.Filter.ProductCharges;
 
                         ExplicitMods mods = null;
-                        if (lkey.IsModified)
+                        if (_peptides[index].IsModified)
                         {
                             IList<ExplicitMod> staticModList = new List<ExplicitMod>();
                             IList<ExplicitMod> heavyModList = new List<ExplicitMod>();
-                            IList<ModificationInfo> modList = _peptides[index].Modifications;
+                            IList<ModificationInfo> modList = GetModifications(_peptides[index]);
                             int numMods = modList.Count;
                             for (int idx = 0; idx < numMods; idx++)
                             {
@@ -1022,6 +998,15 @@ namespace pwiz.Skyline.SettingsUI
             {
                 AddGraphItem(graphPane, new UnavailableMSGraphItem());
             }
+
+            aionsButton.Checked = Settings.Default.ShowAIons;
+            bionsButton.Checked = Settings.Default.ShowBIons;
+            cionsButton.Checked = Settings.Default.ShowCIons;
+            xionsButton.Checked = Settings.Default.ShowXIons;
+            yionsButton.Checked = Settings.Default.ShowYIons;
+            zionsButton.Checked = Settings.Default.ShowZIons;
+            charge1Button.Checked = Settings.Default.ShowCharge1;
+            charge2Button.Checked = Settings.Default.ShowCharge2;
         }
 
         private void LibraryComboBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -1047,6 +1032,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (e.KeyCode == Keys.Up)
             {
+                e.Handled = true;
                 if (PeptideListBox.SelectedIndex > 0)
                 {
                     PeptideListBox.SelectedIndex--;
@@ -1054,6 +1040,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             else if (e.KeyCode == Keys.Down)
             {
+                e.Handled = true;
                 if ((PeptideListBox.SelectedIndex + 1) < PeptideListBox.Items.Count)
                 {
                     PeptideListBox.SelectedIndex++;
@@ -1144,5 +1131,69 @@ namespace pwiz.Skyline.SettingsUI
         {
             ZoomSpectrumToSettings();
         }
+
+        private void copyMetafileButton_Click(object sender, EventArgs e)
+        {
+            CopyEmfToolStripMenuItem.CopyEmf(graphControl);
+        }
+
+        private void copyButton_Click(object sender, EventArgs e)
+        {
+            graphControl.Copy(false);
+        }
+
+        private void saveButton_Click(object sender, EventArgs e)
+        {
+            graphControl.SaveAs();
+        }
+
+        private void printButton_Click(object sender, EventArgs e)
+        {
+            graphControl.DoPrint();
+        }
+
+        #region Splitter events
+
+        // Temp variable to store a previously focused control
+        private Control _focused;
+
+        private void splitMain_MouseDown(object sender, MouseEventArgs e)
+        {
+            // Get the focused control before the splitter is focused
+            _focused = GetFocused(Controls);
+        }
+
+        private void splitMain_MouseUp(object sender, MouseEventArgs e)
+        {
+            // If a previous control had focus
+            if (_focused != null)
+            {
+                // Return focus and clear the temp variable
+                _focused.Focus();
+                _focused = null;
+            }
+        }
+
+        private static Control GetFocused(Control.ControlCollection controls)
+        {
+            foreach (Control c in controls)
+            {
+                if (c.Focused)
+                {
+                    // Return the focused control
+                    return c;
+                }
+                else if (c.ContainsFocus)
+                {
+                    // If the focus is contained inside a control's children
+                    // return the child
+                    return GetFocused(c.Controls);
+                }
+            }
+            // No control on the form has focus
+            return null;
+        }
+
+        #endregion
     }
 }
