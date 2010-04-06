@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
         if (argc<3)
         {
             string usage = "usage: ";
-            usage += argv[0];
+            usage += basename(argv[0]);
             usage += " <in> <out>";
             throw runtime_error(usage.c_str());
         }
@@ -73,6 +73,7 @@ int main(int argc, char* argv[])
         msmsPA.read(in);
 
         Pep2MzIdent p2m(msmsPA);
+        p2m.translate();
 
         MzIdentMLFile::write(*p2m.getMzIdentML(), outFile);
         
