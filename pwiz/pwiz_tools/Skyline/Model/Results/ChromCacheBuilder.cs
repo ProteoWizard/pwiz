@@ -2116,10 +2116,26 @@ namespace pwiz.Skyline.Model.Results
                         var peak = peakSet[0].Peak;
                         var peakBest = bestPeptidePeak.PeakGroup[0].Peak;
                         int offsetBest = bestPeptidePeak.Data.Offset;
-                        peak.StartIndex = Math.Max(0, GetIndex(peakBest.StartIndex + offsetBest));
-                        peak.EndIndex = Math.Min(Times.Length - 1, GetIndex(peakBest.EndIndex + offsetBest));
+                        int startIndex = Math.Max(0, GetIndex(peakBest.StartIndex + offsetBest));
+                        int endIndex = Math.Min(Times.Length - 1, GetIndex(peakBest.EndIndex + offsetBest));
 
-                        Debug.Assert(peak.StartIndex < peak.EndIndex);
+                        // In a peak set with mutiple charge states and light-heavy pairs, it is
+                        // possible that a peak may not overlap with the best peak in its
+                        // charge group.  If this is the case, and the best peak is completely
+                        // outside the bounds of the current chromatogram, then insert an
+                        // empty peak.
+                        if (startIndex > endIndex)
+                        {
+                            var peakAdd = new ChromDataPeak(_listChromData[0], null);
+                            _listPeakSets.Insert(0,
+                                new ChromDataPeakList(peakAdd, _listChromData) {IsForcedIntegration = true});                            
+                        }
+                        // Otherwise, reset the best peak
+                        else
+                        {
+                            peak.StartIndex = startIndex;
+                            peak.EndIndex = endIndex;
+                        }
                     }
                 }
                 // If no peak was found at the peptide level for this data set,
