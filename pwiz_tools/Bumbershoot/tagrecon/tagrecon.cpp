@@ -1445,6 +1445,12 @@ namespace freicore
                                                         max(lookupTol,(float) NEUTRON), misMatchTerm) ) 
                     {
 
+                        // Adjust the location bounds in which the mod can be moved. 
+                        // We ignore the termini when moving an unknown mod because
+                        // we can never find an ion to differentiate b/w termini mod
+                        // and first or last resiude mod.
+                        modLowIndex = misMatchTerm == NTERM ? 1 : modLowIndex;
+                        modHighIndex = misMatchTerm == CTERM ? modHighIndex-1 : modHighIndex;
                         numComparisonsDone += 
                             ScoreUnknownModification(candidate,neutralMass, tagMatch.modificationMass, modLowIndex, 
                                                      modHighIndex, spectrum, idx, sequenceIons,	ionTypesToSearchFor,
@@ -1727,15 +1733,14 @@ namespace freicore
     */
     void ComputeNETProbabilities()
     {
-        cout << g_hostString << " computing NET probabilities." << endl;
-        Timer timer;
-        timer.Begin();
-        
         g_rtConfig->NETRewardVector.resize(3);
         fill(g_rtConfig->NETRewardVector.begin(), g_rtConfig->NETRewardVector.end(), 0);
         if(!g_rtConfig->UseNETAdjustment)
             return;
-
+        
+        cout << g_hostString << " computing NET probabilities." << endl;
+        Timer timer;
+        timer.Begin();
         // Shuffle the proteins, select 5% of the total, and distribute them between workers
         proteins.random_shuffle();
         numNETWorkers = g_numWorkers;
