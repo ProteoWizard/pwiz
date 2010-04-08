@@ -223,6 +223,7 @@
     <many-to-one name="Workspace" not-null="true" unique-key="PeptideAnalysis" />
     <many-to-one name="Peptide" not-null="true" unique-key="PeptideAnalysis" />
     <property name="MinCharge" />
+    
     <property name="MaxCharge" />
     <property name="ExcludedMasses" type="BinaryBlob" />
     <property name="IntermediateEnrichmentLevels" />

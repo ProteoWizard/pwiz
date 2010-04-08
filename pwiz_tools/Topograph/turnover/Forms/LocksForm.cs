@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
+using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.ui.Forms
 {
@@ -20,7 +21,13 @@ namespace pwiz.Topograph.ui.Forms
 
         private void btnRefresh_Click(object sender, EventArgs e)
         {
-            new Action(Requery).BeginInvoke(null, null);
+            Requery();
+        }
+
+        protected override void OnShown(EventArgs e)
+        {
+            base.OnShown(e);
+            Requery();
         }
 
         private void Requery()
@@ -28,9 +35,13 @@ namespace pwiz.Topograph.ui.Forms
             var locks = new List<DbLock>();
             using (var session = Workspace.OpenSession())
             {
-                session.CreateCriteria(typeof (DbLock)).List(locks);
+                var broker = new LongOperationBroker(b => session.CreateCriteria(typeof (DbLock)).List(locks),
+                                                     new LongWaitDialog(this, "Querying Database"), session);
+                if (broker.LaunchJob())
+                {
+                    BeginInvoke(new Action<List<DbLock>>(DisplayResults), locks);
+                }
             }
-            BeginInvoke(new Action<List<DbLock>>(DisplayResults), locks);
         }
 
         private void DisplayResults(List<DbLock> locks)
@@ -88,6 +99,7 @@ namespace pwiz.Topograph.ui.Forms
                 }
                 session.Transaction.Commit();
             }
+            Requery();
         }
     }
 }

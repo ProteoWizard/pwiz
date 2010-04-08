@@ -28,9 +28,10 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ModificationsForm));
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.colSymbol = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colDeltaMass = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colMassDelta = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
@@ -43,7 +44,7 @@
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colSymbol,
-            this.colDeltaMass});
+            this.colMassDelta});
             this.dataGridView1.Location = new System.Drawing.Point(-1, 0);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.Size = new System.Drawing.Size(286, 150);
@@ -56,8 +57,8 @@
             // 
             // colMassDelta
             // 
-            this.colDeltaMass.HeaderText = "Mass Delta";
-            this.colDeltaMass.Name = "colMassDelta";
+            this.colMassDelta.HeaderText = "Mass Delta";
+            this.colMassDelta.Name = "colMassDelta";
             // 
             // btnOK
             // 
@@ -89,9 +90,11 @@
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOK);
             this.Controls.Add(this.dataGridView1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "ModificationsForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.TabText = "ModificationsForm";
-            this.Text = "ModificationsForm";
+            this.Text = "Edit Modifications";
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.ResumeLayout(false);
 
@@ -104,5 +107,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn colDeltaMass;
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Button btnCancel;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colMassDelta;
     }
 }

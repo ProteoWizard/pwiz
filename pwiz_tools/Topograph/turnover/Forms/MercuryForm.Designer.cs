@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MercuryForm));
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.tbxSequence = new System.Windows.Forms.TextBox();
             this.tbxCharge = new System.Windows.Forms.TextBox();
@@ -251,7 +252,9 @@
             this.ClientSize = new System.Drawing.Size(647, 400);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.tableLayoutPanel1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "MercuryForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.TabText = "Isotope Distributions";
             this.Text = "Isotope Distribution";
             this.tableLayoutPanel1.ResumeLayout(false);

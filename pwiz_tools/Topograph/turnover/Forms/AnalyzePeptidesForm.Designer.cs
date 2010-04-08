@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AnalyzePeptidesForm));
             this.label1 = new System.Windows.Forms.Label();
             this.tbxMinTracers = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
@@ -127,9 +128,11 @@
             this.Controls.Add(this.label2);
             this.Controls.Add(this.tbxMinTracers);
             this.Controls.Add(this.label1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "AnalyzePeptidesForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.TabText = "AnalyzePeptidesForm";
-            this.Text = "AnalyzePeptidesForm";
+            this.Text = "Analyze Peptides";
             this.ResumeLayout(false);
             this.PerformLayout();
 

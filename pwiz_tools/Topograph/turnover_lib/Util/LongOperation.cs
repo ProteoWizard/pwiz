@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using NHibernate;
 
 namespace pwiz.Topograph.Util
 {
@@ -23,6 +24,11 @@ namespace pwiz.Topograph.Util
 
         public LongOperationBroker(Action<LongOperationBroker> job, ILongOperationUi ui) : this(new DefaultJob(job), ui)
         {
+        }
+
+        public LongOperationBroker(Action<LongOperationBroker> job, ILongOperationUi ui, ISession session) : this(new DefaultJob(job, session), ui)
+        {
+            
         }
 
         public ILongOperationJob Job { get; private set; }
@@ -168,9 +174,15 @@ namespace pwiz.Topograph.Util
         private class DefaultJob : ILongOperationJob
         {
             private Action<LongOperationBroker> _job;
-            public DefaultJob(Action<LongOperationBroker> job)
+            private ISession _session;
+            public DefaultJob(Action<LongOperationBroker> job) : this(job, null)
+            {
+            }
+
+            public DefaultJob(Action<LongOperationBroker> job, ISession session)
             {
                 _job = job;
+                _session = session;
             }
 
             public void Run(LongOperationBroker longOperationBroker)
@@ -180,6 +192,10 @@ namespace pwiz.Topograph.Util
 
             public bool Cancel()
             {
+                if (_session != null)
+                {
+                    _session.CancelQuery();
+                }
                 return true;
             }
         }

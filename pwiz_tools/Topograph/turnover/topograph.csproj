@@ -36,6 +36,7 @@
     <TargetZone>LocalIntranet</TargetZone>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
     <SignManifests>true</SignManifests>
+    <ApplicationIcon>Topograph.ico</ApplicationIcon>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
@@ -50,7 +51,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>57</ApplicationRevision>
+    <ApplicationRevision>59</ApplicationRevision>
     <ApplicationVersion>0.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -307,6 +308,12 @@
     <Compile Include="Forms\TpgLinkForm.Designer.cs">
       <DependentUpon>TpgLinkForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\TracerAmountsByCohort.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\TracerAmountsByCohort.Designer.cs">
+      <DependentUpon>TracerAmountsByCohort.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\TracerAmountsForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -354,12 +361,6 @@
     </Compile>
     <Compile Include="Forms\UpdateProteinNames.Designer.cs">
       <DependentUpon>UpdateProteinNames.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Forms\UpgradeWorkspaceForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\UpgradeWorkspaceForm.Designer.cs">
-      <DependentUpon>UpgradeWorkspaceForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\WorkspaceForm.cs">
       <SubType>Form</SubType>
@@ -455,6 +456,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\TpgLinkForm.resx">
       <DependentUpon>TpgLinkForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\TracerAmountsByCohort.resx">
+      <DependentUpon>TracerAmountsByCohort.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\TracerAmountsForm.resx">
       <DependentUpon>TracerAmountsForm.cs</DependentUpon>
@@ -569,6 +573,7 @@
     <Content Include="Microsoft.VC90.MFC\mfcm90u.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Topograph.ico" />
   </ItemGroup>
   <ItemGroup>
     <PublishFile Include="Interop.EDAL">

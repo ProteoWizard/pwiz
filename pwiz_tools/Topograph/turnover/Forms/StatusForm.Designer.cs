@@ -29,7 +29,9 @@ namespace pwiz.Topograph.ui.Forms
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(StatusForm));
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.btnSuspendChromatogram = new System.Windows.Forms.Button();
             this.pbChromatogram = new System.Windows.Forms.ProgressBar();
             this.tbxChromatogramStatus = new System.Windows.Forms.TextBox();
             this.tbxChromatogramMessage = new System.Windows.Forms.TextBox();
@@ -45,7 +47,6 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxMemory = new System.Windows.Forms.TextBox();
             this.tbxOpenAnalyses = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.btnSuspendChromatogram = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -65,6 +66,16 @@ namespace pwiz.Topograph.ui.Forms
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Chromatogram Generator";
+            // 
+            // btnSuspendChromatogram
+            // 
+            this.btnSuspendChromatogram.Location = new System.Drawing.Point(369, 112);
+            this.btnSuspendChromatogram.Name = "btnSuspendChromatogram";
+            this.btnSuspendChromatogram.Size = new System.Drawing.Size(75, 23);
+            this.btnSuspendChromatogram.TabIndex = 3;
+            this.btnSuspendChromatogram.Text = "Suspend";
+            this.btnSuspendChromatogram.UseVisualStyleBackColor = true;
+            this.btnSuspendChromatogram.Click += new System.EventHandler(this.btnSuspendChromatogram_Click);
             // 
             // pbChromatogram
             // 
@@ -220,16 +231,6 @@ namespace pwiz.Topograph.ui.Forms
             this.label2.Text = "Open Analyses:";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // btnSuspendChromatogram
-            // 
-            this.btnSuspendChromatogram.Location = new System.Drawing.Point(369, 112);
-            this.btnSuspendChromatogram.Name = "btnSuspendChromatogram";
-            this.btnSuspendChromatogram.Size = new System.Drawing.Size(75, 23);
-            this.btnSuspendChromatogram.TabIndex = 3;
-            this.btnSuspendChromatogram.Text = "Suspend";
-            this.btnSuspendChromatogram.UseVisualStyleBackColor = true;
-            this.btnSuspendChromatogram.Click += new System.EventHandler(this.btnSuspendChromatogram_Click);
-            // 
             // StatusForm
             // 
             this.AcceptButton = this.btnOK;
@@ -243,7 +244,9 @@ namespace pwiz.Topograph.ui.Forms
             this.Controls.Add(this.btnOK);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "StatusForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.TabText = "StatusForm";
             this.Text = "StatusForm";
             this.groupBox1.ResumeLayout(false);

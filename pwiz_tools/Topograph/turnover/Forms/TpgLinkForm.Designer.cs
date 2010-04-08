@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TpgLinkForm));
             this.label1 = new System.Windows.Forms.Label();
             this.tbxServer = new System.Windows.Forms.TextBox();
             this.tbxDatabase = new System.Windows.Forms.TextBox();
@@ -214,8 +215,10 @@
             this.Controls.Add(this.tbxDatabase);
             this.Controls.Add(this.tbxServer);
             this.Controls.Add(this.label1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "TpgLinkForm";
-            this.Text = "TpgLinkForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+            this.Text = "New Online Workspace";
             this.ResumeLayout(false);
             this.PerformLayout();
 

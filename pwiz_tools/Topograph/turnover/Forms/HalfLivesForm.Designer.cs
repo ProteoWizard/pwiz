@@ -32,6 +32,10 @@
             this.label1 = new System.Windows.Forms.Label();
             this.tbxMinScore = new System.Windows.Forms.TextBox();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.colPeptide = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.colProteinKey = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colProteinDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colProteinName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.btnRequery = new System.Windows.Forms.Button();
             this.tbxInitialTracerPercent = new System.Windows.Forms.TextBox();
             this.tbxFinalTracerPercent = new System.Windows.Forms.TextBox();
@@ -42,10 +46,6 @@
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.label2 = new System.Windows.Forms.Label();
             this.cbxFixYIntercept = new System.Windows.Forms.CheckBox();
-            this.colPeptide = new System.Windows.Forms.DataGridViewLinkColumn();
-            this.colProteinKey = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colProteinDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colProteinName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
@@ -54,7 +54,7 @@
             // 
             this.cbxByProtein.AutoSize = true;
             this.cbxByProtein.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cbxByProtein.Location = new System.Drawing.Point(315, 3);
+            this.cbxByProtein.Location = new System.Drawing.Point(314, 3);
             this.cbxByProtein.Name = "cbxByProtein";
             this.cbxByProtein.Size = new System.Drawing.Size(94, 19);
             this.cbxByProtein.TabIndex = 0;
@@ -65,7 +65,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label1.Location = new System.Drawing.Point(315, 25);
+            this.label1.Location = new System.Drawing.Point(314, 25);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(94, 25);
             this.label1.TabIndex = 1;
@@ -75,9 +75,9 @@
             // tbxMinScore
             // 
             this.tbxMinScore.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tbxMinScore.Location = new System.Drawing.Point(415, 28);
+            this.tbxMinScore.Location = new System.Drawing.Point(414, 28);
             this.tbxMinScore.Name = "tbxMinScore";
-            this.tbxMinScore.Size = new System.Drawing.Size(240, 20);
+            this.tbxMinScore.Size = new System.Drawing.Size(238, 20);
             this.tbxMinScore.TabIndex = 2;
             // 
             // dataGridView1
@@ -99,12 +99,40 @@
             this.dataGridView1.TabIndex = 3;
             this.dataGridView1.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
             // 
+            // colPeptide
+            // 
+            this.colPeptide.HeaderText = "Peptide";
+            this.colPeptide.Name = "colPeptide";
+            this.colPeptide.ReadOnly = true;
+            this.colPeptide.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            // 
+            // colProteinKey
+            // 
+            this.colProteinKey.HeaderText = "Protein";
+            this.colProteinKey.Name = "colProteinKey";
+            this.colProteinKey.ReadOnly = true;
+            this.colProteinKey.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            // 
+            // colProteinDescription
+            // 
+            this.colProteinDescription.HeaderText = "Protein Description";
+            this.colProteinDescription.Name = "colProteinDescription";
+            this.colProteinDescription.ReadOnly = true;
+            this.colProteinDescription.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            // 
+            // colProteinName
+            // 
+            this.colProteinName.HeaderText = "Protein Name";
+            this.colProteinName.Name = "colProteinName";
+            this.colProteinName.ReadOnly = true;
+            this.colProteinName.Visible = false;
+            // 
             // btnRequery
             // 
             this.btnRequery.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btnRequery.Location = new System.Drawing.Point(661, 3);
+            this.btnRequery.Location = new System.Drawing.Point(658, 3);
             this.btnRequery.Name = "btnRequery";
-            this.btnRequery.Size = new System.Drawing.Size(96, 19);
+            this.btnRequery.Size = new System.Drawing.Size(99, 19);
             this.btnRequery.TabIndex = 4;
             this.btnRequery.Text = "Recalculate";
             this.btnRequery.UseVisualStyleBackColor = true;
@@ -115,7 +143,7 @@
             this.tbxInitialTracerPercent.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tbxInitialTracerPercent.Location = new System.Drawing.Point(103, 3);
             this.tbxInitialTracerPercent.Name = "tbxInitialTracerPercent";
-            this.tbxInitialTracerPercent.Size = new System.Drawing.Size(206, 20);
+            this.tbxInitialTracerPercent.Size = new System.Drawing.Size(205, 20);
             this.tbxInitialTracerPercent.TabIndex = 5;
             // 
             // tbxFinalTracerPercent
@@ -123,7 +151,7 @@
             this.tbxFinalTracerPercent.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tbxFinalTracerPercent.Location = new System.Drawing.Point(103, 28);
             this.tbxFinalTracerPercent.Name = "tbxFinalTracerPercent";
-            this.tbxFinalTracerPercent.Size = new System.Drawing.Size(206, 20);
+            this.tbxFinalTracerPercent.Size = new System.Drawing.Size(205, 20);
             this.tbxFinalTracerPercent.TabIndex = 7;
             // 
             // label3
@@ -141,9 +169,9 @@
             // 
             this.btnSave.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnSave.Enabled = false;
-            this.btnSave.Location = new System.Drawing.Point(661, 28);
+            this.btnSave.Location = new System.Drawing.Point(658, 28);
             this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(96, 19);
+            this.btnSave.Size = new System.Drawing.Size(99, 19);
             this.btnSave.TabIndex = 9;
             this.btnSave.Text = "Save...";
             this.btnSave.UseVisualStyleBackColor = true;
@@ -154,16 +182,16 @@
             this.tableLayoutPanel1.SetColumnSpan(this.findBox, 2);
             this.findBox.DataGridView = this.dataGridView1;
             this.findBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.findBox.Location = new System.Drawing.Point(415, 53);
+            this.findBox.Location = new System.Drawing.Point(414, 53);
             this.findBox.Name = "findBox";
-            this.findBox.Size = new System.Drawing.Size(342, 20);
+            this.findBox.Size = new System.Drawing.Size(343, 20);
             this.findBox.TabIndex = 10;
             // 
             // label4
             // 
             this.label4.AutoSize = true;
             this.label4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label4.Location = new System.Drawing.Point(315, 50);
+            this.label4.Location = new System.Drawing.Point(314, 50);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(94, 26);
             this.label4.TabIndex = 11;
@@ -177,7 +205,7 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 46.3964F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 100F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 53.6036F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 101F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 104F));
             this.tableLayoutPanel1.Controls.Add(this.label2, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.tbxInitialTracerPercent, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.label3, 0, 1);
@@ -220,38 +248,10 @@
             this.cbxFixYIntercept.Dock = System.Windows.Forms.DockStyle.Fill;
             this.cbxFixYIntercept.Location = new System.Drawing.Point(3, 53);
             this.cbxFixYIntercept.Name = "cbxFixYIntercept";
-            this.cbxFixYIntercept.Size = new System.Drawing.Size(306, 20);
+            this.cbxFixYIntercept.Size = new System.Drawing.Size(305, 20);
             this.cbxFixYIntercept.TabIndex = 12;
             this.cbxFixYIntercept.Text = "Hold Initial Tracer % Constant";
             this.cbxFixYIntercept.UseVisualStyleBackColor = true;
-            // 
-            // colPeptide
-            // 
-            this.colPeptide.HeaderText = "Peptide";
-            this.colPeptide.Name = "colPeptide";
-            this.colPeptide.ReadOnly = true;
-            this.colPeptide.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
-            // colProteinKey
-            // 
-            this.colProteinKey.HeaderText = "Protein";
-            this.colProteinKey.Name = "colProteinKey";
-            this.colProteinKey.ReadOnly = true;
-            this.colProteinKey.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            // 
-            // colProteinDescription
-            // 
-            this.colProteinDescription.HeaderText = "Protein Description";
-            this.colProteinDescription.Name = "colProteinDescription";
-            this.colProteinDescription.ReadOnly = true;
-            this.colProteinDescription.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            // 
-            // colProteinName
-            // 
-            this.colProteinName.HeaderText = "Protein Name";
-            this.colProteinName.Name = "colProteinName";
-            this.colProteinName.ReadOnly = true;
-            this.colProteinName.Visible = false;
             // 
             // HalfLivesForm
             // 

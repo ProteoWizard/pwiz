@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TurnoverForm));
             this.dockPanel = new DigitalRune.Windows.Docking.DockPanel();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -56,11 +57,12 @@
             this.updateProteinNamesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.machineSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dataDirectoryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.debuggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.debuggingToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.runningJobsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.databaseLocksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.errorsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.debuggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.tracerAmountsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -196,7 +198,8 @@
             this.peptideAnalysesToolStripMenuItem,
             this.queryToolStripMenuItem,
             this.mercuryToolStripMenuItem,
-            this.halfLivesToolStripMenuItem});
+            this.halfLivesToolStripMenuItem,
+            this.tracerAmountsToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "View";
@@ -301,12 +304,6 @@
             this.dataDirectoryToolStripMenuItem.Text = "Data Directory...";
             this.dataDirectoryToolStripMenuItem.Click += new System.EventHandler(this.dataDirectoryToolStripMenuItem_Click);
             // 
-            // debuggingToolStripMenuItem
-            // 
-            this.debuggingToolStripMenuItem.Name = "debuggingToolStripMenuItem";
-            this.debuggingToolStripMenuItem.Size = new System.Drawing.Size(32, 19);
-            this.debuggingToolStripMenuItem.Text = "Debugging";
-            // 
             // debuggingToolStripMenuItem1
             // 
             this.debuggingToolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -340,6 +337,20 @@
             this.errorsToolStripMenuItem1.Text = "Errors";
             this.errorsToolStripMenuItem1.Click += new System.EventHandler(this.errorsToolStripMenuItem_Click);
             // 
+            // debuggingToolStripMenuItem
+            // 
+            this.debuggingToolStripMenuItem.Name = "debuggingToolStripMenuItem";
+            this.debuggingToolStripMenuItem.Size = new System.Drawing.Size(32, 19);
+            this.debuggingToolStripMenuItem.Text = "Debugging";
+            // 
+            // tracerAmountsToolStripMenuItem
+            // 
+            this.tracerAmountsToolStripMenuItem.Enabled = false;
+            this.tracerAmountsToolStripMenuItem.Name = "tracerAmountsToolStripMenuItem";
+            this.tracerAmountsToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.tracerAmountsToolStripMenuItem.Text = "Tracer Amounts";
+            this.tracerAmountsToolStripMenuItem.Click += new System.EventHandler(this.tracerAmountsToolStripMenuItem_Click);
+            // 
             // TurnoverForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -347,6 +358,7 @@
             this.ClientSize = new System.Drawing.Size(984, 564);
             this.Controls.Add(this.dockPanel);
             this.Controls.Add(this.menuStrip1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "TurnoverForm";
             this.Text = "Topograph";
@@ -392,5 +404,6 @@
         private System.Windows.Forms.ToolStripMenuItem debuggingToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem databaseLocksToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem errorsToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem tracerAmountsToolStripMenuItem;
     }
 }

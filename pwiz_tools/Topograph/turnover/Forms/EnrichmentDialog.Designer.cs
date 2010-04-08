@@ -352,7 +352,9 @@
             this.Controls.Add(this.label2);
             this.Controls.Add(this.tbxTracerSymbol);
             this.Controls.Add(this.label1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "EnrichmentDialog";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.TabText = "Edit Tracer Definitions";
             this.Text = "Edit Tracer Definitions";
             this.ResumeLayout(false);

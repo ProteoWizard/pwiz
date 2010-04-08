@@ -114,6 +114,7 @@ namespace pwiz.Topograph.ui.Forms
                                mercuryToolStripMenuItem,
                                halfLivesToolStripMenuItem,
                                dataDirectoryToolStripMenuItem,
+                               tracerAmountsToolStripMenuItem,
                            };
             }
         }
@@ -844,6 +845,12 @@ namespace pwiz.Topograph.ui.Forms
                 return;
             }
             new ErrorForm().Show(this);
+        }
+
+        private void tracerAmountsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var tracerAmountsForm = new TracerAmountsByCohort(Workspace);
+            tracerAmountsForm.Show(dockPanel, DockState.Document);
         }
     }
 }

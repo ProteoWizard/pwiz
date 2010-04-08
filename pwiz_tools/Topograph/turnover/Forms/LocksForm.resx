@@ -126,4 +126,7 @@
   <metadata name="colLockType.UserAddedColumn" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
+  <data name="label1.Text" xml:space="preserve">
+    <value>This form shows the jobs are running in various topograph instances that are using this workspace.  The locks exist to prevent multiple instances of Topograph from doing the same work at the same time.  If an instance of Topograph exits abnormally it may be necessary to delete the locks that it had.</value>
+  </data>
 </root>
