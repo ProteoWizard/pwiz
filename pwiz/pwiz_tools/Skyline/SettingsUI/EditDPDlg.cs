@@ -91,7 +91,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (_regression == null && _existing.Contains(r => Equals(name, r.Name)))
             {
-                helper.ShowTextBoxError(textName, "The retention time regression '{0}' already exists.", name);
+                helper.ShowTextBoxError(textName, "The declustering potential regression '{0}' already exists.", name);
                 return;
             }
 
@@ -181,7 +181,7 @@ namespace pwiz.Skyline.SettingsUI
                 return null;
             if (!document.Settings.MeasuredResults.IsLoaded)
             {
-                MessageBox.Show(this, "Measured results must be completely loaded before they can be used to create a retention time regression.", Program.Name);
+                MessageBox.Show(this, "Measured results must be completely loaded before they can be used to create a declustring potential regression.", Program.Name);
                 return null;
             }
 

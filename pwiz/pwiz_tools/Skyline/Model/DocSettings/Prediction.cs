@@ -1156,7 +1156,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
     public abstract class OptimizableRegression : XmlNamedElement
     {
-        public const int MIN_RECALC_REGRESSION_VALUES = 8;
+        public const int MIN_RECALC_REGRESSION_VALUES = 4;
         public const int MIN_OPT_STEP_COUNT = 1;
         public const int MAX_OPT_STEP_COUNT = 10;
 

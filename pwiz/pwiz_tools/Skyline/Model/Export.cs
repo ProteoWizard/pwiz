@@ -535,16 +535,20 @@ namespace pwiz.Skyline.Model
         private sealed class OptimizationStep<T>
             where T : OptimizableRegression
         {
-            private OptimizationStep(T regression, int step, double maxArea)
+            private OptimizationStep(T regression, int step)
             {
                 Regression = regression;
                 Step = step;
-                MaxArea = maxArea;
             }
 
             private T Regression { get; set; }
             private int Step { get; set; }
-            private double MaxArea { get; set; }
+            private double TotalArea { get; set; }
+
+            private void AddArea(double area)
+            {
+                TotalArea += area;
+            }
 
             public delegate double GetRegressionValue(SrmDocument document, PeptideDocNode nodePep,
                                                       TransitionGroupDocNode nodeGroup, T regression, int step);
@@ -557,7 +561,8 @@ namespace pwiz.Skyline.Model
                                                  T regressionDocument,
                                                  GetRegressionValue getRegressionValue)
             {
-                var listBestOptSteps = new List<OptimizationStep<T>>();
+                // Collect peak area for 
+                var dictOptTotals = new Dictionary<T, Dictionary<int, OptimizationStep<T>>>();
                 if (document.Settings.HasResults)
                 {
                     var chromatograms = document.Settings.MeasuredResults.Chromatograms;
@@ -567,56 +572,49 @@ namespace pwiz.Skyline.Model
                         var regression = chromSet.OptimizationFunction as T;
                         if (regression == null)
                             continue;
+
+                        Dictionary<int, OptimizationStep<T>> stepAreas;
+                        if (!dictOptTotals.TryGetValue(regression, out stepAreas))
+                            dictOptTotals.Add(regression, stepAreas = new Dictionary<int, OptimizationStep<T>>());
+
                         if (methodType == OptimizedMethodType.Precursor)
                         {
                             TransitionGroupDocNode[] listGroups = FindCandidateGroups(nodePep, nodeGroup);
                             foreach (var nodeGroupCandidate in listGroups)
-                            {
-                                var optimizationStep = FindBestOptimizationStep(nodeGroupCandidate, i, regression);
-                                if (optimizationStep != null)
-                                    listBestOptSteps.Add(optimizationStep);
-                            }
+                                AddOptimizationStepAreas(nodeGroupCandidate, i, regression, stepAreas);
                         }
                         else if (methodType == OptimizedMethodType.Transition)
                         {
                             TransitionDocNode[] listTransitions = FindCandidateTransitions(nodePep, nodeGroup, nodeTran);
                             foreach (var nodeTranCandidate in listTransitions)
-                            {
-                                var optimizationStep = FindBestOptimizationStep(nodeTranCandidate, i, regression);
-                                if (optimizationStep != null)
-                                    listBestOptSteps.Add(optimizationStep);
-                            }
+                                AddOptimizationStepAreas(nodeTranCandidate, i, regression, stepAreas);
                         }
                     }
                 }
                 // If no candidate values were found, use the document regressor.
-                if (listBestOptSteps.Count == 0)
+                if (dictOptTotals.Count == 0)
                     return getRegressionValue(document, nodePep, nodeGroup, regressionDocument, 0);
-                // Calculate the mean of the best values found
-                double[] bestValues = new double[listBestOptSteps.Count];
-                double[] bestAreas = new double[listBestOptSteps.Count];
+                // Get the CE value with the maximum total peak area
                 double maxArea = 0;
-                int maxAreaIndex = 0;
-                for (int i = 0; i < listBestOptSteps.Count; i++)
+                double bestValue = 0;
+                foreach (var optTotals in dictOptTotals.Values)
                 {
-                    var optStep = listBestOptSteps[i];
-                    bestValues[i] = getRegressionValue(document, nodePep, nodeGroup, optStep.Regression, optStep.Step);
-                    bestAreas[i] = optStep.MaxArea;
-                    if (maxArea < optStep.MaxArea)
+                    foreach (var optStep in optTotals.Values)
                     {
-                        maxArea = optStep.MaxArea;
-                        maxAreaIndex = i;
+                        if (maxArea < optStep.TotalArea)
+                        {
+                            maxArea = optStep.TotalArea;
+                            bestValue = getRegressionValue(document, nodePep, nodeGroup, optStep.Regression, optStep.Step);
+                        }
                     }
                 }
-                // Use CE for candidate with the largest area
-                return bestValues[maxAreaIndex];
-                // Use mean weighted by area as the CE
-//                Statistics statBestValues = new Statistics(bestValues);
-//                Statistics statBestAreas = new Statistics(bestAreas);
-//                return statBestValues.Mean(statBestAreas);
+                // Use value for candidate with the largest area
+                return bestValue;
             }
 
+// ReSharper disable SuggestBaseTypeForParameter
             private static TransitionGroupDocNode[] FindCandidateGroups(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
+// ReSharper restore SuggestBaseTypeForParameter
             {
                 if (nodePep.Children.Count == 1)
                     return new[] { nodeGroup };
@@ -656,40 +654,40 @@ namespace pwiz.Skyline.Model
                 return listCandidates.ToArray();
             }
 
-            private static OptimizationStep<T> FindBestOptimizationStep(TransitionGroupDocNode nodeGroup, int iResult, T regression)
+            private static void AddOptimizationStepAreas(TransitionGroupDocNode nodeGroup, int iResult, T regression,
+                IDictionary<int, OptimizationStep<T>> optTotals)
             {
                 var results = (nodeGroup.HasResults ? nodeGroup.Results[iResult] : null);
                 if (results == null)
-                    return null;
-                float maxArea = 0;
-                int maxStep = -1;
+                    return;
                 foreach (var chromInfo in results)
                 {
-                    if (chromInfo.Area.HasValue && maxArea < chromInfo.Area)
-                    {
-                        maxArea = chromInfo.Area.Value;
-                        maxStep = chromInfo.OptimizationStep;
-                    }
+                    if (!chromInfo.Area.HasValue)
+                        continue;
+                    int step = chromInfo.OptimizationStep;
+                    OptimizationStep<T> optStep;
+                    if (!optTotals.TryGetValue(step, out optStep))
+                        optTotals.Add(step, optStep = new OptimizationStep<T>(regression, step));
+                    optStep.AddArea(chromInfo.Area.Value);
                 }
-                return (maxStep != -1 ? new OptimizationStep<T>(regression, maxStep, maxArea) : null);
             }
 
-            private static OptimizationStep<T> FindBestOptimizationStep(TransitionDocNode nodeTran, int iResult, T regression)
+            private static void AddOptimizationStepAreas(TransitionDocNode nodeTran, int iResult, T regression,
+                IDictionary<int, OptimizationStep<T>> optTotals)
             {
                 var results = (nodeTran.HasResults ? nodeTran.Results[iResult] : null);
                 if (results == null)
-                    return null;
-                float maxArea = 0;
-                int maxStep = -1;
+                    return;
                 foreach (var chromInfo in results)
                 {
-                    if (maxArea < chromInfo.Area)
-                    {
-                        maxArea = chromInfo.Area;
-                        maxStep = chromInfo.OptimizationStep;
-                    }
+                    if (chromInfo.Area == 0)
+                        continue;
+                    int step = chromInfo.OptimizationStep;
+                    OptimizationStep<T> optStep;
+                    if (!optTotals.TryGetValue(step, out optStep))
+                        optTotals.Add(step, optStep = new OptimizationStep<T>(regression, step));
+                    optStep.AddArea(chromInfo.Area);
                 }
-                return (maxStep != -1 ? new OptimizationStep<T>(regression, maxStep, maxArea) : null);
             }
         }
 
