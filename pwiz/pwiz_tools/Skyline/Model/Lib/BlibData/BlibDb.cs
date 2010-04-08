@@ -156,13 +156,18 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                             typeInfo == nodeGroup.TransitionGroup.LabelType)
                         {
                             var calcPre = settings.GetPrecursorCalc(typeInfo, mods);
+                            var peptideModSeq = calcPre.GetModifiedSequence(peptideSeq, false);
+                            var libKey = new LibKey(peptideModSeq, precursorCharge);
+                            if (dictLibrary.ContainsKey(libKey))
+                                continue;
+
                             short copies = (short) headerInfo.GetRankValue(LibrarySpec.PEP_RANK_COPIES);
                             DbRefSpectra refSpectra = new DbRefSpectra
                                                           {
                                                               PeptideSeq = peptideSeq,
                                                               PrecursorMZ = nodeGroup.PrecursorMz,
                                                               PrecursorCharge = precursorCharge,
-                                                              PeptideModSeq = calcPre.GetModifiedSequence(peptideSeq, false),
+                                                              PeptideModSeq = peptideModSeq,
 //                                                              NextAA = null,
 //                                                              PrevAA = null,
                                                               Copies = copies,
@@ -180,7 +185,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
                             session.Save(refSpectra);
 
-                            dictLibrary.Add(new LibKey(refSpectra.PeptideModSeq, precursorCharge),
+                            dictLibrary.Add(libKey,
                                 new BiblioLiteSpectrumInfo(copies, refSpectra.NumPeaks, (int) refSpectra.Id));
 
                             session.Flush();
