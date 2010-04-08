@@ -231,8 +231,11 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double? MeasuredRTWindow { get; private set; }
 
-        public double? PredictRetentionTime(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup,
-            bool singleWindow, out double windowRT)
+        public double? PredictRetentionTime(SrmDocument document,
+                                            PeptideDocNode nodePep,
+                                            TransitionGroupDocNode nodeGroup,
+                                            bool singleWindow,
+                                            out double windowRT)
         {
             // Safe defaults
             double? predictedRT = null;
@@ -241,7 +244,7 @@ namespace pwiz.Skyline.Model.DocSettings
             bool useMeasured = (UseMeasuredRTs && MeasuredRTWindow.HasValue);
             if (useMeasured)
             {
-                predictedRT = nodeGroup.AveragePeakCenterTime;
+                predictedRT = nodeGroup.GetSchedulingPeakTime(document);
                 if (predictedRT.HasValue)
                     windowRT = MeasuredRTWindow.Value;
                 else if (nodePep.Children.Count > 1)
@@ -252,7 +255,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     {
                         if (!ReferenceEquals(nodeGroup, nodeGroupOther))
                         {
-                            predictedRT = nodeGroupOther.AveragePeakCenterTime;
+                            predictedRT = nodeGroupOther.GetSchedulingPeakTime(document);
                             if (predictedRT.HasValue)
                             {
                                 windowRT = MeasuredRTWindow.Value;
@@ -308,7 +311,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                 {
                     double windowRT;
-                    if (!PredictRetentionTime(nodePep, nodeGroup, singleWindow, out windowRT).HasValue)
+                    if (!PredictRetentionTime(document, nodePep, nodeGroup, singleWindow, out windowRT).HasValue)
                         return false;
                 }
             }
