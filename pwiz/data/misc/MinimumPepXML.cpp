@@ -1517,6 +1517,14 @@ struct HandlerMSMSRunSummary : public SAXParser::Handler
     {
         if ( name == "msms_run_summary" )
         {
+            getAttribute(attributes, "base_name", msmsrunsummary->base_name);
+            getAttribute(attributes, "raw_data_type", msmsrunsummary->raw_data_type);
+            getAttribute(attributes, "raw_data", msmsrunsummary->raw_data);
+            getAttribute(attributes, "msManufacturer", msmsrunsummary->msManufacturer);
+            getAttribute(attributes, "msModel", msmsrunsummary->msModel);
+            getAttribute(attributes, "msIonization", msmsrunsummary->msIonization);
+            getAttribute(attributes, "msMassAnalyzer", msmsrunsummary->msMassAnalyzer);
+            getAttribute(attributes, "msDetector", msmsrunsummary->msDetector);
 
             return Handler::Status::Ok;
 

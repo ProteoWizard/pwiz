@@ -54,6 +54,8 @@ public:
     /// Resets the member variables.
     void clear();
 
+    bool operator()(const MSMSPipelineAnalysis& pepxml, MzIdentMLPtr mzid);
+    
     /// Translates all known tags in the pepXML object tree into the
     /// MzIdentML object tree. The resulting MzIdentMLPtr is returned.
     MzIdentMLPtr translate();
@@ -69,6 +71,10 @@ public:
     {
         return mzid;
     }
+
+    void setDebug(bool debug);
+
+    bool getDebug() const;
     
 private:
 
@@ -112,6 +118,9 @@ private:
     void addModifications(const std::vector<AminoAcidModification>& mods,
                           PeptidePtr peptide, MzIdentMLPtr result);
 
+    /// Adds a SpectraData object to the data collection's input.
+    void addSpectraData(const MSMSRunSummary& msmsRunSummary,
+                   MzIdentMLPtr result);
     // Adds any additional elements needed after all other data has
     // been processed.
     void addFinalElements();
@@ -138,7 +147,8 @@ private:
     const MSMSPipelineAnalysis* _mspa;
     MzIdentMLPtr mzid;
     bool _translated;
-
+    bool debug;
+    
     // recursor flags.
     bool precursorMonoisotopic;
     bool fragmentMonoisotopic;

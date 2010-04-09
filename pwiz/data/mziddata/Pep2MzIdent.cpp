@@ -28,6 +28,9 @@
 #include "boost/filesystem.hpp"
 #include "boost/algorithm/string.hpp"
 
+// Debug macro to be used if needed.
+#define DOUT(a) do{ if(debug) std::cout << a << endl; } while(0)
+
 using namespace pwiz;
 using namespace pwiz::cv;
 using namespace pwiz::mziddata;
@@ -216,12 +219,12 @@ AnalysisSoftwarePtr guessAnalysisSoftware(
 //
 
 Pep2MzIdent::Pep2MzIdent(const MSMSPipelineAnalysis& mspa, MzIdentMLPtr mzid)
-    : _mspa(&mspa), mzid(mzid),
+    : _mspa(&mspa), mzid(mzid), debug(false),
       precursorMonoisotopic(false), fragmentMonoisotopic(false),
       indices(new Indices())
 {
-    mzid->cvs.push_back(cv::cv("MS"));
-    mzid->cvs.push_back(cv::cv("UO"));
+    //mzid->cvs.push_back(cv::cv("MS"));
+    //mzid->cvs.push_back(cv::cv("UO"));
     //translate();
 }
 
@@ -230,6 +233,17 @@ void Pep2MzIdent::setMspa(const MSMSPipelineAnalysis& mspa)
     clear();
     
     _mspa = &mspa;
+}
+
+bool Pep2MzIdent::operator()(const MSMSPipelineAnalysis& pepxml, MzIdentMLPtr mzid)
+{
+    _mspa = &pepxml;
+    this->mzid = mzid;
+
+    translate();
+
+    // TODO Change this meaningless return into somethingn good.
+    return true;
 }
 
 void Pep2MzIdent::clear()
@@ -251,10 +265,21 @@ void Pep2MzIdent::clear()
     aminoAcidModifications = NULL;
 }
 
+void Pep2MzIdent::setDebug(bool debug)
+{
+    this->debug = debug;
+}
+
+bool Pep2MzIdent::getDebug() const
+{
+    return this->debug;
+}
+
 void Pep2MzIdent::translateRoot()
 {
     mzid->creationDate = _mspa->date;
 
+    addSpectraData(_mspa->msmsRunSummary, mzid);
     translateEnzyme(_mspa->msmsRunSummary.sampleEnzyme, mzid);
 
     earlyMetadata();
@@ -274,6 +299,32 @@ void Pep2MzIdent::translateRoot()
     lateMetadata();
     
     addFinalElements();
+}
+
+void Pep2MzIdent::addSpectraData(const MSMSRunSummary& msmsRunSummary,
+                                 MzIdentMLPtr result)
+{
+    SpectraDataPtr sd(new SpectraData(
+                          "SD_"+lexical_cast<string>(indices->sd++)));
+
+    // TODO verify that both of these valules are legit.
+    sd->location = msmsRunSummary.base_name;
+
+    if (iequals(msmsRunSummary.raw_data, ".mzml"))
+    {
+        sd->fileFormat.set(MS_mzML_file);
+        sd->spectrumIDFormat.set(MS_mzML_unique_identifier);
+    }
+    else if (iequals(msmsRunSummary.raw_data, ".mzxml"))
+    {
+        sd->fileFormat.set(MS_ISB_mzXML_file);
+        sd->spectrumIDFormat.set(MS_scan_number_only_nativeID_format);
+    }
+    else
+        throw runtime_error(("[Pep2MzIdent::addSpectraData] Unknown "
+                             "file type for "+msmsRunSummary.raw_data).c_str());
+        
+    mzid->dataCollection.inputs.spectraData.push_back(sd);
 }
 
 void Pep2MzIdent::translateEnzyme(const SampleEnzyme& sampleEnzyme,
@@ -329,6 +380,7 @@ CVParam Pep2MzIdent::translateSearchScore(const string& name, const vector<Searc
 
     return cvp;
 }
+
 
 CVParam Pep2MzIdent::getParamForSearchScore(const SearchScorePtr searchScore)
 {
@@ -615,7 +667,9 @@ void Pep2MzIdent::translateQueries(const SpectrumQueryPtr query,
 
 MzIdentMLPtr Pep2MzIdent::translate()
 {
-    mzid = MzIdentMLPtr(new MzIdentML());
+    if (mzid.get() == NULL)
+        mzid = MzIdentMLPtr(new MzIdentML());
+    
     mzid->cvs.push_back(cv::cv("MS"));
     mzid->cvs.push_back(cv::cv("UO"));
    
