@@ -150,6 +150,16 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
+        public bool IsProcessedBy(string softwareName)
+        {
+            foreach (var softwareApp in _msDataFile.softwareList)
+            {
+                if (softwareApp.id.Contains(softwareName))
+                    return true;
+            }
+            return false;
+        }
+
         private ChromatogramList ChromatogramList
         {
             get

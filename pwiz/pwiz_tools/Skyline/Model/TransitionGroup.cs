@@ -388,9 +388,8 @@ namespace pwiz.Skyline.Model
         private TransitionGroupDocNode UpdateResults(SrmSettings settingsNew, SrmSettingsDiff diff,
             TransitionGroupDocNode nodePrevious)
         {
-            // Make sure no results are present, if the new settings has no results,
-            // or this node has no children
-            if (!settingsNew.HasResults || Children.Count == 0)
+            // Make sure no results are present, if the new settings has no results
+            if (!settingsNew.HasResults)
             {
                 if (!HasResults)
                     return this;
@@ -405,6 +404,13 @@ namespace pwiz.Skyline.Model
                     childrenNew[iTran] = nodeTran.ChangeResults(null);
                 }
                 return (TransitionGroupDocNode) nodeResult.ChangeChildren(childrenNew);
+            }
+            else if (Children.Count == 0)
+            {
+                // If no children, just use a null populated list of the right size.
+                int countResults = settingsNew.MeasuredResults.Chromatograms.Count;
+                var resultsNew = new ChromInfoList<TransitionGroupChromInfo>[countResults];
+                return ChangeResults(new Results<TransitionGroupChromInfo>(resultsNew));
             }
             else
             {

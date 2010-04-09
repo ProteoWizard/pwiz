@@ -431,7 +431,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         ref statisticsResult, ref outIndexes);
                     // If there are only 2 left, then this is the best we can do and still have
                     // a linear equation.
-                    if (worstIn == 2 || IsAboveThreshold(statisticsResult.R, threshold))
+                    if (worstIn <= 2 || IsAboveThreshold(statisticsResult.R, threshold))
                         return regression;
                     worstIn--;
                 }

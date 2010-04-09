@@ -185,7 +185,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 foreach (var matchingGroup in GetMatchingGroups(chromDataSet, listMzPrecursors))
                 {
-                    AddChromDataSet(provider.IsPorcessedScans,
+                    AddChromDataSet(provider.IsProcessedScans,
                                     matchingGroup.Value,
                                     matchingGroup.Key,
                                     dictPeptideChromData,
@@ -440,13 +440,15 @@ namespace pwiz.Skyline.Model.Results
 
             public abstract void GetChromatogram(int id, out float[] times, out float[] intensities);
 
-            public abstract bool IsPorcessedScans { get; }
+            public abstract bool IsProcessedScans { get; }
         }
 
         private sealed class SpectraChromDataProvider : ChromDataProvider
         {
             private readonly List<KeyValuePair<ChromKey, ChromCollector>> _chromatograms =
                 new List<KeyValuePair<ChromKey, ChromCollector>>();
+
+            private readonly bool _isProcessedScans;
 
             public SpectraChromDataProvider(MsDataFileImpl dataFile,
                                             ProgressStatus status,
@@ -557,6 +559,10 @@ namespace pwiz.Skyline.Model.Results
                         _chromatograms.Add(new KeyValuePair<ChromKey, ChromCollector>(key, pair.Value));
                     }
                 }
+
+                // Only mzXML from mzWiff requires the introduction of zero values
+                // during interpolation.
+                _isProcessedScans = dataFile.IsProcessedBy("mzWiff");
             }
 
             public override IEnumerable<KeyValuePair<ChromKey, int>> ChromIds
@@ -575,9 +581,9 @@ namespace pwiz.Skyline.Model.Results
                 intensities = tis.Intensities.ToArray();
             }
 
-            public override bool IsPorcessedScans
+            public override bool IsProcessedScans
             {
-                get { return true; }
+                get { return _isProcessedScans; }
             }
         }
 
@@ -635,7 +641,7 @@ namespace pwiz.Skyline.Model.Results
                     SetPercentComplete(50 + _readChromatograms*50/_chromIds.Count);
             }
 
-            public override bool IsPorcessedScans
+            public override bool IsProcessedScans
             {
                 get { return false; }
             }
@@ -850,8 +856,10 @@ namespace pwiz.Skyline.Model.Results
         private sealed class PeptideChromDataSets
         {
             private const double TIME_DELTA_VARIATION_THRESHOLD = 0.001;
-            private const double TIME_DELTA_MAX_RATIO_THRESHOLD = 25;
-            private const int MINIMUM_DELTAS_PER_CHROM = 4;
+            // No longer necessary, since mzWiff mzXML is the only thing marked
+            // as IsProcessedScans
+//            private const double TIME_DELTA_MAX_RATIO_THRESHOLD = 25;
+//            private const int MINIMUM_DELTAS_PER_CHROM = 4;
 
             private readonly List<ChromDataSet> _dataSets = new List<ChromDataSet>();
             private readonly bool _isProcessedScans;
@@ -955,10 +963,10 @@ namespace pwiz.Skyline.Model.Results
                 double maxIntensity = 0;
                 float[] firstTimes = null;
                 double expectedTimeDelta = 0;
-                int countChromData = 0;
+//                int countChromData = 0;
                 foreach (var chromData in ChromDatas)
                 {
-                    countChromData++;
+//                    countChromData++;
                     if (firstTimes == null)
                     {
                         firstTimes = chromData.Times;
@@ -1026,9 +1034,10 @@ namespace pwiz.Skyline.Model.Results
                 intervalDelta = EnsureMinDelta(intervalDelta);
 
                 bool inferZeros = false;
-                if (_isProcessedScans &&
-                    (statDeltas.Length < countChromData * MINIMUM_DELTAS_PER_CHROM ||
-                     statDeltas.Max() / intervalDelta > TIME_DELTA_MAX_RATIO_THRESHOLD))
+                if (_isProcessedScans)  // only mzWiff mzXML has this set now
+//                if (_isProcessedScans &&
+//                    (statDeltas.Length < countChromData * MINIMUM_DELTAS_PER_CHROM ||
+//                     statDeltas.Max() / intervalDelta > TIME_DELTA_MAX_RATIO_THRESHOLD))
                 {
                     inferZeros = true; // Verbose expression for easy breakpoint placement
 
@@ -2140,7 +2149,7 @@ namespace pwiz.Skyline.Model.Results
                 }
                 // If no peak was found at the peptide level for this data set,
                 // but there is a best peak for the peptide
-                else if (bestPeptidePeak != null)
+                else if (bestPeptidePeak != null && bestPeptidePeak.PeakGroup != null)
                 {
                     ChromDataPeak peakAdd = null;
 
