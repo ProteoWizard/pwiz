@@ -868,7 +868,8 @@ namespace pwiz.Skyline.Model.Results
             int i = 0;
             foreach (var peak in Peaks)
             {
-                if (peak.ContainsTime((float)retentionTime))
+                // Should never be searching for forced integration peaks in this way
+                if (!peak.IsForcedIntegration && peak.ContainsTime((float)retentionTime))
                     return i;
                 i++;
             }

@@ -203,15 +203,55 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public float? AveragePeakCenterTime
+        public float? GetSchedulingPeakTime(SrmDocument document)
         {
-            get
+            if (!HasResults)
+                return null;
+
+            // Try to get a scheduling time from non-optimization data, unless this
+            // document contains only optimization data.  This is because optimization
+            // data may have been taken under completely different chromatographic
+            // condictions.
+            int valCount = 0;
+            double valTotal = 0;
+            int valCountOpt = 0;
+            double valTotalOpt = 0;
+
+            for (int i = 0; i < Results.Count; i++)
             {
-                return GetAverageResultValue(chromInfo =>
-                    chromInfo.OptimizationStep != 0 || chromInfo.PeakCountRatio < 0.5 ?
-                        (float?) null :
-                        (chromInfo.StartRetentionTime.Value + chromInfo.EndRetentionTime.Value) / 2);
+                var result = Results[i];
+                if (result == null)
+                    continue;
+                var chromatogramSet = document.Settings.MeasuredResults.Chromatograms[i];
+                foreach (var chromInfo in result)
+                {
+                    if (chromInfo == null ||
+//                            chromInfo.PeakCountRatio < 0.5 || - caused problems
+                            !chromInfo.StartRetentionTime.HasValue ||
+                            !chromInfo.EndRetentionTime.HasValue)
+                        continue;
+                    double centerTime = (chromInfo.StartRetentionTime.Value + chromInfo.EndRetentionTime.Value)/2;
+                    if (chromatogramSet.OptimizationFunction == null)
+                    {
+                        valTotal += centerTime;
+                        valCount++;                        
+                    }
+                    else
+                    {
+                        valTotalOpt += centerTime;
+                        valCountOpt++;
+                    }
+                }
             }
+
+            // If possible return the scheduling time based on non-optimization data.
+            if (valCount != 0)
+                return (float)(valTotal / valCount);
+            // If only optimization was found, then use it.
+            else if (valTotalOpt != 0)
+                return (float)(valTotalOpt / valCountOpt);
+            // No usable data at all.
+            return null;
         }
 
         private float? GetAverageResultValue(Func<TransitionGroupChromInfo, float?> getVal)
@@ -348,9 +388,8 @@ namespace pwiz.Skyline.Model
         private TransitionGroupDocNode UpdateResults(SrmSettings settingsNew, SrmSettingsDiff diff,
             TransitionGroupDocNode nodePrevious)
         {
-            // Make sure no results are present, if the new settings has no results,
-            // or this node has no children
-            if (!settingsNew.HasResults || Children.Count == 0)
+            // Make sure no results are present, if the new settings has no results
+            if (!settingsNew.HasResults)
             {
                 if (!HasResults)
                     return this;
@@ -365,6 +404,13 @@ namespace pwiz.Skyline.Model
                     childrenNew[iTran] = nodeTran.ChangeResults(null);
                 }
                 return (TransitionGroupDocNode) nodeResult.ChangeChildren(childrenNew);
+            }
+            else if (Children.Count == 0)
+            {
+                // If no children, just use a null populated list of the right size.
+                int countResults = settingsNew.MeasuredResults.Chromatograms.Count;
+                var resultsNew = new ChromInfoList<TransitionGroupChromInfo>[countResults];
+                return ChangeResults(new Results<TransitionGroupChromInfo>(resultsNew));
             }
             else
             {

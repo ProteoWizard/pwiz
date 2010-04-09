@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                 {
                     double timeWindow;
-                    double? retentionTime = predict.PredictRetentionTime(nodePep, nodeGroup,
+                    double? retentionTime = predict.PredictRetentionTime(document, nodePep, nodeGroup,
                         singleWindow, out timeWindow);
                     if (retentionTime.HasValue)
                     {

@@ -19,13 +19,13 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
@@ -350,7 +350,7 @@ namespace pwiz.Skyline.SettingsUI
                 return null;
             if (!document.Settings.MeasuredResults.IsLoaded)
             {
-                MessageBox.Show(this, "Measured results must be completely loaded before they can be used to create a retention time regression.", Program.Name);
+                MessageBox.Show(this, "Measured results must be completely loaded before they can be used to create a collision energy regression.", Program.Name);
                 return null;
             }
 
@@ -401,8 +401,8 @@ namespace pwiz.Skyline.SettingsUI
     internal abstract class RegressionData<T>
         where T : OptimizableRegression
     {
-        private readonly List<double> _bestValues = new List<double>();
-        private readonly List<double> _precursorMzValues = new List<double>();
+        private readonly Dictionary<TransitionGroupDocNode, Dictionary<T, Dictionary<int, double>>> _dictGroupToOptTotals =
+            new Dictionary<TransitionGroupDocNode, Dictionary<T, Dictionary<int, double>>>();
 
         protected RegressionData(RegressionLine regressionLineSetting)
         {
@@ -414,45 +414,89 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                if (_bestValues.Count < OptimizableRegression.MIN_RECALC_REGRESSION_VALUES)
+                if (_dictGroupToOptTotals.Count < OptimizableRegression.MIN_RECALC_REGRESSION_VALUES)
                     return null;
-                Statistics statCE = new Statistics(_bestValues);
-                Statistics statMz = new Statistics(_precursorMzValues);
+                Statistics statCE = new Statistics(BestValues);
+                Statistics statMz = new Statistics(PrecursorMzValues);
                 return new RegressionLine(statCE.Slope(statMz), statCE.Intercept(statMz));
             }
         }
 
-        public double[] BestValues { get { return _bestValues.ToArray(); } }
-        public double[] PrecursorMzValues { get { return _precursorMzValues.ToArray(); } }
-
-        public void Add(T regression, TransitionGroupDocNode nodeGroup, int iResult)
+        public double[] PrecursorMzValues
         {
-            var chromInfo = GetMaxChromInfo(nodeGroup.Results[iResult]);
-            if (chromInfo == null)
-                return;
+            get
+            {
+                return (from nodeGroup in _dictGroupToOptTotals.Keys
+                        orderby nodeGroup.PrecursorMz
+                        select nodeGroup.PrecursorMz).ToArray();
+            }
+        }
 
-            _precursorMzValues.Add(nodeGroup.PrecursorMz);
-            _bestValues.Add(GetValue(regression, nodeGroup, chromInfo.OptimizationStep));
+        public double[] BestValues
+        {
+            get
+            {
+                return (from dictOptTotalsPair in _dictGroupToOptTotals
+                        orderby dictOptTotalsPair.Key.PrecursorMz
+                        select GetBestValue(dictOptTotalsPair)).ToArray();
+            }
         }
 
         protected abstract double GetValue(T regression, TransitionGroupDocNode nodeGroup, int step);
 
-        private static TransitionGroupChromInfo GetMaxChromInfo(IEnumerable<TransitionGroupChromInfo> result)
+        /// <summary>
+        /// Each <see cref="TransitionGroupDocNode"/> gets only one optimal value,
+        /// which is taken by summing the areas for each different regression, for each step,
+        /// and then choosing the step that produces the maximum area.
+        /// </summary>
+        private double GetBestValue(KeyValuePair<TransitionGroupDocNode, Dictionary<T, Dictionary<int, double>>> dictOptTotalsPair)
         {
-            if (result == null)
-                return null;
-
             double maxArea = 0;
-            TransitionGroupChromInfo maxChromInfo = null;
-            foreach (var chromInfo in result)
+            double bestValue = 0;
+
+            foreach (var optTotalsPair in dictOptTotalsPair.Value)
             {
-                if (chromInfo.PeakCountRatio == 1.0 && chromInfo.Area.HasValue && maxArea < chromInfo.Area)
+                foreach (var optTotalPair in optTotalsPair.Value)
                 {
-                    maxArea = chromInfo.Area.Value;
-                    maxChromInfo = chromInfo;
+                    if (maxArea < optTotalPair.Value)
+                    {
+                        maxArea = optTotalPair.Value;
+                        bestValue = GetValue(optTotalsPair.Key, dictOptTotalsPair.Key, optTotalPair.Key);
+                    }
                 }
             }
-            return maxChromInfo;
+            return bestValue;
+        }
+
+        public void Add(T regression, TransitionGroupDocNode nodeGroup, int iResult)
+        {
+            var result = nodeGroup.Results[iResult];
+            if (result == null)
+                return;
+
+            Dictionary<T, Dictionary<int, double>> dictOptTotals;
+            if (!_dictGroupToOptTotals.TryGetValue(nodeGroup, out dictOptTotals))
+            {
+                _dictGroupToOptTotals.Add(nodeGroup,
+                    dictOptTotals = new Dictionary<T, Dictionary<int, double>>());
+            }
+            Dictionary<int, double> optTotals;
+            if (!dictOptTotals.TryGetValue(regression, out optTotals))
+            {
+                dictOptTotals.Add(regression, optTotals = new Dictionary<int, double>());
+            }
+
+            foreach (var chromInfo in result)
+            {
+                if (chromInfo.PeakCountRatio != 1.0 || !chromInfo.Area.HasValue)
+                    continue;
+
+                int step = chromInfo.OptimizationStep;
+                if (optTotals.ContainsKey(chromInfo.OptimizationStep))
+                    optTotals[step] += chromInfo.Area.Value;
+                else
+                    optTotals.Add(step, chromInfo.Area.Value);
+            }
         }
     }
 }
