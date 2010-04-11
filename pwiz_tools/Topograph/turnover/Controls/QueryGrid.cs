@@ -278,11 +278,23 @@ namespace pwiz.Topograph.ui.Controls
                     {
                         writer.Write(tab);
                         tab = "\t";
-                        writer.Write(cell);
+                        writer.Write(StripLineBreaks(cell));
                     }
                     writer.WriteLine();
                 }
             }
+        }
+
+        private static string StripLineBreaks(object value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+            return Convert.ToString(value)
+                .Replace("\r\n", " ")
+                .Replace("\r", " ")
+                .Replace("\n", " ");
         }
     }
 }
