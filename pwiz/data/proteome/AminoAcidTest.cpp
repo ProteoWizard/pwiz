@@ -92,7 +92,7 @@ TestAminoAcid testAminoAcids[] =
     { 147.068414, 147.1739, 'F' },    // Phenylalanine
     { 97.0527640, 97.11520, 'P' },    // Proline
     { 87.0320280, 87.07730, 'S' },    // Serine
-    { 168.964200, 168.0532, 'U' },    // Selenocysteine
+    { 150.953636, 150.0379, 'U' },    // Selenocysteine
     { 101.047679, 101.1039, 'T' },    // Threonine
     { 186.079313, 186.2099, 'W' },    // Tryptophan
     { 163.063329, 163.1733, 'Y' },    // Tyrosine
