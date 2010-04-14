@@ -1221,7 +1221,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     ChromatogramGroupInfo[] arrayChromInfo;
                     if (!results.TryLoadChromatogram(chromatograms, nodeGroup, mzMatchTolerance, true, out arrayChromInfo))
-                        return false;
+                    {
+                        listArrayChromInfo.Add(null);
+                        continue;
+                    }
+
                     listArrayChromInfo.Add(arrayChromInfo);
                     foreach (var chromInfo in arrayChromInfo)
                     {
@@ -1231,6 +1235,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                 }                    
 
+                // If no data was found, then return false
+                if (listFiles.Count == 0)
+                    return false;
+
                 // Make a list of chromatogram info by unique file path corresponding
                 // to the groups passed in.
                 _arrayChromInfo = new ChromatogramGroupInfo[listFiles.Count][];
@@ -1239,7 +1247,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     var arrayNew = new ChromatogramGroupInfo[listArrayChromInfo.Count];
                     for (int j = 0; j < arrayNew.Length; j++)
                     {
-                        foreach (var chromInfo in listArrayChromInfo[j])
+                        var arrayChromInfo = listArrayChromInfo[j];
+                        if (arrayChromInfo == null)
+                            continue;
+                        foreach (var chromInfo in arrayChromInfo)
                         {
                             if (Equals(listFiles[i], chromInfo.FilePath))
                                 arrayNew[j] = chromInfo;

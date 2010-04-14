@@ -374,8 +374,10 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
             }
-            // Only return a match, if at least two product ions match
-            if (listMatchingData.Count < 2)
+            // Only return a match, if at least two product ions match, or the precursor
+            // has only a single product ion, and it matches
+            int countChildren = nodeGroup.Children.Count;
+            if (countChildren == 0 || listMatchingData.Count < Math.Min(2, countChildren))
                 return null;
             return listMatchingData;
         }
@@ -1051,7 +1053,7 @@ namespace pwiz.Skyline.Model.Results
                 GetExtents(inferZeros, intervalDelta, out start, out end);
 
                 var listTimesNew = new List<float>();
-                for (double t = start; t < end; t += intervalDelta)
+                for (double t = start; t <= end; t += intervalDelta)
                     listTimesNew.Add((float)t);
                 float[] timesNew = listTimesNew.ToArray();
 
@@ -1107,7 +1109,8 @@ namespace pwiz.Skyline.Model.Results
             private static double GetIntervalMaxDelta(IList<double> listMaxDeltas, double intervalDelta)
             {
                 const int magnitude = 8;    // 8x counted as an order of magnitude difference
-                if (listMaxDeltas.Count > 0 && listMaxDeltas[0] / magnitude < intervalDelta)
+                // Allow larger differences, if there are 4 in a row with relatively consistent spacing
+                if (listMaxDeltas.Count > 0 && (listMaxDeltas[0] / magnitude < intervalDelta || IsRegular(listMaxDeltas, 4)))
                 {
                     intervalDelta = listMaxDeltas[0];
                     for (int i = 1; i < listMaxDeltas.Count; i++)
@@ -1125,6 +1128,22 @@ namespace pwiz.Skyline.Model.Results
 //                    Console.WriteLine("Max delta {0} too much larger than {1}", listMaxDeltas[0], intervalDelta);
 //                }
                 return intervalDelta;
+            }
+
+            /// <summary>
+            /// Returns true if n values are relatively consistent.
+            /// </summary>
+            private static bool IsRegular(IList<double> deltas, int n)
+            {
+                var deltasCompare = new double[n];
+                n = Math.Min(n, deltas.Count);
+                for (int i = 0; i < n; i++)
+                    deltasCompare[i] = deltas[i];
+                var statDeltas = new Statistics(deltasCompare);
+                double cv = statDeltas.StdDev()/statDeltas.Mean();
+                if (cv < 0.1)
+                    return true;
+                return false;
             }
 
             private void PickPeptidePeaks()
@@ -1526,13 +1545,13 @@ namespace pwiz.Skyline.Model.Results
             /// </summary>
             /// <param name="interval">Interval that will be used for interpolation</param>
             /// <returns>Value to use as the start time for chromatograms that do not infer zeros</returns>
-            private float GetNonZeroStart(double interval)
+            private double GetNonZeroStart(double interval)
             {
                 float min = MinRawTime;
                 float max = MaxStartTime;
                 if (max - min > interval * 2)
                     return min;
-                return max;
+                return (max != float.MinValue ? max : double.MaxValue);
             }
 
             /// <summary>
@@ -1543,13 +1562,13 @@ namespace pwiz.Skyline.Model.Results
             /// </summary>
             /// <param name="interval">Interval that will be used for interpolation</param>
             /// <returns>Value to use as the end time for chromatograms that do not infer zeros</returns>
-            private float GetNonZeroEnd(double interval)
+            private double GetNonZeroEnd(double interval)
             {
                 float min = MinEndTime;
                 float max = MaxRawTime;
                 if (max - min > interval * 2)
                     return max;
-                return min;
+                return (min != float.MaxValue ? min : double.MinValue);
             }
 
             public void GetExtents(bool inferZeros, double intervalDelta, out double start, out double end)
@@ -1573,6 +1592,14 @@ namespace pwiz.Skyline.Model.Results
                 // Get the extent times
                 double startTime, endTime;
                 GetExtents(inferZeros, intervalDelta, out startTime, out endTime);
+
+                // If there is no valid interval, return the entire array
+                if (startTime > endTime)
+                {
+                    start = 0;
+                    end = timesNew.Length - 1;
+                    return;
+                }
 
                 // Search forward for the time that best matches the start time.
                 int i;
@@ -2281,6 +2308,9 @@ namespace pwiz.Skyline.Model.Results
 
             public void Interpolate(float[] timesNew, double intervalDelta, bool inferZeros)
             {
+                if (timesNew.Length == 0)
+                    return;
+
                 var intensNew = new List<float>();
                 var timesMeasured = RawTimes;
                 var intensMeasured = RawIntensities;
