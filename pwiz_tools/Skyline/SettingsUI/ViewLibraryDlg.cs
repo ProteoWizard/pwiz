@@ -488,6 +488,8 @@ namespace pwiz.Skyline.SettingsUI
         private void LoadLibrary()
         {
             LibrarySpec selectedLibrarySpec = _driverLibrary.List[LibraryComboBox.SelectedIndex];
+            if (_selectedLibrary != null)
+                _selectedLibrary.ReadStream.CloseStream();
             _selectedLibrary = _libraryManager.TryGetLibrary(selectedLibrarySpec);
             if (null == _selectedLibrary)
             {
@@ -1019,9 +1021,20 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
+            CancelDialog();
+        }
+
+        public void CancelDialog()
+        {
             DialogResult = DialogResult.Cancel;
-            Close();
             Application.DoEvents();
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            if (_selectedLibrary != null)
+                _selectedLibrary.ReadStream.CloseStream();
+            base.OnClosed(e);
         }
 
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)

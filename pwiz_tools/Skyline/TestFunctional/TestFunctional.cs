@@ -181,8 +181,10 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         protected void RunFunctionalTest()
         {
-            new Thread(WaitForSkyline).Start();
+            var threadTest = new Thread(WaitForSkyline);
+            threadTest.Start();
             Program.Main();
+            threadTest.Join();
             if (_testExceptions.Count > 0)
             {
                 Assert.Fail(_testExceptions[0].ToString());
@@ -228,7 +230,7 @@ namespace pwiz.SkylineTestFunctional
         private void EndTest()
         {
             var skylineWindow = Program.MainWindow;
-            if (skylineWindow == null)
+            if (skylineWindow == null || !IsFormOpen(skylineWindow))
                 return;
 
             // Release all resources by setting the document to something that

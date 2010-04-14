@@ -312,6 +312,11 @@ namespace pwiz.Skyline.SettingsUI
 
         private void editLibraries_Click(object sender, EventArgs e)
         {
+            EditLibraryList();
+        }
+
+        private void EditLibraryList()
+        {
             _driverLibrary.EditList();
 
             panelPick.Visible = listLibraries.CheckedIndices.Count > 0;
@@ -563,6 +568,10 @@ namespace pwiz.Skyline.SettingsUI
             set { _driverHeavyMod.CheckedNames = value; }
         }
 
+        public void EditList()
+        {
+            EditLibraryList();
+        }
         #endregion
     }
 }
