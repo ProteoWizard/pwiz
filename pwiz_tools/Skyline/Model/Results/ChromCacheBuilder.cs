@@ -1616,6 +1616,16 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
                 start = i;
+                // If there is only one time with an intensity, pick the time point
+                // in the new time array closest to it.
+                if (startTime == endTime)
+                {
+                    if (i == 0 || timesNew[i] - startTime < startTime - timesNew[i - 1])
+                        end = start;
+                    else
+                        end = start = i - 1;
+                    return;
+                }
                 // Search backward from the end for the time that best matches the end time.
                 int lastTime = timesNew.Length - 1;
                 for (i = lastTime; i >= 0; i--)
