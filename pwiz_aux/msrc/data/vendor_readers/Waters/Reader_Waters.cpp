@@ -137,6 +137,12 @@ void fillInMetadata(const string& rawpath, RawDataPtr rawdata, MSData& msd)
     dpPwiz->processingMethods.back().cvParams.push_back(MS_Conversion_to_mzML);
     msd.dataProcessingPtrs.push_back(dpPwiz);
 
+    // give ownership of dpPwiz to the SpectrumList (and ChromatogramList)
+    SpectrumList_Waters* sl = dynamic_cast<SpectrumList_Waters*>(msd.run.spectrumListPtr.get());
+    ChromatogramList_Waters* cl = dynamic_cast<ChromatogramList_Waters*>(msd.run.chromatogramListPtr.get());
+    if (sl) sl->setDataProcessingPtr(dpPwiz);
+    if (cl) cl->setDataProcessingPtr(dpPwiz);
+
     //initializeInstrumentConfigurationPtrs(msd, rawfile, softwareXcalibur);
     msd.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("IC")));
     msd.instrumentConfigurationPtrs.back()->set(MS_Waters_instrument_model);

@@ -138,11 +138,12 @@ void hackInMemoryMSData(const string& sourceName, MSData& msd)
     mangleSourceFileLocations(sourceName, sfs);
     manglePwizSoftware(msd);
 
-    // remove current DataProcessing created on read
+    // set current DataProcessing to the original conversion
+    // NOTE: this only works for vendor readers that use a single dataProcessing element
     SpectrumListBase* sl = dynamic_cast<SpectrumListBase*>(msd.run.spectrumListPtr.get());
     ChromatogramListBase* cl = dynamic_cast<ChromatogramListBase*>(msd.run.chromatogramListPtr.get());
-    if (sl) sl->setDataProcessingPtr(DataProcessingPtr());
-    if (cl) cl->setDataProcessingPtr(DataProcessingPtr());
+    if (sl) sl->setDataProcessingPtr(msd.dataProcessingPtrs[0]);
+    if (cl) cl->setDataProcessingPtr(msd.dataProcessingPtrs[0]);
 }
 
 
