@@ -834,6 +834,7 @@ namespace myrimatch
 				    START_PROFILER(0);
                     START_PROFILER(9);
                     Peptide protein(proteins[i].getSequence());
+                    bool isDecoy = proteins[i].isDecoy();
                     STOP_PROFILER(9);
                     START_PROFILER(10);
                     Digestion digestion( protein, g_rtConfig->cleavageAgentRegex, g_rtConfig->digestionConfig );
@@ -864,11 +865,12 @@ namespace myrimatch
                         STOP_PROFILER(12);
                         variantIterator.getVariantsAsList(digestedPeptides);
                         threadInfo->stats.numCandidatesGenerated += digestedPeptides.size();
+                        
                         for( size_t j=0; j < digestedPeptides.size(); ++j )
                         {
                             //++ threadInfo->stats.numCandidatesGenerated;
                             START_PROFILER(1);
-                            boost::int64_t queryComparisonCount = QuerySequence( digestedPeptides[j], i, proteins[i].isDecoy(), g_rtConfig->EstimateSearchTimeOnly );
+                            boost::int64_t queryComparisonCount = QuerySequence( digestedPeptides[j], i, isDecoy, g_rtConfig->EstimateSearchTimeOnly );
                             STOP_PROFILER(1);
                             if( queryComparisonCount > 0 )
                             {
