@@ -127,6 +127,7 @@ namespace pwiz.Skyline.EditUI
                                          MinPeakFoundRatio = minPeakFoundRatio,
                                          MaxPeakFoundRatio = maxPeakFoundRatio,
                                          MaxPeakRank = maxPeakRank,
+                                         PreferLargeIons = cbPreferLarger.Checked,
                                          RemoveMissingResults = removeMissingResults,
                                          RTRegressionThreshold = rtRegressionThreshold,
                                          DotProductThreshold = dotProductThreshold
@@ -144,6 +145,13 @@ namespace pwiz.Skyline.EditUI
         private void cbAdd_CheckedChanged(object sender, EventArgs e)
         {
             labelLabelType.Text = (cbAdd.Checked ? "Add la&bel type:" : "Remove la&bel type:");
+        }
+
+        private void textMaxPeakRank_TextChanged(object sender, EventArgs e)
+        {
+            cbPreferLarger.Enabled = !string.IsNullOrEmpty(textMaxPeakRank.Text);
+            if (!cbPreferLarger.Enabled)
+                cbPreferLarger.Checked = false;
         }
     }
 }

@@ -262,7 +262,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             AxisChange();
-            GraphSummary.Invalidate();
+            GraphSummary.GraphControl.Invalidate();
         }
 
         /// <summary>

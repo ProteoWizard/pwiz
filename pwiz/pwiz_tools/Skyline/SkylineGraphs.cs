@@ -1960,7 +1960,7 @@ namespace pwiz.Skyline
 
         private void setRTThresholdContextMenuItem_Click(object sender, EventArgs e)
         {
-            var dlg = new ShowRTThresholdDlg {Threshold = Settings.Default.RTResidualRThreshold};
+            var dlg = new SetRTThresholdDlg {Threshold = Settings.Default.RTResidualRThreshold};
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {
                 Settings.Default.RTResidualRThreshold = dlg.Threshold;

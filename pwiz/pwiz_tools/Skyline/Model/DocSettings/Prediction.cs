@@ -377,8 +377,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 peptidesTimesTry.Add(peptidesTimes[i]);
             }
 
-            // Rerun the regression
-            return CalcRegression(Name, Calculator.Name, peptidesTimesTry, scoreCache,
+            // Rerun the regression (calculator may change)
+            return CalcRegression(Name, null, peptidesTimesTry, scoreCache,
                 out statisticsResult);            
         }
 

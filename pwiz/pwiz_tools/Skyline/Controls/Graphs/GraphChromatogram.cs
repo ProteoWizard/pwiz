@@ -1412,7 +1412,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (_peakBoundDragInfos != null)
             {
-                Cursor = Cursors.VSplit;
+                graphControl.Cursor = Cursors.VSplit;
                 if (DoDrag(pt))
                     Refresh();                    
                 return true;
@@ -1433,24 +1433,24 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (nearest is TextObj &&
                         FindAnnotatedPeakRetentionTime((TextObj)nearest, out nodeGroup, out nodeTran) != 0)
                     {
-                        Cursor = Cursors.Hand;
+                        graphControl.Cursor = Cursors.Hand;
                         return true;
                     }
                     ChromGraphItem graphItem;
                     if (nearest is LineObj && IsBestPeakBoundary(pt, out graphItem))
                     {
-                        Cursor = Cursors.VSplit;
+                        graphControl.Cursor = Cursors.VSplit;
                         return true;
                     }
 
                     if (nearest is CurveItem)
                     {
-                        Cursor = Cursors.VSplit;
+                        graphControl.Cursor = Cursors.VSplit;
                         return true;
                     }
                     if (nearest is XAxis && IsGroupActive)
                     {
-                        Cursor = Cursors.VSplit;
+                        graphControl.Cursor = Cursors.VSplit;
                         return true;                        
                     }
 
@@ -1479,7 +1479,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             if (peakTime != 0)
                             {
                                 FirePickedPeak(nodeGroup, nodeTran, peakTime);
-                                Cursor = Cursors.Hand;    // ZedGraph changes to crosshair without this
+                                graphControl.Cursor = Cursors.Hand;    // ZedGraph changes to crosshair without this
                                 return true;
                             }
                         }
@@ -1489,7 +1489,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             double time, yTemp;
                             GraphPane.ReverseTransform(pt, out time, out yTemp);
                             _peakBoundDragInfos = new[] {StartDrag(graphItem, pt, time, false)};
-                            Cursor = Cursors.VSplit;    // ZedGraph changes to crosshair without this
+                            graphControl.Cursor = Cursors.VSplit;    // ZedGraph changes to crosshair without this
                             return true;
                         }
 
@@ -1514,7 +1514,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                     listDragInfos.Add(StartDrag(graphItem, pt, time, true));                                
                             }
                             _peakBoundDragInfos = listDragInfos.ToArray();
-                            Cursor = Cursors.VSplit;    // ZedGraph changes to crosshair without this
+                            graphControl.Cursor = Cursors.VSplit;    // ZedGraph changes to crosshair without this
                             return true;
                         }
                     }
