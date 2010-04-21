@@ -479,6 +479,7 @@ namespace pwiz.Skyline.SettingsUI
             UpdateStatusArea();
             UpdatePeptideListBox();
             PeptideTextBox.Select();
+            UpdateUI();
         }
 
         // Loads the library selected in the Library combobox. First, we check
@@ -491,7 +492,7 @@ namespace pwiz.Skyline.SettingsUI
             if (_selectedLibrary != null)
                 _selectedLibrary.ReadStream.CloseStream();
             _selectedLibrary = _libraryManager.TryGetLibrary(selectedLibrarySpec);
-            if (null == _selectedLibrary)
+            if (_selectedLibrary == null)
             {
                 var longWait = new LongWaitDlg { Text = "Loading Library" };
                 try
@@ -522,14 +523,17 @@ namespace pwiz.Skyline.SettingsUI
         private void InitializePeptides()
         {
             var lookupPool = new List<byte>();
-            _peptides = new PepInfo[_selectedLibrary.Count];
-            int index = 0;
-            foreach (var libKey in _selectedLibrary.Keys)
+            _peptides = new PepInfo[_selectedLibrary != null ? _selectedLibrary.Count : 0];
+            if (_selectedLibrary != null)
             {
-                _peptides[index] = new PepInfo(libKey, lookupPool);
-                index++;
+                int index = 0;
+                foreach (var libKey in _selectedLibrary.Keys)
+                {
+                    _peptides[index] = new PepInfo(libKey, lookupPool);
+                    index++;
+                }
+                Array.Sort(_peptides, new PepInfoComparer(lookupPool));
             }
-            Array.Sort(_peptides, new PepInfoComparer(lookupPool));
 
             _lookupPool = lookupPool.ToArray();
             _currentRange = new Range(0, _peptides.Length - 1);
