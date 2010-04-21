@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -48,6 +49,7 @@ namespace pwiz.Skyline.Model
         public double? MinPeakFoundRatio { get; set; }
         public double? MaxPeakFoundRatio { get; set; }
         public double? MaxPeakRank { get; set; }
+        public bool PreferLargeIons { get; set; }
         public bool RemoveMissingResults { get; set; }
         public double? RTRegressionThreshold { get; set; }
         public double? DotProductThreshold { get; set; }
@@ -324,19 +326,45 @@ namespace pwiz.Skyline.Model
             {
                 // Calculate the average peak area for each transition
                 int countTrans = nodeGroupRefined.Children.Count;
-                var listAreaIndexes = new List<KeyValuePair<float, int>>();
+                var listAreaIndexes = new List<AreaSortInfo>();
                 for (int i = 0; i < countTrans; i++)
                 {
                     var nodeTran = (TransitionDocNode) nodeGroupRefined.Children[i];
-                    listAreaIndexes.Add(new KeyValuePair<float, int>(nodeTran.AveragePeakArea ?? 0, i));                    
+                    var sortInfo = new AreaSortInfo(nodeTran.AveragePeakArea ?? 0,
+                                                    nodeTran.Transition.Ordinal,
+                                                    nodeTran.Mz > nodeGroup.PrecursorMz,
+                                                    i);
+                    listAreaIndexes.Add(sortInfo);                    
                 }
                 // Sort to area order descending
-                listAreaIndexes.Sort((p1, p2) => Comparer.Default.Compare(p2.Key, p1.Key));
+                if (PreferLargeIons)
+                {
+                    // If prefering large ions, then larger ions get a slight area
+                    // advantage over smaller ones
+                    listAreaIndexes.Sort((p1, p2) =>
+                    {
+                        float areaAdjusted1 = p1.Area;
+                        // If either transition is below the precursor m/z value,
+                        // apply the fragment size correction.
+                        if (!p1.AbovePrecusorMz || !p2.AbovePrecusorMz)
+                        {
+                            int deltaOrdinal = Math.Max(-5, Math.Min(5, p1.Ordinal - p2.Ordinal));
+                            if (deltaOrdinal != 0)
+                                deltaOrdinal += (deltaOrdinal > 0 ? 1 : -1);
+                            areaAdjusted1 += areaAdjusted1 * 0.05f * deltaOrdinal;
+                        }
+                        return Comparer.Default.Compare(p2.Area, areaAdjusted1);
+                    });
+                }
+                else
+                {
+                    listAreaIndexes.Sort((p1, p2) => Comparer.Default.Compare(p2.Area, p1.Area));                    
+                }                 
                 // Store area ranks by transition index
                 var ranks = new int[countTrans];
                 for (int i = 0, iRank = 1; i < countTrans; i++)
                 {
-                    ranks[listAreaIndexes[i].Value] = iRank++;
+                    ranks[listAreaIndexes[i].Index] = iRank++;
                 }
 
                 // Add back all transitions with low enough rank.
@@ -353,6 +381,22 @@ namespace pwiz.Skyline.Model
             }
 
             return nodeGroupRefined;
+        }
+
+        private sealed class AreaSortInfo
+        {
+            public AreaSortInfo(float area, int ordinal, bool abovePrecursorMz, int index)
+            {
+                Area = area;
+                Ordinal = ordinal;
+                AbovePrecusorMz = abovePrecursorMz;
+                Index = index;
+            }
+
+            public float Area { get; private set; }
+            public int Ordinal { get; private set; }
+            public bool AbovePrecusorMz { get; private set; }
+            public int Index { get; private set; }
         }
     }
 }

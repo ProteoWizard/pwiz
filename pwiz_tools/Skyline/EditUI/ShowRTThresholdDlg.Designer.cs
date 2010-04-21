@@ -100,6 +100,7 @@
             this.MinimizeBox = false;
             this.Name = "ShowRTThresholdDlg";
             this.ShowInTaskbar = false;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Retention Time Intensity Threshold";
             this.ResumeLayout(false);
             this.PerformLayout();

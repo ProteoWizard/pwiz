@@ -31,6 +31,7 @@
             this.components = new System.ComponentModel.Container();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabDocument = new System.Windows.Forms.TabPage();
+            this.cbAdd = new System.Windows.Forms.CheckBox();
             this.labelLabelType = new System.Windows.Forms.Label();
             this.comboRefineLabelType = new System.Windows.Forms.ComboBox();
             this.cbRemoveRepeatedPeptides = new System.Windows.Forms.CheckBox();
@@ -57,7 +58,7 @@
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
-            this.cbAdd = new System.Windows.Forms.CheckBox();
+            this.cbPreferLarger = new System.Windows.Forms.CheckBox();
             this.tabControl1.SuspendLayout();
             this.tabDocument.SuspendLayout();
             this.tabResults.SuspendLayout();
@@ -96,6 +97,17 @@
             this.tabDocument.TabIndex = 0;
             this.tabDocument.Text = "Document";
             this.tabDocument.UseVisualStyleBackColor = true;
+            // 
+            // cbAdd
+            // 
+            this.cbAdd.AutoSize = true;
+            this.cbAdd.Location = new System.Drawing.Point(158, 292);
+            this.cbAdd.Name = "cbAdd";
+            this.cbAdd.Size = new System.Drawing.Size(45, 17);
+            this.cbAdd.TabIndex = 8;
+            this.cbAdd.Text = "&Add";
+            this.cbAdd.UseVisualStyleBackColor = true;
+            this.cbAdd.CheckedChanged += new System.EventHandler(this.cbAdd_CheckedChanged);
             // 
             // labelLabelType
             // 
@@ -180,6 +192,7 @@
             // 
             // tabResults
             // 
+            this.tabResults.Controls.Add(this.cbPreferLarger);
             this.tabResults.Controls.Add(this.textMaxPeakRank);
             this.tabResults.Controls.Add(this.labelMaxPeakRank);
             this.tabResults.Controls.Add(this.textMaxPeakFoundRatio);
@@ -206,6 +219,7 @@
             this.textMaxPeakRank.TabIndex = 7;
             this.helpTip.SetToolTip(this.textMaxPeakRank, "All transitions with an average area peak ranking\r\ngreater than this number will " +
                     "be removed from the\r\ndocument.");
+            this.textMaxPeakRank.TextChanged += new System.EventHandler(this.textMaxPeakRank_TextChanged);
             // 
             // labelMaxPeakRank
             // 
@@ -361,16 +375,16 @@
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
-            // cbAdd
+            // cbPreferLarger
             // 
-            this.cbAdd.AutoSize = true;
-            this.cbAdd.Location = new System.Drawing.Point(158, 292);
-            this.cbAdd.Name = "cbAdd";
-            this.cbAdd.Size = new System.Drawing.Size(45, 17);
-            this.cbAdd.TabIndex = 8;
-            this.cbAdd.Text = "&Add";
-            this.cbAdd.UseVisualStyleBackColor = true;
-            this.cbAdd.CheckedChanged += new System.EventHandler(this.cbAdd_CheckedChanged);
+            this.cbPreferLarger.AutoSize = true;
+            this.cbPreferLarger.Enabled = false;
+            this.cbPreferLarger.Location = new System.Drawing.Point(171, 97);
+            this.cbPreferLarger.Name = "cbPreferLarger";
+            this.cbPreferLarger.Size = new System.Drawing.Size(144, 17);
+            this.cbPreferLarger.TabIndex = 10;
+            this.cbPreferLarger.Text = "Prefer larger product ions";
+            this.cbPreferLarger.UseVisualStyleBackColor = true;
             // 
             // RefineDlg
             // 
@@ -433,5 +447,6 @@
         private System.Windows.Forms.Label labelLabelType;
         private System.Windows.Forms.ComboBox comboRefineLabelType;
         private System.Windows.Forms.CheckBox cbAdd;
+        private System.Windows.Forms.CheckBox cbPreferLarger;
     }
 }

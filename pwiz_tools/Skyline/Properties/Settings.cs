@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Serialization;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -706,14 +707,14 @@ namespace pwiz.Skyline.Properties
 
     public sealed class CollisionEnergyList : SettingsList<CollisionEnergyRegression>
     {
-        public override int RevisionIndexCurrent { get { return 1; } }
+        public override int RevisionIndexCurrent { get { return 2; } }
 
         public static CollisionEnergyRegression GetDefault()
         {
             var thermoRegressions = new[]
                                 {
-                                    new ChargeRegressionLine(2, 0.03, 2.786),
-                                    new ChargeRegressionLine(3, 0.038, 2.183)
+                                    new ChargeRegressionLine(2, 0.03, 2.905),
+                                    new ChargeRegressionLine(3, 0.038, 2.281)
                                 };
             return new CollisionEnergyRegression("Thermo TSQ Vantage", thermoRegressions);
         }
@@ -737,10 +738,14 @@ namespace pwiz.Skyline.Properties
                             new CollisionEnergyRegression("Waters", new[]
                                 { new ChargeRegressionLine(2, 0.034, 3.314), }),
                         };
-                default:    // v0.6
+                case 1:    // v0.6
                     return new[]
                         {
-                            GetDefault(), 
+                            new CollisionEnergyRegression("Thermo TSQ Vantage", new[]
+                                {
+                                    new ChargeRegressionLine(2, 0.03, 2.786),
+                                    new ChargeRegressionLine(3, 0.038, 2.183)
+                                }),
                             new CollisionEnergyRegression("Thermo TSQ Ultra", new []
                                 {
                                     new ChargeRegressionLine(2, 0.035, 1.643),
@@ -750,6 +755,25 @@ namespace pwiz.Skyline.Properties
                                 {
                                     new ChargeRegressionLine(2, 0.057, 4.453),
                                     new ChargeRegressionLine(3, 0.03, 7.692)
+                                }), 
+                            new CollisionEnergyRegression("Agilent", new[]
+                                { new ChargeRegressionLine(2, 0.036, -4.8), }),
+                            new CollisionEnergyRegression("Waters", new[]
+                                { new ChargeRegressionLine(2, 0.034, 3.314), }),
+                        };
+                default:    // v0.6 - fix
+                    return new[]
+                        {
+                            GetDefault(), 
+                            new CollisionEnergyRegression("Thermo TSQ Ultra", new []
+                                {
+                                    new ChargeRegressionLine(2, 0.036, 0.954),
+                                    new ChargeRegressionLine(3, 0.037, 3.525)
+                                }), 
+                            new CollisionEnergyRegression("ABI 4000 QTrap", new []
+                                {
+                                    new ChargeRegressionLine(2, 0.057, -4.265),
+                                    new ChargeRegressionLine(3, 0.031, 7.082)
                                 }), 
                             new CollisionEnergyRegression("Agilent", new[]
                                 { new ChargeRegressionLine(2, 0.036, -4.8), }),
@@ -1187,11 +1211,21 @@ namespace pwiz.Skyline.Properties
 
         private void MergeDifferences(IEnumerable<T> itemsNew, IEnumerable<T> itemsOld)
         {
+            var itemsOldArray = itemsOld.ToArray();
             foreach (var item in itemsNew)
             {
                 var keyNew = item.GetKey();
-                if (!itemsOld.Contains(itemOld => Equals(keyNew, itemOld.GetKey())))
+                int i = itemsOldArray.IndexOf(itemOld => Equals(keyNew, itemOld.GetKey()));
+                // If the item did not exist, add it.
+                if (i == -1)
                     Add(item);
+                // If the item has changed in the latest version
+                else if (!Equals(item, itemsOldArray[i]))
+                {
+                    // And the item exists unchanged in the settings, then replace it.
+                    if (Remove(itemsOldArray[i]))
+                        Add(item);
+                }
             }
         }
 
