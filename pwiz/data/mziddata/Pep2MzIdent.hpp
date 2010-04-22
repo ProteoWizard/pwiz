@@ -130,6 +130,10 @@ private:
     // found in pepXML.
     CVID getCVID(const std::string& name);
 
+    /// Maps known odd software names to the most applicable CVID.
+    /// TODO make this loadable from a file. 
+    CVID mapToNearestSoftware(const std::string& softwareName);
+    
     /// Translates the search_score with the given name into a CVParam
     /// object using getParamForSearchScore.
     CVParam translateSearchScore(const std::string& name,

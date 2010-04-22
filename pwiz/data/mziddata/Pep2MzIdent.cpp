@@ -66,6 +66,8 @@ struct Pep2MzIdent::Indices
     size_t pdp;
 };
 
+namespace {
+
 struct sequence_p
 {
     const string seq;
@@ -151,7 +153,6 @@ struct software_p
     }
 };
 
-
 AnalysisSoftwarePtr findSoftware(const vector<AnalysisSoftwarePtr>& software,
     CVID cvid)
 {
@@ -168,17 +169,21 @@ AnalysisSoftwarePtr findSoftware(const vector<AnalysisSoftwarePtr>& software,
 
 CVParam guessThreshold(const vector<AnalysisSoftwarePtr>& software)
 {
-    static const CVID cvids[] = {MS_Mascot, MS_Sequest,
-                                 MS_Phenyx, CVID_Unknown};
+    static const CVID cvids[][2] = {
+        {MS_Mascot, MS_mascot_score},
+        {MS_Sequest, MS_sequest_probability},
+        {MS_Phenyx, MS_Phenyx_Score},
+        {CVID_Unknown, CVID_Unknown}
+    };
     CVParam cvparam;
 
-    for (size_t idx = 0; cvids[idx] != CVID_Unknown; idx++)
+    for (size_t idx = 0; cvids[idx][0] != CVID_Unknown; idx++)
     {
-        AnalysisSoftwarePtr as = findSoftware(software, cvids[idx]);
+        AnalysisSoftwarePtr as = findSoftware(software, cvids[idx][0]);
         
         if (!as.get())
         {
-            cvparam = CVParam(cvids[idx], "0.5");
+            cvparam = CVParam(cvids[idx][1], "0.5");
             break;
         }
     }
@@ -186,7 +191,7 @@ CVParam guessThreshold(const vector<AnalysisSoftwarePtr>& software)
     // TODO put a reasonable default here and a reasonable way to set it.
     if (cvparam.cvid == CVID_Unknown)
     {
-        cvparam.cvid = MS_Mascot;
+        cvparam.cvid = MS_mascot_score;
         cvparam.value = "0.05";
     }
     
@@ -213,6 +218,8 @@ AnalysisSoftwarePtr guessAnalysisSoftware(
 
     return asp;
 }
+
+} // namespace
 
 //
 // Pep2MzIdent
@@ -307,7 +314,7 @@ void Pep2MzIdent::addSpectraData(const MSMSRunSummary& msmsRunSummary,
     SpectraDataPtr sd(new SpectraData(
                           "SD_"+lexical_cast<string>(indices->sd++)));
 
-    // TODO verify that both of these valules are legit.
+    // TODO verify that both of these cvid values are legit.
     sd->location = msmsRunSummary.base_name;
 
     if (iequals(msmsRunSummary.raw_data, ".mzml"))
@@ -343,9 +350,16 @@ void Pep2MzIdent::translateEnzyme(const SampleEnzyme& sampleEnzyme,
 
     // Cross fingers and pray that the name enzyme matches a cv name.
     // TODO create a more flexable conversion.
-    enzyme->enzymeName.set(getCVID(sampleEnzyme.name));
-    enzyme->enzymeName.userParams.
-        push_back(UserParam("description", sampleEnzyme.description));
+    CVID seCVID = getCVID(sampleEnzyme.name);
+    if (seCVID != CVID_Unknown)
+        enzyme->enzymeName.set(seCVID);
+    else
+        enzyme->enzymeName.userParams.
+            push_back(UserParam("name", sampleEnzyme.name));
+
+    if (sampleEnzyme.description.size()>0)
+        enzyme->enzymeName.userParams.
+            push_back(UserParam("description", sampleEnzyme.description));
 
     if (sampleEnzyme.fidelity == "Semispecific")
         enzyme->semiSpecific = true;
@@ -422,16 +436,35 @@ void Pep2MzIdent::translateSearch(const SearchSummaryPtr summary,
 
     // push SourceFilePtr onto sourceFile
     // in Inputs in DataCollection
+    //
+    // Removed because sourcefiles are for intermediate file formats,
+    // not the source of the data.
+    
+    /*
     SourceFilePtr sourceFile(new SourceFile());
     sourceFile->id = "SF_1";
     sourceFile->location = summary->baseName;
     sourceFile->fileFormat.set(MS_ISB_mzXML_file);
 
     result->dataCollection.inputs.sourceFile.push_back(sourceFile);
-
+    */
+    
     AnalysisSoftwarePtr as(new AnalysisSoftware());
     as->id = "AS";
-    as->softwareName.set(getCVID(summary->searchEngine));
+    CVID cvid = getCVID(summary->searchEngine);
+    if (cvid != CVID_Unknown)
+        as->softwareName.set(cvid);
+    else
+    {
+        cvid = mapToNearestSoftware(summary->searchEngine);
+        if (cvid == CVID_Unknown)
+            throw invalid_argument(("Unknown search software name "+
+                                    summary->searchEngine).c_str());
+
+        as->softwareName.set(cvid);
+        as->softwareName.userParams.push_back(
+            UserParam("search_engine full name", summary->searchEngine));
+    }
     result->analysisSoftwareList.push_back(as);
 
     // handle precursorMassType/fragmentMassType
@@ -461,10 +494,11 @@ void Pep2MzIdent::translateSearch(const SearchSummaryPtr summary,
     {
         fs::path localPath(summary->searchDatabase.localPath);
         searchDatabase->DatabaseName.userParams.push_back(
-            UserParam(localPath.filename()));
+            UserParam("local_path", localPath.filename()));
     }
 
-    // TODO make this more elegant
+    // TODO this goes in the analysis software section, I think.
+    /*
     if (iends_with(summary->baseName, ".dat") &&
         iequals(summary->searchEngine, "mascot"))
         searchDatabase->fileFormat.set(MS_Mascot_DAT_file);
@@ -472,11 +506,29 @@ void Pep2MzIdent::translateSearch(const SearchSummaryPtr summary,
         searchDatabase->fileFormat.set(MS_Sequest_out_file);
     else if (iequals(summary->searchEngine, "xtandem"))
         searchDatabase->fileFormat.set(MS_xtandem_xml_file);
-
+    */
+    
     mzid->dataCollection.inputs.searchDatabase.push_back(searchDatabase);
     
     // Save for later.
     aminoAcidModifications = &summary->aminoAcidModifications;
+}
+
+
+CVID Pep2MzIdent::mapToNearestSoftware(const string& softwareName)
+{
+    CVID cvid = getCVID(softwareName);
+
+    if (cvid == CVID_Unknown)
+    {
+        if (istarts_with(softwareName, "X! Tandem") ||
+            istarts_with(softwareName, "X!Tandem"))
+        {
+            cvid = MS_xtandem;
+        }
+    }
+
+    return cvid;
 }
 
 
@@ -591,28 +643,50 @@ void Pep2MzIdent::translateQueries(const SpectrumQueryPtr query,
             // TODO find out if this is right.
             sii->chargeState = query->assumedCharge;
 
-            // TODO get search_score
+            // TODO get search_score(s)
+            for (vector<SearchScorePtr>::const_iterator ssit=(*shit)->searchScore.begin();
+                 ssit != (*shit)->searchScore.end(); ssit++)
+            {
+                CVParam cvp;
+                cvp = getParamForSearchScore(*ssit);
+                if (cvp.cvid != CVID_Unknown)
+                    sii->paramGroup.set(cvp.cvid, cvp.value);
+                else
+                    sii->paramGroup.userParams.
+                        push_back(UserParam((*ssit)->name, (*ssit)->value));
+                    
+            }
+            /*
             CVParam cvp = translateSearchScore("ionscore",
                                                (*shit)->searchScore);
 
+            std::cerr << "ionscore=" << cvp.cvid << "\n";
             if (cvp.cvid != CVID_Unknown)
                 sii->paramGroup.set(cvp.cvid, cvp.value);
+            
             cvp = translateSearchScore("expect", (*shit)->searchScore);
+            std::cerr << "expect=" << cvp.cvid << "\n";
             if (cvp.cvid != CVID_Unknown)
                 sii->paramGroup.set(cvp.cvid, cvp.value);
+            
             
             sii->peptideEvidence.push_back(pepEv);
 
             // TODO handle precursorNeutralMass
             // TODO handle index/retentionTimeSec fields
-    
+
+            */
             SpectrumIdentificationResultPtr sirp(
                 new SpectrumIdentificationResult());
             sirp->id = "SIR_"+lexical_cast<string>(indices->sir++);
 
+            /*
             cvp = translateSearchScore("identityscore", (*shit)->searchScore);
-            sirp->paramGroup.set(cvp.cvid, cvp.value);
-
+            std::cerr << "identityscore=" << cvp.cvid << "\n";
+            if (cvp.cvid != CVID_Unknown)
+                sirp->paramGroup.set(cvp.cvid, cvp.value);
+            */
+            
             sirp->spectrumID = query->spectrum;
             sirp->spectrumIdentificationItem.push_back(sii);
             if (mzid->dataCollection.inputs.spectraData.size()>0)
