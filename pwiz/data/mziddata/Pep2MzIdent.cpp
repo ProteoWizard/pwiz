@@ -462,8 +462,14 @@ void Pep2MzIdent::translateSearch(const SearchSummaryPtr summary,
                                     summary->searchEngine).c_str());
 
         as->softwareName.set(cvid);
+
+        // TODO This is invalid, but we need to save the software
+        // somewhere.
+        /*
         as->softwareName.userParams.push_back(
-            UserParam("search_engine full name", summary->searchEngine));
+            UserParam("search_engine full name",
+            summary->searchEngine));
+        */
     }
     result->analysisSoftwareList.push_back(as);
 
@@ -614,7 +620,19 @@ void Pep2MzIdent::translateQueries(const SpectrumQueryPtr query,
             dbs->length = (*shit)->peptide.length();
             dbs->seq = (*shit)->peptide;
             dbs->accession = (*shit)->protein;
-            dbs->paramGroup.set(MS_protein_description, (*shit)->proteinDescr);
+
+            // TODO find the best way of setting the protein for
+            // DBSequence's MS_protein_description cvParam.
+            const string* protein_desc = NULL;
+            if ((*shit)->proteinDescr.length()>0)
+                protein_desc = &(*shit)->proteinDescr;
+            else if ((*shit)->protein.length()>0)
+                protein_desc = &(*shit)->protein;
+            else
+                throw runtime_error(("No protein found for sequence "+
+                                     (*shit)->peptide).c_str());
+            
+            dbs->paramGroup.set(MS_protein_description, *protein_desc);
             if (mzid->dataCollection.inputs.searchDatabase.size()>0)
                 dbs->searchDatabasePtr = mzid->dataCollection.inputs.
                     searchDatabase.at(0);
@@ -629,8 +647,8 @@ void Pep2MzIdent::translateQueries(const SpectrumQueryPtr query,
                                              indices->peptideEvidence++)));
             
             // TODO make sure handle the spectrum field
-            pepEv->paramGroup.userParams.push_back(UserParam("spectrum",
-                                                             query->spectrum));
+            //pepEv->paramGroup.userParams.push_back(UserParam("spectrum",
+            //                                                 query->spectrum));
 
             pepEv->start = query->startScan;
             pepEv->end = query->endScan;
@@ -640,11 +658,29 @@ void Pep2MzIdent::translateQueries(const SpectrumQueryPtr query,
                 new SpectrumIdentificationItem(
                     "SII_"+lexical_cast<string>(indices->sii++)));
 
-            // TODO find out if this is right.
+            sii->peptideEvidence.push_back(pepEv);
+            sii->rank = (*shit)->hitRank;
+            
+            // TODO find out if this use of assumedCharge is right.
             sii->chargeState = query->assumedCharge;
 
+            // TODO put neutral mass where it belongs
+
+            // TODO find out if pepxml's precursorNeutralMass is
+            // experimental or calculated.
+            if (query->assumedCharge == 0)
+                throw runtime_error(("zero assumed_charge found in spectrum: "+
+                                     query->spectrum).c_str());
+            
+            sii->experimentalMassToCharge = query->precursorNeutralMass /
+                query->assumedCharge;
+
+            sii->calculatedMassToCharge = (*shit)->calcNeutralPepMass /
+                query->assumedCharge;
+
             // TODO get search_score(s)
-            for (vector<SearchScorePtr>::const_iterator ssit=(*shit)->searchScore.begin();
+            typedef vector<SearchScorePtr>::const_iterator SSP_cit;
+            for (SSP_cit ssit=(*shit)->searchScore.begin();
                  ssit != (*shit)->searchScore.end(); ssit++)
             {
                 CVParam cvp;
