@@ -487,11 +487,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
             // First remove all old document local specs.
-            foreach (LibrarySpec librarySpec in defSet.SpectralLibraryList.ToArray())
-            {
-                if (librarySpec.IsDocumentLocal)
-                    defSet.SpectralLibraryList.Remove(librarySpec);
-            }
+            defSet.SpectralLibraryList.RemoveDocumentLocalLibraries();
             // Then add any specs belonging to this document.
             if (PeptideSettings.Libraries.HasLibraries)
             {
