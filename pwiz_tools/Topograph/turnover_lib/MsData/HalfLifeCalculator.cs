@@ -44,8 +44,7 @@ namespace pwiz.Topograph.MsData
                       + "FROM " + typeof (DbPeptideDistribution) + " T\n"
                       + "WHERE T.PeptideFileAnalysis.MsDataFile.TimePoint IS NOT NULL\n"
                       + "AND T.Score > :minScore\n" 
-                      + "AND T.PeptideFileAnalysis.ValidationStatus != " + (int) ValidationStatus.reject + "\n"
-                      + "AND T.PeptideFileAnalysis.PeptideAnalysis.ValidationStatus != " + (int) ValidationStatus.reject + "\n";
+                      + "AND T.PeptideFileAnalysis.ValidationStatus != " + (int) ValidationStatus.reject + "\n";
             var query = Session.CreateQuery(hql)
                 .SetParameter("minScore", MinScore);
 

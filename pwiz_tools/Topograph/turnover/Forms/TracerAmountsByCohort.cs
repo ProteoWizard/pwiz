@@ -76,8 +76,7 @@ namespace pwiz.Topograph.ui.Forms
                                                 + "\nd.TracerPercent"
                                                 + "\nFROM DbPeptideDistribution d"
                                                 + "\nWHERE d.Score > :minScore AND d.PeptideQuantity = 0 "
-                                                + "\nAND d.PeptideFileAnalysis.ValidationStatus <> " + (int) ValidationStatus.reject 
-                                                + "\nAND d.PeptideFileAnalysis.PeptideAnalysis.ValidationStatus <> " + (int) ValidationStatus.reject);
+                                                + "\nAND d.PeptideFileAnalysis.ValidationStatus <> " + (int) ValidationStatus.reject);
                 if (!string.IsNullOrEmpty(tbxMinScore.Text))
                 {
                     query.SetParameter("minScore", double.Parse(tbxMinScore.Text));

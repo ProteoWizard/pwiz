@@ -178,7 +178,7 @@ namespace pwiz.Topograph.ui.Forms
                 var peptideAnalysisRows = new Dictionary<long, PeptideAnalysisRow>();
                 using (var session = Workspace.OpenSession())
                 {
-                    String hql = "SELECT pa.Id, pa.Peptide.Id, pa.Note, pa.ValidationStatus "
+                    String hql = "SELECT pa.Id, pa.Peptide.Id, pa.Note "
                                  + "\nFROM " + typeof(DbPeptideAnalysis) + " pa";
 
                     if (idsToRequery != null)
@@ -197,9 +197,8 @@ namespace pwiz.Topograph.ui.Forms
                         }
                         peptideAnalysisRow.PeptideId = (long)rowData[1];
                         peptideAnalysisRow.Note = (string)rowData[2];
-                        peptideAnalysisRow.ValidationStatus = (ValidationStatus)rowData[3];
                     }
-                    var hql2 = "SELECT pd.PeptideFileAnalysis.PeptideAnalysis.Id, pd.PeptideQuantity, Min(pd.Score), Max(pd.Score) "
+                    var hql2 = "SELECT pd.PeptideFileAnalysis.PeptideAnalysis.Id, pd.PeptideQuantity, Min(pd.Score), Max(pd.Score), Min(pd.PeptideFileAnalysis.ValidationStatus), Max(pd.PeptideFileAnalysis.ValidationStatus) "
                                + "\nfrom " + typeof(DbPeptideDistribution) +
                                " pd ";
                     if (idsToRequery != null)
@@ -227,6 +226,8 @@ namespace pwiz.Topograph.ui.Forms
                             peptideAnalysisRow.MinScorePrecursorEnrichments = (double?)rowData[2];
                             peptideAnalysisRow.MaxScorePrecursorEnrichments = (double?)rowData[3];
                         }
+                        peptideAnalysisRow.MinValidationStatus = (ValidationStatus?) rowData[4];
+                        peptideAnalysisRow.MaxValidationStatus = (ValidationStatus?) rowData[5];
                     }
                 }
                 if (idsToRequery != null)
@@ -273,6 +274,7 @@ namespace pwiz.Topograph.ui.Forms
                         row.Tag = entry.Value.Id;
                     }
                     var peptide = Workspace.Peptides.GetChild(entry.Value.PeptideId);
+                    var peptideAnalysis = Workspace.PeptideAnalyses.GetChild(entry.Value.Id);
                     if (peptide == null)
                     {
                         row.Cells[colProteinKey.Index].Value = null;
@@ -287,12 +289,27 @@ namespace pwiz.Topograph.ui.Forms
                         row.Cells[colProteinDescription.Index].Value = row.Cells[colProteinDescription.Index].ToolTipText = peptide.ProteinDescription;
                         row.Cells[colMaxTracers.Index].Value = peptide.MaxTracerCount;
                     }
-                    row.Cells[colStatus.Name].Value = entry.Value.ValidationStatus;
-                    row.Cells[colNote.Name].Value = entry.Value.Note;
                     row.Cells[colMinScoreTracerCount.Index].Value = entry.Value.MinScoreTracerAmounts;
                     row.Cells[colMaxScoreTracerCount.Index].Value = entry.Value.MaxScoreTracerAmounts;
                     row.Cells[colMinScorePrecursorEnrichment.Index].Value = entry.Value.MinScorePrecursorEnrichments;
                     row.Cells[colMaxScorePrecursorEnrichment.Index].Value = entry.Value.MaxScorePrecursorEnrichments;
+                    if (peptideAnalysis == null)
+                    {
+                        row.Cells[colNote.Index].Value = entry.Value.Note;
+                        if (entry.Value.MinValidationStatus == entry.Value.MaxValidationStatus)
+                        {
+                            row.Cells[colStatus.Index].Value = entry.Value.MinValidationStatus;
+                        }
+                        else
+                        {
+                            row.Cells[colStatus.Index].Value = null;
+                        }
+                    }
+                    else
+                    {
+                        row.Cells[colNote.Index].Value = peptideAnalysis.Note;
+                        row.Cells[colStatus.Index].Value = peptideAnalysis.GetValidationStatus();
+                    }
                 }
             }
             finally
@@ -317,7 +334,12 @@ namespace pwiz.Topograph.ui.Forms
             {
                 UpdateColumnVisibility();
             }
-            AddPeptideAnalysesToRequery(args.GetChangedPeptideAnalyses().Keys);
+            var changedPeptideAnalysisIds = new HashSet<long>(args.GetChangedPeptideAnalyses().Keys);
+            foreach (var peptideFileAnalysis in args.GetEntities<PeptideFileAnalysis>())
+            {
+                changedPeptideAnalysisIds.Add(peptideFileAnalysis.PeptideAnalysis.Id.Value);
+            }
+            AddPeptideAnalysesToRequery(changedPeptideAnalysisIds);
         }
 
         private void dataGridView_RowHeaderMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
@@ -354,7 +376,7 @@ namespace pwiz.Topograph.ui.Forms
                 }
                 else if (column == colStatus)
                 {
-                    peptideAnalysis.ValidationStatus = (ValidationStatus)cell.Value;
+                    peptideAnalysis.SetValidationStatus((ValidationStatus?) cell.Value);
                 }
             }
         }
@@ -445,12 +467,13 @@ namespace pwiz.Topograph.ui.Forms
         {
             public long Id;
             public long PeptideId;
-            public ValidationStatus ValidationStatus;
             public String Note;
             public double? MinScoreTracerAmounts;
             public double? MaxScoreTracerAmounts;
             public double? MinScorePrecursorEnrichments;
             public double? MaxScorePrecursorEnrichments;
+            public ValidationStatus? MinValidationStatus;
+            public ValidationStatus? MaxValidationStatus;
         }
     }
 }

@@ -53,6 +53,37 @@ namespace pwiz.Topograph.Model
 
         public Peptide Peptide { get; private set; }
         public PeptideFileAnalyses FileAnalyses { get; private set; }
+        public ValidationStatus? GetValidationStatus() 
+        {
+            ValidationStatus? result = null;
+            foreach (var peptideFileAnalysis in FileAnalyses.ListChildren())
+            {
+                if (result == null)
+                {
+                    result = peptideFileAnalysis.ValidationStatus;
+                }
+                else
+                {
+                    if (result != peptideFileAnalysis.ValidationStatus)
+                    {
+                        return null;
+                    }
+                }
+            }
+            return result;
+        }
+
+        public void SetValidationStatus(ValidationStatus? value)
+        {
+            if (value == null)
+            {
+                return;
+            }
+            foreach (var peptideFileAnalysis in FileAnalyses.ListChildren())
+            {
+                peptideFileAnalysis.ValidationStatus = value.Value;
+            }
+        }
 
         protected override IEnumerable<ModelProperty> GetModelProperties()
         {

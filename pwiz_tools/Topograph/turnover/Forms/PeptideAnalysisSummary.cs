@@ -191,24 +191,24 @@ namespace pwiz.Topograph.ui.Forms
         private void dataGridView_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
             var row = dataGridView.Rows[e.RowIndex];
-            var peptideAnalysis = (PeptideFileAnalysis) row.Tag;
+            var peptideFileAnalysis = (PeptideFileAnalysis) row.Tag;
             var column = dataGridView.Columns[e.ColumnIndex];
             var cell = row.Cells[e.ColumnIndex];
             if (column == colCohort)
             {
-                peptideAnalysis.MsDataFile.Cohort = Convert.ToString(cell.Value);
+                peptideFileAnalysis.MsDataFile.Cohort = Convert.ToString(cell.Value);
             }
             else if (column == colTimePoint)
             {
-                peptideAnalysis.MsDataFile.TimePoint = DataFilesForm.ToDouble(cell.Value);
+                peptideFileAnalysis.MsDataFile.TimePoint = DataFilesForm.ToDouble(cell.Value);
             }
             else if (column == colDataFileLabel)
             {
-                peptideAnalysis.MsDataFile.Label = Convert.ToString(cell.Value);
+                peptideFileAnalysis.MsDataFile.Label = Convert.ToString(cell.Value);
             }
             else if (column == colStatus)
             {
-                peptideAnalysis.ValidationStatus = (ValidationStatus) cell.Value;
+                peptideFileAnalysis.ValidationStatus = (ValidationStatus) cell.Value;
             }
     }
 
