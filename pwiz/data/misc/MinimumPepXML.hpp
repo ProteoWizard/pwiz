@@ -151,6 +151,65 @@ struct PWIZ_API_DECL Q3RatioResult
 
 };
 
+struct PWIZ_API_DECL RocDataPoint
+{
+    double min_prob;
+    double sensitivity;
+    double error;
+    long num_corr;
+    long num_incorr;
+};
+
+struct PWIZ_API_DECL ErrorPoint
+{
+    double error;
+    double min_prob;
+    long num_corr;
+    long num_incorr;
+};
+
+struct PWIZ_API_DECL DistributionPoint
+{
+    double fvalue;
+    long obs_1_distr;
+    double model_1_pos_distr;
+    double model_1_neg_distr;
+    long obs_2_distr;
+    double model_2_pos_distr;
+    double model_2_neg_distr;
+    long obs_3_distr;
+    double model_3_pos_distr;
+    double model_3_neg_distr;
+};
+
+struct PWIZ_API_DECL MixtureModel
+{
+    long precursor_ion_charge;
+    std::string comments;
+    double prior_probability;
+    double est_tot_correct;
+    long tot_num_spectra;
+    long num_iterations;
+
+    // TODO Child tags go here... Don't forget to add the struct for
+    // them too
+};
+
+struct PWIZ_API_DECL PeptideProphetSummary
+{
+    std::string version;
+    std::string author;
+    double min_prob;
+    std::string options;
+    double est_tot_num_correct;
+
+    std::vector<std::string> inputFile;
+    std::vector<RocDataPoint> roc_data_point;
+    std::vector<ErrorPoint> error_point;
+    std::vector<DistributionPoint> distribution_point;
+    std::vector<MixtureModel> mixture_model;
+};
+
 struct PWIZ_API_DECL PeptideProphetResult
 {
     PeptideProphetResult() : probability(0) {}
@@ -501,6 +560,7 @@ struct PWIZ_API_DECL AnalysisSummary
     
     // TODO deal with the results of
     // <xs:any namespace="##any" processContents="lax" minOccurs="0">
+    std::vector<PeptideProphetSummary> peptideprophet_summary;
 };
 
 typedef boost::shared_ptr<AnalysisSummary> AnalysisSummaryPtr;

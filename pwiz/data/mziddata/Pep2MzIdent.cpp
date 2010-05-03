@@ -24,9 +24,12 @@
 #include "Pep2MzIdent.hpp"
 #include "pwiz/utility/chemistry/Ion.hpp"
 #include "pwiz/data/common/cv.hpp"
+#include "boost/regex.hpp"
+#include "boost/algorithm/string/join.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/filesystem.hpp"
 #include "boost/algorithm/string.hpp"
+#include "boost/foreach.hpp"
 
 // Debug macro to be used if needed.
 #define DOUT(a) do{ if(debug) std::cout << a << endl; } while(0)
@@ -39,6 +42,8 @@ using namespace pwiz::chemistry;
 
 using namespace boost;
 using namespace std;
+
+using boost::algorithm::join;
 
 // String constants
 
@@ -100,6 +105,18 @@ struct id_p
     id_p(const string id) : id(id) {}
 
     bool operator()(const shared_ptr<T>& t) const { return t->id == id; } 
+};
+
+struct parameter_p
+{
+    const string name;
+
+    parameter_p(const string name) : name(name) {}
+
+    bool operator()(const shared_ptr<Parameter>& p) const
+    {
+        return p->name == name;
+    }
 };
 
 // Utility functions
@@ -219,6 +236,74 @@ AnalysisSoftwarePtr guessAnalysisSoftware(
     return asp;
 }
 
+struct fileInfo
+{
+    const string ext;
+    CVID fileFormat;
+    CVID spectrumIDFormat;
+    
+    fileInfo(const string& ext, CVID fileFormat,CVID spectrumIDFormat)
+        : ext(ext), fileFormat(fileFormat), spectrumIDFormat(spectrumIDFormat)
+    {}
+
+};
+
+bool fileExtension2Type(const string& file,
+                        CVID& fileFormat,
+                        CVID& spectrumIDFormat)
+{
+    // TODO map the following file formats
+    //{MS_Waters_raw_file, MS_mass_spectrometer_file_format},
+    //{MS_mass_spectrometer_file_format, MS_file_format},
+    //{MS_ABI_WIFF_file, MS_mass_spectrometer_file_format},
+    //{MS_Thermo_RAW_file, MS_mass_spectrometer_file_format},
+    //{MS_PSI_mzData_file, MS_mass_spectrometer_file_format},
+    //{MS_Micromass_PKL_file, MS_mass_spectrometer_file_format},
+    //{MS_ISB_mzXML_file, MS_mass_spectrometer_file_format},
+    //{MS_Bruker_Agilent_YEP_file, MS_mass_spectrometer_file_format},
+    //{MS_mzML_file, MS_mass_spectrometer_file_format},
+    //{MS_DTA_file, MS_mass_spectrometer_file_format},
+    //{MS_ProteinLynx_Global_Server_mass_spectrum_XML_file, MS_mass_spectrometer_file_format},
+    //{MS_parameter_file, MS_mass_spectrometer_file_format},
+    //{MS_Bioworks_SRF_file, MS_mass_spectrometer_file_format},
+    //{MS_Bruker_BAF_file, MS_mass_spectrometer_file_format},
+    //{MS_Bruker_U2_file, MS_mass_spectrometer_file_format},
+    //{MS_Bruker_FID_file, MS_mass_spectrometer_file_format},
+    //{MS_Mascot_MGF_file, MS_mass_spectrometer_file_format},
+    //{MS_PerSeptive_PKS_file, MS_mass_spectrometer_file_format},
+    //{MS_Sciex_API_III_file, MS_mass_spectrometer_file_format},
+    //{MS_Bruker_XML_file, MS_mass_spectrometer_file_format},
+    //{MS_text_file, MS_mass_spectrometer_file_format},
+    //{MS_Phenyx_XML_format, MS_mass_spectrometer_file_format},
+    //{MS_AB_SCIEX_TOF_TOF_database, MS_mass_spectrometer_file_format},
+    //{MS_Agilent_MassHunter_file, MS_mass_spectrometer_file_format},
+    //{MS_Proteinscape_spectra, MS_mass_spectrometer_file_format},
+    //{MS_AB_SCIEX_TOF_TOF_T2D_file, MS_mass_spectrometer_file_format},
+
+    static fileInfo pairs[] = {
+        fileInfo(".mzml", MS_mzML_file, MS_mzML_unique_identifier),
+        fileInfo(".mzxml", MS_ISB_mzXML_file, MS_scan_number_only_nativeID_format),
+        fileInfo(".pkl", MS_Micromass_PKL_file, MS_no_nativeID_format),
+        //fileInfo("", CVID_Unknown,CVID_Unknown)
+    };
+
+    bool found = false;
+    BOOST_FOREACH(fileInfo fi, pairs)
+    {
+        if (iends_with(file, fi.ext))
+        {
+            fileFormat = fi.fileFormat;
+            spectrumIDFormat = fi.spectrumIDFormat;
+
+            found = true;
+            break;
+        }
+    }
+
+    return found;
+}
+
+
 } // namespace
 
 //
@@ -317,19 +402,33 @@ void Pep2MzIdent::addSpectraData(const MSMSRunSummary& msmsRunSummary,
     // TODO verify that both of these cvid values are legit.
     sd->location = msmsRunSummary.base_name;
 
-    if (iequals(msmsRunSummary.raw_data, ".mzml"))
+
+    CVID fileFormat, spectrumIDFormat;
+    if (fileExtension2Type(msmsRunSummary.raw_data, fileFormat, spectrumIDFormat))
     {
-        sd->fileFormat.set(MS_mzML_file);
-        sd->spectrumIDFormat.set(MS_mzML_unique_identifier);
+        sd->fileFormat.set(fileFormat);
+        sd->spectrumIDFormat.set(spectrumIDFormat);
     }
-    else if (iequals(msmsRunSummary.raw_data, ".mzxml"))
-    {
-        sd->fileFormat.set(MS_ISB_mzXML_file);
-        sd->spectrumIDFormat.set(MS_scan_number_only_nativeID_format);
-    }
-    else
-        throw runtime_error(("[Pep2MzIdent::addSpectraData] Unknown "
-                             "file type for "+msmsRunSummary.raw_data).c_str());
+        //if (iequals(msmsRunSummary.raw_data, ".mzml"))
+        //{
+        //sd->fileFormat.set(MS_mzML_file);
+        //sd->spectrumIDFormat.set(MS_mzML_unique_identifier);
+        //}
+        //else if (iequals(msmsRunSummary.raw_data, ".mzxml"))
+        //{
+        //sd->fileFormat.set(MS_ISB_mzXML_file);
+        //sd->spectrumIDFormat.set(MS_scan_number_only_nativeID_format);
+        //}
+        //else if (msmsRunSummary.raw_data.size() == 0)
+        //{
+        //DOUT("Warning: no raw_data set in msms_run_summary. "
+        //"The parameter tags will be checked for FILE.");
+        //}
+    //else
+    // throw runtime_error(("[Pep2MzIdent::addSpectraData] Unknown "
+    //                       "file type for '"+
+    //                       msmsRunSummary.raw_data+
+    //                       "'.").c_str());
         
     mzid->dataCollection.inputs.spectraData.push_back(sd);
 }
@@ -456,12 +555,17 @@ void Pep2MzIdent::translateSearch(const SearchSummaryPtr summary,
         as->softwareName.set(cvid);
     else
     {
-        cvid = mapToNearestSoftware(summary->searchEngine);
+        vector<string> customizations;
+        cvid = mapToNearestSoftware(summary->searchEngine, customizations);
         if (cvid == CVID_Unknown)
             throw invalid_argument(("Unknown search software name "+
                                     summary->searchEngine).c_str());
 
         as->softwareName.set(cvid);
+        if (customizations.size())
+        {
+            as->customizations = join(customizations, ", ");
+        }
 
         // TODO This is invalid, but we need to save the software
         // somewhere.
@@ -521,16 +625,32 @@ void Pep2MzIdent::translateSearch(const SearchSummaryPtr summary,
 }
 
 
-CVID Pep2MzIdent::mapToNearestSoftware(const string& softwareName)
+CVID Pep2MzIdent::mapToNearestSoftware(const string& softwareName,
+                                       vector<string>& customizations)
 {
+    // TODO clean this up and move the patterns into a separate class
+    // as we get more patterns.
+    static regex xtandemMod("[xX][\\!]?[ ]*[Tt]andem[ ]*[\\(]?([^\\)]*)[\\)]?");
+    
     CVID cvid = getCVID(softwareName);
 
     if (cvid == CVID_Unknown)
     {
-        if (istarts_with(softwareName, "X! Tandem") ||
-            istarts_with(softwareName, "X!Tandem"))
+        smatch what;
+        if (regex_match(softwareName, what, xtandemMod))
         {
             cvid = MS_xtandem;
+
+            // HACK: smatch.size() is never 0
+            if (what.size()>1 && // If there's at least 1 match
+                what[1].matched && // If the first one we're
+                                   // interested in matches
+                what[1].first != what[1].second // If it's not zero length
+                )
+            {
+                customizations.push_back(what[1]);
+                cout << "Customization: " << what[1] << endl;
+            }
         }
     }
 
@@ -834,20 +954,29 @@ void Pep2MzIdent::earlyParameters(ParameterPtr parameter,
                               "SD_"+lexical_cast<string>(indices->sd++)));
         sd->location = parameter->value;
 
-        if (iends_with(sd->location, ".mzML"))
-        {
-            sd->fileFormat.set(MS_mzML_file);
-            sd->spectrumIDFormat.set(MS_mzML_unique_identifier);
-        }
-        else if (iends_with(sd->location, ".mzXML"))
-        {
-            sd->fileFormat.set(MS_ISB_mzXML_file);
-            sd->spectrumIDFormat.set(MS_scan_number_only_nativeID_format);
-        }
-        else
-            throw runtime_error(("[Pep2MzIdent::processParameter] Unknown "
-                                 "file type for "+sd->location).c_str());
+        CVID fileFormat = CVID_Unknown;
+        CVID spectrumIDFormat = CVID_Unknown;
         
+        if (fileExtension2Type(sd->location, fileFormat, spectrumIDFormat))
+        {
+            sd->fileFormat.set(fileFormat);
+            sd->spectrumIDFormat.set(spectrumIDFormat);
+        }
+        //else
+            //if (iends_with(sd->location, ".mzML"))
+            //{
+            //sd->fileFormat.set(MS_mzML_file);
+            //sd->spectrumIDFormat.set(MS_mzML_unique_identifier);
+            //}
+            //else if (iends_with(sd->location, ".mzXML"))
+            //{
+            //sd->fileFormat.set(MS_ISB_mzXML_file);
+            //sd->spectrumIDFormat.set(MS_scan_number_only_nativeID_format);
+            //}
+            //else
+        //throw runtime_error(("[Pep2MzIdent::processParameter] Unknown "
+        //                       "file type for "+sd->location).c_str());
+        //
         mzid->dataCollection.inputs.spectraData.push_back(sd);
     }
     else if (parameter->name == "TOL")

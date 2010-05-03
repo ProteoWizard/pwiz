@@ -416,6 +416,202 @@ PWIZ_API_DECL bool Q3RatioResult::operator!=(const Q3RatioResult& that) const
 
 }
 
+struct HandlerMixtureModel : public SAXParser::Handler
+{
+    MixtureModel* mixtureModel;
+    HandlerMixtureModel(MixtureModel* _mixtureModel = 0)
+        : mixtureModel(_mixtureModel) {}
+    
+    virtual Status startElement(const string& name,
+                                const Attributes& attributes,
+                                stream_offset position)
+
+    {
+        if (!mixtureModel)
+            throw runtime_error("[HandlerMixtureModel::startElement] "
+                                "NULL mixtureModel");
+
+        if (name != "roc_data_point")
+            throw runtime_error(("[HandlerMixtureModel::startElement] "
+                                 "Unknown tag: "+name).c_str());
+
+        getAttribute(attributes, "precursor_ion_charge", mixtureModel->precursor_ion_charge);
+        getAttribute(attributes, "comments", mixtureModel->comments);
+        getAttribute(attributes, "prior_probability", mixtureModel->prior_probability);
+        getAttribute(attributes, "est_tot_correct", mixtureModel->est_tot_correct);
+        getAttribute(attributes, "tot_num_spectra", mixtureModel->tot_num_spectra);
+        getAttribute(attributes, "num_iterations", mixtureModel->num_iterations);
+
+        return Status::Ok;
+    }
+};
+
+
+struct HandlerDistributionPoint : public SAXParser::Handler
+{
+    DistributionPoint* distributionPoint;
+    HandlerDistributionPoint(DistributionPoint* _distributionPoint = 0)
+        : distributionPoint(_distributionPoint) {}
+    
+    virtual Status startElement(const string& name,
+                                const Attributes& attributes,
+                                stream_offset position)
+
+    {
+        if (!distributionPoint)
+            throw runtime_error("[HandlerDistributionPoint::startElement] "
+                                "NULL distributionPoint");
+
+        if (name != "roc_data_point")
+            throw runtime_error(("[HandlerDistributionPoint::startElement] "
+                                 "Unknown tag: "+name).c_str());
+
+        getAttribute(attributes, "fvalue", distributionPoint->fvalue);
+        getAttribute(attributes, "obs_1_distr", distributionPoint->obs_1_distr);
+        getAttribute(attributes, "model_1_pos_distr", distributionPoint->model_1_pos_distr);
+        getAttribute(attributes, "model_1_neg_distr", distributionPoint->model_1_neg_distr);
+        getAttribute(attributes, "obs_2_distr", distributionPoint->obs_2_distr);
+        getAttribute(attributes, "model_2_pos_distr", distributionPoint->model_2_pos_distr);
+        getAttribute(attributes, "model_2_neg_distr", distributionPoint->model_2_neg_distr);
+        getAttribute(attributes, "obs_3_distr", distributionPoint->obs_3_distr);
+        getAttribute(attributes, "model_3_pos_distr", distributionPoint->model_3_pos_distr);
+        getAttribute(attributes, "model_3_neg_distr", distributionPoint->model_3_neg_distr);
+
+        return Status::Ok;
+    }
+};
+
+
+struct HandlerErrorPoint : public SAXParser::Handler
+{
+    ErrorPoint* errorPoint;
+    HandlerErrorPoint(ErrorPoint* _errorPoint = 0)
+        : errorPoint(_errorPoint) {}
+    
+    virtual Status startElement(const string& name,
+                                const Attributes& attributes,
+                                stream_offset position)
+
+    {
+        if (!errorPoint)
+            throw runtime_error("[HandlerErrorPoint::startElement] "
+                                "NULL errorPoint");
+
+        if (name != "roc_data_point")
+            throw runtime_error(("[HandlerErrorPoint::startElement] "
+                                 "Unknown tag: "+name).c_str());
+
+        getAttribute(attributes, "error", errorPoint->error);
+        getAttribute(attributes, "min_prob", errorPoint->min_prob);
+        getAttribute(attributes, "num_corr", errorPoint->num_corr);
+        getAttribute(attributes, "num_incorr", errorPoint->num_incorr);
+
+        return Status::Ok;
+
+    }
+};
+
+struct HandlerRocDataPoint : public SAXParser::Handler
+{
+    RocDataPoint* rocDataPoint;
+    HandlerRocDataPoint(RocDataPoint* _rocDataPoint = 0)
+        : rocDataPoint(_rocDataPoint) {}
+    
+    virtual Status startElement(const string& name,
+                                const Attributes& attributes,
+                                stream_offset position)
+
+    {
+        if (!rocDataPoint)
+            throw runtime_error("[HandlerRocDataPoint::startElement] "
+                                "NULL rocDataPoint");
+
+        if (name != "roc_data_point")
+            throw runtime_error(("[HandlerRocDataPoint::startElement] "
+                                 "Unknown tag: "+name).c_str());
+        
+        getAttribute(attributes, "min_prob", rocDataPoint->min_prob);
+        getAttribute(attributes, "sensitivity", rocDataPoint->sensitivity);
+        getAttribute(attributes, "error", rocDataPoint->error);
+        getAttribute(attributes, "num_corr", rocDataPoint->num_corr);
+        getAttribute(attributes, "num_incorr", rocDataPoint->num_incorr);
+
+        return Handler::Status::Ok;
+    }
+};
+
+struct HandlerPeptideProphetSummary : public SAXParser::Handler
+{
+    PeptideProphetSummary* peptideProphetSummary;
+    HandlerPeptideProphetSummary(PeptideProphetSummary* _peptideProphetSummary = 0)
+        : peptideProphetSummary(_peptideProphetSummary) {}
+
+    virtual Status startElement(const string& name,
+                                const Attributes& attributes,
+                                stream_offset position)
+
+    {
+        if (!peptideProphetSummary)
+            throw runtime_error("[HandlerPeptideProphetSummary::startElement]"
+                                " NULL peptideProphetSummary.");
+        
+        if (name == "peptideprophet_summary")
+        {
+            getAttribute(attributes, "version", peptideProphetSummary->version);
+            getAttribute(attributes, "author", peptideProphetSummary->author);
+            getAttribute(attributes, "min_prob", peptideProphetSummary->min_prob);
+            getAttribute(attributes, "options", peptideProphetSummary->options);
+            getAttribute(attributes, "est_tot_num_correct",
+                         peptideProphetSummary->est_tot_num_correct);
+
+            return Status::Ok;
+        }
+        //std::vector<ErrorPoint> error_point;
+        //std::vector<DistributionPoint> distribution_point;
+        //std::vector<MixtureModel> mixture_model;
+        else if (name == "inputFile")
+        {
+            string value;
+            getAttribute(attributes, "name", value);
+
+            if (!value.empty())
+                peptideProphetSummary->inputFile.push_back(value);
+        }
+        else if (name == "roc_data_point")
+        {
+             peptideProphetSummary->roc_data_point.push_back(RocDataPoint());
+            _handlerRocDataPoint.rocDataPoint = &peptideProphetSummary->roc_data_point.back(); 
+            return Status(Status::Delegate, &_handlerRocDataPoint);
+        }
+        else if (name == "error_point")
+        {
+             peptideProphetSummary->error_point.push_back(ErrorPoint());
+            _handlerErrorPoint.errorPoint = &peptideProphetSummary->error_point.back(); 
+            return Handler::Status(Handler::Status::Delegate, &_handlerErrorPoint);
+        }
+        else if (name == "distribution_point")
+        {
+            peptideProphetSummary->distribution_point.push_back(DistributionPoint());
+            _handlerDistributionPoint.distributionPoint = &peptideProphetSummary->distribution_point.back(); 
+            return Status(Status::Delegate, &_handlerDistributionPoint);
+        }
+        else if (name == "mixture_mode")
+        {
+             peptideProphetSummary->mixture_model.push_back(MixtureModel());
+            _handlerMixtureModel.mixtureModel = &peptideProphetSummary->mixture_model.back(); 
+            return Status(Status::Delegate, &_handlerMixtureModel);
+        }
+        
+        return Status::Ok;
+    }
+
+private:
+    HandlerRocDataPoint _handlerRocDataPoint;
+    HandlerErrorPoint _handlerErrorPoint;
+    HandlerDistributionPoint _handlerDistributionPoint;
+    HandlerMixtureModel _handlerMixtureModel;
+};
+
 PWIZ_API_DECL void PeptideProphetResult::write(XMLWriter& writer) const
 {
     const string allNttProbStr  = stringCastVector(allNttProb);

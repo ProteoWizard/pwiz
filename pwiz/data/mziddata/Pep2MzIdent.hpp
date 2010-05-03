@@ -132,7 +132,8 @@ private:
 
     /// Maps known odd software names to the most applicable CVID.
     /// TODO make this loadable from a file. 
-    CVID mapToNearestSoftware(const std::string& softwareName);
+    CVID mapToNearestSoftware(const std::string& softwareName,
+                              std::vector<std::string>& customization);
     
     /// Translates the search_score with the given name into a CVParam
     /// object using getParamForSearchScore.
