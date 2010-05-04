@@ -607,8 +607,8 @@ void WiffFileImpl::setSample(int sample) const
         {
             reader->SampleNum = sample;
             currentSample = sample;
+            currentPeriod = currentExperiment = currentCycle = -1;
         }
-        // TODO: refresh other experiments?
     }
     CATCH_AND_FORWARD
 }
@@ -623,6 +623,7 @@ void WiffFileImpl::setPeriod(int sample, int period) const
         {
             reader->PeriodNum = period;
             currentPeriod = period;
+            currentExperiment = currentCycle = -1;
         }
     }
     CATCH_AND_FORWARD
@@ -638,6 +639,7 @@ void WiffFileImpl::setExperiment(int sample, int period, int experiment) const
         {
             reader->ExperimentNum = experiment;
             currentExperiment = experiment;
+            currentCycle = -1;
         }
     }
     CATCH_AND_FORWARD
