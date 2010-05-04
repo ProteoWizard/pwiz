@@ -142,8 +142,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool HasPrecursorCalc(IsotopeLabelType type, ExplicitMods mods)
         {
-            return (type == IsotopeLabelType.light || PrecursorHeavyCalc != null ||
-                (mods != null && mods.HasHeavyModifications));
+            return (type == IsotopeLabelType.light ||
+                (mods == null ? PrecursorHeavyCalc != null : mods.HasHeavyModifications));
         }
 
         public IPrecursorMassCalc GetPrecursorCalc(IsotopeLabelType type, ExplicitMods mods)

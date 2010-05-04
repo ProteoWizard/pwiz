@@ -207,7 +207,7 @@ namespace pwiz.Skyline.Model
             {
                 foreach (PeptideDocNode nodePep in nodePepGroup.Children)
                 {
-                    var peptideSchedule = new PeptideSchedule(maxInstrumentTrans);
+                    var peptideSchedule = new PeptideSchedule(nodePep, maxInstrumentTrans);
                     foreach (TransitionGroupDocNode nodeTranGroup in nodePep.Children)
                     {
                         double timeWindow;
@@ -233,6 +233,23 @@ namespace pwiz.Skyline.Model
                 foreach (var schedule in listSchedules)
                     schedule.Schedule(listScheduleNext, MaxTransitions.Value);
                 listScheduleBuckets.Add(listScheduleNext);
+                if (listScheduleNext.TransitionCount == 0)
+                {
+                    var sb = new StringBuilder();
+                    foreach (var peptideSchedule in listSchedules)
+                    {
+                        if (peptideSchedule.TransitionCount > MaxTransitions.Value)
+                        {
+                            sb.AppendLine(string.Format("{0} - {1} transitions",
+                                peptideSchedule.Peptide.Peptide,
+                                peptideSchedule.TransitionCount));
+                        }
+                    }
+                    if (OptimizeStepCount == 0)
+                        throw new IOException(string.Format("Failed to schedule the following peptides with the current settings:\n\n{0}\n\nCheck max concurrent transitions count.", sb));
+                    else
+                        throw new IOException(string.Format("Failed to schedule the following peptides with the current settings:\n\n{0}\nCheck max concurrent transitions count and optimization step count.", sb));
+                }
                 totalScheduled += listScheduleNext.TransitionCount;
             }
 
@@ -363,10 +380,13 @@ namespace pwiz.Skyline.Model
         {
             private readonly List<PrecursorSchedule> _precursorSchedules = new List<PrecursorSchedule>();
 
-            public PeptideSchedule(int? maxInstrumentTrans)
+            public PeptideSchedule(PeptideDocNode nodePep, int? maxInstrumentTrans)
             {
+                Peptide = nodePep;
                 MaxInstrumentTrans = maxInstrumentTrans;
             }
+
+            public PeptideDocNode Peptide { get; private set; }
 
             private bool IsScheduled { get; set; }
 
