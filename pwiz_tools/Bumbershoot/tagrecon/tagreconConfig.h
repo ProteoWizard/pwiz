@@ -93,8 +93,10 @@ using namespace pwiz;
     RTCONFIG_VARIABLE( string,			ExplainUnknownMassShiftsAs,  ""   		    ) \
     RTCONFIG_VARIABLE( int,			    MaxAmbResultsForBlindMods,  2   		    ) \
     RTCONFIG_VARIABLE( int,			    MaxPeakCount,               200   		    ) \
-    RTCONFIG_VARIABLE( bool,			ComputeXCorr,               false  		    ) \
-    RTCONFIG_VARIABLE( bool,			UseNETAdjustment,           true  		    )
+    RTCONFIG_VARIABLE( bool,			ComputeXCorr,               true  		    ) \
+    RTCONFIG_VARIABLE( bool,			UseNETAdjustment,           true  		    ) \
+    RTCONFIG_VARIABLE( bool,			PenalizeUnknownMods,        false  		    ) \
+    RTCONFIG_VARIABLE( bool,			PercolatorReranking,        false  		    )
 
 
 namespace freicore
@@ -218,6 +220,9 @@ namespace tagrecon
                         unknownMassShiftSearchMode = PREFERRED_MASS_SHITS;
                     }
                 }
+
+                if( unknownMassShiftSearchMode != BLIND_PTMS )
+                    PenalizeUnknownMods = false;
 
                 int maxMissedCleavages = NumMaxMissedCleavages < 0 ? 100000 : NumMaxMissedCleavages;
                 Digestion::Specificity specificity = (Digestion::Specificity) NumMinTerminiCleavages;

@@ -898,13 +898,15 @@ namespace tagrecon
 					rootSpectrum->numTargetComparisons += childSpectrum->numTargetComparisons;
                     rootSpectrum->numDecoyComparisons += childSpectrum->numDecoyComparisons;
 					rootSpectrum->processingTime += childSpectrum->processingTime;
-					for( Spectrum::SearchResultSetType::iterator itr = childSpectrum->resultSet.begin(); itr != childSpectrum->resultSet.end(); ++itr ) {
-						//#ifdef MPI_DEBUG
-						//cout << "\t Sequence:" << (*itr).sequence << " " << (*itr).rank << endl;
-						//#endif
+                    rootSpectrum->detailedCompStats = rootSpectrum->detailedCompStats + childSpectrum->detailedCompStats;
+					for( Spectrum::SearchResultSetType::iterator itr = childSpectrum->resultSet.begin(); itr != childSpectrum->resultSet.end(); ++itr )
 						rootSpectrum->resultSet.add( *itr );
-					}
+                    for( Spectrum::SearchResultSetType::iterator itr = childSpectrum->topTargetHits.begin(); itr != childSpectrum->topTargetHits.end(); ++itr )
+						rootSpectrum->topTargetHits.add( *itr );
+                    for( Spectrum::SearchResultSetType::iterator itr = childSpectrum->topDecoyHits.begin(); itr != childSpectrum->topDecoyHits.end(); ++itr )
+						rootSpectrum->topDecoyHits.add( *itr );
 					rootSpectrum->scoreHistogram += childSpectrum->scoreHistogram;
+                    
 					delete childSpectrum;
 				}
 				//cout << g_hostString << " is finished unpacking results." << endl;

@@ -28,7 +28,7 @@
 #include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/data/proteome/Version.hpp"
 #include "svnrev.hpp"
-
+#include "ScoreDiscriminant.h"
 
 namespace freicore
 {
@@ -670,71 +670,103 @@ namespace freicore
 	{
 	}
 
+    /* This function determines the best ranking method using the target-decoy
+       score optimization strategy described in percolator manuscript. */
+    void RerankResultsWithCompoundScore()
+    {
+        // Figure out the optimal score discriminant 
+        // that separates the target and decoy hits
+        ScoreDiscriminant scoreDiscriminant(spectra);
+        scoreDiscriminant.computeScoreDiscriminant();
+        if(!scoreDiscriminant.isSuccessful)
+        {
+            cout << g_hostString << " failed to change ranks; Preserving original ranks." << endl;
+            return;
+        }
+        // Compute the charge state normalization factors for each score
+        map< string, map< size_t, double > > maxScoresByZState;
+        map< string, map< size_t, double > > minScoresByZState;
+        for(size_t z = 1; z <= g_rtConfig->NumChargeStates; ++z)
+        {
+            maxScoresByZState["mvh"][z] = (double) INT_MIN;
+            maxScoresByZState["mzfidelity"][z] = (double) INT_MIN;
+            maxScoresByZState["xcorr"][z] = (double) INT_MIN;
+            minScoresByZState["mvh"][z] = (double) INT_MAX;
+            minScoresByZState["mzfidelity"][z] = (double) INT_MAX;
+            minScoresByZState["xcorr"][z] = (double) INT_MAX;
+        }
+        BOOST_FOREACH(Spectrum* s, spectra)
+            BOOST_FOREACH(const SearchResult& result, s->resultSet)
+            {
+                maxScoresByZState["mvh"][s->id.charge] = max(maxScoresByZState["mvh"][s->id.charge], result.mvh);
+                maxScoresByZState["mzfidelity"][s->id.charge] = max(maxScoresByZState["mzfidelity"][s->id.charge], result.mzFidelity);
+                maxScoresByZState["xcorr"][s->id.charge] = max(maxScoresByZState["xcorr"][s->id.charge], result.XCorr);
+                minScoresByZState["mvh"][s->id.charge] = min(minScoresByZState["mvh"][s->id.charge], result.mvh);
+                minScoresByZState["mzfidelity"][s->id.charge] = min(minScoresByZState["mzfidelity"][s->id.charge], result.mzFidelity);
+                minScoresByZState["xcorr"][s->id.charge] = min(minScoresByZState["xcorr"][s->id.charge], result.XCorr);
+            }
+        // Use the discriminant to change the ranks of each PSM.
+        BOOST_FOREACH(Spectrum* s, spectra)
+        {
+            Spectrum::SearchResultSetType newResultSet;
+            BOOST_FOREACH(const SearchResult& result, s->resultSet)
+            {
+                Spectrum::SearchResultType& mutableResult = (const_cast<Spectrum::SearchResultType&>(result));
+                mutableResult.computediscriminantScore(scoreDiscriminant.featureWeights,s->id.charge, minScoresByZState, maxScoresByZState );
+                mutableResult.rankScore = mutableResult.discriminantScore;
+                newResultSet.insert(mutableResult);
+            }
+            s->resultSet.clear();
+            BOOST_FOREACH(const SearchResult& result, newResultSet)
+                s->resultSet.insert(result);
+            s->resultSet.calculateRanks();
+        }                
+    }
+
     void ComputeXCorrs(string sourceFilepath)
     {
         // Get total spectra size
         int numSpectra = (int) spectra.size();
-
-        cout << g_hostString << " is reading " << numSpectra << " spectra for cross-correlation analysis." << endl;
-
+        
         Timer timer;
         timer.Begin();
-
+        
+        cout << g_hostString << " is reading and preparing " << numSpectra << " spectra for cross-correlation analysis." << endl;
         spectra.backFillPeaks(sourceFilepath);
         // Parse each spectrum
-        for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
+        BOOST_FOREACH(Spectrum* s, spectra)
         {
             try
             {
-                if((*sItr)->resultSet.size()==0)
+                if(s->resultSet.size()==0)
                     continue;
-                (*sItr)->parse();
+                s->parse();
+                s->PreprocessForXCorr();
             } catch( exception& e )
             {
                 stringstream msg;
-                msg << "parsing spectrum " << (*sItr)->id << ": " << e.what();
+                msg << "parsing and preprocessing spectrum " << s->id << ": " << e.what();
                 throw runtime_error( msg.str() );
             } catch( ... )
             {
                 stringstream msg;
-                msg << "parsing spectrum " << (*sItr)->id;
+                msg << "parsing and preprocessing spectrum " << s->id;
                 throw runtime_error( msg.str() );
             }
         }
-        cout << g_hostString << " finished reading its spectra; " << timer.End() << " seconds elapsed." << endl;
-        cout << g_hostString << " is preparing spectra for cross-correlation." << endl;
-
-        timer.Begin();
-        for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
-        {
-            try
-            {
-                // Preprocess the spectrum for XCorr
-                if((*sItr)->resultSet.size()==0)
-                    continue;
-                (*sItr)->PreprocessForXCorr();
-            } catch( exception& e )
-            {
-                stringstream msg;
-                msg << "preprocessing spectrum " << (*sItr)->id << ": " << e.what();
-                throw runtime_error( msg.str() );
-            } catch( ... )
-            {
-                stringstream msg;
-                msg << "preprocessing spectrum " << (*sItr)->id;
-                throw runtime_error( msg.str() );
-            }
-        }
-        cout << g_hostString << " finished preparing spectra; " << timer.End() << " seconds elapsed." << endl;
+        cout << g_hostString << " finished reading and preparing spectra; " << timer.End() << " seconds elapsed." << endl;
+        
         cout << g_hostString << " is computing cross-correlations." << endl;
-
         timer.Begin();
         // For each spectrum, iterate through its result set and compute the XCorr.
-        for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
+        BOOST_FOREACH(Spectrum* s, spectra)
         {
-            Spectrum* s = (*sItr);
-            size_t charge = min(s->id.charge-1,1);
-            BOOST_FOREACH(const SearchResult& result, (*sItr)->resultSet)
+            size_t charge = max(s->id.charge-1,1);
+            BOOST_FOREACH(const SearchResult& result, s->resultSet)
+                s->ComputeXCorr(result,charge);
+            BOOST_FOREACH(const SearchResult& result, s->topTargetHits)
+                s->ComputeXCorr(result,charge);
+            BOOST_FOREACH(const SearchResult& result, s->topDecoyHits)
                 s->ComputeXCorr(result,charge);
             s->peakDataForXCorr.clear();
         }
@@ -972,6 +1004,7 @@ namespace freicore
 		//cout << "\t\t\t\t\t" << candidate.sequence() << "," << modMass << "," << locStart << "," << locEnd << endl;
 		// Get all possible amino acid substitutions that fit the modification mass with in the mass tolerance
 		DynamicModSet possibleModifications;
+        size_t numDynamicMods = candidate.modifications().size();
         // Get all possible amino acid substitutions or preferred mass shifts 
         // that fit the mod mass within the tolerance
         size_t maxCombin = 1 , minCombin = 1;
@@ -1003,7 +1036,7 @@ namespace freicore
             SearchResult result(variant);
             // Compute the predicted spectrum and score it against the experimental spectrum
             CalculateSequenceIons( variant, spectrum->id.charge, &sequenceIons, spectrum->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, 0, 0);
-            spectrum->ScoreSequenceVsSpectrum( result, variantSequence, sequenceIons, NTT );
+            spectrum->ScoreSequenceVsSpectrum( result, variantSequence, sequenceIons, NTT, numDynamicMods, 1 );
             // Compute the true modification mass. The modMass of in the arguments is used to look up
             // the canidate mods with a certain tolerance. It's not the true modification mass of the
             // peptide.
@@ -1019,10 +1052,18 @@ namespace freicore
             // Update some search stats and add the result to the
             // spectrum
             simplethread_lock_mutex( &spectrum->mutex );
-            if( isDecoy )
+            if( isDecoy ) 
+            {
                 ++ spectrum->numDecoyComparisons;
+                ++ spectrum->detailedCompStats.numDecoyModComparisons;
+                spectrum->topDecoyHits.add( result );
+            }
             else
+            {
                 ++ spectrum->numTargetComparisons;
+                ++ spectrum->detailedCompStats.numTargetModComparisons;
+                spectrum->topTargetHits.add( result );
+            }
             spectrum->resultSet.add( result );
             simplethread_unlock_mutex( &spectrum->mutex );
         }
@@ -1048,6 +1089,8 @@ namespace freicore
 		string peptideSeq = PEPTIDE_N_TERMINUS_STRING + candidate.sequence() + PEPTIDE_C_TERMINUS_STRING;
 		multimap<double,SearchResult> localizationPossibilities;
         double topMVHScore = 0.0;
+        size_t numDynamicMods = candidate.modifications().size();
+        
         //bool debug = false;
         //if(candidate.sequence() == "AMGIMNSFVNDIFER")
         //    debug = true;
@@ -1072,7 +1115,7 @@ namespace freicore
 			SearchResult result(variant);
 			// Compute the predicted spectrum and score it against the experimental spectrum
             CalculateSequenceIons( variant, spectrum->id.charge, &sequenceIons, spectrum->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, 0, 0);
-			spectrum->ScoreSequenceVsSpectrum( result, variantSequence, sequenceIons, NTT );
+			spectrum->ScoreSequenceVsSpectrum( result, variantSequence, sequenceIons, NTT, numDynamicMods, 1 );
 			// Assign the modification mass and the mass error
 			// Compute the true modification mass. The modMass in the arguments is used to look up
 			// the canidate mods with a certain tolerance. It's not the true modification mass of the
@@ -1099,10 +1142,18 @@ namespace freicore
             multimap<double,SearchResult>::const_iterator end = localizationPossibilities.upper_bound(topMVHScore);
             
 			simplethread_lock_mutex( &spectrum->mutex );
-            if( isDecoy )
-				++ spectrum->numDecoyComparisons;
-			else
-				++ spectrum->numTargetComparisons;
+            if( isDecoy ) 
+            {
+                ++ spectrum->numDecoyComparisons;
+                ++ spectrum->detailedCompStats.numDecoyModComparisons;
+                spectrum->topDecoyHits.add((*begin).second);
+            }
+            else
+            {
+                ++ spectrum->numTargetComparisons;
+                ++ spectrum->detailedCompStats.numTargetModComparisons;
+                spectrum->topTargetHits.add((*begin).second);
+            }
             // By default we only keep track of top 2 results for each ambiguous peptide
             int maxAmbResults = g_rtConfig->MaxAmbResultsForBlindMods;
             while(begin != end && maxAmbResults > 0)
@@ -1238,7 +1289,7 @@ namespace freicore
 				    // score the match as an unmodified sequence.
 
                     CalculateSequenceIons( candidate, spectrum->id.charge, &sequenceIons, spectrum->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, 0, 0);
-				    spectrum->ScoreSequenceVsSpectrum( result, aSequence, sequenceIons, NTT );
+				    spectrum->ScoreSequenceVsSpectrum( result, aSequence, sequenceIons, NTT, candidate.modifications().size(), 0 );
 
 				    result.massError = spectrum->mOfPrecursor-neutralMass;
 				    result.lociByIndex.insert( ProteinLocusByIndex( idx + g_rtConfig->ProteinIndexOffset, candidate.offset() ) );
@@ -1246,19 +1297,31 @@ namespace freicore
 
 				    if( g_rtConfig->UseMultipleProcessors )
 					    simplethread_lock_mutex( &spectrum->mutex );
-				    if( isDecoy )
-					    ++ spectrum->numDecoyComparisons;
-				    else
-					    ++ spectrum->numTargetComparisons;
+                    if( isDecoy )
+                    {
+                        ++ spectrum->numDecoyComparisons;
+                        spectrum->topDecoyHits.add( result );
+                        if(candidate.modifications().size()>0)
+                            ++ spectrum->detailedCompStats.numDecoyModComparisons;
+                        else
+                            ++ spectrum->detailedCompStats.numDecoyUnmodComparisons;
+                    }
+                    else
+                    {
+                        ++ spectrum->numTargetComparisons;
+                        spectrum->topTargetHits.add( result );
+                        if(candidate.modifications().size()>0)
+                            ++ spectrum->detailedCompStats.numTargetModComparisons;
+                        else
+                            ++ spectrum->detailedCompStats.numTargetUnmodComparisons;
+                    }
 				    spectrum->resultSet.add( result );
-
 				    if( g_rtConfig->UseMultipleProcessors )
 					    simplethread_unlock_mutex( &spectrum->mutex );
 			    }
             }
 
             // avoid tag-based querying
-            //cout << numComparisonsDone << endl;
             return numComparisonsDone;
         }
 
@@ -1377,7 +1440,7 @@ namespace freicore
                 // If there are no n-terminal and c-terminal delta mass differences then
                 // score the match as an unmodified sequence.
                 CalculateSequenceIons( candidate, spectrumCharge, &sequenceIons, spectrum->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, 0, 0);
-                spectrum->ScoreSequenceVsSpectrum( result, aSequence, sequenceIons, NTT );
+                spectrum->ScoreSequenceVsSpectrum( result, aSequence, sequenceIons, NTT, candidate.modifications().size(), 0 );
 
                 result.massError = spectrum->mOfPrecursor - neutralMass;
                 result.lociByIndex.insert( ProteinLocusByIndex( idx + g_rtConfig->ProteinIndexOffset, candidate.offset() ) );	
@@ -1386,9 +1449,23 @@ namespace freicore
                 if( g_rtConfig->UseMultipleProcessors )
                     simplethread_lock_mutex( &spectrum->mutex );
                 if( isDecoy )
+                {
                     ++ spectrum->numDecoyComparisons;
+                    spectrum->topDecoyHits.add( result );
+                    if(candidate.modifications().size()>0)
+                        ++ spectrum->detailedCompStats.numDecoyModComparisons;
+                    else
+                        ++ spectrum->detailedCompStats.numDecoyUnmodComparisons;
+                }
                 else
+                {
                     ++ spectrum->numTargetComparisons;
+                    spectrum->topTargetHits.add( result );
+                    if(candidate.modifications().size()>0)
+                        ++ spectrum->detailedCompStats.numTargetModComparisons;
+                    else
+                        ++ spectrum->detailedCompStats.numTargetUnmodComparisons;
+                }
                 spectrum->resultSet.add( result );
 
                 if( g_rtConfig->UseMultipleProcessors )
@@ -2208,7 +2285,7 @@ namespace freicore
 							// Start the threads
 							sumSearchStats = ExecuteSearch();
 							cout << g_hostString << " has finished database search; " << searchTime.End() << " seconds elapsed." << endl;
-							cout << g_hostString << (string) sumSearchStats << endl;
+							cout << g_hostString << " " << (string) sumSearchStats << endl;
 
 							// Free global variables
 							DestroyWorkerGlobals();
@@ -2219,6 +2296,8 @@ namespace freicore
 					{
                         if(g_rtConfig->ComputeXCorr)
                             ComputeXCorrs(sourceFilepath);
+                        if(g_rtConfig->PercolatorReranking)
+                            RerankResultsWithCompoundScore();
 						// Generate an output file for each input file
 						WriteOutputToFile( *fItr, startTime, startDate, searchTime.End(), opcs, fpcs, sumSearchStats );
 						cout << g_hostString << " finished file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;

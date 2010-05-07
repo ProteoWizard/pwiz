@@ -60,7 +60,7 @@ namespace tagrecon
 	struct SearchResult : public BaseSearchResult
 	{
 		SearchResult() : BaseSearchResult() {}
-		SearchResult( const DigestedPeptide& peptide) : BaseSearchResult(peptide) {}
+		SearchResult( const DigestedPeptide& peptide ) : BaseSearchResult(peptide) {}
 
 		double mvh;
         double mzFidelity;
@@ -74,6 +74,12 @@ namespace tagrecon
 		double pvalue;
 		double expect;
 		double fdr;
+
+        double discriminantScore;
+        double probabilisticScore;
+
+        size_t numberOfBlindMods;
+        size_t numberOfOtherMods;
 
         vector<double> matchedIons;
 
@@ -99,6 +105,8 @@ namespace tagrecon
 				scoreList.push_back( SearchScoreInfo( "pvalue", pvalue ) );
 				scoreList.push_back( SearchScoreInfo( "expect", expect ) );
 			}
+            if( g_rtConfig->PercolatorReranking )
+                scoreList.push_back( SearchScoreInfo( "F-score", discriminantScore ) );
 			return scoreList;
 		}
 
@@ -109,6 +117,48 @@ namespace tagrecon
                 matchedIonsStream << matchedIons[i] << " ";
             annotation = matchedIonsStream.str();
             return annotation;
+        }
+
+        typedef map< string, map < size_t, double > > MinMaxScoresByZState;
+
+        double normalizeScore(string name, double value, size_t charge, MinMaxScoresByZState minScoreMap, MinMaxScoresByZState maxScoreMap)
+        {
+            double minScore = minScoreMap[name][charge];
+            double maxScore = maxScoreMap[name][charge];
+            double div = (maxScore-minScore);
+            div = div<=0 ? 1 : div;
+            return (value-minScore)/div;
+        }
+
+        /* This function computes the f-score from a set of features. The weights of these features 
+           are determined by the ScoreDiscriminant data structure. 
+        */
+        void computediscriminantScore(const map<string,double>& featureWeights, int zState, MinMaxScoresByZState minScoresByZState, MinMaxScoresByZState maxScoresByZState)
+        {
+            discriminantScore = 0.0;
+            map<string,double>::const_iterator iter;
+            // Z-state normalize all the scores
+            iter = featureWeights.find("mvh");
+            if(iter != featureWeights.end())
+                discriminantScore += normalizeScore("mvh", mvh, zState, minScoresByZState, maxScoresByZState) * iter->second;
+            iter = featureWeights.find("mzfidelity");
+            if(iter != featureWeights.end())
+                discriminantScore += normalizeScore("mzfidelity", mzFidelity, zState, minScoresByZState, maxScoresByZState)  * iter->second;
+            iter = featureWeights.find("xcorr");
+            if(iter != featureWeights.end())
+                discriminantScore += normalizeScore("xcorr", XCorr, zState, minScoresByZState, maxScoresByZState)  * iter->second;
+            iter = featureWeights.find("numPTMs");
+            if(iter!=featureWeights.end())
+                discriminantScore += numberOfOtherMods * iter->second;
+            iter = featureWeights.find("numBlindPTMs");
+            if(iter!=featureWeights.end())
+                discriminantScore += numberOfBlindMods * iter->second;
+            iter = featureWeights.find("NET");
+            if(iter != featureWeights.end())
+                discriminantScore += specificTermini() * iter->second;
+            iter = featureWeights.find("numMissedCleavs");
+            if(iter != featureWeights.end())
+                discriminantScore += missedCleavages() * iter->second;
         }
 
 		/*** 
@@ -136,7 +186,8 @@ namespace tagrecon
 		void serialize( Archive& ar, const unsigned int version )
 		{
 			ar & boost::serialization::base_object< BaseSearchResult >( *this );
-			ar & mvh & massError & mzSSE & mzFidelity & rankScore & XCorr;
+			ar & mvh & massError & mzSSE & mzFidelity & rankScore & XCorr & probabilisticScore & discriminantScore;
+            ar & numberOfBlindMods & numberOfOtherMods;
 			if( g_rtConfig->CalculateRelativeScores )
 				ar & pvalue & expect;
 		}
@@ -150,16 +201,20 @@ namespace tagrecon
 		Spectrum()
 			:	BaseSpectrum(), PeakSpectrum<PeakInfo>(), SearchSpectrum<SearchResult>(), TaggingSpectrum()
 		{
-			//resultSet.max_size( g_rtConfig->MaxResults );
-            resultSet.max_size( g_rtConfig->maxResultsForInternalUse );
+			resultSet.max_size( g_rtConfig->MaxResults );
+            topTargetHits.max_size( 2 );
+            topDecoyHits.max_size( 2 );
+            //resultSet.max_size( g_rtConfig->maxResultsForInternalUse );
 			simplethread_create_mutex( &mutex );
 		}
 
 		Spectrum( const Spectrum& old )
 			:	BaseSpectrum( old ), PeakSpectrum<PeakInfo>( old ), SearchSpectrum<SearchResult>( old ), TaggingSpectrum( old )
 		{
-			//resultSet.max_size( g_rtConfig->MaxResults );
-            resultSet.max_size( g_rtConfig->maxResultsForInternalUse );
+			resultSet.max_size( g_rtConfig->MaxResults );
+            topTargetHits.max_size( 2 );
+            topDecoyHits.max_size( 2 );
+            //resultSet.max_size( g_rtConfig->maxResultsForInternalUse );
 			simplethread_create_mutex( &mutex );
 		}
 
@@ -311,7 +366,8 @@ namespace tagrecon
 			ScoreSequenceVsSpectrum takes a peptide sequence, predicted sequence ions and experimental spectrum
 			to generate MVH and m/z fidelity scores.
 		*/
-		inline size_t ScoreSequenceVsSpectrum( SearchResult& result, const string& seq, const vector<double>& seqIons, int NTT)
+		inline size_t ScoreSequenceVsSpectrum( SearchResult& result, const string& seq, const vector<double>& seqIons, 
+                                               int NTT, size_t numDynamicMods, size_t numUnknownMods)
 		{
 			PeakData::iterator peakItr;
 			// Holds the number of occurences of each class
@@ -325,6 +381,8 @@ namespace tagrecon
 			result.mvh = 0.0;
 			result.mzSSE = 0.0;
             result.mzFidelity = 0.0;
+            result.numberOfBlindMods = numUnknownMods;
+            result.numberOfOtherMods = numDynamicMods;
 			size_t numPeaksFound = 0;
 
 			START_PROFILER(6);
@@ -424,8 +482,15 @@ namespace tagrecon
 
                 // Reward the MVH of the peptide according to its enzymatic status
                 double rewardedMVH = result.mvh + -1.0 * g_rtConfig->NETRewardVector[NTT];
-                result.rankScore = g_rtConfig->UseNETAdjustment ? rewardedMVH : result.mvh;
-                
+                result.probabilisticScore = g_rtConfig->UseNETAdjustment ? rewardedMVH : result.mvh;
+                // Penalize the score for number of modifications
+                if(g_rtConfig->PenalizeUnknownMods)
+                {
+                    double modPenalty = 0.0;
+                    modPenalty = numDynamicMods * result.probabilisticScore * 0.025 + result.probabilisticScore * numUnknownMods * 0.05;
+                    result.probabilisticScore -= modPenalty;
+                }
+                result.rankScore = result.probabilisticScore;
 			}
 			STOP_PROFILER(8);
 			return numPeaksFound;
