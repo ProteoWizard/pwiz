@@ -24,6 +24,7 @@ using System.Diagnostics;
 using System.Drawing.Imaging;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.SeqNode
@@ -60,6 +61,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             Debug.Assert(model != null);
 
             Model = model;
+
         }
 
         public abstract string Heading { get; }
@@ -127,6 +129,37 @@ namespace pwiz.Skyline.Controls.SeqNode
             return (node == null ? IdentityPath.ROOT : node.Path);
         }
 
+
+
+        public int XIndent
+        {
+            // Finds the X coordinate of the indent for this node, accounting for horizontal scrolling.
+            get
+            {
+                int treeIndent = SequenceTree.HORZ_DASH_LENGTH + SequenceTree.PADDING;
+                if(StateImageIndex > -1)
+                    treeIndent += SequenceTree.IMG_WIDTH;
+                if(ImageIndex > -1)
+                    treeIndent += SequenceTree.IMG_WIDTH;
+                return Bounds.X - treeIndent;
+            }
+        }
+
+        public int HorizScrollDif
+        {
+            get
+            {
+                return XIndent - (Level * SequenceTree.Indent + 11);
+            }
+        }
+
+
+        public virtual int DropWidth
+        {
+            get { return 5; }
+        }
+
+
         /// <summary>
         /// Override to handle changes to the underlying document node, performing
         /// tasks such as updating the node icon, label text, and children.
@@ -151,6 +184,106 @@ namespace pwiz.Skyline.Controls.SeqNode
             // Add parent nodes
             return SrmParent.GetPath(path);
         }
+
+        public void DrawNodeCustom(Graphics g)
+        {
+            // ** Draw the Dashed Lines. ** 
+            // Horizontal line.
+            SequenceTree.DashBrush.TranslateTransform(Level % 2 + HorizScrollDif, 0);
+            g.FillRectangle(SequenceTree.DashBrush, XIndent, Bounds.Top + Bounds.Height / 2,
+                SequenceTree.HORZ_DASH_LENGTH, 1);
+            // Vertical lines corresponding to the horizontal level of this node.
+            SequenceTree.DashBrush.TranslateTransform(-Level % 2 - HorizScrollDif, 0);
+            // Check if this is the Root.
+            if (this == SequenceTree.Nodes[0])
+                g.FillRectangle(SequenceTree.DashBrush, XIndent, Bounds.Top + Bounds.Height / 2,
+                    1, Bounds.Height / 2);
+            // Move up the levels of the tree, drawing the corresponding vertical lines.
+            else
+            {
+                SrmTreeNode curNode = this;
+                while (curNode != null)
+                {
+                    SequenceTree.DashBrush.TranslateTransform(0, curNode.Level % 2);
+                    if (curNode.NextNode != null)
+                        g.FillRectangle(SequenceTree.DashBrush, curNode.XIndent, Bounds.Top,
+                            1, Bounds.Height);
+                    else if (curNode == this)
+                        g.FillRectangle(SequenceTree.DashBrush, curNode.XIndent, Bounds.Top,
+                            1, Bounds.Height / 2);
+                    SequenceTree.DashBrush.TranslateTransform(0, -curNode.Level % 2);
+                    curNode = curNode.Parent as SrmTreeNode;
+                }
+            }
+
+            // Draw Collapse/Expand bmps and the image associated with the node.
+            SrmTreeNodeParent asParent = this as SrmTreeNodeParent;
+            if (asParent != null && asParent.ChildDocNodes.Count > 0)
+            {
+                Image expandCollapse = IsExpanded ? Resources.Collapse : Resources.Expand;
+                g.DrawImage(expandCollapse, XIndent - expandCollapse.Width / 2,
+                    Bounds.Top + (Bounds.Height - expandCollapse.Height) / 2);
+            }
+
+            // Draw images associated with the node.
+            int imgLocX = XIndent + SequenceTree.HORZ_DASH_LENGTH;
+            Image nodeImg = SequenceTree.ImageList.Images[ImageIndex];
+            if (StateImageIndex > -1)
+            {
+                Image stateImg = SequenceTree.StateImageList.Images[StateImageIndex];
+                g.DrawImageUnscaled(stateImg,
+                        imgLocX, Bounds.Top, SequenceTree.IMG_WIDTH, SequenceTree.IMG_WIDTH);
+                imgLocX += SequenceTree.IMG_WIDTH;
+            }
+            g.DrawImageUnscaled(nodeImg, imgLocX, Bounds.Top, SequenceTree.IMG_WIDTH, SequenceTree.IMG_WIDTH);            
+
+            DrawNode(g);
+        }
+
+        
+        protected void DrawBackground(Graphics g, Rectangle bounds)
+        {
+            
+        }
+
+        protected virtual void DrawNode(Graphics g)
+        {
+            // Draw the highlight, if necessary.
+            Color textColor = ForeColor;
+            Color backColor = BackColor;
+
+            if (SequenceTree.SelectedNodes.Contains(this)) 
+            {
+                if (SequenceTree.Focused)
+                {
+                    textColor = SystemColors.HighlightText;
+                    backColor = SystemColors.Highlight;
+                    g.FillRectangle(SystemBrushes.Highlight, Bounds);
+                    if (IsSelected)
+                        ControlPaint.DrawBorder(g, Bounds, Color.Black, ButtonBorderStyle.Dotted);
+                }
+                else
+                {
+                    backColor = Color.LightGray;
+                    g.FillRectangle(Brushes.LightGray, Bounds);
+                }
+            }
+
+            
+            // Draw the text.
+            const TextFormatFlags format = TextFormatFlags.SingleLine | TextFormatFlags.VerticalCenter;
+            TextRenderer.DrawText(g, Text, SequenceTree.Font, Bounds, textColor, backColor, format);
+            
+            // Add the annotation.
+            if (!Model.Annotations.IsEmpty)
+                g.FillPolygon(Brushes.OrangeRed, new[] {new Point(Bounds.Right, Bounds.Top), 
+                        new Point(Bounds.Right-5, Bounds.Top), new Point(Bounds.Right, Bounds.Top+5)});
+
+        }
+
+        
+
+
 
         #region object overrides
 
@@ -433,7 +566,6 @@ namespace pwiz.Skyline.Controls.SeqNode
                     nodeTree.Model = nodeDoc;
                 treeNodes.Insert(i, nodeTree);
             }
-
             if (selChanged)
                 tree.FireSelectedNodeChanged();
         }

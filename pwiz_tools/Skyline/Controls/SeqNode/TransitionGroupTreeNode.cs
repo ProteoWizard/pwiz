@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             int peakImageIndex = PeakImageIndex;
             if (peakImageIndex != StateImageIndex)
                 StateImageIndex = peakImageIndex;
-            string label = GetLabel(DocNode.TransitionGroup, DocNode.PrecursorMz, ResultsText, DocNode.NoteMark);
+            string label = GetLabel(DocNode.TransitionGroup, DocNode.PrecursorMz, ResultsText);
             if (!Equals(label, Text))
                 Text = label;
 
@@ -173,11 +173,11 @@ namespace pwiz.Skyline.Controls.SeqNode
         }
 
         public static string GetLabel(TransitionGroup tranGroup, double precursorMz,
-            string resultsText, string noteMark)
+            string resultsText)
         {
-            return string.Format("{0:F04}{1}{2}{3}{4}", precursorMz,
+            return string.Format("{0:F04}{1}{2}{3}", precursorMz,
                                  Transition.GetChargeIndicator(tranGroup.PrecursorCharge),
-                                 tranGroup.LabelTypeText, resultsText, noteMark);
+                                 tranGroup.LabelTypeText, resultsText);
         }
 
         #region IChildPicker Members

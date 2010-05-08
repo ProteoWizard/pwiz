@@ -368,7 +368,7 @@ namespace pwiz.Skyline.FileUI
                 }
             }
 
-            // Thremo LTQ method building ignores CE and DP regression values
+            // Thermo LTQ method building ignores CE and DP regression values
             if (!Equals(InstrumentType, ExportInstrumentType.Thermo_LTQ))
             {
                 // Check to make sure CE and DP match chosen instrument, and offer to use

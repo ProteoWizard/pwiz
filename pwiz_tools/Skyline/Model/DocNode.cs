@@ -65,8 +65,6 @@ namespace pwiz.Skyline.Model
         /// </summary>
         public string Note { get { return Annotations.Note;} }
 
-        public string NoteMark { get { return Annotations.IsEmpty ? "" : "*"; } }
-
         /// <summary>
         /// Returns a clone of this with a different property value.
         /// </summary>

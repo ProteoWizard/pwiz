@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             int typeImageIndex = TypeImageIndex;
             if (typeImageIndex != ImageIndex)
                 ImageIndex = SelectedImageIndex = typeImageIndex;
-            string label = DocNode.Name + DocNode.NoteMark;
+            string label = DocNode.Name;
             if (!string.Equals(label, Text))
                 Text = label;
 

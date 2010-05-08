@@ -258,6 +258,9 @@
     </Compile>
     <Compile Include="Controls\StatementCompletionTextBox.cs">
     </Compile>
+    <Compile Include="Controls\TreeViewMS.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="EditUI\ArrangeGraphsGroupedDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -871,6 +874,10 @@
     <EmbeddedResource Include="Controls\ResultsGridForm.resx">
       <DependentUpon>ResultsGridForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Controls\TreeViewMS.resx">
+      <DependentUpon>TreeViewMS.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="EditUI\ArrangeGraphsGroupedDlg.resx">
       <DependentUpon>ArrangeGraphsGroupedDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -1042,6 +1049,9 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Wand.bmp" />
+    <EmbeddedResrouce Include="Resources\minus.bmp" />
+    <EmbeddedResource Include="Resources\plus.bmp" />
+    <EmbeddedResource Include="Resources\Dash.bmp" />
     <EmbeddedResource Include="Resources\WandProhibit.bmp" />
     <EmbeddedResource Include="Resources\Copy_Bitmap.bmp" />
     <EmbeddedResource Include="Resources\Ions_1.bmp" />

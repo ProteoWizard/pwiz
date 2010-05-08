@@ -38,11 +38,9 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             Debug.Assert(nodeDoc is PeptideDocNode);
             var nodeTree = new PeptideTreeNode(tree, (PeptideDocNode)nodeDoc);
-
             if (ExpandDefault)
                 nodeTree.Expand();
-
-            return nodeTree;
+           return nodeTree;
         }
 
 // ReSharper disable SuggestBaseTypeForParameter
@@ -50,6 +48,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 // ReSharper restore SuggestBaseTypeForParameter
             : base(tree, nodePeptide)
         {
+
         }
 
         public PeptideDocNode DocNode { get { return (PeptideDocNode)Model; } }
@@ -90,7 +89,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             int peakImageIndex = PeakImageIndex;
             if (peakImageIndex != StateImageIndex)
                 StateImageIndex = peakImageIndex;
-            string label = DocNode + ResultsText + DocNode.NoteMark;
+            string label = DocNode + ResultsText;
             if (!string.Equals(label, Text))
                 Text = label;
 
@@ -142,6 +141,156 @@ namespace pwiz.Skyline.Controls.SeqNode
                                                  TransitionGroupTreeNode.CreateInstance);
         }
 
+        protected struct AAMod
+        {
+            public String AAs;
+            public Font Font;
+            
+            public AAMod(String s, Font f)
+            {
+                AAs = s;
+                Font = f;
+            }
+        }
+
+        private IList<AAMod> GetParsedString()
+        {
+            IList<AAMod> modParsed = new List<AAMod>();
+
+            var calcPreLight = DocSettings.GetPrecursorCalc(IsotopeLabelType.light, DocNode.ExplicitMods);
+            var calcPreHeavy = DocSettings.GetPrecursorCalc(IsotopeLabelType.heavy, DocNode.ExplicitMods);
+
+            string heavyMods = DocNode.Peptide.Sequence;
+            string lightMods = DocNode.Peptide.Sequence;
+
+            if(calcPreLight != null)
+                lightMods = calcPreLight.GetModifiedSequence(DocNode.Peptide.Sequence, true);
+            if(calcPreHeavy != null)
+                heavyMods = calcPreHeavy.GetModifiedSequence(DocNode.Peptide.Sequence, true);
+
+            if (DocNode.Peptide.PrevAA != 'X')
+                modParsed.Add(new AAMod(DocNode.Peptide.PrevAA + ".", SequenceTree.Font));
+            else
+                modParsed.Add(new AAMod("", SequenceTree.Font));
+
+            Font prevFont = SequenceTree.Font;
+            int i = 0;
+            int j = 0;
+            
+            while(i < heavyMods.Length)
+            {
+                int last = i;
+                Font curFont = SequenceTree.Font;
+                if (i < heavyMods.Length - 1)
+                {
+                    char heavyNext = heavyMods[i + 1];
+                    char lightNext = j < lightMods.Length - 1 ? lightMods[j + 1] : ' ';
+                    if (heavyNext == '[' && lightNext == '[')
+                    {
+                        while (heavyMods[i] == lightMods[j] && lightMods[j] != ']')
+                        {
+                            i++;
+                            j++;
+                        }
+                        curFont = lightMods[j] == ']' && heavyMods[j] == ']'
+                                      ?
+                                          SequenceTree.LightFont
+                                      : SequenceTree.HeavyAndLightFont;
+                    }
+                    else if (heavyNext == '[')
+                        curFont = SequenceTree.HeavyFont;
+                    else if (lightNext == '[')
+                        curFont = SequenceTree.LightFont;
+                }
+                if (curFont.Equals(prevFont))
+                {
+                    int modParsedLast = modParsed.Count - 1;
+                    modParsed[modParsedLast] = new AAMod(modParsed[modParsedLast].AAs + heavyMods[last], curFont);
+                }
+                else
+                    modParsed.Add(new AAMod(heavyMods[last].ToString(), curFont));
+                prevFont = curFont;
+                i++;
+                j++;
+                while (i < heavyMods.Length && !Char.IsLetter(heavyMods[i])) i++;
+                while (j < lightMods.Length && !Char.IsLetter(lightMods[j])) j++;
+
+            }
+            if (DocNode.Peptide.NextAA != 'X')
+                modParsed.Add(new AAMod((string.Format(".{0} [{1}, {2}]",
+                    DocNode.Peptide.NextAA, DocNode.Peptide.Begin, DocNode.Peptide.End)), SequenceTree.Font));
+
+            return modParsed;
+        }
+
+        private int _textWidth;
+
+        public override int DropWidth
+        {
+            get
+            {
+                return base.DropWidth + _textWidth - Bounds.Width;
+            }
+        }
+
+        protected override void DrawNode(Graphics g)
+        {
+            // Measure the modified string.
+            IList<AAMod> seq = GetParsedString();
+
+            const TextFormatFlags format = TextFormatFlags.SingleLine |
+                               TextFormatFlags.NoPadding |
+                               TextFormatFlags.VerticalCenter;
+            int textRectWidth = 0;
+            IList<int> textWidths = new List<int>();
+            foreach (var aaMod in seq)
+            {
+                Size sizeMax = new Size(int.MaxValue, int.MaxValue);
+                int textWidth = TextRenderer.MeasureText(g, aaMod.AAs, aaMod.Font, sizeMax, format).Width;
+                textWidths.Add(textWidth);
+                textRectWidth += textWidth;
+            }
+
+            _textWidth = textRectWidth;
+
+            // Draw the highlight.
+            Rectangle textBounds = new Rectangle(Bounds.X, Bounds.Y, textRectWidth + SequenceTree.PADDING * 2, Bounds.Height);
+            Color textColor = SequenceTree.ForeColor;
+            Color backColor = SequenceTree.BackColor;
+            if (SequenceTree.SelectedNodes.Contains(this))
+            {
+                if (SequenceTree.Focused)
+                {
+                    g.FillRectangle(SystemBrushes.Highlight, textBounds);
+                    textColor = SystemColors.HighlightText;
+                    backColor = SystemColors.Highlight;
+                    if (IsSelected)
+                        ControlPaint.DrawBorder(g, textBounds, Color.Black, ButtonBorderStyle.Dotted);
+                }
+                else
+                {
+                    g.FillRectangle(Brushes.LightGray, textBounds);
+                    backColor = Color.LightGray;
+                }
+            }
+
+            // Draw the text.
+            Point textLoc = new Point(Bounds.X + SequenceTree.PADDING, Bounds.Y);
+            for (int i = 0; i < seq.Count; i++)
+            {
+                TextRenderer.DrawText(g, seq[i].AAs, seq[i].Font,
+                                      new Rectangle(textLoc, new Size(textWidths[i], Bounds.Height)),
+                                      textColor, backColor, format);
+                textLoc = new Point(textLoc.X + textWidths[i], textLoc.Y);
+            }
+            
+            // Add the annotation.
+            if (!Model.Annotations.IsEmpty)
+                g.FillPolygon(Brushes.OrangeRed, new[] {new Point(textBounds.Right, textBounds.Top), 
+                    new Point(textBounds.Right-5, textBounds.Top), new Point(textBounds.Right, textBounds.Top+5)});
+        }
+         
+
         #region IChildPicker Members
 
         public override string GetPickLabel(object child)
@@ -149,7 +298,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             // TODO: Library information e.g. (12 copies)
             TransitionGroup group = (TransitionGroup) child;
             double massH = DocSettings.GetPrecursorMass(group.LabelType, group.Peptide.Sequence, DocNode.ExplicitMods);
-            return TransitionGroupTreeNode.GetLabel(group, SequenceMassCalc.GetMZ(massH, group.PrecursorCharge), "", "");
+            return TransitionGroupTreeNode.GetLabel(group, SequenceMassCalc.GetMZ(massH, group.PrecursorCharge), "");
         }
 
         public override bool Filtered
@@ -224,6 +373,8 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public Size RenderTip(Graphics g, Size sizeMax, bool draw)
         {
+
+
             var table = new TableDesc();
             using (RenderTools rt = new RenderTools())
             {

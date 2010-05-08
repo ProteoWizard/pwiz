@@ -17,14 +17,18 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+
+
 
 namespace pwiz.Skyline.Controls
 {
@@ -35,10 +39,8 @@ namespace pwiz.Skyline.Controls
     /// http://www.codeproject.com/KB/tree/CustomizedLabelEdit.aspx?display=Print
     /// </para>
     /// </summary>
-    public class SequenceTree : TreeView
+    public class SequenceTree : TreeViewMS
     {
-        private IDocumentUIContainer _documentContainer;
-
         private Image _dropImage;
         private TreeNode _nodeCapture;
         private NodeTip _nodeTip;
@@ -88,8 +90,9 @@ namespace pwiz.Skyline.Controls
 
         public void InitializeTree(IDocumentUIContainer documentUIContainer)
         {
-            _documentContainer = documentUIContainer;
-            _documentContainer.ListenUI(OnDocumentChanged);
+            
+            DocumentContainer = documentUIContainer;
+            DocumentContainer.ListenUI(OnDocumentChanged);
 
             // Activate double buffering (unsuccessful attempts to reduce flicker)
             DoubleBuffered = true;
@@ -121,10 +124,130 @@ namespace pwiz.Skyline.Controls
             Nodes.Add(new EmptyNode());
 
             _nodeTip = new NodeTip();
+
+            HeavyFont = new Font(Font, FontStyle.Bold);
+            LightFont = new Font(Font, FontStyle.Underline);
+            HeavyAndLightFont = new Font(Font, FontStyle.Bold | FontStyle.Underline);
+
+            DashBrush = new TextureBrush(Resources.Dash)
+                                             {WrapMode = WrapMode.Tile};
+            BackColorBrush = new SolidBrush(BackColor);
+            SetStyle(ControlStyles.UserPaint, true);
+            ItemHeight = 16;
+
+
         }
+
+        // Length of the horizontal dashed lines representing each branch of the tree.
+        protected internal const int HORZ_DASH_LENGTH = 11;
+        // Text padding.
+        protected internal const int PADDING = 3;
+        // Width of images associated with the tree.
+        public const int IMG_WIDTH = 16;
 
         [Browsable(true)]
         public event EventHandler<PickedChildrenEventArgs> PickedChildrenEvent;
+
+        [Browsable(false)]
+        public TextureBrush DashBrush { get; set; }
+
+        public SolidBrush BackColorBrush { get; set; }
+
+        [Browsable(false)]
+        public Font HeavyFont { get; set; }
+
+        [Browsable(false)]
+        public Font LightFont { get; set; }
+
+        [Browsable(false)]
+        public Font HeavyAndLightFont { get; set; }
+
+        protected override void OnBeforeExpand(TreeViewCancelEventArgs e)
+        {
+            BeginUpdate();
+            base.OnBeforeExpand(e);
+        }
+
+        protected override void OnAfterExpand(TreeViewEventArgs e)
+        {
+            base.OnAfterExpand(e);
+            EndUpdate();
+        }
+
+        protected override void OnBeforeCollapse(TreeViewCancelEventArgs e)
+        {
+            BeginUpdate();
+            base.OnBeforeCollapse(e);
+        }
+
+        protected override void OnAfterCollapse(TreeViewEventArgs e)
+        {
+            base.OnAfterCollapse(e);
+            EndUpdate();
+        }
+
+        protected override void OnPaintBackground(PaintEventArgs pevent)
+        {
+ 
+        }
+
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            // If we have nodes, then we have to draw them - and that means everything
+            // about the node.
+            if (Nodes.Count > 0)
+            {
+
+
+                e.Graphics.FillRectangle(BackColorBrush, ClientRectangle); 
+                
+                // If we have nodes then there has to be a Nodes[0]. Use it to get the
+                // height of one TreeNode - in a TreeView, all nodes are the same height
+                int nodeHeight = Nodes[0].Bounds.Height;
+                var drawRect = Bounds;
+                int curY = drawRect.Top;
+
+                // Walk down the client area, stepping by the height of one row, looking 
+                // for nodes.
+                while (curY <= drawRect.Bottom)
+                {
+                    TreeNode node = GetNodeAt(0, curY);
+                    // If this rect does contain a node, draw the node.
+                    SrmTreeNode nodeSrm = node as SrmTreeNode;
+                    if (nodeSrm != null)
+                        nodeSrm.DrawNodeCustom(e.Graphics);
+                    else if (node != null && !node.IsEditing)
+                    {
+                        int horzScrollDiff = node.Bounds.X - (HORZ_DASH_LENGTH + HORZ_DASH_LENGTH + Indent);
+                        DashBrush.TranslateTransform(-horzScrollDiff, 0);
+                        if(curY != 0)
+                            e.Graphics.FillRectangle(DashBrush, HORZ_DASH_LENGTH + horzScrollDiff, node.Bounds.Top, 1, 8);
+                        e.Graphics.FillRectangle(DashBrush, HORZ_DASH_LENGTH + horzScrollDiff, node.Bounds.Top + node.Bounds.Height/2, 9, 1);
+                        DashBrush.TranslateTransform(+horzScrollDiff, 0);
+                        if (SelectedNodes.Contains(node))
+                        {
+                            if(Focused)
+                            {
+                                e.Graphics.FillRectangle(SystemBrushes.Highlight, node.Bounds);
+                                if (node.IsSelected)
+                                    ControlPaint.DrawBorder(e.Graphics, node.Bounds, Color.Black, ButtonBorderStyle.Dotted);
+                            }
+                            else
+                            {
+                                e.Graphics.FillRectangle(Brushes.LightGray, node.Bounds);
+                            }
+                        }
+
+                    }
+                    curY += nodeHeight;
+                }
+            }
+            else
+            {
+                e.Graphics.FillRectangle(BackColorBrush, ClientRectangle);
+            } 
+        }
 
         /// <summary>
         /// For <see cref="SrmTreeNodeParent"/> to use when child picking completes
@@ -177,7 +300,7 @@ namespace pwiz.Skyline.Controls
         /// Property access to the underlying document being edited.
         /// </summary>
         [Browsable(false)]
-        public SrmDocument Document { get { return _documentContainer.Document; } }
+        public SrmDocument Document { get { return DocumentContainer.Document; } }
 
         /// <summary>
         /// Handler for a document changed event raised on the main document
@@ -187,7 +310,7 @@ namespace pwiz.Skyline.Controls
         /// <param name="e"></param>
         private void OnDocumentChanged(object sender, DocumentChangedEventArgs e)
         {
-            SrmDocument document = _documentContainer.DocumentUI;
+            SrmDocument document = DocumentContainer.DocumentUI;
             // If none of the children changed, then do nothing
             if (e.DocumentPrevious != null &&
                     ReferenceEquals(document.Children, e.DocumentPrevious.Children))
@@ -273,6 +396,30 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+        public IList<IdentityPath> SelectedPaths
+        {
+            get
+            {
+                IList<IdentityPath> treeSelections = new List<IdentityPath>();
+                foreach (TreeNode n in SelectedNodes)
+                {
+                    SrmTreeNode nodeTree = n as SrmTreeNode;
+                    if (nodeTree != null) treeSelections.Add(nodeTree.Path);
+                }
+                return treeSelections;
+            }
+            set
+            {
+                if (value != null)
+                {
+                    foreach (IdentityPath path in value)
+                    {
+                        AddSelectedNode(Nodes, new IdentityPathTraversal(path));
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// Property usable for saving and restoring selection based on the
         /// underlying document structure.
@@ -291,7 +438,10 @@ namespace pwiz.Skyline.Controls
             set
             {
                 if (value != null)
+                {
                     SelectNode(Nodes, new IdentityPathTraversal(value));
+    
+                }
             }
         }
 
@@ -300,13 +450,20 @@ namespace pwiz.Skyline.Controls
             return path != null && ReferenceEquals(path.GetIdentity(0), NODE_INSERT_ID);
         }
 
+        private void SelectNode(TreeNodeCollection treeNodes, IdentityPathTraversal traversal)
+        {
+            SelectedNodes = new ArrayList();
+            AddSelectedNode(treeNodes, traversal);
+            SelectedNode = SelectedNodes[0] as TreeNode;
+        }
+
         /// <summary>
         /// Recursive function for restoring a tree node selection based
         /// on a path of <see cref="Identity"/> references.
         /// </summary>
         /// <param name="treeNodes">Tree nodes for the current point in the <see cref="traversal"/></param>
         /// <param name="traversal">A recursive descent traversal of a <see cref="IdentityPath"/></param>
-        private void SelectNode(TreeNodeCollection treeNodes, IdentityPathTraversal traversal)
+        private void AddSelectedNode(TreeNodeCollection treeNodes, IdentityPathTraversal traversal)
         {
             // Identity paths are not allowed to be empty, so we can get the
             // first value, and then check to make sure we never descend further when
@@ -316,7 +473,7 @@ namespace pwiz.Skyline.Controls
             // Check of the insert node, which is a special value
             if (ReferenceEquals(id, NODE_INSERT_ID))
             {
-                SelectedNode = Nodes[Nodes.Count - 1];
+                SelectedNodes.Add(Nodes[Nodes.Count - 1]);
                 return;
             }
 
@@ -328,7 +485,7 @@ namespace pwiz.Skyline.Controls
                 {
                     // If traversal is complete, select the specified node
                     if (!traversal.HasNext)
-                        SelectedNode = node;
+                        SelectedNodes.Add(node);
                     // Otherwise continue descending
                     else
                     {
@@ -338,9 +495,9 @@ namespace pwiz.Skyline.Controls
 
                         // If no children are found, then select this node
                         if (node.Nodes.Count == 0)
-                            SelectedNode = node;
+                            SelectedNodes.Add(node);
                         else
-                            SelectNode(node.Nodes, traversal);
+                            AddSelectedNode(node.Nodes, traversal);
                     }
                 }
             }
@@ -483,7 +640,7 @@ namespace pwiz.Skyline.Controls
             // Size for arrowhead image, centered on the node
             Rectangle rectNode = node.Bounds;
             Image img = DropImage;
-            return new Rectangle(rectNode.X + rectNode.Width + 5,
+            return new Rectangle(rectNode.X + rectNode.Width + ((SrmTreeNode) node).DropWidth,
                                  rectNode.Y,
                                  img.Width,
                                  rectNode.Height);
@@ -523,7 +680,7 @@ namespace pwiz.Skyline.Controls
                     Point pt = dropRect.Location;
                     // Center the image in the rectangle.
                     pt.Y += dropRect.Height/2 - DropImage.Height/2;
-
+                    
                     g.DrawImage(DropImage, pt);
                 }
             }
@@ -533,6 +690,7 @@ namespace pwiz.Skyline.Controls
         {
             base.OnGotFocus(e);
             _focus = true;
+            Refresh();
         }
 
         protected override void OnLostFocus(EventArgs e)
@@ -540,6 +698,7 @@ namespace pwiz.Skyline.Controls
             _focus = false;
             HideEffects();
             base.OnLostFocus(e);
+            Refresh();
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
@@ -729,8 +888,8 @@ namespace pwiz.Skyline.Controls
         protected override void OnNotifyMessage(Message m)
         {
             // No erasebackground to reduce flicker
-            if (m.Msg == (int)WinMsg.WM_ERASEBKGND)
-                return;
+            //if (m.Msg == (int)WinMsg.WM_ERASEBKGND)
+            //    return;
 
             if (_triggerLabelEdit)
             {
@@ -779,7 +938,7 @@ namespace pwiz.Skyline.Controls
                     disableCompletion = false;
                 }
             }
-            _editTextBox = new StatementCompletionTextBox(_documentContainer)
+            _editTextBox = new StatementCompletionTextBox(DocumentContainer)
                 {AutoSizeWidth = true, DisableCompletion = disableCompletion};
             _editTextBox.Attach(textBox);
             textBox.KeyDown += textBox_KeyDown;
@@ -870,6 +1029,7 @@ namespace pwiz.Skyline.Controls
         {
             if (!_inUpdate)
             {
+               
                 SrmTreeNodeParent nodeTree = e.Node as SrmTreeNodeParent;
                 if (nodeTree != null)
                 {

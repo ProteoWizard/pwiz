@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -454,21 +455,24 @@ namespace pwiz.Skyline
             private readonly SkylineWindow _window;
             private readonly SrmDocument _document;
             private readonly IdentityPath _treeSelection;
+            private readonly IList<IdentityPath> _treeSelections;
             private readonly string _resultName;
 
             public UndoState(SkylineWindow window)
             {
                 _window = window;
                 _document = window.DocumentUI;
+                _treeSelections = window.sequenceTree.SelectedPaths;
                 _treeSelection = window.sequenceTree.SelectedPath;
                 _resultName = ResultNameCurrent;
             }
 
-            private UndoState(SkylineWindow window, SrmDocument document,
+            private UndoState(SkylineWindow window, SrmDocument document, IList<IdentityPath> treeSelections,
                 IdentityPath treeSelection, string resultName)
             {
                 _window = window;
                 _document = document;
+                _treeSelections = treeSelections;
                 _treeSelection = treeSelection;
                 _resultName = resultName;
             }
@@ -484,6 +488,10 @@ namespace pwiz.Skyline
 
             public IUndoState Restore()
             {
+
+                // Get current tree selections
+                IList<IdentityPath> treeSelections = _window.sequenceTree.SelectedPaths;
+
                 // Get current tree selection
                 IdentityPath treeSelection = _window.sequenceTree.SelectedPath;
 
@@ -495,6 +503,11 @@ namespace pwiz.Skyline
 
                 // Restore previous tree selection
                 _window.sequenceTree.SelectedPath = _treeSelection;
+                
+                // Restore previous tree selections
+                _window.SequenceTree.SelectedPaths = _treeSelections;
+
+                _window.SequenceTree.Invalidate();
 
                 // Restore selected result
                 if (_resultName != null)
@@ -502,7 +515,7 @@ namespace pwiz.Skyline
 
                 // Return a record that can be used to restore back to the state
                 // before this action.
-                return new UndoState(_window, docReplaced, treeSelection, resultName);
+                return new UndoState(_window, docReplaced, treeSelections, treeSelection, resultName);
             }
         }
 
@@ -890,13 +903,26 @@ namespace pwiz.Skyline
         private void deleteMenuItem_Click(object sender, EventArgs e) { EditDelete(); }
         public void EditDelete()
         {
-            SrmTreeNode node = sequenceTree.SelectedNode as SrmTreeNode;
-            if (node != null)
-            {
-                IdentityPath path = node.Path.Parent;
-                ModifyDocument("Delete " + node.Text, doc => (SrmDocument)doc.RemoveChild(path, node.Model));
-            }
+            ModifyDocument("Delete Nodes", doc =>
+                                                  {
+                                                      foreach (TreeNode nodeTree in SequenceTree.SelectedNodes.ToArray())
+                                                      {
+                                                          var node = nodeTree as SrmTreeNode;
+                                                          if (node == null)
+                                                              continue;
+
+                                                          if (node.Parent == null || sequenceTree.Nodes.Contains(node.Parent))
+                                                          {
+                                                              IdentityPath path = node.Path.Parent;
+                                                              doc =
+                                                                  (SrmDocument)
+                                                                  doc.RemoveChild(path, node.Model);
+                                                          }
+                                                      }
+                                                      return doc;
+                                                  });
         }
+ 
 
         private void editNoteMenuItem_Click(object sender, EventArgs e) { EditNote(); }
         public void EditNote()
@@ -967,8 +993,8 @@ namespace pwiz.Skyline
         {
             BulkUpdateTreeNodes<PeptideGroupTreeNode>(() =>
                 {
-                    foreach (PeptideGroupTreeNode node in sequenceTree.GetSequenceNodes())
-                        node.Collapse();                    
+                   foreach (PeptideGroupTreeNode node in sequenceTree.GetSequenceNodes())
+                        node.Collapse();
                 });
             Settings.Default.SequenceTreeExpandProteins =
                 Settings.Default.SequenceTreeExpandPeptides = 

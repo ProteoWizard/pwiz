@@ -57,6 +57,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 Text = label;
         }
 
+        
         public int TypeImageIndex
         {
             get
@@ -116,22 +117,20 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             if (!nodeTran.HasLibInfo)
             {
-                return string.Format("{0} - {1:F04}{2}{3}{4}",
+                return string.Format("{0} - {1:F04}{2}{3}",
                                      labelPrefix,
                                      nodeTran.Mz,
                                      Transition.GetChargeIndicator(tran.Charge),
-                                     resultsText,
-                                     nodeTran.NoteMark);
+                                     resultsText);
             }
             else
             {
-                return string.Format("{0} - {1:F04}{2} (rank {3}){4}{5}",
+                return string.Format("{0} - {1:F04}{2} (rank {3}){4}",
                                      labelPrefix,
                                      nodeTran.Mz,
                                      Transition.GetChargeIndicator(tran.Charge),
                                      nodeTran.LibInfo.Rank,
-                                     resultsText,
-                                     nodeTran.NoteMark);
+                                     resultsText);
             }
         }
 
