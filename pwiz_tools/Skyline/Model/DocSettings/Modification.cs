@@ -403,34 +403,96 @@ namespace pwiz.Skyline.Model.DocSettings
         }
     }
 
+    public sealed class TypedModifications : Immutable
+    {
+        public TypedModifications(IsotopeLabelType labelType, IList<StaticMod> modifications)
+        {
+            LabelType = labelType;
+            Modifications = MakeReadOnly(modifications);
+        }
+
+        public IsotopeLabelType LabelType { get; private set; }
+        public IList<StaticMod> Modifications { get; private set; }
+
+        public bool HasImplicitModifications
+        {
+            get { return Modifications.Contains(mod => !mod.IsExplicit); }
+        }
+
+        #region object overrides
+
+        public bool Equals(TypedModifications other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(other.LabelType, LabelType) &&
+                ArrayUtil.EqualsDeep(other.Modifications, Modifications);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof(TypedModifications)) return false;
+            return Equals((TypedModifications)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (LabelType.GetHashCode() * 397) ^ Modifications.GetHashCodeDeep();
+            }
+        }
+
+        #endregion
+    }
+
     public sealed class ExplicitMods : Immutable
     {
-        private ReadOnlyCollection<ExplicitMod> _staticModifications;
-        private ReadOnlyCollection<ExplicitMod> _heavyModifications;
-        // Cached masses for faster calculation
-        private ReadOnlyCollection<double> _staticModMassesMono;
-        private ReadOnlyCollection<double> _staticModMassesAvg;
-        private ReadOnlyCollection<double> _heavyModMassesMono;
-        private ReadOnlyCollection<double> _heavyModMassesAvg;
+        private ReadOnlyCollection<TypedExplicitModifications> _modifications;
 
-        public ExplicitMods(Peptide peptide, IList<ExplicitMod> staticMods, IList<ExplicitMod> heavyMods)
+        public ExplicitMods(Peptide peptide, IList<ExplicitMod> staticMods,
+            IEnumerable<TypedExplicitModifications> heavyMods)
         {
             Peptide = peptide;
-            StaticModifications = staticMods;
-            HeavyModifications = heavyMods;
 
-            CacheModMasses();
+            var modifications = new List<TypedExplicitModifications>();
+            // Add static mods, if applicable
+            if (staticMods != null)
+            {
+                modifications.Add(new TypedExplicitModifications(peptide,
+                    IsotopeLabelType.light, staticMods));
+            }
+            // Add isotope mods
+            modifications.AddRange(heavyMods);
+            _modifications = MakeReadOnly(modifications.ToArray());
         }
 
         public ExplicitMods(Peptide peptide,
             IEnumerable<StaticMod> staticMods, MappedList<string, StaticMod> listStaticMods,
-            IEnumerable<StaticMod> heavyMods, MappedList<string, StaticMod> listHeavyMods)
+            IEnumerable<TypedModifications> heavyMods, MappedList<string, StaticMod> listHeavyMods)
         {
             Peptide = peptide;
-            StaticModifications = GetImplicitMods(staticMods, listStaticMods);
-            HeavyModifications = GetImplicitMods(heavyMods, listHeavyMods);
 
-            CacheModMasses();
+            var modifications = new List<TypedExplicitModifications>();
+            TypedExplicitModifications staticTypedMods = null;
+            // Add static mods, if applicable
+            if (staticMods != null)
+            {
+                var explicitMods = GetImplicitMods(staticMods, listStaticMods);
+                staticTypedMods = new TypedExplicitModifications(peptide,
+                    IsotopeLabelType.light, explicitMods);
+                modifications.Add(staticTypedMods);
+            }
+            foreach (TypedModifications typedMods in heavyMods)
+            {
+                var explicitMods = GetImplicitMods(typedMods.Modifications, listHeavyMods);
+                var typedHeavyMods = new TypedExplicitModifications(peptide,
+                    typedMods.LabelType, explicitMods);
+                modifications.Add(typedHeavyMods.AddModMasses(staticTypedMods));
+            }
+            _modifications = MakeReadOnly(modifications.ToArray());
         }
 
         /// <summary>
@@ -464,78 +526,119 @@ namespace pwiz.Skyline.Model.DocSettings
             return listImplicitMods.ToArray();
         }
 
-        private void CacheModMasses()
-        {
-            // Cache modification masses
-            var staticModMassesMono = CalcModMasses(StaticModifications, null, SrmSettings.MonoisotopicMassCalc);
-            _staticModMassesMono = MakeReadOnly(staticModMassesMono);
-            var staticModMassesAvg = CalcModMasses(StaticModifications, null, SrmSettings.AverageMassCalc);
-            _staticModMassesAvg = MakeReadOnly(staticModMassesAvg);
-            var heavyModMassesMono = CalcModMasses(HeavyModifications, staticModMassesMono, SrmSettings.MonoisotopicMassCalc);
-            _heavyModMassesMono = MakeReadOnly(heavyModMassesMono);
-            var heavyModMassesAvg = CalcModMasses(HeavyModifications, staticModMassesAvg, SrmSettings.AverageMassCalc);
-            _heavyModMassesAvg = MakeReadOnly(heavyModMassesAvg);
-        }
-
         public Peptide Peptide { get; private set; }
 
         public IList<ExplicitMod> StaticModifications
         {
-            get { return _staticModifications; }
-            private set { _staticModifications = MakeReadOnly(value); }
+            get { return GetModifications(IsotopeLabelType.light); }
         }
 
         public IList<ExplicitMod> HeavyModifications
         {
-            get { return _heavyModifications; }
-            private set { _heavyModifications = MakeReadOnly(value); }
+            get { return GetModifications(IsotopeLabelType.heavy); }
         }
 
-        public bool HasHeavyModifications { get { return _heavyModifications.Count > 0; } }
+        public IList<ExplicitMod> GetModifications(IsotopeLabelType labelType)
+        {
+            int index = GetModIndex(labelType);
+            if (index == -1)
+                return null;
+            return _modifications[index].Modifications;
+        }
+
+        private int GetModIndex(IsotopeLabelType labelType)
+        {
+            return _modifications.IndexOf(mod => Equals(labelType, mod.LabelType));
+        }
+
+        public IEnumerable<TypedExplicitModifications> GetHeavyModifications()
+        {
+            for (int i = 0; i < _modifications.Count; i++)
+            {
+                var typedMods = _modifications[i];
+                if (!typedMods.LabelType.IsLight)
+                    yield return typedMods;
+            }
+        }
+
+        public bool IsModified(IsotopeLabelType labelType)
+        {
+            return GetModIndex(labelType) != -1;
+        }
+
+        public bool HasHeavyModifications
+        {
+            get { return GetHeavyModifications().Contains(mods => mods.Modifications.Count > 0); }
+        }
+
+        public bool HasModifications(IsotopeLabelType labelType)
+        {
+            return _modifications.Contains(mods =>
+                Equals(labelType, mods.LabelType) && mods.Modifications.Count > 0);
+        }
 
         public IList<double> GetModMasses(MassType massType, IsotopeLabelType labelType)
         {
-            if (massType == MassType.Monoisotopic)
-            {
-                if (labelType == IsotopeLabelType.light)
-                    return _staticModMassesMono;
-                else
-                    return _heavyModMassesMono;
-            }
-            else
-            {
-                if (labelType == IsotopeLabelType.light)
-                    return _staticModMassesAvg;
-                else
-                    return _heavyModMassesAvg;
-            }
-        }
-
-        private double[] CalcModMasses(IEnumerable<ExplicitMod> mods, double[] massesBase, SequenceMassCalc massCalc)
-        {
-            double[] masses = new double[Peptide.Length];
-            if (massesBase != null)
-                Array.Copy(massesBase, masses, Math.Min(massesBase.Length, masses.Length));
-            string seq = Peptide.Sequence;
-            foreach (ExplicitMod mod in mods)
-                masses[mod.IndexAA] += massCalc.GetModMass(seq[mod.IndexAA], mod.Modification);
-            return masses;
+            var index = GetModIndex(labelType);
+            // This will throw, if the modification type is not found.
+            return _modifications[index].GetModMasses(massType);
         }
 
         public ExplicitMods ChangeGlobalMods(SrmSettings settingsNew)
         {
             var modSettings = settingsNew.PeptideSettings.Modifications;
-            return ChangeGlobalMods(modSettings.StaticModifications, modSettings.HeavyModifications);
+            IList<StaticMod> heavyMods = null;
+            List<StaticMod> heavyModsList = null;
+            foreach (var typedMods in modSettings.GetHeavyModifications())
+            {
+                if (heavyMods == null)
+                    heavyMods = typedMods.Modifications;
+                else
+                {
+                    if (heavyModsList == null)
+                        heavyModsList = new List<StaticMod>(heavyMods);
+                    heavyModsList.AddRange(typedMods.Modifications);
+                }
+            }
+            heavyMods = heavyModsList ?? heavyMods ?? new StaticMod[0];
+            return ChangeGlobalMods(modSettings.StaticModifications, heavyMods,
+                modSettings.GetHeavyModificationTypes());
         }
 
-        public ExplicitMods ChangeGlobalMods(IList<StaticMod> staticMods, IList<StaticMod> heavyMods)
+        public ExplicitMods ChangeGlobalMods(IList<StaticMod> staticMods, IList<StaticMod> heavyMods,
+            IEnumerable<IsotopeLabelType> heavyLabelTypes)
         {
-            IList<ExplicitMod> staticExplicitMods = ChangeGlobalMods(staticMods , StaticModifications);
-            IList<ExplicitMod> heavyExplicitMods = ChangeGlobalMods(heavyMods, HeavyModifications);
-            if (ReferenceEquals(staticExplicitMods, StaticModifications) &&
-                    ReferenceEquals(heavyExplicitMods, HeavyModifications))
+            var modifications = new List<TypedExplicitModifications>();
+            int index = GetModIndex(IsotopeLabelType.light);
+            TypedExplicitModifications typedStaticMods = (index != -1 ? _modifications[index] : null);
+            if (typedStaticMods != null)
+            {
+                IList<ExplicitMod> staticExplicitMods = ChangeGlobalMods(staticMods, typedStaticMods.Modifications);
+                if (!ReferenceEquals(staticExplicitMods, typedStaticMods.Modifications))
+                    typedStaticMods = new TypedExplicitModifications(Peptide, IsotopeLabelType.light, staticExplicitMods);
+                modifications.Add(typedStaticMods);
+            }
+
+            foreach (TypedExplicitModifications typedMods in GetHeavyModifications())
+            {
+                // Discard explicit modifications for label types that no longer exist
+                if (!heavyLabelTypes.Contains(typedMods.LabelType))
+                    continue;
+
+                var heavyExplicitMods = ChangeGlobalMods(heavyMods, typedMods.Modifications);
+                var typedHeavyMods = typedMods;
+                if (!ReferenceEquals(heavyExplicitMods, typedMods.Modifications))
+                {
+                    typedHeavyMods = new TypedExplicitModifications(Peptide, typedMods.LabelType, heavyExplicitMods);
+                    typedHeavyMods = typedHeavyMods.AddModMasses(typedStaticMods);
+                }
+                modifications.Add(typedHeavyMods);                
+            }
+            if (ArrayUtil.ReferencesEqual(modifications, _modifications))
                 return this;
-            return new ExplicitMods(Peptide, staticExplicitMods, heavyExplicitMods);            
+            if (modifications.Count == 0)
+                return null;
+            return ChangeProp(ImClone(this), im => im._modifications = MakeReadOnly(modifications));
         }
 
         public static IList<ExplicitMod> ChangeGlobalMods(IList<StaticMod> staticMods, IList<ExplicitMod> explicitMods)
@@ -561,12 +664,25 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public ExplicitMods ChangeStaticModifications(IList<ExplicitMod> prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.StaticModifications = v, prop);
+            return ChangeModifications(IsotopeLabelType.light, prop);
         }
 
         public ExplicitMods ChangeHeavyModifications(IList<ExplicitMod> prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.HeavyModifications = v, prop);
+            return ChangeModifications(IsotopeLabelType.heavy, prop);
+        }
+
+        public ExplicitMods ChangeModifications(IsotopeLabelType labelType, IList<ExplicitMod> prop)
+        {
+            int index = GetModIndex(labelType);
+            if (index == -1)
+                throw new IndexOutOfRangeException(string.Format("Modification type {0} not found.", labelType));
+            var modifications = _modifications.ToArrayStd();
+            var typedMods = new TypedExplicitModifications(Peptide, labelType, prop);
+            if (index != 0)
+                typedMods = typedMods.AddModMasses(modifications[0]);
+            modifications[index] = typedMods;
+            return ChangeProp(ImClone(this), im => im._modifications = MakeReadOnly(modifications));
         }
 
         #endregion
@@ -577,8 +693,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return ArrayUtil.EqualsDeep(obj._heavyModifications, _heavyModifications) &&
-                ArrayUtil.EqualsDeep(obj._staticModifications, _staticModifications) &&
+            return ArrayUtil.EqualsDeep(obj._modifications, _modifications) &&
                 Equals(obj.Peptide, Peptide);
         }
 
@@ -594,8 +709,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             unchecked
             {
-                int result = _heavyModifications.GetHashCodeDeep();
-                result = (result*397) ^ _staticModifications.GetHashCodeDeep();
+                int result = _modifications.GetHashCodeDeep();
                 result = (result*397) ^ Peptide.GetHashCode();
                 return result;
             }
@@ -653,6 +767,97 @@ namespace pwiz.Skyline.Model.DocSettings
                 int result = IndexAA;
                 result = (result*397) ^ Modification.GetHashCode();
                 return result;
+            }
+        }
+
+        #endregion
+    }
+
+    public sealed class TypedExplicitModifications : Immutable
+    {
+        // Cached masses for faster calculation
+        private ReadOnlyCollection<double> _modMassesMono;
+        private ReadOnlyCollection<double> _modMassesAvg;
+        private TypedExplicitModifications _typedStaticMods;
+
+        public TypedExplicitModifications(Peptide peptide, IsotopeLabelType labelType,
+            IList<ExplicitMod> modifications)
+        {
+            LabelType = labelType;
+            Modifications = MakeReadOnly(modifications);
+
+            // Cache modification masses
+            var modMassesMono = CalcModMasses(peptide, Modifications, SrmSettings.MonoisotopicMassCalc);
+            _modMassesMono = MakeReadOnly(modMassesMono);
+            var modMassesAvg = CalcModMasses(peptide, Modifications, SrmSettings.AverageMassCalc);
+            _modMassesAvg = MakeReadOnly(modMassesAvg);
+        }
+
+        public IsotopeLabelType LabelType { get; private set; }
+        public IList<ExplicitMod> Modifications { get; private set; }
+
+        public IList<double> GetModMasses(MassType massType)
+        {
+            return (massType == MassType.Monoisotopic ? _modMassesMono : _modMassesAvg);
+        }
+
+        private static double[] CalcModMasses(Peptide peptide, IEnumerable<ExplicitMod> mods,
+            SequenceMassCalc massCalc)
+        {
+            double[] masses = new double[peptide.Length];
+            string seq = peptide.Sequence;
+            foreach (ExplicitMod mod in mods)
+                masses[mod.IndexAA] += massCalc.GetModMass(seq[mod.IndexAA], mod.Modification);
+            return masses;
+        }
+
+        public TypedExplicitModifications AddModMasses(TypedExplicitModifications typedStaticMods)
+        {
+            if (typedStaticMods == null)
+                return this;
+            if (_typedStaticMods != null)
+                throw new InvalidOperationException("Static mod masses have already been added for this heavy type.");
+            if (LabelType.IsLight)
+                throw new InvalidOperationException("Static mod masses may not be added to light type.");
+
+            var im = ImClone(this);
+            im._typedStaticMods = typedStaticMods;
+            im._modMassesMono = AddModMasses(im._modMassesMono, typedStaticMods._modMassesMono);
+            im._modMassesAvg = AddModMasses(im._modMassesAvg, typedStaticMods._modMassesAvg);
+            return im;
+        }
+
+        private static ReadOnlyCollection<double> AddModMasses(IList<double> modMasses1, IList<double> modMasses2)
+        {
+            double[] masses = modMasses1.ToArrayStd();
+            for (int i = 0, count = Math.Min(masses.Length, modMasses2.Count); i < count; i++)
+                masses[i] += modMasses2[i];
+            return MakeReadOnly(masses);
+        }
+
+        #region object overrides
+
+        public bool Equals(TypedExplicitModifications other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(other.LabelType, LabelType) &&
+                ArrayUtil.EqualsDeep(other.Modifications, Modifications);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof(TypedExplicitModifications)) return false;
+            return Equals((TypedExplicitModifications)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (LabelType.GetHashCode() * 397) ^ Modifications.GetHashCodeDeep();
             }
         }
 

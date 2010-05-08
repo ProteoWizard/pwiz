@@ -41,6 +41,7 @@
             this.textMinPeptides = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.tabResults = new System.Windows.Forms.TabPage();
+            this.cbPreferLarger = new System.Windows.Forms.CheckBox();
             this.textMaxPeakRank = new System.Windows.Forms.TextBox();
             this.labelMaxPeakRank = new System.Windows.Forms.Label();
             this.textMaxPeakFoundRatio = new System.Windows.Forms.TextBox();
@@ -58,7 +59,6 @@
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
-            this.cbPreferLarger = new System.Windows.Forms.CheckBox();
             this.tabControl1.SuspendLayout();
             this.tabDocument.SuspendLayout();
             this.tabResults.SuspendLayout();
@@ -122,10 +122,6 @@
             // 
             this.comboRefineLabelType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboRefineLabelType.FormattingEnabled = true;
-            this.comboRefineLabelType.Items.AddRange(new object[] {
-            "",
-            "Light",
-            "Heavy"});
             this.comboRefineLabelType.Location = new System.Drawing.Point(19, 290);
             this.comboRefineLabelType.Name = "comboRefineLabelType";
             this.comboRefineLabelType.Size = new System.Drawing.Size(121, 21);
@@ -211,12 +207,23 @@
             this.tabResults.Text = "Results";
             this.tabResults.UseVisualStyleBackColor = true;
             // 
+            // cbPreferLarger
+            // 
+            this.cbPreferLarger.AutoSize = true;
+            this.cbPreferLarger.Enabled = false;
+            this.cbPreferLarger.Location = new System.Drawing.Point(171, 97);
+            this.cbPreferLarger.Name = "cbPreferLarger";
+            this.cbPreferLarger.Size = new System.Drawing.Size(144, 17);
+            this.cbPreferLarger.TabIndex = 6;
+            this.cbPreferLarger.Text = "Prefer larger product ions";
+            this.cbPreferLarger.UseVisualStyleBackColor = true;
+            // 
             // textMaxPeakRank
             // 
             this.textMaxPeakRank.Location = new System.Drawing.Point(25, 95);
             this.textMaxPeakRank.Name = "textMaxPeakRank";
             this.textMaxPeakRank.Size = new System.Drawing.Size(65, 20);
-            this.textMaxPeakRank.TabIndex = 7;
+            this.textMaxPeakRank.TabIndex = 5;
             this.helpTip.SetToolTip(this.textMaxPeakRank, "All transitions with an average area peak ranking\r\ngreater than this number will " +
                     "be removed from the\r\ndocument.");
             this.textMaxPeakRank.TextChanged += new System.EventHandler(this.textMaxPeakRank_TextChanged);
@@ -227,7 +234,7 @@
             this.labelMaxPeakRank.Location = new System.Drawing.Point(22, 79);
             this.labelMaxPeakRank.Name = "labelMaxPeakRank";
             this.labelMaxPeakRank.Size = new System.Drawing.Size(126, 13);
-            this.labelMaxPeakRank.TabIndex = 6;
+            this.labelMaxPeakRank.TabIndex = 4;
             this.labelMaxPeakRank.Text = "Max &transition peak rank:";
             // 
             // textMaxPeakFoundRatio
@@ -254,7 +261,7 @@
             this.radioRemoveMissing.Location = new System.Drawing.Point(25, 154);
             this.radioRemoveMissing.Name = "radioRemoveMissing";
             this.radioRemoveMissing.Size = new System.Drawing.Size(167, 17);
-            this.radioRemoveMissing.TabIndex = 5;
+            this.radioRemoveMissing.TabIndex = 8;
             this.radioRemoveMissing.TabStop = true;
             this.radioRemoveMissing.Text = "&Remove nodes missing results";
             this.helpTip.SetToolTip(this.radioRemoveMissing, "All elements without measured results will be\r\nremoved from the document.");
@@ -267,7 +274,7 @@
             this.radioIgnoreMissing.Location = new System.Drawing.Point(25, 131);
             this.radioIgnoreMissing.Name = "radioIgnoreMissing";
             this.radioIgnoreMissing.Size = new System.Drawing.Size(157, 17);
-            this.radioIgnoreMissing.TabIndex = 4;
+            this.radioIgnoreMissing.TabIndex = 7;
             this.radioIgnoreMissing.TabStop = true;
             this.radioIgnoreMissing.Text = "Ig&nore nodes missing results";
             this.helpTip.SetToolTip(this.radioIgnoreMissing, "No action will be taken for elements without\r\nmeasured results.");
@@ -299,7 +306,7 @@
             this.groupLibCorr.Location = new System.Drawing.Point(25, 290);
             this.groupLibCorr.Name = "groupLibCorr";
             this.groupLibCorr.Size = new System.Drawing.Size(332, 80);
-            this.groupLibCorr.TabIndex = 9;
+            this.groupLibCorr.TabIndex = 10;
             this.groupLibCorr.TabStop = false;
             this.groupLibCorr.Text = "&Spectral library correlation:";
             // 
@@ -330,7 +337,7 @@
             this.groupBox1.Location = new System.Drawing.Point(25, 192);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(332, 80);
-            this.groupBox1.TabIndex = 8;
+            this.groupBox1.TabIndex = 9;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Retention time &outliers:";
             // 
@@ -374,17 +381,6 @@
             this.btnCancel.TabIndex = 2;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
-            // 
-            // cbPreferLarger
-            // 
-            this.cbPreferLarger.AutoSize = true;
-            this.cbPreferLarger.Enabled = false;
-            this.cbPreferLarger.Location = new System.Drawing.Point(171, 97);
-            this.cbPreferLarger.Name = "cbPreferLarger";
-            this.cbPreferLarger.Size = new System.Drawing.Size(144, 17);
-            this.cbPreferLarger.TabIndex = 10;
-            this.cbPreferLarger.Text = "Prefer larger product ions";
-            this.cbPreferLarger.UseVisualStyleBackColor = true;
             // 
             // RefineDlg
             // 

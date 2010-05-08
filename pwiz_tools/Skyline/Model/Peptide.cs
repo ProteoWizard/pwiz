@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -161,7 +162,7 @@ namespace pwiz.Skyline.Model
             get
             {
                 return Children.Contains(node =>
-                    ((TransitionGroupDocNode) node).TransitionGroup.LabelType != IsotopeLabelType.light);
+                    !((TransitionGroupDocNode) node).TransitionGroup.LabelType.IsLight);
             }
         }
 
@@ -177,10 +178,15 @@ namespace pwiz.Skyline.Model
                         diff.SettingsOld.PeptideSettings.Modifications))
             {
                 explicitMods = ExplicitMods.ChangeGlobalMods(settingsNew);
-                if (!ReferenceEquals(explicitMods.HeavyModifications, ExplicitMods.HeavyModifications))
-                    diff = new SrmSettingsDiff(diff, SrmSettingsDiff.ALL);
+                if (explicitMods == null || !ArrayUtil.ReferencesEqual(explicitMods.GetHeavyModifications().ToArray(),
+                        ExplicitMods.GetHeavyModifications().ToArray()))
+                {
+                    diff = new SrmSettingsDiff(diff, SrmSettingsDiff.ALL);                    
+                }
                 else if (!ReferenceEquals(explicitMods.StaticModifications, ExplicitMods.StaticModifications))
+                {
                     diff = new SrmSettingsDiff(diff, SrmSettingsDiff.PROPS);
+                }
             }
 
             TransitionInstrument instrument = settingsNew.TransitionSettings.Instrument;
@@ -230,19 +236,18 @@ namespace pwiz.Skyline.Model
             }
             else
             {
-                // Even with auto-select off, if there is no heavy mass calculator,
-                // for this peptide, then it may not contain heavy precursors.
-                if (diff.DiffTransitionGroups && nodeResult.HasHeavyTransitionGroups &&
-                    !settingsNew.HasPrecursorCalc(IsotopeLabelType.heavy, explicitMods))
+                // Even with auto-select off, transition groups for which there is
+                // no longer a precursor calculator must be removed.
+                if (diff.DiffTransitionGroups && nodeResult.HasHeavyTransitionGroups)
                 {
                     IList<DocNode> childrenNew = new List<DocNode>();
                     foreach (TransitionGroupDocNode nodeGroup in nodeResult.Children)
                     {
-                        if (nodeGroup.TransitionGroup.LabelType == IsotopeLabelType.light)
+                        if (settingsNew.HasPrecursorCalc(nodeGroup.TransitionGroup.LabelType, explicitMods))
                             childrenNew.Add(nodeGroup);
                     }
 
-                    nodeResult = (PeptideDocNode)ChangeChildren(childrenNew);
+                    nodeResult = (PeptideDocNode)ChangeChildrenChecked(childrenNew);
                 }
 
                 // Update properties and children, if necessary
@@ -498,7 +503,7 @@ namespace pwiz.Skyline.Model
                     return null;
 
                 // Only add ratios to the internal standard transitions
-                if (nodeTran.Transition.Group.LabelType == IsotopeLabelType.light)
+                if (nodeTran.Transition.Group.LabelType.IsLight)
                     return listInfo;
 
                 var listInfoNew = new List<TransitionChromInfo>();
@@ -526,7 +531,7 @@ namespace pwiz.Skyline.Model
                     return null;
 
                 // Only add ratios to the internal standard transitions
-                if (nodeGroup.TransitionGroup.LabelType == IsotopeLabelType.light)
+                if (nodeGroup.TransitionGroup.LabelType.IsLight)
                     return listInfo;
 
                 var listInfoNew = new List<TransitionGroupChromInfo>();
@@ -741,7 +746,7 @@ namespace pwiz.Skyline.Model
                 if (!area.HasValue)
                     return;
 
-                if (labelType == IsotopeLabelType.light)
+                if (labelType.IsLight)
                     Area += area.Value;
                 else
                     StandardArea = area.Value;
@@ -837,7 +842,7 @@ namespace pwiz.Skyline.Model
             int chargeDiff = group1.PrecursorCharge - group2.PrecursorCharge;
             if (chargeDiff != 0)
                 return chargeDiff;
-            return ((int)group1.LabelType) - ((int)group2.LabelType);
+            return group1.LabelType.CompareTo(group2.LabelType);
         }
 
         public IEnumerable<TransitionGroup> GetTransitionGroups(SrmSettings settings, ExplicitMods mods, bool useFilter)
@@ -852,26 +857,39 @@ namespace pwiz.Skyline.Model
 
             TransitionInstrument instrument = settings.TransitionSettings.Instrument;
 
-            bool heavy = (mods != null ? mods.HasHeavyModifications :
-                settings.PeptideSettings.Modifications.HasHeavyImplicitModifications);
+            var modSettings = settings.PeptideSettings.Modifications;
 
-            double precursorMass = settings.GetPrecursorMass(IsotopeLabelType.light, Sequence, mods);
-            double precursorMassHeavy = (heavy ? settings.GetPrecursorMass(IsotopeLabelType.heavy, Sequence, mods) : 0);
+            double precursorMassLight = settings.GetPrecursorMass(IsotopeLabelType.light, Sequence, mods);
+            var listPrecursorMasses = new List<KeyValuePair<IsotopeLabelType, double>>
+                { new KeyValuePair<IsotopeLabelType, double>(IsotopeLabelType.light, precursorMassLight) };
+
+            foreach (var typeMods in modSettings.GetHeavyModifications())
+            {
+                IsotopeLabelType labelType = typeMods.LabelType;
+                double precursorMass = precursorMassLight;
+                if (settings.HasPrecursorCalc(labelType, mods))
+                    precursorMass = settings.GetPrecursorMass(labelType, Sequence, mods);
+
+                listPrecursorMasses.Add(new KeyValuePair<IsotopeLabelType, double>(labelType, precursorMass));
+            }
 
             foreach (int charge in precursorCharges)
             {
                 if (useFilter && !settings.Accept(this, mods, charge))
                     continue;
 
-                if (instrument.IsMeasurable(SequenceMassCalc.GetMZ(precursorMass, charge)))
-                    yield return new TransitionGroup(this, charge, IsotopeLabelType.light);
-                if (heavy)
+                for (int i = 0; i < listPrecursorMasses.Count; i++)
                 {
+                    var pair = listPrecursorMasses[i];
+                    IsotopeLabelType labelType = pair.Key;
+                    double precursorMass = pair.Value;
                     // Only return a heavy group, if the precursor masses differ
                     // between the light and heavy calculators
-                    if (precursorMass != precursorMassHeavy &&
-                            instrument.IsMeasurable(SequenceMassCalc.GetMZ(precursorMassHeavy, charge)))
-                        yield return new TransitionGroup(this, charge, IsotopeLabelType.heavy);                    
+                    if (i == 0 || precursorMass != precursorMassLight)
+                    {
+                        if (instrument.IsMeasurable(SequenceMassCalc.GetMZ(precursorMass, charge)))
+                            yield return new TransitionGroup(this, charge, labelType);
+                    }
                 }
             }
         }

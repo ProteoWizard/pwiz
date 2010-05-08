@@ -156,7 +156,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(2, nodeTran.Results.Count);
                 foreach (var chromInfoList in nodeTran.Results)
                 {
-                    if (nodeTran.Transition.Group.LabelType == IsotopeLabelType.light)
+                    if (nodeTran.Transition.Group.LabelType.IsLight)
                     {
                         Assert.IsNotNull(chromInfoList,
                             string.Format("Peptide {0}{1}, fragment {2}{3} missing results",

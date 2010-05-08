@@ -173,7 +173,7 @@ namespace pwiz.SkylineTest.Results
             int ratioGroupMissingCount = 0;
             foreach (var nodeGroup in docResults.TransitionGroups)
             {
-                if (nodeGroup.TransitionGroup.LabelType == IsotopeLabelType.light)
+                if (nodeGroup.TransitionGroup.LabelType.IsLight)
                 {
                     foreach (var result in nodeGroup.Results)
                         Assert.IsFalse(result[0].Ratio.HasValue, "Light group found with a ratio");

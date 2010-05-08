@@ -65,7 +65,10 @@
     </id>
     <many-to-one class="DbPeptide" name="Peptide" />
     <property name="Charge" />
-    <property name="IsotopeLabelType" />
+    <component name="IsotopeLabelType">
+      <property name="Name"/>
+      <property name="SortOrder"/>
+    </component>
     <property name="NeutralMass" />
     <property name="Mz" />
     <property name="CollisionEnergy" />

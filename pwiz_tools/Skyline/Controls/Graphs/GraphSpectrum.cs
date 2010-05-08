@@ -119,7 +119,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 foreach (var graphObj in GraphPane.GraphObjList)
                 {
                     var label = graphObj as TextObj;
-                    if (label != null && label.FontSpec.FontColor == SpectrumGraphItem.COLOR_SELECTED)
+                    if (label != null && label.FontSpec.FontColor == AbstractSpectrumGraphItem.COLOR_SELECTED)
                         return label.Text;
                 }
                 return null;

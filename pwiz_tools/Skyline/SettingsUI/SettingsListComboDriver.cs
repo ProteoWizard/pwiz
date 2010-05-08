@@ -58,7 +58,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     string name = List.GetKey(item);
                     int i = Combo.Items.Add(name);
-                    if (Combo.Items[i].ToString() == selectedItemLast)
+                    if (Equals(Combo.Items[i].ToString(), selectedItemLast))
                         Combo.SelectedIndex = i;
                 }
                 // If nothing was added, add a blank to avoid starting with "Add..." selected.

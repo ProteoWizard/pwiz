@@ -67,7 +67,7 @@ namespace pwiz.SkylineTestFunctional
 
         private void AddLibraries()
         {
-            var editListUI = ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(PeptideSettingsUI.EditList);
+            var editListUI = ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(PeptideSettingsUI.EditLibraryList);
             int numLibs = _testLibs.Length;
             for (int i = 0; i < numLibs; i++)
             {

@@ -502,7 +502,8 @@ namespace pwiz.Skyline.EditUI
         {
             bool missingProteinName = false;
             bool anyProteinName = false;
-            bool isHeavyAllowed = document.Settings.PeptideSettings.Modifications.HasHeavyImplicitModifications;
+            var modifications = document.Settings.PeptideSettings.Modifications;
+            bool isHeavyAllowed = modifications.HasHeavyImplicitModifications;
             var backgroundProteome = GetBackgroundProteome(document);
             for (int i = gridViewTransitionList.Rows.Count - 1; i >= 0; i--)
             {
@@ -594,13 +595,17 @@ namespace pwiz.Skyline.EditUI
                 double precursorMassH = document.Settings.GetPrecursorMass(IsotopeLabelType.light, peptideSequence, null);
                 double mzMatchTolerance = document.Settings.TransitionSettings.Instrument.MzMatchTolerance;
                 int precursorCharge = TransitionCalc.CalcPrecursorCharge(precursorMassH, precursorMz, mzMatchTolerance);
-                IsotopeLabelType isotopeLabelType = IsotopeLabelType.light;
+                IsotopeLabelType labelType = IsotopeLabelType.light;
                 if (precursorCharge < 1 && isHeavyAllowed)
                 {
-                    isotopeLabelType = IsotopeLabelType.heavy;
-                    precursorMassH = document.Settings.GetPrecursorMass(IsotopeLabelType.heavy, peptideSequence, null);
-                    precursorCharge = TransitionCalc.CalcPrecursorCharge(precursorMassH, precursorMz,
-                                                                                             mzMatchTolerance);
+                    foreach (var typeMods in modifications.GetHeavyModifications())
+                    {
+                        labelType = typeMods.LabelType;
+                        precursorMassH = document.Settings.GetPrecursorMass(labelType, peptideSequence, null);
+                        precursorCharge = TransitionCalc.CalcPrecursorCharge(precursorMassH, precursorMz, mzMatchTolerance);
+                        if (precursorCharge > 0)
+                            break;
+                    }
                 }
                 if (precursorCharge < 1)
                 {
@@ -612,7 +617,7 @@ namespace pwiz.Skyline.EditUI
                                             });
                     return null;
                 }
-                var calc = document.Settings.GetFragmentCalc(isotopeLabelType, null);
+                var calc = document.Settings.GetFragmentCalc(labelType, null);
                 double productPrecursorMass = calc.GetPrecursorFragmentMass(peptideSequence);
                 double[,] productMasses = calc.GetFragmentIonMasses(peptideSequence);
                 IonType? ionType;
@@ -658,7 +663,7 @@ namespace pwiz.Skyline.EditUI
                 {
                     if (peptideDocNode.Peptide.Sequence == peptideSequence)
                     {
-                        children.Add(AddTransition(document, peptideDocNode, precursorCharge, isotopeLabelType, productCharge,
+                        children.Add(AddTransition(document, peptideDocNode, precursorCharge, labelType, productCharge,
                                       ionType.Value, ordinal.Value));
                         transitionAdded = true;
                     }
@@ -694,7 +699,7 @@ namespace pwiz.Skyline.EditUI
                         var newPeptide = new Peptide(null, peptideSequence, null, null, missedCleavages);
                         peptideDocNode = new PeptideDocNode(newPeptide, new TransitionGroupDocNode[0], false);
                     }
-                    children.Add(AddTransition(document, peptideDocNode, precursorCharge, isotopeLabelType,
+                    children.Add(AddTransition(document, peptideDocNode, precursorCharge, labelType,
                                                       productCharge, ionType.Value, ordinal.Value));
 
                 }
@@ -706,13 +711,13 @@ namespace pwiz.Skyline.EditUI
         }
 
         private static PeptideDocNode AddTransition(SrmDocument document, PeptideDocNode peptideDocNode, int precursorCharge, 
-            IsotopeLabelType isotopeLabelType, int productCharge, IonType ionType, int ordinal)
+            IsotopeLabelType labelType, int productCharge, IonType ionType, int ordinal)
         {
             TransitionGroupDocNode transitionGroupDocNode = null;
             var transitionGroups = new List<TransitionGroupDocNode>();
             foreach (TransitionGroupDocNode node in peptideDocNode.Children)
             {
-                if (node.TransitionGroup.PrecursorCharge == precursorCharge && node.TransitionGroup.LabelType == isotopeLabelType)
+                if (node.TransitionGroup.PrecursorCharge == precursorCharge && Equals(node.TransitionGroup.LabelType, labelType))
                 {
                     transitionGroupDocNode = node;
                 }
@@ -725,9 +730,9 @@ namespace pwiz.Skyline.EditUI
             {
                 transitionGroupDocNode =
                     new TransitionGroupDocNode(
-                        new TransitionGroup(peptideDocNode.Peptide, precursorCharge, isotopeLabelType),
-                        document.Settings.GetPrecursorMass(isotopeLabelType, peptideDocNode.Peptide.Sequence, null),
-                        document.Settings.GetRelativeRT(isotopeLabelType, peptideDocNode.Peptide.Sequence, null),
+                        new TransitionGroup(peptideDocNode.Peptide, precursorCharge, labelType),
+                        document.Settings.GetPrecursorMass(labelType, peptideDocNode.Peptide.Sequence, null),
+                        document.Settings.GetRelativeRT(labelType, peptideDocNode.Peptide.Sequence, null),
                         new TransitionDocNode[0]);
                 
             }

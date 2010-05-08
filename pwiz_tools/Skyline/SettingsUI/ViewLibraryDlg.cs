@@ -917,8 +917,8 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         SrmSettings settings =  Program.ActiveDocumentUI.Settings;
                         var peptide = new Peptide(null, _peptides[index].GetAASequence(_lookupPool), null, null, 0);
-                        const IsotopeLabelType isotopeLabelType = IsotopeLabelType.light;
-                        var group = new TransitionGroup(peptide, _peptides[index].Charge, isotopeLabelType);
+                        IsotopeLabelType labelType = IsotopeLabelType.light;
+                        var group = new TransitionGroup(peptide, _peptides[index].Charge, labelType);
 
                         var types = ShowIonTypes;
                         var charges = ShowIonCharges;
@@ -929,7 +929,6 @@ namespace pwiz.Skyline.SettingsUI
                         if (_peptides[index].IsModified)
                         {
                             IList<ExplicitMod> staticModList = new List<ExplicitMod>();
-                            IList<ExplicitMod> heavyModList = new List<ExplicitMod>();
                             IList<ModificationInfo> modList = GetModifications(_peptides[index]);
                             int numMods = modList.Count;
                             for (int idx = 0; idx < numMods; idx++)
@@ -950,7 +949,7 @@ namespace pwiz.Skyline.SettingsUI
                                 staticModList.Add(exmod);
                             }
 
-                            mods = new ExplicitMods(peptide, staticModList, heavyModList);
+                            mods = new ExplicitMods(peptide, staticModList, new TypedExplicitModifications[0]);
                         }
 
                         // Make sure the types and charges in the settings are at the head
@@ -969,7 +968,7 @@ namespace pwiz.Skyline.SettingsUI
                         }
 
                         var spectrumInfoR = new LibraryRankedSpectrumInfo(spectrum,
-                                                                          isotopeLabelType,
+                                                                          labelType,
                                                                           group,
                                                                           settings,
                                                                           mods,

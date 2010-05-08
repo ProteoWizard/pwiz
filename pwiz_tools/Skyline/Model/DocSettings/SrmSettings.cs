@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -85,18 +86,18 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        public RelativeRT GetRelativeRT(IsotopeLabelType type, string seq, ExplicitMods mods)
+        public RelativeRT GetRelativeRT(IsotopeLabelType labelType, string seq, ExplicitMods mods)
         {
-            if (type == IsotopeLabelType.light)
+            if (labelType.IsLight)
                 return RelativeRT.Matching;
             // Default is matching
             RelativeRT relativeRT = RelativeRT.Matching;
             // One unkown modification makes everything unknown
             // One preceding modification with no unknowns make relative RT preceding
             // Overlapping overrides matching
-            if (mods != null)
+            if (mods != null && mods.IsModified(labelType))
             {
-                foreach (var mod in mods.HeavyModifications)
+                foreach (var mod in mods.GetModifications(labelType))
                 {
                     if (mod.Modification.RelativeRT == RelativeRT.Unknown)
                         return RelativeRT.Unknown;
@@ -109,7 +110,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             else
             {
-                foreach (var mod in PeptideSettings.Modifications.HeavyModifications)
+                foreach (var mod in PeptideSettings.Modifications.GetModifications(labelType))
                 {
                     if (!mod.IsMod(seq))
                         continue;
@@ -126,53 +127,102 @@ namespace pwiz.Skyline.Model.DocSettings
         }
         
         // Cached calculators
-        private SequenceMassCalc PrecursorMassCalc { get; set; }
+        private ReadOnlyCollection<TypedMassCalc> _precursorMassCalcs;
+        private ReadOnlyCollection<TypedMassCalc> _fragmentMassCalcs;
 
-        private SequenceMassCalc PrecursorHeavyCalc { get; set; }
-
-        private SequenceMassCalc FragmentMassCalc { get; set; }
-
-        private SequenceMassCalc FragmentHeavyCalc { get; set; }
-
-        private static SequenceMassCalc GetBaseCalc(SequenceMassCalc calcImplicit)
+        private static SequenceMassCalc GetBaseCalc(IsotopeLabelType labelType,
+            ExplicitMods mods, IList<TypedMassCalc> massCalcs)
         {
-            return (calcImplicit.MassType == MassType.Monoisotopic ?
+            if (mods == null)
+                return null;
+
+            var calcLightImplicit = massCalcs[0].MassCalc;
+
+            // If the light type is not modified
+            if (!mods.IsModified(IsotopeLabelType.light))
+            {
+                // If requesting the light calculator or an unmodified heavy,
+                // then no explicit calculator is required.
+                if (Equals(labelType, IsotopeLabelType.light) || !mods.IsModified(labelType))
+                    return null;
+                
+                // Otherwise, use its calculator as the base for a heavy type
+                // to make sure the implicit light modifications are included.
+                return calcLightImplicit;
+            }
+            // If the type requested is not modified, it must be a heavy type
+            // with the light type modified.  In this case, return the heavy
+            // calculator as the base, to which the light explicit modifications
+            // may be applied to get modified masses.
+            if (!mods.IsModified(labelType))
+                return GetMassCalc(labelType, massCalcs);
+
+            // If both light and this type are modified, then us a base calculator
+            // that contains no modifications at all.
+            return (calcLightImplicit.MassType == MassType.Monoisotopic ?
                 MonoisotopicMassCalc : AverageMassCalc);            
         }
 
-        public bool HasPrecursorCalc(IsotopeLabelType type, ExplicitMods mods)
+        private static SequenceMassCalc GetMassCalc(IsotopeLabelType labelType, IList<TypedMassCalc> massCalcs)
         {
-            return (type == IsotopeLabelType.light || PrecursorHeavyCalc != null ||
-                (mods != null && mods.HasHeavyModifications));
+            int index = massCalcs.IndexOf(calc => Equals(labelType, calc.LabelType));
+            if (index == -1)
+                return null;
+            return massCalcs[index].MassCalc;
         }
 
-        public IPrecursorMassCalc GetPrecursorCalc(IsotopeLabelType type, ExplicitMods mods)
+        public bool HasPrecursorCalc(IsotopeLabelType labelType, ExplicitMods mods)
         {
-            if (mods != null)
+            if (labelType.IsLight)
+                return true;
+            return GetPrecursorCalc(labelType, mods) != null;
+
+//            if (GetBaseCalc(labelType, mods, _precursorMassCalcs) != null)
+//            {
+//                if (mods.IsModified(labelType))
+//                    return mods.HasModifications(labelType);
+//                return mods.IsModified(IsotopeLabelType.light);
+//            }
+//            return _precursorMassCalcs.Contains(calc => Equals(labelType, calc.LabelType));
+        }
+
+        public IPrecursorMassCalc GetPrecursorCalc(IsotopeLabelType labelType, ExplicitMods mods)
+        {
+            var massCalcBase = GetBaseCalc(labelType, mods, _precursorMassCalcs);
+            if (massCalcBase != null)
             {
-                if (type != IsotopeLabelType.light && !mods.HasHeavyModifications)
+                // If this type is not explicitly modified, then it must be
+                // heavy with explicit light modifications.
+                if (!mods.IsModified(labelType))
+                    labelType = IsotopeLabelType.light;
+                if (!labelType.IsLight && !mods.HasModifications(labelType))
                     return null;
-                var massCalcBase = GetBaseCalc(PrecursorMassCalc);
-                return new ExplicitSequenceMassCalc(massCalcBase, mods.GetModMasses(massCalcBase.MassType, type));
+                return new ExplicitSequenceMassCalc(massCalcBase,
+                    mods.GetModMasses(massCalcBase.MassType, labelType));
             }
-            return (type == IsotopeLabelType.heavy ? PrecursorHeavyCalc : PrecursorMassCalc);
+            return GetMassCalc(labelType, _precursorMassCalcs);
         }
 
-        public double GetPrecursorMass(IsotopeLabelType type, string seq, ExplicitMods mods)
+        public double GetPrecursorMass(IsotopeLabelType labelType, string seq, ExplicitMods mods)
         {
-            return GetPrecursorCalc(type, mods).GetPrecursorMass(seq);
+            return GetPrecursorCalc(labelType, mods).GetPrecursorMass(seq);
         }
 
-        public IFragmentMassCalc GetFragmentCalc(IsotopeLabelType type, ExplicitMods mods)
+        public IFragmentMassCalc GetFragmentCalc(IsotopeLabelType labelType, ExplicitMods mods)
         {
-            if (mods != null)
+            var massCalcBase = GetBaseCalc(labelType, mods, _fragmentMassCalcs);
+            if (massCalcBase != null)
             {
-                if (type != IsotopeLabelType.light && !mods.HasHeavyModifications)
+                // If this type is not explicitly modified, then it must be
+                // heavy with explicit light modifications.
+                if (!mods.IsModified(labelType))
+                    labelType = IsotopeLabelType.light;
+                if (!labelType.IsLight && !mods.HasModifications(labelType))
                     return null;
-                var massCalcBase = GetBaseCalc(FragmentMassCalc);
-                return new ExplicitSequenceMassCalc(massCalcBase, mods.GetModMasses(massCalcBase.MassType, type));
+                return new ExplicitSequenceMassCalc(massCalcBase,
+                    mods.GetModMasses(massCalcBase.MassType, labelType));
             }
-            return (type == IsotopeLabelType.heavy ? FragmentHeavyCalc : FragmentMassCalc);
+            return GetMassCalc(labelType, _fragmentMassCalcs);
         }
 
         public double GetFragmentMass(Transition transition, ExplicitMods mods)
@@ -180,14 +230,14 @@ namespace pwiz.Skyline.Model.DocSettings
             return GetFragmentMass(IsotopeLabelType.light, mods, transition);
         }
 
-        public double GetFragmentMass(IsotopeLabelType type, ExplicitMods mods, Transition transition)
+        public double GetFragmentMass(IsotopeLabelType labelType, ExplicitMods mods, Transition transition)
         {
-            return GetFragmentCalc(type, mods).GetFragmentMass(transition);
+            return GetFragmentCalc(labelType, mods).GetFragmentMass(transition);
         }
 
-        public string GetModifiedSequence(string seq, IsotopeLabelType type, ExplicitMods mods)
+        public string GetModifiedSequence(string seq, IsotopeLabelType labelType, ExplicitMods mods)
         {
-            return GetPrecursorCalc(type, mods).GetModifiedSequence(seq, false);
+            return GetPrecursorCalc(labelType, mods).GetModifiedSequence(seq, false);
         }
 
         private static readonly SequenceMassCalc MONOISOTOPIC_MASS_CALC = new SequenceMassCalc(MassType.Monoisotopic);
@@ -208,7 +258,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             double mz = nodeGroup.PrecursorMz;
             // Always use the light m/z value to ensure regression values are consistent between light and heavy
-            if (nodeGroup.TransitionGroup.LabelType != IsotopeLabelType.light)
+            if (!nodeGroup.TransitionGroup.LabelType.IsLight)
             {
                 double massH = GetPrecursorMass(IsotopeLabelType.light,
                     nodePep.Peptide.Sequence, nodePep.ExplicitMods);
@@ -277,51 +327,60 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private void CreatePrecursorMassCalcs()
         {
-            SequenceMassCalc light, heavy;
-            CreateMassCalcs(TransitionSettings.Prediction.PrecursorMassType, out light, out heavy);
-            PrecursorMassCalc = light;
-            PrecursorHeavyCalc = heavy;
+            _precursorMassCalcs = CreateMassCalcs(TransitionSettings.Prediction.PrecursorMassType);
         }
 
         private void CreateFragmentMassCalcs()
         {
-            SequenceMassCalc light, heavy;
-            CreateMassCalcs(TransitionSettings.Prediction.FragmentMassType, out light, out heavy);
-            FragmentMassCalc = light;
-            FragmentHeavyCalc = heavy;
+            _fragmentMassCalcs = CreateMassCalcs(TransitionSettings.Prediction.FragmentMassType);
         }
 
-        private void CreateMassCalcs(MassType type, out SequenceMassCalc light, out SequenceMassCalc heavy)
+        private ReadOnlyCollection<TypedMassCalc> CreateMassCalcs(MassType type)
         {
+            var calcs = new List<TypedMassCalc>();
+
             var mods = PeptideSettings.Modifications;
 
             var modsStatic = mods.StaticModifications;
-            light = CreateMassCalc(type, modsStatic);
+            calcs.Add(new TypedMassCalc(IsotopeLabelType.light, CreateMassCalc(type, modsStatic)));
 
-            if (!mods.HasHeavyImplicitModifications)
-                heavy = null;
-            else
+            foreach (var typedMods in mods.GetHeavyModifications())
             {
-                var modsHeavy = mods.HeavyModifications;
-                heavy = CreateMassCalc(type, modsStatic, modsHeavy);
+                // Only add a heavy calculator for this type if it contains
+                // implicit modifications.
+                var modsHeavy = typedMods.Modifications;
+                if (modsHeavy.Contains(mod => !mod.IsExplicit))
+                {
+                    calcs.Add(new TypedMassCalc(typedMods.LabelType,
+                        CreateMassCalc(type, modsStatic, modsHeavy)));
+                }
             }
+
+            return MakeReadOnly(calcs.ToArray());
         }
 
-        private static SequenceMassCalc CreateMassCalc(MassType type, params IEnumerable<StaticMod>[] arrayMods)
+        private static SequenceMassCalc CreateMassCalc(MassType type, IEnumerable<StaticMod> staticMods)
+        {
+            return CreateMassCalc(type, staticMods, null);
+        }
+
+        private static SequenceMassCalc CreateMassCalc(MassType type, IEnumerable<StaticMod> staticMods, IEnumerable<StaticMod> heavyMods)
         {
             SequenceMassCalc calc = new SequenceMassCalc(type);
-            foreach (IEnumerable<StaticMod> mods in arrayMods)
+            // Add implicit modifications to the mass calculator
+            calc.AddStaticModifications(from mod in staticMods
+                                        where !mod.IsExplicit
+                                        select mod);
+            if (heavyMods != null)
             {
-                // Add implicit modifications to the mass calculator
-                calc.AddStaticModifications(from mod in mods
-                                            where !mod.IsExplicit
-                                            select mod);
+                calc.AddHeavyModifications(from mod in heavyMods
+                                           where !mod.IsExplicit
+                                           select mod);
             }
             return calc;
         }
 
-        public bool Contains(string sequence, int charge, ExplicitMods mods,
-            out IsotopeLabelType type)
+        public bool Contains(string sequence, int charge, ExplicitMods mods, out IsotopeLabelType type)
         {
             var libraries = PeptideSettings.Libraries;
 
@@ -331,13 +390,13 @@ namespace pwiz.Skyline.Model.DocSettings
             if (libraries.Contains(new LibKey(sequenceMod, charge)))
                 return true;
 
-            if (HasPrecursorCalc(IsotopeLabelType.heavy, mods))
-            {
+            foreach (var labelType in GetHeavyLabelTypes(mods))
+            {                
                 // If light version not found, try heavy
-                sequenceMod = GetModifiedSequence(sequence, IsotopeLabelType.heavy, mods);
+                sequenceMod = GetModifiedSequence(sequence, labelType, mods);
                 if (libraries.Contains(new LibKey(sequenceMod, charge)))
                 {
-                    type = IsotopeLabelType.heavy;
+                    type = labelType;
                     return true;
                 }                
             }
@@ -355,13 +414,13 @@ namespace pwiz.Skyline.Model.DocSettings
             if (libraries.TryGetLibInfo(new LibKey(sequenceMod, charge), out libInfo))
                 return true;
 
-            if (HasPrecursorCalc(IsotopeLabelType.heavy, mods))
+            foreach (var labelType in GetHeavyLabelTypes(mods))
             {
                 // If light version not found, try heavy
-                sequenceMod = GetModifiedSequence(sequence, IsotopeLabelType.heavy, mods);
+                sequenceMod = GetModifiedSequence(sequence, labelType, mods);
                 if (libraries.TryGetLibInfo(new LibKey(sequenceMod, charge), out libInfo))
                 {
-                    type = IsotopeLabelType.heavy;
+                    type = labelType;
                     return true;
                 }
             }
@@ -381,19 +440,29 @@ namespace pwiz.Skyline.Model.DocSettings
             if (libraries.TryLoadSpectrum(new LibKey(sequenceMod, charge), out spectrum))
                 return true;
 
-            if (HasPrecursorCalc(IsotopeLabelType.heavy, mods))
+            foreach (var labelType in GetHeavyLabelTypes(mods))
             {
                 // If light version not found, try heavy
-                sequenceMod = GetModifiedSequence(sequence, IsotopeLabelType.heavy, mods);
+                sequenceMod = GetModifiedSequence(sequence, labelType, mods);
                 if (libraries.TryLoadSpectrum(new LibKey(sequenceMod, charge), out spectrum))
                 {
-                    type = IsotopeLabelType.heavy;
+                    type = labelType;
                     return true;
                 }
             }
 
             spectrum = null;
             return false;
+        }
+
+        private IEnumerable<IsotopeLabelType> GetHeavyLabelTypes(ExplicitMods mods)
+        {
+            foreach (var typedMods in PeptideSettings.Modifications.GetHeavyModifications())
+            {
+                IsotopeLabelType labelType = typedMods.LabelType;
+                if (HasPrecursorCalc(labelType, mods))
+                    yield return labelType;
+            }
         }
 
         #region Implementation of IPeptideFilter
@@ -437,8 +506,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 double? precursorMass = null;
                 foreach (int charge in precursorCharges)
                 {
-                    IsotopeLabelType type;
-                    if (Contains(peptide.Sequence, charge, mods, out type))
+                    IsotopeLabelType labelType;
+                    if (Contains(peptide.Sequence, charge, mods, out labelType))
                     {
                         // It is in the library.  Make sure it is measurable on the selected instrument.
                         precursorMass = precursorMass ??
@@ -894,8 +963,30 @@ namespace pwiz.Skyline.Model.DocSettings
             var newMods = newPep.Modifications;
             bool diffStaticMods = !StaticMod.EquivalentImplicitMods(newMods.StaticModifications,
                                            oldMods.StaticModifications);
-            bool diffHeavyMods = !StaticMod.EquivalentImplicitMods(newMods.HeavyModifications,
-                                           oldMods.HeavyModifications);
+            bool diffHeavyMods = false;
+            var enumNewHeavyMods = newMods.GetHeavyModifications().GetEnumerator();
+            foreach (var oldTypedMods in oldMods.GetHeavyModifications())
+            {
+                if (!enumNewHeavyMods.MoveNext())   // synch with foreach
+                {
+                    // If fewer heavy label types
+                    diffHeavyMods = true;
+                    break;
+                }
+                var newTypedMods = enumNewHeavyMods.Current;
+                if (!Equals(newTypedMods.LabelType, oldTypedMods.LabelType) ||
+                        !StaticMod.EquivalentImplicitMods(newTypedMods.Modifications,
+                                                          oldTypedMods.Modifications))
+                {
+                    // If label types or implicit modifications differ
+                    diffHeavyMods = true;
+                    break;
+                }
+            }
+            // If not different yet, then make sure nothing was added
+            if (!diffHeavyMods)
+                diffHeavyMods = enumNewHeavyMods.MoveNext();
+
             // Set explicit differences, if no differences in the global implicit modifications,
             // but the modifications have changed.
             if (!diffStaticMods && !diffHeavyMods && !ReferenceEquals(oldPep.Modifications, newPep.Modifications))

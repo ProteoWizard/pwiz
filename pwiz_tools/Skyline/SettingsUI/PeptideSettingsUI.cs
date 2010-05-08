@@ -53,6 +53,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly SettingsListComboDriver<BackgroundProteomeSpec> _driverBackgroundProteome;
         private readonly SettingsListBoxDriver<StaticMod> _driverStaticMod;
         private readonly SettingsListBoxDriver<StaticMod> _driverHeavyMod;
+        private readonly LabelTypeComboDriver _driverLabelType;
         private readonly MessageBoxHelper _helper;
 
         public PeptideSettingsUI(SkylineWindow parent, LibraryManager libraryManager)
@@ -112,7 +113,7 @@ namespace pwiz.Skyline.SettingsUI
             _driverStaticMod = new SettingsListBoxDriver<StaticMod>(listStaticMods, Settings.Default.StaticModList);
             _driverStaticMod.LoadList(null, Modifications.StaticModifications);
             _driverHeavyMod = new SettingsListBoxDriver<StaticMod>(listHeavyMods, Settings.Default.HeavyModList);
-            _driverHeavyMod.LoadList(null, Modifications.HeavyModifications);
+            _driverLabelType = new LabelTypeComboDriver(comboLabelType, Modifications, _driverHeavyMod);
         }
 
         public DigestSettings Digest { get { return _peptideSettings.DigestSettings; } }
@@ -230,7 +231,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // Validate and hold modifications
             PeptideModifications modifications = new PeptideModifications(
-                _driverStaticMod.Chosen, _driverHeavyMod.Chosen);
+                _driverStaticMod.Chosen, _driverLabelType.GetHeavyModifications());
             // Should not be possible to change explicit modifications in the background,
             // so this should be safe.  CONSIDER: Document structure because of a library load?
             modifications = modifications.DeclareExplicitMods(_parent.DocumentUI,
@@ -315,7 +316,7 @@ namespace pwiz.Skyline.SettingsUI
             EditLibraryList();
         }
 
-        private void EditLibraryList()
+        public void EditLibraryList()
         {
             _driverLibrary.EditList();
 
@@ -505,12 +506,34 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        private void comboLabelType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // Handle label type selection events, like <Edit list...>
+            if (_driverLabelType != null)
+                _driverLabelType.SelectedIndexChangedEvent();
+        }
+
+        public void EditLabelTypeList ()
+        {
+            _driverLabelType.EditList();
+        }
+
         private void btnEditStaticMods_Click(object sender, EventArgs e)
+        {
+            EditStaticMods();
+        }
+
+        public void EditStaticMods()
         {
             _driverStaticMod.EditList();
         }
 
         private void btnEditHeavyMods_Click(object sender, EventArgs e)
+        {
+            EditHeavyMods();
+        }
+
+        public void EditHeavyMods()
         {
             _driverHeavyMod.EditList();
         }
@@ -568,10 +591,174 @@ namespace pwiz.Skyline.SettingsUI
             set { _driverHeavyMod.CheckedNames = value; }
         }
 
-        public void EditList()
+        public string SelectedLabelTypeName
         {
-            EditLibraryList();
+            get { return _driverLabelType.SelectedName; }
+            set { _driverLabelType.SelectedName = value; }
         }
+
         #endregion
+
+        private sealed class LabelTypeComboDriver
+        {
+            private const string EDIT_LIST_ITEM = "<Edit list...>";
+
+            private readonly SettingsListBoxDriver<StaticMod> _driverHeavyMod;
+
+            private int _selectedIndexLast;
+
+            public LabelTypeComboDriver(ComboBox combo, PeptideModifications modifications,
+                SettingsListBoxDriver<StaticMod> driverHeavyMod)
+            {
+                _driverHeavyMod = driverHeavyMod;
+
+                Combo = combo;
+                Combo.DisplayMember = "LabelType";
+                LoadList(null, modifications.GetHeavyModifications());
+                ShowModifications();
+            }
+
+            private ComboBox Combo { get; set; }
+
+            private void LoadList(string selectedItemLast, IEnumerable<TypedModifications> heavyMods)
+            {
+                try
+                {
+                    Combo.BeginUpdate();
+                    Combo.Items.Clear();
+                    foreach (var typedMods in heavyMods)
+                    {
+                        int i = Combo.Items.Add(typedMods);
+                        if (Equals(typedMods.LabelType.Name, selectedItemLast))
+                            Combo.SelectedIndex = i;
+                    }
+                    Combo.Items.Add(EDIT_LIST_ITEM);
+                    if (Combo.SelectedIndex < 0)
+                        Combo.SelectedIndex = 0;
+                }
+                finally
+                {
+                    Combo.EndUpdate();
+                }                
+            }
+
+            public string SelectedName
+            {
+                get { return SelectedMods.LabelType.Name; }
+                set
+                {
+                    for (int i = 0; i < Combo.Items.Count; i++)
+                    {
+                        if (Equals(value, ((TypedModifications)Combo.Items[i]).LabelType.Name))
+                        {
+                            Combo.SelectedIndex = i;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            private TypedModifications SelectedMods
+            {
+                get { return (TypedModifications) Combo.SelectedItem; }
+            }
+
+            private TypedModifications SelectedModsLast
+            {
+                get { return (TypedModifications)Combo.Items[_selectedIndexLast]; }
+            }
+
+            public IEnumerable<TypedModifications> GetHeavyModifications()
+            {
+                UpdateLastSelected();
+
+                foreach (object item in Combo.Items)
+                {
+                    if (item is TypedModifications)
+                        yield return (TypedModifications) item;                    
+                }
+            }
+
+            private bool EditListSelected()
+            {
+                return (EDIT_LIST_ITEM == Combo.SelectedItem.ToString());
+            }
+
+            public void SelectedIndexChangedEvent()
+            {
+                if (_selectedIndexLast != -1)
+                {
+                    UpdateLastSelected();
+
+                    if (EditListSelected())
+                    {
+                        EditList();
+                    }
+
+                    ShowModifications();
+                }
+
+                _selectedIndexLast = Combo.SelectedIndex;
+            }
+
+            private void UpdateLastSelected()
+            {
+                var lastSelectedMods = SelectedModsLast;
+                var currentMods = _driverHeavyMod.Chosen;
+                if (!ArrayUtil.EqualsDeep(currentMods, lastSelectedMods.Modifications))
+                {
+                    Combo.Items[_selectedIndexLast] =
+                        new TypedModifications(lastSelectedMods.LabelType, currentMods);
+                }
+            }
+
+            private void ShowModifications()
+            {
+                // Update the heavy modifications check-list to show the new selection
+                _driverHeavyMod.LoadList(SelectedMods.Modifications);
+            }
+
+            public void EditList()
+            {
+                var heavyMods = GetHeavyModifications();
+                var dlg = new EditLabelTypeListDlg
+                              {
+                                  LabelTypes = from typedMods in heavyMods
+                                               select typedMods.LabelType
+                              };
+                if (dlg.ShowDialog(Combo.TopLevelControl) == DialogResult.OK)
+                {
+                    // Store existing values in dictionary by lowercase name.
+                    string selectedItemLast = SelectedModsLast.LabelType.Name;
+                    var dictHeavyMods = new Dictionary<string, TypedModifications>();
+                    foreach (var typedMods in heavyMods)
+                        dictHeavyMods.Add(typedMods.LabelType.Name.ToLower(), typedMods);
+
+                    Combo.Items.Clear();
+
+                    // Add new values based on the content of the dialog.
+                    // Names that already existed keep same modifications, and
+                    // names that have not changed order stay reference-equal.
+                    var listHeavyMods = new List<TypedModifications>();
+                    foreach (var labelType in dlg.LabelTypes)
+                    {
+                        TypedModifications typedMods;
+                        if (!dictHeavyMods.TryGetValue(labelType.Name.ToLower(), out typedMods))
+                            typedMods = new TypedModifications(labelType, new StaticMod[0]);
+                        else if (!Equals(labelType, typedMods.LabelType))
+                            typedMods = new TypedModifications(labelType, typedMods.Modifications);
+                        listHeavyMods.Add(typedMods);
+                    }
+
+                    _selectedIndexLast = -1;
+                    LoadList(selectedItemLast, listHeavyMods);
+                }
+                else
+                {
+                    // Reset the selected index before edit was chosen.
+                    Combo.SelectedIndex = _selectedIndexLast;
+                }
+            }
+        }
     }
 }

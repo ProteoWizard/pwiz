@@ -134,11 +134,12 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        public static bool WaitForDocumentChange(SrmDocument docCurrent)
+        public static SrmDocument WaitForDocumentChange(SrmDocument docCurrent)
         {
             // Make sure the document changes on the UI thread, since tests are mostly
             // interested in interacting with the document on the UI thread.
-            return WaitForConditionUI(() => !ReferenceEquals(docCurrent, SkylineWindow.DocumentUI));
+            Assert.IsTrue(WaitForConditionUI(() => !ReferenceEquals(docCurrent, SkylineWindow.DocumentUI)));
+            return SkylineWindow.Document;
         }
 
         public static bool WaitForCondition(Func<bool> func)

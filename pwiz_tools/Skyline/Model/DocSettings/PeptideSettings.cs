@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
@@ -758,76 +759,134 @@ namespace pwiz.Skyline.Model.DocSettings
     [XmlRoot("peptide_modifications")]
     public class PeptideModifications : Immutable, IXmlSerializable
     {
-        private ReadOnlyCollection<StaticMod> _staticModifications;
-        private ReadOnlyCollection<StaticMod> _heavyModifications;
+        private ReadOnlyCollection<TypedModifications> _modifications;
 
-        public PeptideModifications(IList<StaticMod> staticModifications, IList<StaticMod> heavyModifications)
+        public PeptideModifications(IList<StaticMod> staticMods, IEnumerable<TypedModifications> heavyMods)
         {
-            StaticModifications = staticModifications;
-            HeavyModifications = heavyModifications;
+            var modifications = new List<TypedModifications>
+                                    {new TypedModifications(IsotopeLabelType.light, staticMods)};
+            modifications.AddRange(heavyMods);
+            _modifications = MakeReadOnly(modifications.ToArray());
         }
 
         public IList<StaticMod> StaticModifications
         {
-            get { return _staticModifications; }
-            private set { _staticModifications = MakeReadOnly(value); }
+            get { return _modifications[0].Modifications; }
         }
 
         public IList<StaticMod> HeavyModifications
         {
-            get { return _heavyModifications; }
-            private set { _heavyModifications = MakeReadOnly(value); }
+            get { return GetModifications(IsotopeLabelType.heavy); }
         }
 
-        public bool HasHeavyModifications { get { return _heavyModifications.Count > 0; } }
+        public IList<StaticMod> GetModifications(IsotopeLabelType labelType)
+        {
+            int index = GetModIndex(labelType);
+            if (index == -1)
+                return new StaticMod[0];
+            return _modifications[index].Modifications;
+        }
+
+        private int GetModIndex(IsotopeLabelType labelType)
+        {
+            return _modifications.IndexOf(mod => ReferenceEquals(labelType, mod.LabelType));
+        }
+
+        public TypedModifications GetModificationsByName(string typeName)
+        {
+            int index = GetModIndexByName(typeName);
+            if (index == -1)
+                return null;
+            return _modifications[index];
+        }
+
+        private int GetModIndexByName(string typeName)
+        {
+            return _modifications.IndexOf(mod => Equals(typeName, mod.LabelType.Name));
+        }
+
+        public IEnumerable<TypedModifications> GetHeavyModifications()
+        {
+            for (int i = 1; i < _modifications.Count; i++)
+                yield return _modifications[i];
+        }
+
+        public IEnumerable<IsotopeLabelType> GetHeavyModificationTypes()
+        {
+            return from typedMod in GetHeavyModifications()
+                   select typedMod.LabelType;
+        }
+
+        public bool HasHeavyModifications
+        {
+            get { return GetHeavyModifications().Contains(mods => mods.Modifications.Count > 0); }
+        }
+
         public bool HasHeavyImplicitModifications
         {
-            get { return _heavyModifications.IndexOf(mod => !mod.IsExplicit) != -1; }
+            get 
+            {
+                return GetHeavyModifications().Contains(typedMods => typedMods.HasImplicitModifications);
+            }
         }
 
         #region Property change methods
 
         public PeptideModifications ChangeStaticModifications(IList<StaticMod> prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.StaticModifications = v, prop);
+            return ChangeModifications(IsotopeLabelType.light, prop);
         }
 
         public PeptideModifications ChangeHeavyModifications(IList<StaticMod> prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.HeavyModifications = v, prop);
+            return ChangeModifications(IsotopeLabelType.heavy, prop);
+        }
+
+        public PeptideModifications ChangeModifications(IsotopeLabelType labelType, IList<StaticMod> prop)
+        {
+            int index = GetModIndex(labelType);
+            if (index == -1)
+                throw new IndexOutOfRangeException(string.Format("Modification type {0} not found.", labelType));
+            var modifications = _modifications.ToArrayStd();
+            modifications[index] = new TypedModifications(labelType, prop);
+            return ChangeProp(ImClone(this), im => im._modifications = MakeReadOnly(modifications));
         }
 
         public PeptideModifications DeclareExplicitMods(SrmDocument doc,
             IList<StaticMod> listStaticMods, IList<StaticMod> listHeavyMods)
         {
+            var modifications = new List<TypedModifications>
+                                    {DeclareExplicitMods(doc, listStaticMods, _modifications[0])};
+            foreach (TypedModifications typedMods in GetHeavyModifications())
+                modifications.Add(DeclareExplicitMods(doc, listHeavyMods, typedMods));
+
+            // If nothing changed, return this
+            if (ArrayUtil.ReferencesEqual(modifications, _modifications))
+                return this;
+
+            return ChangeProp(ImClone(this), im => im._modifications = MakeReadOnly(modifications));
+        }
+
+        private static TypedModifications DeclareExplicitMods(SrmDocument doc,
+            IEnumerable<StaticMod> listMods, TypedModifications typedMods)
+        {
             Dictionary<string, StaticMod> explicitStaticMods;
-            IList<StaticMod> staticMods = SplitModTypes(StaticModifications,
-                listStaticMods, out explicitStaticMods);
-            Dictionary<string, StaticMod> explicitHeavyMods;
-            IList<StaticMod> heavyMods = SplitModTypes(HeavyModifications,
-                listHeavyMods, out explicitHeavyMods);
+            IList<StaticMod> mods = SplitModTypes(typedMods.Modifications,
+                listMods, out explicitStaticMods);
 
             foreach (PeptideDocNode nodePep in doc.Peptides)
             {
                 if (!nodePep.HasExplicitMods)
                     continue;
-                DeclareExplicitMods(staticMods, explicitStaticMods, nodePep.ExplicitMods.StaticModifications);
-                DeclareExplicitMods(heavyMods, explicitHeavyMods, nodePep.ExplicitMods.HeavyModifications);
+                var explicitMods = nodePep.ExplicitMods.GetModifications(typedMods.LabelType);
+                if (explicitMods == null)
+                    continue;
+                DeclareExplicitMods(mods, explicitStaticMods, explicitMods);
             }
 
-            if (ArrayUtil.EqualsDeep(staticMods, StaticModifications))
-                staticMods = StaticModifications;
-            if (ArrayUtil.EqualsDeep(heavyMods, HeavyModifications))
-                heavyMods = HeavyModifications;
-
-            // If nothing changed, return this
-            if (ReferenceEquals(staticMods, StaticModifications) && ReferenceEquals(heavyMods, HeavyModifications))
-                return this;
-
-            var modsClone = ImClone(this);
-            modsClone.StaticModifications = staticMods;
-            modsClone.HeavyModifications = heavyMods;
-            return modsClone;
+            if (ArrayUtil.EqualsDeep(mods, typedMods.Modifications))
+                return typedMods;
+            return new TypedModifications(typedMods.LabelType, mods);
         }
 
         private static IList<StaticMod> SplitModTypes(IEnumerable<StaticMod> mods,
@@ -895,6 +954,11 @@ namespace pwiz.Skyline.Model.DocSettings
             heavy_modifications            
         }
 
+        private enum ATTR
+        {
+            isotope_label
+        }
+
         public static PeptideModifications Deserialize(XmlReader reader)
         {
             return reader.Deserialize(new PeptideModifications());
@@ -907,32 +971,64 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public void ReadXml(XmlReader reader)
         {
-            var list = new List<StaticMod>();
-            var listHeavy = new List<StaticMod>();
+            var list = new List<TypedModifications>();
 
             // Consume tag
             if (reader.IsEmptyElement)
-                reader.Read();
+            {
+                list.Add(new TypedModifications(IsotopeLabelType.light, new StaticMod[0]));
+                reader.Read();                
+            }
             else
             {
                 reader.ReadStartElement();
                 // Read child elements
-                reader.ReadElementList(EL.static_modifications, list);
-                reader.ReadElementList(EL.heavy_modifications, listHeavy);
-                reader.ReadEndElement();                
+                var listMods = new List<StaticMod>();
+                reader.ReadElementList(EL.static_modifications, listMods);
+                list.Add(new TypedModifications(IsotopeLabelType.light, listMods));
+                int typeOrder = IsotopeLabelType.FirstHeavy;
+                while (reader.IsStartElement(EL.heavy_modifications))
+                {
+                    // If first heavy tag has no isotope_label attribute, use the default heavy type
+                    var labelType = IsotopeLabelType.heavy;
+                    string typeName = reader.GetAttribute(ATTR.isotope_label);
+                    if (!string.IsNullOrEmpty(typeName))
+                    {
+                        labelType = new IsotopeLabelType(typeName, typeOrder);
+                        if (Equals(labelType, IsotopeLabelType.heavy))
+                            labelType = IsotopeLabelType.heavy;
+                    }
+                    else if (typeOrder > IsotopeLabelType.FirstHeavy)
+                        throw new InvalidDataException(string.Format("Heavy modifications found without '{0}' attribute.", ATTR.isotope_label));
+                    typeOrder++;
+
+                    listMods = new List<StaticMod>();
+                    reader.ReadElementList(EL.heavy_modifications, listMods);
+
+                    list.Add(new TypedModifications(labelType, listMods));
+                }
+                reader.ReadEndElement();
             }
 
-            StaticModifications = list;
-            HeavyModifications = listHeavy;
+            if (list.Count < 2)
+                list.Add(new TypedModifications(IsotopeLabelType.heavy, new StaticMod[0]));
+
+            _modifications = MakeReadOnly(list.ToArray());
         }
 
         public void WriteXml(XmlWriter writer)
         {
             // Write child elements
-            if (_staticModifications.Count > 0)
+            if (StaticModifications.Count > 0)
                 writer.WriteElementList(EL.static_modifications, StaticModifications);
-            if (_heavyModifications.Count > 0)
-                writer.WriteElementList(EL.heavy_modifications, HeavyModifications);
+            foreach (var heavyMods in GetHeavyModifications())
+            {
+                writer.WriteStartElement(EL.heavy_modifications);
+                if (!ReferenceEquals(heavyMods.LabelType, IsotopeLabelType.heavy))
+                    writer.WriteAttribute(ATTR.isotope_label, heavyMods.LabelType);
+                writer.WriteElements(heavyMods.Modifications);
+                writer.WriteEndElement();
+            }
         }
 
         #endregion
@@ -943,8 +1039,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return ArrayUtil.EqualsDeep(obj._staticModifications, _staticModifications) &&
-                ArrayUtil.EqualsDeep(obj._heavyModifications, _heavyModifications);
+            return ArrayUtil.EqualsDeep(obj._modifications, _modifications);
         }
 
         public override bool Equals(object obj)
@@ -957,12 +1052,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public override int GetHashCode()
         {
-            unchecked
-            {
-                int result = _staticModifications.GetHashCodeDeep();
-                result = (result * 397) ^ _heavyModifications.GetHashCodeDeep();
-                return result;
-            }
+            return _modifications.GetHashCodeDeep();
         }
 
         #endregion

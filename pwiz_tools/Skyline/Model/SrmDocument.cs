@@ -166,7 +166,8 @@ namespace pwiz.Skyline.Model
         public const string EXT = "sky";
 
         public const double FORMAT_VERSION_0_1 = 0.1;
-        public const double FORMAT_VERSION = 0.2;
+        public const double FORMAT_VERSION_0_2 = 0.2;
+        public const double FORMAT_VERSION = 0.7;
 
         public const int MAX_PEPTIDE_COUNT = 50000;
         public const int MAX_TRANSITION_COUNT = 100000;
@@ -175,14 +176,14 @@ namespace pwiz.Skyline.Model
         private double _formatVersion;
 
         public SrmDocument(SrmSettings settings)
-            : base(new SrmDocumentId(), new PeptideGroupDocNode[0])
+            : base(new SrmDocumentId(), Annotations.Empty, new PeptideGroupDocNode[0], false)
         {
             _formatVersion = FORMAT_VERSION;
             Settings = settings;
         }
 
         public SrmDocument(SrmDocument doc, SrmSettings settings, IList<DocNode> children)
-            : base(doc.Id, children)
+            : base(doc.Id, Annotations.Empty, children, false)
         {
             _formatVersion = doc._formatVersion;
             RevisionIndex = doc.RevisionIndex + 1;
@@ -607,34 +608,33 @@ namespace pwiz.Skyline.Model
             IList<StaticMod> listGlobalStaticMods, IList<StaticMod> listGlobalHeavyMods)
         {
             var docResult = this;
+            var pepMods = docResult.Settings.PeptideSettings.Modifications;
+
             var nodePeptide = (PeptideDocNode)FindNode(peptidePath);
             if (nodePeptide == null)
                 throw new IdentityNotFoundException(peptidePath.Child);
             // Make sure modifications are in synch with global values
             if (mods != null)
-                mods = mods.ChangeGlobalMods(listGlobalStaticMods, listGlobalHeavyMods);
+            {
+                mods = mods.ChangeGlobalMods(listGlobalStaticMods, listGlobalHeavyMods,
+                    pepMods.GetHeavyModificationTypes());
+            }
             // If modifications have changed, update the peptide.
             var modsPep = nodePeptide.ExplicitMods;
             if (!Equals(mods, modsPep))
             {
                 // Update the peptide to the new explicit modifications
-                SrmSettingsDiff settingsDiff;
-                if (mods == null || modsPep == null ||
-                    !ArrayUtil.ReferencesEqual(mods.HeavyModifications, modsPep.HeavyModifications))
-                    settingsDiff = SrmSettingsDiff.ALL;
-                else
-                    settingsDiff = SrmSettingsDiff.PROPS;
                 // Change the explicit modifications, and force a settings update through the peptide
                 // to all of its children.
                 // CONSIDER: This is not really the right SrmSettings object to be using for this
                 //           update, but constructing the right one currently depends on the
                 //           peptide being added to the document.  Doesn't seem like the potential
                 //           changes would have any impact on this operation, though.
-                nodePeptide = nodePeptide.ChangeExplicitMods(mods).ChangeSettings(Settings, settingsDiff);
+                nodePeptide = nodePeptide.ChangeExplicitMods(mods).ChangeSettings(Settings,
+                    SrmSettingsDiff.ALL);
 
                 docResult = (SrmDocument) ReplaceChild(peptidePath.Parent, nodePeptide);
             }
-            var pepMods = docResult.Settings.PeptideSettings.Modifications;
             var pepModsNew = pepMods.DeclareExplicitMods(docResult, listGlobalStaticMods, listGlobalHeavyMods);
             if (ReferenceEquals(pepModsNew, pepMods))
                 return docResult;
@@ -1047,34 +1047,61 @@ namespace pwiz.Skyline.Model
         {
             if (reader.IsStartElement(EL.explicit_modifications))
             {
-                IList<ExplicitMod> staticMods;
-                IList<ExplicitMod> heavyMods;
+                IList<ExplicitMod> staticMods = null;
+                IList<TypedExplicitModifications> listHeavyMods;
                 if (reader.IsEmptyElement)
                 {
                     reader.Read();
-                    staticMods = new ExplicitMod[0];
-                    heavyMods = new ExplicitMod[0];
+                    return null;
                 }
                 else
                 {
                     reader.ReadStartElement();
-                    var modSettings = Settings.PeptideSettings.Modifications;
-                    staticMods = ReadExplicitMods(reader, EL.explicit_static_modifications,
-                        modSettings.StaticModifications);
-                    heavyMods = ReadExplicitMods(reader, EL.explicit_heavy_modifications,
-                        modSettings.HeavyModifications);
+                    TypedExplicitModifications staticTypedMods = null;
+                    if (reader.IsStartElement(EL.explicit_static_modifications))
+                    {
+                        staticTypedMods = ReadExplicitMods(reader, EL.explicit_static_modifications,
+                            peptide, IsotopeLabelType.light);
+                        staticMods = staticTypedMods.Modifications;
+                    }
+                    // For format version 0.2 and earlier it was not possible
+                    // to have unmodified types.  The absence of a type simply
+                    // meant it had no modifications.
+                    else if (_formatVersion <= FORMAT_VERSION_0_2)
+                    {
+                        staticTypedMods = new TypedExplicitModifications(peptide,
+                            IsotopeLabelType.light, new ExplicitMod[0]);
+                        staticMods = staticTypedMods.Modifications;
+                    }
+                    listHeavyMods = new List<TypedExplicitModifications>();
+                    while (reader.IsStartElement(EL.explicit_heavy_modifications))
+                    {
+                        var heavyMods = ReadExplicitMods(reader, EL.explicit_heavy_modifications,
+                                                         peptide, IsotopeLabelType.heavy);
+                        heavyMods = heavyMods.AddModMasses(staticTypedMods);
+                        listHeavyMods.Add(heavyMods);
+                    }
+                    if (_formatVersion <= FORMAT_VERSION_0_2 && listHeavyMods.Count == 0)
+                    {
+                        listHeavyMods.Add(new TypedExplicitModifications(peptide,
+                            IsotopeLabelType.heavy, new ExplicitMod[0]));
+                    }
                     reader.ReadEndElement();
                 }
-                return new ExplicitMods(peptide, staticMods, heavyMods);
+                return new ExplicitMods(peptide, staticMods, listHeavyMods);
             }
             return null;
         }
 
-        private static ExplicitMod[] ReadExplicitMods(XmlReader reader, Enum name, IList<StaticMod> mods)
+        private TypedExplicitModifications ReadExplicitMods(XmlReader reader, Enum name,
+            Peptide peptide, IsotopeLabelType labelTypeDefault)
         {
             if (!reader.IsStartElement(name))
-                return new ExplicitMod[0];
+                return new TypedExplicitModifications(peptide, labelTypeDefault, new ExplicitMod[0]);
+
+            var typedMods = ReadLabelType(reader, labelTypeDefault);
             var listMods = new List<ExplicitMod>();
+
             if (reader.IsEmptyElement)
                 reader.Read();
             else
@@ -1084,10 +1111,10 @@ namespace pwiz.Skyline.Model
                 {
                     int indexAA = reader.GetIntAttribute(ATTR.index_aa);
                     string nameMod = reader.GetAttribute(ATTR.modification_name);
-                    int indexMod = mods.IndexOf(mod => Equals(nameMod, mod.Name));
+                    int indexMod = typedMods.Modifications.IndexOf(mod => Equals(nameMod, mod.Name));
                     if (indexMod == -1)
                         throw new InvalidDataException(string.Format("No modification named {0} was found in this document.", nameMod));
-                    StaticMod modAdd = mods[indexMod];
+                    StaticMod modAdd = typedMods.Modifications[indexMod];
                     // In the document context, all static mods must have the explicit
                     // flag off to behave correctly for equality checks.  Only in the
                     // settings context is the explicit flag necessary to destinguish
@@ -1101,7 +1128,7 @@ namespace pwiz.Skyline.Model
                 }
                 reader.ReadEndElement();                
             }
-            return listMods.ToArray();
+            return new TypedExplicitModifications(peptide, typedMods.LabelType, listMods.ToArray());
         }
 
         private Results<PeptideChromInfo> ReadPeptideResults(XmlReader reader)
@@ -1138,9 +1165,9 @@ namespace pwiz.Skyline.Model
         private TransitionGroupDocNode ReadTransitionGroupXml(XmlReader reader, Peptide peptide, ExplicitMods mods)
         {
             int precursorCharge = reader.GetIntAttribute(ATTR.charge);
-            IsotopeLabelType labelType = reader.GetEnumAttribute(ATTR.isotope_label, IsotopeLabelType.light);
 
-            TransitionGroup group = new TransitionGroup(peptide, precursorCharge, labelType);
+            var typedMods = ReadLabelType(reader, IsotopeLabelType.light);
+            TransitionGroup group = new TransitionGroup(peptide, precursorCharge, typedMods.LabelType);
             bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
             var annotations = Annotations.Empty;
             SpectrumHeaderInfo libInfo = null;
@@ -1171,6 +1198,17 @@ namespace pwiz.Skyline.Model
                                               results,
                                               children ?? new TransitionDocNode[0],
                                               autoManageChildren);
+        }
+
+        private TypedModifications ReadLabelType(XmlReader reader, IsotopeLabelType labelTypeDefault)
+        {
+            string typeName = reader.GetAttribute(ATTR.isotope_label);
+            if (string.IsNullOrEmpty(typeName))
+                typeName = labelTypeDefault.Name;
+            var typedMods = Settings.PeptideSettings.Modifications.GetModificationsByName(typeName);
+            if (typedMods == null)
+                throw new InvalidDataException(string.Format("The isotope modification type {0} does not exist in the document settings.", typeName));
+            return typedMods;
         }
 
         private static SpectrumHeaderInfo ReadTransitionGroupLibInfo(XmlReader reader)
@@ -1676,16 +1714,28 @@ namespace pwiz.Skyline.Model
             if (node.ExplicitMods == null)
                 return;
             writer.WriteStartElement(EL.explicit_modifications);
-            WriteExplicitMods(writer, EL.explicit_static_modifications, node.ExplicitMods.StaticModifications);
-            WriteExplicitMods(writer, EL.explicit_heavy_modifications, node.ExplicitMods.HeavyModifications);
+            WriteExplicitMods(writer, EL.explicit_static_modifications, null,
+                node.ExplicitMods.StaticModifications);
+            foreach (var heavyMods in node.ExplicitMods.GetHeavyModifications())
+            {
+                IsotopeLabelType labelType = heavyMods.LabelType;
+                if (Equals(labelType, IsotopeLabelType.heavy))
+                    labelType = null;
+
+                WriteExplicitMods(writer, EL.explicit_heavy_modifications, labelType,
+                    heavyMods.Modifications);                
+            }
             writer.WriteEndElement();
         }
 
-        private static void WriteExplicitMods(XmlWriter writer, Enum name, ICollection<ExplicitMod> mods)
+        private static void WriteExplicitMods(XmlWriter writer, Enum name, IsotopeLabelType labelType,
+            IEnumerable<ExplicitMod> mods)
         {
-            if (mods == null || mods.Count == 0)
+            if (mods == null)
                 return;
             writer.WriteStartElement(name);
+            if (labelType != null)
+                writer.WriteAttribute(ATTR.isotope_label, labelType);
             foreach (ExplicitMod mod in mods)
             {
                 writer.WriteStartElement(EL.explicit_modification);
@@ -1713,7 +1763,7 @@ namespace pwiz.Skyline.Model
         {
             TransitionGroup group = node.TransitionGroup;
             writer.WriteAttribute(ATTR.charge, group.PrecursorCharge);
-            if (group.LabelType != IsotopeLabelType.light)
+            if (!group.LabelType.IsLight)
                 writer.WriteAttribute(ATTR.isotope_label, group.LabelType);
             writer.WriteAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
             // Write child elements

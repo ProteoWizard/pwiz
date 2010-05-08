@@ -79,7 +79,7 @@ namespace pwiz.Skyline.Model
 
         public TransitionGroup TransitionGroup { get { return (TransitionGroup) Id; }}
 
-        public bool IsLight { get { return TransitionGroup.LabelType == IsotopeLabelType.light; } }
+        public bool IsLight { get { return TransitionGroup.LabelType.IsLight; } }
 
         public RelativeRT RelativeRT { get; private set; }
 
@@ -1179,7 +1179,74 @@ namespace pwiz.Skyline.Model
         #endregion
     }
 
-    public enum IsotopeLabelType { light, heavy }
+    public sealed class IsotopeLabelType : IComparable
+    {
+        // ReSharper disable InconsistentNaming
+        public const string LIGHT_NAME = "light";
+        public const string HEAVY_NAME = "heavy";
+
+        public static readonly IsotopeLabelType light = new IsotopeLabelType(LIGHT_NAME, 0);
+        // Default heavy label for testing
+        public static readonly IsotopeLabelType heavy = new IsotopeLabelType(HEAVY_NAME, 1);
+        // ReSharper restore InconsistentNaming
+
+        public static int FirstHeavy { get { return light.SortOrder + 1; } }
+
+        public IsotopeLabelType(string name, int sortOrder)
+        {
+            Name = name;
+            SortOrder = sortOrder;
+        }
+
+        // NHibernate constructor
+// ReSharper disable UnusedMember.Local
+        private IsotopeLabelType()
+        {            
+        }
+// ReSharper restore UnusedMember.Local
+
+        public string Name { get; private set; }
+        public int SortOrder { get; private set; }
+
+        public bool IsLight { get { return ReferenceEquals(this, light); } }
+
+        public int CompareTo(object obj)
+        {
+            return SortOrder - ((IsotopeLabelType) obj).SortOrder;
+        }
+
+        #region object overrides
+
+        public bool Equals(IsotopeLabelType other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(other.Name, Name) && other.SortOrder == SortOrder;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof (IsotopeLabelType)) return false;
+            return Equals((IsotopeLabelType) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (Name.GetHashCode()*397) ^ SortOrder;
+            }
+        }
+
+        public override string ToString()
+        {
+            return Name;
+        }
+
+        #endregion
+    }
 
     public class TransitionGroup : Identity
     {
@@ -1205,7 +1272,7 @@ namespace pwiz.Skyline.Model
 
         public string LabelTypeText
         {
-            get { return (LabelType == IsotopeLabelType.heavy ? " (heavy)" : ""); }
+            get { return (!LabelType.IsLight ? " ("+ LabelType + ")" : ""); }
         }
 
         public static int CompareTransitions(TransitionDocNode node1, TransitionDocNode node2)
@@ -1371,18 +1438,18 @@ namespace pwiz.Skyline.Model
             else if (!libraries.IsLoaded)
                 return;
 
-            IsotopeLabelType typeInfo;
-            if (!settings.TryGetLibInfo(Peptide.Sequence, PrecursorCharge, mods, out typeInfo, out libInfo))
+            IsotopeLabelType labelType;
+            if (!settings.TryGetLibInfo(Peptide.Sequence, PrecursorCharge, mods, out labelType, out libInfo))
                 libInfo = null;                
             else if (transitionRanks != null)
             {
                 try
                 {
                     SpectrumPeaksInfo spectrumInfo;
-                    string sequenceMod = settings.GetModifiedSequence(Peptide.Sequence, typeInfo, mods);
+                    string sequenceMod = settings.GetModifiedSequence(Peptide.Sequence, labelType, mods);
                     if (libraries.TryLoadSpectrum(new LibKey(sequenceMod, PrecursorCharge), out spectrumInfo))
                     {
-                        var spectrumInfoR = new LibraryRankedSpectrumInfo(spectrumInfo, typeInfo,
+                        var spectrumInfoR = new LibraryRankedSpectrumInfo(spectrumInfo, labelType,
                             this, settings, mods, useFilter, 50);
                         foreach (var rmi in spectrumInfoR.PeaksRanked)
                         {

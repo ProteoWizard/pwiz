@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Model
         }
         public bool RemoveRepeatedPeptides { get; set; }
         public int? MinTransitionsPepPrecursor { get; set; }
-        public IsotopeLabelType? RefineLabelType { get; set; }
+        public IsotopeLabelType RefineLabelType { get; set; }
         public bool AddLabelType { get; set; }
         public double? MinPeakFoundRatio { get; set; }
         public double? MaxPeakFoundRatio { get; set; }
@@ -186,7 +186,7 @@ namespace pwiz.Skyline.Model
             var listGroups = new List<TransitionGroupDocNode>();
             foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
             {
-                if (!AddLabelType && RefineLabelType != null && RefineLabelType.Value == nodeGroup.TransitionGroup.LabelType)
+                if (!AddLabelType && RefineLabelType != null && Equals(RefineLabelType, nodeGroup.TransitionGroup.LabelType))
                     continue;
 
                 double? peakFoundRatio = nodeGroup.AveragePeakCountRatio;
@@ -230,7 +230,7 @@ namespace pwiz.Skyline.Model
                     // CONSIDER: This is a lot like some code in PeptideDocNode.ChangeSettings
                     Debug.Assert(RefineLabelType != null);  // Keep ReSharper from warning
                     var tranGroup = new TransitionGroup(nodePep.Peptide, nodeGroup.TransitionGroup.PrecursorCharge,
-                                                        RefineLabelType.Value);
+                                                        RefineLabelType);
                     var settings = document.Settings;
                     string sequence = nodePep.Peptide.Sequence;
                     var explicitMods = nodePep.ExplicitMods;
@@ -269,7 +269,7 @@ namespace pwiz.Skyline.Model
         {
             // If not adding a label type, or this precursor is already the label type being added,
             // then no further work is required
-            if (!AddLabelType || !RefineLabelType.HasValue || RefineLabelType.Value == nodeGroup.TransitionGroup.LabelType)
+            if (!AddLabelType || RefineLabelType == null || Equals(RefineLabelType, nodeGroup.TransitionGroup.LabelType))
                 return false;
 
             // If either the peptide or the list of new groups already contains the
@@ -277,13 +277,13 @@ namespace pwiz.Skyline.Model
             foreach (TransitionGroupDocNode nodeGroupChild in nodePep.Children)
             {
                 if (nodeGroupChild.TransitionGroup.PrecursorCharge == nodeGroup.TransitionGroup.PrecursorCharge &&
-                        nodeGroupChild.TransitionGroup.LabelType == RefineLabelType.Value)
+                        Equals(RefineLabelType, nodeGroupChild.TransitionGroup.LabelType))
                     return false;
             }
             foreach (TransitionGroupDocNode nodeGroupAdded in listGroups)
             {
                 if (nodeGroupAdded.TransitionGroup.PrecursorCharge == nodeGroup.TransitionGroup.PrecursorCharge &&
-                        nodeGroupAdded.TransitionGroup.LabelType == RefineLabelType.Value)
+                        Equals(RefineLabelType, nodeGroupAdded.TransitionGroup.LabelType))
                     return false;
             }
             return true;

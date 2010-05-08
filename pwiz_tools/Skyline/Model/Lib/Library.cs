@@ -151,7 +151,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public Library TryGetLibrary(LibrarySpec spec)
         {
-            Library library = null;
+            Library library;
             _loadedLibraries.TryGetValue(spec.Name, out library);
             return library;
         }
@@ -679,18 +679,18 @@ namespace pwiz.Skyline.Model.Lib
         private readonly ReadOnlyCollection<RankedMI> _spectrum;
 
         public LibraryRankedSpectrumInfo(SpectrumPeaksInfo info,
-                IsotopeLabelType typeInfo, TransitionGroup group,
+                IsotopeLabelType labelType, TransitionGroup group,
                 SrmSettings settings, ExplicitMods mods,
                 IEnumerable<int> charges, IEnumerable<IonType> types,
                 IEnumerable<int> rankCharges, IEnumerable<IonType> rankTypes)
-            : this(info, typeInfo, group, settings, mods, charges, types, rankCharges, rankTypes, false, true, -1)
+            : this(info, labelType, group, settings, mods, charges, types, rankCharges, rankTypes, false, true, -1)
         {
         }
 
-        public LibraryRankedSpectrumInfo(SpectrumPeaksInfo info, IsotopeLabelType typeInfo,
+        public LibraryRankedSpectrumInfo(SpectrumPeaksInfo info, IsotopeLabelType labelType,
                 TransitionGroup group, SrmSettings settings, ExplicitMods mods,
                 bool useFilter, int minPeaks)
-            : this(info, typeInfo, group, settings, mods,
+            : this(info, labelType, group, settings, mods,
                 null, // charges
                 null, // types
                 // ReadOnlyCollection enumerators are too slow, and show under a profiler
@@ -700,13 +700,13 @@ namespace pwiz.Skyline.Model.Lib
         {
         }
 
-        private LibraryRankedSpectrumInfo(SpectrumPeaksInfo info, IsotopeLabelType typeInfo,
+        private LibraryRankedSpectrumInfo(SpectrumPeaksInfo info, IsotopeLabelType labelType,
             TransitionGroup group, SrmSettings settings, ExplicitMods mods,
             IEnumerable<int> charges, IEnumerable<IonType> types,
             IEnumerable<int> rankCharges, IEnumerable<IonType> rankTypes,
             bool useFilter, bool matchAll, int minPeaks)
         {
-            LabelType = typeInfo;
+            LabelType = labelType;
 
             if (!useFilter)
             {
@@ -729,8 +729,8 @@ namespace pwiz.Skyline.Model.Lib
                                 };
 
             // Get necessary mass calculators and masses
-            var calcMatchPre = settings.GetPrecursorCalc(typeInfo, mods);
-            var calcMatch = settings.GetFragmentCalc(typeInfo, mods);
+            var calcMatchPre = settings.GetPrecursorCalc(labelType, mods);
+            var calcMatch = settings.GetFragmentCalc(labelType, mods);
             var calcPredict = settings.GetFragmentCalc(group.LabelType, mods);
             rp.precursorMz = SequenceMassCalc.GetMZ(calcMatchPre.GetPrecursorMass(rp.sequence),
                 rp.precursorCharge);

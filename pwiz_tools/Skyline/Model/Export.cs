@@ -982,10 +982,7 @@ namespace pwiz.Skyline.Model
             if (Document.Settings.PeptideSettings.Modifications.HasHeavyModifications)
             {
                 writer.Write(FieldSeparator);
-                if (nodeTranGroup.TransitionGroup.LabelType == IsotopeLabelType.light)
-                    writer.Write("light");
-                else
-                    writer.Write("heavy");
+                writer.Write(nodeTranGroup.TransitionGroup.LabelType);
             }
 
             writer.WriteLine();
@@ -1088,7 +1085,7 @@ namespace pwiz.Skyline.Model
                 writer.Write(nodeTran.LibInfo.Rank);
             writer.Write(nodeTran.Transition.FragmentIonName);
             writer.Write('.');
-            writer.Write(nodeTranGroup.TransitionGroup.LabelType == IsotopeLabelType.light ? "light" : "heavy");
+            writer.Write(nodeTranGroup.TransitionGroup.LabelType);
             writer.Write(FieldSeparator);
 
             writer.Write(Math.Round(GetDeclusteringPotential(nodePep, nodeTranGroup, nodeTran, step), 1));
@@ -1169,7 +1166,7 @@ namespace pwiz.Skyline.Model
         {
             writer.Write(nodePep.Peptide.Sequence);
             writer.Write(FieldSeparator);
-            writer.Write(nodeTranGroup.TransitionGroup.LabelType == IsotopeLabelType.light ? "FALSE" : "TRUE");
+            writer.Write(nodeTranGroup.TransitionGroup.LabelType.IsLight ? "FALSE" : "TRUE");
             writer.Write(FieldSeparator);
             writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz));
             writer.Write(FieldSeparator);
@@ -1344,10 +1341,7 @@ namespace pwiz.Skyline.Model
             if (Document.Settings.PeptideSettings.Modifications.HasHeavyModifications)
             {
                 writer.Write(FieldSeparator);
-                if (nodeTranGroup.TransitionGroup.LabelType == IsotopeLabelType.light)
-                    writer.Write("light");
-                else
-                    writer.Write("heavy");
+                writer.Write(nodeTranGroup.TransitionGroup.LabelType);
             }
             writer.WriteLine();
         }

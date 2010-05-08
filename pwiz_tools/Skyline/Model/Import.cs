@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -297,6 +298,11 @@ namespace pwiz.Skyline.Model
 
         private sealed class ExTransitionInfo
         {
+            public ExTransitionInfo()
+            {
+                LabelType = IsotopeLabelType.light;
+            }
+
             public string ProteinName { get; set; }
             public string PeptideSequence { get; set; }
             public int? ProductCharge { get; set; }
@@ -354,7 +360,7 @@ namespace pwiz.Skyline.Model
                 if (!FastaSequence.IsExSequence(info.PeptideSequence))
                     throw new InvalidDataException(string.Format("Invalid peptide sequence {0} found, line {1}.", info.PeptideSequence, lineNum));
 
-                if (info.LabelType != IsotopeLabelType.light && !IsHeavyAllowed)
+                if (!info.LabelType.IsLight && !IsHeavyAllowed)
                     throw new InvalidDataException(string.Format("Isotope labeled entry found without matching settings, line {0}.\nCheck the Modifications tab in Transition Settings.", lineNum));
 
                 string seq = info.PeptideSequence;
@@ -368,7 +374,7 @@ namespace pwiz.Skyline.Model
                 if (precursorCharge < 1)
                 {
                     double nearestMz = SequenceMassCalc.GetMZ(precursorMassH, -precursorCharge);
-                    if (info.LabelType == IsotopeLabelType.heavy && !info.LabelTypeExplicit)
+                    if (!info.LabelType.IsLight && !info.LabelTypeExplicit)
                     {
                         // Need to check the light version also for the closest possible value
                         precursorMassH = Settings.GetPrecursorMass(IsotopeLabelType.light, info.PeptideSequence, null);
@@ -558,13 +564,24 @@ namespace pwiz.Skyline.Model
                 else
                 {
                     // If no isotope label type can be found, and the current
-                    // precursor m/z column does not match with no label, try the heavy type.
+                    // precursor m/z column does not match with no label, try heavy types.
                     double precursorMassH = Settings.GetPrecursorMass(info.LabelType, info.PeptideSequence, null);
                     double precursorMz = ColumnMz(Fields, PrecursorColumn, FormatProvider);
 
                     int precursorCharge = CalcPrecursorCharge(precursorMassH, precursorMz, MzMatchTolerance);
                     if (IsHeavyAllowed && precursorCharge < 1)
-                        info.LabelType = IsotopeLabelType.heavy;                    
+                    {
+                        var modifications = Settings.PeptideSettings.Modifications;
+                        foreach (var typeMods in modifications.GetHeavyModifications())
+                        {
+                            info.LabelType = typeMods.LabelType;
+                            precursorMassH = Settings.GetPrecursorMass(info.LabelType, info.PeptideSequence, null);
+                            precursorCharge = TransitionCalc.CalcPrecursorCharge(precursorMassH, precursorMz, MzMatchTolerance);
+                            if (precursorCharge > 0)
+                                break;
+                        }
+                        
+                    }
                 }
 
                 return info;
@@ -608,11 +625,19 @@ namespace pwiz.Skyline.Model
                     if (settings.PeptideSettings.Modifications.HasHeavyModifications &&
                             iPrecursor == -1 && iLabelType == -1)
                     {
-                        labelType = IsotopeLabelType.heavy;
-                        if (settings.GetPrecursorCalc(labelType, null) != null)
+                        var modifications = settings.PeptideSettings.Modifications;
+                        foreach (var typeMods in modifications.GetHeavyModifications())
                         {
-                            iPrecursor = FindPrecursor(fields, sequence, labelType, iSequence,
-                                tolerance, provider, settings);                            
+                            if (settings.GetPrecursorCalc(labelType, null) != null)
+                            {
+                                iPrecursor = FindPrecursor(fields, sequence, typeMods.LabelType, iSequence,
+                                                           tolerance, provider, settings);
+                                if (iPrecursor != -1)
+                                {
+                                    labelType = typeMods.LabelType;
+                                    break;                                    
+                                }
+                            }
                         }
                     }
                 }
@@ -759,21 +784,24 @@ namespace pwiz.Skyline.Model
 
         private class ExPeptideRowReader : MassListRowReader
         {
-            private static readonly Regex REGEX_PEPTIDE = new Regex(@"([^. ]+)\.([A-Z]+)\.[^. ]+\.(heavy|light)");
+            private const string REGEX_PEPTIDE_FORMAT =@"([^. ]+)\.([A-Z]+)\.[^. ]+\.(light|{0})";
 
-            private ExPeptideRowReader(IFormatProvider provider, char separator, int exPeptideColumn,
-                    int precursorColumn, int productColumn, double tolerance, SrmSettings settings)
+            private ExPeptideRowReader(IFormatProvider provider, char separator,
+                    int exPeptideColumn, Regex exPeptideRegex, int precursorColumn, int productColumn,
+                    double tolerance, SrmSettings settings)
                 : base(provider, separator, precursorColumn, productColumn, tolerance, settings)
             {
                 ExPeptideColumn = exPeptideColumn;
+                ExPeptideRegex = exPeptideRegex;
             }
 
             private int ExPeptideColumn { get; set; }
+            private Regex ExPeptideRegex { get; set; }
 
             protected override ExTransitionInfo CalcTransitionInfo(int lineNum)
             {
                 string exPeptide = Fields[ExPeptideColumn];
-                Match match = REGEX_PEPTIDE.Match(exPeptide);
+                Match match = ExPeptideRegex.Match(exPeptide);
                 if (!match.Success)
                     throw new InvalidDataException(string.Format("Invalid extended peptide format {0}, line {1}.", exPeptide, lineNum));
 
@@ -792,7 +820,7 @@ namespace pwiz.Skyline.Model
 //                            IonType = (IonType) Enum.Parse(typeof (IonType), match.Groups[4].Value.ToLower()),
 //                            FragmentOrdinal = int.Parse(match.Groups[5].Value),
 
-                            LabelType = GetLabelType(match),
+                            LabelType = GetLabelType(match, Settings),
                             LabelTypeExplicit = true
                         };
                     return info;
@@ -810,17 +838,23 @@ namespace pwiz.Skyline.Model
                 Debug.Assert(lines.Count > 0);
                 string[] fields = GetFields(lines[0], separator);
 
+                // Create the ExPeptide regular expression
+                var modSettings = settings.PeptideSettings.Modifications;
+                var heavyTypeNames = from typedMods in modSettings.GetHeavyModifications()
+                                     select typedMods.LabelType.Name;
+                string exPeptideFormat = string.Format(REGEX_PEPTIDE_FORMAT, string.Join("|", heavyTypeNames.ToArray()));
+                var exPeptideRegex = new Regex(exPeptideFormat);
+
                 // Look for sequence column
                 string sequence;
                 IsotopeLabelType labelType;
-                int iExPeptide = FindExPeptide(fields, out sequence, out labelType);
+                int iExPeptide = FindExPeptide(fields, exPeptideRegex, settings, out sequence, out labelType);
                 // If no sequence column found, return null.  After this,
                 // all errors throw.
                 if (iExPeptide == -1)
                     return null;
 
-                if (labelType != IsotopeLabelType.light &&
-                        !settings.PeptideSettings.Modifications.HasHeavyImplicitModifications)
+                if (!labelType.IsLight && !modSettings.HasHeavyImplicitModifications)
                     throw new InvalidDataException("Isotope labelled entry found without matching settings.\nCheck the Modifications tab in Transition Settings.");
 
 
@@ -834,23 +868,25 @@ namespace pwiz.Skyline.Model
                 if (iProduct == -1)
                     throw new MzMatchException("No valid product m/z column found.");
 
-                return new ExPeptideRowReader(provider, separator, iExPeptide, iPrecursor, iProduct, tolerance, settings);
+                return new ExPeptideRowReader(provider, separator, iExPeptide, exPeptideRegex,
+                    iPrecursor, iProduct, tolerance, settings);
             }
 
-            private static int FindExPeptide(string[] fields, out string sequence, out IsotopeLabelType labelType)
+            private static int FindExPeptide(string[] fields, Regex exPeptideRegex, SrmSettings settings,
+                out string sequence, out IsotopeLabelType labelType)
             {
                 labelType = IsotopeLabelType.light;
 
                 for (int i = 0; i < fields.Length; i++)
                 {
-                    Match match = REGEX_PEPTIDE.Match(fields[i]);
+                    Match match = exPeptideRegex.Match(fields[i]);
                     if (match.Success)
                     {
                         string sequencePart = match.Groups[2].Value;
                         if (FastaSequence.IsExSequence(sequencePart))
                         {
                             sequence = sequencePart;
-                            labelType = GetLabelType(match);
+                            labelType = GetLabelType(match, settings);
                             return i;
                         }
                         // Very strange case where there is a match, but it
@@ -862,10 +898,11 @@ namespace pwiz.Skyline.Model
                 return -1;
             }
 
-            private static IsotopeLabelType GetLabelType(Match pepExMatch)
+            private static IsotopeLabelType GetLabelType(Match pepExMatch, SrmSettings settings)
             {
-                return ("heavy".Equals(pepExMatch.Groups[3].Value) ?
-                    IsotopeLabelType.heavy : IsotopeLabelType.light);
+                var modSettings = settings.PeptideSettings.Modifications;
+                var typedMods = modSettings.GetModificationsByName(pepExMatch.Groups[3].Value);
+                return (typedMods != null ? typedMods.LabelType : IsotopeLabelType.light);
             }
         }
 
@@ -997,7 +1034,10 @@ namespace pwiz.Skyline.Model
             // Split ID from description at first space or tab
             int split = IndexEndId(line);
             if (split == -1)
+            {
                 Name = line.Substring(start);
+                Description = "";
+            }
             else
             {
                 Name = line.Substring(start, split - start);

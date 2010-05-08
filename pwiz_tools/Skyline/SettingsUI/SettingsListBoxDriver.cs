@@ -59,10 +59,15 @@ namespace pwiz.Skyline.SettingsUI
 
         public void LoadList()
         {
+            LoadList(Chosen);
+        }
+
+        public void LoadList(IEnumerable<T> chosen)
+        {
             string selectedItemLast = null;
             if (ListBox.SelectedItem != null)
                 selectedItemLast = ListBox.SelectedItem.ToString();
-            LoadList(selectedItemLast, Chosen);
+            LoadList(selectedItemLast, chosen);
         }
 
         public void LoadList(string selectedItemLast, IEnumerable<T> chosen)

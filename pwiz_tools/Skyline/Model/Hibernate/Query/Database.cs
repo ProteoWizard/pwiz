@@ -906,8 +906,10 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 
     struct ResultKey
     {
+// ReSharper disable InconsistentNaming
         public readonly DbResultFile ResultFile;
         public readonly int OptimizationStep;
+// ReSharper restore InconsistentNaming
         public ResultKey(DbResultFile resultFile, int optimizationStep)
         {
             ResultFile = resultFile;

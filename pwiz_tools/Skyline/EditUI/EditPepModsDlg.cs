@@ -18,8 +18,12 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -30,17 +34,43 @@ namespace pwiz.Skyline.EditUI
     public partial class EditPepModsDlg : Form
     {
         private const int VSPACE = 3;
+        private const int HSPACE = 10;
         private const string ADD_ITEM = "<Add...>";
         private const string EDIT_LIST_ITEM = "<Edit list...>";
 
         private const string PREFIX_STATIC_NAME = "comboStatic";
         private const string PREFIX_HEAVY_NAME = "comboHeavy";
 
+        private const string PREFIX_LABEL_NAME = "labelHeavy1";
+
+        private static readonly Regex REGEX_HEAVY_NAME = new Regex(PREFIX_HEAVY_NAME + @"(\d+)_(\d+)");
+
         private readonly List<ComboBox> _listComboStatic = new List<ComboBox>();
         private readonly List<int> _listSelectedIndexStatic = new List<int>();
         private readonly List<Label> _listLabelAA = new List<Label>();
-        private readonly List<ComboBox> _listComboHeavy = new List<ComboBox>();
-        private readonly List<int> _listSelectedIndexHeavy = new List<int>();
+        private readonly List<IsotopeLabelType> _listLabelTypeHeavy = new List<IsotopeLabelType>();
+        private readonly List<List<ComboBox>> _listListComboHeavy = new List<List<ComboBox>>();
+        private readonly List<List<int>> _listListSelectedIndexHeavy = new List<List<int>>();
+
+        public static string GetStaticName(int row)
+        {
+            return string.Format("{0}{1}", PREFIX_STATIC_NAME, row);
+        }
+
+        public static string GetHeavyName(int row, int col)
+        {
+            return string.Format("{0}{1}_{2}", PREFIX_HEAVY_NAME, row, col);
+        }
+
+        private static string GetIsotopeLabelName(int col)
+        {
+            return string.Format("{0}{1}", PREFIX_LABEL_NAME, col);
+        }
+
+        private static string GetIsotopeLabelText(IsotopeLabelType labelType)
+        {
+            return string.Format("Isotope {0}:", labelType);
+        }
 
         public EditPepModsDlg(SrmSettings settings, PeptideDocNode nodePeptide)
         {
@@ -53,62 +83,135 @@ namespace pwiz.Skyline.EditUI
             Icon = Resources.Skyline;
 
             SuspendLayout();
-            ComboBox comboStaticLast = null, comboHeavyLast = null;
+            ComboBox comboStaticLast = null;
+            List<ComboBox> listComboHeavyLast = null;
+            List<Label> listLabelHeavyLast = null;
             Label labelAALast = null;
             string seq = nodePeptide.Peptide.Sequence;
+            var modsDoc = DocSettings.PeptideSettings.Modifications;
+
+            _listLabelTypeHeavy.AddRange(from typedMods in modsDoc.GetHeavyModifications()
+                                         select typedMods.LabelType);
+
             for (int i = 0; i < seq.Length; i++)
             {
                 char aa = seq[i];
+                int row = i + 1;
 
                 if (comboStaticLast == null)
                 {
                     labelAALast = labelAA1;
                     comboStaticLast = comboStatic1;
-                    comboHeavyLast = comboHeavy1;
+                    foreach (var labelType in _listLabelTypeHeavy)
+                    {
+                        if (listComboHeavyLast == null || listLabelHeavyLast == null)
+                        {
+                            listComboHeavyLast = new List<ComboBox> { comboHeavy1_1 };
+                            listLabelHeavyLast = new List<Label> { labelHeavy1 };
+                            labelHeavy1.Text = GetIsotopeLabelText(labelType);
+                        }
+                        else
+                        {
+                            var comboHeavyLast = listComboHeavyLast[listComboHeavyLast.Count - 1];
+                            panelMain.Controls.Add(comboHeavyLast = new ComboBox
+                            {
+                                Name = GetHeavyName(row, labelType.SortOrder),
+                                Left = comboHeavyLast.Right + HSPACE,
+                                Top = comboHeavyLast.Top,
+                                Size = comboHeavyLast.Size,
+                                TabIndex = comboHeavyLast.TabIndex + 1
+                            });
+                            listComboHeavyLast.Add(comboHeavyLast);
+                            var labelHeavyLast = listLabelHeavyLast[listLabelHeavyLast.Count - 1];
+                            panelMain.Controls.Add(labelHeavyLast = new Label
+                            {
+                                Text = GetIsotopeLabelText(labelType),
+                                Name = GetIsotopeLabelName(labelType.SortOrder),
+                                Left = comboHeavyLast.Left,
+                                Top = labelHeavyLast.Top,
+                                TabIndex = labelHeavyLast.TabIndex + 1
+                            });
+                            listLabelHeavyLast.Add(labelHeavyLast);
+                        }
+                    }
                 }
                 else
                 {
+                    Debug.Assert(listComboHeavyLast != null);
+                    int controlsPerRow = 2 + listComboHeavyLast.Count;
                     int top = Top = comboStaticLast.Bottom + VSPACE;
                     panelMain.Controls.Add(labelAALast = new Label
                     {
-                        Name = ("labelAA" + (_listLabelAA.Count + 1)),
+                        Name = ("labelAA" + row),
                         AutoSize = true,
                         Font = labelAA1.Font,
                         Left = labelAA1.Left,
                         Top = top + (labelAALast.Top - comboStaticLast.Top),
                         Size = labelAA1.Size,
-                        TabIndex = labelAALast.TabIndex + 3
+                        TabIndex = labelAALast.TabIndex + controlsPerRow
                     });
                     panelMain.Controls.Add(comboStaticLast = new ComboBox
                     {
-                        Name = (PREFIX_STATIC_NAME + (_listComboStatic.Count + 1)),
+                        Name = GetStaticName(row),
                         Left = comboStaticLast.Left,
                         Top = top,
                         Size = comboStaticLast.Size,
-                        TabIndex = comboStaticLast.TabIndex + 3
+                        TabIndex = comboStaticLast.TabIndex + controlsPerRow
                     });
-                    panelMain.Controls.Add(comboHeavyLast = new ComboBox
+                    foreach (var labelType in _listLabelTypeHeavy)
                     {
-                        Name = (PREFIX_HEAVY_NAME + (_listComboHeavy.Count + 1)),
-                        Left = comboHeavyLast.Left,
-                        Top = top,
-                        Size = comboHeavyLast.Size,
-                        TabIndex = comboHeavyLast.TabIndex + 3
-                    });
+                        int col = labelType.SortOrder - 1;
+                        var comboHeavyLast = listComboHeavyLast[col];
+                        panelMain.Controls.Add(comboHeavyLast = new ComboBox
+                        {
+                            Name = GetHeavyName(row, labelType.SortOrder),
+                            Left = comboHeavyLast.Left,
+                            Top = top,
+                            Size = comboHeavyLast.Size,
+                            TabIndex = comboHeavyLast.TabIndex + controlsPerRow
+                        });
+                        listComboHeavyLast[col] = comboHeavyLast;
+                    }
                 }
-                labelAALast.Text = aa.ToString();
-                _listLabelAA.Add(labelAALast);
+                // Store static modification combos and selected indexes
                 _listSelectedIndexStatic.Add(-1);
                 _listComboStatic.Add(InitModificationCombo(comboStaticLast, i, IsotopeLabelType.light));
-                _listSelectedIndexHeavy.Add(-1);
-                _listComboHeavy.Add(InitModificationCombo(comboHeavyLast, i, IsotopeLabelType.heavy));
+                // Store heavy moficiation combos and selected indexes
+                Debug.Assert(listComboHeavyLast != null);   // For ReSharper
+                for (int j = 0; j < _listLabelTypeHeavy.Count; j++)
+                {
+                    while (_listListComboHeavy.Count <= j)
+                    {
+                        _listListSelectedIndexHeavy.Add(new List<int>());
+                        _listListComboHeavy.Add(new List<ComboBox>());
+                    }
+                    var comboHeavyLast = listComboHeavyLast[j];
+                    var labelType = _listLabelTypeHeavy[j];
+
+                    _listListSelectedIndexHeavy[j].Add(-1);
+                    _listListComboHeavy[j].Add(InitModificationCombo(comboHeavyLast, i, labelType));
+                }
+                // Store amino acid labels
+                labelAALast.Text = aa.ToString();
+                _listLabelAA.Add(labelAALast);
+            }
+            for (int i = 0; i < _listLabelAA.Count; i++)
+            {
+                UpdateAminoAcidLabel(i);
             }
             if (comboStaticLast != null && comboStaticLast != comboStatic1)
             {
+                // Increase width by the delta from the left edges of the first and last
+                // heavy combo box columns
+                int widthDiff = _listListComboHeavy[_listListComboHeavy.Count - 1][0].Left -
+                    _listListComboHeavy[0][0].Left;
+                Width += widthDiff;
+                // Increase height by the delta from the bottom edges of the first and last
+                // amino acid labels
                 int heightDiff = comboStaticLast.Bottom - comboStatic1.Bottom;
                 heightDiff += comboStatic1.Bottom - panelMain.Height;
                 Height += heightDiff;
-                btnOk.TabIndex = comboHeavyLast.TabIndex + 1;
+                btnOk.TabIndex = listComboHeavyLast[listComboHeavyLast.Count - 1].TabIndex + 1;
                 btnCancel.TabIndex = btnOk.TabIndex + 1;
             }
             ResumeLayout(true);
@@ -124,8 +227,14 @@ namespace pwiz.Skyline.EditUI
 
         public void SetModification(int indexAA, IsotopeLabelType type, string modification)
         {
-            ComboBox combo = (type == IsotopeLabelType.light ?
-                _listComboStatic[indexAA] : _listComboHeavy[indexAA]);
+            ComboBox combo;
+            if (type.IsLight)
+                combo = _listComboStatic[indexAA];
+            else
+            {
+                int indexHeavyList = _listLabelTypeHeavy.IndexOf(type);
+                combo = _listListComboHeavy[indexHeavyList][indexAA];
+            }
             combo.SelectedItem = modification;
         }
 
@@ -136,15 +245,15 @@ namespace pwiz.Skyline.EditUI
         {
             var modsDoc = DocSettings.PeptideSettings.Modifications;
             var modsExp = NodePeptide.ExplicitMods;
-            if (type == IsotopeLabelType.heavy)
-            {
-                return InitModificationCombo(combo, modsDoc.HeavyModifications,
-                    modsExp != null ? modsExp.HeavyModifications : null, HeavyList, indexAA);
-            }
-            else
+            if (type.IsLight)
             {
                 return InitModificationCombo(combo, modsDoc.StaticModifications,
                     modsExp != null ? modsExp.StaticModifications : null, StaticList, indexAA);
+            }
+            else
+            {
+                return InitModificationCombo(combo, modsDoc.GetModifications(type),
+                    modsExp != null ? modsExp.GetModifications(type) : null, HeavyList, indexAA);
             }
         }
 
@@ -171,7 +280,7 @@ namespace pwiz.Skyline.EditUI
             char aa = seq[indexAA];
             int iSelected = -1;
             string explicitName = null;
-            if (ExplicitMods != null)
+            if (listExplicitMods != null)
             {
                 int indexMod = listExplicitMods.IndexOf(mod => mod.IndexAA == indexAA);
                 if (indexMod != -1)
@@ -187,7 +296,7 @@ namespace pwiz.Skyline.EditUI
 
                 // If the peptide is explicitly modified, then the explicit modifications
                 // indicate the combo selections.
-                if (ExplicitMods != null)
+                if (listExplicitMods != null)
                 {
                     if (Equals(explicitName, mod.Name))
                         iSelected = listItems.Count - 1;
@@ -238,31 +347,88 @@ namespace pwiz.Skyline.EditUI
             return (selectedItem != null && EDIT_LIST_ITEM == combo.SelectedItem.ToString());
         }
 
+        public void SelectModification(IsotopeLabelType labelType, int indexAA, string modName)
+        {
+            int row = indexAA + 1;
+            string comboName = (labelType.IsLight ?
+                GetStaticName(row) :
+                GetHeavyName(row, labelType.SortOrder));
+
+            foreach (var comboBox in _listComboStatic)
+            {
+                if (Equals(comboName, comboBox.Name))
+                {
+                    comboBox.SelectedItem = modName;
+                    return;
+                }
+            }
+            foreach (var listComboHeavy in _listListComboHeavy)
+            {
+                foreach (var comboBox in listComboHeavy)
+                {
+                    if (Equals(comboName, comboBox.Name))
+                    {
+                        comboBox.SelectedItem = modName;
+                        return;
+                    }
+                }
+            }
+        }
+
         public void comboMod_SelectedIndexChangedEvent(object sender, EventArgs e)
         {
             ComboBox combo = (ComboBox) sender;
             ExplicitMods modsExp = ExplicitMods;
+            int indexAA;
             if (combo.Name.StartsWith(PREFIX_HEAVY_NAME))
             {
-                int indexAA = int.Parse(combo.Name.Substring(PREFIX_HEAVY_NAME.Length)) - 1;
+                var matchName = REGEX_HEAVY_NAME.Match(combo.Name);
+                indexAA = int.Parse(matchName.Groups[1].Value) - 1;
+                int indexLabelType = int.Parse(matchName.Groups[2].Value) - 1;
                 SelectedIndexChangedEvent(combo, HeavyList, modsExp != null ? modsExp.HeavyModifications : null,
-                    _listComboHeavy, _listSelectedIndexHeavy, indexAA);
-                // Make text bold, if it has a heavy modification
-                bool bold = !string.IsNullOrEmpty((string) combo.SelectedItem);
-                var label = _listLabelAA[indexAA];
-                if (label.Font.Bold != bold)
-                {
-                    label.Font = new Font(label.Font.Name, label.Font.SizeInPoints,
-                        (bold ? FontStyle.Bold : FontStyle.Regular), GraphicsUnit.Point, 0);                    
-                }
+                    _listListComboHeavy[indexLabelType], _listListSelectedIndexHeavy[indexLabelType], indexAA);
             }
             else
             {
-                int indexAA = int.Parse(combo.Name.Substring(PREFIX_STATIC_NAME.Length)) - 1;
+                indexAA = int.Parse(combo.Name.Substring(PREFIX_STATIC_NAME.Length)) - 1;
                 SelectedIndexChangedEvent(combo, StaticList, modsExp != null ? modsExp.StaticModifications : null,
                     _listComboStatic, _listSelectedIndexStatic, indexAA);
-                bool modified = !string.IsNullOrEmpty((string) combo.SelectedItem);
-                _listLabelAA[indexAA].Text = NodePeptide.Peptide.Sequence[indexAA] + (modified ? "*" : "");
+            }
+            UpdateAminoAcidLabel(indexAA);
+        }
+
+        private void UpdateAminoAcidLabel(int indexAA)
+        {
+            if (indexAA >= _listLabelAA.Count)
+                return;
+
+            FontStyle fontStyle = FontStyle.Regular;
+            Color textColor = Color.Black;
+            
+            if (!string.IsNullOrEmpty((string) _listComboStatic[indexAA].SelectedItem))
+            {
+                fontStyle = FontStyle.Bold | FontStyle.Underline;
+            }
+
+            for (int i = 0; i < _listListComboHeavy.Count; i++)
+            {
+                if (!string.IsNullOrEmpty((string) _listListComboHeavy[i][indexAA].SelectedItem))
+                {
+                    fontStyle |= FontStyle.Bold;
+                    textColor = GraphChromatogram.COLORS_GROUPS[i + 1];
+                    break;
+                }
+            }
+
+            var label = _listLabelAA[indexAA];
+            if (label.Font.Style != fontStyle)
+            {
+                label.Font = new Font(label.Font.Name, label.Font.SizeInPoints,
+                    fontStyle, GraphicsUnit.Point, 0);
+            }
+            if (label.ForeColor != textColor)
+            {
+                label.ForeColor = textColor;
             }
         }
 
@@ -338,12 +504,24 @@ namespace pwiz.Skyline.EditUI
 
         private void btnReset_Click(object sender, EventArgs e)
         {
+            ResetMods();
+        }
+
+        public void ResetMods()
+        {
             ExplicitMods = null;
             var modifications = DocSettings.PeptideSettings.Modifications;
             for (int i = 0; i < _listComboStatic.Count; i++)
                 UpdateComboItems(_listComboStatic[i], StaticList, null, modifications.StaticModifications, i, true);
-            for (int i = 0; i < _listComboHeavy.Count; i++)
-                UpdateComboItems(_listComboHeavy[i], HeavyList, null, modifications.HeavyModifications, i, true);
+            for (int i = 0; i < _listLabelTypeHeavy.Count; i++)
+            {
+                var labelType = _listLabelTypeHeavy[i];
+                var listComboHeavy = _listListComboHeavy[i];
+                for (int j = 0; j < listComboHeavy.Count; j++)
+                {
+                    UpdateComboItems(listComboHeavy[j], HeavyList, null, modifications.GetModifications(labelType), j, true);
+                }
+            }
         }
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -353,17 +531,48 @@ namespace pwiz.Skyline.EditUI
 
         public void OkDialog()
         {
-            IList<ExplicitMod> staticMods = GetExplicitMods(_listComboStatic, Settings.Default.StaticModList);
-            IList<ExplicitMod> heavyMods = GetExplicitMods(_listComboHeavy, Settings.Default.HeavyModList);
-
+            var peptide = NodePeptide.Peptide;
+            var explicitModsCurrent = NodePeptide.ExplicitMods;
             var modsDoc = DocSettings.PeptideSettings.Modifications;
-            var explicitMods = new ExplicitMods(NodePeptide.Peptide, staticMods, heavyMods);
             var implicitMods = new ExplicitMods(NodePeptide.Peptide,
                 modsDoc.StaticModifications, Settings.Default.StaticModList,
-                modsDoc.HeavyModifications, Settings.Default.HeavyModList);
-            // If currently chosen modifications equal the implicit document modifications,
-            // then clear the explicit modification from this peptide.
-            ExplicitMods = (Equals(explicitMods, implicitMods) ? null : explicitMods);
+                modsDoc.GetHeavyModifications(), Settings.Default.HeavyModList);
+            
+            // Get static modifications from the dialog, and check for equality with
+            // the document implicit modifications.
+            TypedExplicitModifications staticTypedMods = null;
+            var staticMods = GetExplicitMods(_listComboStatic, Settings.Default.StaticModList);
+            if (ArrayUtil.EqualsDeep(staticMods, implicitMods.StaticModifications))
+                staticMods = null;  // Use implicit modifications
+            else
+            {
+                if (explicitModsCurrent != null &&
+                        ArrayUtil.EqualsDeep(staticMods, explicitModsCurrent.StaticModifications))
+                {
+                    staticMods = explicitModsCurrent.StaticModifications;                    
+                }
+                staticTypedMods = new TypedExplicitModifications(peptide, IsotopeLabelType.light, staticMods);
+            }
+
+            var listHeavyTypedMods = new List<TypedExplicitModifications>();
+            for (int i = 0; i < _listLabelTypeHeavy.Count; i++)
+            {
+                var labelType = _listLabelTypeHeavy[i];
+                var heavyMods = GetExplicitMods(_listListComboHeavy[i], Settings.Default.HeavyModList);
+
+                if (ArrayUtil.EqualsDeep(heavyMods, implicitMods.GetModifications(labelType)))
+                    continue;
+
+                var heavyTypedMods = new TypedExplicitModifications(peptide, labelType, heavyMods);
+                listHeavyTypedMods.Add(heavyTypedMods.AddModMasses(staticTypedMods));
+            }
+
+            ExplicitMods explicitMods = null;
+            if (staticMods != null || listHeavyTypedMods.Count > 0)
+                explicitMods = new ExplicitMods(peptide, staticMods, listHeavyTypedMods);
+            Helpers.AssignIfEquals(ref explicitMods, explicitModsCurrent);
+            ExplicitMods = explicitMods;
+
             DialogResult = DialogResult.OK;
             Close();            
         }

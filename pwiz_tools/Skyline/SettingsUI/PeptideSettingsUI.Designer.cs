@@ -76,6 +76,8 @@ namespace pwiz.Skyline.SettingsUI
             this.label11 = new System.Windows.Forms.Label();
             this.listLibraries = new System.Windows.Forms.CheckedListBox();
             this.tabModifications = new System.Windows.Forms.TabPage();
+            this.label16 = new System.Windows.Forms.Label();
+            this.comboLabelType = new System.Windows.Forms.ComboBox();
             this.btnEditHeavyMods = new System.Windows.Forms.Button();
             this.label10 = new System.Windows.Forms.Label();
             this.listHeavyMods = new System.Windows.Forms.CheckedListBox();
@@ -551,6 +553,8 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // tabModifications
             // 
+            this.tabModifications.Controls.Add(this.label16);
+            this.tabModifications.Controls.Add(this.comboLabelType);
             this.tabModifications.Controls.Add(this.btnEditHeavyMods);
             this.tabModifications.Controls.Add(this.label10);
             this.tabModifications.Controls.Add(this.listHeavyMods);
@@ -564,12 +568,31 @@ namespace pwiz.Skyline.SettingsUI
             this.tabModifications.Text = "Modifications";
             this.tabModifications.UseVisualStyleBackColor = true;
             // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Location = new System.Drawing.Point(25, 150);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(93, 13);
+            this.label16.TabIndex = 3;
+            this.label16.Text = "Isotope label &type:";
+            // 
+            // comboLabelType
+            // 
+            this.comboLabelType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboLabelType.FormattingEnabled = true;
+            this.comboLabelType.Location = new System.Drawing.Point(28, 169);
+            this.comboLabelType.Name = "comboLabelType";
+            this.comboLabelType.Size = new System.Drawing.Size(177, 21);
+            this.comboLabelType.TabIndex = 4;
+            this.comboLabelType.SelectedIndexChanged += new System.EventHandler(this.comboLabelType_SelectedIndexChanged);
+            // 
             // btnEditHeavyMods
             // 
-            this.btnEditHeavyMods.Location = new System.Drawing.Point(211, 169);
+            this.btnEditHeavyMods.Location = new System.Drawing.Point(211, 213);
             this.btnEditHeavyMods.Name = "btnEditHeavyMods";
             this.btnEditHeavyMods.Size = new System.Drawing.Size(75, 23);
-            this.btnEditHeavyMods.TabIndex = 6;
+            this.btnEditHeavyMods.TabIndex = 7;
             this.btnEditHeavyMods.Text = "E&dit list...";
             this.btnEditHeavyMods.UseVisualStyleBackColor = true;
             this.btnEditHeavyMods.Click += new System.EventHandler(this.btnEditHeavyMods_Click);
@@ -577,27 +600,27 @@ namespace pwiz.Skyline.SettingsUI
             // label10
             // 
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(25, 153);
+            this.label10.Location = new System.Drawing.Point(25, 197);
             this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(41, 13);
-            this.label10.TabIndex = 4;
-            this.label10.Text = "&Heavy:";
+            this.label10.Size = new System.Drawing.Size(109, 13);
+            this.label10.TabIndex = 5;
+            this.label10.Text = "&Isotope modifications:";
             // 
             // listHeavyMods
             // 
             this.listHeavyMods.CheckOnClick = true;
             this.listHeavyMods.FormattingEnabled = true;
-            this.listHeavyMods.Location = new System.Drawing.Point(28, 169);
+            this.listHeavyMods.Location = new System.Drawing.Point(28, 213);
             this.listHeavyMods.Name = "listHeavyMods";
             this.listHeavyMods.Size = new System.Drawing.Size(177, 94);
-            this.listHeavyMods.TabIndex = 5;
+            this.listHeavyMods.TabIndex = 6;
             // 
             // btnEditStaticMods
             // 
             this.btnEditStaticMods.Location = new System.Drawing.Point(211, 36);
             this.btnEditStaticMods.Name = "btnEditStaticMods";
             this.btnEditStaticMods.Size = new System.Drawing.Size(75, 23);
-            this.btnEditStaticMods.TabIndex = 3;
+            this.btnEditStaticMods.TabIndex = 2;
             this.btnEditStaticMods.Text = "&Edit list...";
             this.btnEditStaticMods.UseVisualStyleBackColor = true;
             this.btnEditStaticMods.Click += new System.EventHandler(this.btnEditStaticMods_Click);
@@ -607,9 +630,9 @@ namespace pwiz.Skyline.SettingsUI
             this.label8.AutoSize = true;
             this.label8.Location = new System.Drawing.Point(25, 20);
             this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(37, 13);
+            this.label8.Size = new System.Drawing.Size(119, 13);
             this.label8.TabIndex = 0;
-            this.label8.Text = "&Static:";
+            this.label8.Text = "&Structural modifications:";
             // 
             // listStaticMods
             // 
@@ -707,5 +730,7 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.ComboBox comboBackgroundProteome;
         private System.Windows.Forms.Button btnExplore;
+        private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.ComboBox comboLabelType;
     }
 }

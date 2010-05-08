@@ -37,8 +37,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>1932</ApplicationRevision>
-    <ApplicationVersion>0.6.1.1932</ApplicationVersion>
+    <ApplicationRevision>1960</ApplicationRevision>
+    <ApplicationVersion>0.6.1.1960</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -521,6 +521,12 @@
     <Compile Include="SettingsUI\DefineAnnotationDlg.Designer.cs">
       <DependentUpon>DefineAnnotationDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="SettingsUI\EditLabelTypeListDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\EditLabelTypeListDlg.Designer.cs">
+      <DependentUpon>EditLabelTypeListDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\EditLibraryDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -996,6 +1002,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\DefineAnnotationDlg.resx">
       <DependentUpon>DefineAnnotationDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditLabelTypeListDlg.resx">
+      <DependentUpon>EditLabelTypeListDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditLibraryDlg.resx">
       <DependentUpon>EditLibraryDlg.cs</DependentUpon>

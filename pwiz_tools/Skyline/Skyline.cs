@@ -1766,8 +1766,7 @@ namespace pwiz.Skyline
             {
                 // Edit text on existing peptide list
                 PeptideGroupTreeNode nodeTree = e.Node as PeptideGroupTreeNode;
-                Debug.Assert(nodeTree != null);
-                if (e.Label != null && !Equals(nodeTree.Text, e.Label))
+                if (nodeTree != null && e.Label != null && !Equals(nodeTree.Text, e.Label))
                 {
                     ModifyDocument(string.Format("Edit name {0}", e.Label), doc => (SrmDocument)
                         doc.ReplaceChild(nodeTree.DocNode.ChangeName(e.Label)));

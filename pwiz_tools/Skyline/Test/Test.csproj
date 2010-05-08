@@ -79,6 +79,7 @@
     <Compile Include="AssertEx.cs" />
     <Compile Include="ExplicitModTest.cs" />
     <Compile Include="IdentityTest.cs" />
+    <Compile Include="IsotypeModTest.cs" />
     <Compile Include="LibraryLoadTest.cs" />
     <Compile Include="LibrarySettingsTest.cs" />
     <Compile Include="Proteome\ProteomeDbTest.cs" />

@@ -66,7 +66,7 @@ namespace pwiz.SkylineTest.Results
                 if (nodeGroup.Results[index][0].PeakCountRatio < 0.5)
                     continue;
 
-                if (nodeGroup.TransitionGroup.LabelType == IsotopeLabelType.light)
+                if (nodeGroup.TransitionGroup.LabelType.IsLight)
                     tranGroupsActual++;
                 else
                     tranGroupsHeavyActual++;
@@ -80,7 +80,7 @@ namespace pwiz.SkylineTest.Results
                 if (nodeTran.Results[index][0].Area == 0)
                     continue;
 
-                if (nodeTran.Transition.Group.LabelType == IsotopeLabelType.light)
+                if (nodeTran.Transition.Group.LabelType.IsLight)
                     transitionsActual++;
                 else
                     transitionsHeavyActual++;

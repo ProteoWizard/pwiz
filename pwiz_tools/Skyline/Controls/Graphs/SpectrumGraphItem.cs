@@ -56,11 +56,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 TransitionGroup transitionGroup = TransitionGroupNode.TransitionGroup;
                 string sequence = transitionGroup.Peptide.Sequence;
                 int charge = transitionGroup.PrecursorCharge;
-                var type = SpectrumInfo.LabelType;
-                if (type == IsotopeLabelType.light)
+                var labelType = SpectrumInfo.LabelType;
+                if (labelType.IsLight)
                     return string.Format("{0}{1}, Charge {2}", libraryNamePrefix, sequence, charge);
                 else
-                    return string.Format("{0}{1}, Charge {2} ({3})", libraryNamePrefix, sequence, charge, type);
+                    return string.Format("{0}{1}, Charge {2} ({3})", libraryNamePrefix, sequence, charge, labelType);
             }
         }
     }

@@ -3,17 +3,28 @@ using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.EditUI
 {
     public partial class RefineDlg : Form
     {
+        private SrmSettings _settings;
+
         public RefineDlg(SrmDocument document)
         {
+            _settings = document.Settings;
+
             InitializeComponent();
 
             Icon = Resources.Skyline;
+
+            // Fill label type combo box
+            comboRefineLabelType.Items.Add("");
+            comboRefineLabelType.Items.Add(IsotopeLabelType.LIGHT_NAME);
+            foreach (var typedMods in _settings.PeptideSettings.Modifications.GetHeavyModifications())
+                comboRefineLabelType.Items.Add(typedMods.LabelType.Name);
             comboRefineLabelType.SelectedIndex = 0;
 
             var settings = document.Settings;
@@ -21,6 +32,7 @@ namespace pwiz.Skyline.EditUI
             {
                 tabControl1.TabPages.Remove(tabResults);
             }
+
             if (settings.PeptideSettings.Libraries.HasLibraries)
             {
                 groupLibCorr.Enabled = true;
@@ -56,13 +68,14 @@ namespace pwiz.Skyline.EditUI
             bool removeDuplicatePeptides = cbRemoveDuplicatePeptides.Checked;
             bool removeRepeatedPeptides = cbRemoveRepeatedPeptides.Checked;
 
-            IsotopeLabelType? refineLabelType = null;
-            string refineLabelText = comboRefineLabelType.SelectedItem.ToString();
-            if (!string.IsNullOrEmpty(refineLabelText))
+            IsotopeLabelType refineLabelType = null;
+            string refineTypeName = comboRefineLabelType.SelectedItem.ToString();
+            if (!string.IsNullOrEmpty(refineTypeName))
             {
-                 refineLabelType = (IsotopeLabelType)
-                     Enum.Parse(typeof(IsotopeLabelType), refineLabelText.ToLower());
+                var typedMods = _settings.PeptideSettings.Modifications.GetModificationsByName(refineTypeName);
+                refineLabelType = typedMods.LabelType;
             }
+
             bool addLabelType = cbAdd.Checked;
 
             double? minPeakFoundRatio = null, maxPeakFoundRatio = null;
