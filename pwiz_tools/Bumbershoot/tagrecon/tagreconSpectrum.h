@@ -99,14 +99,20 @@ namespace tagrecon
 			scoreList.push_back( SearchScoreInfo( "massError", massError ) );
 			scoreList.push_back( SearchScoreInfo( "mzSSE", mzSSE ) );
             scoreList.push_back( SearchScoreInfo( "mzFidelity", mzFidelity ) );
-            scoreList.push_back( SearchScoreInfo( "XCorr", XCorr ) );
+            scoreList.push_back( SearchScoreInfo( "numPTMs", numberOfOtherMods ) );
+
+            if (g_rtConfig->ComputeXCorr)
+                scoreList.push_back( SearchScoreInfo( "xcorr", XCorr ) );
+
 			if( g_rtConfig->CalculateRelativeScores )
 			{
 				scoreList.push_back( SearchScoreInfo( "pvalue", pvalue ) );
 				scoreList.push_back( SearchScoreInfo( "expect", expect ) );
 			}
-            if( g_rtConfig->PercolatorReranking )
-                scoreList.push_back( SearchScoreInfo( "F-score", discriminantScore ) );
+            
+            if (g_rtConfig->unknownMassShiftSearchMode == BLIND_PTMS)
+                scoreList.push_back( SearchScoreInfo( "numBlindPTMs", numberOfBlindMods ) );
+
 			return scoreList;
 		}
 

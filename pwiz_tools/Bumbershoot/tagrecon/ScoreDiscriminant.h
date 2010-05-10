@@ -1,3 +1,6 @@
+//
+// $Id: $
+//
 // The contents of this file are subject to the Mozilla Public License
 // Version 1.1 (the "License"); you may not use this file except in
 // compliance with the License. You may obtain a copy of the License at
@@ -31,14 +34,12 @@ namespace freicore {
          */
         struct ScoreDiscriminant
         {
-            typedef map<string,bool> FeatureNamesMap;
             // Names and weights of the features selected for disciminator
-            FeatureNamesMap featureNames;
+            set<string> featureNames;
             map< size_t, map<string,double> > featureValuesMatrix;
             map< size_t, SetType > featureType;
             map<string,double> featureWeights;
             // Tracking variables
-            size_t numAllowedFeatures;
             size_t maxResults;
             size_t numDecoys;
             size_t numTargets;
@@ -94,32 +95,22 @@ namespace freicore {
                 }
                 //maxCharge = maxCharge > 3 ? 3 : maxCharge;
                 // Select features
-                featureNames.insert(make_pair<string,bool>("mvh",true));
-                featureNames.insert(make_pair<string,bool>("mzfidelity",true));
-                if(g_rtConfig->ComputeXCorr)
-                    featureNames.insert(make_pair<string,bool>("xcorr",true));
-                else
-                    featureNames.insert(make_pair<string,bool>("xcorr",false));
-                featureNames.insert(make_pair<string,bool>("numPTMs",true));
-                if(g_rtConfig->unknownMassShiftSearchMode == BLIND_PTMS)
-                    featureNames.insert(make_pair<string,bool>("numBlindPTMs", true));
-                else
-                    featureNames.insert(make_pair<string,bool>("numBlindPTMs", false));
-                featureNames.insert(make_pair<string,bool>("NET",true));
-                featureNames.insert(make_pair<string,bool>("numMissedCleavs",true));
+                featureNames.insert("mvh");
+                featureNames.insert("mzfidelity");
+                if (g_rtConfig->ComputeXCorr)
+                    featureNames.insert("xcorr");
+                featureNames.insert("numPTMs");
+                if (g_rtConfig->unknownMassShiftSearchMode == BLIND_PTMS)
+                    featureNames.insert("numBlindPTMs");
+                featureNames.insert("NET");
+                featureNames.insert("numMissedCleavs");
                 maxResults = min(numTargets, numDecoys);
 
                 // Build the feature names for percolator
-                numAllowedFeatures = 0;
-                typedef pair<string,bool> Feature;
-                BOOST_FOREACH(Feature feature, featureNames)
-                    numAllowedFeatures = (feature.second==true) ? ++numAllowedFeatures : numAllowedFeatures;
-                char ** featureNamesForPercolator = NULL;
-                featureNamesForPercolator = (char **) calloc(numAllowedFeatures,sizeof(char *));
+                char ** featureNamesForPercolator = (char **) calloc(featureNames.size(),sizeof(char *));
                 size_t featureNameIndex = 0;
-                BOOST_FOREACH(Feature feature, featureNames)
-                    if(feature.second)
-                        featureNamesForPercolator[featureNameIndex++] = const_cast<char *>(feature.first.c_str());
+                BOOST_FOREACH(string feature, featureNames)
+                    featureNamesForPercolator[featureNameIndex++] = const_cast<char *>(strdup(feature.c_str()));
 
                 // Initialize percolator for two set strategy (one real and one decoy).
                 NSet numSets = TWO_SETS;
@@ -127,7 +118,7 @@ namespace freicore {
                 isSuccessful = true;
                 try 
                 {
-                    pcInitiate(numSets, numAllowedFeatures, maxResults, featureNamesForPercolator, 1.0);
+                    pcInitiate(numSets, featureNames.size(), maxResults, featureNamesForPercolator, 1.0);
                 } catch(...) { isSuccessful = false; }
                 free(featureNamesForPercolator);
 
@@ -146,7 +137,15 @@ namespace freicore {
                     cout << g_hostString << " starting percolator with " << maxResults << " results from each class." << endl;
                     // Set the normalizer to uniform distribution. 
                     Normalizer::setType(Normalizer::UNI);
-                    featureWeights = pcExecute();
+
+                    char** featureNames = (char**) calloc(this->featureNames.size(), sizeof(char*));
+                    double* featureWeights = (double*) calloc(this->featureNames.size(), sizeof(double));
+                    pcExecute(featureNames, featureWeights);
+                    for (size_t i=0; i < this->featureNames.size(); ++i)
+                        this->featureWeights[featureNames[i]] = featureWeights[i];
+                    free(featureNames);
+                    free(featureWeights);
+
                     pcCleanUp();
                     cout << g_hostString << " finished percolator run; " << timer.End() << " seconds elapsed." << endl;
                 } catch(...) { isSuccessful = false; }
@@ -216,13 +215,13 @@ namespace freicore {
                     size_t featureIndex = fp.first;
                     SetType type = featureType[featureIndex];
                     // Send the extracted feature values to percolator
-                    double * featureValuesMatrixForPecolator = (double*)calloc(int(numAllowedFeatures), sizeof(double));
+                    double * featureValuesMatrixForPecolator = (double*)calloc(featureNames.size(), sizeof(double));
                     typedef pair<string,double> FeatureVector;
                     int index = 0;
                     BOOST_FOREACH(FeatureVector fv, fp.second)
-                        if(featureNames[fv.first])
-                            featureValuesMatrixForPecolator[index++] = fv.second;
+                        featureValuesMatrixForPecolator[index++] = fv.second;
                     pcRegisterPSM(type, NULL, featureValuesMatrixForPecolator);
+                    free(featureValuesMatrixForPecolator);
                 }
                 (const_cast<SpectraList&>(spectra)).sort( spectraSortByID() );
             }

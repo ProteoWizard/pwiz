@@ -137,8 +137,16 @@ namespace freicore
 			// Set the spectrum id as the scan number
 			spectra.setId( s->id, SpectrumId( filenameAsScanName, s->id.index, s->id.charge ) );
 
+            // If the top target or decoy results aren't in the main result set, add them manually
+            if( !s->topTargetHits.empty() && s->resultSet.find(*s->topTargetHits.rbegin()) == s->resultSet.end() )
+                s->resultSet.insert(*s->topTargetHits.rbegin(), true);
+
+            if( !s->topDecoyHits.empty() && s->resultSet.find(*s->topDecoyHits.rbegin()) == s->resultSet.end() )
+                s->resultSet.insert(*s->topDecoyHits.rbegin(), true);
+
 			// Compute the relative ranks of the results in the result set
 			s->resultSet.calculateRanks();
+
 			// Convert all the protein indices in the result set to their corresponding names
 			s->resultSet.convertProteinIndexesToNames( proteins );
 
