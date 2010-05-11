@@ -409,26 +409,13 @@ void Pep2MzIdent::addSpectraData(const MSMSRunSummary& msmsRunSummary,
         sd->fileFormat.set(fileFormat);
         sd->spectrumIDFormat.set(spectrumIDFormat);
     }
-        //if (iequals(msmsRunSummary.raw_data, ".mzml"))
-        //{
-        //sd->fileFormat.set(MS_mzML_file);
-        //sd->spectrumIDFormat.set(MS_mzML_unique_identifier);
-        //}
-        //else if (iequals(msmsRunSummary.raw_data, ".mzxml"))
-        //{
-        //sd->fileFormat.set(MS_ISB_mzXML_file);
-        //sd->spectrumIDFormat.set(MS_scan_number_only_nativeID_format);
-        //}
-        //else if (msmsRunSummary.raw_data.size() == 0)
-        //{
-        //DOUT("Warning: no raw_data set in msms_run_summary. "
-        //"The parameter tags will be checked for FILE.");
-        //}
-    //else
-    // throw runtime_error(("[Pep2MzIdent::addSpectraData] Unknown "
-    //                       "file type for '"+
-    //                       msmsRunSummary.raw_data+
-    //                       "'.").c_str());
+    else if (fileExtension2Type(msmsRunSummary.raw_data_type, fileFormat, spectrumIDFormat))
+    {
+        sd->fileFormat.set(fileFormat);
+        sd->spectrumIDFormat.set(spectrumIDFormat);
+    }
+    // In some pepXML files both may be blank. In this case the data
+    // may be kept in a parameter named "FILE"
         
     mzid->dataCollection.inputs.spectraData.push_back(sd);
 }
@@ -473,7 +460,13 @@ void Pep2MzIdent::translateEnzyme(const SampleEnzyme& sampleEnzyme,
         "]["+sampleEnzyme.specificity.cut+"]";
     
     sip->enzymes.enzymes.push_back(enzyme);
-
+    
+    // sampleEnzyme.independant is a tribool. If the optional
+    // attribute was not set, then don't alter the mzid Enzymes'
+    // values.
+    if (sampleEnzyme.independent || !sampleEnzyme.independent)
+        sip->enzymes.independent = (bool)sampleEnzyme.independent;
+        
     result->analysisProtocolCollection.
         spectrumIdentificationProtocol.push_back(sip);
 }
@@ -835,13 +828,6 @@ void Pep2MzIdent::translateQueries(const SpectrumQueryPtr query,
             SpectrumIdentificationResultPtr sirp(
                 new SpectrumIdentificationResult());
             sirp->id = "SIR_"+lexical_cast<string>(indices->sir++);
-
-            /*
-            cvp = translateSearchScore("identityscore", (*shit)->searchScore);
-            std::cerr << "identityscore=" << cvp.cvid << "\n";
-            if (cvp.cvid != CVID_Unknown)
-                sirp->paramGroup.set(cvp.cvid, cvp.value);
-            */
             
             sirp->spectrumID = query->spectrum;
             sirp->spectrumIdentificationItem.push_back(sii);
@@ -851,7 +837,9 @@ void Pep2MzIdent::translateQueries(const SpectrumQueryPtr query,
             else
                 throw runtime_error("[Pep2MzIdent::translateQueries] no "
                                     "SpectraData");
-    
+
+            // Get the last added SpectrumIdentificationList, or if
+            // one's has not been added, add one now.  
             SpectrumIdentificationListPtr sil;
             if (mzid->dataCollection.analysisData.
                 spectrumIdentificationList.size() > 0)
@@ -868,28 +856,9 @@ void Pep2MzIdent::translateQueries(const SpectrumQueryPtr query,
                     push_back(sil);
             }
 
+            // Add the SpectrumIdentificationResult to the mzIdentML object.
             if (!sil->empty())
                 sil->spectrumIdentificationResult.push_back(sirp);
-            
-            /*
-            if (sil->spectrumIdentificationResult.empty())
-            {
-                sil = SpectrumIdentificationListPtr(
-                    new SpectrumIdentificationList("SIL_"+lexical_cast<string>(
-                                                       indices->sil++)));
-                mzid->dataCollection.analysisData.spectrumIdentificationList.
-                    push_back(sil);
-            }
-            else
-            {
-                sil = mzid->dataCollection.analysisData.
-                    spectrumIdentificationList.back();
-            }
-
-            if (!sil->empty())
-                sil->spectrumIdentificationResult.push_back(sip);
-            */
-
         }
     }
 }
@@ -911,6 +880,37 @@ MzIdentMLPtr Pep2MzIdent::translate()
 void Pep2MzIdent::earlyParameters(ParameterPtr parameter,
                                         MzIdentMLPtr mzid)
 {
+    /*
+      Parameters handled in this function have a (*):
+      
+      CHARGE
+      CLE
+      DB
+      FILE(*)
+      FORMAT
+      FORMVER
+      INSTRUMENT
+      INTERNALS
+      IT_MODS
+      ITOL(*)
+      ITOLU(*)
+      LICENSE
+      MASS
+      PEAK(handled later)
+      PFA
+      QUANTITATION
+      REPORT
+      REPTYPE
+      RULES
+      SEARCH
+      TAXONOMY
+      TOL(*)
+      TOLU(*)
+      USEREMAIL(*)
+      USERID
+      USERNAME(*)
+      _mzML (ignored except for software)
+     */
     if (parameter->name == "USERNAME")
     {
         ContactPtr cp = find_id(mzid->auditCollection,
@@ -962,21 +962,6 @@ void Pep2MzIdent::earlyParameters(ParameterPtr parameter,
             sd->fileFormat.set(fileFormat);
             sd->spectrumIDFormat.set(spectrumIDFormat);
         }
-        //else
-            //if (iends_with(sd->location, ".mzML"))
-            //{
-            //sd->fileFormat.set(MS_mzML_file);
-            //sd->spectrumIDFormat.set(MS_mzML_unique_identifier);
-            //}
-            //else if (iends_with(sd->location, ".mzXML"))
-            //{
-            //sd->fileFormat.set(MS_ISB_mzXML_file);
-            //sd->spectrumIDFormat.set(MS_scan_number_only_nativeID_format);
-            //}
-            //else
-        //throw runtime_error(("[Pep2MzIdent::processParameter] Unknown "
-        //                       "file type for "+sd->location).c_str());
-        //
         mzid->dataCollection.inputs.spectraData.push_back(sd);
     }
     else if (parameter->name == "TOL")
@@ -1075,105 +1060,54 @@ void Pep2MzIdent::earlyParameters(ParameterPtr parameter,
                                      getCVID(parameter->value));
         }
     }
-    else if (parameter->name == "_mzML.fileDescription.sourceFileList."
-             "sourceFile.cvParam.01.accession")
+    else if (istarts_with(parameter->name, "_mzML."))
     {
-        istringstream oss(parameter->value.substr(
-                              parameter->value.find_first_of(":")));
-        size_t cvid;
-        oss >> cvid;
-    }
-    else if (parameter->name == "_mzML.fileDescription.sourceFileList."
-             "sourceFile.cvParam.02.accession")
-    {
-        istringstream oss(parameter->value.substr(
-                              parameter->value.find_first_of(":")));
-        size_t cvid;
-        oss >> cvid;
-    }
-    else if (parameter->name == "_mzML.fileDescription.sourceFileList."
-             "sourceFile.cvParam.03.accession")
-    { 
-        istringstream oss(parameter->value.substr(
-                              parameter->value.find_first_of(":")));
-        size_t cvid;
-        
-        oss >> cvid;
-    }
-    else if (parameter->name == "_mzML.fileDescription.sourceFileList."
-             "sourceFile.cvParam.03.value")
-    {
-    }
-    else if (parameter->name == "_mzML.referenceableParamGroupList."
-             "referenceableParamGroup.cvParam.01.accession")
-    {
-        size_t idx = parameter->value.find_first_of(":");
+        // TODO make a _mzML parameter parsing tree
 
-        if (idx == string::npos)
-            return;
-        
-        istringstream oss(parameter->value.substr(idx));
-        size_t cvid;
-        oss >> cvid;
-    }
-    else if (parameter->name == "_mzML.referenceableParamGroupList."
-             "referenceableParamGroup.cvParam.02.accession")
-    {
-        size_t idx = parameter->value.find_first_of(":");
-
-        if (idx == string::npos)
-            return;
-        
-        istringstream oss(parameter->value.substr(idx));
-        size_t cvid;
-        oss >> cvid;
-    }
-    else if (parameter->name == "_mzML.referenceableParamGroupList."
-             "referenceableParamGroup.cvParam.02.value")
-    {
-    }
-    else if (starts_with(parameter->name, "_mzML.softwareList.") &&
-             starts_with(parameter->name, ".count"))
-    {
-        size_t idx = parameter->value.find_first_of(":");
-
-        if (idx == string::npos)
-            return;
-        
-        istringstream oss(parameter->value.substr(idx));
-        size_t id;
-        oss >> id;
-
-        size_t start = mzid->analysisSoftwareList.size();
-        for (size_t i=start; i<id; i++)
-            mzid->analysisSoftwareList.push_back(
-                AnalysisSoftwarePtr(new AnalysisSoftware()));
-    }
-    else if (starts_with(parameter->name, "_mzML.softwareList.software."))
-    {
-        if (parameter->name.size() < 31)
-            return;
-        string number = parameter->name.substr(28, 2);
-
-        istringstream oss(number);
-        size_t idx;
-        oss >> idx;
-
-        if (idx < 1)
-            return;
-        else if (mzid->analysisSoftwareList.size() < idx)
-            resizeSoftware(mzid->analysisSoftwareList, idx);
-        
-        if (ends_with(parameter->name, "id"))
+        // I don't see how this cuold possibly work.
+        if (starts_with(parameter->name, "_mzML.softwareList.") &&
+            starts_with(parameter->name, ".count"))
         {
-            mzid->analysisSoftwareList[idx-1]->id = parameter->value;
-            CVID cvid = getCVID(parameter->value);
-            if (cvid != CVID_Unknown)
-                mzid->analysisSoftwareList[idx-1]->softwareName.set(cvid);
+            size_t idx = parameter->value.find_first_of(":");
+
+            if (idx == string::npos)
+                return;
+        
+            istringstream oss(parameter->value.substr(idx));
+            size_t id;
+            oss >> id;
+
+            size_t start = mzid->analysisSoftwareList.size();
+            for (size_t i=start; i<id; i++)
+                mzid->analysisSoftwareList.push_back(
+                    AnalysisSoftwarePtr(new AnalysisSoftware()));
         }
-        else if (ends_with(parameter->name, "version"))
+        else if (starts_with(parameter->name, "_mzML.softwareList.software."))
         {
-            mzid->analysisSoftwareList[idx-1]->version = parameter->value;
+            if (parameter->name.size() < 31)
+                return;
+            string number = parameter->name.substr(28, 2);
+
+            istringstream oss(number);
+            size_t idx;
+            oss >> idx;
+
+            if (idx < 1)
+                return;
+            else if (mzid->analysisSoftwareList.size() < idx)
+                resizeSoftware(mzid->analysisSoftwareList, idx);
+        
+            if (ends_with(parameter->name, "id"))
+            {
+                mzid->analysisSoftwareList[idx-1]->id = parameter->value;
+                CVID cvid = getCVID(parameter->value);
+                if (cvid != CVID_Unknown)
+                    mzid->analysisSoftwareList[idx-1]->softwareName.set(cvid);
+            }
+            else if (ends_with(parameter->name, "version"))
+            {
+                mzid->analysisSoftwareList[idx-1]->version = parameter->value;
+            }
         }
     }
 }
@@ -1325,15 +1259,6 @@ void Pep2MzIdent::addFinalElements()
     }
 
     mzid->analysisCollection.spectrumIdentification.push_back(sip);
-
-    /*
-    if (mzid->analysisProtocolCollection.
-        spectrumIdentificationProtocol.size() > 0)
-    {
-        mzid->analysisProtocolCollection.spectrumIdentificationProtocol.at(0)
-            ->threshold.userParams.push_back(UserParam("unknown"));
-    }
-    */
 }
 
 

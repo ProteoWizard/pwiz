@@ -27,6 +27,7 @@
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include "pwiz/data/misc/PeakData.hpp"
 #include "boost/shared_ptr.hpp"
+#include "boost/logic/tribool.hpp"
 
 #include <iostream>
 #include <stdexcept>
@@ -74,7 +75,7 @@ struct PWIZ_API_DECL Specificity
 
 struct PWIZ_API_DECL SampleEnzyme
 {
-    SampleEnzyme(){}
+    SampleEnzyme() : independent(boost::indeterminate) {}
 
     /// Controlled code name for the enzyme that can be referred to by
     /// applications.
@@ -96,7 +97,7 @@ struct PWIZ_API_DECL SampleEnzyme
     /// terminus and a different specificity at the other. If
     /// independent is false, then a single peptide can exhibit mixed
     /// specificities.
-    bool independent;
+    boost::tribool independent;
 
     Specificity specificity;
 
