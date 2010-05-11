@@ -615,10 +615,8 @@ MassListPtr RawFileImpl::getMassList(long scanNumber,
 {
     _bstr_t bstrFilter(filter.c_str());
     double centroidPeakWidth = 0;
-    VARIANT variantMassList;
-    VariantInit(&variantMassList);
-    VARIANT variantPeakFlags;
-    VariantInit(&variantPeakFlags);
+    _variant_t variantMassList;
+    _variant_t variantPeakFlags;
     long size = 0;
 
 
@@ -712,10 +710,8 @@ RawFileImpl::getAverageMassList(long firstAvgScanNumber, long lastAvgScanNumber,
 {
     _bstr_t bstrFilter(filter.c_str());
     double centroidPeakWidth = 0;
-    VARIANT variantMassList;
-    VariantInit(&variantMassList);
-    VARIANT variantPeakFlags;
-    VariantInit(&variantPeakFlags);
+    _variant_t variantMassList;
+    _variant_t variantPeakFlags;
     long size = 0;
 
     checkResult(raw_->GetAverageMassList(&firstAvgScanNumber, &lastAvgScanNumber,
@@ -748,10 +744,8 @@ MassListPtr RawFileImpl::getMassListFromLabelData(long scanNumber)
         throw RawEgg("[RawFileImpl::getMassListFromLabelData()] GetLabelData requires the IXRawfile2 interface.");
 
     IXRawfile2Ptr raw2 = (IXRawfile2Ptr) raw_;
-	VARIANT varLabels;
-    VariantInit(&varLabels);
-    VARIANT varFlags;
-    VariantInit(&varFlags);
+	_variant_t varLabels;
+    _variant_t varFlags;
 	raw2->GetLabelData(&varLabels, &varFlags, &scanNumber);
     return MassListPtr(new MassListFromLabelDataImpl(scanNumber, varLabels));
 }
@@ -759,8 +753,7 @@ MassListPtr RawFileImpl::getMassListFromLabelData(long scanNumber)
 
 auto_ptr<StringArray> RawFileImpl::getFilters()
 {
-    VARIANT v;
-    VariantInit(&v);
+    _variant_t v;
     long size = 0;
 
     checkResult(raw_->GetFilters(&v, &size), "[RawFileImpl::getFilters()] ");
@@ -953,10 +946,8 @@ void ScanInfoImpl::initStatusLog() const
 void ScanInfoImpl::initStatusLogHelper() const
 {
     statusLogInitialized_ = true;
-    VARIANT variantStatusLogLabels;
-    VariantInit(&variantStatusLogLabels);
-    VARIANT variantStatusLogValues;
-    VariantInit(&variantStatusLogValues);
+    _variant_t variantStatusLogLabels;
+    _variant_t variantStatusLogValues;
 
     checkResult(rawfile_->raw_->GetStatusLogForScanNum(scanNumber_,
                                              &statusLogRT_,
@@ -976,10 +967,8 @@ void ScanInfoImpl::initTrailerExtra() const
 void ScanInfoImpl::initTrailerExtraHelper() const
 {
     trailerExtraInitialized_ = true;
-    VARIANT variantTrailerExtraLabels;
-    VariantInit(&variantTrailerExtraLabels);
-    VARIANT variantTrailerExtraValues;
-    VariantInit(&variantTrailerExtraValues);
+    _variant_t variantTrailerExtraLabels;
+    _variant_t variantTrailerExtraValues;
 
     checkResult(rawfile_->raw_->GetTrailerExtraForScanNum(scanNumber_,
                                                 &variantTrailerExtraLabels,
@@ -1029,8 +1018,7 @@ vector<PrecursorInfo> ScanInfoImpl::precursorInfo() const
 
     IXRawfile3Ptr raw3 = (IXRawfile3Ptr) rawfile_->raw_;
     vector<PrecursorInfo> precursorInfo;
-	VARIANT varInfo;
-    VariantInit(&varInfo);
+	_variant_t varInfo;
     long precursorCount;
     raw3->GetPrecursorInfoFromScanNum(scanNumber_, &varInfo, &precursorCount);
     cout << precursorCount << " " << varInfo.vt << endl;
@@ -1138,8 +1126,7 @@ double ScanInfoImpl::trailerExtraValueDouble(const string& name) const
 {
     IXRawfilePtr& raw_ = rawfile_->raw_;
 
-    VARIANT v;
-    VariantInit(&v);
+    _variant_t v;
 
     checkResult(raw_->GetTrailerExtraValueForScanNum(scanNumber_,
                                                      name.c_str(), 
@@ -1156,8 +1143,7 @@ long ScanInfoImpl::trailerExtraValueLong(const string& name) const
 {
     IXRawfilePtr& raw_ = rawfile_->raw_;
 
-    VARIANT v;
-    VariantInit(&v);
+    _variant_t v;
 
     checkResult(raw_->GetTrailerExtraValueForScanNum(scanNumber_,
                                                      name.c_str(), 
@@ -1273,8 +1259,7 @@ class TuneDataLabelValueArray : public LabelValueArray
         // lazy evaluation via GetTuneDataValue() because
         // GetTuneData() was returning unexpected error
 
-        VARIANT v;
-        VariantInit(&v);
+        _variant_t v;
         _bstr_t bstrLabel(labels_.item(index).c_str());
         HRESULT hr = raw_->GetTuneDataValue(segmentNumber_, bstrLabel, &v);
         if (hr)
@@ -1323,8 +1308,7 @@ class TuneDataLabelValueArray : public LabelValueArray
 
 auto_ptr<LabelValueArray> RawFileImpl::getTuneData(long segmentNumber)
 {
-    VARIANT variantLabels;
-    VariantInit(&variantLabels);
+    _variant_t variantLabels;
     long size = 0;
 
     checkResult(raw_->GetTuneDataLabels(segmentNumber, &variantLabels, &size), "[RawFileImpl::GetTuneDataLabels()] ");
@@ -1372,8 +1356,7 @@ class InstrumentMethodLabelValueArray : public LabelValueArray
 
 auto_ptr<LabelValueArray> RawFileImpl::getInstrumentMethods()
 {
-    VARIANT variantLabels;
-    VariantInit(&variantLabels);
+    _variant_t variantLabels;
     long size = 0;
 
     checkResult(raw_->GetInstMethodNames(&size, &variantLabels), "[RawFileImpl::GetInstMethodNames()] ");
@@ -1466,10 +1449,8 @@ RawFileImpl::getChromatogramData(ChromatogramType type1,
     _bstr_t bstrFilter(filter.c_str());
     _bstr_t bstrMassRanges1(massRanges1.c_str());
     _bstr_t bstrMassRanges2(massRanges2.c_str());
-    VARIANT variantChromatogramData;
-    VariantInit(&variantChromatogramData);
-    VARIANT variantPeakFlags;
-    VariantInit(&variantPeakFlags);
+    _variant_t variantChromatogramData;
+    _variant_t variantPeakFlags;
     long size = 0;
 
     checkResult(raw_->GetChroData(type1, op, type2,
