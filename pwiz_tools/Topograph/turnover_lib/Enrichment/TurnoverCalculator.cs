@@ -399,18 +399,30 @@ namespace pwiz.Topograph.Enrichment
             return Score(observedVector, totalPrediction);
         }
         
-        public void GetTracerAmounts(PeptideDistribution tracerAmounts, IList<double> observedIntensities, out IDictionary<TracerFormula, IList<double>> predictedIntensities)
+        public IList<IList<double>> GetTheoreticalIntensities(IList<TracerFormula> tracerFormulas)
         {
-            var excludeFunc = ExcludeNaNs(observedIntensities);
-            Vector observedVector = new Vector(observedIntensities.ToArray());
-            var vectors = new List<Vector>();
-            var tracerFormulas = ListTracerFormulas();
+            var vectors = new List<IList<double>>();
             foreach (var tracerFormula in tracerFormulas)
             {
                 var massDistribution = GetMassDistribution(tracerFormula);
                 massDistribution = massDistribution.OffsetAndDivide(_aminoAcidFormulas.GetMassShift(Sequence), 1);
                 vectors.Add(IntensityDictionaryToVector(massDistribution, _masses));
             }
+            return vectors;
+        }
+
+        public void GetTracerAmounts(PeptideDistribution tracerAmounts, IList<double> observedIntensities, out IDictionary<TracerFormula, IList<double>> predictedIntensities)
+        {
+            var tracerFormulas = ListTracerFormulas();
+            var vectors = GetTheoreticalIntensities(tracerFormulas);
+            GetTracerAmounts(tracerAmounts, observedIntensities, out predictedIntensities, tracerFormulas, vectors);
+        }
+
+        public void GetTracerAmounts(PeptideDistribution tracerAmounts, IList<double> observedIntensities, out IDictionary<TracerFormula, IList<double>> predictedIntensities, IList<TracerFormula> tracerFormulas, IList<IList<double>> theoreticalIntensities)
+        {
+            var vectors = new List<Vector>(theoreticalIntensities.Select(l => new Vector(l.ToArray())));
+            var excludeFunc = ExcludeNaNs(observedIntensities);
+            Vector observedVector = new Vector(observedIntensities.ToArray());
             Vector amounts = FindBestCombinationFilterNegatives(observedVector, vectors, excludeFunc);
             if (amounts == null)
             {
@@ -418,18 +430,18 @@ namespace pwiz.Topograph.Enrichment
             }
             predictedIntensities = new Dictionary<TracerFormula, IList<double>>();
             Vector totalPrediction = new Vector(observedIntensities.Count);
-            for (int i = 0; i < tracerFormulas.Count; i ++)
+            for (int i = 0; i < tracerFormulas.Count; i++)
             {
                 Vector scaledVector = vectors[i].Scale(amounts[i]);
                 predictedIntensities.Add(tracerFormulas[i], scaledVector);
                 totalPrediction = totalPrediction.Add(scaledVector);
                 var tracerAmount
                     = new DbPeptideAmount
-                          {
-                              TracerFormula = tracerFormulas[i].ToString(),
-                              TracerPercent = GetTracerPercent(tracerFormulas[i]),
-                              PercentAmountValue = 100 * amounts[i] / amounts.Sum(),
-                        };
+                    {
+                        TracerFormula = tracerFormulas[i].ToString(),
+                        TracerPercent = GetTracerPercent(tracerFormulas[i]),
+                        PercentAmountValue = 100 * amounts[i] / amounts.Sum(),
+                    };
                 tracerAmounts.AddChild(tracerAmount.TracerFormula, tracerAmount);
             }
             tracerAmounts.Score = Score(observedVector, totalPrediction, excludeFunc);

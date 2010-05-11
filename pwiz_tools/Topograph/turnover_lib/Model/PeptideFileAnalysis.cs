@@ -514,6 +514,7 @@ namespace pwiz.Topograph.Model
                     Chromatograms.AddChild(chromatogramData.MzKey, chromatogramData);
                 }
                 Recalculate();
+                Workspace.EntityChanged(PeptideAnalysis);
                 return true;
             }
         }

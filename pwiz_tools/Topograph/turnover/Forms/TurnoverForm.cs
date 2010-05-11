@@ -483,7 +483,7 @@ namespace pwiz.Topograph.ui.Forms
         public bool EnsureMsDataFile(MsDataFile msDataFile, bool alwaysPrompt)
         {
             String errorMessage;
-            if (!alwaysPrompt && msDataFile.ValidationStatus == ValidationStatus.reject)
+            if (!alwaysPrompt && msDataFile.Workspace.IsRejected(msDataFile))
             {
                 return false;
             }
@@ -517,13 +517,7 @@ namespace pwiz.Topograph.ui.Forms
                 dialogResult =
                     MessageBox.Show(errorMessage + " Do you want to keep looking for a different file?", Program.AppName, MessageBoxButtons.OKCancel);
             }
-            msDataFile.ValidationStatus = ValidationStatus.reject;
-            using (var session = Workspace.OpenWriteSession())
-            {
-                session.BeginTransaction();
-                msDataFile.Save(session);
-                session.Transaction.Commit();
-            }
+            Workspace.RejectMsDataFile(msDataFile);
             return false;
         }
 

@@ -97,11 +97,7 @@ namespace pwiz.Topograph.ui.Forms
                 row.Cells[0].Value = entries[iCandidate].Key.ToString();
                 row.Cells[0].Style.BackColor = color;
                 row.Cells[1].Value = distributions[iCandidate].PercentAmountValue / 100;
-                var label = entries[iCandidate].Key.ToString();
-                if (label.Length == 0)
-                {
-                    label = "No tracers";
-                }
+                var label = entries[iCandidate].Key.ToDisplayString();
                 barGraphControl.GraphPane.AddBar(label, predictedBarPoints, color);
             }
             barGraphControl.GraphPane.AxisChange();

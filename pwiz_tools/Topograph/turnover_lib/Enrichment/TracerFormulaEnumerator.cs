@@ -19,6 +19,33 @@ namespace pwiz.Topograph.Enrichment
     /// </summary>
     public class TracerFormula : Formula<TracerFormula>
     {
+        public override String ToDisplayString()
+        {
+            if (Count == 0)
+            {
+                return "No Tracers";
+            }
+            var result = new StringBuilder();
+            var comma = "";
+            foreach (var entry in this)
+            {
+                result.Append(comma);
+                comma = " ";
+                if (entry.Value == 1)
+                {
+                    result.Append("1 ");
+                    result.Append(entry.Key);
+                }
+                else
+                {
+                    result.Append(entry.Value);
+                    result.Append(" ");
+                    result.Append(entry.Value);
+                    result.Append("s");
+                }
+            }
+            return result.ToString();
+        }
     }
     public class TracerFormulaEnumerator : IEnumerator<TracerFormula>
     {

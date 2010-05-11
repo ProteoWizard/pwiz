@@ -29,6 +29,7 @@ using DigitalRune.Windows.Docking;
 using pwiz.MSGraph;
 using NHibernate;
 using NHibernate.Criterion;
+using pwiz.Topograph.Controls;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
 using ZedGraph;
@@ -63,6 +64,7 @@ namespace pwiz.Topograph.ui.Forms
 
         void msGraphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
+            menuStrip.Items.Insert(0, new CopyEmfToolStripMenuItem(sender));
             menuStrip.Items.Insert(0, new ToolStripSeparator());
             menuStrip.Items.Insert(0, toolStripMenuItemShowSpectrum);
             menuStrip.Items.Insert(0, toolStripMenuItemSmooth);

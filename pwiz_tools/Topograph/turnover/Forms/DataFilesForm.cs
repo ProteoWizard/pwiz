@@ -86,11 +86,10 @@ namespace pwiz.Topograph.ui.Forms
         private void UpdateRow(DataGridViewRow row)
         {
             var dataFile = (MsDataFile) row.Tag;
-            row.Cells[colName.Name].Value = dataFile.Name;
-            row.Cells[colLabel.Name].Value = dataFile.Label;
-            row.Cells[colCohort.Name].Value = dataFile.Cohort;
-            row.Cells[colTimePoint.Name].Value = dataFile.TimePoint;
-            row.Cells[colStatus.Name].Value = dataFile.ValidationStatus;
+            row.Cells[colName.Index].Value = dataFile.Name;
+            row.Cells[colLabel.Index].Value = dataFile.Label;
+            row.Cells[colCohort.Index].Value = dataFile.Cohort;
+            row.Cells[colTimePoint.Index].Value = dataFile.TimePoint;
         }
 
         protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
@@ -141,11 +140,7 @@ namespace pwiz.Topograph.ui.Forms
             var msDataFile = (MsDataFile) row.Tag;
             var column = gridView.Columns[e.ColumnIndex];
             var cell = row.Cells[e.ColumnIndex];
-            if (column == colStatus)
-            {
-                msDataFile.ValidationStatus = (ValidationStatus) cell.Value;
-            }
-            else if (column == colCohort)
+            if (column == colCohort)
             {
                 msDataFile.Cohort = Convert.ToString(cell.Value);
             }

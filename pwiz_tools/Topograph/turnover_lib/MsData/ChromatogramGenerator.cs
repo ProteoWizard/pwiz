@@ -44,7 +44,6 @@ namespace pwiz.Topograph.MsData
         private String _statusMessage;
         private readonly PendingIdQueue _pendingIdQueue = new PendingIdQueue();
         private ISession _session;
-        private ICollection<long> _rejectedMsDataFileIds = new HashSet<long>();
 
         public ChromatogramGenerator(Workspace workspace)
         {
@@ -132,7 +131,7 @@ namespace pwiz.Topograph.MsData
                         {
                             continue;
                         }
-                        if (_rejectedMsDataFileIds.Contains(peptideFileAnalysis.MsDataFile.Id.Value))
+                        if (_workspace.IsRejected(peptideFileAnalysis.MsDataFile))
                         {
                             continue;
                         }
@@ -185,7 +184,7 @@ namespace pwiz.Topograph.MsData
                                 {
                                     continue;
                                 }
-                                if (_rejectedMsDataFileIds.Contains(peptideFileAnalysis.MsDataFile.Id.Value))
+                                if (_workspace.IsRejected(peptideFileAnalysis.MsDataFile))
                                 {
                                     continue;
                                 }
@@ -358,7 +357,7 @@ namespace pwiz.Topograph.MsData
             var result = new HashSet<long>();
             foreach (var msDataFile in _workspace.MsDataFiles.ListChildren())
             {
-                if (msDataFile.HasTimes() && msDataFile.ValidationStatus != ValidationStatus.reject)
+                if (msDataFile.HasTimes())
                 {
                     result.Add(msDataFile.Id.Value);
                 }
@@ -409,7 +408,7 @@ namespace pwiz.Topograph.MsData
             catch (Exception exception)
             {
                 ErrorHandler.LogException("Chromatogram Generator", "Error opening " + path, exception);
-                _rejectedMsDataFileIds.Add(msDataFile.Id.Value);
+                _workspace.RejectMsDataFile(msDataFile);
                 return;
             }
             using (pwizMsDataFileImpl)

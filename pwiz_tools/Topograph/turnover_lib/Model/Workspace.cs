@@ -52,6 +52,7 @@ namespace pwiz.Topograph.Model
         private TracerDefs _tracerDefs;
         private IList<TracerDef> _tracerDefList;
         private ActionInvoker _actionInvoker;
+        private ICollection<long> _rejectedMsDataFileIds = new HashSet<long>();
         public Workspace(String path)
         {
             InstanceId = Guid.NewGuid();
@@ -743,6 +744,7 @@ namespace pwiz.Topograph.Model
                 {
                     return;
                 }
+                ClearRejectedMsDataFiles();
                 if (TpgLinkDef != null)
                 {
                     TpgLinkDef.DataDirectory = directory;
@@ -905,6 +907,25 @@ namespace pwiz.Topograph.Model
                 }
             }
             return false;
+        }
+        
+        public void RejectMsDataFile(MsDataFile msDataFile)
+        {
+            _rejectedMsDataFileIds.Add(msDataFile.Id.Value);
+        }
+
+        public bool IsRejected(MsDataFile msDataFile)
+        {
+            return _rejectedMsDataFileIds.Contains(msDataFile.Id.Value);
+        }
+        public bool IsRejected(DbMsDataFile msDataFile)
+        {
+            return _rejectedMsDataFileIds.Contains(msDataFile.Id.Value);
+        }
+
+        public void ClearRejectedMsDataFiles()
+        {
+            _rejectedMsDataFileIds.Clear();
         }
     }
 

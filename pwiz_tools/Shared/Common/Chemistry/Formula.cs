@@ -97,6 +97,10 @@ namespace pwiz.Common.Chemistry
             }
             return result.ToString();
         }
+        public virtual String ToDisplayString()
+        {
+            return ToString();
+        }
         public override int GetHashCode()
         {
             int result = 0;

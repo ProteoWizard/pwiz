@@ -23,7 +23,7 @@ using System.Text;
 
 namespace pwiz.Topograph.Util
 {
-    class Dictionaries
+    public class Dictionaries
     {
         public static Dictionary<T, double> Normalize<T>(IDictionary<T, double> dict, double target)
         {

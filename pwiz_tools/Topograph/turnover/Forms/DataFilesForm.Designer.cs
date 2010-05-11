@@ -36,12 +36,11 @@ namespace pwiz.Topograph.ui.Forms
             this.label1 = new System.Windows.Forms.Label();
             this.findBox1 = new pwiz.Common.Controls.FindBox();
             this.gridView = new System.Windows.Forms.DataGridView();
+            this.label2 = new System.Windows.Forms.Label();
             this.colName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colLabel = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTimePoint = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colCohort = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colStatus = new pwiz.Topograph.ui.Controls.ValidationStatusColumn();
-            this.label2 = new System.Windows.Forms.Label();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -114,8 +113,7 @@ namespace pwiz.Topograph.ui.Forms
             this.colName,
             this.colLabel,
             this.colTimePoint,
-            this.colCohort,
-            this.colStatus});
+            this.colCohort});
             this.gridView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.gridView.Location = new System.Drawing.Point(0, 0);
             this.gridView.Name = "gridView";
@@ -124,6 +122,16 @@ namespace pwiz.Topograph.ui.Forms
             this.gridView.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridView_CellEndEdit);
             this.gridView.RowHeaderMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.gridView_RowHeaderMouseDoubleClick);
             this.gridView.RowsRemoved += new System.Windows.Forms.DataGridViewRowsRemovedEventHandler(this.gridView_RowsRemoved);
+            // 
+            // label2
+            // 
+            this.tableLayoutPanel1.SetColumnSpan(this.label2, 2);
+            this.label2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.label2.Location = new System.Drawing.Point(3, 0);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(573, 41);
+            this.label2.TabIndex = 2;
+            this.label2.Text = resources.GetString("label2.Text");
             // 
             // colName
             // 
@@ -145,24 +153,6 @@ namespace pwiz.Topograph.ui.Forms
             // 
             this.colCohort.HeaderText = "Cohort";
             this.colCohort.Name = "colCohort";
-            // 
-            // colStatus
-            // 
-            this.colStatus.DisplayMember = "Display";
-            this.colStatus.HeaderText = "Status";
-            this.colStatus.Name = "colStatus";
-            this.colStatus.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            this.colStatus.ValueMember = "Value";
-            // 
-            // label2
-            // 
-            this.tableLayoutPanel1.SetColumnSpan(this.label2, 2);
-            this.label2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label2.Location = new System.Drawing.Point(3, 0);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(573, 41);
-            this.label2.TabIndex = 2;
-            this.label2.Text = resources.GetString("label2.Text");
             // 
             // DataFilesForm
             // 
@@ -190,11 +180,10 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Label label1;
         private pwiz.Common.Controls.FindBox findBox1;
+        private System.Windows.Forms.Label label2;
         private System.Windows.Forms.DataGridViewTextBoxColumn colName;
         private System.Windows.Forms.DataGridViewTextBoxColumn colLabel;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTimePoint;
         private System.Windows.Forms.DataGridViewTextBoxColumn colCohort;
-        private ValidationStatusColumn colStatus;
-        private System.Windows.Forms.Label label2;
     }
 }
