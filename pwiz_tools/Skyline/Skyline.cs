@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Collections;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
@@ -905,19 +904,15 @@ namespace pwiz.Skyline
         {
             ModifyDocument("Delete Nodes", doc =>
                                                   {
-                                                      foreach (TreeNode nodeTree in SequenceTree.SelectedNodes.ToArray())
+                                                      foreach (TreeNodeMS nodeTree in SequenceTree.SelectedNodes)
                                                       {
                                                           var node = nodeTree as SrmTreeNode;
                                                           if (node == null)
                                                               continue;
 
-                                                          if (node.Parent == null || sequenceTree.Nodes.Contains(node.Parent))
-                                                          {
-                                                              IdentityPath path = node.Path.Parent;
-                                                              doc =
-                                                                  (SrmDocument)
-                                                                  doc.RemoveChild(path, node.Model);
-                                                          }
+                                                          IdentityPath path = node.Path;
+                                                          if (doc.FindNode(path) != null)
+                                                            doc = (SrmDocument) doc.RemoveChild(path.Parent, node.Model);
                                                       }
                                                       return doc;
                                                   });
@@ -2207,12 +2202,16 @@ namespace pwiz.Skyline
                 deleteMenuItem.Enabled = false;
                 return;
             }
-            SrmTreeNode nodeTree = sequenceTree.SelectedNode as SrmTreeNode;
-            bool enabled = (nodeTree as IClipboardDataProvider) != null;
+            int countSelected = sequenceTree.SelectedNodes.Count;
+            SrmTreeNode nodeTree = (countSelected > 0 ? sequenceTree.SelectedNode as SrmTreeNode : null);
+            bool enabled = nodeTree is IClipboardDataProvider;
+
             cutToolBarButton.Enabled = cutMenuItem.Enabled = enabled;
             copyToolBarButton.Enabled = copyMenuItem.Enabled = enabled;
             pasteToolBarButton.Enabled = pasteMenuItem.Enabled = true;
-            deleteMenuItem.Enabled = nodeTree != null;
+            // Allow deletion for a single selection that is not the insert node,
+            // or any multiple selection.
+            deleteMenuItem.Enabled = (nodeTree != null || sequenceTree.SelectedNodes.Count > 1);
         }
     }
 }

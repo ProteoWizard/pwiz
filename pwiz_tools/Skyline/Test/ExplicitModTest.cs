@@ -122,7 +122,8 @@ namespace pwiz.SkylineTest
                 i++;
             }
 
-            AssertEx.IsDocumentState(docStudy7, 6, 7, 11, 22, 66);
+            // Removes heavy from peptide with c-terminal P
+            AssertEx.IsDocumentState(docStudy7, 6, 7, 11, 21, 63);
             modifications = docStudy7.Settings.PeptideSettings.Modifications;
             Assert.AreEqual(2, modifications.HeavyModifications.Count);
             Assert.AreEqual(0, modifications.HeavyModifications.Count(mod => mod.IsExplicit));
@@ -136,7 +137,35 @@ namespace pwiz.SkylineTest
                 docStudy7 = docStudy7.ChangePeptideMods(path, pair.Value, listStaticMods, listHeavyMods);
             }
 
-            AssertEx.IsDocumentState(docStudy7, 11, 7, 11, 22, 66);
+            AssertEx.IsDocumentState(docStudy7, 11, 7, 11, 21, 63);
+
+            // Replace the heavy precursor that was removed
+            // TODO: Yuck.  Would be nice to have a way to do this without duplicating
+            //       so much of the logic in PeptideDocNode and PeptideTreeNode
+            var pepPath = docStudy7.GetPathTo((int) SrmDocument.Level.Peptides, 10);
+            var nodePep = (PeptideDocNode) docStudy7.FindNode(pepPath);
+            string seq = nodePep.Peptide.Sequence;
+            var mods = nodePep.ExplicitMods;
+            var nodeGroupLight = (TransitionGroupDocNode) nodePep.Children[0];
+            var settings = docStudy7.Settings;
+            foreach (var tranGroup in nodePep.Peptide.GetTransitionGroups(settings, mods, false))
+            {
+                if (tranGroup.PrecursorCharge == nodeGroupLight.TransitionGroup.PrecursorCharge &&
+                        !tranGroup.LabelType.IsLight)
+                {
+                    double massH = settings.GetPrecursorMass(tranGroup.LabelType, seq, mods);
+                    RelativeRT relativeRT = settings.GetRelativeRT(tranGroup.LabelType, seq, mods);
+                    TransitionDocNode[] transitions = nodePep.GetMatchingTransitions(tranGroup, settings, mods);
+                    var nodeGroup = new TransitionGroupDocNode(tranGroup, massH, relativeRT,
+                        transitions, false);
+                    nodeGroup = nodeGroup.ChangeSettings(settings, mods, SrmSettingsDiff.ALL);
+                    docStudy7 = (SrmDocument) docStudy7.Add(pepPath, nodeGroup);
+                    break;
+                }
+            }
+
+            AssertEx.IsDocumentState(docStudy7, 12, 7, 11, 22, 66);
+
             modifications = docStudy7.Settings.PeptideSettings.Modifications;
             Assert.AreEqual(2, modifications.HeavyModifications.Count(mod => mod.IsExplicit && mod.Label13C));
             Assert.AreEqual(2, modifications.HeavyModifications.Count(mod => mod.Formula != null));

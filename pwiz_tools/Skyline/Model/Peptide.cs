@@ -59,6 +59,12 @@ namespace pwiz.Skyline.Model
 
         public bool HasExplicitMods { get { return ExplicitMods != null; }}
 
+        public bool HasChildType(IsotopeLabelType labelType)
+        {
+            return Children.Contains(nodeGroup => ReferenceEquals(labelType,
+                ((TransitionGroupDocNode)nodeGroup).TransitionGroup.LabelType));
+        }
+
         public int? Rank { get; private set; }
 
         public Results<PeptideChromInfo> Results { get; private set; }
@@ -261,8 +267,22 @@ namespace pwiz.Skyline.Model
                     foreach (TransitionGroupDocNode nodeGroup in nodeResult.Children)
                     {
                         TransitionGroupDocNode nodeChanged = nodeGroup.ChangeSettings(settingsNew, explicitMods, diff);
-                        if (instrument.IsMeasurable(nodeChanged.PrecursorMz))
-                            childrenNew.Add(nodeChanged);
+                        // Skip if the node can no longer be measured on the target instrument
+                        if (!instrument.IsMeasurable(nodeChanged.PrecursorMz))
+                            continue;
+                        // Skip this node, if it is heavy and the update caused it to have the
+                        // same m/z value as the light value.
+                        if (!nodeChanged.TransitionGroup.LabelType.IsLight)
+                        {
+                            double precursorMassLight = settingsNew.GetPrecursorMass(
+                                IsotopeLabelType.light, Peptide.Sequence, explicitMods);
+                            double precursorMzLight = SequenceMassCalc.GetMZ(precursorMassLight,
+                                nodeChanged.TransitionGroup.PrecursorCharge);
+                            if (nodeChanged.PrecursorMz == precursorMzLight)
+                                continue;
+                        }
+
+                        childrenNew.Add(nodeChanged);
                     }
 
                     nodeResult = (PeptideDocNode)ChangeChildrenChecked(childrenNew);

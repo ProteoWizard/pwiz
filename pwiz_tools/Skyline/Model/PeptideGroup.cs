@@ -231,7 +231,7 @@ namespace pwiz.Skyline.Model
             unchecked
             {
                 int result = base.GetHashCode();
-                result = (result*397) ^ _name.GetHashCode();
+                result = (result*397) ^ (_name != null ? _name.GetHashCode() : 0);
                 result = (result*397) ^ (_description != null ? _description.GetHashCode() : 0);
                 return result;
             }

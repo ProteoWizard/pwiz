@@ -1631,7 +1631,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 ChromGraphItem.ColorSelected,
                 Color.Blue,
-                Color.OrangeRed,
+                Color.Maroon,
                 Color.Purple,
                 Color.Orange,
                 Color.Green,

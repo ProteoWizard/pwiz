@@ -1,213 +1,473 @@
+/*
+ * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2009 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
 {
 	/// <summary>
-    /// A MultiSelect TreeView. See http://www.codeproject.com/KB/tree/treeviewms.aspx for details.
+    /// A MultiSelect TreeView.
+    /// <para>
+    /// Inspired by the example at http://www.codeproject.com/KB/tree/treeviewms.aspx for details.</para>
 	/// </summary>
     public class TreeViewMS : TreeView
     {
-       
+        // Length of the horizontal dashed lines representing each branch of the tree
+        protected internal const int HORZ_DASH_LENGTH = 11;
+        // Text padding
+        protected internal const int PADDING = 3;
+        // Width of images associated with the tree
+        protected internal const int IMG_WIDTH = 16;
 
-        protected ArrayList MColl;
-        protected TreeNode MLastNode, AnchorNode;
+        private TreeNodeMS _anchorNode;
 
         public TreeViewMS()
         {
-            MColl = new ArrayList();
+            SelectedNodes = new TreeNodeSelectionMS();
 
+            DashBrush = new TextureBrush(Resources.Dash) { WrapMode = WrapMode.Tile };
+            SetStyle(ControlStyles.UserPaint, true);
+            ItemHeight = 16;
         }
 
-        protected IDocumentUIContainer DocumentContainer
-        { 
-            get;
-            set;
-        }
+        [Browsable(false)]
+        protected IDocumentUIContainer DocumentContainer { get; set; }
 
+        [Browsable(false)]
+        public TextureBrush DashBrush { get; set; }
 
-	    [Browsable (false)]
-        public ArrayList SelectedNodes
+        [Browsable(false)]
+        public ICollection<TreeNodeMS> SelectedNodes { get; private set; }
+
+        /// <summary>
+        /// For functional testing of multiple selection code.
+        /// </summary>
+        [Browsable(false)]
+        public Keys? KeysOverride { get; set; }
+
+        private Keys ModifierKeysOverriden { get { return KeysOverride ?? ModifierKeys; } }
+
+        protected bool IsRangeSelect { get { return ModifierKeysOverriden == Keys.Shift; } }
+	    protected bool IsDisjointSelect
+	    {
+	        get { return ModifierKeysOverriden == Keys.Control && !DocumentContainer.InUndoRedo; }
+	    }
+
+        public void SelectNode(TreeNodeMS node, bool select)
         {
-            get
+            if (!select)
+                SelectedNodes.Remove(node);
+            else
             {
-                return MColl;
-            }
-            set
-            {
-                MColl.Clear();
-                MColl = value;
-                
-            }
-        }
-
-
-       
-
-        // Triggers
-        //
-        // (overriden method, and base class called to ensure events are triggered)
-
-	   protected override void OnBeforeSelect(TreeViewCancelEventArgs e)
-        {
-            base.OnBeforeSelect(e);
-
-            bool bControl = (ModifierKeys == Keys.Control);
-	        bool bShift = (ModifierKeys == Keys.Shift);
-
-            
-            // selecting twice the node while pressing CTRL ?
-            if (bControl && MColl.Contains(e.Node) && !DocumentContainer.InUndoRedo)
-            {
-                // unselect it (let framework know we don't want selection this time)
-                e.Cancel = true;
-
-                // update nodes
-                MColl.Remove(e.Node);
-                return;
-            }
-
-            
-            if (!bShift) MLastNode = AnchorNode = e.Node; // store begin of shift sequence
-        }
-
-
-        protected override void OnAfterSelect(TreeViewEventArgs e)
-        {
-            base.OnAfterSelect(e);
-
-            bool bControl = (ModifierKeys == Keys.Control);
-            bool bShift = (ModifierKeys == Keys.Shift);
-            
-
-            if (bControl && !DocumentContainer.InUndoRedo)
-            {
-                if (!MColl.Contains(e.Node)) // new node ?
+                SelectedNodes.Add(node);
+                // Make sure all ancestors of this node are expanded
+                for (var parent = node.Parent; parent != null && !parent.IsExpanded; parent = parent.Parent)
                 {
-                    MColl.Add(e.Node);
+                    parent.Expand();
                 }
-                else  // not new, remove it from the collection
-                {
-                    
-                    MColl.Remove(e.Node);
-                }
-                
+            }
+            node.IsInSelection = select;
+        }
+
+        public bool IsNodeSelected(TreeNode node)
+        {
+            return node is TreeNodeMS && ((TreeNodeMS) node).IsInSelection;
+        }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+                TreeNodeMS node = (TreeNodeMS)GetNodeAt(e.X, e.Y);
+                if (node != null && !node.IsInSelection &&
+                        node.BoundsMS.Contains(e.Location))
+                    SelectedNode = node;
             }
             else
             {
-                // SHIFT is pressed
-                if (bShift)
+                // Handle cases where clicking on the selected node should change
+                // the selection.
+                TreeNodeMS node = (TreeNodeMS)GetNodeAt(e.X, e.Y);
+                if (ReferenceEquals(node, SelectedNode) &&
+                        node.BoundsMS.Contains(e.Location))
                 {
-                    TreeNode uppernode = MLastNode;
-                    TreeNode bottomnode = e.Node;
-                    
-                    if(!(bottomnode.Index < uppernode.Index && uppernode.Index < AnchorNode.Index) 
-                        && !(bottomnode.Index > uppernode.Index && uppernode.Index > AnchorNode.Index) 
-                        && !MLastNode.Equals(AnchorNode))
-                        MColl.Remove(MLastNode);
-
-                    // case 1 : begin and end nodes are parent
-                    bool bParent = isParent(MLastNode, e.Node); // is AnchorNode parent (direct or not) of e.Node
-                    if (!bParent)
-                    {
-                        bParent = isParent(bottomnode, uppernode);
-                        if (bParent) // swap nodes
-                        {
-                            TreeNode t = uppernode;
-                            uppernode = bottomnode;
-                            bottomnode = t;
-                        }
-                    }
-                    if (bParent)
-                    {
-                        TreeNode n = bottomnode;
-                        while (n != uppernode.Parent)
-                        {
-                            if (!n.Equals(MLastNode))
-                            {
-                                if (!MColl.Contains(n)) MColl.Add(n);
-                                else if (!n.Equals(AnchorNode)) MColl.Remove(n);
-                            }
-                            n = n.Parent;
-                        }
-                    }
-                    // case 2 : nor the begin nor the end node are descendant one another
-                    else
-                    {
-                        if ((uppernode.Parent == null && bottomnode.Parent == null) || (uppernode.Parent != null && uppernode.Parent.Nodes.Contains(bottomnode))) // are they siblings ?
-                        {
-                            int nIndexUpper = uppernode.Index;
-                            int nIndexBottom = bottomnode.Index;
-                            if (nIndexBottom < nIndexUpper) // reversed?
-                            {
-                                TreeNode t = uppernode;
-                                uppernode = bottomnode;
-                                bottomnode = t;
-                                nIndexUpper = uppernode.Index;
-                                nIndexBottom = bottomnode.Index;
-                            }
-
-                            TreeNode n = uppernode;
-                            while (nIndexUpper <= nIndexBottom)
-                            {
-                                if (!n.Equals(MLastNode))
-                                {
-                                    if (!MColl.Contains(n) && !n.Equals(MLastNode)) MColl.Add(n);
-                                    else if (!n.Equals(AnchorNode)) MColl.Remove(n);
-                                }
-                                n = n.NextNode;
-
-                                nIndexUpper++;
-                            } // end while
-
-                        }
-                        else
-                        {
-                            if (!uppernode.Equals(MLastNode))
-                            {
-                                if (!MColl.Contains(uppernode)) MColl.Add(uppernode);
-                                else if (!uppernode.Equals(AnchorNode)) MColl.Remove(uppernode);
-                            }
-                            if (!bottomnode.Equals(MLastNode))
-                            {
-                                if (!MColl.Contains(bottomnode)) MColl.Add(bottomnode);
-                                else if (!bottomnode.Equals(AnchorNode)) MColl.Remove(bottomnode);
-                            }
-                        }
-                      }
-                    Invalidate();
-                    
-                    MLastNode = e.Node; // let us chain several SHIFTs if we like it
-                } // end if m_bShift
-                else
-                {
-                    // in the case of a simple click, just add this item
-                    if (MColl != null && MColl.Count > 0)
-                    {
-                        if (MColl.Count > 1)
-                            Invalidate();
-                        MColl.Clear();
-                    }
-                    if (MColl != null) MColl.Add(e.Node);
+                    // Disjoint selection or the SelectedNode is not in the selection
+                    if (IsDisjointSelect || !IsNodeSelected(node))
+                        SelectedNode = null;
+                    // More than a single node currently selected, and not performing
+                    // range selection on an existing range selection.
+                    else if (SelectedNodes.Count > 1 && (!IsRangeSelect || ReferenceEquals(_anchorNode, SelectedNode)))
+                        SelectedNode = null;
                 }
+            }
+            base.OnMouseDown(e);
+        }
+
+        protected override void OnBeforeSelect(TreeViewCancelEventArgs e)
+        {
+            base.OnBeforeSelect(e);
+
+            // New selection is always the anchor for the next shift selection
+            if (_anchorNode == null || !IsRangeSelect)
+                _anchorNode = (TreeNodeMS) e.Node;
+        }
+
+        protected override void OnAfterSelect(TreeViewEventArgs e)
+        {
+            // Save old selection for invalidating
+            var selectedNodesOld = SelectedNodes.ToArray();
+
+            TreeNodeMS node = (TreeNodeMS)e.Node;
+
+            if (IsDisjointSelect)
+            {
+                // Toggle selection on the node
+                SelectNode(node, !IsNodeSelected(e.Node));
+            }
+            else if (IsRangeSelect && !ReferenceEquals(_anchorNode, node))
+            {
+                // Figure out top and bottom of the range to be selected
+                TreeNodeMS upperNode = _anchorNode;
+                TreeNodeMS bottomNode = node;
+                if (upperNode.BoundsMS.Top > bottomNode.BoundsMS.Top)
+                    Helpers.Swap(ref upperNode, ref bottomNode);
+
+                // Set new selection to contain all visible nodes between top and bottom
+                SelectedNodes.Clear();
+                while (!ReferenceEquals(upperNode, bottomNode))
+                {
+                    SelectNode(upperNode, true);
+                    upperNode = (TreeNodeMS) upperNode.NextVisibleNode;
+                }
+                SelectNode(bottomNode, true);
+            }
+            else
+            {
+                // Make this a single selection of the selected node.
+                SelectedNodes.Clear();
+                SelectNode(node, true);
+            }
+
+            // Invalidate the changed nodes
+            var unchangedNodes = new HashSet<TreeNodeMS>(selectedNodesOld.Intersect(SelectedNodes));
+            InvalidateChangedNodes(selectedNodesOld, unchangedNodes);
+            InvalidateChangedNodes(SelectedNodes, unchangedNodes);
+
+            // Make sure selection is updated before after select event is fired
+            base.OnAfterSelect(e);
+        }
+
+	    private void InvalidateChangedNodes(IEnumerable<TreeNodeMS> nodes, ICollection<TreeNodeMS> unchangedNodes)
+	    {
+	        foreach (var node in nodes)
+	        {
+	            if (!unchangedNodes.Contains(node))
+	                IvalidateNode(node);
+	        }
+	    }
+
+	    protected void IvalidateNode(TreeNodeMS node)
+	    {
+	        Invalidate(new Rectangle(0, node.BoundsMS.Top, ClientRectangle.Width, node.BoundsMS.Height));
+	    }
+
+        protected override void OnPaintBackground(PaintEventArgs pevent)
+        {
+
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            // If we have nodes, then we have to draw them - and that means everything
+            // about the node.
+            var backColorBrush = new SolidBrush(BackColor);
+            e.Graphics.FillRectangle(backColorBrush, ClientRectangle);
+
+            // Draw all nodes exposed in the paint clipping rectangle.
+            var drawRect = e.Graphics.ClipBounds;
+            int top = (int)drawRect.Top, bottom = (int)drawRect.Bottom;
+            for (var node = GetNodeAt(0, top);
+                node != null && node.Bounds.Top <= bottom;
+                node = node.NextVisibleNode)
+            {
+                ((TreeNodeMS)node).DrawNodeCustom(e.Graphics);
             }
         }
 
-        protected bool isParent(TreeNode parentNode, TreeNode childNode)
+        private class TreeNodeSelectionMS : ICollection<TreeNodeMS>
         {
-            if (parentNode == childNode)
-                return true;
+            private readonly List<TreeNodeMS> _nodes = new List<TreeNodeMS>();
 
-            TreeNode n = childNode;
-            bool bFound = false;
-            while (!bFound && n != null)
+            IEnumerator IEnumerable.GetEnumerator()
             {
-                n = n.Parent;
-                bFound = (n == parentNode);
+                return GetEnumerator();
             }
-            return bFound;
+
+            public IEnumerator<TreeNodeMS> GetEnumerator()
+            {
+                return _nodes.GetEnumerator();
+            }
+
+            public void Add(TreeNodeMS item)
+            {
+                item.IsInSelection = true;
+                _nodes.Add(item);                
+            }
+
+            public void Clear()
+            {
+                _nodes.ForEach(node => node.IsInSelection = false);
+                _nodes.Clear();
+            }
+
+            public bool Contains(TreeNodeMS item)
+            {
+                return _nodes.Contains(item);
+            }
+
+            public void CopyTo(TreeNodeMS[] array, int arrayIndex)
+            {
+                _nodes.CopyTo(array, arrayIndex);
+            }
+
+            public bool Remove(TreeNodeMS item)
+            {
+                if (_nodes.Remove(item))
+                {
+                    item.IsInSelection = false;
+                    return true;
+                }
+                return false;
+            }
+
+            public int Count
+            {
+                get { return _nodes.Count; }
+            }
+
+            public bool IsReadOnly
+            {
+                get { return false; }
+            }
+        }
+    }
+
+    public class TreeNodeMS : TreeNode
+    {
+        private const TextFormatFlags FORMAT_TEXT = TextFormatFlags.SingleLine | TextFormatFlags.VerticalCenter;
+
+        public TreeNodeMS()
+        {
+        }
+
+        public TreeNodeMS(string text) : base(text)
+        {
+        }
+
+        /// <summary>
+        /// Returns a typed reference to the owning <see cref="SequenceTree"/>.
+        /// </summary>
+        public TreeViewMS TreeViewMS { get { return (TreeViewMS)TreeView; } }
+
+        public bool IsInSelection { get; protected internal set; }
+
+        public Color ForeColorMS
+        {
+            get
+            {
+                if (!IsInSelection || !TreeViewMS.Focused)
+                    return ForeColor;
+                return SystemColors.HighlightText;
+            }
+        }
+
+        public Color BackColorMS
+        {
+            get
+            {
+                if (!IsInSelection)
+                    return BackColor;
+                if (!TreeViewMS.Focused)
+                    return Color.LightGray;
+                return SystemColors.Highlight;
+            }
+        }
+
+        public Brush SelectionBrush
+        {
+            get
+            {
+                if (!IsInSelection)
+                    return null;
+                if (!TreeViewMS.Focused)
+                    return Brushes.LightGray;
+                return SystemBrushes.Highlight;
+            }
+        }
+
+        private int _widthCustom;
+
+        protected virtual int WidthCustom
+        {
+            get { return _widthCustom > 0 ? _widthCustom : Bounds.Width; }
+        }
+
+        protected virtual void EnsureWidthCustom(Graphics g)
+        {
+            // Measured only once, because the default Bounds width appears to be too
+            // large when the tree view is not allowed to draw itself.
+            if (_widthCustom == 0)
+                _widthCustom = TextRenderer.MeasureText(g, Text, TreeView.Font, Bounds.Size, FORMAT_TEXT).Width;
+        }
+
+        /// <summary>
+        /// Because these nodes allow override of text drawing, this virtual
+        /// is required to get the true bounds of the text that is drawn.
+        /// </summary>
+        public Rectangle BoundsMS
+        {
+            get
+            {
+                var bounds = Bounds;
+                int width = WidthCustom;
+                if (width != Bounds.Width)
+                    bounds.Width = width;
+                return bounds;
+            }
+        }
+
+        public int XIndent
+        {
+            // Finds the X coordinate of the indent for this node, accounting for horizontal scrolling.
+            get
+            {
+                int treeIndent = TreeViewMS.HORZ_DASH_LENGTH + TreeViewMS.PADDING;
+                // Always indent for the node image, whether it has one or not
+                treeIndent += TreeViewMS.IMG_WIDTH;
+                // Only indent for the state image, if it has one
+                if (StateImageIndex != -1)
+                    treeIndent += TreeViewMS.IMG_WIDTH;
+                return BoundsMS.X - treeIndent;
+            }
+        }
+
+        public int HorizScrollDiff
+        {
+            get
+            {
+                return XIndent - (Level*TreeView.Indent + 11);
+            }
+        }
+
+        public void DrawNodeCustom(Graphics g)
+        {
+            EnsureWidthCustom(g);
+
+            Rectangle bounds = BoundsMS;
+
+            // Draw dashed lines
+            var treeView = TreeViewMS;
+            var dashBrush = treeView.DashBrush;
+            // Horizontal line.
+            dashBrush.TranslateTransform(Level % 2 + HorizScrollDiff, 0);
+            g.FillRectangle(dashBrush, XIndent, bounds.Top + bounds.Height / 2,
+                TreeViewMS.HORZ_DASH_LENGTH, 1);
+            // Vertical lines corresponding to the horizontal level of this node.
+            dashBrush.TranslateTransform(-Level % 2 - HorizScrollDiff, 0);
+            // Check if this is the Root.
+            if (ReferenceEquals(this, treeView.Nodes[0]))
+            {
+                if (treeView.Nodes.Count > 1)
+                {
+                    g.FillRectangle(dashBrush, XIndent, bounds.Top + bounds.Height/2,
+                        1, bounds.Height/2);
+                }
+            }
+            // Move up the levels of the tree, drawing the corresponding vertical lines.
+            else
+            {
+                TreeNodeMS curNode = this;
+                while (curNode != null)
+                {
+                    dashBrush.TranslateTransform(0, curNode.Level % 2);
+                    if (curNode.NextNode != null)
+                        g.FillRectangle(dashBrush, curNode.XIndent, bounds.Top, 1, bounds.Height);
+                    else if (curNode == this)
+                        g.FillRectangle(dashBrush, curNode.XIndent, bounds.Top, 1, bounds.Height / 2);
+                    dashBrush.TranslateTransform(0, -curNode.Level % 2);
+                    curNode = curNode.Parent as TreeNodeMS;
+                }
+            }
+
+            // Draw Collapse/Expand bmps and the image associated with the node.
+            if (Nodes.Count > 0)
+            {
+                Image expandCollapse = IsExpanded ? Resources.Collapse : Resources.Expand;
+                g.DrawImage(expandCollapse, XIndent - expandCollapse.Width/2,
+                    bounds.Top + (BoundsMS.Height - expandCollapse.Height + 1) / 2);
+            }
+
+            // Draw images associated with the node.
+            int imgLocX = XIndent + TreeViewMS.HORZ_DASH_LENGTH;
+            const int imgWidth = TreeViewMS.IMG_WIDTH, imgHeight = TreeViewMS.IMG_WIDTH;
+            if (StateImageIndex != -1)
+            {
+                Image stateImg = TreeView.StateImageList.Images[StateImageIndex];
+                g.DrawImageUnscaled(stateImg, imgLocX, bounds.Top, imgWidth, imgHeight);
+                imgLocX += imgWidth;
+            }
+            if (ImageIndex != -1)
+            {
+                Image nodeImg = TreeView.ImageList.Images[ImageIndex];
+                g.DrawImageUnscaled(nodeImg, imgLocX, bounds.Top, imgWidth, imgHeight);
+            }
+
+            DrawTextMS(g);
+        }
+
+        protected virtual void DrawTextMS(Graphics g)
+        {
+            DrawTextBackground(g);
+
+            TextRenderer.DrawText(g, Text, TreeView.Font, BoundsMS, ForeColorMS, BackColorMS, FORMAT_TEXT);
+
+            DrawFocus(g);
+        }
+
+        protected void DrawTextBackground(Graphics g)
+        {
+            if (IsInSelection)
+                g.FillRectangle(SelectionBrush, BoundsMS);
+        }
+
+        protected void DrawFocus(Graphics g)
+        {
+            if (IsSelected)
+                ControlPaint.DrawBorder(g, BoundsMS, Color.Black, ButtonBorderStyle.Dotted);            
         }
     }
 }

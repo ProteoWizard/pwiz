@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -415,7 +416,7 @@ namespace pwiz.Skyline.EditUI
                 if (!string.IsNullOrEmpty((string) _listListComboHeavy[i][indexAA].SelectedItem))
                 {
                     fontStyle |= FontStyle.Bold;
-                    textColor = GraphChromatogram.COLORS_GROUPS[i + 1];
+                    textColor = SequenceTree.GetModColor(_listLabelTypeHeavy[i]);
                     break;
                 }
             }
