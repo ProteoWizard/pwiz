@@ -170,9 +170,10 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             if (!Model.Annotations.IsEmpty)
             {
-                g.FillPolygon(Brushes.OrangeRed, new[] {new Point(Bounds.Right, Bounds.Top), 
-                                                        new Point(Bounds.Right-ANNOTATION_WIDTH, Bounds.Top),
-                                                        new Point(Bounds.Right, Bounds.Top+ANNOTATION_WIDTH)});
+                var bounds = BoundsMS;
+                g.FillPolygon(Brushes.OrangeRed, new[] {new Point(bounds.Right, bounds.Top), 
+                                                        new Point(bounds.Right-ANNOTATION_WIDTH, bounds.Top),
+                                                        new Point(bounds.Right, bounds.Top+ANNOTATION_WIDTH)});
             }
         }
 
