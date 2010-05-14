@@ -23,6 +23,7 @@ namespace pwiz.Topograph.ui.Forms
             InitializeComponent();
             splitContainer1.Panel2.Controls.Add(msGraphControl);
             colAmount.DefaultCellStyle.Format = "0.##%";
+            colTracerPercent.DefaultCellStyle.Format = "0.##%";
         }
 
         protected override void Recalc()
@@ -80,6 +81,25 @@ namespace pwiz.Topograph.ui.Forms
             }
             msGraphControl.AxisChange();
             msGraphControl.Invalidate();
+            double turnover;
+            var precursorEnrichment = PeptideAnalysis.GetTurnoverCalculator().ComputePrecursorEnrichmentAndTurnover(amounts, out turnover);
+            gridViewTracerPercents.Rows.Clear();
+            if (precursorEnrichment == null)
+            {
+                tbxTurnover.Text = "";
+                tbxPrecursorPool.Text = "";
+            }
+            else
+            {
+                tbxTurnover.Text = turnover.ToString("0.##%");
+                tbxPrecursorPool.Text = precursorEnrichment.ToDisplayString();
+                foreach (var tracerDef in Workspace.GetTracerDefs())
+                {
+                    var row = gridViewTracerPercents.Rows[gridViewTracerPercents.Rows.Add()];
+                    row.Cells[0].Value = tracerDef.Name;
+                    row.Cells[1].Value = GetTracerPercent(tracerDef, amounts) / 100;
+                }
+            }
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -185,5 +205,20 @@ namespace pwiz.Topograph.ui.Forms
         {
             UpdateUi();
         }
+        private double GetTracerPercent(TracerDef tracerDef, IDictionary<TracerFormula, double> distribution)
+        {
+            int maxTracerCount = tracerDef.GetMaximumTracerCount(PeptideFileAnalysis.Peptide.Sequence);
+            if (maxTracerCount == 0)
+            {
+                return 0;
+            }
+            double result = 0;
+            foreach (var entry in distribution)
+            {
+                result += entry.Key.GetElementCount(tracerDef.Name) * 100.0 / maxTracerCount * entry.Value;
+            }
+            return result;
+        }
+
     }
 }

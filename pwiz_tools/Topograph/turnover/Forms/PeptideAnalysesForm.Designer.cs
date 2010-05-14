@@ -33,22 +33,23 @@ namespace pwiz.Topograph.ui.Forms
         {
             this.components = new System.ComponentModel.Container();
             this.dataGridView = new System.Windows.Forms.DataGridView();
-            this.colPeptide = new System.Windows.Forms.DataGridViewLinkColumn();
-            this.colStatus = new pwiz.Topograph.ui.Controls.ValidationStatusColumn();
-            this.colNote = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colProteinKey = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colProteinDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colMaxTracers = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colMinScoreTracerCount = new System.Windows.Forms.DataGridViewLinkColumn();
-            this.colMaxScoreTracerCount = new System.Windows.Forms.DataGridViewLinkColumn();
-            this.colMinScorePrecursorEnrichment = new System.Windows.Forms.DataGridViewLinkColumn();
-            this.colMaxScorePrecursorEnrichment = new System.Windows.Forms.DataGridViewLinkColumn();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.deleteMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.btnAnalyzePeptides = new System.Windows.Forms.Button();
             this.findBox = new pwiz.Common.Controls.FindBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.colPeptide = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.colStatus = new pwiz.Topograph.ui.Controls.ValidationStatusColumn();
+            this.colNote = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colProteinKey = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colProteinDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colMaxTracers = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colDataFileCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colMinScoreTracerCount = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.colMaxScoreTracerCount = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.colMinScorePrecursorEnrichment = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.colMaxScorePrecursorEnrichment = new System.Windows.Forms.DataGridViewLinkColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.contextMenuStrip1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -66,6 +67,7 @@ namespace pwiz.Topograph.ui.Forms
             this.colProteinKey,
             this.colProteinDescription,
             this.colMaxTracers,
+            this.colDataFileCount,
             this.colMinScoreTracerCount,
             this.colMaxScoreTracerCount,
             this.colMinScorePrecursorEnrichment,
@@ -79,73 +81,6 @@ namespace pwiz.Topograph.ui.Forms
             this.dataGridView.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_CellEndEdit);
             this.dataGridView.RowHeaderMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView_RowHeaderMouseDoubleClick);
             this.dataGridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_CellContentClick);
-            // 
-            // colPeptide
-            // 
-            this.colPeptide.HeaderText = "Peptide";
-            this.colPeptide.Name = "colPeptide";
-            this.colPeptide.ReadOnly = true;
-            this.colPeptide.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.colPeptide.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            this.colPeptide.Width = 160;
-            // 
-            // colStatus
-            // 
-            this.colStatus.DisplayMember = "Display";
-            this.colStatus.HeaderText = "Status";
-            this.colStatus.Name = "colStatus";
-            this.colStatus.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            this.colStatus.ValueMember = "Value";
-            // 
-            // colNote
-            // 
-            this.colNote.HeaderText = "Note";
-            this.colNote.Name = "colNote";
-            // 
-            // colProteinKey
-            // 
-            this.colProteinKey.HeaderText = "Protein";
-            this.colProteinKey.Name = "colProteinKey";
-            this.colProteinKey.ReadOnly = true;
-            // 
-            // colProteinDescription
-            // 
-            this.colProteinDescription.HeaderText = "Protein Description";
-            this.colProteinDescription.Name = "colProteinDescription";
-            this.colProteinDescription.ReadOnly = true;
-            this.colProteinDescription.Width = 240;
-            // 
-            // colMaxTracers
-            // 
-            this.colMaxTracers.HeaderText = "Max Tracers";
-            this.colMaxTracers.Name = "colMaxTracers";
-            this.colMaxTracers.ReadOnly = true;
-            // 
-            // colMinScoreTracerCount
-            // 
-            this.colMinScoreTracerCount.HeaderText = "Min Score";
-            this.colMinScoreTracerCount.Name = "colMinScoreTracerCount";
-            this.colMinScoreTracerCount.ReadOnly = true;
-            this.colMinScoreTracerCount.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
-            // colMaxScoreTracerCount
-            // 
-            this.colMaxScoreTracerCount.HeaderText = "Max Score";
-            this.colMaxScoreTracerCount.Name = "colMaxScoreTracerCount";
-            this.colMaxScoreTracerCount.ReadOnly = true;
-            this.colMaxScoreTracerCount.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
-            // colMinScorePrecursorEnrichment
-            // 
-            this.colMinScorePrecursorEnrichment.HeaderText = "Min Score";
-            this.colMinScorePrecursorEnrichment.Name = "colMinScorePrecursorEnrichment";
-            this.colMinScorePrecursorEnrichment.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.colMinScorePrecursorEnrichment.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
-            // colMaxScorePrecursorEnrichment
-            // 
-            this.colMaxScorePrecursorEnrichment.HeaderText = "Max Score";
-            this.colMaxScorePrecursorEnrichment.Name = "colMaxScorePrecursorEnrichment";
             // 
             // contextMenuStrip1
             // 
@@ -208,6 +143,79 @@ namespace pwiz.Topograph.ui.Forms
             this.label1.Text = "Find:";
             this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
+            // colPeptide
+            // 
+            this.colPeptide.HeaderText = "Peptide";
+            this.colPeptide.Name = "colPeptide";
+            this.colPeptide.ReadOnly = true;
+            this.colPeptide.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.colPeptide.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            this.colPeptide.Width = 160;
+            // 
+            // colStatus
+            // 
+            this.colStatus.DisplayMember = "Display";
+            this.colStatus.HeaderText = "Status";
+            this.colStatus.Name = "colStatus";
+            this.colStatus.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            this.colStatus.ValueMember = "Value";
+            // 
+            // colNote
+            // 
+            this.colNote.HeaderText = "Note";
+            this.colNote.Name = "colNote";
+            // 
+            // colProteinKey
+            // 
+            this.colProteinKey.HeaderText = "Protein";
+            this.colProteinKey.Name = "colProteinKey";
+            this.colProteinKey.ReadOnly = true;
+            // 
+            // colProteinDescription
+            // 
+            this.colProteinDescription.HeaderText = "Protein Description";
+            this.colProteinDescription.Name = "colProteinDescription";
+            this.colProteinDescription.ReadOnly = true;
+            this.colProteinDescription.Width = 240;
+            // 
+            // colMaxTracers
+            // 
+            this.colMaxTracers.HeaderText = "Max Tracers";
+            this.colMaxTracers.Name = "colMaxTracers";
+            this.colMaxTracers.ReadOnly = true;
+            // 
+            // colDataFileCount
+            // 
+            this.colDataFileCount.HeaderText = "# Data Files";
+            this.colDataFileCount.Name = "colDataFileCount";
+            this.colDataFileCount.ReadOnly = true;
+            // 
+            // colMinScoreTracerCount
+            // 
+            this.colMinScoreTracerCount.HeaderText = "Min Score";
+            this.colMinScoreTracerCount.Name = "colMinScoreTracerCount";
+            this.colMinScoreTracerCount.ReadOnly = true;
+            this.colMinScoreTracerCount.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            // 
+            // colMaxScoreTracerCount
+            // 
+            this.colMaxScoreTracerCount.HeaderText = "Max Score";
+            this.colMaxScoreTracerCount.Name = "colMaxScoreTracerCount";
+            this.colMaxScoreTracerCount.ReadOnly = true;
+            this.colMaxScoreTracerCount.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            // 
+            // colMinScorePrecursorEnrichment
+            // 
+            this.colMinScorePrecursorEnrichment.HeaderText = "Min Score";
+            this.colMinScorePrecursorEnrichment.Name = "colMinScorePrecursorEnrichment";
+            this.colMinScorePrecursorEnrichment.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.colMinScorePrecursorEnrichment.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            // 
+            // colMaxScorePrecursorEnrichment
+            // 
+            this.colMaxScorePrecursorEnrichment.HeaderText = "Max Score";
+            this.colMaxScorePrecursorEnrichment.Name = "colMaxScorePrecursorEnrichment";
+            // 
             // PeptideAnalysesForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -233,17 +241,18 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.Button btnAnalyzePeptides;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem deleteMenuItem;
+        private FindBox findBox;
+        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.DataGridViewLinkColumn colPeptide;
         private ValidationStatusColumn colStatus;
         private System.Windows.Forms.DataGridViewTextBoxColumn colNote;
         private System.Windows.Forms.DataGridViewTextBoxColumn colProteinKey;
         private System.Windows.Forms.DataGridViewTextBoxColumn colProteinDescription;
         private System.Windows.Forms.DataGridViewTextBoxColumn colMaxTracers;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colDataFileCount;
         private System.Windows.Forms.DataGridViewLinkColumn colMinScoreTracerCount;
         private System.Windows.Forms.DataGridViewLinkColumn colMaxScoreTracerCount;
         private System.Windows.Forms.DataGridViewLinkColumn colMinScorePrecursorEnrichment;
         private System.Windows.Forms.DataGridViewLinkColumn colMaxScorePrecursorEnrichment;
-        private FindBox findBox;
-        private System.Windows.Forms.Label label1;
     }
 }

@@ -19,13 +19,78 @@ namespace pwiz.Topograph.Enrichment
     /// but the following is not:
     /// Argsix75Argten75
     /// </summary>
-    public class TracerPercentFormula : Formula<TracerPercentFormula>
+    public class TracerPercentFormula : AbstractFormula<TracerPercentFormula, double>
     {
+        public static TracerPercentFormula Parse(string formula)
+        {
+            var result = new SortedDictionary<string, double>();
+            string currentElement = null;
+            StringBuilder currentQuantity = new StringBuilder();
+            for (int ich = 0; ich < formula.Length; ich++)
+            {
+                char ch = formula[ich];
+                if (ch == '%')
+                {
+                    continue;
+                }
+                
+                if (char.IsDigit(ch) || ch == '.')
+                {
+                    currentQuantity.Append(ch);
+                }
+                else if (Char.IsUpper(ch))
+                {
+                    if (currentElement != null)
+                    {
+                        double quantity = currentQuantity.Length == 0 ? 100 : double.Parse(currentQuantity.ToString());
+                        if (result.ContainsKey(currentElement))
+                        {
+                            result[currentElement] = result[currentElement] + quantity;
+                        }
+                        else
+                        {
+                            result[currentElement] = quantity;
+                        }
+                    }
+                    currentQuantity = new StringBuilder();
+                    currentElement = "" + ch;
+                }
+                else if (Char.IsLower(ch))
+                {
+                    currentElement = currentElement + ch;
+                }
+            }
+            if (currentElement != null)
+            {
+                double quantity = currentQuantity.Length == 0 ? 100 : double.Parse(currentQuantity.ToString());
+                if (result.ContainsKey(currentElement))
+                {
+                    result[currentElement] = result[currentElement] + quantity;
+                }
+                else
+                {
+                    result[currentElement] = quantity;
+                }
+            }
+            return new TracerPercentFormula() { Dictionary = result };
+        }
+        public override String ToString()
+        {
+            var result = new StringBuilder();
+            foreach (var entry in this)
+            {
+                result.Append(entry.Key);
+                result.Append(entry.Value);
+                result.Append("%");
+            }
+            return result.ToString();
+        }
     }
     public class TracerPercentEnumerator : IEnumerator<TracerPercentFormula>
     {
         private readonly SortedDictionary<String,TracerDef> _tracerDefs = new SortedDictionary<string, TracerDef>();
         private readonly int _intermediateLevels;
+        private readonly double _stepsize;
         public TracerPercentEnumerator(ICollection<TracerDef> tracerDefs, int intermediateLevels)
         {
             _intermediateLevels = intermediateLevels;
@@ -34,6 +99,10 @@ namespace pwiz.Topograph.Enrichment
                 _tracerDefs.Add(tracerDef.Name, tracerDef);
             }
         }
+        public TracerPercentEnumerator(ICollection<TracerDef> tracerDefs) : this(tracerDefs, 0)
+        {
+            _stepsize = 1;
+        }
 
         public void Dispose()
         {
@@ -41,7 +110,7 @@ namespace pwiz.Topograph.Enrichment
 
         public bool MoveNext()
         {
-            var remainingSymbolCounts = new Dictionary<string, int>();
+            var remainingSymbolCounts = new Dictionary<string, double>();
             foreach (var tracerDef in _tracerDefs.Values)
             {
                 if (remainingSymbolCounts.ContainsKey(tracerDef.TraceeSymbol))
@@ -55,8 +124,8 @@ namespace pwiz.Topograph.Enrichment
                 Current = TracerPercentFormula.Empty;
                 foreach (var tracerDef in _tracerDefs.Values)
                 {
-                    int remainingSymbolCount = remainingSymbolCounts[tracerDef.TraceeSymbol];
-                    int tracerCount = Math.Min(remainingSymbolCount,
+                    double remainingSymbolCount = remainingSymbolCounts[tracerDef.TraceeSymbol];
+                    double tracerCount = Math.Min(remainingSymbolCount,
                                                (int) Math.Min(tracerDef.InitialApe, tracerDef.FinalApe));
                     Current = Current.SetElementCount(tracerDef.Name, tracerCount);
                     remainingSymbolCounts[tracerDef.TraceeSymbol] = remainingSymbolCount - tracerCount;
@@ -72,9 +141,9 @@ namespace pwiz.Topograph.Enrichment
             foreach (var tracerDef in _tracerDefs.Values)
             {
                 var apesToTry = ListApes(tracerDef);
-                int currentLevel = Current.GetElementCount(tracerDef.Name);
-                int remainingSymbolCount = remainingSymbolCounts[tracerDef.TraceeSymbol];
-                int nextLevel = Math.Min(apesToTry.Max(), remainingSymbolCount + currentLevel);
+                double currentLevel = Current.GetElementCount(tracerDef.Name);
+                double remainingSymbolCount = remainingSymbolCounts[tracerDef.TraceeSymbol];
+                double nextLevel = Math.Min(apesToTry.Max(), remainingSymbolCount + currentLevel);
                 if (nextLevel > currentLevel)
                 {
                     foreach (var level in apesToTry)
@@ -110,22 +179,36 @@ namespace pwiz.Topograph.Enrichment
         {
             get; private set;
         }
-        private List<int> ListApes(TracerDef tracerDef)
+        private List<double> ListApes(TracerDef tracerDef)
         {
             var apes = new List<double>();
-            apes.Add(tracerDef.InitialApe);
-            for (int i = 0; i < _intermediateLevels; i++)
+            if (_stepsize != 0)
             {
-                var ape = (tracerDef.InitialApe*(_intermediateLevels - i)
-                           + tracerDef.FinalApe*(i + 1))/(_intermediateLevels + 1);
-                apes.Add(ape);
+                double ape1 = Math.Min(tracerDef.InitialApe, tracerDef.FinalApe);
+                double ape2 = Math.Max(tracerDef.InitialApe, tracerDef.FinalApe);
+                for (double ape = ape1; ape < ape2; ape += _stepsize)
+                {
+                    apes.Add(ape);
+                }
+                apes.Add(ape2);
             }
-            apes.Add(tracerDef.FinalApe);
-            apes.Sort();
-            var result = new List<int>();
+            else
+            {
+                apes.Add(tracerDef.InitialApe);
+                for (int i = 0; i < _intermediateLevels; i++)
+                {
+                    var ape = (tracerDef.InitialApe * (_intermediateLevels - i)
+                               + tracerDef.FinalApe * (i + 1)) / (_intermediateLevels + 1);
+                    apes.Add(ape);
+                }
+                apes.Add(tracerDef.FinalApe);
+                apes.Sort();
+            }
+            
+            var result = new List<double>();
             foreach (double ape in apes)
             {
-                int apeInt = (int) ape;
+                double apeInt = Math.Floor(ape);
                 if (result.Count == 0 || apeInt != result[result.Count - 1])
                 {
                     result.Add(apeInt);

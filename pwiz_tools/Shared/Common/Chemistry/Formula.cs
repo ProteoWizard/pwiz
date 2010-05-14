@@ -7,10 +7,100 @@ using pwiz.Common.Collections;
 
 namespace pwiz.Common.Chemistry
 {
-    public class Formula<T> : ImmutableDictionary<String, int>, IComparable<T>
+    public abstract class AbstractFormula<T,N> : ImmutableDictionary<String, N>, IComparable<T>
+        where T : AbstractFormula<T, N>, new()
+        where N : IComparable<N>
+    {
+        public static readonly T Empty = new T { Dictionary = new SortedDictionary<string, N>() };
+        public override abstract string ToString();
+        public virtual String ToDisplayString()
+        {
+            return ToString();
+        }
+        public T SetElementCount(String element, N count)
+        {
+            var dict = new SortedDictionary<String, N>(this);
+            if (count.Equals(default(N)))
+            {
+                dict.Remove(element);
+            }
+            else
+            {
+                dict[element] = count;
+            }
+            return new T { Dictionary = dict };
+        }
+        public N GetElementCount(String element)
+        {
+            N atomCount;
+            TryGetValue(element, out atomCount);
+            return atomCount;
+        }
+        public override int GetHashCode()
+        {
+            int result = 0;
+            foreach (var entry in this)
+            {
+                result += entry.Key.GetHashCode() * entry.Value.GetHashCode();
+            }
+            return result;
+        }
+        public override bool Equals(Object o)
+        {
+            if (o == this)
+            {
+                return true;
+            }
+            var that = o as T;
+            if (that == null)
+            {
+                return false;
+            }
+            if (Count != that.Count)
+            {
+                return false;
+            }
+            foreach (var entry in this)
+            {
+                N thatValue;
+                if (!that.TryGetValue(entry.Key, out thatValue))
+                {
+                    return false;
+                }
+                if (!Equals(entry.Value, thatValue))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+        public int CompareTo(T that)
+        {
+            var thisEnumerator = GetEnumerator();
+            var thatEnumerator = that.GetEnumerator();
+            while (thisEnumerator.MoveNext())
+            {
+                if (!thatEnumerator.MoveNext())
+                {
+                    return 1;
+                }
+                int keyCompare = thisEnumerator.Current.Key.CompareTo(thatEnumerator.Current.Key);
+                if (keyCompare != 0)
+                {
+                    return keyCompare;
+                }
+                int valueCompare = thisEnumerator.Current.Value.CompareTo(thatEnumerator.Current.Value);
+                if (valueCompare != 0)
+                {
+                    return valueCompare;
+                }
+            }
+            return thatEnumerator.MoveNext() ? -1 : 0;
+        }
+    }
+    public class Formula<T> : AbstractFormula<T, int>
         where T : Formula<T>, new()
     {
-        public static readonly T Empty = new T { Dictionary = new SortedDictionary<string, int>() };
         public static T Parse(String formula)
         {
             var result = new SortedDictionary<String, int>();
@@ -65,25 +155,6 @@ namespace pwiz.Common.Chemistry
             }
             return new T {Dictionary = result};
         }
-        public T SetElementCount(String element, int count)
-        {
-            var dict = new SortedDictionary<String, int>(this);
-            if (count == 0)
-            {
-                dict.Remove(element);
-            }
-            else
-            {
-                dict[element] = count;
-            }
-            return new T {Dictionary = dict};
-        }
-        public int GetElementCount(String element)
-        {
-            int atomCount;
-            TryGetValue(element, out atomCount);
-            return atomCount;
-        }
         public override String ToString()
         {
             var result = new StringBuilder();
@@ -96,71 +167,6 @@ namespace pwiz.Common.Chemistry
                 }
             }
             return result.ToString();
-        }
-        public virtual String ToDisplayString()
-        {
-            return ToString();
-        }
-        public override int GetHashCode()
-        {
-            int result = 0;
-            foreach (var entry in this)
-            {
-                result += entry.Key.GetHashCode() * entry.Value;
-            }
-            return result;
-        }
-        public override bool Equals(Object o)
-        {
-            if (o == this)
-            {
-                return true;
-            }
-            var that = o as T;
-            if (that == null)
-            {
-                return false;
-            }
-            if (Count != that.Count)
-            {
-                return false;
-            }
-            foreach (var entry in this)
-            {
-                int thatValue;
-                if (!that.TryGetValue(entry.Key, out thatValue))
-                {
-                    return false;
-                }
-                if (entry.Value != thatValue)
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
-        public int CompareTo(T that)
-        {
-            var thisEnumerator = GetEnumerator();
-            var thatEnumerator = that.GetEnumerator();
-            while (thisEnumerator.MoveNext())
-            {
-                if (!thatEnumerator.MoveNext())
-                {
-                    return 1;
-                }
-                int keyCompare = thisEnumerator.Current.Key.CompareTo(thatEnumerator.Current.Key);
-                if (keyCompare != 0)
-                {
-                    return keyCompare;
-                }
-                int valueCompare = thisEnumerator.Current.Value.CompareTo(thatEnumerator.Current.Value);
-                if (valueCompare != 0)
-                {
-                    return valueCompare;
-                }
-            }
-            return thatEnumerator.MoveNext() ? -1 : 0;
         }
     }
 }

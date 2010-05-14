@@ -44,8 +44,9 @@ namespace pwiz.Topograph.ui.Forms
             InitializeComponent();
         }
         
-        protected void DisplayDistributionResults<T>(PeptideDistribution peptideDistribution, IList<double> observedIntensities, IDictionary<T,IList<double>> predictedIntensities, ZedGraphControl barGraphControl) 
-            where T:Formula<T>, new()
+        protected void DisplayDistributionResults<T,N>(PeptideDistribution peptideDistribution, IList<double> observedIntensities, IDictionary<T,IList<double>> predictedIntensities, ZedGraphControl barGraphControl) 
+            where T:AbstractFormula<T,N>, new()
+            where N : IComparable<N>
         {
             GridViewTracerPercents.Rows.Clear();
             GridViewFormulas.Rows.Clear();

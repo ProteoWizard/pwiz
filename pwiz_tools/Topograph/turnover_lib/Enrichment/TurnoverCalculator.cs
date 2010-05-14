@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using MathNet.Numerics;
 using MathNet.Numerics.LinearAlgebra;
 using pwiz.Common.Chemistry;
 using pwiz.Topograph.Data;
@@ -493,6 +494,109 @@ namespace pwiz.Topograph.Enrichment
                 result.Add(enumerator.Current);
             }
             return result;
+        }
+
+        public TracerPercentFormula ComputePrecursorEnrichmentAndTurnover(IDictionary<TracerFormula, double> peptideDistribution, out double turnover)
+        {
+            var tracerFormulaIndexes = new Dictionary<TracerFormula, int>();
+            var observedPercentages = new Vector(peptideDistribution.Count);
+            foreach (var entry in peptideDistribution)
+            {
+                var tracerFormula = entry.Key;
+                observedPercentages[tracerFormulaIndexes.Count] = entry.Value;
+                tracerFormulaIndexes.Add(tracerFormula, tracerFormulaIndexes.Count);
+            }
+            var initialVector = DistributionToVector(GetDistribution(GetInitialTracerPercents()), tracerFormulaIndexes);
+            TracerPercentFormula bestFormula = null;
+            double bestScore = 0;
+            double bestTurnover = 0;
+            var tracerPercentEnumerator = new TracerPercentEnumerator(_tracerDefs.Values);
+            while (tracerPercentEnumerator.MoveNext())
+            {
+                var tracerPercents = tracerPercentEnumerator.Current;
+                var distribution = GetDistribution(tracerPercents);
+                var newlySynthesizedVector = DistributionToVector(distribution, tracerFormulaIndexes);
+                var combination = FindBestCombination(observedPercentages, initialVector, newlySynthesizedVector);
+                if (combination == null)
+                {
+                    continue;
+                }
+                if (combination[0] < 0 || combination[1] < 0)
+                {
+                    continue;
+                }
+                var resultVector = initialVector.Scale(combination[0]).Add(newlySynthesizedVector.Scale(combination[1]));
+                var score = Score(observedPercentages, resultVector);
+                if (bestFormula == null || score > bestScore)
+                {
+                    bestFormula = tracerPercents;
+                    bestScore = score;
+                    bestTurnover = combination[1]/(combination[0] + combination[1]);
+                }
+            }
+            turnover = bestTurnover;
+            return bestFormula;
+        }
+
+        private TracerPercentFormula GetInitialTracerPercents()
+        {
+            var result = TracerPercentFormula.Empty;
+            foreach (var tracerDef in _tracerDefs.Values)
+            {
+                result = result.SetElementCount(tracerDef.Name, tracerDef.InitialApe);
+            }
+            return result;
+        }
+
+        private static Vector DistributionToVector(IDictionary<TracerFormula, double> distribution, IDictionary<TracerFormula, int> indexes)
+        {
+            var result = new Vector(indexes.Count);
+            foreach (var entry in distribution)
+            {
+                result[indexes[entry.Key]] = entry.Value;
+            }
+            return result;
+        }
+        
+        public Dictionary<TracerFormula, double> GetDistribution(TracerPercentFormula tracerPercents)
+        {
+            var tracerFormulaEnumerator = new TracerFormulaEnumerator(Sequence, _tracerDefs.Values);
+            var result = new Dictionary<TracerFormula, double>();
+            while (tracerFormulaEnumerator.MoveNext())
+            {
+                result.Add(tracerFormulaEnumerator.Current, ComputeProbability(tracerFormulaEnumerator, tracerPercents));
+            }
+            return result;
+        }
+
+        private double ComputeProbability(TracerFormulaEnumerator tracerFormulaEnumerator, TracerPercentFormula tracerPercents)
+        {
+            var tracerFormula = tracerFormulaEnumerator.Current;
+            var tracerSymbolCounts = tracerFormulaEnumerator.GetTracerSymbolCounts();
+
+            var traceePercents = tracerSymbolCounts.Keys.ToDictionary(s=>s, s => 1.0);
+            var result = 1.0;
+            foreach (var tracerDef in _tracerDefs.Values)
+            {
+                int tracerTraceeCount = tracerSymbolCounts[tracerDef.TraceeSymbol];
+                int tracerCount = tracerFormula.GetElementCount(tracerDef.Name);
+                double probability = Math.Pow(tracerPercents.GetElementCount(tracerDef.Name) / 100, tracerCount)
+                                     *Choose(tracerTraceeCount, tracerCount);
+                result *= probability;
+                tracerSymbolCounts[tracerDef.TraceeSymbol] = tracerTraceeCount - tracerCount;
+                traceePercents[tracerDef.TraceeSymbol] = traceePercents[tracerDef.TraceeSymbol] -
+                                                         tracerPercents.GetElementCount(tracerDef.Name)/100;
+            }
+            foreach (var entry in tracerSymbolCounts)
+            {
+                result *= Math.Pow(traceePercents[entry.Key], entry.Value);
+            }
+            return result;
+        }
+
+        static double Choose(int n, int c)
+        {
+            return Fn.Factorial(n)/Fn.Factorial(c)/Fn.Factorial(n - c);
         }
     }
 }

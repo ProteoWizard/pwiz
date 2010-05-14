@@ -62,7 +62,7 @@ namespace pwiz.Topograph.ui.Forms
             var precursorEnrichments = PeptideFileAnalysis.PeptideDistributions.ComputePrecursorEnrichments(
                 PeptideFileAnalysis.Peaks,
                 out observedIntensities, out predictedIntensities);
-            DisplayDistributionResults(precursorEnrichments, observedIntensities, predictedIntensities, barGraphControl);
+            DisplayDistributionResults<TracerPercentFormula, double>(precursorEnrichments, observedIntensities, predictedIntensities, barGraphControl);
             if (precursorEnrichments == null)
             {
                 tbxScore.Text = "";

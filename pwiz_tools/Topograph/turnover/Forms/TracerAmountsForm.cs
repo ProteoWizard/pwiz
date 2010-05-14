@@ -57,7 +57,7 @@ namespace pwiz.Topograph.ui.Forms
             var tracerAmounts = PeptideFileAnalysis.PeptideDistributions.ComputeTracerAmounts(
                 PeptideFileAnalysis.Peaks, out observedIntensities, out predictedIntensities);
             
-            DisplayDistributionResults(tracerAmounts, observedIntensities, predictedIntensities, barGraphControl);
+            DisplayDistributionResults<TracerFormula, int>(tracerAmounts, observedIntensities, predictedIntensities, barGraphControl);
             if (tracerAmounts != null)
             {
                 tbxScore.Text = tracerAmounts.Score.ToString();

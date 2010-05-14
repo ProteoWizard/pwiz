@@ -40,7 +40,7 @@ namespace pwiz.Topograph.Enrichment
                 {
                     result.Append(entry.Value);
                     result.Append(" ");
-                    result.Append(entry.Value);
+                    result.Append(entry.Key);
                     result.Append("s");
                 }
             }
@@ -133,5 +133,10 @@ namespace pwiz.Topograph.Enrichment
         }
 
         object IEnumerator.Current { get { return Current;} }
+
+        public IDictionary<string, int> GetTracerSymbolCounts()
+        {
+            return new Dictionary<string, int>(_tracerSymbolCounts);
+        }
     }
 }

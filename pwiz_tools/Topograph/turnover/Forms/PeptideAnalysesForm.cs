@@ -178,7 +178,7 @@ namespace pwiz.Topograph.ui.Forms
                 var peptideAnalysisRows = new Dictionary<long, PeptideAnalysisRow>();
                 using (var session = Workspace.OpenSession())
                 {
-                    String hql = "SELECT pa.Id, pa.Peptide.Id, pa.Note "
+                    String hql = "SELECT pa.Id, pa.Peptide.Id, pa.Note, pa.FileAnalysisCount "
                                  + "\nFROM " + typeof(DbPeptideAnalysis) + " pa";
 
                     if (idsToRequery != null)
@@ -197,6 +197,7 @@ namespace pwiz.Topograph.ui.Forms
                         }
                         peptideAnalysisRow.PeptideId = (long)rowData[1];
                         peptideAnalysisRow.Note = (string)rowData[2];
+                        peptideAnalysisRow.DataFileCount = (int) rowData[3];
                     }
                     var hql2 = "SELECT pd.PeptideFileAnalysis.PeptideAnalysis.Id, pd.PeptideQuantity, Min(pd.Score), Max(pd.Score), Min(pd.PeptideFileAnalysis.ValidationStatus), Max(pd.PeptideFileAnalysis.ValidationStatus) "
                                + "\nfrom " + typeof(DbPeptideDistribution) +
@@ -293,6 +294,7 @@ namespace pwiz.Topograph.ui.Forms
                     row.Cells[colMaxScoreTracerCount.Index].Value = entry.Value.MaxScoreTracerAmounts;
                     row.Cells[colMinScorePrecursorEnrichment.Index].Value = entry.Value.MinScorePrecursorEnrichments;
                     row.Cells[colMaxScorePrecursorEnrichment.Index].Value = entry.Value.MaxScorePrecursorEnrichments;
+                    row.Cells[colDataFileCount.Index].Value = entry.Value.DataFileCount;
                     if (peptideAnalysis == null)
                     {
                         row.Cells[colNote.Index].Value = entry.Value.Note;
@@ -360,6 +362,10 @@ namespace pwiz.Topograph.ui.Forms
         private void dataGridView_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
             var column = dataGridView.Columns[e.ColumnIndex];
+            if (column.ReadOnly)
+            {
+                return;
+            }
             var row = dataGridView.Rows[e.RowIndex];
             var cell = row.Cells[e.ColumnIndex];
             var peptideAnalysisId = (long)row.Tag;
@@ -474,6 +480,7 @@ namespace pwiz.Topograph.ui.Forms
             public double? MaxScorePrecursorEnrichments;
             public ValidationStatus? MinValidationStatus;
             public ValidationStatus? MaxValidationStatus;
+            public int DataFileCount;
         }
     }
 }
