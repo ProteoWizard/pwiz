@@ -678,59 +678,6 @@ namespace freicore
 	{
 	}
 
-    /* This function determines the best ranking method using the target-decoy
-       score optimization strategy described in percolator manuscript. */
-    void RerankResultsWithCompoundScore()
-    {
-        // Figure out the optimal score discriminant 
-        // that separates the target and decoy hits
-        ScoreDiscriminant scoreDiscriminant(spectra);
-        scoreDiscriminant.computeScoreDiscriminant();
-        if(!scoreDiscriminant.isSuccessful)
-        {
-            cout << g_hostString << " failed to change ranks; Preserving original ranks." << endl;
-            return;
-        }
-        // Compute the charge state normalization factors for each score
-        map< string, map< size_t, double > > maxScoresByZState;
-        map< string, map< size_t, double > > minScoresByZState;
-        for(size_t z = 1; z <= g_rtConfig->NumChargeStates; ++z)
-        {
-            maxScoresByZState["mvh"][z] = (double) INT_MIN;
-            maxScoresByZState["mzfidelity"][z] = (double) INT_MIN;
-            maxScoresByZState["xcorr"][z] = (double) INT_MIN;
-            minScoresByZState["mvh"][z] = (double) INT_MAX;
-            minScoresByZState["mzfidelity"][z] = (double) INT_MAX;
-            minScoresByZState["xcorr"][z] = (double) INT_MAX;
-        }
-        BOOST_FOREACH(Spectrum* s, spectra)
-            BOOST_FOREACH(const SearchResult& result, s->resultSet)
-            {
-                maxScoresByZState["mvh"][s->id.charge] = max(maxScoresByZState["mvh"][s->id.charge], result.mvh);
-                maxScoresByZState["mzfidelity"][s->id.charge] = max(maxScoresByZState["mzfidelity"][s->id.charge], result.mzFidelity);
-                maxScoresByZState["xcorr"][s->id.charge] = max(maxScoresByZState["xcorr"][s->id.charge], result.XCorr);
-                minScoresByZState["mvh"][s->id.charge] = min(minScoresByZState["mvh"][s->id.charge], result.mvh);
-                minScoresByZState["mzfidelity"][s->id.charge] = min(minScoresByZState["mzfidelity"][s->id.charge], result.mzFidelity);
-                minScoresByZState["xcorr"][s->id.charge] = min(minScoresByZState["xcorr"][s->id.charge], result.XCorr);
-            }
-        // Use the discriminant to change the ranks of each PSM.
-        BOOST_FOREACH(Spectrum* s, spectra)
-        {
-            Spectrum::SearchResultSetType newResultSet;
-            BOOST_FOREACH(const SearchResult& result, s->resultSet)
-            {
-                Spectrum::SearchResultType& mutableResult = (const_cast<Spectrum::SearchResultType&>(result));
-                mutableResult.computediscriminantScore(scoreDiscriminant.featureWeights,s->id.charge, minScoresByZState, maxScoresByZState );
-                mutableResult.rankScore = mutableResult.discriminantScore;
-                newResultSet.insert(mutableResult);
-            }
-            s->resultSet.clear();
-            BOOST_FOREACH(const SearchResult& result, newResultSet)
-                s->resultSet.insert(result);
-            s->resultSet.calculateRanks();
-        }                
-    }
-
     void ComputeXCorrs(string sourceFilepath)
     {
         // Get total spectra size
@@ -1018,7 +965,7 @@ namespace freicore
         size_t maxCombin = 1 , minCombin = 1;
         if(g_rtConfig->unknownMassShiftSearchMode == MUTATIONS)
             possibleModifications = deltaMasses->getPossibleSubstitutions(modMass, massTol);
-        else if(g_rtConfig->unknownMassShiftSearchMode == PREFERRED_MASS_SHITS)
+        else if(g_rtConfig->unknownMassShiftSearchMode == PREFERRED_DELTA_MASSES)
             possibleModifications =  g_rtConfig->preferredDeltaMasses.getMatchingMassShifts(modMass, massTol, maxCombin, minCombin);
             
 		if(possibleModifications.size() == 0)
@@ -1269,7 +1216,7 @@ namespace freicore
                     {
                         // If the user configured the searches for substitutions
                         if(g_rtConfig->unknownMassShiftSearchMode ==  MUTATIONS ||
-                           g_rtConfig->unknownMassShiftSearchMode == PREFERRED_MASS_SHITS)
+                           g_rtConfig->unknownMassShiftSearchMode == PREFERRED_DELTA_MASSES)
                         {
                             numComparisonsDone +=
                                 ScoreKnownModification(candidate, neutralMass, modMass,
@@ -1496,7 +1443,7 @@ namespace freicore
                 // against a small list, check to make sure that the 
                 // current mod mass is in that list.
                 bool legitimateModMass = true;
-                if(g_rtConfig->unknownMassShiftSearchMode == PREFERRED_MASS_SHITS) 
+                if(g_rtConfig->unknownMassShiftSearchMode == PREFERRED_DELTA_MASSES) 
                    legitimateModMass &= g_rtConfig->preferredDeltaMasses.containsMassShift(tagMatch.modificationMass, modMassTolerance);
                 
                 // If we are in the blind or mutation mode, make sure we are not picking any
@@ -1514,7 +1461,7 @@ namespace freicore
 
                     // If the user configured the search for either substitutions or preferred mass shifts
                     if(g_rtConfig->unknownMassShiftSearchMode ==  MUTATIONS||
-                        g_rtConfig->unknownMassShiftSearchMode == PREFERRED_MASS_SHITS) 
+                        g_rtConfig->unknownMassShiftSearchMode == PREFERRED_DELTA_MASSES) 
                     {
                         // Find the substitutions or PDMs that fit the mass, generate variants and score them.
                         numComparisonsDone += 
@@ -2015,6 +1962,22 @@ namespace freicore
                     // Read the metadata without the tags (returns the path to peaks file, i.e. mzML)
                     sourceFilepath = spectra.readTags( *fItr, g_rtConfig->StartSpectraScanNum, g_rtConfig->EndSpectraScanNum, true);
 
+                // Try to find the source next to the tags
+                if( !bfs::exists(sourceFilepath) )
+                {
+                    string sourceFilename = bfs::path(sourceFilepath).filename();
+                    bfs::path tagsFilepath = bfs::path(*fItr);
+                    bfs::path adjacentSourceFilepath = tagsFilepath.parent_path() / sourceFilename;
+                    if( bfs::exists(adjacentSourceFilepath) )
+                        sourceFilepath = adjacentSourceFilepath.string();
+                    else
+                    {
+                        cerr << "Error: could not find source \"" + sourceFilename + "\" for tags file \"" + tagsFilepath.filename() + "\"" << endl;
+                        continue;
+                    }
+                }
+
+
 				// Set the parameters for the search
 				g_rtConfig->setVariables( varsFromFile );
 				g_residueMap->dynamicMods = DynamicModSet( g_rtConfig->DynamicMods );
@@ -2304,8 +2267,6 @@ namespace freicore
 					{
                         if(g_rtConfig->ComputeXCorr)
                             ComputeXCorrs(sourceFilepath);
-                        if(g_rtConfig->PercolatorReranking)
-                            RerankResultsWithCompoundScore();
 						// Generate an output file for each input file
 						WriteOutputToFile( *fItr, startTime, startDate, searchTime.End(), opcs, fpcs, sumSearchStats );
 						cout << g_hostString << " finished file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;

@@ -95,8 +95,7 @@ using namespace pwiz;
     RTCONFIG_VARIABLE( int,			    MaxPeakCount,               200   		    ) \
     RTCONFIG_VARIABLE( bool,			ComputeXCorr,               true  		    ) \
     RTCONFIG_VARIABLE( bool,			UseNETAdjustment,           true  		    ) \
-    RTCONFIG_VARIABLE( bool,			PenalizeUnknownMods,        false  		    ) \
-    RTCONFIG_VARIABLE( bool,			PercolatorReranking,        false  		    )
+    RTCONFIG_VARIABLE( bool,			PenalizeUnknownMods,        false  		    )
 
 
 namespace freicore
@@ -104,7 +103,7 @@ namespace freicore
 namespace tagrecon
 {
 
-        enum UnknownMassShiftSearchMode {BLIND_PTMS, MUTATIONS, PREFERRED_MASS_SHITS, INACTIVE};
+        enum UnknownMassShiftSearchMode {BLIND_PTMS, MUTATIONS, PREFERRED_DELTA_MASSES, INACTIVE};
 
         struct RunTimeConfig : public BaseRunTimeConfig
         {
@@ -217,7 +216,7 @@ namespace tagrecon
                     {
                         if(preferredDeltaMasses.size()==0)
                             throw runtime_error("Preferred mass shifts must be defined when \"PreferredPTMs\" search mode is selected.");
-                        unknownMassShiftSearchMode = PREFERRED_MASS_SHITS;
+                        unknownMassShiftSearchMode = PREFERRED_DELTA_MASSES;
                     }
                 }
 

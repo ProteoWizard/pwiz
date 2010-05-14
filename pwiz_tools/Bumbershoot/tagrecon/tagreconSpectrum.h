@@ -65,6 +65,7 @@ namespace tagrecon
 		double mvh;
         double mzFidelity;
         double rankScore;
+        double probabilisticScore;
 
 		double mzSSE;
         double massError;
@@ -74,9 +75,6 @@ namespace tagrecon
 		double pvalue;
 		double expect;
 		double fdr;
-
-        double discriminantScore;
-        double probabilisticScore;
 
         size_t numberOfBlindMods;
         size_t numberOfOtherMods;
@@ -136,37 +134,6 @@ namespace tagrecon
             return (value-minScore)/div;
         }
 
-        /* This function computes the f-score from a set of features. The weights of these features 
-           are determined by the ScoreDiscriminant data structure. 
-        */
-        void computediscriminantScore(const map<string,double>& featureWeights, int zState, MinMaxScoresByZState minScoresByZState, MinMaxScoresByZState maxScoresByZState)
-        {
-            discriminantScore = 0.0;
-            map<string,double>::const_iterator iter;
-            // Z-state normalize all the scores
-            iter = featureWeights.find("mvh");
-            if(iter != featureWeights.end())
-                discriminantScore += normalizeScore("mvh", mvh, zState, minScoresByZState, maxScoresByZState) * iter->second;
-            iter = featureWeights.find("mzfidelity");
-            if(iter != featureWeights.end())
-                discriminantScore += normalizeScore("mzfidelity", mzFidelity, zState, minScoresByZState, maxScoresByZState)  * iter->second;
-            iter = featureWeights.find("xcorr");
-            if(iter != featureWeights.end())
-                discriminantScore += normalizeScore("xcorr", XCorr, zState, minScoresByZState, maxScoresByZState)  * iter->second;
-            iter = featureWeights.find("numPTMs");
-            if(iter!=featureWeights.end())
-                discriminantScore += numberOfOtherMods * iter->second;
-            iter = featureWeights.find("numBlindPTMs");
-            if(iter!=featureWeights.end())
-                discriminantScore += numberOfBlindMods * iter->second;
-            iter = featureWeights.find("NET");
-            if(iter != featureWeights.end())
-                discriminantScore += specificTermini() * iter->second;
-            iter = featureWeights.find("numMissedCleavs");
-            if(iter != featureWeights.end())
-                discriminantScore += missedCleavages() * iter->second;
-        }
-
 		/*** 
 			Operator to sort the search scores based on total scores (MVH)
 			This function sorts search results based on mvh, sequence and 
@@ -192,7 +159,7 @@ namespace tagrecon
 		void serialize( Archive& ar, const unsigned int version )
 		{
 			ar & boost::serialization::base_object< BaseSearchResult >( *this );
-			ar & mvh & massError & mzSSE & mzFidelity & rankScore & XCorr & probabilisticScore & discriminantScore;
+			ar & mvh & massError & mzSSE & mzFidelity & rankScore & XCorr & probabilisticScore;
             ar & numberOfBlindMods & numberOfOtherMods;
 			if( g_rtConfig->CalculateRelativeScores )
 				ar & pvalue & expect;
@@ -297,7 +264,7 @@ namespace tagrecon
             
             // Get the expected width of the array
             int peakDataLength = peakDataForXCorr.size();
-            float binWidth = 1.0007079;
+            float binWidth = 1.0007079f;
             vector<float> theoreticalSpectrum;
             theoreticalSpectrum.resize(peakDataLength);
             fill(theoreticalSpectrum.begin(), theoreticalSpectrum.end(), 0);
