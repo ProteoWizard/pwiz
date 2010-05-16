@@ -250,17 +250,22 @@ namespace pwiz.SkylineTestFunctional
                 () => SkylineWindow.Paste(peptideList));
 
             if (keep)
-                RunUI(pasteFilteredPeptideDlg.NoDialog);
+                OkDialog(pasteFilteredPeptideDlg, pasteFilteredPeptideDlg.NoDialog);
             else
             {
-                RunUI(pasteFilteredPeptideDlg.YesDialog);
+                OkDialog(pasteFilteredPeptideDlg, pasteFilteredPeptideDlg.YesDialog);
                 peptideCount -= filteredPeptideCount;
             }
 
             Assert.IsTrue(WaitForCondition(() => SkylineWindow.Document.PeptideCount == peptideCount),
                 string.Format("Expecting {0} peptides, found {1}.", peptideCount, SkylineWindow.Document.PeptideCount));
-            Assert.AreEqual(peptideCount - missingSpectraCount, SkylineWindow.Document.TransitionGroupCount,
-                "Expecting precursors for peptides matched to library spectrum.");
+            if (peptideCount - missingSpectraCount == SkylineWindow.Document.TransitionGroupCount)
+            {
+                string peptideSeqs = string.Join(", ", (from nodeGroup in SkylineWindow.Document.TransitionGroups
+                                                       select nodeGroup.TransitionGroup.Peptide.Sequence).ToArray());
+                Assert.AreNotEqual(peptideCount - missingSpectraCount, SkylineWindow.Document.TransitionGroupCount,
+                    string.Format("Expecting precursors for peptides matched to library spectrum. Found precursors for {0}.", peptideSeqs));                
+            }
 
             var docCurrent = SkylineWindow.Document;
             foreach (var nodeGroup in docCurrent.TransitionGroups)
