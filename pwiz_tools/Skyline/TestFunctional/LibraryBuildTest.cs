@@ -56,6 +56,10 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            // Clean-up before running the test
+            RunUI(() => SkylineWindow.ModifyDocument("Set default settings",
+                            doc => doc.ChangeSettings(SrmSettingsList.GetDefault())));
+
             // Test error conditions
             BuildLibraryError("missing_charge.pep.XML", TestFilesDir.FullPath, "uw.edu");
             BuildLibraryError("non_int_charge.pep.XML");
