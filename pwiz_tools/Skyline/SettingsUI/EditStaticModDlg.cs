@@ -272,10 +272,10 @@ namespace pwiz.Skyline.SettingsUI
             {
                 formula = null;
                 double mass;
-                if (!helper.ValidateDecimalTextBox(e, textMonoMass, 0, 1500, out mass))
+                if (!helper.ValidateDecimalTextBox(e, textMonoMass, -1500, 1500, out mass))
                     return;
                 monoMass = mass;
-                if (!helper.ValidateDecimalTextBox(e, textAverageMass, 0, 1500, out mass))
+                if (!helper.ValidateDecimalTextBox(e, textAverageMass, -1500, 1500, out mass))
                     return;
                 avgMass = mass;
             }
