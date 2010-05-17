@@ -290,6 +290,9 @@ struct PWIZ_API_DECL Transition : public ParamContainer
     /// Information about a prediction for a suitable transition using some software
     Prediction prediction;
 
+    /// Information about predicted or calibrated retention time
+    RetentionTime retentionTime;
+
     /// List of possible interprations of fragment ions for a transition
     std::vector<Interpretation> interpretationList;
 
@@ -315,6 +318,9 @@ struct PWIZ_API_DECL Target : public ParamContainer
     
     /// Precursor (Q1) of the target
     Precursor precursor;
+
+    /// Information about predicted or calibrated retention time
+    RetentionTime retentionTime;
 
     /// List of instrument configurations used in the validation or optimization of the target
     std::vector<Configuration> configurationList;

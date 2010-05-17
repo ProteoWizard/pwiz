@@ -42,13 +42,13 @@ PWIZ_API_DECL void initializeTiny(TraData& td)
 
     Transition transition1;
     transition1.id = "Transition1";
-    transition1.precursor.set(MS_selected_ion_m_z, 456.78, MS_m_z);
-    transition1.product.set(MS_selected_ion_m_z, 678.90, MS_m_z);
+    transition1.precursor.set(MS_isolation_window_target_m_z, 456.78, MS_m_z);
+    transition1.product.set(MS_isolation_window_target_m_z, 678.90, MS_m_z);
 
     Transition transition2;
     transition2.id = "Transition2";
-    transition2.precursor.set(MS_selected_ion_m_z, 456.78, MS_m_z);
-    transition2.product.set(MS_selected_ion_m_z, 789.00, MS_m_z);
+    transition2.precursor.set(MS_isolation_window_target_m_z, 456.78, MS_m_z);
+    transition2.product.set(MS_isolation_window_target_m_z, 789.00, MS_m_z);
 
     td.transitions.push_back(transition1);
     td.transitions.push_back(transition2);
@@ -56,11 +56,11 @@ PWIZ_API_DECL void initializeTiny(TraData& td)
 
     Target target1;
     target1.id = "Target1";
-    target1.precursor.set(MS_selected_ion_m_z, 456.78, MS_m_z);
+    target1.precursor.set(MS_isolation_window_target_m_z, 456.78, MS_m_z);
 
     Target target2;
     target2.id = "Target2";
-    target2.precursor.set(MS_selected_ion_m_z, 567.89, MS_m_z);
+    target2.precursor.set(MS_isolation_window_target_m_z, 567.89, MS_m_z);
 
     td.targets.set(MS_includes_supersede_excludes);
     td.targets.targetExcludeList.push_back(target1);
@@ -79,15 +79,19 @@ PWIZ_API_DECL void addMIAPEExampleMetadata(TraData& td)
 
 
     Publication publication;
-    publication.id = "Al et al";
+    publication.id = "Al_et_al";
     publication.set(MS_PubMed_identifier, 123456);
     td.publications.push_back(publication);
 
 
-    InstrumentPtr instrumentPtr(new Instrument("LCQDeca"));
-    instrumentPtr->set(MS_LCQ_Deca);
-    instrumentPtr->set(MS_instrument_serial_number,"23433");
-    td.instrumentPtrs.push_back(instrumentPtr);
+    InstrumentPtr lcqInstrumentPtr(new Instrument("LCQ"));
+    lcqInstrumentPtr->set(MS_LCQ_Deca);
+    lcqInstrumentPtr->set(MS_instrument_serial_number,"23433");
+    td.instrumentPtrs.push_back(lcqInstrumentPtr);
+
+    InstrumentPtr qtrapInstrumentPtr(new Instrument("QTRAP"));
+    qtrapInstrumentPtr->set(MS_4000_Q_TRAP);
+    td.instrumentPtrs.push_back(qtrapInstrumentPtr);
 
 
     SoftwarePtr softwarePtr(new Software("Xcalibur"));
@@ -111,7 +115,7 @@ PWIZ_API_DECL void addMIAPEExampleMetadata(TraData& td)
     proteinPtr->set(MS_protein_accession, "Q123");
     proteinPtr->sequence = "ABCD";
     proteinPtr->set(MS_protein_name, "A short protein.");
-    proteinPtr->set(UO_dalton, 12345);
+    proteinPtr->set(MS_molecular_mass, 12345, UO_dalton);
     td.proteinPtrs.push_back(proteinPtr);
 
 
@@ -124,7 +128,7 @@ PWIZ_API_DECL void addMIAPEExampleMetadata(TraData& td)
     peptide1Ptr->modifications.back().location = 1;
     peptide1Ptr->modifications.back().monoisotopicMassDelta = 123;
     peptide1Ptr->retentionTimes.push_back(RetentionTime());
-    peptide1Ptr->retentionTimes.back().set(MS_predicted_retention_time, 42);
+    peptide1Ptr->retentionTimes.back().set(MS_predicted_retention_time, 42, UO_minute);
     peptide1Ptr->retentionTimes.back().softwarePtr = softwareMaRiMba;
     peptide1Ptr->evidence.set(MS_confident_peptide, 6);
     td.peptidePtrs.push_back(peptide1Ptr);
@@ -133,7 +137,7 @@ PWIZ_API_DECL void addMIAPEExampleMetadata(TraData& td)
     CompoundPtr compound1Ptr(new Compound("Cmp1"));
     compound1Ptr->set(MS_theoretical_mass, 1234, UO_dalton);
     compound1Ptr->retentionTimes.push_back(RetentionTime());
-    compound1Ptr->retentionTimes.back().set(MS_predicted_retention_time, 42);
+    compound1Ptr->retentionTimes.back().set(MS_predicted_retention_time, 42, UO_minute);
     compound1Ptr->retentionTimes.back().softwarePtr = softwareMaRiMba;
     td.compoundPtrs.push_back(compound1Ptr);
 
@@ -157,17 +161,17 @@ PWIZ_API_DECL void addMIAPEExampleMetadata(TraData& td)
     qtrapValidation.set(MS_peak_targeting_suitability_rank, 1);
 
 
-    Configuration configuration;
-    configuration.instrumentPtr = instrumentPtr;
-    configuration.contactPtr = contactPtr;
-    configuration.set(MS_dwell_time, 0.12, UO_second);
-    configuration.set(MS_collision_gas, "argon");
-    configuration.set(MS_collision_gas_pressure, 12, UO_pascal);
-    configuration.set(MS_collision_energy, 26, UO_electronvolt);
-    configuration.set(MS_cone_voltage, 1200, UO_volt);
-    configuration.set(MS_interchannel_delay, 0.1, UO_second);
-    configuration.set(MS_tube_lens, 23, UO_volt);
-    configuration.validations.push_back(qtrapValidation);
+    Configuration qtrapConfiguration;
+    qtrapConfiguration.instrumentPtr = qtrapInstrumentPtr;
+    qtrapConfiguration.contactPtr = contactPtr;
+    qtrapConfiguration.set(MS_dwell_time, 0.12, UO_second);
+    qtrapConfiguration.set(MS_collision_gas, "argon");
+    qtrapConfiguration.set(MS_collision_gas_pressure, 12, UO_pascal);
+    qtrapConfiguration.set(MS_collision_energy, 26, UO_electronvolt);
+    qtrapConfiguration.set(MS_cone_voltage, 1200, UO_volt);
+    qtrapConfiguration.set(MS_interchannel_delay, 0.1, UO_second);
+    qtrapConfiguration.set(MS_tube_lens, 23, UO_volt);
+    qtrapConfiguration.validations.push_back(qtrapValidation);
 
 
     Transition& tra0 = td.transitions[0];
@@ -177,10 +181,14 @@ PWIZ_API_DECL void addMIAPEExampleMetadata(TraData& td)
     tra0.prediction.softwarePtr = softwareMaRiMba;
     tra0.prediction.set(MS_transition_purported_from_an_MS_MS_spectrum_on_a_different__specified_instrument);
     tra0.prediction.set(MS_linear_ion_trap);
-    tra0.prediction.set(MS_peak_intensity, 10000);
+    tra0.prediction.set(MS_peak_intensity, 10000, UO_electronvolt);
     tra0.prediction.set(MS_peak_intensity_rank, 1);
     tra0.prediction.set(MS_peak_targeting_suitability_rank, 1);
-    tra0.configurationList.push_back(configuration);
+    tra0.retentionTime.set(MS_local_retention_time, 40.02, UO_minute);
+    tra0.retentionTime.set(MS_retention_time_window_lower_offset, 3, UO_minute);
+    tra0.retentionTime.set(MS_retention_time_window_upper_offset, 3, UO_minute);
+    tra0.configurationList.push_back(qtrapConfiguration);
+
 
 
     Transition& tra1 = td.transitions[1];
@@ -189,12 +197,23 @@ PWIZ_API_DECL void addMIAPEExampleMetadata(TraData& td)
     tra1.product.set(MS_charge_state, 1);
 
 
+    Configuration lcqConfiguration;
+    lcqConfiguration.instrumentPtr = lcqInstrumentPtr;
+    lcqConfiguration.contactPtr = contactPtr;
+    lcqConfiguration.set(MS_collision_energy, 42, UO_electronvolt);
+
+
+    Target& tar0 = td.targets.targetIncludeList[0];
+    tar0.compoundPtr = compound1Ptr;
+    tar0.precursor.set(MS_charge_state, 2);
+    tar0.retentionTime.set(MS_local_retention_time, 12.3, UO_minute);
+    tar0.retentionTime.set(MS_retention_time_window_lower_offset, 1, UO_minute);
+    tar0.retentionTime.set(MS_retention_time_window_upper_offset, 2, UO_minute);
+    tar0.configurationList.push_back(lcqConfiguration);
+
+    
     td.targets.targetExcludeList[0].peptidePtr = peptide1Ptr;
     td.targets.targetExcludeList[0].precursor.set(MS_charge_state, 2);
-    td.targets.targetExcludeList[0].configurationList.push_back(configuration);
-
-    td.targets.targetIncludeList[0].compoundPtr = compound1Ptr;
-    td.targets.targetIncludeList[0].precursor.set(MS_charge_state, 2);
 
 } // addMIAPEExampleMetadata()
 

@@ -214,6 +214,7 @@ PWIZ_API_DECL bool Transition::empty() const
     return ParamContainer::empty() &&
            precursor.empty() &&
            product.empty() &&
+           retentionTime.empty() &&
            interpretationList.empty() &&
            configurationList.empty() &&
            (!peptidePtr.get() || peptidePtr->empty()) &&
@@ -226,6 +227,7 @@ PWIZ_API_DECL bool Target::empty() const
 {
     return ParamContainer::empty() &&
            precursor.empty() &&
+           retentionTime.empty() &&
            configurationList.empty() &&
            (!peptidePtr.get() || peptidePtr->empty()) &&
            (!compoundPtr.get() || compoundPtr->empty()) &&
@@ -243,7 +245,7 @@ PWIZ_API_DECL bool TargetList::empty() const
 
 
 
-PWIZ_API_DECL TraData::TraData() : version_("0.9.2") {}
+PWIZ_API_DECL TraData::TraData() : version_("0.9.4") {}
 PWIZ_API_DECL TraData::~TraData() {}
 
 

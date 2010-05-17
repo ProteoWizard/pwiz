@@ -277,6 +277,7 @@ void diff(const Transition& a,
     diff(a.precursor, b.precursor, a_b.precursor, b_a.precursor, config);
     diff(a.product, b.product, a_b.product, b_a.product, config);
     diff(a.prediction, b.prediction, a_b.prediction, b_a.prediction, config);
+    diff(a.retentionTime, b.retentionTime, a_b.retentionTime, b_a.retentionTime, config);
     ptr_diff(a.peptidePtr, b.peptidePtr, a_b.peptidePtr, b_a.peptidePtr, config);
     ptr_diff(a.compoundPtr, b.compoundPtr, a_b.compoundPtr, b_a.compoundPtr, config);
     vector_diff_diff(a.interpretationList, b.interpretationList, a_b.interpretationList, b_a.interpretationList, config);
@@ -301,6 +302,7 @@ void diff(const Target& a,
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
     diff(a.id, b.id, a_b.id, b_a.id, config);
     diff(a.precursor, b.precursor, a_b.precursor, b_a.precursor, config);
+    diff(a.retentionTime, b.retentionTime, a_b.retentionTime, b_a.retentionTime, config);
     ptr_diff(a.peptidePtr, b.peptidePtr, a_b.peptidePtr, b_a.peptidePtr, config);
     ptr_diff(a.compoundPtr, b.compoundPtr, a_b.compoundPtr, b_a.compoundPtr, config);
     vector_diff_diff(a.configurationList, b.configurationList, a_b.configurationList, b_a.configurationList, config);

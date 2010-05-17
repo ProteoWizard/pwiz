@@ -95,7 +95,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const CV& cv)
     attributes.push_back(make_pair("fullName", cv.fullName));
     attributes.push_back(make_pair("version", cv.version));
     attributes.push_back(make_pair("URI", cv.URI));
-    writer.startElement("Cv", attributes, XMLWriter::EmptyElement);
+    writer.startElement("cv", attributes, XMLWriter::EmptyElement);
 }
 
 
@@ -108,7 +108,7 @@ struct HandlerCV : public SAXParser::Handler
                                 const Attributes& attributes,
                                 stream_offset position)
     {
-        if (name != "Cv")
+        if (name != "cv")
             throw runtime_error(("[IO::HandlerCV] Unexpected element name: " + name).c_str());
         getAttribute(attributes, "id", cv->id);
         getAttribute(attributes, "fullName", cv->fullName);
@@ -203,7 +203,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const CVParam& cvParam)
         attributes.push_back(make_pair("unitAccession", cvTermInfo(cvParam.units).id));
         attributes.push_back(make_pair("unitName", cvTermInfo(cvParam.units).name));
     }
-    writer.startElement("CvParam", attributes, XMLWriter::EmptyElement);
+    writer.startElement("cvParam", attributes, XMLWriter::EmptyElement);
 }
 
 
@@ -217,11 +217,11 @@ struct HandlerCVParam : public SAXParser::Handler
                                 const Attributes& attributes,
                                 stream_offset position)
     {
-        if (name != "CvParam")
+        if (name != "cvParam")
             throw runtime_error(("[IO::HandlerCVParam] Unexpected element name: " + name).c_str());
 
         if (!cvParam)
-            throw runtime_error("[IO::HandlerCVParam] Null CvParam."); 
+            throw runtime_error("[IO::HandlerCVParam] Null cvParam."); 
 
         string accession;
         getAttribute(attributes, "accession", accession);
@@ -282,7 +282,7 @@ struct HandlerParamContainer : public SAXParser::Handler
         if (!paramContainer)
             throw runtime_error("[IO::HandlerParamContainer] Null paramContainer.");
 
-        if (name == "CvParam")
+        if (name == "cvParam")
         {
             paramContainer->cvParams.push_back(CVParam()); 
             handlerCVParam_.cvParam = &paramContainer->cvParams.back();
@@ -706,7 +706,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Modification& modifi
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("location", lexical_cast<string>(modification.location)));
-    attributes.push_back(make_pair("monoisotopicDeltaMass", lexical_cast<string>(modification.monoisotopicMassDelta)));
+    attributes.push_back(make_pair("monoisotopicMassDelta", lexical_cast<string>(modification.monoisotopicMassDelta)));
     attributes.push_back(make_pair("averageMassDelta", lexical_cast<string>(modification.averageMassDelta)));
 
     writer.startElement("Modification", attributes);
@@ -775,17 +775,10 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptidePtr& peptideP
 
     BOOST_FOREACH(const Modification& m, peptidePtr->modifications)
     {
-        writer.startElement("Modification");
         write(writer, m);
-        writer.endElement();
     }
 
-    BOOST_FOREACH(const RetentionTime& r, peptidePtr->retentionTimes)
-    {
-        writer.startElement("RetentionTime");
-        write(writer, r);
-        writer.endElement();
-    }
+    writeList(writer, peptidePtr->retentionTimes, "RetentionTimeList");
 
     if (!peptidePtr->evidence.empty())
     {
@@ -886,12 +879,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const CompoundPtr& compoun
     writer.startElement("Compound", attributes);
     writeParamContainer(writer, *compoundPtr);
 
-    BOOST_FOREACH(const RetentionTime& r, compoundPtr->retentionTimes)
-    {
-        writer.startElement("RetentionTime");
-        write(writer, r);
-        writer.endElement();
-    }
+    writeList(writer, compoundPtr->retentionTimes, "RetentionTimeList");
 
     writer.endElement();
 }
@@ -974,6 +962,16 @@ void write(minimxml::XMLWriter& writer, const Transition& transition)
     writeParamContainer(writer, transition.product);
     writer.endElement();
 
+    if (!transition.retentionTime.empty())
+    {
+        writer.startElement("RetentionTime");
+        writeParamContainer(writer, transition.retentionTime);
+        writer.endElement();
+    }
+
+    if (!transition.prediction.empty())
+        write(writer, transition.prediction);
+
     writeList(writer, transition.interpretationList, "InterpretationList");
     writeList(writer, transition.configurationList, "ConfigurationList");
 
@@ -989,7 +987,8 @@ struct HandlerTransition : public HandlerParamContainer
     :   transition(_transition),
         handlerInterpretation_("Interpretation"),
         handlerPrecursor_("Precursor"),
-        handlerProduct_("Product")
+        handlerProduct_("Product"),
+        handlerRetentionTime_("RetentionTime")
     {}
 
     virtual Status startElement(const string& name, 
@@ -1049,6 +1048,11 @@ struct HandlerTransition : public HandlerParamContainer
             handlerPrediction_.prediction = &transition->prediction;
             return Status(Status::Delegate, &handlerPrediction_);
         }
+        else if (name == "RetentionTime")
+        {
+            handlerRetentionTime_.paramContainer = &transition->retentionTime;
+            return Status(Status::Delegate, &handlerRetentionTime_);
+        }
 
         HandlerParamContainer::paramContainer = transition;
         return HandlerParamContainer::startElement(name, attributes, position);
@@ -1060,6 +1064,7 @@ struct HandlerTransition : public HandlerParamContainer
     HandlerNamedParamContainer handlerPrecursor_;
     HandlerNamedParamContainer handlerProduct_;
     HandlerPrediction handlerPrediction_;
+    HandlerNamedParamContainer handlerRetentionTime_;
 };
 
 
@@ -1093,6 +1098,13 @@ void write(minimxml::XMLWriter& writer, const Target& target)
     writeParamContainer(writer, target.precursor);
     writer.endElement();
 
+    if (!target.retentionTime.empty())
+    {
+        writer.startElement("RetentionTime");
+        writeParamContainer(writer, target.retentionTime);
+        writer.endElement();
+    }
+
     writeList(writer, target.configurationList, "ConfigurationList");
 
     writer.endElement();
@@ -1104,7 +1116,9 @@ struct HandlerTarget : public HandlerParamContainer
     Target* target;
 
     HandlerTarget(Target* _target = 0)
-    :   target(_target), handlerPrecursor_("Precursor")
+    :   target(_target),
+        handlerPrecursor_("Precursor"),
+        handlerRetentionTime_("RetentionTime")
     {}
 
     virtual Status startElement(const string& name, 
@@ -1147,6 +1161,11 @@ struct HandlerTarget : public HandlerParamContainer
             handlerPrecursor_.paramContainer = &target->precursor;
             return Status(Status::Delegate, &handlerPrecursor_);
         }
+        else if (name == "RetentionTime")
+        {
+            handlerRetentionTime_.paramContainer = &target->retentionTime;
+            return Status(Status::Delegate, &handlerRetentionTime_);
+        }
 
         HandlerParamContainer::paramContainer = target;
         return HandlerParamContainer::startElement(name, attributes, position);
@@ -1155,6 +1174,7 @@ struct HandlerTarget : public HandlerParamContainer
     private:
     HandlerConfiguration handlerConfiguration_;
     HandlerNamedParamContainer handlerPrecursor_;
+    HandlerNamedParamContainer handlerRetentionTime_;
 };
 
 
@@ -1241,7 +1261,7 @@ void write(minimxml::XMLWriter& writer, const TraData& td)
 
     writer.startElement("TraML", attributes);
 
-    writeList(writer, td.cvs, "CvList");
+    writeList(writer, td.cvs, "cvList");
 
     writePtrList(writer, td.contactPtrs, "ContactList");
     writeList(writer, td.publications, "PublicationList");
@@ -1251,9 +1271,7 @@ void write(minimxml::XMLWriter& writer, const TraData& td)
 
     if (!td.peptidePtrs.empty() || !td.compoundPtrs.empty())
     {
-        attributes.clear();
-        attributes.push_back(make_pair("count", lexical_cast<string>(td.peptidePtrs.size() + td.compoundPtrs.size())));
-        writer.startElement("CompoundList", attributes);
+        writer.startElement("CompoundList");
         for (vector<PeptidePtr>::const_iterator it=td.peptidePtrs.begin(); it!=td.peptidePtrs.end(); ++it)
             write(writer, *it);
         for (vector<CompoundPtr>::const_iterator it=td.compoundPtrs.begin(); it!=td.compoundPtrs.end(); ++it)
@@ -1265,8 +1283,8 @@ void write(minimxml::XMLWriter& writer, const TraData& td)
 
     writer.startElement("TargetList");
     writeParamContainer(writer, td.targets);
-    writeList(writer, td.targets.targetExcludeList, "TargetExcludeList");
     writeList(writer, td.targets.targetIncludeList, "TargetIncludeList");
+    writeList(writer, td.targets.targetExcludeList, "TargetExcludeList");
     writer.endElement();
 
     writer.endElement();
@@ -1310,7 +1328,7 @@ struct HandlerTraData : public SAXParser::Handler
 
             return Status::Ok;
         }
-        else if (name == "CvList" || 
+        else if (name == "cvList" || 
                  name == "ContactList" || 
                  name == "PublicationList" || 
                  name == "InstrumentList" ||
@@ -1322,7 +1340,7 @@ struct HandlerTraData : public SAXParser::Handler
             // ignore these, unless we want to validate the count attribute
             return Status::Ok;
         }
-        else if (name == "Cv")
+        else if (name == "cv")
         {
             td->cvs.push_back(CV()); 
             handlerCV_.cv = &td->cvs.back();
