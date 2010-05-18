@@ -44,7 +44,6 @@ namespace pwiz.Skyline.Controls
         private Timer _pickTimer;
         private NodeTip _nodeTip;
         private bool _focus;
-        private bool _inUpdate;
         private bool _sawDoubleClick;
         private bool _triggerLabelEdit;
         private string _viewedLabel;
@@ -265,16 +264,14 @@ namespace pwiz.Skyline.Controls
                     _resultsIndex = Math.Min(_resultsIndex, document.Settings.MeasuredResults.Chromatograms.Count - 1);
                 }
 
-                BeginUpdate();
-                _inUpdate = true;
+                BeginUpdateMS();
 
                 SrmTreeNodeParent.UpdateNodes<PeptideGroupTreeNode>(this, Nodes, document.Children,
                     true, PeptideGroupTreeNode.CreateInstance);
             }
             finally
             {
-                _inUpdate = false;
-                EndUpdate();
+                EndUpdateMS();
                 if (cover != null)
                     cover.Dispose();
             }
@@ -318,6 +315,8 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+
+        [Browsable(false)]
         public IList<IdentityPath> SelectedPaths
         {
             get
@@ -325,11 +324,11 @@ namespace pwiz.Skyline.Controls
                 IList<IdentityPath> treeSelections = new List<IdentityPath>();
                 foreach (TreeNodeMS node in SelectedNodes)
                 {
-                    SrmTreeNode nodeTree = node as SrmTreeNode;
-                    if (nodeTree != null) treeSelections.Add(nodeTree.Path);
+                    treeSelections.Add(GetNodePath(node));
                 }
                 return treeSelections;
             }
+
             set
             {
                 if (value != null)
@@ -351,10 +350,7 @@ namespace pwiz.Skyline.Controls
         {
             get
             {
-                SrmTreeNode nodeTree = SelectedNode as SrmTreeNode;
-                if (nodeTree == null)
-                    return (SelectedNode == null ? null : new IdentityPath(NODE_INSERT_ID));
-                return nodeTree.Path;
+                return GetNodePath((TreeNodeMS) SelectedNode);
             }
 
             set
@@ -369,6 +365,14 @@ namespace pwiz.Skyline.Controls
         public bool IsInsertPath(IdentityPath path)
         {
             return path != null && ReferenceEquals(path.GetIdentity(0), NODE_INSERT_ID);
+        }
+
+        public IdentityPath GetNodePath(TreeNodeMS node)
+        {
+            SrmTreeNode nodeTree = node as SrmTreeNode;
+            if (nodeTree == null)
+                return (node == null ? null : new IdentityPath(NODE_INSERT_ID));
+            return nodeTree.Path;
         }
 
         private void SelectNode(TreeNodeCollection treeNodes, IdentityPathTraversal traversal)
@@ -945,7 +949,7 @@ namespace pwiz.Skyline.Controls
 
         private void SequenceTree_BeforeExpand(object sender, TreeViewCancelEventArgs e)
         {
-            if (!_inUpdate)
+            if (!IsInUpdate)
             {
                
                 SrmTreeNodeParent nodeTree = e.Node as SrmTreeNodeParent;

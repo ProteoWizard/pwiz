@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -96,6 +97,23 @@ namespace pwiz.Skyline.Controls
         public bool IsNodeSelected(TreeNode node)
         {
             return node is TreeNodeMS && ((TreeNodeMS) node).IsInSelection;
+        }
+
+        protected void UpdateSelection()
+        {
+            // Remove any nodes from the selection that may have been
+            // removed from the tree.
+            var selectedNodes = SelectedNodes.ToArray();
+            foreach (var node in selectedNodes)
+            {
+                if (node.TreeView == null)
+                    SelectedNodes.Remove(node);
+            }
+
+            // If any nodes were removed from the selection, reset the
+            // anchor node to the selected node.
+            if (selectedNodes.Length != SelectedNodes.Count)
+                _anchorNode = (TreeNodeMS) SelectedNode;
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -207,15 +225,40 @@ namespace pwiz.Skyline.Controls
             var backColorBrush = new SolidBrush(BackColor);
             e.Graphics.FillRectangle(backColorBrush, ClientRectangle);
 
+            // No painting beyond the background while updating, since it can cause
+            // unexpected exceptions.  This used to happen during a node removal that
+            // caused removal of the control's scrollbar.
+            if (IsInUpdate)
+                return;
+
             // Draw all nodes exposed in the paint clipping rectangle.
             var drawRect = e.Graphics.ClipBounds;
-            int top = (int)drawRect.Top, bottom = (int)drawRect.Bottom;
-            for (var node = GetNodeAt(0, top);
+            int bottom = (int)drawRect.Bottom;
+            for (var node = TopNode;
                 node != null && node.Bounds.Top <= bottom;
                 node = node.NextVisibleNode)
             {
                 ((TreeNodeMS)node).DrawNodeCustom(e.Graphics);
             }
+        }
+
+	    private int _updateLockCount;
+
+        public bool IsInUpdate { get { return _updateLockCount > 0; } }
+
+        public void BeginUpdateMS()
+        {
+            BeginUpdate();
+            _updateLockCount++;
+        }
+
+        public void EndUpdateMS()
+        {
+            if (_updateLockCount == 0)
+                return;
+            if (--_updateLockCount == 0)
+                UpdateSelection();
+            EndUpdate();
         }
 
         private class TreeNodeSelectionMS : ICollection<TreeNodeMS>
@@ -410,16 +453,28 @@ namespace pwiz.Skyline.Controls
             // Move up the levels of the tree, drawing the corresponding vertical lines.
             else
             {
-                TreeNodeMS curNode = this;
-                while (curNode != null)
+                try
                 {
-                    dashBrush.TranslateTransform(0, curNode.Level % 2);
-                    if (curNode.NextNode != null)
-                        g.FillRectangle(dashBrush, curNode.XIndent, bounds.Top, 1, bounds.Height);
-                    else if (curNode == this)
-                        g.FillRectangle(dashBrush, curNode.XIndent, bounds.Top, 1, bounds.Height / 2);
-                    dashBrush.TranslateTransform(0, -curNode.Level % 2);
-                    curNode = curNode.Parent as TreeNodeMS;
+                    TreeNodeMS curNode = this;
+                    while (curNode != null)
+                    {
+                        dashBrush.TranslateTransform(0, curNode.Level % 2);
+                        if (curNode.NextNode != null)
+                            g.FillRectangle(dashBrush, curNode.XIndent, bounds.Top, 1, bounds.Height);
+                        else if (curNode == this)
+                            g.FillRectangle(dashBrush, curNode.XIndent, bounds.Top, 1, bounds.Height / 2);
+                        dashBrush.TranslateTransform(0, -curNode.Level % 2);
+                        curNode = curNode.Parent as TreeNodeMS;
+                    }
+                }
+                catch (NullReferenceException)
+                {
+                    // Ignore a NullReferenceException in this code.  The case
+                    // that once caused this has been fixed, but this safeguard is
+                    // kept to avoid showing an unhandled exception to the user.
+
+                    // If the node being painted is in the process of being removed
+                    // from the tree, then curNode.NextNode will throw a NRE.
                 }
             }
 
