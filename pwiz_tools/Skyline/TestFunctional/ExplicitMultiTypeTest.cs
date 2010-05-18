@@ -70,6 +70,8 @@ namespace pwiz.SkylineTestFunctional
             // Select the peptide of interest
             RunUI(() => SkylineWindow.SequenceTree.SelectedPath = pathPeptide);
 
+            Assert.AreSame(docOrig, SkylineWindow.Document);
+
             // Explicitly add the new modification
             var modifyPeptideDlg = ShowModifyPeptide();
             RunUI(() =>

@@ -240,8 +240,8 @@ namespace pwiz.Skyline.SettingsUI
             var backgroundProteomeSpec =
                 Settings.Default.BackgroundProteomeList.GetBackgroundProteomeSpec(
                     (string) _driverBackgroundProteome.Combo.SelectedItem);           
-            BackgroundProteome backgroundProteome = null;
-            if (backgroundProteomeSpec != null)
+            BackgroundProteome backgroundProteome = BackgroundProteome.NONE;
+            if (!backgroundProteomeSpec.IsNone)
             {
                 backgroundProteome = new BackgroundProteome(backgroundProteomeSpec, true);
                 if (backgroundProteome.DatabaseInvalid)
