@@ -559,6 +559,49 @@ namespace pwiz.Skyline.Model
             public bool After { get; private set; }
         }
 
+        public sealed class SynchedPickInfo
+        {
+            public SynchedPickInfo(SrmSettings settings, Identity childId, IPickedList pickedGrandchildren)
+            {
+                Settings = settings;
+                ChildId = childId;
+                PickedGrandchildren = pickedGrandchildren;
+            }
+
+            public SrmSettings Settings { get; private set; }
+            public Identity ChildId { get; private set; }
+            public IPickedList PickedGrandchildren { get; private set; }
+        }
+
+        public DocNodeParent PickGrandchildrenSynched(SynchedPickInfo pickInfo)
+        {
+            var childChanged = (DocNodeParent) FindNode(pickInfo.ChildId);
+            if (childChanged == null)
+                throw new IdentityNotFoundException(pickInfo.ChildId);
+            var childNew = childChanged.PickChildren(pickInfo.PickedGrandchildren);
+
+            List<DocNode> childrenNew = new List<DocNode>();
+            foreach (DocNodeParent child in Children)
+            {
+                if (ReferenceEquals(child, childChanged))
+                    childrenNew.Add(childNew);
+                else
+                    childrenNew.Add(child.SynchChildren(pickInfo.Settings, this, childNew));
+            }
+
+            return ChangeChildren(childrenNew);
+        }
+
+        /// <summary>
+        /// Called to synchronize children of a node with one of its siblings.  By
+        /// default, no action is taken.
+        /// </summary>
+        protected virtual DocNodeParent SynchChildren(SrmSettings settings,
+            DocNodeParent parent, DocNodeParent sibling)
+        {
+            return this;
+        }
+
         public DocNodeParent PickChildren(IPickedList picked)
         {
             // Make sure already chosen nodes are not recreated.  They
@@ -581,12 +624,26 @@ namespace pwiz.Skyline.Model
             return ChangeChildren(childrenNew).ChangeAutoManageChildren(picked.AutoManageChildren);
         }
 
-        public DocNodeParent PickChildren(IdentityPath path, IPickedList picked)
+        public DocNodeParent PickChildren(SrmSettings settings, IdentityPath path, IPickedList picked, bool synchSiblings)
         {
+            if (synchSiblings)
+            {
+                return PickGrandchildrenSynched(this,
+                                                new IdentityPathTraversal(path.Parent),
+                                                new SynchedPickInfo(settings, path.Child, picked));
+            }
+
             return PickChildren(this, new IdentityPathTraversal(path), picked);
         }
 
-        private static DocNodeParent PickChildren(DocNodeParent parent, IdentityPathTraversal traversal, IPickedList picked)
+        private static DocNodeParent PickGrandchildrenSynched(DocNodeParent parent,
+            IdentityPathTraversal traversal, SynchedPickInfo pickInfo)
+        {
+            return traversal.Traverse(parent, pickInfo, PickGrandchildrenSynched, parent.PickGrandchildrenSynched);
+        }
+
+        private static DocNodeParent PickChildren(DocNodeParent parent,
+            IdentityPathTraversal traversal, IPickedList picked)
         {
             return traversal.Traverse(parent, picked, PickChildren, parent.PickChildren);
         }

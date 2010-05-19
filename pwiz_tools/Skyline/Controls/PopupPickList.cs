@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Controls
         /// Current size used for all popup pick-lists.
         /// </summary>
         // CONSIDER: Make the pick lists sizable, and store in the settings?
-        public static Size SizeAll { get { return new Size(375, 243); } }
+        public static Size SizeAll { get { return new Size(375, 251); } }
 
         private readonly IChildPicker _picker;
         private readonly List<object> _chosenAtStart;
@@ -72,10 +72,29 @@ namespace pwiz.Skyline.Controls
 
             if (pickListMulti.Items.Count > 0)
                 pickListMulti.SelectedIndex = 0;
+
             // Avoid setting the property, because it will actually
             // change what is picked.
             _autoManageChildren = _picker.AutoManageChildren;
             UpdateAutoManageUI();
+
+            // Hide the synchronize checkbox, or set its label correctly
+            string synchLabelText = _picker.SynchSiblingsLabel;
+            if (string.IsNullOrEmpty(synchLabelText))
+            {
+                cbSynchronize.Visible = false;
+
+                // Resize to hide space for the checkbox
+                var anchorList = pickListMulti.Anchor;
+                pickListMulti.Anchor = anchorList & ~AnchorStyles.Bottom;
+                Height = pickListMulti.Bottom + 8;
+                pickListMulti.Anchor = anchorList;
+            }
+            else
+            {
+                cbSynchronize.Text = synchLabelText;
+                cbSynchronize.Checked = _picker.IsSynchSiblings;
+            }
         }
 
         public IEnumerable<string> ItemNames
@@ -212,6 +231,7 @@ namespace pwiz.Skyline.Controls
                 if (choice.Chosen)
                     picks.Add(choice.Choice);
             }
+            _picker.IsSynchSiblings = cbSynchronize.Checked;
             _picker.Pick(picks, AutoManageChildren);
 
             _closing = true;

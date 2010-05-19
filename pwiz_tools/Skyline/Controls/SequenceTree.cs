@@ -168,10 +168,11 @@ namespace pwiz.Skyline.Controls
         /// </summary>
         /// <param name="node">The parent node for which children were picked</param>
         /// <param name="list">Access to the picked list and creation of new child nodes</param>
-        public void FirePickedChildren(SrmTreeNodeParent node, IPickedList list)
+        /// <param name="synchSiblings">True if siblings of the node should be synchronized with it</param>
+        public void FirePickedChildren(SrmTreeNodeParent node, IPickedList list, bool synchSiblings)
         {
             if (PickedChildrenEvent != null)
-                PickedChildrenEvent(this, new PickedChildrenEventArgs(node, list));
+                PickedChildrenEvent(this, new PickedChildrenEventArgs(node, list, synchSiblings));
         }
 
         [Browsable(true)]

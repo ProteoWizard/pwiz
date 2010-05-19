@@ -242,6 +242,37 @@ namespace pwiz.Skyline.Controls.SeqNode
             get { return true; }
         }
 
+        public override string SynchSiblingsLabel
+        {
+            get
+            {
+                // If this node has siblings with the same charge state and other
+                // label types, then show the checkbox to keep these siblings in synch.
+                var siblingNodes = Parent.Nodes;
+                if (siblingNodes.Count > 1)
+                {
+                    var tranGroup = DocNode.TransitionGroup;
+                    int charge = tranGroup.PrecursorCharge;
+                    var labelType = tranGroup.LabelType;
+                    foreach (TransitionGroupTreeNode nodeTree in siblingNodes)
+                    {
+                        tranGroup = nodeTree.DocNode.TransitionGroup;
+                        if (charge == tranGroup.PrecursorCharge &&
+                                !ReferenceEquals(labelType, tranGroup.LabelType))
+                            return "Synchronize isotope label types";
+                    }
+                }
+                // Nothing to synchronize
+                return null;
+            }
+        }
+
+        public override bool IsSynchSiblings
+        {
+            get { return Settings.Default.SynchronizeIsotopeTypes; }
+            set { Settings.Default.SynchronizeIsotopeTypes = value; }
+        }
+
         private sealed class TransitionPickedList : IPickedList
         {
             private readonly IEnumerable<object> _picked;

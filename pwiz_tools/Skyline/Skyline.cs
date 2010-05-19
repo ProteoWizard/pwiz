@@ -1775,7 +1775,7 @@ namespace pwiz.Skyline
         {
             SrmTreeNodeParent node = e.Node;
             ModifyDocument(string.Format("Pick {0}", node.ChildUndoHeading),
-                doc => (SrmDocument) doc.PickChildren(node.Path, e.PickedList));
+                doc => (SrmDocument) doc.PickChildren(doc.Settings, node.Path, e.PickedList, e.IsSynchSiblings));
         }
 
         private void sequenceTree_ItemDrag(object sender, ItemDragEventArgs e)

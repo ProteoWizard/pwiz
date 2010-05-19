@@ -1143,6 +1143,44 @@ namespace pwiz.Skyline.Model
             return ChangeChildrenChecked(listChildrenNew);
         }
 
+        protected override DocNodeParent SynchChildren(SrmSettings settings, DocNodeParent parent, DocNodeParent sibling)
+        {
+            var nodePep = (PeptideDocNode)parent;
+            var nodeGroupSynch = (TransitionGroupDocNode)sibling;
+
+            // Only synchronize groups with the same charge.
+            if (TransitionGroup.PrecursorCharge != nodeGroupSynch.TransitionGroup.PrecursorCharge)
+                return this;
+
+            // Start with the current node as the default
+            var nodeResult = this;
+
+            // Use same auto-manage setting
+            if (AutoManageChildren != nodeGroupSynch.AutoManageChildren)
+            {
+                nodeResult = (TransitionGroupDocNode) nodeResult.ChangeAutoManageChildren(
+                    nodeGroupSynch.AutoManageChildren);
+            }
+
+            // If not automanaged, then set the explicit transitions
+            if (!nodeResult.AutoManageChildren)
+            {
+                var childrenNew = new List<DocNode>();
+                foreach (TransitionDocNode nodeTran in nodeGroupSynch.Children)
+                {
+                    var tranMatch = nodeTran.Transition;
+                    var tran = new Transition(TransitionGroup, tranMatch.IonType, tranMatch.CleavageOffset, tranMatch.Charge);
+                    // m/z and library info calculated later
+                    childrenNew.Add(new TransitionDocNode(tran, 0, null));
+                }
+                nodeResult = (TransitionGroupDocNode)nodeResult.ChangeChildrenChecked(childrenNew);
+            }
+
+            // Change settings to creat auto-manage children, or calculate
+            // mz values, library ranks and result matching
+            return nodeResult.ChangeSettings(settings, nodePep.ExplicitMods, SrmSettingsDiff.ALL);
+        }
+
         #endregion
 
         #region object overrides

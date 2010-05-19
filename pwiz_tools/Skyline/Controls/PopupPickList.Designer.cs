@@ -39,6 +39,7 @@
             this.tbbFind = new System.Windows.Forms.ToolStripButton();
             this.cbItems = new System.Windows.Forms.CheckBox();
             this.textSearch = new System.Windows.Forms.TextBox();
+            this.cbSynchronize = new System.Windows.Forms.CheckBox();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -51,7 +52,7 @@
             this.pickListMulti.FormattingEnabled = true;
             this.pickListMulti.Location = new System.Drawing.Point(29, 22);
             this.pickListMulti.Name = "pickListMulti";
-            this.pickListMulti.Size = new System.Drawing.Size(339, 214);
+            this.pickListMulti.Size = new System.Drawing.Size(339, 199);
             this.pickListMulti.TabIndex = 0;
             this.pickListMulti.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.pickListMulti_ItemCheck);
             this.pickListMulti.KeyDown += new System.Windows.Forms.KeyEventHandler(this.pickListMulti_KeyDown);
@@ -71,7 +72,7 @@
             this.tbbFind});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(32, 241);
+            this.toolStrip1.Size = new System.Drawing.Size(24, 249);
             this.toolStrip1.TabIndex = 3;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -81,7 +82,7 @@
             this.tbbOk.Image = global::pwiz.Skyline.Properties.Resources.GreenCheck;
             this.tbbOk.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.tbbOk.Name = "tbbOk";
-            this.tbbOk.Size = new System.Drawing.Size(29, 20);
+            this.tbbOk.Size = new System.Drawing.Size(21, 20);
             this.tbbOk.Text = "toolStripButton3";
             this.tbbOk.ToolTipText = "OK";
             this.tbbOk.Click += new System.EventHandler(this.tbbOk_Click);
@@ -92,14 +93,14 @@
             this.tbbCancel.Image = global::pwiz.Skyline.Properties.Resources.RedX;
             this.tbbCancel.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.tbbCancel.Name = "tbbCancel";
-            this.tbbCancel.Size = new System.Drawing.Size(29, 20);
+            this.tbbCancel.Size = new System.Drawing.Size(21, 20);
             this.tbbCancel.ToolTipText = "Cancel";
             this.tbbCancel.Click += new System.EventHandler(this.tbbCancel_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(29, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(21, 6);
             // 
             // tbbFilter
             // 
@@ -110,7 +111,7 @@
             this.tbbFilter.Image = global::pwiz.Skyline.Properties.Resources.Filter;
             this.tbbFilter.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.tbbFilter.Name = "tbbFilter";
-            this.tbbFilter.Size = new System.Drawing.Size(29, 20);
+            this.tbbFilter.Size = new System.Drawing.Size(21, 20);
             this.tbbFilter.ToolTipText = "Filter";
             this.tbbFilter.Click += new System.EventHandler(this.tbbFilter_Click);
             // 
@@ -121,13 +122,13 @@
             this.tbbAutoManageChildren.Image = global::pwiz.Skyline.Properties.Resources.WandProhibit;
             this.tbbAutoManageChildren.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.tbbAutoManageChildren.Name = "tbbAutoManageChildren";
-            this.tbbAutoManageChildren.Size = new System.Drawing.Size(29, 20);
+            this.tbbAutoManageChildren.Size = new System.Drawing.Size(21, 20);
             this.tbbAutoManageChildren.Click += new System.EventHandler(this.tbbAutoManageChildren_Click);
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(29, 6);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(21, 6);
             // 
             // tbbFind
             // 
@@ -135,7 +136,7 @@
             this.tbbFind.Image = global::pwiz.Skyline.Properties.Resources.Find;
             this.tbbFind.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.tbbFind.Name = "tbbFind";
-            this.tbbFind.Size = new System.Drawing.Size(29, 20);
+            this.tbbFind.Size = new System.Drawing.Size(21, 20);
             this.tbbFind.ToolTipText = "Find (Ctrl + F)";
             this.tbbFind.Click += new System.EventHandler(this.tbbFind_Click);
             // 
@@ -163,12 +164,24 @@
             this.textSearch.TextChanged += new System.EventHandler(this.textSearch_TextChanged);
             this.textSearch.PreviewKeyDown += new System.Windows.Forms.PreviewKeyDownEventHandler(this.textSearch_PreviewKeyDown);
             // 
+            // cbSynchronize
+            // 
+            this.cbSynchronize.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.cbSynchronize.AutoSize = true;
+            this.cbSynchronize.Location = new System.Drawing.Point(32, 227);
+            this.cbSynchronize.Name = "cbSynchronize";
+            this.cbSynchronize.Size = new System.Drawing.Size(84, 17);
+            this.cbSynchronize.TabIndex = 5;
+            this.cbSynchronize.Text = "Synchronize";
+            this.cbSynchronize.UseVisualStyleBackColor = true;
+            // 
             // PopupPickList
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(373, 241);
+            this.ClientSize = new System.Drawing.Size(373, 249);
             this.ControlBox = false;
+            this.Controls.Add(this.cbSynchronize);
             this.Controls.Add(this.textSearch);
             this.Controls.Add(this.cbItems);
             this.Controls.Add(this.toolStrip1);
@@ -201,5 +214,6 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripButton tbbFind;
         private System.Windows.Forms.ToolStripButton tbbAutoManageChildren;
+        private System.Windows.Forms.CheckBox cbSynchronize;
     }
 }

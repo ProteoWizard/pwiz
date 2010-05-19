@@ -295,19 +295,30 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public abstract bool ShowAutoManageChildren { get; }
 
-        public bool AutoManageChildren { get
-            {
-                return ((DocNodeParent) Model).AutoManageChildren;
-            }
+        public bool AutoManageChildren
+        {
+            get { return ((DocNodeParent) Model).AutoManageChildren; }
+        }
+
+        public virtual string SynchSiblingsLabel
+        {
+            get { return null; }
+        }
+
+        public virtual bool IsSynchSiblings
+        {
+            get { return false; }
+            set { /* Ignore */  }
         }
 
         public void Pick(IEnumerable<object> chosen, bool autoManageChildren)
         {
             // Quick check to see if anything changed.
+            // CONSIDER: If synchronizing siblings, this can leave siblings unsynchronized
             if (Helpers.Equals(chosen, Chosen) && AutoManageChildren == autoManageChildren)
                 return;
 
-            SequenceTree.FirePickedChildren(this, CreatePickedList(chosen, autoManageChildren));
+            SequenceTree.FirePickedChildren(this, CreatePickedList(chosen, autoManageChildren), IsSynchSiblings);
 
             // Make sure this node is open to show changes
             Expand();
@@ -548,6 +559,17 @@ namespace pwiz.Skyline.Controls.SeqNode
         /// True if the parent object has auot-manage set.
         /// </summary>
         bool AutoManageChildren { get; }
+
+        /// <summary>
+        /// The label to show the user for the synchronize checkbox, or null if the checkbox
+        /// should not be shown.
+        /// </summary>
+        string SynchSiblingsLabel { get; }
+
+        /// <summary>
+        /// True if the synchronize checkbox should be on when the pick list is shown.
+        /// </summary>
+        bool IsSynchSiblings { get; set; }
     }
 
     /// <summary>
@@ -555,14 +577,16 @@ namespace pwiz.Skyline.Controls.SeqNode
     /// </summary>
     public class PickedChildrenEventArgs : EventArgs
     {
-        public PickedChildrenEventArgs(SrmTreeNodeParent node, IPickedList pickedList)
+        public PickedChildrenEventArgs(SrmTreeNodeParent node, IPickedList pickedList, bool synchSiblings)
         {
             Node = node;
             PickedList = pickedList;
+            IsSynchSiblings = synchSiblings;
         }
 
         public SrmTreeNodeParent Node { get; private set; }
         public IPickedList PickedList { get; private set; }
+        public bool IsSynchSiblings { get; private set; }
     }
 
     /// <summary>
