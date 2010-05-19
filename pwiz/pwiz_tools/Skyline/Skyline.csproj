@@ -37,8 +37,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>1898</ApplicationRevision>
-    <ApplicationVersion>0.6.0.1898</ApplicationVersion>
+    <ApplicationRevision>1959</ApplicationRevision>
+    <ApplicationVersion>0.6.0.1959</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -809,6 +809,8 @@
     <Content Include="Method\Thermo\BuildTSQEZMethod.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Clearcore.dll" />
+    <Content Include="Clearcore.Storage.dll" />
     <Content Include="Interop.EDAL.SxS.manifest">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

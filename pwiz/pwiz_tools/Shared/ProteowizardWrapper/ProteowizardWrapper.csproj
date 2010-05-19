@@ -47,6 +47,10 @@
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ABSciex.DataAccess.WiffFileDataReader, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>obj\x86\ABSciex.DataAccess.WiffFileDataReader.dll</HintPath>
+    </Reference>
     <Reference Include="MassSpecDataReader, Version=3.0.318.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>obj\x86\MassSpecDataReader.dll</HintPath>
