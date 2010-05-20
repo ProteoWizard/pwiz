@@ -82,7 +82,7 @@ namespace pwiz.Skyline.Controls
         {
             if (!select)
                 SelectedNodes.Remove(node);
-            else
+            else if (!node.IsInSelection)
             {
                 SelectedNodes.Add(node);
                 // Make sure all ancestors of this node are expanded

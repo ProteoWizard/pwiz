@@ -86,6 +86,7 @@
     <Compile Include="ExplicitMultiTypeTest.cs" />
     <Compile Include="LibraryExplorerTest.cs" />
     <Compile Include="ManageResultsTest.cs" />
+    <Compile Include="MultiSelectTest.cs" />
     <Compile Include="PrecursorTest.cs" />
     <Compile Include="ReportSummaryTest.cs" />
     <Compile Include="ShareDocumentTest.cs" />
