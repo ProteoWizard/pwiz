@@ -214,8 +214,8 @@ namespace pwiz.SkylineTestFunctional
                 peptideSettingsUIChange.PickedHeavyMods = new[] {modV13C.Name};
                 peptideSettingsUIChange.OkDialog();
             });
-            var docModImplictStatic = WaitForDocumentChange(docModAA);
-            var peptideMatch2 = (PeptideDocNode)docModImplictStatic.FindNode(pathPeptide);
+            var docModImplicitStatic = WaitForDocumentChange(docModAA);
+            var peptideMatch2 = (PeptideDocNode)docModImplicitStatic.FindNode(pathPeptide);
             Assert.IsNotNull(peptideMatch2.ExplicitMods);
             Assert.IsFalse(peptideMatch2.ExplicitMods.IsModified(heavyLabelTypes[0]));
             Assert.IsTrue(peptideMatch2.ExplicitMods.IsModified(heavyLabelTypes[1]));
@@ -228,7 +228,7 @@ namespace pwiz.SkylineTestFunctional
             SetHeavyLabelNames(peptideSettingsUIRemove, new[] {heavyLabelNames[0]});
             RunUI(peptideSettingsUIRemove.OkDialog);
 
-            var docModRemoveType = WaitForDocumentChange(docModImplictStatic);
+            var docModRemoveType = WaitForDocumentChange(docModImplicitStatic);
             foreach (var nodePep in docModRemoveType.Peptides)
             {
                 Assert.IsNull(nodePep.ExplicitMods);
@@ -237,7 +237,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Undo, and add an explicit modification to the heavy AA type
             RunUI(SkylineWindow.Undo);
-            Assert.AreSame(docModImplictStatic, SkylineWindow.Document);
+            Assert.AreSame(docModImplicitStatic, SkylineWindow.Document);
 
             var modifyPeptideAADlg = ShowModifyPeptide();
             RunUI(() =>
@@ -246,12 +246,14 @@ namespace pwiz.SkylineTestFunctional
                 modifyPeptideAADlg.SelectModification(labelTypeAa, pepSequence2.Length - 1, modK13C.Name);
                 modifyPeptideAADlg.OkDialog();
             });
+            var docModExplicitStatic = WaitForDocumentChange(docModImplicitStatic);
+
             // Remove the heavy All label type again
             peptideSettingsUIRemove = ShowPeptideSettings();
             SetHeavyLabelNames(peptideSettingsUIRemove, new[] { heavyLabelNames[0] });
-            RunUI(peptideSettingsUIRemove.OkDialog);
+            OkDialog(peptideSettingsUIRemove, peptideSettingsUIRemove.OkDialog);
 
-            var docMultiExplicit = WaitForDocumentChange(docModImplictStatic);
+            var docMultiExplicit = WaitForDocumentChange(docModExplicitStatic);
             var peptideStillExplicit = (PeptideDocNode)docMultiExplicit.FindNode(pathPeptide);
             Assert.IsNotNull(peptideStillExplicit.ExplicitMods);
             Assert.IsTrue(peptideStillExplicit.ExplicitMods.IsModified(labelTypeAa));
