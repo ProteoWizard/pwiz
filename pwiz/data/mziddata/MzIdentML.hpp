@@ -45,8 +45,11 @@ using namespace pwiz::data;
 /// currently includes PSI-MS, Unit Ontology, and UNIMOD
 PWIZ_API_DECL std::vector<CV> defaultCVList();
 
+struct PWIZ_API_DECL Element
+{
+};
 
-struct PWIZ_API_DECL IdentifiableType
+struct PWIZ_API_DECL IdentifiableType : public Element
 {
     //    static const int INVALID_NATURAL = -1;
     IdentifiableType(const std::string& id_ = "",
@@ -132,7 +135,7 @@ struct PWIZ_API_DECL Organization : public Contact
 
 typedef boost::shared_ptr<Organization> OrganizationPtr;
 
-struct PWIZ_API_DECL Affiliations 
+struct PWIZ_API_DECL Affiliations : public Element
 {
     Affiliations(const std::string& id_ = "");
     
@@ -159,7 +162,7 @@ struct PWIZ_API_DECL Person : public Contact
 
 typedef boost::shared_ptr<Person> PersonPtr;
 
-struct PWIZ_API_DECL ContactRole
+struct PWIZ_API_DECL ContactRole : public Element
 {
     ContactRole();
     

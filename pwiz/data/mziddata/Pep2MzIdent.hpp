@@ -23,6 +23,7 @@
 #define _PEP2MZIDENT_HPP_
 
 #include "MzIdentML.hpp"
+#include "KwCVMap.hpp"
 #include "pwiz/data/misc/MinimumPepXML.hpp"
 #include "pwiz/data/common/CVTranslator.hpp"
 #include "pwiz/utility/misc/Export.hpp"
@@ -75,6 +76,16 @@ public:
     void setDebug(bool debug);
 
     bool getDebug() const;
+    
+    void setVerbose(bool verbose);
+
+    bool getVerbose() const;
+
+    void addParamMap(std::vector<CVMapPtr>& map);
+
+    void setParamMap(std::vector<CVMapPtr>& map);
+
+    const std::vector<CVMapPtr>& getParamMap() const;
     
 private:
 
@@ -151,8 +162,11 @@ private:
     // old member variables
     const MSMSPipelineAnalysis* _mspa;
     MzIdentMLPtr mzid;
-    bool _translated;
+    bool _translated; // No longer used
     bool debug;
+    bool verbose;
+
+    std::vector<CVMapPtr> parameterMap;
     
     // recursor flags.
     bool precursorMonoisotopic;

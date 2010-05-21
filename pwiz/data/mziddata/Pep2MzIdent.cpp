@@ -30,6 +30,7 @@
 #include "boost/filesystem.hpp"
 #include "boost/algorithm/string.hpp"
 #include "boost/foreach.hpp"
+#include "boost/tokenizer.hpp"
 
 // Debug macro to be used if needed.
 #define DOUT(a) do{ if(debug) std::cout << a << endl; } while(0)
@@ -48,6 +49,9 @@ using boost::algorithm::join;
 // String constants
 
 const char* PERSON_DOC_OWNER = "PERSON_DOC_OWNER";
+
+namespace pwiz {
+namespace mziddata {
 
 // Utility structs
 struct Pep2MzIdent::Indices
@@ -71,7 +75,403 @@ struct Pep2MzIdent::Indices
     size_t pdp;
 };
 
+} // namespace pwiz 
+} // namespace mziddata 
+
 namespace {
+
+using namespace pwiz::mziddata;
+
+// TODO may move this into a file of its own.
+
+//
+// XML tree walking
+//
+
+
+/*
+  Supported tags:
+  
+const char* supported_tags[]  =
+{
+    "mzIdentML",
+
+    "AnalysisSoftware",
+    "Provider",
+    "AuditCollection",
+    "AnalysisSampleCollection",
+    "SequenceCollection",
+    "AnalysisCollection",
+    "AnalysisProtocolCollection",
+    "DataCollection",
+    "BibliographicReference",
+
+    // Provider and AuditCollection
+    "ContactRole",
+    "Inputs",
+    "AnalysisData",
+
+    // DataCollection
+    "SpectrumIdentificationList",
+    "ProteinDetectionList",
+
+    // SpectrumIdentificationList
+    "FragmentationTable",
+    "Measure",
+    "SpectrumIdentificationResult",
+
+    // Measure
+    // + cvParam or userParam
+
+    // SpectrumIdentificationResult
+    "SpectrumIdentificationItem",
+    // + cvParam or userParam
+
+    // SpectrumIdentificationItem
+    "PeptideEvidence",
+    "Fragmentation",
+    "IonType",
+    // + cvParam or userParam
+
+    // IonType
+    "FragmentArray",
+    // + cvParam or userParam
+
+    // FragmentArray - nothing
+
+    // PeptideEvidence
+    // + cvParam or userParam
+
+    // ProteinDetectionList
+    "ProteinAmbiguityGroup",
+    // + cvParam or userParam
+
+    // ProteinAmbiguityGroup
+    "ProteinDetectionHypothesis",
+    // + cvParam or userParam
+
+    // ProteinDetectionHypothesis
+    "PeptideHypothesis",
+    // + cvParam or userParam
+
+    // Inputs
+    "SourceFile",
+    "SearchDatabase",
+
+    // SourceFile
+    "externalFormatDocumentation",
+    "fileFormat", // + cvParam or userParam
+    // + cvParam or userParam
+
+    // SearchDatabase
+    "fileFormat", // + cvParam or userParam
+    "DatabaseName",
+    // + cvParam or userParam
+
+    // SpectraData
+    "fileFormat", // + cvParam or userParam
+    "externalFormatDocumentation",
+    "spectrumIDFormat", // + cvParam or userParam
+
+    // AnalysisSampleCollection
+    "Sample",
+
+    // AnalysisProtocolCollection
+    "SpectrumIdentificationProtocol",
+    "ProteinDetectionProtocol",
+
+    // ProteinDetectionProtocol
+    "AnalysisParams", // + cvParam or userParam
+    "Threshold", // + cvParam or userParam
+
+    // SpectrumIdentificationProtocol
+    "SearchType", // + cvParam or userParam
+    "AdditionalSearchParams",  // + cvParam or userParam
+    "ModificationParams",
+    "SearchModification",
+    "Enzymes",
+    "MassTable",
+    "FragmentTolerance", // + cvParam or userParam
+    "ParentTolerance", // + cvParam or userParam
+    "Threshold", // + cvParam or userParam
+    "DatabaseFilters",
+    "Filter",
+    "DatabaseTranslation",
+
+    // DatabaseTranslation
+    "TranslationTable",
+
+    // TranslationTable
+    // + cvParam or userParam
+
+    // Filter
+    "FilterType", // + cvParam or userParam
+    "Include", // + cvParam or userParam
+    "Exclude", // + cvParam or userParam
+
+    // SearchModification
+    "ModParam",
+    "SpecificityRules", // + cvParam or userParam
+
+    // ModParam
+    // + cvParam
+
+    // MassTable
+    "Residue",
+    "AmbiguousResidue",
+
+    // AmbiguousResidue
+    // + cvParam or userParam
+
+    // Residue
+
+    // Enzymes
+    "Enzyme",
+
+    // Enzyme
+    "SiteRegexp",
+    "EnzymeName", // + cvParam or userParam
+
+    // AnalysisCollection
+    "SpectrumIdentification",
+    "ProteinDetection",
+
+    // Sample
+    "ContactRole",
+    "subSample",
+    // + cvParam or userParam
+
+    // ProteinDetection
+    "InputSpectrumIdentifications",
+
+    // SpectrumIdentification
+    "InputSpectra",
+    "SearchDatabase",
+
+    // AnalysisSoftware
+    "ContactRole",
+    "SoftwareName",
+    "Customizations",
+
+    // ContactRole
+    "role", // + cvParam or userParam
+    // + cvParam or userParam
+};
+*/
+
+struct organization_p
+{
+    bool operator()(ContactPtr contact)
+    {
+        return typeid(contact.get()).name() == typeid(Organization*).name();
+    }
+};
+
+struct person_p
+{
+    bool operator()(ContactPtr contact)
+    {
+        return typeid(contact.get()).name() == typeid(Person*).name();
+    }
+};
+
+bool addToContactRoleCV(CVParam& param, vector<string>& path,
+                  ContactRole& contactRole)
+{
+    if (path.size() &&
+        path.at(0) == "role")
+    {
+        contactRole.role.cvParams.push_back(param);
+        return true;
+    }
+
+    return false;
+}
+
+bool addToContactCV(CVParam& param, vector<string>& path,
+                  vector<ContactPtr>& contacts)
+{
+    string nextTag = path.at(0);
+    path.erase(path.begin());
+
+    vector<ContactPtr>::iterator i = contacts.end();
+    if (nextTag == "Organization")
+    {
+        i=find_if(contacts.begin(), contacts.end(),
+                  organization_p());
+        if (i == contacts.end())
+        {
+            // TODO add a meaningful id & name
+            contacts.push_back(ContactPtr(new Organization("O_1")));
+            i = contacts.end() - 1;
+        }
+    }
+    else if (nextTag == "Person")
+    {
+        i=find_if(contacts.begin(), contacts.end(),
+                  person_p());
+        if (i == contacts.end())
+        {
+            // TODO add a meaningful id & name
+            contacts.push_back(ContactPtr(new Person("P_1")));
+            i = contacts.end() - 1;
+        }
+    }
+    else
+        throw runtime_error(("Unsupported tag "+nextTag).c_str());
+
+    // If we have a place to put the cvParam and no where else to go...
+    if (i != contacts.end() && !path.size())
+    {
+        (*i)->params.cvParams.push_back(param);
+        return true;
+    }
+
+    // Otherwise, throw our hands up in confusion.
+    return false;
+}
+
+bool addToAnalysisSoftwareLevel(CVParam& param, vector<string>& path,
+                              AnalysisSoftwarePtr as)
+{
+    if (path.size() == 0 || path.at(0).size() == 0)
+        throw runtime_error("[addAnalysisSoftwareLevel] empty path string passed in");
+
+    if (path.at(0) == "ContactRole")
+    {
+        path.erase(path.begin());
+        if (!as->contactRolePtr.get())
+            as->contactRolePtr = ContactRolePtr(new ContactRole());
+        return addToContactRoleCV(param, path, *(as->contactRolePtr.get()));
+    }
+    else if (path.at(0) == "SoftwareName")
+    {
+    }
+    else if (path.at(0) == "Customizations")
+    {
+    }
+    
+    return false;
+}
+
+bool addToSample(CVParam& param, vector<string>& path, SamplePtr sample)
+{
+    if (!path.size())
+    {
+        sample->cvParams.cvParams.push_back(param);
+        return true;
+    }
+
+    if (path.at(0) == "ContactRole")
+    {
+        path.erase(path.begin());
+        return addToContactRoleCV(param, path, sample->contactRole);
+    }
+    
+    return false;
+}
+
+bool addToMzIdentMLLevel(CVParam& param, vector<string>& path, MzIdentML& mzid)
+{
+    /*
+      "AnalysisSoftware",
+        "Provider",
+        "AuditCollection",
+        "AnalysisSampleCollection",
+        "SequenceCollection",
+        "AnalysisCollection",
+        "AnalysisProtocolCollection",
+        "DataCollection",
+        "BibliographicReference",
+     */
+
+    if (!path.size() == 0 || path.at(0).size())
+        throw runtime_error("[addMzIdentMLLevel] empty path string passed in");
+
+    string tag = path.at(0);
+    path.erase(path.begin());
+    
+    if (tag == "AnalysisSoftware")
+    {
+        mzid.analysisSoftwareList.push_back(AnalysisSoftwarePtr(new AnalysisSoftware()));
+        return addToAnalysisSoftwareLevel(param, path, mzid.analysisSoftwareList.back());
+    }
+    else if (tag == "Provider")
+    {
+        // Is this a path to the only ParamContainer in Provider?
+        if (path.size() >= 2 &&
+            path.at(0) == "ContactRole")
+        {
+            path.erase(path.begin());
+            return addToContactRoleCV(param, path, mzid.provider.contactRole);
+        }
+        // Otherwise fall through to "false"
+    }
+    else if (tag == "AuditCollection")
+    {
+        return addToContactCV(param, path, mzid.auditCollection);
+    }
+    else if (tag == "AnalysisSampleCollection")
+    {
+        if (path.size() < 1 ||
+            path.at(0) != "Sample")
+            return false;
+
+        path.erase(path.begin());
+        
+        SamplePtr sample;
+        if (mzid.analysisSampleCollection.samples.size() == 0)
+        {
+            mzid.analysisSampleCollection.samples.push_back(SamplePtr(new Sample()));
+        }
+
+        sample = mzid.analysisSampleCollection.samples.back();
+
+        return addToSample(param, path, sample);
+    }
+    else if (tag == "SequenceCollection")
+    {
+    }
+    else if (tag == "AnalysisCollection")
+    {
+    }
+    else if (tag == "AnalysisProtocolCollection")
+    {
+    }
+    else if (tag == "DataCollection")
+    {
+    }
+    else if (tag == "BibliographicReference")
+    {
+    }
+    else
+        throw runtime_error(("[addMzIdentMLLevel] Unsupported tag "+
+                             tag).c_str());
+
+    return false;
+}
+
+// Adds a cvParam to allocation in the mzIdentML tree.
+bool addCvByPath(CVParam& param, const std::string& path, MzIdentML& mzid)
+{
+    vector<string> parts;
+    
+    char_separator<char> sep("/@");
+    tokenizer< char_separator<char> > tokens(path, sep);
+
+    for(tokenizer< char_separator<char> >::const_iterator it=tokens.begin();
+        it!=tokens.end(); it++)
+    {
+        string tag = *it;
+
+        parts.push_back(tag);
+    }
+
+    if (parts.at(0) != "mzIdentML")
+        throw runtime_error("[addCvByPath] Root element other than mzIdentML in path.");
+    
+    return addToMzIdentMLLevel(param, parts, mzid);
+}
 
 struct sequence_p
 {
@@ -306,6 +706,9 @@ bool fileExtension2Type(const string& file,
 
 } // namespace
 
+namespace pwiz {
+namespace mziddata {
+
 //
 // Pep2MzIdent
 //
@@ -366,6 +769,39 @@ bool Pep2MzIdent::getDebug() const
 {
     return this->debug;
 }
+
+void Pep2MzIdent::setVerbose(bool verbose)
+{
+    this->verbose = verbose;
+}
+
+bool Pep2MzIdent::getVerbose() const
+{
+    return this->verbose;
+}
+
+// pepxml parameter -> cvid mapping methods.
+
+void Pep2MzIdent::addParamMap(vector<CVMapPtr>& map)
+{
+    parameterMap.insert(parameterMap.begin(),
+                        map.begin(), map.end());
+}
+
+void Pep2MzIdent::setParamMap(vector<CVMapPtr>& map)
+{
+    parameterMap.clear();
+
+    parameterMap.assign(map.begin(), map.end());
+}
+
+const vector<CVMapPtr>& Pep2MzIdent::getParamMap() const
+{
+    return parameterMap;
+}
+
+// Private methods belong below this line
+// ------------------------------------------------------------------------
 
 void Pep2MzIdent::translateRoot()
 {
@@ -911,7 +1347,15 @@ void Pep2MzIdent::earlyParameters(ParameterPtr parameter,
       USERNAME(*)
       _mzML (ignored except for software)
      */
-    if (parameter->name == "USERNAME")
+    vector<CVMapPtr>::const_iterator it = find(
+        parameterMap.begin(), parameterMap.end(),
+        shared_ptr<CVMap>(new StringMatchCVMap(parameter->name)));
+    if (it != parameterMap.end())
+    {
+        // Put the value somewhere useful.
+        CVTermInfo info = cvTermInfo((*it)->cvid);
+    }
+    else if (parameter->name == "USERNAME")
     {
         ContactPtr cp = find_id(mzid->auditCollection,
                                 PERSON_DOC_OWNER);
@@ -1261,4 +1705,5 @@ void Pep2MzIdent::addFinalElements()
     mzid->analysisCollection.spectrumIdentification.push_back(sip);
 }
 
-
+} // namespace pwiz 
+} // namespace mziddata 

@@ -24,9 +24,10 @@
 project
     : requirements
         <toolset>gcc:<cxxflags>-fno-strict-aliasing
+        # hacks to allow building with <warnings>all with MSVC and boost
+        <toolset>msvc:<cxxflags>/wd4702 # warning: unreachable code # (boost/numeric/ublas/lu.hpp)
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
-        <toolset>msvc:<cxxflags>/wd4702                 # warning: unreachable code (boost::iostreams)
-    ;
+;
 
 
 # -fno-strict-aliasing necessary to avoid warnings from gcc 4.1+
@@ -49,7 +50,7 @@ lib pwiz_data_mzid
         Serializer_mzid.cpp
         Pep2MzIdent.cpp
         References.cpp
-#        KwCVMap.cpp
+        KwCVMap.cpp
     : # requirements
         <library>pwiz_data_mzid_version
         <library>../common//pwiz_data_common
@@ -97,7 +98,7 @@ unit-test DiffTest : DiffTest.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
 unit-test ReferencesTest : ReferencesTest.cpp pwiz_data_mzid ;
 unit-test IOTest : IOTest.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
 unit-test Serializer_mzid : Serializer_mzid_Test.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
-#unit-test KwCVMapTest : KwCVMapTest.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
+unit-test KwCVMapTest : KwCVMapTest.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
 #unit-test Pep2MzIdent : Pep2MzIdentTest.cpp pwiz_data_mzid ;
 #unit-test TraDataFileTest : TraDataFileTest.cpp pwiz_data_tradata pwiz_data_tradata_examples /ext/boost//filesystem ;
 #unit-test ReaderTest : ReaderTest.cpp pwiz_data_tradata ;

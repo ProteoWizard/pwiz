@@ -4301,6 +4301,9 @@ struct HandlerAnalysisData : public SAXParser::Handler
                                 const Attributes& attributes,
                                 stream_offset position)
     {
+        if (!ad)
+            throw runtime_error("[HandlerAnalysisData::startElement] NULL value for AnalysisData");
+        
         if (name == "AnalysisData")
         {
             // ignore

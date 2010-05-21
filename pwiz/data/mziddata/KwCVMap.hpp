@@ -34,17 +34,20 @@ namespace mziddata{
 struct PWIZ_API_DECL CVMap
 {
     CVMap();
-    CVMap(const std::string& keyword, cv::CVID cvid);
+    CVMap(const std::string& keyword, cv::CVID cvid,
+          const std::string& path);
     virtual ~CVMap() {}
     
     std::string keyword;
     cv::CVID cvid;
+    std::string path;
 
-    static CVMap* createMap(const std::vector<std::string>& triplet);
+    static CVMap* createMap(const std::vector<std::string>& quad);
 
     virtual const char* getTag() const;
     
     virtual bool operator()(const std::string& text) const;
+    virtual bool operator==(const CVMap& right) const;
 };
 
 typedef boost::shared_ptr<CVMap> CVMapPtr;
@@ -52,11 +55,10 @@ typedef boost::shared_ptr<CVMap> CVMapPtr;
 struct PWIZ_API_DECL RegexCVMap : public CVMap
 {
     RegexCVMap();
-    RegexCVMap(const std::string& pattern, cv::CVID cvid);
+    RegexCVMap(const std::string& pattern, cv::CVID cvid,
+               const std::string& path);
     virtual ~RegexCVMap();
     
-    boost::regex pattern;
-
     void setPattern(const std::string& pattern);
     
     virtual boost::cmatch match(std::string& text);
@@ -64,18 +66,44 @@ struct PWIZ_API_DECL RegexCVMap : public CVMap
     virtual const char* getTag() const;
 
     virtual bool operator()(const std::string& text) const;
+
+protected:
+    boost::regex pattern;
 };
 
 typedef boost::shared_ptr<RegexCVMap> RegexCVMapPtr;
 
-std::ostream& operator<<(std::ostream& os, const CVMap& cm);
-std::ostream& operator<<(std::ostream& os, const CVMapPtr cmp);
-std::ostream& operator<<(std::ostream& os, const CVMap* cmp);
+//
+// Part matching classes.
+//
+struct PWIZ_API_DECL StringMatchCVMap : public CVMap
+{
+    StringMatchCVMap(const std::string& keyword);
 
-std::istream& operator>>(std::istream& is, CVMapPtr& cm);
+    virtual bool operator==(const CVMap& right) const;
+    virtual bool operator==(const CVMapPtr& right) const;
+};
 
-std::ostream& operator<<(std::ostream& os, const std::vector<CVMapPtr>& cmVec);
-std::istream& operator>>(std::istream& is, std::vector<CVMapPtr>& cmVec);
+struct PWIZ_API_DECL CVIDMatchCVMap : public CVMap
+{
+    CVIDMatchCVMap(cv::CVID cvid);
+
+    virtual bool operator==(const CVMap& right) const;
+    virtual bool operator==(const CVMapPtr& right) const;
+};
+
+
+//
+// Useful operators
+//
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const CVMap& cm);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const CVMapPtr cmp);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const CVMap* cmp);
+
+PWIZ_API_DECL std::istream& operator>>(std::istream& is, CVMapPtr& cm);
+
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const std::vector<CVMapPtr>& cmVec);
+PWIZ_API_DECL std::istream& operator>>(std::istream& is, std::vector<CVMapPtr>& cmVec);
 
 } // namespace mziddata
 } // namespace pwiz

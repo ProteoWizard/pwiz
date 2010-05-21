@@ -36,35 +36,43 @@ using namespace std;
 using namespace boost;
 using namespace pwiz::cv;
 
+//
+// struct CVMap
+//
+
 CVMap::CVMap()
-    : keyword(), cvid(cv::CVID_Unknown)
+    : keyword(), cvid(cv::CVID_Unknown), path("/")
 {
 }
 
-CVMap::CVMap(const string& keyword, CVID cvid)
-    : keyword(keyword), cvid(cvid)
+CVMap::CVMap(const string& keyword, CVID cvid, const string& path)
+    : keyword(keyword), cvid(cvid), path(path)
 {
 }
 
-CVMap* CVMap::createMap(const vector<string>& triplet) 
+CVMap* CVMap::createMap(const vector<string>& quad) 
 {
     CVMap* map;
 
-    if (triplet.size() < 3)
-        throw runtime_error("Too few elements in createMap triplet");
+    if (quad.size() < 4)
+        throw runtime_error("[CVMap::createMap] Too few elements in createMap quad");
 
-    CVID cvid = cvTermInfo(triplet[2]).cvid;
+    CVID cvid = cvTermInfo(quad[2]).cvid;
+    string path;
+    if (quad[3].size() == 0)
+        throw runtime_error("[CVMap::createMap] Blank path.");
+    path = quad[3];
 
     if (cvid == CVID_Unknown)
-        throw runtime_error(("Unknown CVID: "+triplet[2]).c_str());
+        throw runtime_error(("[CVMap::createMap] Unknown CVID: "+quad[2]).c_str());
     
-    if (triplet[0] == "plain")
-        map = new CVMap(triplet[1], cvid);
-    else if (triplet[0] == "regex")
-        map = new RegexCVMap(triplet[1], cvid);
+    if (quad[0] == "plain")
+        map = new CVMap(quad[1], cvid, path);
+    else if (quad[0] == "regex")
+        map = new RegexCVMap(quad[1], cvid, path);
     else
-        throw runtime_error(("Unknown map: "+triplet[0]).c_str());
-
+        throw runtime_error(("[CVMap::createMap] Unknown map: "+quad[0]).c_str());
+    
     return map;
 }
 
@@ -78,15 +86,25 @@ bool CVMap::operator()(const string& text) const
     return keyword == text;
 }
 
+bool CVMap::operator==(const CVMap& right) const
+{
+    return keyword == right.keyword &&
+        cvid == right.cvid &&
+        path == right.path;
+}
+
+//
+// struct RegexCVMap
+//
+
 RegexCVMap::RegexCVMap()
-    : CVMap(".*", CVID_Unknown), pattern(".*")
+    : CVMap(".*", CVID_Unknown, "/"), pattern(".*")
 {
 }
 
-RegexCVMap::RegexCVMap(const string& pattern, CVID cvid)
-    : CVMap(pattern, cvid), pattern(pattern)
+RegexCVMap::RegexCVMap(const string& pattern, CVID cvid, const string& path)
+    : CVMap(pattern, cvid, path), pattern(pattern)
 {
-    //this->cvid = cvid;
 }
 
 RegexCVMap::~RegexCVMap()
@@ -124,12 +142,56 @@ bool RegexCVMap::operator()(const string& text) const
     return false;
 }
 
+//
+// struct StringMatchCVMap
+//
+
+StringMatchCVMap::StringMatchCVMap(const string& keyword)
+    : CVMap(keyword, CVID_Unknown, "/")
+{
+}
+
+bool StringMatchCVMap::operator==(const CVMap& right) const
+{
+    return keyword == right.keyword;
+}
+
+bool StringMatchCVMap::operator==(const CVMapPtr& right) const
+{
+    return keyword == right->keyword;
+}
+
+//
+// struct CVIDMatchCVMap
+//
+
+CVIDMatchCVMap::CVIDMatchCVMap(CVID cvid)
+    : CVMap("", cvid, "/")
+{
+}
+
+bool CVIDMatchCVMap::operator==(const CVMap& right) const
+{
+    return cvid == right.cvid;
+}
+
+bool CVIDMatchCVMap::operator==(const CVMapPtr& right) const
+{
+    return cvid == right->cvid;
+}
+
+//
+// operators
+//
+
 ostream& operator<<(ostream& os, const CVMap& cm)
 {
     string id = typeid(cm).name();
     
-    os << cm.getTag() << "\t" << cm.keyword << "\t" <<
-        cvTermInfo(cm.cvid).id << "\n";
+    os << cm.getTag() << "\t" << cm.keyword
+       << "\t" << cvTermInfo(cm.cvid).id
+       << "\t" << cm.path
+       << "\n";
 
     return os;
 }
@@ -170,7 +232,7 @@ istream& operator>>(istream& is, CVMapPtr& cm)
     }
 
     // Step 2: verify the # of fields.
-    if (tokens.size()<3)
+    if (tokens.size()<4)
     {
         ostringstream err;
         err << "Too few fields (" << tokens.size()
