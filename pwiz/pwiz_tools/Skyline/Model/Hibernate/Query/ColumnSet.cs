@@ -169,7 +169,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             IClassMetadata classMetadata = Schema.GetClassMetadata(table.PersistentClass);
             if (table.ResultsClass != null)
             {
-                TreeNode resultsNode = new TreeNode {Name = "Results", Text = "Results"};
+                TreeNode resultsNode = new TreeNode {Name = "Results", Text = ResultText(table, "Results")};
                 foreach (TreeNode treeNode in GetTreeNodes(Schema.GetClassMetadata(table.ResultsClass), identifier))
                 {
                     ((NodeData) treeNode.Tag).Results = true;
@@ -179,7 +179,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             }
             if (table.ResultsSummaryClass != null)
             {
-                TreeNode resultsSummaryNode = new TreeNode { Name = "ResultsSummary", Text = "ResultsSummary" };
+                TreeNode resultsSummaryNode = new TreeNode { Name = "ResultsSummary", Text = ResultText(table, "ResultsSummary") };
                 foreach (TreeNode treeNode in GetTreeNodes(Schema.GetClassMetadata(table.ResultsSummaryClass), identifier))
                 {
                     ((NodeData)treeNode.Tag).ResultsSummary = true;
@@ -189,6 +189,13 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             }
             treeNodes.AddRange(GetTreeNodes(classMetadata, identifier));
             return treeNodes;
+        }
+
+        private static string ResultText(Table table, string resultText)
+        {
+            if (!ReferenceEquals(table.PersistentClass, typeof(DbProtein)))
+                resultText = table.Name + resultText;
+            return resultText;
         }
 
         protected List<TreeNode> GetTreeNodes(IClassMetadata classMetadata, Identifier identifier)

@@ -83,9 +83,9 @@ namespace pwiz.SkylineTestFunctional
                              });
 
             // Add precursor results and results summary information
-            AddColumns(new Identifier("Peptides", "Precursors", "ResultsSummary", "MeanBestRetentionTime"),
-                       new Identifier("Peptides", "Precursors", "ResultsSummary", "CvBestRetentionTime"),
-                       new Identifier("Peptides", "Precursors", "Results", "BestRetentionTime"));
+            AddColumns(new Identifier("Peptides", "Precursors", "PrecursorResultsSummary", "MeanBestRetentionTime"),
+                       new Identifier("Peptides", "Precursors", "PrecursorResultsSummary", "CvBestRetentionTime"),
+                       new Identifier("Peptides", "Precursors", "PrecursorResults", "BestRetentionTime"));
             CheckPreview((preview, document) =>
                              {
                                  int expectedRows = document.TransitionGroupCount*
@@ -110,7 +110,7 @@ namespace pwiz.SkylineTestFunctional
             PivotReport = ShowDialog<PivotReportDlg>(EditReportList.CopyItem);
 
             // Add transition results summary column
-            AddColumns(new Identifier("Peptides", "Precursors", "Transitions", "ResultsSummary", "CvArea"));
+            AddColumns(new Identifier("Peptides", "Precursors", "Transitions", "TransitionResultsSummary", "CvArea"));
             CheckPreview((preview, document) =>
                              {
                                  Assert.AreEqual(document.TransitionCount, preview.RowCount);
@@ -118,7 +118,7 @@ namespace pwiz.SkylineTestFunctional
                              });
 
             // Add transition results column
-            AddColumns(new Identifier("Peptides", "Precursors", "Transitions", "Results", "Area"));
+            AddColumns(new Identifier("Peptides", "Precursors", "Transitions", "TransitionResults", "Area"));
             CheckPreview((preview, document) =>
                              {
                                  Assert.AreEqual(document.TransitionCount, preview.RowCount);
