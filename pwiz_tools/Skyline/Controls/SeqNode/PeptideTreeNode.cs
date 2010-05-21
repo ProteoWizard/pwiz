@@ -144,15 +144,6 @@ namespace pwiz.Skyline.Controls.SeqNode
                                                  TransitionGroupTreeNode.CreateInstance);
         }
 
-        private sealed class TextSequence
-        {
-            public String Text { get; set; }
-            public Font Font { get; set; }
-            public Color Color { get; set; }
-            public int Position { get; set; }
-            public int Width { get; set; }
-        }
-
         private TextSequence[] _textSequences;
 
         private const TextFormatFlags FORMAT_TEXT_SEQUENCE = TextFormatFlags.SingleLine |

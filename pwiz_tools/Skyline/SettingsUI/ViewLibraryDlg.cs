@@ -21,6 +21,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -389,11 +390,14 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        protected internal const int PADDING = 3;
+        private const TextFormatFlags FORMAT_PLAIN = TextFormatFlags.SingleLine | TextFormatFlags.VerticalCenter;
+        private const TextFormatFlags FORMAT_CUSTOM = FORMAT_PLAIN | TextFormatFlags.NoPadding;
+        
         private readonly LibraryManager _libraryManager;
         private readonly SettingsListBoxDriver<LibrarySpec> _driverLibrary;
         private Library _selectedLibrary;
         private Range _currentRange;
-        //private PeptideInfo[] _peptides;
         private readonly PageInfo _pageInfo;
         private MSGraphPane GraphPane { get { return (MSGraphPane)graphControl.MasterPane[0]; } }
         private ViewLibSpectrumGraphItem GraphItem { get; set; }
@@ -477,7 +481,8 @@ namespace pwiz.Skyline.SettingsUI
             _currentRange = BinaryRangeSearch(PeptideTextBox.Text, new Range(0, _peptides.Length - 1));
             UpdatePageInfo();
             UpdateStatusArea();
-            UpdatePeptideListBox();
+            cbShowModMasses.Checked = Settings.Default.ShowModMassesInExplorer;
+            UpdatePeptideListBox(0);
             PeptideTextBox.Select();
             UpdateUI();
         }
@@ -575,7 +580,7 @@ namespace pwiz.Skyline.SettingsUI
 
         // Used to update the peptides list when something changes: e.g. 
         // library selection changes, or search results change.
-        private void UpdatePeptideListBox()
+        private void UpdatePeptideListBox(int selectPeptideIndex)
         {
             PeptideListBox.BeginUpdate();
             PeptideListBox.Items.Clear();
@@ -588,7 +593,7 @@ namespace pwiz.Skyline.SettingsUI
                     PeptideListBox.Items.Add(_peptides[i].DisplayString);
                 }
 
-                PeptideListBox.SelectedIndex = 0;
+                PeptideListBox.SelectedIndex = selectPeptideIndex;
             }
 
             PeptideListBox.EndUpdate();
@@ -739,7 +744,7 @@ namespace pwiz.Skyline.SettingsUI
             _currentRange = BinaryRangeSearch(PeptideTextBox.Text, new Range(0, _peptides.Length - 1));
             UpdatePageInfo();
             UpdateStatusArea();
-            UpdatePeptideListBox();
+            UpdatePeptideListBox(0);
             UpdateUI();
         }
 
@@ -756,7 +761,7 @@ namespace pwiz.Skyline.SettingsUI
             _pageInfo.Page--;
             NextLink.Enabled = true;
             PreviousLink.Enabled = _pageInfo.Page > 1;
-            UpdatePeptideListBox();
+            UpdatePeptideListBox(0);
             UpdateStatusArea();
             UpdateUI();
         }
@@ -767,7 +772,7 @@ namespace pwiz.Skyline.SettingsUI
             _pageInfo.Page++;
             PreviousLink.Enabled = true;
             NextLink.Enabled = (_currentRange.Count - (_pageInfo.Page * _pageInfo.PageSize)) > 0;
-            UpdatePeptideListBox();
+            UpdatePeptideListBox(0);
             UpdateStatusArea();
             UpdateUI();
         }
@@ -1200,7 +1205,7 @@ namespace pwiz.Skyline.SettingsUI
                     // Return the focused control
                     return c;
                 }
-                else if (c.ContainsFocus)
+                if (c.ContainsFocus)
                 {
                     // If the focus is contained inside a control's children
                     // return the child
@@ -1212,5 +1217,95 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         #endregion
+
+        /// <summary>
+        /// Creates a text sequence with normal font.
+        /// </summary>
+        private TextSequence CreateTextSequence(string text, bool modified)
+        {
+            var font = PeptideListBox.Font;
+            if (modified)
+                font = new Font(font, FontStyle.Bold | FontStyle.Underline);
+            return new TextSequence { Text = text, Font = font, Color = Color.Black };
+        }
+
+        private IEnumerable<TextSequence> GetTextSequences(DrawItemEventArgs e)
+        {
+            string sequence = PeptideListBox.Items[e.Index].ToString();
+            IList<TextSequence> textSequences = new List<TextSequence>();
+            if (!sequence.Contains('['))
+                textSequences.Add(CreateTextSequence(sequence, false));
+            else
+            {
+                var sb = new StringBuilder(128);
+                bool inMod = false;
+
+                for (int i = 0; i < sequence.Length; i++)
+                {
+                    bool isMod = i < sequence.Length - 1 && sequence[i+1] == '[';
+                    if (isMod != inMod)
+                    {
+                        textSequences.Add(CreateTextSequence(sb.ToString(), inMod));
+                        sb.Remove(0, sb.Length);
+                    }
+                    sb.Append(sequence[i]);
+                    inMod = isMod;
+                    if (isMod)
+                        i = sequence.IndexOf(']', i);
+                }
+                textSequences.Add(CreateTextSequence(sb.ToString(), inMod));
+            }
+
+            // Calculate placement for each text sequence
+            int textRectWidth = 0;
+            foreach (var textSequence in textSequences)
+            {
+                Size sizeMax = new Size(int.MaxValue, int.MaxValue);
+                textSequence.Position = textRectWidth;
+                textSequence.Width = TextRenderer.MeasureText(e.Graphics, textSequence.Text,
+                    textSequence.Font, sizeMax, FORMAT_CUSTOM).Width;
+                textRectWidth += textSequence.Width;
+            }
+
+            return textSequences;
+        }
+
+        private void PeptideListBox_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            // Draw the background of the ListBox control for each item.
+            e.DrawBackground();
+
+            if (Settings.Default.ShowModMassesInExplorer)
+            {
+                // Draw the current item text based on the current Font 
+                // and a black brush.
+                TextRenderer.DrawText(e.Graphics, PeptideListBox.Items[e.Index].ToString(),
+                                      e.Font, e.Bounds, e.ForeColor, e.BackColor,
+                                      FORMAT_PLAIN);
+            }
+            else
+            {
+                Rectangle bounds = e.Bounds;
+                Rectangle rectDraw = new Rectangle(0, bounds.Y, 0, bounds.Height);
+                foreach (var textSequence in GetTextSequences(e))
+                {
+                    rectDraw.X = textSequence.Position + bounds.X + PADDING;
+                    rectDraw.Width = textSequence.Width;
+                    TextRenderer.DrawText(e.Graphics, textSequence.Text,
+                                          textSequence.Font, rectDraw, e.ForeColor, e.BackColor,
+                                          FORMAT_CUSTOM);
+                }
+            }
+
+            if (PeptideListBox.Focused && e.Index == PeptideListBox.SelectedIndex)
+                e.DrawFocusRectangle();
+        }
+
+        private void cbShowModMasses_CheckedChanged(object sender, EventArgs e)
+        {
+            Settings.Default.ShowModMassesInExplorer = cbShowModMasses.Checked;
+            int selPepIndex = PeptideListBox.SelectedIndex > 0 ? PeptideListBox.SelectedIndex : 0;
+            UpdatePeptideListBox(selPepIndex);
+        }
     }
 }

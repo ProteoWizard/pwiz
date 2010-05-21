@@ -83,6 +83,7 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStripSeparator15 = new System.Windows.Forms.ToolStripSeparator();
             this.zoomSpectrumContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator27 = new System.Windows.Forms.ToolStripSeparator();
+            this.cbShowModMasses = new System.Windows.Forms.CheckBox();
             this.splitMain.Panel1.SuspendLayout();
             this.splitMain.Panel2.SuspendLayout();
             this.splitMain.SuspendLayout();
@@ -148,6 +149,7 @@ namespace pwiz.Skyline.SettingsUI
             // PeptideListPanel
             // 
             this.PeptideListPanel.Controls.Add(this.PeptideListBox);
+            this.PeptideListPanel.Controls.Add(this.cbShowModMasses);
             this.PeptideListPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.PeptideListPanel.Location = new System.Drawing.Point(0, 3);
             this.PeptideListPanel.Name = "PeptideListPanel";
@@ -157,11 +159,13 @@ namespace pwiz.Skyline.SettingsUI
             // PeptideListBox
             // 
             this.PeptideListBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.PeptideListBox.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
             this.PeptideListBox.FormattingEnabled = true;
             this.PeptideListBox.Location = new System.Drawing.Point(0, 0);
             this.PeptideListBox.Name = "PeptideListBox";
-            this.PeptideListBox.Size = new System.Drawing.Size(258, 264);
+            this.PeptideListBox.Size = new System.Drawing.Size(258, 251);
             this.PeptideListBox.TabIndex = 0;
+            this.PeptideListBox.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.PeptideListBox_DrawItem);
             this.PeptideListBox.SelectedIndexChanged += new System.EventHandler(this.PeptideListBox_SelectedIndexChanged);
             // 
             // PageCount
@@ -238,7 +242,7 @@ namespace pwiz.Skyline.SettingsUI
             this.PeptideLabel.Name = "PeptideLabel";
             this.PeptideLabel.Size = new System.Drawing.Size(46, 13);
             this.PeptideLabel.TabIndex = 1;
-            this.PeptideLabel.Text = "Peptide:";
+            this.PeptideLabel.Text = "&Peptide:";
             // 
             // PeptideTextBox
             // 
@@ -487,7 +491,7 @@ namespace pwiz.Skyline.SettingsUI
             this.LibraryLabel.Name = "LibraryLabel";
             this.LibraryLabel.Size = new System.Drawing.Size(41, 13);
             this.LibraryLabel.TabIndex = 0;
-            this.LibraryLabel.Text = "Library:";
+            this.LibraryLabel.Text = "&Library:";
             // 
             // contextMenuSpectrum
             // 
@@ -654,6 +658,18 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStripSeparator27.Name = "toolStripSeparator27";
             this.toolStripSeparator27.Size = new System.Drawing.Size(162, 6);
             // 
+            // cbShowModMasses
+            // 
+            this.cbShowModMasses.AutoSize = true;
+            this.cbShowModMasses.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.cbShowModMasses.Location = new System.Drawing.Point(0, 252);
+            this.cbShowModMasses.Name = "cbShowModMasses";
+            this.cbShowModMasses.Size = new System.Drawing.Size(258, 17);
+            this.cbShowModMasses.TabIndex = 1;
+            this.cbShowModMasses.Text = "&Show modification masses";
+            this.cbShowModMasses.UseVisualStyleBackColor = true;
+            this.cbShowModMasses.CheckedChanged += new System.EventHandler(this.cbShowModMasses_CheckedChanged);
+            // 
             // ViewLibraryDlg
             // 
             this.AcceptButton = this.btnCancel;
@@ -680,6 +696,7 @@ namespace pwiz.Skyline.SettingsUI
             this.PeptideListSplitContainer.Panel2.PerformLayout();
             this.PeptideListSplitContainer.ResumeLayout(false);
             this.PeptideListPanel.ResumeLayout(false);
+            this.PeptideListPanel.PerformLayout();
             this.PeptideEditPanel.ResumeLayout(false);
             this.PeptideEditPanel.PerformLayout();
             this.GraphPanel.ResumeLayout(false);
@@ -750,6 +767,7 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.ToolStripButton copyButton;
         private System.Windows.Forms.ToolStripButton saveButton;
         private System.Windows.Forms.ToolStripButton printButton;
+        private System.Windows.Forms.CheckBox cbShowModMasses;
 
 
 

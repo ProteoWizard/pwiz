@@ -284,4 +284,16 @@ namespace pwiz.Skyline.Util
                 Math.Abs(Location.Value.Y - locationNew.Y) > Threshold.Height;            
         }
     }
+
+    /// <summary>
+    /// Simple class for custom drawing of text ranges
+    /// </summary>
+    public sealed class TextSequence
+    {
+        public String Text { get; set; }
+        public Font Font { get; set; }
+        public Color Color { get; set; }
+        public int Position { get; set; }
+        public int Width { get; set; }
+    }
 }
