@@ -987,6 +987,24 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        /// <summary>
+        /// True if children of a given node are equivalent to the children
+        /// of this node.
+        /// </summary>
+        public bool EquivalentChildren(TransitionGroupDocNode nodeGroup)
+        {
+            if (Children.Count != nodeGroup.Children.Count)
+                return false;
+            for (int i = 0; i < Children.Count; i++)
+            {
+                TransitionDocNode nodeTran1 = (TransitionDocNode) Children[i];
+                TransitionDocNode nodeTran2 = (TransitionDocNode) nodeGroup.Children[i];
+                if (!nodeTran1.Transition.Equivalent(nodeTran2.Transition))
+                    return false;
+            }
+            return true;
+        }
+
         #region Property change methods
 
         public TransitionGroupDocNode ChangeLibInfo(SpectrumHeaderInfo prop)

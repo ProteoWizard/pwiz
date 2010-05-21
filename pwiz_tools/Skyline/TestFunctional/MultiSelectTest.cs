@@ -1,5 +1,5 @@
 /*
- * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
+ * Original author: Alana Killeen <killea .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2009 University of Washington - Seattle, WA
@@ -42,20 +42,18 @@ namespace pwiz.SkylineTestFunctional
         }
 
         /// <summary>
-        /// 
+        /// Tests multiple selection in the peptide tree view.
         /// </summary>
         protected override void DoTest()
         {
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_scheduled_mini.sky")));
-
             
             _expectedSelNodes = new List<Identity>();
 
             // Three main multi-select tests. Testing for delete/undo occurs within these tests.
             TestRangeSelect();
             TestInsertNode();
-            TestDisjointSelect();
-            
+            TestDisjointSelect();            
         }
 
         private void TestRangeSelect()
@@ -283,7 +281,5 @@ namespace pwiz.SkylineTestFunctional
             else
                 Assert.AreEqual(_expectedSelNode, selNode.Model.Id);
         }
-
     }
-
 }

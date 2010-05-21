@@ -946,69 +946,74 @@ namespace pwiz.Skyline
             }
         }
 
-        private void expandProteinsMenuItem_Click(object sender, EventArgs e)
+        private void expandProteinsMenuItem_Click(object sender, EventArgs e) { ExpandProteins(); }
+        public void ExpandProteins()
         {
             BulkUpdateTreeNodes<TreeNode>(() =>
-                {
-                    foreach (PeptideGroupTreeNode node in sequenceTree.GetSequenceNodes())
-                        node.Expand();
-                });
+            {
+                foreach (PeptideGroupTreeNode node in sequenceTree.GetSequenceNodes())
+                    node.Expand();
+            });
             Settings.Default.SequenceTreeExpandProteins = true;
         }
 
-        private void expandPeptidesMenuItem_Click(object sender, EventArgs e)
+        private void expandPeptidesMenuItem_Click(object sender, EventArgs e) { ExpandPeptides(); }
+        public void ExpandPeptides()
         {
             BulkUpdateTreeNodes<TreeNode>(() =>
+            {
+                foreach (PeptideGroupTreeNode node in sequenceTree.GetSequenceNodes())
                 {
-                    foreach (PeptideGroupTreeNode node in sequenceTree.GetSequenceNodes())
-                    {
-                        node.Expand();
-                        foreach (TreeNode nodeChild in node.Nodes)
-                            nodeChild.Expand();
-                    }
-                });
+                    node.Expand();
+                    foreach (TreeNode nodeChild in node.Nodes)
+                        nodeChild.Expand();
+                }
+            });
             Settings.Default.SequenceTreeExpandPeptides =
                 Settings.Default.SequenceTreeExpandProteins = true;
         }
 
-        private void expandPrecursorsMenuItem_Click(object sender, EventArgs e)
+        private void expandPrecursorsMenuItem_Click(object sender, EventArgs e) { ExpandPrecursors(); }
+        public void ExpandPrecursors()
         {
             BulkUpdateTreeNodes<TreeNode>(() =>
-                {
+            {
                 foreach (TreeNode node in sequenceTree.Nodes)
                     node.ExpandAll();
-                });
+            });
             Settings.Default.SequenceTreeExpandPrecursors =
                 Settings.Default.SequenceTreeExpandPeptides =
-                Settings.Default.SequenceTreeExpandProteins = true;
-
+                Settings.Default.SequenceTreeExpandProteins = true;            
         }
 
-        private void collapseProteinsMenuItem_Click(object sender, EventArgs e)
+        private void collapseProteinsMenuItem_Click(object sender, EventArgs e) { CollapseProteins(); }
+        public void CollapseProteins()
         {
             BulkUpdateTreeNodes<PeptideGroupTreeNode>(() =>
-                {
-                   foreach (PeptideGroupTreeNode node in sequenceTree.GetSequenceNodes())
-                        node.Collapse();
-                });
+            {
+                foreach (PeptideGroupTreeNode node in sequenceTree.GetSequenceNodes())
+                    node.Collapse();
+            });
             Settings.Default.SequenceTreeExpandProteins =
-                Settings.Default.SequenceTreeExpandPeptides = 
-                Settings.Default.SequenceTreeExpandPrecursors = false;
+                Settings.Default.SequenceTreeExpandPeptides =
+                Settings.Default.SequenceTreeExpandPrecursors = false;            
         }
 
-        private void collapsePeptidesMenuItem_Click(object sender, EventArgs e)
+        private void collapsePeptidesMenuItem_Click(object sender, EventArgs e) { CollapsePeptides(); }
+        public void CollapsePeptides()
         {
             BulkUpdateTreeNodes<PeptideTreeNode>(() =>
-               {
-                   foreach (PeptideGroupTreeNode node in sequenceTree.GetSequenceNodes())
-                       foreach (TreeNode child in node.Nodes)
-                           child.Collapse();
-               });
+            {
+                foreach (PeptideGroupTreeNode node in sequenceTree.GetSequenceNodes())
+                    foreach (TreeNode child in node.Nodes)
+                        child.Collapse();
+            });
             Settings.Default.SequenceTreeExpandPeptides =
                 Settings.Default.SequenceTreeExpandPrecursors = false;
         }
 
-        private void collapsePrecursorsMenuItem_Click(object sender, EventArgs e)
+        private void collapsePrecursorsMenuItem_Click(object sender, EventArgs e) { CollapsePrecursors(); }
+        public void CollapsePrecursors()
         {
             BulkUpdateTreeNodes<PeptideTreeNode>(() =>
             {

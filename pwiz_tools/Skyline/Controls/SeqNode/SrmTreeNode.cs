@@ -311,14 +311,13 @@ namespace pwiz.Skyline.Controls.SeqNode
             set { /* Ignore */  }
         }
 
-        public void Pick(IEnumerable<object> chosen, bool autoManageChildren)
+        public void Pick(IEnumerable<object> chosen, bool autoManageChildren, bool synchSiblings)
         {
-            // Quick check to see if anything changed.
-            // CONSIDER: If synchronizing siblings, this can leave siblings unsynchronized
-            if (Helpers.Equals(chosen, Chosen) && AutoManageChildren == autoManageChildren)
+            // Quick check to see if anything changed
+            if (Helpers.Equals(chosen, Chosen) && AutoManageChildren == autoManageChildren && IsSynchSiblings == synchSiblings)
                 return;
 
-            SequenceTree.FirePickedChildren(this, CreatePickedList(chosen, autoManageChildren), IsSynchSiblings);
+            SequenceTree.FirePickedChildren(this, CreatePickedList(chosen, autoManageChildren), synchSiblings);
 
             // Make sure this node is open to show changes
             Expand();
@@ -547,7 +546,8 @@ namespace pwiz.Skyline.Controls.SeqNode
         /// </summary>
         /// <param name="chosen">List of objects supplied by <see cref="GetChoices"/> that the user left checked</param>
         /// <param name="autoManageChildren">True if the auto-manage bit should also be set</param>
-        void Pick(IEnumerable<object> chosen, bool autoManageChildren);
+        /// <param name="synchSiblings">True if siblings of this node should be synchronized with it</param>
+        void Pick(IEnumerable<object> chosen, bool autoManageChildren, bool synchSiblings);
 
         /// <summary>
         /// Whether to show the checkbox that controls whether children will be automatically added

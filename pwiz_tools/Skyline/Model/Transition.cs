@@ -454,6 +454,17 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        /// <summary>
+        /// True if a given transition is equivalent to this, ignoring the
+        /// transition group.
+        /// </summary>
+        public bool Equivalent(Transition obj)
+        {
+            return Equals(obj.IonType, IonType) &&
+                obj.CleavageOffset == CleavageOffset &&
+                obj.Charge == Charge;
+        }
+
         #region object overrides
 
         public bool Equals(Transition obj)

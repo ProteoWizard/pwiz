@@ -106,6 +106,17 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+        public bool IsSynchSiblings
+        {
+            get { return cbSynchronize.Checked; }
+            set { cbSynchronize.Checked = value; }
+        }
+
+        public bool CanSynchSiblings
+        {
+            get { return cbSynchronize.Visible; }
+        }
+
         public bool AutoManageChildren
         {
             get
@@ -231,8 +242,8 @@ namespace pwiz.Skyline.Controls
                 if (choice.Chosen)
                     picks.Add(choice.Choice);
             }
-            _picker.IsSynchSiblings = cbSynchronize.Checked;
-            _picker.Pick(picks, AutoManageChildren);
+            _picker.IsSynchSiblings = IsSynchSiblings;
+            _picker.Pick(picks, AutoManageChildren, IsSynchSiblings);
 
             _closing = true;
             Dispose();
@@ -333,7 +344,15 @@ namespace pwiz.Skyline.Controls
 
         public void SetItemChecked(int i, bool checkItem)
         {
+            if (pickListMulti.Items.Count <= i)
+                Console.WriteLine("Items = {0}", pickListMulti.Items.Count);
             pickListMulti.SetItemChecked(i, checkItem);
+        }
+
+        public bool SelectAll
+        {
+            get { return cbItems.Checked; }
+            set { cbItems.Checked = value; }
         }
 
         private void cbItems_CheckedChanged(object sender, EventArgs e)

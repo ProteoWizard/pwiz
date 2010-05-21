@@ -246,33 +246,44 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             get
             {
-                // If this node has siblings with the same charge state and other
-                // label types, then show the checkbox to keep these siblings in synch.
-                var siblingNodes = Parent.Nodes;
-                if (siblingNodes.Count > 1)
-                {
-                    var tranGroup = DocNode.TransitionGroup;
-                    int charge = tranGroup.PrecursorCharge;
-                    var labelType = tranGroup.LabelType;
-                    foreach (TransitionGroupTreeNode nodeTree in siblingNodes)
-                    {
-                        tranGroup = nodeTree.DocNode.TransitionGroup;
-                        if (charge == tranGroup.PrecursorCharge &&
-                                !ReferenceEquals(labelType, tranGroup.LabelType))
-                            return "Synchronize isotope label types";
-                    }
-                }
-                // Nothing to synchronize
-                return null;
+                return HasSiblingsToSynch(false) ? "Synchronize isotope label types" : null;
             }
         }
 
         public override bool IsSynchSiblings
         {
-            get { return Settings.Default.SynchronizeIsotopeTypes; }
-            set { Settings.Default.SynchronizeIsotopeTypes = value; }
+            get { return !HasSiblingsToSynch(true) && Settings.Default.SynchronizeIsotopeTypes; }
+            set
+            {
+                // Avoid changing the flag in the settings, if this value is not
+                // different from current value
+                if (IsSynchSiblings != value)
+                    Settings.Default.SynchronizeIsotopeTypes = value;
+            }
         }
 
+        /// <summary>
+        /// True if this node has siblings with the same charge state, and
+        /// if those siblings must be in-synch, then only if they are not.
+        /// </summary>
+        private bool HasSiblingsToSynch(bool mustBeInSynch)
+        {
+            var siblingNodes = Parent.Nodes;
+            if (siblingNodes.Count > 1)
+            {
+                var tranGroupThis = DocNode.TransitionGroup;
+                foreach (TransitionGroupTreeNode nodeTree in siblingNodes)
+                {
+                    var tranGroup = nodeTree.DocNode.TransitionGroup;
+                    if (!ReferenceEquals(tranGroupThis, tranGroup) &&
+                            tranGroupThis.PrecursorCharge == tranGroup.PrecursorCharge &&
+                            !(mustBeInSynch && DocNode.EquivalentChildren(nodeTree.DocNode)))
+                        return true;
+                }
+            }
+            return false;
+        }
+        
         private sealed class TransitionPickedList : IPickedList
         {
             private readonly IEnumerable<object> _picked;

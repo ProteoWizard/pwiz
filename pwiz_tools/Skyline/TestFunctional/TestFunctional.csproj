@@ -92,6 +92,7 @@
     <Compile Include="ShareDocumentTest.cs" />
     <Compile Include="LibraryBuildTest.cs" />
     <Compile Include="OptimizeTest.cs" />
+    <Compile Include="SynchSiblingsTest.cs" />
     <Compile Include="TestFunctional.cs" />
     <Compile Include="BackgroundProteomeTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -114,6 +115,7 @@
     <None Include="OptimizeTest.zip" />
     <None Include="PrecursorTest.zip" />
     <None Include="ReportSummaryTest.zip" />
+    <None Include="SynchSiblingsTest.zip" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
