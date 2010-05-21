@@ -164,8 +164,10 @@ namespace pwiz.SkylineTest
             var docMulti = docFasta.ChangeSettings(settings);
 
             // Make sure transition lists export to various formats and roundtrip
-            VerifyExportRoundTrip(new ThermoMassListExporter(docMulti), docFasta);
-            VerifyExportRoundTrip(new AbiMassListExporter(docMulti), docFasta);
+            VerifyExportRoundTrip(new ThermoMassListExporter(docMulti), false, docFasta);
+            VerifyExportRoundTrip(new AbiMassListExporter(docMulti), false, docFasta);
+            VerifyExportRoundTrip(new AgilentMassListExporter(docMulti), true, docFasta);
+            VerifyExportRoundTrip(new WatersMassListExporter(docMulti), true, docFasta);
         }
 
         [TestMethod]
@@ -224,7 +226,7 @@ namespace pwiz.SkylineTest
             AssertEx.Serializable(document, 3, AssertEx.DocumentCloned);
         }
 
-        private static void VerifyExportRoundTrip(MassListExporter exporter, SrmDocument docFasta)
+        private static void VerifyExportRoundTrip(MassListExporter exporter, bool hasHeader, SrmDocument docFasta)
         {
             exporter.Export(null);
 
@@ -232,7 +234,7 @@ namespace pwiz.SkylineTest
             var docExport = exporter.Document;
             var docImport = new SrmDocument(docExport.Settings);
             string transitionList = exporter.MemoryOutput.Values.ToArray()[0].ToString();
-            using (var readerImport = new StringReader(ReverseLines(transitionList)))
+            using (var readerImport = new StringReader(ReverseLines(transitionList, hasHeader)))
             {
                 IdentityPath pathAdded;
                 IFormatProvider provider = CultureInfo.InvariantCulture;
@@ -250,7 +252,7 @@ namespace pwiz.SkylineTest
             VerifyMultiLabelContent(docFasta, docImport, out countProteinTerm, out countProteinTermTran);
         }
 
-        private static string ReverseLines(string transitionList)
+        private static string ReverseLines(string transitionList, bool hasHeader)
         {
             var listLines = new List<string>();
             using (var readerList = new StringReader(transitionList))
@@ -260,7 +262,14 @@ namespace pwiz.SkylineTest
                     listLines.Add(line);
             }
 
+            string lineHeader = (hasHeader ? listLines[0] : null);
+            if (hasHeader)
+                listLines.RemoveAt(0);
+
             listLines.Reverse();
+
+            if (hasHeader)
+                listLines.Insert(0, lineHeader);
 
             var sb = new StringBuilder();
             listLines.ForEach(line => sb.AppendLine(line));

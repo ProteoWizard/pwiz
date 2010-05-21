@@ -191,9 +191,16 @@ namespace pwiz.Skyline.Model
                         break;
                     lines.Add(line);
                 }
-                rowReader = GeneralRowReader.Create(lines, FormatProvider, Separator, tolerance, Document.Settings);
+                rowReader = GeneralRowReader.Create(lines, null, FormatProvider, Separator, tolerance, Document.Settings);
                 if (rowReader == null)
-                    throw new InvalidDataException("Failed to find peptide column.");
+                {
+                    // Check for a possible header row
+                    string[] headers = lines[0].Split(Separator);
+                    lines.RemoveAt(0);
+                    rowReader = GeneralRowReader.Create(lines, headers, FormatProvider, Separator, tolerance, Document.Settings);
+                    if (rowReader == null)
+                        throw new InvalidDataException("Failed to find peptide column.");
+                }
             }
 
             // Set starting values for limit counters
@@ -587,7 +594,7 @@ namespace pwiz.Skyline.Model
                 return info;
             }
 
-            public static GeneralRowReader Create(IList<string> lines,
+            public static GeneralRowReader Create(IList<string> lines, IList<string> headers,
                 IFormatProvider provider, char separator, double tolerance, SrmSettings settings)
             {
                 // Split the first line into fields.
@@ -648,7 +655,7 @@ namespace pwiz.Skyline.Model
                 if (iProduct == -1)
                     throw new MzMatchException("No valid product m/z column found.");
 
-                int iProtein = FindProtein(fields, iSequence, lines, provider, separator);
+                int iProtein = FindProtein(fields, iSequence, lines, headers, provider, separator);
 
                 return new GeneralRowReader(provider, separator, iSequence, iProtein,
                     iPrecursor, iProduct, iLabelType, tolerance, settings);
@@ -694,10 +701,13 @@ namespace pwiz.Skyline.Model
                 return seqBuild.ToString();
             }
 
+            private static readonly string[] EXCLUDE_PROTEIN_VALUES = new[] { "true", "false", "heavy", "light", "unit" };
 
-            private static int FindProtein(string[] fields, int iSequence, IEnumerable<string> lines,
+            private static int FindProtein(string[] fields, int iSequence,
+                IEnumerable<string> lines, IList<string> headers,
                 IFormatProvider provider, char separator)
             {
+
                 // First look for all columns that are non-numeric with more that 2 characters
                 List<int> listDescriptive = new List<int>();
                 for (int i = 0; i < fields.Length; i++)
@@ -705,13 +715,14 @@ namespace pwiz.Skyline.Model
                     if (i == iSequence)
                         continue;
 
+                    string fieldValue = fields[i];
                     try
                     {
-                        double.Parse(fields[i], provider);
+                        double.Parse(fieldValue, provider);
                     }
                     catch (FormatException)
                     {
-                        if (fields[i].Length > 2)
+                        if (fieldValue.Length > 2 && !EXCLUDE_PROTEIN_VALUES.Contains(fieldValue.ToLower()))
                             listDescriptive.Add(i);
                     }                    
                 }
@@ -733,17 +744,28 @@ namespace pwiz.Skyline.Model
                             AddCount(key, valueCounts[i]);
                         }
                     }
-                    for (int i = 0; i < valueCounts.Length; i++)
+                    for (int i = valueCounts.Length - 1; i >= 0; i--)
                     {
-                        // Discard any column with empty cells
+                        // Discard any column with empty cells or which is less repetitive
                         int count;
-                        if (valueCounts[i].TryGetValue("", out count))
-                            continue;
-                        // Return the first column that is at least as repetitive as the
-                        // peptide column.
-                        if (valueCounts[i].Count <= sequenceCounts.Count)
-                            return listDescriptive[i];
-                    }                    
+                        if (valueCounts[i].TryGetValue("", out count) || valueCounts[i].Count > sequenceCounts.Count)
+                            listDescriptive.RemoveAt(i);
+                    }
+                    // If more than one possible value, and there are headers, look for
+                    // one with the word protein in it.
+                    if (headers != null && listDescriptive.Count > 1)
+                    {
+                        foreach (int i in listDescriptive)
+                        {
+                            if (headers[i].ToLower().Contains("protein"))
+                                return i;
+                        }
+                    }
+                    // At this point, just use the first possible value, if one is present
+                    if (listDescriptive.Count > 0)
+                    {
+                        return listDescriptive[0];
+                    }
                 }
                 return -1;
             }
