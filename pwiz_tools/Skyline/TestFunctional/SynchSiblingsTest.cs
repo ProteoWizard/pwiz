@@ -46,12 +46,14 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         protected override void DoTest()
         {
+            var docEmpty = SkylineWindow.Document;
+
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("ANL_N15_mini.sky")));
             RunUI(SkylineWindow.ExpandPrecursors);
 
             Settings.Default.SynchronizeIsotopeTypes = true;
 
-            var docOrig = SkylineWindow.Document;
+            var docOrig = WaitForDocumentChange(docEmpty);
             var pathPeptide = docOrig.GetPathTo((int) SrmDocument.Level.Peptides, 0);
 
             // Select the first transition group
