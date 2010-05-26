@@ -22,6 +22,7 @@
 
 #include "pwiz/data/mziddata/MzIdentMLFile.hpp"
 #include "pwiz/data/mziddata/Pep2MzIdent.hpp"
+#include "pwiz/data/mziddata/KwCVMap.hpp"
 #include "pwiz/data/common/CVTranslator.hpp"
 #include "pwiz/data/misc/MinimumPepXML.hpp"
 #include "pwiz/data/common/cv.hpp"
@@ -32,6 +33,7 @@
 #include <fstream>
 #include <iterator>
 #include <stdexcept>
+#include <vector>
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/lexical_cast.hpp>
@@ -48,14 +50,121 @@ using namespace pwiz::data;
 using namespace pwiz::mziddata;
 using namespace pwiz::data::pepxml;
 
-int main(int argc, char* argv[])
+struct Config
+{
+    string usageOptions;
+
+    string inputFilename;
+    string outputFilename;
+    string outDirectory;
+    vector<string> cvMapFiles;
+};
+
+
+string usage(const Config& config)
+{
+    ostringstream oss;
+    
+    oss << "Usage: mspicture [options] [input_filename]\n"
+        << "Mass Spec Picture - command line access to mass spec data files with optional peptide annotation\n"
+        << "\n"
+        << "Options:\n" 
+        << "\n"
+        << config.usageOptions
+        << "\n";
+    
+    
+    oss << endl
+        << "Questions, comments, and bug reports:\n"
+        << "http://proteowizard.sourceforge.net\n"
+        << "support@proteowizard.org\n"
+        << "\n"
+//        << "ProteoWizard release: " << pwiz::Version::str() << endl
+        << "Build date: " << __DATE__ << " " << __TIME__ << endl;
+
+    return oss.str();
+}
+
+Config parseCommandArgs(int argc, const char* argv[])
+{
+    namespace po = boost::program_options;
+
+    Config config;
+
+    string usageOptions;
+
+    po::options_description od_config("");
+    od_config.add_options()
+        ("outdir,o",
+         po::value<string>(&config.outDirectory)->default_value(
+             config.outDirectory),
+         ": output directory")
+        ("inputfile,i",
+         po::value<string>(&config.inputFilename)->default_value(
+             config.inputFilename),
+         ": input file name")
+        ("outputfile,i",
+         po::value<string>(&config.outputFilename)->default_value(
+             config.outputFilename),
+         ": output file name")
+        ("map,m",
+         po::value< vector<string> >(&config.cvMapFiles),
+        ": keyword to cv map file")
+        ("verbose,v", ": prints extra information.")
+        ("help,h",
+            ": print this helpful message.")
+        ;
+
+    ostringstream temp;
+    temp << od_config;
+    usageOptions = temp.str();
+
+    // handle positional arguments
+
+    po::options_description od_args1;
+
+    const char* label_inputfile = "inputfile";
+    od_args1.add_options()(label_inputfile, po::value<string>(), "");
+
+    po::options_description od_args2;
+    const char* label_outputfile = "outputfile";
+    od_args2.add_options()(label_outputfile, po::value<string>(), "");
+
+    po::positional_options_description pod_args;
+    pod_args.add(label_inputfile, 1);
+    pod_args.add(label_outputfile, 1);
+
+    
+    po::options_description od_parse;
+    od_parse.add(od_config).add(od_args1);
+    od_parse.add(od_config).add(od_args2);
+
+    // parse command line
+
+    po::variables_map vm;
+    char** argv_hack = (char**)argv;
+    po::store(po::command_line_parser(argc, argv_hack).
+              options(od_parse).positional(pod_args).run(), vm);
+    po::notify(vm);
+
+    config.usageOptions = usageOptions;
+    
+    if (vm.count("help"))
+        throw runtime_error(usage(config).c_str());
+
+    return config;
+}
+
+int main(int argc, const char* argv[])
 {
     namespace pepxml = pwiz::data::pepxml;
 
     try
     {
+        Config config = parseCommandArgs(argc, argv);
         string inFile, outFile;
-        
+
+        /*
         if (argc<3)
         {
             string usage = "usage: ";
@@ -66,16 +175,27 @@ int main(int argc, char* argv[])
 
         inFile = argv[1];
         outFile = argv[2];
+        */
 
-        ifstream in(inFile.c_str());
+        // TODO read in kw->cv map file.
+        vector<CVMapPtr> cvmaps;
+        for (vector<string>::iterator i=config.cvMapFiles.begin();
+             i != config.cvMapFiles.end(); i++)
+        {
+            ifstream mapis((*i).c_str());
+            mapis >> cvmaps;
+        }
         
+        ifstream in(config.inputFilename.c_str());
+
         MSMSPipelineAnalysis msmsPA;
         msmsPA.read(in);
 
         Pep2MzIdent p2m(msmsPA);
+        p2m.setParamMap(cvmaps);
         p2m.translate();
 
-        MzIdentMLFile::write(*p2m.getMzIdentML(), outFile);
+        MzIdentMLFile::write(*p2m.getMzIdentML(), config.outputFilename);
         
         return 0;
     }
