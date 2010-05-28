@@ -44,8 +44,11 @@ namespace pwiz.Topograph.ui.Forms
                 dataGridView1.Rows.Clear();
                 dataGridView1.Rows.Add(entries.Length);
             }
-            msGraphControl.GraphPane.AddCurve("Score", scores, Color.Black, SymbolType.None)
-                .IsY2Axis = true;
+            if (cbxShowScore.Checked)
+            {
+                msGraphControl.GraphPane.AddCurve("Score", scores, Color.Black, SymbolType.None)
+                    .IsY2Axis = true;
+            }
             for (int iCandidate = 0; iCandidate < entries.Count(); iCandidate++)
             {
                 var entry = entries[iCandidate];
@@ -53,13 +56,14 @@ namespace pwiz.Topograph.ui.Forms
                 var row = dataGridView1.Rows[iCandidate];
                 row.Cells[colFormula.Index].Value = label;
                 row.Cells[colAmount.Index].Value = amounts[entry.Key];
+                row.Cells[colFormula.Index].Style.BackColor = row.Cells[colAmount.Index].Style.BackColor 
+                    = DistributionResultsForm.GetColor(iCandidate, entries.Length);
                 if (dataGridView1.SelectedRows.Count == 0 || row.Selected)
                 {
                     var curve = new ChromatogramGraphItem
                     {
                         Color = DistributionResultsForm.GetColor(iCandidate, entries.Length),
                         Points = entry.Value,
-                        Title = label
                     };
                     msGraphControl.AddGraphItem(msGraphControl.GraphPane, curve);
                 }
@@ -205,6 +209,12 @@ namespace pwiz.Topograph.ui.Forms
         {
             UpdateUi();
         }
+
+        private void cbxShowScore_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateUi();
+        }
+
         private double GetTracerPercent(TracerDef tracerDef, IDictionary<TracerFormula, double> distribution)
         {
             int maxTracerCount = tracerDef.GetMaximumTracerCount(PeptideFileAnalysis.Peptide.Sequence);
@@ -219,6 +229,5 @@ namespace pwiz.Topograph.ui.Forms
             }
             return result;
         }
-
     }
 }

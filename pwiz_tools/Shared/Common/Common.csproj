@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
+    <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -81,6 +81,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Controls\FindBox.resx">
       <DependentUpon>FindBox.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

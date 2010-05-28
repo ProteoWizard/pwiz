@@ -34,6 +34,7 @@
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.colFormula = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colAmount = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.cbxShowScore = new System.Windows.Forms.CheckBox();
             this.label1 = new System.Windows.Forms.Label();
             this.tbxPrecursorPool = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
@@ -73,6 +74,7 @@
             this.tableLayoutPanel1.Controls.Add(this.label2, 0, 2);
             this.tableLayoutPanel1.Controls.Add(this.tbxTurnover, 1, 2);
             this.tableLayoutPanel1.Controls.Add(this.gridViewTracerPercents, 0, 3);
+            this.tableLayoutPanel1.Controls.Add(this.cbxShowScore, 1, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -125,6 +127,17 @@
             this.colAmount.HeaderText = "Amount";
             this.colAmount.Name = "colAmount";
             this.colAmount.ReadOnly = true;
+            // 
+            // cbxShowScore
+            // 
+            this.cbxShowScore.AutoSize = true;
+            this.cbxShowScore.Location = new System.Drawing.Point(144, 3);
+            this.cbxShowScore.Name = "cbxShowScore";
+            this.cbxShowScore.Size = new System.Drawing.Size(127, 17);
+            this.cbxShowScore.TabIndex = 2;
+            this.cbxShowScore.Text = "Show score on graph";
+            this.cbxShowScore.UseVisualStyleBackColor = true;
+            this.cbxShowScore.CheckedChanged += new System.EventHandler(this.cbxShowScore_CheckedChanged);
             // 
             // label1
             // 
@@ -221,6 +234,7 @@
         private System.Windows.Forms.DataGridView dataGridView1;
         private System.Windows.Forms.DataGridViewTextBoxColumn colFormula;
         private System.Windows.Forms.DataGridViewTextBoxColumn colAmount;
+        private System.Windows.Forms.CheckBox cbxShowScore;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox tbxPrecursorPool;
         private System.Windows.Forms.Label label2;
