@@ -38,13 +38,10 @@
 
 #include "pwiz/data/msdata/SpectrumListWrapper.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
-#include "pwiz/analysis/spectrum_processing/SpectrumList_PeakFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Sorter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Smoother.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PeakPicker.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_ChargeStateCalculator.hpp"
-#include "pwiz/analysis/spectrum_processing/MS2Deisotoper.hpp"
-#include "pwiz/utility/misc/IntegerSet.hpp"
 #include <boost/shared_ptr.hpp>
 #include <boost/logic/tribool.hpp>
 #pragma warning( pop )
@@ -324,32 +321,6 @@ public ref class SpectrumList_ChargeStateCalculator : public msdata::SpectrumLis
     static bool accept(msdata::SpectrumList^ inner);
 };
 
-public ref class SpectrumList_MS2Deisotoping : public msdata::SpectrumList
-{
-/*    internal: virtual ~SpectrumList_MS2Deisotoping()
-              {
-                  // base class destructor will delete the shared pointer
-              }
-              pwiz::analysis::SpectrumList_PeakFilter* base_;*/
-    DEFINE_INTERNAL_LIST_WRAPPER_CODE(SpectrumList_MS2Deisotoping, pwiz::analysis::SpectrumList_PeakFilter)
-
-    public:
-
-    SpectrumList_MS2Deisotoping(msdata::SpectrumList^ inner)
-    : msdata::SpectrumList(0)
-    {
-		pwiz::analysis::SpectrumDataFilterPtr pFilter = pwiz::analysis::SpectrumDataFilterPtr(new pwiz::analysis::MS2Deisotoper(pwiz::analysis::MS2Deisotoper::Config()));
-		base_ = new pwiz::analysis::SpectrumList_PeakFilter(
-                    *inner->base_, 
-                    pFilter);
-        msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
-    }
-
-
-    /// thresholding works on any SpectrumList
-    static bool accept(msdata::SpectrumList^ inner)
-    {return pwiz::analysis::SpectrumList_PeakFilter::accept(*inner->base_);}
-};
 
 } // namespace analysis
 } // namespace CLI
