@@ -46,6 +46,13 @@ namespace pwiz.Skyline.Model.Hibernate
         public virtual double? StdevTotalAreaRatio { get; set; }
         [QueryColumn(Format = Formats.CV)]
         public virtual double? CvTotalAreaRatio { get; set; }
+        // RatioIS
+        [QueryColumn(Format = Formats.STANDARD_RATIO)]
+        public virtual double? MeanTotalAreaRatioIS { get; set; }
+        [QueryColumn(Format = Formats.STANDARD_RATIO)]
+        public virtual double? StdevTotalAreaRatioIS { get; set; }
+        [QueryColumn(Format = Formats.CV)]
+        public virtual double? CvTotalAreaRatioIS { get; set; }
         // Area Normalized (Area / Total Replicate Group Area)
         [QueryColumn(Format = Formats.PEAK_AREA_NORMALIZED)]
         public virtual double? MeanTotalAreaNormalized { get; set; }

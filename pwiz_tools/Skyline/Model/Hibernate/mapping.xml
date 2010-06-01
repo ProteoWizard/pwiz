@@ -98,6 +98,8 @@
     <property name="TotalBackground"/>
     <property name="TotalAreaRatio" />
     <!-- <property name="StdevAreaRatio" /> -->
+    <property name="TotalAreaRatioIS" />
+    <!-- <property name="StdevAreaRatioIS" /> -->
     <property name="TotalAreaNormalized" />
     <property name="LibraryDotProduct" />
     <!-- <property name="TotalSignalToNoise" /> -->
@@ -128,6 +130,9 @@
     <property name="MeanTotalAreaRatio" />
     <property name="StdevTotalAreaRatio" />
     <property name="CvTotalAreaRatio" />
+    <property name="MeanTotalAreaRatioIS" />
+    <property name="StdevTotalAreaRatioIS" />
+    <property name="CvTotalAreaRatioIS" />
     <property name="MeanTotalAreaNormalized" />
     <property name="StdevTotalAreaNormalized" />
     <property name="CvTotalAreaNormalized" />
@@ -163,6 +168,7 @@
     <property name="Area" />
     <property name="Background" />
     <property name="AreaRatio" />
+    <property name="AreaRatioIS" />
     <property name="AreaNormalized" />
     <!--    <property name="SignalToNoise" /> -->
     <property name="Height" />
@@ -192,6 +198,9 @@
     <property name="MeanAreaRatio" />
     <property name="StdevAreaRatio" />
     <property name="CvAreaRatio" />
+    <property name="MeanAreaRatioIS" />
+    <property name="StdevAreaRatioIS" />
+    <property name="CvAreaRatioIS" />
     <property name="MeanAreaNormalized" />
     <property name="StdevAreaNormalized" />
     <property name="CvAreaNormalized" />

@@ -65,6 +65,7 @@
       <Abbreviation Text="RMI" />
       <Abbreviation Text="DB" />
       <Abbreviation Text="POM" />
+      <Abbreviation Text="IS" />
     </Naming2>
   </CodeStyleSettings>
 </Configuration>

@@ -93,6 +93,8 @@ namespace pwiz.Skyline.Model.Results
                                         float? backgroundArea,
                                         float? ratio,
                                         float? stdev,
+                                        float? ratioIS,
+                                        float? stdevIS,
                                         float? libraryDotProduct,
                                         Annotations annotations,
                                         bool userSet)
@@ -108,6 +110,8 @@ namespace pwiz.Skyline.Model.Results
             BackgroundArea = backgroundArea;
             Ratio = ratio;
             RatioStdev = stdev;
+            RatioIS = ratioIS;
+            RatioISStdev = stdevIS;
             LibraryDotProduct = libraryDotProduct;
             Annotations = annotations;
             UserSet = userSet;
@@ -124,6 +128,8 @@ namespace pwiz.Skyline.Model.Results
         public float? BackgroundArea { get; private set; }
         public float? Ratio { get; private set; }
         public float? RatioStdev { get; private set; }
+        public float? RatioIS { get; private set; }
+        public float? RatioISStdev { get; private set; }
         public float? LibraryDotProduct { get; private set; }
         public Annotations Annotations { get; private set; }
 
@@ -139,6 +145,14 @@ namespace pwiz.Skyline.Model.Results
             var im = ImClone(this);
             im.Ratio = prop;
             im.RatioStdev = stdev;
+            return im;
+        }
+
+        public TransitionGroupChromInfo ChangeRatioIS(float? prop, float? stdev)
+        {
+            var im = ImClone(this);
+            im.RatioIS = prop;
+            im.RatioISStdev = stdev;
             return im;
         }
 
@@ -164,6 +178,9 @@ namespace pwiz.Skyline.Model.Results
                    other.EndRetentionTime.Equals(EndRetentionTime) &&
                    other.Fwhm.Equals(Fwhm) &&
                    other.Ratio == Ratio &&
+                   other.RatioStdev == RatioStdev &&
+                   other.RatioIS == RatioIS &&
+                   other.RatioISStdev == RatioISStdev &&
                    other.LibraryDotProduct.Equals(LibraryDotProduct) &&
                    other.Annotations.Equals(Annotations) &&
                    other.UserSet.Equals(UserSet);
@@ -187,6 +204,9 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ (EndRetentionTime.HasValue ? EndRetentionTime.Value.GetHashCode() : 0);
                 result = (result*397) ^ (Fwhm.HasValue ? Fwhm.Value.GetHashCode() : 0);
                 result = (result*397) ^ (Ratio.HasValue ? Ratio.Value.GetHashCode() : 0);
+                result = (result*397) ^ (RatioStdev.HasValue ? RatioStdev.Value.GetHashCode() : 0);
+                result = (result*397) ^ (RatioIS.HasValue ? RatioIS.Value.GetHashCode() : 0);
+                result = (result*397) ^ (RatioISStdev.HasValue ? RatioISStdev.Value.GetHashCode() : 0);
                 result = (result*397) ^ (LibraryDotProduct.HasValue ? LibraryDotProduct.Value.GetHashCode() : 0);
                 result = (result*397) ^ UserSet.GetHashCode();
                 return result;
@@ -202,17 +222,18 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public sealed class TransitionChromInfo : ChromInfo
     {
-        public TransitionChromInfo(int fileIndex, int optimizationStep, ChromPeak peak, float? ratio, bool userSet)
+        public TransitionChromInfo(int fileIndex, int optimizationStep, ChromPeak peak,
+            float? ratio, float? ratioIS, bool userSet)
             : this(fileIndex, optimizationStep, peak.RetentionTime, peak.StartTime, peak.EndTime,
                    peak.Area, peak.BackgroundArea, peak.Height, peak.Fwhm,
-                   peak.IsFwhmDegenerate, ratio, Annotations.Empty, userSet)
+                   peak.IsFwhmDegenerate, ratio, ratioIS, Annotations.Empty, userSet)
         {            
         }
 
         public TransitionChromInfo(int fileIndex, int optimizationStep, float retentionTime,
                                    float startRetentionTime, float endRetentionTime,
                                    float area, float backgroundArea, float height,
-                                   float fwhm, bool fwhmDegenerate, float? ratio,
+                                   float fwhm, bool fwhmDegenerate, float? ratio, float? ratioIS,
                                    Annotations annotations, bool userSet)
             : base(fileIndex)
         {
@@ -226,6 +247,7 @@ namespace pwiz.Skyline.Model.Results
             Fwhm = fwhm;
             IsFwhmDegenerate = fwhmDegenerate;
             Ratio = ratio;
+            RatioIS = ratioIS;
             Annotations = annotations;
             UserSet = userSet;
         }
@@ -251,6 +273,11 @@ namespace pwiz.Skyline.Model.Results
         /// Set after creation at the peptide results calculation level
         /// </summary>
         public float? Ratio { get; private set; }
+
+        /// <summary>
+        /// Set after creation at the peptide results calculation level
+        /// </summary>
+        public float? RatioIS { get; private set; }
 
         public Annotations Annotations { get; private set; }
 
@@ -294,21 +321,26 @@ namespace pwiz.Skyline.Model.Results
 
         public TransitionChromInfo ChangeRatio(float? prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.Ratio = v, prop);
+            return ChangeProp(ImClone(this), im => im.Ratio = prop);
+        }
+
+        public TransitionChromInfo ChangeRatioIS(float? prop)
+        {
+            return ChangeProp(ImClone(this), im => im.RatioIS = prop);
         }
 
         public TransitionChromInfo ChangeRank(int prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.Rank = v, prop);
+            return ChangeProp(ImClone(this), im => im.Rank = prop);
         }
 
         public TransitionChromInfo ChangeAnnotations(Annotations annotations)
         {
-            return ChangeProp(ImClone(this), (im, v) =>
+            return ChangeProp(ImClone(this), im =>
                                                  {
-                                                     im.Annotations = v;
-                                                     im.UserSet = im.UserSet || !v.IsEmpty;
-                                                 }, annotations);
+                                                     im.Annotations = annotations;
+                                                     im.UserSet = im.UserSet || !annotations.IsEmpty;
+                                                 });
         }
 
         #endregion
@@ -330,6 +362,7 @@ namespace pwiz.Skyline.Model.Results
                    other.IsFwhmDegenerate.Equals(IsFwhmDegenerate) &&
                    other.Rank == Rank &&
                    other.Ratio.Equals(Ratio) &&
+                   other.RatioIS.Equals(RatioIS) &&
                    other.OptimizationStep.Equals(OptimizationStep) &&
                    other.Annotations.Equals(Annotations) &&
                    other.UserSet.Equals(UserSet);
@@ -357,6 +390,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ IsFwhmDegenerate.GetHashCode();
                 result = (result*397) ^ Rank;
                 result = (result*397) ^ (Ratio.HasValue ? Ratio.Value.GetHashCode() : 0);
+                result = (result*397) ^ (RatioIS.HasValue ? RatioIS.Value.GetHashCode() : 0);
                 result = (result*397) ^ OptimizationStep.GetHashCode();
                 result = (result*397) ^ Annotations.GetHashCode();
                 result = (result*397) ^ UserSet.GetHashCode();

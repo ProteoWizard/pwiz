@@ -724,6 +724,8 @@ namespace pwiz.Skyline.Model
             peak_count_ratio,
             ratio,
             ratio_stdev,
+            ratio_is,
+            ratio_is_stdev,
             library_dotp,
             auto_manage_children,
         }
@@ -1242,6 +1244,8 @@ namespace pwiz.Skyline.Model
             float? backgroundArea = reader.GetNullableFloatAttribute(ATTR.background);
             float? ratio = reader.GetNullableFloatAttribute(ATTR.ratio);
             float? stdev = reader.GetNullableFloatAttribute(ATTR.ratio_stdev);
+            float? ratioIS = reader.GetNullableFloatAttribute(ATTR.ratio_is);
+            float? stdevIS = reader.GetNullableFloatAttribute(ATTR.ratio_is_stdev);
             float? libraryDotProduct = reader.GetNullableFloatAttribute(ATTR.library_dotp);
             var annotations = Annotations.Empty;
             if (!reader.IsEmptyElement)
@@ -1264,6 +1268,8 @@ namespace pwiz.Skyline.Model
                                                 backgroundArea,
                                                 ratio,
                                                 stdev,
+                                                ratioIS,
+                                                stdevIS,
                                                 libraryDotProduct,
                                                 annotations,
                                                 userSet);
@@ -1490,6 +1496,10 @@ namespace pwiz.Skyline.Model
                 // Make sure non-null ratios are not negative
                 if (ratio.HasValue)
                     ratio = Math.Max(0, ratio.Value);
+                float? ratioIS = reader.GetNullableFloatAttribute(ATTR.ratio_is);
+                // Make sure non-null ratios are not negative
+                if (ratioIS.HasValue)
+                    ratioIS = Math.Max(0, ratioIS.Value);
                 bool userSet = reader.GetBoolAttribute(ATTR.user_set);
                 var annotations = Annotations.Empty;
                 if (!reader.IsEmptyElement)
@@ -1497,8 +1507,20 @@ namespace pwiz.Skyline.Model
                     reader.ReadStartElement();
                     annotations = ReadAnnotations(reader);
                 }
-                return new TransitionChromInfo(indexFile, optimizationStep, retentionTime, startRetentionTime, endRetentionTime,
-                                               area, backgroundArea, height, fwhm, fwhmDegenerate, ratio, annotations, userSet);
+                return new TransitionChromInfo(indexFile,
+                                               optimizationStep,
+                                               retentionTime,
+                                               startRetentionTime,
+                                               endRetentionTime,
+                                               area,
+                                               backgroundArea,
+                                               height,
+                                               fwhm,
+                                               fwhmDegenerate,
+                                               ratio,
+                                               ratioIS,
+                                               annotations,
+                                               userSet);
             }
         }
 
@@ -1801,6 +1823,8 @@ namespace pwiz.Skyline.Model
             writer.WriteAttributeNullable(ATTR.background, chromInfo.BackgroundArea);
             writer.WriteAttributeNullable(ATTR.ratio, chromInfo.Ratio);
             writer.WriteAttributeNullable(ATTR.ratio_stdev, chromInfo.RatioStdev);
+            writer.WriteAttributeNullable(ATTR.ratio_is, chromInfo.RatioIS);
+            writer.WriteAttributeNullable(ATTR.ratio_is_stdev, chromInfo.RatioISStdev);
             writer.WriteAttributeNullable(ATTR.library_dotp, chromInfo.LibraryDotProduct);
             WriteAnnotations(writer, chromInfo.Annotations);
         }
@@ -1873,7 +1897,8 @@ namespace pwiz.Skyline.Model
                 writer.WriteAttribute(ATTR.fwhm, chromInfo.Fwhm);
                 writer.WriteAttribute(ATTR.fwhm_degenerate, chromInfo.IsFwhmDegenerate);
                 writer.WriteAttribute(ATTR.rank, chromInfo.Rank);
-                writer.WriteAttributeNullable(ATTR.ratio, chromInfo.Ratio);                
+                writer.WriteAttributeNullable(ATTR.ratio, chromInfo.Ratio);
+                writer.WriteAttributeNullable(ATTR.ratio_is, chromInfo.RatioIS);
             }
             writer.WriteAttribute(ATTR.user_set, chromInfo.UserSet);
             WriteAnnotations(writer, chromInfo.Annotations);

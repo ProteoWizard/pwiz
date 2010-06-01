@@ -1034,6 +1034,11 @@ namespace pwiz.Skyline.Model.DocSettings
             // If the match tolerance has changed, then force a full update of all results
             if (newTran.Instrument.MzMatchTolerance != oldTran.Instrument.MzMatchTolerance)
                 DiffResults = DiffResultsAll = true;
+            // If internal standard type changed, update all results to recalculate ratios.
+            if (!Equals(newMods.InternalStandardType, oldMods.InternalStandardType))
+            {
+                DiffResults = true;
+            }
         }
 
         private static bool EquivalentLibraries(PeptideLibraries newLib, PeptideLibraries oldLib)

@@ -537,7 +537,8 @@ namespace pwiz.Skyline.Model
                                             // Use the old ratio for now, and it will be corrected by the peptide,
                                             // if it is incorrect.
                                             float? ratio = (chromInfo != null ? chromInfo.Ratio : null);
-                                            chromInfo = new TransitionChromInfo(fileIndex, step, peak, ratio, false);
+                                            float? ratioIS = (chromInfo != null ? chromInfo.RatioIS : null);
+                                            chromInfo = new TransitionChromInfo(fileIndex, step, peak, ratio, ratioIS, false);
                                         }
                                     }
 
@@ -892,6 +893,8 @@ namespace pwiz.Skyline.Model
                 {
                     Ratio = chromInfo.Ratio;
                     RatioStdev = chromInfo.RatioStdev;
+                    RatioIS = chromInfo.RatioIS;
+                    RatioStdevIS = chromInfo.RatioISStdev;
                     Annotations = chromInfo.Annotations;
                 }
                 else
@@ -915,6 +918,8 @@ namespace pwiz.Skyline.Model
             private float? LibraryDotProduct { get; set; }
             private float? Ratio { get; set; }
             private float? RatioStdev { get; set; }
+            private float? RatioIS { get; set; }
+            private float? RatioStdevIS { get; set; }
             private Annotations Annotations { get; set; }
             private bool UserSet { get; set; }
 
@@ -981,6 +986,8 @@ namespace pwiz.Skyline.Model
                                                     BackgroundArea,
                                                     Ratio,
                                                     RatioStdev,
+                                                    RatioIS,
+                                                    RatioStdevIS,
                                                     LibraryDotProduct,
                                                     Annotations,
                                                     UserSet);

@@ -181,7 +181,7 @@ namespace pwiz.Skyline.Model
             var listChromInfo = Results[indexSet];
             var listChromInfoNew = new List<TransitionChromInfo>();
             if (listChromInfo == null)
-                listChromInfoNew.Add(new TransitionChromInfo(indexFile, step, peak, null, true));
+                listChromInfoNew.Add(new TransitionChromInfo(indexFile, step, peak, null, null, true));
             else
             {
                 bool peakAdded = false;
@@ -203,7 +203,7 @@ namespace pwiz.Skyline.Model
                             chromInfo.FileIndex >= indexFile &&
                             chromInfo.OptimizationStep > step)
                         {
-                            listChromInfoNew.Add(new TransitionChromInfo(indexFile, step, peak, null, true));
+                            listChromInfoNew.Add(new TransitionChromInfo(indexFile, step, peak, null, null, true));
                             peakAdded = true;
                         }
                         listChromInfoNew.Add(chromInfo);

@@ -84,6 +84,8 @@ namespace pwiz.Skyline.SettingsUI
             this.btnEditStaticMods = new System.Windows.Forms.Button();
             this.label8 = new System.Windows.Forms.Label();
             this.listStaticMods = new System.Windows.Forms.CheckedListBox();
+            this.label17 = new System.Windows.Forms.Label();
+            this.comboInternalStandard = new System.Windows.Forms.ComboBox();
             this.tabControl1.SuspendLayout();
             this.tabDigestion.SuspendLayout();
             this.tabPrediction.SuspendLayout();
@@ -96,7 +98,7 @@ namespace pwiz.Skyline.SettingsUI
             // btnOk
             // 
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.Location = new System.Drawing.Point(227, 375);
+            this.btnOk.Location = new System.Drawing.Point(227, 420);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 1;
@@ -108,7 +110,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(308, 375);
+            this.btnCancel.Location = new System.Drawing.Point(308, 420);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 2;
@@ -129,7 +131,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabControl1.Location = new System.Drawing.Point(12, 12);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = global::pwiz.Skyline.Properties.Settings.Default.PeptideSettingsTab;
-            this.tabControl1.Size = new System.Drawing.Size(371, 355);
+            this.tabControl1.Size = new System.Drawing.Size(371, 400);
             this.tabControl1.TabIndex = 0;
             // 
             // tabDigestion
@@ -143,7 +145,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabDigestion.Location = new System.Drawing.Point(4, 22);
             this.tabDigestion.Name = "tabDigestion";
             this.tabDigestion.Padding = new System.Windows.Forms.Padding(3);
-            this.tabDigestion.Size = new System.Drawing.Size(363, 329);
+            this.tabDigestion.Size = new System.Drawing.Size(363, 374);
             this.tabDigestion.TabIndex = 0;
             this.tabDigestion.Text = "Digestion";
             this.tabDigestion.UseVisualStyleBackColor = true;
@@ -225,7 +227,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabPrediction.Controls.Add(this.label9);
             this.tabPrediction.Location = new System.Drawing.Point(4, 22);
             this.tabPrediction.Name = "tabPrediction";
-            this.tabPrediction.Size = new System.Drawing.Size(363, 329);
+            this.tabPrediction.Size = new System.Drawing.Size(363, 374);
             this.tabPrediction.TabIndex = 3;
             this.tabPrediction.Text = "Prediction";
             this.tabPrediction.UseVisualStyleBackColor = true;
@@ -301,7 +303,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabFilter.Location = new System.Drawing.Point(4, 22);
             this.tabFilter.Name = "tabFilter";
             this.tabFilter.Padding = new System.Windows.Forms.Padding(3);
-            this.tabFilter.Size = new System.Drawing.Size(363, 329);
+            this.tabFilter.Size = new System.Drawing.Size(363, 374);
             this.tabFilter.TabIndex = 1;
             this.tabFilter.Text = "Filter";
             this.tabFilter.UseVisualStyleBackColor = true;
@@ -412,7 +414,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabLibrary.Controls.Add(this.listLibraries);
             this.tabLibrary.Location = new System.Drawing.Point(4, 22);
             this.tabLibrary.Name = "tabLibrary";
-            this.tabLibrary.Size = new System.Drawing.Size(363, 329);
+            this.tabLibrary.Size = new System.Drawing.Size(363, 374);
             this.tabLibrary.TabIndex = 4;
             this.tabLibrary.Text = "Library";
             this.tabLibrary.UseVisualStyleBackColor = true;
@@ -553,6 +555,8 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // tabModifications
             // 
+            this.tabModifications.Controls.Add(this.comboInternalStandard);
+            this.tabModifications.Controls.Add(this.label17);
             this.tabModifications.Controls.Add(this.label16);
             this.tabModifications.Controls.Add(this.comboLabelType);
             this.tabModifications.Controls.Add(this.btnEditHeavyMods);
@@ -563,7 +567,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabModifications.Controls.Add(this.listStaticMods);
             this.tabModifications.Location = new System.Drawing.Point(4, 22);
             this.tabModifications.Name = "tabModifications";
-            this.tabModifications.Size = new System.Drawing.Size(363, 329);
+            this.tabModifications.Size = new System.Drawing.Size(363, 374);
             this.tabModifications.TabIndex = 2;
             this.tabModifications.Text = "Modifications";
             this.tabModifications.UseVisualStyleBackColor = true;
@@ -581,7 +585,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             this.comboLabelType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboLabelType.FormattingEnabled = true;
-            this.comboLabelType.Location = new System.Drawing.Point(28, 169);
+            this.comboLabelType.Location = new System.Drawing.Point(28, 166);
             this.comboLabelType.Name = "comboLabelType";
             this.comboLabelType.Size = new System.Drawing.Size(177, 21);
             this.comboLabelType.TabIndex = 4;
@@ -589,7 +593,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // btnEditHeavyMods
             // 
-            this.btnEditHeavyMods.Location = new System.Drawing.Point(211, 213);
+            this.btnEditHeavyMods.Location = new System.Drawing.Point(211, 212);
             this.btnEditHeavyMods.Name = "btnEditHeavyMods";
             this.btnEditHeavyMods.Size = new System.Drawing.Size(75, 23);
             this.btnEditHeavyMods.TabIndex = 7;
@@ -600,7 +604,7 @@ namespace pwiz.Skyline.SettingsUI
             // label10
             // 
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(25, 197);
+            this.label10.Location = new System.Drawing.Point(25, 196);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(109, 13);
             this.label10.TabIndex = 5;
@@ -610,7 +614,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             this.listHeavyMods.CheckOnClick = true;
             this.listHeavyMods.FormattingEnabled = true;
-            this.listHeavyMods.Location = new System.Drawing.Point(28, 213);
+            this.listHeavyMods.Location = new System.Drawing.Point(28, 212);
             this.listHeavyMods.Name = "listHeavyMods";
             this.listHeavyMods.Size = new System.Drawing.Size(177, 94);
             this.listHeavyMods.TabIndex = 6;
@@ -643,13 +647,31 @@ namespace pwiz.Skyline.SettingsUI
             this.listStaticMods.Size = new System.Drawing.Size(177, 94);
             this.listStaticMods.TabIndex = 1;
             // 
+            // label17
+            // 
+            this.label17.AutoSize = true;
+            this.label17.Location = new System.Drawing.Point(25, 322);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(112, 13);
+            this.label17.TabIndex = 8;
+            this.label17.Text = "I&nternal standard type:";
+            // 
+            // comboInternalStandard
+            // 
+            this.comboInternalStandard.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboInternalStandard.FormattingEnabled = true;
+            this.comboInternalStandard.Location = new System.Drawing.Point(28, 338);
+            this.comboInternalStandard.Name = "comboInternalStandard";
+            this.comboInternalStandard.Size = new System.Drawing.Size(177, 21);
+            this.comboInternalStandard.TabIndex = 9;
+            // 
             // PeptideSettingsUI
             // 
             this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(395, 410);
+            this.ClientSize = new System.Drawing.Size(395, 455);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.tabControl1);
@@ -732,5 +754,7 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Button btnExplore;
         private System.Windows.Forms.Label label16;
         private System.Windows.Forms.ComboBox comboLabelType;
+        private System.Windows.Forms.ComboBox comboInternalStandard;
+        private System.Windows.Forms.Label label17;
     }
 }
