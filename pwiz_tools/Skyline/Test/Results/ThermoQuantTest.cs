@@ -24,6 +24,8 @@ using System.Threading;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 
@@ -151,6 +153,9 @@ namespace pwiz.SkylineTest.Results
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath;
             SrmDocument doc = InitThermoDocument(testFilesDir, out docPath);
+            SrmSettings settings = doc.Settings.ChangePeptideModifications(mods =>
+                mods.ChangeInternalStandardType(IsotopeLabelType.light).ChangeInvertRatios(true));
+            doc = doc.ChangeSettings(settings);
             var docContainer = new ResultsTestDocumentContainer(doc, docPath);
             var listChromatograms = new List<ChromatogramSet>
                                         {
@@ -171,12 +176,10 @@ namespace pwiz.SkylineTest.Results
             docResults = docContainer.Document;
             // Make sure all groups have at least 5 transitions (of 6) with ratios
             int ratioGroupMissingCount = 0;
-            TransitionGroupDocNode nodeGroupLight = null;
             foreach (var nodeGroup in docResults.TransitionGroups)
             {
                 if (nodeGroup.TransitionGroup.LabelType.IsLight)
                 {
-                    nodeGroupLight = nodeGroup;
                     foreach (var result in nodeGroup.Results)
                         Assert.IsFalse(result[0].Ratio.HasValue, "Light group found with a ratio");
                     foreach (TransitionDocNode nodeTran in nodeGroup.Children)
@@ -187,14 +190,10 @@ namespace pwiz.SkylineTest.Results
                 }
                 else
                 {
-                    Assert.IsNotNull(nodeGroupLight);
-
                     bool missingRatio = false;
                     for (int i = 0; i < nodeGroup.Results.Count; i++)
                     {
-                        var ratioLight = nodeGroupLight.Results[i][0].RatioIS;
                         var ratioHeavy = nodeGroup.Results[i][0].Ratio;
-                        Assert.AreEqual(ratioLight, ratioHeavy);
                         if (!ratioHeavy.HasValue)
                             missingRatio = true;
                     }
@@ -202,19 +201,14 @@ namespace pwiz.SkylineTest.Results
                     int ratioCount2 = 0;
                     for (int i = 0; i < nodeGroup.Children.Count; i++)
                     {
-                        var nodeTranLight = (TransitionDocNode) nodeGroupLight.Children[i];
                         var nodeTranHeavy = (TransitionDocNode) nodeGroup.Children[i];
-                        float? ratioLight = nodeTranLight.Results[0][0].RatioIS;
                         float? ratioHeavy = nodeTranHeavy.Results[0][0].Ratio;
-                        Assert.AreEqual(ratioLight, ratioHeavy);
                         if (ratioHeavy.HasValue)
                         {
                             Assert.IsFalse(float.IsNaN(ratioHeavy.Value) || float.IsInfinity(ratioHeavy.Value));
                             ratioCount1++;
                         }
-                        ratioLight = nodeTranLight.Results[1][0].RatioIS;
                         ratioHeavy = nodeTranHeavy.Results[1][0].Ratio;
-                        Assert.AreEqual(ratioLight, ratioHeavy);
                         if (ratioHeavy.HasValue)
                         {
                             Assert.IsFalse(float.IsNaN(ratioHeavy.Value) || float.IsInfinity(ratioHeavy.Value));
@@ -237,7 +231,7 @@ namespace pwiz.SkylineTest.Results
             IdentityPath pathFirstPep = docResults.GetPathTo((int) SrmDocument.Level.Peptides, 0);
             var nodePep = (PeptideDocNode) docResults.FindNode(pathFirstPep);
             Assert.AreEqual(2, nodePep.Children.Count);
-            nodeGroupLight = (TransitionGroupDocNode) nodePep.Children[0];
+            var nodeGroupLight = (TransitionGroupDocNode) nodePep.Children[0];
             IdentityPath pathGroupLight = new IdentityPath(pathFirstPep, nodeGroupLight.TransitionGroup);
             Assert.IsNull(nodeGroupLight.Results[0][0].Ratio, "Light group has ratio");
             var nodeGroupHeavy = (TransitionGroupDocNode) nodePep.Children[1];

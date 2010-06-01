@@ -763,7 +763,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public PeptideModifications(IList<StaticMod> staticMods,
             IEnumerable<TypedModifications> heavyMods)
-                : this(staticMods, heavyMods, IsotopeLabelType.heavy)
+                : this(staticMods, heavyMods, IsotopeLabelType.heavy, false)
         {
             // Make sure the internal standard type is reference equal with
             // the first heavy type.
@@ -774,7 +774,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public PeptideModifications(IList<StaticMod> staticMods,
             IEnumerable<TypedModifications> heavyMods,
-            IsotopeLabelType internalStandardType)
+            IsotopeLabelType internalStandardType,
+            bool invertRatios)
         {
             var modifications = new List<TypedModifications>
                                     {new TypedModifications(IsotopeLabelType.light, staticMods)};
@@ -782,9 +783,11 @@ namespace pwiz.Skyline.Model.DocSettings
             _modifications = MakeReadOnly(modifications.ToArray());
 
             InternalStandardType = internalStandardType;
+            InvertRatios = invertRatios;
         }
 
         public IsotopeLabelType InternalStandardType { get; private set; }
+        public bool InvertRatios { get; private set; }
 
         public IList<StaticMod> StaticModifications
         {
@@ -848,6 +851,16 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #region Property change methods
+
+        public PeptideModifications ChangeInternalStandardType(IsotopeLabelType prop)
+        {
+            return ChangeProp(ImClone(this), im => im.InternalStandardType = prop);
+        }
+
+        public PeptideModifications ChangeInvertRatios(bool prop)
+        {
+            return ChangeProp(ImClone(this), im => im.InvertRatios = prop);
+        }
 
         public PeptideModifications ChangeStaticModifications(IList<StaticMod> prop)
         {
@@ -974,7 +987,8 @@ namespace pwiz.Skyline.Model.DocSettings
         private enum ATTR
         {
             isotope_label,
-            internal_standard
+            internal_standard,
+            invert_ratios
         }
 
         public static PeptideModifications Deserialize(XmlReader reader)
@@ -991,6 +1005,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             var list = new List<TypedModifications>();
             var internalStandardType = IsotopeLabelType.heavy;
+            bool invertRatios = false;
 
             // Consume tag
             if (reader.IsEmptyElement)
@@ -1003,6 +1018,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 string internalStandardName = reader.GetAttribute(ATTR.internal_standard);
                 if (Equals(internalStandardName, IsotopeLabelType.light))
                     internalStandardType = IsotopeLabelType.light;
+                invertRatios = reader.GetBoolAttribute(ATTR.invert_ratios);
 
                 reader.ReadStartElement();
 
@@ -1050,6 +1066,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             _modifications = MakeReadOnly(list.ToArray());
             InternalStandardType = internalStandardType;
+            InvertRatios = invertRatios;
         }
 
         public void WriteXml(XmlWriter writer)
@@ -1057,6 +1074,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // Write attibutes
             if (!ReferenceEquals(InternalStandardType, IsotopeLabelType.heavy))
                 writer.WriteAttribute(ATTR.internal_standard, InternalStandardType.Name);
+            writer.WriteAttribute(ATTR.invert_ratios, InvertRatios);
 
             // Write child elements
             if (StaticModifications.Count > 0)
@@ -1080,6 +1098,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             return Equals(obj.InternalStandardType, InternalStandardType) &&
+                Equals(obj.InvertRatios, InvertRatios) &&
                 ArrayUtil.EqualsDeep(obj._modifications, _modifications);
         }
 
@@ -1096,6 +1115,7 @@ namespace pwiz.Skyline.Model.DocSettings
             unchecked
             {
                 int result = InternalStandardType.GetHashCode();
+                result = (result*397) ^ InvertRatios.GetHashCode();
                 result = (result*397) ^ _modifications.GetHashCodeDeep();
                 return result;
             }

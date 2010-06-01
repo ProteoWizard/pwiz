@@ -534,7 +534,9 @@ namespace pwiz.Skyline.Model
                     return null;
 
                 var listInfoNew = new List<TransitionChromInfo>();
-                var labelTypeIS = Settings.PeptideSettings.Modifications.InternalStandardType;
+                var mods = Settings.PeptideSettings.Modifications;
+                var labelTypeIS = mods.InternalStandardType;
+                bool invertRatios = mods.InvertRatios;
                 foreach (var info in listInfo)
                 {
                     PeptideChromInfoCalculator calc;
@@ -545,14 +547,10 @@ namespace pwiz.Skyline.Model
                         var infoNew = info;
                         var labelType = nodeTran.Transition.Group.LabelType;
 
-                        float? ratio = calc.CalcTransitionRatio(nodeTran, IsotopeLabelType.light, labelType);
+                        float? ratio = calc.CalcTransitionRatio(nodeTran, labelType, labelTypeIS, invertRatios);
                         if (!Equals(ratio, info.Ratio))
                             infoNew = infoNew.ChangeRatio(ratio);
                         
-                        float? ratioIS = calc.CalcTransitionRatio(nodeTran, labelType, labelTypeIS);
-                        if (!Equals(ratioIS, info.RatioIS))
-                            infoNew = infoNew.ChangeRatioIS(ratioIS);
-
                         listInfoNew.Add(infoNew);
                     }
                 }
@@ -568,7 +566,9 @@ namespace pwiz.Skyline.Model
                     return null;
 
                 var listInfoNew = new List<TransitionGroupChromInfo>();
-                var labelTypeIS = Settings.PeptideSettings.Modifications.InternalStandardType;
+                var mods = Settings.PeptideSettings.Modifications;
+                var labelTypeIS = mods.InternalStandardType;
+                bool invertRatios = mods.InvertRatios;
                 foreach (var info in listInfo)
                 {
                     PeptideChromInfoCalculator calc;
@@ -581,14 +581,9 @@ namespace pwiz.Skyline.Model
 
                         float? stdev;
                         float? ratio = calc.CalcTransitionGroupRatio(nodeGroup,
-                            IsotopeLabelType.light, labelType, out stdev);
+                            labelType, labelTypeIS, invertRatios, out stdev);
                         if (!Equals(ratio, info.Ratio) || !Equals(stdev, info.RatioStdev))
                             infoNew = infoNew.ChangeRatio(ratio, stdev);
-
-                        ratio = calc.CalcTransitionGroupRatio(nodeGroup,
-                            labelType, labelTypeIS, out stdev);
-                        if (!Equals(ratio, info.RatioIS) || !Equals(stdev, info.RatioISStdev))
-                            infoNew = infoNew.ChangeRatioIS(ratio, stdev);
 
                         listInfoNew.Add(infoNew);
                     }
@@ -660,17 +655,35 @@ namespace pwiz.Skyline.Model
                 float? retentionTime = null;
                 if (RetentionTimesMeasured > 0)
                     retentionTime = (float) (RetentionTimeTotal/RetentionTimesMeasured);
+                var mods = Settings.PeptideSettings.Modifications;
+                var standardType = mods.InternalStandardType;
+                // Use the first type that is not the internal standard type
+                // as the numerator in the ratio for the peptide.
+                var numType = IsotopeLabelType.light;
+                if (ReferenceEquals(standardType, numType))
+                {
+                    foreach (var labelType in mods.GetHeavyModificationTypes())
+                    {
+                        if (!ReferenceEquals(standardType, labelType))
+                        {
+                            numType = labelType;
+                            break;
+                        }
+                    }
+                }
+
                 float? stdev;
                 float? ratioToStandard = CalcTransitionGroupRatio(-1,
-                    IsotopeLabelType.light,
-                    Settings.PeptideSettings.Modifications.InternalStandardType,
+                    numType,
+                    standardType,
+                    Settings.PeptideSettings.Modifications.InvertRatios,
                     out stdev);
 
                 return new PeptideChromInfo(FileIndex, peakCountRatio, retentionTime, ratioToStandard);
             }
 
             public float? CalcTransitionRatio(TransitionDocNode nodeTran,
-                IsotopeLabelType labelTypeNum, IsotopeLabelType labelTypeDenom)
+                IsotopeLabelType labelTypeNum, IsotopeLabelType labelTypeDenom, bool invertRatios)
             {
                 // Avoid 1.0 ratios for self-to-self
                 if (ReferenceEquals(labelTypeNum, labelTypeDenom))
@@ -682,21 +695,23 @@ namespace pwiz.Skyline.Model
                 if (!TranAreas.TryGetValue(keyNum, out areaNum) ||
                         !TranAreas.TryGetValue(keyDenom, out areaDenom))
                     return null;
-                return areaNum/areaDenom;
+                return (invertRatios ? areaDenom/areaNum : areaNum/areaDenom);
             }
 
             public float? CalcTransitionGroupRatio(TransitionGroupDocNode nodeGroup,
                                                    IsotopeLabelType labelTypeNum,
                                                    IsotopeLabelType labelTypeDenom,
+                                                   bool invertRatios,
                                                    out float? stdev)
             {
                 return CalcTransitionGroupRatio(nodeGroup.TransitionGroup.PrecursorCharge,
-                    labelTypeNum, labelTypeDenom, out stdev);
+                    labelTypeNum, labelTypeDenom, invertRatios, out stdev);
             }
 
             private float? CalcTransitionGroupRatio(int precursorCharge,
                                                     IsotopeLabelType labelTypeNum,
                                                     IsotopeLabelType labelTypeDenom,
+                                                    bool invertRatios,
                                                     out float? stdev)
             {
                 // Avoid 1.0 ratios for self-to-self
@@ -726,8 +741,16 @@ namespace pwiz.Skyline.Model
                     areaTotalNum += areaNum;
                     areaTotalDenom += areaDenom;
 
-                    ratios.Add(areaNum/areaDenom);
-                    weights.Add(areaDenom);
+                    if (invertRatios)
+                    {
+                        ratios.Add(areaDenom/areaNum);
+                        weights.Add(areaNum);
+                    }
+                    else
+                    {
+                        ratios.Add(areaNum/areaDenom);
+                        weights.Add(areaDenom);
+                    }
                 }
 
                 switch (ratios.Count)
@@ -743,7 +766,7 @@ namespace pwiz.Skyline.Model
                 var stats = new Statistics(ratios);
                 var statsW = new Statistics(weights);
                 stdev = (float)stats.StdDev(statsW);
-                double mean = areaTotalNum/areaTotalDenom;
+                double mean = (invertRatios ? areaTotalDenom/areaTotalNum : areaTotalNum/areaTotalDenom);
                 Debug.Assert(Math.Abs(mean - stats.Mean(statsW)) < 0.0001);
                 // Make sure the value does not exceed the bounds of a float.
                 return (float) Math.Min(float.MaxValue, Math.Max(float.MinValue, mean));

@@ -933,7 +933,8 @@ namespace pwiz.Skyline.Properties
                         ), 
                     new PeptideModifications(StaticModList.GetDefaultsOn(), new[]
                         { new TypedModifications(IsotopeLabelType.heavy, HeavyModList.GetDefaultsOn()) },
-                        IsotopeLabelType.heavy),
+                        IsotopeLabelType.heavy,
+                        false),
                     BackgroundProteome.NONE
                 ),
                 new TransitionSettings

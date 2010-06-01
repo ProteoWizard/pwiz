@@ -446,8 +446,6 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             TotalBackground = chromInfo.BackgroundArea,
                             TotalAreaRatio = chromInfo.Ratio,
                             // StdevAreaRatio = chromInfo.RatioStdev,
-                            TotalAreaRatioIS = chromInfo.RatioIS,
-                            // StdevAreaRatioIS = chromInfo.RatioISStdev,
                             LibraryDotProduct = chromInfo.LibraryDotProduct,
                             // TotalSignalToNoise = SignalToNoise(chromInfo.Area, chromInfo.BackgroundArea),
                             Note = chromInfo.Annotations.Note,
@@ -567,7 +565,6 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             ResultFile = resultFile,
                             OptStep = chromInfo.OptimizationStep,
                             AreaRatio = chromInfo.Ratio,
-                            AreaRatioIS = chromInfo.RatioIS,
                             Note = chromInfo.Annotations.Note,
                             UserSetPeak = chromInfo.UserSet,
                             PrecursorResult = precursorResults[new ResultKey(resultFile,chromInfo.OptimizationStep)],
@@ -730,16 +727,6 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 }
             }
 
-            private Statistics TotalAreaRatioISStats
-            {
-                get
-                {
-                    return new Statistics(from result in _results
-                                          where result.TotalAreaRatioIS.HasValue
-                                          select result.TotalAreaRatioIS.Value);
-                }
-            }
-
             private Statistics TotalAreaNormalizedStats
             {
                 get
@@ -786,12 +773,6 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                     precursorResultSummary.MeanTotalAreaRatio = mean;
                     precursorResultSummary.StdevTotalAreaRatio = stdev;
                     precursorResultSummary.CvTotalAreaRatio = cv;
-                });
-                CalcSummary(TotalAreaRatioISStats, (mean, stdev, cv) =>
-                {
-                    precursorResultSummary.MeanTotalAreaRatioIS = mean;
-                    precursorResultSummary.StdevTotalAreaRatioIS = stdev;
-                    precursorResultSummary.CvTotalAreaRatioIS = cv;
                 });
                 CalcSummary(TotalAreaNormalizedStats, (mean, stdev, cv) =>
                 {
@@ -851,16 +832,6 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 }
             }
 
-            private Statistics AreaRatioISStats
-            {
-                get
-                {
-                    return new Statistics(from result in _results
-                                          where result.AreaRatioIS.HasValue
-                                          select result.AreaRatioIS.Value);
-                }
-            }
-
             private Statistics AreaNormalizedStats
             {
                 get
@@ -907,12 +878,6 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                     transitionResultSummary.MeanAreaRatio = mean;
                     transitionResultSummary.StdevAreaRatio = stdev;
                     transitionResultSummary.CvAreaRatio = cv;
-                });
-                CalcSummary(AreaRatioISStats, (mean, stdev, cv) =>
-                {
-                    transitionResultSummary.MeanAreaRatioIS = mean;
-                    transitionResultSummary.StdevAreaRatioIS = stdev;
-                    transitionResultSummary.CvAreaRatioIS = cv;
                 });
                 CalcSummary(AreaNormalizedStats, (mean, stdev, cv) =>
                 {

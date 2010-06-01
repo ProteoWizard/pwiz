@@ -152,8 +152,11 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         private TextSequence[] GetTextSequences(IDeviceContext g)
         {
-            if (_textSequences == null)
+            if (_textSequences == null || !ReferenceEquals(_widthText, Text))
+            {
                 _textSequences = CreateTextSequences(g);
+                _widthText = Text;
+            }
             return _textSequences;
         }
 

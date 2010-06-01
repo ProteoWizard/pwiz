@@ -372,7 +372,8 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-        private int _widthCustom;
+        protected string _widthText;
+        protected int _widthCustom;
 
         protected virtual int WidthCustom
         {
@@ -383,8 +384,11 @@ namespace pwiz.Skyline.Controls
         {
             // Measured only once, because the default Bounds width appears to be too
             // large when the tree view is not allowed to draw itself.
-            if (_widthCustom == 0)
+            if (_widthCustom == 0 || !ReferenceEquals(_widthText, Text))
+            {
                 _widthCustom = TextRenderer.MeasureText(g, Text, TreeView.Font, Bounds.Size, FORMAT_TEXT).Width;
+                _widthText = Text;
+            }
         }
 
         /// <summary>

@@ -116,6 +116,7 @@ namespace pwiz.Skyline.SettingsUI
             _driverHeavyMod = new SettingsListBoxDriver<StaticMod>(listHeavyMods, Settings.Default.HeavyModList);
             _driverLabelType = new LabelTypeComboDriver(comboLabelType, Modifications, _driverHeavyMod,
                                                         comboInternalStandard);
+            cbInvertRatios.Checked = Modifications.InvertRatios;
         }
 
         public DigestSettings Digest { get { return _peptideSettings.DigestSettings; } }
@@ -234,7 +235,7 @@ namespace pwiz.Skyline.SettingsUI
             // Validate and hold modifications
             PeptideModifications modifications = new PeptideModifications(
                 _driverStaticMod.Chosen, _driverLabelType.GetHeavyModifications(),
-                _driverLabelType.InternalStandardType);
+                _driverLabelType.InternalStandardType, cbInvertRatios.Checked);
             // Should not be possible to change explicit modifications in the background,
             // so this should be safe.  CONSIDER: Document structure because of a library load?
             modifications = modifications.DeclareExplicitMods(_parent.DocumentUI,

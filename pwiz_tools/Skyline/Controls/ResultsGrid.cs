@@ -170,6 +170,22 @@ namespace pwiz.Skyline.Controls
                           ReadOnly = true,
                           DefaultCellStyle = {Format = Formats.PEAK_AREA}
                       });
+            Columns.Add(TotalBackgroundColumn
+                = new DataGridViewTextBoxColumn
+                      {
+                          Name = "TotalBackground",
+                          HeaderText = "Total Background",
+                          ReadOnly = true,
+                          DefaultCellStyle = {Format = Formats.PEAK_AREA}
+                      });
+            Columns.Add(TotalAreaRatioColumn
+                = new DataGridViewTextBoxColumn
+                      {
+                          Name = "TotalAreaRatio",
+                          HeaderText = "Total Area Ratio",
+                          ReadOnly = true,
+                          DefaultCellStyle = {Format = Formats.STANDARD_RATIO}
+                      });
             Columns.Add(LibraryDotProductColumn
                 = new DataGridViewTextBoxColumn
                       {
@@ -551,6 +567,8 @@ namespace pwiz.Skyline.Controls
                                MinStartTimeColumn,
                                MaxEndTimeColumn,
                                TotalAreaColumn,
+                               TotalBackgroundColumn,
+                               TotalAreaRatioColumn,
                                LibraryDotProductColumn,
                                OptCollisionEnergyColumn,
                                OptDeclusteringPotentialColumn,
@@ -987,6 +1005,8 @@ namespace pwiz.Skyline.Controls
                     row.Cells[MinStartTimeColumn.Index].Value =
                     row.Cells[MaxEndTimeColumn.Index].Value =
                     row.Cells[TotalAreaColumn.Index].Value =
+                    row.Cells[TotalBackgroundColumn.Index].Value =
+                    row.Cells[TotalAreaRatioColumn.Index].Value =
                     row.Cells[LibraryDotProductColumn.Index].Value =
                     row.Cells[PrecursorNoteColumn.Index].Value =
                     row.Cells[OptCollisionEnergyColumn.Index].Value =
@@ -1000,6 +1020,8 @@ namespace pwiz.Skyline.Controls
                 row.Cells[MinStartTimeColumn.Index].Value = chromInfo.StartRetentionTime;
                 row.Cells[MaxEndTimeColumn.Index].Value = chromInfo.EndRetentionTime;
                 row.Cells[TotalAreaColumn.Index].Value = chromInfo.Area;
+                row.Cells[TotalBackgroundColumn.Index].Value = chromInfo.BackgroundArea;
+                row.Cells[TotalAreaRatioColumn.Index].Value = chromInfo.Ratio;
                 row.Cells[LibraryDotProductColumn.Index].Value = chromInfo.LibraryDotProduct;
                 row.Cells[PrecursorNoteColumn.Index].Value = chromInfo.Annotations.Note;
                 row.Cells[OptCollisionEnergyColumn.Index].Value = null;
@@ -1253,6 +1275,8 @@ namespace pwiz.Skyline.Controls
         public DataGridViewTextBoxColumn MinStartTimeColumn { get; private set; }
         public DataGridViewTextBoxColumn MaxEndTimeColumn { get; private set; }
         public DataGridViewTextBoxColumn TotalAreaColumn { get; private set; }
+        public DataGridViewTextBoxColumn TotalBackgroundColumn { get; private set; }
+        public DataGridViewTextBoxColumn TotalAreaRatioColumn { get; private set; }
         public DataGridViewTextBoxColumn LibraryDotProductColumn { get; private set; }
         public DataGridViewTextBoxColumn OptCollisionEnergyColumn { get; private set; }
         public DataGridViewTextBoxColumn OptDeclusteringPotentialColumn { get; private set; }
