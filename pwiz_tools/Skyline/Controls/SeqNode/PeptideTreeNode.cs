@@ -29,7 +29,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.SeqNode
 {
-    public class PeptideTreeNode : SrmTreeNodeParent, ITipProvider, IClipboardDataProvider
+    public class PeptideTreeNode : SrmTreeNodeParent, ITipProvider
     {
         public const string TITLE = "Peptide";
 
@@ -224,15 +224,19 @@ namespace pwiz.Skyline.Controls.SeqNode
                 }
             }
 
-            // Calculate placement for each text sequence
-            int textRectWidth = 0;
-            foreach (var textSequence in listTextSequences)
+            if (g != null)
             {
-                Size sizeMax = new Size(int.MaxValue, int.MaxValue);
-                textSequence.Position = textRectWidth;
-                textSequence.Width = TextRenderer.MeasureText(g, textSequence.Text,
-                    textSequence.Font, sizeMax, FORMAT_TEXT_SEQUENCE).Width;
-                textRectWidth += textSequence.Width;
+                // Calculate placement for each text sequence
+                int textRectWidth = 0;
+                foreach (var textSequence in listTextSequences)
+                {
+                    Size sizeMax = new Size(int.MaxValue, int.MaxValue);
+                    textSequence.Position = textRectWidth;
+                    textSequence.Width = TextRenderer.MeasureText(g, textSequence.Text,
+                                                                  textSequence.Font, sizeMax, FORMAT_TEXT_SEQUENCE).
+                        Width;
+                    textRectWidth += textSequence.Width;
+                }
             }
 
             return listTextSequences.ToArray();            
@@ -339,9 +343,13 @@ namespace pwiz.Skyline.Controls.SeqNode
                        {
                            Text = text,
                            Font = SequenceTree.Font,
-                           Color = Color.Black
+                           Color = Color.Black,
+                           IsPlainText = true
                        };
         }
+
+        
+        
 
         /// <summary>
         /// Creates a text sequence for a peptide sequence with modifications
@@ -543,13 +551,33 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         #region IClipboardDataProvider Members
 
-        public void ProvideData()
+        protected override DataObject GetNodeData()
         {
             DataObject data = new DataObject();
-            data.SetData(DataFormats.Text, DocNode.Peptide.Sequence);
+            data.SetData(DataFormats.Text, Text);
 
-            Clipboard.Clear();
-            Clipboard.SetDataObject(data);
+            StringBuilder sb = new StringBuilder();
+            TextSequence[] nodeText = _textSequences ?? CreateTextSequences(null);
+            foreach (TextSequence text in nodeText)
+            {
+                if (text.IsPlainText)
+                    sb.Append(text.Text);
+                else
+                {
+                    sb.Append("<Font");
+                    if (text.Font.Bold && text.Font.Underline)
+                        sb.Append(" style=\"font-weight: bold; text-decoration: underline\"");
+                    else if (text.Font.Bold)
+                        sb.Append(" style=\"font-weight: bold\"");
+                    else if (text.Font.Underline)
+                        sb.Append(" style=\"text-decoration: underline\"");
+                    sb.AppendFormat(" color = \"{0}\">{1}", text.Color.ToKnownColor(), text.Text);
+                    sb.Append("</font>");
+                }
+            }
+            data.SetData(DataFormats.Html, HtmlFragment.ClipBoardText(sb.ToString()));
+
+            return data;
         }
 
         #endregion

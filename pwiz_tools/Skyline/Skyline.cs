@@ -646,15 +646,98 @@ namespace pwiz.Skyline
             deleteMenuItem_Click(sender, e);
         }
 
+        private static int CompareNodeBounds(TreeNode x, TreeNode y)
+        {
+            return Comparer<int>.Default.Compare(x.Bounds.Top, y.Bounds.Top);
+        }
+
+        private int GetLineBreakCount(TreeNodeMS curNode, TreeNodeMS prevNode)
+        {
+            int count = 0;
+            if (prevNode != null)
+                count++;
+            if(curNode == null || prevNode == null)
+                return count;
+            TreeNodeMS nodeParent = curNode;
+            while(nodeParent != null)
+            {
+                if(nodeParent == prevNode)
+                    return count;
+                nodeParent = (TreeNodeMS) nodeParent.Parent;
+            }
+            TreeNodeMS nodeVisible = curNode;
+            while(nodeVisible != prevNode)
+            {
+                if(!sequenceTree.SelectedNodes.Contains(nodeVisible) && nodeVisible.Level < curNode.Level)
+                    return count+1;
+                nodeVisible = (TreeNodeMS) nodeVisible.PrevVisibleNode;
+                if(nodeVisible == null)
+                    return count;
+            }
+            return count;
+        }
+
         private void copyMenuItem_Click(object sender, EventArgs e)
         {
-            if (StatementCompletionAction(textBox => textBox.Copy()))
+            if (StatementCompletionAction(textBox => textBox.Copy()) || sequenceTree.SelectedNodes.Count < 0)
                 return;
+
+            Clipboard.Clear();
             
-            IClipboardDataProvider provider =
-                sequenceTree.SelectedNode as IClipboardDataProvider;
-            if (provider != null)
-                provider.ProvideData();
+            List<TreeNode> sortedNodes = new List<TreeNode>();
+            int shallowestLevel = int.MaxValue;
+            foreach(TreeNodeMS node in SequenceTree.SelectedNodes)
+            {
+                shallowestLevel = Math.Min(shallowestLevel, node.Level);
+                sortedNodes.Add(node);
+            }
+            sortedNodes.Sort(CompareNodeBounds);
+
+            StringBuilder htmlSb = new StringBuilder();
+            StringBuilder textSb = new StringBuilder();
+            StringBuilder csvSb = new StringBuilder();
+
+            TreeNodeMS prev = null;
+            foreach(TreeNodeMS node in sortedNodes)
+            {
+                IClipboardDataProvider provider = node as IClipboardDataProvider;
+                if (provider == null)
+                    continue;
+
+                DataObject data = provider.ProvideData();
+                int levels = node.Level - shallowestLevel;
+                int lineBreaks = GetLineBreakCount(node, prev);
+                string providerHtml = (string) data.GetData("HTML Format");
+                if (providerHtml != null)
+                    AppendClipboardText(htmlSb, new HtmlFragment(providerHtml).Fragment,
+                        "<br>\r\n", "&nbsp;&nbsp;&nbsp;&nbsp;", levels, lineBreaks);
+                string providerText = (string) data.GetData("Text");
+                if (providerText != null)
+                    AppendClipboardText(textSb, providerText, "\r\n", "    ", levels, lineBreaks);
+                
+                prev = node;
+
+                if (data.GetData("Csv") != null)
+                    csvSb.Append(data.GetData("Csv"));
+            }
+            DataObject dataObj = new DataObject();
+            if(htmlSb.Length > 0)
+                dataObj.SetData(DataFormats.Html, HtmlFragment.ClipBoardText(htmlSb.AppendLine().ToString()));
+            if(textSb.Length > 0)
+                dataObj.SetData(DataFormats.Text, textSb.AppendLine().ToString());
+            if(csvSb.Length > 0)
+                dataObj.SetData(DataFormats.CommaSeparatedValue, csvSb.ToString());
+
+            Clipboard.SetDataObject(dataObj);    
+        }
+
+        private static void AppendClipboardText(StringBuilder sb, string text, string lineSep, string indent, int levels, int lineBreaks)
+        {
+            for (int i = 0; i < lineBreaks; i++)
+                sb.Append(lineSep);
+            for (int i = 0; i < levels; i++)
+                sb.Append(indent);
+            sb.Append(text);
         }
 
         private void pasteMenuItem_Click(object sender, EventArgs e) { Paste(); }
@@ -2209,13 +2292,12 @@ namespace pwiz.Skyline
             }
             int countSelected = sequenceTree.SelectedNodes.Count;
             SrmTreeNode nodeTree = (countSelected > 0 ? sequenceTree.SelectedNode as SrmTreeNode : null);
-            bool enabled = nodeTree is IClipboardDataProvider;
 
-            cutToolBarButton.Enabled = cutMenuItem.Enabled = enabled;
-            copyToolBarButton.Enabled = copyMenuItem.Enabled = enabled;
-            pasteToolBarButton.Enabled = pasteMenuItem.Enabled = true;
-            // Allow deletion for a single selection that is not the insert node,
+            // Allow deletion, copy/paste for a single selection that is not the insert node,
             // or any multiple selection.
+            cutToolBarButton.Enabled = cutMenuItem.Enabled = (nodeTree != null || sequenceTree.SelectedNodes.Count > 1);
+            copyToolBarButton.Enabled = copyMenuItem.Enabled = (nodeTree != null || sequenceTree.SelectedNodes.Count > 1);
+            pasteToolBarButton.Enabled = pasteMenuItem.Enabled = (nodeTree != null || sequenceTree.SelectedNodes.Count > 1);
             deleteMenuItem.Enabled = (nodeTree != null || sequenceTree.SelectedNodes.Count > 1);
         }
     }

@@ -49,7 +49,7 @@ namespace pwiz.Skyline.Controls.SeqNode
     /// <summary>
     /// Base class for all tree node to document node mapping in the <see cref="SequenceTree"/>.
     /// </summary>
-    public abstract class SrmTreeNode : TreeNodeMS
+    public abstract class SrmTreeNode : TreeNodeMS, IClipboardDataProvider
     {
         private const int ANNOTATION_WIDTH = 5;
 
@@ -203,6 +203,20 @@ namespace pwiz.Skyline.Controls.SeqNode
         public override int GetHashCode()
         {
             return Tag.GetHashCode();
+        }
+
+        public DataObject ProvideData()
+        {
+            return GetNodeData();
+        }
+
+        protected virtual DataObject GetNodeData()
+        {
+            DataObject data = new DataObject();
+            data.SetData(DataFormats.Text, Text);
+            data.SetData(DataFormats.Html, HtmlFragment.ClipBoardText(Text));
+
+            return data;
         }
 
         #endregion // object overrides

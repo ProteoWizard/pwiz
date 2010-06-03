@@ -22,16 +22,14 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
-using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.SeqNode
 {
-    public class TransitionGroupTreeNode : SrmTreeNodeParent, ITipProvider, IClipboardDataProvider
+    public class TransitionGroupTreeNode : SrmTreeNodeParent, ITipProvider
     {
         public const string TITLE = "Precursor";
 
@@ -520,22 +518,5 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         #endregion
 
-        #region Implementation of IClipboardDataProvider
-
-        public void ProvideData()
-        {
-            DataObject data = new DataObject();
-            data.SetData(DataFormats.Text, DocNode.TransitionGroup.Peptide.Sequence);
-
-            StringBuilder sb = new StringBuilder();
-
-            // TODO: Render in HTML.
-
-            data.SetData(DataFormats.Html, HtmlFragment.ClipBoardText(sb.ToString()));
-            Clipboard.Clear();
-            Clipboard.SetDataObject(data);
-        }
-
-        #endregion
     }
 }

@@ -141,6 +141,7 @@ namespace pwiz.Skyline.Model
     /// traversal call.  Create a copy before making the call, if you
     /// want to keep the path state around.
     /// </summary>
+    [Serializable]  // To keep Visual Studio from complaining
     public sealed class IdentityPath
     {
         public static readonly IdentityPath ROOT = new IdentityPath();

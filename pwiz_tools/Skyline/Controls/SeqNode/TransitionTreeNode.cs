@@ -18,7 +18,9 @@
  */
 using System.Diagnostics;
 using System.Drawing;
+using System.Windows.Forms;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.SeqNode
 {
@@ -163,5 +165,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         }
 
         #endregion
+
+
     }
 }

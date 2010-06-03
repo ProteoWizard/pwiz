@@ -31,7 +31,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.SeqNode
 {
-    public class PeptideGroupTreeNode : SrmTreeNodeParent, ITipProvider, IClipboardDataProvider
+    public class PeptideGroupTreeNode : SrmTreeNodeParent, ITipProvider
     {
         public const string PROTEIN_TITLE = "Protein";
         public const string PEPTIDE_LIST_TITLE = "Peptide List";
@@ -428,91 +428,85 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         #region IClipboardDataProvider Members
 
-        public void ProvideData()
+        protected override DataObject GetNodeData()
         {
-            DataObject data = new DataObject();
-            StringBuilder sb = new StringBuilder();
             FastaSequence fastaSeq = DocNode.Id as FastaSequence;
             if (fastaSeq == null)
+                return base.GetNodeData();
+
+            DataObject data = new DataObject();
+            StringBuilder sb = new StringBuilder();
+            sb.Append(">").Append(Model.Id).Append(" ");
+            foreach (string desc in Descriptions)
+                sb.Append(desc).Append((char)1);
+
+            string aa = fastaSeq.Sequence;
+            for (int i = 0; i < aa.Length; i++)
             {
-                foreach (PeptideDocNode nodePeptide in DocNode.Children)
-                    sb.Append(nodePeptide.Peptide.Sequence).AppendLine();
-                data.SetData(DataFormats.Text, sb.ToString());
+                if (i % 60 == 0)
+                    sb.AppendLine();
+                sb.Append(aa[i]);
             }
+            sb.Append("*");
+            data.SetData(DataFormats.Text, sb.ToString());
+
+            sb = new StringBuilder();
+            sb.Append("<b>").Append(Model.Id).Append("</b> ");
+            sb.Append("<i>");
+            if (string.IsNullOrEmpty(DocNode.Description))
+                sb.AppendLine("<br/>");
             else
             {
-                sb.Append(">").Append(Model.Id).Append(" ");
                 foreach (string desc in Descriptions)
-                    sb.Append(desc).Append((char)1);
+                    sb.Append(desc).AppendLine("<br/>");
+            }
+            sb.Append("</i>");
 
-                string aa = fastaSeq.Sequence;
-                for (int i = 0; i < aa.Length; i++)
+            IEnumerator<object> peptides = GetChoices(true).GetEnumerator();
+            HashSet<object> peptidesChosen = new HashSet<object>(Chosen);
+            Peptide peptide = (Peptide)(peptides.MoveNext() ? peptides.Current : null);
+            bool chosen = peptidesChosen.Contains(peptide);
+
+            bool inPeptide = false;
+            for (int i = 0; i < aa.Length; i++)
+            {
+                if (peptide != null)
                 {
-                    if (i % 60 == 0)
-                        sb.AppendLine();
-                    sb.Append(aa[i]);
-                }
-                sb.AppendLine("*");
-                data.SetData(DataFormats.Text, sb.ToString());
-
-                sb = new StringBuilder();
-                sb.Append("<b>").Append(Model.Id).Append("</b> ");
-                sb.Append("<i>");
-                if (string.IsNullOrEmpty(DocNode.Description))
-                    sb.AppendLine("<br/>");
-                else
-                {
-                    foreach (string desc in Descriptions)
-                        sb.Append(desc).AppendLine("<br/>");
-                }
-                sb.Append("</i>");
-
-                IEnumerator<object> peptides = GetChoices(true).GetEnumerator();
-                HashSet<object> peptidesChosen = new HashSet<object>(Chosen);
-                Peptide peptide = (Peptide)(peptides.MoveNext() ? peptides.Current : null);
-                bool chosen = peptidesChosen.Contains(peptide);
-
-                bool inPeptide = false;
-                for (int i = 0; i < aa.Length; i++)
-                {
-                    if (peptide != null)
+                    while (peptide != null && i >= peptide.End)
                     {
-                        while (peptide != null && i >= peptide.End)
+                        peptide = (Peptide)(peptides.MoveNext() ? peptides.Current : null);
+                        chosen = peptidesChosen.Contains(peptide);
+                    }
+                    if (peptide != null && i >= peptide.Begin)
+                    {
+                        if (!inPeptide)
                         {
-                            peptide = (Peptide)(peptides.MoveNext() ? peptides.Current : null);
-                            chosen = peptidesChosen.Contains(peptide);
-                        }
-                        if (peptide != null && i >= peptide.Begin)
-                        {
-                            if (!inPeptide)
-                            {
-                                if (chosen)
-                                    sb.Append("<font style=\"font-weight: bold; color: blue\">");
-                                else
-                                    sb.Append("<font style=\"font-weight: bold\">");
-                                inPeptide = true;
-                            }
-                        }
-                        else if (inPeptide)
-                        {
-                            sb.Append("</font>");
-                            inPeptide = false;
+                            if (chosen)
+                                sb.Append("<font style=\"font-weight: bold; color: blue\">");
+                            else
+                                sb.Append("<font style=\"font-weight: bold\">");
+                            inPeptide = true;
                         }
                     }
-                    sb.Append(aa[i]);
+                    else if (inPeptide)
+                    {
+                        sb.Append("</font>");
+                        inPeptide = false;
+                    }
                 }
-                sb.AppendLine();
-
-                data.SetData(DataFormats.Html, HtmlFragment.ClipBoardText(sb.ToString()));                
+                sb.Append(aa[i]);
             }
+            sb.Append("</font>");
+            
+
+            data.SetData(DataFormats.Html, HtmlFragment.ClipBoardText(sb.ToString()));                
 
             var transitionListExporter = new AbiMassListExporter(Document, DocNode);
             transitionListExporter.Export(null);
             data.SetData(DataFormats.CommaSeparatedValue,
                          transitionListExporter.MemoryOutput[MassListExporter.MEMORY_KEY_ROOT].ToString());
 
-            Clipboard.Clear();
-            Clipboard.SetDataObject(data);
+            return data;
         }
 
         #endregion

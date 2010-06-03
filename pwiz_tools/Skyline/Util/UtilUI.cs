@@ -255,7 +255,7 @@ namespace pwiz.Skyline.Util
 
     public interface IClipboardDataProvider
     {
-        void ProvideData();
+        DataObject ProvideData();
     }
 
     public interface IUpdatable
@@ -295,5 +295,6 @@ namespace pwiz.Skyline.Util
         public Color Color { get; set; }
         public int Position { get; set; }
         public int Width { get; set; }
+        public bool IsPlainText { get; set; }
     }
 }
