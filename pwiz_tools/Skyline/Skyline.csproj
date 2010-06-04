@@ -539,6 +539,12 @@
     <Compile Include="SettingsUI\EditLibraryDlg.Designer.cs">
       <DependentUpon>EditLibraryDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="SettingsUI\BuildLibraryNotification.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\BuildLibraryNotification.Designer.cs">
+      <DependentUpon>BuildLibraryNotification.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\SettingsListBoxDriver.cs" />
     <Compile Include="SettingsUI\SettingsListComboDriver.cs">
     </Compile>
@@ -735,6 +741,7 @@
     </Compile>
     <Compile Include="Util\BioMassCalc.cs" />
     <Compile Include="Util\Extensions\UtilProcess.cs" />
+    <Compile Include="Util\FormAnimator.cs" />
     <Compile Include="Util\SystemMetrics.cs" />
     <Compile Include="Util\UtilUIExtra.cs" />
     <Compile Include="Util\UtilIOExtra.cs" />
@@ -1007,6 +1014,9 @@
       <DependentUpon>BuildBackgroundProteomeDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\BuildLibraryNotification.resx">
+      <DependentUpon>BuildLibraryNotification.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\ChooseAnnotationsDlg.resx">
       <DependentUpon>ChooseAnnotationsDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -1083,6 +1093,7 @@
     <EmbeddedResource Include="Resources\Ions_Z.bmp" />
     <EmbeddedResource Include="Resources\Print.bmp" />
     <EmbeddedResource Include="Resources\ProteoWizard.bmp" />
+    <Content Include="Resources\RedXTransparentBackground.bmp" />
     <Content Include="SkylineData.ico" />
     <Content Include="SkylineDoc.ico" />
   </ItemGroup>

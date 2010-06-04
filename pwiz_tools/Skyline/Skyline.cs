@@ -54,7 +54,8 @@ namespace pwiz.Skyline
         : Form,
             IUndoable,
             IDocumentUIContainer,
-            IProgressMonitor
+            IProgressMonitor,
+            IBuildNotificationClient
     {
         private SrmDocument _document;  // Interlocked access only
         private SrmDocument _documentUI;
@@ -72,6 +73,8 @@ namespace pwiz.Skyline
         private List<ProgressStatus> _listProgress;
         private readonly Timer _timerProgress;
         private readonly Timer _timerGraphs;
+
+        public event EventHandler LibraryBuildCompleteEvent;
 
         /// <summary>
         /// Constructor for the main window of the Skyline program.
@@ -519,6 +522,11 @@ namespace pwiz.Skyline
         }
 
         #endregion
+
+        private void InvokeAction(Action action)
+        {
+            Invoke(action);
+        }
 
         private void UpdateTitle()
         {
@@ -1675,7 +1683,7 @@ namespace pwiz.Skyline
                     // Return the focused control
                     return c;
                 }
-                else if (c.ContainsFocus)
+                if (c.ContainsFocus)
                 {
                     // If the focus is contained inside a control's children
                     // return the child
@@ -2300,6 +2308,59 @@ namespace pwiz.Skyline
             pasteToolBarButton.Enabled = pasteMenuItem.Enabled = (nodeTree != null || sequenceTree.SelectedNodes.Count > 1);
             deleteMenuItem.Enabled = (nodeTree != null || sequenceTree.SelectedNodes.Count > 1);
         }
+
+        #region Implementation of IBuildNotificationClient interface
+
+        void IBuildNotificationClient.BuildCompleteEventListen(EventHandler listener)
+        {
+            LibraryBuildCompleteEvent += listener;
+        }
+
+        void IBuildNotificationClient.BuildCompleteEventUnlisten(EventHandler listener)
+        {
+            LibraryBuildCompleteEvent -= listener;
+        }
+
+        void IBuildNotificationClient.LocationChangedEventListen(EventHandler listener)
+        {
+            LocationChanged += listener;
+        }
+        void IBuildNotificationClient.LocationChangedEventUnlisten(EventHandler listener)
+        {
+            LocationChanged -= listener;
+        }
+
+        void IBuildNotificationClient.OnBuildNotificationOpened(object sender, EventArgs e)
+        {
+            InvokeAction(() => Focus());
+        }
+
+        void IBuildNotificationClient.GetDisplayLocation(ref int x, ref int y)
+        {
+            x = Left;
+            y = statusStrip.Visible ? Bottom - statusStrip.Height : Bottom;
+        }
+
+        void IBuildNotificationClient.ShowLibrary(String libName)
+        {
+            InvokeAction(() => ShowViewLibraryUI(libName));
+        }
+
+        private void ShowViewLibraryUI(String libName)
+        {   
+            PeptideSettingsUI ps = new PeptideSettingsUI(this, _libraryManager);
+            ps.ShowViewLibraryDlg(libName);
+        }
+
+        public void LibraryBuildCompleteCallback(IAsyncResult ar)
+        {
+            if (LibraryBuildCompleteEvent != null)
+            {
+                LibraryBuildCompleteEvent(this, new EventArgs());
+            }
+        }
+
+        #endregion
     }
 }
 

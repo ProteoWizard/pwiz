@@ -396,6 +396,7 @@ namespace pwiz.Skyline.SettingsUI
         
         private readonly LibraryManager _libraryManager;
         private readonly SettingsListBoxDriver<LibrarySpec> _driverLibrary;
+        private String _selectedLibName;
         private Library _selectedLibrary;
         private Range _currentRange;
         private readonly PageInfo _pageInfo;
@@ -414,12 +415,14 @@ namespace pwiz.Skyline.SettingsUI
         /// chosen peptide library. </param>
         /// <param name="driverLibrary"> This is needed to get the names of the
         /// libraries currently in the Library tab of Peptide Settings. </param>
-        public ViewLibraryDlg(LibraryManager libMgr, SettingsListBoxDriver<LibrarySpec> driverLibrary)
+        /// <param name="libName"> Name of the library to select. </param>
+        public ViewLibraryDlg(LibraryManager libMgr, SettingsListBoxDriver<LibrarySpec> driverLibrary, String libName)
         {
             InitializeComponent();
 
             _libraryManager = libMgr;
             _driverLibrary = driverLibrary;
+            _selectedLibName = libName;
             _pageInfo = new PageInfo(100, 0, _currentRange);
 
             graphControl.MasterPane.Border.IsVisible = false;
@@ -451,23 +454,35 @@ namespace pwiz.Skyline.SettingsUI
             // Go through all the libraries currently in the Peptide Settings
             // --> Library tab and show them in the combobox. 
             int numLibs = _driverLibrary.List.Count;
+            int selLibIdx = -1;
             for (int i = 0; i < numLibs; i++)
             {
                 LibraryComboBox.Items.Add(_driverLibrary.List[i].Name);
+                if (_driverLibrary.List[i].Name == _selectedLibName)
+                {
+                    selLibIdx = i;
+                }
             }
 
-            // If anything is checked, start on the first checked item.
-            string[] checkedNames = _driverLibrary.CheckedNames;
-            if (checkedNames.Length > 0)
-                LibraryComboBox.SelectedItem = checkedNames[0];
+            if (selLibIdx < 0)
+            {
+                // If anything is checked, start on the first checked item.
+                string[] checkedNames = _driverLibrary.CheckedNames;
+                if (checkedNames.Length > 0)
+                    LibraryComboBox.SelectedItem = checkedNames[0];
+                else
+                {
+                    // Set the selection to the very first library in the combobox.
+                    // The "View Libraries" button is not enabled unless we have at 
+                    // least ONE library, so if we are here, we must have at least 
+                    // one to select.
+
+                    LibraryComboBox.SelectedIndex = 0;
+                }
+            }
             else
             {
-                // Set the selection to the very first library in the combobox.
-                // The "View Libraries" button is not enabled unless we have at 
-                // least ONE library, so if we are here, we must have at least 
-                // one to select.
-
-                LibraryComboBox.SelectedIndex = 0;                
+                LibraryComboBox.SelectedIndex = selLibIdx;
             }
 
             LibraryComboBox.EndUpdate();
