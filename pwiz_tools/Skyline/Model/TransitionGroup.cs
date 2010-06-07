@@ -36,7 +36,7 @@ namespace pwiz.Skyline.Model
                                       double massH,
                                       RelativeRT relativeRT,
                                       TransitionDocNode[] children)
-            : this(id, Annotations.Empty, massH, relativeRT, null, null, children, true)
+            : this(id, Annotations.EMPTY, massH, relativeRT, null, null, children, true)
         {
         }
 
@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Model
                                       RelativeRT relativeRT,
                                       TransitionDocNode[] children,
                                       bool autoManageChildren)
-            : this(id, Annotations.Empty, massH, relativeRT, null, null, children, autoManageChildren)
+            : this(id, Annotations.EMPTY, massH, relativeRT, null, null, children, autoManageChildren)
         {
         }
 
@@ -172,6 +172,11 @@ namespace pwiz.Skyline.Model
 
         public float? GetPeakAreaRatio(int i, out float? stdev)
         {
+            return GetPeakAreaRatio(i, 0, out stdev);
+        }
+
+        public float? GetPeakAreaRatio(int i, int indexIS, out float? stdev)
+        {
             // CONSIDER: Also specify the file index?
             var chromInfo = GetChromInfoEntry(i);
             if (chromInfo == null)
@@ -180,8 +185,8 @@ namespace pwiz.Skyline.Model
                 return null;                
             }
 
-            stdev = chromInfo.RatioStdev;
-            return chromInfo.Ratio;
+            stdev = chromInfo.RatioStdevs[indexIS];
+            return chromInfo.Ratios[indexIS];
         }
 
         public float? GetLibraryDotProduct(int i)
@@ -536,8 +541,12 @@ namespace pwiz.Skyline.Model
                                         {
                                             // Use the old ratio for now, and it will be corrected by the peptide,
                                             // if it is incorrect.
-                                            float? ratio = (chromInfo != null ? chromInfo.Ratio : null);
-                                            chromInfo = new TransitionChromInfo(fileIndex, step, peak, ratio, false);
+                                            IList<float?> ratios = (chromInfo != null ?
+                                                chromInfo.Ratios
+                                                :
+                                                new float?[settingsNew.PeptideSettings.Modifications.InternalStandardTypes.Count]);
+
+                                            chromInfo = new TransitionChromInfo(fileIndex, step, peak, ratios, false);
                                         }
                                     }
 
@@ -828,7 +837,8 @@ namespace pwiz.Skyline.Model
                             if (iFile != -1)
                                 chromInfoGroup = _listChromInfo[iFile];
                         }
-                        var calc = new TransitionGroupChromInfoCalculator(fileIndex, step, TransitionCount, chromInfoGroup);
+                        var calc = new TransitionGroupChromInfoCalculator(fileIndex, step,
+                            TransitionCount, chromInfo.Ratios.Count, chromInfoGroup);
                         calc.AddChromInfo(chromInfo);
                         Calculators.Insert(~i, calc);
                     }
@@ -881,7 +891,7 @@ namespace pwiz.Skyline.Model
 
         private sealed class TransitionGroupChromInfoCalculator
         {
-            public TransitionGroupChromInfoCalculator(int fileIndex, int optimizationStep, int transitionCount, TransitionGroupChromInfo chromInfo)
+            public TransitionGroupChromInfoCalculator(int fileIndex, int optimizationStep, int transitionCount, int ratioCount, TransitionGroupChromInfo chromInfo)
             {
                 FileIndex = fileIndex;
                 OptimizationStep = optimizationStep;
@@ -890,13 +900,15 @@ namespace pwiz.Skyline.Model
                 // Use existing ratio until it can be recalculated
                 if (chromInfo != null)
                 {
-                    Ratio = chromInfo.Ratio;
-                    RatioStdev = chromInfo.RatioStdev;
+                    Ratios = chromInfo.Ratios;
+                    RatioStdevs = chromInfo.RatioStdevs;
                     Annotations = chromInfo.Annotations;
                 }
                 else
                 {
-                    Annotations = Annotations.Empty;
+                    Ratios = new float?[ratioCount];
+                    RatioStdevs = new float?[ratioCount];
+                    Annotations = Annotations.EMPTY;
                 }
             }
 
@@ -913,8 +925,8 @@ namespace pwiz.Skyline.Model
             private float? Area { get; set; }
             private float? BackgroundArea { get; set; }
             private float? LibraryDotProduct { get; set; }
-            private float? Ratio { get; set; }
-            private float? RatioStdev { get; set; }
+            private IList<float?> Ratios { get; set; }
+            private IList<float?> RatioStdevs { get; set; }
             private Annotations Annotations { get; set; }
             private bool UserSet { get; set; }
 
@@ -979,8 +991,8 @@ namespace pwiz.Skyline.Model
                                                     Fwhm,
                                                     Area,
                                                     BackgroundArea,
-                                                    Ratio,
-                                                    RatioStdev,
+                                                    Ratios,
+                                                    RatioStdevs,
                                                     LibraryDotProduct,
                                                     Annotations,
                                                     UserSet);
@@ -1265,6 +1277,22 @@ namespace pwiz.Skyline.Model
         public int SortOrder { get; private set; }
 
         public bool IsLight { get { return ReferenceEquals(this, light); } }
+
+        public string Title
+        {
+            get
+            {
+                if (char.IsUpper(Name[0]))
+                    return Name;
+
+               return Name[0].ToString().ToUpper() + (Name.Length > 1 ? Name.Substring(1) : "");
+            }
+        }
+
+        public string Id
+        {
+            get { return Helpers.MakeId(Name); }
+        }
 
         public int CompareTo(object obj)
         {

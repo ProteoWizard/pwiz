@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
@@ -29,18 +30,24 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public sealed class PeptideChromInfo : ChromInfo
     {
-        public PeptideChromInfo(int fileIndex, float peakCountRatio,
-                                float? retentionTime, float? ratioToStandard)
+        private ReadOnlyCollection<PeptideLabelRatio> _labelRatios;
+
+        public PeptideChromInfo(int fileIndex, float peakCountRatio, float? retentionTime,
+                IList<PeptideLabelRatio> labelRatios)
             : base(fileIndex)
         {
             PeakCountRatio = peakCountRatio;
             RetentionTime = retentionTime;
-            RatioToStandard = ratioToStandard;
+            LabelRatios = labelRatios;
         }
 
         public float PeakCountRatio { get; private set; }
         public float? RetentionTime { get; private set; }
-        public float? RatioToStandard { get; private set; }
+        public IList<PeptideLabelRatio> LabelRatios
+        {
+            get { return _labelRatios; }
+            set { _labelRatios = MakeReadOnly(value); }
+        }
 
         #region object overrides
 
@@ -50,8 +57,7 @@ namespace pwiz.Skyline.Model.Results
             if (ReferenceEquals(this, other)) return true;
             return base.Equals(other) &&
                    other.PeakCountRatio == PeakCountRatio &&
-                   other.RetentionTime.Equals(RetentionTime) &&
-                   other.RatioToStandard.Equals(RatioToStandard);
+                   other.RetentionTime.Equals(RetentionTime);
         }
 
         public override bool Equals(object obj)
@@ -68,7 +74,54 @@ namespace pwiz.Skyline.Model.Results
                 int result = base.GetHashCode();
                 result = (result*397) ^ PeakCountRatio.GetHashCode();
                 result = (result*397) ^ (RetentionTime.HasValue ? RetentionTime.Value.GetHashCode() : 0);
-                result = (result*397) ^ (RatioToStandard.HasValue ? RatioToStandard.Value.GetHashCode() : 0);
+                return result;
+            }
+        }
+
+        #endregion
+    }
+
+    public struct PeptideLabelRatio
+    {
+        public PeptideLabelRatio(IsotopeLabelType labelType, IsotopeLabelType standardType,
+            float ratio, float ratioStdev) : this()
+        {
+            LabelType = labelType;
+            StandardType = standardType;
+            Ratio = ratio;
+            RatioStdev = ratioStdev;
+        }
+
+        public IsotopeLabelType LabelType { get; private set; }
+        public IsotopeLabelType StandardType { get; private set; }
+        public float Ratio { get; private set; }
+        public float RatioStdev { get; private set; }
+
+        #region object overrides
+
+        public bool Equals(PeptideLabelRatio other)
+        {
+            return Equals(other.LabelType, LabelType) &&
+                Equals(other.StandardType, StandardType) &&
+                other.Ratio == Ratio &&
+                other.RatioStdev == RatioStdev;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (obj.GetType() != typeof (PeptideLabelRatio)) return false;
+            return Equals((PeptideLabelRatio) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int result = LabelType.GetHashCode();
+                result = (result*397) ^ StandardType.GetHashCode();
+                result = (result*397) ^ Ratio.GetHashCode();
+                result = (result*397) ^ RatioStdev.GetHashCode();
                 return result;
             }
         }
@@ -82,6 +135,9 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public sealed class TransitionGroupChromInfo : ChromInfo
     {
+        private ReadOnlyCollection<float?> _ratios;
+        private ReadOnlyCollection<float?> _ratioStdevs;
+
         public TransitionGroupChromInfo(int fileIndex,
                                         int optimizationStep,
                                         float peakCountRatio,
@@ -91,8 +147,8 @@ namespace pwiz.Skyline.Model.Results
                                         float? fwhm,
                                         float? area,
                                         float? backgroundArea,
-                                        float? ratio,
-                                        float? stdev,
+                                        IList<float?> ratios,
+                                        IList<float?> stdevs,
                                         float? libraryDotProduct,
                                         Annotations annotations,
                                         bool userSet)
@@ -106,8 +162,8 @@ namespace pwiz.Skyline.Model.Results
             Fwhm = fwhm;
             Area = area;
             BackgroundArea = backgroundArea;
-            Ratio = ratio;
-            RatioStdev = stdev;
+            Ratios = ratios;
+            RatioStdevs = stdevs;
             LibraryDotProduct = libraryDotProduct;
             Annotations = annotations;
             UserSet = userSet;
@@ -122,8 +178,18 @@ namespace pwiz.Skyline.Model.Results
         public float? Fwhm { get; private set; }
         public float? Area { get; private set; }
         public float? BackgroundArea { get; private set; }
-        public float? Ratio { get; private set; }
-        public float? RatioStdev { get; private set; }
+        public float? Ratio { get { return _ratios[0]; } }
+        public IList<float?> Ratios
+        {
+            get { return _ratios; }
+            set { _ratios = MakeReadOnly(value); }
+        }
+        public float? RatioStdev { get { return _ratioStdevs[0]; } }
+        public IList<float?> RatioStdevs
+        {
+            get { return _ratioStdevs; }
+            set { _ratioStdevs = MakeReadOnly(value); }
+        }
         public float? LibraryDotProduct { get; private set; }
         public Annotations Annotations { get; private set; }
 
@@ -134,19 +200,22 @@ namespace pwiz.Skyline.Model.Results
 
         #region Property change methods
 
-        public TransitionGroupChromInfo ChangeRatio(float? prop, float? stdev)
+        public TransitionGroupChromInfo ChangeRatios(IList<float?> prop, IList<float?> stdev)
         {
-            var im = ImClone(this);
-            im.Ratio = prop;
-            im.RatioStdev = stdev;
-            return im;
+            return ChangeProp(ImClone(this), im =>
+                                                 {
+                                                     im.Ratios = prop;
+                                                     im.RatioStdevs = stdev;
+                                                 });
         }
 
         public TransitionGroupChromInfo ChangeAnnotations(Annotations annotations)
         {
-            return ChangeProp(ImClone(this), 
-                (im, v) => { im.Annotations = v; im.UserSet = im.UserSet || !v.IsEmpty; }, 
-                annotations);
+            return ChangeProp(ImClone(this), im =>
+                                                 {
+                                                     im.Annotations = annotations;
+                                                     im.UserSet = im.UserSet || !annotations.IsEmpty;
+                                                 });
         }
 
         #endregion
@@ -163,8 +232,8 @@ namespace pwiz.Skyline.Model.Results
                    other.StartRetentionTime.Equals(StartRetentionTime) &&
                    other.EndRetentionTime.Equals(EndRetentionTime) &&
                    other.Fwhm.Equals(Fwhm) &&
-                   other.Ratio == Ratio &&
-                   other.RatioStdev == RatioStdev &&
+                   ArrayUtil.EqualsDeep(other.Ratios, Ratios) &&
+                   ArrayUtil.EqualsDeep(other.RatioStdevs, RatioStdevs) &&
                    other.LibraryDotProduct.Equals(LibraryDotProduct) &&
                    other.Annotations.Equals(Annotations) &&
                    other.UserSet.Equals(UserSet);
@@ -187,8 +256,8 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ (StartRetentionTime.HasValue ? StartRetentionTime.Value.GetHashCode() : 0);
                 result = (result*397) ^ (EndRetentionTime.HasValue ? EndRetentionTime.Value.GetHashCode() : 0);
                 result = (result*397) ^ (Fwhm.HasValue ? Fwhm.Value.GetHashCode() : 0);
-                result = (result*397) ^ (Ratio.HasValue ? Ratio.Value.GetHashCode() : 0);
-                result = (result*397) ^ (RatioStdev.HasValue ? RatioStdev.Value.GetHashCode() : 0);
+                result = (result*397) ^ Ratios.GetHashCodeDeep();
+                result = (result*397) ^ RatioStdevs.GetHashCodeDeep();
                 result = (result*397) ^ (LibraryDotProduct.HasValue ? LibraryDotProduct.Value.GetHashCode() : 0);
                 result = (result*397) ^ UserSet.GetHashCode();
                 return result;
@@ -204,18 +273,20 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public sealed class TransitionChromInfo : ChromInfo
     {
+        private ReadOnlyCollection<float?> _ratios;
+
         public TransitionChromInfo(int fileIndex, int optimizationStep, ChromPeak peak,
-            float? ratio, bool userSet)
+            IList<float?> ratios, bool userSet)
             : this(fileIndex, optimizationStep, peak.RetentionTime, peak.StartTime, peak.EndTime,
                    peak.Area, peak.BackgroundArea, peak.Height, peak.Fwhm,
-                   peak.IsFwhmDegenerate, ratio, Annotations.Empty, userSet)
+                   peak.IsFwhmDegenerate, ratios, Annotations.EMPTY, userSet)
         {            
         }
 
         public TransitionChromInfo(int fileIndex, int optimizationStep, float retentionTime,
                                    float startRetentionTime, float endRetentionTime,
                                    float area, float backgroundArea, float height,
-                                   float fwhm, bool fwhmDegenerate, float? ratio,
+                                   float fwhm, bool fwhmDegenerate, IList<float?> ratios,
                                    Annotations annotations, bool userSet)
             : base(fileIndex)
         {
@@ -228,7 +299,7 @@ namespace pwiz.Skyline.Model.Results
             Height = height;
             Fwhm = fwhm;
             IsFwhmDegenerate = fwhmDegenerate;
-            Ratio = ratio;
+            Ratios = ratios;
             Annotations = annotations;
             UserSet = userSet;
         }
@@ -253,7 +324,12 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// Set after creation at the peptide results calculation level
         /// </summary>
-        public float? Ratio { get; private set; }
+        public IList<float?> Ratios
+        {
+            get { return _ratios; }
+            set { _ratios = MakeReadOnly(value); }
+        }
+        public float? Ratio { get { return _ratios[0]; } }
 
         public Annotations Annotations { get; private set; }
 
@@ -295,9 +371,9 @@ namespace pwiz.Skyline.Model.Results
             return chromInfo;
         }
 
-        public TransitionChromInfo ChangeRatio(float? prop)
+        public TransitionChromInfo ChangeRatios(IList<float?> prop)
         {
-            return ChangeProp(ImClone(this), im => im.Ratio = prop);
+            return ChangeProp(ImClone(this), im => im.Ratios = prop);
         }
 
         public TransitionChromInfo ChangeRank(int prop)
@@ -332,7 +408,7 @@ namespace pwiz.Skyline.Model.Results
                    other.Fwhm == Fwhm &&
                    other.IsFwhmDegenerate.Equals(IsFwhmDegenerate) &&
                    other.Rank == Rank &&
-                   other.Ratio.Equals(Ratio) &&
+                   ArrayUtil.EqualsDeep(other.Ratios, Ratios) &&
                    other.OptimizationStep.Equals(OptimizationStep) &&
                    other.Annotations.Equals(Annotations) &&
                    other.UserSet.Equals(UserSet);
@@ -359,7 +435,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ Fwhm.GetHashCode();
                 result = (result*397) ^ IsFwhmDegenerate.GetHashCode();
                 result = (result*397) ^ Rank;
-                result = (result*397) ^ (Ratio.HasValue ? Ratio.Value.GetHashCode() : 0);
+                result = (result*397) ^ Ratios.GetHashCodeDeep();
                 result = (result*397) ^ OptimizationStep.GetHashCode();
                 result = (result*397) ^ Annotations.GetHashCode();
                 result = (result*397) ^ UserSet.GetHashCode();

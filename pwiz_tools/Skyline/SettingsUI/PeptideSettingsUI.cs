@@ -115,9 +115,8 @@ namespace pwiz.Skyline.SettingsUI
             _driverStaticMod = new SettingsListBoxDriver<StaticMod>(listStaticMods, Settings.Default.StaticModList);
             _driverStaticMod.LoadList(null, Modifications.StaticModifications);
             _driverHeavyMod = new SettingsListBoxDriver<StaticMod>(listHeavyMods, Settings.Default.HeavyModList);
-            _driverLabelType = new LabelTypeComboDriver(comboLabelType, Modifications, _driverHeavyMod,
-                                                        comboInternalStandard);
-            cbInvertRatios.Checked = Modifications.InvertRatios;
+            _driverLabelType = new LabelTypeComboDriver(comboLabelType, Modifications, _driverHeavyMod, 
+                labelStandardType, comboStandardType, listStandardTypes);
         }
 
         public DigestSettings Digest { get { return _peptideSettings.DigestSettings; } }
@@ -234,9 +233,16 @@ namespace pwiz.Skyline.SettingsUI
             Helpers.AssignIfEquals(ref libraries, Libraries);
 
             // Validate and hold modifications
+            var standardTypes = _driverLabelType.InternalStandardTypes;
+            if (standardTypes.Count < 1)
+            {
+                MessageDlg.Show(this, "Choose at least one internal standard type.");
+                e.Cancel = true;
+                return;
+            }
             PeptideModifications modifications = new PeptideModifications(
                 _driverStaticMod.Chosen, _driverLabelType.GetHeavyModifications(),
-                _driverLabelType.InternalStandardType, cbInvertRatios.Checked);
+                standardTypes);
             // Should not be possible to change explicit modifications in the background,
             // so this should be safe.  CONSIDER: Document structure because of a library load?
             modifications = modifications.DeclareExplicitMods(_parent.DocumentUI,
@@ -630,32 +636,49 @@ namespace pwiz.Skyline.SettingsUI
             private readonly SettingsListBoxDriver<StaticMod> _driverHeavyMod;
 
             private int _selectedIndexLast;
+            private bool _singleStandard;
 
-            public LabelTypeComboDriver(ComboBox combo, PeptideModifications modifications,
-                SettingsListBoxDriver<StaticMod> driverHeavyMod, ComboBox comboIS)
+            public LabelTypeComboDriver(ComboBox combo,
+                                        PeptideModifications modifications,
+                                        SettingsListBoxDriver<StaticMod> driverHeavyMod,
+                                        Label labelIS,
+                                        ComboBox comboIS,
+                                        CheckedListBox listBoxIS)
             {
                 _driverHeavyMod = driverHeavyMod;
 
+                LabelIS = labelIS;
                 Combo = combo;
                 Combo.DisplayMember = "LabelType";
                 ComboIS = comboIS;
-                LoadList(null, modifications.InternalStandardType.Name,
+                ListBoxIS = listBoxIS;
+                LoadList(null, modifications.InternalStandardTypes,
                     modifications.GetHeavyModifications());
                 ShowModifications();
             }
 
             private ComboBox Combo { get; set; }
             private ComboBox ComboIS { get; set; }
+            private CheckedListBox ListBoxIS { get; set; }
+            private Label LabelIS { get; set; }
 
-            public IsotopeLabelType InternalStandardType
+            public IList<IsotopeLabelType> InternalStandardTypes
             {
                 get
                 {
-                    return (IsotopeLabelType) ComboIS.SelectedItem;
+                    if (_singleStandard)
+                        return new[] {(IsotopeLabelType) ComboIS.SelectedItem};
+                    else
+                    {
+                        var listStandardTypes = new List<IsotopeLabelType>();
+                        foreach (IsotopeLabelType labelType in ListBoxIS.CheckedItems)
+                            listStandardTypes.Add(labelType);
+                        return listStandardTypes.ToArray();
+                    }
                 }
             }
 
-            private void LoadList(string selectedItemLast, string selectedItemISLast,
+            private void LoadList(string selectedItemLast, ICollection<IsotopeLabelType> internalStandardTypes,
                 IEnumerable<TypedModifications> heavyMods)
             {
                 try
@@ -663,28 +686,63 @@ namespace pwiz.Skyline.SettingsUI
                     Combo.BeginUpdate();
                     ComboIS.BeginUpdate();
                     Combo.Items.Clear();
-                    ComboIS.Items.Clear();
-                    ComboIS.Items.Add(IsotopeLabelType.light);
-                    if (Equals(selectedItemISLast, IsotopeLabelType.light.Name))
-                        ComboIS.SelectedIndex = 0;
+
+                    _singleStandard = (heavyMods.Count() <= 1);
+                    if (_singleStandard)
+                    {
+                        LabelIS.Text = "I&nternal standard type:";
+                        ComboIS.Items.Clear();
+                        ComboIS.Items.Add(IsotopeLabelType.light);
+                        if (internalStandardTypes.Contains(IsotopeLabelType.light))
+                            ComboIS.SelectedIndex = 0;
+                        ComboIS.Visible = true;
+                        ListBoxIS.Visible = false;
+                        ComboIS.Parent.Parent.Parent.Height +=
+                            ComboIS.Bottom + 10 - ComboIS.Parent.Height;
+                    }
+                    else
+                    {
+                        LabelIS.Text = "I&nternal standard types:";
+                        ListBoxIS.Items.Clear();
+                        ListBoxIS.Items.Add(IsotopeLabelType.light);
+                        if (internalStandardTypes.Contains(IsotopeLabelType.light))
+                            ListBoxIS.SetItemChecked(0, true);
+                        ComboIS.Visible = false;
+                        ListBoxIS.Visible = true;
+                        ListBoxIS.Parent.Parent.Parent.Height +=
+                            ListBoxIS.Bottom + 12 - ComboIS.Parent.Height;
+                    }
 
                     foreach (var typedMods in heavyMods)
                     {
+                        string labelName = typedMods.LabelType.Name;
+
                         int i = Combo.Items.Add(typedMods);
                         if (Equals(typedMods.LabelType.Name, selectedItemLast))
                             Combo.SelectedIndex = i;
 
-                        i = ComboIS.Items.Add(typedMods.LabelType);
-                        if (Equals(typedMods.LabelType.Name, selectedItemISLast))
-                            ComboIS.SelectedIndex = i;
+                        if (_singleStandard)
+                        {
+                            i = ComboIS.Items.Add(typedMods.LabelType);
+                            if (internalStandardTypes.Contains(lt => Equals(lt.Name, labelName)))
+                                ComboIS.SelectedIndex = i;
+                        }
+                        else
+                        {
+                            i = ListBoxIS.Items.Add(typedMods.LabelType);
+                            if (internalStandardTypes.Contains(lt => Equals(lt.Name, labelName)))
+                                ListBoxIS.SetItemChecked(i, true);
+                        }
                     }
 
                     Combo.Items.Add(EDIT_LIST_ITEM);
                     if (Combo.SelectedIndex < 0)
                         Combo.SelectedIndex = 0;
                     // If no internal standard selected yet, use the first heavy mod type
-                    if (ComboIS.SelectedIndex < 0)
-                        ComboIS.SelectedIndex = 1;
+                    if (_singleStandard && ComboIS.SelectedIndex == -1)
+                        ComboIS.SelectedIndex = (ComboIS.Items.Count > 1 ? 1 : 0);
+                    if (!_singleStandard && ListBoxIS.CheckedItems.Count == 0)
+                        ListBoxIS.SetItemChecked(ListBoxIS.Items.Count > 1 ? 1 : 0, true);
                 }
                 finally
                 {
@@ -781,7 +839,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     // Store existing values in dictionary by lowercase name.
                     string selectedItemLast = SelectedModsLast.LabelType.Name;
-                    string selectedItemISLast = ComboIS.SelectedItem.ToString();
+                    var internalStandardTypes = InternalStandardTypes;
                     var dictHeavyMods = new Dictionary<string, TypedModifications>();
                     foreach (var typedMods in heavyMods)
                         dictHeavyMods.Add(typedMods.LabelType.Name.ToLower(), typedMods);
@@ -803,7 +861,7 @@ namespace pwiz.Skyline.SettingsUI
                     }
 
                     _selectedIndexLast = -1;
-                    LoadList(selectedItemLast, selectedItemISLast, listHeavyMods);
+                    LoadList(selectedItemLast, internalStandardTypes, listHeavyMods);
                 }
                 else
                 {

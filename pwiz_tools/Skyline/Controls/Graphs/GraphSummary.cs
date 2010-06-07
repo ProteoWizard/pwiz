@@ -48,10 +48,11 @@ namespace pwiz.Skyline.Controls.Graphs
             GraphSummary GraphSummary { get; set; }
 
             void OnResultsIndexChanged();
+            void OnRatioIndexChanged();
 
             void OnUpdateGraph();
 
-            bool HandleKeyDownEvent(object sender, KeyEventArgs e);            
+            bool HandleKeyDownEvent(object sender, KeyEventArgs e);
         }
 
         public interface IStateProvider
@@ -78,6 +79,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly IController _controller;
 
         private int _resultsIndex;
+        private int _ratioIndex;
 
         public GraphSummary(IDocumentUIContainer documentUIContainer, IController controller)
         {
@@ -108,6 +110,25 @@ namespace pwiz.Skyline.Controls.Graphs
                     _resultsIndex = value;
 
                     _controller.OnResultsIndexChanged();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Not all summary graphs care about this value, but since the
+        /// peak area summary graph uses this class directly, this is the
+        /// only way to get it the ratio index value.
+        /// </summary>
+        public int RatioIndex
+        {
+            get { return _ratioIndex; }
+            set
+            {
+                if (_ratioIndex != value)
+                {
+                    _ratioIndex = value;
+
+                    _controller.OnRatioIndexChanged();
                 }
             }
         }
@@ -170,6 +191,12 @@ namespace pwiz.Skyline.Controls.Graphs
             // And make sure it is not disposed, since rendering happens on a timer
             if (!Visible || IsDisposed)
                 return;
+
+            // CONSIDER: Need a better guarantee that this ratio index matches the
+            //           one in the sequence tree, but at least this will keep the UI
+            //           from crashing with IndexOutOfBoundsException.
+            var mods = DocumentUIContainer.DocumentUI.Settings.PeptideSettings.Modifications;
+            _ratioIndex = Math.Min(_ratioIndex, mods.InternalStandardTypes.Count - 1);
 
             var graphPaneCurrent = GraphPane;
             _controller.OnUpdateGraph();

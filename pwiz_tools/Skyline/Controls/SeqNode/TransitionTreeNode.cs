@@ -97,10 +97,11 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             get
             {
-                int? rank = DocNode.GetPeakRank(SequenceTree.ResultsIndex);
-                string label = (rank.HasValue && rank > 0 ? string.Format("[{0}]", rank) : "");
                 int index = SequenceTree.ResultsIndex;
-                float? ratio = DocNode.GetPeakAreaRatio(index);
+                int indexRatio = SequenceTree.RatioIndex;
+                int? rank = DocNode.GetPeakRank(index);
+                string label = (rank.HasValue && rank > 0 ? string.Format("[{0}]", rank) : "");
+                float? ratio = DocNode.GetPeakAreaRatio(index, indexRatio);
                 if (!ratio.HasValue)
                     return label;
 

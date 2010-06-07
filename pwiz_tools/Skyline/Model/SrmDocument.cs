@@ -176,14 +176,14 @@ namespace pwiz.Skyline.Model
         private double _formatVersion;
 
         public SrmDocument(SrmSettings settings)
-            : base(new SrmDocumentId(), Annotations.Empty, new PeptideGroupDocNode[0], false)
+            : base(new SrmDocumentId(), Annotations.EMPTY, new PeptideGroupDocNode[0], false)
         {
             _formatVersion = FORMAT_VERSION;
             Settings = settings;
         }
 
         public SrmDocument(SrmDocument doc, SrmSettings settings, IList<DocNode> children)
-            : base(doc.Id, Annotations.Empty, children, false)
+            : base(doc.Id, Annotations.EMPTY, children, false)
         {
             _formatVersion = doc._formatVersion;
             RevisionIndex = doc.RevisionIndex + 1;
@@ -722,8 +722,6 @@ namespace pwiz.Skyline.Model
             fwhm_degenerate,
             user_set,
             peak_count_ratio,
-            ratio,
-            ratio_stdev,
             library_dotp,
             auto_manage_children,
         }
@@ -935,7 +933,7 @@ namespace pwiz.Skyline.Model
 
             PeptideGroup group = new PeptideGroup();
 
-            Annotations annotations = Annotations.Empty;
+            Annotations annotations = Annotations.EMPTY;
             PeptideDocNode[] children = null;
 
             if (reader.IsEmptyElement)
@@ -1004,7 +1002,7 @@ namespace pwiz.Skyline.Model
 
             Peptide peptide = new Peptide(group as FastaSequence, sequence, start, end, missedCleavages);
 
-            var annotations = Annotations.Empty;
+            var annotations = Annotations.EMPTY;
             ExplicitMods mods = null;
             Results<PeptideChromInfo> results = null;
             TransitionGroupDocNode[] children = null;
@@ -1138,12 +1136,11 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
-        private static PeptideChromInfo ReadPeptideChromInfo(XmlReader reader, int indexFile)
+        private static PeptideChromInfo ReadPeptideChromInfo(XmlReader reader, SrmSettings settings, int indexFile)
         {
             float peakCountRatio = reader.GetFloatAttribute(ATTR.peak_count_ratio);
             float? retentionTime = reader.GetNullableFloatAttribute(ATTR.retention_time);
-            float? ratioToStandard = reader.GetNullableFloatAttribute(ATTR.ratio);
-            return new PeptideChromInfo(indexFile, peakCountRatio, retentionTime, ratioToStandard);
+            return new PeptideChromInfo(indexFile, peakCountRatio, retentionTime, new PeptideLabelRatio[0]);
         }
 
         /// <summary>
@@ -1169,7 +1166,7 @@ namespace pwiz.Skyline.Model
             var typedMods = ReadLabelType(reader, IsotopeLabelType.light);
             TransitionGroup group = new TransitionGroup(peptide, precursorCharge, typedMods.LabelType);
             bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
-            var annotations = Annotations.Empty;
+            var annotations = Annotations.EMPTY;
             SpectrumHeaderInfo libInfo = null;
             Results<TransitionGroupChromInfo> results = null;
             TransitionDocNode[] children = null;
@@ -1230,7 +1227,7 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
-        private static TransitionGroupChromInfo ReadTransitionGroupChromInfo(XmlReader reader, int indexFile)
+        private static TransitionGroupChromInfo ReadTransitionGroupChromInfo(XmlReader reader, SrmSettings settings, int indexFile)
         {
             int optimizationStep = reader.GetIntAttribute(ATTR.step);
             float peakCountRatio = reader.GetFloatAttribute(ATTR.peak_count_ratio);
@@ -1240,10 +1237,8 @@ namespace pwiz.Skyline.Model
             float? fwhm = reader.GetNullableFloatAttribute(ATTR.fwhm);
             float? area = reader.GetNullableFloatAttribute(ATTR.area);
             float? backgroundArea = reader.GetNullableFloatAttribute(ATTR.background);
-            float? ratio = reader.GetNullableFloatAttribute(ATTR.ratio);
-            float? stdev = reader.GetNullableFloatAttribute(ATTR.ratio_stdev);
             float? libraryDotProduct = reader.GetNullableFloatAttribute(ATTR.library_dotp);
-            var annotations = Annotations.Empty;
+            var annotations = Annotations.EMPTY;
             if (!reader.IsEmptyElement)
             {
                 reader.ReadStartElement();
@@ -1253,6 +1248,7 @@ namespace pwiz.Skyline.Model
             // from the child transitions.  Otherwise inconsistency is possible.
 //            bool userSet = reader.GetBoolAttribute(ATTR.user_set);
             const bool userSet = false;
+            int countRatios = settings.PeptideSettings.Modifications.InternalStandardTypes.Count;
             return new TransitionGroupChromInfo(indexFile,
                                                 optimizationStep,
                                                 peakCountRatio,
@@ -1262,8 +1258,8 @@ namespace pwiz.Skyline.Model
                                                 fwhm,
                                                 area,
                                                 backgroundArea,
-                                                ratio,
-                                                stdev,
+                                                new float?[countRatios],
+                                                new float?[countRatios],
                                                 libraryDotProduct,
                                                 annotations,
                                                 userSet);
@@ -1473,7 +1469,7 @@ namespace pwiz.Skyline.Model
                 return null;
             }
 
-            private static TransitionChromInfo ReadTransitionPeak(XmlReader reader, int indexFile)
+            private static TransitionChromInfo ReadTransitionPeak(XmlReader reader, SrmSettings settings, int indexFile)
             {
                 int optimizationStep = reader.GetIntAttribute(ATTR.step);
                 float retentionTime = reader.GetFloatAttribute(ATTR.retention_time);
@@ -1486,17 +1482,14 @@ namespace pwiz.Skyline.Model
                 float height = reader.GetFloatAttribute(ATTR.height);
                 float fwhm = reader.GetFloatAttribute(ATTR.fwhm);
                 bool fwhmDegenerate = reader.GetBoolAttribute(ATTR.fwhm_degenerate);
-                float? ratio = reader.GetNullableFloatAttribute(ATTR.ratio);
-                // Make sure non-null ratios are not negative
-                if (ratio.HasValue)
-                    ratio = Math.Max(0, ratio.Value);
                 bool userSet = reader.GetBoolAttribute(ATTR.user_set);
-                var annotations = Annotations.Empty;
+                var annotations = Annotations.EMPTY;
                 if (!reader.IsEmptyElement)
                 {
                     reader.ReadStartElement();
                     annotations = ReadAnnotations(reader);
                 }
+                int countRatios = settings.PeptideSettings.Modifications.InternalStandardTypes.Count;
                 return new TransitionChromInfo(indexFile,
                                                optimizationStep,
                                                retentionTime,
@@ -1507,14 +1500,14 @@ namespace pwiz.Skyline.Model
                                                height,
                                                fwhm,
                                                fwhmDegenerate,
-                                               ratio,
+                                               new float?[countRatios],
                                                annotations,
                                                userSet);
             }
         }
 
         private static Results<T> ReadResults<T>(XmlReader reader, SrmSettings settings, Enum start,
-                Func<XmlReader, int, T> readInfo)
+                Func<XmlReader, SrmSettings, int, T> readInfo)
             where T : ChromInfo
         {
             // If the results element is empty, then there are no results to read.
@@ -1545,7 +1538,7 @@ namespace pwiz.Skyline.Model
                 if (indexFile == -1)
                     throw new InvalidDataException(string.Format("No file with id {0} found in the replicate {1}", fileId, name));
 
-                T chromInfo = readInfo(reader, indexFile);
+                T chromInfo = readInfo(reader, settings, indexFile);
                 // Consume the tag
                 reader.Read();
 
@@ -1761,7 +1754,6 @@ namespace pwiz.Skyline.Model
         {
             writer.WriteAttribute(ATTR.peak_count_ratio, chromInfo.PeakCountRatio);
             writer.WriteAttributeNullable(ATTR.retention_time, chromInfo.RetentionTime);
-            writer.WriteAttributeNullable(ATTR.ratio, chromInfo.RatioToStandard);
         }
 
         /// <summary>
@@ -1810,8 +1802,6 @@ namespace pwiz.Skyline.Model
             writer.WriteAttributeNullable(ATTR.fwhm, chromInfo.Fwhm);
             writer.WriteAttributeNullable(ATTR.area, chromInfo.Area);
             writer.WriteAttributeNullable(ATTR.background, chromInfo.BackgroundArea);
-            writer.WriteAttributeNullable(ATTR.ratio, chromInfo.Ratio);
-            writer.WriteAttributeNullable(ATTR.ratio_stdev, chromInfo.RatioStdev);
             writer.WriteAttributeNullable(ATTR.library_dotp, chromInfo.LibraryDotProduct);
             WriteAnnotations(writer, chromInfo.Annotations);
         }
@@ -1884,7 +1874,6 @@ namespace pwiz.Skyline.Model
                 writer.WriteAttribute(ATTR.fwhm, chromInfo.Fwhm);
                 writer.WriteAttribute(ATTR.fwhm_degenerate, chromInfo.IsFwhmDegenerate);
                 writer.WriteAttribute(ATTR.rank, chromInfo.Rank);
-                writer.WriteAttributeNullable(ATTR.ratio, chromInfo.Ratio);
             }
             writer.WriteAttribute(ATTR.user_set, chromInfo.UserSet);
             WriteAnnotations(writer, chromInfo.Annotations);

@@ -122,9 +122,11 @@ namespace pwiz.Skyline.Controls.SeqNode
             get
             {
                 int index = SequenceTree.ResultsIndex;
+                int indexRatio = SequenceTree.RatioIndex;
+
                 float? libraryProduct = DocNode.GetLibraryDotProduct(index);
                 float? stdev;
-                float? ratio = DocNode.GetPeakAreaRatio(index, out stdev);
+                float? ratio = DocNode.GetPeakAreaRatio(index, indexRatio, out stdev);
                 if (!ratio.HasValue && !libraryProduct.HasValue)
                     return "";
                 StringBuilder sb = new StringBuilder(" (");

@@ -924,6 +924,11 @@ namespace pwiz.Skyline.Util
 
         public static string MakeId(IEnumerable<char> name)
         {
+            return MakeId(name, false);
+        }
+
+        public static string MakeId(IEnumerable<char> name, bool capitalize)
+        {
             StringBuilder sb = new StringBuilder();
             char lastC = '\0';
             foreach (var c in name)
@@ -932,7 +937,11 @@ namespace pwiz.Skyline.Util
                 {
                     if (lastC == ' ')
                         sb.Append('_');
-                    sb.Append(lastC = c);
+                    lastC = c;
+                    if (capitalize && sb.Length == 0)
+                        sb.Append(c.ToString().ToUpper());
+                    else
+                        sb.Append(c);
                 }
                 // Must start with a letter or digit
                 else if (lastC != '\0')

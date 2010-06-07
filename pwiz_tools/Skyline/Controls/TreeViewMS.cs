@@ -56,18 +56,22 @@ namespace pwiz.Skyline.Controls
         }
 
         [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         protected IDocumentUIContainer DocumentContainer { get; set; }
 
         [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public TextureBrush DashBrush { get; set; }
 
         [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ICollection<TreeNodeMS> SelectedNodes { get; private set; }
 
         /// <summary>
         /// For functional testing of multiple selection code.
         /// </summary>
         [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Keys? KeysOverride { get; set; }
 
         private Keys ModifierKeysOverriden { get { return KeysOverride ?? ModifierKeys; } }
@@ -130,7 +134,7 @@ namespace pwiz.Skyline.Controls
                 // Handle cases where clicking on the selected node should change
                 // the selection.
                 TreeNodeMS node = (TreeNodeMS)GetNodeAt(e.X, e.Y);
-                if (ReferenceEquals(node, SelectedNode) &&
+                if (node != null && ReferenceEquals(node, SelectedNode) &&
                         node.BoundsMS.Contains(e.Location))
                 {
                     // Disjoint selection or the SelectedNode is not in the selection
@@ -400,9 +404,7 @@ namespace pwiz.Skyline.Controls
             get
             {
                 var bounds = Bounds;
-                int width = WidthCustom;
-                if (width != Bounds.Width)
-                    bounds.Width = width;
+                bounds.Width = WidthCustom;
                 return bounds;
             }
         }

@@ -322,9 +322,9 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             ResultFile = resultFile,
                             PeptidePeakFoundRatio = chromInfo.PeakCountRatio,
                             PeptideRetentionTime = chromInfo.RetentionTime,
-                            RatioToStandard = chromInfo.RatioToStandard,
                             ProteinResult = docInfo.ProteinResults[dbProtein][resultFile],
                         };
+                        AddRatios(dbPeptideResult, docInfo, chromInfo);
                         session.Save(dbPeptideResult);
                         peptideResults.Add(resultFile, dbPeptideResult);
                     }
@@ -336,6 +336,57 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             {
                 SavePrecursor(session, docInfo, dbPeptide, nodePeptide, nodeGroup);
             }
+        }
+
+        private static void AddRatios(DbPeptideResult peptideResult, DocInfo docInfo,
+                PeptideChromInfo chromInfo)
+        {
+            var mods = docInfo.Settings.PeptideSettings.Modifications;
+            var standardTypes = mods.InternalStandardTypes;
+            var labelTypes = mods.GetModificationTypes().ToArray();
+            bool firstRatio = true;
+            for (int i = 0; i < standardTypes.Count; i++)
+            {
+                var standardType = standardTypes[i];
+
+                for (int j = 0; j < labelTypes.Length; j++)
+                {
+                    var labelType = labelTypes[i];
+                    if (ReferenceEquals(standardType, labelType))
+                        continue;
+                    if (firstRatio)
+                    {
+                        peptideResult.RatioToStandard = GetPeptideRatio(chromInfo, labelType, standardType);
+                        firstRatio = false;
+                    }
+                    // If there are more than two label types, add all the possible
+                    // ratio combinations as custom columns
+                    if (labelTypes.Length > 2)
+                    {
+                        peptideResult.LabelRatios[GetPeptideRatioColumn(labelType, standardType)] =
+                            GetPeptideRatio(chromInfo, labelType, standardType);
+                    }
+                }
+            }
+        }
+
+        private static string GetPeptideRatioColumn(IsotopeLabelType labelType, IsotopeLabelType standardType)
+        {
+            return string.Format("Ratio{0}To{1}",
+                Helpers.MakeId(labelType.ToString()),
+                Helpers.MakeId(standardType.ToString()));
+        }
+
+        private static double? GetPeptideRatio(PeptideChromInfo chromInfo,
+            IsotopeLabelType labelType, IsotopeLabelType standardType)
+        {
+            foreach (var labelRatio in chromInfo.LabelRatios)
+            {
+                if (ReferenceEquals(labelType, labelRatio.LabelType) &&
+                        ReferenceEquals(standardType, labelRatio.StandardType))
+                    return labelRatio.Ratio;
+            }
+            return null;
         }
 
         /// <summary>
@@ -444,8 +495,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             MaxFwhm = chromInfo.Fwhm,
                             TotalArea = chromInfo.Area,
                             TotalBackground = chromInfo.BackgroundArea,
-                            TotalAreaRatio = chromInfo.Ratio,
-                            // StdevAreaRatio = chromInfo.RatioStdev,
+                            TotalAreaRatio = chromInfo.Ratios[0],
+                            // StdevAreaRatio = chromInfo.RatioStdevs[0],
                             LibraryDotProduct = chromInfo.LibraryDotProduct,
                             // TotalSignalToNoise = SignalToNoise(chromInfo.Area, chromInfo.BackgroundArea),
                             Note = chromInfo.Annotations.Note,
@@ -455,6 +506,15 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             // optimization data will join with those with it.
                             OptStep = chromInfo.OptimizationStep,
                         };
+                        var standardTypes = docInfo.Settings.PeptideSettings.Modifications.InternalStandardTypes;
+                        if (standardTypes.Count > 1)
+                        {
+                            for (int j = 0; j < standardTypes.Count; j++)
+                            {
+                                string columnName = GetGroupRatioColumn(standardTypes[j]);
+                                precursorResult.LabelRatios[columnName] = chromInfo.Ratios[j];
+                            }
+                        }
                         // Area values get normalized to the total for the precursors of the same isotope
                         // label type, since this allows use of CVs on spiked in heavy labeled peptides.
                         double sumTotalArea;
@@ -500,6 +560,11 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             {
                 SaveTransition(session, docInfo, dbPrecursor, precursorResultSummary, nodeTran);
             }
+        }
+
+        private static string GetGroupRatioColumn(IsotopeLabelType labelType)
+        {
+            return "Total" + GetRatioColumn(labelType);
         }
 
         /// <summary>
@@ -564,11 +629,20 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             Transition = dbTransition,
                             ResultFile = resultFile,
                             OptStep = chromInfo.OptimizationStep,
-                            AreaRatio = chromInfo.Ratio,
+                            AreaRatio = chromInfo.Ratios[0],
                             Note = chromInfo.Annotations.Note,
                             UserSetPeak = chromInfo.UserSet,
                             PrecursorResult = precursorResults[new ResultKey(resultFile,chromInfo.OptimizationStep)],
                         };
+                        var standardTypes = docInfo.Settings.PeptideSettings.Modifications.InternalStandardTypes;
+                        if (standardTypes.Count > 1)
+                        {
+                            for (int j = 0; j < standardTypes.Count; j++)
+                            {
+                                string columnName = GetRatioColumn(standardTypes[j]);
+                                transitionResult.LabelRatios[columnName] = chromInfo.Ratios[j];
+                            }
+                        }
                         AddAnnotations(transitionResult, chromInfo.Annotations);
                         if (!chromInfo.IsEmpty)
                         {
@@ -605,6 +679,11 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             }
             session.Flush();
             session.Clear();
+        }
+
+        private static string GetRatioColumn(IsotopeLabelType labelType)
+        {
+            return "AreaRatioTo" + Helpers.MakeId(labelType.Name, true);
         }
 
 //        private static double SignalToNoise(float area, float background)

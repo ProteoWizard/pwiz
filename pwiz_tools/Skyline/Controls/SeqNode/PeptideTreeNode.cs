@@ -150,9 +150,14 @@ namespace pwiz.Skyline.Controls.SeqNode
                                                              TextFormatFlags.NoPadding |
                                                              TextFormatFlags.VerticalCenter;
 
+        private bool IsMeasured
+        {
+            get { return _textSequences != null && ReferenceEquals(_widthText, Text); }
+        }
+
         private TextSequence[] GetTextSequences(IDeviceContext g)
         {
-            if (_textSequences == null || !ReferenceEquals(_widthText, Text))
+            if (!IsMeasured)
             {
                 _textSequences = CreateTextSequences(g);
                 _widthText = Text;
@@ -391,13 +396,18 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             get
             {
-                if (_textSequences == null)
+                if (!IsMeasured)
                     return Bounds.Width;
 
                 var lastTextSequence = _textSequences[_textSequences.Length - 1];
                 return lastTextSequence.Position + lastTextSequence.Width +
                     TreeViewMS.PADDING*2;
             }
+        }
+
+        protected override void EnsureWidthCustom(Graphics g)
+        {
+            GetTextSequences(g);
         }
 
         protected override void DrawTextMS(Graphics g)

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -209,9 +209,9 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                     continue;
                 }
                 var label = propertyName;
-                if (label.StartsWith(AnnotationPropertyAccessor.AnnotationPrefix))
+                if (label.StartsWith(AnnotationPropertyAccessor.ANNOTATION_PREFIX))
                 {
-                    label = label.Substring(AnnotationPropertyAccessor.AnnotationPrefix.Length);
+                    label = label.Substring(AnnotationPropertyAccessor.ANNOTATION_PREFIX.Length);
                 }
                 var columnInfo = CreateColumnInfo(identifier, classMetadata, propertyName);
                 if (columnInfo.IsHidden)

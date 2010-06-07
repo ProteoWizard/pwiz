@@ -760,34 +760,37 @@ namespace pwiz.Skyline.Model.DocSettings
     public class PeptideModifications : Immutable, IXmlSerializable
     {
         private ReadOnlyCollection<TypedModifications> _modifications;
+        private ReadOnlyCollection<IsotopeLabelType> _internalStandardTypes;
 
         public PeptideModifications(IList<StaticMod> staticMods,
             IEnumerable<TypedModifications> heavyMods)
-                : this(staticMods, heavyMods, IsotopeLabelType.heavy, false)
+                : this(staticMods, heavyMods, new[] {IsotopeLabelType.heavy})
         {
             // Make sure the internal standard type is reference equal with
             // the first heavy type.
             var enumHeavy = heavyMods.GetEnumerator();
             if (enumHeavy.MoveNext())
-                InternalStandardType = enumHeavy.Current.LabelType;
+                InternalStandardTypes = new[] {enumHeavy.Current.LabelType};
         }
 
         public PeptideModifications(IList<StaticMod> staticMods,
             IEnumerable<TypedModifications> heavyMods,
-            IsotopeLabelType internalStandardType,
-            bool invertRatios)
+            IList<IsotopeLabelType> internalStandardTypes)
         {
             var modifications = new List<TypedModifications>
                                     {new TypedModifications(IsotopeLabelType.light, staticMods)};
             modifications.AddRange(heavyMods);
             _modifications = MakeReadOnly(modifications.ToArray());
 
-            InternalStandardType = internalStandardType;
-            InvertRatios = invertRatios;
+            Debug.Assert(internalStandardTypes.Count > 0);
+            InternalStandardTypes = internalStandardTypes;
         }
 
-        public IsotopeLabelType InternalStandardType { get; private set; }
-        public bool InvertRatios { get; private set; }
+        public IList<IsotopeLabelType> InternalStandardTypes
+        {
+            get { return _internalStandardTypes; }
+            set { _internalStandardTypes = MakeReadOnly(value); }
+        }
 
         public IList<StaticMod> StaticModifications
         {
@@ -837,6 +840,12 @@ namespace pwiz.Skyline.Model.DocSettings
                    select typedMod.LabelType;
         }
 
+        public IEnumerable<IsotopeLabelType> GetModificationTypes()
+        {
+            return from typedMod in _modifications
+                   select typedMod.LabelType;
+        }
+
         public bool HasHeavyModifications
         {
             get { return GetHeavyModifications().Contains(mods => mods.Modifications.Count > 0); }
@@ -852,14 +861,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #region Property change methods
 
-        public PeptideModifications ChangeInternalStandardType(IsotopeLabelType prop)
+        public PeptideModifications ChangeInternalStandardTypes(IList<IsotopeLabelType> prop)
         {
-            return ChangeProp(ImClone(this), im => im.InternalStandardType = prop);
-        }
-
-        public PeptideModifications ChangeInvertRatios(bool prop)
-        {
-            return ChangeProp(ImClone(this), im => im.InvertRatios = prop);
+            return ChangeProp(ImClone(this), im => im.InternalStandardTypes = prop);
         }
 
         public PeptideModifications ChangeStaticModifications(IList<StaticMod> prop)
@@ -982,13 +986,14 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             static_modifications,
             heavy_modifications,
+            internal_standard
         }
 
         private enum ATTR
         {
             isotope_label,
             internal_standard,
-            invert_ratios
+            name
         }
 
         public static PeptideModifications Deserialize(XmlReader reader)
@@ -1004,8 +1009,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public void ReadXml(XmlReader reader)
         {
             var list = new List<TypedModifications>();
-            var internalStandardType = IsotopeLabelType.heavy;
-            bool invertRatios = false;
+            var internalStandardTypes = new[] {IsotopeLabelType.heavy};
 
             // Consume tag
             if (reader.IsEmptyElement)
@@ -1015,12 +1019,26 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             else
             {
+                var internalStandardNames = new List<string>();
                 string internalStandardName = reader.GetAttribute(ATTR.internal_standard);
-                if (Equals(internalStandardName, IsotopeLabelType.light))
-                    internalStandardType = IsotopeLabelType.light;
-                invertRatios = reader.GetBoolAttribute(ATTR.invert_ratios);
 
                 reader.ReadStartElement();
+
+                if (internalStandardName != null)
+                    internalStandardNames.Add(internalStandardName);
+                else
+                {
+                    while (reader.IsStartElement(EL.internal_standard))
+                    {
+                        internalStandardNames.Add(reader.GetAttribute(ATTR.name));
+                        reader.Read();
+                    }
+                }
+
+                if (internalStandardNames.Count > 0)
+                    internalStandardTypes = new IsotopeLabelType[internalStandardNames.Count];
+
+                SetInternalStandardType(IsotopeLabelType.light, internalStandardNames, internalStandardTypes);
 
                 // Read child elements
                 var listMods = new List<StaticMod>();
@@ -1037,27 +1055,27 @@ namespace pwiz.Skyline.Model.DocSettings
                         labelType = new IsotopeLabelType(typeName, typeOrder);
                         if (Equals(labelType, IsotopeLabelType.heavy))
                             labelType = IsotopeLabelType.heavy;
-                        if (Equals(internalStandardName, labelType.Name))
-                            internalStandardType = labelType;
                     }
                     else if (typeOrder > IsotopeLabelType.FirstHeavy)
                         throw new InvalidDataException(string.Format("Heavy modifications found without '{0}' attribute.", ATTR.isotope_label));
                     typeOrder++;
 
+                    SetInternalStandardType(labelType, internalStandardNames, internalStandardTypes);
+
                     // If no internal standard type was given, use the first heavy type.
-                    if (internalStandardName == null)
+                    if (internalStandardNames.Count == 0)
                     {
-                        internalStandardName = labelType.Name;
-                        internalStandardType = labelType;
+                        internalStandardNames.Add(labelType.Name);
+                        internalStandardTypes = new[] {labelType};
                     }
                     listMods = new List<StaticMod>();
                     reader.ReadElementList(EL.heavy_modifications, listMods);
 
                     list.Add(new TypedModifications(labelType, listMods));
                 }
-                if (internalStandardName != null &&
-                        !Equals(internalStandardName, internalStandardType.Name))
-                    throw new InvalidDataException(string.Format("Internal standard type {0} not found.", internalStandardName));
+                int iMissingType = internalStandardTypes.IndexOf(labelType => labelType == null);
+                if (iMissingType != -1)
+                    throw new InvalidDataException(string.Format("Internal standard type {0} not found.", internalStandardNames[iMissingType]));
                 reader.ReadEndElement();
             }
 
@@ -1065,16 +1083,35 @@ namespace pwiz.Skyline.Model.DocSettings
                 list.Add(new TypedModifications(IsotopeLabelType.heavy, new StaticMod[0]));
 
             _modifications = MakeReadOnly(list.ToArray());
-            InternalStandardType = internalStandardType;
-            InvertRatios = invertRatios;
+            InternalStandardTypes = internalStandardTypes;
+        }
+
+        private static void SetInternalStandardType(IsotopeLabelType labelType,
+            IList<string> labelNames, IList<IsotopeLabelType> labelTypes)
+        {
+            int i = labelNames.IndexOf(labelType.Name);
+            if (i != -1)
+                labelTypes[i] = labelType;
         }
 
         public void WriteXml(XmlWriter writer)
         {
             // Write attibutes
-            if (!ReferenceEquals(InternalStandardType, IsotopeLabelType.heavy))
-                writer.WriteAttribute(ATTR.internal_standard, InternalStandardType.Name);
-            writer.WriteAttribute(ATTR.invert_ratios, InvertRatios);
+            if (InternalStandardTypes.Count == 1)
+            {
+                var internalStandardType = InternalStandardTypes[0];
+                if (!ReferenceEquals(internalStandardType, IsotopeLabelType.heavy))
+                    writer.WriteAttribute(ATTR.internal_standard, internalStandardType.Name);
+            }
+            else
+            {
+                foreach (var labelType in InternalStandardTypes)
+                {
+                    writer.WriteStartElement(EL.internal_standard);
+                    writer.WriteAttribute(ATTR.name, labelType.Name);
+                    writer.WriteEndElement();
+                }
+            }
 
             // Write child elements
             if (StaticModifications.Count > 0)
@@ -1097,8 +1134,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj.InternalStandardType, InternalStandardType) &&
-                Equals(obj.InvertRatios, InvertRatios) &&
+            return ArrayUtil.EqualsDeep(obj.InternalStandardTypes, InternalStandardTypes) &&
                 ArrayUtil.EqualsDeep(obj._modifications, _modifications);
         }
 
@@ -1114,8 +1150,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             unchecked
             {
-                int result = InternalStandardType.GetHashCode();
-                result = (result*397) ^ InvertRatios.GetHashCode();
+                int result = InternalStandardTypes.GetHashCodeDeep();
                 result = (result*397) ^ _modifications.GetHashCodeDeep();
                 return result;
             }

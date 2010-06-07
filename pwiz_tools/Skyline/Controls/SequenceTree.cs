@@ -49,6 +49,7 @@ namespace pwiz.Skyline.Controls
         private string _viewedLabel;
         private string _editedLabel;
         private int _resultsIndex;
+        private int _ratioIndex;
         private StatementCompletionTextBox _editTextBox;
 
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
@@ -135,9 +136,11 @@ namespace pwiz.Skyline.Controls
         public event EventHandler<PickedChildrenEventArgs> PickedChildrenEvent;
 
         [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Font HeavyModFont { get; set; }
 
         [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Font LightModFont { get; set; }
 
         /// <summary>
@@ -146,6 +149,7 @@ namespace pwiz.Skyline.Controls
         /// the light-only modifications.
         /// </summary>
         [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Font LightAndHeavyModFont { get { return LightModFont; } }
 
         public Font GetModFont(IsotopeLabelType labelType)
@@ -220,6 +224,7 @@ namespace pwiz.Skyline.Controls
         /// Property access to the underlying document being edited.
         /// </summary>
         [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SrmDocument Document { get { return DocumentContainer.Document; } }
 
         /// <summary>
@@ -253,16 +258,23 @@ namespace pwiz.Skyline.Controls
                 if (e.DocumentPrevious != null && !ReferenceEquals(e.DocumentPrevious.Id, document.Id))
                 {
                     _resultsIndex = 0;
+                    _ratioIndex = 0;
 
                     cover = new CoverControl(this);
                 }
-                else if (!document.Settings.HasResults)
-                {
-                    _resultsIndex = 0;
-                }
                 else
                 {
-                    _resultsIndex = Math.Min(_resultsIndex, document.Settings.MeasuredResults.Chromatograms.Count - 1);
+                    var settings = document.Settings;
+                    if (!settings.HasResults)
+                    {
+                        _resultsIndex = 0;
+                    }
+                    else
+                    {
+                        _resultsIndex = Math.Min(_resultsIndex, settings.MeasuredResults.Chromatograms.Count - 1);
+                    }
+                    var mods = settings.PeptideSettings.Modifications;
+                    _ratioIndex = Math.Min(_ratioIndex, mods.InternalStandardTypes.Count-1);
                 }
 
                 BeginUpdateMS();
@@ -282,6 +294,7 @@ namespace pwiz.Skyline.Controls
         public bool AutoExpandSingleNodes { get; set; }
 
         [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public int ResultsIndex
         {
             get { return _resultsIndex; }
@@ -290,6 +303,23 @@ namespace pwiz.Skyline.Controls
                 if (_resultsIndex != value)
                 {
                     _resultsIndex = value;
+                    BeginUpdate();
+                    UpdateNodeStates(Nodes);
+                    EndUpdate();
+                }
+            }
+        }
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public int RatioIndex
+        {
+            get { return _ratioIndex; }
+            set
+            {
+                if (_ratioIndex != value)
+                {
+                    _ratioIndex = value;
                     BeginUpdate();
                     UpdateNodeStates(Nodes);
                     EndUpdate();
@@ -318,6 +348,7 @@ namespace pwiz.Skyline.Controls
 
 
         [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IList<IdentityPath> SelectedPaths
         {
             get
@@ -347,6 +378,7 @@ namespace pwiz.Skyline.Controls
         /// underlying document structure.
         /// </summary>
         [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public IdentityPath SelectedPath
         {
             get

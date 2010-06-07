@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
@@ -81,40 +82,63 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         internal abstract class GraphData : Immutable
         {
+            private readonly DocNode _docNode;
+            private readonly DisplayTypeChrom _displayType;
+
+            private ReadOnlyCollection<DocNode> _docNodes;
+            private ReadOnlyCollection<String> _docNodeLabels;
+            private ReadOnlyCollection<List<PointPairList>> _pointPairLists;
+
             protected GraphData(DocNode docNode, DisplayTypeChrom displayType)
+            {
+                _docNode = docNode;
+                _displayType = displayType;
+            }
+
+            /// <summary>
+            /// Moved out of the constructor for better support of virtual functions called
+            /// in this code.
+            /// </summary>
+            protected void EnsureData()
+            {
+                if (_pointPairLists == null)
+                    InitData();
+            }
+
+            protected virtual void InitData()
             {
                 List<DocNode> docNodes = new List<DocNode>();
                 List<List<PointPairList>> pointPairLists = new List<List<PointPairList>>();
                 List<String> docNodeLabels = new List<string>();
-                if (docNode is TransitionDocNode)
+                if (_docNode is TransitionDocNode)
                 {
-                    TransitionDocNode transitionDocNode = (TransitionDocNode) docNode;
+                    TransitionDocNode transitionDocNode = (TransitionDocNode)_docNode;
                     docNodes.Add(transitionDocNode);
-                    pointPairLists.Add(GetPointPairLists(transitionDocNode, displayType));
+                    pointPairLists.Add(GetPointPairLists(transitionDocNode, _displayType));
                     docNodeLabels.Add(ChromGraphItem.GetTitle(transitionDocNode));
                 }
-                else if (docNode is TransitionGroupDocNode)
+                else if (_docNode is TransitionGroupDocNode)
                 {
-                    if (displayType != DisplayTypeChrom.all)
+                    if (_displayType != DisplayTypeChrom.all)
                     {
-                        TransitionGroupDocNode transitionGroup = (TransitionGroupDocNode)docNode;
+                        TransitionGroupDocNode transitionGroup = (TransitionGroupDocNode)_docNode;
                         docNodes.Add(transitionGroup);
-                        pointPairLists.Add(GetPointPairLists(transitionGroup, displayType));
-                        docNodeLabels.Add(ChromGraphItem.GetTitle(transitionGroup));                        
+                        pointPairLists.Add(GetPointPairLists(transitionGroup, _displayType));
+                        docNodeLabels.Add(ChromGraphItem.GetTitle(transitionGroup));
                     }
                     else
                     {
-                        foreach (TransitionDocNode transitionDocNode in ((TransitionGroupDocNode)docNode).Children)
+                        foreach (TransitionDocNode transitionDocNode in ((TransitionGroupDocNode)_docNode).Children)
                         {
                             docNodes.Add(transitionDocNode);
-                            pointPairLists.Add(GetPointPairLists(transitionDocNode, displayType));
+                            pointPairLists.Add(GetPointPairLists(transitionDocNode, _displayType));
                             docNodeLabels.Add(ChromGraphItem.GetTitle(transitionDocNode));
-                        }                        
+                        }
                     }
                 }
-                else if (docNode is PeptideDocNode)
+                else if (_docNode is PeptideDocNode)
                 {
-                    foreach (TransitionGroupDocNode transitionGroup in ((PeptideDocNode)docNode).Children)
+                    foreach (TransitionGroupDocNode transitionGroup in ((PeptideDocNode)_docNode).Children)
                     {
                         docNodes.Add(transitionGroup);
                         pointPairLists.Add(GetPointPairLists(transitionGroup, DisplayTypeChrom.total));
@@ -136,9 +160,44 @@ namespace pwiz.Skyline.Controls.Graphs
                        select chromatogram.Name;
             }
 
-            public IList<DocNode> DocNodes { get; private set; }
-            public IList<String> DocNodeLabels { get; private set; }
-            public IList<List<PointPairList>> PointPairLists { get; private set; }
+            public IList<DocNode> DocNodes
+            {
+                get
+                {
+                    EnsureData();
+                    return _docNodes;
+                }
+                set
+                {
+                    _docNodes = MakeReadOnly(value);
+                }
+            }
+
+            public IList<String> DocNodeLabels
+            {
+                get
+                {
+                    EnsureData();
+                    return _docNodeLabels;
+                }
+                set
+                {
+                    _docNodeLabels = MakeReadOnly(value);
+                }
+            }
+
+            public IList<List<PointPairList>> PointPairLists
+            {
+                get
+                {
+                    EnsureData();
+                    return _pointPairLists;
+                }
+                set
+                {
+                    _pointPairLists = MakeReadOnly(value);
+                }
+            }
 
             public abstract PointPair PointPairMissing(int xValue);
 

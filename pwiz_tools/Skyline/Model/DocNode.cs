@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model
     public abstract class DocNode : Immutable
     {
         protected DocNode(Identity id)
-            : this(id, Annotations.Empty)
+            : this(id, Annotations.EMPTY)
         {
         }
 
@@ -133,7 +133,7 @@ namespace pwiz.Skyline.Model
         /// <param name="id">The <see cref="Identity"/> object for this node</param>
         /// <param name="children">Children of this node</param>
         protected DocNodeParent(Identity id, IList<DocNode> children)
-            : this(id, Annotations.Empty, children, true)
+            : this(id, Annotations.EMPTY, children, true)
         {
         }
 

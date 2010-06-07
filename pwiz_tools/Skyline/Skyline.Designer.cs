@@ -178,6 +178,9 @@ namespace pwiz.Skyline
             this.modifyPeptideContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator7 = new System.Windows.Forms.ToolStripSeparator();
             this.editNoteContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparatorRatios = new System.Windows.Forms.ToolStripSeparator();
+            this.ratiosContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.placeholderToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitMain = new System.Windows.Forms.SplitContainer();
             this.toolBarResults = new System.Windows.Forms.ToolStrip();
             this.labelResults = new System.Windows.Forms.ToolStripLabel();
@@ -286,6 +289,10 @@ namespace pwiz.Skyline
             this.peptideOrderRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideOrderAreaContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaPercentViewContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaNormalizeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaNormalizeTotalContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator40 = new System.Windows.Forms.ToolStripSeparator();
+            this.areaNormalizeNoneContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideLogScaleContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideCvsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator28 = new System.Windows.Forms.ToolStripSeparator();
@@ -1476,9 +1483,11 @@ namespace pwiz.Skyline
             this.removePeakContextMenuItem,
             this.modifyPeptideContextMenuItem,
             this.toolStripSeparator7,
-            this.editNoteContextMenuItem});
+            this.editNoteContextMenuItem,
+            this.toolStripSeparatorRatios,
+            this.ratiosContextMenuItem});
             this.contextMenuTreeNode.Name = "contextMenuTreeNode";
-            this.contextMenuTreeNode.Size = new System.Drawing.Size(146, 192);
+            this.contextMenuTreeNode.Size = new System.Drawing.Size(146, 220);
             this.contextMenuTreeNode.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuTreeNode_Opening);
             // 
             // cutContextMenuItem
@@ -1558,6 +1567,26 @@ namespace pwiz.Skyline
             this.editNoteContextMenuItem.Text = "Edit Note";
             this.editNoteContextMenuItem.Click += new System.EventHandler(this.editNoteMenuItem_Click);
             // 
+            // toolStripSeparatorRatios
+            // 
+            this.toolStripSeparatorRatios.Name = "toolStripSeparatorRatios";
+            this.toolStripSeparatorRatios.Size = new System.Drawing.Size(142, 6);
+            // 
+            // ratiosContextMenuItem
+            // 
+            this.ratiosContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.placeholderToolStripMenuItem});
+            this.ratiosContextMenuItem.Name = "ratiosContextMenuItem";
+            this.ratiosContextMenuItem.Size = new System.Drawing.Size(145, 22);
+            this.ratiosContextMenuItem.Text = "Ratios To";
+            this.ratiosContextMenuItem.DropDownOpening += new System.EventHandler(this.ratiosContextMenuItem_DropDownOpening);
+            // 
+            // placeholderToolStripMenuItem
+            // 
+            this.placeholderToolStripMenuItem.Name = "placeholderToolStripMenuItem";
+            this.placeholderToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.placeholderToolStripMenuItem.Text = "<placeholder>";
+            // 
             // splitMain
             // 
             this.splitMain.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -1621,11 +1650,10 @@ namespace pwiz.Skyline
             this.sequenceTree.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.sequenceTree.Cursor = System.Windows.Forms.Cursors.Arrow;
             this.sequenceTree.HideSelection = false;
+            this.sequenceTree.ItemHeight = 16;
             this.sequenceTree.LabelEdit = true;
             this.sequenceTree.Location = new System.Drawing.Point(-1, 0);
             this.sequenceTree.Name = "sequenceTree";
-            this.sequenceTree.ResultsIndex = 0;
-            this.sequenceTree.SelectedPath = null;
             this.sequenceTree.Size = new System.Drawing.Size(271, 444);
             this.sequenceTree.TabIndex = 2;
             this.sequenceTree.PickedChildrenEvent += new System.EventHandler<pwiz.Skyline.Controls.SeqNode.PickedChildrenEventArgs>(this.sequenceTree_PickedChildrenEvent);
@@ -2410,12 +2438,13 @@ namespace pwiz.Skyline
             this.areaGraphContextMenuItem,
             this.peptideOrderContextMenuItem,
             this.areaPercentViewContextMenuItem,
+            this.areaNormalizeContextMenuItem,
             this.peptideLogScaleContextMenuItem,
             this.peptideCvsContextMenuItem,
             this.toolStripSeparator28,
             this.areaPropsContextMenuItem});
             this.contextMenuPeakAreas.Name = "contextMenuStrip1";
-            this.contextMenuPeakAreas.Size = new System.Drawing.Size(137, 142);
+            this.contextMenuPeakAreas.Size = new System.Drawing.Size(153, 186);
             // 
             // areaGraphContextMenuItem
             // 
@@ -2423,7 +2452,7 @@ namespace pwiz.Skyline
             this.areaReplicateComparisonContextMenuItem,
             this.areaPeptideComparisonContextMenuItem});
             this.areaGraphContextMenuItem.Name = "areaGraphContextMenuItem";
-            this.areaGraphContextMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.areaGraphContextMenuItem.Size = new System.Drawing.Size(152, 22);
             this.areaGraphContextMenuItem.Text = "Graph";
             this.areaGraphContextMenuItem.DropDownOpening += new System.EventHandler(this.areaGraphMenuItem_DropDownOpening);
             // 
@@ -2448,7 +2477,7 @@ namespace pwiz.Skyline
             this.peptideOrderRTContextMenuItem,
             this.peptideOrderAreaContextMenuItem});
             this.peptideOrderContextMenuItem.Name = "peptideOrderContextMenuItem";
-            this.peptideOrderContextMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.peptideOrderContextMenuItem.Size = new System.Drawing.Size(152, 22);
             this.peptideOrderContextMenuItem.Text = "Order";
             this.peptideOrderContextMenuItem.DropDownOpening += new System.EventHandler(this.peptideOrderContextMenuItem_DropDownOpening);
             // 
@@ -2475,17 +2504,46 @@ namespace pwiz.Skyline
             // 
             // areaPercentViewContextMenuItem
             // 
-            this.areaPercentViewContextMenuItem.CheckOnClick = true;
             this.areaPercentViewContextMenuItem.Name = "areaPercentViewContextMenuItem";
-            this.areaPercentViewContextMenuItem.Size = new System.Drawing.Size(136, 22);
-            this.areaPercentViewContextMenuItem.Text = "Normalized";
+            this.areaPercentViewContextMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.areaPercentViewContextMenuItem.Text = "Normalize";
             this.areaPercentViewContextMenuItem.Click += new System.EventHandler(this.areaPercentViewContextMenuItem_Click);
+            // 
+            // areaNormalizeContextMenuItem
+            // 
+            this.areaNormalizeContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.areaNormalizeTotalContextMenuItem,
+            this.toolStripSeparator40,
+            this.areaNormalizeNoneContextMenuItem});
+            this.areaNormalizeContextMenuItem.Name = "areaNormalizeContextMenuItem";
+            this.areaNormalizeContextMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.areaNormalizeContextMenuItem.Text = "Normalized To";
+            this.areaNormalizeContextMenuItem.DropDownOpening += new System.EventHandler(this.areaNormalizeContextMenuItem_DropDownOpening);
+            // 
+            // areaNormalizeTotalContextMenuItem
+            // 
+            this.areaNormalizeTotalContextMenuItem.Name = "areaNormalizeTotalContextMenuItem";
+            this.areaNormalizeTotalContextMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.areaNormalizeTotalContextMenuItem.Text = "Total";
+            this.areaNormalizeTotalContextMenuItem.Click += new System.EventHandler(this.areaNormalizeTotalContextMenuItem_Click);
+            // 
+            // toolStripSeparator40
+            // 
+            this.toolStripSeparator40.Name = "toolStripSeparator40";
+            this.toolStripSeparator40.Size = new System.Drawing.Size(149, 6);
+            // 
+            // areaNormalizeNoneContextMenuItem
+            // 
+            this.areaNormalizeNoneContextMenuItem.Name = "areaNormalizeNoneContextMenuItem";
+            this.areaNormalizeNoneContextMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.areaNormalizeNoneContextMenuItem.Text = "None";
+            this.areaNormalizeNoneContextMenuItem.Click += new System.EventHandler(this.areaNormalizeNoneContextMenuItem_Click);
             // 
             // peptideLogScaleContextMenuItem
             // 
             this.peptideLogScaleContextMenuItem.CheckOnClick = true;
             this.peptideLogScaleContextMenuItem.Name = "peptideLogScaleContextMenuItem";
-            this.peptideLogScaleContextMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.peptideLogScaleContextMenuItem.Size = new System.Drawing.Size(152, 22);
             this.peptideLogScaleContextMenuItem.Text = "Log Scale";
             this.peptideLogScaleContextMenuItem.Click += new System.EventHandler(this.peptideLogScaleContextMenuItem_Click);
             // 
@@ -2493,19 +2551,19 @@ namespace pwiz.Skyline
             // 
             this.peptideCvsContextMenuItem.CheckOnClick = true;
             this.peptideCvsContextMenuItem.Name = "peptideCvsContextMenuItem";
-            this.peptideCvsContextMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.peptideCvsContextMenuItem.Size = new System.Drawing.Size(152, 22);
             this.peptideCvsContextMenuItem.Text = "CV Values";
             this.peptideCvsContextMenuItem.Click += new System.EventHandler(this.peptideCvsContextMenuItem_Click);
             // 
             // toolStripSeparator28
             // 
             this.toolStripSeparator28.Name = "toolStripSeparator28";
-            this.toolStripSeparator28.Size = new System.Drawing.Size(133, 6);
+            this.toolStripSeparator28.Size = new System.Drawing.Size(149, 6);
             // 
             // areaPropsContextMenuItem
             // 
             this.areaPropsContextMenuItem.Name = "areaPropsContextMenuItem";
-            this.areaPropsContextMenuItem.Size = new System.Drawing.Size(136, 22);
+            this.areaPropsContextMenuItem.Size = new System.Drawing.Size(152, 22);
             this.areaPropsContextMenuItem.Text = "Properties...";
             this.areaPropsContextMenuItem.Click += new System.EventHandler(this.areaPropsContextMenuItem_Click);
             // 
@@ -2770,7 +2828,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem areaGraphContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaReplicateComparisonContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaPeptideComparisonContextMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem areaPercentViewContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaNormalizeContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem resultsGridMenuItem;
         private System.Windows.Forms.ToolStripMenuItem peptideLogScaleContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem peptideOrderContextMenuItem;
@@ -2807,6 +2865,13 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator38;
         private System.Windows.Forms.ToolStripMenuItem manageResultsMenuItem;
         private System.Windows.Forms.ToolStripStatusLabel statusPeptides;
+        private System.Windows.Forms.ToolStripMenuItem ratiosContextMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparatorRatios;
+        private System.Windows.Forms.ToolStripMenuItem placeholderToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaNormalizeTotalContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem areaPercentViewContextMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator40;
+        private System.Windows.Forms.ToolStripMenuItem areaNormalizeNoneContextMenuItem;
     }
 }
 

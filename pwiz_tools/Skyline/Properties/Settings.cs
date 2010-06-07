@@ -931,10 +931,9 @@ namespace pwiz.Skyline.Properties
                         new LibrarySpec[0],     // LibrarySpecs
                         new Library[0]          // Libraries
                         ), 
-                    new PeptideModifications(StaticModList.GetDefaultsOn(), new[]
-                        { new TypedModifications(IsotopeLabelType.heavy, HeavyModList.GetDefaultsOn()) },
-                        IsotopeLabelType.heavy,
-                        false),
+                    new PeptideModifications(StaticModList.GetDefaultsOn(),
+                        new[] {new TypedModifications(IsotopeLabelType.heavy, HeavyModList.GetDefaultsOn())},
+                        new[] {IsotopeLabelType.heavy}),
                     BackgroundProteome.NONE
                 ),
                 new TransitionSettings

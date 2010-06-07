@@ -18,10 +18,7 @@
  */
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using NHibernate.Engine;
 using NHibernate.Properties;
 using pwiz.Skyline.Model.DocSettings;
@@ -34,15 +31,16 @@ namespace pwiz.Skyline.Model.Hibernate
     /// </summary>
     public class AnnotationPropertyAccessor : IPropertyAccessor
     {
-        public const string AnnotationPrefix = AnnotationDef.AnnotationPrefix;
+        public const string ANNOTATION_PREFIX = AnnotationDef.AnnotationPrefix;
+
         public IGetter GetGetter(Type theClass, string propertyName)
         {
-            return new Getter(propertyName.Substring(AnnotationPrefix.Length));
+            return new Getter(propertyName.Substring(ANNOTATION_PREFIX.Length));
         }
 
         public ISetter GetSetter(Type theClass, string propertyName)
         {
-            return new Setter(propertyName.Substring(AnnotationPrefix.Length));
+            return new Setter(propertyName.Substring(ANNOTATION_PREFIX.Length));
         }
 
         public bool CanAccessThroughReflectionOptimizer
@@ -52,7 +50,8 @@ namespace pwiz.Skyline.Model.Hibernate
 
         private class Getter : IGetter
         {
-            private string _name;
+            private readonly string _name;
+
             public Getter(String name)
             {
                 _name = name;
@@ -85,9 +84,11 @@ namespace pwiz.Skyline.Model.Hibernate
                 get { return null; }
             }
         }
+
         private class Setter : ISetter
         {
-            private string _name;
+            private readonly string _name;
+
             public Setter(String name)
             {
                 _name = name;
@@ -117,17 +118,19 @@ namespace pwiz.Skyline.Model.Hibernate
             }
         }
     }
+
     public class BoolAnnotationPropertyAccessor : IPropertyAccessor
     {
-        private const string AnnotationPrefix = AnnotationPropertyAccessor.AnnotationPrefix;
+        private const string ANNOTATION_PREFIX = AnnotationPropertyAccessor.ANNOTATION_PREFIX;
+
         public IGetter GetGetter(Type theClass, string propertyName)
         {
-            return new Getter(propertyName.Substring(AnnotationPrefix.Length));
+            return new Getter(propertyName.Substring(ANNOTATION_PREFIX.Length));
         }
 
         public ISetter GetSetter(Type theClass, string propertyName)
         {
-            return new Setter(propertyName.Substring(AnnotationPrefix.Length));
+            return new Setter(propertyName.Substring(ANNOTATION_PREFIX.Length));
         }
 
         public bool CanAccessThroughReflectionOptimizer
@@ -137,7 +140,8 @@ namespace pwiz.Skyline.Model.Hibernate
 
         private class Getter : IGetter
         {
-            private string _name;
+            private readonly string _name;
+
             public Getter(String name)
             {
                 _name = name;
@@ -170,9 +174,11 @@ namespace pwiz.Skyline.Model.Hibernate
                 get { return null; }
             }
         }
+
         private class Setter : ISetter
         {
-            private string _name;
+            private readonly string _name;
+
             public Setter(String name)
             {
                 _name = name;

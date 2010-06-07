@@ -689,7 +689,7 @@ namespace pwiz.Skyline
         {
             if (StatementCompletionAction(textBox => textBox.Copy()) || sequenceTree.SelectedNodes.Count < 0)
                 return;
-
+            
             Clipboard.Clear();
             
             List<TreeNode> sortedNodes = new List<TreeNode>();
@@ -698,7 +698,7 @@ namespace pwiz.Skyline
             {
                 shallowestLevel = Math.Min(shallowestLevel, node.Level);
                 sortedNodes.Add(node);
-            }
+        }
             sortedNodes.Sort(CompareNodeBounds);
 
             StringBuilder htmlSb = new StringBuilder();
@@ -820,6 +820,18 @@ namespace pwiz.Skyline
             // allow internal white space including tabs.
             else if (MassListImporter.IsColumnar(text, out provider, out separator, out columnTypes))
             {
+                // If no numeric type is found, try the second line.  Ther first may be
+                // a header row.
+                if (!MassListImporter.HasNumericColumn(columnTypes))
+                {
+                    int endLine = text.IndexOf('\n');
+                    if (endLine != -1)
+                    {
+                        MassListImporter.IsColumnar(text.Substring(endLine + 1),
+                            out provider, out separator, out columnTypes);
+                    }
+                }
+
                 if (MassListImporter.HasNumericColumn(columnTypes))
                     ImportMassList(new StringReader(text), provider, separator, textSeq, "Paste mass list");
                 else if (columnTypes[columnTypes.Length - 1] != typeof(FastaSequence))
@@ -1683,7 +1695,7 @@ namespace pwiz.Skyline
                     // Return the focused control
                     return c;
                 }
-                if (c.ContainsFocus)
+                else if (c.ContainsFocus)
                 {
                     // If the focus is contained inside a control's children
                     // return the child
@@ -1707,7 +1719,52 @@ namespace pwiz.Skyline
                 TreeNode nodeTree = sequenceTree.GetNodeAt(pt);
                 sequenceTree.SelectedNode = nodeTree;
                 sequenceTree.HideEffects();
+                var settings = DocumentUI.Settings;
+                // Show the ratios sub-menu when there are results and a choice of
+                // internal standard types.
+                ratiosContextMenuItem.Visible = toolStripSeparatorRatios.Visible =
+                    settings.HasResults &&
+                    settings.PeptideSettings.Modifications.InternalStandardTypes.Count > 1 &&
+                    HasLabelModifications;
                 contextMenuTreeNode.Show(sequenceTree, pt);
+            }
+        }
+
+        private void ratiosContextMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            ToolStripMenuItem menu = ratiosContextMenuItem;
+            menu.DropDownItems.Clear();
+            var standardTypes = DocumentUI.Settings.PeptideSettings.Modifications.InternalStandardTypes;
+            for (int i = 0; i < standardTypes.Count; i++)
+            {
+                var handler = new SelectRatioHandler(this, i);
+                var item = new ToolStripMenuItem(standardTypes[i].Title, null, handler.ToolStripMenuItemClick)
+                    {Checked = (sequenceTree.RatioIndex == i)};
+                menu.DropDownItems.Add(item);
+            }
+        }
+
+        private class SelectRatioHandler
+        {
+            protected readonly SkylineWindow _skyline;
+            protected readonly int _ratioIndex;
+
+            public SelectRatioHandler(SkylineWindow skyline, int ratioIndex)
+            {
+                _skyline = skyline;
+                _ratioIndex = ratioIndex;
+            }
+
+            public void ToolStripMenuItemClick(object sender, EventArgs e)
+            {
+                OnMenuItemClick();
+            }
+
+            protected virtual void OnMenuItemClick()
+            {
+                _skyline.sequenceTree.RatioIndex = _ratioIndex;
+                if (_skyline._graphPeakArea != null)
+                    _skyline._graphPeakArea.RatioIndex = _ratioIndex;                
             }
         }
 
@@ -1838,7 +1895,7 @@ namespace pwiz.Skyline
                     if (oldPeptideGroupDocNode == null)
                     {
                         // Add a new peptide list or protein to the end of the document
-                        newPeptideGroupDocNode = new PeptideGroupDocNode(peptideGroup, Annotations.Empty, peptideGroupName, null,
+                        newPeptideGroupDocNode = new PeptideGroupDocNode(peptideGroup, Annotations.EMPTY, peptideGroupName, null,
                             peptideDocNodes.ToArray(), peptideSequence == null);
                         ModifyDocument(modifyMessage, doc=>(SrmDocument) doc.Add(newPeptideGroupDocNode));
                     }
@@ -2314,12 +2371,12 @@ namespace pwiz.Skyline
         void IBuildNotificationClient.BuildCompleteEventListen(EventHandler listener)
         {
             LibraryBuildCompleteEvent += listener;
-        }
+    }
 
         void IBuildNotificationClient.BuildCompleteEventUnlisten(EventHandler listener)
         {
             LibraryBuildCompleteEvent -= listener;
-        }
+}
 
         void IBuildNotificationClient.LocationChangedEventListen(EventHandler listener)
         {

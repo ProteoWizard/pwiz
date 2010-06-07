@@ -1035,8 +1035,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (newTran.Instrument.MzMatchTolerance != oldTran.Instrument.MzMatchTolerance)
                 DiffResults = DiffResultsAll = true;
             // If internal standard type changed, update all results to recalculate ratios.
-            if (!Equals(newMods.InternalStandardType, oldMods.InternalStandardType) ||
-                !Equals(newMods.InvertRatios, oldMods.InvertRatios))
+            if (!ArrayUtil.EqualsDeep(newMods.InternalStandardTypes, oldMods.InternalStandardTypes))
             {
                 DiffResults = true;
             }

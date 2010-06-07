@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -54,10 +54,10 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 ReportColumn = new ReportColumn(table, new Identifier(column)),
                 Caption = column
             };
-            if (column.StartsWith(AnnotationPropertyAccessor.AnnotationPrefix))
+            if (column.StartsWith(AnnotationPropertyAccessor.ANNOTATION_PREFIX))
             {
                 var classMetadata = GetClassMetadata(table);
-                var annotationName = column.Substring(AnnotationPropertyAccessor.AnnotationPrefix.Length);
+                var annotationName = column.Substring(AnnotationPropertyAccessor.ANNOTATION_PREFIX.Length);
                 columnInfo.Caption = annotationName;
                 columnInfo.ColumnType = classMetadata.GetPropertyType(column).ReturnedClass;
                 columnInfo.IsHidden = !_annotationDefNames.Contains(annotationName);

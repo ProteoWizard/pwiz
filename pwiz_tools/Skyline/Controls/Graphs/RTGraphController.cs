@@ -76,6 +76,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 GraphSummary.UpdateUI();
         }
 
+        public void OnRatioIndexChanged()
+        {
+            // Retention times are not impacted by the ratio index
+        }
+
         public void OnUpdateGraph()
         {
             switch (GraphType)

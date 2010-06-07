@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Model.Hibernate
                 {
                     continue;
                 }
-                var column = new Column(AnnotationPropertyAccessor.AnnotationPrefix + annotationDef.Name);
+                var column = new Column(AnnotationPropertyAccessor.ANNOTATION_PREFIX + annotationDef.Name);
                 mapping.Table.AddColumn(column);
                 var isBoolAttribute = annotationDef.Type == AnnotationDef.AnnotationType.true_false;
                 var value = new SimpleValue(mapping.Table)
@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Model.Hibernate
                 value.AddColumn(column);
                 var property = new Property(value)
                                    {
-                                       Name = AnnotationPropertyAccessor.AnnotationPrefix + annotationDef.Name,
+                                       Name = AnnotationPropertyAccessor.ANNOTATION_PREFIX + annotationDef.Name,
                                        PropertyAccessorName = 
                                             isBoolAttribute 
                                             ? typeof(BoolAnnotationPropertyAccessor).AssemblyQualifiedName 

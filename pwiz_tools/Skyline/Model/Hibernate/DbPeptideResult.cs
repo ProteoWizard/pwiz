@@ -17,12 +17,18 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 
 namespace pwiz.Skyline.Model.Hibernate
 {
     [QueryTable(TableType = TableType.result)]
     public class DbPeptideResult : DbEntity
     {
+        public DbPeptideResult()
+        {
+            LabelRatios = new Dictionary<string, double?>();
+        }
+
         public override Type EntityClass
         {
             get { return typeof(DbPeptideResult); }
@@ -36,6 +42,7 @@ namespace pwiz.Skyline.Model.Hibernate
         public virtual double? PeptideRetentionTime { get; set; }
         [QueryColumn(Format=Formats.STANDARD_RATIO)]
         public virtual double? RatioToStandard { get; set; }
+        public virtual IDictionary<string, double?> LabelRatios { get; private set; }
         [QueryColumn(FullName = "PeptideResultNote")]
         public virtual String Note { get; set; }
     }

@@ -76,8 +76,8 @@ namespace pwiz.Skyline.SettingsUI
             this.label11 = new System.Windows.Forms.Label();
             this.listLibraries = new System.Windows.Forms.CheckedListBox();
             this.tabModifications = new System.Windows.Forms.TabPage();
-            this.comboInternalStandard = new System.Windows.Forms.ComboBox();
-            this.label17 = new System.Windows.Forms.Label();
+            this.comboStandardType = new System.Windows.Forms.ComboBox();
+            this.labelStandardType = new System.Windows.Forms.Label();
             this.label16 = new System.Windows.Forms.Label();
             this.comboLabelType = new System.Windows.Forms.ComboBox();
             this.btnEditHeavyMods = new System.Windows.Forms.Button();
@@ -86,7 +86,7 @@ namespace pwiz.Skyline.SettingsUI
             this.btnEditStaticMods = new System.Windows.Forms.Button();
             this.label8 = new System.Windows.Forms.Label();
             this.listStaticMods = new System.Windows.Forms.CheckedListBox();
-            this.cbInvertRatios = new System.Windows.Forms.CheckBox();
+            this.listStandardTypes = new System.Windows.Forms.CheckedListBox();
             this.tabControl1.SuspendLayout();
             this.tabDigestion.SuspendLayout();
             this.tabPrediction.SuspendLayout();
@@ -99,7 +99,7 @@ namespace pwiz.Skyline.SettingsUI
             // btnOk
             // 
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.Location = new System.Drawing.Point(227, 425);
+            this.btnOk.Location = new System.Drawing.Point(227, 452);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 1;
@@ -111,7 +111,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(308, 425);
+            this.btnCancel.Location = new System.Drawing.Point(308, 452);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 2;
@@ -132,7 +132,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabControl1.Location = new System.Drawing.Point(12, 12);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = global::pwiz.Skyline.Properties.Settings.Default.PeptideSettingsTab;
-            this.tabControl1.Size = new System.Drawing.Size(371, 405);
+            this.tabControl1.Size = new System.Drawing.Size(371, 432);
             this.tabControl1.TabIndex = 0;
             // 
             // tabDigestion
@@ -146,7 +146,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabDigestion.Location = new System.Drawing.Point(4, 22);
             this.tabDigestion.Name = "tabDigestion";
             this.tabDigestion.Padding = new System.Windows.Forms.Padding(3);
-            this.tabDigestion.Size = new System.Drawing.Size(363, 374);
+            this.tabDigestion.Size = new System.Drawing.Size(363, 406);
             this.tabDigestion.TabIndex = 0;
             this.tabDigestion.Text = "Digestion";
             this.tabDigestion.UseVisualStyleBackColor = true;
@@ -228,7 +228,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabPrediction.Controls.Add(this.label9);
             this.tabPrediction.Location = new System.Drawing.Point(4, 22);
             this.tabPrediction.Name = "tabPrediction";
-            this.tabPrediction.Size = new System.Drawing.Size(363, 374);
+            this.tabPrediction.Size = new System.Drawing.Size(363, 406);
             this.tabPrediction.TabIndex = 3;
             this.tabPrediction.Text = "Prediction";
             this.tabPrediction.UseVisualStyleBackColor = true;
@@ -304,7 +304,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabFilter.Location = new System.Drawing.Point(4, 22);
             this.tabFilter.Name = "tabFilter";
             this.tabFilter.Padding = new System.Windows.Forms.Padding(3);
-            this.tabFilter.Size = new System.Drawing.Size(363, 374);
+            this.tabFilter.Size = new System.Drawing.Size(363, 406);
             this.tabFilter.TabIndex = 1;
             this.tabFilter.Text = "Filter";
             this.tabFilter.UseVisualStyleBackColor = true;
@@ -415,7 +415,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabLibrary.Controls.Add(this.listLibraries);
             this.tabLibrary.Location = new System.Drawing.Point(4, 22);
             this.tabLibrary.Name = "tabLibrary";
-            this.tabLibrary.Size = new System.Drawing.Size(363, 374);
+            this.tabLibrary.Size = new System.Drawing.Size(363, 406);
             this.tabLibrary.TabIndex = 4;
             this.tabLibrary.Text = "Library";
             this.tabLibrary.UseVisualStyleBackColor = true;
@@ -556,9 +556,8 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // tabModifications
             // 
-            this.tabModifications.Controls.Add(this.cbInvertRatios);
-            this.tabModifications.Controls.Add(this.comboInternalStandard);
-            this.tabModifications.Controls.Add(this.label17);
+            this.tabModifications.Controls.Add(this.comboStandardType);
+            this.tabModifications.Controls.Add(this.labelStandardType);
             this.tabModifications.Controls.Add(this.label16);
             this.tabModifications.Controls.Add(this.comboLabelType);
             this.tabModifications.Controls.Add(this.btnEditHeavyMods);
@@ -567,30 +566,31 @@ namespace pwiz.Skyline.SettingsUI
             this.tabModifications.Controls.Add(this.btnEditStaticMods);
             this.tabModifications.Controls.Add(this.label8);
             this.tabModifications.Controls.Add(this.listStaticMods);
+            this.tabModifications.Controls.Add(this.listStandardTypes);
             this.tabModifications.Location = new System.Drawing.Point(4, 22);
             this.tabModifications.Name = "tabModifications";
-            this.tabModifications.Size = new System.Drawing.Size(363, 379);
+            this.tabModifications.Size = new System.Drawing.Size(363, 406);
             this.tabModifications.TabIndex = 2;
             this.tabModifications.Text = "Modifications";
             this.tabModifications.UseVisualStyleBackColor = true;
             // 
-            // comboInternalStandard
+            // comboStandardType
             // 
-            this.comboInternalStandard.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboInternalStandard.FormattingEnabled = true;
-            this.comboInternalStandard.Location = new System.Drawing.Point(28, 338);
-            this.comboInternalStandard.Name = "comboInternalStandard";
-            this.comboInternalStandard.Size = new System.Drawing.Size(177, 21);
-            this.comboInternalStandard.TabIndex = 9;
+            this.comboStandardType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboStandardType.FormattingEnabled = true;
+            this.comboStandardType.Location = new System.Drawing.Point(28, 338);
+            this.comboStandardType.Name = "comboStandardType";
+            this.comboStandardType.Size = new System.Drawing.Size(177, 21);
+            this.comboStandardType.TabIndex = 9;
             // 
-            // label17
+            // labelStandardType
             // 
-            this.label17.AutoSize = true;
-            this.label17.Location = new System.Drawing.Point(25, 322);
-            this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size(112, 13);
-            this.label17.TabIndex = 8;
-            this.label17.Text = "I&nternal standard type:";
+            this.labelStandardType.AutoSize = true;
+            this.labelStandardType.Location = new System.Drawing.Point(25, 322);
+            this.labelStandardType.Name = "labelStandardType";
+            this.labelStandardType.Size = new System.Drawing.Size(112, 13);
+            this.labelStandardType.TabIndex = 8;
+            this.labelStandardType.Text = "I&nternal standard type:";
             // 
             // label16
             // 
@@ -667,15 +667,14 @@ namespace pwiz.Skyline.SettingsUI
             this.listStaticMods.Size = new System.Drawing.Size(177, 94);
             this.listStaticMods.TabIndex = 1;
             // 
-            // cbInvertRatios
+            // listStandardTypes
             // 
-            this.cbInvertRatios.AutoSize = true;
-            this.cbInvertRatios.Location = new System.Drawing.Point(211, 340);
-            this.cbInvertRatios.Name = "cbInvertRatios";
-            this.cbInvertRatios.Size = new System.Drawing.Size(81, 17);
-            this.cbInvertRatios.TabIndex = 10;
-            this.cbInvertRatios.Text = "In&vert ratios";
-            this.cbInvertRatios.UseVisualStyleBackColor = true;
+            this.listStandardTypes.CheckOnClick = true;
+            this.listStandardTypes.FormattingEnabled = true;
+            this.listStandardTypes.Location = new System.Drawing.Point(28, 338);
+            this.listStandardTypes.Name = "listStandardTypes";
+            this.listStandardTypes.Size = new System.Drawing.Size(177, 49);
+            this.listStandardTypes.TabIndex = 10;
             // 
             // PeptideSettingsUI
             // 
@@ -683,7 +682,7 @@ namespace pwiz.Skyline.SettingsUI
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(395, 460);
+            this.ClientSize = new System.Drawing.Size(395, 487);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.tabControl1);
@@ -766,8 +765,8 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Button btnExplore;
         private System.Windows.Forms.Label label16;
         private System.Windows.Forms.ComboBox comboLabelType;
-        private System.Windows.Forms.ComboBox comboInternalStandard;
-        private System.Windows.Forms.Label label17;
-        private System.Windows.Forms.CheckBox cbInvertRatios;
+        private System.Windows.Forms.ComboBox comboStandardType;
+        private System.Windows.Forms.Label labelStandardType;
+        private System.Windows.Forms.CheckedListBox listStandardTypes;
     }
 }

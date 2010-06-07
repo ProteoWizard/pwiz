@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model
     public class TransitionDocNode : DocNode
     {
         public TransitionDocNode(Transition id, double massH, TransitionLibInfo libInfo)
-            : this(id, Annotations.Empty, massH, libInfo, null)
+            : this(id, Annotations.EMPTY, massH, libInfo, null)
         {
         }
 
@@ -142,11 +142,16 @@ namespace pwiz.Skyline.Model
 
         public float? GetPeakAreaRatio(int i)
         {
+            return GetPeakAreaRatio(i, 0);
+        }
+
+        public float? GetPeakAreaRatio(int i, int indexIS)
+        {
             // CONSIDER: Also specify the file index?
             var chromInfo = GetChromInfoEntry(i);
             if (chromInfo == null)
                 return null;
-            return chromInfo.Ratio;
+            return chromInfo.Ratios[indexIS];
         }
 
         public float? AveragePeakArea

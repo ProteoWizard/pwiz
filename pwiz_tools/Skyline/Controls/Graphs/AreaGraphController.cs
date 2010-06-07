@@ -37,6 +37,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 GraphSummary.UpdateUI();
         }
 
+        public void OnRatioIndexChanged()
+        {
+            if (GraphSummary.GraphPane is AreaReplicateGraphPane /* || !Settings.Default.AreaAverageReplicates */)
+                GraphSummary.UpdateUI();
+        }
+
         public void OnUpdateGraph()
         {
             switch (GraphType)

@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model
@@ -30,7 +29,7 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public sealed class Annotations
     {
-        public static readonly Annotations Empty = new Annotations(null, null);
+        public static readonly Annotations EMPTY = new Annotations(null, null);
         private readonly IDictionary<string, string> _annotations;
         public Annotations(String note, IEnumerable<KeyValuePair<string,string>> annotations)
         {
@@ -151,7 +150,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private static int GetHashCodeDict<K,V>(IDictionary<K,V> dictionary)
+        private static int GetHashCodeDict<TK,TV>(IEnumerable<KeyValuePair<TK, TV>> dictionary)
         {
             if (dictionary == null)
             {
@@ -168,7 +167,7 @@ namespace pwiz.Skyline.Model
         {
             return Equals(value, default(T)) ? 0 : value.GetHashCode();
         }
-        private static bool EqualsDict<K,V>(IDictionary<K,V> dictionary1, IDictionary<K,V> dictionary2)
+        private static bool EqualsDict<TK,TV>(ICollection<KeyValuePair<TK, TV>> dictionary1, IDictionary<TK,TV> dictionary2)
         {
             if (dictionary1 == dictionary2)
             {
@@ -184,7 +183,7 @@ namespace pwiz.Skyline.Model
             }
             foreach (var entry in dictionary1)
             {
-                V value;
+                TV value;
                 if (!dictionary2.TryGetValue(entry.Key, out value))
                 {
                     return false;

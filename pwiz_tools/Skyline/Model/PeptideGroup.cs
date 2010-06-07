@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Model
         private string _description;
 
         public PeptideGroupDocNode(PeptideGroup id, string name, string description, PeptideDocNode[] children)
-            : this(id, Annotations.Empty, name, description, children)
+            : this(id, Annotations.EMPTY, name, description, children)
         {
         }
 

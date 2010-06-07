@@ -42,7 +42,11 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                return Settings.Default.AreaPercentView ? BarType.PercentStack : BarType.Stack;
+                if (Settings.Default.AreaRatioView)
+                    return BarType.Cluster;
+                if (Settings.Default.AreaPercentView)
+                    return BarType.PercentStack;
+                return BarType.Stack;
             }
         }
 
@@ -130,9 +134,18 @@ namespace pwiz.Skyline.Controls.Graphs
                     BarSettings.Type = BarType.Cluster;
             }
 
+            // Normalize optimization data, if it is being shown, and normalization has been chosen.
             bool normalizeOpt = (optimizationPresent && displayType == DisplayTypeChrom.single &&
                                  Settings.Default.AreaPercentView);
-            GraphData graphData = new AreaGraphData(parentNode, displayType, normalizeOpt);
+            int ratioIndex = -1;
+            var standardType = IsotopeLabelType.light;
+            if (Settings.Default.AreaRatioView)
+            {
+                ratioIndex = GraphSummary.RatioIndex;
+                standardType = document.Settings.PeptideSettings.Modifications.InternalStandardTypes[ratioIndex];                
+            }
+
+            GraphData graphData = new AreaGraphData(parentNode, displayType, ratioIndex, normalizeOpt);
 
             int selectedReplicateIndex = GraphSummary.ResultsIndex;
             double maxArea = -double.MaxValue;
@@ -161,6 +174,16 @@ namespace pwiz.Skyline.Controls.Graphs
                         color = COLORS_TRANSITION[iColor%COLORS_TRANSITION.Length];
                     }
                     iColor++;
+                    // If showing ratios, do not add the standard type to the graph,
+                    // since it wiall always be empty, but make sure the colors still
+                    // correspond with the other graphs.
+                    var nodeGroup = docNode as TransitionGroupDocNode;
+                    if (nodeGroup != null && ratioIndex != -1)
+                    {
+                        var labelType = nodeGroup.TransitionGroup.LabelType;
+                        if (ReferenceEquals(labelType, standardType))
+                            continue;
+                    }
 
                     string label = graphData.DocNodeLabels[i];
                     if (step != 0)
@@ -264,7 +287,10 @@ namespace pwiz.Skyline.Controls.Graphs
                         YAxis.Scale.MaxAuto = true;
                     }
 
-                    YAxis.Title.Text = "Peak Area";
+                    if (Settings.Default.AreaRatioView)
+                        YAxis.Title.Text = string.Format("Peak Area Ratio To {0}", standardType.Title);
+                    else
+                        YAxis.Title.Text = "Peak Area";
                     YAxis.Type = AxisType.Linear;
                     YAxis.Scale.MinAuto = false;
                     FixedYMin = YAxis.Scale.Min = 0;
@@ -287,10 +313,21 @@ namespace pwiz.Skyline.Controls.Graphs
                 return new PointPair(xValue, PointPairBase.Missing);                
             }
 
-            public AreaGraphData(DocNode docNode, DisplayTypeChrom displayType, bool normalize)
+            private readonly int _ratioIndex;
+            private readonly bool _normalize;
+
+            public AreaGraphData(DocNode docNode, DisplayTypeChrom displayType, int ratioIndex, bool normalize)
                 : base(docNode, displayType)
             {
-                if (normalize)
+                _ratioIndex = ratioIndex;
+                _normalize = normalize;
+            }
+
+            protected override void InitData()
+            {
+                base.InitData();
+
+                if (_normalize)
                     Normalize();
             }
 
@@ -345,17 +382,28 @@ namespace pwiz.Skyline.Controls.Graphs
 
             protected override PointPair CreatePointPair(int iResult, TransitionChromInfo chromInfo)
             {
-                return new PointPair(iResult, chromInfo.Area);
+                float? pointY = GetValue(chromInfo);
+                return new PointPair(iResult, pointY.HasValue ? pointY.Value : 0);
             }
 
             protected override bool IsMissingValue(TransitionGroupChromInfo chromInfo)
             {
-                return !chromInfo.Area.HasValue;
+                return !GetValue(chromInfo).HasValue;
             }
 
             protected override PointPair CreatePointPair(int iResult, TransitionGroupChromInfo chromInfo)
             {
-                return new PointPair(iResult, chromInfo.Area.Value);
+                return new PointPair(iResult, GetValue(chromInfo).Value);
+            }
+
+            private float? GetValue(TransitionGroupChromInfo chromInfo)
+            {
+                return (_ratioIndex == -1 ? chromInfo.Area : chromInfo.Ratios[_ratioIndex]);
+            }
+
+            private float? GetValue(TransitionChromInfo chromInfo)
+            {
+                return (_ratioIndex == -1 ? chromInfo.Area : chromInfo.Ratios[_ratioIndex]);
             }
         }
     }

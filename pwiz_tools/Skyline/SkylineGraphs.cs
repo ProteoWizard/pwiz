@@ -27,7 +27,6 @@ using DigitalRune.Windows.Docking;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
-using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -2190,8 +2189,23 @@ namespace pwiz.Skyline
             }
             if (graphType == GraphTypeArea.replicate)
             {
-                areaPercentViewContextMenuItem.Checked = set.AreaPercentView;
-                menuStrip.Items.Insert(iInsert++, areaPercentViewContextMenuItem);
+                areaNormalizeTotalContextMenuItem.Checked =
+                    areaPercentViewContextMenuItem.Checked = set.AreaPercentView;
+                if (!HasLabelModifications)
+                    menuStrip.Items.Insert(iInsert++, areaPercentViewContextMenuItem);
+                else
+                {
+                    menuStrip.Items.Insert(iInsert++, areaNormalizeContextMenuItem);
+                    if (areaNormalizeContextMenuItem.DropDownItems.Count == 0)
+                    {
+                        areaNormalizeContextMenuItem.DropDownItems.AddRange(new[]
+                            {
+                                areaNormalizeTotalContextMenuItem,
+                                (ToolStripItem)toolStripSeparator40,
+                                areaNormalizeNoneContextMenuItem
+                            });
+                    }
+                }
             }
             else if (graphType == GraphTypeArea.peptide)
             {
@@ -2224,6 +2238,15 @@ namespace pwiz.Skyline
                 string tag = (string)item.Tag;
                 if (tag == "set_default" || tag == "show_val")
                     menuStrip.Items.Remove(item);
+            }
+        }
+
+        private bool HasLabelModifications
+        {
+            get
+            {
+                var mods = DocumentUI.Settings.PeptideSettings.Modifications;
+                return mods.GetHeavyModifications().Contains(tm => tm.Modifications.Count > 0);
             }
         }
 
@@ -2276,10 +2299,15 @@ namespace pwiz.Skyline
 
         private void areaPercentViewContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.AreaPercentView = areaPercentViewContextMenuItem.Checked;
-            if (areaPercentViewContextMenuItem.Checked)
-                Settings.Default.AreaLogScale = false;
-            UpdateSummaryGraphs();
+            NormalizeAreaGraphToTotal(areaPercentViewContextMenuItem.Checked);
+        }
+
+        private void NormalizeAreaGraphToTotal(bool normalize)
+        {
+            Settings.Default.AreaPercentView = normalize;
+            if (normalize)
+                Settings.Default.AreaRatioView = Settings.Default.AreaLogScale = false;
+            UpdatePeakAreaGraph();
         }
 
         private void peptideLogScaleContextMenuItem_Click(object sender, EventArgs e)
@@ -2303,6 +2331,53 @@ namespace pwiz.Skyline
             {
                 UpdateSummaryGraphs();
             }
+        }
+
+        private void areaNormalizeContextMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            ToolStripMenuItem menu = areaNormalizeContextMenuItem;
+            // Remove menu items up to the Total menu item.
+            while (!ReferenceEquals(areaNormalizeTotalContextMenuItem, menu.DropDownItems[0]))
+                menu.DropDownItems.RemoveAt(0);
+
+            var standardTypes = DocumentUI.Settings.PeptideSettings.Modifications.InternalStandardTypes;
+            for (int i = 0; i < standardTypes.Count; i++)
+            {
+                var handler = new SelectNormalizeHandler(this, i);
+                var item = new ToolStripMenuItem(standardTypes[i].Title, null, handler.ToolStripMenuItemClick)
+                { Checked = (sequenceTree.RatioIndex == i && Settings.Default.AreaRatioView) };
+                menu.DropDownItems.Insert(i, item);
+            }
+            areaNormalizeTotalContextMenuItem.Checked = Settings.Default.AreaPercentView;
+            areaNormalizeNoneContextMenuItem.Checked = !Settings.Default.AreaPercentView &&
+                                                       !Settings.Default.AreaRatioView;
+        }
+
+        private class SelectNormalizeHandler : SelectRatioHandler
+        {
+            public SelectNormalizeHandler(SkylineWindow skyline, int ratioIndex) : base(skyline, ratioIndex)
+            {
+            }
+
+            protected override void OnMenuItemClick()
+            {
+                Settings.Default.AreaRatioView = true;
+                Settings.Default.AreaPercentView = Settings.Default.AreaLogScale = false;
+
+                base.OnMenuItemClick();
+
+                _skyline.UpdatePeakAreaGraph();
+            }
+        }
+
+        private void areaNormalizeTotalContextMenuItem_Click(object sender, EventArgs e)
+        {
+            NormalizeAreaGraphToTotal(true);
+        }
+
+        private void areaNormalizeNoneContextMenuItem_Click(object sender, EventArgs e)
+        {
+            NormalizeAreaGraphToTotal(false);
         }
 
         private void UpdatePeakAreaGraph()

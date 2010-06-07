@@ -310,7 +310,7 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-        void ResultsGrid_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        private void ResultsGrid_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
             _inCommitEdit = true;
             try
@@ -433,7 +433,9 @@ namespace pwiz.Skyline.Controls
             return identityPath;
         }
 
-        static TransitionGroupChromInfo GetChromInfo(Results<TransitionGroupChromInfo> results, RowIdentifier rowIdentifier)
+// ReSharper disable SuggestBaseTypeForParameter
+        private static TransitionGroupChromInfo GetChromInfo(Results<TransitionGroupChromInfo> results, RowIdentifier rowIdentifier)
+// ReSharper restore SuggestBaseTypeForParameter
         {
             foreach (var chromInfo in results[rowIdentifier.ReplicateIndex])
             {
@@ -445,7 +447,7 @@ namespace pwiz.Skyline.Controls
             return null;
         }
 
-        ChromInfo GetChromInfo(AnnotationDef annotationDef, RowIdentifier rowIdentifier)
+        private ChromInfo GetChromInfo(AnnotationDef annotationDef, RowIdentifier rowIdentifier)
         {
             if (SelectedTransitionDocNode != null && 0 != (annotationDef.AnnotationTargets & AnnotationDef.AnnotationTarget.transition_result))
             {
@@ -458,7 +460,9 @@ namespace pwiz.Skyline.Controls
             return null;
         }
 
-        static TransitionChromInfo GetChromInfo(Results<TransitionChromInfo> results, RowIdentifier rowIdentifier)
+// ReSharper disable SuggestBaseTypeForParameter
+        private static TransitionChromInfo GetChromInfo(Results<TransitionChromInfo> results, RowIdentifier rowIdentifier)
+// ReSharper restore SuggestBaseTypeForParameter
         {
             foreach (var chromInfo in results[rowIdentifier.ReplicateIndex])
             {
@@ -470,7 +474,9 @@ namespace pwiz.Skyline.Controls
             return null;
         }
 
-        static Results<T> ChangeChromInfo<T>(Results<T> results, RowIdentifier rowIdentifier, T chromInfoOld, T chromInfoNew) where T: ChromInfo
+// ReSharper disable SuggestBaseTypeForParameter
+        private static Results<T> ChangeChromInfo<T>(Results<T> results, RowIdentifier rowIdentifier, T chromInfoOld, T chromInfoNew) where T: ChromInfo
+// ReSharper restore SuggestBaseTypeForParameter
         {
             var elements = new List<ChromInfoList<T>>();
             bool found = false;
@@ -509,7 +515,7 @@ namespace pwiz.Skyline.Controls
         /// <summary>
         /// Stores the Setting which controls the set and order of visible columns and their widths.
         /// </summary>
-        void SaveColumnState()
+        private void SaveColumnState()
         {
             var key = GetGridColumnsKey();
             if (key == null)
@@ -687,7 +693,7 @@ namespace pwiz.Skyline.Controls
                 {
                     continue;
                 }
-                var name = AnnotationPropertyAccessor.AnnotationPrefix + annotationDef.Name;
+                var name = AnnotationPropertyAccessor.ANNOTATION_PREFIX + annotationDef.Name;
                 DataGridViewColumn column;
                 _annotationColumns.TryGetValue(name, out column);
                 if (column != null)
@@ -990,7 +996,8 @@ namespace pwiz.Skyline.Controls
             {
                 row.Cells[PeptidePeakFoundRatioColumn.Index].Value = chromInfo.PeakCountRatio;
                 row.Cells[PeptideRetentionTimeColumn.Index].Value = chromInfo.RetentionTime;
-                row.Cells[RatioToStandardColumn.Index].Value = chromInfo.RatioToStandard;
+                // TODO: Fix this
+//                row.Cells[RatioToStandardColumn.Index].Value = chromInfo.RatioToStandard;
             }
         }
 
@@ -1021,7 +1028,7 @@ namespace pwiz.Skyline.Controls
                 row.Cells[MaxEndTimeColumn.Index].Value = chromInfo.EndRetentionTime;
                 row.Cells[TotalAreaColumn.Index].Value = chromInfo.Area;
                 row.Cells[TotalBackgroundColumn.Index].Value = chromInfo.BackgroundArea;
-                row.Cells[TotalAreaRatioColumn.Index].Value = chromInfo.Ratio;
+                row.Cells[TotalAreaRatioColumn.Index].Value = chromInfo.Ratios[0];
                 row.Cells[LibraryDotProductColumn.Index].Value = chromInfo.LibraryDotProduct;
                 row.Cells[PrecursorNoteColumn.Index].Value = chromInfo.Annotations.Note;
                 row.Cells[OptCollisionEnergyColumn.Index].Value = null;
@@ -1086,7 +1093,7 @@ namespace pwiz.Skyline.Controls
                 row.Cells[EndTimeColumn.Index].Value = chromInfo.EndRetentionTime;
                 row.Cells[AreaColumn.Index].Value = chromInfo.Area;
                 row.Cells[BackgroundColumn.Index].Value = chromInfo.BackgroundArea;
-                row.Cells[AreaRatioColumn.Index].Value = chromInfo.Ratio;
+                row.Cells[AreaRatioColumn.Index].Value = chromInfo.Ratios[0];
                 row.Cells[HeightColumn.Index].Value = chromInfo.Height;
                 row.Cells[PeakRankColumn.Index].Value = chromInfo.Rank;
                 row.Cells[TransitionNoteColumn.Index].Value = chromInfo.Annotations.Note;
