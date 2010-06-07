@@ -38,7 +38,7 @@ namespace Waters {
 
 
 /// function types copied from http://www.waters.com/webassets/cms/support/docs/71500123505ra.pdf
-PWIZ_API_DECL enum FunctionType
+PWIZ_API_DECL enum PwizFunctionType
 {
     FunctionType_Unknown,
     FunctionType_Scan,                  /// Standard MS scanning function
@@ -77,6 +77,28 @@ PWIZ_API_DECL enum FunctionType
     FunctionType_MSMSMS
 };
 
+PWIZ_API_DECL enum PwizIonizationType
+{
+    IonizationType_Unknown = -1,
+    IonizationType_EI = 0,       // Electron Ionization
+    IonizationType_CI,           // Chemical Ionization
+    IonizationType_FB,           // Fast Atom Bombardment
+    IonizationType_TS,           // Thermospray
+    IonizationType_ES,           // Electrospray Ionization
+    IonizationType_AI,           // Atmospheric Ionization
+    IonizationType_LD,           // Laser Desorption Ionization
+    IonizationType_FI,           // ?
+    IonizationType_Generic,
+    IonizationType_Count
+};
+
+PWIZ_API_DECL enum PwizPolarityType
+{
+    PolarityType_Unknown = -1,
+    PolarityType_Positive = 0,
+    PolarityType_Negative,
+    PolarityType_Count
+};
 
 PWIZ_API_DECL enum InstrumentType
 {
@@ -143,7 +165,7 @@ struct PWIZ_API_DECL Function
 {
     virtual int getFunctionNumber() const = 0;
 
-    virtual FunctionType getFunctionType() const = 0;
+    virtual PwizFunctionType getFunctionType() const = 0;
 
     virtual size_t getScanCount() const = 0;
     virtual ScanPtr getScan(int process, int scan) const = 0;

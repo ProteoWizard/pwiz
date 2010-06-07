@@ -83,6 +83,8 @@ PWIZ_API_DECL size_t ChromatogramList_Waters::find(const string& id) const
 }
 
 
+#ifdef PWIZ_READER_WATERS_LEGACY
+
 PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index, bool getBinaryData) const
 {
     boost::call_once(indexInitialized_, boost::bind(&ChromatogramList_Waters::createIndex, this));
@@ -204,6 +206,151 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
 
     size_ = index_.size();
 }
+
+#else // PWIZ_READER_WATERS_LEGACY
+
+PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index, bool getBinaryData) const
+{
+    boost::call_once(indexInitialized_, boost::bind(&ChromatogramList_Waters::createIndex, this));
+    if (index>size_)
+        throw runtime_error(("[ChromatogramList_Waters::chromatogram()] Bad index: " 
+                            + lexical_cast<string>(index)).c_str());
+
+    
+    // allocate a new Chromatogram
+    IndexEntry& ie = index_[index];
+    ChromatogramPtr result = ChromatogramPtr(new Chromatogram);
+    if (!result.get())
+        throw std::runtime_error("[ChromatogramList_Thermo::chromatogram()] Allocation error.");
+
+    result->index = index;
+    result->id = ie.id;
+    result->set(ie.chromatogramType);
+
+    switch (ie.chromatogramType)
+    {
+        case MS_TIC_chromatogram:
+        {
+            map<double, double> fullFileTIC;
+
+            BOOST_FOREACH(int function, rawdata_->FunctionIndexList())
+            {
+                // add current function TIC to full file TIC
+                vector<float> times, intensities;
+                rawdata_->ChromatogramReader.ReadTICChromatogram(function, times, intensities);
+                for (int i = 0, end = intensities.size(); i < end; ++i)
+                    fullFileTIC[times[i]] += intensities[i];
+            }
+
+            result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, MS_number_of_counts);
+
+            if (getBinaryData)
+            {
+                BinaryDataArrayPtr timeArray = result->getTimeArray();
+                BinaryDataArrayPtr intensityArray = result->getIntensityArray();
+
+                timeArray->data.reserve(fullFileTIC.size());
+                intensityArray->data.reserve(fullFileTIC.size());
+                for (map<double, double>::iterator itr = fullFileTIC.begin();
+                     itr != fullFileTIC.end();
+                     ++itr)
+                {
+                    timeArray->data.push_back(itr->first);
+                    intensityArray->data.push_back(itr->second);
+                }
+            }
+
+            result->defaultArrayLength = fullFileTIC.size();
+        }
+        break;
+
+        case MS_SRM_chromatogram:
+        {
+            result->precursor.isolationWindow.set(MS_isolation_window_target_m_z, ie.Q1, MS_m_z);
+            //result->precursor.isolationWindow.set(MS_isolation_window_lower_offset, ie.q1, MS_m_z);
+            //result->precursor.isolationWindow.set(MS_isolation_window_upper_offset, ie.q1, MS_m_z);
+            result->precursor.activation.set(MS_CID);
+
+            result->product.isolationWindow.set(MS_isolation_window_target_m_z, ie.Q3, MS_m_z);
+            //result->product.isolationWindow.set(MS_isolation_window_lower_offset, ie.q3, MS_m_z);
+            //result->product.isolationWindow.set(MS_isolation_window_upper_offset, ie.q3, MS_m_z);
+
+            result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, MS_number_of_counts);
+
+            vector<float> times;
+            vector< vector<float> > intensities;
+            vector<float> Q3s(1, ie.Q3);
+            rawdata_->ChromatogramReader.ReadMultipleMassChromatograms(ie.function, Q3s, times, intensities, 0.0f);
+            result->defaultArrayLength = times.size();
+
+            if (getBinaryData)
+            {
+                result->getTimeArray()->data.assign(times.begin(), times.end());
+                result->getIntensityArray()->data.assign(intensities[0].begin(), intensities[0].end());
+            }
+        }
+        break;
+    }
+
+    return result;
+}
+
+
+PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
+{
+    index_.push_back(IndexEntry());
+    IndexEntry& ie = index_.back();
+    ie.index = index_.size()-1;
+    ie.id = "TIC";
+    ie.chromatogramType = MS_TIC_chromatogram;
+    idToIndexMap_[ie.id] = ie.index;
+
+    BOOST_FOREACH(int function, rawdata_->FunctionIndexList())
+    {
+        int msLevel;
+        CVID spectrumType;
+
+        try { translateFunctionType(WatersToPwizFunctionType(rawdata_->Info.GetFunctionType(function)), msLevel, spectrumType); }
+        catch(...) // unable to translate function type
+        {
+            cerr << "[ChromatogramList_Waters::createIndex] Unable to translate function type \"" + rawdata_->Info.GetFunctionTypeString(function) + "\"" << endl;
+            continue;
+        }
+
+        if (spectrumType != MS_SRM_spectrum)
+            continue;
+
+        //rawdata_->Info.GetAcquisitionTimeRange(function, f1, f2);
+        //cout << "Time range: " << f1 << " - " << f2 << endl;
+
+        vector<float> precursorMZs, productMZs, intensities;
+        rawdata_->ScanReader.readSpectrum(function, 1, precursorMZs, intensities, productMZs);
+
+        for (size_t i=0; i < precursorMZs.size(); ++i)
+        {
+            index_.push_back(IndexEntry());
+            IndexEntry& ie = index_.back();
+            ie.chromatogramType = MS_SRM_chromatogram;
+            ie.index = index_.size()-1;
+            ie.function = function;
+            ie.offset = i;
+            ie.Q1 = precursorMZs[i];
+            ie.Q3 = productMZs[i];
+
+            std::ostringstream oss;
+            oss << "SRM SIC Q1=" << ie.Q1 <<
+                   " Q3=" << ie.Q3 <<
+                   " function=" << (function+1) <<
+                   " offset=" << ie.offset;
+            ie.id = oss.str();
+            idToIndexMap_[ie.id] = ie.index;
+        }
+    }
+
+    size_ = index_.size();
+}
+
+#endif // PWIZ_READER_WATERS_LEGACY
 
 
 } // detail

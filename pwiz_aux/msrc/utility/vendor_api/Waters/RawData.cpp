@@ -126,7 +126,7 @@ struct ScanImpl : public Scan
 
 namespace {
 
-FunctionType translateFunctionType(const string& funcType)
+PwizFunctionType translateFunctionType(const string& funcType)
 {
     if (funcType == "Scan")                                 return FunctionType_Scan;
     else if (funcType == "SIR")                             return FunctionType_SIR;
@@ -193,7 +193,7 @@ struct FunctionImpl : public Function
 
     virtual int getFunctionNumber() const {return number;}
 
-    virtual FunctionType getFunctionType() const
+    virtual PwizFunctionType getFunctionType() const
     {
         if (type == FunctionType_Unknown)
             type = translateFunctionType((const char*) dacFunctionInfoPtr->FunctionType);
@@ -258,7 +258,7 @@ struct FunctionImpl : public Function
     short number;
     IDACFunctionInfoPtr dacFunctionInfoPtr;
 
-    mutable FunctionType type;
+    mutable PwizFunctionType type;
     mutable automation_vector<float> mrmParents;
     mutable automation_vector<float> mrmDaughters;
 };

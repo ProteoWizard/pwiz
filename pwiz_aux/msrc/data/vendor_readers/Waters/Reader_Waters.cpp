@@ -165,7 +165,12 @@ void Reader_Waters::read(const string& filename,
     if (runIndex != 0)
         throw ReaderFail("[Reader_Waters::read] multiple runs not supported");
 
+#ifdef PWIZ_READER_WATERS_LEGACY
     RawDataPtr rawdata = RawData::create(filename);
+#else
+    RawDataPtr rawdata = RawDataPtr(new RawData(filename));
+#endif // PWIZ_READER_WATERS_LEGACY
+
     result.run.spectrumListPtr = SpectrumListPtr(new SpectrumList_Waters(result, rawdata));
     result.run.chromatogramListPtr = ChromatogramListPtr(new ChromatogramList_Waters(rawdata));
 

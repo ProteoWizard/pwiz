@@ -58,12 +58,21 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListBase
     RawDataPtr rawdata_;
     size_t size_;
 
+#ifdef PWIZ_READER_WATERS_LEGACY
     struct IndexEntry : public SpectrumIdentity
     {
         FunctionPtr functionPtr;
         int process;
         int scan;
     };
+#else
+    struct IndexEntry : public SpectrumIdentity
+    {
+        int function;
+        int process;
+        int scan;
+    };
+#endif // PWIZ_READER_WATERS_LEGACY
 
     mutable vector<IndexEntry> index_;
     mutable map<string, size_t> idToIndexMap_;

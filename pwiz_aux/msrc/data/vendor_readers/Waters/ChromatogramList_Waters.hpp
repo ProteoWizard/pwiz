@@ -30,7 +30,6 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
-using namespace pwiz::vendor_api::Waters;
 
 class PWIZ_API_DECL ChromatogramList_Waters : public ChromatogramListBase
 {
@@ -51,13 +50,23 @@ class PWIZ_API_DECL ChromatogramList_Waters : public ChromatogramListBase
 
     mutable boost::once_flag indexInitialized_;
 
+#ifdef PWIZ_READER_WATERS_LEGACY
     struct IndexEntry : public ChromatogramIdentity
     {
         CVID chromatogramType;
-        SRMTarget target;
-        FunctionPtr functionPtr;
+        vendor_api::Waters::SRMTarget target;
+        vendor_api::Waters::FunctionPtr functionPtr;
         size_t SRMIndex;
     };
+#else
+    struct IndexEntry : public ChromatogramIdentity
+    {
+        CVID chromatogramType;
+        int function;
+        int offset;
+        float Q1, Q3;
+    };
+#endif // PWIZ_READER_WATERS_LEGACY
 
     mutable std::vector<IndexEntry> index_;
     mutable std::map<std::string, size_t> idToIndexMap_;

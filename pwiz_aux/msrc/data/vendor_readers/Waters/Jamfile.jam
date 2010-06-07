@@ -100,11 +100,21 @@ lib pwiz_aux_msrc_reader_waters
 rule test-requirements ( properties * )
 {
     # decompress test data if available (on any platform)
-    if ! $(.extract-once) && [ path.exists $(TEST_DATA_PATH).tar.bz2 ]
+
+    if [ path.exists $(API_PATH)/MassLynxRaw.dll ]
+    {
+        path-constant TEST_DATA_LEGACY_PATH : $(TEST_DATA_PATH) ;
+    }
+    else
+    {
+        path-constant TEST_DATA_LEGACY_PATH : ./Reader_Waters_Test_Legacy.data ;
+    }
+
+    if ! $(.extract-once) && [ path.exists $(TEST_DATA_LEGACY_PATH).tar.bz2 ]
     {
         .extract-once = true ;
         import tar ;
-        tar.extract $(TEST_DATA_PATH).tar.bz2 : : : : check-last-file-only ;
+        tar.extract $(TEST_DATA_LEGACY_PATH).tar.bz2 : : : : check-last-file-only ;
     }
 
     local result ;

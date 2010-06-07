@@ -25,8 +25,15 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/MSData.hpp"
-#include "pwiz_aux/msrc/utility/vendor_api/Waters/RawData.hpp"
 #include <vector>
+
+#ifdef PWIZ_READER_WATERS
+
+#ifdef PWIZ_READER_WATERS_LEGACY
+#include "pwiz_aux/msrc/utility/vendor_api/Waters/RawData.hpp"
+#else
+#include "pwiz_aux/msrc/utility/vendor_api/Waters/MassLynxRaw.hpp"
+#endif // PWIZ_READER_WATERS_LEGACY
 
 namespace pwiz {
 namespace msdata {
@@ -38,16 +45,18 @@ PWIZ_API_DECL
 std::vector<InstrumentConfiguration> createInstrumentConfigurations(RawDataPtr rawdata);
 
 PWIZ_API_DECL CVID translateAsInstrumentModel(RawDataPtr rawdata);
-PWIZ_API_DECL void translateFunctionType(FunctionType functionType, int& msLevel, CVID& spectrumType);
+PWIZ_API_DECL void translateFunctionType(PwizFunctionType functionType, int& msLevel, CVID& spectrumType);
+PWIZ_API_DECL CVID translateAsIonizationType(PwizIonizationType ionizationType);
+PWIZ_API_DECL CVID translate(PwizPolarityType polarityType);
 
 /*PWIZ_API_DECL CVID translate(MassAnalyzerType type);
-PWIZ_API_DECL CVID translateAsIonizationType(IonizationType ionizationType);
 PWIZ_API_DECL CVID translateAsInletType(IonizationType ionizationType);
-PWIZ_API_DECL CVID translate(PolarityType polarityType);
 PWIZ_API_DECL CVID translate(ActivationType activationType);*/
 
 } // detail
 } // msdata
 } // pwiz
+
+#endif
 
 #endif // _READER_WATERS_DETAIL_HPP_

@@ -44,19 +44,19 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(RawDataPtr rawdata)
 
 
 PWIZ_API_DECL
-void translateFunctionType(FunctionType functionType,
+void translateFunctionType(PwizFunctionType functionType,
                            int& msLevel,
                            CVID& spectrumType)
 {
     switch (functionType)
     {
-        case FunctionType_MSMSMS:
+        /*case FunctionType_MSMSMS:
             msLevel = 3;
             spectrumType = MS_MSn_spectrum;
-            break;
+            break;*/
 
         case FunctionType_Daughters:
-        case FunctionType_MSMS:
+        //case FunctionType_MSMS:
         case FunctionType_MS2:
         case FunctionType_TOF_Daughter:
         case FunctionType_Auto_Daughters:
@@ -119,6 +119,30 @@ void translateFunctionType(FunctionType functionType,
         default:
             throw std::runtime_error("[translateFunctionType] Unable to translate function type.");
     }
+}
+
+
+PWIZ_API_DECL CVID translateAsIonizationType(PwizIonizationType ionizationType)
+{
+    /*switch (ionizationType)
+    {
+        case IonizationType_EI = 0,       // Electron Ionization
+        case IonizationType_CI,           // Chemical Ionization
+        case IonizationType_FB,           // Fast Atom Bombardment
+        case IonizationType_TS,           // Thermospray
+        case IonizationType_ES,           // Electrospray Ionization
+        case IonizationType_AI,           // Atmospheric Ionization
+        case IonizationType_LD,           // Laser Desorption Ionization
+        case IonizationType_FI,           // ?
+        case IonizationType_Generic,
+        case IonizationType_Count*/
+    return CVID_Unknown;
+}
+
+
+PWIZ_API_DECL CVID translate(PwizPolarityType polarityType)
+{
+    return CVID_Unknown;
 }
 
 

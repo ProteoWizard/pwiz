@@ -31,12 +31,58 @@ if [ modules.peek : NT ]
 {
 
 import path ;
+
+if [ path.exists $(API_PATH)/MassLynxRaw.dll ]
+{
+rule vendor-api-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties)
+    {
+        result += <assembly-dependency>MassLynxRaw.dll ;
+    }
+    return $(result) ;
+}
+
+lib pwiz_vendor_api_waters
+    : # sources
+    : # requirements
+        <link>shared:<define>PWIZ_DYN_LINK
+        <name>MassLynxRaw <search>$(API_PATH)
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
+        <conditional>@vendor-api-requirements
+        <conditional>@msvc-requirement
+    : # default-build
+    : # usage-requirements
+        <conditional>@vendor-api-requirements
+    ;
+
+
+# a test utility, not a unit test
+exe RawDataTest
+    : RawDataTest.cpp
+      pwiz_vendor_api_waters
+    ;
+
+explicit RawDataTest ;
+
+
+install install_pwiz_vendor_api_waters
+    : MassLynxRaw.dll
+    ;
+
+explicit install_pwiz_vendor_api_waters ;
+
+}
+else # [ path.exists $(API_PATH)/MassLynxRaw.dll ]
+{
 rule vendor-api-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties) &&
        [ path.exists $(API_PATH)/DACServer.dll ]
     {
+        result += <define>PWIZ_READER_WATERS_LEGACY ;
         result += <dependency>$(API_PATH)/DACServer.dll ;
         result += <dependency>$(API_PATH)/genutil.dll ;
         result += <dependency>$(API_PATH)/MetaGD32.dll ;
@@ -78,5 +124,6 @@ install install_pwiz_vendor_api_waters
     ;
 
 explicit install_pwiz_vendor_api_waters ;
+} # [ path.exists $(API_PATH)/MassLynxRaw.dll ]
 
 }
