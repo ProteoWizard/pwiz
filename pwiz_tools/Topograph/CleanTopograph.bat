@@ -9,6 +9,11 @@ pushd %PWIZ_ROOT%
 
 IF EXIST bin rmdir /s /q bin
 IF EXIST obj rmdir /s /q obj
+IF EXIST turnover\Microsoft.VC90.MFC rmdir /s /q turnover\Microsoft.VC90.MFC
+IF EXIST turnover\ClearCore.dll del /q turnover\ClearCore.dll
+IF EXIST turnover\ClearCore.Storage.dll del /q turnover\ClearCore.Storage.dll
+IF EXIST turnover\Interop.EDAL.SxS.manifest del /q turnover\Interop.EDAL.SxS.manifest
+IF EXIST turnover\MassLynxRaw.dll del /q turnover\MassLynxRaw.dll
 IF EXIST TestResults rmdir /s /q TestResults
 IF EXIST TopographTestProject\bin rmdir /s /q TopographTestProject\bin
 IF EXIST TopographTestProject\obj rmdir /s /q TopographTestProject\obj
@@ -20,8 +25,10 @@ IF EXIST ..\Shared\Common\bin rmdir /s /q ..\Shared\Common\bin
 IF EXIST ..\Shared\Common\obj rmdir /s /q ..\Shared\Common\obj
 IF EXIST ..\Shared\ProteomeDb\bin rmdir /s /q ..\Shared\ProteomeDb\bin
 IF EXIST ..\Shared\ProteomeDb\obj rmdir /s /q ..\Shared\ProteomeDb\obj
+IF EXIST ..\Shared\ProteowizardWrapper\Interop.EDAL.SxS.manifest del /q ..\Shared\ProteowizardWrapper\Interop.EDAL.SxS.manifest
 IF EXIST ..\Shared\ProteowizardWrapper\bin rmdir /s /q ..\Shared\ProteowizardWrapper\bin
 IF EXIST ..\Shared\ProteowizardWrapper\obj rmdir /s /q ..\Shared\ProteowizardWrapper\obj
+IF EXIST ..\Shared\ProteowizardWrapper\Microsoft.VC90.MFC rmdir /s /q ..\Shared\ProteowizardWrapper\Microsoft.VC90.MFC
 IF EXIST ..\Shared\MSGraph\bin rmdir /s /q ..\Shared\MSGraph\bin
 IF EXIST ..\Shared\MSGraph\obj rmdir /s /q ..\Shared\MSGraph\obj
 

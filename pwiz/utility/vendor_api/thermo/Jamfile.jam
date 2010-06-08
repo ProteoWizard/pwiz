@@ -117,4 +117,8 @@ install install_pwiz_vendor_api_thermo
 
 explicit install_pwiz_vendor_api_thermo ;
 
+install install_pwiz_vendor_api_thermo_mfc
+    : [ path.glob $(API_PATH)/Microsoft.VC90.MFC : *.dll *.manifest ]
+    ;
+
 }

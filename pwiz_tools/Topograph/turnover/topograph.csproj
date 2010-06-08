@@ -594,6 +594,9 @@
     </Content>
     <Content Include="Clearcore.Storage.dll">
     </Content>
+    <Content Include="MassLynxRaw.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Microsoft.VC90.MFC\mfc90.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

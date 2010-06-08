@@ -2191,7 +2191,7 @@ namespace pwiz.Skyline
             {
                 areaNormalizeTotalContextMenuItem.Checked =
                     areaPercentViewContextMenuItem.Checked = set.AreaPercentView;
-                if (!HasLabelModifications)
+                if (!DocumentUI.Settings.PeptideSettings.Modifications.HasHeavyModifications)
                     menuStrip.Items.Insert(iInsert++, areaPercentViewContextMenuItem);
                 else
                 {
@@ -2238,15 +2238,6 @@ namespace pwiz.Skyline
                 string tag = (string)item.Tag;
                 if (tag == "set_default" || tag == "show_val")
                     menuStrip.Items.Remove(item);
-            }
-        }
-
-        private bool HasLabelModifications
-        {
-            get
-            {
-                var mods = DocumentUI.Settings.PeptideSettings.Modifications;
-                return mods.GetHeavyModifications().Contains(tm => tm.Modifications.Count > 0);
             }
         }
 

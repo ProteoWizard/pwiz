@@ -106,4 +106,8 @@ install install_pwiz_vendor_api_bruker
 
 explicit install_pwiz_vendor_api_bruker ;
 
+# for application build and install
+install install_pwiz_vendor_api_bruker_stub
+    : Interop.EDAL.SxS.manifest
+    ;
 }

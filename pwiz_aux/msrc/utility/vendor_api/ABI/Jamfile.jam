@@ -120,4 +120,9 @@ install install_pwiz_vendor_api_abi
 
 explicit install_pwiz_vendor_api_abi ;
 
+# for application build and install
+install install_pwiz_vendor_api_abi_app
+    : ClearCore.dll
+      ClearCore.Storage.dll
+    ;
 }

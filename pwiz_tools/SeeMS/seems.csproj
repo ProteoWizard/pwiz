@@ -277,6 +277,9 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="MassLynxRaw.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Misc\Centroider.ico" />
     <None Include="Misc\ChromatogramDataSet.xsc">
       <DependentUpon>ChromatogramDataSet.xsd</DependentUpon>

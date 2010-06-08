@@ -73,6 +73,12 @@ install install_pwiz_vendor_api_waters
 
 explicit install_pwiz_vendor_api_waters ;
 
+install install_pwiz_vendor_api_waters_masslynxraw
+    : MassLynxRaw.dll
+    ;
+
+explicit install_pwiz_vendor_api_waters_masslynxraw ;
+
 }
 else # [ path.exists $(API_PATH)/MassLynxRaw.dll ]
 {
@@ -124,6 +130,14 @@ install install_pwiz_vendor_api_waters
     ;
 
 explicit install_pwiz_vendor_api_waters ;
+
+install install_pwiz_vendor_api_waters_masslynxraw
+    : stub/MassLynxRaw.dll
+    ;
+
+explicit install_pwiz_vendor_api_waters_masslynxraw ;
+
+
 } # [ path.exists $(API_PATH)/MassLynxRaw.dll ]
 
 }

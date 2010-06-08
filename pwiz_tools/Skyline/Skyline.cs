@@ -1725,7 +1725,7 @@ namespace pwiz.Skyline
                 ratiosContextMenuItem.Visible = toolStripSeparatorRatios.Visible =
                     settings.HasResults &&
                     settings.PeptideSettings.Modifications.InternalStandardTypes.Count > 1 &&
-                    HasLabelModifications;
+                    settings.PeptideSettings.Modifications.HasHeavyModifications;
                 contextMenuTreeNode.Show(sequenceTree, pt);
             }
         }

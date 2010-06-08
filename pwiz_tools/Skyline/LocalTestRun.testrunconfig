@@ -6,6 +6,7 @@
     <DeploymentItem filename="BlibFilter.exe" />
     <DeploymentItem filename="msparser.dll" />
     <DeploymentItem filename="..\Shared\Lib\System.Data.SQLite.DLL" />
+    <DeploymentItem filename="..\Shared\ProteowizardWrapper\obj\x86\MassLynxRaw.dll" />
     <DeploymentItem filename="..\Shared\ProteowizardWrapper\obj\x86\rscoree.dll" />
     <DeploymentItem filename="..\Shared\ProteowizardWrapper\obj\x86\Interop.EDAL.SxS.manifest" />
     <DeploymentItem filename="..\Shared\ProteowizardWrapper\obj\x86\MSFileReader.XRawfile2.SxS.manifest" />

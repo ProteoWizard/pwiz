@@ -153,6 +153,12 @@ if [ modules.peek : NT ]
             <conditional>@build-location
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/x86
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/x86
+            <dependency>../../pwiz_aux/msrc/utility/vendor_api/ABI//install_pwiz_vendor_api_abi_app/<location>$(SKYLINE_PATH)
+            <dependency>../../pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker_stub/<location>$(SKYLINE_PATH)
+            <dependency>../../pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker_stub/<location>$(PWIZ_WRAPPER_PATH)
+            <dependency>../../pwiz/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo_mfc/<location>$(SKYLINE_PATH)/Microsoft.VC90.MFC
+            <dependency>../../pwiz/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo_mfc/<location>$(PWIZ_WRAPPER_PATH)/Microsoft.VC90.MFC
+            <dependency>../../pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters_masslynxraw/<location>$(SKYLINE_PATH)
         ;
         
     make Test.dll

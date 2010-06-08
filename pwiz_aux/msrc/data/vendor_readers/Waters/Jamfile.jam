@@ -139,6 +139,10 @@ rule test-requirements ( properties * )
         {
             result += <define>PWIZ_READER_WATERS ;
         }
+        else if [ path.exists $(API_PATH)/MassLynxRaw.dll ]
+        {
+            result += <define>PWIZ_READER_WATERS ;
+        }
         else if ! $(.warn-once)
         {
             .warn-once = true ;
