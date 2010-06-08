@@ -355,6 +355,7 @@ void Pseudo2DGel::Impl::update(const DataInfo& dataInfo,
     // special handling based on msLevel and instrument type
     
     static size_t lastParent = 0;
+
     if (info.msLevel == 1)
     {
         lastParent = info.index; // remember this scan in case there are children
@@ -369,7 +370,8 @@ void Pseudo2DGel::Impl::update(const DataInfo& dataInfo,
             if (itScans_.maxTime < info.retentionTime)
                 itScans_.maxTime = info.retentionTime;
         }
-        else if (info.massAnalyzerType == MS_FT_ICR){
+        else if (info.massAnalyzerType == MS_FT_ICR ||
+                 cvIsA(info.massAnalyzerType, MS_orbitrap)){
             ftScans_.scans.push_back(info.index);
             ftScans_.rts.push_back(info.retentionTime);
             ftScans_.bin.push_back(bin(info.basePeakMZ));
@@ -803,6 +805,10 @@ class ColorMapTouchTable : public ColorMap
     public:
     virtual void operator()(float intensity, float& red, float& green, float& blue) const
     {
+        if (intensity < 0)
+            throw runtime_error("[ColorMapTouchTable::operator()] negative "
+                                "intensity passed in");
+        
         int index = (int)(intensity*255);
 
         if (index == 0)
@@ -1058,7 +1064,8 @@ void Pseudo2DGel::Impl::writeImage(const DataInfo& dataInfo, const string& label
 {
     ScanList& scans = scanInfo.scans;
 
-    if (scans.empty()) return;
+    if (scans.empty())
+        return;
 
     auto_ptr<IntensityFunction> intensityFunction = createIntensityFunction(scans);
 
@@ -1446,6 +1453,14 @@ void Pseudo2DGel::Impl::drawLegend(Image& image,
     float low = intensityFunction.low();
     float high = intensityFunction.high();
 
+    if (high <= low)
+    {
+        ostringstream oss;
+        oss << "[Pseudo2DGel::Impl::drawLegend()] Illegal low/high bounds: "
+            << low << "/" << high;
+        throw runtime_error(oss.str().c_str());
+    }
+    
     for (int i=0; i<=10; i++)
     {
         float t = low + i*(high-low)/10;

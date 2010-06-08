@@ -317,6 +317,11 @@ int main(int argc, const char* argv[])
                  << config.filenames.at(0)
                  << endl;
 
+        if (config.verbose)
+            cout << "Processing " 
+                 << config.filenames.at(0)
+                 << " for pictures.\n";
+        
         if (!config.filenames.empty())
             bfs::create_directories(config.outputDirectory);
         
