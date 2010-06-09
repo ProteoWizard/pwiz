@@ -60,6 +60,9 @@ local bound_libs =
         <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/spectrum_processing/<asynch-exceptions>off/$(linkage)
         <library>$(PWIZ_ROOT_PATH)/pwiz/analysis/chromatogram_processing/<asynch-exceptions>off/$(linkage)
 
+        # chemistry
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/chemistry/<asynch-exceptions>off/$(linkage)
+
         # proteome
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome/<asynch-exceptions>off/$(linkage)
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome_examples/<asynch-exceptions>off/$(linkage)
@@ -104,6 +107,8 @@ obj MSData_examples  : msdata/examples.cpp   : $(bound_libs) <cxxflags>"/doc$(DO
 obj spectrum_processing       : analysis/spectrum_processing.cpp       : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/spectrum_processing.xdc" ;
 obj SpectrumList_PeakFilter   : analysis/SpectrumList_PeakFilter.cpp   : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/SpectrumList_PeakFilter.xdc" ;
 
+obj chemistry              : chemistry/chemistry.cpp       : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/chemistry.xdc" ;
+
 obj proteome               : proteome/proteome.cpp         : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/proteome.xdc" ;
 obj ProteomeDataDiff       : proteome/Diff.cpp             : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/ProteomeDataDiff.xdc" ;
 obj ProteomeData           : proteome/ProteomeData.cpp     : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/ProteomeData.xdc" ;
@@ -122,6 +127,7 @@ lib pwiz_bindings_cli
         MSData_examples
         spectrum_processing
         SpectrumList_PeakFilter
+        chemistry
         proteome
         ProteomeDataDiff
         ProteomeData

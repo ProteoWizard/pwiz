@@ -124,13 +124,13 @@ public ref class Contact : public ParamContainer
 /// <summary>
 /// A list of SourceFile references; implements the IList&lt;SourceFile&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(SourceFileList, pwiz::msdata::SourceFilePtr, SourceFile, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(SourceFileList, pwiz::msdata::SourceFilePtr, SourceFile, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
 
 
 /// <summary>
 /// A list of Contact references; implements the IList&lt;Contact&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ContactList, pwiz::msdata::Contact, Contact, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ContactList, pwiz::msdata::Contact, Contact, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 /// <summary>
@@ -269,7 +269,7 @@ public ref class Component : public ParamContainer
 /// <summary>
 /// A list of Component references; implements the IList&lt;Component&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ComponentBaseList, pwiz::msdata::Component, Component, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ComponentBaseList, pwiz::msdata::Component, Component, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 /// <summary>
@@ -351,7 +351,7 @@ public ref class Target : public ParamContainer
 /// <summary>
 /// A list of Target references; implements the IList&lt;Target&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(TargetList, pwiz::msdata::Target, Target, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(TargetList, pwiz::msdata::Target, Target, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 /// <summary>
@@ -482,7 +482,7 @@ public ref class ProcessingMethod : public ParamContainer
 /// <summary>
 /// A list of ProcessingMethod references; implements the IList&lt;ProcessingMethod&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ProcessingMethodList, pwiz::msdata::ProcessingMethod, ProcessingMethod, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ProcessingMethodList, pwiz::msdata::ProcessingMethod, ProcessingMethod, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 /// <summary>
@@ -539,7 +539,7 @@ public ref class ScanWindow : public ParamContainer
 /// <summary>
 /// A list of ScanWindow references; implements the IList&lt;ScanWindow&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ScanWindowList, pwiz::msdata::ScanWindow, ScanWindow, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ScanWindowList, pwiz::msdata::ScanWindow, ScanWindow, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 /// <summary>
@@ -612,7 +612,7 @@ public ref class Scan : public ParamContainer
 /// <summary>
 /// A list of Scan references; implements the IList&lt;Scan&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(Scans, pwiz::msdata::Scan, Scan, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(Scans, pwiz::msdata::Scan, Scan, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 /// <summary>
@@ -668,7 +668,7 @@ public ref class Activation : public ParamContainer
 /// <summary>
 /// A list of SelectedIon references; implements the IList&lt;ltSelectedIon&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(SelectedIonList, pwiz::msdata::SelectedIon, SelectedIon, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(SelectedIonList, pwiz::msdata::SelectedIon, SelectedIon, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 /// <summary>
@@ -749,7 +749,7 @@ public ref class Precursor : public ParamContainer
 /// <summary>
 /// A list of Precursor references; implements the IList&lt;Precursor&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(PrecursorList, pwiz::msdata::Precursor, Precursor, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(PrecursorList, pwiz::msdata::Precursor, Precursor, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 public ref class Product
@@ -779,13 +779,13 @@ public ref class Product
 /// <summary>
 /// A list of Product references; implements the IList&lt;Product&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ProductList, pwiz::msdata::Product, Product, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ProductList, pwiz::msdata::Product, Product, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 /// <summary>
 /// A list of doubles; implements the IList&lt;double&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(BinaryData, double, double, NATIVE_VALUE_TO_CLI, CLI_VALUE_TO_NATIVE_VALUE);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(BinaryData, double, double, NATIVE_VALUE_TO_CLI, CLI_VALUE_TO_NATIVE_VALUE);
 
 
 /// <summary>
@@ -969,19 +969,19 @@ public ref class ChromatogramIdentity
 /// <summary>
 /// A list of BinaryDataArray references; implements the IList&lt;BinaryDataArray&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(BinaryDataArrayList, pwiz::msdata::BinaryDataArrayPtr, BinaryDataArray, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(BinaryDataArrayList, pwiz::msdata::BinaryDataArrayPtr, BinaryDataArray, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
 
 
 /// <summary>
 /// A list of MZIntensityPair references; implements the IList&lt;MZIntensityPair&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(MZIntensityPairList, pwiz::msdata::MZIntensityPair, MZIntensityPair, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(MZIntensityPairList, pwiz::msdata::MZIntensityPair, MZIntensityPair, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 /// <summary>
 /// A list of TimeIntensityPair references; implements the IList&lt;TimeIntensityPair&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(TimeIntensityPairList, pwiz::msdata::TimeIntensityPair, TimeIntensityPair, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(TimeIntensityPairList, pwiz::msdata::TimeIntensityPair, TimeIntensityPair, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 /// <summary>
@@ -1248,7 +1248,7 @@ public ref class Chromatogram : public ParamContainer
 /// <summary>
 /// A list of spectrum or chromatogram indexes; implements the IList&lt;int&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(IndexList, size_t, int, NATIVE_VALUE_TO_CLI, CLI_VALUE_TO_NATIVE_VALUE);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(IndexList, size_t, int, NATIVE_VALUE_TO_CLI, CLI_VALUE_TO_NATIVE_VALUE);
 
 
 /// <summary>
@@ -1326,7 +1326,7 @@ public ref class SpectrumList
 /// <summary>
 /// A list of Spectrum references; implements the IList&lt;Spectrum&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(Spectra, pwiz::msdata::SpectrumPtr, Spectrum, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(Spectra, pwiz::msdata::SpectrumPtr, Spectrum, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
 
 
 /// <summary>
@@ -1428,7 +1428,7 @@ public ref class ChromatogramList
 /// <summary>
 /// A list of Chromatogram references; implements the IList&lt;Chromatogram&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(Chromatograms, pwiz::msdata::ChromatogramPtr, Chromatogram, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(Chromatograms, pwiz::msdata::ChromatogramPtr, Chromatogram, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
 
 
 /// <summary>
@@ -1547,31 +1547,31 @@ public ref class Run : public ParamContainer
 /// <summary>
 /// A list of Sample references; implements the IList&lt;Sample&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(SampleList, pwiz::msdata::SamplePtr, Sample, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(SampleList, pwiz::msdata::SamplePtr, Sample, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
 
 
 /// <summary>
 /// A list of InstrumentConfiguration references; implements the IList&lt;InstrumentConfiguration&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(InstrumentConfigurationList, pwiz::msdata::InstrumentConfigurationPtr, InstrumentConfiguration, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(InstrumentConfigurationList, pwiz::msdata::InstrumentConfigurationPtr, InstrumentConfiguration, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
 
 
 /// <summary>
 /// A list of Software references; implements the IList&lt;Software&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(SoftwareList, pwiz::msdata::SoftwarePtr, Software, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(SoftwareList, pwiz::msdata::SoftwarePtr, Software, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
 
 
 /// <summary>
 /// A list of DataProcessing references; implements the IList&lt;DataProcessing&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(DataProcessingList, pwiz::msdata::DataProcessingPtr, DataProcessing, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(DataProcessingList, pwiz::msdata::DataProcessingPtr, DataProcessing, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
 
 
 /// <summary>
 /// A list of ScanSettings references; implements the IList&lt;ScanSettings&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ScanSettingsList, pwiz::msdata::ScanSettingsPtr, ScanSettings, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ScanSettingsList, pwiz::msdata::ScanSettingsPtr, ScanSettings, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
 
 
 /// <summary>
@@ -1706,7 +1706,7 @@ public ref class MSData
 
 public ref class id {
 
-/// parses an id string into a map<string,string>
+// parses an id string into a map<string,string>
 // TODO: std::map<std::string,std::string> parse(const std::string& id);
 
 /// <summary>

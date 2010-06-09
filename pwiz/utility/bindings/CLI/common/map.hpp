@@ -27,7 +27,7 @@
 #endif
 
 #define DEFINE_STD_MAP_WRAPPER(WrapperName, NativeKeyType, CLIKeyType, CLIKeyHandle, NativeKeyToCLI, CLIKeyToNative, NativeValueType, CLIValueType, CLIValueHandle, NativeValueToCLI, CLIValueToNative) \
-public ref class WrapperName : public System::Collections::Generic::IDictionary<CLIKeyHandle, CLIValueHandle> \
+ref class WrapperName : public System::Collections::Generic::IDictionary<CLIKeyHandle, CLIValueHandle> \
 { \
     INTERNAL: typedef std::map<NativeKeyType, NativeValueType> WrappedType; \
 \

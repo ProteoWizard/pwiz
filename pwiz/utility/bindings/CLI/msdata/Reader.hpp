@@ -38,7 +38,7 @@ namespace CLI {
 namespace msdata {
 
 
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(MSDataList, pwiz::msdata::MSDataPtr, MSData, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(MSDataList, pwiz::msdata::MSDataPtr, MSData, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
 
 
 /// interface for file readers

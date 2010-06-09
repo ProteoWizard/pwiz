@@ -59,7 +59,7 @@ public ref class Protein : public Peptide
 /// <summary>
 /// A list of protein indexes; implements the IList&lt;int&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(IndexList, size_t, int, NATIVE_VALUE_TO_CLI, CLI_VALUE_TO_NATIVE_VALUE);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(IndexList, size_t, int, NATIVE_VALUE_TO_CLI, CLI_VALUE_TO_NATIVE_VALUE);
 
 
 /// <summary>
@@ -108,7 +108,7 @@ public ref class ProteinList
 /// <summary>
 /// A list of Protein references; implements the IList&lt;Protein&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(Proteins, pwiz::proteome::ProteinPtr, Protein, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(Proteins, pwiz::proteome::ProteinPtr, Protein, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
 
 
 /// <summary>

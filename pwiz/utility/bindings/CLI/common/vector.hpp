@@ -27,7 +27,7 @@
 #endif
 
 #define DEFINE_STD_VECTOR_WRAPPER(WrapperName, NativeType, CLIType, CLIHandle, NativeToCLI, CLIToNative) \
-public ref class WrapperName : public System::Collections::Generic::IList<CLIHandle> \
+ref class WrapperName : public System::Collections::Generic::IList<CLIHandle> \
 { \
     INTERNAL: typedef std::vector<NativeType> WrappedType; \
 \

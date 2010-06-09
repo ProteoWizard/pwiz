@@ -35,7 +35,8 @@
 #endif
 
 #include "pwiz/data/common/cv.hpp"
-#include "pwiz/utility/chemistry/Chemistry.hpp"
+#include "../chemistry/chemistry.hpp"
+#include "pwiz/data/proteome/AminoAcid.hpp"
 #include "pwiz/data/proteome/Peptide.hpp"
 #include "pwiz/data/proteome/Digestion.hpp"
 #include "pwiz/data/proteome/Version.hpp"
@@ -64,25 +65,65 @@ public ref class Version
 };
 
 
-public ref class Chemistry
+/// <summary>enumeration of the amino acids</summary>
+public enum class AminoAcid
 {
+    Alanine,
+    Cysteine,
+    AsparticAcid,
+    GlutamicAcid,
+    Phenylalanine,
+    Glycine,
+    Histidine,
+    Isoleucine,
+    Lysine,
+    Leucine,
+    Methionine,
+    Asparagine,
+    Proline,
+    Glutamine,
+    Arginine,
+    Serine,
+    Threonine,
+    Valine,
+    Tryptophan,
+    Tyrosine,
+    Selenocysteine,
+    AspX,
+    GlutX,
+    Unknown
+};
+
+
+/// <summary>scope for accessing information about the amino acids</summary>
+public ref struct AminoAcidInfo abstract sealed {
+
+
+/// <summary>struct for holding data for a single amino acid</summary>
+ref class Record 
+{
+    DEFINE_INTERNAL_BASE_CODE(Record, pwiz::proteome::AminoAcid::Info::Record);
+
     public:
 
-    /// <summary>
-	/// the mass of a proton in unified atomic mass units
-	/// </summary>
-    static property double Proton { double get(); }
-
-    /// <summary>
-	/// the mass of a neutron in unified atomic mass units
-	/// </summary>
-    static property double Neutron { double get(); }
-
-    /// <summary>
-	/// the mass of an electron in unified atomic mass units
-	/// </summary>
-    static property double Electron { double get(); }
+    property System::String^ name { System::String^ get(); }
+    property System::String^ abbreviation { System::String^ get(); }
+    property System::Char symbol { System::Char get(); }
+    property pwiz::CLI::chemistry::Formula^ residueFormula { pwiz::CLI::chemistry::Formula^ get(); }
+    property pwiz::CLI::chemistry::Formula^ formula { pwiz::CLI::chemistry::Formula^ get(); }
 };
+
+
+/// <summary>returns the amino acid's Record by type</summary>
+static Record^ record(AminoAcid aminoAcid);
+
+
+/// <summary>returns the amino acid's Record by symbol (may throw) </summary>
+static Record^ record(System::Char symbol);
+
+
+};
+
 
 ref class Fragmentation;
 ref class ModificationMap;
@@ -92,10 +133,10 @@ ref class ModificationMap;
 /// </summary>
 public enum class ModificationParsing
 {
-    ModificationParsing_Off, /// any non-AA characters will cause an exception
-    ModificationParsing_ByFormula, /// oxidized P in peptide: PEP(O)TIDE
-    ModificationParsing_ByMass, /// PEP(15.94)TIDE or PEP(15.94,15.99)TIDE
-    ModificationParsing_Auto /// either by formula or by mass
+    ModificationParsing_Off, /// <summary>any non-AA characters will cause an exception</summary>
+    ModificationParsing_ByFormula, /// <summary>oxidized P in peptide: PEP(O)TIDE</summary>
+    ModificationParsing_ByMass, /// <summary>PEP(15.94)TIDE or PEP(15.94,15.99)TIDE</summary>
+    ModificationParsing_Auto /// <summary>either by formula or by mass</summary>
 };
 
 /// <summary>
@@ -103,9 +144,9 @@ public enum class ModificationParsing
 /// </summary>
 public enum class ModificationDelimiter
 {
-    ModificationDelimiter_Parentheses, /// '(' and ')'
-    ModificationDelimiter_Brackets, /// '[' and ']'
-    ModificationDelimiter_Braces /// '{' and '}'
+    ModificationDelimiter_Parentheses, /// <summary>'(' and ')'</summary>
+    ModificationDelimiter_Brackets, /// <summary>'[' and ']'</summary>
+    ModificationDelimiter_Braces /// <summary>'{' and '}'</summary>
 };
 
 /// <summary>
@@ -304,7 +345,7 @@ public ref class Modification
 };
 
 
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ModificationBaseList, pwiz::proteome::Modification, Modification, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ModificationBaseList, pwiz::proteome::Modification, Modification, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 /// represents a list of modifications on a single amino acid
 public ref class ModificationList : public ModificationBaseList
@@ -503,19 +544,19 @@ public ref class Digestion : public System::Collections::Generic::IEnumerable<Di
 
     /// <summary>
     /// specifies digestion occurs by a user-specified, zero-width Perl regular expression 
-    /// example: "(?<=K)" means "cleaves after K"
-    /// example: "((?<=D))|((?=D))" means "cleaves before or after D"
+    /// example: "(?&lt;=K)" means "cleaves after K"
+    /// example: "((?&lt;=D))|((?=D))" means "cleaves before or after D"
     /// example: "(?=[DE])" means "cleaves before D or E"
-    /// example: "(?<=[FYWLKR])(?!P)" means "cleaves after any single residue from FYWLKR except when it is followed by P"
+    /// example: "(?&lt;=[FYWLKR])(?!P)" means "cleaves after any single residue from FYWLKR except when it is followed by P"
     /// </summary>
     Digestion(Peptide^ peptide, System::String^ cleavageAgentRegex);
 
     /// <summary>
     /// specifies digestion occurs by a user-specified, zero-width Perl regular expression 
-    /// example: "(?<=K)" means "cleaves after K"
-    /// example: "((?<=D))|((?=D))" means "cleaves before or after D"
+    /// example: "(?&lt;=K)" means "cleaves after K"
+    /// example: "((?&lt;=D))|((?=D))" means "cleaves before or after D"
     /// example: "(?=[DE])" means "cleaves before D or E"
-    /// example: "(?<=[FYWLKR])(?!P)" means "cleaves after any single residue from FYWLKR except when it is followed by P"
+    /// example: "(?&lt;=[FYWLKR])(?!P)" means "cleaves after any single residue from FYWLKR except when it is followed by P"
     /// </summary>
     Digestion(Peptide^ peptide, System::String^ cleavageAgentRegex, Config^ config);
 

@@ -5737,12 +5737,12 @@ public enum class CVID
 /// <summary>
 /// A list of enumerated CVIDs (CV terms); implements IList&lt;CVID&gt;
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(CVIDList, pwiz::cv::CVID, CVID, NATIVE_VALUE_TO_CLI, CLI_VALUE_TO_NATIVE_VALUE);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(CVIDList, pwiz::cv::CVID, CVID, NATIVE_VALUE_TO_CLI, CLI_VALUE_TO_NATIVE_VALUE);
 
 /// <summary>
 /// A list of enumerated System.Strings; implements IList&lt;System.String&gt;
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(StringList, std::string, System::String, STD_STRING_TO_CLI_STRING, CLI_STRING_TO_STD_STRING);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(StringList, std::string, System::String, STD_STRING_TO_CLI_STRING, CLI_STRING_TO_STD_STRING);
 
 /// <summary>
 /// A utility class for getting detailed information about a particular CVID (CV term)

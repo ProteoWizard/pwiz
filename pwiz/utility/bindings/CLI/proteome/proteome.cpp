@@ -26,7 +26,7 @@
 
 using System::String;
 using namespace System::Collections::Generic;
-
+using namespace pwiz::CLI::chemistry;
 namespace b = pwiz::proteome;
 
 // HACK: this suppresses a "TypeRef without TypeDef" error apparently caused by
@@ -38,9 +38,25 @@ namespace CLI {
 namespace proteome {
 
 
-double Chemistry::Proton::get() {return pwiz::chemistry::Proton;}
-double Chemistry::Neutron::get() {return pwiz::chemistry::Neutron;}
-double Chemistry::Electron::get() {return pwiz::chemistry::Electron;}
+IMPLEMENT_STRING_PROPERTY_GET(AminoAcidInfo::Record, name);
+IMPLEMENT_STRING_PROPERTY_GET(AminoAcidInfo::Record, abbreviation);
+IMPLEMENT_SIMPLE_PRIMITIVE_PROPERTY_GET(System::Char, AminoAcidInfo::Record, symbol);
+IMPLEMENT_REFERENCE_PROPERTY_GET(Formula, AminoAcidInfo::Record, residueFormula);
+IMPLEMENT_REFERENCE_PROPERTY_GET(Formula, AminoAcidInfo::Record, formula);
+
+AminoAcidInfo::Record^ AminoAcidInfo::record(AminoAcid aminoAcid)
+{
+    return gcnew AminoAcidInfo::Record(const_cast<b::AminoAcid::Info::Record*>(&b::AminoAcid::Info::record((b::AminoAcid::Type) aminoAcid)), Proton::Mass);
+}
+
+AminoAcidInfo::Record^ AminoAcidInfo::record(System::Char symbol)
+{
+    try
+    {
+        return gcnew AminoAcidInfo::Record(const_cast<b::AminoAcid::Info::Record*>(&b::AminoAcid::Info::record((char) symbol)), Proton::Mass);
+    }
+    CATCH_AND_FORWARD
+}
 
 
 Peptide::Peptide()

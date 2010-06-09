@@ -80,10 +80,10 @@ public ref class ObjectStructorLog
 // runtime_error has been rethrown by pwiz so don't prepend the forwarding function
 #undef CATCH_AND_FORWARD
 #define CATCH_AND_FORWARD \
-    catch (std::runtime_error& e) { throw gcnew Exception(gcnew String(e.what())); } \
-    catch (std::exception& e) { throw gcnew Exception("[" + __FUNCTION__ + "] Unhandled exception: " + gcnew String(e.what())); } \
-    catch (_com_error& e) { throw gcnew Exception("[" + __FUNCTION__ + "] Unhandled COM error: " + gcnew String(e.ErrorMessage())); } \
-    catch (...) { throw gcnew Exception("[" + __FUNCTION__ + "] Unknown exception"); }
+    catch (std::runtime_error& e) { throw gcnew System::Exception(gcnew System::String(e.what())); } \
+    catch (std::exception& e) { throw gcnew System::Exception("[" + __FUNCTION__ + "] Unhandled exception: " + gcnew System::String(e.what())); } \
+    catch (_com_error& e) { throw gcnew System::Exception("[" + __FUNCTION__ + "] Unhandled COM error: " + gcnew System::String(e.ErrorMessage())); } \
+    catch (...) { throw gcnew System::Exception("[" + __FUNCTION__ + "] Unknown exception"); }
 
 #ifndef INTERNAL
 #define INTERNAL internal
@@ -207,5 +207,24 @@ property CLIType Name \
 #define DEFINE_SIMPLE_PRIMITIVE_PROPERTY(Type, Name) \
     DEFINE_PRIMITIVE_PROPERTY(Type, Type, Name)
 
+#define IMPLEMENT_STRING_PROPERTY_GET(Class, Property) \
+    System::String^ Class::Property::get() {return ToSystemString(base().Property);}
+#define IMPLEMENT_STRING_PROPERTY_SET(Class, Property) \
+    void Class::Property::set(System::String^ value) {base().Property = ToStdString(value);}
+
+#define IMPLEMENT_SIMPLE_PRIMITIVE_PROPERTY_GET(Type, Class, Property) \
+    Type Class::Property::get() {return base().Property;}
+#define IMPLEMENT_SIMPLE_PRIMITIVE_PROPERTY_SET(Type, Class, Property) \
+    void Class::Property::set(Type value) {base().Property = value;}
+
+#define IMPLEMENT_ENUM_PROPERTY_GET(Type, Class, Property) \
+    Type Class::Property::get() {return (Type) base().Property;}
+#define IMPLEMENT_ENUM_PROPERTY_SET(CLIType, NativeType, Class, Property) \
+    void Class::Property::set(CLIType value) {base().Property = (NativeType) value;}
+
+#define IMPLEMENT_REFERENCE_PROPERTY_GET(Type, Class, Property) \
+    Type^ Class::Property::get() {return gcnew Type(&base().Property, this);}
+#define IMPLEMENT_REFERENCE_PROPERTY_SET(Type, Class, Property) \
+    void Class::Property::set(Type^ value) {base().Property = value;}
 
 #endif // _SHAREDCLI_HPP_

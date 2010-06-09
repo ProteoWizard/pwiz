@@ -565,25 +565,25 @@ public ref class ParamGroup : public ParamContainer
 /// <summary>
 /// A list of CV references; implements the IList&lt;CV&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(CVList, pwiz::cv::CV, CV, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(CVList, pwiz::cv::CV, CV, NATIVE_REFERENCE_TO_CLI, CLI_TO_NATIVE_REFERENCE);
 
 
 /// <summary>
 /// A list of ParamGroup references; implements the IList&lt;ParamGroup&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ParamGroupList, pwiz::data::ParamGroupPtr, ParamGroup, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ParamGroupList, pwiz::data::ParamGroupPtr, ParamGroup, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
 
 
 /// <summary>
 /// A list of CVParam references; implements the IList&lt;CVParam&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(CVParamList, pwiz::data::CVParam, CVParam, NATIVE_REFERENCE_TO_CLI, CLI_SHARED_PTR_TO_NATIVE_REFERENCE);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(CVParamList, pwiz::data::CVParam, CVParam, NATIVE_REFERENCE_TO_CLI, CLI_SHARED_PTR_TO_NATIVE_REFERENCE);
 
 
 /// <summary>
 /// A list of UserParam references; implements the IList&lt;UserParam&gt; interface
 /// </summary>
-DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(UserParamList, pwiz::data::UserParam, UserParam, NATIVE_REFERENCE_TO_CLI, CLI_SHARED_PTR_TO_NATIVE_REFERENCE);
+public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(UserParamList, pwiz::data::UserParam, UserParam, NATIVE_REFERENCE_TO_CLI, CLI_SHARED_PTR_TO_NATIVE_REFERENCE);
 
 
 } // namespace data
