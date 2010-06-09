@@ -117,14 +117,23 @@ rule test-requirements ( properties * )
     }
 
     local result ;
-    if ! [ path.exists $(TEST_DATA_PATH) ]
+    
+    if ! $(.warn-once-test)
     {
-        if ! $(.warn-once)
+        .warn-once-test = true ;
+        if ! [ path.exists $(TEST_DATA_PATH) ]
         {
-            .warn-once = true ;
             echo "[pwiz_aux/msrc/data/vendor_readers/ABI] Missing ABI WIFF test data." ;
+            result += <build>no ;
         }
-        result += <build>no ;
+        else if ! <toolset>msvc in $(properties)
+        {
+            echo "[pwiz_aux/msrc/data/vendor_readers/ABI] Non-MSVC build: Reader_ABI_Test is only testing that WIFF files can be identified, not read." ;
+        }
+        else if ! $(.hasDLLs)
+        {
+            echo "[pwiz_aux/msrc/data/vendor_readers/ABI] Missing WiffFileDataReader DLL: Reader_ABI_Test is only testing that WIFF files can be identified, not read." ;
+        }
     }
     return $(result) ;
 }
