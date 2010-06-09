@@ -748,11 +748,13 @@ CVID translate_parentFilenameToSourceFileType(const string& name)
     // check for known open formats
     else if (fileExtension == ".mzdata")                        return MS_PSI_mzData_file;
     else if (fileExtension == ".mgf")                           return MS_Mascot_MGF_file;
+    else if (fileExtension == ".dta")                           return MS_DTA_file;
+    else if (fileExtension == ".pkl")                           return MS_Micromass_PKL_file;
     else if (fileExtension == ".mzxml")                         return MS_ISB_mzXML_file;
     else if (bal::iends_with(name, ".mz.xml"))                  return MS_ISB_mzXML_file;
     else if (fileExtension == ".mzml")                          return MS_mzML_file;
 
-    // This case is nasty for two reasons:
+    // This case is nasty for several reasons:
     // 1) a .d suffix almost certainly indicates a directory, not a file (so no SHA-1)
     // 2) the same suffix is used by multiple different formats (Agilent/Bruker YEP, Bruker BAF, Agilent ms*.bin)
     // 3) all the formats use the same nativeID style ("scan=123") so just treat it like an mzXML source
@@ -774,6 +776,7 @@ CVID translateSourceFileTypeToNativeIdFormat(CVID sourceFileType)
         case MS_ISB_mzXML_file:             return MS_scan_number_only_nativeID_format;
         case MS_PSI_mzData_file:            return MS_spectrum_identifier_nativeID_format;
         case MS_Mascot_MGF_file:            return MS_multiple_peak_list_nativeID_format;
+        case MS_DTA_file:                   return MS_scan_number_only_nativeID_format;
         case MS_Agilent_MassHunter_file:    return MS_Agilent_MassHunter_nativeID_format;
 
         // for these sources we must assume the scan number came from the index
@@ -781,6 +784,7 @@ CVID translateSourceFileTypeToNativeIdFormat(CVID sourceFileType)
         case MS_Bruker_FID_file:
         case MS_AB_SCIEX_TOF_TOF_T2D_file:
         case MS_Waters_raw_file:
+        case MS_Micromass_PKL_file:
             return MS_scan_number_only_nativeID_format;
 
         // in other cases, assume the source file doesn't contain instrument data
