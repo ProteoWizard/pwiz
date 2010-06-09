@@ -156,10 +156,10 @@ namespace pwiz.Skyline.Model.Lib
             return library;
         }
 
-        public void BuildLibrary(IDocumentContainer container, ILibraryBuilder builder, AsyncCallback callback)
+        public void BuildLibrary(IDocumentContainer container, ILibraryBuilder builder, AsyncCallback callback, String libName)
         {
             Action<IDocumentContainer, ILibraryBuilder> buildAction = BuildLibraryBackground;
-            buildAction.BeginInvoke(container, builder, callback, null);
+            buildAction.BeginInvoke(container, builder, callback, libName);
         }
 
         private void BuildLibraryBackground(IDocumentContainer container, ILibraryBuilder builder)

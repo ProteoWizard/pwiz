@@ -74,7 +74,8 @@ namespace pwiz.Skyline
         private readonly Timer _timerProgress;
         private readonly Timer _timerGraphs;
 
-        public event EventHandler LibraryBuildCompleteEvent;
+        public event EventHandler<BuildNotificationEventArgs> LibraryBuildCompleteEvent;
+        public event EventHandler<BuildNotificationEventArgs> BuildNotificationOpenedEvent;
 
         /// <summary>
         /// Constructor for the main window of the Skyline program.
@@ -2368,15 +2369,25 @@ namespace pwiz.Skyline
 
         #region Implementation of IBuildNotificationClient interface
 
-        void IBuildNotificationClient.BuildCompleteEventListen(EventHandler listener)
+        void IBuildNotificationClient.BuildCompleteEventListen(EventHandler<BuildNotificationEventArgs> listener)
         {
             LibraryBuildCompleteEvent += listener;
     }
 
-        void IBuildNotificationClient.BuildCompleteEventUnlisten(EventHandler listener)
+        void IBuildNotificationClient.BuildCompleteEventUnlisten(EventHandler<BuildNotificationEventArgs> listener)
         {
             LibraryBuildCompleteEvent -= listener;
-}
+        }
+
+        void IBuildNotificationClient.BuildNotificationOpenedEventListen(EventHandler<BuildNotificationEventArgs> listener)
+        {
+            BuildNotificationOpenedEvent += listener;
+        }
+
+        void IBuildNotificationClient.BuildNotificationOpenedEventUnlisten(EventHandler<BuildNotificationEventArgs> listener)
+        {
+            BuildNotificationOpenedEvent -= listener;
+        }
 
         void IBuildNotificationClient.LocationChangedEventListen(EventHandler listener)
         {
@@ -2387,8 +2398,25 @@ namespace pwiz.Skyline
             LocationChanged -= listener;
         }
 
-        void IBuildNotificationClient.OnBuildNotificationOpened(object sender, EventArgs e)
+        void IBuildNotificationClient.ClientClosingEventListen(CancelEventHandler listener)
         {
+            Closing += listener;
+        }
+        void IBuildNotificationClient.ClientClosingEventUnlisten(CancelEventHandler listener)
+        {
+            Closing -= listener;
+        }
+
+        void IBuildNotificationClient.OnBuildNotificationOpened(object sender, BuildNotificationEventArgs e)
+        {
+            InvokeAction(() =>
+            {
+                if (BuildNotificationOpenedEvent != null)
+                {
+                    BuildNotificationOpenedEvent(this, new BuildNotificationEventArgs(e.LibName));
+                }
+            });
+
             InvokeAction(() => Focus());
         }
 
@@ -2413,7 +2441,7 @@ namespace pwiz.Skyline
         {
             if (LibraryBuildCompleteEvent != null)
             {
-                LibraryBuildCompleteEvent(this, new EventArgs());
+                LibraryBuildCompleteEvent(this, new BuildNotificationEventArgs((String)ar.AsyncState));
             }
         }
 

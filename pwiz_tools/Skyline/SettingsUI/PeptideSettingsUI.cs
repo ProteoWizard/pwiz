@@ -345,7 +345,7 @@ namespace pwiz.Skyline.SettingsUI
             var dlg = new BuildLibraryDlg();
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {
-                _libraryManager.BuildLibrary(_parent, dlg.Builder, _parent.LibraryBuildCompleteCallback);
+                _libraryManager.BuildLibrary(_parent, dlg.Builder, _parent.LibraryBuildCompleteCallback, dlg.Builder.LibrarySpec.Name);
 
                 Settings.Default.SpectralLibraryList.Add(dlg.Builder.LibrarySpec);
                 _driverLibrary.LoadList();
