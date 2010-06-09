@@ -26,6 +26,9 @@
 
 #include <gcroot.h>
 #include <vcclr.h>
+#include <vector>
+#include <string>
+#include <stdexcept>
 #include "automation_vector.h"
 
 
