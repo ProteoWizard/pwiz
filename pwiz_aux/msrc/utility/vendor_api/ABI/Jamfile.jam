@@ -120,9 +120,21 @@ install install_pwiz_vendor_api_abi
 
 explicit install_pwiz_vendor_api_abi ;
 
+if [ path.exists $(API_PATH)/ClearCore.dll ] || [ path.exists $(ProteinPilot)\\ABSciex.DataAccess.ClearCore.dll ]
+{
 # for application build and install
 install install_pwiz_vendor_api_abi_app
     : ClearCore.dll
       ClearCore.Storage.dll
     ;
+}
+else
+{
+# for application build and install
+install install_pwiz_vendor_api_abi_app
+    : stub/ClearCore.dll
+      stub/ClearCore.Storage.dll
+    ;
+}
+explicit install_pwiz_vendor_api_abi_app ;
 }
