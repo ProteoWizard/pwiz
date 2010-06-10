@@ -26,6 +26,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/proteome/ProteinListWrapper.hpp"
+#include <boost/cstdint.hpp>
 
 
 namespace pwiz {
@@ -85,7 +86,7 @@ class PWIZ_API_DECL ProteinList_DecoyGeneratorPredicate_Reversed : public Protei
 class PWIZ_API_DECL ProteinList_DecoyGeneratorPredicate_Shuffled : public ProteinList_DecoyGenerator::Predicate
 {
     public:
-    ProteinList_DecoyGeneratorPredicate_Shuffled(const std::string& decoyPrefix, unsigned long randomSeed = 0);
+    ProteinList_DecoyGeneratorPredicate_Shuffled(const std::string& decoyPrefix, boost::uint32_t randomSeed = 0u);
 
     virtual ProteinPtr generate(const Protein& protein) const;
 

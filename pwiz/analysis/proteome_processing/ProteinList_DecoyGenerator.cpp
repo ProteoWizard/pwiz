@@ -118,7 +118,7 @@ PWIZ_API_DECL ProteinPtr ProteinList_DecoyGeneratorPredicate_Reversed::generate(
 
 struct ProteinList_DecoyGeneratorPredicate_Shuffled::Impl
 {
-    Impl(unsigned long randomSeed)
+    Impl(boost::uint32_t randomSeed)
     :   rng(engine, distribution)
     {
         engine.seed(randomSeed);
@@ -134,7 +134,7 @@ struct ProteinList_DecoyGeneratorPredicate_Shuffled::Impl
 //
 
 
-PWIZ_API_DECL ProteinList_DecoyGeneratorPredicate_Shuffled::ProteinList_DecoyGeneratorPredicate_Shuffled(const std::string& decoyPrefix, unsigned long randomSeed)
+PWIZ_API_DECL ProteinList_DecoyGeneratorPredicate_Shuffled::ProteinList_DecoyGeneratorPredicate_Shuffled(const std::string& decoyPrefix, boost::uint32_t randomSeed)
 :   impl_(new Impl(randomSeed)), decoyPrefix(decoyPrefix)
 {
 }
