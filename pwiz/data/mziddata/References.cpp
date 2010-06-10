@@ -183,19 +183,58 @@ PWIZ_API_DECL void resolve(MassTablePtr& mt, const vector<SpectrumIdentification
     mt = MassTablePtr(new MassTable((*it)->massTable));
 }
 
+PWIZ_API_DECL void resolve(PeptideEvidencePtr pe, const MzIdentML& mzid)
+{
+    if (!pe.get())
+        throw runtime_error("NULL value passed into resolve(PeptideEvidencePtr,"
+            "MzIdentML&)");
+
+    if (pe->dbSequencePtr.get())
+        resolve(pe->dbSequencePtr, mzid.sequenceCollection.dbSequences);
+
+    // TODO construct a collection of TranslationTable's from all the
+    // SpectrumIdentificationProtocolPtr's in AnalysisProtocolCollection.
+    
+    //if (pe->translationTablePtr.get())
+    //    resolve(pe->translationTablePtr, mzid.);
+    
+}
+
+
+//template <MzIdentML& mzid>
+struct ResolvePE
+{
+    const MzIdentML* mzid_;
+    ResolvePE(const MzIdentML* mzid) : mzid_(mzid) {}
+    
+    void operator()(PeptideEvidencePtr pe)
+    {
+        return resolve(pe, (*mzid_));
+    }
+};
+
 PWIZ_API_DECL void resolve(SpectrumIdentificationListPtr si, MzIdentML& mzid)
 {
-    for (vector<SpectrumIdentificationResultPtr>::iterator rit=si->spectrumIdentificationResult.begin(); rit != si->spectrumIdentificationResult.end(); rit++)
+    typedef vector<SpectrumIdentificationResultPtr>::iterator rit_iterator;
+    typedef vector<SpectrumIdentificationItemPtr>::iterator iit_iterator;
+    typedef vector<PeptideEvidencePtr>::iterator pe_iterator;
+    
+    for (rit_iterator rit=si->spectrumIdentificationResult.begin(); rit != si->spectrumIdentificationResult.end(); rit++)
     {
         if ((*rit)->spectraDataPtr.get())
             resolve((*rit)->spectraDataPtr, mzid.dataCollection.inputs.spectraData);
         
-        for (vector<SpectrumIdentificationItemPtr>::iterator iit=(*rit)->spectrumIdentificationItem.begin(); iit!=(*rit)->spectrumIdentificationItem.end(); iit++)
+        for (iit_iterator iit=(*rit)->spectrumIdentificationItem.begin(); iit!=(*rit)->spectrumIdentificationItem.end(); iit++)
         {
             if ((*iit)->peptidePtr.get())
             {
+                ResolvePE rpe(&mzid);
+                for_each((*iit)->peptideEvidence.begin(),
+                         (*iit)->peptideEvidence.end(),
+                         rpe);
                 resolve((*iit)->peptidePtr, mzid.sequenceCollection.peptides);
-                resolve((*iit)->massTablePtr, mzid.analysisProtocolCollection.spectrumIdentificationProtocol);
+                resolve((*iit)->massTablePtr, mzid.analysisProtocolCollection.
+                        spectrumIdentificationProtocol);
                 resolve((*iit)->samplePtr, mzid.analysisSampleCollection.samples);
             }
         }
