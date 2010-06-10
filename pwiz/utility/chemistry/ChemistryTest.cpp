@@ -25,6 +25,7 @@
 #include "Ion.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/math/round.hpp"
+#include <cstring>
 #include <iostream>
 #include <iomanip>
 #include <stdexcept>

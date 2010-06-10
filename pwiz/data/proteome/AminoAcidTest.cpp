@@ -23,6 +23,7 @@
 
 #include "AminoAcid.hpp"
 #include "pwiz/utility/misc/unit.hpp"
+#include <cstring>
 #include <iostream>
 #include <iomanip>
 #include <stdexcept>
