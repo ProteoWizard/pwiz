@@ -1,42 +1,9 @@
 /* $Id$
-
 	100% free public domain implementation of the SHA-1 algorithm
 	by Dominik Reichl <dominik.reichl@t-online.de>
 	Web: http://www.dominik-reichl.de/
 
-	Version 1.7 - 2006-12-21
-	- Fixed buffer underrun warning which appeared when compiling with
-	  Borland C Builder (thanks to Rex Bloom and Tim Gallagher for the
-	  patch)
-	- Breaking change: ReportHash writes the final hash to the start
-	  of the buffer, i.e. it's not appending it to the string any more
-	- Made some function parameters const
-	- Added Visual Studio 2005 project files to demo project
-
-	Version 1.6 - 2005-02-07 (thanks to Howard Kapustein for patches)
-	- You can set the endianness in your files, no need to modify the
-	  header file of the CSHA1 class any more
-	- Aligned data support
-	- Made support/compilation of the utility functions (ReportHash
-	  and HashFile) optional (useful when bytes count, for example in
-	  embedded environments)
-
-	Version 1.5 - 2005-01-01
-	- 64-bit compiler compatibility added
-	- Made variable wiping optional (define SHA1_WIPE_VARIABLES)
-	- Removed unnecessary variable initializations
-	- ROL32 improvement for the Microsoft compiler (using _rotl)
-
-	======== Test Vectors (from FIPS PUB 180-1) ========
-
-	SHA1("abc") =
-		A9993E36 4706816A BA3E2571 7850C26C 9CD0D89D
-
-	SHA1("abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq") =
-		84983E44 1C3BD26E BAAE4AA1 F95129E5 E54670F1
-
-	SHA1(A million repetitions of "a") =
-		34AA973C D4C4DAA4 F61EEB2B DBAD2731 6534016F
+	See header file for version history.
 */
 
 // added endianization check -- dk
@@ -45,6 +12,7 @@
 #define SHA1_BIG_ENDIAN // for SHA1.h
 #endif // PWIZ_BIG_ENDIAN
 
+#define _CRT_SECURE_NO_WARNINGS
 #include "SHA1.h"
 
 #ifdef SHA1_UTILITY_FUNCTIONS
@@ -54,9 +22,9 @@
 // Rotate x bits to the left
 #ifndef ROL32
 #ifdef _MSC_VER
-#define ROL32(_val32, _nBits) _rotl(_val32, _nBits)
+#define ROL32(_val32,_nBits) _rotl(_val32,_nBits)
 #else
-#define ROL32(_val32, _nBits) (((_val32)<<(_nBits))|((_val32)>>(32-(_nBits))))
+#define ROL32(_val32,_nBits) (((_val32)<<(_nBits))|((_val32)>>(32-(_nBits))))
 #endif
 #endif
 
@@ -71,11 +39,11 @@
 	^ m_block->l[(i+2)&15] ^ m_block->l[i&15],1))
 
 // SHA-1 rounds
-#define _R0(v,w,x,y,z,i) { z+=((w&(x^y))^y)+SHABLK0(i)+0x5A827999+ROL32(v,5); w=ROL32(w,30); }
-#define _R1(v,w,x,y,z,i) { z+=((w&(x^y))^y)+SHABLK(i)+0x5A827999+ROL32(v,5); w=ROL32(w,30); }
-#define _R2(v,w,x,y,z,i) { z+=(w^x^y)+SHABLK(i)+0x6ED9EBA1+ROL32(v,5); w=ROL32(w,30); }
-#define _R3(v,w,x,y,z,i) { z+=(((w|x)&y)|(w&x))+SHABLK(i)+0x8F1BBCDC+ROL32(v,5); w=ROL32(w,30); }
-#define _R4(v,w,x,y,z,i) { z+=(w^x^y)+SHABLK(i)+0xCA62C1D6+ROL32(v,5); w=ROL32(w,30); }
+#define _R0(v,w,x,y,z,i) {z+=((w&(x^y))^y)+SHABLK0(i)+0x5A827999+ROL32(v,5);w=ROL32(w,30);}
+#define _R1(v,w,x,y,z,i) {z+=((w&(x^y))^y)+SHABLK(i)+0x5A827999+ROL32(v,5);w=ROL32(w,30);}
+#define _R2(v,w,x,y,z,i) {z+=(w^x^y)+SHABLK(i)+0x6ED9EBA1+ROL32(v,5);w=ROL32(w,30);}
+#define _R3(v,w,x,y,z,i) {z+=(((w|x)&y)|(w&x))+SHABLK(i)+0x8F1BBCDC+ROL32(v,5);w=ROL32(w,30);}
+#define _R4(v,w,x,y,z,i) {z+=(w^x^y)+SHABLK(i)+0xCA62C1D6+ROL32(v,5);w=ROL32(w,30);}
 
 CSHA1::CSHA1()
 {
@@ -144,92 +112,78 @@ void CSHA1::Transform(UINT_32* pState, const UINT_8* pBuffer)
 }
 
 // Use this function to hash in binary data and strings
-void CSHA1::Update(const UINT_8* pData, UINT_32 uLen)
+void CSHA1::Update(const UINT_8* pbData, UINT_32 uLen)
 {
-	UINT_32 i, j;
-
-	j = (m_count[0] >> 3) & 63;
+	UINT_32 j = ((m_count[0] >> 3) & 0x3F);
 
 	if((m_count[0] += (uLen << 3)) < (uLen << 3))
-		m_count[1]++;
+		++m_count[1]; // Overflow
 
 	m_count[1] += (uLen >> 29);
 
+	UINT_32 i;
 	if((j + uLen) > 63)
 	{
 		i = 64 - j;
-		memcpy(&m_buffer[j], pData, i);
+		memcpy(&m_buffer[j], pbData, i);
 		Transform(m_state, m_buffer);
 
 		for( ; (i + 63) < uLen; i += 64)
-			Transform(m_state, &pData[i]);
+			Transform(m_state, &pbData[i]);
 
 		j = 0;
 	}
 	else i = 0;
 
 	if((uLen - i) != 0)
-		memcpy(&m_buffer[j], &pData[i], uLen - i);
+		memcpy(&m_buffer[j], &pbData[i], uLen - i);
 }
 
 #ifdef SHA1_UTILITY_FUNCTIONS
 // Hash in file contents
-bool CSHA1::HashFile(const char* szFileName)
+bool CSHA1::HashFile(const TCHAR* tszFileName)
 {
-	unsigned long ulFileSize, ulRest, ulBlocks;
-	unsigned long i;
-	UINT_8 uData[SHA1_MAX_FILE_BUFFER];
-	FILE* fIn;
+	if(tszFileName == NULL) return false;
 
-	if(szFileName == NULL) return false;
+	FILE* fpIn = _tfopen(tszFileName, _T("rb"));
+	if(fpIn == NULL) return false;
 
-	fIn = fopen(szFileName, "rb");
-	if(fIn == NULL) return false;
+	_fseeki64(fpIn, 0, SEEK_END);
+	const INT_64 lFileSize = _ftelli64(fpIn);
+	_fseeki64(fpIn, 0, SEEK_SET);
 
-	fseek(fIn, 0, SEEK_END);
-	ulFileSize = (unsigned long)ftell(fIn);
-	fseek(fIn, 0, SEEK_SET);
+	const INT_64 lMaxBuf = SHA1_MAX_FILE_BUFFER;
+	UINT_8 vData[SHA1_MAX_FILE_BUFFER];
+	INT_64 lRemaining = lFileSize;
 
-	if(ulFileSize != 0)
+	while(lRemaining > 0)
 	{
-		ulBlocks = ulFileSize / SHA1_MAX_FILE_BUFFER;
-		ulRest = ulFileSize % SHA1_MAX_FILE_BUFFER;
-	}
-	else
-	{
-		ulBlocks = 0;
-		ulRest = 0;
-	}
+		const size_t uMaxRead = static_cast<size_t>((lRemaining > lMaxBuf) ?
+			lMaxBuf : lRemaining);
 
-	bool result = true;
-	for(i = 0; i < ulBlocks; i++)
-	{
-		if (SHA1_MAX_FILE_BUFFER != fread(uData, 1, SHA1_MAX_FILE_BUFFER, fIn)) {
-			result = false;
-			break;
+		const size_t uRead = fread(vData, 1, uMaxRead, fpIn);
+		if(uRead == 0)
+		{
+			fclose(fpIn);
+			return false;
 		}
-		Update((UINT_8*)uData, SHA1_MAX_FILE_BUFFER);
+
+		Update(vData, static_cast<UINT_32>(uRead));
+
+		lRemaining -= static_cast<INT_64>(uRead);
 	}
 
-	if(ulRest != 0)
-	{
-		if (ulRest != fread(uData, 1, ulRest, fIn)) {
-			result = false;
-		}
-		Update((UINT_8*)uData, ulRest);
-	}
-
-	fclose(fIn); fIn = NULL;
-	return result;
+	fclose(fpIn);
+	return (lRemaining == 0);
 }
 #endif
 
 void CSHA1::Final()
 {
 	UINT_32 i;
-	UINT_8 finalcount[8];
 
-	for(i = 0; i < 8; i++)
+	UINT_8 finalcount[8];
+	for(i = 0; i < 8; ++i)
 		finalcount[i] = (UINT_8)((m_count[((i >= 4) ? 0 : 1)]
 			>> ((3 - (i & 3)) * 8) ) & 255); // Endian independent
 
@@ -240,8 +194,8 @@ void CSHA1::Final()
 
 	Update(finalcount, 8); // Cause a SHA1Transform()
 
-	for(i = 0; i < 20; i++)
-		m_digest[i] = (UINT_8)((m_state[i >> 2] >> ((3 - (i & 3)) * 8)) & 255);
+	for(i = 0; i < 20; ++i)
+		m_digest[i] = (UINT_8)((m_state[i >> 2] >> ((3 - (i & 3)) * 8)) & 0xFF);
 
 	// Wipe variables for security reasons
 #ifdef SHA1_WIPE_VARIABLES
@@ -255,41 +209,55 @@ void CSHA1::Final()
 
 #ifdef SHA1_UTILITY_FUNCTIONS
 // Get the final hash as a pre-formatted string
-void CSHA1::ReportHash(char* szReport, unsigned char uReportType) const
+bool CSHA1::ReportHash(TCHAR* tszReport, REPORT_TYPE rtReportType) const
 {
-	unsigned char i;
-	char szTemp[16];
+	if(tszReport == NULL) return false;
 
-	if(szReport == NULL) return;
+	TCHAR tszTemp[16];
 
-	if(uReportType == REPORT_HEX)
+	if((rtReportType == REPORT_HEX) || (rtReportType == REPORT_HEX_SHORT))
 	{
-		sprintf(szTemp, "%02X", m_digest[0]);
-		strcpy(szReport, szTemp);
+		_sntprintf(tszTemp, 15, _T("%02X"), m_digest[0]);
+		_tcscpy(tszReport, tszTemp);
 
-		for(i = 1; i < 20; i++)
+		const TCHAR* lpFmt = ((rtReportType == REPORT_HEX) ? _T(" %02X") : _T("%02X"));
+		for(size_t i = 1; i < 20; ++i)
 		{
-			sprintf(szTemp, " %02X", m_digest[i]);
-			strcat(szReport, szTemp);
+			_sntprintf(tszTemp, 15, lpFmt, m_digest[i]);
+			_tcscat(tszReport, tszTemp);
 		}
 	}
-	else if(uReportType == REPORT_DIGIT)
+	else if(rtReportType == REPORT_DIGIT)
 	{
-		sprintf(szTemp, "%u", m_digest[0]);
-		strcpy(szReport, szTemp);
+		_sntprintf(tszTemp, 15, _T("%u"), m_digest[0]);
+		_tcscpy(tszReport, tszTemp);
 
-		for(i = 1; i < 20; i++)
+		for(size_t i = 1; i < 20; ++i)
 		{
-			sprintf(szTemp, " %u", m_digest[i]);
-			strcat(szReport, szTemp);
+			_sntprintf(tszTemp, 15, _T(" %u"), m_digest[i]);
+			_tcscat(tszReport, tszTemp);
 		}
 	}
-	else strcpy(szReport, "Error: Unknown report type!");
+	else return false;
+
+	return true;
+}
+#endif
+
+#ifdef SHA1_STL_FUNCTIONS
+bool CSHA1::ReportHashStl(std::basic_string<TCHAR>& strOut, REPORT_TYPE rtReportType) const
+{
+	TCHAR tszOut[84];
+	const bool bResult = ReportHash(tszOut, rtReportType);
+	if(bResult) strOut = tszOut;
+	return bResult;
 }
 #endif
 
 // Get the raw message digest
-void CSHA1::GetHash(UINT_8* puDest) const
+bool CSHA1::GetHash(UINT_8* pbDest) const
 {
-	memcpy(puDest, m_digest, 20);
+	if(pbDest == NULL) return false;
+	memcpy(pbDest, m_digest, 20);
+	return true;
 }
