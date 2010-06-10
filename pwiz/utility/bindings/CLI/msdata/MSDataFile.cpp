@@ -70,7 +70,8 @@ MSDataFile::MSDataFile(System::String^ path)
 
 void MSDataFile::write(MSData^ msd, System::String^ filename)
 {
-    WriteConfig^ config = gcnew WriteConfig(Format::Format_mzML);
+    WriteConfig^ config = gcnew WriteConfig();
+    config->format = Format::Format_mzML;
     config->precision = Precision::Precision_64;
     config->byteOrder = ByteOrder::ByteOrder_LittleEndian;
     config->compression = Compression::Compression_None;
@@ -83,6 +84,7 @@ void MSDataFile::write(MSData^ msd, System::String^ filename, WriteConfig^ confi
     try
     {
         b::MSDataFile::WriteConfig config2((b::MSDataFile::Format) config->format);
+        config2.gzipped = config->gzipped;
         config2.binaryDataEncoderConfig.precision = (b::BinaryDataEncoder::Precision) config->precision;
         config2.binaryDataEncoderConfig.byteOrder = (b::BinaryDataEncoder::ByteOrder) config->byteOrder;
         config2.binaryDataEncoderConfig.compression = (b::BinaryDataEncoder::Compression) config->compression;
@@ -101,7 +103,8 @@ void MSDataFile::write(MSData^ msd, System::String^ filename, WriteConfig^ confi
 
 void MSDataFile::write(System::String^ filename)
 {
-    WriteConfig^ config = gcnew WriteConfig(Format::Format_mzML);
+    WriteConfig^ config = gcnew WriteConfig();
+    config->format = Format::Format_mzML;
     config->precision = Precision::Precision_64;
     config->byteOrder = ByteOrder::ByteOrder_LittleEndian;
     config->compression = Compression::Compression_None;
@@ -114,6 +117,7 @@ void MSDataFile::write(System::String^ filename, WriteConfig^ config)
     try
     {
         b::MSDataFile::WriteConfig config2((b::MSDataFile::Format) config->format);
+        config2.gzipped = config->gzipped;
         config2.binaryDataEncoderConfig.precision = (b::BinaryDataEncoder::Precision) config->precision;
         config2.binaryDataEncoderConfig.byteOrder = (b::BinaryDataEncoder::ByteOrder) config->byteOrder;
         config2.binaryDataEncoderConfig.compression = (b::BinaryDataEncoder::Compression) config->compression;

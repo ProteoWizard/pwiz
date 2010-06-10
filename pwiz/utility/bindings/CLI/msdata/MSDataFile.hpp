@@ -69,15 +69,18 @@ public ref class MSDataFile : public MSData
     ref class WriteConfig
     {
         public:
-        Format format;
-        Precision precision;
-        ByteOrder byteOrder;
-        Compression compression;
-        bool indexed;
+        property Format format;
+        property Precision precision;
+        property ByteOrder byteOrder;
+        property Compression compression;
+        property bool indexed;
+        property bool gzipped;
 
-        WriteConfig(Format _format)
-        :   format(_format), indexed(true)
-        {}
+        WriteConfig()
+        {
+            format = Format::Format_mzML;
+            indexed = true;
+        }
     };
 
     /// <summary>
