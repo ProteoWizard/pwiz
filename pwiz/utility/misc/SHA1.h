@@ -138,12 +138,15 @@
 #endif
 #endif
 
-// Fallback, if no 64-bit support
-#ifndef _fseeki64
-#define _fseeki64 fseek
-#endif
-#ifndef _ftelli64
-#define _ftelli64 ftell
+#ifdef _MSC_VER // Compiling with Microsoft compiler
+#define _fseeki64 _fseeki64
+#define _ftelli64 _ftelli64
+#elif __MINGW
+#define _fseeki64 fseeko64
+#define _ftelli64 ftello64
+#else // assume POSIX
+#define _fseeki64 fseeko
+#define _ftelli64 ftello
 #endif
 
 ///////////////////////////////////////////////////////////////////////////
