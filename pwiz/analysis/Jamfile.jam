@@ -27,6 +27,7 @@ build-project-if-exists passive ;
 build-project-if-exists peakdetect ;
 build-project-if-exists peptideid ;
 build-project-if-exists spectrum_processing ;
+build-project-if-exists proteome_processing ;
 
 
 lib pwiz_analysis_version 
