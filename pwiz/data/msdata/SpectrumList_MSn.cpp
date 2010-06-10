@@ -361,6 +361,12 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
             }
         }// header vs peaks
     }// read next line
+
+    // if we got to the end of the file, clear the eof bit and return to beginning of file
+    if( is_->eof() ){
+       is_->clear();
+       is_->seekg(0);
+    }
     
     // If we have only ONE charge state, we read it in as "MS_charge_state";
     // otherwise, the charge states are all read as "MS_possible_charge_state"
