@@ -41,21 +41,21 @@ namespace msdata {
 namespace detail {
 
 ChromatogramList_Agilent::ChromatogramList_Agilent(MassHunterDataPtr rawfile)
-:   rawfile_(rawfile), indexInitialized_(BOOST_ONCE_INIT)
+:   rawfile_(rawfile), indexInitialized_(util::init_once_flag_proxy)
 {
 }
 
 
 PWIZ_API_DECL size_t ChromatogramList_Agilent::size() const
 {
-    boost::call_once(indexInitialized_, boost::bind(&ChromatogramList_Agilent::createIndex, this));
+    boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_Agilent::createIndex, this));
     return index_.size();
 }
 
 
 PWIZ_API_DECL const ChromatogramIdentity& ChromatogramList_Agilent::chromatogramIdentity(size_t index) const
 {
-    boost::call_once(indexInitialized_, boost::bind(&ChromatogramList_Agilent::createIndex, this));
+    boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_Agilent::createIndex, this));
     if (index>size())
         throw runtime_error(("[ChromatogramList_Agilent::chromatogramIdentity()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
@@ -65,7 +65,7 @@ PWIZ_API_DECL const ChromatogramIdentity& ChromatogramList_Agilent::chromatogram
 
 PWIZ_API_DECL size_t ChromatogramList_Agilent::find(const string& id) const
 {
-    boost::call_once(indexInitialized_, boost::bind(&ChromatogramList_Agilent::createIndex, this));
+    boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_Agilent::createIndex, this));
     map<string, size_t>::const_iterator itr = idMap_.find(id);
     if (itr != idMap_.end())
         return itr->second;
@@ -76,7 +76,7 @@ PWIZ_API_DECL size_t ChromatogramList_Agilent::find(const string& id) const
 
 PWIZ_API_DECL ChromatogramPtr ChromatogramList_Agilent::chromatogram(size_t index, bool getBinaryData) const 
 {
-    boost::call_once(indexInitialized_, boost::bind(&ChromatogramList_Agilent::createIndex, this));
+    boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_Agilent::createIndex, this));
     if (index>size())
         throw runtime_error(("[ChromatogramList_Agilent::chromatogram()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());

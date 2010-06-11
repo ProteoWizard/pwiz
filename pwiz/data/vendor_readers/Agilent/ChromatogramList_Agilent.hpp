@@ -31,7 +31,7 @@
 
 #ifdef PWIZ_READER_AGILENT
 #include "pwiz/utility/vendor_api/Agilent/MassHunterData.hpp"
-#include <boost/thread/once.hpp>
+#include "pwiz/utility/misc/Once.hpp"
 using namespace pwiz::vendor_api::Agilent;
 #endif // PWIZ_READER_AGILENT
 
@@ -59,7 +59,7 @@ public:
 
     MassHunterDataPtr rawfile_;
 
-    mutable boost::once_flag indexInitialized_;
+    mutable util::once_flag_proxy indexInitialized_;
 
     struct IndexEntry : public ChromatogramIdentity
     {

@@ -166,13 +166,14 @@ rule init ( version : location : options * )
             ;
 
         lib iostreams
-            :   [ glob $(location)/libs/iostreams/src/*.cpp : $(location)/libs/iostreams/src/zlib.cpp $(location)/libs/iostreams/src/bzip2.cpp ]
+            :   [ glob $(location)/libs/iostreams/src/*.cpp : $(location)/libs/iostreams/src/zlib.cpp $(location)/libs/iostreams/src/gzip.cpp $(location)/libs/iostreams/src/bzip2.cpp ]
             :   $(requirements)
                 <location-prefix>iostreams
                 <use>boost
                 <threading>multi
                 <link>shared:<define>BOOST_IOSTREAMS_DYN_LINK=1
                 <boost-iostreams-zlib>on:<source>$(location)/libs/iostreams/src/zlib.cpp
+                <boost-iostreams-zlib>on:<source>$(location)/libs/iostreams/src/gzip.cpp
                 <boost-iostreams-zlib>on:<library>/ext/zlib//z
                 #<toolset>msvc,<boost-iostreams-zlib>on:<link>static
                 <boost-iostreams-bzip2>on:<source>$(location)/libs/iostreams/src/bzip2.cpp
@@ -210,9 +211,12 @@ rule init ( version : location : options * )
           text_iarchive
           text_oarchive
           void_cast
+          archive_exception
           xml_grammar
           xml_iarchive
           xml_oarchive
+          xml_archive_exception
+          shared_ptr_helper
         ;
 
         local wserialization_sources = 
@@ -230,11 +234,9 @@ rule init ( version : location : options * )
         lib serialization
             :   $(location)/libs/serialization/src/$(serialization_sources).cpp
             :   $(requirements) <toolset>msvc:<cxxflags>/Gy
-                # wtf is this? <dependency>$(location)/libs/config/test/all//BOOST_NO_STD_LOCALE
                 <location-prefix>serialization
                 <use>boost
                 #<threading>multi
-                <toolset>gcc:<warnings>on # gcc 4.1.2 error on extra semicolon instead of warning with -pedantic
                 <link>shared:<define>BOOST_SERIALIZATION_DYN_LINK=1
                 <define>BOOST_SERIALIZATION_NO_LIB=1
             :
@@ -260,7 +262,6 @@ rule init ( version : location : options * )
         {
           thread_sources =
                 win32/thread
-                win32/exceptions
                 win32/tss_dll
                 ../../../../boost_aux/libs/thread/src/win32/tss_pe
               ;
@@ -268,7 +269,6 @@ rule init ( version : location : options * )
         {
           thread_sources =
                 pthread/thread
-                pthread/exceptions
                 pthread/once
               ;
         }

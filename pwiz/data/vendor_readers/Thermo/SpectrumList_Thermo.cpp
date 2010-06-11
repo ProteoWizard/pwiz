@@ -46,7 +46,7 @@ namespace detail {
 SpectrumList_Thermo::SpectrumList_Thermo(const MSData& msd, RawFilePtr rawfile)
 :   msd_(msd), rawfile_(rawfile),
     size_(0),
-    indexInitialized_(BOOST_ONCE_INIT)
+    indexInitialized_(util::init_once_flag_proxy)
 {
     spectraByScanType.resize(ScanType_Count, 0);
     spectraByMSOrder.resize(MSOrder_Count+3, 0); // can't use negative index and a std::map would be inefficient
@@ -97,7 +97,7 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::size() const
 
 PWIZ_API_DECL const SpectrumIdentity& SpectrumList_Thermo::spectrumIdentity(size_t index) const
 {
-    boost::call_once(indexInitialized_, boost::bind(&SpectrumList_Thermo::createIndex, this));
+    boost::call_once(indexInitialized_.flag, boost::bind(&SpectrumList_Thermo::createIndex, this));
     if (index>size_)
         throw runtime_error(("[SpectrumList_Thermo::spectrumIdentity()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
@@ -107,7 +107,7 @@ PWIZ_API_DECL const SpectrumIdentity& SpectrumList_Thermo::spectrumIdentity(size
 
 PWIZ_API_DECL size_t SpectrumList_Thermo::find(const string& id) const
 {
-    boost::call_once(indexInitialized_, boost::bind(&SpectrumList_Thermo::createIndex, this));
+    boost::call_once(indexInitialized_.flag, boost::bind(&SpectrumList_Thermo::createIndex, this));
     try
     {
         size_t scanNumber = lexical_cast<size_t>(id);
@@ -151,7 +151,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const 
 { 
-    boost::call_once(indexInitialized_, boost::bind(&SpectrumList_Thermo::createIndex, this));
+    boost::call_once(indexInitialized_.flag, boost::bind(&SpectrumList_Thermo::createIndex, this));
     if (index >= size_)
         throw runtime_error(("[SpectrumList_Thermo::spectrum()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());

@@ -31,7 +31,7 @@
 
 #ifdef PWIZ_READER_THERMO
 #include "pwiz/utility/vendor_api/thermo/RawFile.h"
-#include <boost/thread/once.hpp>
+#include "pwiz/utility/misc/Once.hpp"
 using namespace pwiz::vendor_api::Thermo;
 #endif // PWIZ_READER_THERMO
 
@@ -66,7 +66,7 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListBase
     size_t size_;
 
     mutable vector<int> scanMsLevelCache_;
-    mutable boost::once_flag indexInitialized_;
+    mutable util::once_flag_proxy indexInitialized_;
 
     struct IndexEntry : public SpectrumIdentity
     {

@@ -26,7 +26,7 @@
 
 #ifdef PWIZ_READER_ABI_T2D
 #include "pwiz_aux/msrc/utility/vendor_api/ABI/T2D/T2D_Data.hpp"
-#include <boost/thread/once.hpp>
+#include "pwiz/utility/misc/Once.hpp"
 using namespace pwiz::vendor_api::ABI::T2D;
 #endif // PWIZ_READER_ABI_T2D
 

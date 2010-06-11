@@ -31,7 +31,7 @@
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Stream.hpp"
 #include "pwiz/utility/misc/Container.hpp"
-#include <boost/thread/once.hpp>
+#include "pwiz/utility/misc/Once.hpp"
 #include <boost/bind.hpp>
 
 
@@ -45,17 +45,6 @@ using boost::iostreams::offset_to_position;
 
 
 namespace {
-
-
-// since the call_once implementation on pthreads is defined as an aggregate,
-// this proxy class is used for initializing the per-instance once_flags
-struct once_flag_proxy
-{
-    boost::once_flag flag;
-};
-
-
-once_flag_proxy init_once_flag_proxy = {BOOST_ONCE_INIT};
 
 
 class SpectrumList_mzMLImpl : public SpectrumList_mzML
@@ -78,8 +67,8 @@ class SpectrumList_mzMLImpl : public SpectrumList_mzML
     const MSData& msd_;
     mutable bool indexed_;
 
-    mutable once_flag_proxy indexSizeSet_;
-    mutable once_flag_proxy indexInitialized_;
+    mutable util::once_flag_proxy indexSizeSet_;
+    mutable util::once_flag_proxy indexInitialized_;
     mutable size_t size_;
     mutable vector<SpectrumIdentity> index_;
     mutable map<string,size_t> idToIndex_;
@@ -95,8 +84,8 @@ class SpectrumList_mzMLImpl : public SpectrumList_mzML
 SpectrumList_mzMLImpl::SpectrumList_mzMLImpl(shared_ptr<istream> is, const MSData& msd, bool indexed)
 :   is_(is), msd_(msd),
     indexed_(indexed),
-    indexSizeSet_(init_once_flag_proxy),
-    indexInitialized_(init_once_flag_proxy)
+    indexSizeSet_(util::init_once_flag_proxy),
+    indexInitialized_(util::init_once_flag_proxy)
 {
 }
 
@@ -325,6 +314,8 @@ class HandlerIndexList : public SAXParser::Handler
 class HandlerSpectrumListCount : public SAXParser::Handler
 {
     public:
+
+    HandlerSpectrumListCount() : spectrumListCount(0) {}
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,

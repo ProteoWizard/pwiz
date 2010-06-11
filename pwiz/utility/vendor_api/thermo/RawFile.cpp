@@ -45,7 +45,7 @@
 #include "pwiz/utility/misc/COMInitializer.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include <boost/thread/once.hpp>
+#include "pwiz/utility/misc/Once.hpp"
 #include <boost/bind.hpp>
 #include <windows.h> // GetModuleFileName
 
@@ -845,13 +845,13 @@ class ScanInfoImpl : public ScanInfo
     bool isUniformTime_;
     double frequency_;
 
-    mutable boost::once_flag statusLogInitialized_;
+    mutable once_flag_proxy statusLogInitialized_;
     mutable long statusLogSize_;
     mutable double statusLogRT_;
     mutable auto_ptr<VariantStringArray> statusLogLabels_;
     mutable auto_ptr<VariantStringArray> statusLogValues_;
 
-    mutable boost::once_flag trailerExtraInitialized_;
+    mutable once_flag_proxy trailerExtraInitialized_;
     mutable long trailerExtraSize_;
     mutable auto_ptr<VariantStringArray> trailerExtraLabels_;
     mutable auto_ptr<VariantStringArray> trailerExtraValues_;
@@ -893,12 +893,12 @@ ScanInfoImpl::ScanInfoImpl(long scanNumber, RawFileImpl* raw)
     channelCount_(0),
     isUniformTime_(false),
     frequency_(0),
-    statusLogInitialized_(BOOST_ONCE_INIT),
+    statusLogInitialized_(init_once_flag_proxy),
     statusLogSize_(0),
     statusLogRT_(0),
     statusLogLabels_(0),
     statusLogValues_(0),
-    trailerExtraInitialized_(BOOST_ONCE_INIT),
+    trailerExtraInitialized_(init_once_flag_proxy),
     trailerExtraSize_(0),
     trailerExtraLabels_(0),
     trailerExtraValues_(0)
@@ -940,12 +940,11 @@ void ScanInfoImpl::initialize()
 
 void ScanInfoImpl::initStatusLog() const
 {
-    boost::call_once(statusLogInitialized_, boost::bind(&ScanInfoImpl::initStatusLogHelper, this));
+    boost::call_once(statusLogInitialized_.flag, boost::bind(&ScanInfoImpl::initStatusLogHelper, this));
 }
 
 void ScanInfoImpl::initStatusLogHelper() const
 {
-    statusLogInitialized_ = true;
     _variant_t variantStatusLogLabels;
     _variant_t variantStatusLogValues;
 
@@ -961,12 +960,11 @@ void ScanInfoImpl::initStatusLogHelper() const
 
 void ScanInfoImpl::initTrailerExtra() const
 {
-    boost::call_once(statusLogInitialized_, boost::bind(&ScanInfoImpl::initTrailerExtraHelper, this));
+    boost::call_once(statusLogInitialized_.flag, boost::bind(&ScanInfoImpl::initTrailerExtraHelper, this));
 }
 
 void ScanInfoImpl::initTrailerExtraHelper() const
 {
-    trailerExtraInitialized_ = true;
     _variant_t variantTrailerExtraLabels;
     _variant_t variantTrailerExtraValues;
 

@@ -26,7 +26,7 @@
 
 #ifdef PWIZ_READER_ABI
 #include "pwiz_aux/msrc/utility/vendor_api/ABI/WiffFile.hpp"
-#include <boost/thread/once.hpp>
+#include "pwiz/utility/misc/Once.hpp"
 using namespace pwiz::vendor_api::ABI;
 #endif // PWIZ_READER_ABI
 
@@ -56,7 +56,7 @@ class PWIZ_API_DECL SpectrumList_ABI : public SpectrumListBase
 
     mutable size_t size_;
 
-    mutable boost::once_flag indexInitialized_;
+    mutable util::once_flag_proxy indexInitialized_;
 
     struct IndexEntry : public SpectrumIdentity
     {

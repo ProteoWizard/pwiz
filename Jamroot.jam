@@ -28,7 +28,7 @@ local default_libraries_path = "./libraries" ;
 local libraries_path = [ MATCH --libraries-path=(.*) : [ modules.peek : ARGV ] ] ;
 libraries_path ?= $(default_libraries_path) ; # set default path in absence of command-line path
 
-local default_boost_src = "$(libraries_path)/boost_1_39_0" ;
+local default_boost_src = "$(libraries_path)/boost_1_43_0" ;
 local boost_src = [ MATCH --boost-src=(.*) : [ modules.peek : ARGV ] ] ;
 boost_src ?= $(default_boost_src) ; # set default path in absence of command-line path
 
@@ -89,7 +89,7 @@ if --teamcity-test-decoration in [ modules.peek : ARGV ]
 #                           Default: "./libraries"
 #
 #   --boost-src=<DIR>       Find Boost source distribution here.
-#                           Default: "<libraries-path>/boost_1_39_0"
+#                           Default: "<libraries-path>/boost_1_43_0"
 #
 #   --zlib-src=<DIR>        Find zlib source distribution here.
 #                           Default: "<libraries-path>/zlib-1.23.0"
@@ -188,7 +188,7 @@ modules.poke : BOOST_BUILD_PATH : [ modules.peek : BOOST_BUILD_PATH ] $(PWIZ_LIB
 import svnrev sequence common ;
 
 constant PWIZ_MAJOR : 2 ;
-constant PWIZ_MINOR : 0 ;
+constant PWIZ_MINOR : 1 ;
 
 # rule for generating a ProteoWizard Version.cpp file
 rule generate-Version.cpp ( filepath ? : namespace ? : sources-with-rcs-keywords + :
@@ -381,7 +381,15 @@ tar.extract $(PWIZ_LIBRARIES_PATH)/gd-2.0.33.tar.bz2 : *.h : <location>$(PWIZ_LI
 path-constant BOOST_SOURCE : $(boost_src) ;
 path-constant ZLIB_SOURCE : $(zlib_src) ;
 
-using ext-boost : 1.39.0 : $(BOOST_SOURCE) : <zlib-src-location>$(ZLIB_SOURCE) ;
+# HACK: bug in boost::iostreams 1.43 requires this little patch to support building with link=shared
+# Boost bug ticket: https://svn.boost.org/trac/boost/ticket/4335
+if [ modules.peek : NT ]
+{
+    import path ;
+    echo [ SHELL "copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\file_descriptor.hpp $(PWIZ_LIBRARIES_PATH)\\boost_1_43_0\\boost\\iostreams\\device" ] ;
+}
+
+using ext-boost : 1.43.0 : $(BOOST_SOURCE) : <zlib-src-location>$(ZLIB_SOURCE) ;
 
 
 rule project-exists ( project-path )
@@ -602,15 +610,15 @@ bcp.copy-boost-dependencies copy_boost_subset
     $(PWIZ_ROOT_PATH)/pwiz_tools/commandline//mstools
 
   : # requirements
-    <location>$(BOOST_SUBSET_PATH)/boost_1_39_0
+    <location>$(BOOST_SUBSET_PATH)/boost_1_43_0
   ;
 
 
-tar.create boost_1_39_0.tar.bz2
+tar.create boost_1_43_0.tar.bz2
   : # sources
 
       path-anchor:$(BOOST_SUBSET_PATH)
-      $(BOOST_SUBSET_PATH)/boost_1_39_0
+      $(BOOST_SUBSET_PATH)/boost_1_43_0
 
   : # requirements
     <location>$(BOOST_SUBSET_PATH)/libraries
@@ -693,7 +701,7 @@ tar.create pwiz-src.tar.bz2
   : # requirements
     <name>pwiz-src-$(version-tag:J=_).tar.bz2
     <location>$(.common-location)
-    <dependency>boost_1_39_0.tar.bz2
+    <dependency>boost_1_43_0.tar.bz2
     <dependency>SUBSET
   ;
 
@@ -717,7 +725,7 @@ tar.create pwiz-src-without-vendor-support.tar.bz2
   : # requirements
     <name>pwiz-src-without-vendor-support-$(version-tag:J=_).tar.bz2
     <location>$(.common-location)
-    <dependency>boost_1_39_0.tar.bz2
+    <dependency>boost_1_43_0.tar.bz2
   ;
 
 } # if SUBSET

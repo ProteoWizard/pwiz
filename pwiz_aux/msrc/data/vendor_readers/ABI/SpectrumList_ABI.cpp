@@ -49,21 +49,21 @@ PWIZ_API_DECL SpectrumList_ABI::SpectrumList_ABI(const MSData& msd, WiffFilePtr 
     wifffile_(wifffile),
     sample(sample),
     size_(0),
-    indexInitialized_(BOOST_ONCE_INIT)
+    indexInitialized_(util::init_once_flag_proxy)
 {
 }
 
 
 PWIZ_API_DECL size_t SpectrumList_ABI::size() const
 {
-    boost::call_once(indexInitialized_, boost::bind(&SpectrumList_ABI::createIndex, this));
+    boost::call_once(indexInitialized_.flag, boost::bind(&SpectrumList_ABI::createIndex, this));
     return size_;
 }
 
 
 PWIZ_API_DECL const SpectrumIdentity& SpectrumList_ABI::spectrumIdentity(size_t index) const
 {
-    boost::call_once(indexInitialized_, boost::bind(&SpectrumList_ABI::createIndex, this));
+    boost::call_once(indexInitialized_.flag, boost::bind(&SpectrumList_ABI::createIndex, this));
     if (index >= size_)
         throw runtime_error(("[SpectrumList_ABI::spectrumIdentity()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
@@ -73,7 +73,7 @@ PWIZ_API_DECL const SpectrumIdentity& SpectrumList_ABI::spectrumIdentity(size_t 
 
 PWIZ_API_DECL size_t SpectrumList_ABI::find(const string& id) const
 {
-    boost::call_once(indexInitialized_, boost::bind(&SpectrumList_ABI::createIndex, this));
+    boost::call_once(indexInitialized_.flag, boost::bind(&SpectrumList_ABI::createIndex, this));
 
     map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
     if (scanItr == idToIndexMap_.end())
@@ -89,7 +89,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, bool getBinar
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_ABI::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const 
 {
-    boost::call_once(indexInitialized_, boost::bind(&SpectrumList_ABI::createIndex, this));
+    boost::call_once(indexInitialized_.flag, boost::bind(&SpectrumList_ABI::createIndex, this));
     if (index >= size_)
         throw runtime_error(("[SpectrumList_ABI::spectrum()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());

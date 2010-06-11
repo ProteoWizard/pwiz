@@ -45,21 +45,21 @@ namespace detail {
 
 
 ChromatogramList_Thermo::ChromatogramList_Thermo(const MSData& msd, RawFilePtr rawfile)
-:   msd_(msd), rawfile_(rawfile), indexInitialized_(BOOST_ONCE_INIT)
+:   msd_(msd), rawfile_(rawfile), indexInitialized_(util::init_once_flag_proxy)
 {
 }
 
 
 PWIZ_API_DECL size_t ChromatogramList_Thermo::size() const
 {
-    boost::call_once(indexInitialized_, boost::bind(&ChromatogramList_Thermo::createIndex, this));
+    boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_Thermo::createIndex, this));
     return index_.size();
 }
 
 
 PWIZ_API_DECL const ChromatogramIdentity& ChromatogramList_Thermo::chromatogramIdentity(size_t index) const
 {
-    boost::call_once(indexInitialized_, boost::bind(&ChromatogramList_Thermo::createIndex, this));
+    boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_Thermo::createIndex, this));
     if (index>size())
         throw runtime_error(("[ChromatogramList_Thermo::chromatogramIdentity()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
@@ -69,7 +69,7 @@ PWIZ_API_DECL const ChromatogramIdentity& ChromatogramList_Thermo::chromatogramI
 
 PWIZ_API_DECL size_t ChromatogramList_Thermo::find(const string& id) const
 {
-    boost::call_once(indexInitialized_, boost::bind(&ChromatogramList_Thermo::createIndex, this));
+    boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_Thermo::createIndex, this));
     map<string, size_t>::const_iterator itr = idMap_.find(id);
     if (itr != idMap_.end())
         return itr->second;
@@ -80,7 +80,7 @@ PWIZ_API_DECL size_t ChromatogramList_Thermo::find(const string& id) const
 
 PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index, bool getBinaryData) const 
 {
-    boost::call_once(indexInitialized_, boost::bind(&ChromatogramList_Thermo::createIndex, this));
+    boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_Thermo::createIndex, this));
     if (index>size())
         throw runtime_error(("[ChromatogramList_Thermo::chromatogram()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());

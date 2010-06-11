@@ -50,21 +50,21 @@ namespace detail {
 PWIZ_API_DECL ChromatogramList_Waters::ChromatogramList_Waters(RawDataPtr rawdata)
 :   rawdata_(rawdata),
     size_(0),
-    indexInitialized_(BOOST_ONCE_INIT)
+    indexInitialized_(util::init_once_flag_proxy)
 {
 }
 
 
 PWIZ_API_DECL size_t ChromatogramList_Waters::size() const
 {
-    boost::call_once(indexInitialized_, boost::bind(&ChromatogramList_Waters::createIndex, this));
+    boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_Waters::createIndex, this));
     return size_;
 }
 
 
 PWIZ_API_DECL const ChromatogramIdentity& ChromatogramList_Waters::chromatogramIdentity(size_t index) const
 {
-    boost::call_once(indexInitialized_, boost::bind(&ChromatogramList_Waters::createIndex, this));
+    boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_Waters::createIndex, this));
     if (index>size_)
         throw runtime_error(("[ChromatogramList_Waters::chromatogramIdentity()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
@@ -74,7 +74,7 @@ PWIZ_API_DECL const ChromatogramIdentity& ChromatogramList_Waters::chromatogramI
 
 PWIZ_API_DECL size_t ChromatogramList_Waters::find(const string& id) const
 {
-    boost::call_once(indexInitialized_, boost::bind(&ChromatogramList_Waters::createIndex, this));
+    boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_Waters::createIndex, this));
 
     map<string, size_t>::const_iterator scanItr = idToIndexMap_.find(id);
     if (scanItr == idToIndexMap_.end())
@@ -87,7 +87,7 @@ PWIZ_API_DECL size_t ChromatogramList_Waters::find(const string& id) const
 
 PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index, bool getBinaryData) const
 {
-    boost::call_once(indexInitialized_, boost::bind(&ChromatogramList_Waters::createIndex, this));
+    boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_Waters::createIndex, this));
     if (index>size_)
         throw runtime_error(("[ChromatogramList_Waters::chromatogram()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
@@ -211,7 +211,7 @@ PWIZ_API_DECL void ChromatogramList_Waters::createIndex() const
 
 PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index, bool getBinaryData) const
 {
-    boost::call_once(indexInitialized_, boost::bind(&ChromatogramList_Waters::createIndex, this));
+    boost::call_once(indexInitialized_.flag, boost::bind(&ChromatogramList_Waters::createIndex, this));
     if (index>size_)
         throw runtime_error(("[ChromatogramList_Waters::chromatogram()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());

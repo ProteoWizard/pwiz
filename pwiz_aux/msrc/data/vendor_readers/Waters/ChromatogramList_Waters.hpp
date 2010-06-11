@@ -23,7 +23,7 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/ChromatogramListBase.hpp"
 #include "Reader_Waters_Detail.hpp"
-#include <boost/thread/once.hpp>
+#include "pwiz/utility/misc/Once.hpp"
 
 
 namespace pwiz {
@@ -48,7 +48,7 @@ class PWIZ_API_DECL ChromatogramList_Waters : public ChromatogramListBase
     RawDataPtr rawdata_;
     mutable size_t size_;
 
-    mutable boost::once_flag indexInitialized_;
+    mutable util::once_flag_proxy indexInitialized_;
 
 #ifdef PWIZ_READER_WATERS_LEGACY
     struct IndexEntry : public ChromatogramIdentity
