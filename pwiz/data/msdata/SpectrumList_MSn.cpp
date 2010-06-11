@@ -53,6 +53,7 @@ const int sizeIntMSn       = 4;
 const int sizeFloatMSn     = 4;   
 const int sizeDoubleMSn    = 8; 
 const int sizeChargeMSn    = 12; // struct Charge{ int z; double mass; }
+const int sizeEzMSn        = 20; // struct EZState{ int z; double mass; float rTime; float area; }
 const int sizePeakMSn      = 12; // struct Peak{ double mz; float intensity; }
 
 struct MSnScanInfo
@@ -68,6 +69,7 @@ struct MSnScanInfo
     float   ionInjectionTime;
     int     numPeaks;
     int     numChargeStates;
+    int     numEzStates;
 
     MSnScanInfo(): scanNumber(-1),
                    mz(-1),
@@ -79,7 +81,8 @@ struct MSnScanInfo
                    TIC(-1),
                    ionInjectionTime(-1),
                    numPeaks(-1),
-                   numChargeStates(-1) 
+                   numChargeStates(-1),
+                   numEzStates(0) 
     {}
 
     void readSpectrumHeader(boost::shared_ptr<istream> is, int version) 
@@ -89,7 +92,7 @@ struct MSnScanInfo
         (*is).read(reinterpret_cast<char *>(&mz), sizeDoubleMSn);
         (*is).read(reinterpret_cast<char *>(&rTime), sizeFloatMSn);
 
-        if( version == 2 )
+        if( version >= 2 )
         {
             (*is).read(reinterpret_cast<char *>(&basePeakIntensity), sizeFloatMSn);
             (*is).read(reinterpret_cast<char *>(&basePeakMz), sizeDoubleMSn);
@@ -100,6 +103,11 @@ struct MSnScanInfo
         }
 
         (*is).read(reinterpret_cast<char *>(&numChargeStates), sizeIntMSn);
+
+        if( version == 3 )
+        {
+            (*is).read(reinterpret_cast<char *>(&numEzStates), sizeIntMSn);   
+        }
         (*is).read(reinterpret_cast<char *>(&numPeaks), sizeIntMSn);
 
     };
@@ -440,6 +448,19 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
         }
     }
 
+    // Read EZ states
+    for(int i=0; i<scanInfo.numEzStates; i++){
+      int eCharge;
+      double eMass;
+      float pRTime;
+      float pArea;
+      (*is_).read(reinterpret_cast<char *>(&eCharge), sizeIntMSn);
+      (*is_).read(reinterpret_cast<char *>(&eMass), sizeDoubleMSn);
+      (*is_).read(reinterpret_cast<char *>(&pRTime), sizeFloatMSn);
+      (*is_).read(reinterpret_cast<char *>(&pArea), sizeFloatMSn);
+      // TODO:  save this information somewhere
+    }
+
     // get retention time
     spectrum.scanList.scans.push_back(Scan());
     spectrum.scanList.scans.back().set(MS_scan_start_time, scanInfo.rTime, UO_second);
@@ -590,6 +611,11 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
     (*is_).read(reinterpret_cast<char *>(&intFileType), sizeIntMSn);
     (*is_).read(reinterpret_cast<char *>(&version_), sizeIntMSn);
     (*is_).read(reinterpret_cast<char *>(&header), sizeof(MSnHeader));
+  
+    if( version_ > 3 ){
+        throw runtime_error(("[SpectrumList_MSn::createIndexBinary] The version of this file is " +
+                               lexical_cast<string>(version_) + " but the latest version handled is 3"));
+    }
 
     // temp varabiles for each scan
     MSnScanInfo scanInfo;
@@ -619,6 +645,9 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
       if( filetype_ == MSn_Type_CMS2 ){
         // skip the charge states
         (*is_).seekg(scanInfo.numChargeStates * sizeChargeMSn, std::ios_base::cur); 
+        // skip the EZ states
+        (*is_).seekg(scanInfo.numEzStates * sizeEzMSn, std::ios_base::cur); 
+
         // skip the peaks, first find out how far
         int iTemp;
         unsigned long mzLen, intensityLen;

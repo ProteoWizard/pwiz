@@ -420,7 +420,7 @@ int main(int argc, char* argv[])
         SpectrumListPtr slBMS2 = SpectrumList_MSn::create(isBMS2, dummy, MSn_Type_BMS2);
         test(slBMS2);
 
-        // TEST CMS2 COMPRESSED BINARY FORMAT
+        // TEST CMS2 COMPRESSED BINARY FORMAT (version 2)
         const string& testCMS2Base64Str = testCMS2;
         vector<char> binaryBufferCMS2;
         binaryBufferCMS2.resize(Base64::textToBinarySize(testCMS2Base64Str.size()) + 1, '\0');
@@ -434,6 +434,10 @@ int main(int argc, char* argv[])
         shared_ptr<istream> isCMS2(new istringstream(binaryStringCMS2));
         SpectrumListPtr slCMS2 = SpectrumList_MSn::create(isCMS2, dummy, MSn_Type_CMS2);
         test(slCMS2);
+
+        // TEST CMS2 COMPRESSED BINARY FORMAT (version 3)
+        // TODO!!
+
 
         return 0;
     }
