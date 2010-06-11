@@ -34,7 +34,7 @@ namespace proteome {
 
 
 /// Inheritable pass-through implementation for wrapping a ProteinList 
-class PWIZ_API_DECL ProteinListWrapper : public ProteinList
+class ProteinListWrapper : public ProteinList
 {
     public:
 
