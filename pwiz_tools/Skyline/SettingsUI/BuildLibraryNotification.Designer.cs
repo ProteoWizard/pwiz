@@ -106,7 +106,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoValidate = System.Windows.Forms.AutoValidate.Disable;
             this.BackColor = System.Drawing.Color.Lavender;
-            this.ClientSize = new System.Drawing.Size(151, 106);
+            this.ClientSize = new System.Drawing.Size(158, 106);
             this.ControlBox = false;
             this.Controls.Add(this.NotificationCloseButton);
             this.Controls.Add(this.TextPanel);

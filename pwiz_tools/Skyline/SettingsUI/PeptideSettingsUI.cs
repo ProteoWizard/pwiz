@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Threading;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -345,11 +344,10 @@ namespace pwiz.Skyline.SettingsUI
             var dlg = new BuildLibraryDlg();
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {
-                _libraryManager.BuildLibrary(_parent, dlg.Builder, _parent.LibraryBuildCompleteCallback, dlg.Builder.LibrarySpec.Name);
+                _libraryManager.BuildLibrary(_parent, dlg.Builder, _parent.LibraryBuildCompleteCallback);
 
                 Settings.Default.SpectralLibraryList.Add(dlg.Builder.LibrarySpec);
                 _driverLibrary.LoadList();
-                LaunchBuildNotficationThread(dlg.Builder.LibrarySpec.Name);
             }
         }
 
@@ -560,19 +558,6 @@ namespace pwiz.Skyline.SettingsUI
             OkDialog();
         }
 
-        private void LaunchBuildNotficationThread(String libraryName)
-        {
-            Thread th = new Thread(new ThreadStart(delegate
-            {
-                BuildLibraryNotification frm = new BuildLibraryNotification(_parent, libraryName);
-                frm.BuildNotificationThread();
-            }));
-            th.Name = "BuildLibraryNotification";
-            th.SetApartmentState(ApartmentState.STA);
-            th.IsBackground = true;
-            th.Start();
-        }
-        
         #region Functional testing support
 
         public void ShowBuildBackgroundProteomeDlg()

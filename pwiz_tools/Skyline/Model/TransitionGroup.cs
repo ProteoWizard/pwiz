@@ -384,7 +384,8 @@ namespace pwiz.Skyline.Model
             if (!Equals(libInfo, nodeResult.LibInfo))
                 nodeResult = nodeResult.ChangeLibInfo(libInfo);
 
-            if (diff.DiffResults || ChangedResults(nodeResult))
+            // A change in the precursor m/z may impact which results match this node
+            if (diff.DiffResults || ChangedResults(nodeResult) || precursorMz != PrecursorMz)
                 nodeResult = nodeResult.UpdateResults(settingsNew, diff, this);
 
             return nodeResult;
@@ -1038,6 +1039,8 @@ namespace pwiz.Skyline.Model
                                   Identity tranId,
                                   double retentionTime)
         {
+            int ratioCount = settings.PeptideSettings.Modifications.InternalStandardTypes.Count;
+            
             bool integrateAll = settings.TransitionSettings.Integration.IsIntegrateAll;
             // Find the index of the peak group referenced by this retention time.
             int indexPeakBest = -1;
@@ -1108,15 +1111,18 @@ namespace pwiz.Skyline.Model
                             var tranInfoList = nodeTran.Results[indexSet];
                             int iTran = tranInfoList.IndexOf(info =>
                                 info.FileIndex == indexFile && info.OptimizationStep == step);
-                            var tranInfoOld = tranInfoList[iTran];
-                            if (Math.Min(tranInfoOld.EndRetentionTime, endMax) -
-                                Math.Max(tranInfoOld.StartRetentionTime, startMin) > overlapThreshold)
+                            if (iTran != -1)
                             {
-                                continue;
+                                var tranInfoOld = tranInfoList[iTran];
+                                if (Math.Min(tranInfoOld.EndRetentionTime, endMax) -
+                                    Math.Max(tranInfoOld.StartRetentionTime, startMin) > overlapThreshold)
+                                {
+                                    continue;
+                                }
                             }
                         }
                         nodeTranNew = (TransitionDocNode) nodeTranNew.ChangePeak(
-                            indexSet, indexFile, step, peakNew);
+                            indexSet, indexFile, step, peakNew, ratioCount);
                     }
                     listChildrenNew.Add(nodeTranNew);
                 }
@@ -1134,6 +1140,8 @@ namespace pwiz.Skyline.Model
                                   double startTime,
                                   double endTime)
         {
+            int ratioCount = settings.PeptideSettings.Modifications.InternalStandardTypes.Count;
+
             // Recalculate peaks based on new boundaries
             var listChildrenNew = new List<DocNode>();
             int startIndex = chromInfoGroup.IndexOfNearestTime((float)startTime);
@@ -1163,8 +1171,8 @@ namespace pwiz.Skyline.Model
                         {
                             var chromInfo = chromInfoArray[i];
                             int step = i - numSteps;
-                            nodeTranNew = (TransitionDocNode) nodeTranNew.ChangePeak(
-                                indexSet, indexFile, step, chromInfo.CalcPeak(startIndex, endIndex, flags));
+                            nodeTranNew = (TransitionDocNode) nodeTranNew.ChangePeak(indexSet, indexFile, step,
+                                chromInfo.CalcPeak(startIndex, endIndex, flags), ratioCount);
                         }
                         listChildrenNew.Add(nodeTranNew);
                     }
@@ -1340,13 +1348,18 @@ namespace pwiz.Skyline.Model
         private readonly Peptide _peptide;
 
         public TransitionGroup(Peptide peptide, int precursorCharge, IsotopeLabelType labelType)
+            : this(peptide, precursorCharge, labelType, false)
+        {            
+        }
+
+        public TransitionGroup(Peptide peptide, int precursorCharge, IsotopeLabelType labelType, bool unlimitedCharge)
         {
             _peptide = peptide;
 
             PrecursorCharge = precursorCharge;
             LabelType = labelType;
 
-            Validate();
+            Validate(unlimitedCharge);
         }
 
         public Peptide Peptide { get { return _peptide; } }
@@ -1559,8 +1572,10 @@ namespace pwiz.Skyline.Model
             return (Transition.GetFragmentNTermAA(sequence, cleavageOffset) == 'P');
         }
 
-        private void Validate()
+        private void Validate(bool unlimitedCharge)
         {
+            if (unlimitedCharge)
+                return;
             if (MIN_PRECURSOR_CHARGE > PrecursorCharge || PrecursorCharge > MAX_PRECURSOR_CHARGE)
             {
                 throw new InvalidDataException(string.Format("Precursor charge {0} must be between {1} and {2}.",

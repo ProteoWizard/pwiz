@@ -396,7 +396,7 @@ namespace pwiz.Skyline.SettingsUI
         
         private readonly LibraryManager _libraryManager;
         private readonly SettingsListBoxDriver<LibrarySpec> _driverLibrary;
-        private String _selectedLibName;
+        private readonly string _selectedLibName;
         private Library _selectedLibrary;
         private Range _currentRange;
         private readonly PageInfo _pageInfo;
@@ -436,6 +436,29 @@ namespace pwiz.Skyline.SettingsUI
             PeptideTextBox.Focus();
         }
 
+        private SettingsList<LibrarySpec> LibraryList
+        {
+            get { return _driverLibrary != null ? _driverLibrary.List : Settings.Default.SpectralLibraryList; }
+        }
+
+        private string SelectedLibraryName
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(_selectedLibName))
+                    return _selectedLibName;
+                if (_driverLibrary != null)
+                {
+                    string[] checkedNames = _driverLibrary.CheckedNames;
+                    if (checkedNames.Length > 0)
+                        return checkedNames[0];
+                }
+                if (LibraryComboBox.Items.Count > 0)
+                    return (string) LibraryComboBox.Items[0];
+                return null;
+            }
+        }
+
         private void ViewLibraryDlg_Load(object sender, EventArgs e)
         {
             // The combobox is the control that tells us which peptide library
@@ -451,39 +474,10 @@ namespace pwiz.Skyline.SettingsUI
         {
             LibraryComboBox.BeginUpdate();
 
-            // Go through all the libraries currently in the Peptide Settings
-            // --> Library tab and show them in the combobox. 
-            int numLibs = _driverLibrary.List.Count;
-            int selLibIdx = -1;
-            for (int i = 0; i < numLibs; i++)
-            {
-                LibraryComboBox.Items.Add(_driverLibrary.List[i].Name);
-                if (_driverLibrary.List[i].Name == _selectedLibName)
-                {
-                    selLibIdx = i;
-                }
-            }
+            foreach (var librarySpec in LibraryList)
+                LibraryComboBox.Items.Add(librarySpec.Name);
 
-            if (selLibIdx < 0)
-            {
-                // If anything is checked, start on the first checked item.
-                string[] checkedNames = _driverLibrary.CheckedNames;
-                if (checkedNames.Length > 0)
-                    LibraryComboBox.SelectedItem = checkedNames[0];
-                else
-                {
-                    // Set the selection to the very first library in the combobox.
-                    // The "View Libraries" button is not enabled unless we have at 
-                    // least ONE library, so if we are here, we must have at least 
-                    // one to select.
-
-                    LibraryComboBox.SelectedIndex = 0;
-                }
-            }
-            else
-            {
-                LibraryComboBox.SelectedIndex = selLibIdx;
-            }
+            LibraryComboBox.SelectedItem = SelectedLibraryName;
 
             LibraryComboBox.EndUpdate();
         }
@@ -508,7 +502,7 @@ namespace pwiz.Skyline.SettingsUI
         // as the IProgressMonitor to load the library from the LibrarySpec.
         private void LoadLibrary()
         {
-            LibrarySpec selectedLibrarySpec = _driverLibrary.List[LibraryComboBox.SelectedIndex];
+            LibrarySpec selectedLibrarySpec = LibraryList[LibraryComboBox.SelectedIndex];
             if (_selectedLibrary != null)
                 _selectedLibrary.ReadStream.CloseStream();
             _selectedLibrary = _libraryManager.TryGetLibrary(selectedLibrarySpec);
@@ -779,6 +773,7 @@ namespace pwiz.Skyline.SettingsUI
             UpdatePeptideListBox(0);
             UpdateStatusArea();
             UpdateUI();
+            PeptideTextBox.Focus();
         }
 
         // User wants to go to the next page. Update the page info.
@@ -790,6 +785,7 @@ namespace pwiz.Skyline.SettingsUI
             UpdatePeptideListBox(0);
             UpdateStatusArea();
             UpdateUI();
+            PeptideTextBox.Focus();
         }
 
         public IList<IonType> ShowIonTypes
@@ -938,7 +934,7 @@ namespace pwiz.Skyline.SettingsUI
                         SrmSettings settings =  Program.ActiveDocumentUI.Settings;
                         var peptide = new Peptide(null, _peptides[index].GetAASequence(_lookupPool), null, null, 0);
                         IsotopeLabelType labelType = IsotopeLabelType.light;
-                        var group = new TransitionGroup(peptide, _peptides[index].Charge, labelType);
+                        var group = new TransitionGroup(peptide, _peptides[index].Charge, labelType, true);
 
                         var types = ShowIonTypes;
                         var charges = ShowIonCharges;

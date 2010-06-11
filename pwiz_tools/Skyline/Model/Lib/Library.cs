@@ -156,29 +156,49 @@ namespace pwiz.Skyline.Model.Lib
             return library;
         }
 
-        public void BuildLibrary(IDocumentContainer container, ILibraryBuilder builder, AsyncCallback callback, String libName)
+        public delegate bool BuildFunction(IDocumentContainer documentContainer, ILibraryBuilder libraryBuilder);
+
+        public sealed class BuildState
         {
-            Action<IDocumentContainer, ILibraryBuilder> buildAction = BuildLibraryBackground;
-            buildAction.BeginInvoke(container, builder, callback, libName);
+            public BuildState(LibrarySpec librarySpec, BuildFunction buildFunc)
+            {
+                LibrarySpec = librarySpec;
+                BuildFunc = buildFunc;
+            }
+
+            public LibrarySpec LibrarySpec { get; private set; }
+            public BuildFunction BuildFunc { get; private set; }
         }
 
-        private void BuildLibraryBackground(IDocumentContainer container, ILibraryBuilder builder)
+        public void BuildLibrary(IDocumentContainer container, ILibraryBuilder builder, AsyncCallback callback)
+        {
+            BuildFunction buildFunc = BuildLibraryBackground;
+            buildFunc.BeginInvoke(container, builder, callback, new BuildState(builder.LibrarySpec, buildFunc));
+        }
+
+        private bool BuildLibraryBackground(IDocumentContainer container, ILibraryBuilder builder)
         {
             // This blocks all library loading, while a library is being built
             // TODO: Something better than locking for the entire build
             lock (_loadedLibraries)
             {
-                builder.BuildLibrary(new LibraryBuildMonitor(this, container));
-                // If the library was already loaded, make sure the new copy
-                // replaces the load in the library load cache.
-                string name = builder.LibrarySpec.Name;
-                _loadedLibraries.Remove(name);
+                bool success = builder.BuildLibrary(new LibraryBuildMonitor(this, container));
 
-                // If the current document contains the newly built library,
-                // make sure it is reloaded into the document, by resetting all
-                // library-specs.  Do this inside the lock to avoid library loading
-                // happening during this check.
-                ForDocumentLibraryReload(container, name);
+                if (success)
+                {
+                    // If the library was already loaded, make sure the new copy
+                    // replaces the load in the library load cache.
+                    string name = builder.LibrarySpec.Name;
+                    _loadedLibraries.Remove(name);
+
+                    // If the current document contains the newly built library,
+                    // make sure it is reloaded into the document, by resetting all
+                    // library-specs.  Do this inside the lock to avoid library loading
+                    // happening during this check.
+                    ForDocumentLibraryReload(container, name);
+                }
+
+                return success;
             }            
         }
 
@@ -249,7 +269,7 @@ namespace pwiz.Skyline.Model.Lib
         /// to cancel.
         /// </summary>
         /// <param name="progress">Sink for progress updates, and source of user cancel status</param>
-        void BuildLibrary(IProgressMonitor progress);
+        bool BuildLibrary(IProgressMonitor progress);
 
         /// <summary>
         /// A <see cref="LibrarySpec"/> referencing the library to be built.
@@ -799,6 +819,10 @@ namespace pwiz.Skyline.Model.Lib
             // Create filtered peak array storing original index for m/z ordering
             // to avoid needing to sort to return to this order.
             RankedMI[] arrayRMI = new RankedMI[len];
+            // Detect when m/z values are out of order, and use the expensive sort
+            // by m/z to correct this.
+            double lastMz = double.MinValue;
+            bool sortMz = false;
             for (int i = 0, j = 0, lenOrig = listMI.Count; i < lenOrig ; i++)
             {
                 SpectrumPeaksInfo.MI mi = listMI[i];
@@ -806,6 +830,12 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     arrayRMI[j] = new RankedMI(mi, j);
                     j++;
+                }
+                if (ionMatchCount == -1)
+                {
+                    if (mi.Mz < lastMz)
+                        sortMz = true;
+                    lastMz = mi.Mz;
                 }
             }
 
@@ -843,6 +873,12 @@ namespace pwiz.Skyline.Model.Lib
             {
                 for (int i = rp.Ranked; i < ionMatchCount; i++)
                     arrayResult[i] = RankedMI.EMPTY;
+            }
+            // If all ions are to be included, and some were found out of order, then
+            // the expensive full sort by m/z is necesary.
+            else if (sortMz)
+            {
+                Array.Sort(arrayResult, OrderMz);
             }
 
             _spectrum = MakeReadOnly(arrayResult);
@@ -1140,12 +1176,12 @@ namespace pwiz.Skyline.Model.Lib
                 return (ionMz <= ObservedMz);
             }
         }
-/*
+
         private static int OrderMz(RankedMI mi1, RankedMI mi2)
         {
             return (mi1.ObservedMz.CompareTo(mi2.ObservedMz));
         }
-
+/*
         private static int OrderIntensityDesc(RankedMI mi1, RankedMI mi2)
         {
             return -(mi1.Intensity.CompareTo(mi2.Intensity));

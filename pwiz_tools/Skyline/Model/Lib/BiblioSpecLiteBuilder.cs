@@ -43,6 +43,7 @@ namespace pwiz.Skyline.Model.Lib
         public const string EXT_SQT = ".sqt";
         public const string EXT_DAT = ".dat";
         public const string EXT_XTAN_XML = ".xtan.xml";
+        public const string EXT_PILOT_XML = ".group.xml";
         public const string EXT_SQLITE_JOURNAL = "-journal";
 
         private ReadOnlyCollection<string> _inputFiles;
@@ -69,7 +70,7 @@ namespace pwiz.Skyline.Model.Lib
             private set { _inputFiles = value as ReadOnlyCollection<string> ?? new ReadOnlyCollection<string>(value); }
         }
 
-        public void BuildLibrary(IProgressMonitor progress)
+        public bool BuildLibrary(IProgressMonitor progress)
         {
             string message = string.Format("Building {0} library", Path.GetFileName(OutputPath));
             ProgressStatus status = new ProgressStatus(message);
@@ -126,13 +127,13 @@ namespace pwiz.Skyline.Model.Lib
             catch (IOException x)
             {
                 progress.UpdateProgress(status = status.ChangeErrorException(x));
-                return;
+                return false;
             }
             catch (Exception x)
             {
                 Console.WriteLine(x.Message);
                 progress.UpdateProgress(status = status.ChangeErrorException(new Exception(string.Format("Failed trying to build the redundant library {0}.",redundantLibrary))));
-                return;
+                return false;
             }
             finally
             {
@@ -175,12 +176,12 @@ namespace pwiz.Skyline.Model.Lib
                 catch (IOException x)
                 {
                     progress.UpdateProgress(status.ChangeErrorException(x));
-                    return;
+                    return false;
                 }
                 catch
                 {
                     progress.UpdateProgress(status.ChangeErrorException(new Exception(string.Format("Failed trying to build the library {0}.", OutputPath))));
-                    return;
+                    return false;
                 }
                 finally
                 {
@@ -190,6 +191,8 @@ namespace pwiz.Skyline.Model.Lib
                         File.Delete(redundantLibrary);
                 }
             }
+
+            return status.IsComplete;
         }
     }
 }

@@ -19,120 +19,31 @@
 
 using System;
 using System.ComponentModel;
+using System.Drawing;
+using System.Threading;
 using System.Windows.Forms;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Util;
 using Timer=System.Windows.Forms.Timer;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    /// <summary>
-    /// The interface a "client" of this notification must implement in order
-    /// to get/set information pertaining to showing/hiding the notification.
-    /// </summary>
-    public interface IBuildNotificationClient
-    {
-        /// <summary>
-        /// The notification window needs to listen for the "build complete"
-        /// event so that it can show itself at the appropriate time.
-        /// </summary>
-        /// <param name="listener"> Handler for "build complete" event. </param>
-        void BuildCompleteEventListen(EventHandler<BuildNotificationEventArgs> listener);
-
-        /// <summary>
-        /// The notification window needs to be able to remove the listener for
-        /// the build complete event before it closes.
-        /// </summary>
-        /// <param name="listener"> Handler for "build complete" event. </param>
-        void BuildCompleteEventUnlisten(EventHandler<BuildNotificationEventArgs> listener);
-
-        /// <summary>
-        /// The notification window needs to listen for the "build notification
-        /// opened" event in order to close itself in case ANOTHER build
-        /// notification window has opened for a different library build.
-        /// </summary>
-        /// <param name="listener"></param>
-        void BuildNotificationOpenedEventListen(EventHandler<BuildNotificationEventArgs> listener);
-
-        /// <summary>
-        /// The notification window needs to be able to remove the listener for
-        /// the "build notification opened" event before it closes.
-        /// </summary>
-        /// <param name="listener"></param>
-        void BuildNotificationOpenedEventUnlisten(EventHandler<BuildNotificationEventArgs> listener);
-
-        /// <summary>
-        /// The notification window needs to know when the client window moves
-        /// so that it can close itself.
-        /// </summary>
-        /// <param name="listener"> Handler for location changed event. </param>
-        void LocationChangedEventListen(EventHandler listener);
-
-        /// <summary>
-        /// The notification window needs to be able to remove the lister for
-        /// the client location changed even before it closes itself.
-        /// </summary>
-        /// <param name="listener"> Handler for location changed event. </param>
-        void LocationChangedEventUnlisten(EventHandler listener);
-
-        /// <summary>
-        /// The notification window needs to know when the client has closed
-        /// so that it can close itself along with the client.
-        /// </summary>
-        /// <param name="listener"></param>
-        void ClientClosingEventListen(CancelEventHandler listener);
-
-        /// <summary>
-        /// The notification window needs to be able to remove the listener for
-        /// the "client window closed" event before it closes itself.
-        /// </summary>
-        /// <param name="listener"></param>
-        void ClientClosingEventUnlisten(CancelEventHandler listener);
-
-        /// <summary>
-        /// The notification window will use this method to let the client know
-        /// when it has opened itself by associating it with the "Show" event.
-        /// </summary>
-        /// <param name="sender"> sender of the Show event </param>
-        /// <param name="e"> EventArgs for the Show event </param>
-        void OnBuildNotificationOpened(object sender, BuildNotificationEventArgs e);
-
-        /// <summary>
-        /// The notification window needs to know where to display itself 
-        /// relative to the client.
-        /// </summary>
-        /// <param name="x"> The x-coordinate of the position </param>
-        /// <param name="y"> The y-coordinate of the position </param>
-        void GetDisplayLocation(ref int x, ref int y);
-
-        /// <summary>
-        /// The notification window will call this method on the client when
-        /// the user clicks on the "View Library" link.
-        /// </summary>
-        /// <param name="libName"></param>
-        void ShowLibrary(String libName);
-    }
-
     public partial class BuildLibraryNotification : Form
     {
         private const int ANIMATION_DURATION = 1000;
         private const int DISPLAY_DURATION = 10000;
-        private const int DISPLAY_PADDING = 8;
-        private const int WINDOW_HEIGHT = 120;
-        private const int WINDOW_WIDTH = 165;
 
-        private readonly IBuildNotificationClient _client;
         private readonly FormAnimator _animator;
         private readonly Timer _displayTimer;
         private readonly String _libraryName;
 
-        public event EventHandler<BuildNotificationEventArgs> BuildLibraryNotificationShown;
+        public event EventHandler<ExploreLibraryEventArgs> ExploreLibrary;
+        public event EventHandler NotificationComplete;
 
-        public BuildLibraryNotification(IBuildNotificationClient client, String libraryName)
+        public BuildLibraryNotification(String libraryName)
         {
             InitializeComponent();
 
-            _client = client;
-            
             _libraryName = libraryName;
             LibraryNameLabel.Text = String.Format("Library {0}", _libraryName);
 
@@ -144,128 +55,57 @@ namespace pwiz.Skyline.SettingsUI
                                     FormAnimator.AnimationMethod.blend, 
                                     FormAnimator.AnimationDirection.up, 
                                     0);
-            _animator = new FormAnimator(this, showParams, hideParams);
+            _animator = new FormAnimator(this, showParams, hideParams)
+                {ShowParams = {Duration = ANIMATION_DURATION}};
+
+            // Not sure why this is necessary, but sometimes the form doesn't
+            // appear without it.
+            Opacity = 1;
 
             _displayTimer = new Timer();
             _displayTimer.Tick += OnDisplayTimerEvent;
             _displayTimer.Interval = DISPLAY_DURATION;
         }
 
-        public void BuildNotificationThread()
-        {
-            _client.BuildCompleteEventListen(OnLibraryBuildComplete);
-            _client.ClientClosingEventListen(OnClientClosing);
-            
-            // Don't show the form until the build complete event is fired. 
-            // This seems to be the easiest way to launch it hidden.
-            Opacity = 0;
-
-            Application.Run(this);
-        }
-
+        /// <summary>
+        /// Does not work with the way this form gets shown, but it is
+        /// here to prove it was tried.
+        /// </summary>
         protected override bool ShowWithoutActivation
         {
             get { return true; }
         }
 
-        private void InvokeAction(Action action)
+        public void Notify()
         {
-            Invoke(action);
-        }
-
-        private void PositionNotificationWindow()
-        {
-            int x = 0;
-            int y = 0;
-            _client.GetDisplayLocation(ref x, ref y);
-            
-            // Place the notification window relative to the client window
-            SetBounds(x + DISPLAY_PADDING,
-                      y - WINDOW_HEIGHT - DISPLAY_PADDING,
-                      WINDOW_WIDTH,
-                      WINDOW_HEIGHT);
-        }
-
-        private void ShowNotification()
-        {
-            // First, ensure the notification is actually hidden, so that
-            // the animation plays on show.
-            HideNotification(false /* no animation */);
-
-            _client.BuildNotificationOpenedEventListen(OnBuildLibraryNotificationOpened);
-
-            // Prepare the client to listen for the "Shown" event
-            BuildLibraryNotificationShown += _client.OnBuildNotificationOpened;
-
-            // Set up to listen for the client location changed
-            _client.LocationChangedEventListen(OnClientLocationChanged);
-
-            // Position the notification at the bottom left corner of client
-            PositionNotificationWindow();
-
-            // Show the notification with animation
-            Opacity = 1;
-            _animator.ShowParams.Duration = ANIMATION_DURATION;
-            Show();
-
-            // We've already let the client know the notification has shown
-            BuildLibraryNotificationShown -= _client.OnBuildNotificationOpened;
-
             // Start the timer that will count how long to display it
             _displayTimer.Start();
+
+            // Start the message pump
+            // This call returns when ExitThread is called
+            Application.Run(this);
         }
 
-        protected override void OnVisibleChanged(EventArgs e)
+        public void Remove()
         {
-            // If the form is visible and opaque, it has "officially" shown.
-            // Fire the "Shown" event the client is listening for, indicating
-            // which library the event is associated with.
-            if (Visible && (Opacity == 1))
-            {
-                if (BuildLibraryNotificationShown != null)
-                {
-                    BuildLibraryNotificationShown(this, new BuildNotificationEventArgs(_libraryName));
-                }
-            }
-            base.OnVisibleChanged(e);
+            // Make sure this happens on the right thread.
+            BeginInvoke((Action)OnRemove);
         }
 
-        private void OnLibraryBuildComplete(object sender, BuildNotificationEventArgs e)
+        public void OnRemove()
         {
-            if (e.LibName == _libraryName)
-            {   
-                // We don't want to listen for any more "build completed"
-                // events since they are not for this form.
-                _client.BuildCompleteEventUnlisten(OnLibraryBuildComplete);
-
-                InvokeAction(() => ShowNotification());
-            }
-        }
-
-        private void OnClientClosing(object sender, CancelEventArgs e)
-        {
-            InvokeAction(() => CloseNotification(false));
-        }
-
-        private void HideNotification(bool animate)
-        {
-            _animator.HideParams.Duration = animate ? ANIMATION_DURATION : 0;
-            Hide();
+            _displayTimer.Stop();
+            Close();
         }
 
         private void CloseNotification(bool animate)
         {
             _displayTimer.Stop();
-            HideNotification(animate);
+            _animator.HideParams.Duration = animate ? ANIMATION_DURATION : 0;
+            Hide();
             
-            // Remove all event listeners, we're about to close
-            _client.LocationChangedEventUnlisten(OnClientLocationChanged);
-            _client.ClientClosingEventUnlisten(OnClientClosing);
-            BuildLibraryNotificationShown -= _client.OnBuildNotificationOpened;
-            _client.BuildNotificationOpenedEventUnlisten(OnBuildLibraryNotificationOpened);
-            
-            Close();
-            Application.ExitThread();
+            if (NotificationComplete != null)
+                NotificationComplete.Invoke(this, new EventArgs());
         }
 
         private void OnDisplayTimerEvent(object sender, EventArgs e)
@@ -281,40 +121,185 @@ namespace pwiz.Skyline.SettingsUI
         private void ViewLibraryLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             CloseNotification(false);
-            _client.ShowLibrary(_libraryName);
-        }
-
-        private void OnClientLocationChanged(object sender, EventArgs e)
-        {
-            InvokeAction(() => CloseNotification(false));
-        }
-
-        private void OnBuildLibraryNotificationOpened(object sender, BuildNotificationEventArgs e)
-        {
-            if ((e.LibName != _libraryName) && Visible)
-            {
-                InvokeAction(() => CloseNotification(false));
-            }
+            if (ExploreLibrary != null)
+                ExploreLibrary.Invoke(this, new ExploreLibraryEventArgs(_libraryName));
         }
     }
 
-    /// <summary>
-    /// Custom event arguments for library build notification related events
-    /// </summary>
-    public class BuildNotificationEventArgs : EventArgs
+    public sealed class ExploreLibraryEventArgs : EventArgs
     {
-        /// <summary>
-        /// The library associated with the event
-        /// </summary>
-        public String LibName { get; private set; }
-
-        /// <summary>
-        /// Constructor for custom library build notification events
-        /// </summary>
-        /// <param name="libName"> Library associated with the event </param>
-        public BuildNotificationEventArgs(String libName)
+        public ExploreLibraryEventArgs(string libraryName)
         {
-            LibName = libName;
+            LibraryName = libraryName;
+        }
+
+        public string LibraryName { get; private set; }
+    }
+
+    public interface INotificationContainer
+    {
+        Point NotificationAnchor { get; }
+    }
+
+    public interface ILibraryBuildNotificationContainer : INotificationContainer
+    {
+        LibraryManager LibraryManager { get; }
+    }
+
+    public sealed class LibraryBuildNotificationHandler
+    {
+        private const int PADDING = 8;
+
+        public LibraryBuildNotificationHandler(Form notificationContainer)
+        {
+            notificationContainer.Closing += notificationContainerForm_Closing;
+            notificationContainer.Move += notifactionContainerForm_Move;
+            NotificationContainerForm = notificationContainer;
+            NotificationContainer = (ILibraryBuildNotificationContainer) notificationContainer;
+        }
+
+        private Form NotificationContainerForm { get; set; }
+        private ILibraryBuildNotificationContainer NotificationContainer { get; set; }
+
+        private BuildLibraryNotification Notification { get; set; }
+
+        private Point NotificationAnchor
+        {
+            get
+            {
+                Point anchor = NotificationContainer.NotificationAnchor;
+                anchor.X += PADDING;
+                anchor.Y -= PADDING;
+                return anchor;
+            }
+        }
+
+        private void InvokeAction(Action action)
+        {
+            // Make sure the notification container form has not already been
+            // destroyed on its own thread, before trying to post a message to the
+            // thread.
+            try
+            {
+                NotificationContainerForm.Invoke(action);
+            }
+            catch (ObjectDisposedException)
+            {
+                // The main window may close during an attempt to activate it,
+                // and cause this exception.  Hard to figure out anything to do
+                // but catch and ignore it.  Would be lots nicer, if it were
+                // possible to show a .NET form without it activating itself.
+                // Again, using NativeWindow is too much for this feature right now.
+                // It does not help to test IsDisposed before calling Invoke.
+            }
+        }
+
+        private void notification_ExploreLibrary(object sender, ExploreLibraryEventArgs e)
+        {
+            InvokeAction(() => ShowViewLibraryUI(e.LibraryName));
+        }
+
+        private void ShowViewLibraryUI(String libName)
+        {
+            var dlg = new ViewLibraryDlg(NotificationContainer.LibraryManager, null, libName);
+            if (dlg.ShowDialog(TopMostApplicationForm) == DialogResult.OK)
+            {
+            }
+        }
+
+        private void notification_Activated(object sender, EventArgs e)
+        {
+            // Ugh. The library build notification form will activate itself.
+            // To do better, we would have to use a NativeWindow for the notification,
+            // like CustomTip, but that is just too much work for this.  So,
+            // we just do our best to return activation to the topmost open form.
+            InvokeAction(TopMostApplicationForm.Activate);
+        }
+
+        private void notification_Shown(object sender, EventArgs e)
+        {
+            Form form = (Form) sender;
+            // If the application is not active when the form is shown, then the form
+            // can end up underneath the application window.  This hack fixes that issue.
+            form.TopMost = true;
+
+            // Remove the activation hook, since it can cause problems after this.
+            form.Activated -= notification_Activated;
+        }
+
+        private Form TopMostApplicationForm
+        {
+            get
+            {
+                for (int i = Application.OpenForms.Count - 1; i >= 0; i--)
+                {
+                    Form form = Application.OpenForms[i];
+                    if (form is BuildLibraryNotification)
+                        continue;
+                    return form;
+                }
+                // Should never happen, but to be safe at least return this
+                // Skyline window.
+                return NotificationContainerForm;
+            }
+        }
+
+        private void notification_NotificationComplete(object sender, EventArgs e)
+        {
+            RemoveLibraryBuildNotification();
+        }
+
+        private void notifactionContainerForm_Move(object sender, EventArgs e)
+        {
+            RemoveLibraryBuildNotification();
+        }
+
+        private void notificationContainerForm_Closing(object sender, CancelEventArgs e)
+        {
+            RemoveLibraryBuildNotification();
+        }
+
+        private void RemoveLibraryBuildNotification()
+        {
+            lock (this)
+            {
+                if (Notification != null)
+                {
+                    Notification.Shown -= notification_Shown;
+                    Notification.Activated -= notification_Activated;
+                    Notification.Remove();
+                    Notification = null;
+                }
+            }
+        }
+
+        public void LibraryBuildCompleteCallback(IAsyncResult ar)
+        {
+            var buildState = (LibraryManager.BuildState)ar.AsyncState;
+            bool success = buildState.BuildFunc.EndInvoke(ar);
+
+            if (success)
+            {
+                lock (this)
+                {
+                    RemoveLibraryBuildNotification();
+
+                    var frm = new BuildLibraryNotification(buildState.LibrarySpec.Name);
+                    frm.Activated += notification_Activated;
+                    frm.Shown += notification_Shown;
+                    frm.ExploreLibrary += notification_ExploreLibrary;
+                    frm.NotificationComplete += notification_NotificationComplete;
+                    Point anchor = NotificationAnchor;
+                    frm.Left = anchor.X;
+                    frm.Top = anchor.Y - frm.Height;
+
+                    Thread th = new Thread(frm.Notify) { Name = "BuildLibraryNotification", IsBackground = true };
+                    th.SetApartmentState(ApartmentState.STA);
+                    th.Start();
+
+                    Notification = frm;
+                }
+            }
         }
     }
 }

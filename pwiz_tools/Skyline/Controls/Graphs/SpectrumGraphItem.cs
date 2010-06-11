@@ -111,7 +111,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private FontSpec FONT_SPEC_SELECTED { get { return GetFontSpec(COLOR_SELECTED, ref _fontSpecSelected); } }
         // ReSharper restore InconsistentNaming
 
-        public AbstractSpectrumGraphItem(LibraryRankedSpectrumInfo spectrumInfo)
+        protected AbstractSpectrumGraphItem(LibraryRankedSpectrumInfo spectrumInfo)
         {
             SpectrumInfo = spectrumInfo;
 

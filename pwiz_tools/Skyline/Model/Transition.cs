@@ -181,12 +181,12 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), (im, v) => im.Results = v, prop);
         }
 
-        public DocNode ChangePeak(int indexSet, int indexFile, int step, ChromPeak peak)
+        public DocNode ChangePeak(int indexSet, int indexFile, int step, ChromPeak peak, int ratioCount)
         {
             var listChromInfo = Results[indexSet];
             var listChromInfoNew = new List<TransitionChromInfo>();
             if (listChromInfo == null)
-                listChromInfoNew.Add(new TransitionChromInfo(indexFile, step, peak, null, true));
+                listChromInfoNew.Add(new TransitionChromInfo(indexFile, step, peak, new float?[ratioCount], true));
             else
             {
                 bool peakAdded = false;
@@ -208,13 +208,17 @@ namespace pwiz.Skyline.Model
                             chromInfo.FileIndex >= indexFile &&
                             chromInfo.OptimizationStep > step)
                         {
-                            listChromInfoNew.Add(new TransitionChromInfo(indexFile, step, peak, null, true));
+                            listChromInfoNew.Add(new TransitionChromInfo(indexFile, step, peak, new float?[ratioCount], true));
                             peakAdded = true;
                         }
                         listChromInfoNew.Add(chromInfo);
                     }
                 }                
+                // Finally, make sure the peak is added
+                if (!peakAdded)
+                    listChromInfoNew.Add(new TransitionChromInfo(indexFile, step, peak, new float?[ratioCount], true));
             }
+
             return ChangeResults((Results<TransitionChromInfo>)
                 Results.ChangeAt(indexSet, new ChromInfoList<TransitionChromInfo>(listChromInfoNew)));
         }
@@ -348,7 +352,8 @@ namespace pwiz.Skyline.Model
 
         public static string GetChargeIndicator(int charge)
         {
-            return "++++++++++".Substring(0, charge);
+            const string pluses = "+++++++++++++++++++++++++++++++";
+            return pluses.Substring(0, Math.Min(charge, pluses.Length-1));
         }
 
         private readonly TransitionGroup _group;

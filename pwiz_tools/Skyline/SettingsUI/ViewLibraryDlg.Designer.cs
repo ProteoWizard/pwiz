@@ -33,6 +33,7 @@ namespace pwiz.Skyline.SettingsUI
             this.PeptideListSplitContainer = new System.Windows.Forms.SplitContainer();
             this.PeptideListPanel = new System.Windows.Forms.Panel();
             this.PeptideListBox = new System.Windows.Forms.ListBox();
+            this.cbShowModMasses = new System.Windows.Forms.CheckBox();
             this.PageCount = new System.Windows.Forms.Label();
             this.PeptideCount = new System.Windows.Forms.Label();
             this.NextLink = new System.Windows.Forms.LinkLabel();
@@ -83,7 +84,6 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStripSeparator15 = new System.Windows.Forms.ToolStripSeparator();
             this.zoomSpectrumContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator27 = new System.Windows.Forms.ToolStripSeparator();
-            this.cbShowModMasses = new System.Windows.Forms.CheckBox();
             this.splitMain.Panel1.SuspendLayout();
             this.splitMain.Panel2.SuspendLayout();
             this.splitMain.SuspendLayout();
@@ -167,6 +167,18 @@ namespace pwiz.Skyline.SettingsUI
             this.PeptideListBox.TabIndex = 0;
             this.PeptideListBox.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.PeptideListBox_DrawItem);
             this.PeptideListBox.SelectedIndexChanged += new System.EventHandler(this.PeptideListBox_SelectedIndexChanged);
+            // 
+            // cbShowModMasses
+            // 
+            this.cbShowModMasses.AutoSize = true;
+            this.cbShowModMasses.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.cbShowModMasses.Location = new System.Drawing.Point(0, 252);
+            this.cbShowModMasses.Name = "cbShowModMasses";
+            this.cbShowModMasses.Size = new System.Drawing.Size(258, 17);
+            this.cbShowModMasses.TabIndex = 1;
+            this.cbShowModMasses.Text = "&Show modification masses";
+            this.cbShowModMasses.UseVisualStyleBackColor = true;
+            this.cbShowModMasses.CheckedChanged += new System.EventHandler(this.cbShowModMasses_CheckedChanged);
             // 
             // PageCount
             // 
@@ -657,18 +669,6 @@ namespace pwiz.Skyline.SettingsUI
             // 
             this.toolStripSeparator27.Name = "toolStripSeparator27";
             this.toolStripSeparator27.Size = new System.Drawing.Size(162, 6);
-            // 
-            // cbShowModMasses
-            // 
-            this.cbShowModMasses.AutoSize = true;
-            this.cbShowModMasses.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.cbShowModMasses.Location = new System.Drawing.Point(0, 252);
-            this.cbShowModMasses.Name = "cbShowModMasses";
-            this.cbShowModMasses.Size = new System.Drawing.Size(258, 17);
-            this.cbShowModMasses.TabIndex = 1;
-            this.cbShowModMasses.Text = "&Show modification masses";
-            this.cbShowModMasses.UseVisualStyleBackColor = true;
-            this.cbShowModMasses.CheckedChanged += new System.EventHandler(this.cbShowModMasses_CheckedChanged);
             // 
             // ViewLibraryDlg
             // 

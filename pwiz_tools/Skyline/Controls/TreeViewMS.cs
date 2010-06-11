@@ -165,39 +165,42 @@ namespace pwiz.Skyline.Controls
 
             TreeNodeMS node = (TreeNodeMS)e.Node;
 
-            if (IsDisjointSelect)
+            if (node != null)
             {
-                // Toggle selection on the node
-                SelectNode(node, !IsNodeSelected(e.Node));
-            }
-            else if (IsRangeSelect && !ReferenceEquals(_anchorNode, node))
-            {
-                // Figure out top and bottom of the range to be selected
-                TreeNodeMS upperNode = _anchorNode;
-                TreeNodeMS bottomNode = node;
-                if (upperNode.BoundsMS.Top > bottomNode.BoundsMS.Top)
-                    Helpers.Swap(ref upperNode, ref bottomNode);
-
-                // Set new selection to contain all visible nodes between top and bottom
-                SelectedNodes.Clear();
-                while (!ReferenceEquals(upperNode, bottomNode))
+                if (IsDisjointSelect)
                 {
-                    SelectNode(upperNode, true);
-                    upperNode = (TreeNodeMS) upperNode.NextVisibleNode;
+                    // Toggle selection on the node
+                    SelectNode(node, !IsNodeSelected(e.Node));
                 }
-                SelectNode(bottomNode, true);
-            }
-            else
-            {
-                // Make this a single selection of the selected node.
-                SelectedNodes.Clear();
-                SelectNode(node, true);
-            }
+                else if (IsRangeSelect && !ReferenceEquals(_anchorNode, node))
+                {
+                    // Figure out top and bottom of the range to be selected
+                    TreeNodeMS upperNode = _anchorNode;
+                    TreeNodeMS bottomNode = node;
+                    if (upperNode.BoundsMS.Top > bottomNode.BoundsMS.Top)
+                        Helpers.Swap(ref upperNode, ref bottomNode);
 
-            // Invalidate the changed nodes
-            var unchangedNodes = new HashSet<TreeNodeMS>(selectedNodesOld.Intersect(SelectedNodes));
-            InvalidateChangedNodes(selectedNodesOld, unchangedNodes);
-            InvalidateChangedNodes(SelectedNodes, unchangedNodes);
+                    // Set new selection to contain all visible nodes between top and bottom
+                    SelectedNodes.Clear();
+                    while (!ReferenceEquals(upperNode, bottomNode))
+                    {
+                        SelectNode(upperNode, true);
+                        upperNode = (TreeNodeMS)upperNode.NextVisibleNode;
+                    }
+                    SelectNode(bottomNode, true);
+                }
+                else
+                {
+                    // Make this a single selection of the selected node.
+                    SelectedNodes.Clear();
+                    SelectNode(node, true);
+                }
+
+                // Invalidate the changed nodes
+                var unchangedNodes = new HashSet<TreeNodeMS>(selectedNodesOld.Intersect(SelectedNodes));
+                InvalidateChangedNodes(selectedNodesOld, unchangedNodes);
+                InvalidateChangedNodes(SelectedNodes, unchangedNodes);
+            }
 
             // Make sure selection is updated before after select event is fired
             base.OnAfterSelect(e);

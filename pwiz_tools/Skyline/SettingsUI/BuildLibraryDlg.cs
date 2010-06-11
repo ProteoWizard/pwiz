@@ -33,10 +33,11 @@ namespace pwiz.Skyline.SettingsUI
     {
         private static readonly string[] RESULTS_EXTS = new[]
             {
+                BiblioSpecLiteBuilder.EXT_DAT,
                 BiblioSpecLiteBuilder.EXT_PEP_XML,
                 BiblioSpecLiteBuilder.EXT_PEP_XML_ONE_DOT,
                 BiblioSpecLiteBuilder.EXT_XTAN_XML,
-                BiblioSpecLiteBuilder.EXT_DAT,
+                BiblioSpecLiteBuilder.EXT_PILOT_XML,
                 BiblioSpecLiteBuilder.EXT_IDP_XML,
                 BiblioSpecLiteBuilder.EXT_SQT
             };

@@ -66,7 +66,7 @@ namespace pwiz.SkylineTestFunctional
             BuildLibraryError("zero_charge.pep.XML");
             BuildLibraryError("truncated.pep.XML");
             BuildLibraryError("no_such_file.pep.XML", "Failed to open");
-            BuildLibraryError("bad_mzxml.pep.XML", "index corrupted");
+            BuildLibraryError("bad_mzxml.pep.XML", "<index> not found");
             BuildLibraryError("missing_mzxml.pep.XML", "Could not find spectrum file");
 
             // Test successful builds
