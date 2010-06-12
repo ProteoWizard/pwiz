@@ -57,7 +57,8 @@ namespace pwiz.Skyline.Model.Results
             if (ReferenceEquals(this, other)) return true;
             return base.Equals(other) &&
                    other.PeakCountRatio == PeakCountRatio &&
-                   other.RetentionTime.Equals(RetentionTime);
+                   other.RetentionTime.Equals(RetentionTime) &&
+                   ArrayUtil.EqualsDeep(other.LabelRatios, LabelRatios);
         }
 
         public override bool Equals(object obj)
@@ -74,6 +75,7 @@ namespace pwiz.Skyline.Model.Results
                 int result = base.GetHashCode();
                 result = (result*397) ^ PeakCountRatio.GetHashCode();
                 result = (result*397) ^ (RetentionTime.HasValue ? RetentionTime.Value.GetHashCode() : 0);
+                result = (result*397) ^ LabelRatios.GetHashCodeDeep();
                 return result;
             }
         }

@@ -40,9 +40,15 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         private readonly ISessionFactory _sessionFactory;
         private readonly ISession _session;
         private DataSettings _dataSettings;
+
         public Database()
+            : this(null)
+        {            
+        }
+
+        public Database(SrmSettings settings)
         {
-            var configuration = SessionFactoryFactory.GetConfiguration(":memory:");
+            var configuration = SessionFactoryFactory.GetConfiguration(":memory:", settings);
             // In-memory SQLite databases disappear the moment that you release the connection,
             // so we have to tell Hibernate not to release the connection until we close the 
             // session.
@@ -351,7 +357,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 
                 for (int j = 0; j < labelTypes.Length; j++)
                 {
-                    var labelType = labelTypes[i];
+                    var labelType = labelTypes[j];
                     if (ReferenceEquals(standardType, labelType))
                         continue;
                     if (firstRatio)
@@ -363,18 +369,12 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                     // ratio combinations as custom columns
                     if (labelTypes.Length > 2)
                     {
-                        peptideResult.LabelRatios[GetPeptideRatioColumn(labelType, standardType)] =
+                        string keyRatio = RatioPropertyAccessor.GetPeptideKey(labelType, standardType);
+                        peptideResult.LabelRatios[keyRatio] =
                             GetPeptideRatio(chromInfo, labelType, standardType);
                     }
                 }
             }
-        }
-
-        private static string GetPeptideRatioColumn(IsotopeLabelType labelType, IsotopeLabelType standardType)
-        {
-            return string.Format("Ratio{0}To{1}",
-                Helpers.MakeId(labelType.ToString()),
-                Helpers.MakeId(standardType.ToString()));
         }
 
         private static double? GetPeptideRatio(PeptideChromInfo chromInfo,
@@ -511,7 +511,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                         {
                             for (int j = 0; j < standardTypes.Count; j++)
                             {
-                                string columnName = GetGroupRatioColumn(standardTypes[j]);
+                                string columnName = RatioPropertyAccessor.GetPrecursorKey(standardTypes[j]);
                                 precursorResult.LabelRatios[columnName] = chromInfo.Ratios[j];
                             }
                         }
@@ -560,11 +560,6 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             {
                 SaveTransition(session, docInfo, dbPrecursor, precursorResultSummary, nodeTran);
             }
-        }
-
-        private static string GetGroupRatioColumn(IsotopeLabelType labelType)
-        {
-            return "Total" + GetRatioColumn(labelType);
         }
 
         /// <summary>
@@ -639,7 +634,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                         {
                             for (int j = 0; j < standardTypes.Count; j++)
                             {
-                                string columnName = GetRatioColumn(standardTypes[j]);
+                                string columnName = RatioPropertyAccessor.GetTransitionKey(standardTypes[j]);
                                 transitionResult.LabelRatios[columnName] = chromInfo.Ratios[j];
                             }
                         }
@@ -679,11 +674,6 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             }
             session.Flush();
             session.Clear();
-        }
-
-        private static string GetRatioColumn(IsotopeLabelType labelType)
-        {
-            return "AreaRatioTo" + Helpers.MakeId(labelType.Name, true);
         }
 
 //        private static double SignalToNoise(float area, float background)

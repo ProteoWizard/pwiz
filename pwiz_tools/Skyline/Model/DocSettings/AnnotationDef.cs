@@ -19,8 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Skyline.Util;
@@ -41,7 +39,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// A prefix that is often prepended to annotation names when annotations coexist 
         /// with other built in columns or attributes.
         /// </summary>
-        public const string AnnotationPrefix = "annotation_";
+        public const string ANNOTATION_PREFIX = "annotation_";
         public AnnotationDef(String name, AnnotationTarget annotationTargets, AnnotationType type, IList<String> items) : base(name)
         {
             AnnotationTargets = annotationTargets;

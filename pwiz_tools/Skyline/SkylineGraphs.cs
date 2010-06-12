@@ -2296,8 +2296,9 @@ namespace pwiz.Skyline
         private void NormalizeAreaGraphToTotal(bool normalize)
         {
             Settings.Default.AreaPercentView = normalize;
+            Settings.Default.AreaRatioView = false;
             if (normalize)
-                Settings.Default.AreaRatioView = Settings.Default.AreaLogScale = false;
+                Settings.Default.AreaLogScale = false;
             UpdatePeakAreaGraph();
         }
 

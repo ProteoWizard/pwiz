@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -119,7 +119,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(chooseColumnsDlg, ()=>chooseColumnsDlg.DialogResult=DialogResult.OK);
             var colPrecursorResultItems =
                 resultsGrid.Columns[
-                    AnnotationDef.AnnotationPrefix + "precursorResultItems"];
+                    AnnotationDef.ANNOTATION_PREFIX + "precursorResultItems"];
             // Set the annotation value on the first two rows in the ResultsGrid.
             // The annotation is a dropdown with values {blank, "a", "b", "c"}
             Assert.IsNotNull(colPrecursorResultItems);

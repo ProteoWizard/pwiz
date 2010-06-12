@@ -172,16 +172,24 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 parts.AddRange(columnInfo.ReportColumn.Column.Parts);
                 Identifier identifier = new Identifier(parts);
 
+                // HACK: This is a hack to hide certain pivot columns which will never contain
+                //       values in the case of label types and ratios.
                 // TODO(nicksh): Something more general
                 bool hidden = false;
-                if (Equals(columnInfo.Caption, "TotalAreaRatio") ||
-                         Equals(columnInfo.Caption, "AreaRatio"))
+                const string nameTotalRatioTo = "TotalAreaRatioTo";
+                const string nameRatioTo = "AreaRatioTo";
+                string colCap = columnInfo.Caption;
+                if (Equals(colCap, "TotalAreaRatio") || Equals(colCap, "AreaRatio"))
                 {
-                    foreach (var part in rowKey)
-                    {
-                        if (part != null && Equals(part.ToString(), "light"))
-                            hidden = true;
-                    }
+                    hidden = !RowKeyContains(rowKey, "light");
+                }
+                else if (colCap.StartsWith(nameTotalRatioTo))
+                {
+                    hidden = RowKeyContains(rowKey, colCap.Substring(nameTotalRatioTo.Length));
+                }
+                else if (colCap.StartsWith(nameRatioTo))
+                {
+                    hidden = RowKeyContains(rowKey, colCap.Substring(nameRatioTo.Length));                    
                 }
 
                 return new ColumnInfo
@@ -192,6 +200,24 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                     ColumnType = columnInfo.ColumnType,
                     IsHidden = hidden
                 };
+            }
+
+// ReSharper disable SuggestBaseTypeForParameter
+            private static bool RowKeyContains(RowKey rowKey, string keyPart)
+// ReSharper restore SuggestBaseTypeForParameter
+            {
+                string keyPartLower = keyPart.ToLower();
+                string keyPartSpaces = keyPartLower.Replace('_', ' ');  // Ugh.
+
+                foreach (var part in rowKey)
+                {
+                    if (part == null)
+                        continue;
+                    string partLower = part.ToString().ToLower();
+                    if (Equals(partLower, keyPartLower) || Equals(partLower, keyPartSpaces))
+                        return true;
+                }
+                return false;
             }
 
             /// <summary>

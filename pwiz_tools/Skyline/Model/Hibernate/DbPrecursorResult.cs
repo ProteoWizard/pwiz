@@ -17,18 +17,12 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 
 namespace pwiz.Skyline.Model.Hibernate
 {
     [QueryTable(TableType = TableType.result)]
-    public class DbPrecursorResult : DbEntity
+    public class DbPrecursorResult : DbRatioResult
     {
-        public DbPrecursorResult()
-        {
-            LabelRatios = new Dictionary<string, double?>();
-        }
-
         public override Type EntityClass
         {
             get { return typeof (DbPrecursorResult); }
@@ -54,7 +48,6 @@ namespace pwiz.Skyline.Model.Hibernate
         public virtual double? TotalAreaRatio { get; set; }
 //        [QueryColumn(Format = Formats.STANDARD_RATIO)]
 //        public virtual double? StdevAreaRatio { get; set; }
-        public virtual IDictionary<string, double?> LabelRatios { get; private set; }
         [QueryColumn(Format = Formats.PEAK_AREA_NORMALIZED)]
         public virtual double? TotalAreaNormalized { get; set; }
         [QueryColumn(Format = Formats.STANDARD_RATIO)]

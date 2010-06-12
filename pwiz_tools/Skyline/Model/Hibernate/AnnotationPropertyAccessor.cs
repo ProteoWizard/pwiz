@@ -22,6 +22,7 @@ using System.Reflection;
 using NHibernate.Engine;
 using NHibernate.Properties;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Hibernate
 {
@@ -31,16 +32,36 @@ namespace pwiz.Skyline.Model.Hibernate
     /// </summary>
     public class AnnotationPropertyAccessor : IPropertyAccessor
     {
-        public const string ANNOTATION_PREFIX = AnnotationDef.AnnotationPrefix;
+        public const string ANNOTATION_PREFIX = AnnotationDef.ANNOTATION_PREFIX;
+
+        public static string GetKey(string annotationName)
+        {
+            return Helpers.MakeId(annotationName);
+        }
+
+        public static string GetColumnName(string annotationName)
+        {
+            return ANNOTATION_PREFIX + GetKey(annotationName);
+        }
+
+        public static string GetDisplayName(string propertyName)
+        {
+            return propertyName.Substring(ANNOTATION_PREFIX.Length);
+        }
+
+        public static bool IsAnnotationProperty(string propertyName)
+        {
+            return propertyName.StartsWith(ANNOTATION_PREFIX);
+        }
 
         public IGetter GetGetter(Type theClass, string propertyName)
         {
-            return new Getter(propertyName.Substring(ANNOTATION_PREFIX.Length));
+            return new Getter(GetDisplayName(propertyName));
         }
 
         public ISetter GetSetter(Type theClass, string propertyName)
         {
-            return new Setter(propertyName.Substring(ANNOTATION_PREFIX.Length));
+            return new Setter(GetDisplayName(propertyName));
         }
 
         public bool CanAccessThroughReflectionOptimizer

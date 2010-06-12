@@ -37,8 +37,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>2003</ApplicationRevision>
-    <ApplicationVersion>0.6.1.2003</ApplicationVersion>
+    <ApplicationRevision>2017</ApplicationRevision>
+    <ApplicationVersion>0.6.1.2017</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -319,7 +319,9 @@
       <DependentUpon>RenameResultDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Model\Hibernate\DbPrecursorResultSummary.cs" />
+    <Compile Include="Model\Hibernate\DbRatioResult.cs" />
     <Compile Include="Model\Hibernate\DbTransitionResultSummary.cs" />
+    <Compile Include="Model\Hibernate\RatioPropertyAccessor.cs" />
     <Compile Include="Model\Lib\BlibData\BlibDb.cs" />
     <Compile Include="Model\Lib\BlibData\DbEntity.cs" />
     <Compile Include="Model\Lib\BlibData\DbLibInfo.cs" />

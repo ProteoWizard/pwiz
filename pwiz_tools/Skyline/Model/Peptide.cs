@@ -656,7 +656,7 @@ namespace pwiz.Skyline.Model
                 var listRatios = new List<PeptideLabelRatio>();
                 foreach (var standardType in mods.InternalStandardTypes)
                 {
-                    foreach (var labelType in mods.GetHeavyModificationTypes())
+                    foreach (var labelType in mods.GetModificationTypes())
                     {
                         float? stdev;
                         float? ratio = CalcTransitionGroupRatio(-1, labelType, standardType, out stdev);

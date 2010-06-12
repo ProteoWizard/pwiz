@@ -85,7 +85,7 @@ namespace pwiz.Skyline.FileUI
                 }
                 _database = null;
             }
-            Database database = new Database
+            Database database = new Database(document.Settings)
                                     {
                                         LongWaitBroker = longWaitBroker,
                                         PercentOfWait = percentOfWait

@@ -201,6 +201,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         protected List<TreeNode> GetTreeNodes(IClassMetadata classMetadata, Identifier identifier)
         {
             List<TreeNode> result = new List<TreeNode>();
+            // Add special ratio names in order after the default ratio name
+            int lastRatioIndex = -1;
             foreach (String propertyName in classMetadata.PropertyNames)
             {
                 IType propertyType = classMetadata.GetPropertyType(propertyName);
@@ -209,10 +211,13 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                     continue;
                 }
                 var label = propertyName;
-                if (label.StartsWith(AnnotationPropertyAccessor.ANNOTATION_PREFIX))
-                {
-                    label = label.Substring(AnnotationPropertyAccessor.ANNOTATION_PREFIX.Length);
-                }
+                bool isRatio = RatioPropertyAccessor.IsRatioProperty(label);
+                if (isRatio)
+                    label = RatioPropertyAccessor.GetDisplayName(label);
+                else if (AnnotationPropertyAccessor.IsAnnotationProperty(label))
+                    label = AnnotationPropertyAccessor.GetDisplayName(label);
+                else if (label.IndexOf("Ratio") != -1)
+                    lastRatioIndex = result.Count;
                 var columnInfo = CreateColumnInfo(identifier, classMetadata, propertyName);
                 if (columnInfo.IsHidden)
                 {
@@ -225,7 +230,10 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                         Text = label,
                         Tag = columnInfo
                     };
-                result.Add(propertyNode);
+                if (isRatio && lastRatioIndex != -1)
+                    result.Insert(++lastRatioIndex, propertyNode);
+                else
+                    result.Add(propertyNode);
             }
             return result;
         }

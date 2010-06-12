@@ -17,7 +17,9 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Data.SQLite;
+using System.Linq;
 using System.Reflection;
 using NHibernate;
 using NHibernate.Cfg;
@@ -30,7 +32,7 @@ namespace pwiz.Skyline.Model.Hibernate
     {
         public static ISessionFactory CreateSessionFactory(String path, bool createSchema)
         {
-            Configuration configuration = GetConfiguration(path);
+            Configuration configuration = GetConfiguration(path, null);
             if (createSchema)
             {
                 configuration.SetProperty("hbm2ddl.auto", "create-drop");
@@ -39,7 +41,7 @@ namespace pwiz.Skyline.Model.Hibernate
             return sessionFactory;
         }
 
-        public static Configuration GetConfiguration(String path)
+        public static Configuration GetConfiguration(String path, SrmSettings settings)
         {
             Configuration configuration = new Configuration()
                 .SetProperty("dialect", typeof(NHibernate.Dialect.SQLiteDialect).AssemblyQualifiedName)
@@ -52,6 +54,8 @@ namespace pwiz.Skyline.Model.Hibernate
             Assembly assembly = typeof(SessionFactoryFactory).Assembly;
             configuration.SetProperty("connection.provider", typeof(NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName);
             configuration.AddInputStream(assembly.GetManifestResourceStream(typeof(SessionFactoryFactory).Namespace + ".mapping.xml"));
+            if (settings != null)
+                AddRatioColumns(configuration, settings);
             AddAnnotations(configuration, AnnotationDef.AnnotationTarget.protein, typeof(DbProtein));
             AddAnnotations(configuration, AnnotationDef.AnnotationTarget.peptide, typeof(DbPeptide));
             AddAnnotations(configuration, AnnotationDef.AnnotationTarget.precursor, typeof(DbPrecursor));
@@ -59,6 +63,51 @@ namespace pwiz.Skyline.Model.Hibernate
             AddAnnotations(configuration, AnnotationDef.AnnotationTarget.precursor_result, typeof(DbPrecursorResult));
             AddAnnotations(configuration, AnnotationDef.AnnotationTarget.transition_result, typeof(DbTransitionResult));
             return configuration;
+        }
+
+        private const string STRING_TYPE_NAME = "string";
+        private const string BOOL_TYPE_NAME = "bool";
+        private const string NDOUBLE_TYPE_NAME = "double?";
+
+        private static readonly Dictionary<Type, string> DICT_TYPE_TO_NAME =
+            new Dictionary<Type, string>
+                {
+                    {typeof(AnnotationPropertyAccessor), STRING_TYPE_NAME},
+                    {typeof(BoolAnnotationPropertyAccessor), BOOL_TYPE_NAME},
+                    {typeof(RatioPropertyAccessor), NDOUBLE_TYPE_NAME}
+                };
+
+        private static void AddRatioColumns(Configuration configuration, SrmSettings settings)
+        {
+            var mods = settings.PeptideSettings.Modifications;
+            var standardTypes = mods.InternalStandardTypes;
+            var labelTypes = mods.GetModificationTypes().ToArray();
+            if (labelTypes.Length < 3)
+                return;
+
+            var mappingPeptide = configuration.GetClassMapping(typeof(DbPeptideResult));
+            var mappingPrec = configuration.GetClassMapping(typeof(DbPrecursorResult));
+            var mappingTran = configuration.GetClassMapping(typeof(DbTransitionResult));
+
+            for (int i = 0; i < standardTypes.Count; i++)
+            {
+                var standardType = standardTypes[i];
+
+                for (int j = 0; j < labelTypes.Length; j++)
+                {
+                    var labelType = labelTypes[j];
+                    if (ReferenceEquals(labelType, standardType))
+                        continue;
+
+                    string namePep = RatioPropertyAccessor.GetPeptideColumnName(labelType, standardType);
+                    AddColumn(mappingPeptide, namePep, typeof(RatioPropertyAccessor));
+                }
+
+                string namePrec = RatioPropertyAccessor.GetPrecursorColumnName(standardType);
+                AddColumn(mappingPrec, namePrec, typeof(RatioPropertyAccessor));
+                string nameTran = RatioPropertyAccessor.GetTransitionColumnName(standardType);
+                AddColumn(mappingTran, nameTran, typeof(RatioPropertyAccessor));
+            }
         }
 
         private static void AddAnnotations(Configuration configuration, AnnotationDef.AnnotationTarget annotationTarget, Type persistentClass)
@@ -70,25 +119,30 @@ namespace pwiz.Skyline.Model.Hibernate
                 {
                     continue;
                 }
-                var column = new Column(AnnotationPropertyAccessor.ANNOTATION_PREFIX + annotationDef.Name);
-                mapping.Table.AddColumn(column);
+                string columnName = AnnotationPropertyAccessor.GetColumnName(annotationDef.Name);
                 var isBoolAttribute = annotationDef.Type == AnnotationDef.AnnotationType.true_false;
-                var value = new SimpleValue(mapping.Table)
-                                {
-                                        TypeName =
-                                        isBoolAttribute ? "boolean" : "string",
-                                };
-                value.AddColumn(column);
-                var property = new Property(value)
-                                   {
-                                       Name = AnnotationPropertyAccessor.ANNOTATION_PREFIX + annotationDef.Name,
-                                       PropertyAccessorName = 
-                                            isBoolAttribute 
-                                            ? typeof(BoolAnnotationPropertyAccessor).AssemblyQualifiedName 
-                                            : typeof(AnnotationPropertyAccessor).AssemblyQualifiedName,
-                                   };
-                mapping.AddProperty(property);
+                AddColumn(mapping, columnName, isBoolAttribute ?
+                    typeof(BoolAnnotationPropertyAccessor) : typeof(AnnotationPropertyAccessor));
             }
+        }
+
+        private static void AddColumn(PersistentClass mapping, string columnName, Type accessorType)
+        {
+            var typeName = DICT_TYPE_TO_NAME[accessorType];
+            bool isNullable = typeName[typeName.Length - 1] == '?';
+            if (isNullable)
+                typeName = typeName.Substring(0, typeName.Length - 1);
+
+            var column = new Column(columnName) {IsNullable = isNullable};
+            mapping.Table.AddColumn(column);
+            var value = new SimpleValue(mapping.Table) {TypeName = typeName};
+            value.AddColumn(column);
+            var property = new Property(value)
+            {
+                Name = columnName,                
+                PropertyAccessorName = accessorType.AssemblyQualifiedName
+            };
+            mapping.AddProperty(property);
         }
     }
 }
