@@ -141,7 +141,7 @@
 #ifdef _MSC_VER // Compiling with Microsoft compiler
 #define _fseeki64 _fseeki64
 #define _ftelli64 _ftelli64
-#elif __MINGW
+#elif __MINGW || defined(__MINGW32__)
 #define _fseeki64 fseeko64
 #define _ftelli64 ftello64
 #else // assume POSIX
