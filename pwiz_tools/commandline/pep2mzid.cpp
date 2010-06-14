@@ -52,12 +52,16 @@ using namespace pwiz::data::pepxml;
 
 struct Config
 {
+    Config() : verbose(false) {}
+    
     string usageOptions;
 
     string inputFilename;
     string outputFilename;
     string outDirectory;
     vector<string> cvMapFiles;
+    bool   debug;
+    bool   verbose;
 };
 
 
@@ -110,6 +114,7 @@ Config parseCommandArgs(int argc, const char* argv[])
         ("map,m",
          po::value< vector<string> >(&config.cvMapFiles),
         ": keyword to cv map file")
+        ("debug,d", ": prints debug information.")
         ("verbose,v", ": prints extra information.")
         ("help,h",
             ": print this helpful message.")
@@ -124,11 +129,15 @@ Config parseCommandArgs(int argc, const char* argv[])
     po::options_description od_args1;
 
     const char* label_inputfile = "inputfile";
-    od_args1.add_options()(label_inputfile, po::value<string>(), "");
+    od_args1.add_options()(label_inputfile,
+                           po::value<string>(&config.inputFilename),
+                           "");
 
     po::options_description od_args2;
     const char* label_outputfile = "outputfile";
-    od_args2.add_options()(label_outputfile, po::value<string>(), "");
+    od_args2.add_options()(label_outputfile,
+                           po::value<string>(&config.outputFilename),
+                           "");
 
     po::positional_options_description pod_args;
     pod_args.add(label_inputfile, 1);
@@ -152,6 +161,12 @@ Config parseCommandArgs(int argc, const char* argv[])
     if (vm.count("help"))
         throw runtime_error(usage(config).c_str());
 
+    if (vm.count("verbose"))
+        config.verbose = true;
+    
+    if (vm.count("debug"))
+        config.debug = true;
+    
     return config;
 }
 
@@ -163,19 +178,6 @@ int main(int argc, const char* argv[])
     {
         Config config = parseCommandArgs(argc, argv);
         string inFile, outFile;
-
-        /*
-        if (argc<3)
-        {
-            string usage = "usage: ";
-            usage += basename(argv[0]);
-            usage += " <in> <out>";
-            throw runtime_error(usage.c_str());
-        }
-
-        inFile = argv[1];
-        outFile = argv[2];
-        */
 
         // TODO read in kw->cv map file.
         vector<CVMapPtr> cvmaps;
@@ -192,7 +194,11 @@ int main(int argc, const char* argv[])
         msmsPA.read(in);
 
         Pep2MzIdent p2m(msmsPA);
+
+        p2m.setVerbose(config.verbose);
+        p2m.setDebug(config.debug);
         p2m.setParamMap(cvmaps);
+        
         p2m.translate();
 
         MzIdentMLFile::write(*p2m.getMzIdentML(), config.outputFilename);
