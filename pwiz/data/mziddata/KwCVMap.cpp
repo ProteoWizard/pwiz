@@ -151,6 +151,16 @@ StringMatchCVMap::StringMatchCVMap(const string& keyword)
 {
 }
 
+bool StringMatchCVMap::operator()(const CVMap& that) const
+{
+    return (*this) == that;
+}
+
+bool StringMatchCVMap::operator()(const CVMapPtr& that) const
+{
+    return (*this) == that;
+}
+
 bool StringMatchCVMap::operator==(const CVMap& right) const
 {
     return keyword == right.keyword;
@@ -158,7 +168,7 @@ bool StringMatchCVMap::operator==(const CVMap& right) const
 
 bool StringMatchCVMap::operator==(const CVMapPtr& right) const
 {
-    return keyword == right->keyword;
+    return right.get() && keyword == right->keyword;
 }
 
 //
@@ -168,6 +178,16 @@ bool StringMatchCVMap::operator==(const CVMapPtr& right) const
 CVIDMatchCVMap::CVIDMatchCVMap(CVID cvid)
     : CVMap("", cvid, "/")
 {
+}
+
+bool CVIDMatchCVMap::operator()(const CVMap& right) const
+{
+    return (*this) == right;
+}
+
+bool CVIDMatchCVMap::operator()(const CVMapPtr& right) const
+{
+    return (*this) == right;
 }
 
 bool CVIDMatchCVMap::operator==(const CVMap& right) const

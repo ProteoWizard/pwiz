@@ -80,6 +80,8 @@ struct PWIZ_API_DECL StringMatchCVMap : public CVMap
 {
     StringMatchCVMap(const std::string& keyword);
 
+    virtual bool operator()(const CVMap& right) const;
+    virtual bool operator()(const CVMapPtr& right) const;
     virtual bool operator==(const CVMap& right) const;
     virtual bool operator==(const CVMapPtr& right) const;
 };
@@ -88,6 +90,8 @@ struct PWIZ_API_DECL CVIDMatchCVMap : public CVMap
 {
     CVIDMatchCVMap(cv::CVID cvid);
 
+    virtual bool operator()(const CVMap& right) const;
+    virtual bool operator()(const CVMapPtr& right) const;
     virtual bool operator==(const CVMap& right) const;
     virtual bool operator==(const CVMapPtr& right) const;
 };

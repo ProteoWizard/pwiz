@@ -275,9 +275,33 @@ struct person_p
     }
 };
 
+// DEBUG Begin
+
+namespace {
+
+struct path_out
+{
+    int lvl;
+
+    path_out() : lvl(0) {}
+    
+    void operator()(const string& str) 
+    {
+        for (int i=0; i<lvl; i++)
+            cout << "\t";
+        cout << str << "\n";
+
+        lvl++;
+    }
+};
+
+} // anonymous namespace
+// DEBUG End
+
 bool addToContactRoleCV(CVParam& param, vector<string>& path,
                   ContactRole& contactRole)
 {
+    cout << "\taddToContactRoleCV\n";
     if (path.size() &&
         path.at(0) == "role")
     {
@@ -291,6 +315,7 @@ bool addToContactRoleCV(CVParam& param, vector<string>& path,
 bool addToContactCV(CVParam& param, vector<string>& path,
                   vector<ContactPtr>& contacts)
 {
+    cout << "\taddToContactCV\n";
     string nextTag = path.at(0);
     path.erase(path.begin());
 
@@ -331,9 +356,34 @@ bool addToContactCV(CVParam& param, vector<string>& path,
     return false;
 }
 
+bool addToProteinDetectionProtocol(CVParam& param, vector<string>& path,
+                                   ProteinDetectionProtocolPtr& pdp)
+{
+    cout << "\taddToProteinDetectionProtocol\n";
+    string nextTag = path.at(0);
+    path.erase(path.begin());
+
+    if (nextTag == "AnalysisParams")
+    {
+        pdp->analysisParams.cvParams.push_back(param);
+        return true;
+    }
+    else if (nextTag == "Threshold")
+    {
+        pdp->threshold.cvParams.push_back(param);
+        return true;
+    }
+    else
+        throw runtime_error(("Unsupported tag in mzIdentML path: "+
+                             nextTag).c_str());
+
+    return false;
+}
+
 bool addToAnalysisSoftwareLevel(CVParam& param, vector<string>& path,
                               AnalysisSoftwarePtr as)
 {
+    cout << "\taddToAnalysisSoftwareLevel\n";
     if (path.size() == 0 || path.at(0).size() == 0)
         throw runtime_error("[addAnalysisSoftwareLevel] empty path string passed in");
 
@@ -346,16 +396,22 @@ bool addToAnalysisSoftwareLevel(CVParam& param, vector<string>& path,
     }
     else if (path.at(0) == "SoftwareName")
     {
+        throw runtime_error("Unimplemented mzIdentML path: SoftwareName");
     }
     else if (path.at(0) == "Customizations")
     {
+        throw runtime_error("Unimplemented mzIdentML path: Customizations");
     }
+    else
+        throw runtime_error(("Unsupported tag in mzIdentML path: "+
+                             path.at(0)).c_str());
     
     return false;
 }
 
 bool addToSample(CVParam& param, vector<string>& path, SamplePtr sample)
 {
+    cout << "\taddToSample\n";
     if (!path.size())
     {
         sample->cvParams.cvParams.push_back(param);
@@ -367,12 +423,158 @@ bool addToSample(CVParam& param, vector<string>& path, SamplePtr sample)
         path.erase(path.begin());
         return addToContactRoleCV(param, path, sample->contactRole);
     }
+    else
+        throw runtime_error(("Unsupported tag in mzIdentML path: "+
+                             path.at(0)).c_str());
+    
+    return false;
+}
+
+bool addToSearchModification(CVParam& param, vector<string>& path,
+                             SearchModificationPtr sm)
+{
+    if (!sm.get())
+        throw runtime_error("addToSearchModification: NULL value "
+                            "in sm variable");
+    
+    string tag = path.at(0);
+    path.erase(path.begin());
+
+    if (iequals(tag, "ModParam"))
+    {
+        sm->modParam.cvParams.cvParams.push_back(param);
+        return true;
+    }
+    else if (iequals(tag, "SpecificityRules"))
+    {
+        sm->specificityRules.cvParams.push_back(param);
+        return true;
+    }
+    else
+        throw runtime_error(("Unsupported tag in mzIdentML path: "+
+                             path.at(0)).c_str());
+        
+    return false;
+}
+
+bool addToSpectrumIdentificationProtocol(CVParam& param, vector<string>& path,
+                                     SpectrumIdentificationProtocolPtr& sip)
+{
+    if (!sip.get())
+        throw runtime_error("addToSpectrumIdentificationProtocol: NULL "
+                            "value in sip variable");
+    
+    string tag = path.at(0);
+    path.erase(path.begin());
+
+    if (iequals(tag, "SearchType"))
+    {
+        sip->searchType.cvParams.push_back(param);
+        return true;
+    }
+    else if (iequals(tag, "AdditionalSearchParams"))
+    {
+        sip->additionalSearchParams.cvParams.push_back(param);
+        return true;
+    }
+    else if (iequals(tag, "ModificationParams"))
+    {
+        SearchModificationPtr sm;
+        if (!sip->modificationParams.size())
+            sip->modificationParams.push_back(SearchModificationPtr(
+                                                 new SearchModification()));
+        
+        sm = sip->modificationParams.back();
+
+        return addToSearchModification(param, path, sm);
+    }
+    else if (iequals(tag, "Enzymes") && iequals(path.at(0), "Enzyme"))
+    {
+        EnzymePtr enzyme;
+        if (!sip->enzymes.enzymes.size())
+            sip->enzymes.enzymes.push_back(EnzymePtr(new Enzyme()));
+        enzyme = sip->enzymes.enzymes.back();
+
+        enzyme->enzymeName.cvParams.push_back(param);
+        
+        return true;
+    }
+    else if (iequals(tag, "MassTable") &&
+             iequals(path.at(0), "AmbiguousResidue"))
+    {
+        AmbiguousResiduePtr ar;
+        if (!sip->massTable.ambiguousResidue.size())
+            sip->massTable.ambiguousResidue.push_back(
+                AmbiguousResiduePtr(new AmbiguousResidue()));
+
+        ar = sip->massTable.ambiguousResidue.back();
+        ar->params.cvParams.push_back(param);
+
+        return true;
+    }
+    else if (iequals(tag, "FragmentTolerance"))
+    {
+        
+    }
+    else if (iequals(tag, "ParentTolerance"))
+    {
+        
+    }
+    else if (iequals(tag, "Threshold"))
+    {
+        
+    }
+    else if (iequals(tag, "DatabaseFilters"))
+    {
+        
+    }
+    else if (iequals(tag, "DatabaseTranslation"))
+    {
+        
+    }
+    else
+        throw runtime_error(("Unsupported tag in mzIdentML path: "+
+                             path.at(0)).c_str());
+    
+    return false;
+}
+
+bool addToAnalysisProtocolCollection(CVParam& param, vector<string>& path,
+                                     AnalysisProtocolCollection& apc)
+{
+    string tag = path.at(0);
+    path.erase(path.begin());
+
+    if (iequals(tag, "SpectrumIdentificationProtocol"))
+    {
+        SpectrumIdentificationProtocolPtr sip;
+        if (!apc.spectrumIdentificationProtocol.size())
+            apc.spectrumIdentificationProtocol.push_back(
+                SpectrumIdentificationProtocolPtr(new SpectrumIdentificationProtocol()));
+
+        sip = apc.spectrumIdentificationProtocol.back();
+        return addToSpectrumIdentificationProtocol(param, path, sip);
+    }
+    else if (iequals(tag, "ProteinDetectionProtocol"))
+    {
+        ProteinDetectionProtocolPtr pdp;
+        if (!apc.proteinDetectionProtocol.size())
+            apc.proteinDetectionProtocol.push_back(
+                ProteinDetectionProtocolPtr(new ProteinDetectionProtocol()));
+
+        pdp = apc.proteinDetectionProtocol.back();
+        return addToProteinDetectionProtocol(param, path, pdp);
+    }
+    else
+        throw runtime_error(("Unsupported tag in mzIdentML path: "+
+                             path.at(0)).c_str());
     
     return false;
 }
 
 bool addToMzIdentMLLevel(CVParam& param, vector<string>& path, MzIdentML& mzid)
 {
+    cout << "\taddToMzIdentMLLevel\n";
     /*
       "AnalysisSoftware",
         "Provider",
@@ -385,18 +587,22 @@ bool addToMzIdentMLLevel(CVParam& param, vector<string>& path, MzIdentML& mzid)
         "BibliographicReference",
      */
 
-    if (!path.size() == 0 || path.at(0).size())
+    if (path.size() == 0 || path.at(0).size() == 0)
+    {
+        path_out po_ed;
+        for_each(path.begin(), path.end(), po_ed);
         throw runtime_error("[addMzIdentMLLevel] empty path string passed in");
+    }
 
     string tag = path.at(0);
     path.erase(path.begin());
     
-    if (tag == "AnalysisSoftware")
+    if (iequals(tag, "AnalysisSoftware"))
     {
         mzid.analysisSoftwareList.push_back(AnalysisSoftwarePtr(new AnalysisSoftware()));
         return addToAnalysisSoftwareLevel(param, path, mzid.analysisSoftwareList.back());
     }
-    else if (tag == "Provider")
+    else if (iequals(tag, "Provider"))
     {
         // Is this a path to the only ParamContainer in Provider?
         if (path.size() >= 2 &&
@@ -407,11 +613,11 @@ bool addToMzIdentMLLevel(CVParam& param, vector<string>& path, MzIdentML& mzid)
         }
         // Otherwise fall through to "false"
     }
-    else if (tag == "AuditCollection")
+    else if (iequals(tag, "AuditCollection"))
     {
         return addToContactCV(param, path, mzid.auditCollection);
     }
-    else if (tag == "AnalysisSampleCollection")
+    else if (iequals(tag, "AnalysisSampleCollection"))
     {
         if (path.size() < 1 ||
             path.at(0) != "Sample")
@@ -429,19 +635,20 @@ bool addToMzIdentMLLevel(CVParam& param, vector<string>& path, MzIdentML& mzid)
 
         return addToSample(param, path, sample);
     }
-    else if (tag == "SequenceCollection")
+    else if (iequals(tag, "SequenceCollection"))
     {
     }
-    else if (tag == "AnalysisCollection")
+    else if (iequals(tag, "AnalysisCollection"))
     {
     }
-    else if (tag == "AnalysisProtocolCollection")
+    else if (iequals(tag, "AnalysisProtocolCollection"))
+    {
+        return addToAnalysisProtocolCollection(param, path, mzid.analysisProtocolCollection);
+    }
+    else if (iequals(tag, "DataCollection"))
     {
     }
-    else if (tag == "DataCollection")
-    {
-    }
-    else if (tag == "BibliographicReference")
+    else if (iequals(tag, "BibliographicReference"))
     {
     }
     else
@@ -451,9 +658,11 @@ bool addToMzIdentMLLevel(CVParam& param, vector<string>& path, MzIdentML& mzid)
     return false;
 }
 
+
 // Adds a cvParam to allocation in the mzIdentML tree.
-bool addCvByPath(CVParam& param, const std::string& path, MzIdentML& mzid)
+bool addCvByPath(CVParam param, const std::string& path, MzIdentML& mzid)
 {
+    cout << "\taddCvByPath\n";
     vector<string> parts;
     
     char_separator<char> sep("/@");
@@ -467,7 +676,15 @@ bool addCvByPath(CVParam& param, const std::string& path, MzIdentML& mzid)
         parts.push_back(tag);
     }
 
-    if (parts.at(0) != "mzIdentML")
+    // DEBUG Begin
+    path_out po_ed;
+    for_each(parts.begin(), parts.end(), po_ed);
+    // DEBUG End
+    
+    string tag = parts.at(0);
+    parts.erase(parts.begin());
+
+    if (!iequals(tag, "mzIdentML"))
         throw runtime_error("[addCvByPath] Root element other than mzIdentML in path.");
     
     return addToMzIdentMLLevel(param, parts, mzid);
@@ -901,7 +1118,7 @@ void Pep2MzIdent::translateEnzyme(const SampleEnzyme& sampleEnzyme,
     // attribute was not set, then don't alter the mzid Enzymes'
     // values.
     if (sampleEnzyme.independent || !sampleEnzyme.independent)
-        sip->enzymes.independent = (bool)sampleEnzyme.independent;
+        sip->enzymes.independent = sampleEnzyme.independent ? "true" : "false";
         
     result->analysisProtocolCollection.
         spectrumIdentificationProtocol.push_back(sip);
@@ -1347,15 +1564,41 @@ void Pep2MzIdent::earlyParameters(ParameterPtr parameter,
       USERNAME(*)
       _mzML (ignored except for software)
      */
-    vector<CVMapPtr>::const_iterator it = find(
+    if (iequals(parameter->name, "TAXONOMY"))
+    {
+        cout << "\n\n\tSearching for Taxonomy\n\t";
+        cout << parameterMap.size() << endl;
+    }
+    vector<CVMapPtr>::const_iterator it = find_if(
         parameterMap.begin(), parameterMap.end(),
-        shared_ptr<CVMap>(new StringMatchCVMap(parameter->name)));
+        /*shared_ptr<CVMap>(new */StringMatchCVMap(parameter->name))/*)*/;
     if (it != parameterMap.end())
     {
         // Put the value somewhere useful.
         CVTermInfo info = cvTermInfo((*it)->cvid);
+
+        CVParam cvParam(info.cvid, parameter->value);
+        if (!addCvByPath(cvParam, (*it)->path, (*mzid)))
+        {
+            // Notify us of the error.
+            throw runtime_error("addCvByPath found a parameter "
+                                "but couldn't add it.");
+        }
+        else
+            cout << "added CVMapped parameter "
+                 << (*it)->keyword << " to "
+                 << (*it)->path << endl;
+
+        // Debug return. w/o the following debug out, it should be an
+        // if/else if structure.
+        return ;
     }
-    else if (parameter->name == "USERNAME")
+    else
+    {
+        cout << "No cvmap found for " << parameter->name << endl;
+    }
+    
+    /*else*/ if (parameter->name == "USERNAME")
     {
         ContactPtr cp = find_id(mzid->auditCollection,
                                 PERSON_DOC_OWNER);
