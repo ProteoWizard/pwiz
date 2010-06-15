@@ -526,6 +526,28 @@ rule copy-assemblies ( target : properties * )
             }
         }
     }
+
+    # .NET applications may need a side-by-side configuration file that must be named like $(target).exe.config
+    local configuration-file = [ feature.get-values <configuration-file> : $(properties) ] ;
+    if $(configuration-file)
+    {
+        local target-path = [ on $(target) return $(LOCATE) ] ;
+        local configuration-file-path = [ $(configuration-file).name ] ;
+        if ! [ path.is-rooted $(configuration-file-path) ]
+        {
+            configuration-file-path = [ path.join [ $(configuration-file).path ] $(configuration-file-path:D=) ] ;
+        }
+        configuration-file-path = [ path.native $(configuration-file-path) ] ;
+        local target-filepath = [ path.native [ path.join $(target-path) $(configuration-file-path:D=) ] ] ;
+        if $(target-filepath) != $(configuration-file-path)
+        {
+            common.copy $(target-filepath) : $(configuration-file-path) ;
+            DEPENDS $(target-filepath) : $(target-path) ;
+            DEPENDS $(target) : $(target-filepath) ;
+            #JAM_SEMAPHORE on $(target-filepath) = "dotNetSemaphore" ;
+            #JAM_SEMAPHORE on $(target) = "dotNetSemaphore" ;
+        }
+    }
 }
 
 rule set-manifest-dependencies ( target : properties * )
@@ -1231,6 +1253,7 @@ local rule register-toolset-really ( )
         feature.feature assembly            :                       : free dependency ;
         feature.feature assembly-dependency :                       : free dependency ;
         feature.feature manifest-dependency :                       : free dependency ;
+        feature.feature configuration-file  :                       : free dependency ;
         feature.feature using-clr           : false true            : composite ;
         feature.compose <using-clr>true     : <asynch-exceptions>on <runtime-link>shared ;
     }

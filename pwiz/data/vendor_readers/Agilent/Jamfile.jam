@@ -121,6 +121,9 @@ run Reader_Agilent_Test.cpp $(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_ve
     : # requirements
         <library>pwiz_reader_agilent
         <conditional>@test-requirements
+
+        # configuration file sets the "useLegacyV2RuntimeActivationPolicy" attribute
+        <toolset>msvc-10.0:<configuration-file>Reader_Agilent_Test.exe.config
     : # target name
         Reader_Agilent_Test 
     : # default-build
