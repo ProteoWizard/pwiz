@@ -86,7 +86,7 @@ namespace pwiz.Skyline.Model.Results
     public struct PeptideLabelRatio
     {
         public PeptideLabelRatio(IsotopeLabelType labelType, IsotopeLabelType standardType,
-            float ratio, float ratioStdev) : this()
+            float? ratio, float? ratioStdev) : this()
         {
             LabelType = labelType;
             StandardType = standardType;
@@ -96,8 +96,8 @@ namespace pwiz.Skyline.Model.Results
 
         public IsotopeLabelType LabelType { get; private set; }
         public IsotopeLabelType StandardType { get; private set; }
-        public float Ratio { get; private set; }
-        public float RatioStdev { get; private set; }
+        public float? Ratio { get; private set; }
+        public float? RatioStdev { get; private set; }
 
         #region object overrides
 

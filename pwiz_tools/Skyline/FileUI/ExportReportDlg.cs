@@ -19,10 +19,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -234,7 +236,7 @@ namespace pwiz.Skyline.FileUI
             }
             catch (Exception x)
             {
-                MessageBox.Show(string.Format("Failed exporting to {0}.\n{1}", fileName, x.Message));
+                MessageBox.Show(string.Format("Failed exporting to {0}.\n{1}", fileName, GetExceptionDisplayMessage(x)));
                 return false;
             }
         }
@@ -294,10 +296,30 @@ namespace pwiz.Skyline.FileUI
                 previewReportDlg.SetResults(GetReport().Execute(GetDatabase(this)));
                 previewReportDlg.Show(Owner);
             }
-            catch (Exception)
+            catch (Exception x)
             {
-                MessageBox.Show(this, string.Format("An unexpected error occurred attempting to display the report '{0}'.", listboxReports.SelectedItem), Program.Name);
+                string message = GetExceptionDisplayMessage(x);
+                MessageBox.Show(this, string.Format("An unexpected error occurred attempting to display the report '{0}'.\n{1}", listboxReports.SelectedItem, message), Program.Name);
             }
+        }
+
+        private static readonly Regex REGEX_MISSING_COLUMN =
+            new Regex("^could not resolve property: (.*) of: (.*)$");
+
+        private static string GetExceptionDisplayMessage(Exception x)
+        {
+            var match = REGEX_MISSING_COLUMN.Match(x.Message);
+            if (match.Success)
+            {
+                string columnName = match.Groups[1].ToString();
+                if (AnnotationPropertyAccessor.IsAnnotationProperty(columnName))
+                    columnName = AnnotationPropertyAccessor.GetDisplayName(columnName);
+                else if (RatioPropertyAccessor.IsRatioProperty(columnName))
+                    columnName = RatioPropertyAccessor.GetDisplayName(columnName);
+                return string.Format("The field {0} does not exist in this document.", columnName);
+            }
+
+            return x.Message;
         }
 
         private const string REPORT_DEFINITION_FILTER = "Skyline Reports (*.skyr)|*.skyr|All Files|*.*";

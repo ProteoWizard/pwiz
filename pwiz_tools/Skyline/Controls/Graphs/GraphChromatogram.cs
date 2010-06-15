@@ -288,7 +288,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void comboFiles_SelectedIndexChanged(object sender, EventArgs e)
         {
-            UpdateUI();
+            // If the selected file is changing, then all of the chromatogram data
+            // on display will change, and the graph should be auto-zoomed, if
+            // any auto-zooming is turned on.
+            UpdateUI(true);
         }
 
         private void GraphChromatogram_VisibleChanged(object sender, EventArgs e)
@@ -310,6 +313,11 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public void UpdateUI()
+        {
+            UpdateUI(false);
+        }
+
+        public void UpdateUI(bool forceZoom)
         {
             // Only worry about updates, if the graph is visible
             // And make sure it is not disposed, since rendering happens on a timer
@@ -438,7 +446,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (graphPane.CurveList.Count == 0)
                     graphControl.AddGraphItem(graphPane, new UnavailableChromGraphItem(), false);
             }
-            else if (changedGroupIds || _zoomState != zoom ||
+            else if (forceZoom || changedGroupIds || _zoomState != zoom ||
                     _timeRange != Settings.Default.ChromatogramTimeRange ||
                     _maxIntensity != Settings.Default.ChromatogramTimeRange)
             {

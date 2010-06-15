@@ -9,7 +9,17 @@ namespace pwiz.Skyline.Model.Hibernate
 {
     public class RatioPropertyAccessor : IPropertyAccessor
     {
+        public enum RatioTarget
+        {
+            peptide_result, precursor_result, transition_result
+        }
+
         private const string RATIO_PREFIX = "ratio_";
+
+        public static string GetPeptideResultsHeader(IsotopeLabelType labelType, IsotopeLabelType standardType)
+        {
+            return string.Format("Ratio {0} To {1}", labelType.Title, standardType.Title);
+        }
 
         public static string GetPeptideKey(IsotopeLabelType labelType, IsotopeLabelType standardType)
         {
@@ -23,6 +33,11 @@ namespace pwiz.Skyline.Model.Hibernate
             return RATIO_PREFIX + GetPeptideKey(labelType, standardType);
         }
 
+        public static string GetPrecursorResultsHeader(IsotopeLabelType standardType)
+        {
+            return "Total " + GetTransitionResultsHeader(standardType);
+        }
+
         public static string GetPrecursorKey(IsotopeLabelType standardType)
         {
             return "Total" + GetTransitionKey(standardType);
@@ -31,6 +46,11 @@ namespace pwiz.Skyline.Model.Hibernate
         public static string GetPrecursorColumnName(IsotopeLabelType standardType)
         {
             return RATIO_PREFIX + GetPrecursorKey(standardType);
+        }
+
+        public static string GetTransitionResultsHeader(IsotopeLabelType standardType)
+        {
+            return "Area Ratio To " + standardType.Title;
         }
 
         public static string GetTransitionKey(IsotopeLabelType standardType)

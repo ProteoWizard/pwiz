@@ -152,18 +152,22 @@ namespace pwiz.SkylineTestFunctional
             var regexTran = new Regex(@"[A-Z] \[([^\]]+)\] - [^+]*(\++) (\(rank \d+\))");
             for (int i = 0; i < nodes[0].Nodes.Count; i++)
             {
-                var match0 = regexTran.Match(nodes[0].Nodes[i].Text);
-                Assert.IsTrue(match0.Success);
-                var match1 = regexTran.Match(nodes[1].Nodes[i].Text);
-                Assert.IsTrue(match1.Success);
-                var match2 = regexTran.Match(nodes[2].Nodes[i].Text);
-                Assert.IsTrue(match2.Success);
+                var match0 = MatchTransitionText(nodes[0].Nodes[i], regexTran);
+                var match1 = MatchTransitionText(nodes[1].Nodes[i], regexTran);
+                var match2 = MatchTransitionText(nodes[2].Nodes[i], regexTran);
                 for (int j = 1; j < match0.Groups.Count; j++)
                 {
                     Assert.AreEqual(match0.Groups[j].ToString(), match1.Groups[j].ToString());
                     Assert.AreEqual(match0.Groups[j].ToString(), match2.Groups[j].ToString());
                 }
             }
+        }
+
+        private static Match MatchTransitionText(TreeNode nodeTreeTran, Regex regexTran)
+        {
+            var match = regexTran.Match(nodeTreeTran.Text);
+            Assert.IsTrue(match.Success, string.Format("The transition node text {0} did not match the expected pattern.", nodeTreeTran.Text));
+            return match;
         }
 
         private static void VerifyCannotSynch(SrmDocument.Level levelNode)

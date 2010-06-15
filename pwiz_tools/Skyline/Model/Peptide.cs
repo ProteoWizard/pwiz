@@ -658,10 +658,12 @@ namespace pwiz.Skyline.Model
                 {
                     foreach (var labelType in mods.GetModificationTypes())
                     {
+                        if (ReferenceEquals(standardType, labelType))
+                            continue;
+
                         float? stdev;
                         float? ratio = CalcTransitionGroupRatio(-1, labelType, standardType, out stdev);
-                        if (ratio.HasValue && stdev.HasValue)
-                            listRatios.Add(new PeptideLabelRatio(labelType, standardType, ratio.Value, stdev.Value));
+                        listRatios.Add(new PeptideLabelRatio(labelType, standardType, ratio, stdev));
                     }                    
                 }
 

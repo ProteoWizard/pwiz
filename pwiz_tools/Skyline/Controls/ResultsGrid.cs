@@ -40,6 +40,8 @@ namespace pwiz.Skyline.Controls
 
         private Dictionary<string, DataGridViewColumn> _annotationColumns 
             = new Dictionary<string, DataGridViewColumn>();
+        private Dictionary<string, DataGridViewColumn> _ratioColumns
+            = new Dictionary<string, DataGridViewColumn>();
 
         private bool _inCommitEdit;
         private bool _inReplicateChange;
@@ -693,7 +695,7 @@ namespace pwiz.Skyline.Controls
                 {
                     continue;
                 }
-                var name = AnnotationPropertyAccessor.ANNOTATION_PREFIX + annotationDef.Name;
+                var name = AnnotationPropertyAccessor.GetColumnName(annotationDef.Name);
                 DataGridViewColumn column;
                 _annotationColumns.TryGetValue(name, out column);
                 if (column != null)
@@ -761,14 +763,101 @@ namespace pwiz.Skyline.Controls
                 column.Tag = annotationDef;
                 newAnnotationColumns[name] = column;
             }
-            foreach (var entry in _annotationColumns)
+            SynchronizeColumns(newAnnotationColumns, ref _annotationColumns);
+        }
+
+        private void UpdateRatioColumns()
+        {
+            var newRatioColumns = new Dictionary<string, DataGridViewColumn>();
+            var mods = DocumentUiContainer.DocumentUI.Settings.PeptideSettings.Modifications;
+            var standardTypes = mods.InternalStandardTypes;
+            var labelTypes = mods.GetModificationTypes().ToArray();
+            if (labelTypes.Length > 2)
             {
-                if (!newAnnotationColumns.ContainsKey(entry.Key))
+                // Add special ratio columns in order after the default ratio columns
+                // for their element type.
+                int indexPeptideRatio = 0;
+                int indexInsert = Columns.IndexOf(RatioToStandardColumn) + 1;
+                foreach (var standardType in standardTypes)
+                {
+                    foreach (var labelType in labelTypes)
+                    {
+                        if (ReferenceEquals(standardType, labelType))
+                            continue;
+
+                        EnsureRatioColumn(RatioPropertyAccessor.GetPeptideColumnName(labelType, standardType),
+                                          RatioPropertyAccessor.GetPeptideResultsHeader(labelType, standardType),
+                                          new RatioColumnTag(RatioPropertyAccessor.RatioTarget.peptide_result, indexPeptideRatio++),
+                                          indexInsert++,
+                                          newRatioColumns);
+                    }
+                }                
+                if (standardTypes.Count > 1)
+                {
+                    indexInsert = Columns.IndexOf(TotalAreaRatioColumn) + 1;
+                    for (int i = 0; i < standardTypes.Count; i++)
+                    {
+                        EnsureRatioColumn(RatioPropertyAccessor.GetPrecursorColumnName(standardTypes[i]),
+                                          RatioPropertyAccessor.GetPrecursorResultsHeader(standardTypes[i]),
+                                          new RatioColumnTag(RatioPropertyAccessor.RatioTarget.precursor_result, i),
+                                          indexInsert++,
+                                          newRatioColumns);
+                    }
+                    indexInsert = Columns.IndexOf(AreaRatioColumn) + 1;
+                    for (int i = 0; i < standardTypes.Count; i++)
+                    {
+                        EnsureRatioColumn(RatioPropertyAccessor.GetTransitionColumnName(standardTypes[i]),
+                                          RatioPropertyAccessor.GetTransitionResultsHeader(standardTypes[i]),
+                                          new RatioColumnTag(RatioPropertyAccessor.RatioTarget.transition_result, i),
+                                          indexInsert++,
+                                          newRatioColumns);                        
+                    }
+                }
+            }
+            SynchronizeColumns(newRatioColumns, ref _ratioColumns);
+        }
+
+        private void SynchronizeColumns(Dictionary<string, DataGridViewColumn> newColumns,
+                                        ref Dictionary<string, DataGridViewColumn> oldColumns)
+        {
+            foreach (var entry in oldColumns)
+            {
+                if (!newColumns.ContainsKey(entry.Key))
                 {
                     Columns.Remove(entry.Key);
                 }
             }
-            _annotationColumns = newAnnotationColumns;
+            oldColumns = newColumns;
+        }
+
+        private sealed class RatioColumnTag
+        {
+            public RatioColumnTag(RatioPropertyAccessor.RatioTarget target, int indexRatio)
+            {
+                Target = target;
+                IndexRatio = indexRatio;
+            }
+
+            public RatioPropertyAccessor.RatioTarget Target { get; private set; }
+            public int IndexRatio { get; private set; }
+        }
+
+        private void EnsureRatioColumn(string name, string header, RatioColumnTag tag,
+            int indexInsert, IDictionary<string, DataGridViewColumn> newRatioColumns)
+        {
+            DataGridViewColumn column;
+            if (!_ratioColumns.TryGetValue(name, out column))
+            {
+                column = new DataGridViewTextBoxColumn
+                {
+                    Name = name,
+                    HeaderText = header,
+                    DefaultCellStyle = { Format = Formats.STANDARD_RATIO }
+                };
+                Columns.Insert(indexInsert, column);
+            }
+            column.Tag = tag;
+            newRatioColumns[name] = column;
         }
 
         /// <summary>
@@ -800,6 +889,7 @@ namespace pwiz.Skyline.Controls
             {
                 return;
             }
+            UpdateRatioColumns();
             UpdateAnnotationColumns();
             // Remember the set of rowIds that have data in them.  After updating the data, rows
             // that are not in this set will be deleted from the grid
@@ -952,20 +1042,15 @@ namespace pwiz.Skyline.Controls
                 _chromInfoRows.Remove(rowId);
             }
 
-            // Set the visible columns to the default
-            var defaultColumnSet = GetDefaultColumns();
-            foreach (DataGridViewColumn column in Columns)
-            {
-                column.Visible = defaultColumnSet.Contains(column);
-            }
-
-            // Update column visibility from the settings
+            // Update column visibility from the settings.  This has to be done
+            // all in one step to avoid messing up scrolling of the grid.
             GridColumns gridColumns = null;
             var gridColumnsKey = GetGridColumnsKey();
             if (gridColumnsKey != null)
             {
                 Settings.Default.GridColumnsList.TryGetValue(gridColumnsKey, out gridColumns);
             }
+            var visibleColumnNameSet = new HashSet<string>(from col in GetDefaultColumns() select col.Name);
             if (gridColumns != null)
             {
                 var availableColumnSet = new HashSet<DataGridViewColumn>(GetAvailableColumns());
@@ -979,8 +1064,18 @@ namespace pwiz.Skyline.Controls
                     }
                     column.Width = gridColumn.Width;
                     column.DisplayIndex = displayIndex++;
-                    column.Visible = gridColumn.Visible && availableColumnSet.Contains(column);
+                    if (gridColumn.Visible && availableColumnSet.Contains(column))
+                        visibleColumnNameSet.Add(column.Name);
+                    else
+                        visibleColumnNameSet.Remove(column.Name);
                 }
+            }
+            // Visibility is decided as whether or not the saved columns make the
+            // column visible, or any default column that was not part of the
+            // saved set.
+            foreach (DataGridViewColumn column in Columns)
+            {
+                column.Visible = visibleColumnNameSet.Contains(column.Name);
             }
         }
 
@@ -996,8 +1091,17 @@ namespace pwiz.Skyline.Controls
             {
                 row.Cells[PeptidePeakFoundRatioColumn.Index].Value = chromInfo.PeakCountRatio;
                 row.Cells[PeptideRetentionTimeColumn.Index].Value = chromInfo.RetentionTime;
-                // TODO: Fix this
-//                row.Cells[RatioToStandardColumn.Index].Value = chromInfo.RatioToStandard;
+                row.Cells[RatioToStandardColumn.Index].Value = chromInfo.LabelRatios[0].Ratio;
+            }
+            foreach (var column in _ratioColumns.Values)
+            {
+                var ratioTag = (RatioColumnTag)column.Tag;
+                if (ratioTag.Target == RatioPropertyAccessor.RatioTarget.peptide_result)
+                {
+                    row.Cells[column.Index].Value =
+                        chromInfo == null ? null :
+                        chromInfo.LabelRatios[ratioTag.IndexRatio].Ratio;
+                }
             }
         }
 
@@ -1053,6 +1157,16 @@ namespace pwiz.Skyline.Controls
                     }
                 }
             }
+            foreach (var column in _ratioColumns.Values)
+            {
+                var ratioTag = (RatioColumnTag)column.Tag;
+                if (ratioTag.Target == RatioPropertyAccessor.RatioTarget.precursor_result)
+                {
+                    row.Cells[column.Index].Value =
+                        chromInfo == null ? null :
+                        chromInfo.Ratios[ratioTag.IndexRatio];
+                }
+            }
             foreach (var column in _annotationColumns.Values)
             {
                 var annotationDef = (AnnotationDef)column.Tag;
@@ -1060,7 +1174,7 @@ namespace pwiz.Skyline.Controls
                 if (SelectedTransitionDocNode != null)
                 {
                     mask |= AnnotationDef.AnnotationTarget.transition_result;
-        }
+                }
                 if (AnnotationDef.AnnotationTarget.precursor_result == (annotationDef.AnnotationTargets & mask))
                 {
                     row.Cells[column.Index].Value = 
@@ -1098,6 +1212,16 @@ namespace pwiz.Skyline.Controls
                 row.Cells[PeakRankColumn.Index].Value = chromInfo.Rank;
                 row.Cells[TransitionNoteColumn.Index].Value = chromInfo.Annotations.Note;
             }
+            foreach (var column in _ratioColumns.Values)
+            {
+                var ratioTag = (RatioColumnTag)column.Tag;
+                if (ratioTag.Target == RatioPropertyAccessor.RatioTarget.transition_result)
+                {
+                    row.Cells[column.Index].Value =
+                        chromInfo == null ? null :
+                        chromInfo.Ratios[ratioTag.IndexRatio];
+                }
+            }
             foreach (var column in _annotationColumns.Values)
             {
                 var annotationDef = (AnnotationDef) column.Tag;
@@ -1106,7 +1230,7 @@ namespace pwiz.Skyline.Controls
                     row.Cells[column.Index].Value = 
                         chromInfo == null ? null :
                         chromInfo.Annotations.GetAnnotation(annotationDef);
-        }
+                }
             }
         }
 
@@ -1214,15 +1338,21 @@ namespace pwiz.Skyline.Controls
             if (SelectedPeptideDocNode != null)
             {
                 result.AddRange(PeptideColumns);
+                InsertRatioColumns(result, RatioToStandardColumn,
+                    RatioPropertyAccessor.RatioTarget.peptide_result);
             }
             if (SelectedTransitionGroupDocNode != null)
             {
                 result.AddRange(PrecursorColumns);
+                InsertRatioColumns(result, TotalAreaRatioColumn,
+                    RatioPropertyAccessor.RatioTarget.precursor_result);
                 targets |= AnnotationDef.AnnotationTarget.precursor_result;
             }
             if (SelectedTransitionDocNode != null)
             {
                 result.AddRange(TransitionColumns);
+                InsertRatioColumns(result, AreaRatioColumn,
+                    RatioPropertyAccessor.RatioTarget.transition_result);
                 targets |= AnnotationDef.AnnotationTarget.transition_result;
             }
             foreach (var column in _annotationColumns.Values)
@@ -1234,6 +1364,21 @@ namespace pwiz.Skyline.Controls
                 }
             }
             return result;
+        }
+
+        private void InsertRatioColumns(IList<DataGridViewColumn> columns,
+                                        DataGridViewColumn columnAfter,
+                                        RatioPropertyAccessor.RatioTarget target)
+        {
+            int insertIndex = columns.IndexOf(columnAfter) + 1;
+            foreach (var column in _ratioColumns.Values)
+            {
+                var ratioTag = (RatioColumnTag)column.Tag;
+                if (ratioTag.Target == target)
+                {
+                    columns.Insert(insertIndex++, column);
+                }
+            }
         }
 
         protected override void OnHandleCreated(EventArgs e)
