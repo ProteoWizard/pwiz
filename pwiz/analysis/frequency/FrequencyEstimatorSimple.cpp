@@ -30,6 +30,8 @@
 
 #ifdef _MSC_VER // msvc hack
 #define isnan(x) ((x) != (x))
+#else
+using std::isnan;
 #endif // _MSC_VER
 
 
