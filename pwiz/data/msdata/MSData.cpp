@@ -23,14 +23,7 @@
 #define PWIZ_SOURCE
 
 #include "MSData.hpp"
-#include <iostream>
-#include <stdexcept>
-#include <algorithm>
-#include <iterator>
-#include "boost/lexical_cast.hpp"
-#include "boost/format.hpp"
-#include "boost/algorithm/string.hpp"
-#include "boost/algorithm/string/split.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "Diff.hpp"
 
 
@@ -38,11 +31,8 @@ namespace pwiz {
 namespace msdata {
 
 
-using namespace std;
 using namespace pwiz::cv;
 using namespace pwiz::data;
-using boost::lexical_cast;
-using boost::shared_ptr;
 
 
 PWIZ_API_DECL vector<CV> defaultCVList()

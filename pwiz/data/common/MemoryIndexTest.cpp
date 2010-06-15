@@ -28,7 +28,6 @@
 
 using namespace pwiz::util;
 using namespace pwiz::data;
-using boost::shared_ptr;
 
 ostream* os_ = 0;
 

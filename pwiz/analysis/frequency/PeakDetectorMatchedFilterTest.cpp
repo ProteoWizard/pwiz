@@ -24,18 +24,15 @@
 #include "PeakDetectorMatchedFilter.hpp"
 #include "PeakDetectorMatchedFilterTestData.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
-#include <iomanip>
-#include <iterator>
-#include <fstream>
+#include "pwiz/utility/misc/Std.hpp"
 
-
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::frequency;
 using namespace pwiz::chemistry;
 using namespace pwiz::data;
 using namespace pwiz::data::peakdata;
+using std::norm;
+using std::polar;
 
 
 ostream* os_ = 0;

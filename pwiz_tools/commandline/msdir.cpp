@@ -24,19 +24,16 @@
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/Version.hpp"
 #include "boost/program_options.hpp"
-#include "boost/foreach.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/data/msdata/TextWriter.hpp"
 #include <cstdio>
 
 
-using namespace std;
 using namespace pwiz::data;
 using namespace pwiz::msdata;
 using namespace pwiz::util;
-using boost::shared_ptr;
 
 
 enum VerbosityLevel

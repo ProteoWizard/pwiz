@@ -20,10 +20,6 @@
 // limitations under the License.
 //
 
-///
-/// Matrix.hpp
-///
-
 #ifndef _MATRIX_HPP_
 #define _MATRIX_HPP_
 

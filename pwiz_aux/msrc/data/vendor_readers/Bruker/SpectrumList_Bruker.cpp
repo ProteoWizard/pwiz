@@ -28,19 +28,15 @@
 
 
 #ifdef PWIZ_READER_BRUKER
-#include "boost/shared_ptr.hpp"
-#include "boost/foreach.hpp"
 #include "pwiz/data/msdata/MSData.hpp"
 #include "pwiz/utility/misc/automation_vector.h"
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
-#include <iostream>
-#include <stdexcept>
 
-using boost::format;
+
 using namespace pwiz::util;
 using namespace pwiz::minimxml;
 using namespace pwiz::vendor_api::Bruker;

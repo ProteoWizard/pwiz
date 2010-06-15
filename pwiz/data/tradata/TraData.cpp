@@ -23,13 +23,11 @@
 #define PWIZ_SOURCE
 
 #include "TraData.hpp"
-
-
+#include "pwiz/utility/misc/Std.hpp"
 namespace pwiz {
 namespace tradata {
 
 
-using namespace std;
 using namespace pwiz::cv;
 
 

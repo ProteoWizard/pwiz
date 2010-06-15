@@ -23,7 +23,7 @@
 
 #define PWIZ_SOURCE
 #include "MZRTField.hpp"
-#include "boost/lexical_cast.hpp"
+#include "pwiz/utility/misc/Std.hpp"
                                                                                                      
 
 namespace pwiz {
@@ -31,8 +31,6 @@ namespace analysis {
 
 
 using namespace pwiz::minimxml;
-using boost::lexical_cast;
-using namespace std;
 
 
 PWIZ_API_DECL ostream& operator<<(ostream& os, const PeakelField& peakelField)

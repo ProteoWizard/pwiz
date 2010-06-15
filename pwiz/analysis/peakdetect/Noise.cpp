@@ -24,6 +24,7 @@
 #define PWIZ_SOURCE
 #include "Noise.hpp"
 #include "pwiz/utility/math/erf.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include <cmath>
 
 
@@ -31,7 +32,6 @@ namespace pwiz {
 namespace analysis {
 
 
-using namespace std;
 using namespace pwiz::math;
 
 

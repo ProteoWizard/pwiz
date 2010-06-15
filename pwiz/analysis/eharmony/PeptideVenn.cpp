@@ -20,27 +20,16 @@
 // limitations under the License.
 //
 
-///
-/// PeptideVenn.cpp
-///
-
 // Use to analyse the similarity in peptide identifications between two runs
 
 #include "pwiz/analysis/eharmony/PeptideID_dataFetcher.hpp"
 #include "pwiz/analysis/eharmony/PeptideMatcher.hpp"
 #include "boost/program_options.hpp"
 #include "boost/filesystem/path.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
-#include <map>
-#include <iterator>
-#include <algorithm>
-#include <string>
-#include <iostream>
-#include <fstream>
-
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace eharmony;
-using namespace std;
 
 struct Config
 {

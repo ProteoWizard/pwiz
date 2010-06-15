@@ -24,10 +24,7 @@
 
 #include "Serializer_FASTA.hpp"
 #include "pwiz/data/common/Index.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include "pwiz/utility/misc/Container.hpp"
-#include "pwiz/utility/misc/Exception.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 
@@ -35,7 +32,6 @@
 #include <boost/regex.hpp>
 
 
-using boost::shared_ptr;
 using namespace pwiz::data;
 using namespace pwiz::util;
 using boost::regex;

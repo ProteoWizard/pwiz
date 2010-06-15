@@ -20,19 +20,11 @@
 // limitations under the License.
 //
 
-///
-/// WarpFunction.cpp
-///
-
-
 #include "WarpFunction.hpp"
 #include "pwiz/utility/math/Stats.hpp"
 #include "pwiz/utility/math/Stats.cpp" //TODO: figure out why this is required to avoid the linker error
+#include "pwiz/utility/misc/Std.hpp"
 
-#include <iostream>
-#include <fstream>
-
-using namespace std;
 using namespace pwiz::eharmony;
 
 WarpFunction::WarpFunction(const vector<pair<double,double> >& anchors) : anchors_(anchors){}

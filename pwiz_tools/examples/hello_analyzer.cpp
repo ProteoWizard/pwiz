@@ -22,13 +22,11 @@
 
 
 #include "pwiz_tools/common/MSDataAnalyzerApplication.hpp"
-#include <iostream>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 using namespace pwiz::data;
 using namespace pwiz::cv;
 using namespace pwiz::analysis;
-using namespace std;
 
 
 class HelloAnalyzer : public MSDataAnalyzer

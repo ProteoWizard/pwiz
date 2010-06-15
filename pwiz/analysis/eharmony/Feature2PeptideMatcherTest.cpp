@@ -20,16 +20,12 @@
 // limitations under the License.
 //
 
-///
-/// Feature2PeptideMatcherTest.cpp
-///
-
 #include "Feature2PeptideMatcher.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/data/misc/MinimumPepXML.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
-using namespace std;
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::eharmony;
 using namespace pwiz::data::pepxml;
 using namespace pwiz::util;

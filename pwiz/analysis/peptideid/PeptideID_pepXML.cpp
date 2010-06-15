@@ -22,11 +22,7 @@
 
 #define PWIZ_SOURCE
 
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <stdexcept>
-#include <boost/shared_ptr.hpp>
+#include "pwiz/utility/misc/Std.hpp"
 
 #include "PeptideID_pepXML.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
@@ -34,8 +30,6 @@
 
 namespace {
 
-using namespace std;
-using namespace boost; // TODO: avoid this
 using namespace pwiz::peptideid;
 
 ostream& operator<<(ostream& os, const PeptideID::Record& rec)
@@ -78,12 +72,10 @@ struct local_iterator : public PeptideID::Iterator
 namespace pwiz {
 namespace peptideid {
 
-using namespace std;
-using namespace boost; // TODO: avoid this
 using namespace pwiz::minimxml::SAXParser;
 
 typedef map<std::string, PeptideID::Record> record_map;
-typedef multimap<double, shared_ptr<PeptideID::Record>, less<double> > double_multimap;
+typedef multimap<double, shared_ptr<PeptideID::Record>, std::less<double> > double_multimap;
 
 
 ////////////////////////////////////////////////////////////////////////////

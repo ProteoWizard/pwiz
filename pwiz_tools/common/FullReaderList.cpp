@@ -28,16 +28,10 @@
 #include "pwiz_aux/msrc/data/vendor_readers/Bruker/Reader_Bruker.hpp"
 #include "pwiz_aux/msrc/data/vendor_readers/ABI/Reader_ABI.hpp"
 #include "pwiz_aux/msrc/data/vendor_readers/ABI/T2D/Reader_ABI_T2D.hpp"
-#include <iostream>
-#include <fstream>
 
 
 namespace pwiz {
 namespace msdata {
-
-
-using namespace std;
-using boost::shared_ptr;
 
 
 PWIZ_API_DECL FullReaderList::FullReaderList()

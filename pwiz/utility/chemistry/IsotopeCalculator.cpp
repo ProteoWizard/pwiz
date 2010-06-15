@@ -26,11 +26,7 @@
 #include "IsotopeCalculator.hpp"
 #include "IsotopeTable.hpp"
 #include "Ion.hpp"
-#include <iostream>
-#include <algorithm>
-#include <stdexcept>
-#include <cmath>
-#include <numeric>
+#include "pwiz/utility/misc/Std.hpp"
 #include <boost/ptr_container/ptr_vector.hpp>
 
 
@@ -38,7 +34,6 @@ namespace pwiz {
 namespace chemistry {
 
 
-using namespace std;
 using boost::ptr_vector;
 
 

@@ -29,22 +29,17 @@
 #include "Serializer_FASTA.hpp"
 #include "DefaultReaderList.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/data/common/BinaryIndexStream.hpp"
 #include "boost/iostreams/device/file.hpp"
 #include "boost/iostreams/filtering_stream.hpp" 
 #include "boost/iostreams/filter/gzip.hpp" 
 
 
-#include <fstream>
-#include <stdexcept>
-
-
 namespace pwiz {
 namespace proteome {
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::data;
 using boost::shared_ptr;

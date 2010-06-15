@@ -29,7 +29,7 @@
 #include "AminoAcid.hpp"
 #include "pwiz/utility/misc/CharIndexedVector.hpp"
 #include "pwiz/utility/misc/Exception.hpp"
-#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "boost/utility/singleton.hpp"
 
 
@@ -37,7 +37,6 @@ namespace pwiz {
 namespace proteome {
 
 
-using namespace std;
 using namespace pwiz::cv;
 using namespace pwiz::util;
 using boost::shared_ptr;

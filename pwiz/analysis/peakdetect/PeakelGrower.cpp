@@ -23,15 +23,14 @@
 #define PWIZ_SOURCE
 #include "PeakelGrower.hpp"
 #include <functional>
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {
 namespace analysis {
 
 
-using namespace std;
 using namespace pwiz::data::peakdata;
-using boost::shared_ptr;
 
 
 //

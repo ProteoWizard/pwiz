@@ -22,18 +22,11 @@
 
 #define PWIZ_SOURCE
 #include "TabReader.hpp"
-
-#include <fstream>
-#include <vector>
-#include <stdexcept>
-#include <iostream>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace pwiz {
 namespace utility {
 
-using namespace std;
-using namespace boost;
 
 class DefaultTabHandler::Impl 
 {

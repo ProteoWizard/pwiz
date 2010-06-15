@@ -20,11 +20,8 @@
 #include "RawFile.h"
 #include "ScanFilter.h"
 #include "pwiz/utility/misc/unit.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include <iostream>
-#include <vector>
+#include "pwiz/utility/misc/Std.hpp"
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::vendor_api::Thermo;
 

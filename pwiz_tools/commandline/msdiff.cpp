@@ -26,11 +26,8 @@
 #include "pwiz/data/vendor_readers/ExtendedReaderList.hpp"
 #include "pwiz/Version.hpp"
 #include "boost/program_options.hpp"
-#include <iostream>
-#include <iterator>
+#include "pwiz/utility/misc/Std.hpp"
 
-
-using namespace std;
 using namespace pwiz::msdata;
 
 

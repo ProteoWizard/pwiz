@@ -23,18 +23,12 @@
 #include "MemoryMRUCache.hpp"
 #include "SpectrumListCache.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <vector>
-#include <iostream>
-#include <iterator>
-#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
-
-using namespace std;
 using namespace pwiz::util;
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::msdata;
 //using namespace pwiz::analysis;
-using boost::shared_ptr;
 
 
 ostream* os_ = 0;

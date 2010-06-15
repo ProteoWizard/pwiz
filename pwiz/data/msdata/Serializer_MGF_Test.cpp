@@ -26,14 +26,12 @@
 #include "TextWriter.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
-
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::cv;
 using namespace pwiz::data;
 using namespace pwiz::msdata;
-using boost::shared_ptr;
 
 
 ostream* os_ = 0;

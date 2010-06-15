@@ -20,17 +20,10 @@
 // limitations under the License.
 //
 
-//
-// $Id$
-//
-
 #include "Feature_dataFetcher.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "boost/lexical_cast.hpp"
-#include <iostream>
-#include <fstream>
+#include "pwiz/utility/misc/Std.hpp"
 
-using namespace std;
 using namespace pwiz::data::peakdata;
 using namespace pwiz::util;
 using namespace pwiz::minimxml;

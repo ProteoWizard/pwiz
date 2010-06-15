@@ -23,13 +23,10 @@
 
 #include "ParamTypes.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
-#include <iterator>
-#include <algorithm>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
-using namespace std;
 using namespace pwiz::cv;
 using namespace pwiz::util;
 using namespace pwiz::data;

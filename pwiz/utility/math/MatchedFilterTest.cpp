@@ -23,14 +23,13 @@
 
 #include "MatchedFilter.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 #include <complex>
 #include <cstring>
 #include <typeinfo>
 
 using namespace pwiz::math;
 using namespace pwiz::util;
-using namespace std;
 
 
 ostream* os_ = 0;

@@ -20,17 +20,13 @@
 // limitations under the License.
 //
 
-///
-/// AMTDatabase.cpp
-///
-
 #include "AMTDatabase.hpp"
 #include "Exporter.hpp"
 #include "pwiz/utility/proteome/Ion.hpp"
 #include "boost/filesystem.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
-using namespace std;
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace eharmony;
 using namespace pwiz::proteome;
 

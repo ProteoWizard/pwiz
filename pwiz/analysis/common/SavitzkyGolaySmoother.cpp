@@ -24,9 +24,7 @@
 
 #include "SavitzkyGolaySmoother.hpp"
 #include "ZeroSampleFiller.hpp"
-#include "pwiz/utility/misc/Container.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Exception.hpp"
 #include "pwiz/utility/math/round.hpp"
 #include <boost/numeric/ublas/vector.hpp>

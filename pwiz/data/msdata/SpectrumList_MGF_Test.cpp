@@ -25,16 +25,12 @@
 #include "TextWriter.hpp"
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
-#include <iterator>
+#include "pwiz/utility/misc/Std.hpp"
 
-
-using namespace std;
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::msdata;
 using namespace pwiz::util;
 using namespace pwiz::minimxml;
-using boost::shared_ptr;
 
 
 ostream* os_ = 0;

@@ -23,12 +23,10 @@
 
 #include "PeakelGrower.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
-#include <iterator>
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::analysis;
 using namespace pwiz::data::peakdata;

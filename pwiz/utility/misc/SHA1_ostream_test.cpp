@@ -25,13 +25,10 @@
 #include "unit.hpp"
 #include "boost/iostreams/flush.hpp"
 #include <boost/filesystem/operations.hpp>
-#include <iostream>
-#include <sstream>
-#include <fstream>
+#include "pwiz/utility/misc/Std.hpp"
 
 
 using namespace pwiz::util;
-using namespace std;
 
 
 ostream* os_ = 0;

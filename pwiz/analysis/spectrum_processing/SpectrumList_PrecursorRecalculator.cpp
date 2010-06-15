@@ -27,20 +27,17 @@
 #include "PrecursorRecalculatorDefault.hpp"
 #include "pwiz/analysis/peakdetect/PeakFamilyDetectorFT.hpp"
 #include "pwiz/analysis/passive/MSDataCache.hpp"
-#include <stdexcept>
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {
 namespace analysis {
 
 
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::msdata;
 using namespace pwiz::data;
-using namespace std;
-using boost::shared_ptr;
-using boost::lexical_cast;
+
 
 
 //

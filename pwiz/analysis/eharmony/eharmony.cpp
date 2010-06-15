@@ -20,10 +20,6 @@
 // limitations under the License.
 //
 
-///
-/// eharmony.cpp
-///
-
 #include "PeptideMatcher.hpp"
 #include "Feature2PeptideMatcher.hpp"
 #include "Exporter.hpp"
@@ -37,21 +33,14 @@
 #include "boost/program_options.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/tuple/tuple_comparison.hpp"
-#include <algorithm>
-#include <vector>
-#include <iostream>
-#include <fstream>
-#include <stdexcept>
-#include <string>
+#include "pwiz/utility/misc/Std.hpp"
 
-using namespace std;
 using namespace pwiz::minimxml;
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::eharmony;
 using namespace pwiz::proteome;
 using namespace pwiz::eharmony;
 using namespace pwiz::data::pepxml;
-using namespace std;
 
 namespace{
 

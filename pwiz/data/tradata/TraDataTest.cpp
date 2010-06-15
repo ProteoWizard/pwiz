@@ -22,16 +22,11 @@
 
 #include "TraData.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include <iostream>
-#include <iterator>
+#include "pwiz/utility/misc/Std.hpp"
 
-
-using namespace std;
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::util;
 using namespace pwiz::tradata;
-using boost::shared_ptr;
 
 
 void testParamContainer()

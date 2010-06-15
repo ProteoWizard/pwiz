@@ -23,7 +23,7 @@
 
 #define PWIZ_SOURCE
 #include "PeakelPicker.hpp"
-#include <stdexcept>
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {
@@ -31,7 +31,6 @@ namespace analysis {
 
 
 using namespace pwiz::data::peakdata;
-using namespace std;
 
 
 namespace {

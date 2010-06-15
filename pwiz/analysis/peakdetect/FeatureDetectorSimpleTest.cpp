@@ -22,17 +22,12 @@
 
 #include "FeatureDetectorSimple.hpp"
 #include "PeakFamilyDetectorFT.hpp"
-
 #include "pwiz/utility/misc/unit.hpp"
-
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/data/msdata/Serializer_mzML.hpp"
 #include "boost/iostreams/positioning.hpp"
-
 #include "boost/filesystem/path.hpp"
-
-
-using namespace std;
+#include "pwiz/utility/misc/Std.hpp"
 
 using namespace pwiz::util;
 using namespace pwiz::analysis;

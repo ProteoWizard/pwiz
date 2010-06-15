@@ -23,13 +23,12 @@
 
 #include "cv.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
 using namespace pwiz::cv;
 using namespace pwiz::util;
-using namespace std;
 
 
 ostream* os_ = 0;

@@ -29,17 +29,9 @@
 #ifdef PWIZ_READER_WATERS
 #include "Reader_Waters_Detail.hpp"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
-#include "boost/shared_ptr.hpp"
-#include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include <boost/bind.hpp>
-#include <boost/foreach.hpp>
-#include <iostream>
-
-using namespace std;
-using boost::shared_ptr;
-using boost::lexical_cast;
-using boost::bad_lexical_cast;
 
 
 namespace pwiz {

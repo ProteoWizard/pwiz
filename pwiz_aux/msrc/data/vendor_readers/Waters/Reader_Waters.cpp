@@ -51,25 +51,17 @@ PWIZ_API_DECL std::string pwiz::msdata::Reader_Waters::identify(const std::strin
 
 #ifdef PWIZ_READER_WATERS
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
-#include "boost/shared_ptr.hpp"
 //#include <boost/date_time/gregorian/gregorian.hpp>
-#include <boost/foreach.hpp>
 #include "Reader_Waters_Detail.hpp"
 #include "SpectrumList_Waters.hpp"
 #include "ChromatogramList_Waters.hpp"
-#include <iostream>
-#include <iomanip>
-#include <stdexcept>
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {
 namespace msdata {
 
 
-using namespace std;
-using boost::shared_ptr;
-using boost::lexical_cast;
-using boost::bad_lexical_cast;
 using namespace pwiz::util;
 using namespace pwiz::msdata::detail;
 
@@ -193,9 +185,7 @@ void Reader_Waters::read(const string& filename,
 
 namespace pwiz {
 namespace msdata {
-
-using namespace std;
-
+    
 PWIZ_API_DECL void Reader_Waters::read(const string& filename, const string& head, MSData& result, int runIndex) const
 {
     throw ReaderFail("[Reader_Waters::read()] Waters RAW reader not implemented: "

@@ -20,26 +20,15 @@
 // limitations under the License.
 //
 
-///
-/// PeptideHog.cpp
-///
-
 // Use to find proteins that consistently account for too many of the peptide IDs in a subset of runs
 
 #include "pwiz/analysis/eharmony/PeptideID_dataFetcher.hpp"
 #include "boost/program_options.hpp"
 #include "boost/filesystem/path.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
-#include <map>
-#include <iterator>
-#include <algorithm>
-#include <string>
-#include <iostream>
-#include <fstream>
-
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace eharmony;
-using namespace std;
 
 struct Config
 {

@@ -22,13 +22,8 @@
 
 #define PWIZ_SOURCE
 
-#include <iostream>
-#include <fstream>
-#include <algorithm>
-#include <vector>
-#include <stdexcept>
-#include <math.h>
-#include <boost/shared_ptr.hpp>
+#include "pwiz/utility/misc/Std.hpp"
+#include <cmath>
 #include <boost/tokenizer.hpp>
 
 #include "PeptideID_flat.hpp"
@@ -36,8 +31,8 @@
 namespace pwiz {
 namespace peptideid {
 
-using namespace std;
-using namespace boost;
+using boost::tokenizer;
+using boost::char_separator;
 
 namespace {
 

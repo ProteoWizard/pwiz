@@ -15,13 +15,10 @@
 //
 
 #include "Peptide.hpp"
-#include <iostream>
-#include <iterator>
-#include <stdexcept>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cmath>
 
 
-using namespace std;
 using namespace pwiz::proteome;
 
 

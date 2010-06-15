@@ -23,14 +23,10 @@
 
 #include "SAXParser.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
-#include <vector>
-#include <iterator>
-#include <algorithm>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::minimxml;
 using namespace pwiz::minimxml::SAXParser;

@@ -20,18 +20,11 @@
 // limitations under the License.
 //
 
-///
-/// PeptideMatcherTest.cpp
-///
-
 #include "PeptideMatcher.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
-#include <utility>
-#include <vector>
+#include "pwiz/utility/misc/Std.hpp"
 
-using namespace std;
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::eharmony;
 using namespace pwiz::util;
 

@@ -26,15 +26,13 @@
 #include "ExtendedReaderList.hpp"
 #include "Thermo/Reader_Thermo.hpp"
 #include "Agilent/Reader_Agilent.hpp"
-#include <iostream>
-#include <fstream>
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {
 namespace msdata {
 
 
-using namespace std;
 using boost::shared_ptr;
 
 

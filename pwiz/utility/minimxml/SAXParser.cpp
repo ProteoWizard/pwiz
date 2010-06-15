@@ -23,11 +23,7 @@
 #define PWIZ_SOURCE
 
 #include "SAXParser.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include <iostream>
-#include <stdexcept>
-#include <stack>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 //#define PWIZ_USE_BOOST_REGEX 
 #ifdef PWIZ_USE_BOOST_REGEX 
@@ -51,11 +47,7 @@
 namespace pwiz {
 namespace minimxml {
 namespace SAXParser {
-
-
-using namespace std;
-using boost::lexical_cast;
-
+    
 
 namespace {
 

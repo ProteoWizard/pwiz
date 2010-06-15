@@ -23,16 +23,16 @@
 
 #include "erf.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
-#include <iomanip>
+#include "pwiz/utility/misc/Std.hpp"
 #include <limits>
 #include <cstring>
 #include <cmath>
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::math;
+using std::numeric_limits;
+using std::complex;
 
 
 ostream* os_ = 0;

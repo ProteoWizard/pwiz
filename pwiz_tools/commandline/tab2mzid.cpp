@@ -36,9 +36,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
 
-using boost::shared_ptr;
 using boost::tokenizer;
-using boost::lexical_cast;
 using namespace std;
 using namespace pwiz::mziddata;
 using namespace pwiz;

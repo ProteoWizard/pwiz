@@ -25,11 +25,8 @@
 #include "pwiz/data/misc/FrequencyData.hpp"
 #include "pwiz/data/misc/PeakData.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
-#include <iterator>
+#include "pwiz/utility/misc/Std.hpp"
 
-
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::frequency;
 using namespace pwiz::data;

@@ -23,18 +23,14 @@
 
 #include "FeatureModeler.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
-#include <fstream>
-#include <cstring>
-#include <iterator>
 #include "boost/filesystem/path.hpp"
+#include "pwiz/utility/misc/Std.hpp"
+#include <cstring>
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::analysis;
 using namespace pwiz::data::peakdata;
-using boost::shared_ptr;
 namespace bfs = boost::filesystem;
 
 

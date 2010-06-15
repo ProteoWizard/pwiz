@@ -28,14 +28,9 @@
 
 #ifdef PWIZ_READER_AGILENT
 #include "Reader_Agilent_Detail.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include "boost/shared_ptr.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include <boost/bind.hpp>
-
-
-using boost::format;
 
 
 namespace pwiz {

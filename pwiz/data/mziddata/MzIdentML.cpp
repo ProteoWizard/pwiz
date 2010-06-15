@@ -24,14 +24,11 @@
 
 #include "MzIdentML.hpp"
 #include "boost/date_time/gregorian/gregorian.hpp"
-#include <iterator>
-#include <iostream>
-
+#include "pwiz/utility/misc/Std.hpp"
 namespace pwiz {
 namespace mziddata {
 
 
-using namespace std;
 using namespace boost::logic;
 using namespace boost::gregorian;
 using namespace pwiz::cv;

@@ -27,19 +27,12 @@
 #include "pwiz/data/msdata/TextWriter.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
-#include <iostream>
-#include <stdexcept>
-#include <iomanip>
-#include <fstream>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace pwiz {
 namespace analysis {
 
 
-using namespace std;
-using boost::lexical_cast;
-using boost::bad_lexical_cast;
 namespace bfs = boost::filesystem;
 
 

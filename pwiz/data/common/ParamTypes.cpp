@@ -25,16 +25,11 @@
 
 #include "ParamTypes.hpp"
 #include "diff_std.hpp"
-#include <iostream>
-#include <algorithm>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace pwiz {
 namespace data {
-
-
-using namespace std;
-
+    
 
 //
 // CVParam

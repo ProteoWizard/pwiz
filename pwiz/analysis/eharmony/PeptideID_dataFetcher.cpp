@@ -20,16 +20,12 @@
 // limitations under the License.
 //
 
-///
-/// PeptideID_dataFetcher.cpp
-///
-
 #include "PeptideID_dataFetcher.hpp"
 #include "Feature_dataFetcher.hpp"
 #include "pwiz/data/misc/MinimumPepXML.hpp"
 #include "pwiz/utility/proteome/Ion.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
-using namespace std;
 using namespace pwiz::eharmony;
 using namespace pwiz::proteome;
 

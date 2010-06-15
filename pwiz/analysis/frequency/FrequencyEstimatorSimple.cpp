@@ -26,18 +26,13 @@
 #include "FrequencyEstimatorSimple.hpp"
 #include "pwiz/utility/math/Parabola.hpp"
 #include "MagnitudeLorentzian.hpp"
-#include <iostream>
-#include <stdexcept>
-#include <algorithm>
-#include <iterator>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 #ifdef _MSC_VER // msvc hack
 #define isnan(x) ((x) != (x))
 #endif // _MSC_VER
 
 
-using namespace std;
 using namespace pwiz::math;
 using namespace pwiz::frequency;
 using namespace pwiz::data;

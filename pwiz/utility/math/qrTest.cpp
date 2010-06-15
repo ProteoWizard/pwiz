@@ -18,18 +18,13 @@
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/io.hpp>
 
-#include <iostream>
-#include <cstring>
-#include <iomanip>
-//#include <execinfo.h>
+#include "pwiz/utility/misc/Std.hpp"//#include <execinfo.h>
 
 #include "pwiz/utility/misc/unit.hpp"
 #include "Types.hpp"
 #include "qr.hpp"
 
-using std::cerr;
 using namespace boost::numeric::ublas;
-using namespace std;
 using namespace pwiz::math;
 using namespace pwiz::math::types;
 using namespace pwiz::util;

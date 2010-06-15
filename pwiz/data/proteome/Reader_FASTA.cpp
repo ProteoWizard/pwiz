@@ -26,14 +26,10 @@
 #include "Serializer_FASTA.hpp"
 #include "pwiz/data/common/BinaryIndexStream.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
-#include "pwiz/utility/misc/Exception.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include <boost/iostreams/copy.hpp>
-#include <boost/shared_ptr.hpp>
 
 
-using boost::shared_ptr;
 using namespace pwiz::util;
 
 

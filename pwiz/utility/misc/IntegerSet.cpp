@@ -23,20 +23,12 @@
 #define PWIZ_SOURCE
 
 #include "IntegerSet.hpp"
-#include <iostream>
-#include <iterator>
-#include <stdexcept>
-#include <algorithm>
-#include <sstream>
-#include <vector>
+#include "pwiz/utility/misc/Std.hpp"
 #include <limits>
 
 
 namespace pwiz {
 namespace util {
-
-
-using namespace std;
 
 
 // IntegerSet::Interval implementation

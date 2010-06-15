@@ -25,11 +25,10 @@
 #include "pwiz/utility/misc/unit.hpp"
 #include <boost/numeric/ublas/matrix_sparse.hpp>
 #include <boost/numeric/ublas/banded.hpp>
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::math;
 

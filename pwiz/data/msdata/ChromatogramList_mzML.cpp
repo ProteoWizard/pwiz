@@ -27,22 +27,15 @@
 #include "IO.hpp"
 #include "References.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
-#include "boost/lexical_cast.hpp"
 #include "boost/iostreams/positioning.hpp"
-#include <iostream>
-#include <stdexcept>
-#include <iterator>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace pwiz {
 namespace msdata {
 
 
-using namespace std;
 using namespace pwiz::minimxml;
 using namespace pwiz::cv;
-using boost::shared_ptr;
-using boost::lexical_cast;
 using boost::iostreams::offset_to_position;
 
 

@@ -29,16 +29,12 @@
 
 #ifdef PWIZ_READER_ABI_T2D
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
-#include "boost/shared_ptr.hpp"
-#include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include <boost/bind.hpp>
-#include <iostream>
 
-using namespace std;
 using namespace pwiz::minimxml;
-using boost::shared_ptr;
 
 namespace pwiz {
 namespace msdata {

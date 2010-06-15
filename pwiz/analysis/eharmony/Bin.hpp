@@ -20,23 +20,12 @@
 // limitations under the License.
 //
 
-///
-/// Bin.hpp
-///
-
 #ifndef _BIN_HPP_
 #define _BIN_HPP_
 
 #include "boost/shared_ptr.hpp"
-
-#include <vector>
-#include <iterator>
-#include <math.h>
-#include <map>
-#include <algorithm>
-#include <iostream>
-
-using namespace std;
+#include "pwiz/utility/misc/Std.hpp"
+#include <cmath>
 
 namespace pwiz{
 

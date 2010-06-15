@@ -31,18 +31,13 @@
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include <stdexcept>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace pwiz {
 namespace msdata {
 
 
-using namespace std;
 using minimxml::XMLWriter;
-using boost::shared_ptr;
-using boost::lexical_cast;
 using boost::iostreams::stream_offset;
 using namespace pwiz::util;
 using namespace pwiz::minimxml;

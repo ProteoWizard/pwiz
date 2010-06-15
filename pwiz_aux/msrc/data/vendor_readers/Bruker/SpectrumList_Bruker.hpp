@@ -28,15 +28,16 @@
 #include "pwiz/data/msdata/SpectrumListBase.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/Container.hpp"
+#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Stream.hpp"
 #include "Reader_Bruker_Detail.hpp"
-#include <map>
 
 
 namespace pwiz {
 namespace msdata {
 namespace detail {
 
-using namespace std;
 using boost::shared_ptr;
 
 //

@@ -24,14 +24,8 @@
 #define PWIZ_SOURCE
 
 #include "SpectrumList_MSn.hpp"
-#include <istream>
-#include "boost/shared_ptr.hpp"
 #include "References.hpp"
-#include <limits>
-#include "pwiz/utility/misc/String.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
-#include "pwiz/utility/misc/Container.hpp"
-#include "pwiz/utility/misc/Exception.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "zlib.h"
 
 
@@ -39,10 +33,8 @@ namespace pwiz {
 namespace msdata {
 
 
-using boost::shared_ptr;
 using boost::iostreams::stream_offset;
 using boost::iostreams::offset_to_position;
-using namespace std;
 
 
 namespace {

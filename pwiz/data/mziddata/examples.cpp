@@ -25,17 +25,13 @@
 #include "References.hpp"
 #include "examples.hpp"
 #include "Version.hpp"
-
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace pwiz {
 namespace mziddata {
 namespace examples {
 
 
-using boost::shared_ptr;
-using boost::lexical_cast;
-using namespace std;
 
 
 const char* dbsequenceList[] = {

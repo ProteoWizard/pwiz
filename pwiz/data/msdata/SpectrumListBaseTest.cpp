@@ -23,15 +23,10 @@
 
 #include "SpectrumListBase.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "boost/lexical_cast.hpp"
-#include <iostream>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 using namespace pwiz::msdata;
 using namespace pwiz::util;
-using namespace std;
-using boost::lexical_cast;
-using boost::shared_ptr;
 
 
 class MyBase : public SpectrumListBase

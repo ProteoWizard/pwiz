@@ -23,18 +23,13 @@
 
 #include "SpectrumList_MZWindow.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "boost/lexical_cast.hpp"
-#include <iostream>
-#include <iterator>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
-using namespace pwiz;
 using namespace pwiz::util;
 using namespace pwiz::msdata;
 using namespace pwiz::analysis;
-using namespace std;
-using boost::lexical_cast;
 
 
 ostream* os_ = 0;

@@ -38,7 +38,6 @@ namespace pdanalysis {
 
 using namespace std;
 using namespace pwiz::proteome;
-using boost::lexical_cast;
 
 
 class KnownMassList::Impl

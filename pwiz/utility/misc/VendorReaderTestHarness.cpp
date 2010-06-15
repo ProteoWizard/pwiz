@@ -33,16 +33,11 @@
 #include "pwiz/data/msdata/SpectrumListWrapper.hpp"
 #include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
-#include <iostream>
-#include <fstream>
-#include <boost/foreach.hpp>
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::data::diff_impl;
 using namespace pwiz::msdata;

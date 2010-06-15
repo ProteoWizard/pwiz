@@ -26,13 +26,8 @@
 #include "IsotopeEnvelopeEstimator.hpp"
 #include "IsotopeCalculator.hpp"
 #include "pwiz/utility/math/round.hpp"
-#include <iostream>
-#include <iomanip>
-#include <stdexcept>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cmath>
-
-
-using namespace std;
 
 
 namespace pwiz {

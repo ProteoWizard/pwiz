@@ -24,9 +24,8 @@
 
 #include "Diff.hpp"
 #include "TextWriter.hpp"
-#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include <cmath>
-#include <stdexcept>
 
 
 namespace pwiz {
@@ -34,7 +33,6 @@ namespace data {
 namespace diff_impl {
 
 
-using namespace std;
 using namespace pwiz::data;
 using namespace pwiz::mziddata;
 

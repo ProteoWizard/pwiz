@@ -3,11 +3,10 @@
 //
 #include "LinearLeastSquares.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::math;
 using namespace pwiz::math::types;

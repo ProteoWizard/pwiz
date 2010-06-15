@@ -26,7 +26,9 @@
 #include <map>
 #include <set>
 #include <deque>
+#include <stack>
 #include <algorithm>
+#include <numeric>
 #include <utility>
 #include <boost/foreach.hpp>
 
@@ -37,6 +39,7 @@ using std::multimap;
 using std::set;
 using std::multiset;
 using std::deque;
+using std::stack;
 using std::pair;
 using std::make_pair;
 
@@ -55,7 +58,9 @@ using std::replace_copy;
 using std::replace_copy_if;
 using std::replace_if;
 
+using std::for_each;
 using std::transform;
+using std::accumulate;
 using std::sort;
 using std::stable_sort;
 

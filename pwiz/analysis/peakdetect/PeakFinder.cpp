@@ -23,9 +23,7 @@
 
 #define PWIZ_SOURCE
 #include "PeakFinder.hpp"
-#include <algorithm>
-#include <iterator>
-#include <stdexcept>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cmath>
 #include <iomanip>
 
@@ -35,8 +33,6 @@ namespace analysis {
 
 
 using namespace pwiz::math;
-using namespace std;
-using boost::shared_ptr;
 
 
 PeakFinder_SNR::PeakFinder_SNR(shared_ptr<NoiseCalculator> noiseCalculator, const Config& config)
@@ -50,7 +46,7 @@ struct ComputeLogarithm
 {
     OrderedPair operator()(const OrderedPair& p)
     {
-        double value = p.y>0 ? log(p.y) : 0;
+        double value = p.y>0 ? std::log(p.y) : 0;
         return OrderedPair(p.x, value);
     }
 };
@@ -110,7 +106,7 @@ void PeakFinder_SNR::findPeaks(const OrderedPairContainerRef& pairs,
 
     double thresholdValue = noise.mean + config_.zValueThreshold * noise.standardDeviation;
     double thresholdPValue = noise.pvalue(thresholdValue);
-    double threshold = ((double(*)(double,int))pow)(thresholdPValue, 1+2*config_.windowRadius);
+    double threshold = ((double(*)(double,int))std::pow)(thresholdPValue, 1+2*config_.windowRadius);
 
     // report local minima above the threshold
     for (size_t i=0; i<rollingProducts.size(); i++)

@@ -24,15 +24,9 @@
 #define PWIZ_SOURCE
 
 #include "IPIFASTADatabase.hpp"
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <stdexcept>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 #include <cstdlib>
-
-
-using namespace std;
 
 
 namespace pwiz {

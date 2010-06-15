@@ -25,20 +25,12 @@
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/convenience.hpp"
-#include <iostream>
-#include <fstream>
-#include <iomanip>
-#include <stdexcept>
-#include <iterator>
+#include "pwiz/utility/misc/Std.hpp"
 
-
-using namespace std;
 using namespace pwiz::cv;
 using namespace pwiz::data;
 using namespace pwiz::util;
 using namespace pwiz::msdata;
-using boost::shared_ptr;
-using boost::lexical_cast;
 namespace bfs = boost::filesystem;
 
 

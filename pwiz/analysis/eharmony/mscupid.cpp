@@ -20,18 +20,14 @@
 // limitations under the License.
 //
 
-///
-/// mscupid.cpp
-///
-
 #include "AMTDatabase.hpp"
 #include "WarpFunction.hpp"
 #include "boost/filesystem.hpp"
 #include "boost/program_options.hpp"
 #include "boost/filesystem/path.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
-using namespace std;
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::eharmony;
 
 namespace{

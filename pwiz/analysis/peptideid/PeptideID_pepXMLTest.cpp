@@ -20,16 +20,13 @@
 // limitations under the License.
 //
 
-#include <iostream>
-#include <fstream>
-#include <string>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 #include "PeptideID_pepXML.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::peptideid;
 using namespace pwiz::minimxml::SAXParser;

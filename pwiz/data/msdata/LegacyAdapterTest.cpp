@@ -27,14 +27,12 @@
 #include "pwiz/utility/misc/unit.hpp"
 #include "boost/lambda/lambda.hpp"
 #include "boost/lambda/bind.hpp"
-#include <iostream>
-#include <algorithm>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
-using namespace std;
 using namespace pwiz::util;
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::msdata;
 using namespace boost::lambda;
 

@@ -24,18 +24,15 @@
 #include "TextWriter.hpp"
 #include "examples.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::cv;
 using namespace pwiz::data;
 using namespace pwiz::data::diff_impl;
 using namespace pwiz::msdata;
-using boost::shared_ptr;
-using boost::lexical_cast;
 
 
 ostream* os_ = 0;

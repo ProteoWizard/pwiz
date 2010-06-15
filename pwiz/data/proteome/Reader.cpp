@@ -24,15 +24,13 @@
 
 #include "Reader.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
-#include <stdexcept>
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {
 namespace proteome {
 
 
-using namespace std;
 using namespace pwiz::util;
 using boost::shared_ptr;
 

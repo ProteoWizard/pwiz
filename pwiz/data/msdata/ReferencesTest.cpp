@@ -23,13 +23,12 @@
 
 #include "References.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
 
 
-using namespace std;
 using namespace pwiz::util;
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::msdata;
 
 

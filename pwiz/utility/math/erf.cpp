@@ -24,16 +24,12 @@
 #define PWIZ_SOURCE
 
 #include "erf.hpp"
-#include <iostream>
-#include <limits>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cmath>
 
 
 namespace pwiz {
 namespace math {
-
-
-using namespace std;
 
 
 // pulled from IT++ Library

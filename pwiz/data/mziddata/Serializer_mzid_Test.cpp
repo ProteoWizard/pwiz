@@ -25,11 +25,10 @@
 #include "MzIdentML.hpp"
 #include "Serializer_mzid.hpp"
 #include "examples.hpp"
-
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
-using namespace std;
+
 using namespace pwiz::mziddata;
 using namespace pwiz::mziddata::examples;
 

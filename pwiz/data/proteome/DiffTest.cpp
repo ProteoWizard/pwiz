@@ -23,15 +23,13 @@
 #include "Diff.hpp"
 //#include "examples.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::proteome;
 using namespace pwiz::data;
-using boost::shared_ptr;
 
 
 ostream* os_ = 0;

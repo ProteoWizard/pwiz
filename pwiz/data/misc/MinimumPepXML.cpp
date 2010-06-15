@@ -25,18 +25,14 @@
 
 #include "MinimumPepXML.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
-#include "boost/lexical_cast.hpp"
-#include <vector>
-#include <iterator>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
-using namespace std;
 using namespace pwiz;
 using namespace pwiz::data::pepxml;
 using namespace pwiz::data::peakdata;
 using namespace pwiz::minimxml;
 using namespace minimxml::SAXParser;
-using namespace boost;
 
 ostream* _log = 0;
 

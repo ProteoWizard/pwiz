@@ -24,21 +24,12 @@
 #define PWIZ_SOURCE
 
 #include "FrequencyData.hpp"
-#include <iostream>
-#include <iterator>
-#include <stdexcept>
-#include <fstream>
-#include <iomanip>
-#include <stack>
-#include <algorithm>
-#include <string.h>
+#include "pwiz/utility/misc/Std.hpp"
+#include <cstring>
 
 
 namespace pwiz {
 namespace data {
-
-
-using namespace std;
 
 
 namespace {

@@ -4,11 +4,8 @@
 
 #include "MinimumPepXML.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
-#include <fstream>
-#include <algorithm>
+#include "pwiz/utility/misc/Std.hpp"
 
-using namespace std;
 using namespace pwiz::data::pepxml;
 using namespace pwiz::util;
 

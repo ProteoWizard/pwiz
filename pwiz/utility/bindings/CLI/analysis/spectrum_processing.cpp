@@ -28,7 +28,6 @@
 #pragma warning( pop )
 
 
-using boost::shared_ptr;
 
 
 namespace pwiz {

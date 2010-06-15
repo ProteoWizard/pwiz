@@ -26,9 +26,8 @@
 #include "Diff.hpp"
 #include "TextWriter.hpp"
 #include "pwiz/data/common/diff_std.hpp"
-#include <string>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cmath>
-#include <stdexcept>
 
 
 namespace pwiz {
@@ -36,10 +35,7 @@ namespace data {
 namespace diff_impl {
 
 
-using namespace std;
 using namespace pwiz::proteome;
-using boost::shared_ptr;
-using boost::lexical_cast;
 
 
 PWIZ_API_DECL

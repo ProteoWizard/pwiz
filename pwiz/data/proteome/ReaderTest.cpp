@@ -22,14 +22,11 @@
 
 #include "Reader.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
 
-using namespace std;
 using namespace pwiz::util;
-using namespace pwiz;
 using namespace pwiz::proteome;
-using boost::shared_ptr;
 
 
 ostream* os_ = 0;

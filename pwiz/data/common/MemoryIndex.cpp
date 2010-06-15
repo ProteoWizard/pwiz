@@ -23,9 +23,7 @@
 
 
 #include "MemoryIndex.hpp"
-#include "pwiz/utility/misc/Container.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {

@@ -23,18 +23,12 @@
 
 #define PWIZ_SOURCE
 #include "MZTolerance.hpp"
-#include <stdexcept>
-#include <iostream>
-#include <algorithm>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
-#include <string>
 
 
 namespace pwiz {
 namespace analysis {
-
-
-using namespace std;
 
 
 PWIZ_API_DECL ostream& operator<<(ostream& os, const MZTolerance& mzt)

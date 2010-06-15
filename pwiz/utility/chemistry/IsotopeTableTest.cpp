@@ -23,14 +23,10 @@
 
 #include "IsotopeTable.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
-#include <iomanip>
-#include <iterator>
-#include <algorithm>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::chemistry;
 

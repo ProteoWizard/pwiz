@@ -25,23 +25,16 @@
 #define PWIZ_SOURCE
 
 #include "CVTranslator.hpp"
-#include "boost/lexical_cast.hpp"
 #include "boost/algorithm/string/predicate.hpp"
-#include <map>
-#include <iostream>
-#include <sstream>
-#include <iterator>
-#include <stdexcept>
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {
 namespace data {
 
 
-using namespace std;
 using namespace pwiz::cv;
-using boost::lexical_cast;
-using boost::algorithm::starts_with;
+
 
 //
 // default extra translations
@@ -190,8 +183,8 @@ void CVTranslator::Impl::insertCVTerms()
 
         if (info.isObsolete) continue;
 
-        if (!(starts_with(info.id, "MS") ||
-              starts_with(info.id, "UO"))) continue;
+        if (!(bal::starts_with(info.id, "MS") ||
+              bal::starts_with(info.id, "UO"))) continue;
         
         // insert name
         insert(info.name, *cvid);

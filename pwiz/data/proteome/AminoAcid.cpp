@@ -24,16 +24,11 @@
 #define PWIZ_SOURCE
 
 #include "AminoAcid.hpp"
-#include <iostream>
-#include <map>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cmath>
-#include <sstream>
-#include <stdexcept>
 #include "pwiz/utility/misc/CharIndexedVector.hpp"
 #include "boost/utility/singleton.hpp"
 
-
-using namespace std;
 using namespace pwiz::util;
 
 namespace pwiz {

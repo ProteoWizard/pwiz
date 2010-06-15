@@ -21,13 +21,8 @@
 
 
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
-#include <iterator>
-#include "boost/foreach.hpp"
-#include <set>
-#include <vector>
+#include "pwiz/utility/misc/Std.hpp"
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::CLI::cv;
 using namespace pwiz::CLI::chemistry;

@@ -28,15 +28,14 @@
 #include "ChromatogramListBase.hpp"
 #include "examples.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/filter/gzip.hpp>
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/copy.hpp>
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::cv;
 using namespace pwiz::data;

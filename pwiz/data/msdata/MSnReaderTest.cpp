@@ -22,13 +22,10 @@
 
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/data/msdata/SpectrumInfo.hpp"
-#include "boost/lexical_cast.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "boost/foreach.hpp"
-#include <iostream>
-#include <vector>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
@@ -36,7 +33,6 @@ using namespace pwiz::data;
 using namespace pwiz::msdata;
 using namespace pwiz::util;
 using namespace boost;
-using namespace std;
 namespace bfs = boost::filesystem;
 
 ostream* os_ = 0;

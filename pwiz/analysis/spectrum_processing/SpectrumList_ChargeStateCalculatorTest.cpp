@@ -22,18 +22,11 @@
 
 #include "SpectrumList_ChargeStateCalculator.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <vector>
-#include <iostream>
-#include <iterator>
 #include "pwiz/data/msdata/examples.hpp"
 #include "pwiz/data/msdata/TextWriter.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include "boost/foreach.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
-
-using namespace std;
 using namespace pwiz::util;
-using namespace pwiz;
 using namespace pwiz::msdata;
 using namespace pwiz::analysis;
 

@@ -29,14 +29,9 @@
 
 #ifdef PWIZ_READER_ABI
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
-#include "boost/shared_ptr.hpp"
-#include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include <boost/bind.hpp>
-#include <iostream>
-
-using namespace std;
-using boost::shared_ptr;
 
 
 namespace pwiz {

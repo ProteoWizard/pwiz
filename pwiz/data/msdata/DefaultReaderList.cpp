@@ -24,8 +24,7 @@
 #define PWIZ_SOURCE
 
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "DefaultReaderList.hpp"
 #include "SpectrumList_mzXML.hpp"
 #include "SpectrumList_MGF.hpp"
@@ -39,15 +38,12 @@
 #include "ChromatogramListBase.hpp"
 #include "pwiz/data/msdata/Version.hpp"
 #include "boost/regex.hpp"
-#include "boost/foreach.hpp"
-#include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
+
 
 namespace pwiz {
 namespace msdata {
 
 
-using namespace std;
-using boost::shared_ptr;
 
 
 namespace {

@@ -23,16 +23,11 @@
 #include "KwCVMap.hpp"
 #include "examples.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
-#include <cstring>
-#include <sstream>
+#include "pwiz/utility/misc/Std.hpp"
 
-
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::data;
 using namespace pwiz::mziddata;
-using boost::shared_ptr;
 
 ostream* os_ = 0;
 //const double epsilon = numeric_limits<double>::epsilon();

@@ -30,13 +30,7 @@
 #include "gdfontmb.h"
 #include "gdfontl.h"
 #include "gdfontg.h"
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <stdexcept>
-
-
-using namespace std;
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {

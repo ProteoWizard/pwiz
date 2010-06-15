@@ -24,18 +24,15 @@
 
 #include "Diff.hpp"
 #include "TextWriter.hpp"
-#include <string>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cmath>
-#include <stdexcept>
+
 
 namespace pwiz {
 namespace data {
 namespace diff_impl {
 
 
-using namespace std;
-using boost::shared_ptr;
-using boost::lexical_cast;
 
 
 PWIZ_API_DECL

@@ -23,16 +23,13 @@
 
 #include "SampleDatum.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
-#include <vector>
-#include <iterator>
+#include "pwiz/utility/misc/Std.hpp"
 #include <complex>
 #include <cstring>
 
 
 using namespace pwiz::util;
 using namespace pwiz::data;
-using namespace std; 
 
 
 ostream* os_ = 0;

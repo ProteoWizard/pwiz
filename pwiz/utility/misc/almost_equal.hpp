@@ -26,6 +26,7 @@
 
 
 #include <limits>
+#include <cmath>
 
 
 namespace pwiz {
@@ -36,7 +37,7 @@ template <typename float_type>
 bool almost_equal(float_type a, float_type b, int multiplier = 1)
 {
     float_type scale = a==float_type(0.0) ? float_type(1.0) : a;
-    return abs((a-b)/scale) < float_type(multiplier) * std::numeric_limits<float_type>::epsilon();
+    return std::abs((a-b)/scale) < float_type(multiplier) * std::numeric_limits<float_type>::epsilon();
 }
 
 

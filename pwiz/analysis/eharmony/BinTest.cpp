@@ -20,16 +20,12 @@
 // limitations under the License.
 //
 
-///
-/// BinTest.cpp
-///
-
 #include <cstring>
 #include "Bin.hpp"
 #include "pwiz/utility/misc/unit.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
-using namespace std;
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::util;
 
 ostream* os_ = 0;

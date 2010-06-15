@@ -35,17 +35,15 @@
 #include "pwiz/analysis/spectrum_processing/PrecursorMassFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/ThresholdFilter.hpp"
 #include "pwiz/data/msdata/SpectrumInfo.hpp"
-#include <iostream>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace pwiz {
 namespace analysis {
 
 
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::msdata;
 using namespace pwiz::util;
-using namespace std;
 
 
 namespace {

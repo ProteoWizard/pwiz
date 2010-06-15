@@ -23,14 +23,9 @@
 #include "MzIdentMLFile.hpp"
 #include "DefaultReaderList.hpp"
 #include "IO.hpp"
-#include <iostream>
-#include <string>
+#include "pwiz/utility/misc/Std.hpp"
 
-
-using namespace std;
-using namespace pwiz;
 using namespace pwiz::mziddata;
-using boost::shared_ptr;
 
 const char* filenames[] =
 {

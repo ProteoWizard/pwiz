@@ -24,17 +24,11 @@
 #define PWIZ_SOURCE
 
 #include "IsotopeTable.hpp"
-#include <iostream>
-#include <iterator>
-#include <stdexcept>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cmath>
-#include <iomanip>
-#include <numeric>
-#include <algorithm>
 
 
 using namespace pwiz::chemistry;
-using namespace std;
 
 
 namespace pwiz {

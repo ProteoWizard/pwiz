@@ -24,8 +24,7 @@
 #define PWIZ_SOURCE
 
 #include "TruncatedLorentzian.hpp"
-#include <fstream>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 #define i_ (complex<double>(0,1))
 #define pi_ M_PI
@@ -33,9 +32,6 @@
 
 namespace pwiz {
 namespace frequency {
-
-
-using namespace std;
 
 
 struct TruncatedLorentzian::Impl

@@ -23,16 +23,13 @@
 #define PWIZ_SOURCE
 
 #include "References.hpp"
-#include <stdexcept>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace pwiz {
 namespace msdata {
 namespace References {
 
 
-using namespace std;
-using boost::shared_ptr;
 
 
 template <typename object_type>

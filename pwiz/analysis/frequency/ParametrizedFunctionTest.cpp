@@ -24,11 +24,10 @@
 #include "DerivativeTest.hpp"
 #include "TruncatedLorentzian.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::frequency;
 

@@ -25,12 +25,9 @@
 #include "Serializer_MSn.hpp"
 #include "SpectrumList_MSn.hpp"
 #include "SpectrumInfo.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/chemistry/Chemistry.hpp"
-#include "boost/foreach.hpp"
-#include "boost/algorithm/string/join.hpp"
 #include "zlib.h"
 
 
@@ -47,7 +44,6 @@ const int sizePeakMSn      = 12; // struct Peak{ double mz; float intensity; }
 
 using namespace std;
 using boost::shared_ptr;
-using boost::lexical_cast;
 using boost::iostreams::stream_offset;
 using namespace pwiz::util;
 using namespace pwiz::chemistry;

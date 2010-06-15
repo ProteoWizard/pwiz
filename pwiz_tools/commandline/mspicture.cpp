@@ -31,18 +31,12 @@
 #include "pwiz/analysis/peptideid/PeptideID_pepXML.hpp"
 #include "pwiz/analysis/peptideid/PeptideID_flat.hpp"
 #include "pwiz/Version.hpp"
-
-#include <iostream>
-#include <fstream>
-#include <iterator>
-#include <stdexcept>
+#include "pwiz/utility/misc/Std.hpp"
 #include <boost/program_options.hpp>
 #include <boost/filesystem.hpp>
 
 
 using namespace pwiz::analysis;
-using boost::shared_ptr;
-using namespace std;
 using namespace pwiz::peptideid;
 using namespace boost::filesystem;
 

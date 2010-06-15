@@ -24,18 +24,13 @@
 #define PWIZ_SOURCE
 
 #include "TruncatedLorentzianParameters.hpp"
-#include <iostream>
-#include <fstream>
-#include <iomanip>
-#include <string.h>
+#include "pwiz/utility/misc/Std.hpp"
+#include <cstring>
 
 
 namespace pwiz {
 namespace frequency {
-
-
-using namespace std;
-
+    
 
 PWIZ_API_DECL TruncatedLorentzianParameters::TruncatedLorentzianParameters()
 :   T(1), tau(1), alpha(1), f0(0)

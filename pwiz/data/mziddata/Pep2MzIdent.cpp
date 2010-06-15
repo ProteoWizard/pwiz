@@ -25,11 +25,8 @@
 #include "pwiz/utility/chemistry/Ion.hpp"
 #include "pwiz/data/common/cv.hpp"
 #include "boost/regex.hpp"
-#include "boost/algorithm/string/join.hpp"
-#include "boost/lexical_cast.hpp"
 #include "boost/filesystem.hpp"
-#include "boost/algorithm/string.hpp"
-#include "boost/foreach.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "boost/tokenizer.hpp"
 
 // Debug macro to be used if needed.
@@ -41,10 +38,7 @@ using namespace pwiz::mziddata;
 using namespace pwiz::data::pepxml;
 using namespace pwiz::chemistry;
 
-using namespace boost;
-using namespace std;
-
-using boost::algorithm::join;
+using namespace boost; // FIXME: this is a bad idea
 
 // String constants
 

@@ -24,14 +24,13 @@
 
 #include "Reader.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include <stdexcept>
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {
 namespace tradata {
 
 
-using namespace std;
 using namespace pwiz::util;
 
 

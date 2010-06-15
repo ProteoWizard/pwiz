@@ -27,19 +27,15 @@
 #include "pwiz/utility/math/Parabola.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
-#include <iostream>
-#include <iomanip>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cmath>
-#include <stdexcept>
 
 
 namespace pwiz {
 namespace analysis {
 
 
-using namespace std;
 using namespace pwiz::math;
-using boost::lexical_cast;
 namespace bfs = boost::filesystem;
 
 

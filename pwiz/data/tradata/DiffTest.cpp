@@ -21,16 +21,14 @@
 
 #include "Diff.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::cv;
 using namespace pwiz::data;
 using namespace pwiz::tradata;
-using boost::shared_ptr;
 
 
 ostream* os_ = 0;

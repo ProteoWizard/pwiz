@@ -23,15 +23,14 @@
 
 #define PWIZ_SOURCE
 #include "PeakExtractor.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {
 namespace analysis {
 
 
-using namespace std;
 using namespace pwiz::math;
-using boost::shared_ptr;
 
 
 PeakExtractor::PeakExtractor(shared_ptr<PeakFinder> peakFinder,

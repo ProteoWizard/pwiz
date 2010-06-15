@@ -26,10 +26,8 @@
 #include "PeakDetectorNaive.hpp"
 #include "pwiz/data/misc/FrequencyData.hpp"
 #include "pwiz/data/misc/PeakData.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 
-
-using namespace std;
 using namespace pwiz::data;
 using namespace pwiz::data::peakdata;
 

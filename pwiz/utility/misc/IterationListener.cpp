@@ -24,18 +24,12 @@
 #define PWIZ_SOURCE
 
 #include "IterationListener.hpp" 
-#include <vector>
-#include <map>
-#include <algorithm>
-#include <stdexcept>
+#include "pwiz/utility/misc/Std.hpp"
 #include <ctime>
 
 
 namespace pwiz {
 namespace util {
-
-
-using namespace std;
 
 
 //

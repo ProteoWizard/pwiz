@@ -26,12 +26,10 @@
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include "TextWriter.hpp"
-#include <iostream>
-#include <stdexcept>
+#include "pwiz/utility/misc/Std.hpp"
 
-using namespace std;
 using namespace pwiz::util;
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::mziddata;
 
 

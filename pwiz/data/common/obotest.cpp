@@ -24,13 +24,10 @@
 #include "obo.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include <boost/filesystem/operations.hpp>
-#include <iostream>
-#include <fstream>
-#include <stdexcept>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
-using namespace std;
 using namespace pwiz::data;
 using namespace pwiz::util;
 

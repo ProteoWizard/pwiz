@@ -24,13 +24,10 @@
 #include "SHA1Calculator.hpp"
 #include "unit.hpp"
 #include <boost/filesystem/operations.hpp>
-#include <iostream>
-#include <fstream>
-#include <string>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
-using namespace std;
 using namespace pwiz::util;
 
 

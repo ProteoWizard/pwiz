@@ -26,14 +26,13 @@
 #include "TruncatedLorentzianEstimator.hpp"
 #include "ParameterEstimator.hpp"
 #include "pwiz/utility/math/Parabola.hpp"
-#include <fstream>
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {
 namespace frequency {
 
 
-using namespace std;
 using namespace math;
 using namespace data;
 

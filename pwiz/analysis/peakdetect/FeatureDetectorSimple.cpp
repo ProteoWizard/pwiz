@@ -29,22 +29,15 @@
 #include "pwiz/data/msdata/SpectrumIterator.hpp"
 #include "pwiz/data/msdata/SpectrumInfo.hpp"
 #include "pwiz/analysis/passive/MSDataCache.hpp"
-
 #include "boost/tuple/tuple_comparison.hpp"
-
-#include <vector>
-#include <map>
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace{
-
-using namespace std;
 
 using namespace pwiz::analysis;
 using namespace pwiz::data;
 using namespace pwiz::data::peakdata;
 using namespace pwiz::msdata;
-using boost::shared_ptr;
 
 
 // helper function to fill in Peak id attribute (currently from scan number)
@@ -88,8 +81,6 @@ bool operator==(const FeatureKey& a, const FeatureKey& b)
 }
 
 } // anonymous namespace
-
-using namespace std;
 
 using namespace pwiz::analysis;
 using namespace pwiz::data;

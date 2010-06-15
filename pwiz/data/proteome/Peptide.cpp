@@ -26,10 +26,9 @@
 #include "Peptide.hpp"
 #include "Modification.hpp"
 #include "AminoAcid.hpp"
-#include <iostream>
 #include <climits>
 #include "pwiz/utility/misc/Exception.hpp"
-#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "boost/utility/singleton.hpp"
 
 
@@ -37,7 +36,6 @@ namespace pwiz {
 namespace proteome {
 
 
-using namespace std;
 using namespace chemistry;
 using boost::shared_ptr;
 

@@ -24,16 +24,13 @@
 #include "RegionAnalyzer.hpp"
 #include "pwiz/data/msdata/TextWriter.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
-using namespace std;
 using namespace pwiz;
 using namespace pwiz::util;
 using namespace pwiz::analysis;
-using boost::shared_ptr;
-using boost::lexical_cast;
 
 
 ostream* os_ = 0;

@@ -26,15 +26,8 @@
 #define PWIZ_SOURCE
 
 #include "ScanFilter.h"
-
-#include <stack>
-#include <iostream>
-#include <algorithm>
-#include <vector>
-#include "pwiz/utility/misc/String.hpp"
-
+#include "pwiz/utility/misc/Std.hpp"
 using namespace pwiz::vendor_api::Thermo;
-using namespace std;
 
 /*
 

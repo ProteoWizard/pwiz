@@ -23,15 +23,11 @@
 
 #include "pwiz/utility/misc/unit.hpp"
 #include "Peptide.hpp"
-#include <iostream>
-#include <iomanip>
-#include <algorithm>
-#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "boost/thread/thread.hpp"
 #include "boost/thread/barrier.hpp"
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::proteome;
 using namespace pwiz::chemistry;

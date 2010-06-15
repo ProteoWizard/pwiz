@@ -24,7 +24,7 @@
 #define PWIZ_SOURCE
 #include "FeatureDetectorPeakel.hpp"
 #include "pwiz/analysis/passive/MSDataCache.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {
@@ -32,8 +32,6 @@ namespace analysis {
 
 
 using namespace pwiz::msdata;
-using namespace std;
-using boost::shared_ptr;
 
 
 shared_ptr<FeatureDetectorPeakel> FeatureDetectorPeakel::create(FeatureDetectorPeakel::Config config)

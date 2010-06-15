@@ -14,15 +14,7 @@
 // limitations under the License.
 //
 
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <sstream>
-#include <iterator>
-#include <map>
-
-
-using namespace std;
+#include "pwiz/utility/misc/Std.hpp"
 
 
 struct TextRecord

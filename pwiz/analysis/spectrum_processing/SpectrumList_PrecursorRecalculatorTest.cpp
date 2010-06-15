@@ -25,16 +25,14 @@
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "boost/filesystem/path.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::msdata;
 using namespace pwiz::util;
 using namespace pwiz::analysis;
-using namespace std;
-using boost::shared_ptr;
 namespace bfs = boost::filesystem;
 
 

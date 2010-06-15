@@ -24,8 +24,8 @@
 #define PWIZ_SOURCE
 
 #include "PeptideIDMap.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
-using namespace std;
 using namespace pwiz::peptideid;
 
 namespace {
@@ -58,10 +58,6 @@ struct local_iterator : public PeptideID::Iterator
 
 namespace pwiz {
 namespace peptideid {
-
-
-using namespace std;
-using namespace boost;
 
 
 PWIZ_API_DECL PeptideID::Record PeptideIDMap::record(const Location& location) const

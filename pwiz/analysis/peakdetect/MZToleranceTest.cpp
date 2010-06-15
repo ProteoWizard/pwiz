@@ -23,12 +23,10 @@
 
 #include "MZTolerance.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
-#include <limits>
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::analysis;
 

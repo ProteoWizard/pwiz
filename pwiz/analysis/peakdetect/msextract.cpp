@@ -38,22 +38,16 @@
 #include "boost/filesystem/convenience.hpp"
 #include "boost/iostreams/positioning.hpp"
 #include "boost/tuple/tuple_comparison.hpp"
-#include <string>
-#include <vector>
-#include <map>
-#include <iostream>
-#include <fstream>
+#include "pwiz/utility/misc/Std.hpp"
 
 
-using namespace std;
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::analysis;
 using namespace pwiz::data;
 using namespace pwiz::data::peakdata;
 using namespace pwiz::msdata;
 using namespace pwiz::util;
 using namespace pwiz::minimxml;
-using boost::shared_ptr;
 namespace bfs = boost::filesystem;
 
 

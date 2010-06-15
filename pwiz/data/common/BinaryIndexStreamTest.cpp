@@ -21,16 +21,13 @@
 
 #include "BinaryIndexStream.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include "pwiz/utility/misc/Container.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "boost/thread/thread.hpp"
 #include "boost/thread/barrier.hpp"
 
 
 using namespace pwiz::util;
 using namespace pwiz::data;
-using boost::shared_ptr;
 
 ostream* os_ = 0;
 

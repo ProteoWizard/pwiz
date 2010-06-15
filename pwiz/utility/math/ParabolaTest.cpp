@@ -23,15 +23,12 @@
 
 #include "Parabola.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
-#include <iterator>
-#include <iomanip>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cmath>
 #include <limits>
 #include <cstring>
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::math;
 

@@ -24,14 +24,13 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/ChromatogramListBase.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/Container.hpp"
+#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Stream.hpp"
 #include "Reader_Bruker_Detail.hpp"
-#include <map>
 
 
-using namespace std;
 using boost::shared_ptr;
-using boost::lexical_cast;
-using boost::bad_lexical_cast;
 
 
 namespace pwiz {

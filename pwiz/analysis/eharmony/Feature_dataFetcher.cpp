@@ -20,14 +20,10 @@
 // limitations under the License.
 //
 
-/// 
-/// Feature_dataFetcher.cpp
-///
-
 #include "Feature_dataFetcher.hpp"
 #include "pwiz/data/misc/PeakData.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
-using namespace std;
 using namespace pwiz::eharmony;
 using namespace pwiz::data::peakdata;
 

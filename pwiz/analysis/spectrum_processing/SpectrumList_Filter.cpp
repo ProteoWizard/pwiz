@@ -25,23 +25,17 @@
 
 #include "pwiz/data/common/cv.hpp"
 #include "SpectrumList_Filter.hpp"
-#include "boost/foreach.hpp"
-#include <stdexcept>
-#include <iostream>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace pwiz {
 namespace analysis {
 
 
-using namespace pwiz;
 using namespace pwiz::cv;
 using namespace pwiz::util;
 using namespace pwiz::msdata;
 
-using namespace std;
 using boost::logic::tribool;
-using boost::lexical_cast;
 
 
 //

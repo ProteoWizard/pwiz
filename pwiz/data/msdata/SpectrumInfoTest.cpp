@@ -24,13 +24,12 @@
 #include "SpectrumInfo.hpp"
 #include "pwiz/data/msdata/examples.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
-using namespace std;
 using namespace pwiz::util;
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::msdata;
 
 

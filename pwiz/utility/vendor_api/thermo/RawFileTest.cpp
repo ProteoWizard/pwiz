@@ -19,10 +19,9 @@
 
 
 #include "RawFile.h"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 
 
-using namespace std;
 using namespace pwiz::vendor_api::Thermo;
 
 

@@ -24,15 +24,12 @@
 #define PWIZ_SOURCE
 
 #include "PrecursorRecalculatorDefault.hpp"
-#include <iostream>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace pwiz {
 namespace analysis {
 
 
-using namespace std;
-using namespace pwiz;
 using namespace pwiz::msdata;
 using namespace pwiz::data::peakdata;
 

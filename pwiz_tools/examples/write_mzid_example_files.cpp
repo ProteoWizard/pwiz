@@ -25,14 +25,10 @@
 #include "pwiz/data/mziddata/MzIdentMLFile.hpp"
 #include "pwiz/data/mziddata/examples.hpp"
 #include "pwiz/data/mziddata/DefaultReaderList.hpp"
-#include <iostream>
-#include <fstream>
+#include "pwiz/utility/misc/Std.hpp"
 
-
-using namespace std;
 using namespace pwiz::data;
 using namespace pwiz::mziddata;
-using boost::shared_ptr;
 
 
 

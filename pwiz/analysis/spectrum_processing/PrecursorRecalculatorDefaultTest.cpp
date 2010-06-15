@@ -27,17 +27,12 @@
 #include "pwiz/utility/misc/unit.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
-#include <iostream>
-#include <iterator>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 using namespace pwiz::analysis;
-using namespace pwiz;
 using namespace pwiz::msdata;
 using namespace pwiz::util;
 using namespace pwiz::data;
-using namespace std;
-using boost::shared_ptr;
 namespace bfs = boost::filesystem;
 
 

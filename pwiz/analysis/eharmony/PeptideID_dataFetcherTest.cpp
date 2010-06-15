@@ -20,19 +20,13 @@
 // limitations under the License.
 //
 
-//
-// $Id$
-//
-
 #include "pwiz/utility/misc/unit.hpp"
 #include "PeptideID_dataFetcher.hpp"
 #include "Feature_dataFetcher.hpp"
-#include <boost/shared_ptr.hpp>
-#include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/utility/proteome/Ion.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include <iomanip>
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::proteome;
 using namespace pwiz::data::pepxml;

@@ -22,15 +22,12 @@
 
 
 #include "XMLWriter.hpp"
-#include "boost/lexical_cast.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::minimxml;
-using boost::lexical_cast;
 
 
 ostream* os_ = 0;

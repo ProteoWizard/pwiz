@@ -22,13 +22,11 @@
 
 #include "COMInitializer.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 #include "boost/thread/thread.hpp"
 #include "boost/thread/barrier.hpp"
 
 
-using namespace std;
 using namespace pwiz::util;
 
 

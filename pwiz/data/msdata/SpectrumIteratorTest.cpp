@@ -25,18 +25,13 @@
 #include "MSData.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "boost/lexical_cast.hpp"
-#include <iostream>
-#include <algorithm>
-#include <iterator>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::msdata;
 using namespace pwiz::util;
-using namespace std;
-using boost::lexical_cast;
 
 
 ostream* os_ = 0;

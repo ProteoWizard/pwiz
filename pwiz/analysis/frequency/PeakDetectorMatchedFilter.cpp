@@ -35,15 +35,13 @@
 #include "pwiz/utility/math/MatchedFilter.hpp"
 #include "pwiz/utility/math/round.hpp"
 #include "pwiz/utility/misc/Timer.hpp"
-#include <iostream>
-#include <iomanip>
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {
 namespace frequency {
 
 
-using namespace std;
 using namespace util;
 using namespace math;
 using namespace chemistry;

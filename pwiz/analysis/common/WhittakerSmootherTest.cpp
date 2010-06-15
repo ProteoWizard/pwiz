@@ -23,12 +23,8 @@
 
 #include "WhittakerSmoother.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include <vector>
-#include <iostream>
-#include <iterator>
+#include "pwiz/utility/misc/Std.hpp"
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::analysis;
 

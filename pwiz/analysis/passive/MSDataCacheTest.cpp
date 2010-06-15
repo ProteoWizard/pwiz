@@ -25,17 +25,13 @@
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/data/msdata/examples.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
-#include "boost/lexical_cast.hpp"
 
 
-using namespace std;
 using namespace pwiz;
 using namespace pwiz::util;
 using namespace pwiz::analysis;
-using boost::shared_ptr;
-using boost::lexical_cast;
 
 
 ostream* os_ = 0;

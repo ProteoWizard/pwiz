@@ -26,17 +26,11 @@
 #include "pwiz/data/msdata/Diff.hpp"
 #include "pwiz/data/msdata/examples.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "boost/lexical_cast.hpp"
-#include <iostream>
-#include <fstream>
+#include "pwiz/utility/misc/Std.hpp"
 
-
-using namespace std;
 using namespace pwiz::data;
 using namespace pwiz::msdata;
 using namespace pwiz::util;
-using boost::lexical_cast;
-using boost::shared_ptr;
 
 
 void test()

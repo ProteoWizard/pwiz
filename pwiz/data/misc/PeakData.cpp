@@ -24,21 +24,17 @@
 #define PWIZ_SOURCE
 
 #include "PeakData.hpp"
-#include "boost/lexical_cast.hpp"
 #include <complex>
-#include <iterator>
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace pwiz {
 namespace data {
 namespace peakdata {
 
 
-using namespace std;
 using namespace pwiz::minimxml;
 using namespace pwiz::math;
 using namespace minimxml::SAXParser;
-using boost::lexical_cast;
 
 
 //

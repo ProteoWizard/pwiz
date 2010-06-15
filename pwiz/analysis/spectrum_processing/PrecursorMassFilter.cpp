@@ -24,10 +24,7 @@
 
 #include "pwiz/data/msdata/MSData.hpp"
 #include "PrecursorMassFilter.hpp"
-#include "pwiz/utility/misc/String.hpp"
-
-#include "boost/foreach.hpp"
-
+#include "pwiz/utility/misc/Std.hpp"
 #include <iostream>
 
 namespace pwiz {
@@ -35,7 +32,6 @@ namespace analysis {
 
 const double leftWindow = 60.;
 
-using namespace std;
 using namespace msdata;
 using namespace pwiz::util;
 using namespace pwiz::chemistry;

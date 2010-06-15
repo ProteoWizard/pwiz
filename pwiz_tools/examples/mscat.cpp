@@ -23,15 +23,10 @@
 
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz_tools/common/FullReaderList.hpp"
-#include <iostream>
-#include <iomanip>
-#include <stdexcept>
+#include "pwiz/utility/misc/Std.hpp"
 
-
-using namespace std;
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::msdata;
-using boost::shared_ptr;
 
 
 /*

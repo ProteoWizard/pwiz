@@ -22,7 +22,7 @@
 #define PWIZ_SOURCE
 
 #include "examples.hpp"
-#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {
@@ -30,7 +30,6 @@ namespace proteome {
 namespace examples {
 
 
-using boost::shared_ptr;
 
 
 PWIZ_API_DECL void initializeTiny(ProteomeData& pd)

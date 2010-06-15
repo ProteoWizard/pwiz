@@ -28,16 +28,14 @@
 #include "pwiz/analysis/passive/MSDataCache.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "boost/filesystem/path.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
-
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::analysis;
 using namespace pwiz::data;
 using namespace pwiz::data::peakdata;
 using namespace pwiz::msdata;
 namespace bfs = boost::filesystem;
-using boost::shared_ptr;
 
 
 ostream* os_ = 0;

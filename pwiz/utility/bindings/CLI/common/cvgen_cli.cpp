@@ -25,18 +25,8 @@
 #include "pwiz/data/common/obo.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
-#include "boost/foreach.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
-#include <iostream>
-#include <iomanip>
-#include <fstream>
-#include <iterator>
-#include <algorithm>
-#include <map>
-#include <set>
+#include "pwiz/utility/misc/Std.hpp"
 
-
-using namespace std;
 using namespace pwiz::data;
 namespace bfs = boost::filesystem;
 

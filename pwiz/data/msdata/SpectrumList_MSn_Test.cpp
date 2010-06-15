@@ -26,19 +26,16 @@
 #include "TextWriter.hpp"
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "boost/foreach.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Base64.hpp"
 #include <iostream>
 #include <iterator>
 #include <cstring>
 
 
-using namespace std;
 using namespace pwiz::msdata;
 using namespace pwiz::util;
 using namespace pwiz::minimxml;
-using boost::shared_ptr;
 
 
 ostream* os_ = 0;

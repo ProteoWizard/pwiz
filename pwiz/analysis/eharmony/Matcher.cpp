@@ -20,10 +20,6 @@
 // limitations under the License.
 //
 
-///
-/// Matcher.cpp
-///
-
 #include "Matcher.hpp"
 #include "PeptideMatcher.hpp"
 #include "Peptide2FeatureMatcher.hpp"
@@ -34,12 +30,10 @@
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include "boost/tuple/tuple_comparison.hpp"
 #include "boost/filesystem.hpp"
-#include <algorithm>
-#include <string>
+#include "pwiz/utility/misc/Std.hpp"
 
-using namespace std;
 using namespace pwiz::minimxml;
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::eharmony;
 
 namespace{

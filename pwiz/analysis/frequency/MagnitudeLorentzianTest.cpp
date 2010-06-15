@@ -26,17 +26,10 @@
 #include "pwiz/data/misc/FrequencyData.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include <boost/filesystem/operations.hpp>
-#include <iostream>
-#include <fstream>
-#include <iterator>
-#include <iomanip>
-#include <stdexcept>
-#include <limits>
-#include <algorithm>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::frequency;
 using namespace pwiz::data;

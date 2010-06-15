@@ -28,16 +28,14 @@
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumListFactory.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "boost/program_options.hpp"
-#include <iostream>
-#include <boost/foreach.hpp>
 
 
 namespace pwiz {
 namespace analysis {
 
 
-using namespace std;
 using namespace pwiz::util;
 
 

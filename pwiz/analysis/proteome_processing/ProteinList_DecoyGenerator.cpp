@@ -23,11 +23,8 @@
 #define PWIZ_SOURCE
 
 #include "ProteinList_DecoyGenerator.hpp"
-#include "pwiz/utility/misc/optimized_lexical_cast.hpp"
 #include <boost/random.hpp>
-#include <stdexcept>
-#include <iostream>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace pwiz {
 namespace analysis {
@@ -35,9 +32,6 @@ namespace analysis {
 
 using namespace pwiz::util;
 using namespace pwiz::proteome;
-
-using namespace std;
-using boost::lexical_cast;
 
 
 //

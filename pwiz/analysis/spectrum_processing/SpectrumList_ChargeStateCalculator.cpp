@@ -29,12 +29,9 @@
 #include <numeric>
 
 
-// workaround for MSVC's ADL gimpiness
-namespace std {
 namespace {
 
-
-bool operator< (const pwiz::msdata::MZIntensityPair& lhs, const pwiz::msdata::MZIntensityPair& rhs)
+bool mzIntensityPairLessThan (const pwiz::msdata::MZIntensityPair& lhs, const pwiz::msdata::MZIntensityPair& rhs)
 {
     return lhs.mz > rhs.mz;
 }
@@ -47,16 +44,13 @@ struct MZIntensityPairIntensitySum
     }
 };
 
-
 } // namespace
-} // namespace std
 
 
 namespace pwiz {
 namespace analysis {
 
 
-using namespace std;
 using namespace msdata;
 using namespace pwiz::util;
 
@@ -124,11 +118,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ChargeStateCalculator::spectrum(size_t in
 
     vector<MZIntensityPair> mzIntensityPairs;
     s->getMZIntensityPairs(mzIntensityPairs);
-    sort(mzIntensityPairs.begin(), mzIntensityPairs.end());
+    sort(mzIntensityPairs.begin(), mzIntensityPairs.end(), &mzIntensityPairLessThan);
 
     double tic = accumulate(mzIntensityPairs.begin(), mzIntensityPairs.end(), 0.0, MZIntensityPairIntensitySum());
 
-    vector<MZIntensityPair>::iterator mzItr = lower_bound(mzIntensityPairs.begin(), mzIntensityPairs.end(), MZIntensityPair(mz, 0));
+    vector<MZIntensityPair>::iterator mzItr = lower_bound(mzIntensityPairs.begin(), mzIntensityPairs.end(), MZIntensityPair(mz, 0), &mzIntensityPairLessThan);
     double fractionTIC = 0, inverseFractionCutoff = 1 - fraction_;
     for (vector<MZIntensityPair>::iterator itr = mzIntensityPairs.begin();
          itr != mzItr && fractionTIC < inverseFractionCutoff;
@@ -163,14 +157,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ChargeStateCalculator::spectrum(size_t in
                 cvParams.push_back(CVParam(MS_possible_charge_state, z));
     }
     return s;
-
-    try
-    {
-    }
-    catch(std::exception& e)
-    {
-        throw std::runtime_error(std::string("[SpectrumList_SavitzskyGolaySmoother] Error smoothing intensity data: ") + e.what());
-    }
 }
 
 

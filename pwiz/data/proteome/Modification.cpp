@@ -27,12 +27,13 @@
 #include "Modification.hpp"
 #include <climits>
 #include "pwiz/utility/misc/Exception.hpp"
+#include "pwiz/utility/misc/Std.hpp"
+
 
 namespace pwiz {
 namespace proteome {
 
 
-using namespace std;
 using namespace chemistry;
 using namespace pwiz::util;
 

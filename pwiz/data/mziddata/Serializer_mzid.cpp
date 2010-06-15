@@ -27,16 +27,13 @@
 #include "IO.hpp"
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
-#include <stdexcept>
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace pwiz {
 namespace mziddata {
 
-using namespace std;
+
 using minimxml::XMLWriter;
-using boost::shared_ptr;
-using boost::lexical_cast;
 using boost::iostreams::stream_offset;
 using namespace pwiz::minimxml;
 

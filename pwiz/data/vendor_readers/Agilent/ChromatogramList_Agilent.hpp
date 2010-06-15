@@ -26,8 +26,8 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/ChromatogramListBase.hpp"
-#include <map>
-#include <vector>
+#include "pwiz/utility/misc/Std.hpp"
+
 
 #ifdef PWIZ_READER_AGILENT
 #include "pwiz/utility/vendor_api/Agilent/MassHunterData.hpp"
@@ -40,8 +40,6 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
-using namespace std;
-using boost::shared_ptr;
 
 class PWIZ_API_DECL ChromatogramList_Agilent : public ChromatogramListBase
 {

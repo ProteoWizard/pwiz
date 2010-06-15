@@ -23,15 +23,13 @@
 #include "Diff.hpp"
 #include "examples.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::data;
 using namespace pwiz::mziddata;
-using boost::shared_ptr;
 
 
 // TODO: Add IdentifiableType diff to all subclasses of IdentifiableType

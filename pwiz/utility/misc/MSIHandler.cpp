@@ -22,12 +22,10 @@
 
 #define PWIZ_SOURCE
 #include "MSIHandler.hpp"
-#include <vector>
-
+#include "pwiz/utility/misc/Std.hpp"
 namespace pwiz {
 namespace utility {
 
-using namespace std;
 
 MSIHandler::Record::Record(const std::vector<std::string>& fields)
 {

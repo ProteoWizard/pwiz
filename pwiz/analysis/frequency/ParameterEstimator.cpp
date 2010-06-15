@@ -24,7 +24,7 @@
 #include "ParameterEstimator.hpp"
 //#include "DerivativeTest.hpp" // for testing numerical derivatives only
 
-
+#include "pwiz/utility/misc/Std.hpp"
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/lu.hpp>
@@ -36,9 +36,6 @@ namespace ublas = boost::numeric::ublas;
 
 namespace pwiz {
 namespace frequency {
-
-
-using namespace std;
 
 
 class ParameterEstimatorImpl : public ParameterEstimator

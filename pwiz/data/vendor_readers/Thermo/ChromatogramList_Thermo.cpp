@@ -29,10 +29,8 @@
 
 #ifdef PWIZ_READER_THERMO
 #include "Reader_Thermo_Detail.hpp"
-#include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
-#include "boost/shared_ptr.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include <boost/bind.hpp>
 
 

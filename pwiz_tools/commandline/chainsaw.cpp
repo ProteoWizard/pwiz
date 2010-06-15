@@ -11,16 +11,13 @@
 #include "pwiz/Version.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "boost/program_options.hpp"
-#include <iostream>
-#include <fstream>
-#include <string>
 
-using namespace std;
+
 using namespace pwiz::cv;
 using namespace pwiz::proteome;
 using namespace pwiz::util;
-using boost::shared_ptr;
 
 struct Config
 {

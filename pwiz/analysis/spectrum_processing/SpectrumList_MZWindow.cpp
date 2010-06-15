@@ -24,7 +24,7 @@
 
 
 #include "SpectrumList_MZWindow.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {
@@ -32,7 +32,6 @@ namespace analysis {
 
 
 using namespace msdata;
-using namespace std;
 
 
 PWIZ_API_DECL

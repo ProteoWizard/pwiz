@@ -23,12 +23,9 @@
 
 #include "pwiz_tools/common/MSDataAnalyzerApplication.hpp"
 #include "pwiz/analysis/passive/MSDataCache.hpp"
-#include <iostream>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 using namespace pwiz::analysis;
-using boost::shared_ptr;
-using namespace std;
 
 
 class HelloAnalyzer2 : public MSDataAnalyzer

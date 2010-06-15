@@ -27,21 +27,15 @@
 #include "MSDataFile.hpp"
 #include "LegacyAdapter.hpp"
 #include "pwiz/data/common/CVTranslator.hpp"
-#include "boost/lexical_cast.hpp"
 #include "boost/static_assert.hpp"
-#include <stdexcept>
-#include <iostream>
-#include <algorithm>
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {
 namespace msdata {
 
 
-using namespace std;
 using namespace pwiz::data;
-using boost::lexical_cast;
-using boost::bad_lexical_cast;
 
 
 class RAMPAdapter::Impl

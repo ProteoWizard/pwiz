@@ -31,7 +31,7 @@
 #include "Serializer_MSn.hpp"
 #include "DefaultReaderList.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "pwiz/utility/minimxml/XMLWriter.hpp" // for charcounter defn
 #include "boost/iostreams/device/file.hpp"
@@ -39,15 +39,10 @@
 #include "boost/iostreams/filter/gzip.hpp" 
 
 
-#include <fstream>
-#include <stdexcept>
-
-
 namespace pwiz {
 namespace msdata {
 
 
-using namespace std;
 using namespace pwiz::util;
 using boost::shared_ptr;
 

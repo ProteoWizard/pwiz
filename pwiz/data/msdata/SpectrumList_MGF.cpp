@@ -25,24 +25,13 @@
 
 #include "SpectrumList_MGF.hpp"
 #include "References.hpp"
-#include <limits>
-#include "pwiz/utility/misc/String.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
-#include "pwiz/utility/misc/Container.hpp"
-#include "pwiz/utility/misc/Exception.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
-#ifdef _MSC_VER
-#ifdef max //trouble with windef.h
-#undef max
-#undef min
-#endif
-#endif
 
 namespace pwiz {
 namespace msdata {
 
 
-using boost::shared_ptr;
 using boost::iostreams::stream_offset;
 using boost::iostreams::offset_to_position;
 

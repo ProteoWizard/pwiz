@@ -24,6 +24,7 @@
 #define PWIZ_SOURCE
 #include "PeakFitter.hpp"
 #include "pwiz/utility/math/Parabola.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {
@@ -31,7 +32,6 @@ namespace analysis {
 
 
 using namespace pwiz::math;
-using namespace std;
 
 
 //

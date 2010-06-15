@@ -26,18 +26,13 @@
 #include "SpectrumIterator.hpp"
 #include "MSData.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
-#include <iostream>
-#include <stdexcept>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace pwiz {
 namespace msdata {
 
 
 using namespace util;
-using namespace std;
-using boost::shared_ptr;
-using boost::lexical_cast;
 
 
 namespace {

@@ -26,12 +26,7 @@
 #include "FrequencyEstimatorPhysicalModel.hpp"
 #include "TruncatedLorentzianEstimator.hpp"
 #include "pwiz/data/misc/PeakData.hpp"
-#include <iostream>
-#include <iomanip>
-#include <iterator>
-#include <sstream>
-#include <fstream>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 #include "boost/filesystem/operations.hpp"
 #include "boost/filesystem/convenience.hpp"
@@ -39,7 +34,6 @@
 #include "boost/filesystem/exception.hpp"
 
 
-using namespace std;
 using namespace pwiz::frequency;
 using namespace pwiz::data;
 using namespace pwiz::data::peakdata;

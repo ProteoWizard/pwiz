@@ -27,14 +27,13 @@
 #include "pwiz/analysis/frequency/PeakDetectorMatchedFilter.hpp"
 #include "pwiz/data/misc/FrequencyData.hpp"
 #include "pwiz/utility/chemistry/IsotopeEnvelopeEstimator.hpp"
-#include <fstream>
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {
 namespace analysis {
 
 
-using namespace std;
 using namespace pwiz::chemistry;
 using namespace pwiz::data;
 using namespace pwiz::frequency;

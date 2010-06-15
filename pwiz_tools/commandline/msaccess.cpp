@@ -32,14 +32,9 @@
 #include "pwiz/analysis/passive/RegionSIC.hpp"
 #include "pwiz/analysis/passive/Pseudo2DGel.hpp"
 #include "pwiz/Version.hpp"
-#include <iostream>
-#include <iterator>
-#include <stdexcept>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 using namespace pwiz::analysis;
-using boost::shared_ptr;
-using namespace std;
 
 
 template <typename analyzer_type>

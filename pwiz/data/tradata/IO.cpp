@@ -26,24 +26,16 @@
 #include "References.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include "pwiz/utility/misc/optimized_lexical_cast.hpp"
-#include <boost/foreach.hpp>
-#include <stdexcept>
-#include <functional>
-#include <iostream>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace pwiz {
 namespace tradata {
 namespace IO {
 
 
-using namespace std;
 using namespace minimxml;
 using namespace minimxml::SAXParser;
 //using namespace util;
-using boost::lexical_cast;
-using boost::shared_ptr;
 
 
 static const int TRAML_VERSION_PRERELEASE = 0;

@@ -23,14 +23,11 @@
 
 #include "IntegerSet.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
-#include <vector>
-#include <iterator>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 #include <limits>
 
 
-using namespace std;
 using namespace pwiz::util;
 
 

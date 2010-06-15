@@ -20,15 +20,11 @@
 // limitations under the License.
 //
 
-///
-/// DatabaseQuery.cpp
-///
-
 #include "DatabaseQuery.hpp"
 #include "PeptideID_dataFetcher.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
-using namespace std;
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::eharmony;
 
 const double pi = 3.1415926;

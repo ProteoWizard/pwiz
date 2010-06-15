@@ -30,13 +30,10 @@
 #include <boost/numeric/ublas/io.hpp>
 namespace ublas = boost::numeric::ublas;
 
-
-#include <iostream>
-#include <iomanip>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::frequency;
 

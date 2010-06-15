@@ -32,17 +32,12 @@
 #include "boost/iostreams/copy.hpp"
 #include "boost/iostreams/filter/zlib.hpp"
 #include "boost/iostreams/device/array.hpp"
-#include <iostream>
-#include <sstream>
-#include <iterator>
-#include <stdexcept>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace pwiz {
 namespace msdata {
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::cv;
 using namespace boost::iostreams;

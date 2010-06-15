@@ -24,16 +24,11 @@
 #include "AminoAcid.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include <cstring>
-#include <iostream>
-#include <iomanip>
-#include <stdexcept>
-#include <functional>
-#include <algorithm>
+#include "pwiz/utility/misc/Std.hpp"
 #include "boost/thread/thread.hpp"
 #include "boost/thread/barrier.hpp"
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::proteome;
 using namespace pwiz::chemistry;

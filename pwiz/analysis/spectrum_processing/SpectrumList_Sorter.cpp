@@ -24,6 +24,7 @@
 #define PWIZ_SOURCE
 
 #include "SpectrumList_Sorter.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {
@@ -31,9 +32,7 @@ namespace analysis {
 
 
 using namespace msdata;
-using namespace std;
 using boost::logic::tribool;
-using boost::lexical_cast;
 
 
 //

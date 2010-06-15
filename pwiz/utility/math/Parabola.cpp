@@ -24,9 +24,7 @@
 #define PWIZ_SOURCE
 
 #include "Parabola.hpp"
-#include <iostream>
-#include <stdexcept>
-#include <iomanip>
+#include "pwiz/utility/misc/Std.hpp"
 
 
 #ifndef NDEBUG
@@ -48,9 +46,6 @@ goo; // need -DNDEBUG in makefile!
 
 namespace pwiz {
 namespace math {
-
-
-using namespace std;
 
 
 PWIZ_API_DECL Parabola::Parabola(double a, double b, double c)

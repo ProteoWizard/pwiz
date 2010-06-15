@@ -24,18 +24,12 @@
 #define PWIZ_SOURCE
 
 #include "obo.hpp"
-#include "pwiz/utility/misc/String.hpp"
 #include "boost/regex.hpp"
-#include <iostream>
-#include <fstream>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace pwiz {
 namespace data {
-
-
-using namespace std;
-
+    
 const Term::id_type Term::MAX_ID = std::numeric_limits<id_type>::max();
 
 namespace {

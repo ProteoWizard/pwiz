@@ -25,18 +25,8 @@
 
 #include "Chemistry.hpp"
 #include "ChemistryData.hpp"
-#include <iostream>
-#include <map>
-#include <stdexcept>
-#include <iterator>
-#include <sstream>
-#include <numeric>
-#include <algorithm>
-#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "boost/utility/singleton.hpp"
-
-
-using namespace std;
 
 
 namespace pwiz {

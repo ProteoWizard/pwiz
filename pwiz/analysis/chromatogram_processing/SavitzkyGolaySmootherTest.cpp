@@ -23,11 +23,8 @@
 
 #include "SavitzkyGolaySmoother.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <vector>
-#include <iostream>
-#include <iterator>
+#include "pwiz/utility/misc/Std.hpp"
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::analysis;
 

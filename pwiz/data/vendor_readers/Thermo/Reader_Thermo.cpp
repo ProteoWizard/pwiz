@@ -51,25 +51,18 @@ bool _hasRAWHeader(const std::string& head)
 #include "pwiz/utility/vendor_api/thermo/RawFile.h"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "pwiz/data/msdata/Version.hpp"
-#include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "Reader_Thermo_Detail.hpp"
 #include "SpectrumList_Thermo.hpp"
 #include "ChromatogramList_Thermo.hpp"
-#include "boost/shared_ptr.hpp"
-#include <iostream>
-#include <iomanip>
-#include <stdexcept>
-#include <numeric>
 
 
 namespace pwiz {
 namespace msdata {
 
 
-using namespace std;
-using boost::shared_ptr;
 using namespace pwiz::vendor_api::Thermo;
 using namespace pwiz::util;
 using namespace pwiz::msdata::detail;
@@ -249,12 +242,11 @@ void Reader_Thermo::read(const string& filename,
 // non-MSVC implementation
 //
 
-#include <stdexcept>
+#include "pwiz/utility/misc/String.hpp"
 
 namespace pwiz {
 namespace msdata {
 
-using namespace std;
 
 PWIZ_API_DECL std::string Reader_Thermo::identify(const string& filename, const string& head) const
 {

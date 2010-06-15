@@ -23,13 +23,10 @@
 
 #include "Base64.hpp"
 #include "unit.hpp"
-#include <iostream>
-#include <vector>
-#include <algorithm>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
-using namespace std;
 using namespace pwiz::util;
 
 

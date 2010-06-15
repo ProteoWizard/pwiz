@@ -20,17 +20,10 @@
 // limitations under the License.
 //
 
-///
-/// MSIAMTDataTest.cpp 
-///
-
 #include "MSIAMTData.hpp"
-#include <iostream>
-#include <fstream>
-#include <string>
+#include "pwiz/utility/misc/Std.hpp"
 
-using namespace std;
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace eharmony;
 
 int main()

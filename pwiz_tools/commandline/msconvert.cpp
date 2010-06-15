@@ -32,21 +32,14 @@
 #include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/analysis/Version.hpp"
 #include "boost/program_options.hpp"
-#include "boost/foreach.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
-#include <iostream>
-#include <fstream>
-#include <iterator>
+#include "pwiz/utility/misc/Std.hpp"
 
-
-using namespace std;
 using namespace pwiz::cv;
 using namespace pwiz::data;
 using namespace pwiz::msdata;
 using namespace pwiz::analysis;
 using namespace pwiz::util;
-using boost::shared_ptr;
 
 
 struct Config

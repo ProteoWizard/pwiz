@@ -32,19 +32,10 @@ using bioinfo::fasta;
 #include "peptideSieve/digest.hpp"// interface for doing trivial tryptic digests
 
 
-#include <iostream>
-#include <vector>
-#include <string>
-#include <iterator>
-#include <map>
-#include <stdexcept>
-#include <fstream>
-#include <iomanip>
+#include "pwiz/utility/misc/Std.hpp"
 #include <limits>
-#include <algorithm>
 
 
-using namespace std;
 using namespace pwiz::proteome;
 
 

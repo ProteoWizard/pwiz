@@ -26,13 +26,8 @@
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
-#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/data/msdata/Version.hpp"
-#include "boost/shared_ptr.hpp"
-#include <boost/foreach.hpp>
-#include <iostream>
-#include <iomanip>
-#include <stdexcept>
 
 
 PWIZ_API_DECL std::string pwiz::msdata::Reader_ABI::identify(const std::string& filename, const std::string& head) const
@@ -57,10 +52,6 @@ namespace pwiz {
 namespace msdata {
 
 
-using namespace std;
-using boost::shared_ptr;
-using boost::lexical_cast;
-using boost::bad_lexical_cast;
 using namespace pwiz::util;
 using namespace pwiz::msdata::detail;
 
@@ -322,12 +313,10 @@ void Reader_ABI::readIds(const string& filename,
 //
 
 #include "Reader_ABI.hpp"
-#include <stdexcept>
+#include "pwiz/utility/misc/String.hpp"
 
 namespace pwiz {
 namespace msdata {
-
-using namespace std;
 
 PWIZ_API_DECL void Reader_ABI::read(const string& filename, const string& head, MSData& result, int runIndex) const
 {

@@ -25,16 +25,12 @@
 #include "Peptide.hpp"
 #include "Digestion.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include <iostream>
-#include <iterator>
-#include "boost/foreach.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "boost/thread/thread.hpp"
 #include "boost/thread/barrier.hpp"
-#include <set>
 
-using namespace std;
-using namespace pwiz;
+
+using namespace pwiz::cv;
 using namespace pwiz::util;
 using namespace pwiz::proteome;
 

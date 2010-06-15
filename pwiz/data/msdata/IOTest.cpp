@@ -25,20 +25,14 @@
 #include "Diff.hpp"
 #include "References.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "boost/lexical_cast.hpp"
-#include <iostream>
-#include <iterator>
+#include "pwiz/utility/misc/Std.hpp"
 
-
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::minimxml;
 using namespace pwiz::cv;
 using namespace pwiz::data;
 using namespace pwiz::msdata;
-using boost::shared_ptr;
 using boost::iostreams::stream_offset;
-using boost::lexical_cast;
 
 
 ostream* os_ = 0;

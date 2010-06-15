@@ -23,17 +23,14 @@
 #include "pwiz/utility/misc/unit.hpp"
 #include "ProteinList_DecoyGenerator.hpp"
 #include "pwiz/data/proteome/examples.hpp"
-#include "boost/lexical_cast.hpp"
 #include "boost/random.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
 using namespace pwiz::proteome;
 using namespace pwiz::analysis;
 using namespace pwiz::util;
-using namespace std;
-using boost::lexical_cast;
 
 
 ostream* os_ = 0;

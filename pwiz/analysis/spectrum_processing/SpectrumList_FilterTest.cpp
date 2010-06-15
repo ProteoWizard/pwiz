@@ -24,8 +24,7 @@
 #include "SpectrumList_Filter.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
-#include "boost/lexical_cast.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
@@ -33,8 +32,6 @@ using namespace pwiz;
 using namespace pwiz::msdata;
 using namespace pwiz::analysis;
 using namespace pwiz::util;
-using namespace std;
-using boost::lexical_cast;
 using boost::logic::tribool;
 
 

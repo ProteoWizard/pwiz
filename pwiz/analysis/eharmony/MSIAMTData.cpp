@@ -20,16 +20,11 @@
 // limitations under the License.
 //
 
-///
-/// MSIAMTData.cpp
-///
-
 #include "MSIAMTData.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 
-using namespace std;
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace eharmony;
 
 void Observation::write(XMLWriter& writer) const

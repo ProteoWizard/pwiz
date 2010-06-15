@@ -22,17 +22,10 @@
 
 #include "ProteomeData.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "boost/lexical_cast.hpp"
-#include <iostream>
-#include <iterator>
+#include "pwiz/utility/misc/Std.hpp"
 
-
-using namespace std;
 using namespace pwiz::util;
-using namespace pwiz;
 using namespace pwiz::proteome;
-using boost::shared_ptr;
-using boost::lexical_cast;
 
 
 void testProteinListSimple()

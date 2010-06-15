@@ -22,12 +22,8 @@
 
 
 #include "pwiz/data/msdata/RAMPAdapter.hpp"
-#include <iostream>
-#include <stdexcept>
-#include <algorithm>
+#include "pwiz/utility/misc/Std.hpp"
 
-
-using namespace std;
 using namespace pwiz::msdata;
 
 

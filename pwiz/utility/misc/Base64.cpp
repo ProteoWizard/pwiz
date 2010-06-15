@@ -23,11 +23,8 @@
 #define PWIZ_SOURCE
 
 #include "Base64.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cmath>
-
-
-using namespace std;
 
 
 namespace pwiz {

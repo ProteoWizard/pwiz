@@ -23,12 +23,9 @@
 
 #include "SHA1Calculator.hpp"
 #include "unit.hpp"
-#include <iostream>
-#include <fstream>
-#include <string>
+#include "pwiz/utility/misc/Std.hpp"
 
 
-using namespace std;
 using namespace pwiz::util;
 
 

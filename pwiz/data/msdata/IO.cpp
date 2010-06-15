@@ -27,23 +27,16 @@
 #include "References.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include "boost/lexical_cast.hpp"
-#include <stdexcept>
-#include <functional>
-#include <iostream>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace pwiz {
 namespace msdata {
 namespace IO {
 
 
-using namespace std;
 using namespace minimxml;
 using namespace minimxml::SAXParser;
 using namespace util;
-using boost::lexical_cast;
-using boost::shared_ptr;
 
 
 //

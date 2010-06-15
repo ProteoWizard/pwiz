@@ -23,14 +23,12 @@
 #define PWIZ_SOURCE
 
 #include "SpectrumListCache.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {
 namespace msdata {
-
-
-using namespace std;
-
+    
 
 PWIZ_API_DECL SpectrumListCache::SpectrumListCache(const SpectrumListPtr& inner,
                                                    MemoryMRUCacheMode cacheMode,

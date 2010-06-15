@@ -30,14 +30,10 @@
 
 
 #include "SHA1Calculator.hpp"
-#include <stdexcept>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace pwiz {
 namespace util {
-
-
-using namespace std;
 
 
 namespace {

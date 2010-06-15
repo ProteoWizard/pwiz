@@ -20,17 +20,11 @@
 // limitations under the License.
 //
 
-///
-/// PeptideMatcher.cpp
-///
-
 #include "PeptideMatcher.hpp"
 #include "pwiz/utility/proteome/Ion.hpp"
-#include <map>
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 
-using namespace std;
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::eharmony;
 using namespace pwiz::proteome;
 

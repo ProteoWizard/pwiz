@@ -24,16 +24,13 @@
 
 #include "References.hpp"
 #include "TextWriter.hpp"
-#include <stdexcept>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace pwiz {
 namespace mziddata {
 namespace References {
 
 
-using namespace std;
-using boost::shared_ptr;
 
 template <typename object_type>
 struct HasID

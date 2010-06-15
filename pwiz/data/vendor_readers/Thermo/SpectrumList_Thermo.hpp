@@ -28,6 +28,10 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/SpectrumListBase.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
+#include "pwiz/utility/misc/Container.hpp"
+#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Stream.hpp"
+
 
 #ifdef PWIZ_READER_THERMO
 #include "pwiz/utility/vendor_api/thermo/RawFile.h"
@@ -40,7 +44,6 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
-using namespace std;
 
 class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListBase
 {

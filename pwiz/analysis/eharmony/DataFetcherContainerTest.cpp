@@ -29,11 +29,12 @@
 #include "pwiz/utility/misc/unit.hpp"
 #include "boost/shared_ptr.hpp"
 
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::util;
 using namespace pwiz::minimxml;
 using namespace pwiz::data::peakdata;
 using namespace eharmony;
+using boost::shared_ptr;
 
 typedef boost::shared_ptr<DataFetcherContainer> DfcPtr;
 

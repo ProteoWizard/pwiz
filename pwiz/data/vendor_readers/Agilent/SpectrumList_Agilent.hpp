@@ -27,6 +27,10 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/SpectrumListBase.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
+#include "pwiz/utility/misc/Container.hpp"
+#include "pwiz/utility/misc/String.hpp"
+#include "pwiz/utility/misc/Stream.hpp"
+
 
 #ifdef PWIZ_READER_AGILENT
 #include "pwiz/utility/vendor_api/Agilent/MassHunterData.hpp"
@@ -39,7 +43,6 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
-using namespace std;
 using boost::shared_ptr;
 
 class PWIZ_API_DECL SpectrumList_Agilent : public SpectrumListBase

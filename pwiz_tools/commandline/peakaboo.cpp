@@ -30,26 +30,14 @@
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/convenience.hpp"
 #include "boost/program_options.hpp"
-#include "boost/lexical_cast.hpp"
-#include "boost/shared_ptr.hpp"
-#include <iostream>
-#include <sstream>
-#include <fstream>
-#include <stdexcept>
-#include <vector>
-#include <map>
+#include "pwiz/utility/misc/Std.hpp"
 
-
-using namespace pwiz;
 using namespace pwiz::analysis;
 using namespace pwiz::data;
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::msdata;
 using namespace pwiz::util;
 using namespace pwiz::minimxml;
-using namespace std;
-using boost::shared_ptr;
-using boost::lexical_cast;
 
 
 struct Config

@@ -20,17 +20,12 @@
 // limitations under the License.
 //
 
-///
-/// DistanceAttributes.hpp
-///
-
 #ifndef _DISTANCEATTRIBUTES_HPP_
 #define _DISTANCEATTRIBUTES_HPP_
 
 #include "AMTContainer.hpp"
 #include "Matrix.hpp"
-
-using namespace std;
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace pwiz{
 namespace eharmony{

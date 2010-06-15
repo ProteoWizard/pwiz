@@ -24,15 +24,10 @@
 #include "pwiz/data/tradata/TraDataFile.hpp"
 #include "pwiz/data/tradata/examples.hpp"
 #include "pwiz/data/tradata/DefaultReaderList.hpp"
-#include <iostream>
-#include <fstream>
+#include "pwiz/utility/misc/Std.hpp"
 
-
-using namespace std;
 using namespace pwiz::data;
 using namespace pwiz::tradata;
-using boost::shared_ptr;
-
 
 
 void writeTiny()

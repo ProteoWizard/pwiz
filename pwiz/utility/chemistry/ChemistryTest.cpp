@@ -26,15 +26,11 @@
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/math/round.hpp"
 #include <cstring>
-#include <iostream>
-#include <iomanip>
-#include <stdexcept>
-#include <iterator>
+#include "pwiz/utility/misc/Std.hpp"
 #include "boost/thread/thread.hpp"
 #include "boost/thread/barrier.hpp"
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::chemistry;
 

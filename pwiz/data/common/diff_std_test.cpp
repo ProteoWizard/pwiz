@@ -24,10 +24,9 @@
 
 #include "diff_std.hpp"
 #include "pwiz/utility/misc/unit.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
-#include <iostream>
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::cv;
 using namespace pwiz::data;

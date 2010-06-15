@@ -35,16 +35,10 @@
 
 #include "RawFileValues.h"
 #include "RawFileCOM.h"
-#include <iostream>
-#include <map>
-#include <sstream>
-#include "boost/format.hpp"
-#include "boost/shared_ptr.hpp"
-#include <vector>
-#include <algorithm>
 #include "pwiz/utility/misc/COMInitializer.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Once.hpp"
 #include <boost/bind.hpp>
 #include <windows.h> // GetModuleFileName
@@ -52,8 +46,6 @@
 using namespace pwiz::vendor_api::Thermo;
 using namespace pwiz::util;
 using namespace XRawfile;
-using namespace std;
-using boost::shared_ptr;
 
 
 namespace {

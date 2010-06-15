@@ -25,14 +25,13 @@
 
 #include "Reader.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include <stdexcept>
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {
 namespace mziddata {
 
 
-using namespace std;
 using namespace pwiz::util;
 
 

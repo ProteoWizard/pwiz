@@ -24,14 +24,12 @@
 #define PWIZ_SOURCE
 
 #include "PeakFamilyDetector.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {
 namespace analysis {
-
-
-using namespace std;
-
+    
 
 PWIZ_API_DECL
 void PeakFamilyDetector::detect(const vector<MZIntensityPair>& data,

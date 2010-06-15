@@ -22,10 +22,7 @@
 
 #define PWIZ_SOURCE
 
-#include <iostream>
-#include <cstring>
-#include <sstream>
-#include "boost/shared_ptr.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
 #include "boost/accumulators/accumulators.hpp"
@@ -39,7 +36,6 @@
 #include "pwiz/analysis/eharmony/Bin.hpp"
 
 using namespace pwiz::utility;
-using namespace std;
 using namespace boost::accumulators;
 namespace bfs = boost::filesystem;
 

@@ -24,11 +24,9 @@
 #include "PeakData.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include <boost/filesystem/operations.hpp>
-#include <iostream>
-#include <fstream>
+#include "pwiz/utility/misc/Std.hpp"
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::minimxml;
 using namespace pwiz::math;

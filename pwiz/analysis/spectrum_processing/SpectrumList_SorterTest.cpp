@@ -23,18 +23,15 @@
 
 #include "SpectrumList_Sorter.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <vector>
-#include <iostream>
-#include <iterator>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 #include "pwiz/data/msdata/examples.hpp"
 #include "pwiz/data/msdata/TextWriter.hpp"
 #include "boost/logic/tribool.hpp"
 
 
-using namespace std;
 using namespace pwiz::util;
-using namespace pwiz;
+using namespace pwiz::cv;
 using namespace pwiz::msdata;
 using namespace pwiz::analysis;
 using boost::logic::tribool;

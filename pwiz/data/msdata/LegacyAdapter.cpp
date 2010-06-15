@@ -28,15 +28,13 @@
 #include "pwiz/data/common/CVTranslator.hpp"
 #include "boost/lambda/lambda.hpp"
 #include "boost/lambda/bind.hpp"
-#include <iostream>
-#include <stdexcept>
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {
 namespace msdata {
 
 
-using namespace std;
 using namespace boost::lambda;
 using namespace pwiz::data;
 
@@ -84,7 +82,7 @@ void removeUserParams(vector<UserParam>& userParams, const string& name)
     userParams.erase(
     remove_if(userParams.begin(), 
               userParams.end(), 
-              bind(&UserParam::name,_1)==name),
+              boost::lambda::bind(&UserParam::name,_1)==name),
               userParams.end());
 }
 

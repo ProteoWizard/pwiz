@@ -20,21 +20,15 @@
 // limitations under the License.
 //
 
-///
-/// Feature2PeptideMatcher.cpp
-///
-
 #include "Feature2PeptideMatcher.hpp"
 #include "PeptideMatcher.hpp"
 #include "DatabaseQuery.hpp"
 #include "pwiz/utility/proteome/Ion.hpp"
 #include "pwiz/data/misc/MinimumPepXML.hpp"
-#include <math.h>
-#include <string>
-#include <algorithm>
+#include "pwiz/utility/misc/Std.hpp"
+#include <cmath>
 #include <cctype>
 
-using namespace std;
 using namespace pwiz::eharmony;
 using namespace pwiz::minimxml;
 using namespace pwiz::data;

@@ -27,16 +27,12 @@
 #include "pwiz/data/msdata/TextWriter.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
-#include <iostream>
-#include <stdexcept>
-#include <fstream>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace pwiz {
 namespace analysis {
 
 
-using namespace std;
 namespace bfs = boost::filesystem;
 
 

@@ -25,18 +25,12 @@
 
 #include "MSDataCache.hpp"
 #include "pwiz/data/msdata/MSDataFile.hpp"
-#include <stdexcept>
-#include <list>
-#include <iostream>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace pwiz {
 namespace analysis {
 
 
-using boost::shared_ptr;
-using boost::lexical_cast;
-using namespace std;
 
 
 //

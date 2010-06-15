@@ -29,11 +29,7 @@
 #include "pwiz/analysis/peptideid/PeptideID_flat.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
-#include <iostream>
-#include <algorithm>
-#include <stdexcept>
-#include <iomanip>
-#include <fstream>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cmath>
 
 
@@ -41,9 +37,6 @@ namespace pwiz {
 namespace analysis {
 
 
-using namespace std;
-using boost::shared_ptr;
-using boost::lexical_cast;
 namespace bfs = boost::filesystem;
 using namespace pwiz::util;
 using namespace pwiz::peptideid;

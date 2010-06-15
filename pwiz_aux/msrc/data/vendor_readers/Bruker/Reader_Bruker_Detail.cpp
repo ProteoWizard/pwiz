@@ -24,6 +24,7 @@
 #include "Reader_Bruker_Detail.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "boost/filesystem/convenience.hpp"
 #include "pwiz/data/msdata/Reader.hpp"
 
@@ -32,7 +33,6 @@ namespace pwiz {
 namespace msdata {
 namespace detail {
 
-using namespace std;
 using namespace pwiz::util;
 
 Reader_Bruker_Format format(const string& path)

@@ -23,12 +23,11 @@
 
 #include "PeptideIDMap.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 
 
 using namespace pwiz::util;
 using namespace pwiz::peptideid;
-using namespace std;
 
 
 void test()

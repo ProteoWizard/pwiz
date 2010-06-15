@@ -23,13 +23,11 @@
 
 #include "IterationListener.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include <iostream>
-#include <string>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 #include <ctime>
 
 
-using namespace std;
 using namespace pwiz::util;
 
 

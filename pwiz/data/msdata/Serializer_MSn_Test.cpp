@@ -27,15 +27,12 @@
 #include "TextWriter.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "boost/iostreams/positioning.hpp"
-#include <iostream>
-#include <fstream>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 
-using namespace std;
 using namespace pwiz::util;
 using namespace pwiz::msdata;
-using boost::shared_ptr;
 
 
 ostream* os_ = 0;

@@ -26,10 +26,7 @@
 
 
 #include "RawFile.h"
-#include <string>
-#include <iostream>
-
-using namespace std;
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {

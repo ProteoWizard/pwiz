@@ -60,22 +60,15 @@ std::string pwiz::msdata::Reader_Bruker::identify(const std::string& filename,
 
 #ifdef PWIZ_READER_BRUKER
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
-#include "boost/shared_ptr.hpp"
-#include <boost/foreach.hpp>
 #include "SpectrumList_Bruker.hpp"
 #include "ChromatogramList_Bruker.hpp"
-#include <iostream>
-#include <iomanip>
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {
 namespace msdata {
 
 
-using namespace std;
-using boost::shared_ptr;
-using boost::lexical_cast;
-using boost::bad_lexical_cast;
 using namespace pwiz::util;
 using namespace pwiz::msdata::detail;
 using namespace pwiz::vendor_api::Bruker;
@@ -193,8 +186,6 @@ void Reader_Bruker::read(const string& filename,
 
 namespace pwiz {
 namespace msdata {
-
-using namespace std;
 
 PWIZ_API_DECL void Reader_Bruker::read(const string& filename, const string& head, MSData& result, int sampleIndex /* = 0 */) const
 {

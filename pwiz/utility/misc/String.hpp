@@ -31,10 +31,14 @@
 #include "pwiz/utility/misc/optimized_lexical_cast.hpp"
 
 using std::string;
+using std::wstring;
 using std::getline;
 using std::stringstream;
 using std::istringstream;
 using std::ostringstream;
+using std::wstringstream;
+using std::wistringstream;
+using std::wostringstream;
 
 namespace bal = boost::algorithm;
 using boost::lexical_cast;

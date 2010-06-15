@@ -26,17 +26,11 @@
 
 #include "SpectrumInfo.hpp"
 #include "pwiz/utility/misc/Exception.hpp"
-#include <iterator>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 namespace pwiz {
 namespace msdata {
-
-
-using namespace std;
-using boost::lexical_cast;
-using boost::bad_lexical_cast;
-
+    
 
 PWIZ_API_DECL SpectrumInfo::SpectrumInfo()
 :   index((size_t)-1), scanNumber(0), massAnalyzerType(CVID_Unknown), scanEvent(0), 

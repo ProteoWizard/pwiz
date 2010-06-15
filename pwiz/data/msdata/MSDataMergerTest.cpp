@@ -24,14 +24,10 @@
 #include "MSDataMerger.hpp"
 #include "examples.hpp"
 #include "TextWriter.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include <iostream>
-
+#include "pwiz/utility/misc/Std.hpp"
 
 using namespace pwiz::msdata;
 using namespace pwiz::util;
-using namespace std;
-using boost::shared_ptr;
 
 
 ostream* os_ = 0;

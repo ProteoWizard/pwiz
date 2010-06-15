@@ -22,15 +22,13 @@
 #include "TabReader.hpp"
 #include "MSIHandler.hpp"
 #include "unit.hpp"
-#include "boost/shared_ptr.hpp"
 #include "boost/filesystem/path.hpp"
 #include "boost/filesystem/fstream.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
 #include <cstring>
 
 using namespace pwiz::util;
 using namespace pwiz::utility;
-using namespace std;
 namespace bfs = boost::filesystem;
 
 ostream *os_ = NULL;

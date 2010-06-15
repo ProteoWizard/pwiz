@@ -22,79 +22,77 @@
 
 #define PWIZ_SOURCE
 
-#include "pwiz/utility/misc/String.hpp"
-#include "pwiz/utility/math/round.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/data/msdata/MSData.hpp"
 #include "ThresholdFilter.hpp"
 #include <numeric>
 
-// workaround for MSVC's ADL gimpiness
-namespace std
+
+namespace {
+
+bool orientationLess_Predicate (const pwiz::msdata::MZIntensityPair& lhs, const pwiz::msdata::MZIntensityPair& rhs)
 {
-    bool operator< (const pwiz::msdata::MZIntensityPair& lhs, const pwiz::msdata::MZIntensityPair& rhs)
-    {
-        return lhs.intensity < rhs.intensity;
-    }
-
-    bool operator> (const pwiz::msdata::MZIntensityPair& lhs, const pwiz::msdata::MZIntensityPair& rhs)
-    {
-        return lhs.intensity > rhs.intensity;
-    }
-
-    struct MZIntensityPairSortByMZ
-    {
-        bool operator() (const pwiz::msdata::MZIntensityPair& lhs, const pwiz::msdata::MZIntensityPair& rhs) const
-        {
-            return lhs.mz < rhs.mz;
-        }
-    };
-
-    struct MZIntensityPairIntensitySum
-    {
-        double operator() (double lhs, const pwiz::msdata::MZIntensityPair& rhs)
-        {
-            return lhs + rhs.intensity;
-        }
-    };
-
-    struct MZIntensityPairIntensityFractionLessThan
-    {
-        MZIntensityPairIntensityFractionLessThan(double denominator)
-            : denominator_(denominator)
-        {
-        }
-
-        bool operator() (const pwiz::msdata::MZIntensityPair& lhs, const pwiz::msdata::MZIntensityPair& rhs)
-        {
-            return (lhs.intensity / denominator_) < (rhs.intensity / denominator_);
-        }
-
-    private:
-        double denominator_;
-    };
-
-    struct MZIntensityPairIntensityFractionGreaterThan
-    {
-        MZIntensityPairIntensityFractionGreaterThan(double denominator)
-            : denominator_(denominator)
-        {
-        }
-
-        bool operator() (const pwiz::msdata::MZIntensityPair& lhs, const pwiz::msdata::MZIntensityPair& rhs)
-        {
-            return (lhs.intensity / denominator_) > (rhs.intensity / denominator_);
-        }
-
-    private:
-        double denominator_;
-    };
+    return lhs.intensity < rhs.intensity;
 }
+
+bool orientationMore_Predicate (const pwiz::msdata::MZIntensityPair& lhs, const pwiz::msdata::MZIntensityPair& rhs)
+{
+    return lhs.intensity > rhs.intensity;
+}
+
+struct MZIntensityPairSortByMZ
+{
+    bool operator() (const pwiz::msdata::MZIntensityPair& lhs, const pwiz::msdata::MZIntensityPair& rhs) const
+    {
+        return lhs.mz < rhs.mz;
+    }
+};
+
+struct MZIntensityPairIntensitySum
+{
+    double operator() (double lhs, const pwiz::msdata::MZIntensityPair& rhs)
+    {
+        return lhs + rhs.intensity;
+    }
+};
+
+struct MZIntensityPairIntensityFractionLessThan
+{
+    MZIntensityPairIntensityFractionLessThan(double denominator)
+        : denominator_(denominator)
+    {
+    }
+
+    bool operator() (const pwiz::msdata::MZIntensityPair& lhs, const pwiz::msdata::MZIntensityPair& rhs)
+    {
+        return (lhs.intensity / denominator_) < (rhs.intensity / denominator_);
+    }
+
+private:
+    double denominator_;
+};
+
+struct MZIntensityPairIntensityFractionGreaterThan
+{
+    MZIntensityPairIntensityFractionGreaterThan(double denominator)
+        : denominator_(denominator)
+    {
+    }
+
+    bool operator() (const pwiz::msdata::MZIntensityPair& lhs, const pwiz::msdata::MZIntensityPair& rhs)
+    {
+        return (lhs.intensity / denominator_) > (rhs.intensity / denominator_);
+    }
+
+private:
+    double denominator_;
+};
+} // namespace
+
 
 namespace pwiz {
 namespace analysis {
 
-
-using namespace std;
 using namespace msdata;
 
 // Filter params class initialization
@@ -151,9 +149,6 @@ PWIZ_API_DECL void ThresholdFilter::operator () (const SpectrumPtr s) const
     vector<MZIntensityPair> mzIntensityPairs;
     s->getMZIntensityPairs(mzIntensityPairs);
 
-    greater<MZIntensityPair> orientationMore_Predicate;
-    less<MZIntensityPair> orientationLess_Predicate;
-
     if (orientation == Orientation_MostIntense)
         sort(mzIntensityPairs.begin(), mzIntensityPairs.end(), orientationMore_Predicate);
     else if (orientation == Orientation_LeastIntense)
@@ -203,27 +198,27 @@ PWIZ_API_DECL void ThresholdFilter::operator () (const SpectrumPtr s) const
     case ThresholdingBy_AbsoluteIntensity:
         if (orientation == Orientation_MostIntense)
             thresholdItr = lower_bound(mzIntensityPairs.begin(),
-            mzIntensityPairs.end(),
-            MZIntensityPair(0, threshold),
-            orientationMore_Predicate);
+                                       mzIntensityPairs.end(),
+                                       MZIntensityPair(0, threshold),
+                                       orientationMore_Predicate);
         else
             thresholdItr = lower_bound(mzIntensityPairs.begin(),
-            mzIntensityPairs.end(),
-            MZIntensityPair(0, threshold),
-            orientationLess_Predicate);
+                                       mzIntensityPairs.end(),
+                                       MZIntensityPair(0, threshold),
+                                       orientationLess_Predicate);
         break;
 
     case ThresholdingBy_FractionOfBasePeakIntensity:
         if (orientation == Orientation_MostIntense)
             thresholdItr = lower_bound(mzIntensityPairs.begin(),
-            mzIntensityPairs.end(),
-            MZIntensityPair(0, threshold*bpi),
-            MZIntensityPairIntensityFractionGreaterThan(bpi));
+                                       mzIntensityPairs.end(),
+                                       MZIntensityPair(0, threshold*bpi),
+                                       MZIntensityPairIntensityFractionGreaterThan(bpi));
         else
             thresholdItr = lower_bound(mzIntensityPairs.begin(),
-            mzIntensityPairs.end(),
-            MZIntensityPair(0, threshold*bpi),
-            MZIntensityPairIntensityFractionLessThan(bpi));
+                                       mzIntensityPairs.end(),
+                                       MZIntensityPair(0, threshold*bpi),
+                                       MZIntensityPairIntensityFractionLessThan(bpi));
         break;
 
     case ThresholdingBy_FractionOfTotalIntensity:

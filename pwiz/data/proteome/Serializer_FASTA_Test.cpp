@@ -25,15 +25,12 @@
 #include "examples.hpp"
 #include "pwiz/data/common/BinaryIndexStream.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
-#include "pwiz/utility/misc/Exception.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
 
-using namespace pwiz;
 using namespace pwiz::util;
 using namespace pwiz::proteome;
 using namespace pwiz::data;
-using boost::shared_ptr;
 
 
 ostream* os_ = 0;

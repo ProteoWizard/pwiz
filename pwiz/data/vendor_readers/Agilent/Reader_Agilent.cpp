@@ -49,18 +49,13 @@ PWIZ_API_DECL std::string pwiz::msdata::Reader_Agilent::identify(const std::stri
 #include "Reader_Agilent_Detail.hpp"
 #include "SpectrumList_Agilent.hpp"
 #include "ChromatogramList_Agilent.hpp"
-#include "boost/shared_ptr.hpp"
-#include <iostream>
-#include <iomanip>
-#include <stdexcept>
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {
 namespace msdata {
 
 
-using namespace std;
-using boost::shared_ptr;
 using namespace pwiz::util;
 using namespace pwiz::msdata::detail;
 
@@ -238,12 +233,11 @@ void Reader_Agilent::read(const string& filename,
 // non-MSVC implementation
 //
 
-#include <stdexcept>
+#include "pwiz/utility/misc/String.hpp"
 
 namespace pwiz {
 namespace msdata {
 
-using namespace std;
 
 PWIZ_API_DECL void Reader_Agilent::read(const string& filename, const string& head, MSData& result,	int sampleIndex /* = 0 */) const
 {

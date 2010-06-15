@@ -31,6 +31,7 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/convenience.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
 
 namespace bfs = boost::filesystem;
 

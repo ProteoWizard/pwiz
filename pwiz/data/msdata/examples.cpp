@@ -23,16 +23,12 @@
 #define PWIZ_SOURCE
 
 #include "examples.hpp"
-
-
+#include "pwiz/utility/misc/Std.hpp"
 namespace pwiz {
 namespace msdata {
 namespace examples {
 
 
-using boost::shared_ptr;
-using boost::lexical_cast;
-using namespace std;
 
 
 PWIZ_API_DECL void initializeTiny(MSData& msd)
