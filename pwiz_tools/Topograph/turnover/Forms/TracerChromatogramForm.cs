@@ -17,6 +17,7 @@ namespace pwiz.Topograph.ui.Forms
 {
     public partial class TracerChromatogramForm : AbstractChromatogramForm
     {
+        private ZedGraphControl _tracerAmountsGraph;
         public TracerChromatogramForm(PeptideFileAnalysis peptideFileAnalysis) 
             : base(peptideFileAnalysis)
         {
@@ -24,6 +25,11 @@ namespace pwiz.Topograph.ui.Forms
             splitContainer1.Panel2.Controls.Add(msGraphControl);
             colAmount.DefaultCellStyle.Format = "0.##%";
             colTracerPercent.DefaultCellStyle.Format = "0.##%";
+            _tracerAmountsGraph = new ZedGraphControl
+                                      {
+                                          Dock = DockStyle.Fill,
+                                      };
+            splitContainer2.Panel2.Controls.Add(_tracerAmountsGraph);
         }
 
         protected override void Recalc()
@@ -31,6 +37,8 @@ namespace pwiz.Topograph.ui.Forms
             cbxAutoFindPeak.Checked = PeptideFileAnalysis.AutoFindPeak;
             msGraphControl.GraphPane.GraphObjList.Clear();
             msGraphControl.GraphPane.CurveList.Clear();
+            _tracerAmountsGraph.GraphPane.GraphObjList.Clear();
+            _tracerAmountsGraph.GraphPane.CurveList.Clear();
             if (!PeptideFileAnalysis.IsMzKeySetComplete(PeptideFileAnalysis.Chromatograms.GetKeys()))
             {
                 return;
@@ -86,7 +94,8 @@ namespace pwiz.Topograph.ui.Forms
             msGraphControl.AxisChange();
             msGraphControl.Invalidate();
             double turnover;
-            var precursorEnrichment = PeptideAnalysis.GetTurnoverCalculator().ComputePrecursorEnrichmentAndTurnover(amounts, out turnover);
+            IDictionary<TracerFormula, double> bestMatch;
+            var precursorEnrichment = PeptideAnalysis.GetTurnoverCalculator().ComputePrecursorEnrichmentAndTurnover(amounts, out turnover, out bestMatch);
             gridViewTracerPercents.Rows.Clear();
             if (precursorEnrichment == null)
             {
@@ -104,6 +113,21 @@ namespace pwiz.Topograph.ui.Forms
                     row.Cells[1].Value = GetTracerPercent(tracerDef, amounts) / 100;
                 }
             }
+            var observedDistribution = new PointPairList();
+            var matchedDistribution = new PointPairList();
+            var labels = new List<string>();
+            for (int i = 0; i < entries.Count(); i++)
+            {
+                var tracerFormula = entries[i].Key;
+                labels.Add(tracerFormula.ToDisplayString());
+                observedDistribution.Add(i, amounts[tracerFormula]);
+                matchedDistribution.Add(i, bestMatch[tracerFormula]);
+            }
+            _tracerAmountsGraph.GraphPane.AddBar("Observed", observedDistribution, Color.Black);
+            _tracerAmountsGraph.GraphPane.AddBar("Predicted", matchedDistribution, Color.Blue);
+            _tracerAmountsGraph.GraphPane.XAxis.Type = AxisType.Text;
+            _tracerAmountsGraph.GraphPane.XAxis.Scale.TextLabels = labels.ToArray();
+            _tracerAmountsGraph.AxisChange();
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -210,11 +234,6 @@ namespace pwiz.Topograph.ui.Forms
             UpdateUi();
         }
 
-        private void cbxShowScore_CheckedChanged(object sender, EventArgs e)
-        {
-            UpdateUi();
-        }
-
         private double GetTracerPercent(TracerDef tracerDef, IDictionary<TracerFormula, double> distribution)
         {
             int maxTracerCount = tracerDef.GetMaximumTracerCount(PeptideFileAnalysis.Peptide.Sequence);
@@ -229,5 +248,10 @@ namespace pwiz.Topograph.ui.Forms
             }
             return result;
         }
+        private void cbxShowScore_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateUi();
+        }
+
     }
 }

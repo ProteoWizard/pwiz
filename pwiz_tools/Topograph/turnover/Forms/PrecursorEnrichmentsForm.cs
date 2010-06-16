@@ -44,6 +44,7 @@ namespace pwiz.Topograph.ui.Forms
                                       Dock = DockStyle.Fill,
                                   };
             barGraphControl.GraphPane.Title.Text = null;
+            barGraphControl.ContextMenuBuilder += barGraphControl_ContextMenuBuilder;
             splitContainer1.Panel2.Controls.Add(barGraphControl);
 
             tbxIntermediateLevelCount.Leave +=

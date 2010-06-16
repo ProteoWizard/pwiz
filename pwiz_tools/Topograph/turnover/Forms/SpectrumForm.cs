@@ -28,6 +28,7 @@ using DigitalRune.Windows.Docking;
 using pwiz.Common.Chemistry;
 using pwiz.MSGraph;
 using pwiz.ProteowizardWrapper;
+using pwiz.Topograph.Controls;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.MsData;
@@ -50,7 +51,13 @@ namespace pwiz.Topograph.ui.Forms
                                  {
                                      Dock = DockStyle.Fill,
                                  };
+            _msGraphControl.ContextMenuBuilder += _msGraphControl_ContextMenuBuilder;
             Controls.Add(_msGraphControl);
+        }
+
+        void _msGraphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
+        {
+            menuStrip.Items.Insert(0, new CopyEmfToolStripMenuItem(sender));
         }
 
         public int ScanIndex

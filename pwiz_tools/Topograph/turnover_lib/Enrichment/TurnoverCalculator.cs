@@ -496,7 +496,7 @@ namespace pwiz.Topograph.Enrichment
             return result;
         }
 
-        public TracerPercentFormula ComputePrecursorEnrichmentAndTurnover(IDictionary<TracerFormula, double> peptideDistribution, out double turnover)
+        public TracerPercentFormula ComputePrecursorEnrichmentAndTurnover(IDictionary<TracerFormula, double> peptideDistribution, out double turnover, out IDictionary<TracerFormula, double> bestMatch)
         {
             var tracerFormulaIndexes = new Dictionary<TracerFormula, int>();
             var observedPercentages = new Vector(peptideDistribution.Count);
@@ -507,6 +507,7 @@ namespace pwiz.Topograph.Enrichment
                 tracerFormulaIndexes.Add(tracerFormula, tracerFormulaIndexes.Count);
             }
             var initialVector = DistributionToVector(GetDistribution(GetInitialTracerPercents()), tracerFormulaIndexes);
+            bestMatch = null;
             TracerPercentFormula bestFormula = null;
             double bestScore = 0;
             double bestTurnover = 0;
@@ -532,6 +533,7 @@ namespace pwiz.Topograph.Enrichment
                     bestFormula = tracerPercents;
                     bestScore = score;
                     bestTurnover = combination[1]/(combination[0] + combination[1]);
+                    bestMatch = tracerFormulaIndexes.ToDictionary(kv => kv.Key, kv => resultVector[kv.Value]);
                 }
             }
             turnover = bestTurnover;

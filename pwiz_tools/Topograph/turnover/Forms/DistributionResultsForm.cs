@@ -25,6 +25,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Common.Chemistry;
+using pwiz.Topograph.Controls;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;
@@ -113,6 +114,21 @@ namespace pwiz.Topograph.ui.Forms
 
         public static Color GetColor(int iCandidate, int candidateCount)
         {
+            var colors = new[]
+                                       {
+                                            Color.FromArgb(69,114,167),
+                                            Color.FromArgb(170,70,67),
+                                            Color.FromArgb(137,165,78),
+                                            Color.FromArgb(113,88,143),
+                                            Color.FromArgb(65,152,175),
+                                            Color.FromArgb(219,132,61),
+                                            Color.FromArgb(147,169,207),
+                                       };
+            if (iCandidate < colors.Length)
+            {
+                return colors[iCandidate];
+            }
+            
             if (candidateCount == 1)
             {
                 return Color.FromArgb(0, 0, 255);
@@ -151,5 +167,11 @@ namespace pwiz.Topograph.ui.Forms
                 Recalculate();
             }
         }
+        protected void barGraphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
+        {
+            menuStrip.Items.Insert(0, new CopyEmfToolStripMenuItem(sender));
+        }
     }
+
+
 }

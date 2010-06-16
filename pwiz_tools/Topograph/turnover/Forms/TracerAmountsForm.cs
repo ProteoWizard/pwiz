@@ -43,11 +43,13 @@ namespace pwiz.Topograph.ui.Forms
                                       Dock = DockStyle.Fill
                                   };
             barGraphControl.GraphPane.Title.Text = null;
+            barGraphControl.ContextMenuBuilder += barGraphControl_ContextMenuBuilder;
             splitContainer1.Panel2.Controls.Add(barGraphControl);
             Text = "Tracer Amounts";
             colTracerPercent.DefaultCellStyle.Format = "0.##%";
             colTracerFormulaPercent.DefaultCellStyle.Format = "0.##%";
         }
+
 
         public override void Recalculate()
         {
