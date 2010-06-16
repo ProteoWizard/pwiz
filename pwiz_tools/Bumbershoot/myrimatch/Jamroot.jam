@@ -84,52 +84,56 @@ project bumbershoot
 	    <include>freicore/pwiz_src
 	    <include>freicore/libraries/boost_aux
 
-      <toolset>gcc,<link>shared:<runtime-link>shared
-      
-      # using pwiz_wifffile (compiled with /clr) requires the shared runtime,
-      # regardless of how pwiz_wifffile is linked
-      <toolset>msvc:<runtime-link>shared
+        <toolset>gcc,<link>shared:<runtime-link>shared
+        <toolset>darwin,<link>shared:<runtime-link>shared
 
-      # special msvc hacks
-      <toolset>msvc:<define>WIN32                     # windows
-      <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
-      <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
-      <toolset>msvc:<define>_SECURE_SCL_THROWS=1      # checked iterators throw instead of crash  
-      <toolset>msvc:<define>_USE_MATH_DEFINES         # for M_PI in <cmath>
-      <toolset>msvc:<cxxflags>/wd4100                 # warning: unreferenced formal parameter
-      <toolset>msvc:<cxxflags>/wd4512                 # warning: assignment operator could not be generated
-      <toolset>msvc:<cxxflags>/wd4127                 # warning: conditional expression is constant (boost::lexical_cast)
-      <toolset>msvc:<cxxflags>/wd4701                 # warning: potentially uninitialized local variable 'result' used (boost::lexical_cast, debug)
-      <toolset>msvc:<cxxflags>/wd4245                 # warning: conversion from 'type1' to 'type2', signed/unsigned mismatch (boost/filesystem/convenience.hpp)
-      <toolset>msvc:<cxxflags>/wd4251                 # warning: class needs to have dll-interface to be used by clients of class
-      <toolset>msvc:<cxxflags>/wd4267	                # warning: conversion from 'type1' to 'type2', possible loss of data (boost::lexical_cast)
-      <toolset>msvc:<cxxflags>/wd4244                 # warning: conversion from 'int' to 'unsigned short', possible loss of data (boost/date_time/microsec_time_clock.hpp)
-      <toolset>msvc:<cxxflags>/wd4275                 # warning: non dll-interface class 'base' used as base for dll-interface class 'derived'
+        # any module which links with .NET (either dynamically or statically) must use the shared runtime
+        <toolset>msvc:<runtime-link>shared
 
-      # special gcc hack - Cygwin gcc 3.4.4, Ubuntu gcc 4.1.2 
-      # warning: '__cur' might be used uninitialized in this function 
-      <toolset>gcc:<cxxflags>-Wno-uninitialized   
+        # special msvc hacks
+        <toolset>msvc:<define>WIN32                     # windows
+        <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
+        <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
+        <toolset>msvc:<define>_SECURE_SCL_THROWS=1      # checked iterators throw instead of crash  
+        <toolset>msvc:<define>_USE_MATH_DEFINES         # for M_PI in <cmath>
+        <toolset>msvc:<cxxflags>/wd4100                 # warning: unreferenced formal parameter
+        <toolset>msvc:<cxxflags>/wd4512                 # warning: assignment operator could not be generated
+        <toolset>msvc:<cxxflags>/wd4127                 # warning: conditional expression is constant (boost::lexical_cast)
+        <toolset>msvc:<cxxflags>/wd4701                 # warning: potentially uninitialized local variable 'result' used (boost::lexical_cast, debug)
+        <toolset>msvc:<cxxflags>/wd4245                 # warning: conversion from 'type1' to 'type2', signed/unsigned mismatch (boost/filesystem/convenience.hpp)
+        <toolset>msvc:<cxxflags>/wd4251                 # warning: class needs to have dll-interface to be used by clients of class
+        <toolset>msvc:<cxxflags>/wd4267	                # warning: conversion from 'type1' to 'type2', possible loss of data (boost::lexical_cast)
+        <toolset>msvc:<cxxflags>/wd4244                 # warning: conversion from 'int' to 'unsigned short', possible loss of data (boost/date_time/microsec_time_clock.hpp)
+        <toolset>msvc:<cxxflags>/wd4275                 # warning: non dll-interface class 'base' used as base for dll-interface class 'derived'
 
-      # special Cygwin gcc-3.4.4 hack
-      # linker "multiple definition" error on inclusion of boost-1.34.1 filesystem headers  
-      <toolset>gcc-3.4.4:<linkflags>-Wl,--allow-multiple-definition
-      <toolset>gcc-mingw-3.4.5:<linkflags>-Wl,--allow-multiple-definition
+        # special gcc hack - Cygwin gcc 3.4.4, Ubuntu gcc 4.1.2 
+        # warning: '__cur' might be used uninitialized in this function 
+        <toolset>gcc:<cxxflags>-Wno-uninitialized   
 
-      # allow "long long" even with -pedantic
-      <toolset>gcc:<cxxflags>-Wno-long-long
-      <toolset>darwin:<cxxflags>-Wno-long-long
+        # special Cygwin gcc-3.4.4 hack
+        # linker "multiple definition" error on inclusion of boost-1.34.1 filesystem headers  
+        <toolset>gcc-3.4.4:<linkflags>-Wl,--allow-multiple-definition
+        <toolset>gcc-mingw-3.4.5:<linkflags>-Wl,--allow-multiple-definition
 
-      # don't call 'strip' -- causes 'Bus error' in some cases
-      #  e.g. find_if with inline predicate
-      <toolset>darwin:<debug-symbols>on
+        # allow "long long" even with -pedantic
+        <toolset>gcc:<cxxflags>-Wno-long-long
+        <toolset>darwin:<cxxflags>-Wno-long-long
 
-      <threading>multi
+        # any GCC executable that uses shared libraries must have all its code built with -fPIC
+        <conditional>@static-with-fpic
+
+        # don't call 'strip' -- causes 'Bus error' in some cases
+        #  e.g. find_if with inline predicate
+        <toolset>darwin:<debug-symbols>on
+
+        # use of boost::thread requires multithreaded runtime
+        <threading>multi
 
   : build-dir $(BUILD_PATH)
   : default-build
-      <variant>release
-      <link>static
-      <runtime-link>static
+        <variant>release
+        <link>static
+        <runtime-link>static
 	;
 
 
@@ -179,17 +183,34 @@ echo $(application-name) $(version-tag:J=.) $(SVNREVDATE:J=) ;
 
 
 path-constant EXPAT_SOURCE : $(expat_src) ;
-path-constant BOOST_SOURCE : "freicore/libraries/boost_1_39_0" ;
+path-constant BOOST_SOURCE : "freicore/libraries/boost_1_43_0" ;
 
 using expat : 2.0 : $(EXPAT_SOURCE) ;
-using ext-boost : 1.39.0 : $(BOOST_SOURCE) ;
+using ext-boost : 1.43.0 : $(BOOST_SOURCE) ;
 
 
 rule install-location ( properties * )
 {
     local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
     local variants = [ feature.get-values <variant> : $(properties) ] ;
-    return <location>$(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
+    if <link>shared in $(properties)
+    {
+        return <location>$(BUILD_PATH)/$(toolsets[1])-$(variants[1])-shared ;
+    }
+    else
+    {
+        return <location>$(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
+    }
+}
+
+rule install-type ( properties * )
+{
+    local result = <install-type>EXE ;
+    if <link>shared in $(properties)
+    {
+        result += <install-dependencies>on <install-type>SHARED_LIB <install-type>MANIFEST ;
+    }
+    return $(result) ;
 }
 
 rule install-vendor-api-dependencies ( properties * )
@@ -215,10 +236,18 @@ rule with-mpi ( properties * )
     }
 }
 
+rule gcc-install-dll-path ( properties * )
+{
+    if <toolset>gcc in $(properties) && <link>shared in $(properties) && <target-os>linux in $(properties)
+    {
+        return <dll-path>'$ORIGIN' ;
+    }
+}
+
 
 exe $(application-name:L)
   : # sources
-    [ glob *.cpp ] [ glob *.h ]
+    [ glob *.cpp ]
   : # requirements
       <conditional>@with-mpi
       <library>freicore
@@ -226,10 +255,23 @@ exe $(application-name:L)
 
 install install
     : $(application-name:L)
-    : <install-type>EXE
+    : <conditional>@install-type
       <conditional>@install-location
       <conditional>@install-vendor-api-dependencies
+      <conditional>@gcc-install-dll-path
     ;
+
+
+# any GCC executable that uses shared libraries must have all its code built with -fPIC
+rule static-with-fpic ( properties * )
+{
+    if ( <toolset>gcc in $(properties) || <toolset>darwin in $(properties) ) &&
+       <link>static in $(properties)
+    {
+        return <cflags>-fPIC <linkflags>-fPIC ;
+    }
+}
+
 
 # any source tree can build binary tarballs
 
@@ -309,15 +351,15 @@ bcp.copy-boost-dependencies copy_boost_subset
     $(ROOT_PATH)//$(application-name:L)
 
   : # requirements
-    <location>$(BOOST_SUBSET_PATH)/boost_1_39_0
+    <location>$(BOOST_SUBSET_PATH)/boost_1_43_0
   ;
 
 
-tar.create boost_1_39_0.tar.bz2
+tar.create boost_1_43_0.tar.bz2
   : # sources
 
       path-anchor:$(BOOST_SUBSET_PATH)
-      $(BOOST_SUBSET_PATH)/boost_1_39_0
+      $(BOOST_SUBSET_PATH)/boost_1_43_0
 
   : # requirements
     <location>$(BOOST_SUBSET_PATH)/freicore/libraries
@@ -327,7 +369,8 @@ tar.create boost_1_39_0.tar.bz2
 .exclusion-list =
   exclude:.svn
   exclude:*.bak
-  exclude:svnrev.*
+  exclude:svnrev.hpp
+  exclude:Version.cpp
   exclude:Reader_*_Test.data*
   exclude:site-config.jam exclude:user-config.jam # user should provide these
   exclude:bootstrap exclude:bin.* # boost-build intermediate directories
@@ -382,7 +425,7 @@ tar.create $(application-name:L)-src.tar.bz2
   : # requirements
     <name>$(application-name:L)-src-$(version-tag:J=_).tar.bz2
     <location>$(BUILD_PATH)
-    <dependency>boost_1_39_0.tar.bz2
+    <dependency>boost_1_43_0.tar.bz2
     <dependency>SUBSET
   ;
 
