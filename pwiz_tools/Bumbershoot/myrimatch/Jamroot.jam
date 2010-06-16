@@ -217,11 +217,12 @@ rule install-vendor-api-dependencies ( properties * )
 {
     local location = [ install-location $(properties) ] ;
     local dependencies ;
-    if <toolset>msvc in $(properties)
+    if <toolset>msvc in $(properties) && <link>static in $(properties)
     {
         if [ path.exists $(PWIZ_SOURCE)/pwiz/utility/vendor_api/thermo ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo/$(location) ; }
         if [ path.exists $(PWIZ_SOURCE)/pwiz/utility/vendor_api/Agilent ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz/utility/vendor_api/Agilent//install_pwiz_vendor_api_agilent/$(location) ; }
         if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI//install_pwiz_vendor_api_abi/$(location) ; }
+        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D//install_pwiz_vendor_api_abi_t2d/$(location) ; }
         if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Bruker ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker/$(location) ; }
         if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Waters ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/$(location) ; }
     }
