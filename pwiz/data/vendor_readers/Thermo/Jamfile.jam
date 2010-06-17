@@ -41,9 +41,10 @@ project
     ;
 
 
-path-constant READER_PATH : . ;
 path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/thermo ;
 path-constant TEST_DATA_PATH : ./Reader_Thermo_Test.data ;
+constant READER_PATH : "pwiz/data/vendor_readers/Thermo" ;
+constant READER_NAME : "Reader_Thermo" ;
 
 
 import os common ;
@@ -72,6 +73,7 @@ rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties) &&
+       ! ( <address-model>64 in $(properties) ) &&
        [ project-exists $(API_PATH) ]
     {
         result += <library>$(API_PATH)//pwiz_vendor_api_thermo ;
@@ -82,11 +84,15 @@ rule vendor-api-usage-requirements ( properties * )
         .warn-once = true ;
         if ! <toolset>msvc in $(properties)
         {
-            echo "[data/vendor_readers/Thermo] Non-MSVC build: Reader_Thermo can only identify RAW files, not read them." ;
+            echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME) can only identify files, not read them." ;
+        }
+        else if ! <address-model>32 in $(properties)
+        {
+            echo "[$(READER_PATH)] 64-bit MSVC build: $(READER_NAME) can only identify files, not read them." ;
         }
         else if ! [ project-exists $(API_PATH) ]
         {
-            echo "[data/vendor_readers/Thermo] Missing RawFile API: Reader_Thermo can only identify RAW files, not read them." ;
+            echo "[$(READER_PATH)] Missing API: $(READER_NAME) can only identify files, not read them." ;
         }
     }
     return $(result) ;
@@ -118,24 +124,35 @@ rule test-requirements ( properties * )
     }
 
     local result ;
-    if ! [ path.exists $(TEST_DATA_PATH) ]
+
+    if ! $(.warn-once-test)
     {
-        if ! $(.warn-once)
+        .warn-once-test = true ;
+        if ! [ path.exists $(TEST_DATA_PATH) ]
         {
-            .warn-once = true ;
-            echo "[data/vendor_readers/Thermo] Missing Thermo RAW test data." ;
+            echo "[$(READER_PATH)] Missing test data." ;
+            result += <build>no ;
         }
-        result += <build>no ;
-    }
-    else if ! <toolset>msvc in $(properties)
-    {
-        echo "[data/vendor_readers/Thermo] Non-MSVC build: Reader_Thermo_Test is only testing that RAW files can be identified, not read." ;
-        result += <define>PWIZ_READER_THERMO_TEST_ACCEPT_ONLY ;
-    }
-    else if ! $(.hasDLLs)
-    {
-        echo "[data/vendor_readers/Thermo] Missing MSFileReader.XRawfile2.dll: Reader_Thermo_Test is only testing that RAW files can be identified, not read." ;
-        result += <define>PWIZ_READER_THERMO_TEST_ACCEPT_ONLY ;
+        else if ! <toolset>msvc in $(properties)
+        {
+            echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+            result += <define>PWIZ_READER_THERMO_TEST_ACCEPT_ONLY ;
+        }
+        else if <address-model>64 in $(properties)
+        {
+            echo "[$(READER_PATH)] 64-bit MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+            result += <define>PWIZ_READER_THERMO_TEST_ACCEPT_ONLY ;
+        }
+        else if ! [ project-exists $(API_PATH) ]
+        {
+            echo "[$(READER_PATH)] Missing API: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+            result += <define>PWIZ_READER_THERMO_TEST_ACCEPT_ONLY ;
+        }
+        else if ! $(.hasDLLs)
+        {
+            echo "[$(READER_PATH)] Missing DLL: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+            result += <define>PWIZ_READER_THERMO_TEST_ACCEPT_ONLY ;
+        }
     }
 
     return $(result) ;

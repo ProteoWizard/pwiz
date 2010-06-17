@@ -21,7 +21,7 @@
 
 
 # Waters support status:
-# - DLLs are COM and thus MSVC only
+# - DLLs are COM or native and thus MSVC only
 # - cannot redistribute DLLs, but we can compile without them:
 #   * if MSVC:
 #       * if DLLs are present: PWIZ_READER_WATERS is defined for all dependents
@@ -41,6 +41,8 @@ project
 path-constant READER_PATH : . ;
 path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Waters ;
 path-constant TEST_DATA_PATH : ./Reader_Waters_Test.data ;
+constant READER_PATH : "pwiz_aux/msrc/data/vendor_readers/Waters" ;
+constant READER_NAME : "Reader_Waters" ;
 
 
 if [ path.exists $(API_PATH)/DACServer.dll ] ||
@@ -53,7 +55,10 @@ if [ path.exists $(API_PATH)/DACServer.dll ] ||
 rule vendor-api-requirements ( properties * )
 {
     local result ;
-    if <toolset>msvc in $(properties) && $(.hasDLLs)
+    if <toolset>msvc in $(properties) &&
+       ! ( <address-model>64 in $(properties) ) &&
+       [ project-exists $(API_PATH) ] &&
+       $(.hasDLLs)
     {
         result += <source>Reader_Waters_Detail.cpp ;
     }
@@ -63,7 +68,10 @@ rule vendor-api-requirements ( properties * )
 rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
-    if <toolset>msvc in $(properties) && [ project-exists $(API_PATH) ] && $(.hasDLLs)
+    if <toolset>msvc in $(properties) &&
+       ! ( <address-model>64 in $(properties) ) &&
+       [ project-exists $(API_PATH) ] &&
+       $(.hasDLLs)
     {
         result += <library>$(API_PATH)//pwiz_vendor_api_waters ;
         result += <define>PWIZ_READER_WATERS ;
@@ -73,15 +81,19 @@ rule vendor-api-usage-requirements ( properties * )
         .warn-once = true ;
         if ! <toolset>msvc in $(properties)
         {
-            echo "[pwiz_aux/msrc/data/vendor_readers/Waters] Non-MSVC build: Reader_Waters can only identify .raw directories, not read them." ;
+            echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME) can only identify files, not read them." ;
+        }
+        else if <address-model>64 in $(properties)
+        {
+            echo "[$(READER_PATH)] 64-bit MSVC build: $(READER_NAME) can only identify files, not read them." ;
         }
         else if ! [ project-exists $(API_PATH) ]
         {
-            echo "[pwiz_aux/msrc/data/vendor_readers/Waters] Missing RawData API: Reader_Waters can only identify .raw directories, not read them." ;
+            echo "[$(READER_PATH)] Missing API: $(READER_NAME) can only identify files, not read them." ;
         }
         else if ! $(.hasDLLs)
         {
-            echo "[pwiz_aux/msrc/data/vendor_readers/Waters] Missing Waters API DLLs: Reader_Waters can only identify .raw directories, not read them." ;
+            echo "[$(READER_PATH)] Missing DLL: $(READER_NAME) can only identify files, not read them." ;
         }
     }
     return $(result) ;
@@ -129,16 +141,24 @@ rule test-requirements ( properties * )
         .warn-once-test = true ;
         if ! [ path.exists $(TEST_DATA_PATH) ]
         {
-            echo "[pwiz_aux/msrc/data/vendor_readers/Waters] Missing Waters RAW test data." ;
+            echo "[$(READER_PATH)] Missing test data." ;
             result += <build>no ;
         }
         else if ! <toolset>msvc in $(properties)
         {
-            echo "[pwiz_aux/msrc/data/vendor_readers/Waters] Non-MSVC build: Reader_Waters_Test is only testing that .raw directories can be identified, not read." ;
+            echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+        }
+        else if <address-model>64 in $(properties)
+        {
+            echo "[$(READER_PATH)] 64-bit MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+        }
+        else if ! [ project-exists $(API_PATH) ]
+        {
+            echo "[$(READER_PATH)] Missing API: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
         }
         else if ! $(.hasDLLs)
         {
-            echo "[pwiz_aux/msrc/data/vendor_readers/Waters] Missing Waters API DLLs: Reader_Waters_Test is only testing that .raw directories can be identified, not read." ;
+            echo "[$(READER_PATH)] Missing DLL: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
         }
     }
 

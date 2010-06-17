@@ -20,6 +20,11 @@
 # 
 
 
+# Agilent MassHunter support status:
+# - DLLs are .NET and thus MSVC only
+# - we can redistribute DLLs
+
+
 project
     : requirements 
         <toolset>gcc:<cxxflags>-fno-strict-aliasing
@@ -27,9 +32,16 @@ project
     ;
 
 
-path-constant READER_PATH : . ;
 path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/Agilent ;
 path-constant TEST_DATA_PATH : ./Reader_Agilent_Test.data ;
+constant READER_PATH : "pwiz/data/vendor_readers/Agilent" ;
+constant READER_NAME : "Reader_Agilent" ;
+
+
+if [ path.exists $(API_PATH)/MassSpecDataReader.dll ]
+{
+    .hasDLLs = true ;
+}
 
 
 rule vendor-api-requirements ( properties * )
@@ -47,8 +59,9 @@ rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties) &&
+       ! ( <address-model>64 in $(properties) ) &&
        [ project-exists $(API_PATH) ] &&
-       [ path.exists $(API_PATH)/MassSpecDataReader.dll ]
+       $(.hasDLLs)
     {
         result += <library>$(API_PATH)//pwiz_vendor_api_agilent ;
         result += <define>PWIZ_READER_AGILENT ;
@@ -58,15 +71,19 @@ rule vendor-api-usage-requirements ( properties * )
         .warn-once = true ;
         if ! <toolset>msvc in $(properties)
         {
-            echo "[data/vendor_readers/Agilent] Non-MSVC build: Reader_Agilent can only identify MassHunter directories, not read them." ;
+            echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME) can only identify files, not read them." ;
+        }
+        else if <address-model>64 in $(properties)
+        {
+            echo "[$(READER_PATH)] 64-bit MSVC build: $(READER_NAME) can only identify files, not read them." ;
         }
         else if ! [ project-exists $(API_PATH) ]
         {
-            echo "[data/vendor_readers/Agilent] Missing MassHunter API: Reader_Agilent can only identify MassHunter directories, not read them." ;
+            echo "[$(READER_PATH)] Missing API: $(READER_NAME) can only identify files, not read them." ;
         }
-        else if ! [ path.exists $(API_PATH)/MassSpecDataReader.dll ]
+        else if ! $(.hasDLLs)
         {
-            echo "[data/vendor_readers/Agilent] Missing MassHunter DLLs: Reader_Agilent can only identify MassHunter directories, not read them." ;
+            echo "[$(READER_PATH)] Missing DLL: $(READER_NAME) can only identify files, not read them." ;
         }
     }
     return $(result) ;
@@ -98,15 +115,33 @@ rule test-requirements ( properties * )
     }
 
     local result ;
-    if ! [ path.exists $(TEST_DATA_PATH) ]
+
+    if ! $(.warn-once-test)
     {
-        if ! $(.warn-once)
+        .warn-once-test = true ;
+        if ! [ path.exists $(TEST_DATA_PATH) ]
         {
-            .warn-once = true ;
-            echo "[data/vendor_readers/Agilent] Missing Agilent MassHunter test data." ;
+            echo "[$(READER_PATH)] Missing test data." ;
+            result += <build>no ;
         }
-        result += <build>no ;
+        else if ! <toolset>msvc in $(properties)
+        {
+            echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+        }
+        else if <address-model>64 in $(properties)
+        {
+            echo "[$(READER_PATH)] 64-bit MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+        }
+        else if ! [ project-exists $(API_PATH) ]
+        {
+            echo "[$(READER_PATH)] Missing API: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+        }
+        else if ! $(.hasDLLs)
+        {
+            echo "[$(READER_PATH)] Missing DLL: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+        }
     }
+
     return $(result) ;
 }
 

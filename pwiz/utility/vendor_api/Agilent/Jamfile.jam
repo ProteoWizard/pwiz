@@ -77,6 +77,7 @@ lib pwiz_vendor_api_agilent
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
         <conditional>@vendor-api-requirements
         <conditional>@msvc-requirement
+        <address-model>64:<build>no
     : # default-build
     : # usage-requirements
         <conditional>@vendor-api-usage-requirements

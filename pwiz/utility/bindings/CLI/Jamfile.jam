@@ -30,6 +30,7 @@ project
         <conditional>@msvc-requirement
         <define>UNICODE
         <define>_UNICODE
+        <address-model>64:<build>no
     : usage-requirements
         <define>UNICODE
         <define>_UNICODE

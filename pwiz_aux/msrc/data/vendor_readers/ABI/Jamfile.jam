@@ -39,6 +39,8 @@ project
 path-constant READER_PATH : . ;
 path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI ;
 path-constant TEST_DATA_PATH : ./Reader_ABI_Test.data ;
+constant READER_PATH : "pwiz_aux/msrc/data/vendor_readers/ABI" ;
+constant READER_NAME : "Reader_ABI" ;
 
 
 import os common ;
@@ -66,7 +68,10 @@ rule vendor-api-requirements ( properties * )
 rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
-    if <toolset>msvc in $(properties) && [ project-exists $(API_PATH) ] && $(.hasDLLs)
+    if <toolset>msvc in $(properties) &&
+       ! ( <address-model>64 in $(properties) ) &&
+       [ project-exists $(API_PATH) ] &&
+       $(.hasDLLs)
     {
         result += <define>PWIZ_READER_ABI ;
         result += <library>$(API_PATH)//pwiz_vendor_api_abi ;
@@ -76,15 +81,19 @@ rule vendor-api-usage-requirements ( properties * )
         .warn-once = true ;
         if ! <toolset>msvc in $(properties)
         {
-            echo "[pwiz_aux/msrc/data/vendor_readers/ABI] Non-MSVC build: Reader_ABI can only identify WIFF files, not read them." ;
+            echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME) can only identify files, not read them." ;
+        }
+        else if <address-model>64 in $(properties)
+        {
+            echo "[$(READER_PATH)] 64-bit MSVC build: $(READER_NAME) can only identify files, not read them." ;
         }
         else if ! [ project-exists $(API_PATH) ]
         {
-            echo "[pwiz_aux/msrc/data/vendor_readers/ABI] Missing ABI API: Reader_ABI can only identify WIFF files, not read them." ;
+            echo "[$(READER_PATH)] Missing API: $(READER_NAME) can only identify files, not read them." ;
         }
         else if ! $(.hasDLLs)
         {
-            echo "[pwiz_aux/msrc/data/vendor_readers/ABI] Missing WiffFileDataReader DLL: Reader_ABI can only identify WIFF files, not read them." ;
+            echo "[$(READER_PATH)] Missing DLL: $(READER_NAME) can only identify files, not read them." ;
         }
     }
     return $(result) ;
@@ -123,16 +132,24 @@ rule test-requirements ( properties * )
         .warn-once-test = true ;
         if ! [ path.exists $(TEST_DATA_PATH) ]
         {
-            echo "[pwiz_aux/msrc/data/vendor_readers/ABI] Missing ABI WIFF test data." ;
+            echo "[$(READER_PATH)] Missing test data." ;
             result += <build>no ;
         }
         else if ! <toolset>msvc in $(properties)
         {
-            echo "[pwiz_aux/msrc/data/vendor_readers/ABI] Non-MSVC build: Reader_ABI_Test is only testing that WIFF files can be identified, not read." ;
+            echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+        }
+        else if <address-model>64 in $(properties)
+        {
+            echo "[$(READER_PATH)] 64-bit MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+        }
+        else if ! [ project-exists $(API_PATH) ]
+        {
+            echo "[$(READER_PATH)] Missing API: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
         }
         else if ! $(.hasDLLs)
         {
-            echo "[pwiz_aux/msrc/data/vendor_readers/ABI] Missing WiffFileDataReader DLL: Reader_ABI_Test is only testing that WIFF files can be identified, not read." ;
+            echo "[$(READER_PATH)] Missing DLL: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
         }
     }
     return $(result) ;

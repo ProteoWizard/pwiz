@@ -99,6 +99,7 @@ lib pwiz_vendor_api_abi
         <conditional>@vendor-api-requirements
         <using-clr>true # requires hacked msvc.jam
         <link>static # <using-clr>true and <link>shared don't mix
+        <address-model>64:<build>no
     : # default-build
     : # usage-requirements
         <conditional>@vendor-api-requirements

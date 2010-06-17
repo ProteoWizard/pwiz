@@ -33,17 +33,25 @@ project
     ;
 
 
-path-constant READER_PATH : . ;
 path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Bruker ;
 path-constant TEST_DATA_PATH : ./Reader_Bruker_Test.data ;
+constant READER_PATH : "pwiz_aux/msrc/data/vendor_readers/Bruker" ;
+constant READER_NAME : "Reader_Bruker" ;
+
+
+if [ path.exists $(API_PATH)/Interop.EDAL.dll ]
+{
+    .hasDLLs = true ;
+}
 
 
 rule vendor-api-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties) &&
+       ! ( <address-model>64 in $(properties) ) &&
        [ project-exists $(API_PATH) ] &&
-       [ path.exists $(API_PATH)/Interop.EDAL.dll ]
+       $(.hasDLLs)
     {
         result += <library>$(API_PATH)//pwiz_vendor_api_bruker ;
         result += <define>PWIZ_READER_BRUKER ;
@@ -53,15 +61,19 @@ rule vendor-api-requirements ( properties * )
         .warn-once = true ;
         if ! <toolset>msvc in $(properties)
         {
-            echo "[pwiz_aux/msrc/data/vendor_readers/Bruker] Non-MSVC build: Reader_Bruker can only identify Bruker directories, not read them." ;
+            echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME) can only identify files, not read them." ;
+        }
+        else if <address-model>64 in $(properties)
+        {
+            echo "[$(READER_PATH)] 64-bit MSVC build: $(READER_NAME) can only identify files, not read them." ;
         }
         else if ! [ project-exists $(API_PATH) ]
         {
-            echo "[pwiz_aux/msrc/data/vendor_readers/Bruker] Missing Bruker API: Reader_Bruker can only identify Bruker directories, not read them." ;
+            echo "[$(READER_PATH)] Missing API: $(READER_NAME) can only identify files, not read them." ;
         }
-        else if ! [ path.exists $(API_PATH)/Interop.EDAL.dll ]
+        else if ! $(.hasDLLs)
         {
-            echo "[pwiz_aux/msrc/data/vendor_readers/Bruker] Missing CompassXtract DLLs: Reader_Bruker can only identify Bruker directories, not read them." ;
+            echo "[$(READER_PATH)] Missing DLL: $(READER_NAME) can only identify files, not read them." ;
         }
     }
     return $(result) ;
@@ -95,15 +107,33 @@ rule test-requirements ( properties * )
     }
 
     local result ;
-    if ! [ path.exists $(TEST_DATA_PATH) ]
+
+    if ! $(.warn-once-test)
     {
-        if ! $(.warn-once)
+        .warn-once-test = true ;
+        if ! [ path.exists $(TEST_DATA_PATH) ]
         {
-            .warn-once = true ;
-            echo "[pwiz_aux/msrc/data/vendor_readers/Bruker] Missing Bruker CompassXtract test data." ;
+            echo "[$(READER_PATH)] Missing test data." ;
+            result += <build>no ;
         }
-        result += <build>no ;
+        else if ! <toolset>msvc in $(properties)
+        {
+            echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+        }
+        else if <address-model>64 in $(properties)
+        {
+            echo "[$(READER_PATH)] 64-bit MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+        }
+        else if ! [ project-exists $(API_PATH) ]
+        {
+            echo "[$(READER_PATH)] Missing API: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+        }
+        else if ! $(.hasDLLs)
+        {
+            echo "[$(READER_PATH)] Missing DLL: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+        }
     }
+
     return $(result) ;
 }
 

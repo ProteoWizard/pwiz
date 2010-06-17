@@ -31,9 +31,20 @@ project
     ;
 
 
-path-constant READER_PATH : . ;
 path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D ;
 path-constant TEST_DATA_PATH : ./Reader_ABI_T2D_Test.data ;
+constant READER_PATH : "pwiz_aux/msrc/data/vendor_readers/ABI/T2D" ;
+constant READER_NAME : "Reader_ABI" ;
+
+
+import os common ;
+local ProgramFiles = [ os.environ ProgramFiles ] ;
+ProgramFiles ?= "C:\\Program Files" ;
+local DataExplorer = "$(ProgramFiles)\\Applied Biosystems\\Data Explorer\\DataExp.exe" ;
+if [ path.exists $(DataExplorer) ]
+{
+    .hasDLLs = true ;
+}
 
 
 import path ;
@@ -50,7 +61,9 @@ rule vendor-api-requirements ( properties * )
 rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
-    if <toolset>msvc in $(properties) && [ project-exists $(API_PATH) ]
+    if <toolset>msvc in $(properties) &&
+       ! ( <address-model>64 in $(properties) ) &&
+       [ project-exists $(API_PATH) ]
     {
         result += <define>PWIZ_READER_ABI_T2D ;
         result += <library>$(API_PATH)//pwiz_vendor_api_abi_t2d ;
@@ -60,11 +73,15 @@ rule vendor-api-usage-requirements ( properties * )
         .warn-once = true ;
         if ! <toolset>msvc in $(properties)
         {
-            echo "[pwiz_aux/msrc/data/vendor_readers/ABI/T2D] Non-MSVC build: Reader_ABI_T2D can only identify T2D files, not read them." ;
+            echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME) can only identify files, not read them." ;
+        }
+        else if <address-model>64 in $(properties)
+        {
+            echo "[$(READER_PATH)] 64-bit MSVC build: $(READER_NAME) can only identify files, not read them." ;
         }
         else if ! [ project-exists $(API_PATH) ]
         {
-            echo "[pwiz_aux/msrc/data/vendor_readers/ABI/T2D] Missing ABI API: Reader_ABI_T2D can only identify T2D files, not read them." ;
+            echo "[$(READER_PATH)] Missing API: $(READER_NAME) can only identify files, not read them." ;
         }
     }
     return $(result) ;
@@ -99,15 +116,33 @@ rule test-requirements ( properties * )
     }
 
     local result ;
-    if ! ( [ path.exists $(TEST_DATA_PATH) ] || $(generate-mzML:E=false) = "false" )
+
+    if ! $(.warn-once-test)
     {
-        if ! $(.warn-once)
+        .warn-once-test = true ;
+        if ! [ path.exists $(TEST_DATA_PATH) ]
         {
-            .warn-once = true ;
-            echo "[pwiz_aux/msrc/data/vendor_readers/ABI/T2D] Missing ABI T2D test data." ;
+            echo "[$(READER_PATH)] Missing test data." ;
+            result += <build>no ;
         }
-        result += <build>no ;
+        else if ! <toolset>msvc in $(properties)
+        {
+            echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+        }
+        else if <address-model>64 in $(properties)
+        {
+            echo "[$(READER_PATH)] 64-bit MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+        }
+        else if ! [ project-exists $(API_PATH) ]
+        {
+            echo "[$(READER_PATH)] Missing API: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+        }
+        else if ! $(.hasDLLs)
+        {
+            echo "[$(READER_PATH)] Missing Data Explorer: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+        }
     }
+
     return $(result) ;
 }
 
