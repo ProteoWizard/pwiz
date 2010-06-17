@@ -521,6 +521,43 @@ namespace pwiz.Skyline.Model.Results
 
             return (float)(valTotal / valCount);            
         }
+
+        public float? GetBestPeakValue(Func<T, RatedPeakValue> getVal)
+        {
+            double ratingBest = double.MinValue;
+            float? valBest = null;
+
+            foreach (var result in this)
+            {
+                if (result == null)
+                    continue;
+                foreach (var chromInfo in result)
+                {
+                    if (Equals(chromInfo, default(T)))
+                        continue;
+                    RatedPeakValue rateVal = getVal(chromInfo);
+                    if (rateVal.Rating > ratingBest)
+                    {
+                        ratingBest = rateVal.Rating;
+                        valBest = rateVal.Value;
+                    }
+                }
+            }
+
+            return valBest;
+        }
+    }
+
+    public struct RatedPeakValue
+    {
+        public RatedPeakValue(double rating, float? value) : this()
+        {
+            Rating = rating;
+            Value = value;
+        }
+
+        public double Rating { get; private set; }
+        public float? Value { get; private set; }
     }
 
     /// <summary>

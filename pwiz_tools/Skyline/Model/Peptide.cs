@@ -86,6 +86,9 @@ namespace pwiz.Skyline.Model
 
         public float? GetPeakCountRatio(int i)
         {
+            if (i == -1)
+                return AveragePeakCountRatio;
+
             var result = GetSafeChromInfo(i);
             if (result == null)
                 return null;
@@ -124,6 +127,39 @@ namespace pwiz.Skyline.Model
         private float? GetAverageResultValue(Func<PeptideChromInfo, float?> getVal)
         {
             return HasResults ? Results.GetAverageValue(getVal) : null;
+        }
+
+        public int BestResult
+        {
+            get
+            {
+                if (!HasResults)
+                    return -1;
+
+                int iBest = -1;
+                double bestArea = double.MinValue;
+                for (int i = 0; i < Results.Count; i++)
+                {
+                    double totalArea = 0;
+                    foreach (TransitionGroupDocNode nodeGroup in Children)
+                    {
+                        var result = nodeGroup.Results[i];
+                        if (result == null)
+                            continue;
+                        foreach (var chromInfo in result)
+                        {
+                            if (chromInfo != null && chromInfo.Area.HasValue)
+                                totalArea += chromInfo.Area.Value;
+                        }
+                    }
+                    if (totalArea > bestArea)
+                    {
+                        iBest = i;
+                        bestArea = totalArea;
+                    }
+                }
+                return iBest;
+            }
         }
 
         #region Property change methods

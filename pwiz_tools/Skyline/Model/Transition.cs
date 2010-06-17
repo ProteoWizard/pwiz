@@ -109,6 +109,9 @@ namespace pwiz.Skyline.Model
 
         public float? GetPeakCountRatio(int i)
         {
+            if (i == -1)
+                return AveragePeakCountRatio;
+
             // CONSIDER: Also specify the file index?
             var chromInfo = GetChromInfoEntry(i);
             if (chromInfo == null)
@@ -129,6 +132,28 @@ namespace pwiz.Skyline.Model
         private static float GetPeakCountRatio(TransitionChromInfo chromInfo)
         {
             return chromInfo.Area > 0 ? 1 : 0;            
+        }
+
+        public float? GetPeakArea(int i)
+        {
+            if (i == -1)
+                return AveragePeakArea;
+
+            // CONSIDER: Also specify the file index?
+            var chromInfo = GetChromInfoEntry(i);
+            if (chromInfo == null)
+                return null;
+            return chromInfo.Area;
+        }
+
+        public float? AveragePeakArea
+        {
+            get
+            {
+                return GetAverageResultValue(chromInfo =>
+                    chromInfo.OptimizationStep != 0 ?
+                        (float?)null : chromInfo.Area);
+            }
         }
 
         public int? GetPeakRank(int i)
@@ -152,16 +177,6 @@ namespace pwiz.Skyline.Model
             if (chromInfo == null)
                 return null;
             return chromInfo.Ratios[indexIS];
-        }
-
-        public float? AveragePeakArea
-        {
-            get
-            {
-                return GetAverageResultValue(chromInfo =>
-                    chromInfo.OptimizationStep != 0 ?
-                        (float?)null : chromInfo.Area);
-            }
         }
 
         private float? GetAverageResultValue(Func<TransitionChromInfo, float?> getVal)

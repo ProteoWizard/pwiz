@@ -41,6 +41,8 @@
             this.textMinPeptides = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.tabResults = new System.Windows.Forms.TabPage();
+            this.label4 = new System.Windows.Forms.Label();
+            this.comboReplicateUse = new System.Windows.Forms.ComboBox();
             this.cbPreferLarger = new System.Windows.Forms.CheckBox();
             this.textMaxPeakRank = new System.Windows.Forms.TextBox();
             this.labelMaxPeakRank = new System.Windows.Forms.Label();
@@ -76,7 +78,7 @@
             this.tabControl1.Location = new System.Drawing.Point(13, 13);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(395, 422);
+            this.tabControl1.Size = new System.Drawing.Size(395, 478);
             this.tabControl1.TabIndex = 0;
             // 
             // tabDocument
@@ -93,7 +95,7 @@
             this.tabDocument.Location = new System.Drawing.Point(4, 22);
             this.tabDocument.Name = "tabDocument";
             this.tabDocument.Padding = new System.Windows.Forms.Padding(3);
-            this.tabDocument.Size = new System.Drawing.Size(387, 396);
+            this.tabDocument.Size = new System.Drawing.Size(387, 445);
             this.tabDocument.TabIndex = 0;
             this.tabDocument.Text = "Document";
             this.tabDocument.UseVisualStyleBackColor = true;
@@ -188,6 +190,8 @@
             // 
             // tabResults
             // 
+            this.tabResults.Controls.Add(this.label4);
+            this.tabResults.Controls.Add(this.comboReplicateUse);
             this.tabResults.Controls.Add(this.cbPreferLarger);
             this.tabResults.Controls.Add(this.textMaxPeakRank);
             this.tabResults.Controls.Add(this.labelMaxPeakRank);
@@ -202,10 +206,34 @@
             this.tabResults.Location = new System.Drawing.Point(4, 22);
             this.tabResults.Name = "tabResults";
             this.tabResults.Padding = new System.Windows.Forms.Padding(3);
-            this.tabResults.Size = new System.Drawing.Size(387, 396);
+            this.tabResults.Size = new System.Drawing.Size(387, 452);
             this.tabResults.TabIndex = 1;
             this.tabResults.Text = "Results";
             this.tabResults.UseVisualStyleBackColor = true;
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(25, 390);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(99, 13);
+            this.label4.TabIndex = 11;
+            this.label4.Text = "Replicate in&clusion:";
+            // 
+            // comboReplicateUse
+            // 
+            this.comboReplicateUse.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboReplicateUse.FormattingEnabled = true;
+            this.comboReplicateUse.Items.AddRange(new object[] {
+            "All",
+            "Best"});
+            this.comboReplicateUse.Location = new System.Drawing.Point(28, 406);
+            this.comboReplicateUse.Name = "comboReplicateUse";
+            this.comboReplicateUse.Size = new System.Drawing.Size(134, 21);
+            this.comboReplicateUse.TabIndex = 12;
+            this.helpTip.SetToolTip(this.comboReplicateUse, "Determines replicate results are used in refinement:\r\nAll - replicate values are " +
+                    "averaged, use for technical replicates\r\nBest - only the best replicate is used f" +
+                    "or each peptide, use for fractionation");
             // 
             // cbPreferLarger
             // 
@@ -215,7 +243,9 @@
             this.cbPreferLarger.Name = "cbPreferLarger";
             this.cbPreferLarger.Size = new System.Drawing.Size(144, 17);
             this.cbPreferLarger.TabIndex = 6;
-            this.cbPreferLarger.Text = "Prefer larger product ions";
+            this.cbPreferLarger.Text = "&Prefer larger product ions";
+            this.helpTip.SetToolTip(this.cbPreferLarger, "Causes refinement to choose larger product ions\r\nwhen smaller, less selective ion" +
+                    "s yeild only fractionally\r\ngreater peak area.");
             this.cbPreferLarger.UseVisualStyleBackColor = true;
             // 
             // textMaxPeakRank
@@ -363,7 +393,7 @@
             // btnOK
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOK.Location = new System.Drawing.Point(252, 441);
+            this.btnOK.Location = new System.Drawing.Point(252, 497);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
             this.btnOK.TabIndex = 1;
@@ -375,7 +405,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(333, 441);
+            this.btnCancel.Location = new System.Drawing.Point(333, 497);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 2;
@@ -388,7 +418,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(420, 476);
+            this.ClientSize = new System.Drawing.Size(420, 532);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOK);
             this.Controls.Add(this.tabControl1);
@@ -444,5 +474,7 @@
         private System.Windows.Forms.ComboBox comboRefineLabelType;
         private System.Windows.Forms.CheckBox cbAdd;
         private System.Windows.Forms.CheckBox cbPreferLarger;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.ComboBox comboReplicateUse;
     }
 }

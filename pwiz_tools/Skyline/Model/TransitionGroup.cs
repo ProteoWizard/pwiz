@@ -153,6 +153,9 @@ namespace pwiz.Skyline.Model
 
         public float? GetPeakCountRatio(int i)
         {
+            if (i == -1)
+                return AveragePeakCountRatio;
+
             // CONSIDER: Also specify the file index?
             var chromInfo = GetChromInfoEntry(i);
             if (chromInfo == null)
@@ -170,27 +173,11 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public float? GetPeakAreaRatio(int i, out float? stdev)
-        {
-            return GetPeakAreaRatio(i, 0, out stdev);
-        }
-
-        public float? GetPeakAreaRatio(int i, int indexIS, out float? stdev)
-        {
-            // CONSIDER: Also specify the file index?
-            var chromInfo = GetChromInfoEntry(i);
-            if (chromInfo == null)
-            {
-                stdev = null;
-                return null;                
-            }
-
-            stdev = chromInfo.RatioStdevs[indexIS];
-            return chromInfo.Ratios[indexIS];
-        }
-
         public float? GetLibraryDotProduct(int i)
         {
+            if (i == -1)
+                return AverageLibraryDotProduct;
+
             // CONSIDER: Also specify the file index?
             var result = GetChromInfoEntry(i);
             if (result == null)
@@ -206,6 +193,25 @@ namespace pwiz.Skyline.Model
                     chromInfo.OptimizationStep != 0 ?
                         (float?)null : chromInfo.LibraryDotProduct);
             }
+        }
+
+        public float? GetPeakAreaRatio(int i, out float? stdev)
+        {
+            return GetPeakAreaRatio(i, 0, out stdev);
+        }
+
+        public float? GetPeakAreaRatio(int i, int indexIS, out float? stdev)
+        {
+            // CONSIDER: Also specify the file index?
+            var chromInfo = GetChromInfoEntry(i);
+            if (chromInfo == null)
+            {
+                stdev = null;
+                return null;
+            }
+
+            stdev = chromInfo.RatioStdevs[indexIS];
+            return chromInfo.Ratios[indexIS];
         }
 
         public float? GetSchedulingPeakTime(SrmDocument document)

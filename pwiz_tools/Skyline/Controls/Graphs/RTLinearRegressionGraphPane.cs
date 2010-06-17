@@ -106,9 +106,9 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public static PeptideDocNode[] CalcOutliers(SrmDocument document, double threshold)
+        public static PeptideDocNode[] CalcOutliers(SrmDocument document, double threshold, bool bestResult)
         {
-            var data = new GraphData(document, null, -1, threshold, true);
+            var data = new GraphData(document, null, -1, threshold, true, bestResult);
             return data.Refine(() => false).Outliers;
         }
 
@@ -149,7 +149,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void Update(SrmDocument document, int resultIndex, double threshold, bool refine)
         {
-            Data = new GraphData(document, Data, resultIndex, threshold, refine);
+            Data = new GraphData(document, Data, resultIndex, threshold, refine, false);
         }
 
         public bool IsRefined
@@ -314,7 +314,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
             private HashSet<int> _outlierIndexes;
 
-            public GraphData(SrmDocument document, GraphData dataPrevious, int resultIndex, double threshold, bool refine)
+            public GraphData(SrmDocument document, GraphData dataPrevious,
+                int resultIndex, double threshold, bool refine, bool bestResult)
             {
                 _document = document;
                 _resultIndex = resultIndex;
@@ -325,7 +326,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 foreach (var nodePeptide in document.Peptides)
                 {
                     index++;
-                    float? rt = nodePeptide.GetMeasuredRetentionTime(resultIndex);
+                    float? rt = null;
+                    if (!bestResult)
+                        rt = nodePeptide.GetMeasuredRetentionTime(resultIndex);
+                    else
+                    {
+                        int iBest = nodePeptide.BestResult;
+                        if (iBest != -1)
+                            rt = nodePeptide.GetMeasuredRetentionTime(iBest);
+                    }
                     if (!rt.HasValue)
                         rt = 0;
 

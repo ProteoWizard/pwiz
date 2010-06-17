@@ -53,6 +53,7 @@ namespace pwiz.Skyline.Model
         public bool RemoveMissingResults { get; set; }
         public double? RTRegressionThreshold { get; set; }
         public double? DotProductThreshold { get; set; }
+        public bool UseBestResult { get; set; }
 
         public SrmDocument Refine(SrmDocument document)
         {
@@ -60,7 +61,7 @@ namespace pwiz.Skyline.Model
             if (RTRegressionThreshold.HasValue)
             {
                 var outliers = RTLinearRegressionGraphPane.CalcOutliers(document,
-                    RTRegressionThreshold.Value);
+                    RTRegressionThreshold.Value, UseBestResult);
 
                 foreach (var nodePep in outliers)
                     outlierIds.Add(nodePep.Id.GlobalIndex);
@@ -129,7 +130,8 @@ namespace pwiz.Skyline.Model
                 if (outlierIds.Contains(nodePep.Id.GlobalIndex))
                     continue;
 
-                float? peakFoundRatio = nodePep.AveragePeakCountRatio;
+                int bestResultIndex = (UseBestResult ? nodePep.BestResult : -1);
+                float? peakFoundRatio = nodePep.GetPeakCountRatio(bestResultIndex);
                 if (!peakFoundRatio.HasValue)
                 {
                     if (RemoveMissingResults)
@@ -149,7 +151,7 @@ namespace pwiz.Skyline.Model
                     }
                 }
 
-                PeptideDocNode nodePepRefined = Refine(nodePep, document);
+                PeptideDocNode nodePepRefined = Refine(nodePep, document, bestResultIndex);
                 // Always remove peptides if all precursors have been removed by refinement
                 if (!ReferenceEquals(nodePep, nodePepRefined) && nodePepRefined.Children.Count == 0)
                     continue;
@@ -177,7 +179,7 @@ namespace pwiz.Skyline.Model
         }
 
 // ReSharper disable SuggestBaseTypeForParameter
-        private PeptideDocNode Refine(PeptideDocNode nodePep, SrmDocument document)
+        private PeptideDocNode Refine(PeptideDocNode nodePep, SrmDocument document, int bestResultIndex)
 // ReSharper restore SuggestBaseTypeForParameter
         {
             int minTrans = MinTransitionsPepPrecursor ?? 0;
@@ -189,7 +191,7 @@ namespace pwiz.Skyline.Model
                 if (!AddLabelType && RefineLabelType != null && Equals(RefineLabelType, nodeGroup.TransitionGroup.LabelType))
                     continue;
 
-                double? peakFoundRatio = nodeGroup.AveragePeakCountRatio;
+                double? peakFoundRatio = nodeGroup.GetPeakCountRatio(bestResultIndex);
                 if (!peakFoundRatio.HasValue)
                 {
                     if (RemoveMissingResults)
@@ -209,7 +211,7 @@ namespace pwiz.Skyline.Model
                     }
                 }
 
-                TransitionGroupDocNode nodeGroupRefined = Refine(nodeGroup);
+                TransitionGroupDocNode nodeGroupRefined = Refine(nodeGroup, bestResultIndex);
                 if (nodeGroupRefined.Children.Count < minTrans)
                     continue;
 
@@ -217,7 +219,7 @@ namespace pwiz.Skyline.Model
                 {
                     if (DotProductThreshold.HasValue)
                     {
-                        float? dotProduct = nodeGroupRefined.AverageLibraryDotProduct;
+                        float? dotProduct = nodeGroupRefined.GetLibraryDotProduct(bestResultIndex);
                         if (dotProduct.HasValue && dotProduct.Value < DotProductThreshold.Value)
                             continue;
                     }
@@ -290,13 +292,13 @@ namespace pwiz.Skyline.Model
         }
 
 // ReSharper disable SuggestBaseTypeForParameter
-        private TransitionGroupDocNode Refine(TransitionGroupDocNode nodeGroup)
+        private TransitionGroupDocNode Refine(TransitionGroupDocNode nodeGroup, int bestResultIndex)
 // ReSharper restore SuggestBaseTypeForParameter
         {
             var listTrans = new List<TransitionDocNode>();
             foreach (TransitionDocNode nodeTran in nodeGroup.Children)
             {
-                double? peakFoundRatio = nodeTran.AveragePeakCountRatio;
+                double? peakFoundRatio = nodeTran.GetPeakCountRatio(bestResultIndex);
                 if (!peakFoundRatio.HasValue)
                 {
                     if (RemoveMissingResults)
@@ -330,7 +332,7 @@ namespace pwiz.Skyline.Model
                 for (int i = 0; i < countTrans; i++)
                 {
                     var nodeTran = (TransitionDocNode) nodeGroupRefined.Children[i];
-                    var sortInfo = new AreaSortInfo(nodeTran.AveragePeakArea ?? 0,
+                    var sortInfo = new AreaSortInfo(nodeTran.GetPeakArea(bestResultIndex) ?? 0,
                                                     nodeTran.Transition.Ordinal,
                                                     nodeTran.Mz > nodeGroup.PrecursorMz,
                                                     i);

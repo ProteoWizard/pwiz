@@ -200,6 +200,24 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public event EventHandler<ZoomEventArgs> ZoomAll;
+
+        private void graphControl_ZoomEvent(ZedGraphControl sender, ZoomState oldState, ZoomState newState)
+        {
+            if (Settings.Default.AutoZoomAllChromatograms && ZoomAll != null)
+                ZoomAll.Invoke(this, new ZoomEventArgs(newState));
+        }
+
+        public void ZoomTo(ZoomState zoomState)
+        {
+            zoomState.ApplyState(GraphPane);
+        }
+
+        public ZoomState ZoomState
+        {
+            get { return new ZoomState(GraphPane, ZoomState.StateType.Zoom); }
+        }
+
         public void LockZoom()
         {
             _zoomLocked = true;
@@ -1822,5 +1840,15 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public ChangedPeakBoundsEventArgs[] Changes { get; private set; }
+    }
+
+    public sealed class ZoomEventArgs : EventArgs
+    {
+        public ZoomEventArgs(ZoomState zoomState)
+        {
+            ZoomState = zoomState;
+        }
+
+        public ZoomState ZoomState { get; private set; }
     }
 }

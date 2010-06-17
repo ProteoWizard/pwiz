@@ -61,6 +61,7 @@
             this.graphControl.MouseUpEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.graphControl_MouseUpEvent);
             this.graphControl.MouseMoveEvent += new ZedGraph.ZedGraphControl.ZedMouseEventHandler(this.graphControl_MouseMoveEvent);
             this.graphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.graphControl_ContextMenuBuilder);
+            this.graphControl.ZoomEvent += new ZedGraph.ZedGraphControl.ZoomEventHandler(this.graphControl_ZoomEvent);
             // 
             // toolBar
             // 

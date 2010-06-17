@@ -2370,10 +2370,11 @@ namespace pwiz.Skyline
 
             // Allow deletion, copy/paste for a single selection that is not the insert node,
             // or any multiple selection.
-            cutToolBarButton.Enabled = cutMenuItem.Enabled = (nodeTree != null || sequenceTree.SelectedNodes.Count > 1);
-            copyToolBarButton.Enabled = copyMenuItem.Enabled = (nodeTree != null || sequenceTree.SelectedNodes.Count > 1);
-            pasteToolBarButton.Enabled = pasteMenuItem.Enabled = (nodeTree != null || sequenceTree.SelectedNodes.Count > 1);
-            deleteMenuItem.Enabled = (nodeTree != null || sequenceTree.SelectedNodes.Count > 1);
+            bool enabled = (nodeTree != null || sequenceTree.SelectedNodes.Count > 1);
+            cutToolBarButton.Enabled = cutMenuItem.Enabled = enabled;
+            copyToolBarButton.Enabled = copyMenuItem.Enabled = enabled;
+            pasteToolBarButton.Enabled = pasteMenuItem.Enabled = true;
+            deleteMenuItem.Enabled = enabled;
         }
     }
 }

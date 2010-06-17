@@ -1033,6 +1033,8 @@ namespace pwiz.Skyline
             }
             lockYChromContextMenuItem.Checked = set.LockYChrom;
             menuStrip.Items.Insert(iInsert++, lockYChromContextMenuItem);
+            synchronizeZoomingContextMenuItem.Checked = set.AutoZoomAllChromatograms;
+            menuStrip.Items.Insert(iInsert++, synchronizeZoomingContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator18);
             menuStrip.Items.Insert(iInsert++, chromPropsContextMenuItem);
             menuStrip.Items.Insert(iInsert, toolStripSeparator19);
@@ -1340,6 +1342,20 @@ namespace pwiz.Skyline
                 chromatogram.LockYAxis(lockY);
         }
 
+        private void synchronizeZoomingContextMenuItem_Click(object sender, EventArgs e)
+        {
+            bool zoomAll = Settings.Default.AutoZoomAllChromatograms = synchronizeZoomingContextMenuItem.Checked;
+
+            if (zoomAll)
+            {
+                var activeForm = dockPanel.ActiveContent;
+                int iActive = _listGraphChrom.IndexOf(chrom => ReferenceEquals(chrom, activeForm));
+                ZoomState zoomState = (iActive != -1 ? _listGraphChrom[iActive].ZoomState : null);
+                if (zoomState != null)
+                    graphChromatogram_ZoomAll(null, new ZoomEventArgs(zoomState));
+            }
+        }
+
         private void autozoomMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             bool hasRt = (DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime != null);
@@ -1479,6 +1495,7 @@ namespace pwiz.Skyline
             graphChrom.VisibleChanged += graphChromatogram_VisibleChanged;
             graphChrom.PickedPeak += graphChromatogram_PickedPeak;
             graphChrom.ChangedPeakBounds += graphChromatogram_ChangedPeakBounds;
+            graphChrom.ZoomAll += graphChromatogram_ZoomAll;
             _listGraphChrom.Add(graphChrom);
             return graphChrom;
         }
@@ -1627,6 +1644,18 @@ namespace pwiz.Skyline
             {
                 if (graphChrom != null)
                     graphChrom.UnlockZoom();
+            }
+        }
+
+        private void graphChromatogram_ZoomAll(object sender, ZoomEventArgs e)
+        {
+            foreach (var graphChrom in _listGraphChrom)
+            {
+                if (!ReferenceEquals(sender, graphChrom))
+                {
+                    graphChrom.ZoomTo(e.ZoomState);
+                    graphChrom.UpdateUI();
+                }
             }
         }
 
