@@ -10,7 +10,8 @@ function echo_error()
     echo "##teamcity[message text='$*' status='ERROR']"
 }
 
-# Make subset working directory and move tarball there
+# Make a clean subset working directory and move tarball there
+rm -fr src_subset
 mkdir -p src_subset
 mv *-src-*.tar.bz2 src_subset
 cd src_subset
