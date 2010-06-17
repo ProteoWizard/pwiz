@@ -10,6 +10,14 @@ function echo_error()
     echo "##teamcity[message text='$*' status='ERROR']"
 }
 
+# Make subset working directory and move tarball there
+mkdir -p src_subset
+mv *-src-*.tar.bz2 src_subset
+cd src_subset
+
+# Extract subset tarball
+tar -xf *-src-*.tar.bz2
+
 echo_info "Cleaning project..."
 if ! /bin/bash clean.sh; then
 	  echo_error "Error cleaning project!"
