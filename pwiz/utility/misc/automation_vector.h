@@ -59,9 +59,15 @@ struct static_variant_info
         : vt == VT_R4 ? 4
         : vt == VT_R8 ? 8
         : vt == VT_CY ? 8
+#ifdef _WIN64
+        : vt == VT_BSTR ? 8
+        : vt == VT_DISPATCH ? 8
+        : vt == VT_UNKNOWN ? 8
+#else
         : vt == VT_BSTR ? 4
         : vt == VT_DISPATCH ? 4
         : vt == VT_UNKNOWN ? 4
+#endif
         : vt == VT_VARIANT ? 16
         : 0
     };
@@ -72,9 +78,15 @@ struct static_variant_info
             : vt == VT_R4 ? 4
             : vt == VT_R8 ? 8
             : vt == VT_CY ? 8
+#ifdef _WIN64
+            : vt == VT_BSTR ? 8
+            : vt == VT_DISPATCH ? 8
+            : vt == VT_UNKNOWN ? 8
+#else
             : vt == VT_BSTR ? 4
             : vt == VT_DISPATCH ? 4
             : vt == VT_UNKNOWN ? 4
+#endif
             : vt == VT_VARIANT ? 16
             : 0];
 };

@@ -47,7 +47,7 @@ namespace util {
     (defined(__DARWIN_10_6_AND_LATER) && defined(__LITTLE_ENDIAN__)) || \
     (defined(__MINGW32__)) || \
     (defined(__i386__)) || \
-    (defined(PWIZ_MSVC) && defined(_M_IX86))
+    (defined(PWIZ_MSVC))
 #define PWIZ_LITTLE_ENDIAN
 #endif
 
