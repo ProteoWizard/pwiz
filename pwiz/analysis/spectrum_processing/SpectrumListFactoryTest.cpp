@@ -131,6 +131,67 @@ void testWrapMSLevel()
 }
 
 
+void testWrapDefaultArrayLength()
+{
+    // test no effect
+    {
+        MSData msd;
+        examples::initializeTiny(msd);
+
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert(sl.get());
+        unit_assert(sl->size() == 4);
+
+        SpectrumListFactory::wrap(msd, "defaultArrayLength 0-");
+        unit_assert(sl->size() == 4);
+    }
+
+    // test filtering out all spectra
+    {
+        MSData msd;
+        examples::initializeTiny(msd);
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+
+        SpectrumListFactory::wrap(msd, "defaultArrayLength 100-");
+        unit_assert(sl->size() == 0);
+    }
+
+    // test filtering out empty spectra
+    {
+        MSData msd;
+        examples::initializeTiny(msd);
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+
+        SpectrumListFactory::wrap(msd, "defaultArrayLength 1-");
+        unit_assert(sl->size() == 3);
+        unit_assert(sl->find("scan=21") == sl->size());
+    }
+
+    // test filtering out spectra with defaultArrayLength > 14
+    {
+        MSData msd;
+        examples::initializeTiny(msd);
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+
+        SpectrumListFactory::wrap(msd, "defaultArrayLength 15-");
+        unit_assert(sl->size() == 2);
+        unit_assert(sl->find("scan=20") == sl->size());
+        unit_assert(sl->find("scan=21") == sl->size());
+    }
+
+    // test filtering out spectra with 0 < defaultArrayLength < 15
+    {
+        MSData msd;
+        examples::initializeTiny(msd);
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+
+        SpectrumListFactory::wrap(msd, "defaultArrayLength 1-14");
+        unit_assert(sl->size() == 1);
+        unit_assert(sl->find("scan=20") == 0);
+    }
+}
+
+
 void test()
 {
     testUsage(); 
@@ -138,6 +199,7 @@ void test()
     testWrapScanTimeRange();
     testWrapMZWindow();
     testWrapMSLevel();
+    testWrapDefaultArrayLength();
 }
 
 

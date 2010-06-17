@@ -230,6 +230,17 @@ SpectrumListPtr filterCreator_msLevel(const MSData& msd, const string& arg)
 }
 
 
+SpectrumListPtr filterCreator_defaultArrayLength(const MSData& msd, const string& arg)
+{
+    IntegerSet defaultArrayLengthSet;
+    defaultArrayLengthSet.parse(arg);
+
+    return SpectrumListPtr(new 
+        SpectrumList_Filter(msd.run.spectrumListPtr, 
+                            SpectrumList_FilterPredicate_DefaultArrayLengthSet(defaultArrayLengthSet)));
+}
+
+
 SpectrumListPtr filterCreator_metadataFixer(const MSData& msd, const string& arg)
 {
     return SpectrumListPtr(new SpectrumList_MetadataFixer(msd.run.spectrumListPtr));
@@ -349,6 +360,7 @@ JumpTableEntry jumpTable_[] =
     {"metadataFixer", " (add/replace TIC/BPI metadata)", filterCreator_metadataFixer},
     {"threshold", "<count|count-after-ties|absolute|bpi-relative|tic-relative|tic-cutoff> <threshold> <most-intense|least-intense>", filterCreator_thresholdFilter},
     {"mzWindow", "[mzLow,mzHigh]", filterCreator_mzWindow},
+    {"defaultArrayLength", "int_set", filterCreator_defaultArrayLength},
 
     // MSn Spectrum Processing/Filtering
     {"ETDFilter", "removePrecursor:<default:true|false>  removeChargeReduced:<default:true|false>  removeNeutralLoss:<default:true|false>  blanketRemoval:<default:true|false>  MatchingTolerance:(val <PPM|MZ>) (default:3.1 MZ)", filterCreator_ETDFilter},

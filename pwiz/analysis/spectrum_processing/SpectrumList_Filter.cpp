@@ -255,6 +255,23 @@ PWIZ_API_DECL bool SpectrumList_FilterPredicate_MSLevelSet::accept(const msdata:
     return result;
 }
 
+
+//
+// SpectrumList_FilterPredicate_DefaultArrayLengthSet 
+//
+
+
+PWIZ_API_DECL SpectrumList_FilterPredicate_DefaultArrayLengthSet::SpectrumList_FilterPredicate_DefaultArrayLengthSet(const IntegerSet& defaultArrayLengthSet)
+:   defaultArrayLengthSet_(defaultArrayLengthSet)
+{}
+
+
+PWIZ_API_DECL bool SpectrumList_FilterPredicate_DefaultArrayLengthSet::accept(const msdata::Spectrum& spectrum) const
+{
+    return defaultArrayLengthSet_.contains(spectrum.defaultArrayLength);
+}
+
+
 //
 // SpectrumList_FilterPredicate_ActivationType
 //

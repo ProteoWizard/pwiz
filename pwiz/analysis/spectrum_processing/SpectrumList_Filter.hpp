@@ -145,6 +145,19 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_MSLevelSet : public SpectrumLis
     util::IntegerSet msLevelSet_;
 };
 
+
+class PWIZ_API_DECL SpectrumList_FilterPredicate_DefaultArrayLengthSet : public SpectrumList_Filter::Predicate
+{
+    public:
+    SpectrumList_FilterPredicate_DefaultArrayLengthSet(const util::IntegerSet& defaultArrayLengthSet);
+    virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const {return boost::logic::indeterminate;}
+    virtual bool accept(const msdata::Spectrum& spectrum) const;
+
+    private:
+    util::IntegerSet defaultArrayLengthSet_;
+};
+
+
 class PWIZ_API_DECL SpectrumList_FilterPredicate_MS2ActivationType : public SpectrumList_Filter::Predicate
 {
 public:
