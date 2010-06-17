@@ -101,6 +101,7 @@ unit-test ScanFilterTest
     : ScanFilterTest.cpp
       pwiz_vendor_api_thermo
     : <conditional>@msvc-requirement
+      <address-model>64:<build>no
     ;
 
 # a test utility, not a unit test

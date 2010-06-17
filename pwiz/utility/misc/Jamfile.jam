@@ -70,6 +70,7 @@ lib pwiz_utility_image
         <warnings>all
         <library>../../..//gd
         <library>pwiz_utility_misc
+        <toolset>msvc,<address-model>64:<build>no # TODO: build GD from source or get a substitute!
     : # default-build
     : # usage-requirements
         <library>../../..//gd

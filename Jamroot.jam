@@ -139,6 +139,7 @@ project pwiz
         <toolset>gcc:<cxxflags>-Wno-long-long
         <toolset>darwin:<cxxflags>-Wno-long-long
 
+        # any GCC executable that uses shared libraries must have all its code built with -fPIC
         <conditional>@static-with-fpic
 
         # don't call 'strip' -- causes 'Bus error' in some cases
@@ -384,6 +385,8 @@ tar.extract $(PWIZ_LIBRARIES_PATH)/gd-2.0.33.tar.bz2 : *.h : <location>$(PWIZ_LI
 path-constant BOOST_SOURCE : $(boost_src) ;
 path-constant ZLIB_SOURCE : $(zlib_src) ;
 
+using ext-boost : 1.43.0 : $(BOOST_SOURCE) : <zlib-src-location>$(ZLIB_SOURCE) ;
+
 # HACK: bug in boost::iostreams 1.43 requires this little patch to support building with link=shared
 # Boost bug ticket: https://svn.boost.org/trac/boost/ticket/4335
 if [ modules.peek : NT ]
@@ -391,8 +394,6 @@ if [ modules.peek : NT ]
     import path ;
     echo [ SHELL "copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\file_descriptor.hpp $(PWIZ_LIBRARIES_PATH)\\boost_1_43_0\\boost\\iostreams\\device" ] ;
 }
-
-using ext-boost : 1.43.0 : $(BOOST_SOURCE) : <zlib-src-location>$(ZLIB_SOURCE) ;
 
 
 rule project-exists ( project-path )
@@ -633,6 +634,7 @@ tar.create boost_1_43_0.tar.bz2
   exclude:*.bak
   exclude:cvgen*.exe
   exclude:svnrev.hpp
+  exclude:Version.cpp
   exclude:Reader_*_Test.data
   exclude:example_data/small* # large files in example_data
   exclude:bootstrap exclude:bin.* # boost-build intermediate directories

@@ -34,7 +34,7 @@ project
 path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D ;
 path-constant TEST_DATA_PATH : ./Reader_ABI_T2D_Test.data ;
 constant READER_PATH : "pwiz_aux/msrc/data/vendor_readers/ABI/T2D" ;
-constant READER_NAME : "Reader_ABI" ;
+constant READER_NAME : "Reader_ABI_T2D" ;
 
 
 import os common ;
@@ -51,7 +51,8 @@ import path ;
 rule vendor-api-requirements ( properties * )
 {
     local result ;
-    if <toolset>msvc in $(properties)
+    if <toolset>msvc in $(properties) &&
+       ! ( <address-model>64 in $(properties) )
     {
         result += <source>Reader_ABI_T2D_Detail.cpp ;
     }

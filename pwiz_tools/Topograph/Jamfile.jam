@@ -101,6 +101,7 @@ if [ modules.peek : NT ]
             @do_topograph_build
         : # requirements
             <link>shared:<build>no
+            <address-model>64:<build>no
             <conditional>@no-msvc-express
             <toolset>msvc:<assembly>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli
             <conditional>@build-location
@@ -150,6 +151,8 @@ if [ modules.peek : NT ]
         : # actions
             @do_topograph_test
         : # requirements
+            <link>shared:<build>no
+            <address-model>64:<build>no
             <conditional>@no-msvc-express
             <conditional>@build-location
             <dependency>Topograph.exe
@@ -159,6 +162,8 @@ if [ modules.peek : NT ]
         : # actions
             @do_topograph_test_passed
         : # requirements
+            <link>shared:<build>no
+            <address-model>64:<build>no
             <conditional>@no-msvc-express
             <conditional>@build-location
             <dependency>TopographTestProject.dll
