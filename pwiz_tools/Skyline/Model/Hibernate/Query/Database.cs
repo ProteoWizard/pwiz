@@ -305,16 +305,14 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             docInfo.PeptideResults.Add(dbPeptide, peptideResults);
             if (nodePeptide.HasResults)
             {
-                var enumReplicates = docInfo.ReplicateResultFiles.GetEnumerator();
-                foreach (var results in nodePeptide.Results)
+                int iBest = nodePeptide.BestResult;
+                for (int i = 0, len = nodePeptide.Results.Count; i < len; i++)
                 {
-                    bool success = enumReplicates.MoveNext();   // synch with foreach
-                    Debug.Assert(success);
-
+                    var results = nodePeptide.Results[i];
                     if (results == null)
                         continue;
 
-                    var resultFiles = enumReplicates.Current;
+                    var resultFiles = docInfo.ReplicateResultFiles[i];
 
                     foreach (var chromInfo in results)
                     {
@@ -328,6 +326,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             ResultFile = resultFile,
                             PeptidePeakFoundRatio = chromInfo.PeakCountRatio,
                             PeptideRetentionTime = chromInfo.RetentionTime,
+                            BestReplicate = (i == iBest),
                             ProteinResult = docInfo.ProteinResults[dbProtein][resultFile],
                         };
                         AddRatios(dbPeptideResult, docInfo, chromInfo);

@@ -481,6 +481,11 @@ namespace pwiz.Skyline.Controls.SeqNode
                 else if (!ReferenceEquals(nodeTree.Model, nodeDoc))
                     nodeTree.Model = nodeDoc;
                 treeNodes.Insert(i, nodeTree);
+                // Best replicate display, requires that the node have correct
+                // parenting, before the text and icons can be set correctly.
+                // So, force a model change to update those values.
+                if (tree.ShowReplicate == ReplicateDisplay.best)
+                    nodeTree.Model = nodeDoc;
             }
             if (selChanged)
                 tree.FireSelectedNodeChanged();

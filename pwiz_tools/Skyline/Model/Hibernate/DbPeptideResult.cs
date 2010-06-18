@@ -36,6 +36,7 @@ namespace pwiz.Skyline.Model.Hibernate
         public virtual double? PeptideRetentionTime { get; set; }
         [QueryColumn(Format=Formats.STANDARD_RATIO)]
         public virtual double? RatioToStandard { get; set; }
+        public virtual bool BestReplicate { get; set; }
         [QueryColumn(FullName = "PeptideResultNote")]
         public virtual String Note { get; set; }
     }

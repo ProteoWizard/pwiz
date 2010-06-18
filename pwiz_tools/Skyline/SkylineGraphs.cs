@@ -1826,8 +1826,16 @@ namespace pwiz.Skyline
                 if (DocumentUI.Settings.HasResults && 
                     DocumentUI.Settings.MeasuredResults.Chromatograms.Count > 1)
                 {
-                    averageReplicatesContextMenuItem.Checked = set.RTAverageReplicates;
-                    menuStrip.Items.Insert(iInsert++, averageReplicatesContextMenuItem);
+                    menuStrip.Items.Insert(iInsert++, replicatesRTContextMenuItem);
+                    if (replicatesRTContextMenuItem.DropDownItems.Count == 0)
+                    {
+                        replicatesRTContextMenuItem.DropDownItems.AddRange(new[]
+                        {
+                            averageReplicatesContextMenuItem,
+                            singleReplicateRTContextMenuItem,
+                            bestReplicateRTContextMenuItem
+                        });
+                    }
                 }
                 menuStrip.Items.Insert(iInsert++, setRTThresholdContextMenuItem);
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator22);
@@ -1982,8 +1990,28 @@ namespace pwiz.Skyline
 
         private void averageReplicatesContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.RTAverageReplicates = averageReplicatesContextMenuItem.Checked;
+            Settings.Default.ShowRegressionReplicateEnum = ReplicateDisplay.all.ToString();
             UpdateRetentionTimeGraph();
+        }
+
+        private void singleReplicateRTContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowRegressionReplicateEnum = ReplicateDisplay.single.ToString();
+            UpdateRetentionTimeGraph();
+        }
+
+        private void bestReplicateRTContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowRegressionReplicateEnum = ReplicateDisplay.best.ToString();
+            UpdateRetentionTimeGraph();
+        }
+
+        private void replicatesRTContextMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            ReplicateDisplay replicate = RTLinearRegressionGraphPane.ShowReplicate;
+            averageReplicatesContextMenuItem.Checked = (replicate == ReplicateDisplay.all);
+            singleReplicateRTContextMenuItem.Checked = (replicate == ReplicateDisplay.single);
+            bestReplicateRTContextMenuItem.Checked = (replicate == ReplicateDisplay.best);
         }
 
         private void setRTThresholdContextMenuItem_Click(object sender, EventArgs e)

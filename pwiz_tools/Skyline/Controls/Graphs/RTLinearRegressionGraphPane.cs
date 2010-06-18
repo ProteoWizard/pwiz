@@ -25,12 +25,21 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
     internal sealed class RTLinearRegressionGraphPane : SummaryGraphPane
     {
+        public static ReplicateDisplay ShowReplicate
+        {
+            get
+            {
+                return Helpers.ParseEnum(Settings.Default.ShowRegressionReplicateEnum, ReplicateDisplay.all);
+            }
+        }
+
         public static readonly Color COLOR_REFINED = Color.DarkBlue;
         public static readonly Color COLOR_LINE_REFINED = Color.Black;
         public static readonly Color COLOR_LINE_PREDICT = Color.DarkGray;
@@ -63,9 +72,17 @@ namespace pwiz.Skyline.Controls.Graphs
             var peptideIndex = PeptideIndexFromPoint(new PointF(e.X, e.Y));
             if (peptideIndex != null)
             {
-                var pathSelect = GraphSummary.DocumentUIContainer.DocumentUI.GetPathTo((int)SrmDocument.Level.Peptides,
-                                                                                             peptideIndex.IndexDoc);
+                var document = GraphSummary.DocumentUIContainer.DocumentUI;
+                var pathSelect = document.GetPathTo((int) SrmDocument.Level.Peptides,
+                                                    peptideIndex.IndexDoc);
                 GraphSummary.StateProvider.SelectedPath = pathSelect;
+                if (ShowReplicate == ReplicateDisplay.best)
+                {
+                    var nodePep = (PeptideDocNode) document.FindNode(pathSelect);
+                    int iBest = nodePep.BestResult;
+                    if (iBest != -1)
+                        GraphSummary.StateProvider.SelectedResultsIndex = iBest;
+                }
                 return true;
             }
             return false;
@@ -127,10 +144,10 @@ namespace pwiz.Skyline.Controls.Graphs
             return data != null && data.IsValidFor(document);
         }
 
-        public bool IsValidFor(SrmDocument document, int resultIndex, double threshold, bool refine)
+        public bool IsValidFor(SrmDocument document, int resultIndex, bool bestResult, double threshold, bool refine)
         {
             var data = Data;
-            return data != null && data.IsValidFor(document, resultIndex, threshold, refine);
+            return data != null && data.IsValidFor(document, resultIndex, bestResult, threshold, refine);
         }
 
         public void Clear()
@@ -149,7 +166,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void Update(SrmDocument document, int resultIndex, double threshold, bool refine)
         {
-            Data = new GraphData(document, Data, resultIndex, threshold, refine, false);
+            bool bestResults = (ShowReplicate == ReplicateDisplay.best);
+            Data = new GraphData(document, Data, resultIndex, threshold, refine, bestResults);
         }
 
         public bool IsRefined
@@ -213,7 +231,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
             PeptideDocNode nodeSelected = null;
-            int resultIndex = (Settings.Default.RTAverageReplicates ? -1 : GraphSummary.ResultsIndex);
+            int resultIndex = (ShowReplicate == ReplicateDisplay.single ? GraphSummary.ResultsIndex : -1);
             var results = document.Settings.MeasuredResults;
             bool resultsAvailable = results != null;
             if (resultsAvailable)
@@ -245,8 +263,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     double threshold = RTGraphController.OutThreshold;
                     bool refine = Settings.Default.RTRefinePeptides;
+                    bool bestResult = (ShowReplicate == ReplicateDisplay.best);
 
-                    if (!IsValidFor(document, resultIndex, threshold, refine))
+                    if (!IsValidFor(document, resultIndex, bestResult, threshold, refine))
                     {
                         Update(document, resultIndex, threshold, refine);
                         if (refine && !IsRefined)
@@ -292,6 +311,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             private readonly SrmDocument _document;
             private readonly int _resultIndex;
+            private readonly bool _bestResult;
             private readonly double _threshold;
             private readonly bool _refine;
             private readonly List<PeptideDocumentIndex> _peptidesIndexes;
@@ -319,6 +339,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 _document = document;
                 _resultIndex = resultIndex;
+                _bestResult = bestResult;
                 _threshold = threshold;
                 _peptidesIndexes = new List<PeptideDocumentIndex>();
                 _peptidesTimes = new List<MeasuredRetentionTime>();
@@ -370,9 +391,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 return ReferenceEquals(document, _document);
             }
 
-            public bool IsValidFor(SrmDocument document, int resultIndex, double threshold, bool refine)
+            public bool IsValidFor(SrmDocument document, int resultIndex, bool bestResult, double threshold, bool refine)
             {
-                return IsValidFor(document) && _resultIndex == resultIndex && _threshold == threshold &&
+                return IsValidFor(document) &&
+                        _resultIndex == resultIndex &&
+                        _bestResult == bestResult &&
+                        _threshold == threshold &&
                        // Valid if refine is true, and this data requires no further refining
                        (_refine == refine || (refine && IsRefined()));
             }
@@ -587,8 +611,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 else
                 {
                     // Find maximum hydrophobicity score points for drawing the regression line
-                    lineScores = new[] { double.MaxValue, 0 };
-                    lineTimes = new[] { double.MaxValue, 0 };
+                    lineScores = new[] { Double.MaxValue, 0 };
+                    lineTimes = new[] { Double.MaxValue, 0 };
 
                     for (int i = 0; i < statistics.ListHydroScores.Count; i++)
                     {
@@ -660,7 +684,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
-                    label = string.Format("slope = {0:F02}, intercept = {1:F02}\n" +
+                    label = String.Format("slope = {0:F02}, intercept = {1:F02}\n" +
                                           "window = {2:F01}\n" +
                                           "r = {3:F02}",
                                           regression.Conversion.Slope,

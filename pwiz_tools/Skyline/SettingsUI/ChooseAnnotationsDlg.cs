@@ -113,7 +113,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 if (childrenChanged)
                 {
-                    docNode = docNodeParent = docNodeParent.ChangeChildren(newChildren);
+                    docNode = docNodeParent.ChangeChildren(newChildren);
                 }
             }
             if (docNode is TransitionGroupDocNode)
@@ -166,6 +166,9 @@ namespace pwiz.Skyline.SettingsUI
 
         private static bool StripAnnotationValues<T>(ICollection<string> annotationNamesToKeep, ref ChromInfoList<T> chromInfoList)
         {
+            if (chromInfoList == null)
+                return false;
+
             bool fResult = false;
             var newList = new List<T>();
             foreach (var chromInfo in chromInfoList)

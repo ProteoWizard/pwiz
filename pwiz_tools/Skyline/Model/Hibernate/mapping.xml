@@ -58,6 +58,7 @@
     <property name="PeptidePeakFoundRatio"/>
     <property name="PeptideRetentionTime" />
     <property name="RatioToStandard" />
+    <property name="BestReplicate" />
   </class>
   <class name="DbPrecursor">
     <id name="Id">

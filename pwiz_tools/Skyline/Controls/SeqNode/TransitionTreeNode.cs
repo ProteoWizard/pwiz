@@ -18,9 +18,7 @@
  */
 using System.Diagnostics;
 using System.Drawing;
-using System.Windows.Forms;
 using pwiz.Skyline.Model;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.SeqNode
 {
@@ -69,6 +67,11 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
         }
 
+        public int DisplayResultsIndex
+        {
+            get { return SequenceTree.GetDisplayResultsIndex(Parent != null ? (PeptideTreeNode) Parent.Parent : null); }
+        }
+
         public int PeakImageIndex
         {
             get
@@ -76,7 +79,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 if (!DocSettings.HasResults)
                     return -1;
 
-                int index = SequenceTree.ResultsIndex;
+                int index = DisplayResultsIndex;
 
                 float? ratio = (DocNode.HasResults ? DocNode.GetPeakCountRatio(index) : null);
                 if (ratio == null)
@@ -97,7 +100,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             get
             {
-                int index = SequenceTree.ResultsIndex;
+                int index = DisplayResultsIndex;
                 int indexRatio = SequenceTree.RatioIndex;
                 int? rank = DocNode.GetPeakRank(index);
                 string label = (rank.HasValue && rank > 0 ? string.Format("[{0}]", rank) : "");

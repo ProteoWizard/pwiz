@@ -72,7 +72,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void OnResultsIndexChanged()
         {
-            if (GraphSummary.GraphPane is RTReplicateGraphPane || !Settings.Default.RTAverageReplicates)
+            if (GraphSummary.GraphPane is RTReplicateGraphPane ||
+                    RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
                 GraphSummary.UpdateUI();
         }
 

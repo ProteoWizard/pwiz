@@ -49,6 +49,7 @@ namespace pwiz.Skyline.Model
             ExplicitMods = mods;
             Rank = rank;
             Results = results;
+            BestResult = CalcBestResult();
         }
 
         public Peptide Peptide { get { return (Peptide)Id; } }
@@ -129,54 +130,83 @@ namespace pwiz.Skyline.Model
             return HasResults ? Results.GetAverageValue(getVal) : null;
         }
 
-        public int BestResult
-        {
-            get
-            {
-                if (!HasResults)
-                    return -1;
+        public int BestResult { get; private set; }
 
-                int iBest = -1;
-                double bestArea = double.MinValue;
-                for (int i = 0; i < Results.Count; i++)
+        /// <summary>
+        /// Returns the index of the "best" result for a peptide.  This is currently
+        /// base solely on total peak area, could be enhanced in the future to be
+        /// more like picking the best peak in the import code, including factors
+        /// such as peak-found-ratio and dot-product.
+        /// </summary>
+        private int CalcBestResult()
+        {
+            if (!HasResults)
+                return -1;
+
+            int iBest = -1;
+            double bestArea = double.MinValue;
+            for (int i = 0; i < Results.Count; i++)
+            {
+                double productArea = 0;
+                foreach (TransitionGroupDocNode nodeGroup in Children)
                 {
-                    double totalArea = 0;
-                    foreach (TransitionGroupDocNode nodeGroup in Children)
+                    double groupArea = 0;
+                    double groupTranMeasured = 0;
+                    foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                     {
-                        var result = nodeGroup.Results[i];
+                        if (!nodeTran.HasResults)
+                            continue;
+                        var result = nodeTran.Results[i];
                         if (result == null)
                             continue;
-                        foreach (var chromInfo in result)
+                        // Use average area over all files in a replicate to avoid
+                        // counting a replicate as best, simply because it has more
+                        // measurements.  Most of the time there should only be one
+                        // file per precursor per replicate.
+                        double tranArea = 0;
+                        double tranMeasured = 0;
+                        for (int j = 0; j < result.Count; j++)
                         {
-                            if (chromInfo != null && chromInfo.Area.HasValue)
-                                totalArea += chromInfo.Area.Value;
+                            var chromInfo = result[j];
+                            if (chromInfo != null && chromInfo.Area > 0)
+                            {
+                                tranArea += chromInfo.Area;
+                                tranMeasured++;                                
+                            }
                         }
+                        groupArea += tranArea/result.Count;
+                        groupTranMeasured += tranMeasured/result.Count;
                     }
-                    if (totalArea > bestArea)
-                    {
-                        iBest = i;
-                        bestArea = totalArea;
-                    }
+                    productArea += groupArea * Math.Pow(10, groupTranMeasured);
                 }
-                return iBest;
+                if (productArea > bestArea)
+                {
+                    iBest = i;
+                    bestArea = productArea;
+                }
             }
+            return iBest;            
         }
 
         #region Property change methods
 
         public PeptideDocNode ChangeExplicitMods(ExplicitMods prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.ExplicitMods = v, prop);
+            return ChangeProp(ImClone(this), im => im.ExplicitMods = prop);
         }     
 
         public PeptideDocNode ChangeRank(int? prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.Rank = v, prop);
+            return ChangeProp(ImClone(this), im => im.Rank = prop);
         }
 
         public PeptideDocNode ChangeResults(Results<PeptideChromInfo> prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.Results = v, prop);
+            return ChangeProp(ImClone(this), im =>
+                                                 {
+                                                     im.Results = prop;
+                                                     im.BestResult = im.CalcBestResult();
+                                                 });
         }
 
         #endregion

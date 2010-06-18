@@ -624,7 +624,16 @@ namespace pwiz.Skyline
             var enabled = nodeTree != null;
             editNoteToolStripMenuItem.Enabled = enabled;
             manageUniquePeptidesMenuItem.Enabled = enabled;
-            modifyPeptideMenuItem.Enabled = sequenceTree.GetNodeOfType<PeptideTreeNode>() != null;
+            var nodePepTree = sequenceTree.GetNodeOfType<PeptideTreeNode>();
+            modifyPeptideMenuItem.Enabled = nodePepTree != null;
+
+            // Update active replicate, if using best replicate
+            if (nodePepTree != null && SequenceTree.ShowReplicate == ReplicateDisplay.best)
+            {
+                int iBest = nodePepTree.DocNode.BestResult;
+                if (iBest != -1)
+                    SelectedResultsIndex = iBest;
+            }
 
             // Update any visible graphs
             UpdateGraphPanes();
@@ -1373,6 +1382,33 @@ namespace pwiz.Skyline
             sequenceTree.ShowPickList();
         }
 
+
+        private void singleReplicateTreeContextMenuItem_Click(object sender, EventArgs e)
+        {
+            SequenceTree.ShowReplicate = ReplicateDisplay.single;
+        }
+
+        private void bestReplicateTreeContextMenuItem_Click(object sender, EventArgs e)
+        {
+            SequenceTree.ShowReplicate = ReplicateDisplay.best;
+
+            // Make sure the best result index is active for the current peptide.
+            var nodePepTree = sequenceTree.GetNodeOfType<PeptideTreeNode>();
+            if (nodePepTree != null)
+            {
+                int iBest = nodePepTree.DocNode.BestResult;
+                if (iBest != -1)
+                    SelectedResultsIndex = iBest;
+            }
+        }
+
+        private void replicatesTreeContextMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            ReplicateDisplay replicate = SequenceTree.ShowReplicate;
+            singleReplicateTreeContextMenuItem.Checked = (replicate == ReplicateDisplay.single);
+            bestReplicateTreeContextMenuItem.Checked = (replicate == ReplicateDisplay.best);
+        }
+
         #endregion
 
         #region View menu
@@ -1717,7 +1753,7 @@ namespace pwiz.Skyline
                 var settings = DocumentUI.Settings;
                 // Show the ratios sub-menu when there are results and a choice of
                 // internal standard types.
-                ratiosContextMenuItem.Visible = toolStripSeparatorRatios.Visible =
+                ratiosContextMenuItem.Visible =
                     settings.HasResults &&
                     settings.PeptideSettings.Modifications.InternalStandardTypes.Count > 1 &&
                     settings.PeptideSettings.Modifications.HasHeavyModifications;
@@ -1742,7 +1778,7 @@ namespace pwiz.Skyline
         private class SelectRatioHandler
         {
             protected readonly SkylineWindow _skyline;
-            protected readonly int _ratioIndex;
+            private readonly int _ratioIndex;
 
             public SelectRatioHandler(SkylineWindow skyline, int ratioIndex)
             {

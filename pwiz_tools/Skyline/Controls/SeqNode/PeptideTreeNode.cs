@@ -109,6 +109,11 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
         }
 
+        public int DisplayResultsIndex
+        {
+            get { return SequenceTree.GetDisplayResultsIndex(this); }
+        }
+
         public int PeakImageIndex
         {
             get
@@ -116,7 +121,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 if (!DocSettings.HasResults)
                     return -1;
 
-                int index = SequenceTree.ResultsIndex;
+                int index = DisplayResultsIndex;
 
                 float? ratio = (DocNode.HasResults ? DocNode.GetPeakCountRatio(index) : null);
                 if (ratio == null)

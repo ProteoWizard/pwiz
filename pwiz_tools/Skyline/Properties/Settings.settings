@@ -158,9 +158,6 @@
     <Setting Name="RTPredictorVisible" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
-    <Setting Name="RTAverageReplicates" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
     <Setting Name="ShowToolBar" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
@@ -301,6 +298,12 @@
     </Setting>
     <Setting Name="AutoZoomAllChromatograms" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ShowRegressionReplicateEnum" Type="System.String" Scope="User">
+      <Value Profile="(Default)">all</Value>
+    </Setting>
+    <Setting Name="ShowTreeReplicateEnum" Type="System.String" Scope="User">
+      <Value Profile="(Default)">single</Value>
     </Setting>
   </Settings>
 </SettingsFile>

@@ -181,6 +181,9 @@ namespace pwiz.Skyline
             this.toolStripSeparatorRatios = new System.Windows.Forms.ToolStripSeparator();
             this.ratiosContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.placeholderToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.replicatesTreeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.singleReplicateTreeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.bestReplicateTreeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitMain = new System.Windows.Forms.SplitContainer();
             this.toolBarResults = new System.Windows.Forms.ToolStrip();
             this.labelResults = new System.Windows.Forms.ToolStripLabel();
@@ -238,6 +241,7 @@ namespace pwiz.Skyline
             this.autoZoomRTWindowContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.autoZoomBothContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.lockYChromContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.synchronizeZoomingContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator18 = new System.Windows.Forms.ToolStripSeparator();
             this.chromPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator19 = new System.Windows.Forms.ToolStripSeparator();
@@ -268,7 +272,10 @@ namespace pwiz.Skyline
             this.selectionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.refineRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.predictionRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.replicatesRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.averageReplicatesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.singleReplicateRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.bestReplicateRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.setRTThresholdContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator22 = new System.Windows.Forms.ToolStripSeparator();
             this.createRTRegressionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -297,7 +304,6 @@ namespace pwiz.Skyline
             this.peptideCvsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator28 = new System.Windows.Forms.ToolStripSeparator();
             this.areaPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.synchronizeZoomingContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuMain.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.contextMenuTreeNode.SuspendLayout();
@@ -1486,9 +1492,10 @@ namespace pwiz.Skyline
             this.toolStripSeparator7,
             this.editNoteContextMenuItem,
             this.toolStripSeparatorRatios,
-            this.ratiosContextMenuItem});
+            this.ratiosContextMenuItem,
+            this.replicatesTreeContextMenuItem});
             this.contextMenuTreeNode.Name = "contextMenuTreeNode";
-            this.contextMenuTreeNode.Size = new System.Drawing.Size(146, 220);
+            this.contextMenuTreeNode.Size = new System.Drawing.Size(146, 242);
             this.contextMenuTreeNode.Opening += new System.ComponentModel.CancelEventHandler(this.contextMenuTreeNode_Opening);
             // 
             // cutContextMenuItem
@@ -1587,6 +1594,30 @@ namespace pwiz.Skyline
             this.placeholderToolStripMenuItem.Name = "placeholderToolStripMenuItem";
             this.placeholderToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.placeholderToolStripMenuItem.Text = "<placeholder>";
+            // 
+            // replicatesTreeContextMenuItem
+            // 
+            this.replicatesTreeContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.singleReplicateTreeContextMenuItem,
+            this.bestReplicateTreeContextMenuItem});
+            this.replicatesTreeContextMenuItem.Name = "replicatesTreeContextMenuItem";
+            this.replicatesTreeContextMenuItem.Size = new System.Drawing.Size(145, 22);
+            this.replicatesTreeContextMenuItem.Text = "Replicates";
+            this.replicatesTreeContextMenuItem.DropDownOpening += new System.EventHandler(this.replicatesTreeContextMenuItem_DropDownOpening);
+            // 
+            // singleReplicateTreeContextMenuItem
+            // 
+            this.singleReplicateTreeContextMenuItem.Name = "singleReplicateTreeContextMenuItem";
+            this.singleReplicateTreeContextMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.singleReplicateTreeContextMenuItem.Text = "Single";
+            this.singleReplicateTreeContextMenuItem.Click += new System.EventHandler(this.singleReplicateTreeContextMenuItem_Click);
+            // 
+            // bestReplicateTreeContextMenuItem
+            // 
+            this.bestReplicateTreeContextMenuItem.Name = "bestReplicateTreeContextMenuItem";
+            this.bestReplicateTreeContextMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.bestReplicateTreeContextMenuItem.Text = "Best";
+            this.bestReplicateTreeContextMenuItem.Click += new System.EventHandler(this.bestReplicateTreeContextMenuItem_Click);
             // 
             // splitMain
             // 
@@ -1869,7 +1900,7 @@ namespace pwiz.Skyline
             this.zoomChromContextMenuItem,
             this.toolStripSeparator26});
             this.contextMenuChromatogram.Name = "contextMenuChromatogram";
-            this.contextMenuChromatogram.Size = new System.Drawing.Size(213, 348);
+            this.contextMenuChromatogram.Size = new System.Drawing.Size(213, 326);
             // 
             // removePeakGraphMenuItem
             // 
@@ -2093,6 +2124,14 @@ namespace pwiz.Skyline
             this.lockYChromContextMenuItem.Text = "Auto-scale Y-axis";
             this.lockYChromContextMenuItem.Click += new System.EventHandler(this.lockYChromContextMenuItem_Click);
             // 
+            // synchronizeZoomingContextMenuItem
+            // 
+            this.synchronizeZoomingContextMenuItem.CheckOnClick = true;
+            this.synchronizeZoomingContextMenuItem.Name = "synchronizeZoomingContextMenuItem";
+            this.synchronizeZoomingContextMenuItem.Size = new System.Drawing.Size(212, 22);
+            this.synchronizeZoomingContextMenuItem.Text = "Synchronize Zooming";
+            this.synchronizeZoomingContextMenuItem.Click += new System.EventHandler(this.synchronizeZoomingContextMenuItem_Click);
+            // 
             // toolStripSeparator18
             // 
             this.toolStripSeparator18.Name = "toolStripSeparator18";
@@ -2239,7 +2278,7 @@ namespace pwiz.Skyline
             this.selectionContextMenuItem,
             this.refineRTContextMenuItem,
             this.predictionRTContextMenuItem,
-            this.averageReplicatesContextMenuItem,
+            this.replicatesRTContextMenuItem,
             this.setRTThresholdContextMenuItem,
             this.toolStripSeparator22,
             this.createRTRegressionContextMenuItem,
@@ -2360,13 +2399,37 @@ namespace pwiz.Skyline
             this.predictionRTContextMenuItem.Text = "Prediction";
             this.predictionRTContextMenuItem.Click += new System.EventHandler(this.predictionRTContextMenuItem_Click);
             // 
+            // replicatesRTContextMenuItem
+            // 
+            this.replicatesRTContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.averageReplicatesContextMenuItem,
+            this.singleReplicateRTContextMenuItem,
+            this.bestReplicateRTContextMenuItem});
+            this.replicatesRTContextMenuItem.Name = "replicatesRTContextMenuItem";
+            this.replicatesRTContextMenuItem.Size = new System.Drawing.Size(177, 22);
+            this.replicatesRTContextMenuItem.Text = "Replicates";
+            this.replicatesRTContextMenuItem.DropDownOpening += new System.EventHandler(this.replicatesRTContextMenuItem_DropDownOpening);
+            // 
             // averageReplicatesContextMenuItem
             // 
-            this.averageReplicatesContextMenuItem.CheckOnClick = true;
             this.averageReplicatesContextMenuItem.Name = "averageReplicatesContextMenuItem";
-            this.averageReplicatesContextMenuItem.Size = new System.Drawing.Size(177, 22);
-            this.averageReplicatesContextMenuItem.Text = "Average Replicates";
+            this.averageReplicatesContextMenuItem.Size = new System.Drawing.Size(106, 22);
+            this.averageReplicatesContextMenuItem.Text = "All";
             this.averageReplicatesContextMenuItem.Click += new System.EventHandler(this.averageReplicatesContextMenuItem_Click);
+            // 
+            // singleReplicateRTContextMenuItem
+            // 
+            this.singleReplicateRTContextMenuItem.Name = "singleReplicateRTContextMenuItem";
+            this.singleReplicateRTContextMenuItem.Size = new System.Drawing.Size(106, 22);
+            this.singleReplicateRTContextMenuItem.Text = "Single";
+            this.singleReplicateRTContextMenuItem.Click += new System.EventHandler(this.singleReplicateRTContextMenuItem_Click);
+            // 
+            // bestReplicateRTContextMenuItem
+            // 
+            this.bestReplicateRTContextMenuItem.Name = "bestReplicateRTContextMenuItem";
+            this.bestReplicateRTContextMenuItem.Size = new System.Drawing.Size(106, 22);
+            this.bestReplicateRTContextMenuItem.Text = "Best";
+            this.bestReplicateRTContextMenuItem.Click += new System.EventHandler(this.bestReplicateRTContextMenuItem_Click);
             // 
             // setRTThresholdContextMenuItem
             // 
@@ -2569,14 +2632,6 @@ namespace pwiz.Skyline
             this.areaPropsContextMenuItem.Text = "Properties...";
             this.areaPropsContextMenuItem.Click += new System.EventHandler(this.areaPropsContextMenuItem_Click);
             // 
-            // synchronizeZoomingContextMenuItem
-            // 
-            this.synchronizeZoomingContextMenuItem.CheckOnClick = true;
-            this.synchronizeZoomingContextMenuItem.Name = "synchronizeZoomingContextMenuItem";
-            this.synchronizeZoomingContextMenuItem.Size = new System.Drawing.Size(212, 22);
-            this.synchronizeZoomingContextMenuItem.Text = "Synchronize Zooming";
-            this.synchronizeZoomingContextMenuItem.Click += new System.EventHandler(this.synchronizeZoomingContextMenuItem_Click);
-            // 
             // SkylineWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -2757,7 +2812,6 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem zoomOutRTContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator25;
         private System.Windows.Forms.ToolStripMenuItem predictionRTContextMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem averageReplicatesContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem singleTranContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem allTranContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem totalTranContextMenuItem;
@@ -2883,6 +2937,13 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator40;
         private System.Windows.Forms.ToolStripMenuItem areaNormalizeNoneContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem synchronizeZoomingContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem replicatesRTContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem averageReplicatesContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem singleReplicateRTContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem bestReplicateRTContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem replicatesTreeContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem singleReplicateTreeContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem bestReplicateTreeContextMenuItem;
     }
 }
 

@@ -30,6 +30,8 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
 {
+    public enum ReplicateDisplay { all, single, best }
+
     /// <summary>
     /// Displays a <see cref="SrmDocument"/> as a tree of nodes.
     /// <para>
@@ -303,9 +305,49 @@ namespace pwiz.Skyline.Controls
                 if (_resultsIndex != value)
                 {
                     _resultsIndex = value;
-                    BeginUpdate();
-                    UpdateNodeStates(Nodes);
-                    EndUpdate();
+
+                    // If showing results based on the selected index, update
+                    // the display.
+                    if (ShowReplicate == ReplicateDisplay.single)
+                    {
+                        UpdateNodeStates();
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Gets the results index for which the results are displayed in the tree,
+        /// which is either the currently active result, or the best result for the
+        /// given peptide, if best results are being displayed.
+        /// </summary>
+        /// <param name="nodePepTree">The peptide tree node from which to retreive the best result</param>
+        /// <returns>The best result index for the given peptide</returns>
+        public int GetDisplayResultsIndex(PeptideTreeNode nodePepTree)
+        {
+            int i = -1;
+            if (nodePepTree != null && ShowReplicate == ReplicateDisplay.best)
+                i = nodePepTree.DocNode.BestResult;
+            if (i == -1)
+                i = ResultsIndex;
+            return i;
+        }
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public ReplicateDisplay ShowReplicate
+        {
+            get
+            {
+                return Helpers.ParseEnum(Settings.Default.ShowTreeReplicateEnum, ReplicateDisplay.single);
+            }
+
+            set
+            {
+                if (ShowReplicate != value)
+                {
+                    Settings.Default.ShowTreeReplicateEnum = value.ToString();
+                    UpdateNodeStates();
                 }
             }
         }
@@ -320,9 +362,7 @@ namespace pwiz.Skyline.Controls
                 if (_ratioIndex != value)
                 {
                     _ratioIndex = value;
-                    BeginUpdate();
-                    UpdateNodeStates(Nodes);
-                    EndUpdate();
+                    UpdateNodeStates();
                 }
             }
         }
@@ -346,6 +386,12 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+        private void UpdateNodeStates()
+        {
+            BeginUpdate();
+            UpdateNodeStates(Nodes);
+            EndUpdate();            
+        }
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -766,7 +812,7 @@ namespace pwiz.Skyline.Controls
 
         protected override void OnKeyPress(KeyPressEventArgs e)
         {
-            if (IsEditableNode(SelectedNode) && !char.IsControl(e.KeyChar))
+            if (IsEditableNode(SelectedNode) && !Char.IsControl(e.KeyChar))
             {
                 BeginEdit(true);
                 string keyChar = e.KeyChar.ToString();
