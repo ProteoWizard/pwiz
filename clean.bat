@@ -25,7 +25,7 @@ IF EXIST pwiz\data\msdata\Version.cpp del /q pwiz\data\msdata\Version.cpp
 IF EXIST pwiz\data\mziddata\Version.cpp del /q pwiz\data\mziddata\Version.cpp
 IF EXIST pwiz\data\tradata\Version.cpp del /q pwiz\data\tradata\Version.cpp
 IF EXIST pwiz\data\proteome\Version.cpp del /q pwiz\data\proteome\Version.cpp
-IF EXIST pwiz\analysis\Version.cpp del /q pwiz\data\analysis\Version.cpp
+IF EXIST pwiz\analysis\Version.cpp del /q pwiz\analysis\Version.cpp
 
 IF EXIST pwiz\utility\vendor_api\thermo\MSFileReader.XRawfile2.dll del /q pwiz\utility\vendor_api\thermo\MSFileReader.XRawfile2.dll
 IF EXIST pwiz\utility\vendor_api\thermo\fregistry.dll del /q pwiz\utility\vendor_api\thermo\fregistry.dll
