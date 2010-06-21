@@ -1,5 +1,5 @@
 //
-// $Id: ProteinListCache.hpp 1188 2009-08-14 17:19:55Z chambm $
+// $Id$
 //
 //
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
