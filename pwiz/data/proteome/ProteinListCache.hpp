@@ -57,6 +57,8 @@ class PWIZ_API_DECL ProteinListCache : public ProteinListWrapper
     /// the current cache mode
     virtual ProteinPtr protein(size_t index, bool getSequence = true) const;
 
+    virtual size_t find(const std::string& id) const;
+
     /// set the caching mode
     /// note: if the new mode is different than the current mode, the cache will be cleared
     void setMode(ProteinListCacheMode mode);

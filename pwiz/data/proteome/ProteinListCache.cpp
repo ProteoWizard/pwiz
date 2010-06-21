@@ -128,6 +128,11 @@ PWIZ_API_DECL ProteinPtr ProteinListCache::protein(size_t index, bool getSequenc
     }
 }
 
+PWIZ_API_DECL size_t ProteinListCache::find(const std::string& id) const
+{
+    return inner_->find(id);
+}
+
 PWIZ_API_DECL void ProteinListCache::setMode(ProteinListCacheMode mode)
 {
     if (mode != mode_)
