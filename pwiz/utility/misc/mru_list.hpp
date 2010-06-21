@@ -60,6 +60,8 @@ public:
   typedef Item item_type;
   typedef typename item_list::iterator iterator;
   typedef typename item_list::reverse_iterator reverse_iterator;
+  typedef typename item_list::const_iterator const_iterator;
+  typedef typename item_list::const_reverse_iterator const_reverse_iterator;
   typedef typename item_list::value_type value_type;
 
   mru_list(std::size_t max_num_items_) : max_num_items(max_num_items_){}
@@ -87,6 +89,7 @@ public:
   bool empty() const {return il.empty();}
   std::size_t size() const {return il.size();}
   std::size_t max_size() const {return std::min(max_num_items, il.max_size());}
+  void clear() {il.clear();}
 
   const item_type& mru() const {return *il.begin();}
   const item_type& lru() const {return *il.rbegin();}
@@ -96,6 +99,12 @@ public:
 
   reverse_iterator rbegin() {return il.rbegin();}
   reverse_iterator rend() {return il.rend();}
+
+  const_iterator begin() const {return il.begin();}
+  const_iterator end() const {return il.end();}
+
+  const_reverse_iterator rbegin() const {return il.rbegin();}
+  const_reverse_iterator rend() const {return il.rend();}
 
 private:
   item_list   il;
