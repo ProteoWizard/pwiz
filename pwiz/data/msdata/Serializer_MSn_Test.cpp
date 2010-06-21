@@ -54,7 +54,7 @@ void initializeTinyMSn(MSData& msd)
     spectrumList->spectra.push_back(SpectrumPtr(new Spectrum));
 
     Spectrum& s20 = *spectrumList->spectra[0];
-    s20.id = "scan=0";
+    s20.id = "scan=1";
     s20.index = 0;
 
     s20.set(MS_MSn_spectrum);

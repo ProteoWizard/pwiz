@@ -29,6 +29,7 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/chemistry/Chemistry.hpp"
 #include "zlib.h"
+#include <time.h>
 
 
 namespace pwiz {
@@ -75,13 +76,45 @@ namespace
         MSnHeader header;
         os.write(reinterpret_cast<char *>(&header), sizeof(MSnHeader));
     }
-
-    size_t getChargeStates(const SelectedIon& si, vector<int>& charges)
+   
+    void writeTextFileHeader(const MSData& msd, ostream& os)
     {
+      time_t rawtime;
+      time (&rawtime);
+      os << "H\tCreationDate " << ctime(&rawtime) << flush;
+      os << "H\tExtractor\tProteoWizard" << endl;
+      os << "H\tExtractor version\t" << 
+        ( (msd.softwarePtrs.empty() > 0) ? "unknown" : msd.softwarePtrs.at(0)->id ) << endl;
+      os << "H\tSource file\t" << 
+        ( (msd.fileDescription.sourceFilePtrs.empty()) ? "unknown" : 
+          msd.fileDescription.sourceFilePtrs.at(0)->name ) << endl;
+    }
+
+    // Could be one charge state, with our without accurate mass
+    // or could be multiple possible charge states without accurate mass
+    // if no accurate mass, compute it from mz and charge
+    double calculateMass(double mz, int charge)
+    {
+        return (mz * charge) - ((charge - 1)*Proton);
+    }
+
+    size_t getChargeStates(const SelectedIon& si, vector<int>& charges, vector<double>& masses)
+    {
+      int startingChargesCount = charges.size();
         CVParam chargeParam = si.cvParam(MS_charge_state);
+        CVParam massParam = si.cvParam(MS_accurate_mass);
+        double mz = si.cvParam(MS_selected_ion_m_z).valueAs<double>();
         if (!chargeParam.empty())
         {
             charges.push_back(chargeParam.valueAs<int>());
+            if (!massParam.empty())
+            {
+                masses.push_back(massParam.valueAs<double>());
+            }
+            else
+            {
+              masses.push_back(calculateMass(mz, charges.back()));
+            }
         }
         else
         {
@@ -90,18 +123,14 @@ namespace
                 if (param.cvid == MS_possible_charge_state)
                 {
                     charges.push_back(param.valueAs<int>());
+                    masses.push_back(calculateMass(mz, charges.back()));
                 }
             }
         }
 
-        return (int)charges.size();
+        return (int)(charges.size() - startingChargesCount);
     }
     
-    double calculateMass(double mz, int charge)
-    {
-        return (mz * charge) - ((charge - 1)*Proton);
-    }
-
     int getScanNumber(SpectrumPtr s)
     {
         string scanNumber = id::translateNativeIDToScanNumber(MS_scan_number_only_nativeID_format, s->id);
@@ -129,16 +158,23 @@ namespace
         double mz = si.cvParam(MS_selected_ion_m_z).valueAs<double>();
         os << mz << "\n";
         
+        // Write the scan time, if available
+        if( s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds() )
+          os << "I\tRTime\t" << s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds() << "\n";
+
         // For each charge, write the charge and mass
         vector<int> charges;
-        int numChargeStates = getChargeStates(si, charges);
+        vector<double> masses;
+        int numChargeStates = 0;
+        // for each selected ion
+        BOOST_FOREACH(const SelectedIon& curIon, precur.selectedIons){
+          numChargeStates += getChargeStates(curIon, charges, masses);
+        }
         for(int i = 0; i < numChargeStates; i++)
         {
-            os << "Z\t" << charges[i] << "\t" << calculateMass(mz, charges[i]) << "\n"; 
+            os << "Z\t" << charges[i] << "\t" << masses[i] << "\n"; 
         }
 
-        // Write the scan time
-        os << "I\tRTime\t" << s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds() << "\n";
         
         // Write each mz, intensity pair
         const BinaryDataArray& mzArray = *s->getMZArray();
@@ -207,6 +243,10 @@ namespace
 
     void writeSpectrumBinary(SpectrumPtr s, int version, bool compress, ostream& os)
     {
+      // todo
+      // MSnScanInfo header(s);
+      // header.writeSpectrumHeader(version, compress, os);
+
         int scanNum = getScanNumber(s);
         os.write(reinterpret_cast<char *>(&scanNum), sizeIntMSn);
         os.write(reinterpret_cast<char *>(&scanNum), sizeIntMSn); // Yes, there are two
@@ -219,7 +259,7 @@ namespace
         float rt = (float) s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds();
         os.write(reinterpret_cast<char *>(&rt), sizeFloatMSn);
         
-        if (2 == version)
+        if (version >= 2)
         {
             float basePeakIntensity = s->cvParam(MS_base_peak_intensity).valueAs<float>();
             os.write(reinterpret_cast<char *>(&basePeakIntensity), sizeFloatMSn);
@@ -243,21 +283,50 @@ namespace
         }
         
         vector<int> charges;
-        int numChargeStates = getChargeStates(si, charges);
+        vector<double> masses;
+        int numChargeStates = 0;
+        BOOST_FOREACH(const SelectedIon& curIon, precur.selectedIons)
+        {
+            numChargeStates += getChargeStates(curIon, charges, masses);
+        }
         os.write(reinterpret_cast<char *>(&numChargeStates), sizeIntMSn);
         
+        bool hasAccurateMass = false;
+        if (version == 3)
+        {
+          int numEzStates = 0;
+          CVParam massParam = si.cvParam(MS_accurate_mass);
+          if (!massParam.empty())
+          {
+            numEzStates = numChargeStates;
+            hasAccurateMass = true;
+          }
+          os.write(reinterpret_cast<char *>(&numEzStates), sizeIntMSn);
+        }
+
         int numPeaks = (int) s->defaultArrayLength;
         os.write(reinterpret_cast<char *>(&numPeaks), sizeIntMSn);
+
+        // end spectrum header info
 
         // Write out each charge state and corresponding mass
         for(int i = 0; i < numChargeStates; i++)
         {
             os.write(reinterpret_cast<char *>(&(charges[i])), sizeIntMSn);
-
-            double mass = calculateMass(mz, charges[i]);
-            os.write(reinterpret_cast<char *>(&mass), sizeDoubleMSn);
+            os.write(reinterpret_cast<char *>(&(masses[i])), sizeDoubleMSn);
         }
     
+        // if there are accurate masses, write out EZ entries
+        if( hasAccurateMass ){
+          float blank = 0;  // we don't have rTime or area, pad with zeros
+          for(int i=0; i < numChargeStates; i++){
+            os.write(reinterpret_cast<char *>(&charges[i]), sizeIntMSn);
+            os.write(reinterpret_cast<char *>(&masses[i]), sizeDoubleMSn);
+            os.write(reinterpret_cast<char *>(&blank), sizeFloatMSn);
+            os.write(reinterpret_cast<char *>(&blank), sizeFloatMSn);
+          }
+        }
+
         // Do we need to write compressed m/z, intensity arrays?
         if (compress)
         {
@@ -285,11 +354,15 @@ namespace
 void Serializer_MSn::Impl::write(ostream& os, const MSData& msd,
     const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
 {
-    // If it's a binary file, we must write the header
+    // Write the header
     if ((MSn_Type_BMS2 == _filetype) ||
         (MSn_Type_CMS2 == _filetype))
     {
-        writeBinaryFileHeader(_filetype, 2 /* version */, os);
+        writeBinaryFileHeader(_filetype, 3 /* version */, os);
+    } 
+    else if (MSn_Type_MS2 == _filetype)
+    {
+      writeTextFileHeader(msd, os);
     }
 
     // Go through the spectrum list and write each spectrum
@@ -307,10 +380,10 @@ void Serializer_MSn::Impl::write(ostream& os, const MSData& msd,
                 writeSpectrumText(s, os);
                 break;
             case MSn_Type_CMS2:
-                writeSpectrumBinary(s, 2 /* version */, true, os);
+                writeSpectrumBinary(s, 3 /* version */, true, os);
                 break;
             case MSn_Type_BMS2:
-                writeSpectrumBinary(s, 2 /* version */, false, os);
+                writeSpectrumBinary(s, 3 /* version */, false, os);
                 break;
             case MSn_Type_UNKNOWN:
                 throw runtime_error("[SpectrumList_MSn::Impl::write] Cannot create unknown MSn file type.");

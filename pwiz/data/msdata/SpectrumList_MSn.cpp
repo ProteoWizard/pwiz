@@ -239,7 +239,7 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
         } 
       
         // read in the scan number
-        size_t first_num_pos = lineStr.find_first_of("0123456789");
+        size_t first_num_pos = lineStr.find_first_of("123456789");
         size_t second_space_pos = lineStr.find_first_of(" \t", first_num_pos);
         int scanNum = lexical_cast<int>(lineStr.substr(first_num_pos, second_space_pos-first_num_pos+1));
         spectrum.id = "scan=" + lexical_cast<string>(scanNum);
@@ -258,17 +258,15 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
     
     // We may have multiple charges, so build a list
     vector<int> charges;
+    // and we may have multiple charges with accurate mass
+    vector< pair<int, double> > chargeMassPairs;
 
     // read in remainder of spectrum
     while (getline(*is_, lineStr))
     {
         if (lineStr.find("S") == 0) // we are at the next spectrum
         {
-            if (!inPeakList)
-            {
-                // the spec had no peaks, clean up?
-            }
-            
+            // if (!inPeakList) // the spec had no peaks, clean up?
             break; // stop reading file
         }
         else if (lineStr.find("Z") == 0)
@@ -306,6 +304,20 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
                 double rt = lexical_cast<double>(lineStr.substr(last_space_pos + 1, len));
                 spectrum.scanList.scans.push_back(Scan());
                 spectrum.scanList.scans.back().set(MS_scan_start_time, rt, UO_second);
+            }
+            else if (lineStr.find("EZ") != string::npos)
+            {
+              // get the charge and mass pair
+              size_t num_start_pos = lineStr.find_first_of("123456789");
+              size_t next_space_pos = lineStr.find_first_of(" \t", num_start_pos);
+              size_t len = next_space_pos - num_start_pos;
+              int charge = lexical_cast<int>(lineStr.substr(num_start_pos, len));
+
+              num_start_pos = lineStr.find_first_of("0123456789", next_space_pos);
+              next_space_pos = lineStr.find_first_of(" \t", num_start_pos);
+              len = next_space_pos - num_start_pos;
+              double mass = lexical_cast<double>(lineStr.substr(num_start_pos, len));
+              chargeMassPairs.push_back(pair<int,double>(charge, mass));
             }
         }
         else if (lineStr.find("D") == 0)
@@ -368,19 +380,35 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
        is_->seekg(0);
     }
     
-    // If we have only ONE charge state, we read it in as "MS_charge_state";
-    // otherwise, the charge states are all read as "MS_possible_charge_state"
-    size_t numCharges = charges.size();
-    if (1 == numCharges)
+    // if no accurate masses, set charge only
+    if (chargeMassPairs.empty())
     {
-        selectedIon.set(MS_charge_state, charges[0]);
+      // If we have only ONE charge state, we read it in as "MS_charge_state";
+      // otherwise, the charge states are all read as "MS_possible_charge_state"
+      size_t numCharges = charges.size();
+      if (1 == numCharges)
+      {
+          selectedIon.set(MS_charge_state, charges[0]);
+      }
+      else
+      {
+          for (size_t i = 0; i < numCharges; i++)
+          {
+             precursor.selectedIons.back().cvParams.push_back(CVParam(MS_possible_charge_state, charges[i]));
+          }
+      }
     }
-    else
+    else // create a new selected ion for each charge,mass pair
     {
-        for (size_t i = 0; i < numCharges; i++)
-        {
-            precursor.selectedIons.back().cvParams.push_back(CVParam(MS_possible_charge_state, charges[i]));
-        }
+      for(size_t i=0; i < chargeMassPairs.size(); i++)
+      {
+        const pair<int, double>& chargeMass = chargeMassPairs.at(i);
+        precursor.selectedIons.back().cvParams.push_back(CVParam(MS_charge_state, chargeMass.first));
+        precursor.selectedIons.back().cvParams.push_back(CVParam(MS_accurate_mass, chargeMass.second));
+        precursor.selectedIons.push_back(SelectedIon());
+      }
+      // last ion added has no data
+      precursor.selectedIons.pop_back();
     }
 
     spectrum.set(MS_lowest_observed_m_z, lowMZ);
@@ -414,43 +442,53 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
     spectrum.id = "scan=" + lexical_cast<string>(scanInfo.scanNumber);
     selectedIon.set(MS_selected_ion_m_z, scanInfo.mz, MS_m_z);
 
-    // get charge states
+    // read in all the charge state information before adding it to the spectrum
+    // get charge states from equivalent of Z lines
     int charge = 0;
+    vector<int> charges;
     double mass = 0;
 
-    // If we have only ONE charge state, we read it in as "MS_charge_state";
-    // otherwise, the charge states are all read as "MS_possible_charge_state"
-    if (1 == scanInfo.numChargeStates)
+    for(int i=0; i<scanInfo.numChargeStates; i++)
     {
         (*is_).read(reinterpret_cast<char *>(&charge), sizeIntMSn);
-        selectedIon.set(MS_charge_state, charge);
-
+        charges.push_back(charge);
         (*is_).read(reinterpret_cast<char *>(&mass), sizeDoubleMSn);
     }
-    else
+
+    // if there is no extended charge information, add the (possible) charges
+    if( scanInfo.numEzStates == 0 )
     {
-        for(int i=0; i<scanInfo.numChargeStates; i++)
+        if (1 == scanInfo.numChargeStates)
         {
-          (*is_).read(reinterpret_cast<char *>(&charge), sizeIntMSn);
-          precursor.selectedIons.back().cvParams.push_back(CVParam(MS_possible_charge_state, charge));
-
-          (*is_).read(reinterpret_cast<char *>(&mass), sizeDoubleMSn);
-
-          // add another selected ion
+            selectedIon.set(MS_charge_state, charges.back());
+        }
+        else
+        {
+            for(int i=0; i<scanInfo.numChargeStates; i++)
+            {
+              precursor.selectedIons.back().cvParams.push_back(CVParam(MS_possible_charge_state, charges.at(i)));
+            }
         }
     }
-
-    // Read EZ states
-    for(int i=0; i<scanInfo.numEzStates; i++){
-      int eCharge;
-      double eMass;
-      float pRTime;
-      float pArea;
-      (*is_).read(reinterpret_cast<char *>(&eCharge), sizeIntMSn);
-      (*is_).read(reinterpret_cast<char *>(&eMass), sizeDoubleMSn);
-      (*is_).read(reinterpret_cast<char *>(&pRTime), sizeFloatMSn);
-      (*is_).read(reinterpret_cast<char *>(&pArea), sizeFloatMSn);
-      // TODO:  save this information somewhere
+    else  // get extended charge informationfrom equivalent of EZ lines
+    {
+        for(int i=0; i<scanInfo.numEzStates; i++){
+          int eCharge;
+          double eMass;
+          float pRTime;  // rTime of chromatogram peak from MS1 scans
+          float pArea;   // area under chromatogram peak from MS1 scans
+          (*is_).read(reinterpret_cast<char *>(&eCharge), sizeIntMSn);
+          (*is_).read(reinterpret_cast<char *>(&eMass), sizeDoubleMSn);
+          (*is_).read(reinterpret_cast<char *>(&pRTime), sizeFloatMSn);
+          (*is_).read(reinterpret_cast<char *>(&pArea), sizeFloatMSn);
+          
+          // store each charge and accurate mass as a separate selected ion
+          precursor.selectedIons.back().cvParams.push_back(CVParam(MS_charge_state, eCharge));
+          precursor.selectedIons.back().cvParams.push_back(CVParam(MS_accurate_mass, eMass));
+          precursor.selectedIons.push_back(SelectedIon());
+        }
+        // last ion added was not populated
+        precursor.selectedIons.pop_back();
     }
 
     // get retention time
