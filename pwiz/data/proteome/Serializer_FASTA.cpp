@@ -102,13 +102,6 @@ class ProteinList_FASTA : public ProteinList
         indexPtr_->create(index);
     }
 
-    size_t find(const string& id) const
-    {
-        Index::EntryPtr entryPtr = indexPtr_->find(id);
-        return entryPtr.get() ? entryPtr->index : indexPtr_->size();
-    }
-
-
     public:
 
     ProteinList_FASTA(shared_ptr<istream> fsPtr, IndexPtr indexPtr, const vector<string>& idAndDescriptionRegexes)
@@ -132,9 +125,15 @@ class ProteinList_FASTA : public ProteinList
             createIndex();
     }
 
-    size_t size() const {return indexPtr_->size();}
+    virtual size_t find(const string& id) const
+    {
+        Index::EntryPtr entryPtr = indexPtr_->find(id);
+        return entryPtr.get() ? entryPtr->index : indexPtr_->size();
+    }
 
-    ProteinPtr protein(size_t index, bool getSequence /*= true*/) const
+    virtual size_t size() const {return indexPtr_->size();}
+
+    virtual ProteinPtr protein(size_t index, bool getSequence /*= true*/) const
     {
         if (index >= size())
             throw out_of_range("[ProteinList_FASTA::protein] Index out of range");

@@ -68,6 +68,17 @@ PWIZ_API_DECL size_t ProteinList_DecoyGenerator::size() const
     return impl_->original->size() * 2;
 }
 
+PWIZ_API_DECL size_t ProteinList_DecoyGenerator::find(const string& id) const
+{
+    if (bal::starts_with(id, impl_->predicate->decoyPrefix()))
+    {
+        // a decoy protein's index is the original protein's index plus the original size
+        string originalId(id.begin() + impl_->predicate->decoyPrefix().length(), id.end());
+        size_t originalIndex = impl_->original->find(originalId);
+        return originalIndex + impl_->original->size();
+    }
+    return impl_->original->find(id);
+}
 
 PWIZ_API_DECL ProteinPtr ProteinList_DecoyGenerator::protein(size_t index, bool getSequence) const
 {
@@ -75,7 +86,7 @@ PWIZ_API_DECL ProteinPtr ProteinList_DecoyGenerator::protein(size_t index, bool 
         throw out_of_range("[ProteinList_DecoyGenerator::protein] Index out of range");
 
     size_t originalIndex = index % impl_->original->size();
-    ProteinPtr protein = impl_->original->protein(originalIndex, true);
+    ProteinPtr protein = impl_->original->protein(originalIndex, getSequence);
 
     // the second half of the database is decoys
     if (index >= impl_->original->size())
@@ -94,14 +105,15 @@ PWIZ_API_DECL ProteinPtr ProteinList_DecoyGenerator::protein(size_t index, bool 
 
 
 PWIZ_API_DECL ProteinList_DecoyGeneratorPredicate_Reversed::ProteinList_DecoyGeneratorPredicate_Reversed(const std::string& decoyPrefix)
-:   decoyPrefix(decoyPrefix)
-{}
+{
+    decoyPrefix_ = decoyPrefix;
+}
 
 
 PWIZ_API_DECL ProteinPtr ProteinList_DecoyGeneratorPredicate_Reversed::generate(const Protein& protein) const
 {
     string reversedSequence(protein.sequence().rbegin(), protein.sequence().rend());
-    return ProteinPtr(new Protein(decoyPrefix + protein.id, protein.index, "", reversedSequence));
+    return ProteinPtr(new Protein(decoyPrefix_ + protein.id, protein.index, "", reversedSequence));
 }
 
 
@@ -129,8 +141,9 @@ struct ProteinList_DecoyGeneratorPredicate_Shuffled::Impl
 
 
 PWIZ_API_DECL ProteinList_DecoyGeneratorPredicate_Shuffled::ProteinList_DecoyGeneratorPredicate_Shuffled(const std::string& decoyPrefix, boost::uint32_t randomSeed)
-:   impl_(new Impl(randomSeed)), decoyPrefix(decoyPrefix)
+:   impl_(new Impl(randomSeed))
 {
+    decoyPrefix_ = decoyPrefix;
 }
 
 
@@ -138,7 +151,7 @@ PWIZ_API_DECL ProteinPtr ProteinList_DecoyGeneratorPredicate_Shuffled::generate(
 {
     string shuffledSequence = protein.sequence();
     std::random_shuffle(shuffledSequence.begin(), shuffledSequence.end(), impl_->rng);
-    return ProteinPtr(new Protein(decoyPrefix + protein.id, protein.index, "", shuffledSequence));
+    return ProteinPtr(new Protein(decoyPrefix_ + protein.id, protein.index, "", shuffledSequence));
 }
 
 } // namespace analysis

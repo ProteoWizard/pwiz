@@ -46,6 +46,8 @@ class ProteinListWrapper : public ProteinList
 
     virtual size_t size() const {return inner_->size();}
 
+    virtual size_t find(const std::string& id) const {return inner_->find(id);}
+
     virtual ProteinPtr protein(size_t index, bool getSequence = true) const {return inner_->protein(index, getSequence);}
 
     protected:

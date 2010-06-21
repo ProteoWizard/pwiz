@@ -51,6 +51,7 @@ lib pwiz_data_proteome
         Reader_FASTA.cpp
         DefaultReaderList.cpp
         ProteomeDataFile.cpp
+        ProteinListCache.cpp
     : # requirements
         <library>pwiz_data_proteome_version
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/chemistry//pwiz_utility_chemistry
@@ -92,3 +93,4 @@ unit-test ReaderTest : ReaderTest.cpp pwiz_data_proteome ;
 unit-test Serializer_FASTA_Test : Serializer_FASTA_Test.cpp pwiz_data_proteome pwiz_data_proteome_examples ;
 unit-test ProteomeDataFileTest : ProteomeDataFileTest.cpp pwiz_data_proteome pwiz_data_proteome_examples ;
 unit-test ProteinListWrapperTest : ProteinListWrapperTest.cpp pwiz_data_proteome ;
+unit-test ProteinListCacheTest : ProteinListCacheTest.cpp pwiz_data_proteome ;

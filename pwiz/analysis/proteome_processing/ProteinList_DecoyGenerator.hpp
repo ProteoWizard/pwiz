@@ -48,7 +48,13 @@ class PWIZ_API_DECL ProteinList_DecoyGenerator : public proteome::ProteinListWra
         /// return a decoy protein based on an input target protein
         virtual ProteinPtr generate(const Protein& protein) const = 0;
 
+        /// return the string prefixed to a protein id to indicate it is a decoy
+        virtual const std::string& decoyPrefix() const {return decoyPrefix_;}
+
         virtual ~Predicate() {}
+
+        protected:
+        std::string decoyPrefix_;
     };
 
     typedef boost::shared_ptr<Predicate> PredicatePtr;
@@ -58,6 +64,7 @@ class PWIZ_API_DECL ProteinList_DecoyGenerator : public proteome::ProteinListWra
     /// \name ProteinList interface
     //@{
     virtual size_t size() const;
+    virtual size_t find(const std::string& id) const;
     virtual ProteinPtr protein(size_t index, bool getSequence = true) const;
     //@}
 
@@ -76,9 +83,6 @@ class PWIZ_API_DECL ProteinList_DecoyGeneratorPredicate_Reversed : public Protei
     ProteinList_DecoyGeneratorPredicate_Reversed(const std::string& decoyPrefix);
 
     virtual ProteinPtr generate(const Protein& protein) const;
-
-    private:
-    std::string decoyPrefix;
 };
 
 
@@ -93,7 +97,6 @@ class PWIZ_API_DECL ProteinList_DecoyGeneratorPredicate_Shuffled : public Protei
     private:
     struct Impl;
     boost::shared_ptr<Impl> impl_;
-    std::string decoyPrefix;
 };
 
 
