@@ -341,10 +341,8 @@ namespace myrimatch
 			cout << g_hostString << " is calculating relative scores for " << spectra.size() << " spectra." << endl;
 			float lastUpdateTime = 0;
 			size_t n = 0;
-			for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr, ++n )
+			BOOST_FOREACH(Spectrum* s, spectra)
 			{
-				Spectrum* s = (*sItr);
-
 				try
 				{
 					s->CalculateRelativeScores();
@@ -369,10 +367,9 @@ namespace myrimatch
 			cout << g_hostString << " finished calculating relative scores; " << calculationTime.End() << " seconds elapsed." << endl;
 		}
 
-		for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
+		BOOST_FOREACH(Spectrum* s, spectra)
 		{
 			++ numSpectra;
-			Spectrum* s = (*sItr);
 
 			spectra.setId( s->id, SpectrumId( filenameAsScanName, s->id.index, s->id.charge ) );
 
@@ -395,14 +392,17 @@ namespace myrimatch
 				meanScoreHistogramsByChargeState[ s->id.charge ] += s->scoreHistogram;
 			}
 
-			for( Spectrum::SearchResultSetType::reverse_iterator itr = s->resultSet.rbegin(); itr != s->resultSet.rend(); ++itr )
+			BOOST_REVERSE_FOREACH(const SearchResult& r, s->resultSet)
 			{
+                if( r.rank > 1 )
+                    break;
+
 				++ numMatches;
-				numLoci += itr->lociByName.size();
+				numLoci += r.lociByName.size();
 
-				string theSequence = itr->sequence();
+				string theSequence = r.sequence();
 
-				if( itr->rank == 1 && g_rtConfig->MakeSpectrumGraphs )
+				if( g_rtConfig->MakeSpectrumGraphs )
 				{
 					vector< double > ionMasses;
 					vector< string > ionNames;
@@ -431,8 +431,27 @@ namespace myrimatch
 					s->writeToSvgFile( string( "-" ) + theSequence + g_rtConfig->OutputSuffix, &ionLabels, &ionColors, &ionWidths );
 				}
 
+                if( g_rtConfig->AdjustPrecursorMass )
+                {
+                    // set the precursor mass to be the adjusted one closest to the rank 1 result's exact mass;
+                    // the correct id may not have come from the "best" adjustment
+                    double bestAdjustment = s->mOfPrecursor;
+                    double bestAdjustmentDelta = std::numeric_limits<double>::max();
+                    BOOST_FOREACH(double adjustedMass, s->mOfPrecursorList)
+                    {
+                        double exactMass = g_rtConfig->UseAvgMassOfSequences ? r.molecularWeight() : r.monoisotopicMass();
+                        double adjustmentDelta = fabs(adjustedMass - exactMass);
+                        if( adjustmentDelta < bestAdjustmentDelta )
+                        {
+                            bestAdjustmentDelta = adjustmentDelta;
+                            bestAdjustment = adjustedMass;
+                        }
+                    }
 
-			}
+                    s->mOfPrecursor = bestAdjustment;
+			        s->mzOfPrecursor = ( s->mOfPrecursor + ( s->id.charge * PROTON ) ) / s->id.charge;
+                }
+            }
 		}
 
 		if( g_rtConfig->MakeScoreHistograms )
@@ -475,22 +494,21 @@ namespace myrimatch
 
 			ofstream deisotopingDetails( (filenameAsScanName+g_rtConfig->OutputSuffix+"-deisotope-test.tsv").c_str() );
 			deisotopingDetails << "Scan\tCharge\tSequence\tPredicted\tMatchesBefore\tMatchesAfter\n";
-			for( SpectraList::iterator sItr = passingSpectra.begin(); sItr != passingSpectra.end(); ++sItr )
+			BOOST_FOREACH(Spectrum* s, passingSpectra)
 			{
-				Spectrum* s = (*sItr);
 				s->Deisotope( g_rtConfig->IsotopeMzTolerance );
 
 				s->resultSet.calculateRanks();
-				for( Spectrum::SearchResultSetType::reverse_iterator itr = s->resultSet.rbegin(); itr != s->resultSet.rend(); ++itr )
+				BOOST_REVERSE_FOREACH(const SearchResult& r, s->resultSet)
 				{
-					string theSequence = itr->sequence();
+					string theSequence =  r.sequence();
 
-					if( itr->rank == 1 )
+					if(  r.rank == 1 )
 					{
 						vector< double > ionMasses;
 						CalculateSequenceIons( Peptide(theSequence), s->id.charge, &ionMasses, s->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, 0, 0 );
-						int fragmentsPredicted = accumulate( itr->key.begin(), itr->key.end(), 0 );
-						int fragmentsFound = fragmentsPredicted - itr->key.back();
+						int fragmentsPredicted = accumulate(  r.key.begin(),  r.key.end(), 0 );
+						int fragmentsFound = fragmentsPredicted - r.key.back();
 						int fragmentsFoundAfterDeisotoping = 0;
 						for( size_t i=0; i < ionMasses.size(); ++i ) {
 							double fragMassError = g_rtConfig->fragmentMzToleranceUnits == PPM ? (ionMasses[i]*g_rtConfig->FragmentMzTolerance*pow(10.0,-6)):g_rtConfig->FragmentMzTolerance;
@@ -512,21 +530,19 @@ namespace myrimatch
 
 			ofstream adjustmentDetails( (filenameAsScanName+g_rtConfig->OutputSuffix+"-adjustment-test.tsv").c_str() );
 			adjustmentDetails << "Scan\tCharge\tUnadjustedSequenceMass\tAdjustedSequenceMass\tUnadjustedPrecursorMass\tAdjustedPrecursorMass\tUnadjustedError\tAdjustedError\tSequence\n";
-			for( SpectraList::iterator sItr = passingSpectra.begin(); sItr != passingSpectra.end(); ++sItr )
+			BOOST_FOREACH(Spectrum* s, passingSpectra)
 			{
-				Spectrum* s = (*sItr);
-
 				s->resultSet.calculateRanks();
-				for( Spectrum::SearchResultSetType::reverse_iterator itr = s->resultSet.rbegin(); itr != s->resultSet.rend(); ++itr )
+				BOOST_REVERSE_FOREACH(const SearchResult& r, s->resultSet)
 				{
-					if( itr->rank == 1 )
+					if( r.rank == 1 )
 					{
-                        double setSeqMass = g_rtConfig->UseAvgMassOfSequences ? itr->molecularWeight() : itr->monoisotopicMass();
-						double monoSeqMass = itr->monoisotopicMass();
+                        double setSeqMass = g_rtConfig->UseAvgMassOfSequences ?  r.molecularWeight() :  r.monoisotopicMass();
+						double monoSeqMass =  r.monoisotopicMass();
 						adjustmentDetails <<	s->id.index << "\t" << s->id.charge << "\t" <<
 												setSeqMass << "\t" << monoSeqMass << "\t" << s->mOfUnadjustedPrecursor << "\t" << s->mOfPrecursor << "\t" <<
 												fabs( setSeqMass - s->mOfUnadjustedPrecursor ) << "\t" <<
-												fabs( monoSeqMass - s->mOfPrecursor ) << "\t" << itr->sequence() << "\n";
+												fabs( monoSeqMass - s->mOfPrecursor ) << "\t" <<  r.sequence() << "\n";
 					}
 				}
 			}
