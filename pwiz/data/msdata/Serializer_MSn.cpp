@@ -162,7 +162,7 @@ namespace
         if( s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds() )
           os << "I\tRTime\t" << s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds() << "\n";
 
-        // For each charge, write the charge and mass
+        // Collect charge and mass info
         vector<int> charges;
         vector<double> masses;
         int numChargeStates = 0;
@@ -170,6 +170,16 @@ namespace
         BOOST_FOREACH(const SelectedIon& curIon, precur.selectedIons){
           numChargeStates += getChargeStates(curIon, charges, masses);
         }
+
+        // Write EZ lines if accurate masses are available
+        CVParam massParam = si.cvParam(MS_accurate_mass);
+        if( !massParam.empty() ){
+          for(int i=0; i < numChargeStates; i++){
+            os << "I\tEZ\t" << charges[i] << "\t" << masses[i] << "\t0\t0" << endl; // pad last two fields with 0
+          }
+        }
+
+        // For each charge, write the charge and mass
         for(int i = 0; i < numChargeStates; i++)
         {
             os << "Z\t" << charges[i] << "\t" << masses[i] << "\n"; 
