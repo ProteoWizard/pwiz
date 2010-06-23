@@ -71,8 +71,14 @@ SpectrumList_mzXMLImpl::SpectrumList_mzXMLImpl(shared_ptr<istream> is, const MSD
 :   is_(is), msd_(msd)
 {
     bool gotIndex = false;
-    if (indexed)
+    try
+    {
+      if (indexed)
         gotIndex = readIndex(); 
+    } catch (index_not_found e){
+      is_->clear();
+    }
+
     if (!gotIndex)
         createIndex();
 
@@ -636,16 +642,13 @@ class HandlerIndex : public SAXParser::Handler
             return Status(Status::Delegate, &handlerOffset_);
         }
         else
-            throw runtime_error(("[SpectrumList_mzXML::HandlerIndex] Unexpected element name: " + name).c_str());
+            throw SpectrumList_mzXML::index_not_found("[SpectrumList_mzXML::HandlerIndex] Unexpected element name: " + name).c_str());
     }
 
     virtual Status characters(const std::string& text,
                               stream_offset position)
     {
-        // error: should find <index> and return or <offset> and delegate
-        // abandon reading the index
-        index_.clear();
-        return Status::Done;
+        throw SpectrumList_mzXML::index_not_found("[SpectrumList_mzXML::HandlerIndex] <index> not found.");
     }
 
     private:
@@ -683,7 +686,7 @@ bool SpectrumList_mzXMLImpl::readIndex()
     HandlerIndexOffset handlerIndexOffset(indexOffset);
     SAXParser::parse(*is_, handlerIndexOffset);
     if (indexOffset == 0)
-        return false;
+        throw index_not_found("[SpectrumList_mzXML::readIndex()] Error parsing <indexOffset>."); 
 
     // read <index>
 
@@ -693,12 +696,9 @@ bool SpectrumList_mzXMLImpl::readIndex()
 
     HandlerIndex handlerIndex(index_, msd_);
     SAXParser::parse(*is_, handlerIndex);
-    if (index_.empty()){
-      is_->clear();
-      return false;
-    }
+    if (index_.empty())
+        throw index_not_found("[SpectrumList_mzXML::readIndex()] <index> is empty.");
 
-    // else
     return true;
 }
 
