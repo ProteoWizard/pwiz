@@ -1,0 +1,408 @@
+﻿<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="3.5">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{1A7D59F4-0039-4874-8A0E-935F00FAA0E4}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>IdPickerGui</RootNamespace>
+    <AssemblyName>IdPickerGui</AssemblyName>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\build-nt-x86\msvc-debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <OutputPath>..\..\build-nt-x86\msvc-release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="pwiz_bindings_cli, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\build-nt-x86\Common\obj\$(Configuration)\pwiz_bindings_cli.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AboutForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AboutForm.Designer.cs">
+      <DependentUpon>AboutForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="AddPathDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AddPathDialog.Designer.cs">
+      <DependentUpon>AddPathDialog.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DeleteReportForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DeleteReportForm.Designer.cs">
+      <DependentUpon>DeleteReportForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ExceptionsDialogForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ExceptionsDialogForm.Designer.cs">
+      <DependentUpon>ExceptionsDialogForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="HtmlHelpForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="HtmlHelpForm.Designer.cs">
+      <DependentUpon>HtmlHelpForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="IdPickerActions.cs" />
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+    <Compile Include="ReportBrowserControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="ReportBrowserControl.Designer.cs">
+      <DependentUpon>ReportBrowserControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="RunReportAdvancedOptionsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="RunReportAdvancedOptionsForm.Designer.cs">
+      <DependentUpon>RunReportAdvancedOptionsForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="IDPickerForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="IDPickerForm.Designer.cs">
+      <DependentUpon>IDPickerForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SequenceCoverage.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Settings.cs" />
+    <Compile Include="SpectrumGraph.cs" />
+    <Compile Include="TipOfTheDayForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="TipOfTheDayForm.Designer.cs">
+      <DependentUpon>TipOfTheDayForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ToolsOptionsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToolsOptionsForm.Designer.cs">
+      <DependentUpon>ToolsOptionsForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="RunReportForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="RunReportForm.Designer.cs">
+      <DependentUpon>RunReportForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ExportReportForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ExportReportForm.Designer.cs">
+      <DependentUpon>ExportReportForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="AboutForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>AboutForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="AddPathDialog.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>AddPathDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DeleteReportForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>DeleteReportForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ExceptionsDialogForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>ExceptionsDialogForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="HtmlHelpForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>HtmlHelpForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ReportBrowserControl.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>ReportBrowserControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RunReportAdvancedOptionsForm.resx">
+      <DependentUpon>RunReportAdvancedOptionsForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="IDPickerForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>IDPickerForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SequenceCoverage.resx">
+      <DependentUpon>SequenceCoverage.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="TipOfTheDayForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>TipOfTheDayForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ToolsOptionsForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>ToolsOptionsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="RunReportForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>RunReportForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ExportReportForm.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>ExportReportForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common\Common.csproj">
+      <Project>{B3BF62C6-6E21-4ECE-A591-AE21CF194506}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Presentation\Presentation.csproj">
+      <Project>{ED6F5D3E-3C1A-47DA-9B79-20CEA70A0CF6}</Project>
+      <Name>Presentation</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Util\STL_Containers\STL_Containers.csproj">
+      <Project>{D6BD694C-FF6E-4962-A05D-59ACD6CBD6A3}</Project>
+      <Name>STL_Containers</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Workspace\Workspace.csproj">
+      <Project>{BFF4BB50-0D4E-4F1E-A134-23D8B894A8BD}</Project>
+      <Name>Workspace</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\BLL\BLL.csproj">
+      <Project>{1CFB9F5B-211C-40BA-8AA0-B71CD8965FDF}</Project>
+      <Name>BLL</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Model\Model.csproj">
+      <Project>{E2813DD5-5B6C-4FC7-B595-0C3C9C7BB100}</Project>
+      <Name>Model</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DeleteFolderHS.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\MoveToFolderHS.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\DeleteHS.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="Resources\openHS.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="ICSharpCode.SharpZipLib.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="idpicker-2-1-cli.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="idpicker-2-1-cli_files\colorschememapping.xml" />
+    <Content Include="idpicker-2-1-cli_files\filelist.xml" />
+    <Content Include="idpicker-2-1-gui.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="idpicker-2-1-gui_files\colorschememapping.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="idpicker-2-1-gui_files\filelist.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="idpicker-2-1-gui_files\image001.gif">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="idpicker-2-1-gui_files\image001.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="idpicker-2-1-gui_files\image002.gif">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="idpicker-2-1-gui_files\image002.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="idpicker-2-1-gui_files\image003.gif">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="idpicker-2-1-gui_files\image004.gif">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="idpicker-2-1-gui_files\image005.gif">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="idpicker-2-1-gui_files\image006.gif">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="idpicker-2-1-gui_files\image007.gif">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="idpicker-2-1-gui_files\image008.gif">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="idpicker-2-1-gui_files\image009.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="idpicker-2-1-gui_files\item0012.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="idpicker-2-1-gui_files\props0013.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="idpicker.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="idpicker-2-1-cli_files\themedata.thmx" />
+    <Content Include="idpicker-2-1-gui_files\themedata.thmx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="overview-1-2.pdf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="Resources\FillLeftHS.png" />
+    <None Include="Resources\Control_TreeView.bmp" />
+    <None Include="Resources\defaultGroups.bmp" />
+    <None Include="Resources\FillRightHS.png" />
+    <None Include="Resources\Expand_large.bmp" />
+    <None Include="Resources\Collapse_large.bmp" />
+    <None Include="Resources\warning.gif" />
+    <None Include="Resources\tips_of_the_day.txt" />
+    <None Include="Resources\tips.gif" />
+    <None Include="Resources\error_x.png" />
+    <None Include="Resources\file.png" />
+    <None Include="Resources\XPfolder_Open.png" />
+    <None Include="Resources\XPfolder_closed.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 2.0 %28x86%29</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.0">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.0 %28x86%29</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
+  </PropertyGroup>
+</Project>

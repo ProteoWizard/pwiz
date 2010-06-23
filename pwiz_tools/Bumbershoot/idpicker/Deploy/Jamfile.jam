@@ -1,0 +1,83 @@
+#
+# $Id: Jamfile.jam 78 2009-10-12 23:40:51Z chambm $
+#
+# The contents of this file are subject to the Mozilla Public License
+# Version 1.1 (the "License"); you may not use this file except in
+# compliance with the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations
+# under the License.
+#
+# The Original Code is the IDPicker build system.
+#
+# The Initial Developer of the Original Code is Matt Chambers.
+#
+# Copyright 2009 Vanderbilt University
+#
+# Contributor(s): Surendra Dasaris
+#
+
+
+import modules path feature ;
+
+path-constant THIS_PATH : . ;
+
+rule msbuild_deploy ( targets + : sources * : properties * )
+{
+    if <variant>debug in $(properties) ||
+       <debug-symbols>on in $(properties)
+    {
+        CONFIGURATION on $(<[1]) = "Debug" ;
+    }
+    else
+    {
+        CONFIGURATION on $(<[1]) = "Release" ;
+    }
+
+    local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
+    INPUT_PATH on $(<[1]) = [ path.native $(location) ] ;
+    OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
+    INTERMEDIATE_PATH on $(<[1]) = "BaseIntermediateOutputPath=$(BUILD_PATH)/obj/" ;
+}
+
+actions msbuild_deploy
+{
+    REM support both MSVC 8 and 9
+    IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
+    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86 >nul
+    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
+    echo Building DeployVersionBumper in $(CONFIGURATION:L) configuration...
+    pushd $(THIS_PATH)
+    msbuild SetupDeployProject.csproj /p:Configuration=$(CONFIGURATION);$(INTERMEDIATE_PATH) /nologo /verbosity:minimal
+    SetupDeployProject.exe "$(INPUT_PATH)" "$(BUILD_PATH)"
+    devenv Deploy.vdproj /Build Release
+    popd
+}
+
+
+rule build-location ( properties * )
+{
+    local result ;
+    # don't override the location when it's already set
+    if ! <location> in $(properties:G)
+    {
+        return [ install-location $(properties) ] ;
+    }
+    else
+    {
+        return $(properties) ;
+    }
+}
+
+make setup.exe
+    : # sources
+    : # actions
+        @msbuild_deploy
+    : # requirements
+        <variant>debug:<build>no # don't make debug installs
+        <dependency>..//install
+        <conditional>@build-location
+    ;

@@ -1,0 +1,6 @@
+To run a new report click File -> New Report.|
+By Right clicking some IdPicker parameter labels and selecting "What's This", you can lookup a description for the parameter in the IdPicker help documentation.|
+You can clone an existing report as a starting point for a new report. Right click the existing report in "My Reports" and select "Clone". A new report is generated with the same values as the existing report. This is a good way to save time when running similar reports. If you do not change the report name, you will be asked later if you wish to overwrite the original IdPicker report.|
+Exporting a report is a quick way to package all the source files, database file, and search files used in creating an IdPicker report into one .zip file.
+The "Export" report icon can be found to the right of previous IdPicker reports in the "My Reports" section.|
+This version of IdPicker includes support for visually assembling and grouping identifications into an experimental hierarchy using drag and drop controls.|
