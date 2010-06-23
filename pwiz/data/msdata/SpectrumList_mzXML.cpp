@@ -642,7 +642,10 @@ class HandlerIndex : public SAXParser::Handler
     virtual Status characters(const std::string& text,
                               stream_offset position)
     {
-        throw runtime_error("[SpectrumList_mzXML::HandlerIndex] <index> not found.");
+        // error: should find <index> and return or <offset> and delegate
+        // abandon reading the index
+        index_.clear();
+        return Status::Done;
     }
 
     private:
@@ -680,7 +683,7 @@ bool SpectrumList_mzXMLImpl::readIndex()
     HandlerIndexOffset handlerIndexOffset(indexOffset);
     SAXParser::parse(*is_, handlerIndexOffset);
     if (indexOffset == 0)
-        throw index_not_found("[SpectrumList_mzXML::readIndex()] Error parsing <indexOffset>."); 
+        return false;
 
     // read <index>
 
@@ -691,8 +694,10 @@ bool SpectrumList_mzXMLImpl::readIndex()
     HandlerIndex handlerIndex(index_, msd_);
     SAXParser::parse(*is_, handlerIndex);
     if (index_.empty())
-        throw index_not_found("[SpectrumList_mzXML::readIndex()] <index> is empty."); 
-	return true;
+      return false;
+
+    // else
+    return true;
 }
 
 
