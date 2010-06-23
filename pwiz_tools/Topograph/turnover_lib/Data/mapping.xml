@@ -250,6 +250,9 @@
       <one-to-many class="DbPeptideAmount"/>
     </bag>
     <property name="PeptideAmountCount"/>
+    <property name="PrecursorEnrichment" />
+    <property name="PrecursorEnrichmentFormula" />
+    <property name="Turnover" />
   </class>
   <class name="DbPeptideAmount">
     <id name="Id">

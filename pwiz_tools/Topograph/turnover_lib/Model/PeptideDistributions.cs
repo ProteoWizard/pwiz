@@ -92,7 +92,8 @@ namespace pwiz.Topograph.Model
             }
             observedIntensities = peaks.GetAverageIntensities();
             var result = new PeptideDistribution(this, PeptideQuantity.tracer_count) { Parent = this };
-            PeptideFileAnalysis.TurnoverCalculator.GetTracerAmounts(result, peaks.GetAverageIntensitiesExcludedAsNaN(), out predictedIntensities);
+            PeptideFileAnalysis.TurnoverCalculator.GetTracerAmounts(
+                result, peaks.GetAverageIntensitiesExcludedAsNaN(), out predictedIntensities);
             return result;
         }
 

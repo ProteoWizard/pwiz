@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using System.Linq;
 using NHibernate;
 using pwiz.Common.Chemistry;
 using pwiz.Topograph.Data;
@@ -74,6 +75,9 @@ namespace pwiz.Topograph.Model
             base.Load(parent);
             Score = parent.Score;
             PeptideQuantity = parent.PeptideQuantity;
+            PrecursorEnrichmentFormula = TracerPercentFormula.Parse(parent.PrecursorEnrichmentFormula ?? "");
+            PrecursorEnrichment = parent.PrecursorEnrichment;
+            Turnover = parent.Turnover;
         }
 
         protected override DbPeptideDistribution UpdateDbEntity(ISession session)
@@ -83,11 +87,17 @@ namespace pwiz.Topograph.Model
             {
                 result.Score = 0;
                 result.TracerPercent = 0;
+                result.PrecursorEnrichment = 0;
+                result.PrecursorEnrichmentFormula = "";
+                result.Turnover = 0;
             }
             else
             {
                 result.Score = Score;
                 result.TracerPercent = TracerPercent;
+                result.PrecursorEnrichmentFormula = PrecursorEnrichment.ToString();
+                result.PrecursorEnrichment = PrecursorEnrichment;
+                result.Turnover = Turnover;
             }
             return result;
         }
@@ -148,13 +158,15 @@ namespace pwiz.Topograph.Model
                 return totalValue/totalAmount;
             }
         }
-        public double Turnover
-        {
-            get
-            {
-                return 100*(1 - GetChild("").PercentAmountValue/TotalPercentAmount);
-            }
-        }
         public PeptideQuantity PeptideQuantity { get; private set; }
+        public TracerPercentFormula PrecursorEnrichmentFormula { get; set; }
+        public double PrecursorEnrichment { get; set; }
+        public double Turnover { get; set; }
+        public IDictionary<TracerFormula, double> ToDictionary()
+        {
+            return ListChildren().ToDictionary(
+                child => TracerFormula.Parse(child.TracerFormula), 
+                child => child.PercentAmountValue);
+        }
     }
 }

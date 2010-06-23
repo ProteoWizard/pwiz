@@ -62,6 +62,8 @@ namespace pwiz.Topograph.ui.Forms
             this.colPeakEnd = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colTracerPercent = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colScore = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.colPrecursorEnrichment = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colTurnover = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -361,7 +363,9 @@ namespace pwiz.Topograph.ui.Forms
             this.colPeakStart,
             this.colPeakEnd,
             this.colTracerPercent,
-            this.colScore});
+            this.colScore,
+            this.colPrecursorEnrichment,
+            this.colTurnover});
             this.dataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView.Location = new System.Drawing.Point(0, 0);
             this.dataGridView.Name = "dataGridView";
@@ -426,6 +430,18 @@ namespace pwiz.Topograph.ui.Forms
             this.colScore.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.colScore.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
+            // colPrecursorEnrichment
+            // 
+            this.colPrecursorEnrichment.HeaderText = "Precursor Enrichment";
+            this.colPrecursorEnrichment.Name = "colPrecursorEnrichment";
+            this.colPrecursorEnrichment.ReadOnly = true;
+            // 
+            // colTurnover
+            // 
+            this.colTurnover.HeaderText = "Turnover";
+            this.colTurnover.Name = "colTurnover";
+            this.colTurnover.ReadOnly = true;
+            // 
             // PeptideAnalysisSummary
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -480,5 +496,7 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.DataGridViewLinkColumn colPeakEnd;
         private System.Windows.Forms.DataGridViewLinkColumn colTracerPercent;
         private System.Windows.Forms.DataGridViewLinkColumn colScore;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colPrecursorEnrichment;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colTurnover;
     }
 }

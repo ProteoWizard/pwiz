@@ -42,6 +42,8 @@ namespace pwiz.Topograph.ui.Forms
             colPeakEnd.DefaultCellStyle.Format = "0.##";
             colScore.DefaultCellStyle.Format = "0.####";
             colTracerPercent.DefaultCellStyle.Format = "0.##%";
+            colTurnover.DefaultCellStyle.Format = "0.##%";
+            colPrecursorEnrichment.DefaultCellStyle.Format = "0.##%";
             gridViewExcludedMzs.PeptideAnalysis = peptideAnalysis;
             tbxSequence.Text = peptideAnalysis.Peptide.Sequence;
             TabText = "Summary";
@@ -104,11 +106,22 @@ namespace pwiz.Topograph.ui.Forms
             {
                 row.Cells[colTracerPercent.Index].Value = peptideDistribution.TracerPercent / 100;
                 row.Cells[colScore.Index].Value = peptideDistribution.Score;
+                if (Workspace.GetTracerDefs().Count > 1)
+                {
+                    row.Cells[colPrecursorEnrichment.Index].Value = peptideDistribution.PrecursorEnrichmentFormula;
+                }
+                else
+                {
+                    row.Cells[colPrecursorEnrichment.Index].Value = peptideDistribution.PrecursorEnrichment;
+                }
+                row.Cells[colTurnover.Index].Value = peptideDistribution.Turnover;
             }
             else
             {
                 row.Cells[colTracerPercent.Index].Value = null;
                 row.Cells[colScore.Index].Value = null;
+                row.Cells[colPrecursorEnrichment.Index].Value = null;
+                row.Cells[colTurnover.Index].Value = null;
             }
         }
 
