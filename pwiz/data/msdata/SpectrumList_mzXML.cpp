@@ -70,7 +70,7 @@ class SpectrumList_mzXMLImpl : public SpectrumList_mzXML
 SpectrumList_mzXMLImpl::SpectrumList_mzXMLImpl(shared_ptr<istream> is, const MSData& msd, bool indexed)
 :   is_(is), msd_(msd)
 {
-	bool gotIndex = false;
+    bool gotIndex = false;
     if (indexed)
         gotIndex = readIndex(); 
     if (!gotIndex)
@@ -693,8 +693,10 @@ bool SpectrumList_mzXMLImpl::readIndex()
 
     HandlerIndex handlerIndex(index_, msd_);
     SAXParser::parse(*is_, handlerIndex);
-    if (index_.empty())
+    if (index_.empty()){
+      is_->clear();
       return false;
+    }
 
     // else
     return true;
