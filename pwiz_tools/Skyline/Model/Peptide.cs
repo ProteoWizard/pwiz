@@ -40,10 +40,13 @@ namespace pwiz.Skyline.Model
         {
         }
 
-// ReSharper disable SuggestBaseTypeForParameter
+        public PeptideDocNode(Peptide id, ExplicitMods mods)
+            : this(id, null, Annotations.EMPTY, mods, null, new TransitionGroupDocNode[0], true)
+        {
+        }
+
         public PeptideDocNode(Peptide id, int? rank, Annotations annotations, ExplicitMods mods,
                 Results<PeptideChromInfo> results, TransitionGroupDocNode[] children, bool autoManageChildren)
-// ReSharper restore SuggestBaseTypeForParameter
             : base(id, annotations, children, autoManageChildren)
         {
             ExplicitMods = mods;

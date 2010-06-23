@@ -471,8 +471,9 @@ namespace pwiz.Skyline.Model.DocSettings
         /// digestion list for a sequence.
         /// </summary>
         /// <param name="peptide">The peptide being considered</param>
+        /// <param name="explicitMods">Any modifications which will be applied to the peptide, or null for none</param>
         /// <returns>True if the peptide should be included</returns>
-        bool Accept(Peptide peptide);
+        bool Accept(Peptide peptide, ExplicitMods explicitMods);
     }
 
     [XmlRoot("peptide_filter")]
@@ -547,7 +548,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
         #endregion
 
-        public bool Accept(Peptide peptide)
+        public bool Accept(Peptide peptide, ExplicitMods explicitMods)
         {
             return Accept(peptide.Sequence, peptide.Begin);
         }
@@ -747,7 +748,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             #region Implementation of IPeptideFilter
 
-            public bool Accept(Peptide peptide)
+            public bool Accept(Peptide peptide, ExplicitMods explicitMods)
             {
                 return true;
             }
@@ -759,12 +760,20 @@ namespace pwiz.Skyline.Model.DocSettings
     [XmlRoot("peptide_modifications")]
     public class PeptideModifications : Immutable, IXmlSerializable
     {
+        public const int DEFAULT_MAX_VARIABLE_MODS = 3;
+        public const int MIN_MAX_VARIABLE_MODS = 1;
+        public const int MAX_MAX_VARIABLE_MODS = 10;
+        public const int DEFAULT_MAX_NEUTRAL_LOSSES = 1;
+        public const int MIN_MAX_NEUTRAL_LOSSES = 1;
+        public const int MAX_MAX_NEUTRAL_LOSSES = 5;
+
         private ReadOnlyCollection<TypedModifications> _modifications;
         private ReadOnlyCollection<IsotopeLabelType> _internalStandardTypes;
 
         public PeptideModifications(IList<StaticMod> staticMods,
             IEnumerable<TypedModifications> heavyMods)
-                : this(staticMods, heavyMods, new[] {IsotopeLabelType.heavy})
+            : this(staticMods, DEFAULT_MAX_VARIABLE_MODS, DEFAULT_MAX_NEUTRAL_LOSSES,
+                   heavyMods, new[] { IsotopeLabelType.heavy })
         {
             // Make sure the internal standard type is reference equal with
             // the first heavy type.
@@ -774,9 +783,13 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public PeptideModifications(IList<StaticMod> staticMods,
+            int maxVariableMods, int maxNeutralLosses,
             IEnumerable<TypedModifications> heavyMods,
             IList<IsotopeLabelType> internalStandardTypes)
         {
+            MaxVariableMods = maxVariableMods;
+            MaxNeutralLosses = maxNeutralLosses;
+
             var modifications = new List<TypedModifications>
                                     {new TypedModifications(IsotopeLabelType.light, staticMods)};
             modifications.AddRange(heavyMods);
@@ -785,6 +798,9 @@ namespace pwiz.Skyline.Model.DocSettings
             Debug.Assert(internalStandardTypes.Count > 0);
             InternalStandardTypes = internalStandardTypes;
         }
+
+        public int MaxVariableMods { get; private set; }
+        public int MaxNeutralLosses { get; private set; }
 
         public IList<IsotopeLabelType> InternalStandardTypes
         {
@@ -795,6 +811,16 @@ namespace pwiz.Skyline.Model.DocSettings
         public IList<StaticMod> StaticModifications
         {
             get { return _modifications[0].Modifications; }
+        }
+
+        public IEnumerable<StaticMod> VariableModifications
+        {
+            get 
+            {
+                return from mod in StaticModifications
+                       where mod.IsVariable
+                       select mod;
+            }
         }
 
         public IList<StaticMod> HeavyModifications
@@ -861,6 +887,16 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #region Property change methods
 
+        public PeptideModifications ChangeMaxVariableMods(int prop)
+        {
+            return ChangeProp(ImClone(this), im => im.MaxVariableMods = prop);
+        }
+
+        public PeptideModifications ChangeMaxNeutralLosses(int prop)
+        {
+            return ChangeProp(ImClone(this), im => im.MaxNeutralLosses = prop);
+        }
+
         public PeptideModifications ChangeInternalStandardTypes(IList<IsotopeLabelType> prop)
         {
             return ChangeProp(ImClone(this), im => im.InternalStandardTypes = prop);
@@ -912,6 +948,9 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 if (!nodePep.HasExplicitMods)
                     continue;
+                // Variable modifications do not count
+                if (nodePep.ExplicitMods.IsVariableStaticMods && typedMods.LabelType.IsLight)
+                    continue;
                 var explicitMods = nodePep.ExplicitMods.GetModifications(typedMods.LabelType);
                 if (explicitMods == null)
                     continue;
@@ -927,14 +966,12 @@ namespace pwiz.Skyline.Model.DocSettings
             IEnumerable<StaticMod> listModsGlobal, out Dictionary<string, StaticMod> explicitMods)
         {
             List<StaticMod> implicitMods = new List<StaticMod>();
-            explicitMods = new Dictionary<string, StaticMod>();
             // Make sure all global mods are available to explicit mods with their
             // current settings values
-            foreach (StaticMod mod in listModsGlobal)
-                explicitMods.Add(mod.Name, mod);
+            explicitMods = listModsGlobal.ToDictionary(mod => mod.Name);
             foreach (StaticMod mod in mods)
             {
-                if (!mod.IsExplicit)
+                if (mod.IsVariable || !mod.IsExplicit)
                 {
                     implicitMods.Add(mod);
                     explicitMods.Remove(mod.Name);
@@ -991,6 +1028,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private enum ATTR
         {
+            max_variable_mods,
+            max_neutral_losses,
             isotope_label,
             internal_standard,
             name
@@ -1010,6 +1049,9 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             var list = new List<TypedModifications>();
             var internalStandardTypes = new[] {IsotopeLabelType.heavy};
+
+            MaxVariableMods = reader.GetIntAttribute(ATTR.max_variable_mods, DEFAULT_MAX_VARIABLE_MODS);
+            MaxNeutralLosses = reader.GetIntAttribute(ATTR.max_variable_mods, DEFAULT_MAX_NEUTRAL_LOSSES);
 
             // Consume tag
             if (reader.IsEmptyElement)
@@ -1097,6 +1139,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public void WriteXml(XmlWriter writer)
         {
             // Write attibutes
+            writer.WriteAttribute(ATTR.max_variable_mods, MaxVariableMods, DEFAULT_MAX_VARIABLE_MODS);
+            writer.WriteAttribute(ATTR.max_neutral_losses, MaxNeutralLosses, DEFAULT_MAX_NEUTRAL_LOSSES);
             if (InternalStandardTypes.Count == 1)
             {
                 var internalStandardType = InternalStandardTypes[0];
@@ -1134,8 +1178,10 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return ArrayUtil.EqualsDeep(obj.InternalStandardTypes, InternalStandardTypes) &&
-                ArrayUtil.EqualsDeep(obj._modifications, _modifications);
+            return obj.MaxVariableMods == MaxVariableMods &&
+                   obj.MaxNeutralLosses == MaxNeutralLosses &&
+                   ArrayUtil.EqualsDeep(obj.InternalStandardTypes, InternalStandardTypes) &&
+                   ArrayUtil.EqualsDeep(obj._modifications, _modifications);
         }
 
         public override bool Equals(object obj)
@@ -1150,8 +1196,10 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             unchecked
             {
-                int result = InternalStandardTypes.GetHashCodeDeep();
-                result = (result*397) ^ _modifications.GetHashCodeDeep();
+                int result = MaxVariableMods.GetHashCode();
+                result = (result * 397) ^ MaxNeutralLosses.GetHashCode();
+                result = (result * 397) ^ InternalStandardTypes.GetHashCodeDeep();
+                result = (result * 397) ^ _modifications.GetHashCodeDeep();
                 return result;
             }
         }

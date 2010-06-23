@@ -49,6 +49,16 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
+        /// Creates a copy of this with a new global index
+        /// </summary>
+        public Identity Copy()
+        {
+            var copy = (Identity) MemberwiseClone();
+            copy.GlobalIndex = _globalIndexCounter++;
+            return copy;
+        }
+
+        /// <summary>
         /// Use this value as a key in hashing containers, when reference equality
         /// mapping is desitred.
         /// <para>

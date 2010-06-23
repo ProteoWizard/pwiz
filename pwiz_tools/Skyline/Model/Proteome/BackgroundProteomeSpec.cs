@@ -173,7 +173,7 @@ namespace pwiz.Skyline.Model.Proteome
                 yield break;
             }
             DigestSettings digestSettings = new DigestSettings(6, false);
-            foreach (var digest in _enzyme.Digest(fastaSequence, digestSettings, PeptideFilter.UNFILTERED))
+            foreach (var digest in _enzyme.Digest(fastaSequence, digestSettings))
             {
                 var digestedPeptide = new DigestedPeptide
                 {

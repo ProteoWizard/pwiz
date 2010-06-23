@@ -100,6 +100,7 @@
     <Compile Include="StatisticsTest.cs" />
     <Compile Include="UndoManagerTest.cs" />
     <Compile Include="UtilTest.cs" />
+    <Compile Include="VariableModTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="AuthoringTests.txt" />

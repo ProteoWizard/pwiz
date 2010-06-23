@@ -55,13 +55,10 @@ namespace pwiz.Skyline.SettingsUI
         private readonly SettingsListBoxDriver<StaticMod> _driverStaticMod;
         private readonly SettingsListBoxDriver<StaticMod> _driverHeavyMod;
         private readonly LabelTypeComboDriver _driverLabelType;
-        private readonly MessageBoxHelper _helper;
 
         public PeptideSettingsUI(SkylineWindow parent, LibraryManager libraryManager)
         {
             InitializeComponent();
-
-            _helper = new MessageBoxHelper(this);
 
             _parent = parent;
             _libraryManager = libraryManager;
@@ -116,6 +113,8 @@ namespace pwiz.Skyline.SettingsUI
             _driverHeavyMod = new SettingsListBoxDriver<StaticMod>(listHeavyMods, Settings.Default.HeavyModList);
             _driverLabelType = new LabelTypeComboDriver(comboLabelType, Modifications, _driverHeavyMod, 
                 labelStandardType, comboStandardType, listStandardTypes);
+            textMaxVariableMods.Text = Modifications.MaxVariableMods.ToString();
+            textMaxNeutralLosses.Text = Modifications.MaxNeutralLosses.ToString();
         }
 
         public DigestSettings Digest { get { return _peptideSettings.DigestSettings; } }
@@ -133,6 +132,8 @@ namespace pwiz.Skyline.SettingsUI
         {
             // TODO: Remove this
             var e = new CancelEventArgs();
+            var helper = new MessageBoxHelper(this);
+
 
             // Validate and hold digestion settings
             Enzyme enzyme = Settings.Default.GetEnzymeByName(comboEnzyme.SelectedItem.ToString());
@@ -143,7 +144,26 @@ namespace pwiz.Skyline.SettingsUI
             bool excludeRaggedEnds = cbRaggedEnds.Checked;
             DigestSettings digest = new DigestSettings(maxMissedCleavages, excludeRaggedEnds);
             Helpers.AssignIfEquals(ref digest, Digest);
-            
+
+            var backgroundProteomeSpec =
+                Settings.Default.BackgroundProteomeList.GetBackgroundProteomeSpec(
+                    (string)_driverBackgroundProteome.Combo.SelectedItem);
+            BackgroundProteome backgroundProteome = BackgroundProteome.NONE;
+            if (!backgroundProteomeSpec.IsNone)
+            {
+                backgroundProteome = new BackgroundProteome(backgroundProteomeSpec, true);
+                if (backgroundProteome.DatabaseInvalid)
+                {
+                    MessageDlg.Show(this, string.Format("Failed to load background proteome {0}.\nThe file {1} may not be a valid proteome file.",
+                        backgroundProteomeSpec.Name, backgroundProteomeSpec.DatabasePath));
+                    tabControl1.SelectedIndex = 0;
+                    _driverBackgroundProteome.Combo.Focus();
+                    e.Cancel = true;
+                    return;
+                }
+            }
+            Helpers.AssignIfEquals(ref backgroundProteome, _peptideSettings.BackgroundProteome);
+
             // Validate and hold prediction settings
             string nameRT = comboRetentionTime.SelectedItem.ToString();
             RetentionTimeRegression retentionTime =
@@ -155,7 +175,7 @@ namespace pwiz.Skyline.SettingsUI
                 double measuredRTWindowOut;
                 const double minWindow = PeptidePrediction.MIN_MEASURED_RT_WINDOW;
                 const double maxWindow = PeptidePrediction.MAX_MEASURED_RT_WINDOW;
-                if (!_helper.ValidateDecimalTextBox(e, tabControl1, (int) TABS.Prediction,
+                if (!helper.ValidateDecimalTextBox(e, tabControl1, (int) TABS.Prediction,
                         textMeasureRTWindow, minWindow, maxWindow, out measuredRTWindowOut))
                     return;
                 measuredRTWindow = measuredRTWindowOut;
@@ -165,15 +185,15 @@ namespace pwiz.Skyline.SettingsUI
 
             // Validate and hold filter settings
             int excludeNTermAAs;
-            if (!_helper.ValidateNumberTextBox(e, tabControl1, (int) TABS.Filter, textExcludeAAs,
+            if (!helper.ValidateNumberTextBox(e, tabControl1, (int) TABS.Filter, textExcludeAAs,
                     PeptideFilter.MIN_EXCLUDE_NTERM_AA, PeptideFilter.MAX_EXCLUDE_NTERM_AA, out excludeNTermAAs))
                 return;
             int minPeptideLength;
-            if (!_helper.ValidateNumberTextBox(e, tabControl1, (int) TABS.Filter, textMinLength,
+            if (!helper.ValidateNumberTextBox(e, tabControl1, (int) TABS.Filter, textMinLength,
                     PeptideFilter.MIN_MIN_LENGTH, PeptideFilter.MAX_MIN_LENGTH, out minPeptideLength))
                 return;
             int maxPeptideLength;
-            if (!_helper.ValidateNumberTextBox(e, tabControl1, (int)TABS.Filter, textMaxLength,
+            if (!helper.ValidateNumberTextBox(e, tabControl1, (int)TABS.Filter, textMaxLength,
                     Math.Max(PeptideFilter.MIN_MAX_LENGTH, minPeptideLength), PeptideFilter.MAX_MAX_LENGTH, out maxPeptideLength))
                 return;
 
@@ -199,7 +219,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (cbLimitPeptides.Checked)
                 {
                     int peptideCountVal;
-                    if (!_helper.ValidateNumberTextBox(e, textPeptideCount, PeptideLibraries.MIN_PEPTIDE_COUNT,
+                    if (!helper.ValidateNumberTextBox(e, textPeptideCount, PeptideLibraries.MIN_PEPTIDE_COUNT,
                             PeptideLibraries.MAX_PEPTIDE_COUNT, out peptideCountVal))
                         return;
                     peptideCount = peptideCountVal;
@@ -232,6 +252,15 @@ namespace pwiz.Skyline.SettingsUI
             Helpers.AssignIfEquals(ref libraries, Libraries);
 
             // Validate and hold modifications
+            int maxVariableMods;
+            if (!helper.ValidateNumberTextBox(e, tabControl1, (int)TABS.Modifications, textMaxVariableMods,
+                    PeptideModifications.MIN_MAX_VARIABLE_MODS, PeptideModifications.MAX_MAX_VARIABLE_MODS, out maxVariableMods))
+                return;
+            int maxNeutralLosses;
+            if (!helper.ValidateNumberTextBox(e, tabControl1, (int)TABS.Modifications, textMaxNeutralLosses,
+                    PeptideModifications.MIN_MAX_NEUTRAL_LOSSES, PeptideModifications.MAX_MAX_NEUTRAL_LOSSES, out maxNeutralLosses))
+                return;
+
             var standardTypes = _driverLabelType.InternalStandardTypes;
             if (standardTypes.Count < 1)
             {
@@ -240,32 +269,13 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             }
             PeptideModifications modifications = new PeptideModifications(
-                _driverStaticMod.Chosen, _driverLabelType.GetHeavyModifications(),
-                standardTypes);
+                _driverStaticMod.Chosen, maxVariableMods, maxNeutralLosses,
+                _driverLabelType.GetHeavyModifications(), standardTypes);
             // Should not be possible to change explicit modifications in the background,
             // so this should be safe.  CONSIDER: Document structure because of a library load?
             modifications = modifications.DeclareExplicitMods(_parent.DocumentUI,
                 Settings.Default.StaticModList, Settings.Default.HeavyModList);
             Helpers.AssignIfEquals(ref modifications, _peptideSettings.Modifications);
-            var backgroundProteomeSpec =
-                Settings.Default.BackgroundProteomeList.GetBackgroundProteomeSpec(
-                    (string) _driverBackgroundProteome.Combo.SelectedItem);           
-            BackgroundProteome backgroundProteome = BackgroundProteome.NONE;
-            if (!backgroundProteomeSpec.IsNone)
-            {
-                backgroundProteome = new BackgroundProteome(backgroundProteomeSpec, true);
-                if (backgroundProteome.DatabaseInvalid)
-                {
-                    MessageDlg.Show(this, string.Format("Failed to load background proteome {0}.\nThe file {1} may not be a valid proteome file.",
-                        backgroundProteomeSpec.Name, backgroundProteomeSpec.DatabasePath));
-                    tabControl1.SelectedIndex = 0;
-                    _driverBackgroundProteome.Combo.Focus();
-                    e.Cancel = true;
-                    return;
-                }
-            }
-                
-            Helpers.AssignIfEquals(ref backgroundProteome, _peptideSettings.BackgroundProteome);
             PeptideSettings settings = new PeptideSettings(enzyme, digest, prediction,
                     filter, libraries, modifications, backgroundProteome);
 

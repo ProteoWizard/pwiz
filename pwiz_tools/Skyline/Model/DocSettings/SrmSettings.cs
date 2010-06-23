@@ -467,9 +467,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #region Implementation of IPeptideFilter
 
-        public bool Accept(Peptide peptide)
+        public bool Accept(Peptide peptide, ExplicitMods explicitMods)
         {
-            return Accept(peptide, null, TransitionSettings.Filter.PrecursorCharges, false);
+            return Accept(peptide, explicitMods, TransitionSettings.Filter.PrecursorCharges, false);
         }
 
         public bool Accept(Peptide peptide, bool filterUserPeptides)
@@ -492,7 +492,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (!filterUserPeptides && !peptide.Begin.HasValue)
                     return true;
 
-                return PeptideSettings.Filter.Accept(peptide);
+                return PeptideSettings.Filter.Accept(peptide, null);
             }
 
             // Check if the peptide is in the library for one of the
@@ -525,9 +525,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 case PeptidePick.library:
                     return inLibrary;
                 case PeptidePick.both:
-                    return inLibrary && PeptideSettings.Filter.Accept(peptide);
+                    return inLibrary && PeptideSettings.Filter.Accept(peptide, null);
                 default:
-                    return inLibrary || PeptideSettings.Filter.Accept(peptide);
+                    return inLibrary || PeptideSettings.Filter.Accept(peptide, null);
             }
         }
 
@@ -921,7 +921,11 @@ namespace pwiz.Skyline.Model.DocSettings
                                   !newPep.DigestSettings.Equals(oldPep.DigestSettings) ||
                                   !newPep.Filter.Equals(oldPep.Filter) ||
                                   // If precursors differ, and peptide picks depend on the library
-                                  (precursorsDiff && newPep.Libraries.HasLibraries && newPep.Libraries.Pick != PeptidePick.filter);
+                                  (precursorsDiff && newPep.Libraries.HasLibraries && newPep.Libraries.Pick != PeptidePick.filter) ||
+                                  // If variable modifications changed
+                                  newPep.Modifications.MaxVariableMods != oldPep.Modifications.MaxVariableMods ||
+                                  !ArrayUtil.EqualsDeep(newPep.Modifications.VariableModifications.ToArray(),
+                                                        oldPep.Modifications.VariableModifications.ToArray());
 
             // Currently no calculated values on peptides
             DiffPeptideProps = false;

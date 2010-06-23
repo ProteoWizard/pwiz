@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public StaticMod(string name, char? aa, ModTerminus? term,
             string formula, LabelAtoms labelAtoms, double? monoMass, double? avgMass)
-            : this(name, aa, term, formula, labelAtoms, RelativeRT.Matching, monoMass, avgMass, null, null, null)
+            : this(name, aa, term, false, formula, labelAtoms, RelativeRT.Matching, monoMass, avgMass, null, null, null)
         {
             
         }
@@ -72,6 +72,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public StaticMod(string name,
                          char? aa,
                          ModTerminus? term,
+                         bool isVariable,
                          string formula,
                          LabelAtoms labelAtoms,
                          RelativeRT relativeRT,
@@ -84,6 +85,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             AA = aa;
             Terminus = term;
+            IsVariable = IsExplicit = isVariable;   // All variable mods are explicit
             Formula = formula;
             LabelAtoms = labelAtoms;
             RelativeRT = relativeRT;
@@ -110,6 +112,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public char? AA { get; private set; }
 
         public ModTerminus? Terminus { get; private set; }
+
+        public bool IsVariable { get; private set; }
 
         public string Formula { get; private set; }
         public string FormulaLoss { get; private set; }
@@ -171,7 +175,11 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public StaticMod ChangeExplicit(bool prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.IsExplicit = v, prop);
+            return ChangeProp(ImClone(this), im =>
+                                                 {
+                                                     im.IsExplicit = prop;
+                                                     im.IsVariable = false;
+                                                 });
         }
 
         #endregion
@@ -189,6 +197,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             aminoacid,
             terminus,
+            variable,
             formula,
             formula_loss,
 // ReSharper disable InconsistentNaming
@@ -211,9 +220,9 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // It is now valid to specify modifications that apply to every amino acid.
             // This is important for 15N labeling, and reasonable for an explicit
-            // static modification.
-//            if (!Terminus.HasValue && !AA.HasValue)
-//                throw new InvalidDataException("Modification must specify amino acid or terminus.");
+            // static modification... but not for variable modifications.
+            if (IsVariable && !Terminus.HasValue && !AA.HasValue)
+                throw new InvalidDataException("Variable modifications must specify amino acid or terminus.");
             if (AA.HasValue && !AminoAcid.IsAA(AA.Value))
                 throw new InvalidDataException(string.Format("Invalid amino acid {0}.", AA.Value));
             if (!AA.HasValue && Terminus.HasValue && LabelAtoms != LabelAtoms.None)
@@ -288,6 +297,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
 
             Terminus = reader.GetAttribute<ModTerminus>(ATTR.terminus, ToModTerminus);
+            IsVariable = IsExplicit = reader.GetBoolAttribute(ATTR.variable);
             Formula = reader.GetAttribute(ATTR.formula);
             FormulaLoss = reader.GetAttribute(ATTR.formula_loss);
             if (reader.GetBoolAttribute(ATTR.label_13C))
@@ -307,7 +317,8 @@ namespace pwiz.Skyline.Model.DocSettings
             AverageMass = reader.GetNullableDoubleAttribute(ATTR.massdiff_average);
             AverageLoss = reader.GetNullableDoubleAttribute(ATTR.massloss_average);
 
-            IsExplicit = reader.GetBoolAttribute(ATTR.explicit_decl);
+            if (!IsVariable)
+                IsExplicit = reader.GetBoolAttribute(ATTR.explicit_decl);
 
             // Consume tag
             reader.Read();
@@ -321,6 +332,7 @@ namespace pwiz.Skyline.Model.DocSettings
             base.WriteXml(writer);
             writer.WriteAttributeNullable(ATTR.aminoacid, AA);
             writer.WriteAttributeNullable(ATTR.terminus, Terminus);
+            writer.WriteAttribute(ATTR.variable, IsVariable);
             writer.WriteAttributeIfString(ATTR.formula, Formula);
             writer.WriteAttributeIfString(ATTR.formula_loss, FormulaLoss);
             writer.WriteAttribute(ATTR.label_13C, Label13C);
@@ -332,7 +344,8 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttributeNullable(ATTR.massloss_monoisotopic, MonoisotopicLoss);
             writer.WriteAttributeNullable(ATTR.massdiff_average, AverageMass);
             writer.WriteAttributeNullable(ATTR.massloss_average, AverageLoss);
-            writer.WriteAttribute(ATTR.explicit_decl, IsExplicit);
+            if (!IsVariable)
+                writer.WriteAttribute(ATTR.explicit_decl, IsExplicit);
         }
 
         #endregion
@@ -347,6 +360,8 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             return base.Equals(obj) && obj.AA.Equals(AA) &&
+                obj.Terminus.Equals(Terminus) &&
+                obj.IsVariable.Equals(IsVariable) &&
                 obj.AverageMass.Equals(AverageMass) &&
                 obj.AverageLoss.Equals(AverageLoss) &&
                 Equals(obj.Formula, Formula) &&
@@ -354,8 +369,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 Equals(obj.LabelAtoms, LabelAtoms) &&
                 Equals(obj.RelativeRT, RelativeRT) &&
                 obj.MonoisotopicMass.Equals(MonoisotopicMass) &&
-                obj.MonoisotopicLoss.Equals(MonoisotopicLoss) &&
-                obj.Terminus.Equals(Terminus);
+                obj.MonoisotopicLoss.Equals(MonoisotopicLoss);
         }
 
         public bool Equals(StaticMod obj)
@@ -379,6 +393,8 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 int result = base.GetHashCode();
                 result = (result*397) ^ (AA.HasValue ? AA.Value.GetHashCode() : 0);
+                result = (result*397) ^ (Terminus.HasValue ? Terminus.Value.GetHashCode() : 0);
+                result = (result*397) ^ IsVariable.GetHashCode();
                 result = (result*397) ^ (AverageMass.HasValue ? AverageMass.Value.GetHashCode() : 0);
                 result = (result*397) ^ (AverageLoss.HasValue ? AverageLoss.Value.GetHashCode() : 0);
                 result = (result*397) ^ (Formula != null ? Formula.GetHashCode() : 0);
@@ -388,7 +404,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ RelativeRT.GetHashCode();
                 result = (result*397) ^ (MonoisotopicMass.HasValue ? MonoisotopicMass.Value.GetHashCode() : 0);
                 result = (result*397) ^ (MonoisotopicLoss.HasValue ? MonoisotopicLoss.Value.GetHashCode() : 0);
-                result = (result*397) ^ (Terminus.HasValue ? Terminus.Value.GetHashCode() : 0);
                 return result;
             }
         }
@@ -454,8 +469,15 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public ExplicitMods(Peptide peptide, IList<ExplicitMod> staticMods,
             IEnumerable<TypedExplicitModifications> heavyMods)
+            : this(peptide, staticMods, heavyMods, false)
+        {
+            
+        }
+        public ExplicitMods(Peptide peptide, IList<ExplicitMod> staticMods,
+            IEnumerable<TypedExplicitModifications> heavyMods, bool isVariable)
         {
             Peptide = peptide;
+            IsVariableStaticMods = isVariable;
 
             var modifications = new List<TypedExplicitModifications>();
             // Add static mods, if applicable
@@ -527,6 +549,8 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public Peptide Peptide { get; private set; }
+
+        public bool IsVariableStaticMods { get; private set; }
 
         public IList<ExplicitMod> StaticModifications
         {

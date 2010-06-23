@@ -45,14 +45,15 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         protected override void DoTest()
         {
-            var docEmpty = SkylineWindow.Document;
-
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("ANL_N15_mini.sky")));
             RunUI(SkylineWindow.ExpandPrecursors);
 
             Settings.Default.SynchronizeIsotopeTypes = true;
 
-            var docOrig = WaitForDocumentChange(docEmpty);
+            // Wait until the document contains a fully loaded library
+            WaitForConditionUI(() => SkylineWindow.DocumentUI.Settings.PeptideSettings.Libraries.IsLoaded);
+
+            var docOrig = SkylineWindow.Document;
             var pathPeptide = docOrig.GetPathTo((int) SrmDocument.Level.Peptides, 0);
 
             // Select the first transition group
@@ -166,7 +167,7 @@ namespace pwiz.SkylineTestFunctional
         private static Match MatchTransitionText(TreeNode nodeTreeTran, Regex regexTran)
         {
             var match = regexTran.Match(nodeTreeTran.Text);
-            Assert.IsTrue(match.Success, string.Format("The transition node text {0} did not match the expected pattern.", nodeTreeTran.Text));
+            Assert.IsTrue(match.Success, string.Format("The transition node text '{0}' did not match the expected pattern.", nodeTreeTran.Text));
             return match;
         }
 

@@ -1673,6 +1673,16 @@ namespace pwiz.Skyline
             Process.Start("http://proteome.gs.washington.edu/software/skyline/");
         }
 
+        private void videosMenuItem_Click(object sender, EventArgs e)
+        {
+            Process.Start("http://proteome.gs.washington.edu/software/Skyline/videos.html");
+        }
+
+        private void tutorialsMenuItem_Click(object sender, EventArgs e)
+        {
+            Process.Start("http://proteome.gs.washington.edu/software/Skyline/tutorials.html");
+        }
+
         private void supportMenuItem_Click(object sender, EventArgs e)
         {
             Process.Start("http://proteome.gs.washington.edu/software/Skyline/support.html");

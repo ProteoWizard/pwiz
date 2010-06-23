@@ -131,16 +131,15 @@ namespace pwiz.Skyline.Controls.SeqNode
                 PeptideRankId rankId = DocSettings.PeptideSettings.Libraries.RankId;
                 if (rankId == null)
                 {
-                    foreach (Peptide peptide in fastaSeq.GetPeptides(settings, useFilter))
-                        yield return peptide;                    
+                    foreach (var nodePep in fastaSeq.GetPeptideNodes(settings, useFilter))
+                        yield return nodePep;                    
                 }
                 else
                 {
                     IList<DocNode> listPeptides = new List<DocNode>();
-                    foreach (Peptide peptide in fastaSeq.GetPeptides(settings, true))
+                    foreach (var nodePep in fastaSeq.GetPeptideNodes(settings, true))
                     {
-                        PeptideDocNode nodePeptide = new PeptideDocNode(peptide, new TransitionGroupDocNode[0]);
-                        listPeptides.Add(nodePeptide.ChangeSettings(settings, SrmSettingsDiff.ALL));
+                        listPeptides.Add(nodePep.ChangeSettings(settings, SrmSettingsDiff.ALL));
                     }
                     listPeptides = PeptideGroupDocNode.RankPeptides(listPeptides, settings, useFilter);
 
@@ -155,16 +154,16 @@ namespace pwiz.Skyline.Controls.SeqNode
                     {
                         IEnumerator<DocNode> enumPeptides = listPeptides.GetEnumerator();
                         bool hasNext = enumPeptides.MoveNext();
-                        foreach (Peptide peptide in fastaSeq.GetPeptides(settings, false))
+                        foreach (var nodePep in fastaSeq.GetPeptideNodes(settings, false))
                         {
-                            if (hasNext && Equals(peptide, enumPeptides.Current.Id))
+                            if (hasNext && Equals(nodePep.Peptide, enumPeptides.Current.Id))
                             {
                                 yield return enumPeptides.Current;
                                 hasNext = enumPeptides.MoveNext();
                             }
                             else
                             {
-                                yield return new PeptideDocNode(peptide, new TransitionGroupDocNode[0]);
+                                yield return nodePep;
                             }
                         }
                     }
@@ -176,9 +175,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             get
             {
-                if (DocSettings.PeptideSettings.Libraries.RankId != null)
-                    return DocNode.Children.ToArray();
-                return base.Chosen;
+                return DocNode.Children.ToArray();
             }
         }
 

@@ -87,6 +87,10 @@ namespace pwiz.Skyline.SettingsUI
             this.label8 = new System.Windows.Forms.Label();
             this.listStaticMods = new System.Windows.Forms.CheckedListBox();
             this.listStandardTypes = new System.Windows.Forms.CheckedListBox();
+            this.textMaxVariableMods = new System.Windows.Forms.TextBox();
+            this.label17 = new System.Windows.Forms.Label();
+            this.textMaxNeutralLosses = new System.Windows.Forms.TextBox();
+            this.label18 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabDigestion.SuspendLayout();
             this.tabPrediction.SuspendLayout();
@@ -99,7 +103,7 @@ namespace pwiz.Skyline.SettingsUI
             // btnOk
             // 
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.Location = new System.Drawing.Point(227, 452);
+            this.btnOk.Location = new System.Drawing.Point(227, 506);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 1;
@@ -111,7 +115,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(308, 452);
+            this.btnCancel.Location = new System.Drawing.Point(308, 506);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 2;
@@ -132,7 +136,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabControl1.Location = new System.Drawing.Point(12, 12);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = global::pwiz.Skyline.Properties.Settings.Default.PeptideSettingsTab;
-            this.tabControl1.Size = new System.Drawing.Size(371, 432);
+            this.tabControl1.Size = new System.Drawing.Size(371, 486);
             this.tabControl1.TabIndex = 0;
             // 
             // tabDigestion
@@ -146,7 +150,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabDigestion.Location = new System.Drawing.Point(4, 22);
             this.tabDigestion.Name = "tabDigestion";
             this.tabDigestion.Padding = new System.Windows.Forms.Padding(3);
-            this.tabDigestion.Size = new System.Drawing.Size(363, 406);
+            this.tabDigestion.Size = new System.Drawing.Size(363, 460);
             this.tabDigestion.TabIndex = 0;
             this.tabDigestion.Text = "Digestion";
             this.tabDigestion.UseVisualStyleBackColor = true;
@@ -228,7 +232,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabPrediction.Controls.Add(this.label9);
             this.tabPrediction.Location = new System.Drawing.Point(4, 22);
             this.tabPrediction.Name = "tabPrediction";
-            this.tabPrediction.Size = new System.Drawing.Size(363, 406);
+            this.tabPrediction.Size = new System.Drawing.Size(363, 460);
             this.tabPrediction.TabIndex = 3;
             this.tabPrediction.Text = "Prediction";
             this.tabPrediction.UseVisualStyleBackColor = true;
@@ -304,7 +308,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabFilter.Location = new System.Drawing.Point(4, 22);
             this.tabFilter.Name = "tabFilter";
             this.tabFilter.Padding = new System.Windows.Forms.Padding(3);
-            this.tabFilter.Size = new System.Drawing.Size(363, 406);
+            this.tabFilter.Size = new System.Drawing.Size(363, 460);
             this.tabFilter.TabIndex = 1;
             this.tabFilter.Text = "Filter";
             this.tabFilter.UseVisualStyleBackColor = true;
@@ -415,7 +419,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabLibrary.Controls.Add(this.listLibraries);
             this.tabLibrary.Location = new System.Drawing.Point(4, 22);
             this.tabLibrary.Name = "tabLibrary";
-            this.tabLibrary.Size = new System.Drawing.Size(363, 406);
+            this.tabLibrary.Size = new System.Drawing.Size(363, 460);
             this.tabLibrary.TabIndex = 4;
             this.tabLibrary.Text = "Library";
             this.tabLibrary.UseVisualStyleBackColor = true;
@@ -556,6 +560,10 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // tabModifications
             // 
+            this.tabModifications.Controls.Add(this.label18);
+            this.tabModifications.Controls.Add(this.textMaxNeutralLosses);
+            this.tabModifications.Controls.Add(this.label17);
+            this.tabModifications.Controls.Add(this.textMaxVariableMods);
             this.tabModifications.Controls.Add(this.comboStandardType);
             this.tabModifications.Controls.Add(this.labelStandardType);
             this.tabModifications.Controls.Add(this.label16);
@@ -569,7 +577,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabModifications.Controls.Add(this.listStandardTypes);
             this.tabModifications.Location = new System.Drawing.Point(4, 22);
             this.tabModifications.Name = "tabModifications";
-            this.tabModifications.Size = new System.Drawing.Size(363, 406);
+            this.tabModifications.Size = new System.Drawing.Size(363, 460);
             this.tabModifications.TabIndex = 2;
             this.tabModifications.Text = "Modifications";
             this.tabModifications.UseVisualStyleBackColor = true;
@@ -578,45 +586,49 @@ namespace pwiz.Skyline.SettingsUI
             // 
             this.comboStandardType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboStandardType.FormattingEnabled = true;
-            this.comboStandardType.Location = new System.Drawing.Point(28, 338);
+            this.comboStandardType.Location = new System.Drawing.Point(28, 395);
             this.comboStandardType.Name = "comboStandardType";
             this.comboStandardType.Size = new System.Drawing.Size(177, 21);
-            this.comboStandardType.TabIndex = 9;
+            this.comboStandardType.TabIndex = 13;
+            this.toolTipSettings.SetToolTip(this.comboStandardType, "The type to use as the internal stadard, or the denomenator\r\nin peak area ratios." +
+                    "");
             // 
             // labelStandardType
             // 
             this.labelStandardType.AutoSize = true;
-            this.labelStandardType.Location = new System.Drawing.Point(25, 322);
+            this.labelStandardType.Location = new System.Drawing.Point(25, 379);
             this.labelStandardType.Name = "labelStandardType";
             this.labelStandardType.Size = new System.Drawing.Size(112, 13);
-            this.labelStandardType.TabIndex = 8;
+            this.labelStandardType.TabIndex = 12;
             this.labelStandardType.Text = "I&nternal standard type:";
             // 
             // label16
             // 
             this.label16.AutoSize = true;
-            this.label16.Location = new System.Drawing.Point(25, 150);
+            this.label16.Location = new System.Drawing.Point(25, 207);
             this.label16.Name = "label16";
             this.label16.Size = new System.Drawing.Size(93, 13);
-            this.label16.TabIndex = 3;
+            this.label16.TabIndex = 7;
             this.label16.Text = "Isotope label &type:";
             // 
             // comboLabelType
             // 
             this.comboLabelType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboLabelType.FormattingEnabled = true;
-            this.comboLabelType.Location = new System.Drawing.Point(28, 166);
+            this.comboLabelType.Location = new System.Drawing.Point(28, 223);
             this.comboLabelType.Name = "comboLabelType";
             this.comboLabelType.Size = new System.Drawing.Size(177, 21);
-            this.comboLabelType.TabIndex = 4;
+            this.comboLabelType.TabIndex = 8;
+            this.toolTipSettings.SetToolTip(this.comboLabelType, "The currently active isotope label type for which isotope\r\nmodifications are bein" +
+                    "g chosen.");
             this.comboLabelType.SelectedIndexChanged += new System.EventHandler(this.comboLabelType_SelectedIndexChanged);
             // 
             // btnEditHeavyMods
             // 
-            this.btnEditHeavyMods.Location = new System.Drawing.Point(211, 212);
+            this.btnEditHeavyMods.Location = new System.Drawing.Point(211, 269);
             this.btnEditHeavyMods.Name = "btnEditHeavyMods";
             this.btnEditHeavyMods.Size = new System.Drawing.Size(75, 23);
-            this.btnEditHeavyMods.TabIndex = 7;
+            this.btnEditHeavyMods.TabIndex = 11;
             this.btnEditHeavyMods.Text = "E&dit list...";
             this.btnEditHeavyMods.UseVisualStyleBackColor = true;
             this.btnEditHeavyMods.Click += new System.EventHandler(this.btnEditHeavyMods_Click);
@@ -624,20 +636,23 @@ namespace pwiz.Skyline.SettingsUI
             // label10
             // 
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(25, 196);
+            this.label10.Location = new System.Drawing.Point(25, 253);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(109, 13);
-            this.label10.TabIndex = 5;
+            this.label10.TabIndex = 9;
             this.label10.Text = "&Isotope modifications:";
             // 
             // listHeavyMods
             // 
             this.listHeavyMods.CheckOnClick = true;
             this.listHeavyMods.FormattingEnabled = true;
-            this.listHeavyMods.Location = new System.Drawing.Point(28, 212);
+            this.listHeavyMods.Location = new System.Drawing.Point(28, 269);
             this.listHeavyMods.Name = "listHeavyMods";
             this.listHeavyMods.Size = new System.Drawing.Size(177, 94);
-            this.listHeavyMods.TabIndex = 6;
+            this.listHeavyMods.TabIndex = 10;
+            this.toolTipSettings.SetToolTip(this.listHeavyMods, "Modifications applied to any of the heavy forms of the peptides,\r\nwhich are typic" +
+                    "ally changes to the isotopic make-up of the\r\nmolecules, with no impact on struct" +
+                    "ure.");
             // 
             // btnEditStaticMods
             // 
@@ -666,15 +681,57 @@ namespace pwiz.Skyline.SettingsUI
             this.listStaticMods.Name = "listStaticMods";
             this.listStaticMods.Size = new System.Drawing.Size(177, 94);
             this.listStaticMods.TabIndex = 1;
+            this.toolTipSettings.SetToolTip(this.listStaticMods, "Modifications applied to the light form of the peptides\r\nwhich are typically due " +
+                    "to changes in the molecular\r\nstructure of the peptide.");
             // 
             // listStandardTypes
             // 
             this.listStandardTypes.CheckOnClick = true;
             this.listStandardTypes.FormattingEnabled = true;
-            this.listStandardTypes.Location = new System.Drawing.Point(28, 338);
+            this.listStandardTypes.Location = new System.Drawing.Point(28, 395);
             this.listStandardTypes.Name = "listStandardTypes";
             this.listStandardTypes.Size = new System.Drawing.Size(177, 49);
-            this.listStandardTypes.TabIndex = 10;
+            this.listStandardTypes.TabIndex = 14;
+            this.toolTipSettings.SetToolTip(this.listStandardTypes, "The types to use as internal stadards, or the denomenators\r\nin peak area ratios c" +
+                    "alculated for other types.");
+            // 
+            // textMaxVariableMods
+            // 
+            this.textMaxVariableMods.Location = new System.Drawing.Point(28, 163);
+            this.textMaxVariableMods.Name = "textMaxVariableMods";
+            this.textMaxVariableMods.Size = new System.Drawing.Size(90, 20);
+            this.textMaxVariableMods.TabIndex = 4;
+            this.toolTipSettings.SetToolTip(this.textMaxVariableMods, "The maximum number of variable modifications allowed\r\nto occur in combination on " +
+                    "any peptide instance.");
+            // 
+            // label17
+            // 
+            this.label17.AutoSize = true;
+            this.label17.Location = new System.Drawing.Point(25, 145);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(98, 13);
+            this.label17.TabIndex = 3;
+            this.label17.Text = "&Max variable mods:";
+            // 
+            // textMaxNeutralLosses
+            // 
+            this.textMaxNeutralLosses.Location = new System.Drawing.Point(155, 163);
+            this.textMaxNeutralLosses.Name = "textMaxNeutralLosses";
+            this.textMaxNeutralLosses.Size = new System.Drawing.Size(90, 20);
+            this.textMaxNeutralLosses.TabIndex = 6;
+            this.toolTipSettings.SetToolTip(this.textMaxNeutralLosses, "The maximum number of neutral loss events allowed\r\nto occur in combination on any" +
+                    " fragment instance.");
+            this.textMaxNeutralLosses.Visible = false;
+            // 
+            // label18
+            // 
+            this.label18.AutoSize = true;
+            this.label18.Location = new System.Drawing.Point(155, 145);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(97, 13);
+            this.label18.TabIndex = 5;
+            this.label18.Text = "Max &neutral losses:";
+            this.label18.Visible = false;
             // 
             // PeptideSettingsUI
             // 
@@ -682,7 +739,7 @@ namespace pwiz.Skyline.SettingsUI
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(395, 487);
+            this.ClientSize = new System.Drawing.Size(395, 541);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.tabControl1);
@@ -768,5 +825,9 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.ComboBox comboStandardType;
         private System.Windows.Forms.Label labelStandardType;
         private System.Windows.Forms.CheckedListBox listStandardTypes;
+        private System.Windows.Forms.Label label18;
+        private System.Windows.Forms.TextBox textMaxNeutralLosses;
+        private System.Windows.Forms.Label label17;
+        private System.Windows.Forms.TextBox textMaxVariableMods;
     }
 }

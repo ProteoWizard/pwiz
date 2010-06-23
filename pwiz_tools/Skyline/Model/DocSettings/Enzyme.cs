@@ -68,7 +68,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool IsNTerm() { return Type == SequenceTerminus.N; }
         public bool IsCTerm() { return Type == SequenceTerminus.C; }
 
-        public IEnumerable<Peptide> Digest(FastaSequence fastaSeq, DigestSettings settings, IPeptideFilter filter)
+        public IEnumerable<Peptide> Digest(FastaSequence fastaSeq, DigestSettings settings)
         {
             Regex regex = new Regex(Regex);
             int begin = 0;
@@ -108,10 +108,8 @@ namespace pwiz.Skyline.Model.DocSettings
                     int count = end - begin;
                     if (count > 1 && sequence.IndexOfAny(new[] {'*', '-'}, begin, count) == -1)
                     {
-                        Peptide peptide = new Peptide(fastaSeq, sequence.Substring(begin, end - begin),
+                        yield return new Peptide(fastaSeq, sequence.Substring(begin, end - begin),
                             begin, end, missed);
-                        if (filter.Accept(peptide))
-                            yield return peptide;
                     }
 
                     // Increment missed cleavages for next loop.

@@ -73,6 +73,7 @@
             this.label8 = new System.Windows.Forms.Label();
             this.comboRelativeRT = new System.Windows.Forms.ComboBox();
             this.labelRelativeRT = new System.Windows.Forms.Label();
+            this.cbVariableMod = new System.Windows.Forms.CheckBox();
             this.contextFormula.SuspendLayout();
             this.panelFormula.SuspendLayout();
             this.panelAtoms.SuspendLayout();
@@ -219,7 +220,7 @@
             "",
             "N",
             "C"});
-            this.comboTerm.Location = new System.Drawing.Point(136, 89);
+            this.comboTerm.Location = new System.Drawing.Point(95, 89);
             this.comboTerm.Name = "comboTerm";
             this.comboTerm.Size = new System.Drawing.Size(61, 21);
             this.comboTerm.TabIndex = 5;
@@ -228,7 +229,7 @@
             // 
             this.label6.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(133, 73);
+            this.label6.Location = new System.Drawing.Point(92, 73);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(53, 13);
             this.label6.TabIndex = 4;
@@ -506,6 +507,17 @@
             this.labelRelativeRT.TabIndex = 14;
             this.labelRelativeRT.Text = "Relative retention time:";
             // 
+            // cbVariableMod
+            // 
+            this.cbVariableMod.AutoSize = true;
+            this.cbVariableMod.Location = new System.Drawing.Point(183, 91);
+            this.cbVariableMod.Name = "cbVariableMod";
+            this.cbVariableMod.Size = new System.Drawing.Size(64, 17);
+            this.cbVariableMod.TabIndex = 25;
+            this.cbVariableMod.TabStop = false;
+            this.cbVariableMod.Text = "Variable";
+            this.cbVariableMod.UseVisualStyleBackColor = true;
+            // 
             // EditStaticModDlg
             // 
             this.AcceptButton = this.btnOk;
@@ -513,6 +525,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(353, 368);
+            this.Controls.Add(this.cbVariableMod);
             this.Controls.Add(this.labelRelativeRT);
             this.Controls.Add(this.comboRelativeRT);
             this.Controls.Add(this.panelFormula);
@@ -544,7 +557,7 @@
             this.Name = "EditStaticModDlg";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Edit Static Modification";
+            this.Text = "Edit Structural Modification";
             this.contextFormula.ResumeLayout(false);
             this.panelFormula.ResumeLayout(false);
             this.panelFormula.PerformLayout();
@@ -603,5 +616,6 @@
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.ComboBox comboRelativeRT;
         private System.Windows.Forms.Label labelRelativeRT;
+        private System.Windows.Forms.CheckBox cbVariableMod;
     }
 }

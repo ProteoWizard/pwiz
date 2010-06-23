@@ -952,6 +952,7 @@ namespace pwiz.Skyline.SettingsUI
                                 var smod = new StaticMod("temp",
                                                                modList[idx].ModifiedAminoAcid,
                                                                null,
+                                                               false,
                                                                null,
                                                                LabelAtoms.None,
                                                                RelativeRT.Unknown,

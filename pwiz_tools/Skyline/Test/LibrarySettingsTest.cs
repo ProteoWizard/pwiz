@@ -83,8 +83,20 @@ namespace pwiz.SkylineTest
         private static SrmDocument CreateNISTLibraryDocument(out LibraryManager libraryManager,
             out TestDocumentContainer docContainer, out int startRev)
         {
+            SrmDocument docLoaded = CreateNISTLibraryDocument(LibraryLoadTest.TEXT_FASTA_YEAST_LIB,
+                                                              LibraryLoadTest.TEXT_LIB_YEAST_NIST,
+                                                              out libraryManager,
+                                                              out docContainer,
+                                                              out startRev);
+            AssertEx.IsDocumentState(docLoaded, startRev, 2, 4, 12);
+            return docLoaded;
+        }
+
+        public static SrmDocument CreateNISTLibraryDocument(string textFasta, string textLib,
+            out LibraryManager libraryManager, out TestDocumentContainer docContainer, out int startRev)
+        {
             var streamManager = new MemoryStreamManager();
-            streamManager.TextFiles.Add(LibraryLoadTest.PATH_NIST_LIB, LibraryLoadTest.TEXT_LIB_YEAST_NIST);
+            streamManager.TextFiles.Add(LibraryLoadTest.PATH_NIST_LIB, textLib);
             var librarySpec = new NistLibSpec("Yeast (NIST)", LibraryLoadTest.PATH_NIST_LIB);
 
             // For serialization, add the library spec to the settings
@@ -96,13 +108,11 @@ namespace pwiz.SkylineTest
             SrmSettings settings = SrmSettingsList.GetDefault();
             settings = settings.ChangePeptideLibraries(l => l.ChangeLibrarySpecs(new[] { librarySpec }));
 
-            SrmDocument docLoaded = CreateLibraryDocument(settings, docContainer, libraryManager, out startRev);
-            AssertEx.IsDocumentState(docLoaded, startRev, 2, 4, 12);
-            return docLoaded;
+            return CreateLibraryDocument(settings, textFasta, docContainer, libraryManager, out startRev);            
         }
 
-        private static SrmDocument CreateLibraryDocument(SrmSettings settings, TestDocumentContainer docContainer,
-            BackgroundLoader libraryManager, out int startRev)
+        private static SrmDocument CreateLibraryDocument(SrmSettings settings, string textFasta,
+            TestDocumentContainer docContainer, BackgroundLoader libraryManager, out int startRev)
         {
             startRev = 0;
             SrmDocument document = new SrmDocument(SrmSettingsList.GetDefault());
@@ -117,10 +127,10 @@ namespace pwiz.SkylineTest
 
             // Add some FASTA
             IdentityPath path = IdentityPath.ROOT;
-            SrmDocument docFasta = docLibraries.ImportFasta(new StringReader(LibraryLoadTest.TEXT_FASTA_YEAST_LIB), false, path, out path);
+            SrmDocument docFasta = docLibraries.ImportFasta(new StringReader(textFasta), false, path, out path);
 
-            // Until libraries are loaded, only the sequences should appear
-            AssertEx.IsDocumentState(docFasta, ++startRev, 2, 0, 0);
+            // Until libraries are loaded, only the sequences should appear            
+            AssertEx.IsDocumentState(docFasta, ++startRev, textFasta.Count(c => c == '>'), 0, 0);
 
             // Run the library load
             Assert.IsTrue(docContainer.SetDocument(docFasta, document, true));
@@ -181,7 +191,7 @@ namespace pwiz.SkylineTest
 // ReSharper restore InconsistentNaming
             CheckRanks(docRank3_1, docRank2);
             // Turns out TFRatio and picked intensity rank the same with these peptides
-            settings = settings.ChangePeptideLibraries(l => l.ChangeRankId(NistLibSpec.PEP_RANK_TFRATIO));
+            settings = settings.ChangePeptideLibraries(l => l.ChangeRankId(NistLibSpecBase.PEP_RANK_TFRATIO));
 // ReSharper disable InconsistentNaming
             SrmDocument docRank3_2 = docRank2.ChangeSettings(settings);
 // ReSharper restore InconsistentNaming
@@ -389,7 +399,8 @@ namespace pwiz.SkylineTest
             settings = settings.ChangePeptideLibraries(l => l.ChangeLibrarySpecs(new LibrarySpec[] { hunterSpec, bilbioSpec, nistSpec }));
 
             int startRev;
-            SrmDocument docLoaded = CreateLibraryDocument(settings, docContainer, libraryManager, out startRev);
+            SrmDocument docLoaded = CreateLibraryDocument(settings, LibraryLoadTest.TEXT_FASTA_YEAST_LIB,
+                docContainer, libraryManager, out startRev);
             AssertEx.IsDocumentState(docLoaded, startRev, 2, 4, 12);
             Assert.IsTrue(HasLibraryInfo(docLoaded, typeof(XHunterSpectrumHeaderInfo)));
             Assert.IsTrue(HasLibraryInfo(docLoaded, typeof(BiblioSpecSpectrumHeaderInfo)));
@@ -443,7 +454,8 @@ namespace pwiz.SkylineTest
             settings = settings.ChangePeptideLibraries(l => l.ChangeLibrarySpecs(new LibrarySpec[] { hunterSpec }));
 
             int startRev;
-            SrmDocument docLoaded = CreateLibraryDocument(settings, docContainer, libraryManager, out startRev);
+            SrmDocument docLoaded = CreateLibraryDocument(settings, LibraryLoadTest.TEXT_FASTA_YEAST_LIB,
+                docContainer, libraryManager, out startRev);
             // Peptides should have been chosen, but no transitions, since the spectra are garbage
             AssertEx.IsDocumentState(docLoaded, startRev, 2, 4, 0);
         }

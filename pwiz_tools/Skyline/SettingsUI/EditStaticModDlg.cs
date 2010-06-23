@@ -91,6 +91,7 @@ namespace pwiz.Skyline.SettingsUI
                     textName.Text = "";
                     comboAA.SelectedIndex = 0;
                     comboTerm.SelectedIndex = 0;
+                    cbVariableMod.Checked = false;
                     textFormula.Text = "";
                     textMonoMass.Text = "";
                     textAverageMass.Text = "";
@@ -115,6 +116,7 @@ namespace pwiz.Skyline.SettingsUI
                         comboTerm.SelectedIndex = 0;
                     else
                         comboTerm.SelectedItem = _modification.Terminus.ToString();
+                    cbVariableMod.Checked = _modification.IsVariable;
                     if (_modification.Formula != null)
                     {
                         textFormula.Text = _modification.Formula;
@@ -229,8 +231,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (Equals(name, mod.Name))
                     {
-                        helper.ShowTextBoxError(textName, "The modification '{0}' already exists.", name);
-                        e.Cancel = true;
+                        helper.ShowTextBoxError(e, textName, "The modification '{0}' already exists.", name);
                         return;
                     }
                 }
@@ -245,6 +246,13 @@ namespace pwiz.Skyline.SettingsUI
             ModTerminus? term = null;
             if (!string.IsNullOrEmpty(termString))
                 term = (ModTerminus) Enum.Parse(typeof (ModTerminus), termString);
+
+            if (cbVariableMod.Checked && aa == null && term == null)
+            {
+                MessageBox.Show("Variable modifications must specify amino acid or terminus.", Program.Name);
+                comboAA.Focus();
+                return;
+            }
 
             string formula = null;
             double? monoMass = null;
@@ -329,6 +337,7 @@ namespace pwiz.Skyline.SettingsUI
             Modification = new StaticMod(name,
                                          aa,
                                          term,
+                                         cbVariableMod.Checked,
                                          formula,
                                          labelAtoms,
                                          relativeRT,

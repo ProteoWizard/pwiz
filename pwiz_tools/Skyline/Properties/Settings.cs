@@ -672,7 +672,7 @@ namespace pwiz.Skyline.Properties
             return (StaticMod) item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return "Edit Static Modifications"; } }
+        public override string Title { get { return "Edit Structural Modifications"; } }
 
         public override string Label { get { return "&Modifications:"; } }
     }
@@ -694,7 +694,7 @@ namespace pwiz.Skyline.Properties
         {
             EditStaticModDlg editMod = new EditStaticModDlg(existing ?? this, true)
                                            {
-                                               Text = "Edit Heavy Modification",
+                                               Text = "Edit Isotope Modification",
                                                Modification = item
                                            };
             if (editMod.ShowDialog(owner) == DialogResult.OK)
@@ -708,7 +708,7 @@ namespace pwiz.Skyline.Properties
             return (StaticMod) item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return "Edit Heavy Modifications"; } }
+        public override string Title { get { return "Edit Isotope Modifications"; } }
 
         public override string Label { get { return "&Modifications:"; } }
     }
@@ -924,16 +924,21 @@ namespace pwiz.Skyline.Properties
                         true // AutoSelect
                     ),
                     new PeptideLibraries
-                        (
+                    (
                         PeptidePick.library,    // PeptidePick
                         null,                   // PeptideRankId
                         null,                   // PeptideCount
                         new LibrarySpec[0],     // LibrarySpecs
                         new Library[0]          // Libraries
-                        ), 
-                    new PeptideModifications(StaticModList.GetDefaultsOn(),
+                    ), 
+                    new PeptideModifications
+                    (
+                        StaticModList.GetDefaultsOn(),
+                        PeptideModifications.DEFAULT_MAX_VARIABLE_MODS,  // MaxVariableMods
+                        PeptideModifications.DEFAULT_MAX_NEUTRAL_LOSSES, // MaxNeutralLosses
                         new[] {new TypedModifications(IsotopeLabelType.heavy, HeavyModList.GetDefaultsOn())},
-                        new[] {IsotopeLabelType.heavy}),
+                        new[] {IsotopeLabelType.heavy}
+                    ),
                     BackgroundProteome.NONE
                 ),
                 new TransitionSettings
