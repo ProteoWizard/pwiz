@@ -642,7 +642,7 @@ class HandlerIndex : public SAXParser::Handler
             return Status(Status::Delegate, &handlerOffset_);
         }
         else
-            throw SpectrumList_mzXML::index_not_found("[SpectrumList_mzXML::HandlerIndex] Unexpected element name: " + name).c_str());
+          throw SpectrumList_mzXML::index_not_found(("[SpectrumList_mzXML::HandlerIndex] Unexpected element name: " + name).c_str());
     }
 
     virtual Status characters(const std::string& text,
