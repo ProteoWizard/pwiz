@@ -150,6 +150,5 @@ if [ modules.peek : NT ]
             <address-model>64:<build>no
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli/<location>$(SEEMS_PATH)/obj
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli.xml/<location>$(SEEMS_PATH)/obj
-            <dependency>../../pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters_masslynxraw/<location>$(SEEMS_PATH)
         ;
 }

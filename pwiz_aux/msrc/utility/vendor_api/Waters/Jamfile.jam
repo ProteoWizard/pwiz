@@ -133,6 +133,10 @@ install install_pwiz_vendor_api_waters
 
 explicit install_pwiz_vendor_api_waters ;
 
+
+echo "Creating dummy MassLynxRaw.dll." ;
+SHELL "echo \"This is a dummy MassLynxRaw.dll for Visual Studio projects to reference.\" > \"$(API_PATH)\\stub\\MassLynxRaw.dll\"" ;
+
 install install_pwiz_vendor_api_waters_masslynxraw
     : stub/MassLynxRaw.dll
     ;
