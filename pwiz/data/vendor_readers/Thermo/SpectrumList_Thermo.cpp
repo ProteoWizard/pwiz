@@ -329,6 +329,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
             {}
 
             double isolationMz = scanInfo->precursorMZ(i, false);
+            isolationMzCache_[index] = isolationMz;
+
             if (msLevel == -1) // precursor ion scan
             {
                 product.isolationWindow.set(MS_isolation_window_target_m_z, isolationMz, MS_m_z);
@@ -352,8 +354,12 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
                 if (precursorCharge > 0)
                     selectedIon.set(MS_charge_state, precursorCharge);
 
-                // add intensity if available
-                size_t precursorScanIndex = findPrecursorSpectrumIndex(msLevel-1, index);
+                // find the precursor scan, which is the previous scan with the current scan's msLevel-1 and, if
+                // the current scan is MS3 or higher, its precursor scan's last isolation m/z should be the next
+                // to last isolation m/z of the current scan;
+                // i.e. MS3 with filter "234.56@cid30.00 123.45@cid30.00" matches to MS2 with filter "234.56@cid30.00"
+                double precursorIsolationMz = i > 0 ? scanInfo->precursorMZ(i-1) : 0;
+                size_t precursorScanIndex = findPrecursorSpectrumIndex(msLevel-1, precursorIsolationMz, index);
                 if (precursorScanIndex < index_.size())
                 {
                     precursor.spectrumID = index_[precursorScanIndex].id;
@@ -373,6 +379,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
                         selectedIon.set(MS_peak_intensity, peakIntensity, MS_number_of_counts);
                     */
 
+                    // add precursor intensity
                     // retrieve the intensity of the base peak within the isolation window
                     // TODO: determine correct window around precursor m/z
                     ostringstream massRangeStream;
@@ -448,6 +455,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
 PWIZ_API_DECL void SpectrumList_Thermo::createIndex() const
 {
     scanMsLevelCache_.resize(size_, 0);
+    isolationMzCache_.resize(size_, 0);
     index_.reserve(size_);
 
     for (int controllerType = Controller_MS;
@@ -518,7 +526,7 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex() const
 }
 
 
-PWIZ_API_DECL size_t SpectrumList_Thermo::findPrecursorSpectrumIndex(int precursorMsLevel, size_t index) const
+PWIZ_API_DECL size_t SpectrumList_Thermo::findPrecursorSpectrumIndex(int precursorMsLevel, double precursorIsolationMz, size_t index) const
 {
     // for MSn spectra (n > 1): return first scan with MSn-1
 
@@ -526,13 +534,19 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::findPrecursorSpectrumIndex(int precurs
     {
 	    --index;
         int& cachedMsLevel = scanMsLevelCache_[index];
+        double& cachedIsolationMz = isolationMzCache_[index];
         if (cachedMsLevel == 0)
         {
             // populate the missing MS level
             ScanInfoPtr scanInfo = rawfile_->getScanInfo(index_[index].scan);
 	        cachedMsLevel = scanInfo->msLevel();
+
+            // MSn's immediate isolationMz is n-2
+            cachedIsolationMz = scanInfo->precursorMZ(precursorMsLevel - 2, false);
         }
-        if (cachedMsLevel == precursorMsLevel)
+        if (cachedMsLevel == precursorMsLevel &&
+            (precursorIsolationMz == 0 ||
+             precursorIsolationMz == cachedIsolationMz))
             return index;
     }
 

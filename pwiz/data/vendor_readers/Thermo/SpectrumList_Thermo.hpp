@@ -69,6 +69,7 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListBase
     size_t size_;
 
     mutable vector<int> scanMsLevelCache_;
+    mutable vector<double> isolationMzCache_;
     mutable util::once_flag_proxy indexInitialized_;
 
     struct IndexEntry : public SpectrumIdentity
@@ -82,7 +83,7 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListBase
     mutable map<string, size_t> idToIndexMap_;
 
     void createIndex() const;
-    size_t findPrecursorSpectrumIndex(int precursorMsLevel, size_t index) const;
+    size_t findPrecursorSpectrumIndex(int precursorMsLevel, double precursorIsolationMz, size_t index) const;
 #endif // PWIZ_READER_THERMO
 };
 
