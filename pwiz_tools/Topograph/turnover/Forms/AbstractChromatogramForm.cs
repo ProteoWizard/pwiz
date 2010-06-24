@@ -44,6 +44,7 @@ namespace pwiz.Topograph.ui.Forms
         protected IList<double> times;
         private Point _ptClick;
         private WorkspaceVersion _workspaceVersion;
+        private bool _updatePending;
         private AbstractChromatogramForm() : base(null)
         {
             
@@ -266,17 +267,34 @@ namespace pwiz.Topograph.ui.Forms
 
         protected void UpdateUi()
         {
-            if (PeptideFileAnalysis == null)
+            if (_updatePending)
             {
                 return;
             }
-            _workspaceVersion = Workspace.WorkspaceVersion;
-            if (PeptideFileAnalysis.GetChromatograms() == null)
+            _updatePending = true;
+            BeginInvoke(new Action(UpdateUiNow));
+        }
+        
+        private void UpdateUiNow()
+        {
+            try
             {
-                return;
+                if (PeptideFileAnalysis == null)
+                {
+                    return;
+                }
+                _workspaceVersion = Workspace.WorkspaceVersion;
+                if (PeptideFileAnalysis.GetChromatograms() == null)
+                {
+                    return;
+                }
+                times = PeptideFileAnalysis.Times ?? new double[0];
+                Recalc();
             }
-            times = PeptideFileAnalysis.Times ?? new double[0];
-            Recalc();
+            finally
+            {
+                _updatePending = false;
+            }
         }
 
         protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
