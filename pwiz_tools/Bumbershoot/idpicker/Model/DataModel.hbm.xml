@@ -1,0 +1,164 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2" namespace="IDPicker.DataModel" assembly="IDPicker" auto-import="true">
+
+	<class name="SpectrumSourceGroup" table="SpectrumSourceGroups">
+		<id name="Id"><generator class="native"/></id>
+		<property name="Name"/>
+		<set name="Sources" inverse="true" batch-size="500" lazy="true">
+			<key column="Group_"/>
+			<one-to-many class="SpectrumSourceGroupLink"/>
+		</set>
+	</class>
+
+	<class name="SpectrumSource" table="SpectrumSources">
+		<id name="Id"><generator class="native"/></id>
+		<property name="Name"/>
+		<property name="URL"/>
+		<many-to-one name="Group" column="Group_" fetch="join"/>
+		<set name="Groups" inverse="true" batch-size="500">
+			<key column="Source" />
+			<one-to-many class="SpectrumSourceGroupLink"/>
+		</set>
+		<bag name="Spectra" inverse="true" batch-size="500">
+			<key column="Source"/>
+			<one-to-many class="Spectrum"/>
+		</bag>
+		<property name="MetadataPath" lazy="true" type="SpectrumSourceMetadataPathUserType"/>
+	</class>
+
+	<class name="SpectrumSourceGroupLink" table="SpectrumSourceGroupLinks">
+		<id name="Id"><generator class="native"/></id>
+		<many-to-one name="Source" unique-key="SpectrumSourceGroupLink_GroupSource" fetch="join"/>
+		<many-to-one name="Group" unique-key="SpectrumSourceGroupLink_GroupSource" column="Group_" fetch="join"/>
+	</class>
+		   
+	<class name="Spectrum" table="Spectra">
+		<id name="Id"><generator class="native"/></id>
+		<many-to-one name="Source" fetch="join" />
+		<property name="Index" column="Index_"/>
+		<property name="NativeID"/>
+		<property name="PrecursorMZ"/>
+		<bag name="Matches" inverse="true" batch-size="500" lazy="true">
+			<key column="Spectrum"/>
+			<one-to-many class="PeptideSpectrumMatch"/>
+		</bag>
+		<!--<property name="Peaks" lazy="true" type="SpectrumPeakListUserType"/>-->
+	</class>
+
+	<class name="AnalysisParameter" table="AnalysisParameters">
+		<id name="Id"><generator class="native"/></id>
+		<many-to-one name="Analysis" index="AnalysisParameter_AnalysisIndex" fetch="join"/>
+		<property name="Name"/>
+		<property name="Value"/>
+	</class>
+
+	<class name="Analysis" table="Analyses">
+		<id name="Id"><generator class="native"/></id>
+		<property name="Name"/>
+		<component name="Software">
+			<property name="Name" column="SoftwareName"/>
+			<property name="Version" column="SoftwareVersion"/>
+		</component>
+		<property name="Type"/>
+		<property name="StartTime"/>
+		<bag name="Parameters" inverse="true" batch-size="50">
+			<key column="Analysis"/>
+			<one-to-many class="AnalysisParameter"/>
+		</bag>
+		<bag name="Matches" inverse="true" batch-size="500" lazy="true">
+			<key column="Analysis"/>
+			<one-to-many class="PeptideSpectrumMatch"/>
+		</bag>
+	</class>
+	
+	<class name="Protein" table="Proteins">
+		<id name="Id"><generator class="native"/></id>
+		<property name="Accession" unique="true"/>
+		<property name="Description"/>
+		<property name="Sequence" lazy="true"/>
+		<bag name="Peptides" inverse="true" batch-size="500" lazy="true">
+			<key column="Protein"/>
+			<one-to-many class="PeptideInstance"/>
+		</bag>
+		<property name="Cluster" access="nosetter.camelcase" formula="(SELECT pc.ClusterId FROM ProteinClusters pc WHERE Id=pc.ProteinId)"/>
+		<property name="ProteinGroup" access="nosetter.camelcase" formula="(SELECT pg.ProteinGroup FROM ProteinGroups pg WHERE Id=pg.ProteinId)"/>
+		<property name="Length" access="nosetter.camelcase" formula="(SELECT LENGTH(Sequence))"/>
+	</class>
+
+	<class name="Peptide" table="Peptides">
+		<id name="Id"><generator class="native"/></id>
+		<property name="Sequence" access="nosetter.camelcase" 
+				  formula="(SELECT SUBSTR(pro.Sequence, pi.Offset+1, pi.Length)
+							FROM PeptideInstances pi
+							JOIN Proteins pro ON pi.Protein=pro.Id
+							WHERE pi.Protein=pro.Id AND
+							  pi.Id=(SELECT MIN(pi2.Id)
+									 FROM PeptideInstances pi2
+									 WHERE Id=pi2.Peptide))"/>
+		<property name="MonoisotopicMass"/>
+		<property name="MolecularWeight"/>
+		<bag name="Instances" inverse="true" batch-size="500" lazy="true">
+			<key column="Peptide"/>
+			<one-to-many class="PeptideInstance"/>
+		</bag>
+		<bag name="Matches" inverse="true" batch-size="500" lazy="true">
+			<key column="Peptide"/>
+			<one-to-many class="PeptideSpectrumMatch"/>
+		</bag>
+	</class>
+
+	<class name="PeptideInstance" table="PeptideInstances">
+		<id name="Id"><generator class="native"/></id>
+		<many-to-one name="Protein" index="PeptideInstance_ProteinIndex" unique-key="PeptideInstance_ProteinPeptideOffset" fetch="join"/>
+		<many-to-one name="Peptide" index="PeptideInstance_PeptideIndex" unique-key="PeptideInstance_ProteinPeptideOffset" fetch="join"/>
+		<property name="Offset" unique-key="PeptideInstance_ProteinPeptideOffset"/>
+		<property name="Length"/>
+		<property name="NTerminusIsSpecific"/>
+		<property name="CTerminusIsSpecific"/>
+		<property name="MissedCleavages"/>
+		<property name="SpecificTermini" access="nosetter.camelcase" formula="(SELECT NTerminusIsSpecific + CTerminusIsSpecific)"/>
+	</class>
+
+	<class name="Modification" table="Modifications">
+		<id name="Id"><generator class="native"/></id>
+		<property name="MonoMassDelta"/>
+		<property name="AvgMassDelta"/>
+		<property name="Formula"/>
+		<property name="Name"/>
+	</class>
+
+	<class name="PeptideSpectrumMatch" table="PeptideSpectrumMatches">
+		<id name="Id"><generator class="native"/></id>
+		<many-to-one name="Spectrum" index="PeptideSpectrumMatch_SpectrumIndex" fetch="join"/>
+		<many-to-one name="Analysis" index="PeptideSpectrumMatch_AnalysisIndex" fetch="join"/>
+		<many-to-one name="Peptide" index="PeptideSpectrumMatch_PeptideIndex" fetch="join"/>
+		<bag name="Modifications" inverse="true" batch-size="500" lazy="true">
+			<key column="PeptideSpectrumMatch"/>
+			<one-to-many class="PeptideModification"/>
+		</bag>
+		<property name="QValue" index="PeptideSpectrumMatch_QValueIndex"/>
+		<property name="MonoisotopicMass"/>
+		<property name="MolecularWeight"/>
+		<property name="MonoisotopicMassError"/>
+		<property name="MolecularWeightError"/>
+		<property name="Rank"/>
+		<property name="Charge"/>
+		<map name="Scores" table="PeptideSpectrumMatchScores">
+			<key column="Id"/>
+			<index column="Name" type="String"/>
+			<element column="Value" type="Double"/>
+		</map>
+		<property name="FullDistinctKey" access="nosetter.camelcase" formula="(Peptide || ' ' || MonoisotopicMass || ' ' || Charge)"/>
+		<property name="SequenceAndMassDistinctKey" access="nosetter.camelcase" formula="(Peptide || ' ' || MonoisotopicMass)"/>
+	</class>
+
+	<class name="PeptideModification" table="PeptideModifications">
+		<id name="Id"><generator class="native"/></id>
+		<many-to-one name="PeptideSpectrumMatch" index="PeptideModification_PeptideSpectrumMatch" fetch="join"/>
+		<many-to-one name="Modification" index="PeptideModification_Modification" fetch="join"/>
+		<property name="Offset" access="nosetter.camelcase"/>
+		<property name="Site" access="nosetter.camelcase"/>
+		<!--An index on the Site property seems to override the PSM index :( index="PeptideModification_Site"-->
+	</class>
+
+</hibernate-mapping>

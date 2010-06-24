@@ -66,13 +66,13 @@
     <Compile Include="SetupDeployProject.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Common\Common.csproj">
-      <Project>{B3BF62C6-6E21-4ECE-A591-AE21CF194506}</Project>
-      <Name>Common</Name>
-    </ProjectReference>
+    <None Include="Jamfile.jam" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Jamfile.jam" />
+    <ProjectReference Include="..\IDPicker.csproj">
+      <Project>{5C5FC1C6-F9FF-4E2A-A53B-0865FBB9F9D9}</Project>
+      <Name>IDPicker</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />

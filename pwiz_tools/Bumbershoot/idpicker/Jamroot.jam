@@ -136,8 +136,8 @@ local application-name = "IDPicker" ;
 # set version info (used for tarball filenames)
 import svnrev sequence ;
 
-constant MAJOR : 2 ;
-constant MINOR : 6 ;
+constant MAJOR : 3 ;
+constant MINOR : 0 ;
 
 # rule for generating a C# AssemblyInfo file
 rule generate-AssemblyInfo.cs ( filepath ? : sources-with-rcs-keywords + : warn-on-missing ? : print-revision-info ? :
@@ -203,15 +203,15 @@ using System.Runtime.InteropServices;
 
 constant COMPANY_AND_PRODUCT : "Vanderbilt University" "IDPicker" ;
 
-# generate overall IDPicker version header
-local revision-info = [ generate-AssemblyInfo.cs Common/Properties/AssemblyInfo.cs :
+# generate IDPicker version header
+local revision-info = [ generate-AssemblyInfo.cs Properties/AssemblyInfo.cs :
     [ path.glob-tree . : *.jam
                          *.?pp *.h
                          *.cs
                          #*.html
                          #*.vdproj
-      : freicore build-*-* PTMDigger ]
-    : warn-on-missing : : "Common" "Implements IDPicker's shared logic." $(COMPANY_AND_PRODUCT) ] ;
+      : freicore build-*-* ]
+    : warn-on-missing : : "IDPicker" "Filtering, assembling, and reporting of parsimonious protein identifications." $(COMPANY_AND_PRODUCT) ] ;
 
 # revision-info is a sequence: <max revision> <max year> <max month> <max day> <number of modified files in working copy>
 
@@ -232,12 +232,6 @@ if $(revision-info[5]) > 0
 }
 
 echo $(application-name) $(version-tag:J=.) $(SVNREVDATE:J=) ;
-
-
-# generate version headers for other projects
-generate-AssemblyInfo.cs GUI/Forms/Properties/AssemblyInfo.cs : [ path.glob-tree GUI : *.cs ] : : : "IDPickerGUI" "Graphical interface for IDPicker." $(COMPANY_AND_PRODUCT) ;
-generate-AssemblyInfo.cs Workspace/Properties/AssemblyInfo.cs : [ glob Workspace/*.cs ] : : : "Workspace" "Implements IDPicker's core logic." $(COMPANY_AND_PRODUCT) ;
-generate-AssemblyInfo.cs Presentation/Properties/AssemblyInfo.cs : [ glob Presentation/*.cs ] : : : "Presentation" "Implements IDPicker's presentation logic." $(COMPANY_AND_PRODUCT) ;
 
 
 path-constant EXPAT_SOURCE : $(expat_src) ;
@@ -273,24 +267,120 @@ rule install-vendor-api-dependencies ( properties * )
 rule pwiz-dependency ( properties * )
 {
     local variants = [ feature.get-values <variant> : $(properties) ] ;
-    local location = <location>$(BUILD_PATH)/Common/obj/$(variants[1]) ;
+    local location = <location>$(BUILD_PATH)/obj/$(variants[1]) ;
     return <assembly>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli
            <dependency>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli/$(location)
            <dependency>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli.xml/$(location) ;
 }
+
+rule msbuild_IDPicker ( targets + : sources * : properties * )
+{
+    if <variant>debug in $(properties) ||
+       <debug-symbols>on in $(properties)
+    {
+        CONFIGURATION on $(<[1]) = "Debug" ;
+    }
+    else
+    {
+        CONFIGURATION on $(<[1]) = "Release" ;
+    }
+
+    local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
+    OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
+    INTERMEDIATE_PATH on $(<[1]) = "BaseIntermediateOutputPath=$(BUILD_PATH)/obj/" ;
+    JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
+}
+
+actions msbuild_IDPicker
+{
+    REM support both MSVC 8 and 9
+    IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
+    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86 >nul
+    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
+    echo Building IDPicker in $(CONFIGURATION:L) configuration...
+    msbuild $(ROOT_PATH)/IDPicker.csproj /p:Configuration=$(CONFIGURATION);Platform=x86;$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
+}
+
+
+rule build-location ( properties * )
+{
+    local result ;
+    # don't override the location when it's already set
+    if ! <location> in $(properties:G)
+    {
+        if <variant>debug in $(properties) ||
+           <debug-symbols>on in $(properties)
+        {
+            result = <location>$(BUILD_PATH)/bin/Debug ;
+        }
+        else
+        {
+            result = <location>$(BUILD_PATH)/bin/Release ;
+        }
+        return $(result) ;
+    }
+    else
+    {
+        return $(properties) ;
+    }
+}
+
+
+import tar ;
+using tar : bsdtar.exe ;
+
+local pwiz_src_tarball = [ SORT [ glob $(ROOT_PATH)/freicore/pwiz-src*.tar.bz2 ] ] ;
+pwiz_src_tarball = $(pwiz_src_tarball[-1]) ; # take the last (latest) tarball
+
+# extract SeeMS from pwiz tarball
+tar.extract
+      # tar filepath
+        $(pwiz_src_tarball)
+    : # include patterns
+        quickbuild.* clean.*
+        Jamroot.jam
+        LICENSE NOTICE
+        pwiz
+        pwiz_aux/msrc
+        pwiz_aux/Jamfile.jam
+        pwiz_tools/common
+        pwiz_tools/SeeMS
+        pwiz_tools/Shared/MSGraph
+        pwiz_tools/Shared/Lib
+        pwiz_tools/Shared/Common
+
+    : # requirements
+        <location>$(PWIZ_SOURCE)
+    : # usage-requirements
+    : check-last-file-only
+    ;
+
+rule seems-dependency ( properties * )
+{
+    properties = [ build-location $(properties) ] ;
+    local location = [ feature.get-values location : $(properties) ] ;
+    return <dependency>$(PWIZ_SOURCE)/pwiz_tools/SeeMS//seems.exe/<location>$(location) ;
+}
+
+make IDPicker.exe
+    : # sources
+        [ path.glob-tree $(ROOT_PATH) : *.cs ]
+    : # actions
+        @msbuild_IDPicker
+    : # requirements
+        <conditional>@build-location
+        <conditional>@seems-dependency
+        <conditional>@pwiz-dependency
+    ;
         
 rule dotNET-dependencies ( properties * )
 {
     local location = [ install-location $(properties) ] ;
-    return <dependency>idpAssemble//idpAssemble.exe/$(location)
-           <dependency>idpReport//idpReport.exe/$(location)
-           <dependency>generateSubsetFasta//generateSubsetFasta.exe/$(location)
-           <dependency>GUI//idpReportGUI.exe/$(location) ;
+    return <dependency>IDPicker.exe/$(location) ;
 }
 
 install install
     : # sources
-        idpQonvert//idpQonvert
     : # requirements
         <install-type>EXE
         <conditional>@dotNET-dependencies
@@ -368,15 +458,11 @@ bcp.copy-boost-dependencies copy_boost_subset
   : # sources
 
     # scan all source files for boost dependencies
-    [ glob idpQonvert/*.?pp idpQonvert/*.h ]
     [ glob freicore/*.cpp freicore/*.h ]
     [ path.glob-tree $(PWIZ_SOURCE)/pwiz : *.cpp *.hpp ]
     [ path.glob-tree $(PWIZ_SOURCE)/pwiz_aux : *.cpp *.hpp ]
     [ path.glob-tree $(PWIZ_SOURCE)/pwiz_tools/common : *.cpp *.hpp ]
     [ path.glob-tree $(LIBRARIES_PATH)/boost_aux : *.cpp *.hpp ]
-
-    # scan all targets and their dependencies
-    $(ROOT_PATH)/idpQonvert//idpQonvert
 
   : # requirements
     <location>$(BOOST_SUBSET_PATH)/boost_$(BOOST_VERSION_PATH)
@@ -425,16 +511,12 @@ tar.create $(application-name:L)-src.tar.bz2
 
     $(.exclusion-list)
 
-    $(ROOT_PATH)/Common
+    $(ROOT_PATH)/Properties
+    #$(ROOT_PATH)/Resources
     $(ROOT_PATH)/Deploy
-    $(ROOT_PATH)/generateSubsetFasta
-    $(ROOT_PATH)/GUI
-    $(ROOT_PATH)/idpAssemble
-    $(ROOT_PATH)/idpQonvert
-    $(ROOT_PATH)/idpReport
-    $(ROOT_PATH)/Presentation
+    $(ROOT_PATH)/Controls
+    $(ROOT_PATH)/Forms
     $(ROOT_PATH)/Util
-    $(ROOT_PATH)/Workspace
 
     [ glob $(ROOT_PATH)/freicore/*.h ]
     [ glob $(ROOT_PATH)/freicore/*.cpp ]

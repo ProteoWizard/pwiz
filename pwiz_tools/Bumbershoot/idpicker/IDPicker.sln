@@ -1,0 +1,68 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "STL_Containers", "Util\STL_Containers\STL_Containers.csproj", "{D6BD694C-FF6E-4962-A05D-59ACD6CBD6A3}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Installer", "Installer", "{A3E99605-3C35-4CE6-9CD2-5BB63AD18719}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SetupDeployProject", "Deploy\SetupDeployProject.csproj", "{A8ACEA34-28C0-4BC8-825E-030B1A4B7DF7}"
+	ProjectSection(ProjectDependencies) = postProject
+		{5C5FC1C6-F9FF-4E2A-A53B-0865FBB9F9D9} = {5C5FC1C6-F9FF-4E2A-A53B-0865FBB9F9D9}
+	EndProjectSection
+EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Deploy", "Deploy\Deploy.vdproj", "{833A9274-3CA5-479E-BB95-4E5336858341}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IDPicker", "IDPicker.csproj", "{5C5FC1C6-F9FF-4E2A-A53B-0865FBB9F9D9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "seems", "freicore\pwiz_src\pwiz_tools\SeeMS\seems.csproj", "{2399F68B-D886-4D94-AB4B-700FE3E46849}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSGraph", "freicore\pwiz_src\pwiz_tools\Shared\MSGraph\MSGraph.csproj", "{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "freicore\pwiz_src\pwiz_tools\Shared\Common\Common.csproj", "{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D6BD694C-FF6E-4962-A05D-59ACD6CBD6A3}.Debug|x86.ActiveCfg = Debug|x86
+		{D6BD694C-FF6E-4962-A05D-59ACD6CBD6A3}.Debug|x86.Build.0 = Debug|x86
+		{D6BD694C-FF6E-4962-A05D-59ACD6CBD6A3}.Release|x86.ActiveCfg = Release|x86
+		{D6BD694C-FF6E-4962-A05D-59ACD6CBD6A3}.Release|x86.Build.0 = Release|x86
+		{A8ACEA34-28C0-4BC8-825E-030B1A4B7DF7}.Debug|x86.ActiveCfg = Debug|x86
+		{A8ACEA34-28C0-4BC8-825E-030B1A4B7DF7}.Debug|x86.Build.0 = Debug|x86
+		{A8ACEA34-28C0-4BC8-825E-030B1A4B7DF7}.Release|x86.ActiveCfg = Release|x86
+		{A8ACEA34-28C0-4BC8-825E-030B1A4B7DF7}.Release|x86.Build.0 = Release|x86
+		{833A9274-3CA5-479E-BB95-4E5336858341}.Debug|x86.ActiveCfg = Debug
+		{833A9274-3CA5-479E-BB95-4E5336858341}.Debug|x86.Build.0 = Debug
+		{833A9274-3CA5-479E-BB95-4E5336858341}.Release|x86.ActiveCfg = Release
+		{833A9274-3CA5-479E-BB95-4E5336858341}.Release|x86.Build.0 = Release
+		{5C5FC1C6-F9FF-4E2A-A53B-0865FBB9F9D9}.Debug|x86.ActiveCfg = Debug|x86
+		{5C5FC1C6-F9FF-4E2A-A53B-0865FBB9F9D9}.Debug|x86.Build.0 = Debug|x86
+		{5C5FC1C6-F9FF-4E2A-A53B-0865FBB9F9D9}.Release|x86.ActiveCfg = Release|x86
+		{5C5FC1C6-F9FF-4E2A-A53B-0865FBB9F9D9}.Release|x86.Build.0 = Release|x86
+		{2399F68B-D886-4D94-AB4B-700FE3E46849}.Debug|x86.ActiveCfg = Debug|x86
+		{2399F68B-D886-4D94-AB4B-700FE3E46849}.Debug|x86.Build.0 = Debug|x86
+		{2399F68B-D886-4D94-AB4B-700FE3E46849}.Release|x86.ActiveCfg = Release|x86
+		{2399F68B-D886-4D94-AB4B-700FE3E46849}.Release|x86.Build.0 = Release|x86
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Debug|x86.ActiveCfg = Debug|x86
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Debug|x86.Build.0 = Debug|x86
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Release|x86.ActiveCfg = Release|x86
+		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Release|x86.Build.0 = Release|x86
+		{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}.Debug|x86.ActiveCfg = Debug|x86
+		{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}.Debug|x86.Build.0 = Debug|x86
+		{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}.Release|x86.ActiveCfg = Release|x86
+		{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A8ACEA34-28C0-4BC8-825E-030B1A4B7DF7} = {A3E99605-3C35-4CE6-9CD2-5BB63AD18719}
+		{833A9274-3CA5-479E-BB95-4E5336858341} = {A3E99605-3C35-4CE6-9CD2-5BB63AD18719}
+	EndGlobalSection
+	GlobalSection(DPCodeReviewSolutionGUID) = preSolution
+		DPCodeReviewSolutionGUID = {00000000-0000-0000-0000-000000000000}
+	EndGlobalSection
+EndGlobal
