@@ -48,6 +48,7 @@ if ! $(.hasDLLs) && [ path.exists $(MSFileReader)\\XRawfile2.dll ]
     echo [ SHELL "copy \"$(MSFileReader)\\XRawfile2.dll \" \"$(destination)\\MSFileReader.XRawfile2.dll" ] ;
     echo [ SHELL "copy \"$(MSFileReader)\\fileio.dll\" \"$(destination)\"" ] ;
     echo [ SHELL "copy \"$(MSFileReader)\\fregistry.dll\" \"$(destination)\"" ] ;
+    RESCAN ;
 }
 
 rule vendor-api-requirements ( properties * )

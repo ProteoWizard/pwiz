@@ -48,6 +48,7 @@ if ! $(.hasDLLs) && [ path.exists $(ProteinPilot)\\ABSciex.DataAccess.WiffFileDa
     echo [ SHELL "copy \"$(ProteinPilot)\\Clearcore.dll\"  \"$(destination)\"" ] ;
     echo [ SHELL "copy \"$(ProteinPilot)\\ClearCore.Storage.dll\" \"$(destination)\"" ] ;
     echo [ SHELL "copy \"$(ProteinPilot)\\rscoree.dll\" \"$(destination)\"" ] ;
+    RESCAN ;
 }
 
 rule vendor-api-requirements ( properties * )
