@@ -1,4 +1,26 @@
-﻿using System;
+﻿//
+// $Id$
+//
+// The contents of this file are subject to the Mozilla Public License
+// Version 1.1 (the "License"); you may not use this file except in
+// compliance with the License. You may obtain a copy of the License at
+// http://www.mozilla.org/MPL/
+//
+// Software distributed under the License is distributed on an "AS IS"
+// basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+// License for the specific language governing rights and limitations
+// under the License.
+//
+// The Original Code is the IDPicker project.
+//
+// The Initial Developer of the Original Code is Matt Chambers.
+//
+// Copyright 2010 Vanderbilt University
+//
+// Contributor(s): Surendra Dasari
+//
+
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Linq;
@@ -13,30 +35,30 @@ namespace SetupDeployProject
     {
         static void Main(string[] args)
         {
-            string version = Util.GetAssemblyVersion(Util.GetAssemblyByName("Common"));
+            string version = Util.GetAssemblyVersion(Util.GetAssemblyByName("IDPicker"));
             string guid = Guid.NewGuid().ToString("B").ToUpper();
 
             var fileGuidMap = new Dictionary<string, string>();
-            string idPickerGuiGuid = String.Empty;
+            string IDPickerGuid = String.Empty;
             foreach (string filepath in Directory.GetFiles(args[0]))
             {
-                if (filepath.EndsWith(".pdb") || filepath.EndsWith(".xml"))
+                if (filepath.EndsWith(".pdb") || filepath.EndsWith(".xml") || filepath.EndsWith("dummy.c"))
                     continue;
                 string fileGuid = "_" + Guid.NewGuid().ToString("N").ToUpper();
                 fileGuidMap.Add(filepath.Replace("\\", "/"), fileGuid);
-                if (Path.GetFileName(filepath) == "IdPickerGui.exe")
-                    idPickerGuiGuid = fileGuid;
+                if (Path.GetFileName(filepath) == "IDPicker.exe")
+                    IDPickerGuid = fileGuid;
             }
 
-            var subfolderFileGuidMap = new Dictionary<string, string>();
+            /*var subfolderFileGuidMap = new Dictionary<string, string>();
             foreach (string filepath in Directory.GetFiles(Path.Combine(args[0], "idpicker-2-1-gui_files")))
             {
                 string fileGuid = "_" + Guid.NewGuid().ToString("N").ToUpper();
                 subfolderFileGuidMap.Add(filepath.Replace("\\", "/"), fileGuid);
-            }
+            }*/
 
-            using (StreamReader reader = new StreamReader("Deploy.vdproj"))
-            using (StreamWriter writer = new StreamWriter("Deploy.vdproj.tmp"))
+            using (StreamReader reader = new StreamReader("Deploy.vdproj.template"))
+            using (StreamWriter writer = new StreamWriter("Deploy.vdproj"))
             {
                 while (!reader.EndOfStream)
                 {
@@ -52,7 +74,7 @@ namespace SetupDeployProject
                         }
 
                         // write a fresh "Hierarchy" block
-                        writer.Write("    \"Hierarchy\"\n{\n");
+                        writer.Write("    \"Hierarchy\"\n    {\n");
                         foreach (var fileGuidPair in fileGuidMap)
                             writer.Write("\"Entry\"\n{{\n\"MsmKey\" = \"8:{0}\"\n\"OwnerKey\" = \"8:_UNDEFINED\"\n\"MsmSig\" = \"8:_UNDEFINED\"\n}}\n", fileGuidPair.Value);
                         writer.Write("    }\n");
@@ -68,7 +90,7 @@ namespace SetupDeployProject
                         }
 
                         // write a fresh "File" block
-                        writer.Write("        \"File\"\n{\n");
+                        writer.Write("        \"File\"\n        {\n");
                         foreach (var fileGuidPair in fileGuidMap)
                         {
                             writer.Write("\"{{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}}:{0}\"\n", fileGuidPair.Value);
@@ -92,7 +114,7 @@ namespace SetupDeployProject
                             writer.Write("\"IsolateTo\" = \"8:\"\n");
                             writer.Write("}\n");
                         }
-                        foreach (var fileGuidPair in subfolderFileGuidMap)
+                        /*foreach (var fileGuidPair in subfolderFileGuidMap)
                         {
                             writer.Write("\"{{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}}:{0}\"\n", fileGuidPair.Value);
                             writer.Write("{\n");
@@ -114,7 +136,7 @@ namespace SetupDeployProject
                             writer.Write("\"IsDependency\" = \"11:FALSE\"\n");
                             writer.Write("\"IsolateTo\" = \"8:\"\n");
                             writer.Write("}\n");
-                        }
+                        }*/
                         writer.Write("        }\n");
                     }
                     else
@@ -141,15 +163,12 @@ namespace SetupDeployProject
                         }
                         else if (line.StartsWith("            \"Target\" = \"8:"))
                         {
-                            line = String.Format("            \"Target\" = \"8:{0}\"", idPickerGuiGuid);
+                            line = String.Format("            \"Target\" = \"8:{0}\"", IDPickerGuid);
                         }
                         writer.WriteLine(line);
                     }
                 }
             }
-            File.Delete("Deploy.vdproj.old");
-            File.Move("Deploy.vdproj", "Deploy.vdproj.old");
-            File.Move("Deploy.vdproj.tmp", "Deploy.vdproj");
         }
     }
 }

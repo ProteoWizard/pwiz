@@ -372,17 +372,19 @@ make IDPicker.exe
         <conditional>@seems-dependency
         <conditional>@pwiz-dependency
     ;
-        
+
 rule dotNET-dependencies ( properties * )
 {
     local location = [ install-location $(properties) ] ;
     return <dependency>IDPicker.exe/$(location) ;
 }
 
+SHELL "echo This is a dummy file for the picky install rule which needs at least one 'source' > $(BUILD_PATH)/dummy.c" ;
+
 install install
     : # sources
+        $(BUILD_PATH)/dummy.c
     : # requirements
-        <install-type>EXE
         <conditional>@dotNET-dependencies
         <conditional>@install-location
         <conditional>@install-vendor-api-dependencies
@@ -412,7 +414,7 @@ rule binary-tarball-requirements ( properties * )
     local variants = [ feature.get-values <variant> : $(properties) ] ;
     local location = $(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
 
-    local non-redistributables =
+    local non-redistributables = *dummy.c
         *ABSciex.DataAccess.WiffFileDataReader.dll *Clear?ore*.dll *rscoree.dll         # ABI API
         *DACServer.dll *genutil.dll *raw.dll *RawCsm.dll *Security*.dll *MetaGD32.dll ; # Waters API
 

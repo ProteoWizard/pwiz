@@ -1,5 +1,5 @@
 #
-# $Id: Jamfile.jam 78 2009-10-12 23:40:51Z chambm $
+# $Id$
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.1 (the "License"); you may not use this file except in
@@ -39,7 +39,7 @@ rule msbuild_deploy ( targets + : sources * : properties * )
 
     local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
     INPUT_PATH on $(<[1]) = [ path.native $(location) ] ;
-    OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
+    OUTPUT_PATH on $(<[1]) = [ path.native $(BUILD_PATH)/Deploy/ ] ; # OutDir requires trailing slash
     INTERMEDIATE_PATH on $(<[1]) = "BaseIntermediateOutputPath=$(BUILD_PATH)/obj/" ;
 }
 
@@ -49,10 +49,10 @@ actions msbuild_deploy
     IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
     IF EXIST "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86 >nul
     IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
-    echo Building DeployVersionBumper in $(CONFIGURATION:L) configuration...
+    echo Building SetupDeployProject in $(CONFIGURATION:L) configuration...
     pushd $(THIS_PATH)
-    msbuild SetupDeployProject.csproj /p:Configuration=$(CONFIGURATION);$(INTERMEDIATE_PATH) /nologo /verbosity:minimal
-    SetupDeployProject.exe "$(INPUT_PATH)" "$(BUILD_PATH)"
+    msbuild SetupDeployProject.csproj /p:Configuration=$(CONFIGURATION);Platform=x86;$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
+    $(OUTPUT_PATH)SetupDeployProject.exe "$(INPUT_PATH)" "$(BUILD_PATH)"
     devenv Deploy.vdproj /Build Release
     popd
 }
