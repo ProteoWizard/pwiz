@@ -66,6 +66,7 @@
     <Compile Include="SetupDeployProject.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Deploy.vdproj.template" />
     <None Include="Jamfile.jam" />
   </ItemGroup>
   <ItemGroup>

@@ -380,6 +380,7 @@ rule dotNET-dependencies ( properties * )
 }
 
 SHELL "echo This is a dummy file for the picky install rule which needs at least one 'source' > $(BUILD_PATH)/dummy.c" ;
+RESCAN ;
 
 install install
     : # sources

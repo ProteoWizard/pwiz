@@ -1,4 +1,6 @@
 ﻿/*
+ * $Id$
+ *
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -16,6 +18,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Data.SQLite;
 using System.Reflection;
