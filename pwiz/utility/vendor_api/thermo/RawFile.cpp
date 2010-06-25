@@ -468,9 +468,21 @@ InstrumentModelType RawFileImpl::getInstrumentModel()
     if (instrumentModel_ == InstrumentModelType_Unknown)
     {
         string modelString = value(InstModel);
-        if (modelString == "LTQ Velos") //HACK: disambiguate LTQ Velos and Orbitrap Velos
+        if (modelString == "LTQ Velos") // HACK: disambiguate LTQ Velos and Orbitrap Velos
         {
             modelString = value(InstName);
+        }
+        else if (modelString == "LTQ Orbitrap" &&
+                 value(InstName).empty()) // HACK: disambiguate LTQ Orbitrap and some broken Exactive files
+        {
+            // Exactive has instrument info at the end of the tune method
+            auto_ptr<LabelValueArray> lvArray = getTuneData(0);
+            for (int i=0; i < lvArray->size(); ++i)
+                if (lvArray->label(i) == "Model")
+                {
+                    modelString = lvArray->value(i);
+                    break;
+                }
         }
 
         instrumentModel_ = parseInstrumentModelType(modelString);
@@ -982,7 +994,7 @@ void ScanInfoImpl::parseFilterString()
     {
         filterParser.parse(filter_);
     }
-    catch (runtime_error& e)
+    catch (exception& e)
     {
         throw RawEgg("[ScanInfoImpl::parseFilterString()] error parsing filter \"" + filter_ + "\": " + e.what());
     }

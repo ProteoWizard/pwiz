@@ -55,6 +55,11 @@ class PWIZ_API_DECL ScanFilter
 	ActivationType parseActivationType(const std::string& word);
 	AccurateMassType parseAccurateMassType(const std::string& word);
 
+    // these two fields are only in Exactive files: {<segment>,<event>}
+    // -1 means "unknown"
+    int segment_;
+    int event_;
+
 	ScanFilterMassAnalyzerType massAnalyzerType_;
 	PolarityType polarityType_;
 	DataPointType dataPointType_;
@@ -68,6 +73,7 @@ class PWIZ_API_DECL ScanFilter
 	TriBool dependentActive_; // t: data-dependent active; f: non active
     TriBool supplementalCIDOn_;
 	TriBool widebandOn_; // wideband activation
+    TriBool lockMassOn_;
 	AccurateMassType accurateMassType_;
 	ScanType scanType_;
 	int msLevel_; // n, in MSn: >0; msLevel == -1 for precursor ion scans
@@ -86,7 +92,7 @@ class PWIZ_API_DECL ScanFilter
 	void print();
 
     void initialize();
-	bool parse(std::string filterLine);
+	void parse(std::string filterLine);
 
 };
 

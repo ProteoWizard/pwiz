@@ -376,6 +376,9 @@ ScanFilter::print()
 void
 ScanFilter::initialize()
 {
+    segment_ = -1;
+    event_ = -1;
+
     massAnalyzerType_ = ScanFilterMassAnalyzerType_Unknown;
     polarityType_ = PolarityType_Unknown;
     dataPointType_ = DataPointType_Unknown;
@@ -393,6 +396,7 @@ ScanFilter::initialize()
     dependentActive_ = TriBool_Unknown;
     supplementalCIDOn_ = TriBool_Unknown;
     widebandOn_ = TriBool_Unknown;
+    lockMassOn_ = TriBool_Unknown;
 
     msLevel_ = 0;
     cidParentMass_.clear();
@@ -402,7 +406,7 @@ ScanFilter::initialize()
 }
 
 
-bool 
+void 
 ScanFilter::parse(string filterLine)
 {
     initialize();
@@ -415,7 +419,7 @@ ScanFilter::parse(string filterLine)
 	string w;
 
 	if (s.eof()) {
-		return true; // ok, empty line
+		return; // ok, empty line
 	}
 	s >> w;
 
@@ -423,8 +427,19 @@ ScanFilter::parse(string filterLine)
 	if (massAnalyzerType_ > ScanFilterMassAnalyzerType_Unknown) {
 		// "analyzer" field was present
 		if (s.eof()) {
-			return true;
+			return;
 		}
+		s >> w;
+	}
+
+    // read Exactive scan segment and scan event
+    if (*w.begin() == '{' && *w.rbegin() == '}')
+    {
+        boost::trim_if(w, boost::is_any_of("{ }")); // trim flanking brackets and whitespace
+	    vector<string> segmentEventPair;
+	    boost::split(segmentEventPair, w, boost::is_any_of(","));
+		segment_ = lexical_cast<double>(segmentEventPair[0]);
+		event_ = lexical_cast<double>(segmentEventPair[1]);
 		s >> w;
 	}
 
@@ -432,7 +447,7 @@ ScanFilter::parse(string filterLine)
 	if (polarityType_ > PolarityType_Unknown) {
 		// "polarity" field was present
 		if (s.eof()) {
-			return true;
+			return;
 		}
 		s >> w;
 	}
@@ -441,7 +456,7 @@ ScanFilter::parse(string filterLine)
 	if (dataPointType_ > DataPointType_Unknown) {
 		// "scan data type" field present
 		if (s.eof()) {
-			return true;
+			return;
 		}
 		s >> w;
 	}
@@ -450,7 +465,7 @@ ScanFilter::parse(string filterLine)
 	if (ionizationType_ > IonizationType_Unknown) {
 		// "ionization mode" field present
 		if (s.eof()) {
-			return true;
+			return;
 		}
 		s >> w;
 	}
@@ -468,7 +483,7 @@ ScanFilter::parse(string filterLine)
 	}
 	if (advance) {
 		if (s.eof()) {
-			return true;
+			return;
 		}
 		s >> w;
 		advance = false;
@@ -485,7 +500,7 @@ ScanFilter::parse(string filterLine)
 	}
 	if (advance) {
 		if (s.eof()) {
-			return true;
+			return;
 		}
 		s >> w;
 		advance = false;
@@ -502,7 +517,7 @@ ScanFilter::parse(string filterLine)
 	}
 	if (advance) {
 		if (s.eof()) {
-			return true;
+			return;
 		}
 		s >> w;
 		advance = false;
@@ -520,7 +535,7 @@ ScanFilter::parse(string filterLine)
 	}
 	if (advance) {
 		if (s.eof()) {
-			return true;
+			return;
 		}
 		s >> w;
 		advance = false;
@@ -538,7 +553,7 @@ ScanFilter::parse(string filterLine)
 	}
 	if (advance) {
 		if (s.eof()) {
-			return true;
+			return;
 		}
 		s >> w;
 		advance = false;
@@ -556,7 +571,7 @@ ScanFilter::parse(string filterLine)
 	}
 	if (advance) {
 		if (s.eof()) {
-			return true;
+			return;
 		}
 		s >> w;
 		advance = false;
@@ -574,7 +589,7 @@ ScanFilter::parse(string filterLine)
 	}
 	if (advance) {
 		if (s.eof()) {
-			return true;
+			return;
 		}
 		s >> w;
 		advance = false;
@@ -591,7 +606,7 @@ ScanFilter::parse(string filterLine)
 	}
 	if (advance) {
 		if (s.eof()) {
-			return true;
+			return;
 		}
 		s >> w;
 		advance = false;
@@ -604,7 +619,7 @@ ScanFilter::parse(string filterLine)
     }
     if (advance) {
         if (s.eof()) {
-            return true;
+            return;
         }
         s >> w;
         advance = false;
@@ -614,7 +629,7 @@ ScanFilter::parse(string filterLine)
 	if (accurateMassType_ > AccurateMass_Unknown) {
 		// "accurate mass" field present
 		if (s.eof()) {
-			return true;
+			return;
 		}
 		s >> w;
 	}
@@ -629,11 +644,20 @@ ScanFilter::parse(string filterLine)
 
 		// "scan type" field present
 		if (s.eof()) {
-			return true;
+			return;
 		}
 		s >> w;
 	}
 
+    if (w == "LOCK")
+    {
+        lockMassOn_ = TriBool_True;
+
+        if (s.eof()) {
+            return;
+        }
+        s >> w;
+    }
 
     // MS order or PR keyword
     if (w == "PR")
@@ -642,7 +666,7 @@ ScanFilter::parse(string filterLine)
 
         if (s.eof())
         {
-            return true;
+            return;
 		}
         s >> w;
     }
@@ -656,7 +680,7 @@ ScanFilter::parse(string filterLine)
             msLevel_ = lexical_cast<int>(w.substr(2)); // take number after "ms"
         }
         if (s.eof()) {
-            return true;
+            return;
         }
         s >> w;
     }
@@ -717,7 +741,7 @@ ScanFilter::parse(string filterLine)
 		if (activationType_ > ActivationType_Unknown) {
 			// "activation type" field present
 			if (s.eof()) {
-				return true;
+				return;
 			}
 			s >> w;
 		}
@@ -746,7 +770,7 @@ ScanFilter::parse(string filterLine)
 
 	if (s.eof()) {
 		// cout << "done parsing" << endl;
-		return true;
+		return;
 	}
 	else {
         ostringstream oss("unparsed scan filter elements: ");

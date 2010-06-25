@@ -168,10 +168,18 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
                             lexical_cast<string>(ie.controllerNumber));
     }
 
-    // get rawfile::ScanInfo and translate
-    ScanInfoPtr scanInfo = rawfile_->getScanInfo(ie.scan);
-    if (!scanInfo.get())
-        throw runtime_error("[SpectrumList_Thermo::spectrum()] Error retrieving ScanInfo.");
+    ScanInfoPtr scanInfo;
+    try
+    {
+        // get rawfile::ScanInfo and translate
+        scanInfo = rawfile_->getScanInfo(ie.scan);
+        if (!scanInfo.get())
+            throw runtime_error("[SpectrumList_Thermo::spectrum()] Error retrieving ScanInfo.");
+    }
+    catch (RawEgg& e)
+    {
+        throw runtime_error(string("[SpectrumList_Thermo::spectrum()] Error retrieving ScanInfo: ") + e.what());
+    }
 
     // allocate a new Spectrum
     SpectrumPtr result(new Spectrum);
@@ -537,12 +545,20 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::findPrecursorSpectrumIndex(int precurs
         double& cachedIsolationMz = isolationMzCache_[index];
         if (cachedMsLevel == 0)
         {
-            // populate the missing MS level
-            ScanInfoPtr scanInfo = rawfile_->getScanInfo(index_[index].scan);
-	        cachedMsLevel = scanInfo->msLevel();
+            try
+            {
+                ScanInfoPtr scanInfo = rawfile_->getScanInfo(index_[index].scan);
 
-            // MSn's immediate isolationMz is n-2
-            cachedIsolationMz = scanInfo->precursorMZ(precursorMsLevel - 2, false);
+                // populate the missing MS level
+	            cachedMsLevel = scanInfo->msLevel();
+
+                // MSn's immediate isolationMz is n-2
+                cachedIsolationMz = scanInfo->precursorMZ(precursorMsLevel - 2, false);
+            }
+            catch (RawEgg& e)
+            {
+                throw runtime_error(string("[SpectrumList_Thermo::spectrum()] Error retrieving ScanInfo: ") + e.what());
+            }
         }
         if (cachedMsLevel == precursorMsLevel &&
             (precursorIsolationMz == 0 ||

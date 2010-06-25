@@ -28,6 +28,8 @@
 #include <string>
 #include <vector>
 #include <boost/algorithm/string/case_conv.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+namespace bal = boost::algorithm;
 
 namespace pwiz {
 namespace vendor_api {
@@ -105,7 +107,7 @@ enum PWIZ_API_DECL InstrumentModelType
 
 inline InstrumentModelType parseInstrumentModelType(const std::string& instrumentModel)
 {
-    std::string type = boost::to_upper_copy(instrumentModel);
+    std::string type = bal::to_upper_copy(instrumentModel);
 
     if (type == "MAT253")                       return InstrumentModelType_MAT253;
     else if (type == "MAT900XP")                return InstrumentModelType_MAT900XP;
@@ -159,7 +161,7 @@ inline InstrumentModelType parseInstrumentModelType(const std::string& instrumen
     else if (type == "ELEMENT XR")              return InstrumentModelType_Element_XR;
     else if (type == "ELEMENT GD")              return InstrumentModelType_Element_GD;
     else if (type == "GC ISOLINK")              return InstrumentModelType_GC_IsoLink;
-    else if (type == "EXACTIVE")                return InstrumentModelType_Exactive;
+    else if (bal::contains(type, "EXACTIVE"))   return InstrumentModelType_Exactive;
     else if (type == "SURVEYOR PDA")            return InstrumentModelType_Surveyor_PDA;
     else if (type == "ACCELA PDA")              return InstrumentModelType_Accela_PDA;
     else
