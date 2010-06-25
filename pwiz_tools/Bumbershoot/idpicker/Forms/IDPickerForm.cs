@@ -118,6 +118,7 @@ namespace IDPicker
             }
         }
 
+        string lastSourcePathLocation;
         void spectrumTableForm_SpectrumViewVisualize (object sender, SpectrumViewVisualizeEventArgs e)
         {
             var psm = e.PeptideSpectrumMatch;
@@ -133,7 +134,34 @@ namespace IDPicker
             if (spectrum.Source.MetadataPath != null)
                 sourcePath = spectrum.Source.MetadataPath;
             else
-                sourcePath = Util.FindSourceInSearchPath(spectrum.Source.Name, ".");
+            {
+                try
+                {
+                    sourcePath = Util.FindSourceInSearchPath(spectrum.Source.Name, ".");
+                }
+                catch
+                {
+                    try
+                    {
+                        // try the last looked-in path
+                        sourcePath = Util.FindSourceInSearchPath(spectrum.Source.Name, lastSourcePathLocation);
+                    }
+                    catch
+                    {
+                        // prompt user to find the source
+                        var eventArgs = new Parser.SourceNotFoundEventArgs() { SourcePath = spectrum.Source.Name };
+                        sourceNotFoundOnVisualizeHandler(this, eventArgs);
+                        if (File.Exists(eventArgs.SourcePath) || Directory.Exists(eventArgs.SourcePath))
+                        {
+                            lastSourcePathLocation = Path.GetDirectoryName(eventArgs.SourcePath);
+                            sourcePath = eventArgs.SourcePath;
+                        }
+                        else
+                            throw; // user cancelled, abort the visualization
+                    }
+                }
+            }
+
             manager.OpenFile(sourcePath, spectrum.NativeID, annotation);
 
             var source = manager.DataSourceMap[sourcePath];
@@ -349,7 +377,42 @@ namespace IDPicker
             }
         }
 
-        void sourceNotFoundHandler (object sender, Parser.SourceNotFoundEventArgs e)
+        bool promptForSourceNotFound = true;
+        void sourceNotFoundOnImportHandler (object sender, Parser.SourceNotFoundEventArgs e)
+        {
+            if (String.IsNullOrEmpty(e.SourcePath) || !promptForSourceNotFound)
+                return;
+
+            var findDirectoryDialog = new FolderBrowserDialog()
+            {
+                SelectedPath = @"C:\test\rpal-orbi-orbi\raw",
+                ShowNewFolderButton = false,
+                Description = "Locate the directory containing the source \"" + e.SourcePath + "\""
+            };
+
+            while (findDirectoryDialog.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    e.SourcePath = Util.FindSourceInSearchPath(e.SourcePath, findDirectoryDialog.SelectedPath);
+                    return;
+                }
+                catch
+                {
+                    // couldn't find the source in that directory; prompt user again
+                }
+            }
+
+            // user cancelled; prompt them about whether to suppress this event
+            if (MessageBox.Show("Source \"" + e.SourcePath + "\" not found: skipping subset mzML import to database.\r\n\r\n" +
+                                "Do you want to skip all mzML imports for this session?",
+                                "Skipping subset mzML import",
+                                MessageBoxButtons.YesNo,
+                                MessageBoxIcon.Question) == DialogResult.Yes)
+                promptForSourceNotFound = false;
+        }
+
+        void sourceNotFoundOnVisualizeHandler (object sender, Parser.SourceNotFoundEventArgs e)
         {
             if (String.IsNullOrEmpty(e.SourcePath))
                 return;
@@ -366,7 +429,7 @@ namespace IDPicker
                 try
                 {
                     e.SourcePath = Util.FindSourceInSearchPath(e.SourcePath, findDirectoryDialog.SelectedPath);
-                    break;
+                    return;
                 }
                 catch
                 {
@@ -439,7 +502,7 @@ namespace IDPicker
                     {
                         pf.Show();
                         parser.DatabaseNotFound += new EventHandler<Parser.DatabaseNotFoundEventArgs>(databaseNotFoundHandler);
-                        parser.SourceNotFound += new EventHandler<Parser.SourceNotFoundEventArgs>(sourceNotFoundHandler);
+                        parser.SourceNotFound += new EventHandler<Parser.SourceNotFoundEventArgs>(sourceNotFoundOnImportHandler);
                         parser.ParsingProgress += new EventHandler<Parser.ParsingProgressEventArgs>(pf.UpdateProgress);
                         parser.ReadXml(xml_filepaths, commonFilename, ".");
                     }
