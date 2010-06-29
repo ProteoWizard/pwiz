@@ -606,6 +606,9 @@ namespace seems
             int driveCount = 0;
             foreach( DriveInfo driveInfo in DriveInfo.GetDrives() )
             {
+                // skip this drive if there's a problem accessing its properties
+                try { var foo = driveInfo.VolumeLabel; } catch { continue; }
+
                 string label;
                 string sublabel = driveInfo.Name;
                 driveReadiness[sublabel] = driveInfo.IsReady;
