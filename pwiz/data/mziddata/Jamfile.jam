@@ -50,6 +50,7 @@ lib pwiz_data_mzid
         Serializer_mzid.cpp
         Pep2MzIdent.cpp
         DelimWriter.cpp
+        DelimReader.cpp
         References.cpp
         KwCVMap.cpp
     : # requirements

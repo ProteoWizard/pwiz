@@ -56,21 +56,28 @@ class PWIZ_API_DECL Reader
     virtual std::string identify(const std::string& filename,
                                  const std::string& head) const = 0;
 
-    /// fill in the MzIdentML structure from the first (or only) sample
+    /// fill in a vector of MzIdentML structures; provides support for multi-run input files
+    virtual void read(const std::string& filename,
+                      MzIdentML& results) const;
+
+    /// fill in a vector of MzIdentML structures; provides support for multi-run input files
     virtual void read(const std::string& filename,
                       const std::string& head,
-                      MzIdentML& result,
-                      int runIndex = 0) const = 0;
+                      MzIdentML& results) const = 0;
+
+    /// fill in a vector of MzIdentML structures; provides support for multi-run input files
+    virtual void read(const std::string& filename,
+                      MzIdentMLPtr& results) const;
+
+    /// fill in a vector of MzIdentML structures; provides support for multi-run input files
+    virtual void read(const std::string& filename,
+                      const std::string& head,
+                      MzIdentMLPtr& results) const = 0;
 
     /// fill in a vector of MzIdentML structures; provides support for multi-run input files
     virtual void read(const std::string& filename,
                       const std::string& head,
                       std::vector<MzIdentMLPtr>& results) const = 0;
-
-    /// fill in a vector of MSData.Id values; provides support for multi-run input files
-    /*virtual void readIds(const std::string& filename,
-                         const std::string& head,
-                         std::vector<std::string>& dataIds) const;*/
 
 	virtual const char *getType() const = 0; // what kind of reader are you?
 
@@ -118,14 +125,21 @@ class PWIZ_API_DECL ReaderList : public Reader,
 
     /// delegates to first child that identifies
     virtual void read(const std::string& filename,
-                      MzIdentML& result,
-                      int runIndex = 0) const;
+                      MzIdentML& result) const;
 
     /// delegates to first child that identifies
     virtual void read(const std::string& filename,
                       const std::string& head,
-                      MzIdentML& result,
-                      int runIndex = 0) const;
+                      MzIdentML& result) const;
+
+    /// delegates to first child that identifies
+    virtual void read(const std::string& filename,
+                      MzIdentMLPtr& result) const;
+
+    /// delegates to first child that identifies
+    virtual void read(const std::string& filename,
+                      const std::string& head,
+                      MzIdentMLPtr& result) const;
 
     /// delegates to first child that identifies;
     /// provides support for multi-run input files
@@ -137,17 +151,6 @@ class PWIZ_API_DECL ReaderList : public Reader,
     virtual void read(const std::string& filename,
                       const std::string& head,
                       std::vector<MzIdentMLPtr>& results) const;
-
-    /// delegates to first child that identifies;
-    /// provides support for multi-run input files
-    /*virtual void readIds(const std::string& filename,
-                         std::vector<std::string>& results) const;*/
-
-    /// delegates to first child that identifies;
-    /// provides support for multi-run input files
-    /*virtual void readIds(const std::string& filename,
-                         const std::string& head,
-                         std::vector<std::string>& results) const;*/
 
     /// appends all of the rhs operand's Readers to the list
     ReaderList& operator +=(const ReaderList& rhs);

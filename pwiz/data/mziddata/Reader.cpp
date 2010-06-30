@@ -43,6 +43,19 @@ using namespace pwiz::util;
     results.push_back(data.id);
 }*/
 
+PWIZ_API_DECL void Reader::read(const std::string& filename,
+                      MzIdentML& results) const
+{
+    return read(filename, read_file_header(filename, 512), results);
+}
+
+PWIZ_API_DECL void Reader::read(const std::string& filename,
+                                MzIdentMLPtr& results) const
+{
+    return read(filename, read_file_header(filename, 512), results);
+}
+
+
 
 PWIZ_API_DECL std::string ReaderList::identify(const string& filename) const
 {
@@ -65,18 +78,32 @@ PWIZ_API_DECL std::string ReaderList::identify(const string& filename, const str
 }
 
 
-PWIZ_API_DECL void ReaderList::read(const string& filename, MzIdentML& result, int sampleIndex /* = 0 */) const
+PWIZ_API_DECL void ReaderList::read(const string& filename, MzIdentMLPtr& result) const
 {
-    read(filename, read_file_header(filename, 512), result, sampleIndex);
+    read(filename, read_file_header(filename, 512), result);
 }
 
 
-PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, MzIdentML& result, int sampleIndex /* = 0 */) const
+PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, MzIdentMLPtr& result) const
+{
+    if (!result.get())
+        throw ReaderFail(("No result object assigned for "+filename).c_str());
+    
+    read(filename, read_file_header(filename, 512), *result); 
+}
+
+PWIZ_API_DECL void ReaderList::read(const string& filename, MzIdentML& result) const
+{
+    read(filename, read_file_header(filename, 512), result);
+}
+
+
+PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, MzIdentML& result) const
 {
     for (const_iterator it=begin(); it!=end(); ++it)
         if ((*it)->accept(filename, head))
         {
-            (*it)->read(filename, head, result, sampleIndex);
+            (*it)->read(filename, head, result);
             return;
         }
     throw ReaderFail((" don't know how to read " +

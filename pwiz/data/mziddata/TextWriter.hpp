@@ -896,7 +896,7 @@ class PWIZ_API_DECL TextWriter
             child()("calculatedMassToCharge: "+boost::lexical_cast<std::string>(sii.calculatedMassToCharge));
         if (!sii.empty())
             child()("calculatedPI: "+boost::lexical_cast<std::string>(sii.calculatedPI));
-        if (!sii.peptidePtr.get() || sii.peptidePtr->empty())
+        if (sii.peptidePtr.get() && !sii.peptidePtr->empty())
             child()("Peptide_ref: "+sii.peptidePtr->id);
         if (!sii.empty())
             child()("rank: "+boost::lexical_cast<std::string>(sii.rank));

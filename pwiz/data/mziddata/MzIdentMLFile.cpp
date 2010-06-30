@@ -44,12 +44,12 @@ using namespace pwiz::util;
 namespace {
 
 
-void readFile(const string& filename, MzIdentML& td, const Reader& reader, const string& head)
+void readFile(const string& filename, MzIdentML& mzid, const Reader& reader, const string& head)
 {
     if (!reader.accept(filename, head))
         throw runtime_error("[MzIdentMLFile::readFile()] Unsupported file format.");
 
-    reader.read(filename, head, td);
+    reader.read(filename, head, mzid);
 }
 
 

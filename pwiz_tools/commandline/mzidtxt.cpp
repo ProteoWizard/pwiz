@@ -21,10 +21,14 @@
 //
 
 #include "pwiz/data/mziddata/DelimWriter.hpp"
+#include "pwiz/data/mziddata/DelimReader.hpp"
 #include "pwiz/data/mziddata/MzIdentMLFile.hpp"
+#include "pwiz/data/mziddata/Serializer_mzid.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/Version.hpp"
 
 #include <iostream>
+#include <stdexcept>
 #include <fstream>
 #include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
@@ -32,9 +36,14 @@
 
 using namespace std;
 using namespace pwiz::mziddata;
+using namespace pwiz::util;
 
 struct Config
 {
+    Config()
+        : expmz(true), headers(false), verbose(false), stdout(false)
+    {}
+    
     string usageOptions;
     
     string firstfile;
@@ -43,8 +52,10 @@ struct Config
     
     char delim;
 
+    bool expmz;
     bool headers;
     bool verbose;
+    bool stdout;
     bool toMzid;
 };
 
@@ -81,21 +92,17 @@ Config parseCommandLine(int argc, const char* argv[])
 
     po::options_description od_config("");
     od_config.add_options()
-        /*
-        ("mzid,m",
-         po::value<string>(&config.firstfile)->default_value(
-             config.firstfile),
-         ": mzid file name")
-        ("txt,t",
-         po::value<string>(&config.secondfile)->default_value(
-             config.secondfile),
-         ": delimited file name")
-        */
+        ("calcmz,c",
+         ": Use calculated m/z")
         ("delim,d",
          po::value<char>(&config.delim)->default_value('\t'),
          ": delimiter separating fields")
-        ("headers,h",
+        ("expmz,e",
+         ": Use experimental m/z (default)")
+        ("headers",
          ": Use/read a header in the file")
+        ("stdout,s",
+         ": Output to standard out instead of file.")
         ("verbose,v", ": prints extra information.")
         ("help,h",
             ": print this helpful message.")
@@ -137,10 +144,14 @@ Config parseCommandLine(int argc, const char* argv[])
               options(od_parse).positional(pod_args).run(), vm);
     po::notify(vm);
 
+    if (vm.count("calcmz"))
+        config.expmz = false;
+    
+    if (vm.count("expmz"))
+        config.expmz = true;
+    
     if (vm.count("headers"))
         config.headers = true;
-    else
-        config.headers = false;
     
     config.usageOptions = usageOptions;
     
@@ -153,12 +164,37 @@ void translateToTxt(Config& config)
     MzIdentMLFile mzid(config.firstfile);
     
     // Open up output file.
-    ofstream os;
-    os.open(config.secondfile.c_str());
+    ostream* os;
+    if (config.stdout)
+        os = &cout;
+    else
+        os = new ofstream(config.secondfile.c_str());
+    
     
     // Create writer and dump the mzid file to os.
-    DelimWriter writer(&os, config.delim, config.headers);
+    DelimWriter writer(os, config.delim, config.headers);
     writer(mzid);
+
+    // If we created an ofstream, then close it now.
+    if (!config.stdout && os)
+        delete os;
+}
+
+void translateToMzid(Config& config, DelimReader dr)
+{
+    MzIdentML mzid;
+    
+    dr.read(config.firstfile, read_file_header(config.firstfile), mzid);
+
+    ostream* os = 0;
+    if (config.stdout)
+        os = &cout;
+    else
+        os = new ofstream(config.secondfile.c_str());
+
+    Serializer_mzIdentML serializer;
+    serializer.write(*os, mzid);
+
 }
 
 int main(int argc, const char* argv[])
@@ -167,22 +203,23 @@ int main(int argc, const char* argv[])
     {
         Config config = parseCommandLine(argc, argv);
 
-        if (!config.firstfile.size())
-        {
-            cerr << "no mzid file!\n";
-            throw runtime_error(usage(config));
-        }
+        // If there's no output file and no stdout flag, throw an
+        // error.
+        if (config.secondfile.size()==0 && config.stdout==false)
+            throw invalid_argument(usage(config).c_str());
 
-        if (!config.secondfile.size())
-        {
-            cerr << "no text file!\n";
-            throw runtime_error(usage(config));
-        }
-
+        DelimReader dr;
         if (boost::iends_with(config.firstfile, ".mzid"))
+        {
             translateToTxt(config);
-        else
-            throw runtime_error("text import into mzid not supported yet.");
+        }
+        else if (dr.accept(config.firstfile,
+                           read_file_header(config.firstfile)))
+        {
+            translateToMzid(config, dr);
+        }
+
+        return 0;
     }
     catch (exception& e)
     {
@@ -190,7 +227,7 @@ int main(int argc, const char* argv[])
     }
     catch (...)
     {
-        cerr << "[msdiff] Caught unknown exception.\n";
+        cerr << "[mzidtxt] Caught unknown exception.\n";
     }
 
     return 1;

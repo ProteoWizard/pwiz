@@ -136,11 +136,15 @@ class Reader_mzid : public Reader
         return std::string((type(iss) != Type_Unknown)?getType():"");
     }
 
-    virtual void read(const std::string& filename, const std::string& head, MzIdentML& result, int documentIndex = 0) const
+    virtual void read(const std::string& filename, const std::string& head, MzIdentMLPtr& result) const
     {
-        if (documentIndex != 0)
-            throw ReaderFail("[Reader_mzid::read] multiple documents not supported");
-
+        if (result.get())
+            throw ReaderFail("[Reader_mzid::read] NULL valued MzIdentMLPtr passed in.");
+        return read(filename, head, *result);
+    }
+    
+    virtual void read(const std::string& filename, const std::string& head, MzIdentML& result) const
+    {
         shared_ptr<istream> is(new pwiz::util::random_access_compressed_ifstream(filename.c_str()));
         if (!is.get() || !*is)
             throw runtime_error(("[Reader_mzid::read] Unable to open file " + filename).c_str());

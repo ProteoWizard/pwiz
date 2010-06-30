@@ -44,7 +44,7 @@ using namespace boost::algorithm;
 
 PWIZ_API_DECL ostream* DelimWriter::writeHeaders()
 {
-    (*os_) << "#retention time\tm/z\tscore\tpeptide\tprotein\n";
+    (*os_) << "#retention time\tscan\tm/z\tscore\tpeptide\tprotein\n";
     
     return os_;
 }
@@ -79,6 +79,7 @@ PWIZ_API_DECL ostream* DelimWriter::write(const SpectrumIdentificationList& sil)
 PWIZ_API_DECL ostream* DelimWriter::write(const SpectrumIdentificationResult& sir)
 {
     // Fetch the retention time.
+    //
     // Retention time should be kept in the cvParams under accession
     // "MS:1001114"
     CVParam rtParam = sir.paramGroup.cvParam(cvTermInfo(rtCV).cvid);
@@ -93,6 +94,8 @@ PWIZ_API_DECL ostream* DelimWriter::write(const SpectrumIdentificationResult& si
         current_line.push_back(oss.str());
     }
 
+    // Fetch scan
+    //
     // Since this may be a list of peaks, this may not be correct. In
     // that case, current_line will need to be expanded into a vector
     // of line_type. All children will need to do an expansion for
@@ -112,6 +115,16 @@ PWIZ_API_DECL ostream* DelimWriter::write(const SpectrumIdentificationResult& si
 
 PWIZ_API_DECL ostream* DelimWriter::write(const SpectrumIdentificationItem& sii)
 {
+    // Fetch m/z
+    //
+    // Assuming the experimental mass is to be used.
+    //
+    // TODO Add a commandline switch to select
+    // experimental/calculated.
+    ostringstream oss;
+    oss << sii.experimentalMassToCharge;
+    current_line.push_back(oss.str());
+    
     CVParam cvParam = sii.paramGroup.cvParamChild(
         MS_search_engine_specific_score_for_peptides);
 
