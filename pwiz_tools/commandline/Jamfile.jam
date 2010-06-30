@@ -75,13 +75,13 @@ exe mspicture
     ;
 
 
-exe mzidtxt
-    : mzidtxt.cpp
-      ../../pwiz//pwiz_version
-      ../../pwiz/data/mziddata//pwiz_data_mzid
-      /ext/boost//program_options
-    : <include>../../..
-    ;
+#exe mzidtxt
+#    : mzidtxt.cpp
+#      ../../pwiz//pwiz_version
+#      ../../pwiz/data/mziddata//pwiz_data_mzid
+#      /ext/boost//program_options
+#    : <include>../../..
+#    ;
 
 
 exe pepsum
