@@ -41,7 +41,7 @@ using namespace pwiz::util;
 struct Config
 {
     Config()
-        : expmz(true), headers(false), verbose(false), stdout(false)
+        : expmz(true), headers(false), verbose(false), useStdout(false)
     {}
     
     string usageOptions;
@@ -55,7 +55,7 @@ struct Config
     bool expmz;
     bool headers;
     bool verbose;
-    bool stdout;
+    bool useStdout;
     bool toMzid;
 };
 
@@ -165,7 +165,7 @@ void translateToTxt(Config& config)
     
     // Open up output file.
     ostream* os;
-    if (config.stdout)
+    if (config.useStdout)
         os = &cout;
     else
         os = new ofstream(config.secondfile.c_str());
@@ -176,7 +176,7 @@ void translateToTxt(Config& config)
     writer(mzid);
 
     // If we created an ofstream, then close it now.
-    if (!config.stdout && os)
+    if (!config.useStdout && os)
         delete os;
 }
 
@@ -187,7 +187,7 @@ void translateToMzid(Config& config, DelimReader dr)
     dr.read(config.firstfile, read_file_header(config.firstfile), mzid);
 
     ostream* os = 0;
-    if (config.stdout)
+    if (config.useStdout)
         os = &cout;
     else
         os = new ofstream(config.secondfile.c_str());
@@ -205,7 +205,7 @@ int main(int argc, const char* argv[])
 
         // If there's no output file and no stdout flag, throw an
         // error.
-        if (config.secondfile.size()==0 && config.stdout==false)
+        if (config.secondfile.size()==0 && config.useStdout==false)
             throw invalid_argument(usage(config).c_str());
 
         DelimReader dr;
