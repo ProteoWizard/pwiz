@@ -325,7 +325,7 @@ namespace pwiz.Skyline.Model
             return GetModifiedSequence(seq, null, formatNarrow);
         }
 
-        public string GetModifiedSequence(string seq, IList<double> mods, bool formatNarrow)
+        public string GetModifiedSequence(string seq, ExplicitSequenceMods mods, bool formatNarrow)
         {
             // If no modifications, do nothing
             if (!IsModified(seq) && mods == null)
@@ -340,8 +340,8 @@ namespace pwiz.Skyline.Model
 
                 double mod = modMasses._aminoModMasses[c];
                 // Explicit modifications
-                if (mods != null && i < mods.Count)
-                    mod += mods[i];
+                if (mods != null && i < mods.Mods.Count)
+                    mod += mods.Mods[i];
                 // Terminal modifications
                 if (i == 0)
                     mod += modMasses._massModCleaveN + modMasses._aminoNTermModMasses[c];
@@ -355,12 +355,12 @@ namespace pwiz.Skyline.Model
             return sb.ToString();
         }
 
-        private ModMasses GetModMasses(IList<double> mods)
+        private ModMasses GetModMasses(ExplicitSequenceMods mods)
         {
             // If there are explicit modifications and this is a heavy mass
             // calculator, then use only the heavy masses without the static
             // masses added in.
-            if (mods != null && _modMassesHeavy != null)
+            if (mods != null && !mods.RequiresAllCalcMods && _modMassesHeavy != null)
                 return _modMassesHeavy;
             return _modMasses;
         }
@@ -375,7 +375,7 @@ namespace pwiz.Skyline.Model
             return GetPrecursorMass(seq, null);
         }
 
-        public double GetPrecursorMass(string seq, IList<double> mods)
+        public double GetPrecursorMass(string seq, ExplicitSequenceMods mods)
         {
             var modMasses = GetModMasses(mods);
             double mass = _massCleaveN + modMasses._massModCleaveN +
@@ -393,8 +393,8 @@ namespace pwiz.Skyline.Model
             {
                 char c = seq[i];
                 mass += _aminoMasses[c] + modMasses._aminoModMasses[c];
-                if (mods != null && i < mods.Count)
-                    mass += mods[i];
+                if (mods != null && i < mods.Mods.Count)
+                    mass += mods.Mods[i];
             }
             return mass;                
         }
@@ -404,7 +404,7 @@ namespace pwiz.Skyline.Model
             return GetFragmentIonMasses(seq, null);
         }
 
-        public double[,] GetFragmentIonMasses(string seq, IList<double> mods)
+        public double[,] GetFragmentIonMasses(string seq, ExplicitSequenceMods mods)
         {
             var modMasses = GetModMasses(mods);
 
@@ -432,8 +432,8 @@ namespace pwiz.Skyline.Model
             {
                 char aa = seq[iN];
                 nTermMassB += _aminoMasses[aa] + modMasses._aminoModMasses[aa];
-                if (mods != null && iN < mods.Count)
-                    nTermMassB += mods[iN];
+                if (mods != null && iN < mods.Mods.Count)
+                    nTermMassB += mods.Mods[iN];
                 masses[a, iN] = nTermMassB + deltaA;
                 masses[b, iN] = nTermMassB;
                 masses[c, iN] = nTermMassB + deltaC;
@@ -441,8 +441,8 @@ namespace pwiz.Skyline.Model
 
                 aa = seq[iC];
                 cTermMassY += _aminoMasses[aa] + modMasses._aminoModMasses[aa];
-                if (mods != null && iC < mods.Count)
-                    cTermMassY += mods[iC];
+                if (mods != null && iC < mods.Mods.Count)
+                    cTermMassY += mods.Mods[iC];
                 iC--;
                 masses[x, iC] = cTermMassY + deltaX;
                 masses[y, iC] = cTermMassY;
@@ -473,7 +473,7 @@ namespace pwiz.Skyline.Model
             return GetFragmentMass(transition, null);
         }
 
-        public double GetFragmentMass(Transition transition, IList<double> mods)
+        public double GetFragmentMass(Transition transition, ExplicitSequenceMods mods)
         {
             return GetFragmentMass(transition.Group.Peptide.Sequence,
                 transition.IonType, transition.Ordinal, mods);
@@ -481,7 +481,12 @@ namespace pwiz.Skyline.Model
 
         public double GetPrecursorFragmentMass(string seq)
         {
-            return GetFragmentMass(seq, IonType.precursor, seq.Length);
+            return GetPrecursorFragmentMass(seq, null);
+        }
+
+        public double GetPrecursorFragmentMass(string seq, ExplicitSequenceMods mods)
+        {
+            return GetFragmentMass(seq, IonType.precursor, seq.Length, mods);
         }
 
         public double GetFragmentMass(string seq, IonType type, int ordinal)
@@ -489,7 +494,7 @@ namespace pwiz.Skyline.Model
             return GetFragmentMass(seq, type, ordinal, null);
         }
 
-        public double GetFragmentMass(string seq, IonType type, int ordinal, IList<double> mods)
+        public double GetFragmentMass(string seq, IonType type, int ordinal, ExplicitSequenceMods mods)
         {
             if (Transition.IsPrecursor(type))
                 return GetPrecursorMass(seq, mods);
@@ -508,15 +513,15 @@ namespace pwiz.Skyline.Model
             {
                 char aa = seq[iA];
                 mass += _aminoMasses[aa] + modMasses._aminoModMasses[aa];
-                if (mods != null && iA < mods.Count)
-                    mass += mods[iA];
+                if (mods != null && iA < mods.Mods.Count)
+                    mass += mods.Mods[iA];
                 iA += inc;
             }
 
             return mass;
         }
 
-        private double GetTermMass(IonType type, IList<double> mods)
+        private double GetTermMass(IonType type, ExplicitSequenceMods mods)
         {
             var modMasses = GetModMasses(mods);
 
@@ -628,12 +633,14 @@ namespace pwiz.Skyline.Model
     public class ExplicitSequenceMassCalc : IPrecursorMassCalc, IFragmentMassCalc
     {
         private readonly SequenceMassCalc _massCalcBase;
-        private readonly IList<double> _mods;
+        private readonly ExplicitSequenceMods _mods;
 
-        public ExplicitSequenceMassCalc(SequenceMassCalc massCalcBase, IList<double> mods)
+        public ExplicitSequenceMassCalc(SequenceMassCalc massCalcBase,
+            IList<double> mods, bool requiresAllCalcMods)
         {
             _massCalcBase = massCalcBase;
-            _mods = mods;
+            _mods = new ExplicitSequenceMods
+                { Mods = mods, RequiresAllCalcMods = requiresAllCalcMods};
         }
 
         public double GetPrecursorMass(string seq)
@@ -644,7 +651,7 @@ namespace pwiz.Skyline.Model
         public bool IsModified(string seq)
         {
             return _massCalcBase.IsModified(seq) ||
-                _mods.IndexOf(m => m != 0) != -1; // If any non-zero modification values
+                _mods.Mods.IndexOf(m => m != 0) != -1; // If any non-zero modification values
         }
 
         public string GetModifiedSequence(string seq, bool formatNarrow)
@@ -669,7 +676,13 @@ namespace pwiz.Skyline.Model
 
         public double GetPrecursorFragmentMass(string seq)
         {
-            return _massCalcBase.GetPrecursorFragmentMass(seq);
+            return _massCalcBase.GetPrecursorFragmentMass(seq, _mods);
         }
+    }
+
+    public class ExplicitSequenceMods
+    {
+        public IList<double> Mods { get; set; }
+        public bool RequiresAllCalcMods { get; set; }
     }
 }

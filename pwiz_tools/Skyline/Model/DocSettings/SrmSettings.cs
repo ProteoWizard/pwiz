@@ -157,6 +157,12 @@ namespace pwiz.Skyline.Model.DocSettings
             if (!mods.IsModified(labelType))
                 return GetMassCalc(labelType, massCalcs);
 
+            // If the light modifications are variable, and this is a type for
+            // which explicit modifications exist (including the light type itself),
+            // then return the light calculator as base.
+            if (mods.IsVariableStaticMods)
+                return calcLightImplicit;
+
             // If both light and this type are modified, then us a base calculator
             // that contains no modifications at all.
             return (calcLightImplicit.MassType == MassType.Monoisotopic ?
@@ -176,14 +182,6 @@ namespace pwiz.Skyline.Model.DocSettings
             if (labelType.IsLight)
                 return true;
             return GetPrecursorCalc(labelType, mods) != null;
-
-//            if (GetBaseCalc(labelType, mods, _precursorMassCalcs) != null)
-//            {
-//                if (mods.IsModified(labelType))
-//                    return mods.HasModifications(labelType);
-//                return mods.IsModified(IsotopeLabelType.light);
-//            }
-//            return _precursorMassCalcs.Contains(calc => Equals(labelType, calc.LabelType));
         }
 
         public IPrecursorMassCalc GetPrecursorCalc(IsotopeLabelType labelType, ExplicitMods mods)
@@ -198,7 +196,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (!labelType.IsLight && !mods.HasModifications(labelType))
                     return null;
                 return new ExplicitSequenceMassCalc(massCalcBase,
-                    mods.GetModMasses(massCalcBase.MassType, labelType));
+                                                    mods.GetModMasses(massCalcBase.MassType, labelType),
+                                                    mods.IsVariableStaticMods);
             }
             return GetMassCalc(labelType, _precursorMassCalcs);
         }
@@ -220,7 +219,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (!labelType.IsLight && !mods.HasModifications(labelType))
                     return null;
                 return new ExplicitSequenceMassCalc(massCalcBase,
-                    mods.GetModMasses(massCalcBase.MassType, labelType));
+                                                    mods.GetModMasses(massCalcBase.MassType, labelType),
+                                                    mods.IsVariableStaticMods);
             }
             return GetMassCalc(labelType, _fragmentMassCalcs);
         }

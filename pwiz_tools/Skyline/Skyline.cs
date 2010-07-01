@@ -702,7 +702,7 @@ namespace pwiz.Skyline
             {
                 shallowestLevel = Math.Min(shallowestLevel, node.Level);
                 sortedNodes.Add(node);
-        }
+            }
             sortedNodes.Sort(CompareNodeBounds);
 
             StringBuilder htmlSb = new StringBuilder();
@@ -2091,10 +2091,7 @@ namespace pwiz.Skyline
                         if (nodePepTree.DocNode.Peptide.FastaSequence != null)
                             return null;
 
-                        TreeNode nodeResult = nodePepTree.NextNode;
-                        if (nodeResult == null)
-                            nodeResult = nodePepTree.Parent.NextNode;
-                        return nodeResult;
+                        return nodePepTree.NextNode ?? nodePepTree.Parent.NextNode;
                     }
                     nodeTree = nodeTree.Parent as SrmTreeNode;
                 }

@@ -491,30 +491,63 @@ namespace pwiz.Skyline.Model.DocSettings
             _modifications = MakeReadOnly(modifications.ToArray());
         }
 
-        public ExplicitMods(Peptide peptide,
+        public ExplicitMods(PeptideDocNode nodePep,
             IEnumerable<StaticMod> staticMods, MappedList<string, StaticMod> listStaticMods,
             IEnumerable<TypedModifications> heavyMods, MappedList<string, StaticMod> listHeavyMods)
         {
-            Peptide = peptide;
+            Peptide = nodePep.Peptide;
 
             var modifications = new List<TypedExplicitModifications>();
             TypedExplicitModifications staticTypedMods = null;
             // Add static mods, if applicable
             if (staticMods != null)
             {
-                var explicitMods = GetImplicitMods(staticMods, listStaticMods);
-                staticTypedMods = new TypedExplicitModifications(peptide,
+                IList<ExplicitMod> explicitMods = GetImplicitMods(staticMods, listStaticMods);
+                // If the peptide has variable modifications, make them all override
+                // the modification state of the default implicit mods
+                if (nodePep.HasVariableMods)
+                    explicitMods = MergeExplicitMods(nodePep.ExplicitMods.StaticModifications, explicitMods);
+                staticTypedMods = new TypedExplicitModifications(Peptide,
                     IsotopeLabelType.light, explicitMods);
                 modifications.Add(staticTypedMods);
             }
             foreach (TypedModifications typedMods in heavyMods)
             {
                 var explicitMods = GetImplicitMods(typedMods.Modifications, listHeavyMods);
-                var typedHeavyMods = new TypedExplicitModifications(peptide,
+                var typedHeavyMods = new TypedExplicitModifications(Peptide,
                     typedMods.LabelType, explicitMods);
                 modifications.Add(typedHeavyMods.AddModMasses(staticTypedMods));
             }
             _modifications = MakeReadOnly(modifications.ToArray());
+        }
+
+        private static IList<ExplicitMod> MergeExplicitMods(IList<ExplicitMod> modsPrimary,
+                                                            IList<ExplicitMod> modsSecondary)
+        {
+            if (modsSecondary.Count == 0)
+                return modsPrimary;
+            if (modsPrimary.Count == 0)
+                return modsSecondary;
+
+            var listExplicitMods = new List<ExplicitMod>();
+            int iPrimary = 0, iSecondary = 0;
+            while (iPrimary < modsPrimary.Count || iSecondary < modsSecondary.Count)
+            {
+                if (iSecondary >= modsSecondary.Count)
+                    listExplicitMods.Add(modsPrimary[iPrimary++]);
+                else if (iPrimary >= modsPrimary.Count)
+                    listExplicitMods.Add(modsSecondary[iSecondary++]);
+                else if (modsPrimary[iPrimary].IndexAA < modsSecondary[iSecondary].IndexAA)
+                    listExplicitMods.Add(modsPrimary[iPrimary++]);
+                else if (modsPrimary[iPrimary].IndexAA > modsSecondary[iSecondary].IndexAA)
+                    listExplicitMods.Add(modsSecondary[iSecondary++]);
+                else  // Equal
+                {
+                    listExplicitMods.Add(modsPrimary[iPrimary++]);
+                    iSecondary++;
+                }
+            }
+            return listExplicitMods.ToArray();
         }
 
         /// <summary>

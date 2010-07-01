@@ -24,7 +24,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -105,7 +104,7 @@ namespace pwiz.Skyline.EditUI
                     comboStaticLast = comboStatic1;
                     foreach (var labelType in _listLabelTypeHeavy)
                     {
-                        if (listComboHeavyLast == null || listLabelHeavyLast == null)
+                        if (listComboHeavyLast == null /*|| listLabelHeavyLast == null*/)
                         {
                             listComboHeavyLast = new List<ComboBox> { comboHeavy1_1 };
                             listLabelHeavyLast = new List<Label> { labelHeavy1 };
@@ -249,12 +248,14 @@ namespace pwiz.Skyline.EditUI
             if (type.IsLight)
             {
                 return InitModificationCombo(combo, modsDoc.StaticModifications,
-                    modsExp != null ? modsExp.StaticModifications : null, StaticList, indexAA);
+                    modsExp != null ? modsExp.StaticModifications : null, StaticList, indexAA,
+                    modsExp != null && modsExp.IsVariableStaticMods);
             }
             else
             {
                 return InitModificationCombo(combo, modsDoc.GetModifications(type),
-                    modsExp != null ? modsExp.GetModifications(type) : null, HeavyList, indexAA);
+                    modsExp != null ? modsExp.GetModifications(type) : null, HeavyList, indexAA,
+                    false);
             }
         }
 
@@ -262,11 +263,13 @@ namespace pwiz.Skyline.EditUI
                                            IList<StaticMod> listDocMods,
                                            IList<ExplicitMod> listExplicitMods,
                                            IEnumerable<StaticMod> listSettingsMods,
-                                           int indexAA)
+                                           int indexAA,
+                                           bool selectEither)
         {       
             combo.DropDownStyle = ComboBoxStyle.DropDownList;
             combo.FormattingEnabled = true;
-            int iSelected = UpdateComboItems(combo, listSettingsMods, listExplicitMods, listDocMods, indexAA, false);
+            int iSelected = UpdateComboItems(combo, listSettingsMods, listExplicitMods, listDocMods,
+                indexAA, selectEither, false);
             // Add event handler before changing selection, so that the handler will fire
             combo.SelectedIndexChanged += comboMod_SelectedIndexChangedEvent;
             // Change selection, and fire event handler
@@ -275,7 +278,8 @@ namespace pwiz.Skyline.EditUI
         }
 
         private int UpdateComboItems(ComboBox combo, IEnumerable<StaticMod> listSettingsMods,
-            IList<ExplicitMod> listExplicitMods, IList<StaticMod> listDocMods, int indexAA, bool select)
+            IList<ExplicitMod> listExplicitMods, IList<StaticMod> listDocMods, int indexAA,
+            bool selectEither, bool select)
         {
             string seq = NodePeptide.Peptide.Sequence;
             char aa = seq[indexAA];
@@ -302,7 +306,10 @@ namespace pwiz.Skyline.EditUI
                     if (Equals(explicitName, mod.Name))
                         iSelected = listItems.Count - 1;
                 }
-                else
+                // If it is not explicitly modified, or no modification was found in the
+                // explicit set, and using the implicit modifications is allowed (variable mods)
+                // check the implicit modifications for an applicable mod
+                if (listExplicitMods == null || (selectEither && iSelected == -1))
                 {
                     // If the modification is present in the document, then it should be selected by default.
                     StaticMod modCurrent = mod;
@@ -387,13 +394,15 @@ namespace pwiz.Skyline.EditUI
                 indexAA = int.Parse(matchName.Groups[1].Value) - 1;
                 int indexLabelType = int.Parse(matchName.Groups[2].Value) - 1;
                 SelectedIndexChangedEvent(combo, HeavyList, modsExp != null ? modsExp.HeavyModifications : null,
-                    _listListComboHeavy[indexLabelType], _listListSelectedIndexHeavy[indexLabelType], indexAA);
+                    _listListComboHeavy[indexLabelType], _listListSelectedIndexHeavy[indexLabelType], indexAA,
+                    false);
             }
             else
             {
                 indexAA = int.Parse(combo.Name.Substring(PREFIX_STATIC_NAME.Length)) - 1;
                 SelectedIndexChangedEvent(combo, StaticList, modsExp != null ? modsExp.StaticModifications : null,
-                    _listComboStatic, _listSelectedIndexStatic, indexAA);
+                    _listComboStatic, _listSelectedIndexStatic, indexAA,
+                    modsExp != null && modsExp.IsVariableStaticMods);
             }
             UpdateAminoAcidLabel(indexAA);
         }
@@ -435,7 +444,8 @@ namespace pwiz.Skyline.EditUI
 
         private void SelectedIndexChangedEvent(ComboBox combo,
             SettingsList<StaticMod> listSettingsMods, IList<ExplicitMod> listExplicitMods,
-            IList<ComboBox> listCombo, IList<int> listSelectedIndex, int indexAA)
+            IList<ComboBox> listCombo, IList<int> listSelectedIndex, int indexAA,
+            bool selectEither)
         {
             int selectedIndexLast = listSelectedIndex[indexAA];
             if (AddItemSelected(combo))
@@ -444,7 +454,8 @@ namespace pwiz.Skyline.EditUI
                 if (!Equals(itemNew, null))
                 {
                     listSettingsMods.Add(itemNew);
-                    LoadLists(listSettingsMods, listExplicitMods, listCombo, indexAA, itemNew.GetKey());
+                    LoadLists(listSettingsMods, listExplicitMods, listCombo, indexAA, itemNew.GetKey(),
+                        selectEither);
                 }
                 else
                 {
@@ -461,7 +472,8 @@ namespace pwiz.Skyline.EditUI
                     listSettingsMods.AddRange(listNew);
 
                     string selectedItemLast = combo.Items[selectedIndexLast].ToString();
-                    LoadLists(listSettingsMods, listExplicitMods, listCombo, indexAA, selectedItemLast);
+                    LoadLists(listSettingsMods, listExplicitMods, listCombo, indexAA, selectedItemLast,
+                        selectEither);
                 }
                 else
                 {
@@ -473,14 +485,14 @@ namespace pwiz.Skyline.EditUI
         }
 
         private void LoadLists(IEnumerable<StaticMod> listSettingsMods, IList<ExplicitMod> listExplicitMods,
-            IList<ComboBox> listCombo, int indexAA, string selectedItem)
+            IList<ComboBox> listCombo, int indexAA, string selectedItem, bool selectEither)
         {
             for (int i = 0; i < listCombo.Count; i++)
             {
                 ComboBox combo = listCombo[i];
                 // Reset the combo to its current value, unless a different value was specified
                 object selectedItemDesired = (i == indexAA ? selectedItem : combo.SelectedItem);
-                UpdateComboItems(combo, listSettingsMods, listExplicitMods, null, i, false);
+                UpdateComboItems(combo, listSettingsMods, listExplicitMods, null, i, selectEither, false);
                 if (!Equals(selectedItemDesired, combo.SelectedItem))
                     combo.SelectedItem = selectedItemDesired;
             }
@@ -510,17 +522,41 @@ namespace pwiz.Skyline.EditUI
 
         public void ResetMods()
         {
-            ExplicitMods = null;
+            // CONSIDER: This means once a peptide with variable modifications is explicitly
+            //           modified, it is then treated the same as an unmodified peptide for
+            //           future resets.
+            var explicitModsOrig = NodePeptide.ExplicitMods;
+            if (!NodePeptide.HasVariableMods)
+                ExplicitMods = null;
+            else if (!explicitModsOrig.HasHeavyModifications)
+                ExplicitMods = explicitModsOrig;
+            else
+            {
+                // Construct a new explicit mods with only the variable modifications
+                ExplicitMods = new ExplicitMods(NodePeptide.Peptide,
+                                                explicitModsOrig.StaticModifications,
+                                                new TypedExplicitModifications[0],
+                                                true);
+            }
             var modifications = DocSettings.PeptideSettings.Modifications;
             for (int i = 0; i < _listComboStatic.Count; i++)
-                UpdateComboItems(_listComboStatic[i], StaticList, null, modifications.StaticModifications, i, true);
+            {
+                UpdateComboItems(_listComboStatic[i],
+                                 StaticList,
+                                 ExplicitMods != null ? ExplicitMods.StaticModifications : null,
+                                 modifications.StaticModifications,
+                                 i,
+                                 ExplicitMods != null && ExplicitMods.IsVariableStaticMods,
+                                 true);
+            }
             for (int i = 0; i < _listLabelTypeHeavy.Count; i++)
             {
                 var labelType = _listLabelTypeHeavy[i];
                 var listComboHeavy = _listListComboHeavy[i];
                 for (int j = 0; j < listComboHeavy.Count; j++)
                 {
-                    UpdateComboItems(listComboHeavy[j], HeavyList, null, modifications.GetModifications(labelType), j, true);
+                    UpdateComboItems(listComboHeavy[j], HeavyList, null,
+                        modifications.GetModifications(labelType), j, false, true);
                 }
             }
         }
@@ -535,24 +571,34 @@ namespace pwiz.Skyline.EditUI
             var peptide = NodePeptide.Peptide;
             var explicitModsCurrent = NodePeptide.ExplicitMods;
             var modsDoc = DocSettings.PeptideSettings.Modifications;
-            var implicitMods = new ExplicitMods(NodePeptide.Peptide,
+            var implicitMods = new ExplicitMods(NodePeptide,
                 modsDoc.StaticModifications, Settings.Default.StaticModList,
                 modsDoc.GetHeavyModifications(), Settings.Default.HeavyModList);
             
             // Get static modifications from the dialog, and check for equality with
             // the document implicit modifications.
             TypedExplicitModifications staticTypedMods = null;
+            bool isVariableStaticMods = false;
             var staticMods = GetExplicitMods(_listComboStatic, Settings.Default.StaticModList);
             if (ArrayUtil.EqualsDeep(staticMods, implicitMods.StaticModifications))
-                staticMods = null;  // Use implicit modifications
-            else
             {
-                if (explicitModsCurrent != null &&
-                        ArrayUtil.EqualsDeep(staticMods, explicitModsCurrent.StaticModifications))
+                if (!NodePeptide.HasVariableMods)
+                    staticMods = null;  // Use implicit modifications                
+                else
                 {
-                    staticMods = explicitModsCurrent.StaticModifications;                    
+                    staticMods = explicitModsCurrent.StaticModifications;
+                    isVariableStaticMods = true;
                 }
-                staticTypedMods = new TypedExplicitModifications(peptide, IsotopeLabelType.light, staticMods);
+            }
+            else if (explicitModsCurrent != null &&
+                        ArrayUtil.EqualsDeep(staticMods, explicitModsCurrent.StaticModifications))
+            {
+                staticMods = explicitModsCurrent.StaticModifications;
+            }
+            if (staticMods != null)
+            {
+                staticTypedMods = new TypedExplicitModifications(peptide,
+                    IsotopeLabelType.light, staticMods);
             }
 
             var listHeavyTypedMods = new List<TypedExplicitModifications>();
@@ -570,7 +616,7 @@ namespace pwiz.Skyline.EditUI
 
             ExplicitMods explicitMods = null;
             if (staticMods != null || listHeavyTypedMods.Count > 0)
-                explicitMods = new ExplicitMods(peptide, staticMods, listHeavyTypedMods);
+                explicitMods = new ExplicitMods(peptide, staticMods, listHeavyTypedMods, isVariableStaticMods);
             Helpers.AssignIfEquals(ref explicitMods, explicitModsCurrent);
             ExplicitMods = explicitMods;
 

@@ -136,26 +136,51 @@ namespace pwiz.Skyline.Model
 
                 return (PeptideGroupDocNode) ChangeChildrenChecked(childrenNew);
             }
-            // Check for changes affecting children
-            else if (diff.DiffPeptideProps || diff.DiffExplicit ||
-                diff.DiffTransitionGroups || diff.DiffTransitionGroupProps ||
-                diff.DiffTransitions || diff.DiffTransitionProps ||
-                diff.DiffResults)
+            else
             {
-                IList<DocNode> childrenNew = new List<DocNode>();
+                var nodeResult = this;
 
-                // Enumerate the nodes making necessary changes.
-                foreach (PeptideDocNode nodePeptide in Children)
-                    childrenNew.Add(nodePeptide.ChangeSettings(settingsNew, diff));
+                if (diff.DiffPeptides && diff.SettingsOld != null)
+                {
+                    // If variable modifications changed, remove all peptides with variable
+                    // modifications which are no longer possible.
+                    var modsNew = settingsNew.PeptideSettings.Modifications;
+                    var modsVarNew = modsNew.VariableModifications.ToArray();
+                    var modsOld = diff.SettingsOld.PeptideSettings.Modifications;
+                    var modsVarOld = modsOld.VariableModifications.ToArray();
+                    if (modsNew.MaxVariableMods < modsOld.MaxVariableMods ||
+                            !ArrayUtil.EqualsDeep(modsVarNew, modsVarOld))
+                    {
+                        IList<DocNode> childrenNew = new List<DocNode>();
+                        foreach (PeptideDocNode nodePeptide in nodeResult.Children)
+                        {
+                            if (nodePeptide.AreVariableModsPossible(modsNew.MaxVariableMods, modsVarNew))
+                                childrenNew.Add(nodePeptide);
+                        }
 
-                if (ArrayUtil.ReferencesEqual(childrenNew, Children))
-                    childrenNew = Children;
+                        nodeResult = (PeptideGroupDocNode)nodeResult.ChangeChildrenChecked(childrenNew);
+                    }
+                }
 
-                return (PeptideGroupDocNode) ChangeChildrenChecked(childrenNew);
+                // Check for changes affecting children
+                if (diff.DiffPeptideProps || diff.DiffExplicit ||
+                    diff.DiffTransitionGroups || diff.DiffTransitionGroupProps ||
+                    diff.DiffTransitions || diff.DiffTransitionProps ||
+                    diff.DiffResults)
+                {
+                    IList<DocNode> childrenNew = new List<DocNode>();
+
+                    // Enumerate the nodes making necessary changes.
+                    foreach (PeptideDocNode nodePeptide in nodeResult.Children)
+                        childrenNew.Add(nodePeptide.ChangeSettings(settingsNew, diff));
+
+                    if (ArrayUtil.ReferencesEqual(childrenNew, Children))
+                        childrenNew = Children;
+
+                    nodeResult = (PeptideGroupDocNode)nodeResult.ChangeChildrenChecked(childrenNew);
+                }
+                return nodeResult;
             }
-
-            // Changes had no impact on this node.
-            return this;
         }
 
         private Dictionary<PeptideModKey, DocNode> CreatePeptideModToChildMap()

@@ -84,6 +84,7 @@
   <ItemGroup>
     <Compile Include="AnnotationTest.cs" />
     <Compile Include="ExplicitMultiTypeTest.cs" />
+    <Compile Include="ExplicitVariableTest.cs" />
     <Compile Include="LibraryExplorerTest.cs" />
     <Compile Include="ManageResultsTest.cs" />
     <Compile Include="MultiSelectTest.cs" />

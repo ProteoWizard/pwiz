@@ -358,9 +358,8 @@ namespace pwiz.SkylineTestFunctional
 
         private void EnsurePeptideSettings()
         {
-            PeptideSettingsUI = FindOpenForm<PeptideSettingsUI>();
-            if (PeptideSettingsUI == null)
-                PeptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);            
+            PeptideSettingsUI = FindOpenForm<PeptideSettingsUI>() ??
+                                ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
         }
 
         private void BuildLibrary(string inputDir, IEnumerable<string> inputFiles,

@@ -63,6 +63,24 @@ namespace pwiz.Skyline.Model
 
         public bool HasExplicitMods { get { return ExplicitMods != null; }}
 
+        public bool HasVariableMods { get { return HasExplicitMods && ExplicitMods.IsVariableStaticMods; } }
+
+        public bool AreVariableModsPossible(int maxVariableMods, IEnumerable<StaticMod> modsVarAvailable)
+        {
+            if (HasVariableMods)
+            {
+                var explicitModsVar = ExplicitMods.StaticModifications;
+                if (explicitModsVar.Count > maxVariableMods)
+                    return false;
+                foreach (var explicitMod in explicitModsVar)
+                {
+                    if (!modsVarAvailable.Contains(explicitMod.Modification))
+                        return false;
+                }
+            }
+            return true;
+        }
+
         public bool HasChildType(IsotopeLabelType labelType)
         {
             return Children.Contains(nodeGroup => ReferenceEquals(labelType,

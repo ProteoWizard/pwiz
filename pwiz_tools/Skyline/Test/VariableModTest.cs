@@ -26,6 +26,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTest
 {
@@ -36,11 +37,19 @@ namespace pwiz.SkylineTest
     public class VariableModTest
     {
         private static readonly StaticMod VAR_MET_OXIDIZED = new StaticMod("Methionine Oxidized", 'M', null, true, "O",
-            LabelAtoms.None, RelativeRT.Unknown, null, null, null, null, null);
-        private static readonly StaticMod VAR_MET_AMONIA_LOSS = new StaticMod("Methionine Amonial Loss", 'M', null, true, "-NH3",
-            LabelAtoms.None, RelativeRT.Unknown, null, null, null, null, null);
+            LabelAtoms.None, RelativeRT.Matching, null, null, null, null, null);
+        private static readonly StaticMod VAR_MET_AMONIA_ADD = new StaticMod("Methionine Amonia Added", 'M', null, true, "NH3",
+            LabelAtoms.None, RelativeRT.Matching, null, null, null, null, null);
+        private static readonly StaticMod VAR_ASP_WATER_ADD = new StaticMod("Aspartic Acid Water Added", 'D', null, true, "H2O",
+            LabelAtoms.None, RelativeRT.Matching, null, null, null, null, null);
         private static readonly StaticMod VAR_ASP_WATER_LOSS = new StaticMod("Aspartic Acid Water Loss", 'D', null, true, "-H2O",
-            LabelAtoms.None, RelativeRT.Unknown, null, null, null, null, null);
+            LabelAtoms.None, RelativeRT.Matching, null, null, null, null, null);
+
+        private static readonly List<StaticMod> HEAVY_MODS = new List<StaticMod>
+            {
+                new StaticMod("13C K", 'K', ModTerminus.C, null, LabelAtoms.C13, null, null),
+                new StaticMod("13C R", 'R', ModTerminus.C, null, LabelAtoms.C13, null, null),
+            };
 
         /// <summary>
         ///Gets or sets the test context which provides
@@ -97,21 +106,38 @@ namespace pwiz.SkylineTest
 
             // And that removing the variable modification removes the variably modifide peptides
             var docYeast2 = docMoYeast.ChangeSettings(docMoYeast.Settings.ChangePeptideModifications(mods => modsDefault));
-            Assert.AreEqual(0, GetVariableModCount(docYeast));
+            Assert.AreEqual(0, GetVariableModCount(docYeast2));
             Assert.AreEqual(docYeast, docYeast2);
             Assert.AreNotSame(docYeast, docYeast2);
 
+            // Even when automanage children is turned off
+            var docNoAuto = (SrmDocument)docMoYeast.ChangeChildren((from node in docYeast2.PeptideGroups
+                                                                   select node.ChangeAutoManageChildren(false)).ToArray());
+            var docYeastNoAuto = docNoAuto.ChangeSettings(docYeast.Settings);
+            Assert.AreEqual(0, GetVariableModCount(docYeastNoAuto));
+            // Shouldn't come back, if the mods are restored
+            var docMoNoAuto = docYeastNoAuto.ChangeSettings(docMetOxidized.Settings);
+            Assert.AreEqual(0, GetVariableModCount(docMoNoAuto));
+            Assert.AreSame(docYeastNoAuto.Children, docMoNoAuto.Children);
+
+            // Make sure loss modification result in smaller m/z values
+            var listModsLoss = new List<StaticMod>(modsDefault.StaticModifications) { VAR_ASP_WATER_LOSS };
+            var docAspLoss = docYeast2.ChangeSettings(docYeast2.Settings.ChangePeptideModifications(mods =>
+                mods.ChangeStaticModifications(listModsLoss.ToArray())));
+            Assert.AreEqual(145, GetVariableModCount(docAspLoss));
+            VerifyModificationOrder(docAspLoss, false);
+
             // Add multiple variable modifications
-            listStaticMods.Add(VAR_ASP_WATER_LOSS);
+            listStaticMods.Add(VAR_ASP_WATER_ADD);
             var docVarMulti = docYeast2.ChangeSettings(docYeast2.Settings.ChangePeptideModifications(mods =>
                 mods.ChangeStaticModifications(listStaticMods.ToArray())));
             Assert.AreEqual(220, GetVariableModCount(docVarMulti));
             int maxModifiableMulti = GetMaxModifiableCount(docVarMulti);
             Assert.IsTrue(maxModifiableMulti > GetMaxModifiedCount(docVarMulti));
-            VerifyModificationOrder(docVarMulti);
+            VerifyModificationOrder(docVarMulti, true);
 
             // And also multiple modifications on the same amino acid residue
-            listStaticMods.Add(VAR_MET_AMONIA_LOSS);
+            listStaticMods.Add(VAR_MET_AMONIA_ADD);
             var docVarAaMulti = docVarMulti.ChangeSettings(docVarMulti.Settings.ChangePeptideModifications(mods =>
                 mods.ChangeStaticModifications(listStaticMods.ToArray())));
             Assert.AreEqual(315, GetVariableModCount(docVarAaMulti));
@@ -119,20 +145,50 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(maxModifiableMulti, maxModifiableAaMulti,
                 "Unexptected change in the maximum number of modifiable amino acids");
             Assert.IsTrue(maxModifiableAaMulti > GetMaxModifiedCount(docVarAaMulti));
-            VerifyModificationOrder(docVarAaMulti);
+            VerifyModificationOrder(docVarAaMulti, true);
 
             // Reduce the maximum number of variable modifications allowed
             var docVar2AaMulti = docVarAaMulti.ChangeSettings(docVarAaMulti.Settings.ChangePeptideModifications(mods =>
                 mods.ChangeMaxVariableMods(2)));
             Assert.AreEqual(242, GetVariableModCount(docVar2AaMulti));
             Assert.AreEqual(2, GetMaxModifiedCount(docVar2AaMulti));
-            VerifyModificationOrder(docVar2AaMulti);
+            VerifyModificationOrder(docVar2AaMulti, true);
 
             var docVar1AaMulti = docVar2AaMulti.ChangeSettings(docVar2AaMulti.Settings.ChangePeptideModifications(mods =>
                 mods.ChangeMaxVariableMods(1)));
             Assert.AreEqual(128, GetVariableModCount(docVar1AaMulti));
             Assert.AreEqual(1, GetMaxModifiedCount(docVar1AaMulti));
-            VerifyModificationOrder(docVar1AaMulti);
+            VerifyModificationOrder(docVar1AaMulti, true);
+
+            var docVarAaMultiReset = docVar1AaMulti.ChangeSettings(docVarAaMulti.Settings);
+            Assert.AreEqual(315, GetVariableModCount(docVarAaMultiReset));
+
+            // Repeat with auto-manage turned off to make sure it also removes
+            // variable modifications which are made invalide by changing the limit
+            var docMultiNoAuto = (SrmDocument)docVarAaMulti.ChangeChildren((from node in docVarAaMulti.PeptideGroups
+                                                                            select node.ChangeAutoManageChildren(false)).ToArray());
+            var docMulti2NoAuto = docMultiNoAuto.ChangeSettings(docVar2AaMulti.Settings);
+            Assert.IsTrue(ArrayUtil.ReferencesEqual(docVar2AaMulti.Peptides.ToArray(),
+                                                    docMulti2NoAuto.Peptides.ToArray()));
+            var docMulti1NoAuto = docMulti2NoAuto.ChangeSettings(docVar1AaMulti.Settings);
+            Assert.IsTrue(ArrayUtil.ReferencesEqual(docVar1AaMulti.Peptides.ToArray(),
+                                                    docMulti1NoAuto.Peptides.ToArray()));
+            var docMultiNoAutoReset = docMulti1NoAuto.ChangeSettings(docVarAaMulti.Settings);
+            Assert.AreSame(docMulti1NoAuto.Children, docMultiNoAutoReset.Children);
+
+            // Add heavy modifications to an earlier document to verify
+            // that heavy precursors all get greater precursor m/z values than
+            // their light versions
+            var docVarHeavy = docVarMulti.ChangeSettings(docVarMulti.Settings.ChangePeptideModifications(
+                mods => mods.ChangeHeavyModifications(HEAVY_MODS)));
+            foreach (var nodePep in docVarHeavy.Peptides)
+            {
+                if (nodePep.Peptide.NextAA == '-')
+                    continue;
+
+                Assert.AreEqual(2, nodePep.Children.Count);
+                Assert.AreEqual(GetPrecursorMz(nodePep, 0), GetPrecursorMz(nodePep, 1)-3, 0.02);
+            }
         }
 
         /// <summary>
@@ -149,8 +205,8 @@ namespace pwiz.SkylineTest
             var listStaticMods = new List<StaticMod>(modsDefault.StaticModifications)
                                      {
                                          VAR_MET_OXIDIZED,
-                                         VAR_MET_AMONIA_LOSS,
-                                         VAR_ASP_WATER_LOSS
+                                         VAR_MET_AMONIA_ADD,
+                                         VAR_ASP_WATER_ADD
                                      };
             var docVarMods = document.ChangeSettings(settings.ChangePeptideModifications(mods =>
                 mods.ChangeStaticModifications(listStaticMods.ToArray())));
@@ -238,16 +294,18 @@ namespace pwiz.SkylineTest
             return max;
         }
 
-        private static void VerifyModificationOrder(SrmDocument document)
+        private static void VerifyModificationOrder(SrmDocument document, bool addedMass)
         {
             int lastModCount = 0;
             double lastModIndexTotal = 0;
+            double lastUnmodMz = double.MaxValue;
             foreach (var nodePep in document.Peptides)
             {
                 if (nodePep.ExplicitMods == null)
                 {
                     lastModCount = 0;
                     lastModIndexTotal = 0;
+                    lastUnmodMz = ((TransitionGroupDocNode) nodePep.Children[0]).PrecursorMz;
                 }
                 else
                 {
@@ -265,8 +323,17 @@ namespace pwiz.SkylineTest
                             modIndexTotal += Math.Pow(10, mod.IndexAA);
                         Assert.IsTrue(lastModIndexTotal <= modIndexTotal);
                     }
+                    if (addedMass)
+                        Assert.IsTrue(lastUnmodMz < GetPrecursorMz(nodePep, 0));
+                    else
+                        Assert.IsTrue(lastUnmodMz > GetPrecursorMz(nodePep, 0));
                 }
             }
+        }
+
+        private static double GetPrecursorMz(PeptideDocNode nodePep, int iChild)
+        {
+            return ((TransitionGroupDocNode)nodePep.Children[iChild]).PrecursorMz;
         }
 
         private const string TEXT_FASTA_YEAST_39 =

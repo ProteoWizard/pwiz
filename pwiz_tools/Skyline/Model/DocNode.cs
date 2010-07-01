@@ -773,6 +773,48 @@ namespace pwiz.Skyline.Model
             return traversal.Traverse(parent, descendentsRemove, AddAll, parent.AddAll);
         }
 
+        /// <summary>
+        /// Removes all nodes that are not listed in a set to preserve, or which
+        /// contain a node that is listed in the set to preserve.  Preserved nodes
+        /// which contain no other preserved nodes preserve all their children.
+        /// </summary>
+        /// <param name="preserveIndexes">The GlobalIndex values of the nodes to preserve</param>
+        /// <returns>A new instance of this node with nodes removed</returns>
+        protected DocNodeParent RemoveAllBut(ICollection<int> preserveIndexes)
+        {
+            // Rebuild the list of children based on the preserveIndexes
+            var listNewChildren = new List<DocNode>();
+            foreach (var node in Children)
+            {
+                var nodeNew = node as DocNodeParent;
+                if (nodeNew != null)
+                {
+                    // Recurse into children that are themselves parent, including
+                    // nodes that contain nodes to be preserved
+                    nodeNew = nodeNew.RemoveAllBut(preserveIndexes);
+                    if (nodeNew != null)
+                        listNewChildren.Add(nodeNew);
+                }
+                // Recursion stopping condition: the child is not a parent itself
+                // either preserve it by virtue of its inclusion in the set to preserve,
+                // or skip it and allow the parent to decide.
+                else if (preserveIndexes.Contains(node.Id.GlobalIndex))
+                {
+                    listNewChildren.Add(node);
+                }
+            }
+            // If some of the children were included by virtue of their being in the
+            // set to preserve, then reset the children of this parent to only those.
+            if (listNewChildren.Count > 0)
+                return ChangeChildrenChecked(listNewChildren);
+            // Otherwise, if this node itself is to be preserved, then include all of
+            // its children
+            else if (preserveIndexes.Contains(Id.GlobalIndex))
+                return this;
+            // Skip this node and allow the parent to decide
+            return null;
+        }
+
         public DocNodeParent ChangeAll(Func<DocNode, DocNode> change, int depth)
         {
             var listChildrenNew = new List<DocNode>();
