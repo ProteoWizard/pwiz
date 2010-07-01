@@ -455,6 +455,34 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
+        /// <summary>
+        /// Loads a list of all the spectra found in all loaded libraries 
+        /// matching the criteria passed in.
+        /// </summary>
+        /// <param name="sequence"> The sequence to match. </param>
+        /// <param name="charge"> The charge to match. </param>
+        /// <param name="mods"> The modifications to match. </param>
+        /// <param name="spectra"> Used to return a list of the matching spectra. </param>
+        /// <returns> Returns true if at least one spectrum was found; false otherwise. </returns>
+        public bool TryLoadSpectra(string sequence, int charge, ExplicitMods mods,
+            out IList<SpectrumInfo> spectra)
+        {
+            var libraries = PeptideSettings.Libraries;
+
+            spectra = new List<SpectrumInfo>();
+
+            string sequenceMod = GetModifiedSequence(sequence, IsotopeLabelType.light, mods);
+            libraries.AddSpectra(new LibKey(sequenceMod, charge), IsotopeLabelType.light, ref spectra);
+
+            foreach (var labelType in GetHeavyLabelTypes(mods))
+            {
+                sequenceMod = GetModifiedSequence(sequence, labelType, mods);
+                libraries.AddSpectra(new LibKey(sequenceMod, charge), labelType, ref spectra);
+            }
+
+            return spectra.Count > 0;
+        }
+
         private IEnumerable<IsotopeLabelType> GetHeavyLabelTypes(ExplicitMods mods)
         {
             foreach (var typedMods in PeptideSettings.Modifications.GetHeavyModifications())

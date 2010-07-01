@@ -1132,13 +1132,6 @@ namespace pwiz.Skyline.Model
                     if (indexMod == -1)
                         throw new InvalidDataException(string.Format("No modification named {0} was found in this document.", nameMod));
                     StaticMod modAdd = typedMods.Modifications[indexMod];
-                    // In the document context, all static mods must have the explicit
-                    // flag off to behave correctly for equality checks.  Only in the
-                    // settings context is the explicit flag necessary to destinguish
-                    // between the global implicit modifications and the explicit modifications
-                    // which do not apply to everything.
-                    if (modAdd.IsExplicit)
-                        modAdd = modAdd.ChangeExplicit(false);
                     listMods.Add(new ExplicitMod(indexAA, modAdd));
                     // Consume tag
                     reader.Read();

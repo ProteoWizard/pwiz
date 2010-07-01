@@ -31,13 +31,14 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         private TransitionGroupDocNode TransitionGroupNode { get; set; }
         private TransitionDocNode TransitionNode { get; set; }
-        public string LibraryName { get { return TransitionGroupNode.LibInfo.LibraryName; } }
+        public string LibraryName { get; private set; }
 
         public SpectrumGraphItem(TransitionGroupDocNode transitionGroupNode, TransitionDocNode transition,
-                                 LibraryRankedSpectrumInfo spectrumInfo) : base(spectrumInfo)
+                                 LibraryRankedSpectrumInfo spectrumInfo, string libName) : base(spectrumInfo)
         {
             TransitionGroupNode = transitionGroupNode;
             TransitionNode = transition;
+            LibraryName = libName;
         }
 
         protected override bool IsMatch(double predictedMz)
@@ -49,7 +50,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                string libraryNamePrefix = TransitionGroupNode.LibInfo.LibraryName;
+                string libraryNamePrefix = LibraryName;
                 if (!string.IsNullOrEmpty(libraryNamePrefix))
                     libraryNamePrefix += " - ";
 

@@ -34,6 +34,8 @@ namespace pwiz.Skyline.SettingsUI
 {
     public partial class PeptideSettingsUI : Form
     {
+        private const int BORDER_BOTTOM_HEIGHT = 16;
+
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Local
         private enum TABS { Digest, Prediction, Filter, Library, Modifications }
@@ -693,7 +695,7 @@ namespace pwiz.Skyline.SettingsUI
                         ComboIS.Visible = true;
                         ListBoxIS.Visible = false;
                         ComboIS.Parent.Parent.Parent.Height +=
-                            ComboIS.Bottom + 10 - ComboIS.Parent.Height;
+                            ComboIS.Bottom + BORDER_BOTTOM_HEIGHT - ComboIS.Parent.Height;
                     }
                     else
                     {
@@ -705,7 +707,7 @@ namespace pwiz.Skyline.SettingsUI
                         ComboIS.Visible = false;
                         ListBoxIS.Visible = true;
                         ListBoxIS.Parent.Parent.Parent.Height +=
-                            ListBoxIS.Bottom + 12 - ComboIS.Parent.Height;
+                            ListBoxIS.Bottom + BORDER_BOTTOM_HEIGHT - ComboIS.Parent.Height;
                     }
 
                     foreach (var typedMods in heavyMods)

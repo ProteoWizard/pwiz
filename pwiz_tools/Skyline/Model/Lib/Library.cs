@@ -693,6 +693,38 @@ namespace pwiz.Skyline.Model.Lib
         }
     }
 
+    /// <summary>
+    /// Holds the following nformation for a particular spectrum:
+    ///     * Peak information 
+    ///     * Name of the library it is in
+    ///     * Its isotope label type
+    /// </summary>
+    public sealed class SpectrumInfo
+    {
+        public SpectrumInfo(SpectrumPeaksInfo spectrumPeaksInfo, 
+            IsotopeLabelType labelType, String libName)
+        {
+            SpectrumPeaksInfo = spectrumPeaksInfo;
+            LabelType = labelType;
+            LibName = libName;
+        }
+
+        public SpectrumPeaksInfo SpectrumPeaksInfo { get; private set; }
+        public IsotopeLabelType LabelType { get; private set; }
+        public String LibName { get; private set; }
+
+        /// <summary>
+        /// An identity defined by a combination of the library the spectrum
+        /// is in, and its isotope label type.
+        /// </summary>
+        public String Identity
+        {
+            get
+            {
+                return LabelType == IsotopeLabelType.light ? LibName : String.Format("{0} ({1})", LibName, LabelType);
+            }
+        }
+    }
 
     public sealed class LibraryRankedSpectrumInfo : Immutable
     {

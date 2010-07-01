@@ -67,6 +67,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private readonly IDocumentUIContainer _documentContainer;
         private readonly IStateProvider _stateProvider;
+        private TransitionGroupDocNode _nodeGroup;
 
         public GraphSpectrum(IDocumentUIContainer documentUIContainer)
         {
@@ -155,6 +156,88 @@ namespace pwiz.Skyline.Controls.Graphs
             UpdateUI();
         }
 
+        private bool NodeGroupChanged(TransitionGroupDocNode nodeGroup)
+        {
+            return (_nodeGroup == null) ||
+                   (!ReferenceEquals(_nodeGroup.Id, nodeGroup.Id));
+        }
+
+        private void UpdateToolbar(IList<SpectrumInfo> spectra)
+        {
+            if (spectra == null || spectra.Count < 2)
+            {
+                toolBar.Visible = false;
+            }
+            else
+            {
+                // Check to see if the list of files has changed.
+                var listNames = new List<String>();
+                for (int idx = 0; idx < spectra.Count; idx++)
+                {
+                    listNames.Add(spectra[idx].Identity);
+                }
+
+                var listExisting = new List<string>();
+                foreach (var item in comboSpectrum.Items)
+                {
+                    listExisting.Add(item.ToString());
+                }
+
+                if (!ArrayUtil.EqualsDeep(listNames, listExisting))
+                {
+                    // If it has, update the list, trying to maintain selection, if possible.
+                    object selected = comboSpectrum.SelectedItem;
+                    comboSpectrum.Items.Clear();
+                    foreach (string name in listNames)
+                    {
+                        comboSpectrum.Items.Add(name);
+                    }
+                    if ((selected == null) ||
+                        (comboSpectrum.Items.IndexOf(selected) == -1))
+                    {
+                        comboSpectrum.SelectedIndex = 0;
+                    }
+                    else
+                    {
+                        comboSpectrum.SelectedItem = selected;
+                    }
+                    ComboHelper.AutoSizeDropDown(comboSpectrum);
+                }
+
+                // Show the toolbar after updating the files
+                if (!toolBar.Visible)
+                {
+                    toolBar.Visible = true;
+                }
+            }
+        }
+
+        /// <summary>
+        /// If more than one spectrum is found for the current node group, 
+        /// a toolbar with a drop-down combobox is shown, and one item is 
+        /// selected in the combobox. This method searches in the spectra
+        /// list passed in and finds the spectrum selected in the combobox,
+        /// and gets the spectra list index of that particular spectrum.
+        /// </summary>
+        /// <param name="spectra"> The spectra list to be searched. </param>
+        /// <returns> The index of the spectrum found in the spectra list. </returns>
+        private int GetSelectedSpectrumIndex(IList<SpectrumInfo> spectra)
+        {
+            if (spectra.Count > 1 && comboSpectrum.SelectedItem != null)
+            {
+                string identity = comboSpectrum.SelectedItem.ToString();
+                for (int idx = 0; idx < spectra.Count; idx++)
+                {
+                    if (Equals(identity, spectra[idx].Identity))
+                    {
+                        return idx;
+                    }
+                }
+            }
+
+            return 0;
+        }
+
         public void UpdateUI()
         {
             // Only worry about updates, if the graph is visible
@@ -208,12 +291,22 @@ namespace pwiz.Skyline.Controls.Graphs
                 TransitionDocNode transition = (nodeTranTree == null ? null : nodeTranTree.DocNode);
                 try
                 {
-                    SpectrumPeaksInfo spectrumInfo;
-                    IsotopeLabelType typeInfo;
+                    // Try to load a list of spectra matching the criteria for
+                    // the current node group.
+                    IList<SpectrumInfo> spectra;
                     if (libraries.HasLibraries && libraries.IsLoaded &&
-                        settings.TryLoadSpectrum(group.Peptide.Sequence, group.PrecursorCharge, mods,
-                                                 out typeInfo, out spectrumInfo))
+                        settings.TryLoadSpectra(group.Peptide.Sequence, group.PrecursorCharge, 
+                                                    mods, out spectra))
                     {
+                        if (NodeGroupChanged(nodeGroup))
+                        {   
+                            UpdateToolbar(spectra);
+                            _nodeGroup = nodeGroup;
+                        }
+
+                        int selectedIndex = GetSelectedSpectrumIndex(spectra);
+                        SpectrumPeaksInfo spectrumInfo = spectra[selectedIndex].SpectrumPeaksInfo;
+                        IsotopeLabelType typeInfo = spectra[selectedIndex].LabelType;
                         var types = _stateProvider.ShowIonTypes;
                         var charges = _stateProvider.ShowIonCharges;
                         var rankTypes = settings.TransitionSettings.Filter.IonTypes;
@@ -242,7 +335,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                                           rankCharges,
                                                                           rankTypes);
 
-                        GraphItem = new SpectrumGraphItem(nodeGroup, transition, spectrumInfoR)
+                        GraphItem = new SpectrumGraphItem(nodeGroup, transition, spectrumInfoR, spectra[selectedIndex].LibName)
                                             {
                                                 ShowTypes = types,
                                                 ShowCharges = charges,
@@ -265,7 +358,11 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             // Show unavailable message, if no spectrum loaded
             if (!available)
+            {
+                UpdateToolbar(null);
+                _nodeGroup = null;
                 AddGraphItem(graphPane, new UnavailableMSGraphItem());
+            }
         }
 
         public void LockYAxis(bool lockY)
@@ -301,7 +398,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender,
-                                                     ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
+            ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
             _stateProvider.BuildSpectrumMenu(sender, menuStrip);
         }
@@ -319,6 +416,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     _documentContainer.FocusDocument();
                     break;
             }
+        }
+
+        private void comboSpectrum_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateUI();
         }
     }
 }

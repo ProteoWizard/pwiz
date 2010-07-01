@@ -780,8 +780,13 @@ namespace pwiz.Skyline.Model.DocSettings
         public ExplicitMod(int indexAA, StaticMod modification)
         {
             IndexAA = indexAA;
-            // Explicit should only be used in the settings context
-            Debug.Assert(!modification.IsExplicit);
+            // In the document context, all static non-variable mods must have the explicit
+            // flag off to behave correctly for equality checks.  Only in the
+            // settings context is the explicit flag necessary to destinguish
+            // between the global implicit modifications and the explicit modifications
+            // which do not apply to everything.
+            if (modification.IsExplicit && !modification.IsVariable)
+                modification = modification.ChangeExplicit(false);
             Modification = modification;
         }
 

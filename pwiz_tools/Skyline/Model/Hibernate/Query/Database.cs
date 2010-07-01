@@ -290,7 +290,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 Protein = dbProtein,
                 Sequence = peptide.Sequence,
                 BeginPos = peptide.Begin,
-                EndPos = peptide.End,
+                // Convert from a non-inclusive end to an inclusive end
+                EndPos = (peptide.End.HasValue ? peptide.End.Value - 1 : (int?) null),
                 Note = nodePeptide.Note,
                 AverageMeasuredRetentionTime = nodePeptide.AverageMeasuredRetentionTime,
             };

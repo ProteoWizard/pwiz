@@ -1339,6 +1339,28 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
+        /// <summary>
+        /// Loads all the spectra found in all the loaded libraries with the
+        /// given LibKey and IsotopeLabelType.
+        /// </summary>
+        /// <param name="key"> The LibKey to match on. </param>
+        /// <param name="labelType"> The IsotopeLabelType to match on. </param>
+        /// <param name="spectra"> List to which any matching spectra are added. </param>
+        public void AddSpectra(LibKey key, IsotopeLabelType labelType, 
+            ref IList<SpectrumInfo> spectra)
+        {
+            Debug.Assert(IsLoaded);
+
+            foreach (Library lib in _libraries)
+            {
+                SpectrumPeaksInfo spectrum;
+                if (lib != null && lib.TryLoadSpectrum(key, out spectrum))
+                {
+                    spectra.Add(new SpectrumInfo(spectrum, labelType, lib.Name));
+                }
+            }
+        }
+
         #region Property change methods
 
         public PeptideLibraries ChangePick(PeptidePick prop)
