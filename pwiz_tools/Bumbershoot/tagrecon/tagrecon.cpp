@@ -1908,6 +1908,7 @@ namespace freicore
 			// Read the protein database 
 			try
 			{
+                proteins = proteinStore( g_rtConfig->DecoyPrefix );
                 proteins.readFASTA( g_dbFilename );
 			} catch( exception& e )
 			{

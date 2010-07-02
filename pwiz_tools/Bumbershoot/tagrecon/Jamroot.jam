@@ -179,10 +179,10 @@ echo $(application-name) $(version-tag:J=.) $(SVNREVDATE:J=) ;
 
 
 path-constant EXPAT_SOURCE : $(expat_src) ;
-path-constant BOOST_SOURCE : "freicore/libraries/boost_1_39_0" ;
+path-constant BOOST_SOURCE : "freicore/libraries/boost_1_43_0" ;
 
 using expat : 2.0 : $(EXPAT_SOURCE) ;
-using ext-boost : 1.39.0 : $(BOOST_SOURCE) ;
+using ext-boost : 1.43.0 : $(BOOST_SOURCE) ;
 
 
 rule install-location ( properties * )
@@ -318,15 +318,15 @@ bcp.copy-boost-dependencies copy_boost_subset
     $(ROOT_PATH)//$(application-name:L)
 
   : # requirements
-    <location>$(BOOST_SUBSET_PATH)/boost_1_39_0
+    <location>$(BOOST_SUBSET_PATH)/boost_1_43_0
   ;
 
 
-tar.create boost_1_39_0.tar.bz2
+tar.create boost_1_43_0.tar.bz2
   : # sources
 
       path-anchor:$(BOOST_SUBSET_PATH)
-      $(BOOST_SUBSET_PATH)/boost_1_39_0
+      $(BOOST_SUBSET_PATH)/boost_1_43_0
 
   : # requirements
     <location>$(BOOST_SUBSET_PATH)/freicore/libraries
@@ -391,7 +391,7 @@ tar.create $(application-name:L)-src.tar.bz2
   : # requirements
     <name>$(application-name:L)-src-$(version-tag:J=_).tar.bz2
     <location>$(BUILD_PATH)
-    <dependency>boost_1_39_0.tar.bz2
+    <dependency>boost_1_43_0.tar.bz2
   ;
 
 } # if SUBSET

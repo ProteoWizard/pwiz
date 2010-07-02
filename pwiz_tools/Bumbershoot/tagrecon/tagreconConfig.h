@@ -36,6 +36,7 @@ using namespace pwiz;
     COMMON_RTCONFIG SPECTRUM_RTCONFIG SEQUENCE_RTCONFIG MULTITHREAD_RTCONFIG \
     RTCONFIG_VARIABLE( string,			OutputSuffix,				""				) \
     RTCONFIG_VARIABLE( string,          ProteinDatabase,            ""              ) \
+    RTCONFIG_VARIABLE( string,          DecoyPrefix,                "rev_"          ) \
     RTCONFIG_VARIABLE( string,          UnimodXML,		            "unimod.xml"    ) \
     RTCONFIG_VARIABLE( string,          Blosum,						"blosum62.fas"  ) \
     RTCONFIG_VARIABLE( string,          FragmentationRule,          "cid"           ) \
