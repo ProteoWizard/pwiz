@@ -36,6 +36,7 @@ using namespace pwiz::math;
 	COMMON_RTCONFIG SPECTRUM_RTCONFIG SEQUENCE_RTCONFIG MULTITHREAD_RTCONFIG \
 	RTCONFIG_VARIABLE( string,			OutputSuffix,				""				) \
     RTCONFIG_VARIABLE( string,          ProteinDatabase,            ""              ) \
+    RTCONFIG_VARIABLE( string,          DecoyPrefix,                "rev_"          ) \
     RTCONFIG_VARIABLE( string,          FragmentationRule,          "cid"           ) \
     RTCONFIG_VARIABLE( bool,            FragmentationAutoRule,      true            ) \
 	RTCONFIG_VARIABLE( int,				MaxResults,					5				) \
@@ -291,6 +292,7 @@ namespace myrimatch
 				minMzFidelityClassCount = NumMzFidelityClasses;
 			}
 			
+            maxChargeStateFromSpectra = 0;
 			maxFragmentChargeState = ( MaxFragmentChargeState > 0 ? MaxFragmentChargeState+1 : NumChargeStates );
 			
 			vector<double> insideProbs;

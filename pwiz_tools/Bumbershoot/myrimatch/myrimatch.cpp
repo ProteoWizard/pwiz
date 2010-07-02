@@ -1132,6 +1132,7 @@ namespace myrimatch
 			Timer readTime(true);
 			try
 			{
+                proteins = proteinStore( g_rtConfig->DecoyPrefix );
                 proteins.readFASTA( g_dbFilename );
 			} catch( std::exception& e )
 			{
