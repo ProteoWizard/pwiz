@@ -87,18 +87,17 @@ namespace IDPicker.DataModel
                 .SetProperty("hibernate.cache.use_query_cache", "true")
                 .SetProperty("proxyfactory.factory_class", typeof(NHibernate.ByteCode.Castle.ProxyFactoryFactory).AssemblyQualifiedName)
                 //.SetProperty("adonet.batch_size", batchSize.ToString())
-                .SetProperty("connection.connection_string", new SQLiteConnectionStringBuilder
-                {
-                    DataSource = path
-                }.ToString())
-                .SetProperty("connection.driver_class",
-                typeof(NHibernate.Driver.SQLite20Driver).AssemblyQualifiedName);
+                .SetProperty("connection.connection_string", String.Format("Data Source={0};Version=3;Pooling=True;Max Pool Size=1;", path))
+                .SetProperty("connection.driver_class", typeof(NHibernate.Driver.SQLite20Driver).AssemblyQualifiedName)
+                .SetProperty("connection.provider", typeof(NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName)
+                .SetProperty("connection.release_mode", "on_close")
+                ;
+
             if (createSchema)
             {
                 configuration.SetProperty("hbm2ddl.auto", "create");
             }
-            configuration.SetProperty("connection.provider",
-                typeof(NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName);
+
             ConfigureMappings(configuration);
             ISessionFactory sessionFactory = configuration.BuildSessionFactory();
             return sessionFactory;
