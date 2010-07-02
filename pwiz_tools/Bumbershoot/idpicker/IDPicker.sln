@@ -16,7 +16,18 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSGraph", "freicore\pwiz_sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "freicore\pwiz_src\pwiz_tools\Shared\Common\Common.csproj", "{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{30DD84D7-0E18-45C8-8594-2656F94C468E}"
+	ProjectSection(SolutionItems) = preProject
+		IDPicker.vsmdi = IDPicker.vsmdi
+		LocalTestRun.testrunconfig = LocalTestRun.testrunconfig
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestModel", "Model\TestModel.csproj", "{594E7E1C-DDA7-4056-9536-379379925DBA}"
+EndProject
 Global
+	GlobalSection(TestCaseManagementSettings) = postSolution
+		CategoryFile = IDPicker.vsmdi
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
 		Release|x86 = Release|x86
@@ -46,6 +57,10 @@ Global
 		{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}.Debug|x86.Build.0 = Debug|x86
 		{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}.Release|x86.ActiveCfg = Release|x86
 		{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}.Release|x86.Build.0 = Release|x86
+		{594E7E1C-DDA7-4056-9536-379379925DBA}.Debug|x86.ActiveCfg = Debug|x86
+		{594E7E1C-DDA7-4056-9536-379379925DBA}.Debug|x86.Build.0 = Debug|x86
+		{594E7E1C-DDA7-4056-9536-379379925DBA}.Release|x86.ActiveCfg = Release|x86
+		{594E7E1C-DDA7-4056-9536-379379925DBA}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

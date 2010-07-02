@@ -33,6 +33,10 @@ namespace IDPicker.DataModel
     {
         public virtual string Name { get; set; }
         public virtual ISet<SpectrumSourceGroupLink> Sources { get; set; }
+
+        #region Default constructor
+        public SpectrumSourceGroup () { Sources = new SortedSet<SpectrumSourceGroupLink>(); }
+        #endregion
     }
 
     public class SpectrumSource : Entity<SpectrumSource>
@@ -52,6 +56,10 @@ namespace IDPicker.DataModel
 
         public virtual string MetadataPath { get; protected set; }
         public virtual pwiz.CLI.msdata.MSData Metadata { get { return new pwiz.CLI.msdata.MSDataFile(MetadataPath); } }
+
+        #region Default constructor
+        public SpectrumSource () { Groups = new SortedSet<SpectrumSourceGroupLink>(); }
+        #endregion
     }
 
     // HACK: explicit many-to-many linker table is needed for
@@ -166,7 +174,12 @@ namespace IDPicker.DataModel
     {
         public virtual Peptide Peptide { get; set; }
         public virtual Protein Protein { get; set; }
+
+        /// <summary>
+        /// The zero-based offset in the protein where this peptide instance occurs.
+        /// </summary>
         public virtual int Offset { get; set; }
+
         public virtual int Length { get; set; }
         public virtual bool NTerminusIsSpecific { get; set; }
         public virtual bool CTerminusIsSpecific { get; set; }
@@ -329,7 +342,7 @@ namespace IDPicker.DataModel
 
         public void NullSafeSet (System.Data.IDbCommand cmd, object value, int index)
         {
-            throw new NotImplementedException();
+            // TODO: how should this work?
         }
 
         public object Replace (object original, object target, object owner)
@@ -354,6 +367,8 @@ namespace IDPicker.DataModel
 
         bool NHibernate.UserTypes.IUserType.Equals (object x, object y)
         {
+            if (x == null && y == null)
+                return true;
             throw new NotImplementedException();
         }
 
@@ -573,13 +588,6 @@ namespace IDPicker.DataModel
         {
             return childGroup.IsChildOf(parentGroup) &&
                    childGroup.GetGroupDepth() - 1 == parentGroup.GetGroupDepth();
-        }
-
-        public static SpectrumSourceGroup GetImmediateParentGroup (this SpectrumSource source)
-        {
-            return (from g in source.Groups
-                    where g.Group.Name.Length == source.Groups.Max(o => o.Group.Name.Length)
-                    select g).First().Group;
         }
 
         public static string ToProteinIdList (this IList<PeptideInstance> instances)

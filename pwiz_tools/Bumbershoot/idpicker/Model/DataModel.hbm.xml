@@ -84,10 +84,10 @@
 		</component>
 		<property name="Type"/>
 		<property name="StartTime"/>
-		<bag name="Parameters" inverse="true" batch-size="50">
+		<set name="Parameters" inverse="true" batch-size="50">
 			<key column="Analysis"/>
 			<one-to-many class="AnalysisParameter"/>
-		</bag>
+		</set>
 		<bag name="Matches" inverse="true" batch-size="500" lazy="true">
 			<key column="Analysis"/>
 			<one-to-many class="PeptideSpectrumMatch"/>
@@ -103,8 +103,8 @@
 			<key column="Protein"/>
 			<one-to-many class="PeptideInstance"/>
 		</bag>
-		<property name="Cluster" access="nosetter.camelcase" formula="(SELECT pc.ClusterId FROM ProteinClusters pc WHERE Id=pc.ProteinId)"/>
-		<property name="ProteinGroup" access="nosetter.camelcase" formula="(SELECT pg.ProteinGroup FROM ProteinGroups pg WHERE Id=pg.ProteinId)"/>
+		<property name="Cluster" access="nosetter.camelcase"/>
+		<property name="ProteinGroup" access="nosetter.camelcase"/>
 		<property name="Length" access="nosetter.camelcase" formula="(SELECT LENGTH(Sequence))"/>
 	</class>
 

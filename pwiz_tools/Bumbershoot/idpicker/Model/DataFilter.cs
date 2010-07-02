@@ -27,7 +27,7 @@ using System.Text;
 using System.Windows.Forms;
 using IDPicker.DataModel;
 
-namespace IDPicker
+namespace IDPicker.DataModel
 {
     public class DistinctPeptideFormat
     {
@@ -245,7 +245,7 @@ namespace IDPicker
                               "FROM PeptideSpectrumMatches psm " +
                               "JOIN PeptideInstances pi ON psm.Peptide = pi.Peptide " +
                               "JOIN Proteins pro ON pi.Protein = pro.Id " +
-                              "WHERE {0} >= psm.QValue " +
+                              "WHERE {0} >= psm.QValue AND psm.Rank = 1 " +
                               "GROUP BY pi.Protein " +
                               "HAVING {1} <= COUNT(DISTINCT psm.Peptide) AND " +
                               "       {2} <= COUNT(DISTINCT psm.Spectrum)",
@@ -271,9 +271,10 @@ namespace IDPicker
 
             session.CreateSQLQuery("CREATE TABLE FilteredPeptideSpectrumMatches (Id INTEGER PRIMARY KEY, Spectrum INT, Analysis INT, Peptide INT, QValue NUMERIC, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC, MonoisotopicMassError NUMERIC, MolecularWeightError NUMERIC, Rank INT, Charge INT);" +
                                    "INSERT INTO FilteredPeptideSpectrumMatches SELECT psm.* " +
-                                   "FROM PeptideSpectrumMatches psm " +
-                                   "JOIN FilteredPeptideInstances pi ON psm.Peptide = pi.Peptide " +
-                                   "JOIN FilteredProteins pro ON pi.Protein = pro.Id " +
+                                   "FROM FilteredProteins pro " +
+                                   "JOIN FilteredPeptideInstances pi ON pro.Id = pi.Protein " +
+                                   "JOIN PeptideSpectrumMatches psm ON pi.Peptide = psm.Peptide " +
+                                   "WHERE " + MaximumQValue.ToString() + " >= psm.QValue AND psm.Rank = 1 " +
                                    "GROUP BY psm.Id;" +
                                    "CREATE INDEX FilteredPeptideSpectrumMatch_SpectrumIndex ON FilteredPeptideSpectrumMatches (Spectrum);" +
                                    "CREATE INDEX FilteredPeptideSpectrumMatch_PeptideIndex ON FilteredPeptideSpectrumMatches (Peptide);" +
@@ -612,6 +613,11 @@ namespace IDPicker
                 e.SuppressKeyPress = true;
         }
 
+        /// <summary>
+        /// Calculates (by a greedy algorithm) how many additional spectra each protein group explains.
+        /// </summary>
+        /// <param name="queryRows"></param>
+        /// <returns></returns>
         Map<long, long> calculateAdditionalPeptides (NHibernate.ISession session)
         {
             var psmSetByProteinId = new Map<long, Set<long>>();
