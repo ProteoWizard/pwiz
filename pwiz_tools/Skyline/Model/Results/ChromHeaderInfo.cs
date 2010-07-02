@@ -904,6 +904,9 @@ namespace pwiz.Skyline.Model.Results
             var intensitiesNew = new float[Intensities.Length];
             foreach (var info in listInfo)
             {
+                if (info == null)
+                    continue;
+
                 var intensitiesAdd = info.Intensities;
                 for (int i = 0; i < intensitiesAdd.Length; i++)
                     intensitiesNew[i] += intensitiesAdd[i];
