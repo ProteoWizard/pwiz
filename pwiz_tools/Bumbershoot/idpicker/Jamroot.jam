@@ -30,9 +30,6 @@
 #
 #   build                   Build Bumbershoot libraries and applications
 #   =====
-#
-#   --expat-src=<DIR>       Find Expat 2.0+ source distribution here.
-#                           Default: "ext/src/expat*"
 
 
 .os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
@@ -63,13 +60,13 @@ import mpi ;
 
 project bumbershoot
 	: requirements
-	    <include>freicore/pwiz_src
-	    <include>freicore/libraries/boost_aux
+	  <include>freicore/pwiz_src
+	  <include>freicore/libraries/boost_aux
+	  <include>freicore/libraries/boost_$(BOOST_VERSION_PATH)
 
       <toolset>gcc,<link>shared:<runtime-link>shared
       
-      # using pwiz_wifffile (compiled with /clr) requires the shared runtime,
-      # regardless of how pwiz_wifffile is linked
+      # any module which links with .NET (either dynamically or statically) must use the shared runtime
       <toolset>msvc:<runtime-link>shared
 
       # special msvc hacks
@@ -362,6 +359,15 @@ rule seems-dependency ( properties * )
     return <dependency>$(PWIZ_SOURCE)/pwiz_tools/SeeMS//seems.exe/<location>$(location) ;
 }
 
+rule qonverter-dependency ( properties * )
+{
+    local variants = [ feature.get-values <variant> : $(properties) ] ;
+    local location = <location>$(BUILD_PATH)/obj/$(variants[1]) ;
+    return <assembly>Qonverter//Qonverter
+           <dependency>Qonverter//Qonverter/$(location) ;
+           #<dependency>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli.xml/$(location) ;
+}
+
 make IDPicker.exe
     : # sources
         [ path.glob-tree $(ROOT_PATH) : *.cs ]
@@ -371,6 +377,7 @@ make IDPicker.exe
         <conditional>@build-location
         <conditional>@seems-dependency
         <conditional>@pwiz-dependency
+        <conditional>@qonverter-dependency
     ;
 
 rule dotNET-dependencies ( properties * )
