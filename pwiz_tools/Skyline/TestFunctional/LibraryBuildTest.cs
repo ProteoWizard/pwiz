@@ -66,8 +66,10 @@ namespace pwiz.SkylineTestFunctional
             BuildLibraryError("zero_charge.pep.XML");
             BuildLibraryError("truncated.pep.XML");
             BuildLibraryError("no_such_file.pep.XML", "Failed to open");
-            BuildLibraryError("bad_mzxml.pep.XML", "<index> not found");
             BuildLibraryError("missing_mzxml.pep.XML", "Could not find spectrum file");
+            // Barbara added code to ProteoWizard to rebuild a missing or invalid mzXML index
+            // BuildLibraryError("bad_mzxml.pep.XML", "<index> not found");
+            BuildLibraryValid(TestFilesDir.GetTestPath("library_errors"), new[] { "bad_mzxml.pep.XML" }, false, false, 1);
 
             // Test successful builds
             string libraryBaseName = _libraryName;
