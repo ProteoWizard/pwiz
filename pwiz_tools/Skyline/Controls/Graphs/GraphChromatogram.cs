@@ -513,6 +513,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var graphTrans = nodeGroup.Children;
             int numTrans = graphTrans.Count;
             int numSteps = 0;
+            bool allowEmpty = false;
 
             if (DisplayType == DisplayTypeChrom.single &&
                 nodeTranSelected != null)
@@ -526,6 +527,18 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     arrayChromInfo = chromGroupInfo.GetAllTransitionInfo((float)nodeTranSelected.Mz,
                                                                          mzMatchTolerance, chromatograms.OptimizationFunction);
+
+                    if (chromatograms.OptimizationFunction != null)
+                    {
+                        // Make sure the number of steps matches what will show up in the summary
+                        // graphs, or the colors won't match up.
+                        int numStepsExpected = chromatograms.OptimizationFunction.StepCount * 2 + 1;
+                        if (arrayChromInfo.Length != numStepsExpected)
+                        {
+                            arrayChromInfo = ResizeArrayChromInfo(arrayChromInfo, numStepsExpected);
+                            allowEmpty = true;
+                        }
+                    }
 
                     graphTrans = new DocNode[arrayChromInfo.Length];
                     for (int i = 0; i < arrayChromInfo.Length; i++)
@@ -652,7 +665,7 @@ namespace pwiz.Skyline.Controls.Graphs
             for (int i = 0; i < numTrans; i++)
             {
                 var info = arrayChromInfo[i];
-                if (info == null)
+                if (info == null && !allowEmpty)
                     continue;
 
                 var nodeTran = (TransitionDocNode) graphTrans[i];
@@ -716,7 +729,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // of this transition group.
             var listChromInfoSets = new List<ChromatogramInfo[]>();
             var listTranisitionChromInfoSets = new List<TransitionChromInfo[]>();
-            int totalOptCount = 0;
+            int totalOptCount = chromatograms.OptimizationFunction.StepCount*2 + 1;
             foreach (TransitionDocNode nodeTran in nodeGroup.Children)
             {
                 var infos = chromGroupInfo.GetAllTransitionInfo((float)nodeTran.Mz, mzMatchTolerance,
@@ -724,22 +737,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (infos.Length == 0)
                     continue;
 
-                // If the largest size is larger than currently seen
-                if (totalOptCount < infos.Length)
-                {
-                    // Reallocate and copy previously seen arrarys to the new size.
-                    // This data is probably not very good, or possibly invalid, but
-                    // better to show something, than just a chryptic error message.
-                    totalOptCount = infos.Length;
-                    for (int i = 0; i < listTranisitionChromInfoSets.Count; i++)
-                    {
-                        var transitionChromInfosNew = new TransitionChromInfo[totalOptCount];
-                        var transitionChromInfosOld = listTranisitionChromInfoSets[i];
-                        Array.Copy(transitionChromInfosOld, 0, transitionChromInfosNew,
-                            totalOptCount/2 - transitionChromInfosOld.Length/2, transitionChromInfosOld.Length);
-                        listTranisitionChromInfoSets[i] = transitionChromInfosNew;
-                    }
-                }
+                // Make sure the total number of chrom info entries match the expected
+                // no matter what, so that chromatogram colors will match up with peak
+                // area charts.
+                if (infos.Length != totalOptCount)
+                    infos = ResizeArrayChromInfo(infos, totalOptCount);
 
                 listChromInfoSets.Add(infos);
                 var transitionChromInfos = new TransitionChromInfo[totalOptCount];
@@ -836,8 +838,6 @@ namespace pwiz.Skyline.Controls.Graphs
             for (int i = 0; i < listGraphData.Count; i++)
             {
                 var graphData = listGraphData[i];
-                if (graphData.InfoPrimary == null)
-                    continue;
 
                 int step = i - totalSteps;
                 int width = lineWidth;
@@ -874,6 +874,24 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        private static ChromatogramInfo[] ResizeArrayChromInfo(ChromatogramInfo[] arrayChromInfo, int numStepsExpected)
+        {
+            int numStepsFound = arrayChromInfo.Length;
+            var arrayChromInfoNew = new ChromatogramInfo[numStepsExpected];
+            if (numStepsFound < numStepsExpected)
+            {
+                Array.Copy(arrayChromInfo, 0,
+                           arrayChromInfoNew, (numStepsExpected - numStepsFound) / 2, numStepsFound);
+            }
+            else
+            {
+                Array.Copy(arrayChromInfo, (numStepsFound - numStepsExpected) / 2,
+                           arrayChromInfoNew, 0, numStepsExpected);
+            }
+            arrayChromInfo = arrayChromInfoNew;
+            return arrayChromInfo;
+        }
+
         private sealed class OptimizationGraphData
         {
             public OptimizationGraphData(int numPeaks)
@@ -904,20 +922,23 @@ namespace pwiz.Skyline.Controls.Graphs
                     }                    
                 }
 
-                // Sum peak heights.  This may not be strictly valid, but should
-                // work as a good approximation for deciding which peaks to label.
-                int i = 0;
-                foreach (var peak in chromInfo.Peaks)
+                if (chromInfo != null)
                 {
-                    // Exclude any peaks between the boundaries of the chosen peak.
-                    if (transitionChromInfo != null &&
-                        transitionChromInfo.StartRetentionTime < peak.RetentionTime &&
-                        peak.RetentionTime < transitionChromInfo.EndRetentionTime)
-                        continue;
-                    if (peak.IsForcedIntegration)
-                        continue;
+                    // Sum peak heights.  This may not be strictly valid, but should
+                    // work as a good approximation for deciding which peaks to label.
+                    int i = 0;
+                    foreach (var peak in chromInfo.Peaks)
+                    {
+                        // Exclude any peaks between the boundaries of the chosen peak.
+                        if (transitionChromInfo != null &&
+                            transitionChromInfo.StartRetentionTime < peak.RetentionTime &&
+                            peak.RetentionTime < transitionChromInfo.EndRetentionTime)
+                            continue;
+                        if (peak.IsForcedIntegration)
+                            continue;
 
-                    PeakHeights[i++] += peak.Height;
+                        PeakHeights[i++] += peak.Height;
+                    }
                 }
             }
         }

@@ -89,36 +89,44 @@ namespace pwiz.Skyline.Controls.Graphs
             _fontSpec = CreateFontSpec(color, fontSize);
             _width = width;
 
-            // Cache values early to avoid accessing slow enumerators
-            // which show up under profiling.
-            Chromatogram.AsArrays(out _times, out _intensities);
-
             _libraryDotProducts = libraryDotProducts;
             _bestProduct = bestProduct;
 
             _arrayLabelIndexes = new int[annotatePeaks.Length];
 
-            // Add peak times to hash set for labeling
-            int iLastStart = 0;
-            for (int i = 0; i < chromatogram.NumPeaks; i++)
+            if (chromatogram == null)
             {
-                int maxIndex = -1;
-                if (annotatePeaks[i])
-                {
-                    ChromPeak peak = chromatogram.GetPeak(i);
-                    if (!peak.IsForcedIntegration)
-                        maxIndex = GetMaxIndex(peak.StartTime, peak.EndTime, ref iLastStart);
-                }
-                _arrayLabelIndexes[i] = maxIndex;
-                if (maxIndex != -1 && !_annotatedTimes.ContainsKey(_times[maxIndex]))
-                    _annotatedTimes.Add(_times[maxIndex], i);
+                _times = new double[0];
+                _intensities = new double[0];
             }
-
-            // Calculate best peak index
-            if (tranPeakInfo != null)
+            else
             {
-                iLastStart = 0;
-                _bestPeakTimeIndex = GetMaxIndex(tranPeakInfo.StartRetentionTime, tranPeakInfo.EndRetentionTime, ref iLastStart);
+                // Cache values early to avoid accessing slow enumerators
+                // which show up under profiling.
+                Chromatogram.AsArrays(out _times, out _intensities);
+
+                // Add peak times to hash set for labeling
+                int iLastStart = 0;
+                for (int i = 0; i < chromatogram.NumPeaks; i++)
+                {
+                    int maxIndex = -1;
+                    if (annotatePeaks[i])
+                    {
+                        ChromPeak peak = chromatogram.GetPeak(i);
+                        if (!peak.IsForcedIntegration)
+                            maxIndex = GetMaxIndex(peak.StartTime, peak.EndTime, ref iLastStart);
+                    }
+                    _arrayLabelIndexes[i] = maxIndex;
+                    if (maxIndex != -1 && !_annotatedTimes.ContainsKey(_times[maxIndex]))
+                        _annotatedTimes.Add(_times[maxIndex], i);
+                }
+
+                // Calculate best peak index
+                if (tranPeakInfo != null)
+                {
+                    iLastStart = 0;
+                    _bestPeakTimeIndex = GetMaxIndex(tranPeakInfo.StartRetentionTime, tranPeakInfo.EndRetentionTime, ref iLastStart);
+                }
             }
         }
 
@@ -210,6 +218,9 @@ namespace pwiz.Skyline.Controls.Graphs
         public override void AddAnnotations(MSGraphPane graphPane, Graphics g,
                                             MSPointList pointList, GraphObjList annotations)
         {
+            if (Chromatogram == null)
+                return;
+
             // Draw retention time indicator, if set
             if (RetentionPrediction.HasValue)
             {
