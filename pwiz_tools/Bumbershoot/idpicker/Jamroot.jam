@@ -136,12 +136,26 @@ import svnrev sequence ;
 constant MAJOR : 3 ;
 constant MINOR : 0 ;
 
-# rule for generating a C# AssemblyInfo file
-rule generate-AssemblyInfo.cs ( filepath ? : sources-with-rcs-keywords + : warn-on-missing ? : print-revision-info ? :
-                                AssemblyTitle AssemblyDescription AssemblyCompany AssemblyProduct )
+# rule for generating a C++/CLI or C# AssemblyInfo file
+rule generate-AssemblyInfo ( filepath ? : sources-with-rcs-keywords + : warn-on-missing ? : print-revision-info ? : cpp-cli ? :
+                             AssemblyTitle AssemblyDescription AssemblyCompany AssemblyProduct )
 {
-    # default filepath is "Properties/AssemblyInfo.cs" in the current directory
-    filepath ?= Properties/AssemblyInfo.cs ;
+    local extension = "cs" ;
+    local using-namespace = "using" ;
+    local namespace-delimiter = "." ;
+    local attribute-suffix = ;
+    local attribute-line-terminator = ;
+    if $(cpp-cli)
+    {
+        extension = "cpp" ;
+        using-namespace = "using namespace" ;
+        namespace-delimiter = "::" ;
+        attribute-suffix = "Attribute" ;
+        attribute-line-terminator = ";" ;
+    }
+
+    # default filepath is "Properties/AssemblyInfo" in the current directory
+    filepath ?= Properties/AssemblyInfo.$(extension) ;
 
     if $(print-revision-info) { echo Generating/updating version in $(filepath) ; }
 
@@ -178,17 +192,17 @@ rule generate-AssemblyInfo.cs ( filepath ? : sources-with-rcs-keywords + : warn-
 // $Date: $(revision-info[2])-$(revision-info[3])-$(revision-info[4]) $
 //
 
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+$(using-namespace) System$(namespace-delimiter)Reflection;
+$(using-namespace) System$(namespace-delimiter)Runtime$(namespace-delimiter)CompilerServices;
+$(using-namespace) System$(namespace-delimiter)Runtime$(namespace-delimiter)InteropServices;
 
-[assembly: AssemblyTitle(\"$(AssemblyTitle)\")]
-[assembly: AssemblyDescription(\"$(AssemblyDescription)\")]
-[assembly: AssemblyCompany(\"$(AssemblyCompany)\")]
-[assembly: AssemblyProduct(\"$(AssemblyProduct)\")]
-[assembly: AssemblyCopyright(\"$(AssemblyCopyright)\")]
-[assembly: AssemblyVersion(\"$(MAJOR).$(MINOR).$(revision-info[1])\")]
-[assembly: AssemblyFileVersion(\"$(MAJOR).$(MINOR).$(revision-info[1])\")]
+[assembly: AssemblyTitle$(attribute-suffix)(\"$(AssemblyTitle)\")]$(attribute-line-terminator)
+[assembly: AssemblyDescription$(attribute-suffix)(\"$(AssemblyDescription)\")]$(attribute-line-terminator)
+[assembly: AssemblyCompany$(attribute-suffix)(\"$(AssemblyCompany)\")]$(attribute-line-terminator)
+[assembly: AssemblyProduct$(attribute-suffix)(\"$(AssemblyProduct)\")]$(attribute-line-terminator)
+[assembly: AssemblyCopyright$(attribute-suffix)(\"$(AssemblyCopyright)\")]$(attribute-line-terminator)
+[assembly: AssemblyVersion$(attribute-suffix)(\"$(MAJOR).$(MINOR).$(revision-info[1]).*\")]$(attribute-line-terminator)
+[assembly: AssemblyFileVersion$(attribute-suffix)(\"$(MAJOR).$(MINOR).$(revision-info[1]).*\")]$(attribute-line-terminator)
 " ;
 
         header-text = @($(filepath):E=$(header-text)) ;
@@ -197,6 +211,21 @@ using System.Runtime.InteropServices;
     return $(revision-info) ;
 }
 
+# rule for generating a C# AssemblyInfo file
+rule generate-AssemblyInfo.cs ( filepath ? : sources-with-rcs-keywords + : warn-on-missing ? : print-revision-info ? :
+                                AssemblyTitle AssemblyDescription AssemblyCompany AssemblyProduct )
+{
+    generate-AssemblyInfo $(filepath) : $(sources-with-rcs-keywords) : $(warn-on-missing) : $(print-revision-info) : :
+                          "$(AssemblyTitle)" "$(AssemblyDescription)" "$(AssemblyCompany)" "$(AssemblyProduct)" ;
+}
+
+# rule for generating a C++/CLI AssemblyInfo file
+rule generate-AssemblyInfo.cpp ( filepath ? : sources-with-rcs-keywords + : warn-on-missing ? : print-revision-info ? :
+                                 AssemblyTitle AssemblyDescription AssemblyCompany AssemblyProduct )
+{
+    generate-AssemblyInfo $(filepath) : $(sources-with-rcs-keywords) : $(warn-on-missing) : $(print-revision-info) : cpp-cli :
+                          "$(AssemblyTitle)" "$(AssemblyDescription)" "$(AssemblyCompany)" "$(AssemblyProduct)" ;
+}
 
 constant COMPANY_AND_PRODUCT : "Vanderbilt University" "IDPicker" ;
 
@@ -231,10 +260,8 @@ if $(revision-info[5]) > 0
 echo $(application-name) $(version-tag:J=.) $(SVNREVDATE:J=) ;
 
 
-path-constant EXPAT_SOURCE : $(expat_src) ;
 path-constant BOOST_SOURCE : "freicore/libraries/boost_$(BOOST_VERSION_PATH)" ;
 
-using expat : 2.0 : $(EXPAT_SOURCE) ;
 using ext-boost : $(BOOST_VERSION) : $(BOOST_SOURCE) ;
 
 
@@ -254,6 +281,7 @@ rule install-vendor-api-dependencies ( properties * )
         if [ path.exists $(PWIZ_SOURCE)/pwiz/utility/vendor_api/thermo ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo/$(location) ; }
         if [ path.exists $(PWIZ_SOURCE)/pwiz/utility/vendor_api/Agilent ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz/utility/vendor_api/Agilent//install_pwiz_vendor_api_agilent/$(location) ; }
         if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI//install_pwiz_vendor_api_abi/$(location) ; }
+        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D//install_pwiz_vendor_api_abi_t2d/$(location) ; }
         if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Bruker ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker/$(location) ; }
         if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Waters ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/$(location) ; }
     }

@@ -32,6 +32,8 @@ using DigitalRune.Windows.Docking;
 
 namespace IDPicker.Forms
 {
+    using DataFilter = DataModel.DataFilter;
+
     public partial class ModificationTableForm : DockableForm
     {
         public DataGridView DataGridView { get { return dataGridView; } }

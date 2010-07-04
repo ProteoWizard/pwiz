@@ -214,7 +214,7 @@ namespace IDPicker.Forms
                                       select r as object;
 
                     var childSources = from r in rowsBySource
-                                       where r.SpectrumSource.GetImmediateParentGroup().Id == parentGroup.Id
+                                       where r.SpectrumSource.Group.Id == parentGroup.Id
                                        select r as object;
 
                     return childGroups.Concat(childSources);

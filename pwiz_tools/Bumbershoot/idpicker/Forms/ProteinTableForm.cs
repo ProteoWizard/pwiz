@@ -34,6 +34,8 @@ using BrightIdeasSoftware;
 
 namespace IDPicker.Forms
 {
+    using DataFilter = DataModel.DataFilter;
+
     public partial class ProteinTableForm : DockableForm
     {
         public TreeListView TreeListView { get { return treeListView; } }
