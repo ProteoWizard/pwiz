@@ -38,7 +38,7 @@ import modules path svnrev ;
 
 path-constant THIS_PATH : . ;
 
-generate-AssemblyInfo.cpp $(THIS_PATH)/AssemblyInfo.cpp :
+generate-AssemblyInfo.cpp $(THIS_PATH)\\AssemblyInfo.cpp :
     [ path.glob $(THIS_PATH) : Qonverter.?pp Jamfile.jam ]
     : : : "IDPicker" "Calculates Q values for peptide identifications in target-decoy database searches." $(COMPANY_AND_PRODUCT) ;
 RESCAN ;

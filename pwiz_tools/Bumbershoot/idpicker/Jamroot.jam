@@ -143,8 +143,8 @@ rule generate-AssemblyInfo ( filepath ? : sources-with-rcs-keywords + : warn-on-
     local extension = "cs" ;
     local using-namespace = "using" ;
     local namespace-delimiter = "." ;
-    local attribute-suffix = ;
-    local attribute-line-terminator = ;
+    local attribute-suffix = "" ;
+    local attribute-line-terminator = "" ;
     if $(cpp-cli)
     {
         extension = "cpp" ;
@@ -155,7 +155,7 @@ rule generate-AssemblyInfo ( filepath ? : sources-with-rcs-keywords + : warn-on-
     }
 
     # default filepath is "Properties/AssemblyInfo" in the current directory
-    filepath ?= Properties/AssemblyInfo.$(extension) ;
+    filepath ?= Properties\\AssemblyInfo.$(extension) ;
 
     if $(print-revision-info) { echo Generating/updating version in $(filepath) ; }
 
@@ -201,8 +201,8 @@ $(using-namespace) System$(namespace-delimiter)Runtime$(namespace-delimiter)Inte
 [assembly: AssemblyCompany$(attribute-suffix)(\"$(AssemblyCompany)\")]$(attribute-line-terminator)
 [assembly: AssemblyProduct$(attribute-suffix)(\"$(AssemblyProduct)\")]$(attribute-line-terminator)
 [assembly: AssemblyCopyright$(attribute-suffix)(\"$(AssemblyCopyright)\")]$(attribute-line-terminator)
-[assembly: AssemblyVersion$(attribute-suffix)(\"$(MAJOR).$(MINOR).$(revision-info[1]).*\")]$(attribute-line-terminator)
-[assembly: AssemblyFileVersion$(attribute-suffix)(\"$(MAJOR).$(MINOR).$(revision-info[1]).*\")]$(attribute-line-terminator)
+[assembly: AssemblyVersion$(attribute-suffix)(\"$(MAJOR).$(MINOR).$(revision-info[1])\")]$(attribute-line-terminator)
+[assembly: AssemblyFileVersion$(attribute-suffix)(\"$(MAJOR).$(MINOR).$(revision-info[1])\")]$(attribute-line-terminator)
 " ;
 
         header-text = @($(filepath):E=$(header-text)) ;
@@ -230,7 +230,7 @@ rule generate-AssemblyInfo.cpp ( filepath ? : sources-with-rcs-keywords + : warn
 constant COMPANY_AND_PRODUCT : "Vanderbilt University" "IDPicker" ;
 
 # generate IDPicker version header
-local revision-info = [ generate-AssemblyInfo.cs Properties/AssemblyInfo.cs :
+local revision-info = [ generate-AssemblyInfo.cs Properties\\AssemblyInfo.cs :
     [ path.glob-tree . : *.jam
                          *.?pp *.h
                          *.cs
