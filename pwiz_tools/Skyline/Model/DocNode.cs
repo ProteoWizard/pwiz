@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
@@ -604,24 +605,7 @@ namespace pwiz.Skyline.Model
 
         public DocNodeParent PickChildren(IPickedList picked)
         {
-            // Make sure already chosen nodes are not recreated.  They
-            // may also contain specifically chosen children.
-            Dictionary<Identity, DocNode> dict = new Dictionary<Identity, DocNode>();
-            foreach (DocNode child in Children)
-                dict.Add(child.Id, child);
-
-            List<DocNode> childrenNew = new List<DocNode>();
-            foreach (Identity childId in picked.Chosen)
-            {
-                // If the dictionary of previously existing nodes already
-                // contains this one, then just add it back.  Otherwise,
-                // create a new node.
-                DocNode child;
-                if (!dict.TryGetValue(childId, out child))
-                    child = picked.CreateChildNode(childId);
-                childrenNew.Add(child);
-            }
-            return ChangeChildren(childrenNew).ChangeAutoManageChildren(picked.AutoManageChildren);
+            return ChangeChildren(picked.Chosen.ToArray()).ChangeAutoManageChildren(picked.AutoManageChildren);
         }
 
         public DocNodeParent PickChildren(SrmSettings settings, IdentityPath path, IPickedList picked, bool synchSiblings)
@@ -987,16 +971,8 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// List of <see cref="Identity"/> objects for the chosen children.
         /// </summary>
-        IEnumerable<Identity> Chosen { get; }
+        IEnumerable<DocNode> Chosen { get; }
 
         bool AutoManageChildren { get; }
-
-        /// <summary>
-        /// Creation function used to materialise children, which are not already present,
-        /// for the specified <see cref="Identity"/> objects.
-        /// </summary>
-        /// <param name="childId">An <see cref="Identity"/> for which a node is needed</param>
-        /// <returns>The newly created node to add to the child list</returns>
-        DocNode CreateChildNode(Identity childId);
     }
 }

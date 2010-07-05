@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
@@ -69,19 +70,6 @@ namespace pwiz.Skyline.Controls.SeqNode
             get { return string.Format("{0} {1}s", Text, TransitionGroupTreeNode.TITLE.ToLower()); }
         }
 
-        public bool HasLibInfo
-        {
-            get
-            {
-                foreach (TransitionGroupDocNode tranGroup in DocNode.Children)
-                {
-                    if (tranGroup.HasLibInfo)
-                        return true;
-                }
-                return false;
-            }
-        }
-
         protected override void OnModelChanged()
         {
             int typeImageIndex = TypeImageIndex;
@@ -90,7 +78,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             int peakImageIndex = PeakImageIndex;
             if (peakImageIndex != StateImageIndex)
                 StateImageIndex = peakImageIndex;
-            string label = DocNode + ResultsText;
+            string label = GetLabel(DocNode, ResultsText);
             if (!string.Equals(label, Text))
                 Text = label;
             // Hard to tell what might cause label formatting to change
@@ -102,45 +90,61 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public int TypeImageIndex
         {
-            get
-            {
-                return SelectedImageIndex = (int)(HasLibInfo ?
-                     SequenceTree.ImageId.peptide_lib : SequenceTree.ImageId.peptide);
-            }
+            get { return GetTypeImageIndex(DocNode); }
         }
 
-        public int DisplayResultsIndex
+        public static Image GetTypeImage(PeptideDocNode nodePep, SequenceTree sequenceTree)
         {
-            get { return SequenceTree.GetDisplayResultsIndex(this); }
+            return sequenceTree.ImageList.Images[GetTypeImageIndex(nodePep)];
+        }
+
+        private static int GetTypeImageIndex(PeptideDocNode nodePep)
+        {
+            return (int)(nodePep.HasLibInfo ? SequenceTree.ImageId.peptide_lib :
+                SequenceTree.ImageId.peptide);            
         }
 
         public int PeakImageIndex
         {
-            get
+            get { return GetPeakImageIndex(DocNode, SequenceTree); }
+        }
+
+        public static Image GetPeakImage(PeptideDocNode nodePep, SequenceTree sequenceTree)
+        {
+            int imageIndex = GetPeakImageIndex(nodePep, sequenceTree);
+            return (imageIndex != -1 ? sequenceTree.StateImageList.Images[imageIndex] : null);
+        }
+
+        private static int GetPeakImageIndex(PeptideDocNode nodePep, SequenceTree sequenceTree)
+        {
+            var settings = sequenceTree.Document.Settings;
+            if (!settings.HasResults)
+                return -1;
+
+            int index = sequenceTree.GetDisplayResultsIndex(nodePep);
+
+            float? ratio = (nodePep.HasResults ? nodePep.GetPeakCountRatio(index) : null);
+            if (ratio == null)
             {
-                if (!DocSettings.HasResults)
-                    return -1;
-
-                int index = DisplayResultsIndex;
-
-                float? ratio = (DocNode.HasResults ? DocNode.GetPeakCountRatio(index) : null);
-                if (ratio == null)
-                {
-                    return DocSettings.MeasuredResults.IsChromatogramSetLoaded(index) ?
-                        (int)SequenceTree.StateImageId.peak_blank : -1;
-                }
-                else if (ratio < 0.5)
-                    return (int)SequenceTree.StateImageId.no_peak;
-                else if (ratio < 1.0)
-                    return (int)SequenceTree.StateImageId.keep;
-
-                return (int)SequenceTree.StateImageId.peak;                
+                return settings.MeasuredResults.IsChromatogramSetLoaded(index) ?
+                    (int)SequenceTree.StateImageId.peak_blank : -1;
             }
+            else if (ratio < 0.5)
+                return (int)SequenceTree.StateImageId.no_peak;
+            else if (ratio < 1.0)
+                return (int)SequenceTree.StateImageId.keep;
+
+            return (int)SequenceTree.StateImageId.peak;                            
         }
 
         public string ResultsText
         {
             get { return ""; } 
+        }
+
+        public static string GetLabel(PeptideDocNode nodePep, string resultsText)
+        {
+            return nodePep + resultsText;
         }
 
         protected override void UpdateChildren(bool materialize)
@@ -164,7 +168,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             if (!IsMeasured)
             {
-                _textSequences = CreateTextSequences(g);
+                _textSequences = CreateTextSequences(DocNode, DocSettings, Text, g, SequenceTree.ModFonts);
                 _widthText = Text;
             }
             return _textSequences;
@@ -172,16 +176,22 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         private TextSequence[] CreateTextSequences(IDeviceContext g)
         {
+            return CreateTextSequences(DocNode, DocSettings, Text, g, SequenceTree.ModFonts);
+        }
+
+        private static TextSequence[] CreateTextSequences(PeptideDocNode nodePep,
+            SrmSettings settings, string label, IDeviceContext g, ModFontHolder fonts)
+        {
             // Store text and font information for all label types
             bool heavyMods = false;
-            var listTypeSequences = new List<TextSequence> { CreateTypeTextSequence(IsotopeLabelType.light) };
-            foreach (var labelType in DocSettings.PeptideSettings.Modifications.GetHeavyModificationTypes())
+            var listTypeSequences = new List<TextSequence> { CreateTypeTextSequence(nodePep, settings, IsotopeLabelType.light, fonts) };
+            foreach (var labelType in settings.PeptideSettings.Modifications.GetHeavyModificationTypes())
             {
                 // Only color for the label types actually measured in this peptide
-                if (!DocNode.HasChildType(labelType))
+                if (!nodePep.HasChildType(labelType))
                     continue;
 
-                var textSequence = CreateTypeTextSequence(labelType);                
+                var textSequence = CreateTypeTextSequence(nodePep, settings, labelType, fonts);                
                 listTypeSequences.Add(textSequence);
                 heavyMods = (heavyMods || textSequence != null);
             }
@@ -191,28 +201,28 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             // If no modifications, use a single plain text sequence
             if (!heavyMods && !listTypeSequences[0].Text.Contains("["))
-                listTextSequences.Add(CreatePlainTextSequence(Text));
+                listTextSequences.Add(CreatePlainTextSequence(label, fonts));
             else
             {
-                string pepSequence = DocNode.Peptide.Sequence;
-                int startPep = Text.IndexOf(pepSequence);
+                string pepSequence = nodePep.Peptide.Sequence;
+                int startPep = label.IndexOf(pepSequence);
                 int endPep = startPep + pepSequence.Length;
 
                 // Add prefix plain-text if necessary
                 if (startPep > 0)
                 {
-                    string prefix = Text.Substring(0, startPep);
-                    listTextSequences.Add(CreatePlainTextSequence(prefix));
+                    string prefix = label.Substring(0, startPep);
+                    listTextSequences.Add(CreatePlainTextSequence(prefix, fonts));
                 }
 
                 // Enumerate amino acid characters coallescing their font information
                 // into text sequences.
-                var prevCharFont = new CharFont('.', SequenceTree.Font, Color.Black);
+                var prevCharFont = new CharFont('.', fonts.Plain, Color.Black);
                 var indexes = new int[listTypeSequences.Count];
 
                 CharFont charFont;
                 var sb = new StringBuilder();
-                while ((charFont = GetCharFont(indexes, listTypeSequences)) != null)
+                while ((charFont = GetCharFont(indexes, listTypeSequences, fonts)) != null)
                 {
                     if (!charFont.IsSameDisplay(prevCharFont) && sb.Length > 0)
                     {
@@ -227,10 +237,10 @@ namespace pwiz.Skyline.Controls.SeqNode
                     listTextSequences.Add(CreateTextSequence(sb, prevCharFont));
 
                 // Add suffix plain-text if necessary
-                if (endPep < Text.Length)
+                if (endPep < label.Length)
                 {
-                    string suffix = Text.Substring(endPep);
-                    listTextSequences.Add(CreatePlainTextSequence(suffix));
+                    string suffix = label.Substring(endPep);
+                    listTextSequences.Add(CreatePlainTextSequence(suffix, fonts));
                 }
             }
 
@@ -258,8 +268,9 @@ namespace pwiz.Skyline.Controls.SeqNode
         /// </summary>
         /// <param name="indexes">Index locations of the amino acid in each text sequence</param>
         /// <param name="textSequences">List of text sequences for all label types being considered</param>
+        /// <param name="fonts">Modifications fonts</param>
         /// <returns>The amino acid character and its font information</returns>
-        private CharFont GetCharFont(int[] indexes, IList<TextSequence> textSequences)
+        private static CharFont GetCharFont(int[] indexes, IList<TextSequence> textSequences, ModFontHolder fonts)
         {
             int iChar = indexes[0];
             string text = textSequences[0].Text;
@@ -267,7 +278,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 return null;
 
             char c = text[iChar];
-            Font font = SequenceTree.Font;
+            Font font = fonts.Plain;
             Color color = Color.Black;
 
             string modString = NextAA(0, indexes, textSequences);
@@ -286,7 +297,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                     if (modString == null)
                         font = textSequences[i].Font;
                     else
-                        font = SequenceTree.LightAndHeavyModFont;
+                        font = fonts.LightAndHeavy;
                 }
             }
 
@@ -330,29 +341,30 @@ namespace pwiz.Skyline.Controls.SeqNode
         /// Creates a text sequence with the fully modified peptide sequence text
         /// and font information for a given label type.
         /// </summary>
-        private TextSequence CreateTypeTextSequence(IsotopeLabelType labelType)
+        private static TextSequence CreateTypeTextSequence(PeptideDocNode nodePep, SrmSettings settings,
+            IsotopeLabelType labelType, ModFontHolder fonts)
         {
-            var calc = DocSettings.GetPrecursorCalc(labelType, DocNode.ExplicitMods);
+            var calc = settings.GetPrecursorCalc(labelType, nodePep.ExplicitMods);
             if (calc == null)
                 return null;
 
             return new TextSequence
                        {
-                           Text = calc.GetModifiedSequence(DocNode.Peptide.Sequence, true),
-                           Font = SequenceTree.GetModFont(labelType),
-                           Color = SequenceTree.GetModColor(labelType)
+                           Text = calc.GetModifiedSequence(nodePep.Peptide.Sequence, true),
+                           Font = fonts.GetModFont(labelType),
+                           Color = ModFontHolder.GetModColor(labelType)
                        };
         }
 
         /// <summary>
         /// Creates a text sequence with normal font.
         /// </summary>
-        private TextSequence CreatePlainTextSequence(string text)
+        private static TextSequence CreatePlainTextSequence(string text, ModFontHolder fonts)
         {
             return new TextSequence
                        {
                            Text = text,
-                           Font = SequenceTree.Font,
+                           Font = fonts.Plain,
                            Color = Color.Black,
                            IsPlainText = true
                        };
@@ -418,33 +430,80 @@ namespace pwiz.Skyline.Controls.SeqNode
         protected override void DrawTextMS(Graphics g)
         {
             DrawTextBackground(g);
+            DrawPeptideText(DocNode, DocSettings, GetTextSequences(g), g, BoundsMS,
+                SequenceTree.ModFonts, ForeColorMS, BackColorMS);
+            DrawFocus(g);
+            DrawAnnotationIndicator(g);
+        }
 
-            Rectangle bounds = BoundsMS;
+        public static void DrawPeptideText(PeptideDocNode nodePep,
+                                           SrmSettings settings,
+                                           IEnumerable<TextSequence> textSequences,
+                                           Graphics g,
+                                           Rectangle bounds,
+                                           ModFontHolder fonts,
+                                           Color foreColor,
+                                           Color backColor)
+        {
+            if (textSequences == null)
+                textSequences = CreateTextSequences(nodePep, settings, GetLabel(nodePep, ""), g, fonts);
             Rectangle rectDraw = new Rectangle(0, bounds.Y, 0, bounds.Height);
-            foreach (var textSequence in GetTextSequences(g))
+            foreach (var textSequence in textSequences)
             {
                 rectDraw.X = textSequence.Position + bounds.X + TreeViewMS.PADDING;
                 rectDraw.Width = textSequence.Width;
-                // Use selection highlight color, if it is in the selection, otherwise
-                // use the color from the text sequence format information.
-                Color foreColor = (IsInSelection && SequenceTree.Focused ? ForeColorMS : textSequence.Color);
+                // Use selection highlight color, if the background is highlight.
+                if (backColor != SystemColors.Highlight)
+                    foreColor = textSequence.Color;
                 TextRenderer.DrawText(g, textSequence.Text, textSequence.Font, rectDraw,
-                    foreColor, BackColorMS, FORMAT_TEXT_SEQUENCE);
+                    foreColor, backColor, FORMAT_TEXT_SEQUENCE);
             }
-
-            DrawFocus(g);
-            DrawAnnotationIndicator(g);
         }
          
 
         #region IChildPicker Members
 
-        public override string GetPickLabel(object child)
+        public override string GetPickLabel(DocNode child)
         {
-            // TODO: Library information e.g. (12 copies)
-            TransitionGroup group = (TransitionGroup) child;
-            double massH = DocSettings.GetPrecursorMass(group.LabelType, group.Peptide.Sequence, DocNode.ExplicitMods);
-            return TransitionGroupTreeNode.GetLabel(group, SequenceMassCalc.GetMZ(massH, group.PrecursorCharge), "");
+            return TransitionGroupTreeNode.GetDisplayText((TransitionGroupDocNode)child, DocNode, SequenceTree);
+        }
+
+        public override Image GetPickTypeImage(DocNode child)
+        {
+            return TransitionGroupTreeNode.GetTypeImage((TransitionGroupDocNode) child, SequenceTree);
+        }
+
+        public override Image GetPickPeakImage(DocNode child)
+        {
+            return TransitionGroupTreeNode.GetPeakImage((TransitionGroupDocNode) child, DocNode, SequenceTree);
+        }
+
+        public override ITipProvider GetPickTip(DocNode child)
+        {
+            return new PickTransitionGroupTip(DocNode, (TransitionGroupDocNode) child, DocSettings);
+        }
+
+        private sealed class PickTransitionGroupTip : ITipProvider
+        {
+            private readonly PeptideDocNode _nodePep;
+            private readonly TransitionGroupDocNode _nodeGroup;
+            private readonly SrmSettings _settings;
+
+            public PickTransitionGroupTip(PeptideDocNode nodePep,
+                TransitionGroupDocNode nodeGroup, SrmSettings settings)
+            {
+                _nodePep = nodePep;
+                _nodeGroup = nodeGroup;
+                _settings = settings;
+            }
+
+            public bool HasTip { get { return true; } }
+
+            public Size RenderTip(Graphics g, Size sizeMax, bool draw)
+            {
+                return TransitionGroupTreeNode.RenderTip(_nodePep, _nodeGroup, null,
+                    _settings, g, sizeMax, draw);
+            }
         }
 
         public override bool Filtered
@@ -453,48 +512,33 @@ namespace pwiz.Skyline.Controls.SeqNode
             set { Settings.Default.FilterTransitionGroups = value; }
         }
 
-        public override IEnumerable<object> GetChoices(bool useFilter)
+        public override IEnumerable<DocNode> GetChoices(bool useFilter)
         {
             var mods = DocNode.ExplicitMods;
+            var listChildrenNew = new List<DocNode>();
             foreach (TransitionGroup group in DocNode.Peptide.GetTransitionGroups(DocSettings, mods, useFilter))
-                yield return group;
+            {
+                listChildrenNew.Add(CreateChoice(group, mods));
+            }
+            var nodePep = (PeptideDocNode)DocNode.ChangeChildren(listChildrenNew);
+            nodePep.ChangeSettings(DocSettings, SrmSettingsDiff.PROPS);
+            listChildrenNew = new List<DocNode>(nodePep.Children);
+            MergeChosen(listChildrenNew, useFilter);
+            return listChildrenNew;
         }
 
-        public override IPickedList CreatePickedList(IEnumerable<object> chosen, bool autoManageChildren)
+        private DocNode CreateChoice(Identity childId, ExplicitMods mods)
         {
-            return new TransitionGroupPickedList(DocSettings, DocNode, chosen, autoManageChildren);
-        }
+            TransitionGroup tranGroup = (TransitionGroup)childId;
+            string seq = tranGroup.Peptide.Sequence;
+            double massH = DocSettings.GetPrecursorMass(tranGroup.LabelType, seq, mods);
+            RelativeRT relativeRT = DocSettings.GetRelativeRT(tranGroup.LabelType, seq, mods);
+            TransitionDocNode[] transitions = DocNode.GetMatchingTransitions(
+                tranGroup, DocSettings, mods);
 
-        private sealed class TransitionGroupPickedList : AbstractPickedList
-        {
-            private readonly PeptideDocNode _nodePeptide;
-
-            public TransitionGroupPickedList(SrmSettings settings, PeptideDocNode nodePep,
-                    IEnumerable<object> picked, bool autoManageChildren)
-                : base(settings, picked, autoManageChildren)
-            {
-                _nodePeptide = nodePep;
-            }
-
-            public override DocNode CreateChildNode(Identity childId)
-            {
-                TransitionGroup tranGroup = (TransitionGroup) childId;
-                ExplicitMods mods = _nodePeptide.ExplicitMods;
-                string seq = tranGroup.Peptide.Sequence;
-                double massH = Settings.GetPrecursorMass(tranGroup.LabelType, seq, mods);
-                RelativeRT relativeRT = Settings.GetRelativeRT(tranGroup.LabelType, seq, mods);
-                TransitionDocNode[] transitions = _nodePeptide.GetMatchingTransitions(
-                    tranGroup, Settings, mods);
-
-                var nodeGroup = new TransitionGroupDocNode(tranGroup, massH, relativeRT,
-                    transitions ?? new TransitionDocNode[0], transitions == null);
-                return nodeGroup.ChangeSettings(Settings, mods, SrmSettingsDiff.ALL);
-            }
-
-            public override Identity GetId(object pick)
-            {
-                return (Identity) pick;
-            }
+            var nodeGroup = new TransitionGroupDocNode(tranGroup, massH, relativeRT,
+                transitions ?? new TransitionDocNode[0], transitions == null);
+            return nodeGroup.ChangeSettings(DocSettings, mods, SrmSettingsDiff.ALL);
         }
 
         public override bool ShowAutoManageChildren
@@ -508,23 +552,48 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public bool HasTip
         {
-            get
-            {
-                return DocNode.Peptide.Begin.HasValue ||
-                       DocNode.Rank.HasValue ||
-                       DocNode.Note != null ||
-                       (!IsExpanded && DocNode.Children.Count == 1);
-            }
+            get { return HasPeptideTip(DocNode, DocSettings); }
+        }
+
+        public static bool HasPeptideTip(PeptideDocNode nodePep, SrmSettings settings)
+        {
+            return nodePep.Peptide.Begin.HasValue ||
+                   nodePep.Rank.HasValue ||
+                   nodePep.Note != null ||
+                   // With one child, its tip detail will be appended
+                   nodePep.Children.Count == 1 ||
+                   // With multiple children, modification sequences may be shown
+                   GetTypedModifiedSequences(nodePep, settings).Count() > 0;
         }
 
         public Size RenderTip(Graphics g, Size sizeMax, bool draw)
         {
+            var nodeTranTree = SequenceTree.GetNodeOfType<TransitionTreeNode>();
+            var nodeTranSelected = (nodeTranTree != null ? nodeTranTree.DocNode : null);
+            return RenderTip(DocNode, nodeTranSelected, DocSettings, g, sizeMax, draw);
+        }
 
-
+        public static Size RenderTip(PeptideDocNode nodePep,
+                                            TransitionDocNode nodeTranSelected,
+                                            SrmSettings settings,
+                                            Graphics g,
+                                            Size sizeMax,
+                                            bool draw)
+        {
             var table = new TableDesc();
             using (RenderTools rt = new RenderTools())
             {
-                Peptide peptide = DocNode.Peptide;
+                Peptide peptide = nodePep.Peptide;
+
+                if (nodePep.Children.Count > 1)
+                {
+                    foreach (var typedModSequence in GetTypedModifiedSequences(nodePep, settings))
+                        table.AddDetailRow(typedModSequence.Key.Title, typedModSequence.Value, rt);
+
+                    // Add a spacing row, if anything was added
+                    if (table.Count > 0)
+                        table.AddDetailRow(" ", " ", rt);
+                }
 
                 if (peptide.Begin.HasValue)
                 {
@@ -533,25 +602,25 @@ namespace pwiz.Skyline.Controls.SeqNode
                     table.AddDetailRow("Last", (peptide.End.Value - 1).ToString(), rt);
                     table.AddDetailRow("Next", peptide.NextAA.ToString(), rt);
                 }
-                if (DocNode.Rank.HasValue)
-                    table.AddDetailRow("Rank", DocNode.Rank.ToString(), rt);
-                if (!string.IsNullOrEmpty(DocNode.Note))
-                    table.AddDetailRow("Note", DocNode.Note, rt);
+                if (nodePep.Rank.HasValue)
+                    table.AddDetailRow("Rank", nodePep.Rank.ToString(), rt);
+                if (!string.IsNullOrEmpty(nodePep.Note))
+                    table.AddDetailRow("Note", nodePep.Note, rt);
 
                 SizeF size = table.CalcDimensions(g);
                 if (draw)
                     table.Draw(g);
 
                 // Render group tip, if there is only one, and this node is collapsed
-                if (!IsExpanded && DocNode.Children.Count == 1)
+                if (nodePep.Children.Count == 1)
                 {
-                    var nodeGroup = (TransitionGroupDocNode) DocNode.Children[0];
+                    var nodeGroup = (TransitionGroupDocNode)nodePep.Children[0];
                     if (size.Height > 0)
                         size.Height += TableDesc.TABLE_SPACING;
                     g.TranslateTransform(0, size.Height);
-                    Size sizeMaxGroup = new Size(sizeMax.Width, sizeMax.Height - (int) size.Height);
-                    SizeF sizeGroup = TransitionGroupTreeNode.RenderTip(SequenceTree, this,
-                                                                        nodeGroup, g, sizeMaxGroup, draw);
+                    Size sizeMaxGroup = new Size(sizeMax.Width, sizeMax.Height - (int)size.Height);
+                    SizeF sizeGroup = TransitionGroupTreeNode.RenderTip(nodePep, nodeGroup,
+                        nodeTranSelected, settings, g, sizeMaxGroup, draw);
                     g.TranslateTransform(0, -size.Height);
 
                     size.Width = Math.Max(size.Width, sizeGroup.Width);
@@ -559,6 +628,27 @@ namespace pwiz.Skyline.Controls.SeqNode
                 }
 
                 return new Size((int)size.Width + 2, (int)size.Height + 2);
+            }
+        }
+
+        private static IEnumerable<KeyValuePair<IsotopeLabelType, string>> GetTypedModifiedSequences(
+            PeptideDocNode nodePep, SrmSettings settings)
+        {
+            foreach (var labelType in settings.PeptideSettings.Modifications.GetModificationTypes())
+            {
+                // Only return the modified sequence, if the peptide actually as a child
+                // of this type.
+                if (!nodePep.HasChildType(labelType))
+                    continue;
+                var calc = settings.GetPrecursorCalc(labelType, nodePep.ExplicitMods);
+                if (calc == null)
+                    continue;
+
+                string modSequence = calc.GetModifiedSequence(nodePep.Peptide.Sequence, true);
+
+                // Only return if the modified sequence contains modifications
+                if (modSequence.Contains('['))
+                    yield return new KeyValuePair<IsotopeLabelType, string>(labelType, modSequence);
             }            
         }
 

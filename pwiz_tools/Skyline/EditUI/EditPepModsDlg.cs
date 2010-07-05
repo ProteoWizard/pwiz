@@ -425,7 +425,7 @@ namespace pwiz.Skyline.EditUI
                 if (!string.IsNullOrEmpty((string) _listListComboHeavy[i][indexAA].SelectedItem))
                 {
                     fontStyle |= FontStyle.Bold;
-                    textColor = SequenceTree.GetModColor(_listLabelTypeHeavy[i]);
+                    textColor = ModFontHolder.GetModColor(_listLabelTypeHeavy[i]);
                     break;
                 }
             }

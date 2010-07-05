@@ -26,6 +26,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.SeqNode
 {
@@ -53,6 +54,11 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public TransitionGroupDocNode DocNode { get { return (TransitionGroupDocNode) Model; } }
 
+        public PeptideDocNode PepNode
+        {
+            get { return (Parent != null ? ((PeptideTreeNode)Parent).DocNode : null); }
+        }
+
         public override string Heading
         {
             get { return TITLE; }
@@ -76,7 +82,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             int peakImageIndex = PeakImageIndex;
             if (peakImageIndex != StateImageIndex)
                 StateImageIndex = peakImageIndex;
-            string label = GetLabel(DocNode.TransitionGroup, DocNode.PrecursorMz, ResultsText);
+            string label = GetDisplayText(DocNode, PepNode, SequenceTree);
             if (!Equals(label, Text))
                 Text = label;
 
@@ -86,89 +92,96 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public int TypeImageIndex
         {
-            get
-            {
-                return (int)(DocNode.HasLibInfo ?
-                    SequenceTree.ImageId.tran_group_lib : SequenceTree.ImageId.tran_group);
-            }
+            get { return GetTypeImageIndex(DocNode); }            
         }
 
-        public int DisplayResultsIndex
+        public static Image GetTypeImage(TransitionGroupDocNode nodeGroup, SequenceTree sequenceTree)
         {
-            get { return SequenceTree.GetDisplayResultsIndex((PeptideTreeNode)Parent); }
+            return sequenceTree.ImageList.Images[GetTypeImageIndex(nodeGroup)];
+        }
+
+        private static int GetTypeImageIndex(TransitionGroupDocNode nodeGroup)
+        {
+            return (int)(nodeGroup.HasLibInfo ?
+                SequenceTree.ImageId.tran_group_lib : SequenceTree.ImageId.tran_group);
         }
 
         public int PeakImageIndex
         {
             get
             {
-                if (!DocSettings.HasResults)
-                    return -1;
-
-                int index = DisplayResultsIndex;
-
-                float? ratio = (DocNode.HasResults ? DocNode.GetPeakCountRatio(index) : null);
-                if (ratio == null)
-                {
-                    return DocSettings.MeasuredResults.IsChromatogramSetLoaded(index) ?
-                        (int)SequenceTree.StateImageId.peak_blank : -1;
-                }
-                else if (ratio < 0.5)
-                    return (int)SequenceTree.StateImageId.no_peak;
-                else if (ratio < 1.0)
-                    return (int)SequenceTree.StateImageId.keep;
-
-                return (int)SequenceTree.StateImageId.peak;
+                return GetPeakImageIndex(DocNode, PepNode, SequenceTree);
             }
         }
 
-        public string ResultsText
+        public static Image GetPeakImage(TransitionGroupDocNode nodeGroup,
+            PeptideDocNode nodeParent, SequenceTree sequenceTree)
         {
-            get
-            {
-                int index = DisplayResultsIndex;
-                int indexRatio = SequenceTree.RatioIndex;
-
-                float? libraryProduct = DocNode.GetLibraryDotProduct(index);
-                float? stdev;
-                float? ratio = DocNode.GetPeakAreaRatio(index, indexRatio, out stdev);
-                if (!ratio.HasValue && !libraryProduct.HasValue)
-                    return "";
-                StringBuilder sb = new StringBuilder(" (");
-                int len = sb.Length;
-                if (libraryProduct.HasValue)
-                    sb.Append(string.Format("dotp {0:F02}", libraryProduct.Value));
-                if (ratio.HasValue)
-                {
-                    if (sb.Length > len)
-                        sb.Append(", ");
-                    double ratioRounded = RoundAboveZero(ratio.Value, 2, 4);
-                    sb.Append(string.Format("total ratio {0}", ratioRounded));
-
-//                    if (stdev.HasValue)
-//                    {
-//                        double stdevRounded = RoundAboveZero(stdev.Value, 2, 4);
-//                        if (stdevRounded > 0)
-//                        {
-//                            sb.Append(", ");
-//                            sb.Append(string.Format("stdev {0}", stdevRounded));
-//                        }
-//                    }
-                }
-                sb.Append(")");
-                return sb.ToString();
-            }
+            int imageIndex = GetPeakImageIndex(nodeGroup, nodeParent, sequenceTree);
+            return (imageIndex != -1 ? sequenceTree.StateImageList.Images[imageIndex] : null);
         }
 
-        private static double RoundAboveZero(float value, int startDigits, int mostDigits)
+        private static int GetPeakImageIndex(TransitionGroupDocNode nodeGroup,
+            PeptideDocNode nodeParent, SequenceTree sequenceTree)
         {
-            for (int i = startDigits; i <= mostDigits; i++)
+            var settings = sequenceTree.Document.Settings;
+            if (!settings.HasResults)
+                return -1;
+
+            int index = sequenceTree.GetDisplayResultsIndex(nodeParent);
+
+            float? ratio = (nodeGroup.HasResults ? nodeGroup.GetPeakCountRatio(index) : null);
+            if (ratio == null)
             {
-                double rounded = Math.Round(value, i);
-                if (rounded > 0)
-                    return rounded;
+                return settings.MeasuredResults.IsChromatogramSetLoaded(index) ?
+                    (int)SequenceTree.StateImageId.peak_blank : -1;
             }
-            return 0;
+            else if (ratio < 0.5)
+                return (int)SequenceTree.StateImageId.no_peak;
+            else if (ratio < 1.0)
+                return (int)SequenceTree.StateImageId.keep;
+
+            return (int)SequenceTree.StateImageId.peak;
+        }
+
+        public static string GetDisplayText(TransitionGroupDocNode nodeGroup,
+            PeptideDocNode nodePep, SequenceTree sequenceTree)
+        {
+            return GetLabel(nodeGroup.TransitionGroup, nodeGroup.PrecursorMz,
+                GetResultsText(nodeGroup, nodePep, sequenceTree));
+        }
+
+        private static string GetResultsText(TransitionGroupDocNode nodeTran,
+            PeptideDocNode nodePep, SequenceTree sequenceTree)
+        {
+            int index = sequenceTree.GetDisplayResultsIndex(nodePep);
+            int indexRatio = sequenceTree.RatioIndex;
+
+            float? libraryProduct = nodeTran.GetLibraryDotProduct(index);
+            float? stdev;
+            float? ratio = nodeTran.GetPeakAreaRatio(index, indexRatio, out stdev);
+            if (!ratio.HasValue && !libraryProduct.HasValue)
+                return "";
+            StringBuilder sb = new StringBuilder(" (");
+            int len = sb.Length;
+            if (libraryProduct.HasValue)
+                sb.Append(string.Format("dotp {0:F02}", libraryProduct.Value));
+            if (ratio.HasValue)
+            {
+                if (sb.Length > len)
+                    sb.Append(", ");
+                double ratioRounded = MathEx.RoundAboveZero(ratio.Value, 2, 4);
+                sb.Append(string.Format("total ratio {0}", ratioRounded));
+
+//                if (stdev.HasValue)
+//                {
+//                    double stdevRounded = RoundAboveZero(stdev.Value, 2, 4);
+//                    if (stdevRounded > 0)
+//                        sb.Append(string.Format(" ± {0}", stdevRounded));
+//                }
+            }
+            sb.Append(")");
+            return sb.ToString();
         }
 
         protected override void UpdateChildren(bool materialize)
@@ -187,9 +200,44 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         #region IChildPicker Members
 
-        public override string GetPickLabel(object child)
+        public override string GetPickLabel(DocNode child)
         {
-            return TransitionTreeNode.GetLabel((TransitionDocNode) child, "");
+            return TransitionTreeNode.GetDisplayText((TransitionDocNode) child,
+                PepNode, SequenceTree);
+        }
+
+        public override Image GetPickTypeImage(DocNode child)
+        {
+            return TransitionTreeNode.GetTypeImage((TransitionDocNode)child, SequenceTree);
+        }
+
+        public override Image GetPickPeakImage(DocNode child)
+        {
+            return TransitionTreeNode.GetPeakImage((TransitionDocNode)child,
+                PepNode, SequenceTree);
+        }
+
+        public override ITipProvider GetPickTip(DocNode child)
+        {
+            return new PickTransitionTip((TransitionDocNode) child);
+        }
+
+        private sealed class PickTransitionTip : ITipProvider
+        {
+            private readonly TransitionDocNode _nodeTran;
+
+            public PickTransitionTip(TransitionDocNode nodeTran)
+            {
+                _nodeTran = nodeTran;
+            }
+
+            // Not enough useful information in this tip yet
+            public bool HasTip { get { return false; } }
+
+            public Size RenderTip(Graphics g, Size sizeMax, bool draw)
+            {
+                return TransitionTreeNode.RenderTip(_nodeTran, g, sizeMax, draw);
+            }
         }
 
         public override bool Filtered
@@ -198,12 +246,27 @@ namespace pwiz.Skyline.Controls.SeqNode
             set { Settings.Default.FilterTransitions = value; }
         }
 
-        public override bool Equivalent(object choice1, object choice2)
+        public override IEnumerable<DocNode> GetChoices(bool useFilter)
         {
-            return Equals(((TransitionDocNode)choice1).Id, ((TransitionDocNode)choice2).Id);
+            var nodePep = PepNode;
+            if (nodePep == null)
+                throw new InvalidOperationException("Invalid attempt to get choices for a node that has not been added to the tree yet.");
+
+            var listChildrenNew = GetChoices(DocNode, DocSettings, nodePep.ExplicitMods, useFilter);
+            var nodeGroup = (TransitionGroupDocNode) DocNode.ChangeChildrenChecked(listChildrenNew);
+            
+            // Make sure any properties that depend on peptide relationships,
+            // like ratios get updated.
+            nodePep = (PeptideDocNode)nodePep.ReplaceChild(nodeGroup);
+            int iGroup = nodePep.Children.IndexOf(nodeGroup);
+            nodePep = nodePep.ChangeSettings(DocSettings, SrmSettingsDiff.PROPS);
+            nodeGroup = (TransitionGroupDocNode) nodePep.Children[iGroup];
+            listChildrenNew = new List<DocNode>(nodeGroup.Children);
+            MergeChosen(listChildrenNew, useFilter);
+            return listChildrenNew;
         }
 
-        public static IEnumerable<object> GetChoices(TransitionGroupDocNode nodeGroup, SrmSettings settings, ExplicitMods mods, bool useFilter)
+        public static IList<DocNode> GetChoices(TransitionGroupDocNode nodeGroup, SrmSettings settings, ExplicitMods mods, bool useFilter)
         {
             TransitionGroup group = nodeGroup.TransitionGroup;
 
@@ -211,35 +274,13 @@ namespace pwiz.Skyline.Controls.SeqNode
             var transitionRanks = new Dictionary<double, LibraryRankedSpectrumInfo.RankedMI>();
             group.GetLibraryInfo(settings, mods, useFilter, ref libInfo, transitionRanks);
 
+            var listChoices = new List<DocNode>();
             foreach (TransitionDocNode nodeTran in group.GetTransitions(settings, mods,
                     nodeGroup.PrecursorMz, libInfo, transitionRanks, useFilter))
-                yield return nodeTran;
-        }
-
-        public override IEnumerable<object> GetChoices(bool useFilter)
-        {
-            PeptideTreeNode nodePepTree = Parent as PeptideTreeNode;
-            ExplicitMods mods = (nodePepTree != null ? nodePepTree.DocNode.ExplicitMods : null);
-            return GetChoices(DocNode, DocSettings, mods, useFilter);
-        }
-
-        public static IEnumerable<object> GetChosen(TransitionGroupDocNode nodeGroup)
-        {
-            foreach (TransitionDocNode nodeTran in nodeGroup.Children)
-                yield return nodeTran;            
-        }
-
-        public override IEnumerable<object> Chosen
-        {
-            get
             {
-                return GetChosen(DocNode);
+                listChoices.Add(nodeTran);               
             }
-        }
-
-        public override IPickedList CreatePickedList(IEnumerable<object> chosen, bool autoManageChildren)
-        {
-            return new TransitionPickedList(chosen, autoManageChildren);
+            return listChoices;
         }
 
         public override bool ShowAutoManageChildren
@@ -289,39 +330,6 @@ namespace pwiz.Skyline.Controls.SeqNode
             return false;
         }
         
-        private sealed class TransitionPickedList : IPickedList
-        {
-            private readonly IEnumerable<object> _picked;
-
-            public TransitionPickedList(IEnumerable<object> picked, bool autoManageChildren)
-            {
-                _picked = picked;
-                AutoManageChildren = autoManageChildren;
-            }
-
-            public IEnumerable<Identity> Chosen
-            {
-                get
-                {
-                    foreach (TransitionDocNode nodeTran in _picked)
-                        yield return nodeTran.Id;
-                }
-            }
-
-            public DocNode CreateChildNode(Identity childId)
-            {
-                foreach (TransitionDocNode nodeTran in _picked)
-                {
-                    if (ReferenceEquals(nodeTran.Id, childId))
-                        return nodeTran;
-                }
-
-                throw new ArgumentException("Requested child not found in picked list.");
-            }
-
-            public bool AutoManageChildren { get; private set; }
-        }
-
         #endregion
 
         #region ITipProvider Members
@@ -330,24 +338,30 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public Size RenderTip(Graphics g, Size sizeMax, bool draw)
         {
-            return RenderTip(SequenceTree, Parent as PeptideTreeNode, DocNode, g, sizeMax, draw);
+            var nodePep = (Parent != null ? ((PeptideTreeNode) Parent).DocNode : null);
+            var nodeTranTree = SequenceTree.GetNodeOfType<TransitionTreeNode>();
+            var nodeTranSelected = (nodeTranTree != null ? nodeTranTree.DocNode : null);
+            return RenderTip(nodePep, DocNode, nodeTranSelected, DocSettings, g, sizeMax, draw);
         }
 
-        public static Size RenderTip(SequenceTree sequenceTree, PeptideTreeNode nodePepTree,
-            TransitionGroupDocNode nodeGroup, Graphics g, Size sizeMax, bool draw)
+        public static Size RenderTip(PeptideDocNode nodePep,
+                                     TransitionGroupDocNode nodeGroup,
+                                     TransitionDocNode nodeTranSelected,
+                                     SrmSettings settings,
+                                     Graphics g,
+                                     Size sizeMax,
+                                     bool draw)
         {
-            SrmSettings settings = sequenceTree.Document.Settings;
-            ExplicitMods mods = (nodePepTree != null ? nodePepTree.DocNode.ExplicitMods : null);
-            IEnumerable<object> choices = GetChoices(nodeGroup, settings, mods, true).ToArray();
-            HashSet<object> chosen = new HashSet<object>(GetChosen(nodeGroup));
+            ExplicitMods mods = (nodePep != null ? nodePep.ExplicitMods : null);
+            IEnumerable<DocNode> choices = GetChoices(nodeGroup, settings, mods, true).ToArray();
+            HashSet<DocNode> chosen = new HashSet<DocNode>(nodeGroup.Children);
 
             // Make sure all chosen peptides get listed
-            HashSet<object> setChoices = new HashSet<object>(choices);
+            HashSet<DocNode> setChoices = new HashSet<DocNode>(choices);
             setChoices.UnionWith(chosen);
             choices = setChoices.ToArray();
 
-            TransitionTreeNode nodeTranTree = sequenceTree.GetNodeOfType<TransitionTreeNode>();
-            Transition tranSelected = (nodeTranTree != null ? nodeTranTree.DocNode.Transition : null);
+            Transition tranSelected = (nodeTranSelected != null ? nodeTranSelected.Transition : null);
 
             IFragmentMassCalc calc = settings.GetFragmentCalc(nodeGroup.TransitionGroup.LabelType, mods);
             string aa = nodeGroup.TransitionGroup.Peptide.Sequence;
@@ -491,7 +505,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         }
 
         private static CellDesc CreateIon(IonType type, int ordinal, double massH, int charge,
-                                          IEnumerable<object> choices, ICollection<object> chosen, Transition tranSelected,
+                                          IEnumerable<DocNode> choices, ICollection<DocNode> chosen, Transition tranSelected,
                                           RenderTools rt)
         {
             double mz = SequenceMassCalc.GetMZ(massH, charge);

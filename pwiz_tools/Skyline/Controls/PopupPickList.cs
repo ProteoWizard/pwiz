@@ -21,7 +21,9 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using System.Windows.Forms.VisualStyles;
 using pwiz.Skyline.Controls.SeqNode;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
@@ -32,14 +34,23 @@ namespace pwiz.Skyline.Controls
         /// Current size used for all popup pick-lists.
         /// </summary>
         // CONSIDER: Make the pick lists sizable, and store in the settings?
-        public static Size SizeAll { get { return new Size(375, 251); } }
+        public static Size SizeAll { get { return new Size(410, 251); } }
 
         private readonly IChildPicker _picker;
-        private readonly List<object> _chosenAtStart;
+        private readonly List<DocNode> _chosenAtStart;
         private List<PickListChoice> _choices;
         private List<int> _indexListChoices;
         private bool _closing;
         private bool _autoManageChildren;
+
+        private int _leftText;
+
+        private readonly ModFontHolder _modFonts;
+
+        private readonly NodeTip _nodeTip;
+        private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
+        private DocNode _lastTipNode;
+        private ITipProvider _lastTipProvider;
 
         public PopupPickList(IChildPicker picker, string childHeading)
         {
@@ -49,8 +60,11 @@ namespace pwiz.Skyline.Controls
 
             cbItems.Text = childHeading;
 
+            _modFonts = new ModFontHolder(pickListMulti);
+            _nodeTip = new NodeTip(pickListMulti);
+
             _picker = picker;
-            _chosenAtStart = new List<object>(picker.Chosen);
+            _chosenAtStart = new List<DocNode>(picker.Chosen);
 
             bool filter = tbbFilter.Checked = _picker.Filtered;
             var choices = picker.GetChoices(filter).ToArray();
@@ -101,9 +115,31 @@ namespace pwiz.Skyline.Controls
         {
             get
             {
-                foreach (var item in pickListMulti.Items)
-                    yield return item.ToString();
+                for (int i = 0; i < pickListMulti.Items.Count; i++)
+                    yield return GetVisibleChoice(i).Label;
             }
+        }
+
+        public Rectangle GetItemTextRectangle(int i)
+        {
+            var rect = pickListMulti.GetItemRectangle(i);
+            rect.Width += rect.X - _leftText;
+            rect.X = _leftText;
+            return rect;
+        }
+
+        private int GetIndexAtPoint(Point pt)
+        {
+            for (int i = pickListMulti.TopIndex; 0 <= i && i < pickListMulti.Items.Count; i++)
+            {
+                var rectItem = pickListMulti.GetItemRectangle(i);
+                if (rectItem.Top > ClientRectangle.Bottom)
+                    break;
+
+                if (rectItem.Contains(pt))
+                    return i;
+            }
+            return -1;
         }
 
         public bool IsSynchSiblings
@@ -138,7 +174,7 @@ namespace pwiz.Skyline.Controls
                         tbbFilter.Checked = true;
                         tbbFilter_Click(this, null);
                     }
-                    var filteredChoices = new HashSet<object>(_picker.GetChoices(true));
+                    var filteredChoices = new HashSet<DocNode>(_picker.GetChoices(true));
                     foreach (PickListChoice choice in _choices)
                     {
                         choice.Chosen = filteredChoices.Contains(choice.Choice);
@@ -164,10 +200,10 @@ namespace pwiz.Skyline.Controls
                 tbbAutoManageChildren.ToolTipText += " (off)";
         }
 
-        public void SetChoices(IEnumerable<object> choices, IList<object> chosen)
+        public void SetChoices(IEnumerable<DocNode> choices, IList<DocNode> chosen)
         {
             var choicesNew = new List<PickListChoice>();
-            foreach (object choice in choices)
+            foreach (DocNode choice in choices)
             {
                 bool check = false;
                 if (_choices == null)
@@ -176,7 +212,7 @@ namespace pwiz.Skyline.Controls
                 {
                     foreach (PickListChoice choiceExisting in _choices)
                     {
-                        if (_picker.Equivalent(choice, choiceExisting.Choice))
+                        if (ReferenceEquals(choice, choiceExisting.Choice))
                         {
                             check = choiceExisting.Chosen;
                             break;
@@ -206,15 +242,15 @@ namespace pwiz.Skyline.Controls
                 if (!textSearch.Visible || AcceptChoice(choice, searches))
                 {
                     _indexListChoices.Add(i);
-                    pickListMulti.Items.Add(choice.Label, choice.Chosen);
+                    pickListMulti.Items.Add(choice);
                 }
             }
             pickListMulti.EndUpdate();
         }
 
-        private bool ContainsChoice(IList<object> choices, object choice)
+        private static bool ContainsChoice(IList<DocNode> choices, DocNode choice)
         {
-            return choices.IndexOf(c => _picker.Equivalent(c, choice)) != -1;
+            return choices.IndexOf(c => ReferenceEquals(c, choice)) != -1;
         }
 
         private static bool AcceptChoice(PickListChoice choice, IEnumerable<string> searches)
@@ -236,7 +272,7 @@ namespace pwiz.Skyline.Controls
 
         public void OnOk()
         {
-            var picks = new List<object>();
+            var picks = new List<DocNode>();
             foreach (PickListChoice choice in _choices)
             {
                 if (choice.Chosen)
@@ -257,6 +293,8 @@ namespace pwiz.Skyline.Controls
 
         protected override void OnDeactivate(EventArgs e)
         {
+            _nodeTip.HideTip();
+
             base.OnDeactivate(e);
             if (!_closing)
                 OnOk();
@@ -275,6 +313,9 @@ namespace pwiz.Skyline.Controls
                     break;
                 case Keys.Enter:
                     OnOk();
+                    break;
+                case Keys.Space:
+                    ToggleItem(pickListMulti.SelectedIndex);
                     break;
             }
         }
@@ -337,16 +378,19 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+        private PickListChoice GetVisibleChoice(int i)
+        {
+            return (PickListChoice) pickListMulti.Items[i];
+        }
+
         public bool GetItemChecked(int i)
         {
-            return pickListMulti.GetItemChecked(i);
+            return GetVisibleChoice(i).Chosen;
         }
 
         public void SetItemChecked(int i, bool checkItem)
         {
-            if (pickListMulti.Items.Count <= i)
-                Console.WriteLine("Items = {0}", pickListMulti.Items.Count);
-            pickListMulti.SetItemChecked(i, checkItem);
+            GetVisibleChoice(i).Chosen = checkItem;
         }
 
         public bool SelectAll
@@ -359,7 +403,7 @@ namespace pwiz.Skyline.Controls
         {
             bool checkAll = cbItems.Checked;
             for (int i = 0; i < pickListMulti.Items.Count; i++)
-                pickListMulti.SetItemChecked(i, checkAll);
+                SetItemChecked(i, checkAll);
             AutoManageChildren = false;
             pickListMulti.Focus();
         }
@@ -395,40 +439,146 @@ namespace pwiz.Skyline.Controls
             tbbFind_Click(this, null);            
         }
 
-        private void pickListMulti_ItemCheck(object sender, ItemCheckEventArgs e)
+        private void pickListMulti_MouseDown(object sender, MouseEventArgs e)
         {
-            // If all other checkboxes in the list match the new state,
-            // update the header checkbox to match also.
-            int iChange = e.Index;
-            CheckState state = e.NewValue;
-            
-            _choices[_indexListChoices[iChange]].Chosen = (state == CheckState.Checked);
+            int i = GetIndexAtPoint(e.Location);
+            if (i != -1)
+                ToggleItem(i);
+        }
 
+        private void ToggleItem(int iChange)
+        {
+            bool checkedNew = !GetItemChecked(iChange);
+            SetItemChecked(iChange, checkedNew);
+            pickListMulti.Invalidate(pickListMulti.GetItemRectangle(iChange));
+
+            AutoManageChildren = false;
+
+            // If all other visible checkboxes are the same state
+            // as the one that just changed, then check the check-all checkbox.
             for (int i = 0; i < pickListMulti.Items.Count; i++)
             {
                 if (i == iChange)
                     continue;
-                if (pickListMulti.GetItemCheckState(i) != state)
+                if (GetItemChecked(i) != checkedNew)
                     return;
             }
-            cbItems.CheckState = state;
+            cbItems.Checked = checkedNew;
         }
 
-        private void pickListMulti_Click(object sender, EventArgs e)
+        private const int MARGIN_LEFT_CHECKBOX = 1;
+        private const int MARGIN_RIGHT_CHECKBOX = 1;
+        private const int MARGIN_RIGHT_IMAGE = 1;
+        private const TextFormatFlags FORMAT_PLAIN = TextFormatFlags.SingleLine | TextFormatFlags.VerticalCenter;
+
+        private void pickListMulti_DrawItem(object sender, DrawItemEventArgs e)
         {
-            AutoManageChildren = false;
+            if (e.Index == -1)
+            {
+                e.DrawBackground();
+                return;
+            }
+
+            var g = e.Graphics;
+            var bounds = e.Bounds;
+            var choice = GetVisibleChoice(e.Index);
+
+            // Draw checkbox
+            var checkState = (choice.Chosen ? CheckBoxState.CheckedNormal : CheckBoxState.UncheckedNormal);
+            var checkSize = CheckBoxRenderer.GetGlyphSize(g, checkState);
+            var checkLocation = new Point(bounds.X + MARGIN_LEFT_CHECKBOX,
+                bounds.Y + (bounds.Height - checkSize.Height) / 2);
+
+            CheckBoxRenderer.DrawCheckBox(g, checkLocation, checkState);
+
+            checkSize.Width += MARGIN_LEFT_CHECKBOX + MARGIN_RIGHT_CHECKBOX;
+
+            bounds.X += checkSize.Width;
+            bounds.Width -= checkSize.Width;
+
+            // Draw images
+            var imgPeak = _picker.GetPickPeakImage(choice.Choice);
+            if (imgPeak != null)
+            {
+                g.DrawImageUnscaled(imgPeak, bounds.Left, bounds.Top, imgPeak.Width, bounds.Height);
+                bounds.X += imgPeak.Width + MARGIN_RIGHT_IMAGE;
+                bounds.Width -= imgPeak.Width + MARGIN_RIGHT_IMAGE;                
+            }
+            
+            var imgType = _picker.GetPickTypeImage(choice.Choice);
+            g.DrawImageUnscaled(imgType, bounds.Left, bounds.Top, imgType.Width, bounds.Height);
+            bounds.X += imgType.Width + MARGIN_RIGHT_IMAGE;
+            bounds.Width -= imgType.Width + MARGIN_RIGHT_IMAGE;
+
+            // Draw background and text clipped to remaining space
+            var clipRect = g.ClipBounds;
+            g.SetClip(bounds);
+            e.DrawBackground();
+
+            if (!_picker.DrawPickLabel(choice.Choice, g, bounds, _modFonts, e.ForeColor, e.BackColor))
+            {
+                TextRenderer.DrawText(e.Graphics, choice.Label,
+                                      _modFonts.Plain, bounds, e.ForeColor, e.BackColor,
+                                      FORMAT_PLAIN);
+            }
+
+            // Store the left edge of the text for use with tool tips
+            _leftText = bounds.X;
+
+            // Reset the clipping rectangle
+            g.SetClip(clipRect);
+        }
+
+        private void pickListMulti_MouseMove(object sender, MouseEventArgs e)
+        {
+            Point pt = e.Location;
+            if (!_moveThreshold.Moved(pt))
+                return;
+            _moveThreshold.Location = null;
+
+            ITipProvider tipProvider = null;
+            int i = GetIndexAtPoint(pt);
+            // Make sure it is in the text portion of the item
+            if (i != -1 && !GetItemTextRectangle(i).Contains(pt))
+                i = -1;
+
+            if (i == -1)
+            {
+                _lastTipNode = null;
+                _lastTipProvider = null;
+            }
+            else
+            {
+                var nodeDoc = GetVisibleChoice(i).Choice;
+                if (!ReferenceEquals(nodeDoc, _lastTipNode))
+                {
+                    _lastTipNode = nodeDoc;
+                    _lastTipProvider = _picker.GetPickTip(nodeDoc);
+                }
+                tipProvider = _lastTipProvider;
+            }
+
+            if (tipProvider == null || !tipProvider.HasTip)
+                _nodeTip.HideTip();
+            else
+                _nodeTip.SetTipProvider(tipProvider, GetItemTextRectangle(i), pt);
+        }
+
+        private void pickListMulti_MouseLeave(object sender, EventArgs e)
+        {
+            _nodeTip.HideTip();
         }
 
         private sealed class PickListChoice
         {
-            public PickListChoice(object choice, string label, bool chosen)
+            public PickListChoice(DocNode choice, string label, bool chosen)
             {
                 Choice = choice;
                 Label = label;
                 Chosen = chosen;
             }
 
-            public object Choice { get; private set; }
+            public DocNode Choice { get; private set; }
             public string Label { get; private set; }
             public bool Chosen { get; set; }
         }

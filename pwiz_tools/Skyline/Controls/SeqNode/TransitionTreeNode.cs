@@ -19,6 +19,7 @@
 using System.Diagnostics;
 using System.Drawing;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.SeqNode
 {
@@ -39,6 +40,11 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public TransitionDocNode DocNode { get { return (TransitionDocNode)Model; } }
 
+        public PeptideDocNode PepNode
+        {
+            get { return (Parent != null ? ((PeptideTreeNode) Parent.Parent).DocNode : null); }
+        }
+
         public override string Heading
         {
             get { return TITLE; }
@@ -52,64 +58,83 @@ namespace pwiz.Skyline.Controls.SeqNode
             int peakImageIndex = PeakImageIndex;
             if (peakImageIndex != StateImageIndex)
                 StateImageIndex = peakImageIndex;
-            string label = GetLabel(DocNode, ResultsText);
+            string label = GetDisplayText(DocNode, PepNode, SequenceTree);
             if (!Equals(label, Text))
                 Text = label;
         }
-
         
         public int TypeImageIndex
         {
-            get
-            {
-                return (int)(DocNode.HasLibInfo ?
-                    SequenceTree.ImageId.fragment_lib : SequenceTree.ImageId.fragment);
-            }
+            get { return GetTypeImageIndex(DocNode); }
         }
 
-        public int DisplayResultsIndex
+        public static Image GetTypeImage(TransitionDocNode nodeTran, SequenceTree sequenceTree)
         {
-            get { return SequenceTree.GetDisplayResultsIndex(Parent != null ? (PeptideTreeNode) Parent.Parent : null); }
+            return sequenceTree.ImageList.Images[GetTypeImageIndex(nodeTran)];
+        }
+
+        private static int GetTypeImageIndex(TransitionDocNode nodeTran)
+        {
+            return (int)(nodeTran.HasLibInfo ?
+                    SequenceTree.ImageId.fragment_lib : SequenceTree.ImageId.fragment);
         }
 
         public int PeakImageIndex
         {
             get
             {
-                if (!DocSettings.HasResults)
-                    return -1;
-
-                int index = DisplayResultsIndex;
-
-                float? ratio = (DocNode.HasResults ? DocNode.GetPeakCountRatio(index) : null);
-                if (ratio == null)
-                {
-                    return DocSettings.MeasuredResults.IsChromatogramSetLoaded(index) ?
-                        (int)SequenceTree.StateImageId.peak_blank : -1;
-                }
-                else if (ratio == 0)
-                    return (int)SequenceTree.StateImageId.no_peak;
-                else if (ratio < 1.0)
-                    return (int)SequenceTree.StateImageId.keep;
-
-                return (int)SequenceTree.StateImageId.peak;
+                return GetPeakImageIndex(DocNode, PepNode, SequenceTree);
             }
         }
 
-        public string ResultsText
+        public static Image GetPeakImage(TransitionDocNode nodeTran,
+            PeptideDocNode nodePep, SequenceTree sequenceTree)
         {
-            get
-            {
-                int index = DisplayResultsIndex;
-                int indexRatio = SequenceTree.RatioIndex;
-                int? rank = DocNode.GetPeakRank(index);
-                string label = (rank.HasValue && rank > 0 ? string.Format("[{0}]", rank) : "");
-                float? ratio = DocNode.GetPeakAreaRatio(index, indexRatio);
-                if (!ratio.HasValue)
-                    return label;
+            int imageIndex = GetPeakImageIndex(nodeTran, nodePep, sequenceTree);
+            return (imageIndex != -1 ? sequenceTree.StateImageList.Images[imageIndex] : null);
+        }
 
-                return string.Format("{0} (ratio {1:F02})", label, ratio.Value);
+        private static int GetPeakImageIndex(TransitionDocNode nodeTran,
+            PeptideDocNode nodePep, SequenceTree sequenceTree)
+        {
+            var settings = sequenceTree.Document.Settings;
+            if (!settings.HasResults)
+                return -1;
+
+            int index = sequenceTree.GetDisplayResultsIndex(nodePep);
+
+            float? ratio = (nodeTran.HasResults ? nodeTran.GetPeakCountRatio(index) : null);
+            if (ratio == null)
+            {
+                return settings.MeasuredResults.IsChromatogramSetLoaded(index) ?
+                    (int)SequenceTree.StateImageId.peak_blank : -1;
             }
+            else if (ratio == 0)
+                return (int)SequenceTree.StateImageId.no_peak;
+            else if (ratio < 1.0)
+                return (int)SequenceTree.StateImageId.keep;
+
+            return (int)SequenceTree.StateImageId.peak;
+        }
+
+        public static string GetDisplayText(TransitionDocNode nodeTran,
+            PeptideDocNode nodePep, SequenceTree sequenceTree)
+        {
+            return GetLabel(nodeTran, GetResultsText(nodeTran, nodePep, sequenceTree));
+        }
+
+        private static string GetResultsText(TransitionDocNode nodeTran,
+            PeptideDocNode nodePep, SequenceTree sequenceTree)
+        {
+            int index = sequenceTree.GetDisplayResultsIndex(nodePep);
+            int indexRatio = sequenceTree.RatioIndex;
+            int? rank = nodeTran.GetPeakRank(index);
+            string label = (rank.HasValue && rank > 0 ? string.Format("[{0}]", rank) : "");
+            float? ratio = nodeTran.GetPeakAreaRatio(index, indexRatio);
+            if (!ratio.HasValue)
+                return label;
+
+            return string.Format("{0} (ratio {1})", label, MathEx.RoundAboveZero(ratio.Value, 2, 4));
         }
 
         public static string GetLabel(TransitionDocNode nodeTran, string resultsText)
@@ -146,19 +171,24 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public Size RenderTip(Graphics g, Size sizeMax, bool draw)
         {
+            return RenderTip(DocNode, g, sizeMax, draw);
+        }
+
+        public static Size RenderTip(TransitionDocNode nodeTran, Graphics g, Size sizeMax, bool draw)
+        {
             var table = new TableDesc();
             using (RenderTools rt = new RenderTools())
             {
-                table.AddDetailRow("Ion", DocNode.Transition.IonType.ToString() + DocNode.Transition.Ordinal, rt);
-                table.AddDetailRow("Charge", DocNode.Transition.Charge.ToString(), rt);
-                table.AddDetailRow("Product m/z", string.Format("{0:F04}", DocNode.Mz), rt);
-                if (DocNode.HasLibInfo)
+                table.AddDetailRow("Ion", nodeTran.Transition.IonType.ToString() + nodeTran.Transition.Ordinal, rt);
+                table.AddDetailRow("Charge", nodeTran.Transition.Charge.ToString(), rt);
+                table.AddDetailRow("Product m/z", string.Format("{0:F04}", nodeTran.Mz), rt);
+                if (nodeTran.HasLibInfo)
                 {
-                    table.AddDetailRow("Library rank", DocNode.LibInfo.Rank.ToString(), rt);
-                    table.AddDetailRow("Library intensity", string.Format("{0:F0}", DocNode.LibInfo.Intensity), rt);
+                    table.AddDetailRow("Library rank", nodeTran.LibInfo.Rank.ToString(), rt);
+                    table.AddDetailRow("Library intensity", string.Format("{0:F0}", nodeTran.LibInfo.Intensity), rt);
                 }
-                if (!string.IsNullOrEmpty(DocNode.Note))
-                    table.AddDetailRow("Note", DocNode.Note, rt);
+                if (!string.IsNullOrEmpty(nodeTran.Note))
+                    table.AddDetailRow("Note", nodeTran.Note, rt);
 
                 SizeF size = table.CalcDimensions(g);
                 if (draw)
@@ -169,7 +199,5 @@ namespace pwiz.Skyline.Controls.SeqNode
         }
 
         #endregion
-
-
     }
 }

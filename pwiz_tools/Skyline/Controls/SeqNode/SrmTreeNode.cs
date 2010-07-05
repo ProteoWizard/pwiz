@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.Drawing.Imaging;
@@ -284,27 +285,126 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public abstract bool Filtered { get; set; }
 
-        public abstract IPickedList CreatePickedList(IEnumerable<object> chosen, bool autoManageChildren);
-
-        public abstract IEnumerable<object> GetChoices(bool useFilter);
-
-        public virtual bool Equivalent(object choice1, object choice2)
-        {
-            return Equals(choice1, choice2);
-        }
-
-        public virtual string GetPickLabel(object child)
+        public virtual string GetPickLabel(DocNode child)
         {
             return child.ToString();
         }
 
-        public virtual IEnumerable<object> Chosen
+        public virtual bool DrawPickLabel(DocNode child, Graphics g, Rectangle bounds, ModFontHolder fonts, Color foreColor, Color backColor)
         {
-            get
+            // Do nothing by default, and let the pick list render the label text
+            return false;
+        }
+
+        public abstract Image GetPickTypeImage(DocNode child);
+
+        public abstract Image GetPickPeakImage(DocNode child);
+
+        public abstract ITipProvider GetPickTip(DocNode child);
+
+        public abstract IEnumerable<DocNode> GetChoices(bool useFilter);
+
+        public virtual IEnumerable<DocNode> Chosen
+        {
+            get { return ChildDocNodes; }
+        }
+
+        protected void MergeChosen(IList<DocNode> choices, bool useFilter)
+        {
+            MergeChosen(choices, useFilter, node => node.Id);
+        }
+
+        protected void MergeChosen<TKey>(IList<DocNode> choices, bool useFilter,
+                                         Func<DocNode, TKey> keySelector)
+        {
+            // Store currently chosen items in a list
+            var listChosen = Chosen.ToList();
+            // Build a dictionary of them by node specific key type, with the
+            // locations where they are stored in the list of choices.  This has
+            // to be done carefully, because while auto-generated nodes will have
+            // unique keys, manually created nodes may not.
+            var dictChosen = new Dictionary<TKey, InsertNodeLocation>();
+            foreach (var node in listChosen)
             {
-                foreach (DocNode child in ChildDocNodes)
-                    yield return child.Id;
+                var key = keySelector(node);
+                if (!dictChosen.ContainsKey(key))
+                    dictChosen.Add(key, new InsertNodeLocation(node));
             }
+            
+            // Replace nodes in the choices list with matching nodes in the
+            // chosen list.
+            int insertedNodeCount = 0;
+            for (int i = 0; i < choices.Count; i++)
+            {
+                InsertNodeLocation nodeChosen;
+                var key = keySelector(choices[i]);
+                if (dictChosen.TryGetValue(key, out nodeChosen))
+                {
+                    choices[i] = nodeChosen.InsertNode;
+                    nodeChosen.Location = i;
+                    insertedNodeCount++;
+                }
+            }
+
+            // If not all nodes were added, and this is not supposed to be a
+            // filtered set, add the remainig nodes to the list.
+            if (insertedNodeCount < listChosen.Count && !useFilter)
+            {
+                int iLast = listChosen.Count;
+                int iLastChoice = choices.Count;
+                for (int i = iLast - 1; i >= 0; i--)
+                {
+                    // If this item was not added to the list of choices,
+                    // continue until we find the next item that as.
+                    var nodeChosen = dictChosen[keySelector(listChosen[i])];
+                    if (nodeChosen.Location == -1)
+                        continue;
+
+                    // If the last item that was inserted into the list of choices
+                    // was not the item immediately preceding the current item,
+                    // loop until everything between the current item and the
+                    // last item gets inserted now.
+                    int iFirstChoice = nodeChosen.Location + 1;
+                    while (iLast - i > 1)
+                    {
+                        iLast--;
+                        var nodeInsert = listChosen[iLast];
+                        if (iFirstChoice < iLastChoice)
+                            iLastChoice = GetPickInsertIndex(nodeInsert, choices, iFirstChoice, iLastChoice);
+                        choices.Insert(iLastChoice, nodeInsert);
+                    }
+
+                    iLast = i;
+                    iLastChoice = nodeChosen.Location;
+                }
+                // Handle any remaining nodes at the head of the chosen list
+                while (iLast > 0)
+                {
+                    iLast--;
+                    var nodeInsert = listChosen[iLast];
+                    if (0 < iLastChoice)
+                        iLastChoice = GetPickInsertIndex(nodeInsert, choices, 0, iLastChoice);
+                    choices.Insert(iLastChoice, nodeInsert);
+                }
+            }
+        }
+
+        protected virtual int GetPickInsertIndex(DocNode node, IList<DocNode> choices, int iFirst, int iLast)
+        {
+            // By default insert into the first available location
+            return iFirst;
+        }
+
+        private sealed class InsertNodeLocation
+        {
+            public InsertNodeLocation(DocNode insertNode)
+            {
+                InsertNode = insertNode;
+                Location = -1;
+            }
+
+            public DocNode InsertNode { get; private set; }
+            public int Location { get; set; }
         }
 
         public abstract bool ShowAutoManageChildren { get; }
@@ -325,13 +425,13 @@ namespace pwiz.Skyline.Controls.SeqNode
             set { /* Ignore */  }
         }
 
-        public void Pick(IEnumerable<object> chosen, bool autoManageChildren, bool synchSiblings)
+        public void Pick(IEnumerable<DocNode> chosen, bool autoManageChildren, bool synchSiblings)
         {
             // Quick check to see if anything changed
             if (Helpers.Equals(chosen, Chosen) && AutoManageChildren == autoManageChildren && IsSynchSiblings == synchSiblings)
                 return;
 
-            SequenceTree.FirePickedChildren(this, CreatePickedList(chosen, autoManageChildren), synchSiblings);
+            SequenceTree.FirePickedChildren(this, new ChildPickedList(chosen, autoManageChildren), synchSiblings);
 
             // Make sure this node is open to show changes
             Expand();
@@ -526,14 +626,6 @@ namespace pwiz.Skyline.Controls.SeqNode
     public interface IChildPicker : IShowPicker
     {
         /// <summary>
-        /// Given an object used to queue cration of a new child node, return
-        /// a label to show in the <see cref="PopupPickList"/> check list.
-        /// </summary>
-        /// <param name="child">One of the objects returned from <see cref="GetChoices"/></param>
-        /// <returns>A string label to display to the user</returns>
-        string GetPickLabel(object child);
-
-        /// <summary>
         /// Return the complete list of possible children for this node.
         /// 
         /// Any type of object may be returned, as long as it is sufficiently informative
@@ -541,23 +633,58 @@ namespace pwiz.Skyline.Controls.SeqNode
         /// function when the user okays the <see cref="PopupPickList"/>.
         /// </summary>
         /// <returns>All possible children for the implementing node.</returns>
-        IEnumerable<object> GetChoices(bool useFilter);
-
-        /// <summary>
-        /// Determines whether two choice values are equivalent, though their exact
-        /// properties may differ.
-        /// </summary>
-        /// <param name="choice1">First choice to compare</param>
-        /// <param name="choice2">Second choice to compare</param>
-        /// <returns>True if the choices represent the same element</returns>
-        bool Equivalent(object choice1, object choice2);
+        IEnumerable<DocNode> GetChoices(bool useFilter);
 
         /// <summary>
         /// A list of currently chose children expressed with objects that support
         /// content equality with the list returned from <see cref="GetChoices"/>,
         /// since this is how the <see cref="PopupPickList"/> sets its checkboxes.
         /// </summary>
-        IEnumerable<object> Chosen { get; }
+        IEnumerable<DocNode> Chosen { get; }
+
+        /// <summary>
+        /// Given an object used to queue cration of a new child node, return
+        /// a label to show in the <see cref="PopupPickList"/> check list.
+        /// </summary>
+        /// <param name="child">One of the objects returned from <see cref="GetChoices"/></param>
+        /// <returns>A string label to display to the user</returns>
+        string GetPickLabel(DocNode child);
+
+        /// <summary>
+        /// Allows the child pricker to draw the labels for the children in the
+        /// popup pick list.
+        /// </summary>
+        /// <param name="child">Item to draw</param>
+        /// <param name="g"><see cref="Graphics"/> object to draw in</param>
+        /// <param name="bounds">Rectangle to draw in</param>
+        /// <param name="fonts">Base font to use for text</param>
+        /// <param name="foreColor">Text color</param>
+        /// <param name="backColor">Background color</param>
+        /// <returns>true if custom drawing was performed, false otherise</returns>
+        bool DrawPickLabel(DocNode child, Graphics g, Rectangle bounds, ModFontHolder fonts, Color foreColor, Color backColor);
+
+        /// <summary>
+        /// Gets the type image that will be displayed in the sequence tree, if
+        /// a given node is picked.
+        /// </summary>
+        /// <param name="child">Item for which image is requested</param>
+        /// <returns>An image to display beside the pick label</returns>
+        Image GetPickTypeImage(DocNode child);
+
+        /// <summary>
+        /// Gets the peak image that will be displayed in the sequence tree, if
+        /// a given node is picked.
+        /// </summary>
+        /// <param name="child">Item for which image is requested</param>
+        /// <returns>An image to display beside the pick label</returns>
+        Image GetPickPeakImage(DocNode child);
+
+        /// <summary>
+        /// Gets a <see cref="ITipProvider"/> for a specific child.
+        /// </summary>
+        /// <param name="child">The child for which a tip is requested</param>
+        /// <returns>A tip provider that can be used to show a tip about the child</returns>
+        ITipProvider GetPickTip(DocNode child);        
 
         /// <summary>
         /// The implementing node is required to update the child list of its underlying
@@ -566,7 +693,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         /// <param name="chosen">List of objects supplied by <see cref="GetChoices"/> that the user left checked</param>
         /// <param name="autoManageChildren">True if the auto-manage bit should also be set</param>
         /// <param name="synchSiblings">True if siblings of this node should be synchronized with it</param>
-        void Pick(IEnumerable<object> chosen, bool autoManageChildren, bool synchSiblings);
+        void Pick(IEnumerable<DocNode> chosen, bool autoManageChildren, bool synchSiblings);
 
         /// <summary>
         /// Whether to show the checkbox that controls whether children will be automatically added
@@ -609,34 +736,18 @@ namespace pwiz.Skyline.Controls.SeqNode
     }
 
     /// <summary>
-    /// Base class for child node picks, when the pick tag is simply the
-    /// <see cref="Identity"/> objects of the desired nodes.
+    /// .
     /// </summary>
-    internal abstract class AbstractPickedList : IPickedList
+    internal class ChildPickedList : IPickedList
     {
-        protected AbstractPickedList(SrmSettings settings, IEnumerable<object> picked, bool autoManageChildren)
+        public ChildPickedList(IEnumerable<DocNode> picked, bool autoManageChildren)
         {
-            Settings = settings;
-            Picked = picked;
+            Chosen = picked;
             AutoManageChildren = autoManageChildren;
         }
 
-        public SrmSettings Settings { get; private set; }
-        public IEnumerable<object> Picked { get; private set; }
+        public IEnumerable<DocNode> Chosen { get; private set; }
         public bool AutoManageChildren { get; private set; }
-
-        public IEnumerable<Identity> Chosen
-        {
-            get
-            {
-                foreach (object pick in Picked)
-                    yield return GetId(pick);
-            }
-        }
-
-        public abstract DocNode CreateChildNode(Identity childId);
-
-        public abstract Identity GetId(object pick);
     }
 
     /// <summary>
@@ -675,54 +786,48 @@ namespace pwiz.Skyline.Controls.SeqNode
         public static string FontFace { get { return "Arial"; } }
         public static float FontSize { get { return 8f; } }
 
-        private SrmTreeNode _nodeTree;
+        private ITipProvider _tipProvider;
+        private Rectangle _rectItem;
+        private readonly Control _tipControl;
         private readonly Timer _timer;
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
 
         private const int NODE_SPACE_Y = 5;
 
-        public NodeTip()
+        public NodeTip(Control tipControl)
         {
+            _tipControl = tipControl;
             _timer = new Timer { Interval = 500 };
             _timer.Tick += Timer_Tick;
         }
 
-        public SequenceTree SequenceTree
+        public void HideTip()
         {
-            get { return _nodeTree == null ? null : _nodeTree.SequenceTree; }
+            SetTipProvider(null, new Rectangle(), new Point());
         }
 
-        public TreeNode Node
+        public void SetTipProvider(ITipProvider tipProvider, Rectangle rectItem, Point cursorPos)
         {
-            get { return _nodeTree; }
-        }
-
-        public void SetNode(TreeNode node, Point cursorPos)
-        {
-            // First make sure it supports the required types.
-
-            if (!(node is SrmTreeNode && node is ITipProvider))
-                node = null;
-
-            if (_nodeTree != node)
+            if (_tipProvider != tipProvider)
             {
                 _timer.Stop();
                 if (Visible)
                 {
-                    AnimateMode animate = (Y < _nodeTree.Bounds.Y ?
+                    AnimateMode animate = (Y < _rectItem.Y ?
                         AnimateMode.SlideTopToBottom : AnimateMode.SlideBottomToTop);
                     HideAnimate(animate);
                 }
-                _nodeTree = (SrmTreeNode)node;
+                _tipProvider = tipProvider;
+                _rectItem = _tipControl.RectangleToScreen(rectItem);
                 _moveThreshold.Location = cursorPos;
-                if (node != null)
+                if (tipProvider != null)
                     _timer.Start();
             }
             else if (_timer.Enabled && _moveThreshold.Moved(cursorPos))
             {
                 _timer.Stop();
                 _moveThreshold.Location = cursorPos;
-                if (node != null)
+                if (_tipProvider != null)
                     _timer.Start();
             }
         }
@@ -731,59 +836,53 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             base.OnPaint(e);
 
-            ITipProvider tipProvider = Node as ITipProvider;
-            if (tipProvider != null)
+            if (_tipProvider != null)
             {
                 // Render in unrestricted size, since current algorithms may
                 // not render completely, if given exactly the ClientSize.
-                tipProvider.RenderTip(e.Graphics, ClientSize, true);
+                _tipProvider.RenderTip(e.Graphics, ClientSize, true);
             }
         }
 
         private void Timer_Tick(Object sender, EventArgs e)
         {
             _timer.Stop();
-            if (SequenceTree == null || !SequenceTree.Focused)
+            if (_tipControl == null || !_tipControl.Focused)
                 return;
 
-            ITipProvider tipProvider = Node as ITipProvider;
-            Debug.Assert(tipProvider != null);
-
-            Point loc = SequenceTree.PointToScreen(Node.Bounds.Location);
-            Rectangle rectScreen = Screen.GetBounds(SequenceTree);
+            Rectangle rectScreen = Screen.GetBounds(_tipControl);
             AnimateMode animate = AnimateMode.SlideTopToBottom;
 
             using (Bitmap bitmap1 = new Bitmap(1, 1, PixelFormat.Format32bppArgb))
             {
                 using (Graphics g = Graphics.FromImage(bitmap1))
                 {
-                    Size size = tipProvider.RenderTip(g, rectScreen.Size, false);
-                    Rectangle rectNode = SequenceTree.RectangleToScreen(Node.Bounds);
-                    int yPos = loc.Y + rectNode.Height + NODE_SPACE_Y;
+                    Size size = _tipProvider.RenderTip(g, rectScreen.Size, false);
+                    int yPos = _rectItem.Y + _rectItem.Height + NODE_SPACE_Y;
                     if (yPos + size.Height > rectScreen.Bottom)
                     {
-                        if (rectScreen.Bottom - yPos > rectNode.Top - NODE_SPACE_Y - rectScreen.Top)
+                        if (rectScreen.Bottom - yPos > _rectItem.Top - NODE_SPACE_Y - rectScreen.Top)
                         {
                             size.Height = rectScreen.Bottom - yPos;
 
                             // Recalc size based to fit into restricted area.
-                            size = tipProvider.RenderTip(g, size, false);
+                            size = _tipProvider.RenderTip(g, size, false);
                         }
                         else
                         {
-                            yPos = rectNode.Top - NODE_SPACE_Y;
+                            yPos = _rectItem.Top - NODE_SPACE_Y;
                             if (yPos - size.Height < rectScreen.Top)
                             {
                                 size.Height = yPos - rectScreen.Top;
 
                                 // Recalc size based to fit into restricted area.
-                                size = tipProvider.RenderTip(g, size, false);
+                                size = _tipProvider.RenderTip(g, size, false);
                             }
                             yPos -= size.Height;
                             animate = AnimateMode.SlideBottomToTop;
                         }
                     }
-                    Location = new Point(loc.X, yPos);
+                    Location = new Point(_rectItem.X, yPos);
                     ClientSize = size;
                 }
             }

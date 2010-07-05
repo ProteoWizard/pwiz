@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.pickListMulti = new System.Windows.Forms.CheckedListBox();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.tbbOk = new System.Windows.Forms.ToolStripButton();
             this.tbbCancel = new System.Windows.Forms.ToolStripButton();
@@ -40,23 +39,9 @@
             this.cbItems = new System.Windows.Forms.CheckBox();
             this.textSearch = new System.Windows.Forms.TextBox();
             this.cbSynchronize = new System.Windows.Forms.CheckBox();
+            this.pickListMulti = new System.Windows.Forms.ListBox();
             this.toolStrip1.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // pickListMulti
-            // 
-            this.pickListMulti.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.pickListMulti.CheckOnClick = true;
-            this.pickListMulti.FormattingEnabled = true;
-            this.pickListMulti.Location = new System.Drawing.Point(29, 22);
-            this.pickListMulti.Name = "pickListMulti";
-            this.pickListMulti.Size = new System.Drawing.Size(339, 199);
-            this.pickListMulti.TabIndex = 0;
-            this.pickListMulti.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.pickListMulti_ItemCheck);
-            this.pickListMulti.KeyDown += new System.Windows.Forms.KeyEventHandler(this.pickListMulti_KeyDown);
-            this.pickListMulti.Click += new System.EventHandler(this.pickListMulti_Click);
             // 
             // toolStrip1
             // 
@@ -158,8 +143,8 @@
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.textSearch.Location = new System.Drawing.Point(51, 2);
             this.textSearch.Name = "textSearch";
-            this.textSearch.Size = new System.Drawing.Size(317, 20);
-            this.textSearch.TabIndex = 4;
+            this.textSearch.Size = new System.Drawing.Size(352, 20);
+            this.textSearch.TabIndex = 2;
             this.textSearch.Visible = false;
             this.textSearch.TextChanged += new System.EventHandler(this.textSearch_TextChanged);
             this.textSearch.PreviewKeyDown += new System.Windows.Forms.PreviewKeyDownEventHandler(this.textSearch_PreviewKeyDown);
@@ -171,21 +156,39 @@
             this.cbSynchronize.Location = new System.Drawing.Point(32, 227);
             this.cbSynchronize.Name = "cbSynchronize";
             this.cbSynchronize.Size = new System.Drawing.Size(84, 17);
-            this.cbSynchronize.TabIndex = 5;
+            this.cbSynchronize.TabIndex = 4;
             this.cbSynchronize.Text = "Synchronize";
             this.cbSynchronize.UseVisualStyleBackColor = true;
+            // 
+            // pickListMulti
+            // 
+            this.pickListMulti.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.pickListMulti.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+            this.pickListMulti.FormattingEnabled = true;
+            this.pickListMulti.ItemHeight = 16;
+            this.pickListMulti.Location = new System.Drawing.Point(29, 22);
+            this.pickListMulti.Name = "pickListMulti";
+            this.pickListMulti.Size = new System.Drawing.Size(374, 196);
+            this.pickListMulti.TabIndex = 0;
+            this.pickListMulti.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.pickListMulti_DrawItem);
+            this.pickListMulti.MouseMove += new System.Windows.Forms.MouseEventHandler(this.pickListMulti_MouseMove);
+            this.pickListMulti.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pickListMulti_MouseDown);
+            this.pickListMulti.MouseLeave += new System.EventHandler(this.pickListMulti_MouseLeave);
+            this.pickListMulti.KeyDown += new System.Windows.Forms.KeyEventHandler(this.pickListMulti_KeyDown);
             // 
             // PopupPickList
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(373, 249);
+            this.ClientSize = new System.Drawing.Size(408, 249);
             this.ControlBox = false;
+            this.Controls.Add(this.pickListMulti);
             this.Controls.Add(this.cbSynchronize);
             this.Controls.Add(this.textSearch);
             this.Controls.Add(this.cbItems);
             this.Controls.Add(this.toolStrip1);
-            this.Controls.Add(this.pickListMulti);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -203,7 +206,6 @@
 
         #endregion
 
-        private System.Windows.Forms.CheckedListBox pickListMulti;
         private System.Windows.Forms.ToolStrip toolStrip1;
         private System.Windows.Forms.ToolStripButton tbbCancel;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
@@ -215,5 +217,6 @@
         private System.Windows.Forms.ToolStripButton tbbFind;
         private System.Windows.Forms.ToolStripButton tbbAutoManageChildren;
         private System.Windows.Forms.CheckBox cbSynchronize;
+        private System.Windows.Forms.ListBox pickListMulti;
     }
 }

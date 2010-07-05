@@ -531,7 +531,7 @@ namespace pwiz.Skyline.Controls
         protected void DrawFocus(Graphics g)
         {
             if (IsSelected && TreeView.Focused)
-                ControlPaint.DrawBorder(g, BoundsMS, Color.Black, ButtonBorderStyle.Dotted);            
+                ControlPaint.DrawFocusRectangle(g, BoundsMS, ForeColorMS, BackColorMS);
         }
     }
 }

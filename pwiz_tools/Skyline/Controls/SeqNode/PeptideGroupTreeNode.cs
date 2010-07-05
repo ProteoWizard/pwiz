@@ -114,119 +114,105 @@ namespace pwiz.Skyline.Controls.SeqNode
             set { Settings.Default.FilterPeptides = value; }
         }
 
-        public override bool Equivalent(object choice1, object choice2)
+        public override bool DrawPickLabel(DocNode child, Graphics g, Rectangle bounds, ModFontHolder fonts, Color foreColor, Color backColor)
         {
-            if (choice1 is PeptideDocNode && choice2 is PeptideDocNode)
-                return Equals(((PeptideDocNode)choice1).Id, ((PeptideDocNode)choice2).Id);
-            return base.Equivalent(choice1, choice2);
+            PeptideTreeNode.DrawPeptideText((PeptideDocNode) child, DocSettings, null,
+                g, bounds, fonts, foreColor, backColor);
+            return true;
         }
 
-        public override IEnumerable<object> GetChoices(bool useFilter)
+        public override Image GetPickTypeImage(DocNode child)
+        {
+            return PeptideTreeNode.GetTypeImage((PeptideDocNode) child, SequenceTree);
+        }
+
+        public override Image GetPickPeakImage(DocNode child)
+        {
+            return PeptideTreeNode.GetPeakImage((PeptideDocNode) child, SequenceTree);
+        }
+
+        public override ITipProvider GetPickTip(DocNode child)
+        {
+            return new PickPeptideTip((PeptideDocNode) child, DocSettings);
+        }
+
+        private sealed class PickPeptideTip : ITipProvider
+        {
+            private readonly PeptideDocNode _nodePep;
+            private readonly SrmSettings _settings;
+
+            public PickPeptideTip(PeptideDocNode nodePep, SrmSettings settings)
+            {
+                _nodePep = nodePep;
+                _settings = settings;
+            }
+
+            public bool HasTip
+            {
+                get { return PeptideTreeNode.HasPeptideTip(_nodePep, _settings); }
+            }
+
+            public Size RenderTip(Graphics g, Size sizeMax, bool draw)
+            {
+                return PeptideTreeNode.RenderTip(_nodePep, null,
+                    _settings, g, sizeMax, draw);
+            }
+        }
+
+        public override IEnumerable<DocNode> GetChoices(bool useFilter)
         {
             FastaSequence fastaSeq = DocNode.Id as FastaSequence;
             if (fastaSeq != null)
             {
                 SrmSettings settings = DocSettings;
 
+                IList<DocNode> listPeptides = new List<DocNode>();
+                foreach (var nodePep in fastaSeq.GetPeptideNodes(settings, useFilter))
+                    listPeptides.Add(nodePep.ChangeSettings(settings, SrmSettingsDiff.ALL));
+
                 PeptideRankId rankId = DocSettings.PeptideSettings.Libraries.RankId;
-                if (rankId == null)
-                {
-                    foreach (var nodePep in fastaSeq.GetPeptideNodes(settings, useFilter))
-                        yield return nodePep;                    
-                }
-                else
-                {
-                    IList<DocNode> listPeptides = new List<DocNode>();
-                    foreach (var nodePep in fastaSeq.GetPeptideNodes(settings, true))
-                    {
-                        listPeptides.Add(nodePep.ChangeSettings(settings, SrmSettingsDiff.ALL));
-                    }
+                if (rankId != null)
                     listPeptides = PeptideGroupDocNode.RankPeptides(listPeptides, settings, useFilter);
 
-                    // If not filtered, the ranked filtered peptides need to be merged into the
-                    // unfiltered list.
-                    if (useFilter)
-                    {
-                        foreach (var nodePeptide in listPeptides)
-                            yield return nodePeptide;
-                    }
-                    else
-                    {
-                        IEnumerator<DocNode> enumPeptides = listPeptides.GetEnumerator();
-                        bool hasNext = enumPeptides.MoveNext();
-                        foreach (var nodePep in fastaSeq.GetPeptideNodes(settings, false))
-                        {
-                            if (hasNext && Equals(nodePep.Peptide, enumPeptides.Current.Id))
-                            {
-                                yield return enumPeptides.Current;
-                                hasNext = enumPeptides.MoveNext();
-                            }
-                            else
-                            {
-                                yield return nodePep;
-                            }
-                        }
-                    }
-                }
+                MergeChosen(listPeptides, useFilter, node => ((PeptideDocNode)node).Key);
+
+                foreach (var node in listPeptides)
+                    yield return node;
             }
         }
 
-        public override IEnumerable<object> Chosen
+        protected override int GetPickInsertIndex(DocNode node, IList<DocNode> choices, int iFirst, int iLast)
         {
-            get
+            var nodePep = (PeptideDocNode) node;
+            for (int i = iFirst; i < iLast; i++)
             {
-                return DocNode.Children.ToArray();
+                var nodeNext = (PeptideDocNode) choices[i];
+                // If the next node is later in order than the node to insert, then
+                // insert before it.
+                if (nodePep.Peptide.Begin.HasValue && nodeNext.Peptide.Begin.HasValue &&
+                        nodePep.Peptide.Begin.Value < nodeNext.Peptide.Begin.Value)
+                {
+                    return i;
+                }
+                // If the next node is the same peptide and has explicit modifications,
+                // insert before it.
+                else if (Equals(nodePep.Peptide, nodeNext.Peptide) && nodeNext.HasExplicitMods)
+                {
+                    return i;
+                }
             }
+            // Use the last possible insertion point.
+            return iLast;
         }
 
         private static Peptide PeptideFromChoice(object choice)
         {
-            var nodePeptide = choice as PeptideDocNode;
-            if (nodePeptide != null)
-                return nodePeptide.Peptide;
-            return choice as Peptide;
-        }
-
-        public override IPickedList CreatePickedList(IEnumerable<object> chosen, bool autoManageChildren)
-        {
-            return new PeptidePickedList(DocSettings, chosen, autoManageChildren);
+            return ((PeptideDocNode)choice).Peptide;
         }
 
         public override bool ShowAutoManageChildren
         {
             get { return !((PeptideGroupDocNode) Model).IsPeptideList; }
-        }
-
-        private sealed class PeptidePickedList : AbstractPickedList
-        {
-            private readonly bool _ranked;
-
-            public PeptidePickedList(SrmSettings settings, IEnumerable<object> picked, bool autoManageChildren)
-                : base(settings, picked, autoManageChildren)
-            {
-                _ranked = (settings.PeptideSettings.Libraries.RankId != null);
-            }
-
-            public override DocNode CreateChildNode(Identity childId)
-            {
-                if (_ranked)
-                {
-                    foreach (DocNode node in Picked)
-                    {
-                        if (Equals(childId, node.Id))
-                            return node;
-                    }
-                }
-
-                Peptide peptide = (Peptide) childId;
-                var nodePeptide = new PeptideDocNode(peptide, new TransitionGroupDocNode[0]);
-                return nodePeptide.ChangeSettings(Settings, SrmSettingsDiff.ALL);
-            }
-
-            public override Identity GetId(object pick)
-            {
-                return _ranked ? ((DocNode) pick).Id : (Identity) pick;
-            }
         }
 
         #endregion
@@ -274,11 +260,11 @@ namespace pwiz.Skyline.Controls.SeqNode
                     heightTotal += heightDesc;
                 }
 
-                IEnumerable<object> peptidesChoices = GetChoices(true);
-                HashSet<object> peptidesChosen = new HashSet<object>(Chosen);
+                IEnumerable<DocNode> peptidesChoices = GetChoices(true);
+                HashSet<DocNode> peptidesChosen = new HashSet<DocNode>(Chosen);
 
                 // Make sure all chosen peptides get listed
-                HashSet<object> setChoices = new HashSet<object>(peptidesChoices);
+                HashSet<DocNode> setChoices = new HashSet<DocNode>(peptidesChoices);
                 setChoices.UnionWith(peptidesChosen);
                 var arrayChoices = setChoices.ToArray();
                 Array.Sort(arrayChoices, (choice1, choice2) =>
@@ -355,11 +341,11 @@ namespace pwiz.Skyline.Controls.SeqNode
         }
 
         private static int RenderAALine(string aa, bool peptideList, int start, bool elipsis, bool draw,
-                                        IEnumerable<object> peptidesChoices, ICollection<object> peptidesChosen, Peptide peptideSelected,
+                                        IEnumerable<DocNode> peptidesChoices, ICollection<DocNode> peptidesChosen, Peptide peptideSelected,
                                         Graphics g, RenderTools rt, float height, float width)
         {
-            IEnumerator<object> peptides = peptidesChoices.GetEnumerator();
-            object choice = peptides.MoveNext() ? peptides.Current : null;
+            IEnumerator<DocNode> peptides = peptidesChoices.GetEnumerator();
+            DocNode choice = peptides.MoveNext() ? peptides.Current : null;
             bool chosen = peptidesChosen.Contains(choice);
             Peptide peptide = PeptideFromChoice(choice);
 
@@ -459,22 +445,22 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
             sb.Append("</i>");
 
-            IEnumerator<object> peptides = GetChoices(true).GetEnumerator();
-            HashSet<object> peptidesChosen = new HashSet<object>(Chosen);
-            Peptide peptide = (Peptide)(peptides.MoveNext() ? peptides.Current : null);
-            bool chosen = peptidesChosen.Contains(peptide);
+            IEnumerator<DocNode> peptides = GetChoices(true).GetEnumerator();
+            HashSet<DocNode> peptidesChosen = new HashSet<DocNode>(Chosen);
+            PeptideDocNode nodePep = (PeptideDocNode)(peptides.MoveNext() ? peptides.Current : null);
+            bool chosen = peptidesChosen.Contains(nodePep);
 
             bool inPeptide = false;
             for (int i = 0; i < aa.Length; i++)
             {
-                if (peptide != null)
+                if (nodePep != null)
                 {
-                    while (peptide != null && i >= peptide.End)
+                    while (nodePep != null && i >= nodePep.Peptide.End)
                     {
-                        peptide = (Peptide)(peptides.MoveNext() ? peptides.Current : null);
-                        chosen = peptidesChosen.Contains(peptide);
+                        nodePep = (PeptideDocNode)(peptides.MoveNext() ? peptides.Current : null);
+                        chosen = peptidesChosen.Contains(nodePep);
                     }
-                    if (peptide != null && i >= peptide.Begin)
+                    if (nodePep != null && i >= nodePep.Peptide.Begin)
                     {
                         if (!inPeptide)
                         {

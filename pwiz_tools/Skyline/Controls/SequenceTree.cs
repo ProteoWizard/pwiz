@@ -128,10 +128,9 @@ namespace pwiz.Skyline.Controls
             _pickTimer = new Timer { Interval = 1 };
             _pickTimer.Tick += tick_ShowPickList;
 
-            _nodeTip = new NodeTip();
+            _nodeTip = new NodeTip(this);
 
-            HeavyModFont = new Font(Font, FontStyle.Bold);
-            LightModFont = new Font(Font, FontStyle.Bold | FontStyle.Underline);
+            ModFonts = new ModFontHolder(this);
         }
 
         [Browsable(true)]
@@ -139,34 +138,7 @@ namespace pwiz.Skyline.Controls
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public Font HeavyModFont { get; set; }
-
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public Font LightModFont { get; set; }
-
-        /// <summary>
-        /// Modified amino acids with both light and heavy modifications use
-        /// the light modified font, but should have a different color from
-        /// the light-only modifications.
-        /// </summary>
-        [Browsable(false)]
-        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public Font LightAndHeavyModFont { get { return LightModFont; } }
-
-        public Font GetModFont(IsotopeLabelType labelType)
-        {
-            return (labelType.IsLight ? LightModFont : HeavyModFont);
-        }
-
-        public static Color GetModColor(IsotopeLabelType labelType)
-        {
-            if (labelType.IsLight)
-                return Color.Black;
-
-            int indexColor = labelType.SortOrder % GraphChromatogram.COLORS_GROUPS.Length;
-            return GraphChromatogram.COLORS_GROUPS[indexColor];            
-        }
+        public ModFontHolder ModFonts { get; private set; }
 
         /// <summary>
         /// For <see cref="SrmTreeNodeParent"/> to use when child picking completes
@@ -325,9 +297,14 @@ namespace pwiz.Skyline.Controls
         /// <returns>The best result index for the given peptide</returns>
         public int GetDisplayResultsIndex(PeptideTreeNode nodePepTree)
         {
+            return GetDisplayResultsIndex(nodePepTree != null ? nodePepTree.DocNode : null);
+        }
+
+        public int GetDisplayResultsIndex(PeptideDocNode nodePep)
+        {
             int i = -1;
-            if (nodePepTree != null && ShowReplicate == ReplicateDisplay.best)
-                i = nodePepTree.DocNode.BestResult;
+            if (nodePep != null && ShowReplicate == ReplicateDisplay.best)
+                i = nodePep.BestResult;
             if (i == -1)
                 i = ResultsIndex;
             return i;
@@ -561,7 +538,7 @@ namespace pwiz.Skyline.Controls
 
             // Hide tool tip
             if (_nodeTip != null)
-                _nodeTip.SetNode(null, new Point());
+                _nodeTip.HideTip();
 
             _moveThreshold.Location = PointToClient(Cursor.Position);
         }
@@ -716,7 +693,6 @@ namespace pwiz.Skyline.Controls
 
             // Calculate UI indications of picker popup and tool tip
             TreeNodeMS node = (TreeNodeMS) GetNodeAt(pt);
-            TreeNodeMS nodeTip = node;
             var picker = GetPicker(node);
             var tipProvider = node as ITipProvider;
             if (tipProvider != null && !tipProvider.HasTip)
@@ -725,7 +701,9 @@ namespace pwiz.Skyline.Controls
             {
                 Rectangle rectCapture = node.BoundsMS;
                 if (tipProvider == null || !rectCapture.Contains(pt))
-                    nodeTip = null;
+                    _nodeTip.HideTip();
+                else
+                    _nodeTip.SetTipProvider(tipProvider, rectCapture, pt);
                 Rectangle rectDrop = GetDropRect(node);
                 rectCapture.Width = rectDrop.Left + rectDrop.Width - rectCapture.Left;
                 if (picker == null || !rectCapture.Contains(pt))
@@ -734,10 +712,10 @@ namespace pwiz.Skyline.Controls
             }
             else
             {
-                node = nodeTip = null;
+                node = null;
+                _nodeTip.HideTip();                
             }
             NodeCapture = node;
-            _nodeTip.SetNode(nodeTip, pt);
         }
 
         protected override void OnMouseClick(MouseEventArgs e)
@@ -1057,5 +1035,37 @@ namespace pwiz.Skyline.Controls
         }
 
         public string Label { get; set; }
+    }
+
+    public class ModFontHolder
+    {
+        private readonly Control _control;
+
+        public ModFontHolder(Control control)
+        {
+            _control = control;
+
+            Heavy = new Font(Plain, FontStyle.Bold);
+            Light = new Font(Plain, FontStyle.Bold | FontStyle.Underline);
+        }
+
+        public Font Plain { get { return _control.Font; } }
+        public Font Light { get; private set; }
+        public Font Heavy { get; private set; }
+        public Font LightAndHeavy { get { return Light; } }
+
+        public Font GetModFont(IsotopeLabelType labelType)
+        {
+            return (labelType.IsLight ? Light : Heavy);
+        }
+
+        public static Color GetModColor(IsotopeLabelType labelType)
+        {
+            if (labelType.IsLight)
+                return Color.Black;
+
+            int indexColor = labelType.SortOrder % GraphChromatogram.COLORS_GROUPS.Length;
+            return GraphChromatogram.COLORS_GROUPS[indexColor];
+        }
     }
 }

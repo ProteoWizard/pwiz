@@ -958,4 +958,18 @@ namespace pwiz.Skyline.Util
             return sb.ToString();
         }
     }
+
+    public static class MathEx
+    {
+        public static double RoundAboveZero(float value, int startDigits, int mostDigits)
+        {
+            for (int i = startDigits; i <= mostDigits; i++)
+            {
+                double rounded = Math.Round(value, i);
+                if (rounded > 0)
+                    return rounded;
+            }
+            return 0;
+        }        
+    }
 }

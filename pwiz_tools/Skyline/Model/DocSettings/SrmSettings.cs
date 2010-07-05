@@ -497,30 +497,35 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool Accept(Peptide peptide, ExplicitMods explicitMods)
         {
-            return Accept(peptide, explicitMods, TransitionSettings.Filter.PrecursorCharges, false);
+            return Accept(peptide, explicitMods, TransitionSettings.Filter.PrecursorCharges,
+                          PeptideFilterType.fasta);
         }
 
         public bool Accept(Peptide peptide, bool filterUserPeptides)
         {
-            return Accept(peptide, null, TransitionSettings.Filter.PrecursorCharges, filterUserPeptides);            
+            return Accept(peptide, null, TransitionSettings.Filter.PrecursorCharges,
+                          filterUserPeptides ? PeptideFilterType.full : PeptideFilterType.fasta);
         }
 
         public bool Accept(Peptide peptide, ExplicitMods mods, int charge)
         {
-            return Accept(peptide, mods, new[] {charge}, false);
+            return Accept(peptide, mods, new[] {charge}, PeptideFilterType.none);
         }
 
-        private bool Accept(Peptide peptide, ExplicitMods mods, IEnumerable<int> precursorCharges, bool filterUserPeptides)
+        private enum PeptideFilterType { none, fasta, full }
+
+        private bool Accept(Peptide peptide, ExplicitMods mods, IEnumerable<int> precursorCharges, PeptideFilterType filterType)
         {
+            // Only filter user specified peptides based on the heuristic
+            // filter when explicitly requested.
+            bool useFilter = filterType == PeptideFilterType.full;
+            if (filterType == PeptideFilterType.fasta)
+                useFilter = peptide.Begin.HasValue;
+
             var libraries = PeptideSettings.Libraries;
             if (!libraries.HasLibraries || libraries.Pick == PeptidePick.filter)
             {
-                // Only filter user specified peptides based on the heuristic
-                // filter when explicitly requested.
-                if (!filterUserPeptides && !peptide.Begin.HasValue)
-                    return true;
-
-                return PeptideSettings.Filter.Accept(peptide, null);
+                return !useFilter || PeptideSettings.Filter.Accept(peptide, null);
             }
 
             // Check if the peptide is in the library for one of the
@@ -553,9 +558,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 case PeptidePick.library:
                     return inLibrary;
                 case PeptidePick.both:
-                    return inLibrary && PeptideSettings.Filter.Accept(peptide, null);
+                    return inLibrary && (!useFilter || PeptideSettings.Filter.Accept(peptide, null));
                 default:
-                    return inLibrary || PeptideSettings.Filter.Accept(peptide, null);
+                    return inLibrary || (!useFilter || PeptideSettings.Filter.Accept(peptide, null));
             }
         }
 

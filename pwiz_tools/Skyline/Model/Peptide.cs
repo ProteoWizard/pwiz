@@ -57,6 +57,8 @@ namespace pwiz.Skyline.Model
 
         public Peptide Peptide { get { return (Peptide)Id; } }
 
+        public PeptideModKey Key { get { return new PeptideModKey(Peptide, ExplicitMods);}}
+
         public override AnnotationDef.AnnotationTarget AnnotationTarget { get { return AnnotationDef.AnnotationTarget.peptide; } }
 
         public ExplicitMods ExplicitMods { get; private set; }
@@ -248,6 +250,14 @@ namespace pwiz.Skyline.Model
             {
                 return Children.Contains(node =>
                     !((TransitionGroupDocNode) node).TransitionGroup.LabelType.IsLight);
+            }
+        }
+
+        public bool HasLibInfo
+        {
+            get
+            {
+                return Children.Contains(node => ((TransitionGroupDocNode)node).HasLibInfo);
             }
         }
 
@@ -1132,6 +1142,47 @@ namespace pwiz.Skyline.Model
                     format = "{0}.{1}.{2} [{3}, {4}] (missed {5})";
                 return string.Format(format, PrevAA, Sequence, NextAA,
                                      Begin.Value, End.Value - 1, MissedCleavages);
+            }
+        }
+
+        #endregion
+    }
+
+    public sealed class PeptideModKey
+    {
+        public PeptideModKey(Peptide peptide, ExplicitMods modifications)
+        {
+            Peptide = peptide;
+            Modifications = modifications;
+        }
+
+        private Peptide Peptide { get; set; }
+        private ExplicitMods Modifications { get; set; }
+
+        #region object overrides
+
+        private bool Equals(PeptideModKey other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(other.Peptide, Peptide) &&
+                Equals(other.Modifications, Modifications);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof(PeptideModKey)) return false;
+            return Equals((PeptideModKey)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (Peptide.GetHashCode() * 397) ^
+                    (Modifications != null ? Modifications.GetHashCode() : 0);
             }
         }
 

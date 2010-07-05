@@ -432,9 +432,13 @@ namespace pwiz.Skyline.SettingsUI
             graphPane.AllowCurveOverlap = true;
 
             Icon = Resources.Skyline;
+            ModFont = new Font(PlainFont, FontStyle.Bold | FontStyle.Underline);
 
             PeptideTextBox.Focus();
         }
+
+        private Font ModFont { get; set; }
+        private Font PlainFont { get { return PeptideListBox.Font; } }
 
         private SettingsList<LibrarySpec> LibraryList
         {
@@ -1235,9 +1239,7 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private TextSequence CreateTextSequence(string text, bool modified)
         {
-            var font = PeptideListBox.Font;
-            if (modified)
-                font = new Font(font, FontStyle.Bold | FontStyle.Underline);
+            var font = (modified? ModFont : PlainFont);
             return new TextSequence { Text = text, Font = font, Color = Color.Black };
         }
 

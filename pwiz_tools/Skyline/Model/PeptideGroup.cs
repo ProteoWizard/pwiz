@@ -191,47 +191,6 @@ namespace pwiz.Skyline.Model
             return map;
         }
 
-        private sealed class PeptideModKey
-        {
-            public PeptideModKey(Peptide peptide, ExplicitMods modifications)
-            {
-                Peptide = peptide;
-                Modifications = modifications;
-            }
-
-            private Peptide Peptide { get; set; }
-            private ExplicitMods Modifications { get; set; }
-
-            #region object overrides
-
-            private bool Equals(PeptideModKey other)
-            {
-                if (ReferenceEquals(null, other)) return false;
-                if (ReferenceEquals(this, other)) return true;
-                return Equals(other.Peptide, Peptide) &&
-                    Equals(other.Modifications, Modifications);
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (ReferenceEquals(null, obj)) return false;
-                if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != typeof(PeptideModKey)) return false;
-                return Equals((PeptideModKey)obj);
-            }
-
-            public override int GetHashCode()
-            {
-                unchecked
-                {
-                    return (Peptide.GetHashCode() * 397) ^
-                        (Modifications != null ? Modifications.GetHashCode() : 0);
-                }
-            }
-
-            #endregion
-        }
-
         public static IList<DocNode> RankPeptides(IList<DocNode> listPeptides, SrmSettings settings, bool useLimit)
         {
             // If no rank ID is set, just return the input list
@@ -666,7 +625,6 @@ namespace pwiz.Skyline.Model
             return Comparer<int>.Default.Compare(pep1.Begin.Value, pep2.Begin.Value);
         }
     }
-
     public class AlternativeProtein
     {
         public AlternativeProtein(string name, string description)
