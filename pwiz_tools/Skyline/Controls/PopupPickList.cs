@@ -42,6 +42,7 @@ namespace pwiz.Skyline.Controls
         private List<int> _indexListChoices;
         private bool _closing;
         private bool _autoManageChildren;
+        private bool _selectalInternalChange;
 
         private int _leftText;
 
@@ -246,6 +247,7 @@ namespace pwiz.Skyline.Controls
                 }
             }
             pickListMulti.EndUpdate();
+            UpdateSelectAll();
         }
 
         private static bool ContainsChoice(IList<DocNode> choices, DocNode choice)
@@ -399,8 +401,31 @@ namespace pwiz.Skyline.Controls
             set { cbItems.Checked = value; }
         }
 
+        private bool IsAllChecked
+        {
+            get
+            {
+                for (int i = 0; i < pickListMulti.Items.Count; i++)
+                {
+                    if (!GetItemChecked(i))
+                        return false;
+                }
+                return true;
+            }
+        }
+
+        private void UpdateSelectAll()
+        {
+            _selectalInternalChange = true;
+            SelectAll = IsAllChecked;
+            _selectalInternalChange = false;
+        }
+
         private void cbItems_CheckedChanged(object sender, EventArgs e)
         {
+            if (_selectalInternalChange)
+                return;
+
             bool checkAll = cbItems.Checked;
             for (int i = 0; i < pickListMulti.Items.Count; i++)
                 SetItemChecked(i, checkAll);
@@ -448,22 +473,12 @@ namespace pwiz.Skyline.Controls
 
         private void ToggleItem(int iChange)
         {
-            bool checkedNew = !GetItemChecked(iChange);
-            SetItemChecked(iChange, checkedNew);
+            SetItemChecked(iChange, !GetItemChecked(iChange));
             pickListMulti.Invalidate(pickListMulti.GetItemRectangle(iChange));
 
-            AutoManageChildren = false;
+            UpdateSelectAll();
 
-            // If all other visible checkboxes are the same state
-            // as the one that just changed, then check the check-all checkbox.
-            for (int i = 0; i < pickListMulti.Items.Count; i++)
-            {
-                if (i == iChange)
-                    continue;
-                if (GetItemChecked(i) != checkedNew)
-                    return;
-            }
-            cbItems.Checked = checkedNew;
+            AutoManageChildren = false;
         }
 
         private const int MARGIN_LEFT_CHECKBOX = 1;

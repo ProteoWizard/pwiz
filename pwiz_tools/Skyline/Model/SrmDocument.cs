@@ -607,6 +607,12 @@ namespace pwiz.Skyline.Model
         public SrmDocument ChangePeptideMods(IdentityPath peptidePath, ExplicitMods mods,
             IList<StaticMod> listGlobalStaticMods, IList<StaticMod> listGlobalHeavyMods)
         {
+            return ChangePeptideMods(peptidePath, mods, false, listGlobalStaticMods, listGlobalHeavyMods);
+        }
+
+        public SrmDocument ChangePeptideMods(IdentityPath peptidePath, ExplicitMods mods, bool createCopy,
+            IList<StaticMod> listGlobalStaticMods, IList<StaticMod> listGlobalHeavyMods)
+        {
             var docResult = this;
             var pepMods = docResult.Settings.PeptideSettings.Modifications;
 
@@ -621,7 +627,7 @@ namespace pwiz.Skyline.Model
             }
             // If modifications have changed, update the peptide.
             var modsPep = nodePeptide.ExplicitMods;
-            if (!Equals(mods, modsPep))
+            if (createCopy || !Equals(mods, modsPep))
             {
                 // Update the peptide to the new explicit modifications
                 // Change the explicit modifications, and force a settings update through the peptide
@@ -630,10 +636,24 @@ namespace pwiz.Skyline.Model
                 //           update, but constructing the right one currently depends on the
                 //           peptide being added to the document.  Doesn't seem like the potential
                 //           changes would have any impact on this operation, though.
-                nodePeptide = nodePeptide.ChangeExplicitMods(mods).ChangeSettings(Settings,
-                    SrmSettingsDiff.ALL);
-
-                docResult = (SrmDocument) ReplaceChild(peptidePath.Parent, nodePeptide);
+                if (createCopy)
+                {
+                    nodePeptide = new PeptideDocNode((Peptide) nodePeptide.Peptide.Copy(),
+                                                        nodePeptide.Rank,
+                                                        Annotations.EMPTY,
+                                                        nodePeptide.ExplicitMods,
+                                                        null,   // Results
+                                                        nodePeptide.Children.ToList().ConvertAll(node =>
+                                                            (TransitionGroupDocNode)node).ToArray(),
+                                                        nodePeptide.AutoManageChildren);
+                    nodePeptide = nodePeptide.ChangeExplicitMods(mods).ChangeSettings(Settings, SrmSettingsDiff.ALL);
+                    docResult = (SrmDocument)docResult.Insert(peptidePath, nodePeptide, true);
+                }
+                else
+                {
+                    nodePeptide = nodePeptide.ChangeExplicitMods(mods).ChangeSettings(Settings, SrmSettingsDiff.ALL);
+                    docResult = (SrmDocument) docResult.ReplaceChild(peptidePath.Parent, nodePeptide);
+                }
             }
             var pepModsNew = pepMods.DeclareExplicitMods(docResult, listGlobalStaticMods, listGlobalHeavyMods);
             if (ReferenceEquals(pepModsNew, pepMods))

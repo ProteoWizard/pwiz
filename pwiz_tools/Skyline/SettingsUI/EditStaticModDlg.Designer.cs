@@ -126,7 +126,7 @@
             this.labelChemicalFormula.Location = new System.Drawing.Point(6, 137);
             this.labelChemicalFormula.Name = "labelChemicalFormula";
             this.labelChemicalFormula.Size = new System.Drawing.Size(90, 13);
-            this.labelChemicalFormula.TabIndex = 6;
+            this.labelChemicalFormula.TabIndex = 8;
             this.labelChemicalFormula.Text = "&Chemical formula:";
             // 
             // textFormula
@@ -144,7 +144,7 @@
             this.label2.Location = new System.Drawing.Point(6, 193);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(100, 13);
-            this.label2.TabIndex = 10;
+            this.label2.TabIndex = 11;
             this.label2.Text = "&Monoisotopic mass:";
             // 
             // textMonoMass
@@ -152,7 +152,7 @@
             this.textMonoMass.Location = new System.Drawing.Point(9, 209);
             this.textMonoMass.Name = "textMonoMass";
             this.textMonoMass.Size = new System.Drawing.Size(98, 20);
-            this.textMonoMass.TabIndex = 11;
+            this.textMonoMass.TabIndex = 12;
             // 
             // label3
             // 
@@ -160,7 +160,7 @@
             this.label3.Location = new System.Drawing.Point(133, 193);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(77, 13);
-            this.label3.TabIndex = 12;
+            this.label3.TabIndex = 13;
             this.label3.Text = "A&verage mass:";
             // 
             // textAverageMass
@@ -168,7 +168,7 @@
             this.textAverageMass.Location = new System.Drawing.Point(136, 209);
             this.textAverageMass.Name = "textAverageMass";
             this.textAverageMass.Size = new System.Drawing.Size(98, 20);
-            this.textAverageMass.TabIndex = 13;
+            this.textAverageMass.TabIndex = 14;
             // 
             // labelAA
             // 
@@ -337,7 +337,7 @@
             this.panelFormula.Location = new System.Drawing.Point(4, 150);
             this.panelFormula.Name = "panelFormula";
             this.panelFormula.Size = new System.Drawing.Size(288, 31);
-            this.panelFormula.TabIndex = 8;
+            this.panelFormula.TabIndex = 9;
             this.panelFormula.Visible = false;
             // 
             // panelAtoms
@@ -349,7 +349,7 @@
             this.panelAtoms.Location = new System.Drawing.Point(4, 149);
             this.panelAtoms.Name = "panelAtoms";
             this.panelAtoms.Size = new System.Drawing.Size(287, 36);
-            this.panelAtoms.TabIndex = 9;
+            this.panelAtoms.TabIndex = 10;
             // 
             // cb2H
             // 
@@ -413,7 +413,7 @@
             this.btnLoss.Location = new System.Drawing.Point(268, 207);
             this.btnLoss.Name = "btnLoss";
             this.btnLoss.Size = new System.Drawing.Size(75, 23);
-            this.btnLoss.TabIndex = 16;
+            this.btnLoss.TabIndex = 17;
             this.btnLoss.Text = "&Loss <<";
             this.btnLoss.UseVisualStyleBackColor = true;
             this.btnLoss.Click += new System.EventHandler(this.btnLoss_Click);
@@ -424,7 +424,7 @@
             this.labelLossFormula.Location = new System.Drawing.Point(6, 259);
             this.labelLossFormula.Name = "labelLossFormula";
             this.labelLossFormula.Size = new System.Drawing.Size(147, 13);
-            this.labelLossFormula.TabIndex = 17;
+            this.labelLossFormula.TabIndex = 18;
             this.labelLossFormula.Text = "Ne&utral loss chemical formula:";
             // 
             // textLossFormula
@@ -443,7 +443,7 @@
             this.panelLossFormula.Location = new System.Drawing.Point(4, 272);
             this.panelLossFormula.Name = "panelLossFormula";
             this.panelLossFormula.Size = new System.Drawing.Size(288, 31);
-            this.panelLossFormula.TabIndex = 18;
+            this.panelLossFormula.TabIndex = 20;
             this.panelLossFormula.Visible = false;
             // 
             // btnLossFormulaPopup
@@ -460,7 +460,7 @@
             this.textLossAverageMass.Location = new System.Drawing.Point(136, 331);
             this.textLossAverageMass.Name = "textLossAverageMass";
             this.textLossAverageMass.Size = new System.Drawing.Size(98, 20);
-            this.textLossAverageMass.TabIndex = 22;
+            this.textLossAverageMass.TabIndex = 24;
             this.textLossAverageMass.TextChanged += new System.EventHandler(this.textLossAverageMass_TextChanged);
             // 
             // label7
@@ -469,7 +469,7 @@
             this.label7.Location = new System.Drawing.Point(133, 315);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(71, 13);
-            this.label7.TabIndex = 21;
+            this.label7.TabIndex = 23;
             this.label7.Text = "Av&erage loss:";
             // 
             // textLossMonoMass
@@ -477,7 +477,7 @@
             this.textLossMonoMass.Location = new System.Drawing.Point(9, 331);
             this.textLossMonoMass.Name = "textLossMonoMass";
             this.textLossMonoMass.Size = new System.Drawing.Size(98, 20);
-            this.textLossMonoMass.TabIndex = 20;
+            this.textLossMonoMass.TabIndex = 22;
             this.textLossMonoMass.TextChanged += new System.EventHandler(this.textLossMonoMass_TextChanged);
             // 
             // label8
@@ -486,7 +486,7 @@
             this.label8.Location = new System.Drawing.Point(6, 315);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(94, 13);
-            this.label8.TabIndex = 19;
+            this.label8.TabIndex = 21;
             this.label8.Text = "M&onoisotopic loss:";
             // 
             // comboRelativeRT
@@ -496,7 +496,7 @@
             this.comboRelativeRT.Location = new System.Drawing.Point(222, 277);
             this.comboRelativeRT.Name = "comboRelativeRT";
             this.comboRelativeRT.Size = new System.Drawing.Size(98, 21);
-            this.comboRelativeRT.TabIndex = 14;
+            this.comboRelativeRT.TabIndex = 16;
             // 
             // labelRelativeRT
             // 
@@ -504,7 +504,7 @@
             this.labelRelativeRT.Location = new System.Drawing.Point(222, 259);
             this.labelRelativeRT.Name = "labelRelativeRT";
             this.labelRelativeRT.Size = new System.Drawing.Size(115, 13);
-            this.labelRelativeRT.TabIndex = 14;
+            this.labelRelativeRT.TabIndex = 15;
             this.labelRelativeRT.Text = "Relative retention time:";
             // 
             // cbVariableMod
@@ -513,7 +513,7 @@
             this.cbVariableMod.Location = new System.Drawing.Point(183, 91);
             this.cbVariableMod.Name = "cbVariableMod";
             this.cbVariableMod.Size = new System.Drawing.Size(64, 17);
-            this.cbVariableMod.TabIndex = 25;
+            this.cbVariableMod.TabIndex = 6;
             this.cbVariableMod.TabStop = false;
             this.cbVariableMod.Text = "Variable";
             this.cbVariableMod.UseVisualStyleBackColor = true;

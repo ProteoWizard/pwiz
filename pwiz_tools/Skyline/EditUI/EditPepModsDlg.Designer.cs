@@ -37,6 +37,7 @@
             this.labelAA1 = new System.Windows.Forms.Label();
             this.panelMain = new System.Windows.Forms.Panel();
             this.btnReset = new System.Windows.Forms.Button();
+            this.cbCreateCopy = new System.Windows.Forms.CheckBox();
             this.panelMain.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -47,7 +48,7 @@
             this.btnCancel.Location = new System.Drawing.Point(347, 41);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 6;
+            this.btnCancel.TabIndex = 2;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
@@ -57,7 +58,7 @@
             this.btnOk.Location = new System.Drawing.Point(347, 12);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 5;
+            this.btnOk.TabIndex = 1;
             this.btnOk.Text = "OK";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
@@ -120,19 +121,29 @@
             this.panelMain.Controls.Add(this.labelHeavy1);
             this.panelMain.Location = new System.Drawing.Point(2, 12);
             this.panelMain.Name = "panelMain";
-            this.panelMain.Size = new System.Drawing.Size(339, 96);
-            this.panelMain.TabIndex = 7;
+            this.panelMain.Size = new System.Drawing.Size(339, 135);
+            this.panelMain.TabIndex = 0;
             // 
             // btnReset
             // 
             this.btnReset.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnReset.Location = new System.Drawing.Point(348, 85);
+            this.btnReset.Location = new System.Drawing.Point(348, 124);
             this.btnReset.Name = "btnReset";
             this.btnReset.Size = new System.Drawing.Size(75, 23);
-            this.btnReset.TabIndex = 8;
+            this.btnReset.TabIndex = 4;
             this.btnReset.Text = "&Reset";
             this.btnReset.UseVisualStyleBackColor = true;
             this.btnReset.Click += new System.EventHandler(this.btnReset_Click);
+            // 
+            // cbCreateCopy
+            // 
+            this.cbCreateCopy.AutoSize = true;
+            this.cbCreateCopy.Location = new System.Drawing.Point(348, 84);
+            this.cbCreateCopy.Name = "cbCreateCopy";
+            this.cbCreateCopy.Size = new System.Drawing.Size(83, 17);
+            this.cbCreateCopy.TabIndex = 3;
+            this.cbCreateCopy.Text = "&Create copy";
+            this.cbCreateCopy.UseVisualStyleBackColor = true;
             // 
             // EditPepModsDlg
             // 
@@ -140,7 +151,8 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(434, 120);
+            this.ClientSize = new System.Drawing.Size(434, 159);
+            this.Controls.Add(this.cbCreateCopy);
             this.Controls.Add(this.btnReset);
             this.Controls.Add(this.panelMain);
             this.Controls.Add(this.btnCancel);
@@ -154,6 +166,7 @@
             this.panelMain.ResumeLayout(false);
             this.panelMain.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -168,5 +181,6 @@
         private System.Windows.Forms.Label labelAA1;
         private System.Windows.Forms.Panel panelMain;
         private System.Windows.Forms.Button btnReset;
+        private System.Windows.Forms.CheckBox cbCreateCopy;
     }
 }

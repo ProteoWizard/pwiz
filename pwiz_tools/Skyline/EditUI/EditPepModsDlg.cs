@@ -225,6 +225,16 @@ namespace pwiz.Skyline.EditUI
         /// </summary>
         public ExplicitMods ExplicitMods { get; private set; }
 
+        /// <summary>
+        /// True if a copy of the currently selected peptide should be
+        /// made, with the explicit modifications applied.
+        /// </summary>
+        public bool IsCreateCopy
+        {
+            get { return cbCreateCopy.Checked; }
+            set { cbCreateCopy.Checked = value; }
+        }
+
         public void SetModification(int indexAA, IsotopeLabelType type, string modification)
         {
             ComboBox combo;

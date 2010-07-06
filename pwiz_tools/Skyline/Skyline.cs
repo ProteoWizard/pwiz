@@ -1254,7 +1254,8 @@ namespace pwiz.Skyline
                     var listStaticMods = Settings.Default.StaticModList;
                     var listHeavyMods = Settings.Default.HeavyModList;
                     ModifyDocument("Modify " + nodePeptideTree.Text, doc =>
-                        doc.ChangePeptideMods(nodePeptideTree.Path, dlg.ExplicitMods, listStaticMods, listHeavyMods));
+                        doc.ChangePeptideMods(nodePeptideTree.Path, dlg.ExplicitMods,
+                            dlg.IsCreateCopy, listStaticMods, listHeavyMods));
                 }
             }            
         }
