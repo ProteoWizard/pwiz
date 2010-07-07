@@ -53,7 +53,9 @@ class Serializer_MGF::Impl
 void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
     const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
 {
-    bool titleIsThermoDTA = msd.fileDescription.fileContent.hasCVParam(MS_Thermo_nativeID_format);
+    bool titleIsThermoDTA = false;
+    if (msd.fileDescription.sourceFilePtrs.size() >= 1)
+        titleIsThermoDTA = msd.fileDescription.sourceFilePtrs[0]->hasCVParam(MS_Thermo_nativeID_format);
     const string& thermoFilename = titleIsThermoDTA ? msd.fileDescription.sourceFilePtrs[0]->name : "";
     string thermoBasename = titleIsThermoDTA ? bfs::basename(thermoFilename) : "";
 
