@@ -982,7 +982,7 @@ namespace freicore
             float neutralMass = g_rtConfig->UseAvgMassOfSequences ? ((float) variant.molecularWeight(0,true))
                 : (float) variant.monoisotopicMass(0,true);
             float massDiff = fabs(neutralMass - spectrum->mOfPrecursor);
-            if(massDiff > g_rtConfig->PrecursorMassTolerance[spectrum->id.charge])
+            if(massDiff > g_rtConfig->PrecursorMassTolerance[spectrum->id.charge-1])
                 continue;
 
             string variantSequence = PEPTIDE_N_TERMINUS_SYMBOL + variant.sequence() + PEPTIDE_C_TERMINUS_SYMBOL;
