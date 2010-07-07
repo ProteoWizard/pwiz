@@ -27,6 +27,8 @@ namespace pwiz.Topograph.Query
             {
                 "SELECT T.TracerPercent,",
 	            "T.Score,",
+            	"T.PrecursorEnrichment,",
+            	"T.Turnover,",
 	            "T.PeptideFileAnalysis.MsDataFile.Name AS File,",
 	            "T.PeptideFileAnalysis.MsDataFile.TimePoint AS TimePoint,",
 	            "T.PeptideFileAnalysis.MsDataFile.Cohort AS Cohort,",
