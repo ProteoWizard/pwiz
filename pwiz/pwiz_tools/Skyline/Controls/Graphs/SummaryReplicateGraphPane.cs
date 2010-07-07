@@ -237,7 +237,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         pointPairLists[i].Add(PointPairMissing(iResult));
 
                     var result = transitionGroupDocNode.Results[iResult];
-                    if (result == null || result.Count == 0 || !result[0].RetentionTime.HasValue)
+                    if (result == null || result.Count == 0)
                         continue;
 
                     // Add areas by result index to point pair lists for every step
