@@ -79,17 +79,20 @@ namespace pwiz.Skyline.EditUI
                 tbxProteinDescription.Text = proteinColumn.Protein.Description;
                 proteinSequence = proteinColumn.Protein.Sequence;
             }
-            var regex = new Regex(peptideSequence);
-            StringBuilder formattedText = new StringBuilder("{\\rtf1\\ansi{\\fonttbl\\f0\\fswiss Helvetica;}{\\colortbl ;\\red0\\green0\\blue255;}\\f0\\pard \\fs16");
-            int lastIndex = 0;
-            for (Match match = regex.Match(proteinSequence, 0); match.Success; lastIndex = match.Index + match.Length, match = match.NextMatch())
+            if (!String.IsNullOrEmpty(proteinSequence))
             {
-                formattedText.Append("\\cf0\\b0 " + proteinSequence.Substring(lastIndex, match.Index - lastIndex));
-                formattedText.Append("\\cf1\\b " + proteinSequence.Substring(match.Index, match.Length));
+                var regex = new Regex(peptideSequence);
+                StringBuilder formattedText = new StringBuilder("{\\rtf1\\ansi{\\fonttbl\\f0\\fswiss Helvetica;}{\\colortbl ;\\red0\\green0\\blue255;}\\f0\\pard \\fs16");
+                int lastIndex = 0;
+                for (Match match = regex.Match(proteinSequence, 0); match.Success; lastIndex = match.Index + match.Length, match = match.NextMatch())
+                {
+                    formattedText.Append("\\cf0\\b0 " + proteinSequence.Substring(lastIndex, match.Index - lastIndex));
+                    formattedText.Append("\\cf1\\b " + proteinSequence.Substring(match.Index, match.Length));
+                }
+                formattedText.Append("\\cf0\\b0 " + proteinSequence.Substring(lastIndex, proteinSequence.Length - lastIndex));
+                formattedText.Append("\\par }");
+                richTextBoxSequence.Rtf = formattedText.ToString();
             }
-            formattedText.Append("\\cf0\\b0 " + proteinSequence.Substring(lastIndex, proteinSequence.Length - lastIndex));
-            formattedText.Append("\\par }");
-            richTextBoxSequence.Rtf = formattedText.ToString();
         }
 
         public PeptideGroupTreeNode PeptideGroupTreeNode { get; set;}
