@@ -508,8 +508,12 @@ namespace pwiz.Skyline.Model.Results
             {
                 if (Equals(cachePathOpt, CachePath))
                     return this;
-                // Copy the cache, if movint to a new location
-                File.Copy(CachePath, cachePathOpt);
+                // Copy the cache, if moving to a new location
+                using (FileSaver fs = new FileSaver(cachePathOpt))
+                {
+                    File.Copy(CachePath, fs.SafeName, true);
+                    fs.Commit(ReadStream);
+                }
                 return ChangeCachePath(cachePathOpt);
             }
 
@@ -605,14 +609,14 @@ namespace pwiz.Skyline.Model.Results
                 fs.Commit(ReadStream);
             }
 
-            return new ChromatogramCache(CachePath,
+            return new ChromatogramCache(cachePathOpt,
                                          FORMAT_VERSION_CACHE,
                                          listKeepCachedFiles.ToArray(),
                                          listKeepEntries.ToArray(),
                                          listKeepTransitions.ToArray(),
                                          listKeepPeaks.ToArray(),
                                          // Create a new read stream, for the newly created file
-                                         streamManager.CreatePooledStream(CachePath, false));
+                                         streamManager.CreatePooledStream(cachePathOpt, false));
         }
     }
 }
