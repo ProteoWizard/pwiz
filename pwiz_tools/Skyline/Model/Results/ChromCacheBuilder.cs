@@ -309,9 +309,20 @@ namespace pwiz.Skyline.Model.Results
                 // Otherwise, split up the product ions among the precursors they matched
                 bool isTimeNormalArea = chromDataSet.IsTimeNormalArea;
 
+                // Make sure the same chrom data object is not added twice, or two threads
+                // may end up processing it at the same time.
+                var setChromData = new HashSet<ChromData>();
                 foreach (var match in listMatchingGroups)
                 {
-                    var chromDataPart = new ChromDataSet(isTimeNormalArea, match.Value.ToArray());
+                    var arrayChromData = match.Value.ToArray();
+                    for (int j = 0; j < arrayChromData.Length; j++)
+                    {
+                        var chromData = arrayChromData[j];
+                        if (setChromData.Contains(chromData))
+                            arrayChromData[j] = chromData.Clone();
+                        setChromData.Add(chromData);
+                    }
+                    var chromDataPart = new ChromDataSet(isTimeNormalArea, arrayChromData);
                     yield return new KeyValuePair<TransitionGroupDocNode, ChromDataSet>(
                         match.Key, chromDataPart);
                 }
@@ -1620,7 +1631,8 @@ namespace pwiz.Skyline.Model.Results
                 // in the new time array closest to it.
                 if (startTime == endTime)
                 {
-                    if (i == 0 || timesNew[i] - startTime < startTime - timesNew[i - 1])
+                    if (i < timesNew.Length &&
+                            (i == 0 || timesNew[i] - startTime < startTime - timesNew[i - 1]))
                         end = start;
                     else
                         end = start = i - 1;
@@ -2239,6 +2251,11 @@ namespace pwiz.Skyline.Model.Results
                 ProviderId = providerId;
                 Peaks = new List<ChromPeak>();
                 MaxPeakIndex = -1;
+            }
+
+            public ChromData Clone()
+            {
+                return (ChromData) MemberwiseClone();
             }
 
             public void Load(ChromDataProvider provider)

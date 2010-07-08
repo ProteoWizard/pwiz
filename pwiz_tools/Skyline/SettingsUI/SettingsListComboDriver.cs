@@ -95,6 +95,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 EditList();
             }
+            _selectedIndexLast = Combo.SelectedIndex;
         }
 
         public void AddItem()
@@ -110,7 +111,6 @@ namespace pwiz.Skyline.SettingsUI
                 // Reset the selected index before edit was chosen.
                 Combo.SelectedIndex = _selectedIndexLast;
             }
-            _selectedIndexLast = Combo.SelectedIndex;
         }
 
         public void EditList()
@@ -137,7 +137,6 @@ namespace pwiz.Skyline.SettingsUI
                 // Reset the selected index before edit was chosen.
                 Combo.SelectedIndex = _selectedIndexLast;
             }
-            _selectedIndexLast = Combo.SelectedIndex;
         }
     }
 }
