@@ -160,8 +160,8 @@ namespace pwiz.Topograph.Model
         }
         public PeptideQuantity PeptideQuantity { get; private set; }
         public TracerPercentFormula PrecursorEnrichmentFormula { get; set; }
-        public double PrecursorEnrichment { get; set; }
-        public double Turnover { get; set; }
+        public double? PrecursorEnrichment { get; set; }
+        public double? Turnover { get; set; }
         public IDictionary<TracerFormula, double> ToDictionary()
         {
             return ListChildren().ToDictionary(

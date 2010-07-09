@@ -446,14 +446,17 @@ namespace pwiz.Topograph.Enrichment
                 tracerAmounts.AddChild(tracerAmount.TracerFormula, tracerAmount);
             }
             tracerAmounts.Score = Score(observedVector, totalPrediction, excludeFunc);
-            double turnover;
-            IDictionary<TracerFormula, double> bestMatch;
-            tracerAmounts.PrecursorEnrichmentFormula = ComputePrecursorEnrichmentAndTurnover(tracerAmounts.ToDictionary(), out turnover, out bestMatch);
-            if (tracerAmounts.PrecursorEnrichmentFormula != null)
+            if (amounts.Count() > 2)
             {
-                tracerAmounts.PrecursorEnrichment = tracerAmounts.PrecursorEnrichmentFormula.Values.Sum()/100.0;
+                double turnover;
+                IDictionary<TracerFormula, double> bestMatch;
+                tracerAmounts.PrecursorEnrichmentFormula = ComputePrecursorEnrichmentAndTurnover(tracerAmounts.ToDictionary(), out turnover, out bestMatch);
+                if (tracerAmounts.PrecursorEnrichmentFormula != null)
+                {
+                    tracerAmounts.PrecursorEnrichment = tracerAmounts.PrecursorEnrichmentFormula.Values.Sum() / 100.0;
+                }
+                tracerAmounts.Turnover = turnover;
             }
-            tracerAmounts.Turnover = turnover;
         }
 
         internal Vector IntensityDictionaryToVector(IDictionary<double, double> dict, IList<MzRange> mzs)

@@ -35,9 +35,9 @@ namespace pwiz.Topograph.Data
         public virtual int PeptideAmountCount { get; set; }
         public virtual double TracerPercent { get; set; }
         public virtual double Score { get; set; }
-        public virtual double PrecursorEnrichment { get; set; }
+        public virtual double? PrecursorEnrichment { get; set; }
         public virtual string PrecursorEnrichmentFormula { get; set; }
-        public virtual double Turnover { get; set; }
+        public virtual double? Turnover { get; set; }
     }
 
     public enum PeptideQuantity
