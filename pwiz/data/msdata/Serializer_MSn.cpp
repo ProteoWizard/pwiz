@@ -84,7 +84,7 @@ namespace
       os << "H\tCreationDate " << ctime(&rawtime) << flush;
       os << "H\tExtractor\tProteoWizard" << endl;
       os << "H\tExtractor version\t" << 
-        ( (msd.softwarePtrs.empty() > 0) ? "unknown" : msd.softwarePtrs.at(0)->id ) << endl;
+        ( msd.softwarePtrs.empty() ? "unknown" : msd.softwarePtrs.at(0)->id ) << endl;
       os << "H\tSource file\t" << 
         ( (msd.fileDescription.sourceFilePtrs.empty()) ? "unknown" : 
           msd.fileDescription.sourceFilePtrs.at(0)->name ) << endl;
