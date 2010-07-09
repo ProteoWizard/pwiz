@@ -1886,11 +1886,11 @@ namespace pwiz.Skyline
                         peptideGroup = fastaSequence;
                         if (peptideSequence == null)
                         {
-                            peptideDocNodes.AddRange(fastaSequence.CreatePeptideDocNodes(settings, true));
+                            peptideDocNodes.AddRange(fastaSequence.CreateFullPeptideDocNodes(settings, true));
                         }
                         else
                         {
-                            peptideDocNodes.Add(fastaSequence.CreatePeptideDocNode(settings, peptideSequence));
+                            peptideDocNodes.Add(fastaSequence.CreateFullPeptideDocNode(settings, peptideSequence));
                         }
                         peptideDocNodes.Sort(FastaSequence.ComparePeptides);
                     }

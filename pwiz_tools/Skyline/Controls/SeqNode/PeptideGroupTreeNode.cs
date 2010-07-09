@@ -102,10 +102,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public override bool CanShow
         {
-            get
-            {
-                return DocNode.Id is FastaSequence;
-            }
+            get { return DocNode.Id is FastaSequence || ChildDocNodes.Count > 0; }
         }
 
         public override bool Filtered
@@ -161,24 +158,20 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public override IEnumerable<DocNode> GetChoices(bool useFilter)
         {
-            FastaSequence fastaSeq = DocNode.Id as FastaSequence;
-            if (fastaSeq != null)
-            {
-                SrmSettings settings = DocSettings;
+            SrmSettings settings = DocSettings;
 
-                IList<DocNode> listPeptides = new List<DocNode>();
-                foreach (var nodePep in fastaSeq.GetPeptideNodes(settings, useFilter))
-                    listPeptides.Add(nodePep.ChangeSettings(settings, SrmSettingsDiff.ALL));
+            IList<DocNode> listPeptides = new List<DocNode>();
+            foreach (var nodePep in DocNode.GetPeptideNodes(settings, useFilter))
+                listPeptides.Add(nodePep.ChangeSettings(settings, SrmSettingsDiff.ALL));
 
-                PeptideRankId rankId = DocSettings.PeptideSettings.Libraries.RankId;
-                if (rankId != null)
-                    listPeptides = PeptideGroupDocNode.RankPeptides(listPeptides, settings, useFilter);
+            PeptideRankId rankId = DocSettings.PeptideSettings.Libraries.RankId;
+            if (rankId != null)
+                listPeptides = PeptideGroup.RankPeptides(listPeptides, settings, useFilter);
 
-                MergeChosen(listPeptides, useFilter, node => ((PeptideDocNode)node).Key);
+            MergeChosen(listPeptides, useFilter, node => ((PeptideDocNode)node).Key);
 
-                foreach (var node in listPeptides)
-                    yield return node;
-            }
+            foreach (var node in listPeptides)
+                yield return node;
         }
 
         protected override int GetPickInsertIndex(DocNode node, IList<DocNode> choices, int iFirst, int iLast)
@@ -207,7 +200,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         private static Peptide PeptideFromChoice(object choice)
         {
-            return ((PeptideDocNode)choice).Peptide;
+            return (choice != null ? ((PeptideDocNode)choice).Peptide : null);
         }
 
         public override bool ShowAutoManageChildren

@@ -813,6 +813,11 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return _modifications[0].Modifications; }
         }
 
+        public bool HasVariableModifications
+        {
+            get { return StaticModifications.Contains(mod => mod.IsVariable); }
+        }
+
         public IEnumerable<StaticMod> VariableModifications
         {
             get 

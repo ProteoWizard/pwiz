@@ -91,10 +91,7 @@ namespace pwiz.Skyline.Model
 
         public PeptideGroupDocNode ChangeSettings(SrmSettings settingsNew, SrmSettingsDiff diff)
         {
-            // Only FASTA sequences change their peptide lists based on
-            // settings changes.
-            FastaSequence fastaSeq = Id as FastaSequence;
-            if (diff.DiffPeptides && fastaSeq != null && settingsNew.PeptideSettings.Filter.AutoSelect && AutoManageChildren)
+            if (diff.DiffPeptides && settingsNew.PeptideSettings.Filter.AutoSelect && AutoManageChildren)
             {
                 IList<DocNode> childrenNew = new List<DocNode>();
 
@@ -102,7 +99,7 @@ namespace pwiz.Skyline.Model
                 int countIons = 0;
 
                 Dictionary<PeptideModKey, DocNode> mapIdToChild = CreatePeptideModToChildMap();
-                foreach(PeptideDocNode nodePep in fastaSeq.GetPeptideNodes(settingsNew, true))
+                foreach(PeptideDocNode nodePep in GetPeptideNodes(settingsNew, true))
                 {
                     PeptideDocNode nodePeptide = nodePep;
                     SrmSettingsDiff diffNode = SrmSettingsDiff.ALL;
@@ -132,7 +129,7 @@ namespace pwiz.Skyline.Model
                     }
                 }
 
-                childrenNew = RankPeptides(childrenNew, settingsNew, true);
+                childrenNew = PeptideGroup.RankPeptides(childrenNew, settingsNew, true);
 
                 return (PeptideGroupDocNode) ChangeChildrenChecked(childrenNew);
             }
@@ -183,63 +180,58 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public IEnumerable<PeptideDocNode> GetPeptideNodes(SrmSettings settings, bool useFilter)
+        {
+            // FASTA sequences can generate a comprehensive list of available peptides.
+            FastaSequence fastaSeq = Id as FastaSequence;
+            if (fastaSeq != null)
+            {
+                foreach (PeptideDocNode nodePep in fastaSeq.CreatePeptideDocNodes(settings, useFilter))
+                    yield return nodePep;
+            }
+            // Peptide lists without variable modifications just return their existing children.
+            else if (!settings.PeptideSettings.Modifications.HasVariableModifications)
+            {
+                foreach (PeptideDocNode nodePep in Children)
+                {
+                    if (!nodePep.HasVariableMods)
+                        yield return nodePep;                    
+                }
+            }
+            // If there are variable modifications, fill out the available list.
+            else
+            {
+                var setNonExplicit = new HashSet<Peptide>();
+                IPeptideFilter filter = (useFilter ? settings : PeptideFilter.UNFILTERED);
+                foreach (PeptideDocNode nodePep in Children)
+                {
+                    if (nodePep.HasExplicitMods && !nodePep.HasVariableMods)
+                        yield return nodePep;
+                    else if (setNonExplicit.Contains(nodePep.Peptide))
+                        continue;
+                    else
+                    {
+                        bool returnedResult = false;
+                        foreach (PeptideDocNode nodePepResult in nodePep.Peptide.CreateDocNodes(settings, filter))
+                        {
+                            yield return nodePepResult;
+                            returnedResult = true;
+                        }
+                        // Make sure the peptide is not removed due to filtering
+                        if (!returnedResult)
+                            yield return nodePep;
+                        setNonExplicit.Add(nodePep.Peptide);
+                    }
+                }                
+            }
+        }
+
         private Dictionary<PeptideModKey, DocNode> CreatePeptideModToChildMap()
         {
             var map = new Dictionary<PeptideModKey, DocNode>();
             foreach (PeptideDocNode child in Children)
                 map.Add(new PeptideModKey(child.Peptide, child.ExplicitMods), child);
             return map;
-        }
-
-        public static IList<DocNode> RankPeptides(IList<DocNode> listPeptides, SrmSettings settings, bool useLimit)
-        {
-            // If no rank ID is set, just return the input list
-            PeptideRankId rankId = settings.PeptideSettings.Libraries.RankId;
-
-            // Transfer input list to a typed array
-            PeptideDocNode[] peptides = new PeptideDocNode[listPeptides.Count];
-            for (int i = 0; i < peptides.Length; i++)
-            {
-                var peptide = (PeptideDocNode) listPeptides[i];
-                // Remove any old rank information, if peptides are no longer ranked.
-                if (rankId == null && peptide.Rank.HasValue)
-                    peptide = peptide.ChangeRank(null);
-                peptides[i] = peptide;
-            }
-
-            if (rankId == null)
-                return peptides;
-
-            // Sort desc by rank ID value
-            Array.Sort(peptides, (pep1, pep2) =>
-                Comparer<float>.Default.Compare(pep2.GetRankValue(rankId), pep1.GetRankValue(rankId)));
-
-            // Update the rank values on the peptides where necessary
-            for (int i = 0; i < peptides.Length; i++)
-            {
-                PeptideDocNode nodePeptide = peptides[i];
-                int rank = i + 1;
-                if (!nodePeptide.Rank.HasValue || nodePeptide.Rank.Value != rank)
-                    peptides[i] = nodePeptide.ChangeRank(rank);
-            }
-
-            // Reduce array length to desired limit, if necessary
-            int? peptideCount = settings.PeptideSettings.Libraries.PeptideCount;
-            if (useLimit && peptideCount.HasValue && peptideCount.Value < peptides.Length)
-            {
-                PeptideDocNode[] peptidesNew = new PeptideDocNode[peptideCount.Value];
-                for (int i = 0; i < peptidesNew.Length; i++)
-                {
-                    // TODO: Remove any peptide groups without the correct rank value
-                    peptidesNew[i] = peptides[i];
-                }
-                peptides = peptidesNew;
-            }
-
-            // Re-sort by order in FASTA sequence
-            Array.Sort(peptides, FastaSequence.ComparePeptides);
-
-            return peptides;
         }
 
         #region object overrides
@@ -277,6 +269,57 @@ namespace pwiz.Skyline.Model
         public virtual string Name { get { return null; } }
         public virtual string Description { get { return null; } }
         public virtual string Sequence { get { return null; } }
+
+        public static IList<DocNode> RankPeptides(IList<DocNode> listPeptides, SrmSettings settings, bool useLimit)
+        {
+            // If no rank ID is set, just return the input list
+            PeptideRankId rankId = settings.PeptideSettings.Libraries.RankId;
+
+            // Transfer input list to a typed array
+            PeptideDocNode[] peptides = new PeptideDocNode[listPeptides.Count];
+            for (int i = 0; i < peptides.Length; i++)
+            {
+                var peptide = (PeptideDocNode) listPeptides[i];
+                // Remove any old rank information, if peptides are no longer ranked.
+                if (rankId == null && peptide.Rank.HasValue)
+                    peptide = peptide.ChangeRank(null);
+                peptides[i] = peptide;
+            }
+
+            if (rankId == null)
+                return peptides;
+
+            // Sort desc by rank ID value
+            Array.Sort(peptides, (pep1, pep2) =>
+                                 Comparer<float>.Default.Compare(pep2.GetRankValue(rankId), pep1.GetRankValue(rankId)));
+
+            // Update the rank values on the peptides where necessary
+            for (int i = 0; i < peptides.Length; i++)
+            {
+                PeptideDocNode nodePeptide = peptides[i];
+                int rank = i + 1;
+                if (!nodePeptide.Rank.HasValue || nodePeptide.Rank.Value != rank)
+                    peptides[i] = nodePeptide.ChangeRank(rank);
+            }
+
+            // Reduce array length to desired limit, if necessary
+            int? peptideCount = settings.PeptideSettings.Libraries.PeptideCount;
+            if (useLimit && peptideCount.HasValue && peptideCount.Value < peptides.Length)
+            {
+                PeptideDocNode[] peptidesNew = new PeptideDocNode[peptideCount.Value];
+                for (int i = 0; i < peptidesNew.Length; i++)
+                {
+                    // TODO: Remove any peptide groups without the correct rank value
+                    peptidesNew[i] = peptides[i];
+                }
+                peptides = peptidesNew;
+            }
+
+            // Re-sort by order in FASTA sequence
+            Array.Sort(peptides, FastaSequence.ComparePeptides);
+
+            return peptides;
+        }
     }
 
     public class FastaSequence : PeptideGroup
@@ -326,7 +369,7 @@ namespace pwiz.Skyline.Model
         public override string Sequence { get { return _sequence; } }
         public IList<AlternativeProtein> Alternatives { get; private set; }
 
-        public IEnumerable<PeptideDocNode> GetPeptideNodes(SrmSettings settings, bool useFilter)
+        public IEnumerable<PeptideDocNode> CreatePeptideDocNodes(SrmSettings settings, bool useFilter)
         {
             PeptideSettings pepSettings = settings.PeptideSettings;
             DigestSettings digest = pepSettings.DigestSettings;
@@ -334,181 +377,47 @@ namespace pwiz.Skyline.Model
 
             foreach (var peptide in pepSettings.Enzyme.Digest(this, digest))
             {
-                foreach (var nodePep in GetPeptideNodes(settings, filter, peptide))
+                foreach (var nodePep in peptide.CreateDocNodes(settings, filter))
                     yield return nodePep;
             }
         }
 
-        public IEnumerable<PeptideDocNode> GetPeptideNodes(SrmSettings settings, IPeptideFilter filter, Peptide peptide)
+        public IEnumerable<PeptideDocNode> CreateFullPeptideDocNodes(SrmSettings settings, bool useFilter)
         {
-            // Always return the unmodified peptide doc node first
-            var nodePepUnmod = new PeptideDocNode(peptide, new TransitionGroupDocNode[0]);
-            if (filter.Accept(peptide, null))
-                yield return nodePepUnmod;
-
-            // First build a list of the amino acids in this peptide which can be modified,
-            // and the modifications which apply to them.
-            List<KeyValuePair<IList<StaticMod>, int>> listListMods = null;
-
-            var mods = settings.PeptideSettings.Modifications.VariableModifications.ToArray();
-            // Nothing to do, if no variable mods in the document
-            if (mods.Length > 0)
+            if (settings.PeptideSettings.Libraries.RankId == null)
             {
-                // Enurate each amino acid in the sequence
-                string sequence = peptide.Sequence;
-                int len = sequence.Length;
-                for (int i = 0; i < len; i++)
-                {
-                    char aa = sequence[i];
-                    // Test each modification to see if it applies
-                    foreach (var mod in mods)
-                    {
-                        // If the modification does apply, store it in the list
-                        if (mod.IsMod(aa, i, len))
-                        {
-                            if (listListMods == null)
-                                listListMods = new List<KeyValuePair<IList<StaticMod>, int>>();
-                            if (listListMods.Count == 0 || listListMods[listListMods.Count - 1].Value != i)
-                                listListMods.Add(new KeyValuePair<IList<StaticMod>, int>(new List<StaticMod>(), i));
-                            listListMods[listListMods.Count - 1].Key.Add(mod);
-                        }
-                    }
-                }
+                foreach (var nodePep in CreatePeptideDocNodes(settings, useFilter))
+                    yield return nodePep.ChangeSettings(settings, SrmSettingsDiff.ALL);
             }
-
-            // If not applicable modifications were found, return a single DocNode for the
-            // peptide passed in
-            if (listListMods == null)
-                yield break;                
-
-            int maxModCount = Math.Min(settings.PeptideSettings.Modifications.MaxVariableMods, listListMods.Count);
-            for (int modCount = 1; modCount <= maxModCount; modCount++)
+            else
             {
-                var modeStateMachine = new VariableModStateMachine(nodePepUnmod, modCount, listListMods);
-                foreach (var nodePep in modeStateMachine.GetPeptideNodes())
-                {
-                    if (filter.Accept(nodePep.Peptide, nodePep.ExplicitMods))
-                        yield return nodePep;
-                }
+                var listDocNodes = new List<DocNode>();
+                foreach (var nodePep in CreatePeptideDocNodes(settings, useFilter))
+                    listDocNodes.Add(nodePep.ChangeSettings(settings, SrmSettingsDiff.ALL));
+
+                // Rank and filter peptides by rank.
+                foreach (PeptideDocNode nodePep in RankPeptides(listDocNodes, settings, useFilter))
+                    yield return nodePep;
             }
         }
 
-        /// <summary>
-        /// State machine that provides a <see cref="IEnumerable{PeptideDocNode}"/> for
-        /// enumerating all modified states of a peptide, given the peptide, a number of
-        /// possible modifications, and the set of possible modifications.
-        /// </summary>
-        public class VariableModStateMachine
+        public PeptideDocNode CreateFullPeptideDocNode(SrmSettings settings, String peptideSequence)
         {
-            private readonly PeptideDocNode _nodePepUnmod;
-            private readonly int _modCount;
-            private readonly IList<KeyValuePair<IList<StaticMod>, int>> _listListMods;
-
-            /// <summary>
-            /// Contains indexes into _listListMods specifying amino acids currently
-            /// modified.
-            /// </summary>
-            private readonly int[] _arrayModIndexes1;
-
-            /// <summary>
-            /// Contains indexes into the static mod lists of _listListMods specifying
-            /// which modification is currently applied to the amino acid specified
-            /// by _arrayModIndexes1.
-            /// </summary>
-            private readonly int[] _arrayModIndexes2;
-
-            /// <summary>
-            /// Index to the currently active elements in _arrayModIndexes arrays.
-            /// </summary>
-            private int _cursorIndex;
-
-            public VariableModStateMachine(PeptideDocNode nodePepUnmod, int modCount,
-                IList<KeyValuePair<IList<StaticMod>, int>> listListMods)
+            foreach (var peptideDocNode in CreateFullPeptideDocNodes(settings, false))
             {
-                _nodePepUnmod = nodePepUnmod;
-                _modCount = modCount;
-                _listListMods = listListMods;
-
-                // Fill the mod indexes list with the first possible state
-                _arrayModIndexes1 = new int[_modCount];
-                for (int i = 0; i < modCount; i++)
-                    _arrayModIndexes1[i] = i;
-                // Second set of indexes start all zero initialized
-                _arrayModIndexes2 = new int[_modCount];
-                // Set the cursor to the last modification
-                _cursorIndex = modCount - 1;
+                if (peptideSequence == peptideDocNode.Peptide.Sequence)
+                    return peptideDocNode;
             }
 
-            public IEnumerable<PeptideDocNode> GetPeptideNodes()
-            {
-                while (_cursorIndex >= 0)
-                {
-                    yield return CurrentPeptide;
+            int begin = Sequence.IndexOf(peptideSequence);
+            if (begin < 0)
+                return null;
 
-                    if (!ShiftCurrentMod())
-                    {
-                        // Attempt to advance any mod to the left of the current mod
-                        do
-                        {
-                            _cursorIndex--;                            
-                        }
-                        while (_cursorIndex >= 0 && !ShiftCurrentMod());
+            var peptide = new Peptide(this, peptideSequence, begin, begin + peptideSequence.Length,
+                settings.PeptideSettings.Enzyme.CountCleavagePoints(peptideSequence));
 
-                        // If a mod was successfully advanced, reset all mods to its right
-                        // and start over with them.
-                        if (_cursorIndex >= 0)
-                        {
-                            for (int i = 1; i < _modCount - _cursorIndex; i++)
-                            {
-                                _arrayModIndexes1[_cursorIndex + i] = _arrayModIndexes1[_cursorIndex] + i;
-                                _arrayModIndexes2[_cursorIndex + i] = 0;
-                            }
-                            _cursorIndex = _modCount - 1;
-                        }
-                    }
-                }
-            }
-
-            private bool ShiftCurrentMod()
-            {
-                int modIndex = _arrayModIndexes1[_cursorIndex];
-                if (_arrayModIndexes2[_cursorIndex] < _listListMods[modIndex].Key.Count - 1)
-                {
-                    // Shift the current amino acid through all possible modification states
-                    _arrayModIndexes2[_cursorIndex]++;
-                }
-                else if (modIndex < _listListMods.Count - _modCount + _cursorIndex)
-                {
-                    // Shift the current modification through all possible positions
-                    _arrayModIndexes1[_cursorIndex]++;
-                    _arrayModIndexes2[_cursorIndex] = 0;
-                }
-                else
-                {
-                    // Current modification has seen all possible states
-                    return false;
-                }
-                return true;
-            }
-
-            private PeptideDocNode CurrentPeptide
-            {
-                get
-                {
-                    var variableMods = new ExplicitMod[_modCount];
-                    for (int i = 0; i < _modCount; i++)
-                    {
-                        var pair = _listListMods[_arrayModIndexes1[i]];
-                        var mod = pair.Key[_arrayModIndexes2[i]];
-
-                        variableMods[i] = new ExplicitMod(pair.Value, mod);
-                    }
-                    var explicitMods = new ExplicitMods(_nodePepUnmod.Peptide, variableMods,
-                                                        new TypedExplicitModifications[0], true);
-                    // Make a new copy of the peptid ID to give it a new GlobalIndex.
-                    return new PeptideDocNode((Peptide)_nodePepUnmod.Peptide.Copy(), explicitMods);
-                }
-            }            
+            return new PeptideDocNode(peptide, new TransitionGroupDocNode[0])
+                .ChangeSettings(settings, SrmSettingsDiff.ALL);
         }
 
         public static void ValidateSequence(string seq)
@@ -567,49 +476,6 @@ namespace pwiz.Skyline.Model
 
         #endregion // object overrides
 
-        public List<PeptideDocNode> CreatePeptideDocNodes(SrmSettings settings, bool useFilter)
-        {
-            var peptideDocNodes = new List<PeptideDocNode>();
-            foreach (var nodePep in GetPeptideNodes(settings, useFilter))
-            {
-                var nodePepNew = nodePep.ChangeSettings(settings, SrmSettingsDiff.ALL);
-                peptideDocNodes.Add(nodePepNew);
-            }
-            // Rank and filter peptides by rank, if the settings say to.
-            if (settings.PeptideSettings.Libraries.RankId != null)
-            {
-                var rankedPeptideDocNodes =
-                    PeptideGroupDocNode.RankPeptides(peptideDocNodes.ToArray(), settings, useFilter);
-                peptideDocNodes.Clear();
-                foreach (PeptideDocNode nodePep in rankedPeptideDocNodes)
-                    peptideDocNodes.Add(nodePep);
-
-            }
-            return peptideDocNodes;
-        }
-
-        public PeptideDocNode CreatePeptideDocNode(SrmSettings settings, String peptideSequence)
-        {
-            foreach (var peptideDocNode in CreatePeptideDocNodes(settings, false))
-            {
-                if (peptideSequence == peptideDocNode.Peptide.Sequence)
-                {
-                    return peptideDocNode;
-                }
-            }
-            int begin = Sequence.IndexOf(peptideSequence);
-            if (begin < 0)
-            {
-                return null;
-            }
-            var peptide = new Peptide(
-                this, peptideSequence, begin, begin + peptideSequence.Length,
-                settings.PeptideSettings.Enzyme.CountCleavagePoints(peptideSequence)
-                );
-            return new PeptideDocNode(peptide, new TransitionGroupDocNode[0])
-                .ChangeSettings(settings, SrmSettingsDiff.ALL);
-        }
-
         public static int ComparePeptides(PeptideDocNode node1, PeptideDocNode node2)
         {
             return ComparePeptides(node1.Peptide, node2.Peptide);
@@ -625,6 +491,7 @@ namespace pwiz.Skyline.Model
             return Comparer<int>.Default.Compare(pep1.Begin.Value, pep2.Begin.Value);
         }
     }
+
     public class AlternativeProtein
     {
         public AlternativeProtein(string name, string description)

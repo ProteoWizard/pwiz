@@ -227,6 +227,7 @@ namespace pwiz.SkylineTest
             int startRev;
             SrmDocument document = LibrarySettingsTest.CreateNISTLibraryDocument(
                 TEXT_FASTA_YEAST_39,
+                false,
                 TEXT_LIB_YEAST_NIST,
                 out libraryManager,
                 out docContainer,
@@ -241,8 +242,68 @@ namespace pwiz.SkylineTest
                                      };
             var docVarModsLib = document.ChangeSettings(settings.ChangePeptideModifications(mods =>
                 mods.ChangeStaticModifications(listStaticMods.ToArray())));
+            startRev++;
             Assert.AreEqual(1, GetVariableModCount(docVarModsLib));
-            AssertEx.IsDocumentState(docVarModsLib, startRev + 1, 1, 2, 6);
+            AssertEx.IsDocumentState(docVarModsLib, startRev, 1, 2, 6);
+        }
+
+        /// <summary>
+        /// Make sure peptide lists behave as expected with variable modifications
+        /// </summary>
+        [TestMethod]
+        public void VariableModPeptideListTest()
+        {
+            // Create a document with a peptide lists of 3 peptides
+            LibraryManager libraryManager;
+            TestDocumentContainer docContainer;
+            int startRev;
+            SrmDocument document = LibrarySettingsTest.CreateNISTLibraryDocument(
+                TEXT_PEPTIDES_YEAST,
+                true,
+                TEXT_LIB_YEAST_NIST,
+                out libraryManager,
+                out docContainer,
+                out startRev);
+            AssertEx.IsDocumentState(document, startRev, 1, 3, 1, 3);
+
+            // Add variable modifications
+            var settings = document.Settings;
+            var modsDefault = settings.PeptideSettings.Modifications;
+            var listStaticMods = new List<StaticMod>(modsDefault.StaticModifications)
+                                     {
+                                         VAR_MET_OXIDIZED,
+                                     };
+            var docPeptideList = document.ChangeSettings(settings.ChangePeptideModifications(mods =>
+                mods.ChangeStaticModifications(listStaticMods.ToArray())));
+            startRev++;
+            // One new peptide should match a libray spectrum with the variable mods
+            Assert.AreEqual(1, GetVariableModCount(docPeptideList));
+            AssertEx.IsDocumentState(docPeptideList, startRev, 1, 3, 2, 6);
+
+            // Remove libraries which should yield the full set of variable modifications
+            var docNoLib = docPeptideList.ChangeSettings(docPeptideList.Settings.ChangePeptideLibraries(lib =>
+                lib.ChangeLibrarySpecs(new LibrarySpec[0])));
+            int noLibRev = ++startRev;
+            Assert.AreEqual(16, GetVariableModCount(docNoLib));
+            AssertEx.IsDocumentState(docNoLib, startRev, 1, 19, 63);
+
+            // Remove the variable modifications and make sure that reduces the peptides to only unmodified
+            var docNoMods = docNoLib.ChangeSettings(docNoLib.Settings.ChangePeptideModifications(mods =>
+                mods.ChangeStaticModifications(modsDefault.StaticModifications)));
+            startRev++;
+            Assert.AreEqual(0, GetVariableModCount(docNoMods));
+            AssertEx.IsDocumentState(docNoMods, startRev, 1, 3, 12);
+
+            // Repeat the removal with auto-manage children off
+            startRev = noLibRev;
+            var docNoAutoManage = (SrmDocument) docNoLib.ReplaceChild(
+                ((DocNodeParent)docNoLib.Children[0]).ChangeAutoManageChildren(false));
+            startRev++;
+
+            var docNoModsNoManage = docNoAutoManage.ChangeSettings(docNoAutoManage.Settings.ChangePeptideModifications(mods =>
+                mods.ChangeStaticModifications(modsDefault.StaticModifications)));
+            startRev++;
+            AssertEx.IsDocumentState(docNoModsNoManage, startRev, 1, 3, 12);
         }
 
         private static int GetVariableModCount(SrmDocument document)
@@ -343,6 +404,12 @@ namespace pwiz.SkylineTest
             "VESMVQVHNFLNEGCWQEVLEWEKPHTDESHVQPKLLKFMGKPGVLSPRARWMHLCGLLF\n" +
             "PSHFSQELPFDRHDWIVLRGERKAEQQPPTFKEVRYVLDFYGGPDDENGMPTFHVDVRPA\n" +
             "LDSLDNAKDRMTRFLDRMISGPSSSSSAP*\n";
+
+        private const string TEXT_PEPTIDES_YEAST =
+            ">Peptides1\n" +
+            "INPLNNMPELAASK\n" +
+            "FMGKPGVLSPR\n" +
+            "MOMMOMIER";
 
         private const string TEXT_LIB_YEAST_NIST =
             "Name: INPLNNMPELAASK/2\n" +

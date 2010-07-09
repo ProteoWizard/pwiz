@@ -507,12 +507,22 @@ namespace pwiz.Skyline.Model.DocSettings
                           filterUserPeptides ? PeptideFilterType.full : PeptideFilterType.fasta);
         }
 
+        /// <summary>
+        /// This version of Accept is used to select transition groups after the peptide
+        /// itself has already been screened.  For this reason, it only applies library
+        /// filtering.
+        /// </summary>
         public bool Accept(Peptide peptide, ExplicitMods mods, int charge)
         {
-            return Accept(peptide, mods, new[] {charge}, PeptideFilterType.none);
+            return Accept(peptide, mods, new[] { charge }, PeptideFilterType.library);
         }
 
-        private enum PeptideFilterType { none, fasta, full }
+        private enum PeptideFilterType
+        {
+            full,   // Filter all peptides with both filter and library settings
+            fasta,  // Apply filter settings only to peptides with an associated FASTA sequence
+            library // Only filter with library settings
+        }
 
         private bool Accept(Peptide peptide, ExplicitMods mods, IEnumerable<int> precursorCharges, PeptideFilterType filterType)
         {

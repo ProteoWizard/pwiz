@@ -298,7 +298,7 @@ namespace pwiz.Skyline.EditUI
                 PeptideDocNode nodePepNew;
                 if (fastaSequence != null)
                 {
-                    nodePepNew = fastaSequence.CreatePeptideDocNode(document.Settings, peptideSequence);
+                    nodePepNew = fastaSequence.CreateFullPeptideDocNode(document.Settings, peptideSequence);
                     if (nodePepNew == null)
                     {
                         ShowPeptideError(new PasteError
@@ -679,7 +679,7 @@ namespace pwiz.Skyline.EditUI
                     int missedCleavages = document.Settings.PeptideSettings.Enzyme.CountCleavagePoints(peptideSequence);
                     if (fastaSequence != null)
                     {
-                        peptideDocNode = fastaSequence.CreatePeptideDocNode(document.Settings, peptideSequence);
+                        peptideDocNode = fastaSequence.CreateFullPeptideDocNode(document.Settings, peptideSequence);
                         if (peptideDocNode == null)
                         {
                             ShowTransitionError(new PasteError
