@@ -288,7 +288,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getB
 
             size_t lastIndex = yArray.size() - 1;
 
-            for (size_t i=0; i < lastIndex; ++i)
+            for (size_t i=1; i < lastIndex; ++i)
                 if (yArray[i-1] > 0 || yArray[i] > 0 || yArray[i+1] > 0)
                     ++result->defaultArrayLength;
 
@@ -316,7 +316,7 @@ PWIZ_API_DECL void SpectrumList_Agilent::createIndex() const
 
         for (size_t i=0, end = (size_t) size; i < end; ++i)
         {
-            pwiz::vendor_api::Agilent::SpectrumPtr spectrumPtr = rawfile_->getProfileSpectrumByRow(i);
+            pwiz::vendor_api::Agilent::SpectrumPtr spectrumPtr = rawfile_->getPeakSpectrumByRow(i);
             MSScanType scanType = spectrumPtr->getMSScanType();
 
             // these spectra are chromatogram-centric
