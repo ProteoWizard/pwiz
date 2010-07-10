@@ -54,11 +54,11 @@ namespace pwiz.SkylineTestFunctional
             // Create modifications used in this test
             var aquaMods = new[]
             {
-                new StaticMod("Heavy K", 'K', ModTerminus.C, null, LabelAtoms.C13|LabelAtoms.N15, null, null),
-                new StaticMod("Heavy R", 'R', ModTerminus.C, null, LabelAtoms.C13|LabelAtoms.N15, null, null)
+                new StaticMod("Heavy K", "K", ModTerminus.C, null, LabelAtoms.C13|LabelAtoms.N15, null, null),
+                new StaticMod("Heavy R", "R", ModTerminus.C, null, LabelAtoms.C13|LabelAtoms.N15, null, null)
             };
-            var explicitMod = new StaticMod("13C L", 'L', null, null, LabelAtoms.C13, null, null);
-            var variableMod = new StaticMod("Methionine Oxidized", 'M', null, true, "O",
+            var explicitMod = new StaticMod("13C L", "L", null, null, LabelAtoms.C13, null, null);
+            var variableMod = new StaticMod("Methionine Oxidized", "M", null, true, "O",
                 LabelAtoms.None, RelativeRT.Matching, null, null, null, null, null);
 
             Settings.Default.HeavyModList.Clear();

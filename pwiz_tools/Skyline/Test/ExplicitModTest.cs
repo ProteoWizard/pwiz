@@ -37,10 +37,10 @@ namespace pwiz.SkylineTest
         private static readonly List<StaticMod> ATOMIC_HEAVY_MODS = new List<StaticMod>
             {
                 // The original document expressed Heavy K incorrectly
-                new StaticMod("13C K", 'K', ModTerminus.C, "C'8 - C8", LabelAtoms.None, null, null),
-                new StaticMod("13C R", 'R', ModTerminus.C, null, LabelAtoms.C13, null, null),
-                new StaticMod("13C V", 'V', LabelAtoms.C13).ChangeExplicit(true),
-                new StaticMod("13C L", 'L', LabelAtoms.C13).ChangeExplicit(true)
+                new StaticMod("13C K", "K", ModTerminus.C, "C'8 - C8", LabelAtoms.None, null, null),
+                new StaticMod("13C R", "R", ModTerminus.C, null, LabelAtoms.C13, null, null),
+                new StaticMod("13C V", "V", LabelAtoms.C13).ChangeExplicit(true),
+                new StaticMod("13C L", "L", LabelAtoms.C13).ChangeExplicit(true)
             };
 
 
@@ -85,11 +85,11 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(3, docStudy7.Peptides.Count(peptide => peptide.HasExplicitMods));
             Assert.AreEqual(2, docStudy7.Peptides.Count(peptide => peptide.HasExplicitMods &&
                 peptide.ExplicitMods.StaticModifications.Count > 0 &&
-                peptide.ExplicitMods.StaticModifications[0].Modification.AA == 'C'));
+                peptide.ExplicitMods.StaticModifications[0].Modification.AAs[0] == 'C'));
             Assert.AreEqual(2, docStudy7.Peptides.Count(peptide => peptide.HasExplicitMods &&
-                peptide.ExplicitMods.HeavyModifications[0].Modification.AA == 'V'));
+                peptide.ExplicitMods.HeavyModifications[0].Modification.AAs[0] == 'V'));
             Assert.AreEqual(1, docStudy7.Peptides.Count(peptide => peptide.HasExplicitMods &&
-                peptide.ExplicitMods.HeavyModifications[0].Modification.AA == 'L'));
+                peptide.ExplicitMods.HeavyModifications[0].Modification.AAs[0] == 'L'));
             AssertEx.Serializable(docStudy7, 3, AssertEx.DocumentCloned);
         }
 
@@ -172,12 +172,12 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(3, docStudy7.Peptides.Count(peptide => peptide.HasExplicitMods));
             Assert.AreEqual(2, docStudy7.Peptides.Count(peptide => peptide.HasExplicitMods &&
                 peptide.ExplicitMods.StaticModifications.Count > 0 &&
-                peptide.ExplicitMods.StaticModifications[0].Modification.AA == 'C'));
+                peptide.ExplicitMods.StaticModifications[0].Modification.AAs[0] == 'C'));
             Assert.AreEqual(2, docStudy7.Peptides.Count(peptide => peptide.HasExplicitMods &&
-                peptide.ExplicitMods.HeavyModifications[0].Modification.AA == 'V' &&
+                peptide.ExplicitMods.HeavyModifications[0].Modification.AAs[0] == 'V' &&
                 peptide.ExplicitMods.HeavyModifications[0].Modification.Label13C));
             Assert.AreEqual(1, docStudy7.Peptides.Count(peptide => peptide.HasExplicitMods &&
-                peptide.ExplicitMods.HeavyModifications[0].Modification.AA == 'L' &&
+                peptide.ExplicitMods.HeavyModifications[0].Modification.AAs[0] == 'L' &&
                 peptide.ExplicitMods.HeavyModifications[0].Modification.Label13C));
 
             AssertEx.NoDiff(transitionList, ExportCsv(docStudy7));
@@ -198,19 +198,19 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(3, docStudy7.Peptides.Count(peptide => peptide.HasExplicitMods));
             Assert.AreEqual(2, docStudy7.Peptides.Count(peptide => peptide.HasExplicitMods &&
                 peptide.ExplicitMods.StaticModifications.Count > 0 &&
-                peptide.ExplicitMods.StaticModifications[0].Modification.AA == 'C'));
+                peptide.ExplicitMods.StaticModifications[0].Modification.AAs[0] == 'C'));
             Assert.AreEqual(2, docStudy7.Peptides.Count(peptide => peptide.HasExplicitMods &&
-                peptide.ExplicitMods.HeavyModifications[0].Modification.AA == 'V' &&
+                peptide.ExplicitMods.HeavyModifications[0].Modification.AAs[0] == 'V' &&
                 peptide.ExplicitMods.HeavyModifications[0].Modification.Label13C));
             Assert.AreEqual(1, docStudy7.Peptides.Count(peptide => peptide.HasExplicitMods &&
-                peptide.ExplicitMods.HeavyModifications[0].Modification.AA == 'L' &&
+                peptide.ExplicitMods.HeavyModifications[0].Modification.AAs[0] == 'L' &&
                 peptide.ExplicitMods.HeavyModifications[0].Modification.Label13C));
 
             AssertEx.NoDiff(transitionList, ExportCsv(docStudy7));
 
             // Correct Heavy K
             var listHeavyMods = new List<StaticMod>(ATOMIC_HEAVY_MODS);
-            listHeavyMods[0] = new StaticMod("Heavy K", 'K', ModTerminus.C, null, LabelAtoms.C13|LabelAtoms.N15, null, null);
+            listHeavyMods[0] = new StaticMod("Heavy K", "K", ModTerminus.C, null, LabelAtoms.C13|LabelAtoms.N15, null, null);
             settings = settings.ChangePeptideModifications(mods => mods.ChangeHeavyModifications(listHeavyMods));
             var docHeavyK = docStudy7.ChangeSettings(settings);
             var peptidesOld = docStudy7.Peptides.ToArray();
@@ -231,7 +231,7 @@ namespace pwiz.SkylineTest
             }
 
             // Change valine explicit only modification
-            listHeavyMods[2] = new StaticMod("13C V", 'V', null, null, LabelAtoms.C13 | LabelAtoms.N15, null, null);
+            listHeavyMods[2] = new StaticMod("13C V", "V", null, null, LabelAtoms.C13 | LabelAtoms.N15, null, null);
             listHeavyMods[2] = listHeavyMods[2].ChangeExplicit(true);
             settings = settings.ChangePeptideModifications(mods => mods.ChangeHeavyModifications(listHeavyMods));
             var docHeavyV = docHeavyK.ChangeSettings(settings);
@@ -245,7 +245,7 @@ namespace pwiz.SkylineTest
                 var peptideOld = peptidesOld[i];
                 var peptideNew = peptidesNew[i];
                 // Explicit valines should have changed, but no other peptides
-                if (peptideOld.HasExplicitMods && peptideOld.ExplicitMods.HeavyModifications[0].Modification.AA == 'V')
+                if (peptideOld.HasExplicitMods && peptideOld.ExplicitMods.HeavyModifications[0].Modification.AAs[0] == 'V')
                     Assert.AreNotSame(peptideOld, peptideNew);
                 else
                     Assert.AreSame(peptideOld, peptideNew);
@@ -282,7 +282,7 @@ namespace pwiz.SkylineTest
             var listHeavyMods = new List<StaticMod>(settings.PeptideSettings.Modifications.HeavyModifications);
 
             // Change an explicit heavy modification to something new
-            var modV = new StaticMod("Heavy V", 'V', LabelAtoms.C13|LabelAtoms.N15);
+            var modV = new StaticMod("Heavy V", "V", LabelAtoms.C13|LabelAtoms.N15);
             listHeavyMods.Add(modV);
 
             IdentityPath path = docStudy7.GetPathTo((int)SrmDocument.Level.Peptides, 0);
@@ -297,10 +297,10 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(1, modSettings.HeavyModifications.Count(mod => mod.Label13C && mod.Label15N));
             Assert.AreEqual(3, docHeavyV.Peptides.Count(peptide => peptide.HasExplicitMods));
             Assert.AreEqual(1, docHeavyV.Peptides.Count(peptide => peptide.HasExplicitMods &&
-                peptide.ExplicitMods.HeavyModifications[0].Modification.AA == 'V' &&
+                peptide.ExplicitMods.HeavyModifications[0].Modification.AAs[0] == 'V' &&
                 peptide.ExplicitMods.HeavyModifications[0].Modification.Label13C));
             Assert.AreEqual(1, docHeavyV.Peptides.Count(peptide => peptide.HasExplicitMods &&
-                peptide.ExplicitMods.HeavyModifications[0].Modification.AA == 'V' &&
+                peptide.ExplicitMods.HeavyModifications[0].Modification.AAs[0] == 'V' &&
                 peptide.ExplicitMods.HeavyModifications[0].Modification.Label13C &&
                 peptide.ExplicitMods.HeavyModifications[0].Modification.Label15N));
 
@@ -318,7 +318,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(1, modSettings.HeavyModifications.Count(mod => mod.Label13C));
             Assert.AreEqual(3, doc13V.Peptides.Count(peptide => peptide.HasExplicitMods));
             Assert.AreEqual(2, doc13V.Peptides.Count(peptide => peptide.HasExplicitMods &&
-                peptide.ExplicitMods.HeavyModifications[0].Modification.AA == 'V' &&
+                peptide.ExplicitMods.HeavyModifications[0].Modification.AAs[0] == 'V' &&
                 peptide.ExplicitMods.HeavyModifications[0].Modification.Label13C));
 
             // No change to the peptide, but change an orthoganal modification
@@ -332,7 +332,7 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(1, modSettings.HeavyModifications.Count(mod => mod.Label13C));
             Assert.AreEqual(3, doc13V.Peptides.Count(peptide => peptide.HasExplicitMods));
             Assert.AreEqual(2, doc13V.Peptides.Count(peptide => peptide.HasExplicitMods &&
-                peptide.ExplicitMods.HeavyModifications[0].Modification.AA == 'V' &&
+                peptide.ExplicitMods.HeavyModifications[0].Modification.AAs[0] == 'V' &&
                 peptide.ExplicitMods.HeavyModifications[0].Modification.Label13C));
 
             // No change to the peptide, but remove all other modifications from global lists

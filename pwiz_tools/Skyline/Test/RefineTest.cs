@@ -210,8 +210,8 @@ namespace pwiz.SkylineTest
             var settingsNew = docRefineMaxPeaks.Settings.ChangeTransitionFilter(f => f.ChangeAutoSelect(false));
             settingsNew = settingsNew.ChangePeptideModifications(m => m.ChangeHeavyModifications(new[]
                 {
-                    new StaticMod("13C K", 'K', ModTerminus.C, null, LabelAtoms.C13, null, null),
-                    new StaticMod("13C R", 'R', ModTerminus.C, null, LabelAtoms.C13, null, null),
+                    new StaticMod("13C K", "K", ModTerminus.C, null, LabelAtoms.C13, null, null),
+                    new StaticMod("13C R", "R", ModTerminus.C, null, LabelAtoms.C13, null, null),
                 }));
             var docPrepareAdd = docRefineMaxPeaks.ChangeSettings(settingsNew);
             refineSettings = new RefinementSettings {RefineLabelType = IsotopeLabelType.heavy, AddLabelType = true};

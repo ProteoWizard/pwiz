@@ -36,19 +36,19 @@ namespace pwiz.SkylineTest
     [TestClass]
     public class VariableModTest
     {
-        private static readonly StaticMod VAR_MET_OXIDIZED = new StaticMod("Methionine Oxidized", 'M', null, true, "O",
+        private static readonly StaticMod VAR_MET_OXIDIZED = new StaticMod("Methionine Oxidized", "M", null, true, "O",
             LabelAtoms.None, RelativeRT.Matching, null, null, null, null, null);
-        private static readonly StaticMod VAR_MET_AMONIA_ADD = new StaticMod("Methionine Amonia Added", 'M', null, true, "NH3",
+        private static readonly StaticMod VAR_MET_AMONIA_ADD = new StaticMod("Methionine Amonia Added", "M", null, true, "NH3",
             LabelAtoms.None, RelativeRT.Matching, null, null, null, null, null);
-        private static readonly StaticMod VAR_ASP_WATER_ADD = new StaticMod("Aspartic Acid Water Added", 'D', null, true, "H2O",
+        private static readonly StaticMod VAR_ASP_WATER_ADD = new StaticMod("Aspartic Acid Water Added", "D", null, true, "H2O",
             LabelAtoms.None, RelativeRT.Matching, null, null, null, null, null);
-        private static readonly StaticMod VAR_ASP_WATER_LOSS = new StaticMod("Aspartic Acid Water Loss", 'D', null, true, "-H2O",
+        private static readonly StaticMod VAR_ASP_WATER_LOSS = new StaticMod("Aspartic Acid Water Loss", "D", null, true, "-H2O",
             LabelAtoms.None, RelativeRT.Matching, null, null, null, null, null);
 
         private static readonly List<StaticMod> HEAVY_MODS = new List<StaticMod>
             {
-                new StaticMod("13C K", 'K', ModTerminus.C, null, LabelAtoms.C13, null, null),
-                new StaticMod("13C R", 'R', ModTerminus.C, null, LabelAtoms.C13, null, null),
+                new StaticMod("13C K", "K", ModTerminus.C, null, LabelAtoms.C13, null, null),
+                new StaticMod("13C R", "R", ModTerminus.C, null, LabelAtoms.C13, null, null),
             };
 
         /// <summary>

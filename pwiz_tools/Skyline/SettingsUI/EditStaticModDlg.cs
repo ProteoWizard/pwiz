@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -48,6 +49,7 @@ namespace pwiz.Skyline.SettingsUI
 
             InitializeComponent();
 
+            cbVariableMod.Visible = !heavy;
             labelChemicalFormula.Visible = !heavy;
             cbChemicalFormula.Visible = heavy;
             cbChemicalFormula.Checked = !heavy || Settings.Default.ShowHeavyFormula;
@@ -89,7 +91,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (_modification == null)
                 {
                     textName.Text = "";
-                    comboAA.SelectedIndex = 0;
+                    comboAA.Text = "";
                     comboTerm.SelectedIndex = 0;
                     cbVariableMod.Checked = false;
                     textFormula.Text = "";
@@ -108,10 +110,10 @@ namespace pwiz.Skyline.SettingsUI
                 else
                 {
                     textName.Text = _modification.Name;
-                    if (_modification.AA == null)
-                        comboAA.SelectedIndex = 0;
+                    if (_modification.AAs == null)
+                        comboAA.Text = "";
                     else
-                        comboAA.SelectedItem = _modification.AA.ToString();
+                        comboAA.Text = _modification.AAs;
                     if (_modification.Terminus == null)
                         comboTerm.SelectedIndex = 0;
                     else
@@ -237,17 +239,30 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
-            string aaString = comboAA.SelectedItem.ToString();
-            char? aa = null;
-            if (!string.IsNullOrEmpty(aaString))
-                aa = aaString[0];
+            string aas = comboAA.Text;
+            if (string.IsNullOrEmpty(aas))
+                aas = null;
+            else
+            {
+                // Use the cleanest possible format.
+                var sb = new StringBuilder();
+                foreach (string aaPart in aas.Split(SEPARATOR_AA))
+                {
+                    string aa = aaPart.Trim();
+                    if (aa.Length == 0)
+                        continue;
+                    if (sb.Length > 0)
+                        sb.Append(", ");
+                    sb.Append(aa);
+                }
+            }
 
             string termString = comboTerm.SelectedItem.ToString();
             ModTerminus? term = null;
             if (!string.IsNullOrEmpty(termString))
                 term = (ModTerminus) Enum.Parse(typeof (ModTerminus), termString);
 
-            if (cbVariableMod.Checked && aa == null && term == null)
+            if (cbVariableMod.Checked && aas == null && term == null)
             {
                 MessageBox.Show("Variable modifications must specify amino acid or terminus.", Program.Name);
                 comboAA.Focus();
@@ -287,7 +302,7 @@ namespace pwiz.Skyline.SettingsUI
                     return;
                 avgMass = mass;
             }
-            else if (!aa.HasValue && term.HasValue)
+            else if (aas == null && term.HasValue)
             {
                 MessageBox.Show(this, "Labeled atoms on terminal modification are not valid.", Program.Name);
                 e.Cancel = true;
@@ -335,7 +350,7 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             Modification = new StaticMod(name,
-                                         aa,
+                                         aas,
                                          term,
                                          cbVariableMod.Checked,
                                          formula,
@@ -406,8 +421,9 @@ namespace pwiz.Skyline.SettingsUI
             else
             {
                 labelAtoms = LabelAtoms;
-                string aaString = comboAA.SelectedItem.ToString();
-                if (!string.IsNullOrEmpty(aaString) && labelAtoms != LabelAtoms.None)
+                string aaString = comboAA.Text;
+                if (!string.IsNullOrEmpty(aaString) && aaString.Length == 1 &&
+                        AminoAcid.IsAA(aaString[0])&& labelAtoms != LabelAtoms.None)
                     formula = SequenceMassCalc.GetHeavyFormula(aaString[0], labelAtoms);
             }
 
@@ -569,6 +585,43 @@ namespace pwiz.Skyline.SettingsUI
             string massText = textMassValue.Text;
             if (!string.IsNullOrEmpty(massText) && massText[0] != '-')
                 textMassValue.Text = "-" + massText;            
+        }
+
+        private const char SEPARATOR_AA = ',';
+
+        private void comboAA_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            // Force uppercase in this control.
+            e.KeyChar = char.ToUpper(e.KeyChar);
+            // Only allow amino acid characters space, comma and backspace
+            if (!AminoAcid.IsAA(e.KeyChar) && " ,\b".IndexOf(e.KeyChar) == -1)
+                e.Handled = true;
+        }
+
+        private void comboAA_Leave(object sender, EventArgs e)
+        {
+            // Force proper format
+            string aas = comboAA.Text.ToUpper();
+
+            var sb = new StringBuilder();
+            var seenAas = new bool[128];
+            for (int i = 0; i < aas.Length; i++)
+            {
+                char c = aas[i];
+                // Ignore all non-amino acid characters and repeats
+                if (!AminoAcid.IsAA(c) || seenAas[c])
+                    continue;
+
+                if (sb.Length > 0)
+                    sb.Append(SEPARATOR_AA).Append(' ');
+
+                sb.Append(c);
+
+                // Mark this amino acid seen
+                seenAas[c] = true;
+            }
+            comboAA.Text = sb.ToString();
+            UpdateMasses();
         }
     }
 }

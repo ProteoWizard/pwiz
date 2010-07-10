@@ -263,7 +263,7 @@ namespace pwiz.Skyline.Model
         {
             foreach (StaticMod mod in mods)
             {
-                if (!mod.AA.HasValue)
+                if (mod.AAs == null)
                 {
                     if (mod.Terminus != null)
                     {
@@ -285,19 +285,21 @@ namespace pwiz.Skyline.Model
                 }
                 else
                 {
-                    char aa = mod.AA.Value;
-                    double mass = GetModMass(aa, mod);
-                    switch (mod.Terminus)
+                    foreach (var aa in mod.AminoAcids)
                     {
-                        default:
-                            modMasses._aminoModMasses[aa] = modMasses._aminoModMasses[char.ToLower(aa)] += mass;
-                            break;
-                        case ModTerminus.N:
-                            modMasses._aminoNTermModMasses[aa] = modMasses._aminoNTermModMasses[char.ToLower(aa)] += mass;
-                            break;
-                        case ModTerminus.C:
-                            modMasses._aminoCTermModMasses[aa] = modMasses._aminoCTermModMasses[char.ToLower(aa)] += mass;
-                            break;
+                        double mass = GetModMass(aa, mod);
+                        switch (mod.Terminus)
+                        {
+                            default:
+                                modMasses._aminoModMasses[aa] = modMasses._aminoModMasses[char.ToLower(aa)] += mass;
+                                break;
+                            case ModTerminus.N:
+                                modMasses._aminoNTermModMasses[aa] = modMasses._aminoNTermModMasses[char.ToLower(aa)] += mass;
+                                break;
+                            case ModTerminus.C:
+                                modMasses._aminoCTermModMasses[aa] = modMasses._aminoCTermModMasses[char.ToLower(aa)] += mass;
+                                break;
+                        }
                     }
                 }
             }            

@@ -137,8 +137,8 @@ namespace pwiz.SkylineTest.Results
             const LabelAtoms labelAtoms = LabelAtoms.C13 | LabelAtoms.N15;
             List<StaticMod> heavyMods = new List<StaticMod>
                 {
-                    new StaticMod("Heavy K", 'K', ModTerminus.C, null, labelAtoms, null, null),
-                    new StaticMod("Heavy R", 'R', ModTerminus.C, null, labelAtoms, null, null),
+                    new StaticMod("Heavy K", "K", ModTerminus.C, null, labelAtoms, null, null),
+                    new StaticMod("Heavy R", "R", ModTerminus.C, null, labelAtoms, null, null),
                 };
             SrmSettings settings = SrmSettingsList.GetDefault();
             settings = settings.ChangePeptideModifications(mods => mods.ChangeHeavyModifications(heavyMods));

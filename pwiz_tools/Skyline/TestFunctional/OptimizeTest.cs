@@ -129,8 +129,8 @@ namespace pwiz.SkylineTestFunctional
             const LabelAtoms labelAtoms = LabelAtoms.C13 | LabelAtoms.N15;
             const string heavyK = "Heavy K";
             const string heavyR = "Heavy R";
-            Settings.Default.HeavyModList.Add(new StaticMod(heavyK, 'K', ModTerminus.C, null, labelAtoms, null, null));
-            Settings.Default.HeavyModList.Add(new StaticMod(heavyR, 'R', ModTerminus.C, null, labelAtoms, null, null));
+            Settings.Default.HeavyModList.Add(new StaticMod(heavyK, "K", ModTerminus.C, null, labelAtoms, null, null));
+            Settings.Default.HeavyModList.Add(new StaticMod(heavyR, "R", ModTerminus.C, null, labelAtoms, null, null));
 
             docCurrent = SkylineWindow.Document;
 

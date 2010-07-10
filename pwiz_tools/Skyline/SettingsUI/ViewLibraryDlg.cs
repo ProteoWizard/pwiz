@@ -954,7 +954,7 @@ namespace pwiz.Skyline.SettingsUI
                             for (int idx = 0; idx < numMods; idx++)
                             {
                                 var smod = new StaticMod("temp",
-                                                               modList[idx].ModifiedAminoAcid,
+                                                               modList[idx].ModifiedAminoAcid.ToString(),
                                                                null,
                                                                false,
                                                                null,

@@ -73,8 +73,8 @@ namespace pwiz.SkylineTest
 
         private static readonly List<StaticMod> HEAVY_MODS_13_C = new List<StaticMod>
             {
-                new StaticMod("13C K", 'K', ModTerminus.C, null, LabelAtoms.C13, null, null),
-                new StaticMod("13C R", 'R', ModTerminus.C, null, LabelAtoms.C13, null, null),
+                new StaticMod("13C K", "K", ModTerminus.C, null, LabelAtoms.C13, null, null),
+                new StaticMod("13C R", "R", ModTerminus.C, null, LabelAtoms.C13, null, null),
             };
 
         private static readonly List<StaticMod> HEAVY_MODS_15_N = new List<StaticMod>
@@ -183,13 +183,13 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(2, document.PeptideCount);
 
             // Add some modifications in two new label types
-            var modCarb = new StaticMod("Carbamidomethyl Cysteine", 'C', "C2H3ON");
-            var modOther = new StaticMod("Another Cysteine", 'C', "CO8N2");
+            var modCarb = new StaticMod("Carbamidomethyl Cysteine", "C", "C2H3ON");
+            var modOther = new StaticMod("Another Cysteine", "C", "CO8N2");
             var staticMods = new[] {modCarb, modOther};
             var mod15N = new StaticMod("All 15N", null, null, null, LabelAtoms.N15, null, null);
-            var modK13C = new StaticMod("13C K", 'K', ModTerminus.C, null, LabelAtoms.C13, null, null);
-            var modR13C = new StaticMod("13C R", 'R', ModTerminus.C, null, LabelAtoms.C13, null, null);
-            var modV13C = new StaticMod("Heavy V", 'V', null, null, LabelAtoms.C13 | LabelAtoms.N15, null, null);
+            var modK13C = new StaticMod("13C K", "K", ModTerminus.C, null, LabelAtoms.C13, null, null);
+            var modR13C = new StaticMod("13C R", "R", ModTerminus.C, null, LabelAtoms.C13, null, null);
+            var modV13C = new StaticMod("Heavy V", "V", null, null, LabelAtoms.C13 | LabelAtoms.N15, null, null);
             var heavyMods = new[] { mod15N, modK13C, modR13C, modV13C };
             var labelTypeAA = new IsotopeLabelType("heavy AA", IsotopeLabelType.FirstHeavy);
             var labelTypeAll = new IsotopeLabelType("heavy All", IsotopeLabelType.FirstHeavy + 1);

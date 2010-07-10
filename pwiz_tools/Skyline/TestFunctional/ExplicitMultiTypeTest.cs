@@ -62,7 +62,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Add a new static modification on cysteine
             var peptideSettingsUI = ShowPeptideSettings();
-            var modStatic = new StaticMod("Another Cysteine", 'C', "CO8N2");
+            var modStatic = new StaticMod("Another Cysteine", "C", "CO8N2");
             AddStaticMod(modStatic, peptideSettingsUI);
             RunUI(peptideSettingsUI.OkDialog);
             WaitForClosedForm(peptideSettingsUI);
@@ -115,11 +115,11 @@ namespace pwiz.SkylineTestFunctional
             AddHeavyMod(mod15N, peptideSettingsUI);
 //            var mod13C = new StaticMod("All 13C", null, null, null, LabelAtoms.C13, null, null);
 //            AddHeavyMod(mod13C, peptideSettingsUI);
-            var modK13C = new StaticMod("13C K", 'K', ModTerminus.C, null, LabelAtoms.C13, null, null);
+            var modK13C = new StaticMod("13C K", "K", ModTerminus.C, null, LabelAtoms.C13, null, null);
             AddHeavyMod(modK13C, peptideSettingsUI);
-            var modR13C = new StaticMod("13C R", 'R', ModTerminus.C, null, LabelAtoms.C13, null, null);
+            var modR13C = new StaticMod("13C R", "R", ModTerminus.C, null, LabelAtoms.C13, null, null);
             AddHeavyMod(modR13C, peptideSettingsUI);
-            var modV13C = new StaticMod("Heavy V", 'V', null, null, LabelAtoms.C13|LabelAtoms.N15, null, null);
+            var modV13C = new StaticMod("Heavy V", "V", null, null, LabelAtoms.C13|LabelAtoms.N15, null, null);
             AddHeavyMod(modV13C, peptideSettingsUI);
 
             // Set heavy modification for the peptides

@@ -104,9 +104,9 @@ namespace pwiz.SkylineTestFunctional
             // Set modifications on peptides to verify they connect with library spectra.
             const LabelAtoms labelAtoms = LabelAtoms.C13 | LabelAtoms.N15;
             const string heavyR = "Heavy R";
-            Settings.Default.HeavyModList.Add(new StaticMod(heavyR, 'R', ModTerminus.C, null, labelAtoms, null, null));
+            Settings.Default.HeavyModList.Add(new StaticMod(heavyR, "R", ModTerminus.C, null, labelAtoms, null, null));
             const string oMeth = "Oxidized Methionine";
-            Settings.Default.StaticModList.Add(new StaticMod(oMeth, 'M', "O"));
+            Settings.Default.StaticModList.Add(new StaticMod(oMeth, "M", "O"));
 
             var sequenceTree = SkylineWindow.SequenceTree;
             var docCurrent = SkylineWindow.Document;

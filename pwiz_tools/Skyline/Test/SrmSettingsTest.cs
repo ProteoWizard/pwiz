@@ -440,9 +440,11 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Mod\" aminoacid=\"P\" formula=\"C23 - O N P14\" />");
             AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Mod\" aminoacid=\"P\" massdiff_monoisotopic=\"5\"\n" +
                     " massdiff_average=\"5.1\" />");
+            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Oxidation\" aminoacid=\"M, D\" formula=\"O\" variable=\"true\"/>");
             AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Mod\" formula=\"C23N\" />");
             AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"15N\" label_15N=\"true\" />");
             AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Heavy K\" aminoacid=\"K\" label_13C=\"true\" label_15N=\"true\" label_18O=\"true\"  label_2H=\"true\"/>");
+            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Aqua\" aminoacid=\"K, R\" label_13C=\"true\" label_15N=\"true\" label_18O=\"true\"  label_2H=\"true\"/>");
 
             // Missing parameters
             AssertEx.DeserializeError<StaticMod>("<static_modification />");
@@ -463,6 +465,11 @@ namespace pwiz.SkylineTest
             // Both formula and masses
             AssertEx.DeserializeError<StaticMod>("<static_modification name=\"Mod\" aminoacid=\"P\" formula=\"C23N\" massdiff_monoisotopic=\"5\"\n" +
                     " massdiff_average=\"5.1\" />");
+            // Bad amino acid
+            AssertEx.DeserializeError<StaticMod>("<static_modification name=\"Mod\" aminoacid=\"A, B, C\" />");
+            AssertEx.DeserializeError<StaticMod>("<static_modification name=\"Mod\" aminoacid=\"DM\" />");
+            // Variable with no amino acid
+            AssertEx.DeserializeError<StaticMod>("<static_modification name=\"Mod\" variable=\"true\" />");
         }
 
         /// <summary>

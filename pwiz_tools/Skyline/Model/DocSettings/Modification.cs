@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Xml;
@@ -52,25 +51,25 @@ namespace pwiz.Skyline.Model.DocSettings
     [XmlRoot("static_modification")]
     public sealed class StaticMod : XmlNamedElement
     {
-        public StaticMod(string name, char aa, string formula)
-            : this(name, aa, null, formula, LabelAtoms.None, null, null)
+        public StaticMod(string name, string aas, string formula)
+            : this(name, aas, null, formula, LabelAtoms.None, null, null)
         {            
         }
 
-        public StaticMod(string name, char aa, LabelAtoms labelAtoms)
-            : this(name, aa, null, null, labelAtoms, null, null)
+        public StaticMod(string name, string aas, LabelAtoms labelAtoms)
+            : this(name, aas, null, null, labelAtoms, null, null)
         {
         }
 
-        public StaticMod(string name, char? aa, ModTerminus? term,
+        public StaticMod(string name, string aas, ModTerminus? term,
             string formula, LabelAtoms labelAtoms, double? monoMass, double? avgMass)
-            : this(name, aa, term, false, formula, labelAtoms, RelativeRT.Matching, monoMass, avgMass, null, null, null)
+            : this(name, aas, term, false, formula, labelAtoms, RelativeRT.Matching, monoMass, avgMass, null, null, null)
         {
             
         }
 
         public StaticMod(string name,
-                         char? aa,
+                         string aas,
                          ModTerminus? term,
                          bool isVariable,
                          string formula,
@@ -83,7 +82,7 @@ namespace pwiz.Skyline.Model.DocSettings
                          double? avgLoss)
             : base(name)
         {
-            AA = aa;
+            AAs = aas;
             Terminus = term;
             IsVariable = IsExplicit = isVariable;   // All variable mods are explicit
             Formula = formula;
@@ -109,7 +108,7 @@ namespace pwiz.Skyline.Model.DocSettings
             Validate();
         }
 
-        public char? AA { get; private set; }
+        public string AAs { get; private set; }
 
         public ModTerminus? Terminus { get; private set; }
 
@@ -131,6 +130,15 @@ namespace pwiz.Skyline.Model.DocSettings
         public double? AverageMass { get; private set; }
         public double? AverageLoss { get; private set; }
 
+        public IEnumerable<char> AminoAcids
+        {
+            get
+            {
+                foreach (var aaPart in AAs.Split(','))
+                    yield return aaPart.Trim()[0];
+            }
+        }
+
         /// <summary>
         /// True if the modification must be declared on a peptide to have
         /// any effect.  Modifications on the document settings with this
@@ -144,7 +152,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool IsMod(char aa, int indexAA, int len)
         {
-            if (AA.HasValue && AA.Value != aa)
+            if (AAs != null && !AAs.Contains(aa))
                 return false;
             if (Terminus.HasValue)
             {
@@ -221,12 +229,21 @@ namespace pwiz.Skyline.Model.DocSettings
             // It is now valid to specify modifications that apply to every amino acid.
             // This is important for 15N labeling, and reasonable for an explicit
             // static modification... but not for variable modifications.
-            if (IsVariable && !Terminus.HasValue && !AA.HasValue)
+            if (IsVariable && !Terminus.HasValue && AAs == null)
                 throw new InvalidDataException("Variable modifications must specify amino acid or terminus.");
-            if (AA.HasValue && !AminoAcid.IsAA(AA.Value))
-                throw new InvalidDataException(string.Format("Invalid amino acid {0}.", AA.Value));
-            if (!AA.HasValue && Terminus.HasValue && LabelAtoms != LabelAtoms.None)
+            if (AAs != null)
+            {
+                foreach (string aaPart in AAs.Split(','))
+                {
+                    string aa = aaPart.Trim();
+                    if (aa.Length != 1 || !AminoAcid.IsAA(aa[0]))
+                        throw new InvalidDataException(string.Format("Invalid amino acid '{0}'.", aa));
+                }
+            }
+            else if (Terminus.HasValue && LabelAtoms != LabelAtoms.None)
+            {
                 throw new InvalidDataException("Terminal modification with labeled atoms not allowed.");
+            }
             if (Formula == null && LabelAtoms == LabelAtoms.None)
             {
                 if (MonoisotopicMass == null || AverageMass == null)
@@ -284,16 +301,13 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // Read tag attributes
             base.ReadXml(reader);
-            string aa = reader.GetAttribute(ATTR.aminoacid);
-            if (!string.IsNullOrEmpty(aa))
-            {
-                if (aa.Length > 1)
-                    throw new InvalidDataException(string.Format("Invalid amino acid '{0}'.", aa));
-
-                AA = aa[0];
+            string aas = reader.GetAttribute(ATTR.aminoacid);
+            if (!string.IsNullOrEmpty(aas))
+            {                
+                AAs = aas;
                 // Support v0.1 format.
-                if (AA == '\0')
-                    AA = null;
+                if (AAs[0] == '\0')
+                    AAs = null;
             }
 
             Terminus = reader.GetAttribute<ModTerminus>(ATTR.terminus, ToModTerminus);
@@ -330,7 +344,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // Write tag attributes
             base.WriteXml(writer);
-            writer.WriteAttributeNullable(ATTR.aminoacid, AA);
+            writer.WriteAttributeIfString(ATTR.aminoacid, AAs);
             writer.WriteAttributeNullable(ATTR.terminus, Terminus);
             writer.WriteAttribute(ATTR.variable, IsVariable);
             writer.WriteAttributeIfString(ATTR.formula, Formula);
@@ -359,7 +373,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return base.Equals(obj) && obj.AA.Equals(AA) &&
+            return base.Equals(obj) &&
+                Equals(obj.AAs, AAs) &&
                 obj.Terminus.Equals(Terminus) &&
                 obj.IsVariable.Equals(IsVariable) &&
                 obj.AverageMass.Equals(AverageMass) &&
@@ -392,7 +407,7 @@ namespace pwiz.Skyline.Model.DocSettings
             unchecked
             {
                 int result = base.GetHashCode();
-                result = (result*397) ^ (AA.HasValue ? AA.Value.GetHashCode() : 0);
+                result = (result*397) ^ (AAs != null ? AAs.GetHashCode() : 0);
                 result = (result*397) ^ (Terminus.HasValue ? Terminus.Value.GetHashCode() : 0);
                 result = (result*397) ^ IsVariable.GetHashCode();
                 result = (result*397) ^ (AverageMass.HasValue ? AverageMass.Value.GetHashCode() : 0);

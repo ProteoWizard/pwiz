@@ -181,7 +181,6 @@
             // 
             // comboAA
             // 
-            this.comboAA.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboAA.FormattingEnabled = true;
             this.comboAA.Items.AddRange(new object[] {
             "",
@@ -210,6 +209,8 @@
             this.comboAA.Size = new System.Drawing.Size(59, 21);
             this.comboAA.TabIndex = 3;
             this.comboAA.SelectedIndexChanged += new System.EventHandler(this.comboAA_SelectedIndexChanged);
+            this.comboAA.Leave += new System.EventHandler(this.comboAA_Leave);
+            this.comboAA.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.comboAA_KeyPress);
             // 
             // comboTerm
             // 
@@ -514,7 +515,6 @@
             this.cbVariableMod.Name = "cbVariableMod";
             this.cbVariableMod.Size = new System.Drawing.Size(64, 17);
             this.cbVariableMod.TabIndex = 6;
-            this.cbVariableMod.TabStop = false;
             this.cbVariableMod.Text = "Variable";
             this.cbVariableMod.UseVisualStyleBackColor = true;
             // 
