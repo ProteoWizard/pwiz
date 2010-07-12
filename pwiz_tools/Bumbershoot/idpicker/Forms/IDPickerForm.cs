@@ -131,8 +131,12 @@ namespace IDPicker
             var spectrum = psm.Spectrum;
 
             string sourcePath;
-            if (spectrum.Source.MetadataPath != null)
-                sourcePath = spectrum.Source.MetadataPath;
+            if (spectrum.Source.Metadata != null)
+            {
+                sourcePath = Path.GetTempFileName() + ".mzML.gz";
+                pwiz.CLI.msdata.MSDataFile.write(spectrum.Source.Metadata, sourcePath,
+                                                 new pwiz.CLI.msdata.MSDataFile.WriteConfig() { gzipped = true });
+            }
             else
             {
                 try
@@ -151,13 +155,17 @@ namespace IDPicker
                         // prompt user to find the source
                         var eventArgs = new Parser.SourceNotFoundEventArgs() { SourcePath = spectrum.Source.Name };
                         sourceNotFoundOnVisualizeHandler(this, eventArgs);
+
+                        if (eventArgs.SourcePath == spectrum.Source.Name)
+                            return; // user canceled
+
                         if (File.Exists(eventArgs.SourcePath) || Directory.Exists(eventArgs.SourcePath))
                         {
                             lastSourcePathLocation = Path.GetDirectoryName(eventArgs.SourcePath);
                             sourcePath = eventArgs.SourcePath;
                         }
                         else
-                            throw; // user cancelled, abort the visualization
+                            throw; // file still not found, abort the visualization
                     }
                 }
             }
@@ -358,7 +366,7 @@ namespace IDPicker
 
             var findDirectoryDialog = new FolderBrowserDialog()
             {
-                SelectedPath = @"C:\",
+                SelectedPath = @"h:\fasta",
                 ShowNewFolderButton = false,
                 Description = "Locate the directory containing the database \"" + e.DatabasePath + "\""
             };
@@ -455,7 +463,6 @@ namespace IDPicker
                 StartPosition = FormStartPosition.CenterScreen;
                 MaximizeBox = false;
                 MinimizeBox = true;
-                Text = "Progress...";
                 Size = new System.Drawing.Size(450, 50);
 
                 progressBar = new ProgressBar();
@@ -471,6 +478,14 @@ namespace IDPicker
             {
                 progressBar.Maximum = (int) e.TotalBytes;
                 progressBar.Value = (int) e.ParsedBytes;
+                e.Cancel = !Visible || IsDisposed;
+                Application.DoEvents();
+            }
+
+            public void UpdateProgress (object sender, StaticWeightQonverter.QonversionProgressEventArgs e)
+            {
+                progressBar.Maximum = e.TotalAnalyses;
+                progressBar.Value = e.QonvertedAnalyses;
                 e.Cancel = !Visible || IsDisposed;
                 Application.DoEvents();
             }
@@ -498,14 +513,43 @@ namespace IDPicker
                 if (xml_filepaths.Count() > 0)
                 {
                     using (SimpleProgressForm pf = new SimpleProgressForm())
-                    using (Parser parser = new Parser())
+                    using (Parser parser = new Parser(commonFilename))
                     {
+                        pf.Text = "Parsing...";
                         pf.Show();
                         parser.DatabaseNotFound += new EventHandler<Parser.DatabaseNotFoundEventArgs>(databaseNotFoundHandler);
-                        parser.SourceNotFound += new EventHandler<Parser.SourceNotFoundEventArgs>(sourceNotFoundOnImportHandler);
+                        if (xml_filepaths.Count() > 1)
+                            parser.SourceNotFound += new EventHandler<Parser.SourceNotFoundEventArgs>(sourceNotFoundOnImportHandler);
+                        else // if only importing one source, don't ask about skipping mzML import
+                            parser.SourceNotFound += new EventHandler<Parser.SourceNotFoundEventArgs>(sourceNotFoundOnVisualizeHandler);
                         parser.ParsingProgress += new EventHandler<Parser.ParsingProgressEventArgs>(pf.UpdateProgress);
-                        parser.ReadXml(xml_filepaths, commonFilename, ".");
+                        parser.ReadXml(xml_filepaths, ".");
+
+                        if (!pf.Visible || pf.IsDisposed)
+                            return;
                     }
+                }
+
+                using (SimpleProgressForm pf = new SimpleProgressForm())
+                {
+                    pf.Text = "Qonverting...";
+                    pf.Show();
+                    var qonverter = new IDPicker.StaticWeightQonverter();
+                    qonverter.ScoreWeights["mvh"] = 1;
+                    //qonverter.ScoreWeights["mzFidelity"] = 1;
+                    qonverter.QonversionProgress += new StaticWeightQonverter.QonversionProgressEventHandler(pf.UpdateProgress);
+
+                    try
+                    {
+                        qonverter.Qonvert(commonFilename);
+                    }
+                    catch (Exception e)
+                    {
+                        MessageBox.Show("Error: " + e.Message, "Qonversion failed");
+                    }
+
+                    if (!pf.Visible || pf.IsDisposed)
+                        return;
                 }
 
                 var sessionFactory = DataModel.SessionFactoryFactory.CreateSessionFactory(commonFilename, false, true);

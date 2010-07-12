@@ -240,7 +240,7 @@ namespace IDPicker.DataModel
             #endregion
 
             #region Create Filtered* tables by applying the basic filters to the main tables
-            session.CreateSQLQuery("CREATE TABLE FilteredProteins (Id INTEGER PRIMARY KEY, Accession TEXT, Description TEXT, Sequence TEXT);" +
+            session.CreateSQLQuery("CREATE TABLE FilteredProteins (Id INTEGER PRIMARY KEY, Accession TEXT, Description TEXT, Sequence TEXT, Cluster INT, ProteinGroup TEXT);" +
                 String.Format("INSERT INTO FilteredProteins SELECT pro.* " +
                               "FROM PeptideSpectrumMatches psm " +
                               "JOIN PeptideInstances pi ON psm.Peptide = pi.Peptide " +
@@ -296,13 +296,31 @@ namespace IDPicker.DataModel
             session.CreateSQLQuery("ALTER TABLE FilteredPeptideSpectrumMatches RENAME TO PeptideSpectrumMatches").ExecuteUpdate();
             #endregion
 
-            #region Create ProteinGroups table storing the information dependent on the basic filters
-            try { session.CreateSQLQuery("DROP TABLE ProteinGroups").ExecuteUpdate(); } catch { }
-            session.CreateSQLQuery("CREATE TABLE ProteinGroups (ProteinId INTEGER PRIMARY KEY, ProteinGroup TEXT);" +
-                                   "INSERT INTO ProteinGroups SELECT pro.Id, GROUP_CONCAT(DISTINCT pi.Peptide) " +
-                                   "FROM Proteins pro " +
-                                   "JOIN PeptideInstances pi ON pro.Id = pi.Protein " +
-                                   "GROUP BY pro.Id").ExecuteUpdate();
+            #region Set ProteinGroups column (the groups change depending on the basic filters applied above)
+            {
+                var proteinGroupQuery = session.CreateSQLQuery("SELECT GROUP_CONCAT(DISTINCT pi.Peptide), pi.Protein " +
+                                                               "FROM PeptideInstances pi " +
+                                                               "GROUP BY pi.Protein " +
+                                                               "ORDER BY pi.Protein");
+
+                session.Transaction.Begin();
+                var cmd = session.Connection.CreateCommand();
+                cmd.CommandText = "UPDATE Proteins SET ProteinGroup = ? WHERE Id = ?";
+                var parameters = new List<System.Data.IDbDataParameter>();
+                for (int i = 0; i < 2; ++i)
+                {
+                    parameters.Add(cmd.CreateParameter());
+                    cmd.Parameters.Add(parameters[i]);
+                }
+                cmd.Prepare();
+                foreach (object[] itr in proteinGroupQuery.List<object[]>())
+                {
+                    parameters[0].Value = (string) itr[0];
+                    parameters[1].Value = (int) itr[1];
+                    cmd.ExecuteNonQuery();
+                }
+                session.Transaction.Commit();
+            }
             #endregion
 
             #region Calculate additional peptides and filter out proteins that don't meet the minimum
@@ -348,23 +366,27 @@ namespace IDPicker.DataModel
             #endregion
 
             #region Calculate clusters (connected components) for remaining proteins
-            Map<long, long> clusterByProteinId = calculateProteinClusters(session);
-
-            try { session.CreateSQLQuery("DROP TABLE ProteinClusters").ExecuteUpdate(); } catch { }
-            var proteinClustersTableCommand = new StringBuilder("BEGIN TRANSACTION;");
-            proteinClustersTableCommand.Append("CREATE TABLE ProteinClusters (ProteinId INTEGER PRIMARY KEY, ClusterId INT);");
-            foreach (Map<long, long>.MapPair itr in clusterByProteinId)
-                proteinClustersTableCommand.AppendFormat("INSERT INTO ProteinClusters VALUES ({0}, {1}); ", itr.Key, itr.Value);
-            proteinClustersTableCommand.Append("END TRANSACTION");
-
             {
-                var backup = System.Console.Out;
-                var nullOut = new System.IO.StringWriter();
-                System.Console.SetOut(nullOut);
-                session.CreateSQLQuery(proteinClustersTableCommand.ToString()).ExecuteUpdate();
-                System.Console.SetOut(backup);
-            }
+                Map<long, long> clusterByProteinId = calculateProteinClusters(session);
 
+                session.Transaction.Begin();
+                var cmd = session.Connection.CreateCommand();
+                cmd.CommandText = "UPDATE Proteins SET Cluster = ? WHERE Id = ?";
+                var parameters = new List<System.Data.IDbDataParameter>();
+                for (int i = 0; i < 2; ++i)
+                {
+                    parameters.Add(cmd.CreateParameter());
+                    cmd.Parameters.Add(parameters[i]);
+                }
+                cmd.Prepare();
+                foreach (Map<long, long>.MapPair itr in clusterByProteinId)
+                {
+                    parameters[0].Value = itr.Value;
+                    parameters[1].Value = itr.Key;
+                    cmd.ExecuteNonQuery();
+                }
+                session.Transaction.Commit();
+            }
             #endregion
 
             #region Create FilteringCriteria table to store the basic filter parameters

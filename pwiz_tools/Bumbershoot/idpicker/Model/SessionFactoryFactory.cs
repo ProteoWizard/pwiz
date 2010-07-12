@@ -81,13 +81,15 @@ namespace IDPicker.DataModel
 
         public static ISessionFactory CreateSessionFactory(string path, bool createSchema, bool showSQL)
         {
+            bool pooling = path == ":memory:";
+
             Configuration configuration = new Configuration()
                 .SetProperty("show_sql", showSQL ? "true" : "false")
                 .SetProperty("dialect", typeof(CustomSQLiteDialect).AssemblyQualifiedName)
                 .SetProperty("hibernate.cache.use_query_cache", "true")
                 .SetProperty("proxyfactory.factory_class", typeof(NHibernate.ByteCode.Castle.ProxyFactoryFactory).AssemblyQualifiedName)
                 //.SetProperty("adonet.batch_size", batchSize.ToString())
-                .SetProperty("connection.connection_string", String.Format("Data Source={0};Version=3;Pooling=True;Max Pool Size=1;", path))
+                .SetProperty("connection.connection_string", String.Format("Data Source={0};Version=3;{1}", path, (pooling ? "Pooling=True;Max Pool Size=1;" : "")))
                 .SetProperty("connection.driver_class", typeof(NHibernate.Driver.SQLite20Driver).AssemblyQualifiedName)
                 .SetProperty("connection.provider", typeof(NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName)
                 .SetProperty("connection.release_mode", "on_close")

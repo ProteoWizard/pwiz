@@ -53,7 +53,19 @@ struct StaticWeightQonverter
 
     StaticWeightQonverter();
 
-    void Qonvert(const string& idpDbFilepath);
+    struct ProgressMonitor
+    {
+        struct UpdateMessage
+        {
+            int QonvertedAnalyses;
+            int TotalAnalyses;
+            bool Cancel;
+        };
+
+        virtual void operator() (UpdateMessage& updateMessage) const {};
+    };
+
+    void Qonvert(const string& idpDbFilepath, const ProgressMonitor& progressMonitor = ProgressMonitor());
 };
 
 
@@ -70,10 +82,12 @@ struct StaticWeightQonverter
 #pragma warning( push )
 #pragma warning( disable : 4634 4635 )
 #include "../freicore/pwiz_src/pwiz/utility/bindings/CLI/common/SharedCLI.hpp"
+#using <system.dll>
 #pragma warning( pop )
 
 
 using namespace System;
+using namespace System::ComponentModel;
 using namespace System::Collections::Generic;
 
 
@@ -87,9 +101,21 @@ public ref struct StaticWeightQonverter
     property double NTerminusIsSpecificWeight;
     property double CTerminusIsSpecificWeight;
 
+    ref struct QonversionProgressEventArgs : CancelEventArgs
+    {
+        property int QonvertedAnalyses;
+        property int TotalAnalyses;
+    };
+
+    delegate void QonversionProgressEventHandler(Object^ sender, QonversionProgressEventArgs^ e);
+
+    event QonversionProgressEventHandler^ QonversionProgress;
+
     StaticWeightQonverter();
 
     void Qonvert(String^ idpDbFilepath);
+
+    internal: void marshal(int qonvertedAnalyses, int totalAnalyses, bool& cancel);
 };
 
 

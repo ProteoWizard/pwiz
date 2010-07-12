@@ -46,7 +46,7 @@
 			<key column="Source"/>
 			<one-to-many class="Spectrum"/>
 		</bag>
-		<property name="MetadataPath" lazy="true" type="SpectrumSourceMetadataPathUserType"/>
+		<property name="Metadata" column="MsDataBytes" lazy="true" type="SpectrumSourceMetadataUserType"/>
 	</class>
 
 	<class name="SpectrumSourceGroupLink" table="SpectrumSourceGroupLinks">
@@ -57,9 +57,9 @@
 		   
 	<class name="Spectrum" table="Spectra">
 		<id name="Id"><generator class="native"/></id>
-		<many-to-one name="Source" fetch="join" />
+		<many-to-one name="Source" fetch="join" unique-key="Spectrum_SourceNativeID"/>
 		<property name="Index" column="Index_"/>
-		<property name="NativeID"/>
+		<property name="NativeID" unique-key="Spectrum_SourceNativeID"/>
 		<property name="PrecursorMZ"/>
 		<bag name="Matches" inverse="true" batch-size="500" lazy="true">
 			<key column="Spectrum"/>
@@ -159,7 +159,9 @@
 			<key column="PeptideSpectrumMatch"/>
 			<one-to-many class="PeptideModification"/>
 		</bag>
-		<property name="QValue" index="PeptideSpectrumMatch_QValueIndex"/>
+		<property name="QValue" index="PeptideSpectrumMatch_QValueIndex">
+			<column name="QValue" sql-type="DOUBLE"/>
+		</property>
 		<property name="MonoisotopicMass"/>
 		<property name="MolecularWeight"/>
 		<property name="MonoisotopicMassError"/>

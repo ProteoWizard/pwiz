@@ -24,6 +24,7 @@
 #include "Qonverter.hpp"
 #include "../Lib/SQLite/sqlite3.h"
 #include "../freicore/pwiz_src/pwiz/utility/misc/Std.hpp"
+#include "boost/tuple/tuple.hpp"
 
 
 #define CHECK_SQLITE_RESULT(x) \
@@ -73,6 +74,8 @@ struct sqlite3_wrapper
     sqlite3* db;
 };
 
+typedef boost::tuple<string, string, string> AnalysisSourceChargeTuple;
+
 struct PsmRow
 {
     sqlite_int64 id;
@@ -108,12 +111,24 @@ int getStringVector(void* data, int columnCount, char** columnValues, char** col
     return 0;
 }
 
+int getAnalysisSourceChargeTuples(void* data, int columnCount, char** columnValues, char** columnNames)
+{
+    if (columnCount != 3)
+        throw runtime_error("[StaticWeightQonverter::getAnalysisSourceChargeTuples] result must have 3 columns");
+
+    vector<AnalysisSourceChargeTuple>* tuples = static_cast<vector<AnalysisSourceChargeTuple>*>(data);
+    tuples->push_back(boost::make_tuple(columnValues[0], columnValues[1], columnValues[2]));
+
+    return 0;
+}
+
 int getScoreNames(void* data, int columnCount, char** columnValues, char** columnNames)
 {
     if (columnCount != 1)
         throw runtime_error("[StaticWeightQonverter::getScoreNames] result must have 1 column");
 
-    bal::split(*static_cast<vector<string>*>(data), columnValues[0], bal::is_any_of(","));
+    if (columnValues[0] != NULL)
+        bal::split(*static_cast<vector<string>*>(data), columnValues[0], bal::is_any_of(","));
 
     return 0;
 }
@@ -253,7 +268,7 @@ StaticWeightQonverter::StaticWeightQonverter()
 }
 
 
-void StaticWeightQonverter::Qonvert(const string& idpDbFilepath)
+void StaticWeightQonverter::Qonvert(const string& idpDbFilepath, const ProgressMonitor& progressMonitor)
 {
     if (scoreWeights.empty())
         throw runtime_error("[StaticWeightQonverter::Qonvert] no score weights set");
@@ -262,37 +277,59 @@ void StaticWeightQonverter::Qonvert(const string& idpDbFilepath)
 
     string sql;
 
-    // get the set of spectrum sources
-    sql = "SELECT DISTINCT Id FROM SpectrumSources";
+    // get the set of distinct analysis/source/charge tuples
+    sql = string("SELECT DISTINCT psm.Analysis, s.Source, psm.Charge ") +
+                 "FROM PeptideSpectrumMatches psm " +
+                 "JOIN Spectra s ON psm.Spectrum=s.Id " +
+                 "WHERE psm.QValue > 1 " +
+                 "  AND psm.Rank = 1";
 
-    vector<string> spectrumSourceIds;
-    CHECK_SQLITE_RESULT(sqlite3_exec(db, sql.c_str(), getStringVector, &spectrumSourceIds, &errorBuf));
+    vector<AnalysisSourceChargeTuple> analysisSourceChargeTuples;
+    CHECK_SQLITE_RESULT(sqlite3_exec(db, sql.c_str(), getAnalysisSourceChargeTuples, &analysisSourceChargeTuples, &errorBuf));
 
-    // get the set of analysis engines
-    sql = "SELECT DISTINCT Id FROM Analyses";
-
-    vector<string> analysisIds;
-    CHECK_SQLITE_RESULT(sqlite3_exec(db, sql.c_str(), getStringVector, &analysisIds, &errorBuf));
     // get the set of expected score names
     set<string> expectedScoreNames;
     typedef pair<string, double> ScoreWeightPair;
     BOOST_FOREACH(const ScoreWeightPair& itr, scoreWeights)
         expectedScoreNames.insert(itr.first);
 
-    // qonvert each spectrum source and analysis engine independently
-    BOOST_FOREACH(const string& analysisId, analysisIds)
-    BOOST_FOREACH(const string& spectrumSourceId, spectrumSourceIds)
+    // send initial progress update to indicate how many qonversion steps there are
+    ProgressMonitor::UpdateMessage updateMessage;
+    updateMessage.QonvertedAnalyses = 0;
+    updateMessage.TotalAnalyses = analysisSourceChargeTuples.size();
+    updateMessage.Cancel = false;
+    progressMonitor(updateMessage);
+    if (updateMessage.Cancel)
+        return;
+
+    // qonvert each analysis/source/charge tuple independently
+    BOOST_FOREACH(const AnalysisSourceChargeTuple& analysisSourceChargeTuple, analysisSourceChargeTuples)
     {
+        const string& analysisId = analysisSourceChargeTuple.get<0>();
+        const string& spectrumSourceId = analysisSourceChargeTuple.get<1>();
+        const string& psmChargeState = analysisSourceChargeTuple.get<2>();
+
         // get the set of actual score names
         sql = string("SELECT GROUP_CONCAT(DISTINCT psmScore.Name) ") +
-                     "FROM Spectra s " +
-                     "JOIN PeptideSpectrumMatches psm ON s.Id=psm.Spectrum " +
-                     "JOIN PeptideSpectrumMatchScores psmScore ON psm.Id=psmScore.Id " +
-                     "WHERE s.Source=" + spectrumSourceId + " " +
-                     "LIMIT 1";
+                     "FROM PeptideSpectrumMatchScores psmScore " +
+                     "JOIN (SELECT psm.Id " +
+                     "      FROM PeptideSpectrumMatches psm " +
+                     "      JOIN Spectra s ON psm.Spectrum=s.Id " +
+                     "      WHERE s.Source=" + spectrumSourceId +
+                     "        AND psm.Analysis=" + analysisId +
+                     "      LIMIT 1) AS psm ON psmScore.Id=psm.Id";
 
         vector<string> actualScoreNames; // the order of score names is important!
         CHECK_SQLITE_RESULT(sqlite3_exec(db, sql.c_str(), getScoreNames, &actualScoreNames, &errorBuf));
+
+        if (actualScoreNames.empty())
+        {
+            ++updateMessage.QonvertedAnalyses;
+            progressMonitor(updateMessage);
+            if (updateMessage.Cancel)
+                return;
+            continue;
+        }
 
         // the intersection between the sets is used as a SQL condition
         vector<string> scoreSet;
@@ -312,41 +349,33 @@ void StaticWeightQonverter::Qonvert(const string& idpDbFilepath)
         // e.g. ('foo','bar')
         string scoreSetString = "('" + bal::join(scoreSet, "','") + "')";
 
-        // get the set of PSM charge states
-        sql = string("SELECT DISTINCT psm.Charge ") +
-                     "FROM PeptideSpectrumMatches psm " +
-                     "JOIN Spectra s ON psm.Spectrum=s.Id " +
-                     "WHERE s.Source=" + spectrumSourceId;
+        // retrieve triplets of psm id, decoy state, and score list (with the same order retrieved above)
+        sql = string("SELECT psm.Id, psm.Spectrum, ") +
+                     "      CASE WHEN SUM(DISTINCT CASE WHEN pro.Accession LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) + SUM(DISTINCT CASE WHEN pro.Accession NOT LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) = 2 THEN 2 " +
+                     "           ELSE SUM(DISTINCT CASE WHEN pro.Accession LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) " +
+                     "           END AS DecoyState, " +
+                     "      GROUP_CONCAT(psmScore.Value) " +
+                     "FROM Spectra s " +
+                     "JOIN PeptideInstances pi ON psm.Peptide=pi.Peptide " +
+                     "JOIN PeptideSpectrumMatches psm ON s.Id=psm.Spectrum " +
+                     "JOIN PeptideSpectrumMatchScores psmScore ON psm.Id=psmScore.Id " +
+                     "JOIN Proteins pro ON pi.Protein=pro.Id " +
+                     "WHERE s.Source=" + spectrumSourceId +
+                     "  AND psm.Analysis=" + analysisId +
+                     "  AND psm.Charge=" + psmChargeState +
+                     "  AND psmScore.Name IN " + scoreSetString + " " +
+                     "GROUP BY psm.Id " +
+                     "ORDER BY psm.Spectrum";
 
-        vector<string> psmChargeStates;
-        CHECK_SQLITE_RESULT(sqlite3_exec(db, sql.c_str(), getStringVector, &psmChargeStates, &errorBuf));
+        vector<PsmRow> psmRows;
+        CHECK_SQLITE_RESULT(sqlite3_exec(db, sql.c_str(), addPsmRow, &psmRows, &errorBuf));
 
-        // qonvert each charge state independently
-        BOOST_FOREACH(const string& psmChargeState, psmChargeStates)
-        {
-            // retrieve triplets of psm id, decoy state, and score list (with the same order retrieved above)
-            sql = string("SELECT psm.Id, psm.Spectrum, ") +
-                         "      CASE WHEN SUM(DISTINCT CASE WHEN pro.Accession LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) + SUM(DISTINCT CASE WHEN pro.Accession NOT LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) = 2 THEN 2 " +
-                         "           ELSE SUM(DISTINCT CASE WHEN pro.Accession LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) " +
-                         "           END AS DecoyState, " +
-                         "      GROUP_CONCAT(psmScore.Value) " +
-                         "FROM Spectra s " +
-                         "JOIN PeptideInstances pi ON psm.Peptide=pi.Peptide " +
-                         "JOIN PeptideSpectrumMatches psm ON s.Id=psm.Spectrum " +
-                         "JOIN PeptideSpectrumMatchScores psmScore ON psm.Id=psmScore.Id " +
-                         "JOIN Proteins pro ON pi.Protein=pro.Id " +
-                         "WHERE s.Source=" + spectrumSourceId +
-                         "  AND psm.Analysis=" + analysisId +
-                         "  AND psm.Charge=" + psmChargeState +
-                         "  AND psmScore.Name IN " + scoreSetString + " " +
-                         "GROUP BY psm.Id " +
-                         "ORDER BY psm.Spectrum";
+        qonvertPsmSubset(db, psmRows, scoreWeightsVector);
 
-            vector<PsmRow> psmRows;
-            CHECK_SQLITE_RESULT(sqlite3_exec(db, sql.c_str(), addPsmRow, &psmRows, &errorBuf));
-
-            qonvertPsmSubset(db, psmRows, scoreWeightsVector);
-        }
+        ++updateMessage.QonvertedAnalyses;
+        progressMonitor(updateMessage);
+        if (updateMessage.Cancel)
+            return;
     }
 }
 
@@ -363,6 +392,50 @@ void StaticWeightQonverter::Qonvert(const string& idpDbFilepath)
 
 namespace IDPicker {
 
+
+using namespace System::Runtime::InteropServices;
+
+typedef void (__stdcall *QonversionProgressCallback)(int, int, bool&);
+
+
+struct ProgressMonitorForwarder : public native::StaticWeightQonverter::ProgressMonitor
+{
+    QonversionProgressCallback managedFunctionPtr;
+
+    ProgressMonitorForwarder(void* managedFunctionPtr)
+        : managedFunctionPtr(static_cast<QonversionProgressCallback>(managedFunctionPtr))
+    {}
+
+    virtual void operator() (UpdateMessage& updateMessage) const
+    {
+        if (managedFunctionPtr != NULL)
+        {
+            managedFunctionPtr(updateMessage.QonvertedAnalyses,
+                               updateMessage.TotalAnalyses,
+                               updateMessage.Cancel);
+        }
+    }
+};
+
+#pragma managed
+private delegate void QonversionProgressEventWrapper(int qonvertedAnalyses, int totalAnalyses, bool& cancel);
+
+void StaticWeightQonverter::marshal(int qonvertedAnalyses, int totalAnalyses, bool& cancel)
+{
+    try
+    {
+        QonversionProgressEventArgs^ eventArgs = gcnew QonversionProgressEventArgs();
+        eventArgs->QonvertedAnalyses = qonvertedAnalyses;
+        eventArgs->TotalAnalyses = totalAnalyses;
+        eventArgs->Cancel = cancel;
+        QonversionProgress(this, eventArgs);
+        cancel = eventArgs->Cancel;
+    }
+    catch (Exception^ e)
+    {
+        throw runtime_error(ToStdString(e->Message));
+    }
+}
 
 StaticWeightQonverter::StaticWeightQonverter()
 {
@@ -384,7 +457,20 @@ void StaticWeightQonverter::Qonvert(String^ idpDbFilepath)
     for each (KeyValuePair<String^, double> itr in ScoreWeights)
         swq.scoreWeights[ToStdString(itr.Key)] = itr.Value;
 
-    try {swq.Qonvert(ToStdString(idpDbFilepath));} CATCH_AND_FORWARD
+    //if (!ReferenceEquals(%*QonversionProgress, nullptr))
+    {
+        QonversionProgressEventWrapper^ handler = gcnew QonversionProgressEventWrapper(this,
+                                                    &StaticWeightQonverter::marshal);
+        ProgressMonitorForwarder* progressMonitor = new ProgressMonitorForwarder(
+            Marshal::GetFunctionPointerForDelegate(handler).ToPointer());
+
+        try {swq.Qonvert(ToStdString(idpDbFilepath), *progressMonitor);} CATCH_AND_FORWARD
+        delete progressMonitor;
+
+        GC::KeepAlive(handler);
+    }
+    //else
+    //    try {swq.Qonvert(ToStdString(idpDbFilepath));} CATCH_AND_FORWARD
 }
 
 

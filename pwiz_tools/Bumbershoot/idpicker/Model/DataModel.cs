@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using Iesi.Collections.Generic;
+using msdata = pwiz.CLI.msdata;
 
 namespace IDPicker.DataModel
 {
@@ -33,10 +34,6 @@ namespace IDPicker.DataModel
     {
         public virtual string Name { get; set; }
         public virtual ISet<SpectrumSourceGroupLink> Sources { get; set; }
-
-        #region Default constructor
-        public SpectrumSourceGroup () { Sources = new SortedSet<SpectrumSourceGroupLink>(); }
-        #endregion
     }
 
     public class SpectrumSource : Entity<SpectrumSource>
@@ -54,11 +51,14 @@ namespace IDPicker.DataModel
         public virtual string URL { get; set; }
         public virtual IList<Spectrum> Spectra { get; set; }
 
-        public virtual string MetadataPath { get; protected set; }
-        public virtual pwiz.CLI.msdata.MSData Metadata { get { return new pwiz.CLI.msdata.MSDataFile(MetadataPath); } }
+        public virtual msdata.MSData Metadata { get; set; }
 
-        #region Default constructor
-        public SpectrumSource () { Groups = new SortedSet<SpectrumSourceGroupLink>(); }
+        #region Transient instance members
+        public SpectrumSource () { }
+        public SpectrumSource (pwiz.CLI.msdata.MSData msd)
+        {
+            Metadata = msd;
+        }
         #endregion
     }
 
@@ -79,20 +79,21 @@ namespace IDPicker.DataModel
         public virtual double PrecursorMZ { get; set; }
         public virtual IList<PeptideSpectrumMatch> Matches { get; set; }
 
-        /*public struct Peak
-        {
-            public double MZ { get; set; }
-            public double Intensity { get; set; }
-        }
-
-        public virtual Peak[] Peaks { get; set; }*/
-
-        public virtual pwiz.CLI.msdata.Spectrum Metadata
+        public virtual msdata.Spectrum Metadata
         {
             get
             {
                 var spectrumList = Source.Metadata.run.spectrumList;
                 return spectrumList.spectrum(spectrumList.find(NativeID), false);
+            }
+        }
+
+        public virtual msdata.Spectrum MetadataWithPeaks
+        {
+            get
+            {
+                var spectrumList = Source.Metadata.run.spectrumList;
+                return spectrumList.spectrum(spectrumList.find(NativeID), true);
             }
         }
     }
@@ -146,7 +147,7 @@ namespace IDPicker.DataModel
         public virtual string ProteinGroup { get { return proteinGroup; } }
         public virtual long Length { get { return length; } }
 
-        #region Property implementation
+        #region Transient instance members
         long cluster = 0;
         string proteinGroup = "";
         long length = 0;
@@ -163,7 +164,7 @@ namespace IDPicker.DataModel
         public virtual double MonoisotopicMass { get; set; }
         public virtual double MolecularWeight { get; set; }
 
-        #region Sequence implementation for transient instances
+        #region Transient instance members
         public Peptide () { }
         internal Peptide (string sequence) { this.sequence = sequence; }
         private string sequence = null;
@@ -212,9 +213,33 @@ namespace IDPicker.DataModel
         public virtual int Charge { get; set; }
         public virtual IDictionary<string, double> Scores { get; set; }
 
-        private string fullDistinctKey = "", sequenceAndMassDistinctKey = "";
         public virtual string FullDistinctKey { get { return fullDistinctKey; } }
         public virtual string SequenceAndMassDistinctKey { get { return sequenceAndMassDistinctKey; } }
+
+        public readonly static double DefaultQValue = double.PositiveInfinity;
+
+        #region Transient instance members
+        public PeptideSpectrumMatch () { QValue = DefaultQValue; }
+        public PeptideSpectrumMatch (PeptideSpectrumMatch other)
+        {
+            Id = other.Id;
+            Spectrum = other.Spectrum;
+            Analysis = other.Analysis;
+            Peptide = other.Peptide;
+            Modifications = other.Modifications;
+            QValue = other.QValue;
+            MonoisotopicMass = other.MonoisotopicMass;
+            MolecularWeight = other.MolecularWeight;
+            MonoisotopicMassError = other.MonoisotopicMassError;
+            MolecularWeightError = other.MolecularWeightError;
+            Rank = other.Rank;
+            Charge = other.Charge;
+            Scores = other.Scores;
+        }
+
+        private string fullDistinctKey = "";
+        private string sequenceAndMassDistinctKey = "";
+        #endregion
     }
 
     public class PeptideModification : Entity<PeptideModification>
@@ -286,7 +311,7 @@ namespace IDPicker.DataModel
 
     #region Implementation for custom types
     
-    public class SpectrumSourceMetadataPathUserType : NHibernate.UserTypes.IUserType
+    public class SpectrumSourceMetadataUserType : NHibernate.UserTypes.IUserType
     {
         #region IUserType Members
 
@@ -304,7 +329,7 @@ namespace IDPicker.DataModel
             var msdataBytes = cached as byte[];
             string tempFilepath = Path.GetTempFileName() + ".mzML.gz";
             File.WriteAllBytes(tempFilepath, msdataBytes);
-            return tempFilepath;
+            return new msdata.MSDataFile(tempFilepath);
         }
 
         public object DeepCopy (object value)
@@ -323,11 +348,16 @@ namespace IDPicker.DataModel
             if (value == DBNull.Value)
                 return DBNull.Value;
 
-            if (!(value is pwiz.CLI.msdata.MSData))
+            if (!(value is msdata.MSData))
                 throw new ArgumentException();
 
-            var msd = value as pwiz.CLI.msdata.MSData;
-            throw new NotImplementedException();
+            var msd = value as msdata.MSData;
+            string tempFilepath = Path.GetTempFileName() + ".mzML.gz";
+            msdata.MSDataFile.write(msd, tempFilepath,
+                                    new msdata.MSDataFile.WriteConfig() { gzipped = true });
+            byte[] msdataBytes = File.ReadAllBytes(tempFilepath);
+            File.Delete(tempFilepath);
+            return msdataBytes;
         }
 
         public int GetHashCode (object x)
@@ -342,7 +372,7 @@ namespace IDPicker.DataModel
 
         public void NullSafeSet (System.Data.IDbCommand cmd, object value, int index)
         {
-            // TODO: how should this work?
+            (cmd.Parameters[index] as System.Data.IDataParameter).Value = Disassemble(value);
         }
 
         public object Replace (object original, object target, object owner)
@@ -352,7 +382,7 @@ namespace IDPicker.DataModel
 
         public Type ReturnedType
         {
-            get { return typeof(pwiz.CLI.msdata.MSData); }
+            get { return typeof(msdata.MSData); }
         }
 
         public NHibernate.SqlTypes.SqlType[] SqlTypes
@@ -369,7 +399,11 @@ namespace IDPicker.DataModel
         {
             if (x == null && y == null)
                 return true;
-            throw new NotImplementedException();
+            else if (x == null || y == null)
+                return false;
+            var msd1 = x as msdata.MSData;
+            var msd2 = y as msdata.MSData;
+            return msd1.Equals(msd2);
         }
 
         #endregion

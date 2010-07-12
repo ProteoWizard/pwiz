@@ -122,6 +122,7 @@
     <Compile Include="Controls\BreadCrumbControl.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Model\BulkInserter.cs" />
     <Compile Include="Model\DataFilter.cs" />
     <Compile Include="Forms\ModificationTableForm.cs">
       <SubType>Form</SubType>
@@ -148,6 +149,7 @@
       <DependentUpon>IDPickerForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Model\DataModel.cs" />
+    <Compile Include="Model\Exporter.cs" />
     <Compile Include="Model\Parser.cs" />
     <Compile Include="Model\SessionFactoryFactory.cs" />
     <Compile Include="Program.cs" />

@@ -7,8 +7,8 @@
     <ProjectGuid>{594E7E1C-DDA7-4056-9536-379379925DBA}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>TestModel</RootNamespace>
-    <AssemblyName>TestModel</AssemblyName>
+    <RootNamespace>Test</RootNamespace>
+    <AssemblyName>Test</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -87,6 +87,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="TestModel.cs" />
+    <Compile Include="TestQonverter.cs" />
+    <Compile Include="TestUtil.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\freicore\pwiz_src\pwiz_tools\Shared\Common\Common.csproj">

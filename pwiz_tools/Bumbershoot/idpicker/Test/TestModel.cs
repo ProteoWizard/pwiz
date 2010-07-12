@@ -24,9 +24,11 @@ using System;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using IDPicker.DataModel;
 
+using msdata = pwiz.CLI.msdata;
 using pwiz.CLI.chemistry;
 using PwizPeptide = pwiz.CLI.proteome.Peptide;
 using PwizMod = pwiz.CLI.proteome.Modification;
@@ -35,7 +37,7 @@ using ModMap = pwiz.CLI.proteome.ModificationMap;
 using ModParsing = pwiz.CLI.proteome.ModificationParsing;
 using ModDelimiter = pwiz.CLI.proteome.ModificationDelimiter;
 
-namespace TestModel
+namespace Test
 {
     using TestProtein = Protein_Accessor;
     using TestPeptide = Peptide_Accessor;
@@ -54,9 +56,8 @@ namespace TestModel
     [TestClass]
     public class TestModel
     {
-        NHibernate.ISession session;
-
-        private void createTestProteins(IList<string> testProteinSequences)
+        #region Public static methods for easily populating an IDPicker session
+        public static void CreateTestProteins(NHibernate.ISession session, IList<string> testProteinSequences)
         {
             for (int i = 0; i < testProteinSequences.Count; ++i)
             {
@@ -73,63 +74,16 @@ namespace TestModel
             }
         }
 
-        private void createTestPeptideInstances (Peptide pep)
-        {
-            // store instances even though the association is inverse:
-            // the PeptideModification.Offset property needs access to the protein sequence
-            pep.Instances = new List<PeptideInstance>();
-
-            foreach (Protein pro in session.QueryOver<Protein>().List<Protein>())
-            {
-                int start = pro.Sequence.IndexOf(pep.Sequence, 0);
-                while (start >= 0)
-                {
-                    int end = start + pep.Sequence.Length;
-                    bool nTerminusIsSpecific = start == 0 || pro.Sequence[start - 1] == 'K' || pro.Sequence[start - 1] == 'R';
-                    bool cTerminusIsSpecific = end == pro.Sequence.Length || pro.Sequence[end - 1] == 'K' || pro.Sequence[end - 1] == 'R';
-                    var instance = new TestPI()
-                    {
-                        Peptide = pep,
-                        Protein = pro,
-                        Offset = start,
-                        Length = pep.Sequence.Length,
-                        MissedCleavages = pep.Sequence.ToCharArray(0, pep.Sequence.Length - 1).Count(o => o == 'K' || o == 'R'),
-                        NTerminusIsSpecific = nTerminusIsSpecific,
-                        CTerminusIsSpecific = cTerminusIsSpecific,
-                        specificTermini = (nTerminusIsSpecific ? 1 : 0) + (cTerminusIsSpecific ? 1 : 0),
-                    }.Target as PeptideInstance;
-
-                    session.Save(instance);
-                    pep.Instances.Add(instance);
-
-                    start = pro.Sequence.IndexOf(pep.Sequence, start+1);
-                }
-            }
-        }
-
-        private Peptide addOrGetPeptide(string sequenceWithoutMods)
-        {
-            Peptide peptide = session.QueryOver<Peptide>().Where(o => o.Sequence == sequenceWithoutMods).SingleOrDefault();
-            if (peptide == null)
-            {
-                peptide = new TestPeptide(sequenceWithoutMods).Target as Peptide;
-                session.Save(peptide);
-                createTestPeptideInstances(peptide);
-            }
-
-            return peptide;
-        }
-
-        struct PeptideTuple
+        public struct PeptideTuple
         {
             public string Sequence { get; set; }
             public int Charge { get; set; }
             public int ScoreDivider { get; set; }
         }
 
-        class SpectrumTuple
+        public class SpectrumTuple
         {
-            public SpectrumTuple (string group, string source, int spectrum, string analysis, int score, double qvalue, string peptideTuples)
+            public SpectrumTuple (string group, string source, int spectrum, string analysis, int? score, double qvalue, string peptideTuples)
             {
                 Group = group;
                 Source = source;
@@ -144,21 +98,19 @@ namespace TestModel
             public string Source { get; set; }
             public int Spectrum { get; set; }
             public string Analysis { get; set; }
-            public int Score { get; set; }
+            public int? Score { get; set; }
             public double QValue { get; set; }
             public string PeptideTuples { get; set; }
         }
 
-        private void createTestData (IList<SpectrumTuple> testPsmSummary)
+        public static void CreateTestData (NHibernate.ISession session, IList<SpectrumTuple> testPsmSummary)
         {
-            // Group, Source, Spectrum, Peptide@Charge, Score, Alternatives (Peptide@Charge/ScoreDivider)
             foreach (SpectrumTuple row in testPsmSummary)
             {
                 string groupName = row.Group;
                 string sourceName = row.Source;
                 int spectrumId = row.Spectrum;
                 string analysisId = row.Analysis;
-                double score = (double) row.Score;
                 string peptideTuples = row.PeptideTuples;
 
                 SpectrumSourceGroup group = session.QueryOver<SpectrumSourceGroup>().Where(o => o.Name == groupName).SingleOrDefault();
@@ -264,7 +216,13 @@ namespace TestModel
                     {
                         PwizPeptide pwizPeptide = new PwizPeptide(peptideTuple.Sequence, ModParsing.ModificationParsing_Auto, ModDelimiter.ModificationDelimiter_Brackets);
 
-                        Peptide peptide = addOrGetPeptide(pwizPeptide.sequence);
+                        Peptide peptide = session.QueryOver<Peptide>().Where(o => o.Sequence == pwizPeptide.sequence).SingleOrDefault();
+                        if (peptide == null)
+                        {
+                            peptide = new TestPeptide(pwizPeptide.sequence).Target as Peptide;
+                            session.Save(peptide);
+                            createTestPeptideInstances(session, peptide);
+                        }
 
                         var psm = new PeptideSpectrumMatch()
                         {
@@ -273,13 +231,16 @@ namespace TestModel
                             Analysis = analysis,
                             Charge = peptideTuple.Charge,
                             Rank = (peptideTuple.ScoreDivider == lastDivider ? rank : ++rank),
-                            QValue = row.QValue,
-                            Scores = new Dictionary<string, double>()
-                        {
-                            {"score1", score / peptideTuple.ScoreDivider},
-                            {"score2", 1 / (score / peptideTuple.ScoreDivider)}
-                        }
+                            QValue = (rank == 1 ? row.QValue : PeptideSpectrumMatch.DefaultQValue),
                         };
+
+                        if (row.Score != null)
+                            psm.Scores = new Dictionary<string, double>()
+                            {
+                                {"score1", (double) row.Score / peptideTuple.ScoreDivider},
+                                {"score2", 1 / ((double) row.Score / peptideTuple.ScoreDivider)}
+                            };
+
                         session.Save(psm);
                         lastDivider = peptideTuple.ScoreDivider;
 
@@ -316,57 +277,96 @@ namespace TestModel
             }
         }
 
-        public TestModel ()
+        public void AddSubsetPeakData (NHibernate.ISession session)
         {
+            session.Clear();
+            foreach (SpectrumSource source in session.QueryOver<SpectrumSource>().List())
+            {
+                var subsetPeakData = new msdata.MSData();
+                subsetPeakData.id = subsetPeakData.run.id = source.Name;
+                var spectrumList = new msdata.SpectrumListSimple();
+                subsetPeakData.run.spectrumList = spectrumList;
+
+                foreach (Spectrum spectrum in source.Spectra.OrderBy(o => o.Index))
+                {
+                    var spectrumData = new msdata.Spectrum();
+                    spectrumData.id = spectrum.NativeID;
+                    spectrumData.index = spectrum.Index;
+                    spectrumData.setMZIntensityArrays(new List<double>() { 100, 200, 300, 400, 500 },
+                                                      new List<double>() { 10, 20, 30, 40, 50 });
+                    spectrumList.spectra.Add(spectrumData);
+                }
+
+                session.Evict(source);
+                var newSource = new SpectrumSource(subsetPeakData)
+                {
+                    Id = source.Id,
+                    Group = source.Group,
+                    Name = source.Name,
+                    URL = source.URL
+                };
+                session.Update(newSource);
+            }
         }
-
-        /// <summary>
-        ///Gets or sets the test context which provides
-        ///information about and functionality for the current test run.
-        ///</summary>
-        public TestContext TestContext { get; set; }
-
-        #region Additional test attributes
-        //
-        // You can use the following additional attributes as you write your tests:
-        //
-        // Use ClassInitialize to run code before running the first test in the class
-        // [ClassInitialize()]
-        // public static void MyClassInitialize(TestContext testContext) { }
-        //
-        // Use ClassCleanup to run code after all tests in a class have run
-        // [ClassCleanup()]
-        // public static void MyClassCleanup() { }
-        //
-        // Use TestInitialize to run code before running each test 
-        // [TestInitialize()]
-        // public void MyTestInitialize() { }
-        //
-        // Use TestCleanup to run code after each test has run
-        // [TestCleanup()]
-        // public void MyTestCleanup() { }
-        //
         #endregion
 
-        [TestMethod]
-        public void TestExampleData ()
+        #region Private methods
+        private static void createTestPeptideInstances (NHibernate.ISession session, Peptide pep)
         {
-            #region Example proteins
-            string[] testProteinSequences = new string[]
-            {
-                "PEPTIDERPEPTIDEKPEPTIDE",
-                "TIDERPEPTIDEKPEP",
-                "RPEPKTIDERPEPKTIDE",
-                "EDITPEPKEDITPEPR",
-                "PEPREDITPEPKEDIT",
-                "EPPIERPETPDETKTDPEPIIRDE"
-            };
-            #endregion
+            // store instances even though the association is inverse:
+            // the PeptideModification.Offset property needs access to the protein sequence
+            pep.Instances = new List<PeptideInstance>();
 
+            foreach (Protein pro in session.QueryOver<Protein>().List<Protein>())
+            {
+                int start = pro.Sequence.IndexOf(pep.Sequence, 0);
+                while (start >= 0)
+                {
+                    int end = start + pep.Sequence.Length;
+                    bool nTerminusIsSpecific = start == 0 || pro.Sequence[start - 1] == 'K' || pro.Sequence[start - 1] == 'R';
+                    bool cTerminusIsSpecific = end == pro.Sequence.Length || pro.Sequence[end - 1] == 'K' || pro.Sequence[end - 1] == 'R';
+                    var instance = new TestPI()
+                    {
+                        Peptide = pep,
+                        Protein = pro,
+                        Offset = start,
+                        Length = pep.Sequence.Length,
+                        MissedCleavages = pep.Sequence.ToCharArray(0, pep.Sequence.Length - 1).Count(o => o == 'K' || o == 'R'),
+                        NTerminusIsSpecific = nTerminusIsSpecific,
+                        CTerminusIsSpecific = cTerminusIsSpecific,
+                        specificTermini = (nTerminusIsSpecific ? 1 : 0) + (cTerminusIsSpecific ? 1 : 0),
+                    }.Target as PeptideInstance;
+
+                    session.Save(instance);
+                    pep.Instances.Add(instance);
+
+                    start = pro.Sequence.IndexOf(pep.Sequence, start + 1);
+                }
+            }
+        }
+        #endregion
+
+        // shared session between TestModel methods
+        NHibernate.ISession session;
+        
+        #region Example proteins
+        string[] testProteinSequences = new string[]
+        {
+            "PEPTIDERPEPTIDEKPEPTIDE",
+            "TIDERPEPTIDEKPEP",
+            "RPEPKTIDERPEPKTIDE",
+            "EDITPEPKEDITPEPR",
+            "PEPREDITPEPKEDIT",
+            "EPPIERPETPDETKTDPEPIIRDE"
+        };
+        #endregion
+
+        public TestModel ()
+        {
             #region Example PSMs
             List<SpectrumTuple> testPsmSummary = new List<SpectrumTuple>()
             {
-                //                 Group    Source  Spectrum Analysis     Score      List of Peptide@Charge/ScoreDivider
+                //                 Group    Source  Spectrum Analysis     Score  Q   List of Peptide@Charge/ScoreDivider
                 new SpectrumTuple("/A/1", "Source 1",   1,  "Engine 1",      12, 0, "[C2H2O1]PEPTIDE@2/1 TIDERPEPTIDEK@4/2 EPPIER@1/3"),
                 new SpectrumTuple("/A/1", "Source 1",   2,  "Engine 1",      23, 0, "PEPTIDER@2/1 PETPDETK@3/3 EDITPEPK@2/5"),
                 new SpectrumTuple("/A/1", "Source 1",   3,  "Engine 1",      34, 0, "PEPTIDEK@2/1 TIDER@1/4 PETPDETK@2/8"),
@@ -401,21 +401,52 @@ namespace TestModel
             };
             #endregion
 
-            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(":memory:", true, false))
-            {
-                session = sessionFactory.OpenSession();
-            }
+            var sessionFactory = SessionFactoryFactory.CreateSessionFactory(":memory:", true, false);
+            var session2 = sessionFactory.OpenStatelessSession();
+            session = sessionFactory.OpenSession();
 
             session.Transaction.Begin();
-            createTestProteins(testProteinSequences);
-            createTestData(testPsmSummary);
+            CreateTestProteins(session, testProteinSequences);
+            CreateTestData(session, testPsmSummary);
+            AddSubsetPeakData(session);
             session.Transaction.Commit();
 
             // clear session so objects are loaded from database
             session.Clear();
+        }
 
-            #region Overall count tests
-            Assert.AreEqual(6, session.QueryOver<Protein>().RowCount());
+        /// <summary>
+        ///Gets or sets the test context which provides
+        ///information about and functionality for the current test run.
+        ///</summary>
+        public TestContext TestContext { get; set; }
+
+        #region Additional test attributes
+        //
+        // You can use the following additional attributes as you write your tests:
+        //
+        // Use ClassInitialize to run code before running the first test in the class
+        // [ClassInitialize()]
+        // public static void MyClassInitialize(TestContext testContext) { }
+        //
+        // Use ClassCleanup to run code after all tests in a class have run
+        // [ClassCleanup()]
+        // public static void MyClassCleanup() { }
+        //
+        // Use TestInitialize to run code before running each test 
+        // [TestInitialize()]
+        // public void MyTestInitialize() { }
+        //
+        // Use TestCleanup to run code after each test has run
+        // [TestCleanup()]
+        // public void MyTestCleanup() { }
+        //
+        #endregion
+
+        [TestMethod]
+        public void TestOverallCounts ()
+        {
+            Assert.AreEqual(testProteinSequences.Length, session.QueryOver<Protein>().RowCount());
             Assert.AreEqual(12, session.QueryOver<Peptide>().RowCount());
             Assert.AreEqual(30, session.QueryOver<PeptideInstance>().RowCount());
             Assert.AreEqual(90, session.QueryOver<PeptideSpectrumMatch>().RowCount());
@@ -426,10 +457,12 @@ namespace TestModel
             Assert.AreEqual(5, session.QueryOver<SpectrumSource>().RowCount());
             Assert.AreEqual(7, session.QueryOver<SpectrumSourceGroup>().RowCount());
             Assert.AreEqual(15, session.QueryOver<SpectrumSourceGroupLink>().RowCount());
-            #endregion
+        }
 
-            #region Sanity tests
-            for (long i = 1; i <= testProteinSequences.LongLength; ++i)
+        [TestMethod]
+        public void TestSanity()
+        {
+            for (long i = 1; i <= testProteinSequences.Length; ++i)
             {
                 Protein pro = session.Get<Protein>(i);
                 Assert.AreEqual(i, pro.Id);
@@ -441,9 +474,11 @@ namespace TestModel
                 Assert.IsTrue(String.IsNullOrEmpty(pro.ProteinGroup));
                 Assert.AreEqual(0, pro.Cluster);
             }
-            #endregion
+        }
 
-            #region Protein-centric tests
+        [TestMethod]
+        public void TestProteins()
+        {
             Protein pro1 = session.Get<Protein>(1L);
             Assert.AreEqual(3, pro1.Peptides.Count(o => o.Peptide.Sequence == "PEPTIDE"));
             Assert.AreEqual(1, pro1.Peptides.Count(o => o.Peptide.Sequence == "PEPTIDEK"));
@@ -466,9 +501,11 @@ namespace TestModel
             Assert.AreEqual(1, pro6.Peptides.Count(o => o.Peptide.Sequence == "PETPDETK"));
             Assert.AreEqual(0, pro6.Peptides.Count(o => o.Peptide.Sequence == "PEPTIDE"));
             Assert.AreEqual(0, pro6.Peptides.Count(o => o.Peptide.Sequence == "EDIT"));
-            #endregion
+        }
 
-            #region Peptide-centric tests
+        [TestMethod]
+        public void TestPeptides()
+        {
             Peptide pep1 = session.Get<Peptide>(1L);
             Assert.AreEqual("PEPTIDE", pep1.Sequence);
             Assert.AreEqual(4, pep1.Instances.Count);
@@ -498,12 +535,14 @@ namespace TestModel
             Assert.AreEqual("TIDE", pep11.Sequence);
             Assert.AreEqual(7, pep11.Instances.Count);
             Assert.AreEqual(6, pep11.Matches.Count);
-            #endregion
+        }
 
-            #region PeptideInstance-centric tests
+        [TestMethod]
+        public void TestPeptideInstances()
+        {
             PeptideInstance pi1 = session.Get<PeptideInstance>(1L);
-            Assert.AreEqual(pep1, pi1.Peptide);
-            Assert.AreEqual(pro1, pi1.Protein);
+            Assert.AreEqual(session.Get<Peptide>(1L), pi1.Peptide);
+            Assert.AreEqual(session.Get<Protein>(1L), pi1.Protein);
             Assert.AreEqual(1, pi1.SpecificTermini);
             Assert.AreEqual(true, pi1.NTerminusIsSpecific);
             Assert.AreEqual(false, pi1.CTerminusIsSpecific);
@@ -512,17 +551,19 @@ namespace TestModel
             Assert.AreEqual(0, pi1.MissedCleavages);
 
             PeptideInstance pi5 = session.Get<PeptideInstance>(5L);
-            Assert.AreEqual(pep2, pi5.Peptide);
-            Assert.AreEqual(pro1, pi5.Protein);
+            Assert.AreEqual(session.Get<Peptide>(2L), pi5.Peptide);
+            Assert.AreEqual(session.Get<Protein>(1L), pi5.Protein);
             Assert.AreEqual(1, pi5.SpecificTermini);
             Assert.AreEqual(false, pi5.NTerminusIsSpecific);
             Assert.AreEqual(true, pi5.CTerminusIsSpecific);
             Assert.AreEqual(3, pi5.Offset);
             Assert.AreEqual(13, pi5.Length);
             Assert.AreEqual(1, pi5.MissedCleavages);
-            #endregion
+        }
 
-            #region SpectrumSourceGroup-centric tests
+        [TestMethod]
+        public void TestSpectrumSourceGroups()
+        {
             SpectrumSourceGroup ssg3 = session.Get<SpectrumSourceGroup>(3L);
             Assert.AreEqual("/", ssg3.Name);
             Assert.AreEqual(5, ssg3.Sources.Count);
@@ -551,46 +592,70 @@ namespace TestModel
             Assert.IsFalse(ssg5.IsChildOf(ssg2));
             Assert.IsTrue(ssg5.IsChildOf(ssg3));
             Assert.IsFalse(ssg5.IsImmediateChildOf(ssg3));
-            #endregion
+        }
 
-            #region SpectrumSource-centric tests
+        [TestMethod]
+        public void TestSpectrumSources()
+        {
             SpectrumSource ss1 = session.Get<SpectrumSource>(1L);
             Assert.AreEqual("Source 1", ss1.Name);
-            Assert.AreEqual(ssg1, ss1.Group);
-            Assert.IsNotNull(ss1.Groups.SingleOrDefault(o => o.Group == ssg1));
-            Assert.IsNotNull(ss1.Groups.SingleOrDefault(o => o.Group == ssg2));
-            Assert.IsNotNull(ss1.Groups.SingleOrDefault(o => o.Group == ssg3));
-            Assert.IsNull(ss1.Groups.SingleOrDefault(o => o.Group == ssg5));
+            Assert.AreEqual(session.Get<SpectrumSourceGroup>(1L), ss1.Group);
+            Assert.IsNotNull(ss1.Groups.SingleOrDefault(o => o.Group == session.Get<SpectrumSourceGroup>(1L)));
+            Assert.IsNotNull(ss1.Groups.SingleOrDefault(o => o.Group == session.Get<SpectrumSourceGroup>(2L)));
+            Assert.IsNotNull(ss1.Groups.SingleOrDefault(o => o.Group == session.Get<SpectrumSourceGroup>(3L)));
+            Assert.IsNull(ss1.Groups.SingleOrDefault(o => o.Group == session.Get<SpectrumSourceGroup>(5L)));
+            Assert.IsNotNull(ss1.Metadata);
+            Assert.AreEqual(ss1.Name, ss1.Metadata.id);
+            Assert.IsNotInstanceOfType(ss1.Metadata.run.spectrumList, typeof(msdata.SpectrumListSimple));
 
             SpectrumSource ss4 = session.Get<SpectrumSource>(4L);
             Assert.AreEqual("Source 4", ss4.Name);
-            Assert.AreEqual(ssg5, ss4.Group);
-            Assert.IsNotNull(ss4.Groups.SingleOrDefault(o => o.Group == ssg5));
-            Assert.IsNotNull(ss4.Groups.SingleOrDefault(o => o.Group == ssg3));
-            Assert.IsNull(ss4.Groups.SingleOrDefault(o => o.Group == ssg1));
-            #endregion
+            Assert.AreEqual(session.Get<SpectrumSourceGroup>(5L), ss4.Group);
+            Assert.IsNotNull(ss4.Groups.SingleOrDefault(o => o.Group == session.Get<SpectrumSourceGroup>(5L)));
+            Assert.IsNotNull(ss4.Groups.SingleOrDefault(o => o.Group == session.Get<SpectrumSourceGroup>(3L)));
+            Assert.IsNull(ss4.Groups.SingleOrDefault(o => o.Group == session.Get<SpectrumSourceGroup>(1L)));
+            Assert.IsNotNull(ss4.Metadata);
+            Assert.AreEqual(ss4.Name, ss4.Metadata.id);
+            Assert.IsNotInstanceOfType(ss4.Metadata.run.spectrumList, typeof(msdata.SpectrumListSimple));
+        }
 
-            #region Spectrum-centric tests
-            Spectrum ss1s1 = ss1.Spectra[0];
-            Assert.AreEqual(ss1, ss1s1.Source);
+        [TestMethod]
+        public void TestSpectra()
+        {
+            Spectrum ss1s1 = session.Get<SpectrumSource>(1L).Spectra[0];
+            Assert.AreEqual(session.Get<SpectrumSource>(1L), ss1s1.Source);
             Assert.AreEqual(0, ss1s1.Index);
             Assert.AreEqual("scan=1", ss1s1.NativeID);
             Assert.AreEqual(6, ss1s1.Matches.Count);
+            Assert.AreEqual(0, ss1s1.Metadata.index);
+            Assert.AreEqual("scan=1", ss1s1.Metadata.id);
+            Assert.AreEqual(5UL, ss1s1.Metadata.defaultArrayLength);
+            Assert.AreEqual(100, ss1s1.MetadataWithPeaks.getMZArray().data[0]);
 
-            Spectrum ss1s2 = ss1.Spectra[1];
-            Assert.AreEqual(ss1, ss1s2.Source);
+            Spectrum ss1s2 = session.Get<SpectrumSource>(1L).Spectra[1];
+            Assert.AreEqual(session.Get<SpectrumSource>(1L), ss1s2.Source);
             Assert.AreEqual(1, ss1s2.Index);
             Assert.AreEqual("scan=2", ss1s2.NativeID);
             Assert.AreEqual(6, ss1s2.Matches.Count);
+            Assert.AreEqual(1, ss1s2.Metadata.index);
+            Assert.AreEqual("scan=2", ss1s2.Metadata.id);
+            Assert.AreEqual(5UL, ss1s2.Metadata.defaultArrayLength);
+            Assert.AreEqual(100, ss1s2.MetadataWithPeaks.getMZArray().data[0]);
 
-            Spectrum ss4s1 = ss4.Spectra[0];
-            Assert.AreEqual(ss4, ss4s1.Source);
+            Spectrum ss4s1 = session.Get<SpectrumSource>(4L).Spectra[0];
+            Assert.AreEqual(session.Get<SpectrumSource>(4L), ss4s1.Source);
             Assert.AreEqual(0, ss4s1.Index);
             Assert.AreEqual("scan=1", ss4s1.NativeID);
             Assert.AreEqual(6, ss4s1.Matches.Count);
-            #endregion
+            Assert.AreEqual(0, ss4s1.Metadata.index);
+            Assert.AreEqual("scan=1", ss4s1.Metadata.id);
+            Assert.AreEqual(5UL, ss4s1.Metadata.defaultArrayLength);
+            Assert.AreEqual(100, ss4s1.MetadataWithPeaks.getMZArray().data[0]);
+        }
 
-            #region Analysis-centric tests
+        [TestMethod]
+        public void TestAnalyses()
+        {
             Analysis a1 = session.Get<Analysis>(1L);
             Assert.AreEqual("Engine 1", a1.Name);
             Assert.AreEqual("Engine 1", a1.Software.Name);
@@ -614,51 +679,53 @@ namespace TestModel
             Assert.AreEqual(ap2, a2.Parameters.First());
             Assert.AreEqual("Parameter 1", ap2.Name);
             Assert.AreEqual("Value 1", ap2.Value);
-            #endregion
+        }
 
-            #region PSM-centric tests
-            PeptideSpectrumMatch ss1s1psm1 = ss1s1.Matches[0];
-            Assert.AreEqual(pep1, ss1s1psm1.Peptide);
-            Assert.AreEqual(ss1s1, ss1s1psm1.Spectrum);
-            Assert.AreEqual(a1, ss1s1psm1.Analysis);
-            Assert.AreEqual(ss1s1psm1, a1.Matches[0]);
+        [TestMethod]
+        public void TestPeptideSpectrumMatches()
+        {
+            PeptideSpectrumMatch ss1s1psm1 = session.Get<SpectrumSource>(1L).Spectra[0].Matches[0];
+            Assert.AreEqual(session.Get<Peptide>(1L), ss1s1psm1.Peptide);
+            Assert.AreEqual(session.Get<SpectrumSource>(1L).Spectra[0], ss1s1psm1.Spectrum);
+            Assert.AreEqual(session.Get<Analysis>(1L), ss1s1psm1.Analysis);
+            Assert.AreEqual(ss1s1psm1, session.Get<Analysis>(1L).Matches[0]);
             Assert.AreEqual(2, ss1s1psm1.Charge);
             Assert.AreEqual(1, ss1s1psm1.Rank);
             Assert.AreEqual(12.0, ss1s1psm1.Scores["score1"], 1e-12);
             Assert.AreEqual(1 / 12.0, ss1s1psm1.Scores["score2"], 1e-12);
 
-            PeptideSpectrumMatch ss1s1psm1e2 = ss1s1.Matches[3];
-            Assert.AreEqual(pep2, ss1s1psm1e2.Peptide);
-            Assert.AreEqual(ss1s1, ss1s1psm1e2.Spectrum);
-            Assert.AreEqual(a2, ss1s1psm1e2.Analysis);
-            Assert.AreEqual(ss1s1psm1e2, a2.Matches[0]);
+            PeptideSpectrumMatch ss1s1psm1e2 = session.Get<SpectrumSource>(1L).Spectra[0].Matches[3];
+            Assert.AreEqual(session.Get<Peptide>(2L), ss1s1psm1e2.Peptide);
+            Assert.AreEqual(session.Get<SpectrumSource>(1L).Spectra[0], ss1s1psm1e2.Spectrum);
+            Assert.AreEqual(session.Get<Analysis>(2L), ss1s1psm1e2.Analysis);
+            Assert.AreEqual(ss1s1psm1e2, session.Get<Analysis>(2L).Matches[0]);
             Assert.AreEqual(4, ss1s1psm1e2.Charge);
             Assert.AreEqual(1, ss1s1psm1e2.Rank);
             Assert.AreEqual(120.0, ss1s1psm1e2.Scores["score1"], 1e-12);
             Assert.AreEqual(1 / 120.0, ss1s1psm1e2.Scores["score2"], 1e-12);
 
-            PeptideSpectrumMatch ss1s1psm2 = ss1s1.Matches[1];
-            Assert.AreEqual(pep2, ss1s1psm2.Peptide);
-            Assert.AreEqual(ss1s1, ss1s1psm2.Spectrum);
-            Assert.AreEqual(a1, ss1s1psm1.Analysis);
+            PeptideSpectrumMatch ss1s1psm2 = session.Get<SpectrumSource>(1L).Spectra[0].Matches[1];
+            Assert.AreEqual(session.Get<Peptide>(2L), ss1s1psm2.Peptide);
+            Assert.AreEqual(session.Get<SpectrumSource>(1L).Spectra[0], ss1s1psm2.Spectrum);
+            Assert.AreEqual(session.Get<Analysis>(1L), ss1s1psm1.Analysis);
             Assert.AreEqual(4, ss1s1psm2.Charge);
             Assert.AreEqual(2, ss1s1psm2.Rank);
             Assert.AreEqual(12.0 / 2, ss1s1psm2.Scores["score1"], 1e-12);
             Assert.AreEqual(1 / (12.0 / 2), ss1s1psm2.Scores["score2"], 1e-12);
 
-            PeptideSpectrumMatch ss1s1psm3 = ss1s1.Matches[2];
-            Assert.AreEqual(pep3, ss1s1psm3.Peptide);
-            Assert.AreEqual(ss1s1, ss1s1psm3.Spectrum);
-            Assert.AreEqual(a1, ss1s1psm3.Analysis);
+            PeptideSpectrumMatch ss1s1psm3 = session.Get<SpectrumSource>(1L).Spectra[0].Matches[2];
+            Assert.AreEqual(session.Get<Peptide>(3L), ss1s1psm3.Peptide);
+            Assert.AreEqual(session.Get<SpectrumSource>(1L).Spectra[0], ss1s1psm3.Spectrum);
+            Assert.AreEqual(session.Get<Analysis>(1L), ss1s1psm3.Analysis);
             Assert.AreEqual(1, ss1s1psm3.Charge);
             Assert.AreEqual(3, ss1s1psm3.Rank);
             Assert.AreEqual(12.0 / 3, ss1s1psm3.Scores["score1"], 1e-12);
             Assert.AreEqual(1 / (12.0 / 3), ss1s1psm3.Scores["score2"], 1e-12);
 
-            PeptideSpectrumMatch ss4s1psm1 = ss4s1.Matches[0];
-            Assert.AreEqual(pep2, ss4s1psm1.Peptide);
-            Assert.AreEqual(ss4s1, ss4s1psm1.Spectrum);
-            Assert.AreEqual(a1, ss4s1psm1.Analysis);
+            PeptideSpectrumMatch ss4s1psm1 = session.Get<SpectrumSource>(4L).Spectra[0].Matches[0];
+            Assert.AreEqual(session.Get<Peptide>(2L), ss4s1psm1.Peptide);
+            Assert.AreEqual(session.Get<SpectrumSource>(4L).Spectra[0], ss4s1psm1.Spectrum);
+            Assert.AreEqual(session.Get<Analysis>(1L), ss4s1psm1.Analysis);
             Assert.AreEqual(4, ss4s1psm1.Charge);
             Assert.AreEqual(1, ss4s1psm1.Rank);
 
@@ -669,9 +736,11 @@ namespace TestModel
             Assert.AreEqual(18, session.QueryOver<PeptideSpectrumMatch>().Where(o => o.Charge == 1).RowCount());
             Assert.AreEqual(39, session.QueryOver<PeptideSpectrumMatch>().Where(o => o.Charge == 2).RowCount());
             Assert.AreEqual(6, session.QueryOver<PeptideSpectrumMatch>().Where(o => o.Charge == 4).RowCount());
-            #endregion
+        }
 
-            #region Modification-centric tests
+        [TestMethod]
+        public void TestModifications()
+        {
             Modification mod1 = session.Get<Modification>(1L);
             Assert.AreEqual("C2H2O1", mod1.Formula);
             Assert.AreEqual(mod1.Formula, mod1.Name);
@@ -720,94 +789,141 @@ namespace TestModel
             Assert.IsTrue(pm4.PeptideSpectrumMatch.Modifications.Contains(pm4));
             Assert.AreEqual(4, pm4.Offset);
             Assert.AreEqual('T', pm4.Site);
-            #endregion
         }
 
         [TestMethod]
-        public void TestStaticQonversion ()
+        public void TestImportExport ()
+        {
+            using (var exporter = new Exporter(session))
+            {
+                exporter.WriteIdpXml(true);
+            }
+
+            //using (var parser = new Parser())
+        }
+
+        private string createSimpleProteinSequence(string motif, int length)
+        {
+            var sequence = new StringBuilder();
+            while(sequence.Length < length)
+                sequence.Append(motif);
+            return sequence.ToString();
+        }
+
+#if false
+        [TestMethod]
+        public void TestCalculateAdditionalPeptides ()
         {
             #region Example with forward and reverse proteins
-            string[] testProteinSequences = new string[]
+
+            // each protein in the test scenarios is created from simple repeating motifs
+            var testProteinSequences = new string[]
             {
-                "PEPTIDERPEPTIDEK",
-                "TIDERPEPTIDEKPEP",
-                "DERPEPTIDEKPEPTI",
-                "THEQUICKBRWNFXUMPSVERTHELZYDG",
-                "KEDITPEPREDITPEP",
-                "PEPKEDITPEPREDIT",
-                "ITPEPKEDITPEPRED",
-                "GDYZLEHTREVSPMUXFNWRBKCIUQEHT"
+                createSimpleProteinSequence("A", 20),
+
+                createSimpleProteinSequence("B", 20),
+
+                createSimpleProteinSequence("C", 20),
+
+                createSimpleProteinSequence("D", 20),
+
+                createSimpleProteinSequence("E", 20),
+                createSimpleProteinSequence("E", 21),
+
+                createSimpleProteinSequence("F", 20),
+                createSimpleProteinSequence("F", 21),
+
+                createSimpleProteinSequence("G", 20),
+                createSimpleProteinSequence("G", 21),
+                
+                createSimpleProteinSequence("H", 20),
+                createSimpleProteinSequence("H", 21),
             };
 
-            string decoyPrefix = "r-";
+            const int analysisCount = 2;
+            const int sourceCount = 2;
+            const int chargeCount = 2;
 
-            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testStaticQonversion.idpDB", true, false))
-            {
-                session = sessionFactory.OpenSession();
-            }
+            var sessionFactory = SessionFactoryFactory.CreateSessionFactory(":memory:", true, false);
+            session = sessionFactory.OpenSession();
 
             session.Transaction.Begin();
             createTestProteins(testProteinSequences);
-
-            // add decoy prefix to the second half of the proteins
-            for (long i = testProteinSequences.LongLength / 2; i < testProteinSequences.LongLength; ++i)
-            {
-                var pro = session.Get<Protein>(i + 1);
-                pro.Accession = decoyPrefix + pro.Accession;
-                session.Update(pro);
-            }
             #endregion
 
             #region Example PSMs
             // For each combination of 2 engines, 2 sources, and 2 charges,
-            // we test qonversion on this scenario:
-            //
-            // Scan Score DecoyState Targets Decoys Ambiguous -> Expected QValue
-            // 5    99    T          1       0      0            0
-            // 11   95    T          2       0      0            0
-            // 12   90    T          3       0      0            0
-            // 16   85    D          3       1      0            2/4
-            // 15   80    D          3       2      0            4/5
-            // 17   75    T          4       2      0            4/6
-            // 14   70    T          5       2      0            4/7
-            // 2    65    A          5       2      1            4/7
-            // 7    60    D          5       3      1            6/8
-            // 10   55    T          6       3      1            6/9
-            // 4    50    T          7       3      1            6/10
-            // 8    45    T          8       3      1            6/11
-            // 9    40    T          9       3      1            6/12
-            // 3    35    D          9       4      1            8/13
-            // 1    30    D          9       5      1            10/14
-            // 13   25    A          9       5      2            10/14
-            // 6    20    T          10      5      2            10/15
+            // we test qonversion on the scenarios described by the comments:
 
-            for (int engine = 1; engine <= 2; ++engine)
-            for (int source = 1; source <= 2; ++source)
-            for (int charge = 1; charge <= 2; ++charge)
+            for (int analysis = 1; analysis <= analysisCount; ++analysis)
+            for (int source = 1; source <= sourceCount; ++source)
+            for (int charge = 1; charge <= chargeCount; ++charge)
             {
                 string sourceName = "Source " + source.ToString();
-                string engineName = "Engine " + engine.ToString();
+                string engineName = "Engine " + analysis.ToString();
+                int scan = 0;
 
                 List<SpectrumTuple> testPsmSummary = new List<SpectrumTuple>()
                 {
-                    //               Group    Source   Spectrum  Analysis     Score      List of Peptide@Charge/ScoreDivider
-                    new SpectrumTuple("/",  sourceName,     5,  engineName,     99, 1, String.Format("TIDERPEPTIDEK@{0}/1 PEPTIDER@{0}/8", charge)),
-                    new SpectrumTuple("/",  sourceName,     11, engineName,     95, 1, String.Format("TIDERPEPTIDEK@{0}/1 PEPTIDER@{0}/2", charge)),
-                    new SpectrumTuple("/",  sourceName,     12, engineName,     90, 1, String.Format("PEPTIDEKPEP@{0}/1 THEQUICKBR@{0}/4", charge)),
-                    new SpectrumTuple("/",  sourceName,     16, engineName,     85, 1, String.Format("EDITPEP@{0}/1 PEPTIDEK@{0}/2", charge)),
-                    new SpectrumTuple("/",  sourceName,     15, engineName,     80, 1, String.Format("EDITPEPR@{0}/1 PEPTIDER@{0}/2", charge)),
-                    new SpectrumTuple("/",  sourceName,     17, engineName,     75, 1, String.Format("TIDER@{0}/1 TIDERPEPTIDEK@{0}/3", charge)),
-                    new SpectrumTuple("/",  sourceName,     14, engineName,     70, 1, String.Format("TIDER@{0}/1 PEPTIDER@{0}/2", charge)),
-                    new SpectrumTuple("/",  sourceName,     2,  engineName,     65, 1, String.Format("THEQUICKBR@{0}/1 BKCIUQEHT@{0}/1 PEPTIDER@{0}/2", charge)),
-                    new SpectrumTuple("/",  sourceName,     7,  engineName,     60, 1, String.Format("KEDITPEPR@{0}/1 DERPEPTIDEK@{0}/4", charge)),
-                    new SpectrumTuple("/",  sourceName,     4,  engineName,     50, 1, String.Format("THELZYDG@{0}/1 PEPTI@{0}/3", charge)),
-                    new SpectrumTuple("/",  sourceName,     10, engineName,     55, 1, String.Format("DERPEPTIDEK@{0}/1 PEPTIDEK@{0}/5", charge)),
-                    new SpectrumTuple("/",  sourceName,     8,  engineName,     45, 1, String.Format("PEPTI@{0}/1 PEPTIDER@{0}/6", charge)),
-                    new SpectrumTuple("/",  sourceName,     9,  engineName,     40, 1, String.Format("PEPTIDEK@{0}/1 THEQUICKBR@{0}/2", charge)),
-                    new SpectrumTuple("/",  sourceName,     3,  engineName,     35, 1, String.Format("PEPKEDITPEPR@{0}/1 THELZYDG@{0}/2", charge)),
-                    new SpectrumTuple("/",  sourceName,     1,  engineName,     30, 1, String.Format("GDYZLEHT@{0}/1 THEQUICKBR@{0}/2", charge)),
-                    new SpectrumTuple("/",  sourceName,     13, engineName,     25, 1, String.Format("PEPTIDER@{0}/1 PEPKEDITPEPR@{0}/1 BKCIUQEHT@{0}/3", charge)),
-                    new SpectrumTuple("/",  sourceName,     6,  engineName,     20, 1, String.Format("THEQUICKBR@{0}/1 DERPEPTIDEK@{0}/4", charge)),
+                    // Columns:       Group  Source   Spectrum Analysis Score Q  List of Peptide@Charge/ScoreDivider
+                    
+                    // 1 protein to 1 peptide to 1 spectrum = 1 additional peptide
+                    new SpectrumTuple("/", sourceName, ++scan, engineName, 1, 1, String.Format("AAAAAAAAAA@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+
+                    // 1 protein to 1 peptide to 2 spectra = 1 additional peptide
+                    new SpectrumTuple("/", sourceName, ++scan, engineName, 1, 1, String.Format("BBBBBBBBBB@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", sourceName, ++scan, engineName, 1, 1, String.Format("BBBBBBBBBB@{0}/1 CCCCCCCCCC@{0}/8", charge)),
+
+                    // 1 protein to 2 peptides to 1 spectrum (each) = 2 additional peptides
+                    new SpectrumTuple("/", sourceName, ++scan, engineName, 1, 1, String.Format("CCCCCCCCCC@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", sourceName, ++scan, engineName, 1, 1, String.Format("CCCCCCCCC@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+
+                    // 1 protein to 2 peptides to 2 spectra (each) = 2 additional peptides
+                    new SpectrumTuple("/", sourceName, ++scan, engineName, 1, 1, String.Format("DDDDDDDDDD@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", sourceName, ++scan, engineName, 1, 1, String.Format("DDDDDDDDDD@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", sourceName, ++scan, engineName, 1, 1, String.Format("DDDDDDDDD@{0}/1  AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", sourceName, ++scan, engineName, 1, 1, String.Format("DDDDDDDDD@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+
+                    // 2 proteins to 1 peptide to 1 spectrum = 1 additional peptide (ambiguous protein group)
+                    new SpectrumTuple("/", sourceName, ++scan, engineName, 1, 1, String.Format("EEEEEEEEEE@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", sourceName, ++scan, engineName, 1, 1, String.Format("FFFFFFFFFF@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+
+                    // 2 proteins to 1 peptide to 2 spectra = 1 additional peptide (ambiguous protein group)
+                    new SpectrumTuple("/", sourceName, ++scan, engineName, 1, 1, String.Format("DDDDDDDDDD@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", sourceName, ++scan, engineName, 1, 1, String.Format("DDDDDDDDDD@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", sourceName, ++scan, engineName, 1, 1, String.Format("DDDDDDDDD@{0}/1  AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", sourceName, ++scan, engineName, 1, 1, String.Format("DDDDDDDDD@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+
+                    // 2 proteins to 2 peptides to 1 spectrum (each) = 2 additional peptides (ambiguous protein group)
+
+                    // 2 proteins to 2 peptides to 2 spectra (each) = 2 additional peptides (ambiguous protein group)
+
+                    // 1 protein to 2 peptides to 1 spectrum (each) = 2 additional peptide
+                    // 1 protein to 1 of the above peptides = 0 additional peptides (subset protein)
+                    // 1 protein to the other above peptide = 0 additional peptides (subset protein)
+
+                    // 1 protein to 2 peptides to 1 spectrum (each) = 2 additional peptide
+                    // 2 proteins to 1 of the above peptides = 0 additional peptides (subset ambiguous protein group)
+
+                    // 2 proteins to 2 peptides to 1 spectrum (each) = 2 additional peptide (ambiguous protein group)
+                    // 1 protein to 1 of the above peptides = 0 additional peptides (subset protein)
+                    // 1 protein to the other above peptide = 0 additional peptides (subset protein)
+
+                    // 2 proteins to 2 peptides to 1 spectrum (each) = 2 additional peptides (ambiguous protein group)
+                    // 2 proteins to 1 of the above peptides = 0 additional peptides (subset ambiguous protein group)
+
+                    // 1 protein to 3 peptides to 1 spectrum (each) = 3 additional peptides
+                    // 1 protein to 1 of the above peptides and 1 extra peptide to 1 spectrum = 1 additional peptides
+
+                    // 1 protein to 3 peptides to 1 spectrum (each) = 3 additional peptides
+                    // 2 proteins to 1 of the above peptides and 1 extra peptide to 1 spectrum = 1 additional peptides (ambiguous protein group)
+
+                    // 2 proteins to 3 peptides to 1 spectrum (each) = 3 additional peptides (ambiguous protein group)
+                    // 1 protein to 1 of the above peptides and 1 extra peptide to 1 spectrum = 1 additional peptides
+
+                    // 2 proteins to 3 peptides to 1 spectrum (each) = 3 additional peptides (ambiguous protein group)
+                    // 2 proteins to 1 of the above peptides and 1 extra peptide to 1 spectrum = 1 additional peptides (ambiguous protein group)
+
                 };
 
                 createTestData(testPsmSummary);
@@ -815,69 +931,9 @@ namespace TestModel
             session.Transaction.Commit();
             #endregion
 
-            var qonverter = new IDPicker.StaticWeightQonverter()
-            {
-                DecoyPrefix = decoyPrefix,
-                ScoreWeights = new Dictionary<string, double>() { { "score1", 1 }, { "score2", 0 } }
-            };
-            qonverter.Qonvert("testStaticQonversion.idpDB");
-
-            // clear session so qonverted objects are loaded from database
-            session.Clear();
-
-            #region QValue test
-            Dictionary<long, double> expectedQValues = new Dictionary<long, double>()
-            {
-                { 4, 0 },
-                { 10, 0 },
-                { 11, 0 },
-                { 15, 2/4.0 },
-                { 14, 4/5.0 },
-                { 16, 4/6.0 },
-                { 13, 4/7.0 },
-                { 1, 4/7.0 },
-                { 6, 6/8.0 },
-                { 9, 6/9.0 },
-                { 3, 6/10.0 },
-                { 7, 6/11.0 },
-                { 8, 6/12.0 },
-                { 2, 8/13.0 },
-                { 0, 10/14.0 },
-                { 12, 10/14.0 },
-                { 5, 10/15.0 },
-            };
-
-            for (long engine = 1; engine <= 2; ++engine)
-            for (long source = 1; source <= 2; ++source)
-            for (int charge = 1; charge <= 2; ++charge)
-                foreach (var itr in expectedQValues)
-                {
-                    var topRankedMatch = session.CreateQuery("SELECT psm " +
-                                                             "FROM PeptideSpectrumMatch psm " +
-                                                             "WHERE psm.Analysis.id = ? AND " +
-                                                             "      psm.Spectrum.Source.id = ? AND " +
-                                                             "      psm.Spectrum.Index = ? AND " +
-                                                             "      psm.Charge = ?) " +
-                                                             "GROUP BY psm.Spectrum.id ")
-                                                .SetParameter(0, engine)
-                                                .SetParameter(1, source)
-                                                .SetParameter(2, itr.Key)
-                                                .SetParameter(3, charge)
-                                                .List<PeptideSpectrumMatch>().First();
-
-                    Assert.AreEqual(session.Get<Analysis>(engine), topRankedMatch.Analysis);
-                    Assert.AreEqual(session.Get<SpectrumSource>(source), topRankedMatch.Spectrum.Source);
-                    Assert.AreEqual(charge, topRankedMatch.Charge);
-                    Assert.AreEqual(itr.Value, topRankedMatch.QValue, 1e-12);
-                }
-            #endregion
-        }
-
-        /*[TestMethod]
-        public void TestCalculateAdditionalPeptides ()
-        {
             var dataFilter = new DataFilter_Accessor();
             Map<long, long> additionalPeptidesByProteinId = dataFilter.calculateAdditionalPeptides(session);
-        }*/
+        }
+#endif
     }
 }
