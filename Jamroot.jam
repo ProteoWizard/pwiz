@@ -44,7 +44,7 @@ path-constant PWIZ_LIBRARIES_PATH : $(libraries_path) ;
 
 import testing ; # needed to enable unit-test rule
 import feature ; # needed for install rules
-
+import package ; # needed for package install
 
 if --teamcity-test-decoration in [ modules.peek : ARGV ]
 {
@@ -526,6 +526,36 @@ install msconvert
     ;
 explicit msconvert ;
 
+# for copying all libraries and headers to one dir each
+alias libraries : install-pwiz-lib install-boost-headers ;
+explicit libraries ;
+
+# default install location
+local default-prefix = /usr/local ; # LINUX, MACOS
+if [ modules.peek : NT ] { default-prefix = "C:\\" ; }
+# set the default option value to be used when building the lib tarball
+option.set prefix : $(default-prefix) ;
+
+local headers = [ path.glob-tree pwiz : *.h *.hpp : .svn ] ;
+package.install install-pwiz-lib
+    : <install-source-root>$(PWIZ_ROOT_PATH) 
+    : # executables
+    : pwiz
+    : $(headers) 
+    ;
+explicit install-pwiz-lib ;
+
+# move boost headers separately because install-source-root is different
+local boost_headers = [ path.glob-tree $(BOOST_SOURCE)/boost : *.h *.hpp : .svn ] ;
+package.install install-boost-headers
+    : <install-source-root>$(BOOST_SOURCE) 
+    : # exe
+    : # lib
+    : $(boost_headers)
+    ;
+explicit install-boost-headers ;
+
+
 
 # any GCC executable that uses shared libraries must have all its code built with -fPIC
 rule static-with-fpic ( properties * )
@@ -552,6 +582,8 @@ import path ;
 import common ;
 import property-set ;
 import sequence ;
+import option ;
+import property ;
 
 .common-location = $(PWIZ_BUILD_PATH) ;
 
@@ -590,6 +622,44 @@ tar.create pwiz-bin.tar.bz2
     <conditional>@binary-tarball-requirements
   ;
 
+rule library-tarball-requirements ( properties * )
+{
+    local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
+    local variants = [ feature.get-values <variant> : $(properties) ] ;
+    
+    # require that the location come from --prefix or default; do not allow --libdir or --includedir
+    if [ MATCH --libdir=(.*) : [ modules.peek : ARGV ] ] ||
+       [ MATCH --includedir=(.*) : [ modules.peek : ARGV ] ]
+    {
+        echo "--libdir and --includedir are not supported for pwiz-lib.tar.bz2; use --prefix instead" ;
+        exit ;
+    }
+
+    local prefix = [ option.get prefix ] ;
+    local location = $(prefix:G=) ;
+
+    local non-redistributables =
+        *ABSciex.DataAccess.WiffFileDataReader.dll *Clear?ore*.dll *rscoree.dll         # ABI API
+        *DACServer.dll *genutil.dll *raw.dll *RawCsm.dll *Security*.dll *MetaGD32.dll *MassLynxRaw.dll ; # Waters API
+
+    non-redistributables = [ sequence.join $(non-redistributables) : "&&exclude:" ] ;
+    local result = <tar-source>path-anchor:$(location)&&exclude:$(non-redistributables)&&$(location) ;
+    if ! <architecture> in $(properties:G) { properties += <architecture>$(.platform:L) ; }
+    local linkage ;
+    if <link>shared in $(properties) { linkage = "-shared" ; }
+    local name = [ common.format-name <base> <property:target-os> <property:architecture> <toolset> <property:variant> $(linkage) -$(version-tag:J=_)
+                                      : pwiz-lib : TBZ2 : [ property-set.create $(properties) ] ] ;
+    result += <name>$(name) <dependency>libraries <location>$(.common-location) ;
+    return $(result) ;
+}
+
+tar.create pwiz-lib.tar.bz2
+  : # sources are handled by the conditional
+
+  : # requirements
+    <conditional>@library-tarball-requirements
+  ;
+explicit pwiz-lib.tar.bz2 ;
 
 # full source trees automatically build source tarballs
 
