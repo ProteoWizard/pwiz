@@ -501,10 +501,15 @@ namespace pwiz.Skyline.Model.DocSettings
                           PeptideFilterType.fasta);
         }
 
-        public bool Accept(Peptide peptide, bool filterUserPeptides)
+        /// <summary>
+        /// Returns true if a peptide sequence would yield any usable <see cref="PeptideDocNode"/>
+        /// elements with the current filter settings, taking into account variable modifications.
+        /// </summary>
+        public bool Accept(string peptideSequence, int missedCleavages)
         {
-            return Accept(peptide, null, TransitionSettings.Filter.PrecursorCharges,
-                          filterUserPeptides ? PeptideFilterType.full : PeptideFilterType.fasta);
+            var peptide = new Peptide(null, peptideSequence, null, null, missedCleavages);
+            var enumDocNodes = peptide.CreateDocNodes(this, this);
+            return enumDocNodes.GetEnumerator().MoveNext();
         }
 
         /// <summary>

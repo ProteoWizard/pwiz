@@ -37,18 +37,25 @@ namespace pwiz.SkylineTest
     public class VariableModTest
     {
         private static readonly StaticMod VAR_MET_OXIDIZED = new StaticMod("Methionine Oxidized", "M", null, true, "O",
-            LabelAtoms.None, RelativeRT.Matching, null, null, null, null, null);
+            LabelAtoms.None, RelativeRT.Matching, null, null, null);
         private static readonly StaticMod VAR_MET_AMONIA_ADD = new StaticMod("Methionine Amonia Added", "M", null, true, "NH3",
-            LabelAtoms.None, RelativeRT.Matching, null, null, null, null, null);
+            LabelAtoms.None, RelativeRT.Matching, null, null, null);
         private static readonly StaticMod VAR_ASP_WATER_ADD = new StaticMod("Aspartic Acid Water Added", "D", null, true, "H2O",
-            LabelAtoms.None, RelativeRT.Matching, null, null, null, null, null);
+            LabelAtoms.None, RelativeRT.Matching, null, null, null);
         private static readonly StaticMod VAR_ASP_WATER_LOSS = new StaticMod("Aspartic Acid Water Loss", "D", null, true, "-H2O",
-            LabelAtoms.None, RelativeRT.Matching, null, null, null, null, null);
+            LabelAtoms.None, RelativeRT.Matching, null, null, null);
+        private static readonly StaticMod VAR_MET_ASP_OXIDIZED = new StaticMod("Oxidized", "D, M", null, true, "O",
+            LabelAtoms.None, RelativeRT.Matching, null, null, null);
 
         private static readonly List<StaticMod> HEAVY_MODS = new List<StaticMod>
             {
                 new StaticMod("13C K", "K", ModTerminus.C, null, LabelAtoms.C13, null, null),
                 new StaticMod("13C R", "R", ModTerminus.C, null, LabelAtoms.C13, null, null),
+            };
+
+        private static readonly List<StaticMod> HEAVY_MODS_MULTI = new List<StaticMod>
+            {
+                new StaticMod("Aqua", "K, R", ModTerminus.C, null, LabelAtoms.C13, null, null),
             };
 
         /// <summary>
@@ -136,6 +143,14 @@ namespace pwiz.SkylineTest
             Assert.IsTrue(maxModifiableMulti > GetMaxModifiedCount(docVarMulti));
             VerifyModificationOrder(docVarMulti, true);
 
+            // Repeat with a single variable modification on multiple amino acids
+            // and verify that this creates the same number of variably modified peptides
+            var listModsMultiAA = new List<StaticMod>(modsDefault.StaticModifications) { VAR_MET_ASP_OXIDIZED };
+            var docVarMultiAA = docYeast2.ChangeSettings(docYeast2.Settings.ChangePeptideModifications(mods =>
+                mods.ChangeStaticModifications(listModsMultiAA.ToArray())));
+            Assert.AreEqual(220, GetVariableModCount(docVarMultiAA));
+            VerifyModificationOrder(docVarMultiAA, true);
+
             // And also multiple modifications on the same amino acid residue
             listStaticMods.Add(VAR_MET_AMONIA_ADD);
             var docVarAaMulti = docVarMulti.ChangeSettings(docVarMulti.Settings.ChangePeptideModifications(mods =>
@@ -189,6 +204,17 @@ namespace pwiz.SkylineTest
                 Assert.AreEqual(2, nodePep.Children.Count);
                 Assert.AreEqual(GetPrecursorMz(nodePep, 0), GetPrecursorMz(nodePep, 1)-3, 0.02);
             }
+
+            // Repeat with a modification specifying multiple amino acids
+            // and make sure the resulting m/z values are the same
+            var docVarHeavyMulti = docVarMulti.ChangeSettings(docVarMulti.Settings.ChangePeptideModifications(
+                mods => mods.ChangeHeavyModifications(HEAVY_MODS_MULTI)));
+
+            var varHeavyGroups = docVarHeavy.TransitionGroups.ToArray();
+            var varHeavyMultiPeptides = docVarHeavyMulti.TransitionGroups.ToArray();
+            Assert.AreEqual(varHeavyGroups.Length, varHeavyMultiPeptides.Length);
+            for (int i = 0; i < varHeavyGroups.Length; i++)
+                Assert.AreEqual(varHeavyGroups[i].PrecursorMz, varHeavyMultiPeptides[i].PrecursorMz);
         }
 
         /// <summary>

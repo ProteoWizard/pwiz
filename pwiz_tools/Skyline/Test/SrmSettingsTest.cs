@@ -429,7 +429,7 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
-        /// Test error handling in XML deserialization of <see cref="PeptideModifications"/>.
+        /// Test error handling in XML deserialization of <see cref="StaticMod"/>.
         /// </summary>
         [TestMethod]
         public void SerializeStaticModTest()
@@ -445,6 +445,8 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"15N\" label_15N=\"true\" />");
             AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Heavy K\" aminoacid=\"K\" label_13C=\"true\" label_15N=\"true\" label_18O=\"true\"  label_2H=\"true\"/>");
             AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Aqua\" aminoacid=\"K, R\" label_13C=\"true\" label_15N=\"true\" label_18O=\"true\"  label_2H=\"true\"/>");
+            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Loss1\" aminoacid=\"T, S\" formula=\"HPO3\"><fragment_loss formula=\"HP3O4\"/></static_modification>");
+            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Loss3\" aminoacid=\"T, S\" formula=\"HPO3\"><fragment_loss formula=\"HP3O4\"/><fragment_loss formula=\"H2O\"/><fragment_loss formula=\"NH3\"/></static_modification>");
 
             // Missing parameters
             AssertEx.DeserializeError<StaticMod>("<static_modification />");
@@ -470,6 +472,39 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeError<StaticMod>("<static_modification name=\"Mod\" aminoacid=\"DM\" />");
             // Variable with no amino acid
             AssertEx.DeserializeError<StaticMod>("<static_modification name=\"Mod\" variable=\"true\" />");
+        }
+
+        /// <summary>
+        /// Test error handling in XML deserialization of <see cref="FragmentLoss"/>.
+        /// </summary>
+        [TestMethod]
+        public void SerializeFragmentLossTest()
+        {
+            // Valid first
+            AssertEx.DeserializeNoError<FragmentLoss>("<fragment_loss formula=\"H2O\"/>");
+            AssertEx.DeserializeNoError<FragmentLoss>("<fragment_loss formula=\"HCO3\"/>");
+            AssertEx.DeserializeNoError<FragmentLoss>("<fragment_loss massdiff_monoisotopic=\"5\"\n" +
+                    " massdiff_average=\"5.1\" />");
+
+            // Negative formula
+            AssertEx.DeserializeError<FragmentLoss>("<fragment_loss formula=\"-H2O\"/>");
+            // Too big formula
+            AssertEx.DeserializeError<FragmentLoss>("<fragment_loss formula=\"N333\"/>");
+            // Bad formula
+            AssertEx.DeserializeError<FragmentLoss, ArgumentException>("<fragment_loss formula=\"H3Na5Cl5\"/>");
+            // Constant mass out of range
+            AssertEx.DeserializeError<FragmentLoss>("<fragment_loss massdiff_monoisotopic=\"" + FragmentLoss.MIN_LOSS_MASS/2 + "\"\n" +
+                    " massdiff_average=\"1\" />");
+            AssertEx.DeserializeError<FragmentLoss>("<fragment_loss massdiff_monoisotopic=\"1\"\n" +
+                    " massdiff_average=\"" + FragmentLoss.MIN_LOSS_MASS / 2 + "\" />");
+            AssertEx.DeserializeError<FragmentLoss>("<fragment_loss massdiff_monoisotopic=\"" + (FragmentLoss.MAX_LOSS_MASS+1) + "\"\n" +
+                    " massdiff_average=\"1\" />");
+            AssertEx.DeserializeError<FragmentLoss>("<fragment_loss massdiff_monoisotopic=\"1\"\n" +
+                    " massdiff_average=\"" + (FragmentLoss.MAX_LOSS_MASS + 1) + "\" />");
+            // Missing information
+            AssertEx.DeserializeError<FragmentLoss>("<fragment_loss/>");
+            AssertEx.DeserializeError<FragmentLoss>("<fragment_loss massdiff_monoisotopic=\"1\" />");
+            AssertEx.DeserializeError<FragmentLoss>("<fragment_loss massdiff_average=\"1\" />");
         }
 
         /// <summary>

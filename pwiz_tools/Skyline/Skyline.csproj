@@ -529,6 +529,12 @@
     <Compile Include="SettingsUI\DefineAnnotationDlg.Designer.cs">
       <DependentUpon>DefineAnnotationDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="SettingsUI\EditFragmentLossDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\EditFragmentLossDlg.Designer.cs">
+      <DependentUpon>EditFragmentLossDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\EditLabelTypeListDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1028,6 +1034,9 @@
     <EmbeddedResource Include="SettingsUI\DefineAnnotationDlg.resx">
       <DependentUpon>DefineAnnotationDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditFragmentLossDlg.resx">
+      <DependentUpon>EditFragmentLossDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditLabelTypeListDlg.resx">
       <DependentUpon>EditLabelTypeListDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -1040,10 +1049,7 @@
     <EmbeddedResource Include="Resources\PeakBlank.bmp" />
     <EmbeddedResource Include="Resources\Copy.bmp" />
     <EmbeddedResource Include="Resources\Cut.bmp" />
-    <EmbeddedResource Include="Resources\delete-pro.bmp" />
-    <EmbeddedResource Include="Resources\delete-pro32.bmp" />
     <EmbeddedResource Include="Resources\Delete.bmp" />
-    <EmbeddedResource Include="Resources\down-pro.bmp" />
     <EmbeddedResource Include="Resources\down-pro32.bmp" />
     <EmbeddedResource Include="Resources\Edit_Redo.bmp" />
     <EmbeddedResource Include="Resources\Edit_Undo.bmp" />
@@ -1058,7 +1064,6 @@
     <EmbeddedResource Include="Resources\Paste.bmp" />
     <EmbeddedResource Include="Resources\PopupBtn.bmp" />
     <EmbeddedResource Include="Resources\Save.bmp" />
-    <EmbeddedResource Include="Resources\up-pro.bmp" />
     <EmbeddedResource Include="Resources\up-pro32.bmp" />
     <Content Include="Microsoft.VC90.MFC\mfc90.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -1098,6 +1103,7 @@
     <EmbeddedResource Include="Resources\Ions_Z.bmp" />
     <EmbeddedResource Include="Resources\Print.bmp" />
     <EmbeddedResource Include="Resources\ProteoWizard.bmp" />
+    <None Include="Resources\add-pro32.bmp" />
     <Content Include="Resources\RedXTransparentBackground.bmp" />
     <Content Include="SkylineData.ico" />
     <Content Include="SkylineDoc.ico" />
@@ -1123,82 +1129,82 @@
   <ItemGroup>
     <PublishFile Include="BDal.CXt.Lc">
       <Visible>False</Visible>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="BDal.CXt.Lc.Factory">
       <Visible>False</Visible>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="BDal.CXt.Lc.Interfaces">
       <Visible>False</Visible>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="BDal.CXt.Lc.UntU2">
       <Visible>False</Visible>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="Clearcore">
       <Visible>False</Visible>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="Clearcore.Storage">
       <Visible>False</Visible>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="Interop.EDAL">
       <Visible>False</Visible>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
     <PublishFile Include="Interop.EDAL.dll">
       <Visible>False</Visible>
+      <PublishState>Exclude</PublishState>
+      <IncludeHash>True</IncludeHash>
       <Group>
       </Group>
       <TargetPath>
       </TargetPath>
-      <PublishState>Exclude</PublishState>
-      <IncludeHash>True</IncludeHash>
       <FileType>Assembly</FileType>
     </PublishFile>
   </ItemGroup>

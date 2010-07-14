@@ -119,6 +119,7 @@ namespace pwiz.SkylineTestFunctional
             // Initially, peptide with index 0 should be selected
             string previousPeptide = null;
             int peptideIndex = -1;
+            WaitForConditionUI(() => pepList.SelectedIndex != -1);
             RunUI(() =>
             {
                 previousPeptide = pepList.SelectedItem.ToString();

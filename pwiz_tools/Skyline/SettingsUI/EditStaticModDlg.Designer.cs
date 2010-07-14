@@ -63,21 +63,21 @@
             this.cb13C = new System.Windows.Forms.CheckBox();
             this.cbChemicalFormula = new System.Windows.Forms.CheckBox();
             this.btnLoss = new System.Windows.Forms.Button();
-            this.labelLossFormula = new System.Windows.Forms.Label();
-            this.textLossFormula = new System.Windows.Forms.TextBox();
-            this.panelLossFormula = new System.Windows.Forms.Panel();
-            this.btnLossFormulaPopup = new System.Windows.Forms.Button();
-            this.textLossAverageMass = new System.Windows.Forms.TextBox();
-            this.label7 = new System.Windows.Forms.Label();
-            this.textLossMonoMass = new System.Windows.Forms.TextBox();
-            this.label8 = new System.Windows.Forms.Label();
             this.comboRelativeRT = new System.Windows.Forms.ComboBox();
             this.labelRelativeRT = new System.Windows.Forms.Label();
             this.cbVariableMod = new System.Windows.Forms.CheckBox();
+            this.listNeutralLosses = new System.Windows.Forms.ListBox();
+            this.labelLoss = new System.Windows.Forms.Label();
+            this.panelLoss = new System.Windows.Forms.Panel();
+            this.toolBarLosses = new System.Windows.Forms.ToolStrip();
+            this.tbbAddLoss = new System.Windows.Forms.ToolStripButton();
+            this.tbbEditLoss = new System.Windows.Forms.ToolStripButton();
+            this.tbbDeleteLoss = new System.Windows.Forms.ToolStripButton();
             this.contextFormula.SuspendLayout();
             this.panelFormula.SuspendLayout();
             this.panelAtoms.SuspendLayout();
-            this.panelLossFormula.SuspendLayout();
+            this.panelLoss.SuspendLayout();
+            this.toolBarLosses.SuspendLayout();
             this.SuspendLayout();
             // 
             // textName
@@ -419,77 +419,6 @@
             this.btnLoss.UseVisualStyleBackColor = true;
             this.btnLoss.Click += new System.EventHandler(this.btnLoss_Click);
             // 
-            // labelLossFormula
-            // 
-            this.labelLossFormula.AutoSize = true;
-            this.labelLossFormula.Location = new System.Drawing.Point(6, 259);
-            this.labelLossFormula.Name = "labelLossFormula";
-            this.labelLossFormula.Size = new System.Drawing.Size(147, 13);
-            this.labelLossFormula.TabIndex = 18;
-            this.labelLossFormula.Text = "Ne&utral loss chemical formula:";
-            // 
-            // textLossFormula
-            // 
-            this.textLossFormula.Location = new System.Drawing.Point(5, 5);
-            this.textLossFormula.Name = "textLossFormula";
-            this.textLossFormula.Size = new System.Drawing.Size(160, 20);
-            this.textLossFormula.TabIndex = 0;
-            this.textLossFormula.TextChanged += new System.EventHandler(this.textLossFormula_TextChanged);
-            this.textLossFormula.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textLossFormula_KeyPress);
-            // 
-            // panelLossFormula
-            // 
-            this.panelLossFormula.Controls.Add(this.btnLossFormulaPopup);
-            this.panelLossFormula.Controls.Add(this.textLossFormula);
-            this.panelLossFormula.Location = new System.Drawing.Point(4, 272);
-            this.panelLossFormula.Name = "panelLossFormula";
-            this.panelLossFormula.Size = new System.Drawing.Size(288, 31);
-            this.panelLossFormula.TabIndex = 20;
-            this.panelLossFormula.Visible = false;
-            // 
-            // btnLossFormulaPopup
-            // 
-            this.btnLossFormulaPopup.Location = new System.Drawing.Point(170, 3);
-            this.btnLossFormulaPopup.Name = "btnLossFormulaPopup";
-            this.btnLossFormulaPopup.Size = new System.Drawing.Size(24, 23);
-            this.btnLossFormulaPopup.TabIndex = 1;
-            this.btnLossFormulaPopup.UseVisualStyleBackColor = true;
-            this.btnLossFormulaPopup.Click += new System.EventHandler(this.btnLossFormulaPopup_Click);
-            // 
-            // textLossAverageMass
-            // 
-            this.textLossAverageMass.Location = new System.Drawing.Point(136, 331);
-            this.textLossAverageMass.Name = "textLossAverageMass";
-            this.textLossAverageMass.Size = new System.Drawing.Size(98, 20);
-            this.textLossAverageMass.TabIndex = 24;
-            this.textLossAverageMass.TextChanged += new System.EventHandler(this.textLossAverageMass_TextChanged);
-            // 
-            // label7
-            // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(133, 315);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(71, 13);
-            this.label7.TabIndex = 23;
-            this.label7.Text = "Av&erage loss:";
-            // 
-            // textLossMonoMass
-            // 
-            this.textLossMonoMass.Location = new System.Drawing.Point(9, 331);
-            this.textLossMonoMass.Name = "textLossMonoMass";
-            this.textLossMonoMass.Size = new System.Drawing.Size(98, 20);
-            this.textLossMonoMass.TabIndex = 22;
-            this.textLossMonoMass.TextChanged += new System.EventHandler(this.textLossMonoMass_TextChanged);
-            // 
-            // label8
-            // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(6, 315);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(94, 13);
-            this.label8.TabIndex = 21;
-            this.label8.Text = "M&onoisotopic loss:";
-            // 
             // comboRelativeRT
             // 
             this.comboRelativeRT.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -518,23 +447,95 @@
             this.cbVariableMod.Text = "Variable";
             this.cbVariableMod.UseVisualStyleBackColor = true;
             // 
+            // listNeutralLosses
+            // 
+            this.listNeutralLosses.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.listNeutralLosses.FormattingEnabled = true;
+            this.listNeutralLosses.Location = new System.Drawing.Point(0, 0);
+            this.listNeutralLosses.Name = "listNeutralLosses";
+            this.listNeutralLosses.Size = new System.Drawing.Size(214, 69);
+            this.listNeutralLosses.TabIndex = 25;
+            this.listNeutralLosses.SelectedIndexChanged += new System.EventHandler(this.listNeutralLosses_SelectedIndexChanged);
+            // 
+            // labelLoss
+            // 
+            this.labelLoss.AutoSize = true;
+            this.labelLoss.Location = new System.Drawing.Point(6, 258);
+            this.labelLoss.Name = "labelLoss";
+            this.labelLoss.Size = new System.Drawing.Size(76, 13);
+            this.labelLoss.TabIndex = 26;
+            this.labelLoss.Text = "Ne&utral losses:";
+            // 
+            // panelLoss
+            // 
+            this.panelLoss.Controls.Add(this.listNeutralLosses);
+            this.panelLoss.Controls.Add(this.toolBarLosses);
+            this.panelLoss.Location = new System.Drawing.Point(9, 274);
+            this.panelLoss.Name = "panelLoss";
+            this.panelLoss.Size = new System.Drawing.Size(238, 70);
+            this.panelLoss.TabIndex = 27;
+            // 
+            // toolBarLosses
+            // 
+            this.toolBarLosses.Dock = System.Windows.Forms.DockStyle.Right;
+            this.toolBarLosses.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolBarLosses.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.tbbAddLoss,
+            this.tbbEditLoss,
+            this.tbbDeleteLoss});
+            this.toolBarLosses.Location = new System.Drawing.Point(214, 0);
+            this.toolBarLosses.Name = "toolBarLosses";
+            this.toolBarLosses.Size = new System.Drawing.Size(24, 70);
+            this.toolBarLosses.TabIndex = 26;
+            // 
+            // tbbAddLoss
+            // 
+            this.tbbAddLoss.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.tbbAddLoss.Image = global::pwiz.Skyline.Properties.Resources.add_pro32;
+            this.tbbAddLoss.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tbbAddLoss.Name = "tbbAddLoss";
+            this.tbbAddLoss.Size = new System.Drawing.Size(21, 20);
+            this.tbbAddLoss.Text = "tbbAddLoss";
+            this.tbbAddLoss.ToolTipText = "Add neutral loss";
+            this.tbbAddLoss.Click += new System.EventHandler(this.tbbAddLoss_Click);
+            // 
+            // tbbEditLoss
+            // 
+            this.tbbEditLoss.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.tbbEditLoss.Enabled = false;
+            this.tbbEditLoss.Image = global::pwiz.Skyline.Properties.Resources.Comment;
+            this.tbbEditLoss.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tbbEditLoss.Name = "tbbEditLoss";
+            this.tbbEditLoss.Size = new System.Drawing.Size(21, 20);
+            this.tbbEditLoss.Text = "tbbEditLoss";
+            this.tbbEditLoss.ToolTipText = "Edit neutral loss";
+            this.tbbEditLoss.Click += new System.EventHandler(this.tbbEditLoss_Click);
+            // 
+            // tbbDeleteLoss
+            // 
+            this.tbbDeleteLoss.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.tbbDeleteLoss.Enabled = false;
+            this.tbbDeleteLoss.Image = global::pwiz.Skyline.Properties.Resources.Delete;
+            this.tbbDeleteLoss.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.tbbDeleteLoss.Name = "tbbDeleteLoss";
+            this.tbbDeleteLoss.Size = new System.Drawing.Size(21, 20);
+            this.tbbDeleteLoss.Text = "tbbDelete";
+            this.tbbDeleteLoss.ToolTipText = "Delete neutral loss";
+            this.tbbDeleteLoss.Click += new System.EventHandler(this.tbbDeleteLoss_Click);
+            // 
             // EditStaticModDlg
             // 
             this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(353, 368);
+            this.ClientSize = new System.Drawing.Size(353, 360);
+            this.Controls.Add(this.panelLoss);
+            this.Controls.Add(this.labelLoss);
             this.Controls.Add(this.cbVariableMod);
             this.Controls.Add(this.labelRelativeRT);
             this.Controls.Add(this.comboRelativeRT);
             this.Controls.Add(this.panelFormula);
-            this.Controls.Add(this.labelLossFormula);
-            this.Controls.Add(this.panelLossFormula);
-            this.Controls.Add(this.textLossMonoMass);
-            this.Controls.Add(this.textLossAverageMass);
-            this.Controls.Add(this.label7);
-            this.Controls.Add(this.label8);
             this.Controls.Add(this.label6);
             this.Controls.Add(this.btnLoss);
             this.Controls.Add(this.comboTerm);
@@ -563,8 +564,10 @@
             this.panelFormula.PerformLayout();
             this.panelAtoms.ResumeLayout(false);
             this.panelAtoms.PerformLayout();
-            this.panelLossFormula.ResumeLayout(false);
-            this.panelLossFormula.PerformLayout();
+            this.panelLoss.ResumeLayout(false);
+            this.panelLoss.PerformLayout();
+            this.toolBarLosses.ResumeLayout(false);
+            this.toolBarLosses.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -606,16 +609,15 @@
         private System.Windows.Forms.CheckBox cb15N;
         private System.Windows.Forms.CheckBox cbChemicalFormula;
         private System.Windows.Forms.Button btnLoss;
-        private System.Windows.Forms.Label labelLossFormula;
-        private System.Windows.Forms.TextBox textLossFormula;
-        private System.Windows.Forms.Panel panelLossFormula;
-        private System.Windows.Forms.Button btnLossFormulaPopup;
-        private System.Windows.Forms.TextBox textLossAverageMass;
-        private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.TextBox textLossMonoMass;
-        private System.Windows.Forms.Label label8;
         private System.Windows.Forms.ComboBox comboRelativeRT;
         private System.Windows.Forms.Label labelRelativeRT;
         private System.Windows.Forms.CheckBox cbVariableMod;
+        private System.Windows.Forms.ListBox listNeutralLosses;
+        private System.Windows.Forms.Label labelLoss;
+        private System.Windows.Forms.Panel panelLoss;
+        private System.Windows.Forms.ToolStrip toolBarLosses;
+        private System.Windows.Forms.ToolStripButton tbbAddLoss;
+        private System.Windows.Forms.ToolStripButton tbbEditLoss;
+        private System.Windows.Forms.ToolStripButton tbbDeleteLoss;
     }
 }

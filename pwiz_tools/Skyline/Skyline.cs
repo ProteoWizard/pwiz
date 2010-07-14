@@ -1014,8 +1014,8 @@ namespace pwiz.Skyline
 
                 // CONSIDER: Should SrmSettings.Accept check missed cleavages?
                 int missedCleavages = enzyme.CountCleavagePoints(pepSeqClean);
-                if (missedCleavages <= settings.PeptideSettings.DigestSettings.MaxMissedCleavages &&
-                        settings.Accept(new Peptide(null, pepSeqClean, null, null, missedCleavages), true))
+                int maxMissedCleavages = settings.PeptideSettings.DigestSettings.MaxMissedCleavages;
+                if (missedCleavages <= maxMissedCleavages && settings.Accept(pepSeqClean, missedCleavages))
                     listAcceptPeptides.Add(pepSeqClean);
                 else
                     listFilterPeptides.Add(pepSeqClean);

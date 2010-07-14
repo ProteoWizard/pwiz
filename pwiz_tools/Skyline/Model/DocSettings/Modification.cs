@@ -22,6 +22,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Xml;
+using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Skyline.Util;
 
@@ -51,6 +52,8 @@ namespace pwiz.Skyline.Model.DocSettings
     [XmlRoot("static_modification")]
     public sealed class StaticMod : XmlNamedElement
     {
+        private ReadOnlyCollection<FragmentLoss> _losses;
+
         public StaticMod(string name, string aas, string formula)
             : this(name, aas, null, formula, LabelAtoms.None, null, null)
         {            
@@ -63,7 +66,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public StaticMod(string name, string aas, ModTerminus? term,
             string formula, LabelAtoms labelAtoms, double? monoMass, double? avgMass)
-            : this(name, aas, term, false, formula, labelAtoms, RelativeRT.Matching, monoMass, avgMass, null, null, null)
+            : this(name, aas, term, false, formula, labelAtoms, RelativeRT.Matching, monoMass, avgMass, null)
         {
             
         }
@@ -77,9 +80,7 @@ namespace pwiz.Skyline.Model.DocSettings
                          RelativeRT relativeRT,
                          double? monoMass,
                          double? avgMass,
-                         string formulaLoss,
-                         double? monoLoss,
-                         double? avgLoss)
+                         IList<FragmentLoss> losses)
             : base(name)
         {
             AAs = aas;
@@ -96,14 +97,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 AverageMass = avgMass;                
             }
 
-            FormulaLoss = formulaLoss;
-
-            // Only allow masses, if formula is not specified.
-            if (string.IsNullOrEmpty(formulaLoss))
-            {
-                MonoisotopicLoss = monoLoss;
-                AverageLoss = avgLoss;
-            }
+            Losses = losses;
 
             Validate();
         }
@@ -115,7 +109,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool IsVariable { get; private set; }
 
         public string Formula { get; private set; }
-        public string FormulaLoss { get; private set; }
+        public double? MonoisotopicMass { get; private set; }
+        public double? AverageMass { get; private set; }
 
         public LabelAtoms LabelAtoms { get; private set; }
         public bool Label13C { get { return (LabelAtoms & LabelAtoms.C13) != 0; } }
@@ -124,11 +119,14 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool Label2H { get { return (LabelAtoms & LabelAtoms.H2) != 0; } }
         public RelativeRT RelativeRT { get; private set; }
 
-        public double? MonoisotopicMass { get; private set; }
-        public double? MonoisotopicLoss { get; private set; }
-
-        public double? AverageMass { get; private set; }
-        public double? AverageLoss { get; private set; }
+        public IList<FragmentLoss> Losses
+        {
+            get { return _losses; }
+            set
+            {
+                _losses = (value != null ? MakeReadOnly(FragmentLoss.SortByMz(value)) : null);
+            }
+        }
 
         public IEnumerable<char> AminoAcids
         {
@@ -174,9 +172,9 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
-        public bool IsLoss
+        public bool HasLoss
         {
-            get { return FormulaLoss != null || MonoisotopicLoss.HasValue; }
+            get { return Losses != null; }
         }
 
         #region Property change methods
@@ -207,7 +205,6 @@ namespace pwiz.Skyline.Model.DocSettings
             terminus,
             variable,
             formula,
-            formula_loss,
 // ReSharper disable InconsistentNaming
             label_13C,
             label_15N,
@@ -216,13 +213,9 @@ namespace pwiz.Skyline.Model.DocSettings
 // ReSharper restore InconsistentNaming
             relative_rt,
             massdiff_monoisotopic,
-            massloss_monoisotopic,
             massdiff_average,
-            massloss_average,
             explicit_decl
         }
-
-        private static readonly BioMassCalc VALIDATION_MASS_CALC = new BioMassCalc(MassType.Monoisotopic);
 
         private void Validate()
         {
@@ -256,27 +249,11 @@ namespace pwiz.Skyline.Model.DocSettings
                     if (LabelAtoms != LabelAtoms.None)
                         throw new InvalidDataException("Formula not allowed with labeled atoms.");
                     // Throws an exception, if given an invalid formula.
-                    SequenceMassCalc.ParseModMass(VALIDATION_MASS_CALC, Formula);                    
+                    SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, Formula);                    
                 }
                 // No explicit masses with formula or label atoms
                 if (MonoisotopicMass != null || AverageMass != null)
                     throw new InvalidDataException("Modification with a formula may not specify modification masses.");
-            }
-            if (FormulaLoss == null)
-            {
-                // Most both be not null or both null
-                if ((MonoisotopicLoss == null || AverageLoss == null) &&
-                        (MonoisotopicLoss != null || AverageLoss != null))
-                    throw new InvalidDataException("Modification without a loss formula, must specify both monoisotopic and average losses or neither.");
-            }
-            else
-            {
-                // Throws an exception, if given an invalid formula.
-                SequenceMassCalc.ParseModMass(VALIDATION_MASS_CALC, FormulaLoss);
-
-                // No explicit loss masses with formula
-                if (MonoisotopicLoss != null || AverageLoss != null)
-                    throw new InvalidDataException("Modification with a loss formula may not also specify loss masses.");
             }
         }
 
@@ -313,7 +290,6 @@ namespace pwiz.Skyline.Model.DocSettings
             Terminus = reader.GetAttribute<ModTerminus>(ATTR.terminus, ToModTerminus);
             IsVariable = IsExplicit = reader.GetBoolAttribute(ATTR.variable);
             Formula = reader.GetAttribute(ATTR.formula);
-            FormulaLoss = reader.GetAttribute(ATTR.formula_loss);
             if (reader.GetBoolAttribute(ATTR.label_13C))
                 LabelAtoms |= LabelAtoms.C13;
             if (reader.GetBoolAttribute(ATTR.label_15N))
@@ -327,15 +303,21 @@ namespace pwiz.Skyline.Model.DocSettings
             // Allow specific masses always, but they will generate an error,
             // in Validate() if there is already a formula.
             MonoisotopicMass = reader.GetNullableDoubleAttribute(ATTR.massdiff_monoisotopic);
-            MonoisotopicLoss = reader.GetNullableDoubleAttribute(ATTR.massloss_monoisotopic);
             AverageMass = reader.GetNullableDoubleAttribute(ATTR.massdiff_average);
-            AverageLoss = reader.GetNullableDoubleAttribute(ATTR.massloss_average);
 
             if (!IsVariable)
                 IsExplicit = reader.GetBoolAttribute(ATTR.explicit_decl);
 
             // Consume tag
             reader.Read();
+
+            var listLosses = new List<FragmentLoss>();
+            reader.ReadElements(listLosses);
+            if (listLosses.Count > 0)
+            {
+                Losses = listLosses.ToArray();
+                reader.ReadEndElement();
+            }
 
             Validate();
         }
@@ -348,18 +330,18 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttributeNullable(ATTR.terminus, Terminus);
             writer.WriteAttribute(ATTR.variable, IsVariable);
             writer.WriteAttributeIfString(ATTR.formula, Formula);
-            writer.WriteAttributeIfString(ATTR.formula_loss, FormulaLoss);
             writer.WriteAttribute(ATTR.label_13C, Label13C);
             writer.WriteAttribute(ATTR.label_15N, Label15N);
             writer.WriteAttribute(ATTR.label_18O, Label18O);
             writer.WriteAttribute(ATTR.label_2H, Label2H);
             writer.WriteAttribute(ATTR.relative_rt, RelativeRT, RelativeRT.Matching);
             writer.WriteAttributeNullable(ATTR.massdiff_monoisotopic, MonoisotopicMass);
-            writer.WriteAttributeNullable(ATTR.massloss_monoisotopic, MonoisotopicLoss);
             writer.WriteAttributeNullable(ATTR.massdiff_average, AverageMass);
-            writer.WriteAttributeNullable(ATTR.massloss_average, AverageLoss);
             if (!IsVariable)
                 writer.WriteAttribute(ATTR.explicit_decl, IsExplicit);
+
+            if (Losses != null)
+                writer.WriteElements(Losses);
         }
 
         #endregion
@@ -378,13 +360,10 @@ namespace pwiz.Skyline.Model.DocSettings
                 obj.Terminus.Equals(Terminus) &&
                 obj.IsVariable.Equals(IsVariable) &&
                 obj.AverageMass.Equals(AverageMass) &&
-                obj.AverageLoss.Equals(AverageLoss) &&
                 Equals(obj.Formula, Formula) &&
-                Equals(obj.FormulaLoss, FormulaLoss) &&
                 Equals(obj.LabelAtoms, LabelAtoms) &&
                 Equals(obj.RelativeRT, RelativeRT) &&
-                obj.MonoisotopicMass.Equals(MonoisotopicMass) &&
-                obj.MonoisotopicLoss.Equals(MonoisotopicLoss);
+                obj.MonoisotopicMass.Equals(MonoisotopicMass);
         }
 
         public bool Equals(StaticMod obj)
@@ -411,14 +390,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ (Terminus.HasValue ? Terminus.Value.GetHashCode() : 0);
                 result = (result*397) ^ IsVariable.GetHashCode();
                 result = (result*397) ^ (AverageMass.HasValue ? AverageMass.Value.GetHashCode() : 0);
-                result = (result*397) ^ (AverageLoss.HasValue ? AverageLoss.Value.GetHashCode() : 0);
                 result = (result*397) ^ (Formula != null ? Formula.GetHashCode() : 0);
-                result = (result*397) ^ (FormulaLoss != null ? FormulaLoss.GetHashCode() : 0);
                 result = (result*397) ^ IsExplicit.GetHashCode();
                 result = (result*397) ^ LabelAtoms.GetHashCode();
                 result = (result*397) ^ RelativeRT.GetHashCode();
                 result = (result*397) ^ (MonoisotopicMass.HasValue ? MonoisotopicMass.Value.GetHashCode() : 0);
-                result = (result*397) ^ (MonoisotopicLoss.HasValue ? MonoisotopicLoss.Value.GetHashCode() : 0);
                 return result;
             }
         }
@@ -473,6 +449,164 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 return (LabelType.GetHashCode() * 397) ^ Modifications.GetHashCodeDeep();
             }
+        }
+
+        #endregion
+    }
+
+    [XmlRoot("fragment_loss")]
+    public sealed class FragmentLoss : Immutable, IXmlSerializable
+    {
+        public const double MIN_LOSS_MASS = 0.0001;
+        public const double MAX_LOSS_MASS = 500;
+
+        public FragmentLoss(string formula, double? monoisotopicMass, double? averageMass)
+        {
+            Formula = formula;
+            MonoisotopicMass = monoisotopicMass;
+            AverageMass = averageMass;
+        }
+
+        public string Formula { get; private set; }
+        public double? MonoisotopicMass { get; private set; }
+        public double? AverageMass { get; private set; }
+
+        /// <summary>
+        /// Losses are always sorted by m/z, to avoid the need for names and a
+        /// full user interface around list editing.
+        /// </summary>
+        public static IList<FragmentLoss> SortByMz(IList<FragmentLoss> losses)
+        {
+            if (losses.Count < 2)
+                return losses;
+            var listMzLosses = new List<KeyValuePair<double, FragmentLoss>>();
+            foreach (var loss in losses)
+            {
+                double mz = (loss.MonoisotopicMass.HasValue ? loss.MonoisotopicMass.Value :
+                    SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, loss.Formula));
+                listMzLosses.Add(new KeyValuePair<double, FragmentLoss>(mz, loss));
+            }
+            listMzLosses.Sort((l1, l2) => Comparer<double>.Default.Compare(l1.Key, l2.Key));
+            return listMzLosses.ConvertAll(mzLoss => mzLoss.Value).ToArray();
+        }
+
+        #region Implementation of IXmlSerializable
+
+        /// <summary>
+        /// For serialization
+        /// </summary>
+        private FragmentLoss()
+        {
+        }
+
+        private enum ATTR
+        {
+            formula,
+            massdiff_monoisotopic,
+            massdiff_average
+        }
+
+        private void Validate()
+        {
+            if (Formula == null)
+            {
+                if (MonoisotopicMass == null || AverageMass == null)
+                    throw new InvalidDataException("Neutral losses must specify a formula or valid monoisotopic and average masses.");
+                if (MonoisotopicMass.Value <= MIN_LOSS_MASS || AverageMass.Value <= MIN_LOSS_MASS)
+                    throw new InvalidDataException(string.Format("Neutral losses be greater than or equal to {0}.", MIN_LOSS_MASS));
+                if (MonoisotopicMass.Value > MAX_LOSS_MASS || AverageMass.Value > MAX_LOSS_MASS)
+                    throw new InvalidDataException(string.Format("Neutral losses must less than or equal to {0}.", MAX_LOSS_MASS));
+            }
+            else
+            {
+                if (Formula != null)
+                {
+                    // Throws an exception, if given an invalid formula.
+                    double mass = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, Formula);
+                    if (mass <= MIN_LOSS_MASS)
+                        throw new InvalidDataException(string.Format("Neutral losses be greater than or equal to {0}.", MIN_LOSS_MASS));
+                    if (mass > MAX_LOSS_MASS)
+                        throw new InvalidDataException(string.Format("Neutral losses must less than or equal to {0}.", MAX_LOSS_MASS));
+                }
+                // No explicit masses with formula or label atoms
+                if (MonoisotopicMass != null || AverageMass != null)
+                    throw new InvalidDataException("Neutral losses with a formula may not specify modification masses.");
+            }
+        }
+
+        public static FragmentLoss Deserialize(XmlReader reader)
+        {
+            return reader.Deserialize(new FragmentLoss());
+        }
+
+        public XmlSchema GetSchema()
+        {
+            return null;
+        }
+
+        public void ReadXml(XmlReader reader)
+        {
+            // Read tag attributes
+            Formula = reader.GetAttribute(ATTR.formula);
+
+            // Allow specific masses always, but they will generate an error,
+            // in Validate() if there is already a formula.
+            MonoisotopicMass = reader.GetNullableDoubleAttribute(ATTR.massdiff_monoisotopic);
+            AverageMass = reader.GetNullableDoubleAttribute(ATTR.massdiff_average);
+
+            // Consume tag
+            reader.Read();
+
+            Validate();
+        }
+
+        public void WriteXml(XmlWriter writer)
+        {
+            // Write tag attributes
+            writer.WriteAttributeIfString(ATTR.formula, Formula);
+            writer.WriteAttributeNullable(ATTR.massdiff_monoisotopic, MonoisotopicMass);
+            writer.WriteAttributeNullable(ATTR.massdiff_average, AverageMass);
+        }
+
+        #endregion
+
+        #region object overrides
+
+        public bool Equals(FragmentLoss other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(other.Formula, Formula) &&
+                other.MonoisotopicMass.Equals(MonoisotopicMass) &&
+                other.AverageMass.Equals(AverageMass);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof (FragmentLoss)) return false;
+            return Equals((FragmentLoss) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int result = (Formula != null ? Formula.GetHashCode() : 0);
+                result = (result*397) ^ (MonoisotopicMass.HasValue ? MonoisotopicMass.Value.GetHashCode() : 0);
+                result = (result*397) ^ (AverageMass.HasValue ? AverageMass.Value.GetHashCode() : 0);
+                return result;
+            }
+        }
+
+        public override string ToString()
+        {
+            double mass = MonoisotopicMass ?? AverageMass ??
+                SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, Formula);
+            return Formula != null ?
+                string.Format("{0:F04} - {1}", mass, Formula) :
+                string.Format("{0:F04}", mass);
         }
 
         #endregion

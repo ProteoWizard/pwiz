@@ -956,15 +956,10 @@ namespace pwiz.Skyline.SettingsUI
                                 var smod = new StaticMod("temp",
                                                                modList[idx].ModifiedAminoAcid.ToString(),
                                                                null,
-                                                               false,
                                                                null,
                                                                LabelAtoms.None,
-                                                               RelativeRT.Unknown,
                                                                modList[idx].ModifiedMass,
-                                                               modList[idx].ModifiedMass,
-                                                               null,
-                                                               null,
-                                                               null);
+                                                               modList[idx].ModifiedMass);
 
                                 var exmod = new ExplicitMod(idx, smod);
                                 staticModList.Add(exmod);

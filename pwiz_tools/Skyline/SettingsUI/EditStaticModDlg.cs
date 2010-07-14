@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
@@ -35,12 +36,8 @@ namespace pwiz.Skyline.SettingsUI
         private StaticMod _modification;
         private readonly IEnumerable<StaticMod> _existing;
 
-        private readonly BioMassCalc _monoMassCalc = new BioMassCalc(MassType.Monoisotopic);
-        private readonly BioMassCalc _averageMassCalc = new BioMassCalc(MassType.Average);
-
         private readonly bool _heavy;
         private bool _showLoss = true; // Design mode with loss UI showing
-        private TextBox _textFormulaActive;
 
         public EditStaticModDlg(IEnumerable<StaticMod> existing, bool heavy)
         {
@@ -57,7 +54,6 @@ namespace pwiz.Skyline.SettingsUI
             Bitmap bm = Resources.PopupBtn;
             bm.MakeTransparent(Color.Fuchsia);
             btnFormulaPopup.Image = bm;
-            btnLossFormulaPopup.Image = bm;
 
             if (heavy)
             {
@@ -101,19 +97,14 @@ namespace pwiz.Skyline.SettingsUI
                     cb15N.Checked = false;
                     cb18O.Checked = false;
                     cb2H.Checked = false;
-                    textLossFormula.Text = "";
-                    textLossMonoMass.Text = "";
-                    textLossAverageMass.Text = "";
+                    listNeutralLosses.Items.Clear();
                     if (comboRelativeRT.Items.Count > 0)
                         comboRelativeRT.SelectedIndex = 0;
                 }
                 else
                 {
                     textName.Text = _modification.Name;
-                    if (_modification.AAs == null)
-                        comboAA.Text = "";
-                    else
-                        comboAA.Text = _modification.AAs;
+                    comboAA.Text = _modification.AAs ?? "";
                     if (_modification.Terminus == null)
                         comboTerm.SelectedIndex = 0;
                     else
@@ -145,24 +136,31 @@ namespace pwiz.Skyline.SettingsUI
                     if (comboRelativeRT.Items.Count > 0)
                         comboRelativeRT.SelectedItem = _modification.RelativeRT.ToString();
 
-                    if (_modification.FormulaLoss != null)
+                    if (_modification.HasLoss)
                     {
-                        textLossFormula.Text = _modification.FormulaLoss;
-                    }
-                    else
-                    {
-                        textLossFormula.Text = "";
-                        textLossMonoMass.Text = (_modification.MonoisotopicLoss == null ?
-                            "" : _modification.MonoisotopicLoss.ToString());
-                        textLossAverageMass.Text = (_modification.AverageLoss == null ?
-                            "" : _modification.AverageLoss.ToString());
+                        foreach (var loss in _modification.Losses)
+                            listNeutralLosses.Items.Add(loss);
                     }
                     // Make sure loss values are showing, if they are present
-                    if (!string.IsNullOrEmpty(textLossFormula.Text) ||
-                            !string.IsNullOrEmpty(textLossMonoMass.Text) ||
-                            !string.IsNullOrEmpty(textLossAverageMass.Text))
+                    if (listNeutralLosses.Items.Count > 0)
                         ShowLoss = true;
                 }                
+            }
+        }
+
+        private IEnumerable<FragmentLoss> Losses
+        {
+            get
+            {
+                foreach (FragmentLoss loss in listNeutralLosses.Items)
+                    yield return loss;
+            }
+
+            set
+            {
+                var losses = FragmentLoss.SortByMz(value.ToArray());
+                listNeutralLosses.Items.Clear();
+                listNeutralLosses.Items.AddRange(losses.ToArray());
             }
         }
 
@@ -194,10 +192,8 @@ namespace pwiz.Skyline.SettingsUI
                 _showLoss = value;
 
                 // Update UI
-                panelLossFormula.Visible =
-                    labelLossFormula.Visible = 
-                    textLossMonoMass.Visible =
-                    textLossAverageMass.Visible = _showLoss;
+                panelLoss.Visible =
+                    labelLoss.Visible = _showLoss;
 
                 string btnText = btnLoss.Text;
                 btnLoss.Text = btnText.Substring(0, btnText.Length - 2) +
@@ -211,7 +207,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             int bottomControl = _heavy ? comboRelativeRT.Bottom : btnLoss.Bottom;
 
-            int delta = textLossMonoMass.Bottom - bottomControl;
+            int delta = panelLoss.Bottom - bottomControl;
             Height += (ShowLoss ? delta : -delta);
         }
 
@@ -282,7 +278,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 try
                 {
-                    SequenceMassCalc.ParseModMass(_monoMassCalc, formula);
+                    SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, formula);
                 }
                 catch (ArgumentException x)
                 {
@@ -309,37 +305,10 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             }
 
-            string formulaLoss = null;
-            double? monoLoss = null;
-            double? avgLoss = null;
-            if (textLossFormula.Visible)
+            IList<FragmentLoss> losses = null;
+            if (listNeutralLosses.Items.Count > 0)
             {
-                formulaLoss = textLossFormula.Text;
-                if (!string.IsNullOrEmpty(formulaLoss))
-                {
-                    try
-                    {
-                        SequenceMassCalc.ParseModMass(_monoMassCalc, formulaLoss);
-                    }
-                    catch (ArgumentException x)
-                    {
-                        helper.ShowTextBoxError(textLossFormula, x.Message);
-                        e.Cancel = true;
-                        return;
-                    }                    
-                }
-                else if (!string.IsNullOrEmpty(textLossMonoMass.Text) ||
-                        !string.IsNullOrEmpty(textLossAverageMass.Text))
-                {
-                    formulaLoss = null;
-                    double mass;
-                    if (!helper.ValidateDecimalTextBox(e, textLossMonoMass, -200, 0, out mass))
-                        return;
-                    monoLoss = mass;
-                    if (!helper.ValidateDecimalTextBox(e, textAverageMass, -200, 0, out mass))
-                        return;
-                    avgLoss = mass;
-                }
+                losses = Losses.ToArray();
             }
 
             RelativeRT relativeRT = RelativeRT.Matching;
@@ -358,16 +327,13 @@ namespace pwiz.Skyline.SettingsUI
                                          relativeRT,
                                          monoMass,
                                          avgMass,
-                                         formulaLoss,
-                                         monoLoss,
-                                         avgLoss);
+                                         losses);
 
             // Store state of the chemical formula checkbox for next use.
             if (cbChemicalFormula.Visible)
                 Settings.Default.ShowHeavyFormula = panelFormula.Visible;
 
             DialogResult = DialogResult.OK;
-            Close();            
         }
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -437,8 +403,8 @@ namespace pwiz.Skyline.SettingsUI
                 textMonoMass.Enabled = textAverageMass.Enabled = false;
                 try
                 {
-                    textMonoMass.Text = SequenceMassCalc.ParseModMass(_monoMassCalc, formula).ToString();
-                    textAverageMass.Text = SequenceMassCalc.ParseModMass(_averageMassCalc, formula).ToString();
+                    textMonoMass.Text = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, formula).ToString();
+                    textAverageMass.Text = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, formula).ToString();
                     textFormula.ForeColor = Color.Black;
                 }
                 catch (ArgumentException)
@@ -458,66 +424,22 @@ namespace pwiz.Skyline.SettingsUI
         private void btnLoss_Click(object sender, EventArgs e)
         {
             ShowLoss = !ShowLoss;
-        }
-
-        private void textLossFormula_TextChanged(object sender, EventArgs e)
-        {
-            UpdateLosses();
-        }
-
-        private void UpdateLosses()
-        {
-            string formula = textLossFormula.Text;
-            if (string.IsNullOrEmpty(formula))
-            {
-                textLossMonoMass.Text = textLossAverageMass.Text = "";
-                textLossMonoMass.Enabled = textLossAverageMass.Enabled = true;
-            }
-            else
-            {
-                textLossMonoMass.Enabled = textLossAverageMass.Enabled = false;
-                try
-                {
-                    textLossMonoMass.Text = "-" + SequenceMassCalc.ParseModMass(_monoMassCalc, formula);
-                    textLossAverageMass.Text = "-" + SequenceMassCalc.ParseModMass(_averageMassCalc, formula);
-                    textLossFormula.ForeColor = Color.Black;
-                }
-                catch (ArgumentException)
-                {
-                    textLossFormula.ForeColor = Color.Red;
-                    textLossMonoMass.Text = textLossAverageMass.Text = "";
-                }
-            }
-        }
-
-        private void textLossFormula_KeyPress(object sender, KeyPressEventArgs e)
-        {
-            // Force uppercase in this control.
-            e.KeyChar = char.ToUpper(e.KeyChar);
+            if (ShowLoss)
+                listNeutralLosses.Focus();
         }
 
         private void btnFormulaPopup_Click(object sender, EventArgs e)
         {
-            _textFormulaActive = textFormula;
             contextFormula.Show(this, panelFormula.Left + btnFormulaPopup.Right + 1,
                 panelFormula.Top + btnFormulaPopup.Top);
         }
 
-        private void btnLossFormulaPopup_Click(object sender, EventArgs e)
-        {
-            _textFormulaActive = textLossFormula;
-            contextFormula.Show(this, panelLossFormula.Left + btnLossFormulaPopup.Right + 1,
-                panelLossFormula.Top + btnLossFormulaPopup.Top);
-        }
-
         private void AddFormulaSymbol(string symbol)
         {
-            if (_textFormulaActive == null)
-                return;
-            _textFormulaActive.Text += symbol;
-            _textFormulaActive.Focus();
-            _textFormulaActive.SelectionLength = 0;
-            _textFormulaActive.SelectionStart = textFormula.Text.Length;
+            textFormula.Text += symbol;
+            textFormula.Focus();
+            textFormula.SelectionLength = 0;
+            textFormula.SelectionStart = textFormula.Text.Length;
         }
 
         private void hContextMenuItem_Click(object sender, EventArgs e)
@@ -570,23 +492,6 @@ namespace pwiz.Skyline.SettingsUI
             AddFormulaSymbol(BioMassCalc.S);
         }
 
-        private void textLossMonoMass_TextChanged(object sender, EventArgs e)
-        {
-            ForceNegativeValue(textLossMonoMass);
-        }
-
-        private void textLossAverageMass_TextChanged(object sender, EventArgs e)
-        {
-            ForceNegativeValue(textLossAverageMass);
-        }
-
-        private static void ForceNegativeValue(Control textMassValue)
-        {
-            string massText = textMassValue.Text;
-            if (!string.IsNullOrEmpty(massText) && massText[0] != '-')
-                textMassValue.Text = "-" + massText;            
-        }
-
         private const char SEPARATOR_AA = ',';
 
         private void comboAA_KeyPress(object sender, KeyPressEventArgs e)
@@ -622,6 +527,60 @@ namespace pwiz.Skyline.SettingsUI
             }
             comboAA.Text = sb.ToString();
             UpdateMasses();
+        }
+
+        private void tbbAddLoss_Click(object sender, EventArgs e)
+        {
+            AddLoss();
+        }
+
+        public void AddLoss()
+        {
+            var dlg = new EditFragmentLossDlg(Losses.ToArray());
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+            {
+                Losses = new List<FragmentLoss>(Losses) {dlg.Loss};
+                listNeutralLosses.SelectedItem = dlg.Loss;
+            }
+        }
+
+        private void tbbEditLoss_Click(object sender, EventArgs e)
+        {
+            EditLoss();
+        }
+
+        public void EditLoss()
+        {
+            var lossEdit = (FragmentLoss) listNeutralLosses.SelectedItem;
+            var listLosses = new List<FragmentLoss>(Losses);
+            listLosses.Remove(lossEdit);
+
+            var dlg = new EditFragmentLossDlg(listLosses) { Loss = lossEdit };
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+            {
+                listLosses.Add(dlg.Loss);
+                Losses = listLosses;
+                listNeutralLosses.SelectedItem = dlg.Loss;
+            }
+        }
+
+        private void tbbDeleteLoss_Click(object sender, EventArgs e)
+        {
+            DeleteLoss();
+        }
+
+        public void DeleteLoss()
+        {
+            int indexSelected = listNeutralLosses.SelectedIndex;
+            listNeutralLosses.Items.Remove(listNeutralLosses.SelectedItem);
+            listNeutralLosses.SelectedIndex = Math.Min(indexSelected, listNeutralLosses.Items.Count - 1);
+        }
+
+        private void listNeutralLosses_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            bool enable = (listNeutralLosses.SelectedIndex != -1);
+            tbbEditLoss.Enabled = enable;
+            tbbDeleteLoss.Enabled = enable;
         }
     }
 }

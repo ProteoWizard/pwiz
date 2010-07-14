@@ -409,7 +409,7 @@ namespace pwiz.SkylineTestFunctional
 
             if (libExist)
             {
-                Assert.IsFalse(File.Exists(libPath),
+                Assert.IsTrue(File.Exists(libPath),
                     string.Format("Expected library {0} not found", libPath));                                
             }
             else

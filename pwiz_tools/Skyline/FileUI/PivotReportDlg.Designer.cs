@@ -114,7 +114,7 @@ namespace pwiz.Skyline.FileUI
             this.lbxColumns.Location = new System.Drawing.Point(0, 0);
             this.lbxColumns.Name = "lbxColumns";
             this.lbxColumns.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.lbxColumns.Size = new System.Drawing.Size(284, 310);
+            this.lbxColumns.Size = new System.Drawing.Size(276, 310);
             this.lbxColumns.TabIndex = 0;
             this.lbxColumns.SelectedIndexChanged += new System.EventHandler(this.lbxColumns_SelectedIndexChanged);
             // 
@@ -126,9 +126,9 @@ namespace pwiz.Skyline.FileUI
             this.btnRemove,
             this.btnUp,
             this.btnDown});
-            this.toolStrip1.Location = new System.Drawing.Point(284, 0);
+            this.toolStrip1.Location = new System.Drawing.Point(276, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(24, 310);
+            this.toolStrip1.Size = new System.Drawing.Size(32, 310);
             this.toolStrip1.TabIndex = 1;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -136,10 +136,10 @@ namespace pwiz.Skyline.FileUI
             // 
             this.btnRemove.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.btnRemove.Enabled = false;
-            this.btnRemove.Image = global::pwiz.Skyline.Properties.Resources.delete_pro32;
+            this.btnRemove.Image = global::pwiz.Skyline.Properties.Resources.Delete;
             this.btnRemove.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnRemove.Name = "btnRemove";
-            this.btnRemove.Size = new System.Drawing.Size(21, 20);
+            this.btnRemove.Size = new System.Drawing.Size(29, 20);
             this.btnRemove.Text = "Remove";
             this.btnRemove.Click += new System.EventHandler(this.btnRemove_Click);
             // 
@@ -150,7 +150,7 @@ namespace pwiz.Skyline.FileUI
             this.btnUp.Image = global::pwiz.Skyline.Properties.Resources.up_pro32;
             this.btnUp.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnUp.Name = "btnUp";
-            this.btnUp.Size = new System.Drawing.Size(21, 20);
+            this.btnUp.Size = new System.Drawing.Size(29, 20);
             this.btnUp.Text = "Up";
             this.btnUp.Click += new System.EventHandler(this.btnUp_Click);
             // 
@@ -161,7 +161,7 @@ namespace pwiz.Skyline.FileUI
             this.btnDown.Image = global::pwiz.Skyline.Properties.Resources.down_pro32;
             this.btnDown.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnDown.Name = "btnDown";
-            this.btnDown.Size = new System.Drawing.Size(21, 20);
+            this.btnDown.Size = new System.Drawing.Size(29, 20);
             this.btnDown.Text = "Down";
             this.btnDown.Click += new System.EventHandler(this.btnDown_Click);
             // 

@@ -59,7 +59,7 @@ namespace pwiz.SkylineTestFunctional
             };
             var explicitMod = new StaticMod("13C L", "L", null, null, LabelAtoms.C13, null, null);
             var variableMod = new StaticMod("Methionine Oxidized", "M", null, true, "O",
-                LabelAtoms.None, RelativeRT.Matching, null, null, null, null, null);
+                LabelAtoms.None, RelativeRT.Matching, null, null, null);
 
             Settings.Default.HeavyModList.Clear();
             Settings.Default.HeavyModList.AddRange(aquaMods);

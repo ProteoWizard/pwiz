@@ -101,9 +101,9 @@ namespace pwiz.SkylineTestFunctional
                 try
                 {
                     foreach (var form in Application.OpenForms)
-                    {
+                    {                        
                         var tForm = form as T;
-                        if (tForm != null)
+                        if (tForm != null && tForm.Created)
                         {
                             return tForm;
                         }

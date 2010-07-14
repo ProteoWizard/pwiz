@@ -42,6 +42,9 @@ namespace pwiz.Skyline.Util
     /// </summary>
     public class BioMassCalc
     {
+        public static readonly BioMassCalc MONOISOTOPIC = new BioMassCalc(MassType.Monoisotopic);
+        public static readonly BioMassCalc AVERAGE = new BioMassCalc(MassType.Average);
+
         public const string H = "H";
         public const string H2 = "H'";
         public const string C = "C";

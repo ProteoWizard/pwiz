@@ -105,7 +105,8 @@ namespace pwiz.SkylineTest.Results
                     Assert.IsNull(nodeTran.Results[len - 1]);
                 }
 
-                Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
+                Assert.IsTrue(docContainer.SetDocument(docResults, doc, true),
+                    string.Format("Failed adding results for {0}.", path));
                 docContainer.AssertComplete();
                 docResults = docContainer.Document;
 

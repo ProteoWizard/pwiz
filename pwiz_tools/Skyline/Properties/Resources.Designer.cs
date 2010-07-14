@@ -60,6 +60,13 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
+        public static System.Drawing.Bitmap add_pro32 {
+            get {
+                object obj = ResourceManager.GetObject("add_pro32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         public static System.Drawing.Bitmap Blank {
             get {
                 object obj = ResourceManager.GetObject("Blank", resourceCulture);
@@ -119,27 +126,6 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Bitmap Delete {
             get {
                 object obj = ResourceManager.GetObject("Delete", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        public static System.Drawing.Bitmap delete_pro {
-            get {
-                object obj = ResourceManager.GetObject("delete_pro", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        public static System.Drawing.Bitmap delete_pro32 {
-            get {
-                object obj = ResourceManager.GetObject("delete_pro32", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        public static System.Drawing.Bitmap down_pro {
-            get {
-                object obj = ResourceManager.GetObject("down_pro", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -479,13 +465,6 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Bitmap TransitionGroupLib {
             get {
                 object obj = ResourceManager.GetObject("TransitionGroupLib", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        public static System.Drawing.Bitmap up_pro {
-            get {
-                object obj = ResourceManager.GetObject("up_pro", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
