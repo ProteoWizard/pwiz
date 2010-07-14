@@ -37,6 +37,88 @@ namespace freicore
 {
 namespace myrimatch
 {
+    /* This function processes the spectra to compute the fast XCorr implemented in Crux. 
+       Ideally, this function has to be called prior to spectrum filtering.             
+    */
+    void Spectrum::PreprocessForXCorr()
+    {
+
+        if( mzOfPrecursor < 1 )
+        {
+            peakPreData.clear();
+            return;
+        }
+
+        // Determine the neutral mass of the precursor (m/z * z - z)
+        // Eliminate peaks above the precursor's mass with a given tolerance
+        mOfPrecursor = mzOfPrecursor * id.charge - ( id.charge * PROTON );
+        peakPreData.erase( peakPreData.upper_bound( mOfPrecursor + 50 ), peakPreData.end() );
+
+        if( peakPreData.empty() )
+            return;
+
+        // Locate precursor and corresponding water loss ions and wipe them out
+        //PeakPreData::iterator precursorMzLow = peakPreData.lower_bound( mzOfPrecursor - g_rtConfig->FragmentMzTolerance);
+        //PeakPreData::iterator precursorMzHigh = peakPreData.upper_bound( mzOfPrecursor + g_rtConfig->FragmentMzTolerance);
+        //for(; precursorMzLow != precursorMzHigh; ++precursorMzLow)
+        //    peakPreData.erase( precursorMzLow );
+        PeakPreData::iterator precursorWaterLossItr = peakPreData.findNear( mzOfPrecursor - WATER_MONO/id.charge, g_rtConfig->FragmentMzTolerance, true );
+        if( precursorWaterLossItr != peakPreData.end() ) 
+            peakPreData.erase( precursorWaterLossItr );
+        PeakPreData::iterator precursorDoubleWaterLossItr = peakPreData.findNear( mzOfPrecursor - 2*WATER_MONO/id.charge, g_rtConfig->FragmentMzTolerance, true );
+        if( precursorDoubleWaterLossItr != peakPreData.end() ) 
+            peakPreData.erase( precursorDoubleWaterLossItr );
+
+        // Get the number of bins and bin width for the processed peak array
+        float binWidth = 1.0005079;
+        int maxBins;
+        float massCutOff = mOfPrecursor + 50;
+        if (massCutOff > 512)
+            maxBins = (int) ceil(massCutOff / 1024) * 1024;
+        else
+            maxBins = 512;
+        
+        // Detemine the max mass of a fragmet peak.
+        PeakPreData::const_reverse_iterator lastPeakIter = peakPreData.rbegin();
+        float maxPeakMass = (float) lastPeakIter->first;
+        // Section the original peak array in 10 bins and find the
+        // base peak in each bin. Also, square-root the peak intensities
+        int numberOfRegions = 10;
+        vector<double> maxPeakIntensityInRegions;
+        maxPeakIntensityInRegions.resize(numberOfRegions);
+        fill(maxPeakIntensityInRegions.begin(), maxPeakIntensityInRegions.end(), 1);
+        int regionSelector = (int) (maxPeakMass / numberOfRegions);
+        for(PeakPreData::iterator itr = peakPreData.begin(); itr != peakPreData.end(); ++ itr)
+        {
+            itr->second = sqrt(itr->second);
+            int mzBin = (int) (itr->first / binWidth + 0.5f);
+            int normalizationIndex = mzBin / regionSelector;
+            if( IS_VALID_INDEX( normalizationIndex,numberOfRegions ) )
+                maxPeakIntensityInRegions[normalizationIndex] = max(maxPeakIntensityInRegions[normalizationIndex], itr->second);
+        }
+
+        // Normalize peaks in each region from 0 to 50. 
+        // Use base peak in each region for normalization. 
+        peakDataForXCorr.resize(maxBins);
+        fill(peakDataForXCorr.begin(), peakDataForXCorr.end(), 0);
+        for(PeakPreData::iterator itr = peakPreData.begin(); itr != peakPreData.end(); ++itr)
+        {
+            int mzBin = (int) (itr->first / binWidth + 0.5f);
+            int normalizationIndex = mzBin / regionSelector;
+            if ( IS_VALID_INDEX(normalizationIndex,numberOfRegions) && IS_VALID_INDEX(mzBin,maxBins) )
+                peakDataForXCorr[mzBin] = (itr->second / maxPeakIntensityInRegions[normalizationIndex]) * 50;
+        }
+
+        // Compute the cumulative spectrum
+        for (int index = 0; index < (int) peakDataForXCorr.size(); ++index)
+            for (int subIndex = index - 75; subIndex <= index + 75; ++subIndex)
+                if ( IS_VALID_INDEX(subIndex,maxBins) )
+                    peakDataForXCorr[index] -= (peakDataForXCorr[subIndex] / 151);
+
+        peakPreData.clear();
+
+    }
+
 	void Spectrum::Preprocess()
 	{
 		PeakPreData::iterator itr;
@@ -72,6 +154,7 @@ namespace myrimatch
 				writeToSvgFile( "-unprocessed" + g_rtConfig->OutputSuffix );
 
 		FilterByTIC( g_rtConfig->TicCutoffPercentage );
+        FilterByPeakCount( g_rtConfig->MaxPeakCount );
 
 		double neutralLossMassError = g_rtConfig->fragmentMzToleranceUnits == PPM ? (mzOfPrecursor*g_rtConfig->FragmentMzTolerance*pow(10.0,-6)) : g_rtConfig->FragmentMzTolerance;
 		PeakPreData::iterator precursorWaterLossItr = peakPreData.findNear( mzOfPrecursor - WATER_MONO/id.charge, neutralLossMassError, true );

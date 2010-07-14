@@ -317,6 +317,53 @@ namespace myrimatch
 	{
 	}
 
+    void ComputeXCorrs(string sourceFilepath)
+    {
+        // Get total spectra size
+        int numSpectra = (int) spectra.size();
+        
+        Timer timer;
+        timer.Begin();
+        
+        cout << g_hostString << " is reading and preparing " << numSpectra << " spectra for cross-correlation analysis." << endl;
+        spectra.backFillPeaks(sourceFilepath);
+        // Parse each spectrum
+        BOOST_FOREACH(Spectrum* s, spectra)
+        {
+            try
+            {
+                if(s->resultSet.size()==0)
+                    continue;
+                s->parse();
+                s->PreprocessForXCorr();
+            } catch( exception& e )
+            {
+                stringstream msg;
+                msg << "parsing and preprocessing spectrum " << s->id << ": " << e.what();
+                throw runtime_error( msg.str() );
+            } catch( ... )
+            {
+                stringstream msg;
+                msg << "parsing and preprocessing spectrum " << s->id;
+                throw runtime_error( msg.str() );
+            }
+        }
+        cout << g_hostString << " finished reading and preparing spectra; " << timer.End() << " seconds elapsed." << endl;
+        
+        cout << g_hostString << " is computing cross-correlations." << endl;
+        timer.Begin();
+        // For each spectrum, iterate through its result set and compute the XCorr.
+        BOOST_FOREACH(Spectrum* s, spectra)
+        {
+            size_t charge = max(s->id.charge-1,1);
+            BOOST_FOREACH(const SearchResult& result, s->resultSet)
+                s->ComputeXCorr(result,charge);
+            s->peakDataForXCorr.clear();
+        }
+        cout << g_hostString << " finished computing cross-correlations; " << timer.End() << " seconds elapsed." << endl;
+
+    }
+
 	void WriteOutputToFile(	const string& dataFilename,
 							string startTime,
 							string startDate,
@@ -1176,7 +1223,6 @@ namespace myrimatch
 				finishedFiles.insert( *fItr );
 
 				Timer readTime(true);
-
 				//long long memoryUsageCap = (int) GetAvailablePhysicalMemory() / 4;
 				//int peakCountCap = (float) memoryUsageCap / ( sizeof( peakPreInfo ) + sizeof( peakInfo ) );
 				//cout << g_hostString << " sets memory usage ceiling at " << memoryUsageCap << ", or about " << peakCountCap << " total peaks." << endl;
@@ -1428,6 +1474,8 @@ namespace myrimatch
 					}
                     // Write the output
                     if( !skip ) {
+                        if(g_rtConfig->ComputeXCorr)
+                            ComputeXCorrs(*fItr);
                         WriteOutputToFile( *fItr, startTime, startDate, searchTime.End(), opcs, fpcs, sumSearchStats );
                         cout << g_hostString << " finished file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
                         //PRINT_PROFILERS(cout,"old");

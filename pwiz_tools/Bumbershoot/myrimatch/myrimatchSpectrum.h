@@ -32,6 +32,8 @@
 #include "Histogram.h"
 #include <bitset>
 
+#define IS_VALID_INDEX(index,length) (index >=0 && index < length ? true : false)
+
 namespace freicore
 {
 namespace myrimatch
@@ -66,6 +68,8 @@ namespace myrimatch
 		// Mean absolute error
 		double mzMAE;
 		
+        double XCorr;
+
 		double deltaMVHAvg;
 		double deltaMVHMode;
 		double deltaMVHSeqType;
@@ -95,6 +99,10 @@ namespace myrimatch
             scoreList.push_back( SearchScoreInfo( "mzFidelity", mzFidelity ) );
 			scoreList.push_back( SearchScoreInfo( "newMZFidelity" , newMZFidelity ) );
 			scoreList.push_back( SearchScoreInfo( "mzMAE", mzMAE ) ); 
+
+            if (g_rtConfig->ComputeXCorr)
+                scoreList.push_back( SearchScoreInfo( "xcorr", XCorr ) );
+
 			if( g_rtConfig->CalculateRelativeScores )
 			{
 				scoreList.push_back( SearchScoreInfo( "pvalue", pvalue ) );
@@ -151,7 +159,7 @@ namespace myrimatch
 		void serialize( Archive& ar, const unsigned int version )
 		{
 			ar & boost::serialization::base_object< BaseSearchResult >( *this );
-			ar & mvh & massError & mzSSE & mzFidelity & newMZFidelity & mzMAE;
+			ar & mvh & massError & mzSSE & mzFidelity & XCorr & newMZFidelity & mzMAE;
 			ar & deltaMVHAvg & deltaMVHMode & deltaMVHSeqType & deltaMVHSmartSeqType;
 			ar & deltaMZFidelityMode & deltaMZFidelityAvg & deltaMZFidelitySeqType & deltaMZFidelitySmartSeqType;
 			ar & mvhMode & mzFidelityMode;
@@ -190,6 +198,8 @@ namespace myrimatch
 		}
 
 		void Preprocess();
+        void PreprocessForXCorr();
+
 		int QuerySequence();
 
 		void ClassifyPeakIntensities()
@@ -224,6 +234,87 @@ namespace myrimatch
 			}
 			intenSortedPeakPreData.clear();
 		}
+
+        /* This function predicts the theoretical spectrum for a result, and computes the
+            cross-correlation between the predicted spectrum and the experimental spectrum
+        */
+        void ComputeXCorr(const SearchResult& result, size_t maxIonCharge)
+        {
+            if(peakDataForXCorr.size()==0)
+                return;
+            
+            // Get the expected width of the array
+            int peakDataLength = peakDataForXCorr.size();
+            float binWidth = 1.0007079f;
+            vector<float> theoreticalSpectrum;
+            theoreticalSpectrum.resize(peakDataLength);
+            fill(theoreticalSpectrum.begin(), theoreticalSpectrum.end(), 0);
+            
+            // For each peptide bond and charge state
+            // Assign an intensity of 50 to b and y ions. 
+            // Also assign an intensity of 25 to bins 
+            // bordering the b and y ions. Neutral loss
+            // and a ions are assigned an intensity of 10.
+            Fragmentation fragmentation = result.fragmentation(true, true);
+            for(size_t charge = 1; charge <= maxIonCharge; ++charge)
+            {
+                for(size_t fragIndex = 0; fragIndex < result.sequence().length(); ++fragIndex)
+                {
+                    size_t nLength = fragIndex;
+                    size_t cLength = result.sequence().length() - fragIndex;
+                    if(nLength > 0)
+                    {
+                        // B-ion
+                        float fragMass = fragmentation.b(nLength, charge);
+                        int bin = (int) (fragMass / binWidth + 0.5f);
+                        if( !IS_VALID_INDEX( bin, peakDataLength ) )
+                            continue;
+                        theoreticalSpectrum[bin] = 50;
+                        // Fill the neighbouring bins
+                        if( IS_VALID_INDEX( (bin-1), peakDataLength ) )
+                            theoreticalSpectrum[bin-1] = 25;
+                        if( IS_VALID_INDEX( (bin+1), peakDataLength ) )
+                            theoreticalSpectrum[bin+1] = 25;
+                        // Neutral loss peaks
+                        int NH3LossIndex = (int) ( ( fragMass - (AMMONIA_MONO / charge) ) / binWidth + 0.5f );
+                        if( IS_VALID_INDEX( NH3LossIndex, peakDataLength ) )
+                            theoreticalSpectrum[NH3LossIndex] = 10;
+
+                        int H20LossIndex = (int)( ( fragMass - (WATER_MONO / charge) ) / binWidth + 0.5f );
+                        if ( IS_VALID_INDEX( H20LossIndex, peakDataLength ) )
+                            theoreticalSpectrum[H20LossIndex] = 10;
+                        // A-ion
+                        fragMass = fragmentation.a(nLength, charge);
+                        bin = (int) (fragMass / binWidth + 0.5f);
+                        if( IS_VALID_INDEX( bin,peakDataLength ) )
+                            theoreticalSpectrum[bin] = 10;
+                    }
+                    if(cLength > 0)
+                    {
+                        // Y-ion
+                        float fragMass = fragmentation.y(cLength, charge);
+                        int bin = (int) (fragMass / binWidth + 0.5f);
+                        if( !IS_VALID_INDEX( bin, peakDataLength ) )
+                            continue;
+                        theoreticalSpectrum[bin] = 50;
+                        // Fill the neighbouring bins
+                        if( IS_VALID_INDEX( (bin-1), peakDataLength ) )
+                            theoreticalSpectrum[bin-1] = 25;
+                        if( IS_VALID_INDEX( (bin+1), peakDataLength ) )
+                            theoreticalSpectrum[bin+1] = 25;
+                        // Neutral loss
+                        int NH3LossIndex = (int) ( ( fragMass - (AMMONIA_MONO / charge) ) / binWidth + 0.5f );
+                        if( IS_VALID_INDEX( NH3LossIndex, peakDataLength ) )
+                            theoreticalSpectrum[NH3LossIndex] = 10;
+                    }
+                }
+            }
+            
+            double rawXCorr = 0.0;
+            for(int index = 0; index <  peakDataLength; ++index)
+                rawXCorr += peakDataForXCorr[index] * theoreticalSpectrum[index];
+            (const_cast<Spectrum::SearchResultType&>(result)).XCorr = (rawXCorr / 1e4);
+        }
 
 		inline void ScoreSequenceVsSpectrum( SearchResult& result, const string& seq, const vector< double >& seqIons )
 		{
