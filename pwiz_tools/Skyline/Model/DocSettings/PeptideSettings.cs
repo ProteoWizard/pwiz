@@ -24,11 +24,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
@@ -767,6 +770,14 @@ namespace pwiz.Skyline.Model.DocSettings
         public const int MIN_MAX_NEUTRAL_LOSSES = 1;
         public const int MAX_MAX_NEUTRAL_LOSSES = 5;
 
+        [ThreadStatic]
+        private static PeptideModifications _serializationContext;
+
+        public static void SetSerializationContext(PeptideModifications mods)
+        {
+            _serializationContext = mods;
+        }
+
         private ReadOnlyCollection<TypedModifications> _modifications;
         private ReadOnlyCollection<IsotopeLabelType> _internalStandardTypes;
 
@@ -1102,6 +1113,17 @@ namespace pwiz.Skyline.Model.DocSettings
                         labelType = new IsotopeLabelType(typeName, typeOrder);
                         if (Equals(labelType, IsotopeLabelType.heavy))
                             labelType = IsotopeLabelType.heavy;
+                        // If the created label type is going to be used and there are serialization
+                        // context modifications, try to use the label types from the context.
+                        else if (_serializationContext != null)
+                        {
+                            var modsContext = _serializationContext.GetModificationsByName(typeName);
+                            if (modsContext != null)
+                            {
+                                // CONSIDER: Should this require full equality, including order?
+                                labelType = modsContext.LabelType;
+                            }
+                        }
                     }
                     else if (typeOrder > IsotopeLabelType.FirstHeavy)
                         throw new InvalidDataException(string.Format("Heavy modifications found without '{0}' attribute.", ATTR.isotope_label));
@@ -1524,6 +1546,47 @@ namespace pwiz.Skyline.Model.DocSettings
             return true;
         }
 
+        public PeptideLibraries MergeLibrarySpecs(PeptideLibraries newPepLibraries)
+        {
+            IList<LibrarySpec> librarySpecs = LibrarySpecs.ToList();
+            
+            foreach (Library library in newPepLibraries.Libraries)
+            {
+                LibrarySpec spec;
+                if (Settings.Default.SpectralLibraryList.TryGetValue(library.Name, out spec))
+                    continue;
+
+                string fileName = library.FileNameHint;
+                if (fileName != null)
+                {
+                    // In the user's default library directory
+                    var pathLibrary = Path.Combine(Settings.Default.LibraryDirectory, fileName);
+                    if (File.Exists(pathLibrary))
+                    {
+                        var libSpec = library.CreateSpec(pathLibrary);
+                        librarySpecs.Add(libSpec);
+                        Settings.Default.SpectralLibraryList.Add(libSpec);
+                    }
+                    else
+                    {
+
+                        var dlg = new MissingLibraryDlg
+                                      {
+                                          LibraryName = library.Name,
+                                          LibraryFileNameHint = fileName
+                                      };
+                        if (dlg.ShowDialog() == DialogResult.OK)
+                        {
+                            var libSpec = library.CreateSpec(dlg.LibraryPath);
+                            librarySpecs.Add(libSpec);
+                            Settings.Default.SpectralLibraryList.Add(libSpec);
+                        }
+                    }
+                }
+            }
+            return ChangeLibrarySpecs(librarySpecs);
+        }
+            
         // Support for serializing multiple library types
         private static readonly IXmlElementHelper<Library>[] LIBRARY_HELPERS =
         {

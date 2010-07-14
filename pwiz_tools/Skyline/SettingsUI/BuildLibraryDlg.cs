@@ -509,6 +509,17 @@ namespace pwiz.Skyline.SettingsUI
             set { textPath.Text = value; }
         }
 
+        public double LibraryCutoff
+        {
+            get
+            {
+                double cutoff;
+                return (double.TryParse(textCutoff.Text, out cutoff) ? cutoff : 0);
+            }
+
+            set { textCutoff.Text = value.ToString(); }
+        }
+
         public string LibraryAuthority
         {
             get { return textAuthority.Text; }

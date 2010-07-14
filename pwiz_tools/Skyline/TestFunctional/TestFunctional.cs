@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
 using System.Threading;
 using System.Windows.Forms;
 using Ionic.Zip;
@@ -40,7 +41,27 @@ namespace pwiz.SkylineTestFunctional
         ///information about and functionality for the current test run.
         ///</summary>
         public TestContext TestContext { get; set; }
-        public string TestFilesZip { get; set; }
+        private string _testFilesZip;
+        public string TestFilesZip
+        {
+            get { return _testFilesZip; }
+            set
+            {
+                string zipPath = value;
+                if (zipPath.Substring(0, 8).ToLower().Equals("https://") || zipPath.Substring(0, 7).ToLower().Equals("http://"))
+                {
+                    WebClient webClient = new WebClient();
+                    string fileName = zipPath.Substring(zipPath.LastIndexOf('/') + 1);
+                    _testFilesZip = Path.Combine(TestContext.TestDir, fileName);
+                    webClient.DownloadFile(value, _testFilesZip);
+                }
+                else
+                {
+                    _testFilesZip = zipPath;
+                }
+
+            }
+        }
         public string TestDirectoryName { get; set; }
         public TestFilesDir TestFilesDir { get; set; }
         private readonly List<Exception> _testExceptions = new List<Exception>();
@@ -144,7 +165,13 @@ namespace pwiz.SkylineTestFunctional
 
         public static bool WaitForCondition(Func<bool> func)
         {
-            for (int i = 0; i < WAIT_CYCLES; i ++)
+            return WaitForCondition(WAIT_TIME, func);
+        }
+
+        public static bool WaitForCondition(int millis, Func<bool> func)
+        {
+            int waitCycles = millis/SLEEP_INTERVAL;
+            for (int i = 0; i < waitCycles; i ++)
             {
                 if (func())
                     return true;

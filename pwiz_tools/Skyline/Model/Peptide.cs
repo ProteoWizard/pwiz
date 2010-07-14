@@ -386,6 +386,58 @@ namespace pwiz.Skyline.Model
             return nodeResult;
         }
 
+        public PeptideDocNode EnsureMods(PeptideModifications source, PeptideModifications target,
+            MappedList<string, StaticMod> defSetStat, MappedList<string, StaticMod> defSetHeavy)
+        {
+            // Create explicit mods matching the implicit mods on this peptide for each document.
+            var sourceImplicitMods = new ExplicitMods(this, source.StaticModifications, defSetStat, source.GetHeavyModifications(), defSetHeavy);
+            var targetImplicitMods = new ExplicitMods(this, target.StaticModifications, defSetStat, target.GetHeavyModifications(), defSetHeavy);
+            
+            // If modifications match, no need to create explicit modifications for the peptide.
+            if (sourceImplicitMods.Equals(targetImplicitMods))
+                return this;
+
+            // If the target document contains any implicit mods matching explicit mods on the node, drop these modifcations.
+            IList<ExplicitMod> newExplicitStaticMods = (HasExplicitMods && ExplicitMods.StaticModifications != null)? ExplicitMods.StaticModifications.ToList()
+                                                           : new List<ExplicitMod>();
+            foreach(ExplicitMod mod in targetImplicitMods.StaticModifications)
+            {
+                newExplicitStaticMods.Remove(mod);
+            }
+
+            // Add explicit modifications for an implicit modifications from the source document that are not in the target document.
+            foreach(ExplicitMod mod in sourceImplicitMods.StaticModifications)
+            {
+                if (!targetImplicitMods.StaticModifications.Contains(mod))
+                    newExplicitStaticMods.Add(mod);
+            }
+
+            // Foreach heavy mod label type, add explicit mods for any heavy modification from the source docment that is not in the target document.
+            IList<TypedExplicitModifications> newExplicitHeavyMods = new List<TypedExplicitModifications>();
+            foreach (TypedExplicitModifications targetDocMod in targetImplicitMods.GetHeavyModifications())
+            {
+                IList<ExplicitMod> heavyMods = sourceImplicitMods.GetModifications(targetDocMod.LabelType);
+                
+                if (heavyMods == null || targetDocMod.Modifications.Equals(heavyMods))
+                    continue;
+
+                IList<ExplicitMod> missingHeavyMods = new List<ExplicitMod>();
+                foreach (ExplicitMod sourceDocMod in heavyMods)
+                {
+                    if(!targetDocMod.Modifications.Contains(sourceDocMod))
+                        missingHeavyMods.Add(sourceDocMod);
+                }
+                if (missingHeavyMods.Count > 0)
+                    newExplicitHeavyMods.Add(new TypedExplicitModifications(Peptide, targetDocMod.LabelType, missingHeavyMods));
+            }
+
+            if (newExplicitStaticMods.Count() > 0)
+                return ChangeExplicitMods(new ExplicitMods(Peptide, newExplicitStaticMods, newExplicitHeavyMods));
+            else if (newExplicitHeavyMods.Count > 0)
+                return ChangeExplicitMods(new ExplicitMods(Peptide, null, newExplicitHeavyMods));
+            return ChangeExplicitMods(null);
+        }
+
         private static IList<DocNode> FilterHighestRank(IList<DocNode> childrenNew, PeptideRankId rankId)
         {
             if (childrenNew.Count < 2)

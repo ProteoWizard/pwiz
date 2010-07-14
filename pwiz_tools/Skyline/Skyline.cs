@@ -25,6 +25,8 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using System.Xml;
+using System.Xml.Serialization;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
@@ -39,8 +41,8 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
-using PasteFormat=pwiz.Skyline.EditUI.PasteFormat;
-using Timer=System.Windows.Forms.Timer;
+using PasteFormat = pwiz.Skyline.EditUI.PasteFormat;
+using Timer = System.Windows.Forms.Timer;
 
 namespace pwiz.Skyline
 {
@@ -84,14 +86,14 @@ namespace pwiz.Skyline
 
             _undoManager = new UndoManager(this);
             _undoRedoButtons = new UndoRedoButtons(_undoManager,
-                undoMenuItem, undoToolBarButton, 
+                undoMenuItem, undoToolBarButton,
                 redoMenuItem, redoToolBarButton);
             _undoRedoButtons.AttachEventHandlers();
 
             _listProgress = new List<ProgressStatus>();
-            _timerProgress = new Timer {Interval = 750};
+            _timerProgress = new Timer { Interval = 750 };
             _timerProgress.Tick += UpdateProgressUI;
-            _timerGraphs = new Timer {Interval = 100};
+            _timerGraphs = new Timer { Interval = 100 };
             _timerGraphs.Tick += UpdateGraphPanes;
 
             _libraryManager = new LibraryManager();
@@ -253,6 +255,16 @@ namespace pwiz.Skyline
             }
         }
 
+        public bool CopyMenuItemEnabled()
+        {
+            return copyMenuItem.Enabled;
+        }
+
+        public bool PasteMenuItemEnabled()
+        {
+            return pasteMenuItem.Enabled;
+        }
+
         /// <summary>
         /// Function guaranteed to run on the UI thread that handles
         /// main window UI updates and firing the <see cref="DocumentUIChangedEvent"/>
@@ -410,7 +422,7 @@ namespace pwiz.Skyline
             }
             catch (Exception)
             {
-                DocumentFilePath = pathPrevious;                
+                DocumentFilePath = pathPrevious;
                 throw;
             }
         }
@@ -445,7 +457,7 @@ namespace pwiz.Skyline
             return docReplaced;
         }
 
-        #region Implementation of IUndable
+        #region Implementation of IUndoable
 
         IUndoState IUndoable.GetUndoState()
         {
@@ -484,7 +496,7 @@ namespace pwiz.Skyline
                 get
                 {
                     var selItem = _window.comboResults.SelectedItem;
-                    return (selItem != null ? selItem.ToString() : null);                                    
+                    return (selItem != null ? selItem.ToString() : null);
                 }
             }
 
@@ -505,7 +517,7 @@ namespace pwiz.Skyline
 
                 // Restore previous tree selection
                 _window.sequenceTree.SelectedPath = _treeSelection;
-                
+
                 // Restore previous tree selections
                 _window.SequenceTree.SelectedPaths = _treeSelections;
 
@@ -559,7 +571,7 @@ namespace pwiz.Skyline
                 case Keys.F3:
                     FindNext(false);
                     return true;
-                case Keys.F3|Keys.Shift:
+                case Keys.F3 | Keys.Shift:
                     FindNext(true);
                     return true;
             }
@@ -571,11 +583,10 @@ namespace pwiz.Skyline
             if (!CheckSaveDocument())
             {
                 e.Cancel = true;
-                return;                
+                return;
             }
 
             Settings.Default.Save();
-
             base.OnClosing(e);
         }
 
@@ -668,37 +679,38 @@ namespace pwiz.Skyline
             int count = 0;
             if (prevNode != null)
                 count++;
-            if(curNode == null || prevNode == null)
+            if (curNode == null || prevNode == null)
                 return count;
             TreeNodeMS nodeParent = curNode;
-            while(nodeParent != null)
+            while (nodeParent != null)
             {
-                if(nodeParent == prevNode)
+                if (nodeParent == prevNode)
                     return count;
-                nodeParent = (TreeNodeMS) nodeParent.Parent;
+                nodeParent = (TreeNodeMS)nodeParent.Parent;
             }
             TreeNodeMS nodeVisible = curNode;
-            while(nodeVisible != prevNode)
+            while (nodeVisible != prevNode)
             {
-                if(!sequenceTree.SelectedNodes.Contains(nodeVisible) && nodeVisible.Level < curNode.Level)
-                    return count+1;
-                nodeVisible = (TreeNodeMS) nodeVisible.PrevVisibleNode;
-                if(nodeVisible == null)
+                if (!sequenceTree.SelectedNodes.Contains(nodeVisible) && nodeVisible.Level < curNode.Level)
+                    return count + 1;
+                nodeVisible = (TreeNodeMS)nodeVisible.PrevVisibleNode;
+                if (nodeVisible == null)
                     return count;
             }
             return count;
         }
 
-        private void copyMenuItem_Click(object sender, EventArgs e)
+        private void copyMenuItem_Click(object sender, EventArgs e) { Copy(); }
+        public void Copy()
         {
             if (StatementCompletionAction(textBox => textBox.Copy()) || sequenceTree.SelectedNodes.Count < 0)
                 return;
             
             Clipboard.Clear();
-            
+
             List<TreeNode> sortedNodes = new List<TreeNode>();
             int shallowestLevel = int.MaxValue;
-            foreach(TreeNodeMS node in SequenceTree.SelectedNodes)
+            foreach (TreeNodeMS node in SequenceTree.SelectedNodes)
             {
                 shallowestLevel = Math.Min(shallowestLevel, node.Level);
                 sortedNodes.Add(node);
@@ -707,10 +719,9 @@ namespace pwiz.Skyline
 
             StringBuilder htmlSb = new StringBuilder();
             StringBuilder textSb = new StringBuilder();
-            StringBuilder csvSb = new StringBuilder();
 
             TreeNodeMS prev = null;
-            foreach(TreeNodeMS node in sortedNodes)
+            foreach (TreeNodeMS node in sortedNodes)
             {
                 IClipboardDataProvider provider = node as IClipboardDataProvider;
                 if (provider == null)
@@ -726,21 +737,37 @@ namespace pwiz.Skyline
                 string providerText = (string) data.GetData("Text");
                 if (providerText != null)
                     AppendClipboardText(textSb, providerText, "\r\n", "    ", levels, lineBreaks);
-                
-                prev = node;
 
-                if (data.GetData("Csv") != null)
-                    csvSb.Append(data.GetData("Csv"));
+                prev = node;
             }
             DataObject dataObj = new DataObject();
-            if(htmlSb.Length > 0)
+            if (htmlSb.Length > 0)
                 dataObj.SetData(DataFormats.Html, HtmlFragment.ClipBoardText(htmlSb.AppendLine().ToString()));
-            if(textSb.Length > 0)
+            if (textSb.Length > 0)
                 dataObj.SetData(DataFormats.Text, textSb.AppendLine().ToString());
-            if(csvSb.Length > 0)
-                dataObj.SetData(DataFormats.CommaSeparatedValue, csvSb.ToString());
 
-            Clipboard.SetDataObject(dataObj);    
+            String selectionContainsProteins = "0";
+
+            foreach(DocNode node in SequenceTree.SelectedDocNodes)
+            {
+                PeptideGroupDocNode nodePepGroup = node as PeptideGroupDocNode;
+                if(nodePepGroup != null && !nodePepGroup.IsPeptideList)
+                    selectionContainsProteins = "";
+            }
+
+            var docCopy = DocumentUI.RemoveAllBut(sequenceTree.SelectedDocNodes);
+            docCopy = docCopy.ChangeMeasuredResults(null);
+            var stringWriter = new XmlStringWriter();
+            using (var writer = new XmlTextWriter(stringWriter) { Formatting = Formatting.Indented })
+            {
+                XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
+                ser.Serialize(writer, docCopy);
+            }
+
+
+            dataObj.SetData("Skyline Format", selectionContainsProteins + stringWriter);
+
+            Clipboard.SetDataObject(dataObj);
         }
 
         private static void AppendClipboardText(StringBuilder sb, string text, string lineSep, string indent, int levels, int lineBreaks)
@@ -758,20 +785,48 @@ namespace pwiz.Skyline
             if (StatementCompletionAction(textBox => textBox.Paste()))
                 return;
 
-            string textCsv = Clipboard.GetText(TextDataFormat.CommaSeparatedValue);
-            string text = Clipboard.GetText().Trim();
-            try
+            var dataObjectSkyline = (string) null; // Clipboard.GetData("Skyline Format");
+        
+            if (dataObjectSkyline != null)
             {
-                if (string.IsNullOrEmpty(textCsv))
-                    Paste(text);
-                else if (!text.StartsWith(">"))
-                    Paste(textCsv);
-                else
-                    Paste(textCsv, text);
+                SrmTreeNode nodePaste = sequenceTree.SelectedNode as SrmTreeNode;
+
+                bool pasteToPeptideList  = false;
+
+                if (dataObjectSkyline.Substring(0, 1) == "0")
+                {
+                    if (nodePaste != null)
+                        pasteToPeptideList = !(nodePaste.Path.GetIdentity((int) SrmDocument.Level.PeptideGroups) is FastaSequence);
+                    dataObjectSkyline = dataObjectSkyline.Substring(1);
+                }
+
+                IdentityPath selectPath = null;
+
+                ModifyDocument("Paste Skyline data", doc =>
+                    doc.ImportDocumentXml(new StringReader(dataObjectSkyline),
+                        Settings.Default.StaticModList, Settings.Default.HeavyModList,
+                        nodePaste == null ? null : nodePaste.Path, out selectPath, pasteToPeptideList));
+
+                if (selectPath != null)
+                    sequenceTree.SelectedPath = selectPath;
             }
-            catch (InvalidDataException x)
+            else
             {
-                MessageDlg.Show(this, x.Message);
+                string textCsv = Clipboard.GetText(TextDataFormat.CommaSeparatedValue);
+                string text = Clipboard.GetText().Trim();
+                try
+                {
+                    if (string.IsNullOrEmpty(textCsv))
+                        Paste(text);
+                    else if (!text.StartsWith(">"))
+                        Paste(textCsv);
+                    else
+                        Paste(textCsv, text);
+                }
+                catch (InvalidDataException x)
+                {
+                    MessageDlg.Show(this, x.Message);
+                }
             }
         }
 
@@ -877,7 +932,7 @@ namespace pwiz.Skyline
                     Statistics stats = new Statistics(lineLengths);
                     // All lines smaller than the peptide filter
                     if (stats.Max() <= filter.MaxPeptideLength ||
-                            // 3 out of 4 are peptide length
+                        // 3 out of 4 are peptide length
                             (lineLengths.Count > 3 && stats.Percentile(0.75) <= filter.MaxPeptideLength))
                         peptideList = true;
                     // Probably a FASTA sequence, but ask if average line length is less than 40
@@ -945,7 +1000,7 @@ namespace pwiz.Skyline
                     continue;
                 if (pepSeqClean.Contains("."))
                 {
-                    MessageBox.Show(this, string.Format("Unexpected character '.' found on line {0}.", i+1));
+                    MessageBox.Show(this, string.Format("Unexpected character '.' found on line {0}.", i + 1));
                     return null;
                 }
 
@@ -969,12 +1024,12 @@ namespace pwiz.Skyline
             // If filtered peptides, ask the user whether to filter or keep.
             if (listFilterPeptides.Count > 0)
             {
-                var dlg = new PasteFilteredPeptidesDlg {Peptides = listFilterPeptides};
+                var dlg = new PasteFilteredPeptidesDlg { Peptides = listFilterPeptides };
                 switch (dlg.ShowDialog(this))
                 {
                     case DialogResult.Cancel:
                         return null;
-                    case DialogResult.Yes:                        
+                    case DialogResult.Yes:
                         if (listAcceptPeptides.Count == 0)
                             return null;
                         return string.Join("\n", listAcceptPeptides.ToArray());
@@ -1019,13 +1074,27 @@ namespace pwiz.Skyline
 
                                                           IdentityPath path = node.Path;
                                                           if (doc.FindNode(path) != null)
-                                                            doc = (SrmDocument) doc.RemoveChild(path.Parent, node.Model);
+                                                              doc = (SrmDocument)doc.RemoveChild(path.Parent, node.Model);
                                                       }
                                                       return doc;
                                                   });
         }
- 
 
+        private void selectAllMenuItem_Click(object sender, EventArgs e) { SelectAll(); }
+        public void SelectAll()
+        {
+            TreeNode node = SequenceTree.Nodes[0];
+            SequenceTree.SelectedNode = node;
+            while(node.NextVisibleNode != null)
+            {
+                node = node.NextVisibleNode;
+            }
+            SequenceTree.KeysOverride = Keys.Shift;
+            SequenceTree.SelectedNode = node;
+            SequenceTree.KeysOverride = null;
+        }
+
+        
         private void editNoteMenuItem_Click(object sender, EventArgs e) { EditNote(); }
         public void EditNote()
         {
@@ -1090,7 +1159,7 @@ namespace pwiz.Skyline
             });
             Settings.Default.SequenceTreeExpandPrecursors =
                 Settings.Default.SequenceTreeExpandPeptides =
-                Settings.Default.SequenceTreeExpandProteins = true;            
+                Settings.Default.SequenceTreeExpandProteins = true;
         }
 
         private void collapseProteinsMenuItem_Click(object sender, EventArgs e) { CollapseProteins(); }
@@ -1103,7 +1172,7 @@ namespace pwiz.Skyline
             });
             Settings.Default.SequenceTreeExpandProteins =
                 Settings.Default.SequenceTreeExpandPeptides =
-                Settings.Default.SequenceTreeExpandPrecursors = false;            
+                Settings.Default.SequenceTreeExpandPrecursors = false;
         }
 
         private void collapsePeptidesMenuItem_Click(object sender, EventArgs e) { CollapsePeptides(); }
@@ -1148,11 +1217,16 @@ namespace pwiz.Skyline
 
         private void findPeptideMenuItem_Click(object sender, EventArgs e)
         {
+            ShowFindPeptideDlg();
+        }
+
+        public void ShowFindPeptideDlg()
+        {
             var dlg = new FindPeptideDlg
-                          {
-                              Sequence = Settings.Default.EditFindText,
-                              SearchUp = Settings.Default.EditFindUp
-                          };
+            {
+                Sequence = Settings.Default.EditFindText,
+                SearchUp = Settings.Default.EditFindUp
+            };
 
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {
@@ -1201,10 +1275,10 @@ namespace pwiz.Skyline
                 {
                     while (nodeStart is PeptideGroupTreeNode)
                     {
-                        var nodeGroup = (PeptideGroupTreeNode) nodeStart;
+                        var nodeGroup = (PeptideGroupTreeNode)nodeStart;
                         if (nodeGroup.ChildDocNodes.Count > 0)
                         {
-                            nodePep = (PeptideDocNode) nodeGroup.ChildDocNodes[0];
+                            nodePep = (PeptideDocNode)nodeGroup.ChildDocNodes[0];
                             break;
                         }
                         nodeStart = nodeStart.NextNode;
@@ -1212,7 +1286,7 @@ namespace pwiz.Skyline
 
                     if (nodePep == null && document.PeptideCount > 0)
                     {
-                        var pathPep = document.GetPathTo((int) SrmDocument.Level.Peptides, 0);
+                        var pathPep = document.GetPathTo((int)SrmDocument.Level.Peptides, 0);
                         nodePep = (PeptideDocNode)document.FindNode(pathPep);
                     }
                 }
@@ -1225,7 +1299,7 @@ namespace pwiz.Skyline
             int iStart = (excludeCurrent ? iPep + inc : iPep);
             for (int i = 0; i < len; i++)
             {
-                int iCheck = (i*inc + iStart + len)%len;
+                int iCheck = (i * inc + iStart + len) % len;
                 if (listPeptides[iCheck].Peptide.Sequence.IndexOf(searchString) != -1)
                 {
                     sequenceTree.SelectedPath = document.GetPathTo((int)SrmDocument.Level.Peptides, iCheck);
@@ -1257,10 +1331,15 @@ namespace pwiz.Skyline
                         doc.ChangePeptideMods(nodePeptideTree.Path, dlg.ExplicitMods,
                             dlg.IsCreateCopy, listStaticMods, listHeavyMods));
                 }
-            }            
+            }
         }
 
         private void manageUniquePeptidesMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowUniquePeptidesDlg();
+        }
+
+        public void ShowUniquePeptidesDlg()
         {
             if (DocumentUI.Settings.PeptideSettings.BackgroundProteome.IsNone)
             {
@@ -1298,16 +1377,26 @@ namespace pwiz.Skyline
 
         private void insertPeptidesToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var pasteDlg = new PasteDlg(this)
-            {
-                SelectedPath = SelectedPath,
-                PasteFormat = PasteFormat.peptide_list
-            };
-            if (pasteDlg.ShowDialog(this) == DialogResult.OK)
-                SelectedPath = pasteDlg.SelectedPath;
+            ShowPastePeptidesDlg();
         }
 
+       public void ShowPastePeptidesDlg()
+       {
+           var pasteDlg = new PasteDlg(this)
+           {
+               SelectedPath = SelectedPath,
+               PasteFormat = PasteFormat.peptide_list
+           };
+           if (pasteDlg.ShowDialog(this) == DialogResult.OK)
+               SelectedPath = pasteDlg.SelectedPath;
+       }
+
         private void insertProteinsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowPasteProteinsDlg();
+        }
+
+        public void ShowPasteProteinsDlg()
         {
             var pasteDlg = new PasteDlg(this)
             {
@@ -1331,6 +1420,11 @@ namespace pwiz.Skyline
 
         private void refineMenuItem_Click(object sender, EventArgs e)
         {
+            ShowRefineDlg();
+        }
+
+        public void ShowRefineDlg()
+        {
             var refineDlg = new RefineDlg(DocumentUI);
             if (refineDlg.ShowDialog(this) == DialogResult.OK)
             {
@@ -1340,25 +1434,25 @@ namespace pwiz.Skyline
 
         private void removeEmptyProteinsMenuItem_Click(object sender, EventArgs e)
         {
-            var refinementSettings = new RefinementSettings {MinPeptidesPerProtein = 1};
+            var refinementSettings = new RefinementSettings { MinPeptidesPerProtein = 1 };
             ModifyDocument("Remove empty proteins", refinementSettings.Refine);
         }
 
         private void removeDuplicatePeptidesMenuItem_Click(object sender, EventArgs e)
         {
-            var refinementSettings = new RefinementSettings {RemoveDuplicatePeptides = true};
+            var refinementSettings = new RefinementSettings { RemoveDuplicatePeptides = true };
             ModifyDocument("Remove duplicate peptides", refinementSettings.Refine);
         }
 
         private void removeRepeatedPeptidesMenuItem_Click(object sender, EventArgs e)
         {
-            var refinementSettings = new RefinementSettings {RemoveRepeatedPeptides = true};
+            var refinementSettings = new RefinementSettings { RemoveRepeatedPeptides = true };
             ModifyDocument("Remove repeated peptides", refinementSettings.Refine);
         }
 
         private void removeMissingResultsMenuItem_Click(object sender, EventArgs e)
         {
-            var refinementSettings = new RefinementSettings {RemoveMissingResults = true};
+            var refinementSettings = new RefinementSettings { RemoveMissingResults = true };
             ModifyDocument("Remove missing results", refinementSettings.Refine);
         }
 
@@ -1371,6 +1465,7 @@ namespace pwiz.Skyline
             bool enabled = (sequenceTree.SelectedNode is IClipboardDataProvider);
             copyContextMenuItem.Enabled = enabled;
             cutContextMenuItem.Enabled = enabled;
+            deleteContextMenuItem.Enabled = enabled;
             pickChildrenContextMenuItem.Enabled = SequenceTree.CanPickChildren(sequenceTree.SelectedNode);
             editNoteContextMenuItem.Enabled = (sequenceTree.SelectedNode is SrmTreeNode);
             removePeakContextMenuItem.Visible = (sequenceTree.SelectedNode is TransitionTreeNode);
@@ -1503,7 +1598,7 @@ namespace pwiz.Skyline
             if (ts.ShowDialog(this) == DialogResult.OK)
             {
                 // At this point the dialog does everything by itself.
-            }            
+            }
         }
 
         private void settingsMenu_DropDownOpening(object sender, EventArgs e)
@@ -1562,7 +1657,7 @@ namespace pwiz.Skyline
             ModifyDocument("Name settings", doc =>
                 {
                     settingsNew = (SrmSettings)doc.Settings.ChangeName(ss.SaveName);
-                    return doc.ChangeSettings(settingsNew);                    
+                    return doc.ChangeSettings(settingsNew);
                 });
 
             if (settingsNew != null)
@@ -1866,7 +1961,7 @@ namespace pwiz.Skyline
                             if (oldPeptideGroupDocNode != null)
                             {
                                 // Use the FastaSequence already in the document.
-                                fastaSequence = (FastaSequence) oldPeptideGroupDocNode.Id;
+                                fastaSequence = (FastaSequence)oldPeptideGroupDocNode.Id;
                                 foreach (PeptideDocNode peptideDocNode in oldPeptideGroupDocNode.Children)
                                 {
                                     // If the peptide has already been added to this protein, there
@@ -1876,7 +1971,7 @@ namespace pwiz.Skyline
                                     {
                                         e.Node.Text = EmptyNode.TEXT_EMPTY;
                                         sequenceTree.Focus();
-                                        return;                                        
+                                        return;
                                     }
                                     peptideDocNodes.Add(peptideDocNode);
                                 }
@@ -1911,7 +2006,7 @@ namespace pwiz.Skyline
                             if (oldPeptideGroupDocNode == null)
                             {
                                 peptideGroupName = GetPeptideGroupId(Document, true);
-                                peptideGroup = new PeptideGroup();                                
+                                peptideGroup = new PeptideGroup();
                             }
                             else
                             {
@@ -1930,7 +2025,7 @@ namespace pwiz.Skyline
                         else
                         {
                             peptideGroupName = labelText;
-                            peptideGroup = new PeptideGroup();                            
+                            peptideGroup = new PeptideGroup();
                         }
                     }
                     PeptideGroupDocNode newPeptideGroupDocNode;
@@ -1939,14 +2034,14 @@ namespace pwiz.Skyline
                         // Add a new peptide list or protein to the end of the document
                         newPeptideGroupDocNode = new PeptideGroupDocNode(peptideGroup, Annotations.EMPTY, peptideGroupName, null,
                             peptideDocNodes.ToArray(), peptideSequence == null);
-                        ModifyDocument(modifyMessage, doc=>(SrmDocument) doc.Add(newPeptideGroupDocNode));
+                        ModifyDocument(modifyMessage, doc => (SrmDocument)doc.Add(newPeptideGroupDocNode));
                     }
                     else
                     {
                         // Add peptide to existing protein
                         newPeptideGroupDocNode = new PeptideGroupDocNode(oldPeptideGroupDocNode.PeptideGroup, oldPeptideGroupDocNode.Annotations, oldPeptideGroupDocNode.Name,
                             oldPeptideGroupDocNode.Description, peptideDocNodes.ToArray(), false);
-                        ModifyDocument(modifyMessage, doc=> (SrmDocument) doc.ReplaceChild(newPeptideGroupDocNode));
+                        ModifyDocument(modifyMessage, doc => (SrmDocument)doc.ReplaceChild(newPeptideGroupDocNode));
                     }
                 }
                 e.Node.Text = EmptyNode.TEXT_EMPTY;
@@ -1960,7 +2055,7 @@ namespace pwiz.Skyline
                 {
                     ModifyDocument(string.Format("Edit name {0}", e.Label), doc => (SrmDocument)
                         doc.ReplaceChild(nodeTree.DocNode.ChangeName(e.Label)));
-                }                
+                }
             }
             // Put the focus back on the sequence tree
             sequenceTree.Focus();
@@ -1970,7 +2065,7 @@ namespace pwiz.Skyline
         {
             SrmTreeNodeParent node = e.Node;
             ModifyDocument(string.Format("Pick {0}", node.ChildUndoHeading),
-                doc => (SrmDocument) doc.PickChildren(doc.Settings, node.Path, e.PickedList, e.IsSynchSiblings));
+                doc => (SrmDocument)doc.PickChildren(doc.Settings, node.Path, e.PickedList, e.IsSynchSiblings));
         }
 
         private void sequenceTree_ItemDrag(object sender, ItemDragEventArgs e)
@@ -1982,7 +2077,7 @@ namespace pwiz.Skyline
                 bool allow = nodeTree is PeptideGroupTreeNode;
                 if (!allow && nodeTree.Model.Id is Peptide)
                 {
-                    Peptide peptide = (Peptide) nodeTree.Model.Id;
+                    Peptide peptide = (Peptide)nodeTree.Model.Id;
                     allow = peptide.FastaSequence == null;
                 }
 
@@ -2022,7 +2117,7 @@ namespace pwiz.Skyline
             {
                 TreeNode nodeTop = sequenceTree.TopNode;
                 if (nodeTop != null && nodeTop.NextVisibleNode != null)
-                    sequenceTree.TopNode = nodeTop.NextVisibleNode;                
+                    sequenceTree.TopNode = nodeTop.NextVisibleNode;
             }
         }
 
@@ -2102,7 +2197,7 @@ namespace pwiz.Skyline
 
         private SrmTreeNode GetSrmTreeNodeAt(int x, int y)
         {
-            return GetTreeNodeAt(x, y) as SrmTreeNode;            
+            return GetTreeNodeAt(x, y) as SrmTreeNode;
         }
 
         private TreeNode GetTreeNodeAt(int x, int y)
@@ -2139,7 +2234,7 @@ namespace pwiz.Skyline
                         comboResults.Focus();
                 }
 
-//                UpdateReplicateMenuItems(DocumentUI.Settings.HasResults);
+                //                UpdateReplicateMenuItems(DocumentUI.Settings.HasResults);
             }
         }
 
@@ -2187,7 +2282,7 @@ namespace pwiz.Skyline
                         EnsureResultsComboSize();
                         sequenceTree.Top = toolBarResults.Bottom;
                         sequenceTree.Height -= toolBarResults.Height;
-                    }                    
+                    }
                 }
             }
         }
@@ -2417,7 +2512,6 @@ namespace pwiz.Skyline
             bool enabled = (nodeTree != null || sequenceTree.SelectedNodes.Count > 1);
             cutToolBarButton.Enabled = cutMenuItem.Enabled = enabled;
             copyToolBarButton.Enabled = copyMenuItem.Enabled = enabled;
-            pasteToolBarButton.Enabled = pasteMenuItem.Enabled = true;
             deleteMenuItem.Enabled = enabled;
         }
     }

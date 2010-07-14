@@ -1026,7 +1026,7 @@ namespace pwiz.Skyline.EditUI
             OkDialog();
         }
 
-        private void OkDialog()
+        public void OkDialog()
         {
             bool error = false;
             Program.MainWindow.ModifyDocument(Description, 
@@ -1100,7 +1100,7 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        private void PasteProteins()
+        public void PasteProteins()
         {
             Paste(gridViewProteins);
         }
@@ -1122,7 +1122,7 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        private void PastePeptides()
+        public void PastePeptides()
         {
             Paste(gridViewPeptides);
         }

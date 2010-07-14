@@ -404,6 +404,77 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public SrmDocument ImportDocumentXml(TextReader reader,
+                                             MappedList<string, StaticMod> staticMods,
+                                             MappedList<string, StaticMod> heavyMods,
+                                             IdentityPath to,
+                                             out IdentityPath firstAdded,
+                                                bool pasteToPeptideList)
+        {
+            try
+            {
+                PeptideModifications.SetSerializationContext(Settings.PeptideSettings.Modifications);
+
+                XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
+                SrmDocument clipboardDocument = (SrmDocument) ser.Deserialize(reader);
+
+                // Add clipboard modifications to default modifications.
+                clipboardDocument.Settings.UpdateDefaultModifications();
+
+                var newDocument = this;
+
+                // Merge library specs from clipboard document with current document.
+                var settings = Settings.ChangePeptideLibraries(lib =>
+                    lib.MergeLibrarySpecs(clipboardDocument.Settings.PeptideSettings.Libraries));                
+                newDocument = newDocument.ChangeSettings(settings);
+
+                if (!pasteToPeptideList)
+                {
+                    // Create new explicit modifications for peptides pasted in from the clipboard. 
+                    IList<PeptideGroupDocNode> peptideGroupsNew = new List<PeptideGroupDocNode>();
+                    foreach (PeptideGroupDocNode groupNode in clipboardDocument.PeptideGroups)
+                    {
+                        IList<DocNode> peptidesNew = new List<DocNode>();
+                        foreach (PeptideDocNode nodePep in groupNode.Children)
+                        {
+                            PeptideDocNode nodePepModified = nodePep.EnsureMods(
+                                clipboardDocument.Settings.PeptideSettings.Modifications,
+                                newDocument.Settings.PeptideSettings.Modifications,
+                                staticMods, heavyMods);
+                            nodePepModified = nodePepModified.ChangeSettings(newDocument.Settings, SrmSettingsDiff.ALL);
+                            peptidesNew.Add(nodePepModified);
+                        }
+                        peptideGroupsNew.Add(
+                            (PeptideGroupDocNode) groupNode.ChangeChildrenChecked(peptidesNew.ToArray()));
+                    }
+                    return newDocument.AddPeptideGroups(peptideGroupsNew, false, to, out firstAdded);
+                }
+                else
+                {
+                    PeptideGroupDocNode peptideGroupDocNode = clipboardDocument.PeptideGroups.ToList()[0];
+                    IList<DocNode> peptidesNew = new List<DocNode>();
+                    foreach (PeptideDocNode nodePep in clipboardDocument.Peptides)
+                    {
+                        PeptideDocNode nodePepModified = new PeptideDocNode(new Peptide(null, nodePep.Peptide.Sequence, null, null, nodePep.Peptide.MissedCleavages), 
+                            new TransitionGroupDocNode[0]);
+                        nodePepModified = (PeptideDocNode) nodePepModified.ChangeChildren(nodePep.Children);
+                        nodePepModified = nodePepModified.EnsureMods(
+                            clipboardDocument.Settings.PeptideSettings.Modifications,
+                            newDocument.Settings.PeptideSettings.Modifications,
+                            staticMods, heavyMods);
+                        nodePepModified = nodePepModified.ChangeSettings(newDocument.Settings, SrmSettingsDiff.ALL);
+                        peptidesNew.Add(nodePepModified);
+                    }
+                    peptideGroupDocNode = (PeptideGroupDocNode) peptideGroupDocNode.ChangeChildren(peptidesNew);
+                    return newDocument.AddPeptideGroups(new List<PeptideGroupDocNode> {peptideGroupDocNode}, true, to, out firstAdded);
+                }
+            }
+            finally
+            {
+                PeptideModifications.SetSerializationContext(null);
+            }
+        }
+       
         public SrmDocument ImportFasta(TextReader reader, bool peptideList, IdentityPath to,
                 out IdentityPath firstAdded)
         {
@@ -1998,5 +2069,70 @@ namespace pwiz.Skyline.Model
         }
 
         #endregion
+    }
+
+    public static class SrmDocumentExtensions
+    {
+        /// <summary>
+        /// Removes all nodes that are not listed in a set to preserve, or which
+        /// contain a node that is listed in the set to preserve.  Preserved nodes
+        /// which contain no other preserved nodes preserve all their children.
+        /// </summary>
+        /// <param name="document">The document to be modified</param>
+        /// <param name="preserveNodes">Nodes to preserve</param>
+        /// <returns>A new copy of the document with preserved children, or an empty
+        /// document, if nothing was preserved</returns>
+        public static SrmDocument RemoveAllBut(this SrmDocument document, IEnumerable<DocNode> preserveNodes)
+        {
+            var preserveIndexes = new HashSet<int>();
+            foreach (var node in preserveNodes)
+                preserveIndexes.Add(node.Id.GlobalIndex);
+
+            return (SrmDocument)(RemoveAllBut(document, preserveIndexes) ??
+                // If nothing was preserved, return an empty document
+                document.ChangeChildrenChecked(new DocNode[0]));
+        }
+
+        /// <summary>
+        /// Removes all nodes that are not listed in a set to preserve, or which
+        /// contain a node that is listed in the set to preserve.  Preserved nodes
+        /// which contain no other preserved nodes preserve all their children.
+        /// </summary>
+        /// <param name="node">The node to be modified</param>
+        /// <param name="preserveIndexes">The GlobalIndex values of the nodes to preserve</param>
+        /// <returns>A new instance of this node with nodes removed</returns>
+        private static DocNode RemoveAllBut(this DocNode node, ICollection<int> preserveIndexes)
+        {
+            bool preserve = preserveIndexes.Contains(node.Id.GlobalIndex);
+
+            // Recursion stopping condition: non-parent nodes are included only based
+            // on whether they are in the set to preserve
+            var nodeParent = node as DocNodeParent;
+            if (nodeParent == null)
+                return (preserve ? node : null);
+
+            // Rebuild the list of children based on the preserveIndexes
+            var listNewChildren = new List<DocNode>();
+            foreach (var nodeChild in nodeParent.Children)
+            {
+                // Recurse into children and add any that include themselves
+                var nodeNew = nodeChild.RemoveAllBut(preserveIndexes);
+                if (nodeNew != null)
+                    listNewChildren.Add(nodeNew);
+            }
+            // If some of the children were included by virtue of their being in the
+            // set to preserve, then reset the children of this parent to only those.
+            if (listNewChildren.Count > 0)
+            {
+                nodeParent = nodeParent.ChangeAutoManageChildren(false);
+                return nodeParent.ChangeChildrenChecked(listNewChildren);
+            }
+            // Otherwise, if this node itself is to be preserved, then include all of
+            // its children
+            else if (preserve)
+                return node;
+            // Skip this node and allow the parent to decide
+            return null;
+        }
     }
 }

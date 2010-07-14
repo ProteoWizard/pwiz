@@ -624,6 +624,17 @@ namespace pwiz.Skyline.SettingsUI
             set { _driverLabelType.SelectedName = value; }
         }
 
+        public void LimitPeptides(String peptidesPerProtein, String rankBy)
+        {
+            comboRank.SelectedIndex = comboRank.FindString(rankBy);
+            if(peptidesPerProtein != null)
+            {
+                cbLimitPeptides.Checked = true;
+                textPeptideCount.Enabled = true;
+                textPeptideCount.Text = peptidesPerProtein;
+            }
+        }
+
         #endregion
 
         private sealed class LabelTypeComboDriver

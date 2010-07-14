@@ -54,5 +54,10 @@ namespace pwiz.Skyline.EditUI
             if (!AminoAcid.IsExAA(e.KeyChar) && !char.IsControl(e.KeyChar))
                 e.Handled = true;
         }
+
+        public void OkDialog()
+        {
+            btnOk.PerformClick();
+        }
     }
 }

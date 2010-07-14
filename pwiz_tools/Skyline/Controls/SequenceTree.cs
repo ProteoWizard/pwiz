@@ -418,6 +418,21 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        public IEnumerable<DocNode> SelectedDocNodes
+        {
+            get
+            {
+                foreach (var nodeTree in SelectedNodes)
+                {
+                    var nodeSrmTree = nodeTree as SrmTreeNode;
+                    if (nodeSrmTree != null)
+                        yield return nodeSrmTree.Model;
+                }
+            }
+        }
+
         public bool IsInsertPath(IdentityPath path)
         {
             return path != null && ReferenceEquals(path.GetIdentity(0), NODE_INSERT_ID);

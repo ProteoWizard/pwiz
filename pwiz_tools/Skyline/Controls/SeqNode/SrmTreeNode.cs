@@ -470,6 +470,8 @@ namespace pwiz.Skyline.Controls.SeqNode
             // This code is highly optimized to make as few modifications to the
             // tree as possible, as they can have negative impact on the selection.
 
+            TreeNode selNodeTemp = tree.SelectedNode;
+
             // First short-cut all the complexity, if the end result will be an
             // empty list.  This is way faster at removing all the proteins in the
             // File/New case.
@@ -587,8 +589,11 @@ namespace pwiz.Skyline.Controls.SeqNode
                 if (tree.ShowReplicate == ReplicateDisplay.best)
                     nodeTree.Model = nodeDoc;
             }
+
             if (selChanged)
                 tree.FireSelectedNodeChanged();
+            else
+                tree.SelectedNode = selNodeTemp;
         }
     }
 

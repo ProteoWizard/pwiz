@@ -188,5 +188,10 @@ namespace pwiz.Skyline.EditUI
             if (!cbPreferLarger.Enabled)
                 cbPreferLarger.Checked = false;
         }
+
+        public void SetMinTransitions(int minTransitions)
+        {
+            textMinTransitions.Text = minTransitions.ToString();
+        }
     }
 }

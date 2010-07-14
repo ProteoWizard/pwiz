@@ -373,6 +373,13 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        public string MaxMz
+        {
+            get { return textMaxMz.Text; }
+            set { textMaxMz.Text = value; }
+        }
+
+
         #endregion
     }
 }

@@ -609,19 +609,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         defSet.SpectralLibraryList.Add(librarySpec);
                 }
             }
-            if (PeptideSettings.Modifications != null)
-            {
-                foreach (StaticMod mod in PeptideSettings.Modifications.StaticModifications)
-                {
-                    if (!defSet.StaticModList.Contains(mod))
-                        defSet.StaticModList.Add(mod.IsExplicit ? mod.ChangeExplicit(false) : mod);
-                }
-                foreach (StaticMod mod in PeptideSettings.Modifications.HeavyModifications)
-                {
-                    if (!defSet.HeavyModList.Contains(mod))
-                        defSet.HeavyModList.Add(mod.IsExplicit ? mod.ChangeExplicit(false) : mod);
-                }
-            }
+            UpdateDefaultModifications();
             if (TransitionSettings.Prediction != null)
             {
                 TransitionPrediction prediction = TransitionSettings.Prediction;
@@ -704,6 +692,26 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             return ChangePeptideSettings(PeptideSettings.ChangeBackgroundProteome(
                 new BackgroundProteome(backgroundProteomeSpecNew)));
+        }
+
+        public void UpdateDefaultModifications()
+        {
+            var defSet = Settings.Default;
+
+            foreach (var mod in PeptideSettings.Modifications.GetModifications(IsotopeLabelType.light))
+            {
+                if (!defSet.StaticModList.Contains(mod))
+                    defSet.StaticModList.Add(mod.IsExplicit ? mod.ChangeExplicit(false) : mod);
+            }
+
+            foreach (var typedMods in PeptideSettings.Modifications.GetHeavyModifications())
+            {
+                foreach (var mod in typedMods.Modifications)
+                {
+                    if (!defSet.HeavyModList.Contains(mod))
+                        defSet.HeavyModList.Add(mod.IsExplicit ? mod.ChangeExplicit(false) : mod);
+                }
+            }
         }
 
         #region Implementation of IXmlSerializable

@@ -82,6 +82,7 @@
     <Compile Include="IsotypeModTest.cs" />
     <Compile Include="LibraryLoadTest.cs" />
     <Compile Include="LibrarySettingsTest.cs" />
+    <Compile Include="PasteTest.cs" />
     <Compile Include="Proteome\ProteomeDbTest.cs" />
     <Compile Include="RefineTest.cs" />
     <Compile Include="Reporting\PivotTypeTest.cs" />

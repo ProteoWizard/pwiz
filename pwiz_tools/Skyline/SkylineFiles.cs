@@ -840,6 +840,37 @@ namespace pwiz.Skyline
             return doc.ChangeMeasuredResults(results);
         }
 
+        private void importDocumentMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog
+            {
+                Title = "Import Skyline Document",
+                InitialDirectory = Settings.Default.ActiveDirectory,
+                CheckPathExists = true,
+                SupportMultiDottedExtensions = true,
+                DefaultExt = "*.sky",
+                Filter = string.Join("|", new[]
+                    {
+                        "Mass List Text (*.sky)|*.sky",
+                        "All Files (*.*)|*.*"
+                    })
+            };
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+            {
+                SrmTreeNode nodeSel = sequenceTree.SelectedNode as SrmTreeNode;
+                IdentityPath selectPath = null;
+                TextReader reader = new StreamReader(dlg.OpenFile());
+                
+                ModifyDocument("Import Skyline document data", doc =>
+                    doc.ImportDocumentXml(reader,
+                        Settings.Default.StaticModList, Settings.Default.HeavyModList,
+                        nodeSel == null ? null : nodeSel.Path, out selectPath, false));
+
+                if (selectPath != null)
+                    sequenceTree.SelectedPath = selectPath;
+            }
+        }
+
         private static ChromatogramSet GetChromatogramByName(string name, MeasuredResults results)
         {
             return (results == null ? null :

@@ -20,6 +20,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestFunctional", "TestFunct
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProteowizardWrapper", "..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj", "{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestTutorial", "TestTutorial\TestTutorial.csproj", "{6FCD5F27-637B-499A-BB66-F74D5FBBD500}"
+EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = Skyline.vsmdi
@@ -113,6 +115,16 @@ Global
 		{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}.Release|Mixed Platforms.Build.0 = Release|x86
 		{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}.Release|x86.ActiveCfg = Release|x86
 		{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}.Release|x86.Build.0 = Release|x86
+		{6FCD5F27-637B-499A-BB66-F74D5FBBD500}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6FCD5F27-637B-499A-BB66-F74D5FBBD500}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6FCD5F27-637B-499A-BB66-F74D5FBBD500}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{6FCD5F27-637B-499A-BB66-F74D5FBBD500}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{6FCD5F27-637B-499A-BB66-F74D5FBBD500}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6FCD5F27-637B-499A-BB66-F74D5FBBD500}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6FCD5F27-637B-499A-BB66-F74D5FBBD500}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6FCD5F27-637B-499A-BB66-F74D5FBBD500}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{6FCD5F27-637B-499A-BB66-F74D5FBBD500}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{6FCD5F27-637B-499A-BB66-F74D5FBBD500}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

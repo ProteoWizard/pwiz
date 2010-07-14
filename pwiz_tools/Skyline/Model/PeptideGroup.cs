@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -129,7 +130,8 @@ namespace pwiz.Skyline.Model
                     }
                 }
 
-                childrenNew = PeptideGroup.RankPeptides(childrenNew, settingsNew, true);
+                if (PeptideGroup.Sequence != null)
+                    childrenNew = PeptideGroup.RankPeptides(childrenNew, settingsNew, true);
 
                 return (PeptideGroupDocNode) ChangeChildrenChecked(childrenNew);
             }
@@ -276,49 +278,52 @@ namespace pwiz.Skyline.Model
             PeptideRankId rankId = settings.PeptideSettings.Libraries.RankId;
 
             // Transfer input list to a typed array
-            PeptideDocNode[] peptides = new PeptideDocNode[listPeptides.Count];
-            for (int i = 0; i < peptides.Length; i++)
+            var listRanks = new List<KeyValuePair<PeptideDocNode, float>>();
+            for (int i = 0; i < listPeptides.Count; i++)
             {
                 var peptide = (PeptideDocNode) listPeptides[i];
                 // Remove any old rank information, if peptides are no longer ranked.
                 if (rankId == null && peptide.Rank.HasValue)
                     peptide = peptide.ChangeRank(null);
-                peptides[i] = peptide;
+                listRanks.Add(new KeyValuePair<PeptideDocNode, float>(peptide, peptide.GetRankValue(rankId)));
             }
 
             if (rankId == null)
-                return peptides;
+                return listRanks.ConvertAll(p => p.Key).ToArray();
 
             // Sort desc by rank ID value
-            Array.Sort(peptides, (pep1, pep2) =>
-                                 Comparer<float>.Default.Compare(pep2.GetRankValue(rankId), pep1.GetRankValue(rankId)));
-
-            // Update the rank values on the peptides where necessary
-            for (int i = 0; i < peptides.Length; i++)
+            listRanks.Sort((p1, p2) => Comparer.Default.Compare(p2.Value, p1.Value));
+            
+            int rank = 1;
+            for (int i = 0; i < listRanks.Count; i++)
             {
-                PeptideDocNode nodePeptide = peptides[i];
-                int rank = i + 1;
-                if (!nodePeptide.Rank.HasValue || nodePeptide.Rank.Value != rank)
-                    peptides[i] = nodePeptide.ChangeRank(rank);
+                var peptideRank = listRanks[i];
+                var peptide = peptideRank.Key;
+                if(peptideRank.Value == float.MinValue)
+                    break;
+                if (!peptide.Rank.HasValue || peptide.Rank.Value != rank)
+                    peptide = peptide.ChangeRank(rank);
+                listRanks[i] = new KeyValuePair<PeptideDocNode, float>(peptide, peptideRank.Value);
+
+                rank++;
             }
 
             // Reduce array length to desired limit, if necessary
             int? peptideCount = settings.PeptideSettings.Libraries.PeptideCount;
-            if (useLimit && peptideCount.HasValue && peptideCount.Value < peptides.Length)
+            int numPeptides = useLimit && peptideCount.HasValue && peptideCount.Value < listPeptides.Count
+                              ? peptideCount.Value
+                              : listPeptides.Count;
+            PeptideDocNode[] peptidesNew = new PeptideDocNode[numPeptides];
+            for (int i = 0; i < peptidesNew.Length; i++)
             {
-                PeptideDocNode[] peptidesNew = new PeptideDocNode[peptideCount.Value];
-                for (int i = 0; i < peptidesNew.Length; i++)
-                {
-                    // TODO: Remove any peptide groups without the correct rank value
-                    peptidesNew[i] = peptides[i];
-                }
-                peptides = peptidesNew;
+                // TODO: Remove any peptide groups without the correct rank value
+                peptidesNew[i] = listRanks[i].Key;
             }
-
+            
             // Re-sort by order in FASTA sequence
-            Array.Sort(peptides, FastaSequence.ComparePeptides);
+            Array.Sort(peptidesNew, FastaSequence.ComparePeptides);
 
-            return peptides;
+            return peptidesNew;
         }
     }
 

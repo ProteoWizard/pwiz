@@ -26,7 +26,7 @@ using pwiz.Skyline.Model;
 namespace pwiz.SkylineTestFunctional
 {
     /// <summary>
-    /// Functional test for Annotations.
+    /// Functional test for MultiSelect.
     /// </summary>
     [TestClass]
     public class MultiSelectTest : AbstractFunctionalTest

@@ -269,6 +269,11 @@ namespace pwiz.Skyline.EditUI
 
         private void btnOK_Click(object sender, EventArgs e)
         {
+            OkDialog();
+        }
+
+        public void OkDialog()
+        {
             Program.MainWindow.ModifyDocument("Exclude peptides", ExcludePeptidesFromDocument);
             Close();
         }
@@ -317,6 +322,11 @@ namespace pwiz.Skyline.EditUI
                 peptideGroupDocNode.Description, 
                 children.ToArray(),
                 false);
+        }
+
+        public DataGridView GetDataGridView()
+        {
+            return dataGridView1;
         }
     }
 }
