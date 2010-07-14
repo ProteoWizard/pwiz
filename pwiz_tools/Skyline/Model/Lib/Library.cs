@@ -210,7 +210,7 @@ namespace pwiz.Skyline.Model.Lib
             var librarySettings = docOriginal.Settings.PeptideSettings.Libraries;
             if (!librarySettings.HasLibraries)
                 return;
-            int iSpec = librarySettings.LibrarySpecs.IndexOf(spec => Equals(name, spec.Name));
+            int iSpec = librarySettings.LibrarySpecs.IndexOf(spec => spec != null && Equals(name, spec.Name));
             if (iSpec == -1 || librarySettings.Libraries[iSpec] == null)
                 return;
 
