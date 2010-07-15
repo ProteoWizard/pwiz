@@ -4,10 +4,10 @@ pwiz_root=$(dirname $0)
 pushd $pwiz_root > /dev/null
 
 echo "Cleaning project..."
-if [ -d build-*-* ]; then rm -fr build-*-*; fi;
+if (ls build-*-* > /dev/null 2>&1); then rm -fr build-*-*; fi;
+if (ls libraries/boost_*_*_? > /dev/null 2>&1); then rm -fr libraries/boost_*_*_?; fi;
 if [ -d libraries/boost-build/jam_src/bin ]; then rm -fr libraries/boost-build/jam_src/bin; fi;
 if [ -d libraries/boost-build/jam_src/bootstrap ]; then rm -fr libraries/boost-build/jam_src/bootstrap; fi;
-if [ -d libraries/boost_1_43_0 ]; then rm -fr libraries/boost_1_43_0; fi;
 if [ -d libraries/gd-2.0.33 ]; then rm -fr libraries/gd-2.0.33; fi;
 if [ -d libraries/zlib-1.2.3 ]; then rm -fr libraries/zlib-1.2.3; fi;
 if [ -d libraries/fftw-3.1.2 ]; then rm -fr libraries/fftw-3.1.2; fi;
