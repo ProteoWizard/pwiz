@@ -68,22 +68,22 @@ namespace pwiz.Skyline.Model
                 TransitionGroup.MAX_PRECURSOR_CHARGE);
         }
 
-        private static int CalcProductCharge(double productMassH, double productMz, double tolerance)
+        private static int CalcProductCharge(double productMassH, double productMz, double tolerance, int maxCharge)
         {
             return CalcCharge(productMassH, productMz, tolerance,
                 Transition.MIN_PRODUCT_CHARGE,
-                Transition.MAX_PRODUCT_CHARGE);
+                maxCharge);
         }
 
-        public static int CalcProductCharge(double productPrecursorMass, double[,] productMasses, double productMz, double tolerance,
+        public static int CalcProductCharge(double productPrecursorMass, int precursorCharge, double[,] productMasses, double productMz, double tolerance,
             out IonType? ionType, out int? ordinal)
         {
             // Get length of fragment ion mass array
             int len = productMasses.GetLength(1);
 
             // Check to see if it is the precursor
-            int charge = CalcProductCharge(productPrecursorMass, productMz, tolerance);
-            if (charge > 0)
+            int charge = CalcProductCharge(productPrecursorMass, productMz, tolerance, precursorCharge);
+            if (charge == precursorCharge)
             {
                 ionType = IonType.precursor;
                 ordinal = len + 1;
@@ -91,23 +91,36 @@ namespace pwiz.Skyline.Model
             }
 
             // Check all possible ion types and offsets
+            double minDelta = double.MaxValue;
+            int bestCharge = 0;
+            IonType? bestIonType = null;
+            int? bestOrdinal = null;
             foreach (IonType type in Transition.ALL_TYPES)
             {
                 for (int offset = 0; offset < len; offset++)
                 {
-                    charge = CalcProductCharge(productMasses[(int)type, offset], productMz, tolerance);
+                    // Look for the closest match.
+                    double productMass = productMasses[(int) type, offset];
+                    charge = CalcProductCharge(productMass, productMz, tolerance, precursorCharge);
                     if (charge > 0)
                     {
-                        ionType = type;
-                        // The peptide length is 1 longer than the mass array
-                        ordinal = Transition.OffsetToOrdinal(type, offset, len + 1);
-                        return charge;
+                        double delta = Math.Abs(productMz - SequenceMassCalc.GetMZ(productMass, charge));
+                        if (minDelta > delta)
+                        {
+                            bestCharge = charge;
+                            bestIonType = type;
+                            // The peptide length is 1 longer than the mass array
+                            bestOrdinal = Transition.OffsetToOrdinal(type, offset, len + 1);
+
+                            minDelta = delta;
+                        }
                     }
                 }
             }
-            ionType = null;
-            ordinal = null;
-            return 0;
+
+            ionType = bestIonType;
+            ordinal = bestOrdinal;
+            return bestCharge;
         }
 
     }

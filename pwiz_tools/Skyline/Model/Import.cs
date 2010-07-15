@@ -416,7 +416,7 @@ namespace pwiz.Skyline.Model
                     double[,] productMasses = calc.GetFragmentIonMasses(seq);
                     IonType? ionType;
                     int? ordinal;
-                    info.ProductCharge = CalcProductCharge(productPrecursorMass, productMasses,
+                    info.ProductCharge = CalcProductCharge(productPrecursorMass, precursorCharge, productMasses,
                         productMz, MzMatchTolerance, out ionType, out ordinal);
                     if (info.ProductCharge > 0)
                     {
@@ -448,10 +448,10 @@ namespace pwiz.Skyline.Model
                 return TransitionCalc.CalcPrecursorCharge(precursorMassH, precursorMz, tolerance);
             }
 
-            private static int CalcProductCharge(double productPrecursorMass, double[,] productMasses,
+            private static int CalcProductCharge(double productPrecursorMass, int precursorCharge, double[,] productMasses,
                 double productMz, double tolerance, out IonType? ionType, out int? ordinal)
             {
-                return TransitionCalc.CalcProductCharge(productPrecursorMass, productMasses,
+                return TransitionCalc.CalcProductCharge(productPrecursorMass, precursorCharge, productMasses,
                     productMz, tolerance, out ionType, out ordinal);
             }
 
@@ -479,7 +479,7 @@ namespace pwiz.Skyline.Model
 
             protected static int FindPrecursor(string[] fields, string sequence,
                 IsotopeLabelType labelType, int iSequence, double tolerance,
-                IFormatProvider provider, SrmSettings settings)
+                IFormatProvider provider, SrmSettings settings, out int precursorCharge)
             {
                 double precursorMassH = settings.GetPrecursorMass(labelType, sequence, null);
 
@@ -494,13 +494,17 @@ namespace pwiz.Skyline.Model
 
                     int charge = CalcPrecursorCharge(precursorMassH, precursorMz, tolerance);
                     if (charge > 0)
+                    {
+                        precursorCharge = charge;
                         return i;
+                    }
                 }
+                precursorCharge = 0;
                 return -1;
             }
 
             protected static int FindProduct(string[] fields, string sequence,
-                IsotopeLabelType labelType, int iSequence, int iPrecursor, double tolerance,
+                IsotopeLabelType labelType, int iSequence, int iPrecursor, int precursoCharge, double tolerance,
                 IFormatProvider provider, SrmSettings settings)
             {
                 var calc = settings.GetFragmentCalc(labelType, null);
@@ -518,8 +522,8 @@ namespace pwiz.Skyline.Model
 
                     IonType? ionType;
                     int? ordinal;
-                    int charge = CalcProductCharge(productPrecursorMass, productMasses,
-                        productMz, tolerance, out ionType, out ordinal);
+                    int charge = CalcProductCharge(productPrecursorMass, precursoCharge,
+                        productMasses, productMz, tolerance, out ionType, out ordinal);
                     if (charge > 0)
                         return i;
                 }
@@ -607,6 +611,7 @@ namespace pwiz.Skyline.Model
                 string sequence;
                 int iSequence = -1;
                 int iPrecursor;
+                int precursorCharge;
                 IsotopeLabelType labelType;
                 do
                 {
@@ -627,7 +632,7 @@ namespace pwiz.Skyline.Model
                     if (iLabelType != -1)
                         labelType = GetLabelType(fields[iLabelType]);
                     iPrecursor = FindPrecursor(fields, sequence, labelType, iSequence,
-                        tolerance, provider, settings);
+                        tolerance, provider, settings, out precursorCharge);
                     // If no match, and no specific label type, then try heavy.
                     if (settings.PeptideSettings.Modifications.HasHeavyModifications &&
                             iPrecursor == -1 && iLabelType == -1)
@@ -638,7 +643,7 @@ namespace pwiz.Skyline.Model
                             if (settings.GetPrecursorCalc(labelType, null) != null)
                             {
                                 iPrecursor = FindPrecursor(fields, sequence, typeMods.LabelType, iSequence,
-                                                           tolerance, provider, settings);
+                                                           tolerance, provider, settings, out precursorCharge);
                                 if (iPrecursor != -1)
                                 {
                                     labelType = typeMods.LabelType;
@@ -650,7 +655,7 @@ namespace pwiz.Skyline.Model
                 }
                 while (iPrecursor == -1);
 
-                int iProduct = FindProduct(fields, sequence, labelType, iSequence, iPrecursor,
+                int iProduct = FindProduct(fields, sequence, labelType, iSequence, iPrecursor, precursorCharge,
                     tolerance, provider, settings);
                 if (iProduct == -1)
                     throw new MzMatchException("No valid product m/z column found.");
@@ -880,13 +885,14 @@ namespace pwiz.Skyline.Model
                     throw new InvalidDataException("Isotope labelled entry found without matching settings.\nCheck the Modifications tab in Transition Settings.");
 
 
+                int precursorCharge;
                 int iPrecursor = FindPrecursor(fields, sequence, labelType, iExPeptide,
-                    tolerance, provider, settings);
+                    tolerance, provider, settings, out precursorCharge);
                 if (iPrecursor == -1)
                     throw new MzMatchException("No valid precursor m/z column found.");
 
                 int iProduct = FindProduct(fields, sequence, labelType, iExPeptide, iPrecursor,
-                    tolerance, provider, settings);
+                    precursorCharge, tolerance, provider, settings);
                 if (iProduct == -1)
                     throw new MzMatchException("No valid product m/z column found.");
 

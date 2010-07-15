@@ -622,7 +622,7 @@ namespace pwiz.Skyline.EditUI
                 double[,] productMasses = calc.GetFragmentIonMasses(peptideSequence);
                 IonType? ionType;
                 int? ordinal;
-                int productCharge = TransitionCalc.CalcProductCharge(productPrecursorMass, productMasses,
+                int productCharge = TransitionCalc.CalcProductCharge(productPrecursorMass, precursorCharge, productMasses,
                     productMz, mzMatchTolerance, out ionType, out ordinal);
                 if (productCharge < 1)
                 {
