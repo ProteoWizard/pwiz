@@ -73,8 +73,7 @@ namespace pwiz.Skyline.SettingsUI
     public partial class ViewLibraryDlg : Form, IGraphContainer, IStateProvider
     {
         // Used to parse the modification string in a given sequence
-        private const string REGEX_MODIFICATION_PATTERN = @"\[.*?\]";
-        private const string REGEX_VALID_MODIFICATION = @"[+-]*\d+(\.\d+)*";
+        private const string REGEX_MODIFICATION_PATTERN = @"\[.*\]";
 
         /// <summary>
         /// Data structure containing information on a single peptide. It is
@@ -161,11 +160,13 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private class ModificationInfo
         {
+            public int IndexMod { get; private set; }
             public char ModifiedAminoAcid { get; private set; }
             public double ModifiedMass { get; private set; }
            
-            public ModificationInfo(char modifiedAminoAcid, double modifiedMass)
+            public ModificationInfo(int indexMod, char modifiedAminoAcid, double modifiedMass)
             {
+                IndexMod = indexMod;
                 ModifiedAminoAcid = modifiedAminoAcid;
                 ModifiedMass = modifiedMass;
             }
@@ -625,22 +626,36 @@ namespace pwiz.Skyline.SettingsUI
         {
             IList<ModificationInfo> modList = new List<ModificationInfo>();
             string sequence = pep.Sequence;
-            foreach (Match m in Regex.Matches(sequence, REGEX_MODIFICATION_PATTERN))
+            int iMod = 0;
+            for (int i = 0; i < sequence.Length; i++)
             {
-                String str = m.ToString();
-
-                // Strip the "[" and "]" characters 
-                str = str.Substring(1, str.Length - 2);
-
-                // Look up the modified amino acid preceding the "["
-                var aminoAcid = new char[1];
-                sequence.CopyTo(m.Index - 1, aminoAcid, 0, 1);
-
-                // Make sure we have a valid modification pattern.
-                // It should be a "+" or "-" followed by a number.
-                if (Regex.IsMatch(str, REGEX_VALID_MODIFICATION))
+                if (sequence[i] != '[')
                 {
-                    modList.Add(new ModificationInfo(aminoAcid[0], Double.Parse(str)));
+                    iMod++;
+                    continue;
+                }
+                int iAa = i - 1;
+                // Invalid format. Should never happen.
+                if (iAa < 0)
+                    break;
+                i++;
+                int signVal = 1;
+                if (sequence[i] == '+')
+                    i++;
+                else if (sequence[i] == '-')
+                {
+                    i++;
+                    signVal = -1;
+                }
+                int iEnd = sequence.IndexOf(']', i);
+                // Invalid format. Should never happen.
+                if (iEnd == -1)
+                    break;
+                // NIST libraries sometimes use [?] when modification cannot be identified
+                double massDiff;
+                if (double.TryParse(sequence.Substring(i, iEnd - i), out massDiff))
+                {
+                    modList.Add(new ModificationInfo(iMod, sequence[iAa], massDiff*signVal));
                 }
             }
             return modList;
@@ -950,18 +965,17 @@ namespace pwiz.Skyline.SettingsUI
                         {
                             IList<ExplicitMod> staticModList = new List<ExplicitMod>();
                             IList<ModificationInfo> modList = GetModifications(_peptides[index]);
-                            int numMods = modList.Count;
-                            for (int idx = 0; idx < numMods; idx++)
+                            foreach (var modInfo in modList)
                             {
                                 var smod = new StaticMod("temp",
-                                                               modList[idx].ModifiedAminoAcid.ToString(),
+                                                               modInfo.ModifiedAminoAcid.ToString(),
                                                                null,
                                                                null,
                                                                LabelAtoms.None,
-                                                               modList[idx].ModifiedMass,
-                                                               modList[idx].ModifiedMass);
+                                                               modInfo.ModifiedMass,
+                                                               modInfo.ModifiedMass);
 
-                                var exmod = new ExplicitMod(idx, smod);
+                                var exmod = new ExplicitMod(modInfo.IndexMod, smod);
                                 staticModList.Add(exmod);
                             }
 

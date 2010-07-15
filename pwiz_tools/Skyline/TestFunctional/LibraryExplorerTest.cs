@@ -227,12 +227,10 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreNotEqual(previousPeptide, selPeptide);
 
             // Close the Library Explorer dialog
-            RunUI(viewLibUI.CancelDialog);
-            WaitForClosedForm(viewLibUI);
+            OkDialog(viewLibUI, viewLibUI.CancelDialog);
 
             // Close the peptide settings dialog
-            RunUI(PeptideSettingsUI.OkDialog);
-            WaitForClosedForm(PeptideSettingsUI);
+            OkDialog(PeptideSettingsUI, PeptideSettingsUI.OkDialog);
         }
     }
 }
