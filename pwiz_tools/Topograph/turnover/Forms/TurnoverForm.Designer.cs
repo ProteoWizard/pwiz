@@ -51,6 +51,7 @@
             this.queryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.mercuryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.halfLivesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.tracerAmountsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.enrichmentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.modificationsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -62,7 +63,7 @@
             this.databaseLocksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.errorsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.debuggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.tracerAmountsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.precursorEnrichmentsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -199,7 +200,8 @@
             this.queryToolStripMenuItem,
             this.mercuryToolStripMenuItem,
             this.halfLivesToolStripMenuItem,
-            this.tracerAmountsToolStripMenuItem});
+            this.tracerAmountsToolStripMenuItem,
+            this.precursorEnrichmentsToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "View";
@@ -251,6 +253,14 @@
             this.halfLivesToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.halfLivesToolStripMenuItem.Text = "Half Lives";
             this.halfLivesToolStripMenuItem.Click += new System.EventHandler(this.halfLivesToolStripMenuItem_Click);
+            // 
+            // tracerAmountsToolStripMenuItem
+            // 
+            this.tracerAmountsToolStripMenuItem.Enabled = false;
+            this.tracerAmountsToolStripMenuItem.Name = "tracerAmountsToolStripMenuItem";
+            this.tracerAmountsToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.tracerAmountsToolStripMenuItem.Text = "Tracer Amounts";
+            this.tracerAmountsToolStripMenuItem.Click += new System.EventHandler(this.tracerAmountsToolStripMenuItem_Click);
             // 
             // settingsToolStripMenuItem
             // 
@@ -343,13 +353,13 @@
             this.debuggingToolStripMenuItem.Size = new System.Drawing.Size(32, 19);
             this.debuggingToolStripMenuItem.Text = "Debugging";
             // 
-            // tracerAmountsToolStripMenuItem
+            // precursorEnrichmentsToolStripMenuItem
             // 
-            this.tracerAmountsToolStripMenuItem.Enabled = false;
-            this.tracerAmountsToolStripMenuItem.Name = "tracerAmountsToolStripMenuItem";
-            this.tracerAmountsToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
-            this.tracerAmountsToolStripMenuItem.Text = "Tracer Amounts";
-            this.tracerAmountsToolStripMenuItem.Click += new System.EventHandler(this.tracerAmountsToolStripMenuItem_Click);
+            this.precursorEnrichmentsToolStripMenuItem.Enabled = false;
+            this.precursorEnrichmentsToolStripMenuItem.Name = "precursorEnrichmentsToolStripMenuItem";
+            this.precursorEnrichmentsToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.precursorEnrichmentsToolStripMenuItem.Text = "Precursor Enrichments";
+            this.precursorEnrichmentsToolStripMenuItem.Click += new System.EventHandler(this.precursorEnrichmentsToolStripMenuItem_Click);
             // 
             // TurnoverForm
             // 
@@ -405,5 +415,6 @@
         private System.Windows.Forms.ToolStripMenuItem databaseLocksToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem errorsToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem tracerAmountsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem precursorEnrichmentsToolStripMenuItem;
     }
 }

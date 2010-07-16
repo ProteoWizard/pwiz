@@ -227,7 +227,14 @@ namespace pwiz.Topograph.ui.Forms
 
         private void tbxIntermediateLevels_Leave(object sender, EventArgs e)
         {
-            PeptideAnalysis.IntermediateLevels = Convert.ToInt32(tbxIntermediateLevels.Text);
+            try
+            {
+                PeptideAnalysis.IntermediateLevels = Convert.ToInt32(tbxIntermediateLevels.Text);
+            }
+            catch (FormatException)
+            {
+                // ignore
+            }
         }
 
         private void UpdateMassGrid()

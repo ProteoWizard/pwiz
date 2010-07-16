@@ -241,6 +241,39 @@ namespace pwiz.Topograph.Util
             }
         }
 
+        public double Median(Statistics weights)
+        {
+            try
+            {
+                var dict = new Dictionary<double, double>();
+                for (int i = 0; i < _list.Length; i++)
+                {
+                    double value = _list[i];
+                    double weight;
+                    dict.TryGetValue(value, out weight);
+                    weight += weights._list[i];
+                    dict[value] = weight;
+                }
+                var keys = dict.Keys.ToArray();
+                Array.Sort(keys);
+                double total = weights.Sum();
+                double sum = 0;
+                for (int i = 0; i < keys.Length; i++)
+                {
+                    sum += dict[keys[i]];
+                    if (sum >= total / 2)
+                    {
+                        return keys[i];
+                    }
+                }
+                return double.NaN;
+            }
+            catch
+            {
+                return double.NaN;
+            }
+        }
+
         /// <summary>
         /// Calculates range (max - min) of the set of numbers.
         /// </summary>

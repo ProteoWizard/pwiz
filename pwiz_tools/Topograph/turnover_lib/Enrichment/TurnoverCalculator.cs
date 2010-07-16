@@ -27,7 +27,6 @@ using pwiz.Common.Chemistry;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.Util;
-using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.Enrichment
 {

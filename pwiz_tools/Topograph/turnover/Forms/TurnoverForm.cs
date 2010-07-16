@@ -115,6 +115,7 @@ namespace pwiz.Topograph.ui.Forms
                                halfLivesToolStripMenuItem,
                                dataDirectoryToolStripMenuItem,
                                tracerAmountsToolStripMenuItem,
+                               precursorEnrichmentsToolStripMenuItem,
                            };
             }
         }
@@ -845,6 +846,12 @@ namespace pwiz.Topograph.ui.Forms
         {
             var tracerAmountsForm = new TracerAmountsByCohort(Workspace);
             tracerAmountsForm.Show(dockPanel, DockState.Document);
+        }
+
+        private void precursorEnrichmentsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var form = new PrecursorEnrichmentForm(Workspace);
+            form.Show(dockPanel, DockState.Document);
         }
     }
 }
