@@ -55,6 +55,9 @@ enum PWIZ_API_DECL ProteolyticEnzyme
 };
 
 
+class Digestion;
+
+
 /// peptide subclass that contains extra metadata provided by digestion
 class PWIZ_API_DECL DigestedPeptide : public Peptide
 {
@@ -71,13 +74,13 @@ class PWIZ_API_DECL DigestedPeptide : public Peptide
                     bool CTerminusIsSpecific);
 
     DigestedPeptide(std::string::const_iterator begin,
-		    std::string::const_iterator end,
-		    size_t offset,
-		    size_t missedCleavages,
-		    bool NTerminusIsSpecific,
-		    bool CTerminusIsSpecific, 
-		    std::string nTermPrefix,
-		    std::string cTermSuffix );
+                    std::string::const_iterator end,
+                    size_t offset,
+                    size_t missedCleavages,
+                    bool NTerminusIsSpecific,
+                    bool CTerminusIsSpecific, 
+                    std::string NTerminusPrefix,
+                    std::string CTerminusSuffix);
 
     DigestedPeptide(const DigestedPeptide&);
     DigestedPeptide& operator=(const DigestedPeptide&);
@@ -100,20 +103,22 @@ class PWIZ_API_DECL DigestedPeptide : public Peptide
     bool CTerminusIsSpecific() const;
 
     /// returns residue preceding digestion site
-    std::string nTermPrefix() const;
+    std::string NTerminusPrefix() const;
 
     /// returns residue following digestion site
-    std::string cTermSuffix() const;
+    std::string CTerminusSuffix() const;
 
-
+    /// returns true iff peptide sequences, masses, and all digestion metadata are equal
+    bool operator==(const DigestedPeptide& rhs) const;
 
     private:
+    friend class Digestion;
     size_t offset_;
     size_t missedCleavages_;
     bool NTerminusIsSpecific_;
     bool CTerminusIsSpecific_;
-    std::string nTermPrefix_;
-    std::string cTermSuffix_;
+    std::string NTerminusPrefix_;
+    std::string CTerminusSuffix_;
 };
 
 
@@ -169,12 +174,12 @@ class PWIZ_API_DECL Digestion
     static const std::string& getCleavageAgentRegex(CVID agentCvid);
 
     /// specifies digestion occurs by a commonly used cleavage agent
-    Digestion(const Peptide& peptide,
+    Digestion(const Peptide& polypeptide,
               CVID cleavageAgent,
               const Config& config = Config());
 
     /// specifies digestion occurs by a combination of commonly used cleavage agents
-    Digestion(const Peptide& peptide,
+    Digestion(const Peptide& polypeptide,
               const std::vector<CVID>& cleavageAgents,
               const Config& config = Config());
 
@@ -183,30 +188,40 @@ class PWIZ_API_DECL Digestion
     /// example: "((?<=D))|((?=D))" means "cleaves before or after D"
     /// example: "(?=[DE])" means "cleaves before D or E"
     /// example: "(?<=[FYWLKR])(?!P)" means "cleaves after any single residue from FYWLKR except when it is followed by P"
-    Digestion(const Peptide& peptide,
+    Digestion(const Peptide& polypeptide,
               const boost::regex& cleavageAgentRegex,
               const Config& config = Config());
+
+    /// returns all instances of the given peptide in the polypeptide under digestion;
+    /// note: the filters set in Digestion::Config are respected!
+    std::vector<DigestedPeptide> find_all(const Peptide& peptide) const;
+
+    /// returns the first instance of the given peptide in the polypeptide under digestion;
+    /// if offsetHint is provided, the search will begin at that offset;
+    /// throws runtime_error if no instance of the peptide is found;
+    /// note: the filters set in Digestion::Config are respected!
+    DigestedPeptide find_first(const Peptide& peptide, size_t offsetHint = 0) const;
 
 
     // DEPRECATED CONSTRUCTORS ////////////////////////////
 
     /// specifies digestion occurs by a commonly used enzyme
-    Digestion(const Peptide& peptide,
+    Digestion(const Peptide& polypeptide,
               ProteolyticEnzyme enzyme,
               const Config& config = Config());
 
     /// specifies digestion occurs by a combination of commonly used enzymes
-    Digestion(const Peptide& peptide,
+    Digestion(const Peptide& polypeptide,
               const std::vector<ProteolyticEnzyme>& enzymes,
               const Config& config = Config());
 
     /// specifies digestion occurs by a user-specified motif
-    Digestion(const Peptide& peptide,
+    Digestion(const Peptide& polypeptide,
               const Motif& motif,
               const Config& config = Config());
 
     /// specifies digestion occurs by a combination of user-specified motifs
-    Digestion(const Peptide& peptide,
+    Digestion(const Peptide& polypeptide,
               const std::vector<Motif>& motifs,
               const Config& config = Config());
 

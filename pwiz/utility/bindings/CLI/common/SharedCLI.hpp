@@ -77,11 +77,15 @@ public ref class ObjectStructorLog
 #define SAFEDELETE(x) if(x) {delete x; x = NULL;}
 
 // catch a C++ or COM exception and rethrow it as a .NET Exception
-// runtime_error has been rethrown by pwiz so don't prepend the forwarding function
+// invalid_argument and runtime_error have probably been rethrown by pwiz so don't prepend the forwarding function
 #undef CATCH_AND_FORWARD
 #define CATCH_AND_FORWARD \
-    catch (std::runtime_error& e) { throw gcnew System::Exception(gcnew System::String(e.what())); } \
-    catch (std::exception& e) { throw gcnew System::Exception("[" + __FUNCTION__ + "] Unhandled exception: " + gcnew System::String(e.what())); } \
+    catch (std::bad_cast& e) { throw gcnew System::InvalidCastException("[" + __FUNCTION__ + "] " + ToSystemString(e.what())); } \
+    catch (std::bad_alloc& e) { throw gcnew System::OutOfMemoryException("[" + __FUNCTION__ + "] " + ToSystemString(e.what())); } \
+    catch (std::out_of_range& e) { throw gcnew System::IndexOutOfRangeException("[" + __FUNCTION__ + "] " + ToSystemString(e.what())); } \
+    catch (std::invalid_argument& e) { throw gcnew System::ArgumentException(ToSystemString(e.what())); } \
+    catch (std::runtime_error& e) { throw gcnew System::Exception(ToSystemString(e.what())); } \
+    catch (std::exception& e) { throw gcnew System::Exception("[" + __FUNCTION__ + "] Unhandled exception: " + ToSystemString(e.what())); } \
     catch (_com_error& e) { throw gcnew System::Exception("[" + __FUNCTION__ + "] Unhandled COM error: " + gcnew System::String(e.ErrorMessage())); } \
     catch (...) { throw gcnew System::Exception("[" + __FUNCTION__ + "] Unknown exception"); }
 
@@ -123,6 +127,7 @@ public ref class ObjectStructorLog
 // could use the #pragma on the non-templated types, but for consistency
 // the void* downcast is used everywhere
 
+// defines internal members for wrapping a raw pointer to a non-derived native class with a managed wrapper class
 #define DEFINE_INTERNAL_BASE_CODE(CLIType, NativeType) \
 INTERNAL: CLIType(NATIVE_POINTER_ARG(NativeType) base, System::Object^ owner) : base_(NATIVE_POINTER_CAST(NativeType, base)), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType))} \
           CLIType(NATIVE_POINTER_ARG(NativeType) base) : base_(NATIVE_POINTER_CAST(NativeType, base)), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType))} \
@@ -132,6 +137,7 @@ INTERNAL: CLIType(NATIVE_POINTER_ARG(NativeType) base, System::Object^ owner) : 
           System::Object^ owner_; \
           NativeType& base() {return *base_;}
 
+// defines internal members for wrapping a raw pointer to a derived native class with a managed wrapper class
 #define DEFINE_DERIVED_INTERNAL_BASE_CODE(ns, ClassType, BaseClassType) \
 INTERNAL: ClassType(NATIVE_POINTER_ARG(ns::ClassType) base, System::Object^ owner) : BaseClassType(base), base_(NATIVE_POINTER_CAST(ns::ClassType, base)) {owner_ = owner; LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           ClassType(NATIVE_POINTER_ARG(ns::ClassType) base) : BaseClassType(base), base_(NATIVE_POINTER_CAST(ns::ClassType, base)) {owner_ = nullptr; LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
@@ -140,6 +146,7 @@ INTERNAL: ClassType(NATIVE_POINTER_ARG(ns::ClassType) base, System::Object^ owne
           ns::ClassType* base_; \
           ns::ClassType& base() new {return *base_;}
 
+// defines internal members for wrapping a shared_ptr to a non-derived native class with a managed wrapper class
 #define DEFINE_SHARED_INTERNAL_BASE_CODE(ns, ClassType) \
 INTERNAL: ClassType(NATIVE_POINTER_ARG(boost::shared_ptr<ns::ClassType>) base, System::Object^ owner) : base_(NATIVE_POINTER_CAST(boost::shared_ptr<ns::ClassType>, base)), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           ClassType(NATIVE_POINTER_ARG(boost::shared_ptr<ns::ClassType>) base) : base_(NATIVE_POINTER_CAST(boost::shared_ptr<ns::ClassType>, base)), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
@@ -149,6 +156,7 @@ INTERNAL: ClassType(NATIVE_POINTER_ARG(boost::shared_ptr<ns::ClassType>) base, S
           System::Object^ owner_; \
           ns::ClassType& base() {return **base_;}
 
+// defines internal members for wrapping a shared_ptr to a derived native class with a managed wrapper class
 #define DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(ns, ClassType, BaseClassType) \
 INTERNAL: ClassType(NATIVE_POINTER_ARG(boost::shared_ptr<ns::ClassType>) base) : BaseClassType(&**NATIVE_POINTER_CAST(boost::shared_ptr<ns::ClassType>, base)), base_(NATIVE_POINTER_CAST(boost::shared_ptr<ns::ClassType>, base)) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), true) SAFEDELETE(base_); BaseClassType::base_ = NULL;} \
@@ -156,6 +164,8 @@ INTERNAL: ClassType(NATIVE_POINTER_ARG(boost::shared_ptr<ns::ClassType>) base) :
           boost::shared_ptr<ns::ClassType>* base_; \
           ns::ClassType& base() new {return **base_;}
 
+// defines internal members for wrapping a shared_ptr to a derived native class with a managed wrapper class
+// TODO: explain why SpectrumList/MSData derivatives need this but ParamContainer derivatives don't
 #define DEFINE_SHARED_DERIVED_INTERNAL_SHARED_BASE_CODE(ns, ClassType, BaseClassType) \
 INTERNAL: ClassType(NATIVE_POINTER_ARG(boost::shared_ptr<ns::ClassType>) base) : BaseClassType(NATIVE_POINTER_DOWNCAST(boost::shared_ptr<ns::BaseClassType>, base)), base_(NATIVE_POINTER_CAST(boost::shared_ptr<ns::ClassType>, base)) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), true) SAFEDELETE(base_); BaseClassType::base_ = NULL;} \
@@ -164,10 +174,11 @@ INTERNAL: ClassType(NATIVE_POINTER_ARG(boost::shared_ptr<ns::ClassType>) base) :
           ns::ClassType& base() new {return **base_;}
 
 
+// wraps a std::string native member variable
 #define DEFINE_STRING_PROPERTY(Name) \
 property System::String^ Name \
 { \
-    System::String^ get() {return gcnew System::String(base().Name.c_str());} \
+    System::String^ get() {return ToSystemString(base().Name.c_str());} \
     void set(System::String^ value) {base().Name = ToStdString(value);} \
 }
 

@@ -440,12 +440,12 @@ public ref class DigestedPeptide : public Peptide
     /// <summary>
     /// returns residue preceding digestion site
     /// </summary>
-    System::String^ nTermPrefix();
+    System::String^ NTerminusPrefix();
 
     /// <summary>
     /// returns residue following digestion site
     /// </summary>
-    System::String^ cTermSuffix();
+    System::String^ CTerminusSuffix();
 };
 
 
@@ -520,26 +520,31 @@ public ref class Digestion : public System::Collections::Generic::IEnumerable<Di
     /// returns the Perl regular expression defining the places in a
     /// polypeptide or protein that the agent will cut.
     /// </summary>
-    static System::String^ getCleavageAgentRegex(CVID agentCvid);
+    /// <throws>ArgumentException if the cleavageAgent is not in getCleavageAgents()</throws>
+    static System::String^ getCleavageAgentRegex(CVID cleavageAgent);
 
     /// <summary>
     /// specifies digestion occurs by a commonly used cleavage agent
     /// </summary>
+    /// <throws>ArgumentException if cleavageAgent is not in getCleavageAgents()</throws>
     Digestion(Peptide^ peptide, CVID cleavageAgent);
 
     /// <summary>
     /// specifies digestion occurs by a commonly used cleavage agent
     /// </summary>
+    /// <throws>ArgumentException if cleavageAgent is not in getCleavageAgents()</throws>
     Digestion(Peptide^ peptide, CVID cleavageAgent, Config^ config);
 
     /// <summary>
     /// specifies digestion occurs by a combination of commonly used cleavage agents
     /// </summary>
+    /// <throws>ArgumentException if any of cleavageAgents are not in getCleavageAgents()</throws>
     Digestion(Peptide^ peptide, System::Collections::Generic::IEnumerable<CVID>^ cleavageAgents);
 
     /// <summary>
     /// specifies digestion occurs by a combination of commonly used cleavage agents
     /// </summary>
+    /// <throws>ArgumentException if any of cleavageAgents are not in getCleavageAgents()</throws>
     Digestion(Peptide^ peptide, System::Collections::Generic::IEnumerable<CVID>^ cleavageAgents, Config^ config);
 
     /// <summary>
@@ -559,6 +564,46 @@ public ref class Digestion : public System::Collections::Generic::IEnumerable<Di
     /// example: "(?&lt;=[FYWLKR])(?!P)" means "cleaves after any single residue from FYWLKR except when it is followed by P"
     /// </summary>
     Digestion(Peptide^ peptide, System::String^ cleavageAgentRegex, Config^ config);
+
+    /// <summary>
+    /// returns all instances of the given peptide in the polypeptide under digestion;
+    /// note: the filters set in Digestion::Config are respected!
+    /// </summary>
+    System::Collections::Generic::IList<DigestedPeptide^>^ find_all(Peptide^ peptide);
+
+    /// <summary>
+    /// returns all instances of the given peptide in the polypeptide under digestion;
+    /// note: the filters set in Digestion::Config are respected!
+    /// </summary>
+    System::Collections::Generic::IList<DigestedPeptide^>^ find_all(System::String^ peptide);
+
+    /// <summary>
+    /// returns the first instance of the given peptide in the polypeptide under digestion;
+    /// note: the filters set in Digestion::Config are respected!
+    /// </summary>
+    /// <throws>ArgumentException if no instance of the peptide is found</throws>
+    DigestedPeptide^ find_first(Peptide^ peptide);
+
+    /// <summary>
+    /// returns the first instance of the given peptide in the polypeptide under digestion;
+    /// note: the filters set in Digestion::Config are respected!
+    /// </summary>
+    /// <throws>ArgumentException if no instance of the peptide is found</throws>
+    DigestedPeptide^ find_first(System::String^ peptide);
+
+    /// <summary>
+    /// beginning at the offset hint, returns the first instance of the given peptide in the polypeptide under digestion;
+    /// note: the filters set in Digestion::Config are respected!
+    /// </summary>
+    /// <throws>ArgumentException if no instance of the peptide is found</throws>
+    DigestedPeptide^ find_first(Peptide^ peptide, int offsetHint);
+
+    /// <summary>
+    /// beginning at the offset hint, returns the first instance of the given peptide in the polypeptide under digestion;
+    /// note: the filters set in Digestion::Config are respected!
+    /// </summary>
+    /// <throws>ArgumentException if no instance of the peptide is found</throws>
+    DigestedPeptide^ find_first(System::String^ peptide, int offsetHint);
 
     /// <summary>
     /// provides forward-only, read-only iteration to enumerate peptides

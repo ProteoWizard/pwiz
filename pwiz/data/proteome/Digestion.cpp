@@ -78,15 +78,15 @@ DigestedPeptide::DigestedPeptide(std::string::const_iterator begin,
                                  size_t missedCleavages,
                                  bool NTerminusIsSpecific,
                                  bool CTerminusIsSpecific, 
-				 std::string nTermPrefix,
-				 std::string cTermSuffix )
+				 std::string NTerminusPrefix,
+				 std::string CTerminusSuffix )
 :   Peptide(begin, end),
     offset_(offset),
     missedCleavages_(missedCleavages),
     NTerminusIsSpecific_(NTerminusIsSpecific),
     CTerminusIsSpecific_(CTerminusIsSpecific),
-    nTermPrefix_(nTermPrefix),
-    cTermSuffix_(cTermSuffix)
+    NTerminusPrefix_(NTerminusPrefix),
+    CTerminusSuffix_(CTerminusSuffix)
 {
 }
 
@@ -97,8 +97,8 @@ PWIZ_API_DECL DigestedPeptide::DigestedPeptide(const DigestedPeptide& other)
     missedCleavages_(other.missedCleavages_),
     NTerminusIsSpecific_(other.NTerminusIsSpecific_),
     CTerminusIsSpecific_(other.CTerminusIsSpecific_),
-    nTermPrefix_(other.nTermPrefix_),
-    cTermSuffix_(other.cTermSuffix_)
+    NTerminusPrefix_(other.NTerminusPrefix_),
+    CTerminusSuffix_(other.CTerminusSuffix_)
 {
 }
 
@@ -109,8 +109,8 @@ PWIZ_API_DECL DigestedPeptide& DigestedPeptide::operator=(const DigestedPeptide&
     missedCleavages_ = rhs.missedCleavages_;
     NTerminusIsSpecific_ = rhs.NTerminusIsSpecific_;
     CTerminusIsSpecific_ = rhs.CTerminusIsSpecific_;
-    nTermPrefix_ = rhs.nTermPrefix_;
-    cTermSuffix_ = rhs.cTermSuffix_;
+    NTerminusPrefix_ = rhs.NTerminusPrefix_;
+    CTerminusSuffix_ = rhs.CTerminusSuffix_;
     return *this;
 }
 
@@ -143,14 +143,25 @@ PWIZ_API_DECL bool DigestedPeptide::CTerminusIsSpecific() const
     return CTerminusIsSpecific_;
 }
 
-PWIZ_API_DECL std::string DigestedPeptide::nTermPrefix() const
+PWIZ_API_DECL std::string DigestedPeptide::NTerminusPrefix() const
 {
-    return nTermPrefix_;
+    return NTerminusPrefix_;
 }
 
-PWIZ_API_DECL std::string DigestedPeptide::cTermSuffix() const
+PWIZ_API_DECL std::string DigestedPeptide::CTerminusSuffix() const
 {
-    return cTermSuffix_;
+    return CTerminusSuffix_;
+}
+
+PWIZ_API_DECL bool DigestedPeptide::operator==(const DigestedPeptide& rhs) const
+{
+    return this->Peptide::operator==(rhs) &&
+           offset() == rhs.offset() &&
+           missedCleavages() == rhs.missedCleavages() &&
+           NTerminusIsSpecific() == rhs.NTerminusIsSpecific() &&
+           CTerminusIsSpecific() == rhs.CTerminusIsSpecific() &&
+           NTerminusPrefix() == rhs.NTerminusPrefix() &&
+           CTerminusSuffix() == rhs.CTerminusSuffix();
 }
 
 
@@ -539,6 +550,8 @@ class Digestion::Impl
                             }
                     }
                 }
+
+                sitesSet_.insert(sites_.begin(), sites_.end());
             }
             catch (exception& e)
             {
@@ -547,8 +560,111 @@ class Digestion::Impl
         }
     }
 
+    inline vector<DigestedPeptide>& find_all(vector<DigestedPeptide>& result, const Peptide& peptide)
+    {
+        typedef boost::iterator_range<string::const_iterator> const_string_iterator_range;
+
+        digest(); // populate sites_ member if necessary
+
+        const string& sequence_ = peptide_.sequence();
+
+        if ((int) peptide.sequence().length() > config_.maximumLength ||
+            (int) peptide.sequence().length() < config_.minimumLength)
+            return result;
+
+        vector<const_string_iterator_range> instances;
+        bal::find_all(instances, sequence_, peptide.sequence());
+
+        BOOST_FOREACH(const_string_iterator_range& range, instances)
+        {
+            DigestedPeptide p(peptide.sequence());
+
+            size_t& beginOffset = p.offset_ = range.begin() - sequence_.begin();
+            size_t endOffset = beginOffset + peptide.sequence().length() - 1;
+
+            p.NTerminusIsSpecific_ = sitesSet_.count(int(beginOffset) - 1) > 0;
+            p.CTerminusIsSpecific_ = sitesSet_.count(int(endOffset)) > 0;
+
+            if (p.specificTermini() < (size_t) config_.minimumSpecificity)
+                continue;
+
+            p.missedCleavages_ = 0;
+            for (size_t i = beginOffset; i < endOffset; ++i)
+                if (sitesSet_.count((int) i) > 0)
+                    ++p.missedCleavages_;
+
+            if (p.missedCleavages() > (size_t) config_.maximumMissedCleavages)
+                continue;
+
+            if (beginOffset > 0)
+			    p.NTerminusPrefix_ = sequence_.substr(beginOffset-1, 1);
+		    if (endOffset+1 < sequence_.length())
+			    p.CTerminusSuffix_ = sequence_.substr(endOffset+1, 1);
+
+            result.push_back(p);
+        }
+
+        return result;
+    }
+
+    inline DigestedPeptide& find_first(DigestedPeptide& result, const Peptide& peptide, int offsetHint)
+    {
+        digest(); // populate sites_ member if necessary
+        const string& sequence_ = peptide_.sequence();
+
+        if ((int) peptide.sequence().length() > config_.maximumLength ||
+            (int) peptide.sequence().length() < config_.minimumLength)
+            throw runtime_error("[Digestion::find_first()] Peptide \"" + peptide.sequence() + "\" not found in \"" + sequence_ + "\"");
+
+        if(offsetHint + peptide.sequence().length() > sequence_.length())
+            offsetHint = 0;
+
+        size_t beginOffset = sequence_.find(peptide.sequence(), offsetHint);
+        if (beginOffset == string::npos)
+            beginOffset = sequence_.find(peptide.sequence(), 0);
+
+        if (beginOffset == string::npos)
+            throw runtime_error("[Digestion::find_first()] Peptide \"" + peptide.sequence() + "\" not found in \"" + sequence_ + "\"");
+
+        size_t endOffset = beginOffset + peptide.sequence().length() - 1;
+
+        result.missedCleavages_ = 0;
+        for (size_t i = beginOffset; i < endOffset; ++i)
+            if (sitesSet_.count((int) i) > 0)
+                ++result.missedCleavages_;
+
+        if (result.missedCleavages() > (size_t) config_.maximumMissedCleavages)
+            throw runtime_error("[Digestion::find_first()] Peptide \"" + peptide.sequence() + "\" not found in \"" + sequence_ + "\"");
+
+        do
+        {
+            endOffset = beginOffset + peptide.sequence().length() - 1;
+
+            result.NTerminusIsSpecific_ = sitesSet_.count(int(beginOffset)-1) > 0;
+            result.CTerminusIsSpecific_ = sitesSet_.count(int(endOffset)) > 0;
+
+            if (result.specificTermini() >= (size_t) config_.minimumSpecificity)
+                break;
+            beginOffset = sequence_.find(peptide.sequence(), beginOffset + 1);
+        }
+        while (beginOffset != string::npos);
+
+        if (beginOffset == string::npos ||
+            result.specificTermini() < (size_t) config_.minimumSpecificity)
+            throw runtime_error("[Digestion::find_first()] Peptide \"" + peptide.sequence() + "\" not found in \"" + sequence_ + "\"");
+
+        result.offset_ = beginOffset;
+
+        if (beginOffset > 0)
+		    result.NTerminusPrefix_ = sequence_.substr(beginOffset-1, 1);
+	    if (endOffset+1 < sequence_.length())
+		    result.CTerminusSuffix_ = sequence_.substr(endOffset+1, 1);
+
+        return result;
+    }
+
     private:
-    const Peptide& peptide_;
+    Peptide peptide_;
     Config config_;
     boost::regex cleavageAgentRegex_;
     vector<Motif> motifs_;
@@ -559,6 +675,7 @@ class Digestion::Impl
     // -1 is the N terminus digestion site
     // peptide_.sequence().length()-1 is the C terminus digestion site
     mutable vector<int> sites_;
+    mutable set<int> sitesSet_;
 };
 
 
@@ -623,6 +740,18 @@ Digestion::Digestion(const Peptide& peptide,
 
 PWIZ_API_DECL Digestion::~Digestion()
 {
+}
+
+PWIZ_API_DECL vector<DigestedPeptide> Digestion::find_all(const Peptide& peptide) const
+{
+    vector<DigestedPeptide> instances;
+    return impl_->find_all(instances, peptide);
+}
+
+PWIZ_API_DECL DigestedPeptide Digestion::find_first(const Peptide& peptide, size_t offsetHint) const
+{
+    DigestedPeptide result(peptide.sequence());
+    return impl_->find_first(result, peptide, offsetHint);
 }
 
 PWIZ_API_DECL Digestion::const_iterator Digestion::begin() const
@@ -754,41 +883,39 @@ class Digestion::const_iterator::Impl
     {
         try
         {
-	  string prefix = "";
-	  string suffix = "";
+            string prefix = "";
+            string suffix = "";
             if (!peptide_.get())
             {
-	      switch (config_.minimumSpecificity)
+                switch (config_.minimumSpecificity)
                 {
                     default:
                     case FullySpecific:
-		      if((*begin_ >= 0) && (*begin_ < sequence_.length())){
-			prefix = sequence_.substr(*begin_,1); //this could be changed to be something other than 1 by a config option later
-		      }
-		      if(*end_ != sequence_.length()){
-			suffix = sequence_.substr(*end_+1,1);
-		      }
-		      peptide_.reset(
+                        if(*begin_ >= 0 && *begin_ < (int) sequence_.length())
+                            prefix = sequence_.substr(*begin_, 1); //this could be changed to be something other than 1 by a config option later
+                        if(*end_ != (int) sequence_.length())
+                            suffix = sequence_.substr(*end_+1, 1);
+
+                        peptide_.reset(
                             new DigestedPeptide(sequence_.begin()+(*begin_+1),
                                                 sequence_.begin()+(*end_+1),
                                                 *begin_+1,
                                                 int(end_ - begin_)-1,
                                                 true,
                                                 true,
-						prefix, 
-						suffix
+                                                prefix, 
+                                                suffix
 						));
 			                    
-			break;
+                    break;
 
                     case SemiSpecific:
                     case NonSpecific:
-		      if((beginNonSpecific_ >= 0) && (beginNonSpecific_ < sequence_.length())){
-			prefix = sequence_.substr(beginNonSpecific_,1); //this could be changed to be something other than 1 by a config option later
-		      }
-		      if(endNonSpecific_ != sequence_.length()){
-			suffix = sequence_.substr(endNonSpecific_+1,1);
-		      }
+                        if(beginNonSpecific_ >= 0 && beginNonSpecific_ < (int) sequence_.length())
+                            prefix = sequence_.substr(beginNonSpecific_, 1); //this could be changed to be something other than 1 by a config option later
+                        if(endNonSpecific_ != (int) sequence_.length())
+                            suffix = sequence_.substr(endNonSpecific_+1, 1);
+
                         peptide_.reset(
                             new DigestedPeptide(sequence_.begin()+(beginNonSpecific_+1),
                                                 sequence_.begin()+(endNonSpecific_+1),
@@ -796,8 +923,8 @@ class Digestion::const_iterator::Impl
                                                 int(end_ - begin_)-1,
                                                 begin_ != sites_.end() && *begin_ == beginNonSpecific_,
                                                 end_ != sites_.end() && *end_ == endNonSpecific_,
-						prefix,
-						suffix
+                                                prefix,
+                                                suffix
 						));
                         break;
                 }

@@ -20,15 +20,16 @@
 //
 
 
-#include "pwiz/utility/misc/unit.hpp"
+#include "../common/unit.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 
-using namespace pwiz::util;
+using namespace pwiz::CLI::util;
 using namespace pwiz::CLI::cv;
 using namespace pwiz::CLI::chemistry;
 using namespace pwiz::CLI::proteome;
 using namespace System::Collections::Generic;
 using System::Exception;
+using System::ArgumentException;
 using System::String;
 using System::Console;
 
@@ -210,17 +211,31 @@ void testCleavageAgents()
 
     unit_assert(Digestion::getCleavageAgentRegex(CVID::MS_Trypsin) == "(?<=[KR])(?!P)");
     unit_assert(Digestion::getCleavageAgentRegex(CVID::MS_V8_E) == "(?<=[EZ])(?!P)");
-    unit_assert_throws(Digestion::getCleavageAgentRegex(CVID::MS_ion_trap), std::invalid_argument);
+    unit_assert_throws(Digestion::getCleavageAgentRegex(CVID::MS_ion_trap), ArgumentException);
 }
 
-
-/*struct DigestedPeptideLessThan
+void testDigestionMetadata(DigestedPeptide^ peptide,
+                           String^ expectedSequence,
+                           int expectedOffset,
+                           int expectedMissedCleavages,
+                           int expectedSpecificTermini,
+                           String^ expectedPrefix,
+                           String^ expectedSuffix)
 {
-    bool operator() (const DigestedPeptide& lhs, const DigestedPeptide& rhs) const
+    try
     {
-        return lhs.sequence() < rhs.sequence();
+        unit_assert(peptide->sequence == expectedSequence);
+        unit_assert(peptide->offset() == expectedOffset);
+        unit_assert(peptide->missedCleavages() == expectedMissedCleavages);
+        unit_assert(peptide->specificTermini() == expectedSpecificTermini);
+        unit_assert(peptide->NTerminusPrefix() == expectedPrefix);
+        unit_assert(peptide->CTerminusSuffix() == expectedSuffix);
     }
-};*/
+    catch(Exception^ e)
+    {
+        Console::Error->WriteLine("Testing peptide " + peptide->sequence + ": " + e->Message);
+    }
+}
 
 void testTrypticBSA(Digestion^ trypticDigestion)
 {
@@ -315,6 +330,25 @@ void testBSADigestion()
 }
 
 
+void testFind()
+{
+    Digestion^ non = gcnew Digestion(gcnew Peptide("PEPKTIDEKPEPTIDERPEPKTIDEKKKPEPTIDER"), CVID::MS_Lys_C_P, gcnew Digestion::Config(2, 5, 10, Digestion::Specificity::NonSpecific));
+
+    // test find_all
+    unit_assert(non->find_all("EPKTIDEKKK")->Count == 0); // too many missed cleavages
+    
+    unit_assert(non->find_all("PEPKTIDE")->Count == 2);
+    testDigestionMetadata(non->find_all("PEPKTIDE")[0], "PEPKTIDE", 0, 1, 1, "", "K");
+    testDigestionMetadata(non->find_all("PEPKTIDE")[1], "PEPKTIDE", 17, 1, 0, "R", "K");
+    
+    // test find_first
+    unit_assert_throws(non->find_first("ABC"), Exception); // not in peptide
+
+    testDigestionMetadata(non->find_first("EPTIDE"), "EPTIDE", 10, 0, 0, "P", "R");
+    testDigestionMetadata(non->find_first("EPTIDE", 29), "EPTIDE", 29, 0, 0, "P", "R");
+}
+
+
 int main(int argc, char* argv[])
 {
     try
@@ -324,6 +358,7 @@ int main(int argc, char* argv[])
         testAminoAcids();
         testCleavageAgents();
         testBSADigestion();
+        testFind();
         return 0;
     }
     catch (std::exception& e)

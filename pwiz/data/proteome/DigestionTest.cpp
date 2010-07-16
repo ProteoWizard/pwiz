@@ -101,18 +101,39 @@ struct DigestedPeptideLessThan
     }
 };
 
+void testDigestionMetadata(const DigestedPeptide& peptide,
+                           const string& expectedSequence,
+                           size_t expectedOffset,
+                           size_t expectedMissedCleavages,
+                           size_t expectedSpecificTermini,
+                           const string& expectedPrefix,
+                           const string& expectedSuffix)
+{
+    try
+    {
+        unit_assert(peptide.sequence() == expectedSequence);
+        unit_assert(peptide.offset() == expectedOffset);
+        unit_assert(peptide.missedCleavages() == expectedMissedCleavages);
+        unit_assert(peptide.specificTermini() == expectedSpecificTermini);
+        unit_assert(peptide.NTerminusPrefix() == expectedPrefix);
+        unit_assert(peptide.CTerminusSuffix() == expectedSuffix);
+    }
+    catch(exception& e)
+    {
+        cerr << "Testing peptide " << peptide.sequence() << ": " << e.what() << endl;
+    }
+}
+
 void testTrypticBSA(const Digestion& trypticDigestion)
 {
     if (os_) *os_ << "Fully-specific BSA digest (offset, missed cleavages, specific termini, length, sequence)" << endl;
-
-    set<DigestedPeptide, DigestedPeptideLessThan>::const_iterator peptideItr;
 
     vector<DigestedPeptide> trypticPeptides(trypticDigestion.begin(), trypticDigestion.end());
     set<DigestedPeptide, DigestedPeptideLessThan> trypticPeptideSet(trypticPeptides.begin(), trypticPeptides.end());
 
     if (os_)
     {
-        BOOST_FOREACH(DigestedPeptide peptide, trypticPeptides)
+        BOOST_FOREACH(const DigestedPeptide& peptide, trypticPeptides)
         {
             *os_ << peptide.offset() << "\t" << peptide.missedCleavages() << "\t" <<
                     peptide.specificTermini() << "\t" << peptide.sequence().length() <<
@@ -123,27 +144,10 @@ void testTrypticBSA(const Digestion& trypticDigestion)
     // test count
     unit_assert(trypticPeptides.size() > 3);
 
-    // test order of enumeration and trypticPeptides at the N terminus
-    unit_assert(trypticPeptides[0].sequence() == "MKWVTFISLLLLFSSAYSR");
-    unit_assert(trypticPeptides[1].sequence() == "MKWVTFISLLLLFSSAYSRGVFR");
-    unit_assert(trypticPeptides[2].sequence() == "MKWVTFISLLLLFSSAYSRGVFRR");
-
-    // test digestion metadata
-    unit_assert(trypticPeptides[0].offset() == 0);
-    unit_assert(trypticPeptides[0].missedCleavages() == 1);
-    unit_assert(trypticPeptides[0].specificTermini() == 2);
-    unit_assert(trypticPeptides[0].NTerminusIsSpecific() &&
-                trypticPeptides[0].CTerminusIsSpecific());
-    unit_assert(trypticPeptides[1].offset() == 0);
-    unit_assert(trypticPeptides[1].missedCleavages() == 2);
-    unit_assert(trypticPeptides[1].specificTermini() == 2);
-    unit_assert(trypticPeptides[1].NTerminusIsSpecific() &&
-                trypticPeptides[1].CTerminusIsSpecific());
-    unit_assert(trypticPeptides[2].offset() == 0);
-    unit_assert(trypticPeptides[2].missedCleavages() == 3);
-    unit_assert(trypticPeptides[2].specificTermini() == 2);
-    unit_assert(trypticPeptides[2].NTerminusIsSpecific() &&
-                trypticPeptides[2].CTerminusIsSpecific());
+    // test order of enumeration and metadata: sequence,         Off, NMC, NTT, Pre, Suf
+    testDigestionMetadata(trypticPeptides[0], "MKWVTFISLLLLFSSAYSR", 0, 1, 2, "", "G");
+    testDigestionMetadata(trypticPeptides[1], "MKWVTFISLLLLFSSAYSRGVFR", 0, 2, 2, "", "R");
+    testDigestionMetadata(trypticPeptides[2], "MKWVTFISLLLLFSSAYSRGVFRR", 0, 3, 2, "", "D");
 
     // test for non-tryptic peptides
     unit_assert(!trypticPeptideSet.count("MKWVTFISLLLL"));
@@ -505,6 +509,80 @@ void testBSADigestion()
 }
 
 
+void testFind()
+{
+    Digestion fully("PEPKTIDEKPEPTIDERPEPKTIDEKKKPEPTIDER", MS_Lys_C_P, Digestion::Config(2, 5, 10));
+    Digestion semi("PEPKTIDEKPEPTIDERPEPKTIDEKKKPEPTIDER", MS_Lys_C_P, Digestion::Config(2, 5, 10, Digestion::SemiSpecific));
+    Digestion non("PEPKTIDEKPEPTIDERPEPKTIDEKKKPEPTIDER", MS_Lys_C_P, Digestion::Config(2, 5, 10, Digestion::NonSpecific));
+
+    // test find_all
+    unit_assert(fully.find_all("ABC").empty()); // not in peptide
+    unit_assert(fully.find_all("PEPK").empty()); // too short
+    unit_assert(fully.find_all("PEPKTIDEKK").empty()); // no N-terminal cleavage
+    unit_assert(fully.find_all("PEPTIDERPEPK").empty()); // too long
+    unit_assert(fully.find_all("PEPTIDERPEPTIDEK").empty()); // too long
+    unit_assert(semi.find_all("PEPKTIDEKKK").empty()); // too many missed cleavages
+    unit_assert(semi.find_all("EPKTIDE").empty()); // no specific termini
+    unit_assert(non.find_all("EPKTIDEKKK").empty()); // too many missed cleavages
+
+    unit_assert(fully.find_all("PEPKTIDEK").size() == 1);
+    testDigestionMetadata(fully.find_all("PEPKTIDEK")[0], "PEPKTIDEK", 0, 1, 2, "", "P");
+
+    unit_assert(fully.find_all("TIDEK").size() == 2);
+    testDigestionMetadata(fully.find_all("TIDEK")[0], "TIDEK", 4, 0, 2, "K", "P");
+    testDigestionMetadata(fully.find_all("TIDEK")[1], "TIDEK", 21, 0, 2, "K", "K");
+
+    unit_assert(fully.find_all("TIDEKK").size() == 1);
+    testDigestionMetadata(fully.find_all("TIDEKK")[0], "TIDEKK", 21, 1, 2, "K", "K");
+
+    unit_assert(fully.find_all("TIDEKKK").size() == 1);
+    testDigestionMetadata(fully.find_all("TIDEKKK")[0], "TIDEKKK", 21, 2, 2, "K", "P");
+
+    unit_assert(fully.find_all("PEPTIDER").size() == 1);
+    testDigestionMetadata(fully.find_all("PEPTIDER")[0], "PEPTIDER", 28, 0, 2, "K", "");
+
+    unit_assert(semi.find_all("PEPKTIDEKK").size() == 1);
+    testDigestionMetadata(semi.find_all("PEPKTIDEKK")[0], "PEPKTIDEKK", 17, 2, 1, "R", "K");
+
+    unit_assert(semi.find_all("EPKTIDEKK").size() == 1);
+    testDigestionMetadata(semi.find_all("EPKTIDEKK")[0], "EPKTIDEKK", 18, 2, 1, "P", "K");
+
+    unit_assert(non.find_all("PEPKTIDE").size() == 2);
+    testDigestionMetadata(non.find_all("PEPKTIDE")[0], "PEPKTIDE", 0, 1, 1, "", "K");
+    testDigestionMetadata(non.find_all("PEPKTIDE")[1], "PEPKTIDE", 17, 1, 0, "R", "K");
+
+    // test find_first
+    unit_assert_throws(fully.find_first("ABC"), runtime_error); // not in peptide
+    unit_assert_throws(fully.find_first("PEPK"), runtime_error); // too short
+    unit_assert_throws(fully.find_first("PEPKTIDEKK"), runtime_error); // no N-terminal cleavage
+    unit_assert_throws(fully.find_first("PEPTIDERPEPK"), runtime_error); // too long
+    unit_assert_throws(fully.find_first("PEPTIDERPEPTIDEK"), runtime_error); // too long
+    unit_assert_throws(semi.find_first("EPKTIDE"), runtime_error); // no specific termini
+    unit_assert_throws(semi.find_first("PEPKTIDEKKK"), runtime_error); // too many missed cleavages
+    unit_assert_throws(non.find_first("PEPKTIDEKKK"), runtime_error); // too many missed cleavages
+
+    testDigestionMetadata(fully.find_first("PEPKTIDEK"), "PEPKTIDEK", 0, 1, 2, "", "P");
+    testDigestionMetadata(fully.find_first("PEPKTIDEK", 4242), "PEPKTIDEK", 0, 1, 2, "", "P");
+
+    testDigestionMetadata(fully.find_first("TIDEK"), "TIDEK", 4, 0, 2, "K", "P");
+    testDigestionMetadata(fully.find_first("TIDEK", 4242), "TIDEK", 4, 0, 2, "K", "P");
+    testDigestionMetadata(fully.find_first("TIDEK", 15), "TIDEK", 21, 0, 2, "K", "K");
+    testDigestionMetadata(fully.find_first("TIDEK", 21), "TIDEK", 21, 0, 2, "K", "K");
+
+    testDigestionMetadata(fully.find_first("TIDEKK"), "TIDEKK", 21, 1, 2, "K", "K");
+    testDigestionMetadata(fully.find_first("TIDEKKK"), "TIDEKKK", 21, 2, 2, "K", "P");
+    testDigestionMetadata(fully.find_first("PEPTIDER"), "PEPTIDER", 28, 0, 2, "K", "");
+
+    testDigestionMetadata(semi.find_first("IDEKK"), "IDEKK", 22, 1, 1, "T", "K");
+    testDigestionMetadata(semi.find_first("IDEKKK"), "IDEKKK", 22, 2, 1, "T", "P");
+    testDigestionMetadata(semi.find_first("PEPTIDER"), "PEPTIDER", 9, 0, 1, "K", "P");
+    testDigestionMetadata(semi.find_first("PEPTIDER", 28), "PEPTIDER", 28, 0, 2, "K", "");
+
+    testDigestionMetadata(non.find_first("EPTIDE"), "EPTIDE", 10, 0, 0, "P", "R");
+    testDigestionMetadata(non.find_first("EPTIDE", 29), "EPTIDE", 29, 0, 0, "P", "R");
+}
+
+
 void testThreadSafetyWorker(boost::barrier* testBarrier)
 {
     testBarrier->wait(); // wait until all threads have started
@@ -513,6 +591,7 @@ void testThreadSafetyWorker(boost::barrier* testBarrier)
     {
         testCleavageAgents();
         testBSADigestion();
+        testFind();
     }
     catch (exception& e)
     {
@@ -543,6 +622,7 @@ int main(int argc, char* argv[])
         if (os_) *os_ << "DigestionTest\n";
         testCleavageAgents();
         testBSADigestion();
+        testFind();
         testThreadSafety();
         return 0;
     }

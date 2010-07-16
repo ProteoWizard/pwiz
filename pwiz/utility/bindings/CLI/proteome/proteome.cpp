@@ -173,8 +173,8 @@ int DigestedPeptide::missedCleavages() {return (int) base_->missedCleavages();}
 int DigestedPeptide::specificTermini() {return (int) base_->specificTermini();}
 bool DigestedPeptide::NTerminusIsSpecific() {return base_->NTerminusIsSpecific();}
 bool DigestedPeptide::CTerminusIsSpecific() {return base_->CTerminusIsSpecific();}
-String^ DigestedPeptide::nTermPrefix() {return ToSystemString(base_->nTermPrefix());}
-String^ DigestedPeptide::cTermSuffix() {return ToSystemString(base_->cTermSuffix());}
+String^ DigestedPeptide::NTerminusPrefix() {return ToSystemString(base_->NTerminusPrefix());}
+String^ DigestedPeptide::CTerminusSuffix() {return ToSystemString(base_->CTerminusSuffix());}
 
 
 Digestion::Config::Config()
@@ -263,7 +263,11 @@ List<String^>^ Digestion::getCleavageAgentNames()
 
 String^ Digestion::getCleavageAgentRegex(CVID agentCvid)
 {
-    return ToSystemString(b::Digestion::getCleavageAgentRegex((pwiz::cv::CVID) agentCvid));
+    try
+    {
+        return ToSystemString(b::Digestion::getCleavageAgentRegex((pwiz::cv::CVID) agentCvid));
+    }
+    CATCH_AND_FORWARD
 }
 
 List<CVID>^ Digestion::getCleavageAgents()
@@ -272,6 +276,44 @@ List<CVID>^ Digestion::getCleavageAgents()
     BOOST_FOREACH(const pwiz::cv::CVID& cvid, b::Digestion::getCleavageAgents())
         cleavageAgents->Add((CVID) cvid);
     return cleavageAgents;
+}
+
+System::Collections::Generic::IList<DigestedPeptide^>^ Digestion::find_all(Peptide^ peptide)
+{
+    List<DigestedPeptide^>^ instances = gcnew List<DigestedPeptide^>();
+    // make copies of the native DigestedPeptides because the vector is transient
+    BOOST_FOREACH(const b::DigestedPeptide& p, base().find_all(peptide->base()))
+        instances->Add(gcnew DigestedPeptide(new pwiz::proteome::DigestedPeptide(p)));
+
+    return instances;
+}
+
+System::Collections::Generic::IList<DigestedPeptide^>^ Digestion::find_all(String^ peptide)
+{
+    return find_all(gcnew Peptide(peptide));
+}
+
+DigestedPeptide^ Digestion::find_first(Peptide^ peptide)
+{
+    return find_first(peptide, 0);
+}
+
+DigestedPeptide^ Digestion::find_first(String^ peptide)
+{
+    return find_first(gcnew Peptide(peptide));
+}
+
+DigestedPeptide^ Digestion::find_first(Peptide^ peptide, int offsetHint)
+{
+    b::DigestedPeptide instance = base().find_first(peptide->base(), (size_t) offsetHint);
+
+    // make a copy of the native DigestedPeptide because the return value is transient
+    return gcnew DigestedPeptide(new pwiz::proteome::DigestedPeptide(instance));
+}
+
+DigestedPeptide^ Digestion::find_first(String^ peptide, int offsetHint)
+{
+    return find_first(gcnew Peptide(peptide), offsetHint);
 }
 
 
