@@ -68,7 +68,7 @@ namespace pwiz.Skyline.EditUI
         }
 
         /// <summary>
-        /// Adds a new "copy metafile" menu item right below the existing "copy" command
+        /// Adds a new "copy metafile" and "copy graph data" menu items right below the existing "copy" command
         /// on the context menu.
         /// </summary>
         public static void AddToContextMenu(ZedGraphControl zedGraphControl, ContextMenuStrip contextMenuStrip)
@@ -83,6 +83,7 @@ namespace pwiz.Skyline.EditUI
                     break;
                 }
             }
+            contextMenuStrip.Items.Insert(index, new CopyGraphDataToolStripMenuItem(zedGraphControl));
             contextMenuStrip.Items.Insert(index, new CopyEmfToolStripMenuItem(zedGraphControl));
         }
 	}

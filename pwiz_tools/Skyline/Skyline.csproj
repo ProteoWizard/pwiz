@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
+    <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}</ProjectGuid>
     <OutputType>WinExe</OutputType>
@@ -292,6 +292,9 @@
       <DependentUpon>AreaChartPropertyDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="EditUI\CopyEmfToolStripMenuItem.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="EditUI\CopyGraphDataToolStripMenuItem.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="EditUI\RefineDlg.cs">
@@ -865,15 +868,19 @@
     </Content>
     <EmbeddedResource Include="Alerts\MissingBackgroundProteomeDlg.resx">
       <DependentUpon>MissingBackgroundProteomeDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ShareTypeDlg.resx">
       <DependentUpon>ShareTypeDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\MissingLibraryDlg.resx">
       <DependentUpon>MissingLibraryDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\MessageDlg.resx">
       <DependentUpon>MessageDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\PasteFilteredPeptidesDlg.resx">
       <DependentUpon>PasteFilteredPeptidesDlg.cs</DependentUpon>
@@ -885,9 +892,11 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\ColumnChooser.resx">
       <DependentUpon>ColumnChooser.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\GraphRegression.resx">
       <DependentUpon>GraphRegression.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\GraphSummary.resx">
       <DependentUpon>GraphSummary.cs</DependentUpon>
@@ -907,6 +916,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\ResultsGridForm.resx">
       <DependentUpon>ResultsGridForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\TreeViewMS.resx">
       <DependentUpon>TreeViewMS.cs</DependentUpon>
@@ -914,6 +924,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\ArrangeGraphsGroupedDlg.resx">
       <DependentUpon>ArrangeGraphsGroupedDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\StatementCompletionForm.resx">
       <DependentUpon>StatementCompletionForm.cs</DependentUpon>
@@ -929,9 +940,11 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\RefineDlg.resx">
       <DependentUpon>RefineDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\RTChartPropertyDlg.resx">
       <DependentUpon>RTChartPropertyDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\ShowRTThresholdDlg.resx">
       <DependentUpon>ShowRTThresholdDlg.cs</DependentUpon>
@@ -959,9 +972,11 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ExportOptimizeDlg.resx">
       <DependentUpon>ExportOptimizeDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\RenameResultDlg.resx">
       <DependentUpon>RenameResultDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ShareListDlg.resx">
       <DependentUpon>ShareListDlg.cs</DependentUpon>
@@ -1027,18 +1042,23 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\BuildLibraryNotification.resx">
       <DependentUpon>BuildLibraryNotification.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\ChooseAnnotationsDlg.resx">
       <DependentUpon>ChooseAnnotationsDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\DefineAnnotationDlg.resx">
       <DependentUpon>DefineAnnotationDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditFragmentLossDlg.resx">
       <DependentUpon>EditFragmentLossDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditLabelTypeListDlg.resx">
       <DependentUpon>EditLabelTypeListDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditLibraryDlg.resx">
       <DependentUpon>EditLibraryDlg.cs</DependentUpon>
