@@ -274,6 +274,13 @@ namespace pwiz.Skyline.SettingsUI
             else
                 labelAtoms = LabelAtoms;
 
+            // Get the losses to know whether any exist below
+            IList<FragmentLoss> losses = null;
+            if (listNeutralLosses.Items.Count > 0)
+            {
+                losses = Losses.ToArray();
+            }
+
             if (!string.IsNullOrEmpty(formula))
             {
                 try
@@ -290,25 +297,24 @@ namespace pwiz.Skyline.SettingsUI
             else if (labelAtoms == LabelAtoms.None)
             {
                 formula = null;
-                double mass;
-                if (!helper.ValidateDecimalTextBox(e, textMonoMass, -1500, 1500, out mass))
-                    return;
-                monoMass = mass;
-                if (!helper.ValidateDecimalTextBox(e, textAverageMass, -1500, 1500, out mass))
-                    return;
-                avgMass = mass;
+
+                // Allow formula and both masses to be empty, if losses are present
+                if (!string.IsNullOrEmpty(textMonoMass.Text) || !string.IsNullOrEmpty(textAverageMass.Text) || losses == null)
+                {
+                    double mass;
+                    if (!helper.ValidateDecimalTextBox(e, textMonoMass, -1500, 1500, out mass))
+                        return;
+                    monoMass = mass;
+                    if (!helper.ValidateDecimalTextBox(e, textAverageMass, -1500, 1500, out mass))
+                        return;
+                    avgMass = mass;
+                }
             }
             else if (aas == null && term.HasValue)
             {
                 MessageBox.Show(this, "Labeled atoms on terminal modification are not valid.", Program.Name);
                 e.Cancel = true;
                 return;
-            }
-
-            IList<FragmentLoss> losses = null;
-            if (listNeutralLosses.Items.Count > 0)
-            {
-                losses = Losses.ToArray();
             }
 
             RelativeRT relativeRT = RelativeRT.Matching;

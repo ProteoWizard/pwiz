@@ -99,16 +99,20 @@ namespace pwiz.Skyline.Model
                 int countPeptides = 0;
                 int countIons = 0;
 
+                Dictionary<int, DocNode> mapIndexToChild = CreateGlobalIndexToChildMap();
                 Dictionary<PeptideModKey, DocNode> mapIdToChild = CreatePeptideModToChildMap();
+
                 foreach(PeptideDocNode nodePep in GetPeptideNodes(settingsNew, true))
                 {
                     PeptideDocNode nodePeptide = nodePep;
                     SrmSettingsDiff diffNode = SrmSettingsDiff.ALL;
 
                     DocNode existing;
-                    // Add values that existed before the change.
-                    var key = new PeptideModKey(nodePep.Peptide, nodePep.ExplicitMods);
-                    if (mapIdToChild.TryGetValue(key, out existing))
+                    // Add values that existed before the change. First check for exact match by
+                    // global index, which will happen when explicit modifications are added,
+                    // and then by content identity.
+                    if (mapIndexToChild.TryGetValue(nodePep.Id.GlobalIndex, out existing) ||
+                        mapIdToChild.TryGetValue(new PeptideModKey(nodePep.Peptide, nodePep.ExplicitMods), out existing))
                     {
                         nodePeptide = (PeptideDocNode) existing;
                         diffNode = diff;
@@ -214,7 +218,13 @@ namespace pwiz.Skyline.Model
                     else
                     {
                         bool returnedResult = false;
-                        foreach (PeptideDocNode nodePepResult in nodePep.Peptide.CreateDocNodes(settings, filter))
+                        var peptide = nodePep.Peptide;
+                        // The peptide will be returned as the Id of the unmodified instance of this
+                        // peptide.  If the peptide DocNode is explicitly modified this will cause
+                        // two nodes in the tree to have the same Id.  So, use a copy instead.
+                        if (nodePep.HasExplicitMods)
+                            peptide = (Peptide) peptide.Copy();
+                        foreach (PeptideDocNode nodePepResult in peptide.CreateDocNodes(settings, filter))
                         {
                             yield return nodePepResult;
                             returnedResult = true;
@@ -232,8 +242,19 @@ namespace pwiz.Skyline.Model
         {
             var map = new Dictionary<PeptideModKey, DocNode>();
             foreach (PeptideDocNode child in Children)
-                map.Add(new PeptideModKey(child.Peptide, child.ExplicitMods), child);
+            {
+                var key = new PeptideModKey(child.Peptide, child.ExplicitMods);
+                // Skip repeats.  These can only be created by the user, and should be
+                // matched by the global index dictionary.
+                if (!map.ContainsKey(key))
+                    map.Add(key, child);
+            }
             return map;
+        }
+
+        private Dictionary<int, DocNode> CreateGlobalIndexToChildMap()
+        {
+            return Children.ToDictionary(child => child.Id.GlobalIndex);
         }
 
         #region object overrides

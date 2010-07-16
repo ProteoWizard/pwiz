@@ -730,6 +730,14 @@ namespace pwiz.Skyline.Model
             if (ReferenceEquals(pepModsNew, pepMods))
                 return docResult;
 
+            // Turn off auto-manage children for the peptide group if it is a FASTA sequence,
+            // because the child lists the FASTA sequence will create will not contain this manually
+            // altered peptide.
+            var nodePepGroup = (PeptideGroupDocNode) docResult.FindNode(peptidePath.Parent);
+            if (!nodePepGroup.IsPeptideList)
+                docResult = (SrmDocument) docResult.ReplaceChild(nodePepGroup.ChangeAutoManageChildren(false));
+
+            // Make sure any newly included modifications are added to the settings
             var settings = docResult.Settings.ChangePeptideModifications(m => pepModsNew);
             return docResult.ChangeSettings(settings);
         }

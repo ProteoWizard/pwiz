@@ -447,6 +447,7 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Aqua\" aminoacid=\"K, R\" label_13C=\"true\" label_15N=\"true\" label_18O=\"true\"  label_2H=\"true\"/>");
             AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Loss1\" aminoacid=\"T, S\" formula=\"HPO3\"><fragment_loss formula=\"HP3O4\"/></static_modification>");
             AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Loss3\" aminoacid=\"T, S\" formula=\"HPO3\"><fragment_loss formula=\"HP3O4\"/><fragment_loss formula=\"H2O\"/><fragment_loss formula=\"NH3\"/></static_modification>");
+            AssertEx.DeserializeNoError<StaticMod>("<static_modification name=\"Loss-only\" aminoacid=\"K, R, Q, N\"><fragment_loss formula=\"NH3\"/></static_modification>");
 
             // Missing parameters
             AssertEx.DeserializeError<StaticMod>("<static_modification />");

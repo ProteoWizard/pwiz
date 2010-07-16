@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Xml;
@@ -273,6 +274,33 @@ namespace pwiz.SkylineTest
             Assert.AreEqual(peptides, document.PeptideCount);
             Assert.AreEqual(tranGroups, document.TransitionGroupCount);
             Assert.AreEqual(transitions, document.TransitionCount);
+
+            // Verify that no two nodes in the document tree have the same global index
+            var setIndexes = new HashSet<int>();
+            var nodeDuplicate = FindFirstDuplicateGlobalIndex(document, setIndexes);
+            if (nodeDuplicate != null)
+            {
+                Assert.Fail(string.Format("Duplicate global index {0} found in node {1}",
+                    nodeDuplicate.Id.GlobalIndex, nodeDuplicate));
+            }
+        }
+
+        private static DocNode FindFirstDuplicateGlobalIndex(DocNode node, HashSet<int> setIndexes)
+        {
+            var nodeParent = node as DocNodeParent;
+            if (nodeParent != null)
+            {
+                foreach (var child in nodeParent.Children)
+                {
+                    var nodeDuplicate = FindFirstDuplicateGlobalIndex(child, setIndexes);
+                    if (nodeDuplicate != null)
+                        return nodeDuplicate;
+                }
+            }
+            if (setIndexes.Contains(node.Id.GlobalIndex))
+                return node;
+            setIndexes.Add(node.Id.GlobalIndex);
+            return null;
         }
 
         public static void DocumentCloned(SrmDocument target, SrmDocument actual)

@@ -1064,7 +1064,14 @@ namespace pwiz.Skyline
         private void deleteMenuItem_Click(object sender, EventArgs e) { EditDelete(); }
         public void EditDelete()
         {
-            ModifyDocument("Delete Nodes", doc =>
+            string undoText = "items";
+            if (SequenceTree.SelectedNodes.Count == 1)
+            {
+                SrmTreeNode node = sequenceTree.SelectedNode as SrmTreeNode;
+                if (node != null)
+                    undoText = node.Text;
+            }
+            ModifyDocument("Delete " + undoText, doc =>
                                                   {
                                                       foreach (TreeNodeMS nodeTree in SequenceTree.SelectedNodes)
                                                       {

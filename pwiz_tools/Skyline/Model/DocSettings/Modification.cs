@@ -239,8 +239,13 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             if (Formula == null && LabelAtoms == LabelAtoms.None)
             {
-                if (MonoisotopicMass == null || AverageMass == null)
-                    throw new InvalidDataException("Modification must specify a formula, labeled atoms or valid monoisotopic and average masses.");
+                // Allow a modification that just specifies potential neutral losses
+                // from unmodified amino acid residues.
+                if (Losses == null)
+                {
+                    if (MonoisotopicMass == null || AverageMass == null)
+                        throw new InvalidDataException("Modification must specify a formula, labeled atoms or valid monoisotopic and average masses.");
+                }
             }
             else
             {
