@@ -25,6 +25,9 @@ using System.Text;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using System.Data;
+using NHibernate;
+using NHibernate.Linq;
 using Iesi.Collections.Generic;
 using msdata = pwiz.CLI.msdata;
 
@@ -336,7 +339,7 @@ namespace IDPicker.DataModel
         {
             if (value == null)
                 return null;
-            var msd = value as pwiz.CLI.msdata.MSData;
+            var msd = value as msdata.MSData;
             return msd;
         }
 
@@ -365,14 +368,14 @@ namespace IDPicker.DataModel
             return x.GetHashCode();
         }
 
-        public object NullSafeGet (System.Data.IDataReader rs, string[] names, object owner)
+        public object NullSafeGet (IDataReader rs, string[] names, object owner)
         {
             return Assemble(rs.GetValue(0), owner);
         }
 
-        public void NullSafeSet (System.Data.IDbCommand cmd, object value, int index)
+        public void NullSafeSet (IDbCommand cmd, object value, int index)
         {
-            (cmd.Parameters[index] as System.Data.IDataParameter).Value = Disassemble(value);
+            (cmd.Parameters[index] as IDataParameter).Value = Disassemble(value);
         }
 
         public object Replace (object original, object target, object owner)
@@ -582,6 +585,24 @@ namespace IDPicker.DataModel
 
     public static class ExtensionMethods
     {
+        /// <summary>
+        /// Gets a single result from a query on the session matching the given expression.
+        /// If the query returns more than one result, returns null.
+        /// </summary>
+        public static T UniqueResult<T> (this ISession session, System.Linq.Expressions.Expression<Func<T, bool>> expression) where T : class
+        {
+            return session.Query<T>().Where(expression).SingleOrDefault();
+        }
+
+        /// <summary>
+        /// Gets a single result from a query on the session matching the given expression.
+        /// If the query returns more than one result, returns null.
+        /// </summary>
+        public static T UniqueResult<T> (this ISession session, string hql) where T : class
+        {
+            return session.CreateQuery(hql).UniqueResult<T>();
+        }
+
         public static string ToModifiedString (this PeptideSpectrumMatch psm, int precision)
         {
             string format = String.Format("[{{0:f{0}}}]", precision);

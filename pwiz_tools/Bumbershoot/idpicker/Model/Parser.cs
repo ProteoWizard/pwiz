@@ -33,8 +33,15 @@ using System.Linq;
 
 using NHibernate;
 using NHibernate.Linq;
+
+using pwiz.CLI.cv;
 using pwiz.CLI.chemistry;
 using pwiz.CLI.proteome;
+using pwiz.CLI.msdata;
+using pwiz.CLI.analysis;
+using proteome = pwiz.CLI.proteome;
+using msdata = pwiz.CLI.msdata;
+using analysis = pwiz.CLI.analysis;
 
 namespace IDPicker.DataModel
 {
@@ -82,7 +89,7 @@ namespace IDPicker.DataModel
             DecoyPrefix = DefaultDecoyPrefix;
         }
 
-        public void IdentifyXml(StreamReader xmlStream, out FileType fileType, out string proteinDatabasePath)
+        public void IdentifyXml(StreamReader xmlStream, out FileType fileType, out string proteinDatabasePath, out bool embeddedSequences)
         {
             XmlReaderSettings settings = new XmlReaderSettings();
             settings.ValidationType = ValidationType.None;
@@ -97,6 +104,7 @@ namespace IDPicker.DataModel
             bool foundDatabase = false;
             fileType = FileType.Unknown;
             proteinDatabasePath = null;
+            embeddedSequences = false;
 
             using (XmlReader reader = XmlTextReader.Create(xmlStream, settings))
             {
@@ -133,6 +141,7 @@ namespace IDPicker.DataModel
                             proteinDatabasePath = Path.GetFileName(getAttribute(reader, "database").Replace(".pro", ""));
                             if (!String.IsNullOrEmpty(proteinDatabasePath))
                                 foundDatabase = true;
+                            break;
                         }
                     }
 
@@ -147,13 +156,16 @@ namespace IDPicker.DataModel
                                 proteinDatabasePath = Path.GetFileName(getAttribute(reader, "value"));
                                 foundDatabase = true;
                             }
+                            else if (reader.Name == "protein" &&
+                                    !String.IsNullOrEmpty(getAttribute(reader, "sequence")))
+                                embeddedSequences = true;
                         }
                     }
                 }
             }
         }
 
-        public void ReadXml (IEnumerable<string> xmlFilepaths, string rootInputDirectory)
+        public void ReadXml (string rootInputDirectory, params string[] xmlFilepaths)
         {
             #region Manually curated sets of model entities
             IList<SpectrumSourceGroup> dbGroups;
@@ -217,7 +229,8 @@ namespace IDPicker.DataModel
             string lastProteinDatabasePathLocation = Directory.GetCurrentDirectory();
             string lastSourcePathLocation = Directory.GetCurrentDirectory();
 
-            pwiz.CLI.proteome.ProteomeDataFile pd = null;
+            ProteomeDataFile pd = null;
+            ProteinList proteinList = null;
 
             int maxProteinLength = currentMaxProteinLength;
 
@@ -228,40 +241,45 @@ namespace IDPicker.DataModel
                 #region Determine input file type and protein database used; also locate database and open it
                 FileType fileType;
                 string oldProteinDatabasePath = proteinDatabasePath;
-                IdentifyXml(sourceXml, out fileType, out proteinDatabasePath);
-                string databaseFilepath = null;
-                try
+                bool embeddedSequences;
+                IdentifyXml(sourceXml, out fileType, out proteinDatabasePath, out embeddedSequences);
+
+                if (!embeddedSequences)
                 {
-                    databaseFilepath = Util.FindDatabaseInSearchPath(proteinDatabasePath, rootInputDirectory);
-                }
-                catch
-                {
+                    string databaseFilepath = null;
                     try
                     {
-                        databaseFilepath = Util.FindDatabaseInSearchPath(proteinDatabasePath, lastProteinDatabasePathLocation);
+                        databaseFilepath = Util.FindDatabaseInSearchPath(proteinDatabasePath, rootInputDirectory);
                     }
                     catch
                     {
-                        if (DatabaseNotFound != null)
+                        try
                         {
-                            var eventArgs = new DatabaseNotFoundEventArgs() { DatabasePath = proteinDatabasePath };
-                            DatabaseNotFound(this, eventArgs);
-                            if (File.Exists(eventArgs.DatabasePath))
+                            databaseFilepath = Util.FindDatabaseInSearchPath(proteinDatabasePath, lastProteinDatabasePathLocation);
+                        }
+                        catch
+                        {
+                            if (DatabaseNotFound != null)
                             {
-                                lastProteinDatabasePathLocation = Path.GetDirectoryName(eventArgs.DatabasePath);
-                                databaseFilepath = eventArgs.DatabasePath;
+                                var eventArgs = new DatabaseNotFoundEventArgs() { DatabasePath = proteinDatabasePath };
+                                DatabaseNotFound(this, eventArgs);
+                                if (File.Exists(eventArgs.DatabasePath))
+                                {
+                                    lastProteinDatabasePathLocation = Path.GetDirectoryName(eventArgs.DatabasePath);
+                                    databaseFilepath = eventArgs.DatabasePath;
+                                }
                             }
                         }
+
+                        if (databaseFilepath == null)
+                            throw;
                     }
 
-                    if (databaseFilepath == null)
-                        throw;
+                    // don't open the database if it's already open
+                    if (pd == null || oldProteinDatabasePath != proteinDatabasePath)
+                        pd = new ProteomeDataFile(databaseFilepath);
+                    proteinList = pd.proteinList;
                 }
-
-                // don't open the database if it's already open
-                if(pd == null || oldProteinDatabasePath != proteinDatabasePath)
-                    pd = new pwiz.CLI.proteome.ProteomeDataFile(databaseFilepath);
-                var proteinList = pd.proteinList;
                 #endregion
 
                 #region Initialize the XmlReader
@@ -272,8 +290,7 @@ namespace IDPicker.DataModel
                 settings.ProhibitDtd = false;
                 settings.XmlResolver = null;
 
-                sourceXml.BaseStream.Seek(0, SeekOrigin.Begin);
-                sourceXml.DiscardBufferedData();
+                sourceXml = new StreamReader(xmlFilepath);
                 XmlReader reader = XmlTextReader.Create(sourceXml, settings);
                 #endregion
 
@@ -292,8 +309,8 @@ namespace IDPicker.DataModel
                 int curCharge = 0;
                 #endregion
 
-                pwiz.CLI.msdata.MSData curSourceData = null;
-                pwiz.CLI.msdata.SpectrumList curSpectrumList = null;
+                MSData curSourceData = null;
+                SpectrumList curSpectrumList = null;
                 Set<int> curSpectraIndexSubset = null;
 
                 string tag;
@@ -304,8 +321,8 @@ namespace IDPicker.DataModel
                 {
                     #region idpXML reading
 
-                    string[] proteinIndex = null;
-                    string[] peptideIndex = null;
+                    var proteinIndex = new Dictionary<int, string>();
+                    var peptideIndex = new Dictionary<int, string>();
 
                     while (reader.Read())
                     {
@@ -340,10 +357,6 @@ namespace IDPicker.DataModel
 
                                     curPeptide = dbPeptides[pep];
 
-                                    curPSM.Peptide = curPeptide;
-                                    curPSM.MonoisotopicMass = curPeptide.MonoisotopicMass;
-                                    curPSM.MolecularWeight = curPeptide.MolecularWeight;
-
                                     // Get the mods for the peptide
                                     string modListStr = getAttribute(reader, "mods");
                                     if (modListStr.Length > 0)
@@ -359,6 +372,9 @@ namespace IDPicker.DataModel
                                             curPSM = new PeptideSpectrumMatch(curPSM)
                                             {
                                                 Id = ++psmCount,
+                                                Peptide = curPeptide,
+                                                MonoisotopicMass = curPeptide.MonoisotopicMass,
+                                                MolecularWeight = curPeptide.MolecularWeight,
                                             };
 
                                             string[] modInfoStrs = ambiguousLocations[i].Split(' ');
@@ -369,9 +385,16 @@ namespace IDPicker.DataModel
                                                 string[] modPosMassPair = modInfoStr.Split(":".ToCharArray());
                                                 string modPosStr = modPosMassPair[0];
 
-                                                double modMass = Convert.ToDouble(modPosMassPair[1]);
+                                                double modMass;
+                                                proteome.Modification pwizMod;
+                                                if (!Double.TryParse(modPosMassPair[1], out modMass))
+                                                    pwizMod = new proteome.Modification(modPosMassPair[1]);
+                                                else
+                                                    pwizMod = new proteome.Modification(modMass, modMass);
+
+                                                modMass = pwizMod.monoisotopicDeltaMass();
                                                 curPSM.MonoisotopicMass += modMass;
-                                                curPSM.MolecularWeight += modMass;
+                                                curPSM.MolecularWeight += pwizMod.averageDeltaMass();
 
                                                 Modification mod;
                                                 if (!dbModifications.TryGetValue(modMass, out mod))
@@ -379,8 +402,10 @@ namespace IDPicker.DataModel
                                                     mod = new Modification()
                                                     {
                                                         Id = dbModifications.Count + 1,
+                                                        Name = pwizMod.hasFormula() ? pwizMod.formula() : String.Empty,
+                                                        Formula = pwizMod.hasFormula() ? pwizMod.formula() : String.Empty,
                                                         MonoMassDelta = modMass,
-                                                        AvgMassDelta = modMass,
+                                                        AvgMassDelta = pwizMod.averageDeltaMass(),
                                                     };
                                                     dbModifications[modMass] = mod;
                                                     bulkInserter.Modifications.Add(mod);
@@ -419,6 +444,9 @@ namespace IDPicker.DataModel
                                         curPSM = new PeptideSpectrumMatch(curPSM)
                                         {
                                             Id = ++psmCount,
+                                            Peptide = curPeptide,
+                                            MonoisotopicMass = curPeptide.MonoisotopicMass,
+                                            MolecularWeight = curPeptide.MolecularWeight,
                                         };
 
                                         curPSM.MonoisotopicMassError = neutralPrecursorMass - curPSM.MonoisotopicMass;
@@ -448,8 +476,6 @@ namespace IDPicker.DataModel
                                             PrecursorMZ = (neutralPrecursorMass + Proton.Mass * z) / z
                                         };
 
-                                        //byte[] peakListBytes = null;
-
                                         if (curSourceData != null)
                                         {
                                             int realIndex = curSpectrumList.find(nativeID);
@@ -457,6 +483,7 @@ namespace IDPicker.DataModel
                                                 curSpectraIndexSubset.Add(realIndex);
                                         }
 
+                                        curSource.Spectra.Add(curSpectrum);
                                         bulkInserter.Spectra.Add(curSpectrum);
                                     }
 
@@ -474,12 +501,33 @@ namespace IDPicker.DataModel
                                     //curSpectrum.numComparisons += getAttributeAs<int>(reader, "decoys");
                                 }
                                 #endregion
-                                #region <result rank="1" FDR="0.1">
+                                #region <result rank="1" FDR="0.1" scores="name1=value1 name2=value2">
                                 else if (tag == "result")
                                 {
-                                    curPSM.Rank = getAttributeAs<int>(reader, "rank", true);
-                                    curPSM.QValue = getAttributeAs<float>(reader, "FDR", true);
-                                    // TODO: getAttribute(reader, "scores", true);
+                                    curPSM = new PeptideSpectrumMatch(curPSM)
+                                    {
+                                        Rank = getAttributeAs<int>(reader, "rank", true),
+                                        QValue = getAttributeAs<float>(reader, "FDR", true)
+                                    };
+
+                                    string scores = getAttribute(reader, "scores");
+                                    if (!String.IsNullOrEmpty(scores))
+                                    {
+                                        curPSM.Scores = new Dictionary<string, double>();
+                                        string[] scoreTokens = scores.Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+
+                                        // scores could be like "name1=value1 name2=value2" or "value1 value2"
+                                        bool hasNames = scoreTokens[0].Contains('=');
+                                        if (hasNames)
+                                            foreach (string token in scoreTokens)
+                                            {
+                                                string[] tokenTokens = token.Split('=');
+                                                curPSM.Scores[tokenTokens[0]] = Convert.ToDouble(tokenTokens[1]);
+                                            }
+                                        else
+                                            for (int i = 0; i < scoreTokens.Length; ++i)
+                                                curPSM.Scores[String.Format("score{0}", (i + 1))] = Convert.ToDouble(scoreTokens[i]);
+                                    }
                                 }
                                 #endregion
                                 #region <protein id="17" locus="rev_P02413" decoy="1" length="144" />
@@ -503,7 +551,7 @@ namespace IDPicker.DataModel
                                         if (String.IsNullOrEmpty(sequence))
                                         {
                                             int index = proteinList.find(locus);
-                                            pwiz.CLI.proteome.Protein pro = proteinList.protein(index);
+                                            proteome.Protein pro = proteinList.protein(index);
                                             sequence = pro.sequence;
                                         }
 
@@ -531,22 +579,21 @@ namespace IDPicker.DataModel
 
                                     if (!dbPeptides.ContainsKey(sequence))
                                     {
-                                        pwiz.CLI.proteome.Peptide pep = new pwiz.CLI.proteome.Peptide(sequence);
-
-                                        curPeptide = dbPeptides[sequence] = new Peptide(sequence)
+                                        using (proteome.Peptide pep = new proteome.Peptide(sequence))
                                         {
-                                            Id = dbPeptides.Count + 1,
-                                            Instances = new List<PeptideInstance>(),
-                                            MonoisotopicMass = pep.monoisotopicMass(),
-                                            MolecularWeight = pep.molecularWeight()
-                                        };
-
-                                        //pep.unique = Convert.ToBoolean(getAttributeAs<int>(reader, "unique"));
-                                        //Convert.ToBoolean(getAttributeAs<int>(reader, "NTerminusIsSpecific", true));
-                                        //Convert.ToBoolean(getAttributeAs<int>(reader, "CTerminusIsSpecific", true));
+                                            curPeptide = dbPeptides[sequence] = new Peptide(sequence)
+                                            {
+                                                Id = dbPeptides.Count + 1,
+                                                Instances = new List<PeptideInstance>(),
+                                                MonoisotopicMass = pep.monoisotopicMass(),
+                                                MolecularWeight = pep.molecularWeight()
+                                            };
+                                        }
 
                                         bulkInserter.Peptides.Add(curPeptide);
                                     }
+                                    else
+                                        curPeptide = dbPeptides[sequence];
 
                                 }
                                 #endregion
@@ -561,15 +608,33 @@ namespace IDPicker.DataModel
                                     string pep = peptideIndex[curId];
 
                                     int offset = getAttributeAs<int>(reader, "offset", true);
+
+                                    proteome.Protein pwizProtein;
+                                    if (proteinList != null)
+                                        pwizProtein = proteinList.protein(proteinList.find(pro));
+                                    else
+                                        pwizProtein = new proteome.Protein("", 0, "", dbProteins[pro].Sequence);
+
+                                    // get digestion metadata for each peptide instance
+                                    // TODO: get cleavage agent from analysis parameters
+                                    var digestion = new Digestion(pwizProtein,
+                                                                  CVID.MS_Trypsin_P,
+                                                                  new Digestion.Config(int.MaxValue,
+                                                                                       0,
+                                                                                       int.MaxValue,
+                                                                                       Digestion.Specificity.NonSpecific));
+
+                                    DigestedPeptide digestedPeptide = digestion.find_first(curPeptide.Sequence, offset);
+
                                     var peptideInstance = new PeptideInstance()
                                                             {
                                                                 Peptide = dbPeptides[pep],
                                                                 Protein = dbProteins[pro],
-                                                                Offset = offset,
+                                                                Offset = digestedPeptide.offset(),
                                                                 Length = pep.Length,
-                                                                NTerminusIsSpecific = true,
-                                                                CTerminusIsSpecific = true,
-                                                                MissedCleavages = 0
+                                                                NTerminusIsSpecific = digestedPeptide.NTerminusIsSpecific(),
+                                                                CTerminusIsSpecific = digestedPeptide.CTerminusIsSpecific(),
+                                                                MissedCleavages = digestedPeptide.missedCleavages()
                                                             };
 
                                     if (!dbPeptideInstances.ContainsKey(peptideInstance))
@@ -583,13 +648,13 @@ namespace IDPicker.DataModel
                                 #region Initialize protein/peptide indexes
                                 else if (tag == "proteinIndex")
                                 {
-                                    proteinIndex = new string[getAttributeAs<int>(reader, "count", true) + 1];
-                                    proteinIndex.Initialize();
+                                    //proteinIndex = new string[getAttributeAs<int>(reader, "count", true) + 1];
+                                    //proteinIndex.Initialize();
                                 }
                                 else if (tag == "peptideIndex")
                                 {
-                                    peptideIndex = new string[getAttributeAs<int>(reader, "count", true) + 1];
-                                    peptideIndex.Initialize();
+                                    //peptideIndex = new string[getAttributeAs<int>(reader, "count", true) + 1];
+                                    //peptideIndex.Initialize();
                                 }
                                 #endregion
                                 #region <spectraSource ...>
@@ -639,7 +704,7 @@ namespace IDPicker.DataModel
                                             Id = dbSources.Count + 1,
                                             Name = sourceName,
                                             //URL = source.filepath,
-                                            //Spectra = new List<Spectrum>(),
+                                            Spectra = new List<Spectrum>(),
                                             Group = curGroup
                                         });
 
@@ -709,14 +774,14 @@ namespace IDPicker.DataModel
                                     try
                                     {
                                         string sourcePath = Util.FindSourceInSearchPath(curSource.Name, rootInputDirectory);
-                                        curSourceData = new pwiz.CLI.msdata.MSDataFile(sourcePath);
+                                        curSourceData = new MSDataFile(sourcePath);
                                     }
                                     catch
                                     {
                                         try
                                         {
                                             string sourcePath = Util.FindSourceInSearchPath(curSource.Name, lastSourcePathLocation);
-                                            curSourceData = new pwiz.CLI.msdata.MSDataFile(sourcePath);
+                                            curSourceData = new MSDataFile(sourcePath);
                                         }
                                         catch
                                         {
@@ -727,7 +792,7 @@ namespace IDPicker.DataModel
                                                 if (File.Exists(eventArgs.SourcePath) || Directory.Exists(eventArgs.SourcePath))
                                                 {
                                                     lastSourcePathLocation = Path.GetDirectoryName(eventArgs.SourcePath);
-                                                    curSourceData = new pwiz.CLI.msdata.MSDataFile(eventArgs.SourcePath);
+                                                    curSourceData = new MSDataFile(eventArgs.SourcePath);
                                                 }
                                             }
                                         }
@@ -736,12 +801,12 @@ namespace IDPicker.DataModel
                                     if (curSourceData != null)
                                     {
                                         curSpectrumList = curSourceData.run.spectrumList;
-                                        curSpectrumList = new pwiz.CLI.analysis.SpectrumList_PeakPicker(curSpectrumList,
-                                            new pwiz.CLI.analysis.LocalMaximumPeakDetector(5), true, new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
-                                        curSpectrumList = new pwiz.CLI.analysis.SpectrumList_PeakFilter(curSpectrumList,
-                                            new pwiz.CLI.analysis.ThresholdFilter(pwiz.CLI.analysis.ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_Count,
+                                        curSpectrumList = new SpectrumList_PeakPicker(curSpectrumList,
+                                            new LocalMaximumPeakDetector(5), true, new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+                                        curSpectrumList = new SpectrumList_PeakFilter(curSpectrumList,
+                                            new ThresholdFilter(ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_Count,
                                                                                   50,
-                                                                                  pwiz.CLI.analysis.ThresholdFilter.ThresholdingOrientation.Orientation_MostIntense));
+                                                                                  ThresholdFilter.ThresholdingOrientation.Orientation_MostIntense));
                                         curSpectraIndexSubset = new Set<int>();
                                     }
                                     #endregion
@@ -805,8 +870,8 @@ namespace IDPicker.DataModel
                                         curSourceData != null &&
                                         curSpectraIndexSubset.Count > 0)
                                     {
-                                        curSourceData.run.spectrumList = new pwiz.CLI.analysis.SpectrumList_Filter(curSpectrumList,
-                                            delegate(pwiz.CLI.msdata.Spectrum s)
+                                        curSourceData.run.spectrumList = new SpectrumList_Filter(curSpectrumList,
+                                            delegate(msdata.Spectrum s)
                                             {
                                                 return curSpectraIndexSubset.Contains(s.index);
                                             });
@@ -905,7 +970,7 @@ namespace IDPicker.DataModel
                                     string sequence = getAttribute(reader, "peptide");
                                     if (!dbPeptides.TryGetValue(sequence, out curPeptide))
                                     {
-                                        using (pwiz.CLI.proteome.Peptide pep = new pwiz.CLI.proteome.Peptide(sequence))
+                                        using (proteome.Peptide pep = new proteome.Peptide(sequence))
                                         {
                                             curPeptide = dbPeptides[sequence] = new Peptide(sequence)
                                             {
@@ -915,10 +980,6 @@ namespace IDPicker.DataModel
                                                 Instances = new List<PeptideInstance>()
                                             };
                                         }
-
-                                        //pep.unique = Convert.ToBoolean(getAttributeAs<int>(reader, "unique"));
-                                        //bool NTerminusIsSpecific = Convert.ToBoolean(getAttributeAs<int>(reader, "NTerminusIsSpecific", true));
-                                        //bool CTerminusIsSpecific = Convert.ToBoolean(getAttributeAs<int>(reader, "CTerminusIsSpecific", true));
 
                                         bulkInserter.Peptides.Add(curPeptide);
                                     }
@@ -1113,14 +1174,14 @@ namespace IDPicker.DataModel
                                     try
                                     {
                                         string sourcePath = Util.FindSourceInSearchPath(curSource.Name, rootInputDirectory);
-                                        curSourceData = new pwiz.CLI.msdata.MSDataFile(sourcePath);
+                                        curSourceData = new MSDataFile(sourcePath);
                                     }
                                     catch
                                     {
                                         try
                                         {
                                             string sourcePath = Util.FindSourceInSearchPath(curSource.Name, lastSourcePathLocation);
-                                            curSourceData = new pwiz.CLI.msdata.MSDataFile(sourcePath);
+                                            curSourceData = new MSDataFile(sourcePath);
                                         }
                                         catch
                                         {
@@ -1131,7 +1192,7 @@ namespace IDPicker.DataModel
                                                 if (File.Exists(eventArgs.SourcePath) || Directory.Exists(eventArgs.SourcePath))
                                                 {
                                                     lastSourcePathLocation = Path.GetDirectoryName(eventArgs.SourcePath);
-                                                    curSourceData = new pwiz.CLI.msdata.MSDataFile(eventArgs.SourcePath);
+                                                    curSourceData = new MSDataFile(eventArgs.SourcePath);
                                                 }
                                             }
                                         }
@@ -1140,12 +1201,12 @@ namespace IDPicker.DataModel
                                     if (curSourceData != null)
                                     {
                                         curSpectrumList = curSourceData.run.spectrumList;
-                                        curSpectrumList = new pwiz.CLI.analysis.SpectrumList_PeakPicker(curSpectrumList,
-                                            new pwiz.CLI.analysis.LocalMaximumPeakDetector(5), true, new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
-                                        curSpectrumList = new pwiz.CLI.analysis.SpectrumList_PeakFilter(curSpectrumList,
-                                            new pwiz.CLI.analysis.ThresholdFilter(pwiz.CLI.analysis.ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_Count,
-                                                                                  50,
-                                                                                  pwiz.CLI.analysis.ThresholdFilter.ThresholdingOrientation.Orientation_MostIntense));
+                                        curSpectrumList = new SpectrumList_PeakPicker(curSpectrumList,
+                                            new LocalMaximumPeakDetector(5), true, new int[] { 1, 2, 3, 4, 5, 6, 7, 8, 9 });
+                                        curSpectrumList = new SpectrumList_PeakFilter(curSpectrumList,
+                                            new ThresholdFilter(ThresholdFilter.ThresholdingBy_Type.ThresholdingBy_Count,
+                                                                50,
+                                                                ThresholdFilter.ThresholdingOrientation.Orientation_MostIntense));
                                         curSpectraIndexSubset = new Set<int>();
                                     }
                                     #endregion
@@ -1268,8 +1329,8 @@ namespace IDPicker.DataModel
                                         curSourceData != null &&
                                         curSpectraIndexSubset.Count > 0)
                                     {
-                                        curSourceData.run.spectrumList = new pwiz.CLI.analysis.SpectrumList_Filter(curSpectrumList,
-                                            delegate(pwiz.CLI.msdata.Spectrum s)
+                                        curSourceData.run.spectrumList = new SpectrumList_Filter(curSpectrumList,
+                                            delegate(msdata.Spectrum s)
                                             {
                                                 return curSpectraIndexSubset.Contains(s.index);
                                             });
@@ -1341,7 +1402,7 @@ namespace IDPicker.DataModel
         private void addProteinAndPeptideInstances (NHibernate.IStatelessSession session,
                                                     Dictionary<string, Protein> dbProteins,
                                                     Dictionary<PeptideInstance, bool> dbPeptideInstances,
-                                                    pwiz.CLI.proteome.ProteinList proteinList,
+                                                    ProteinList proteinList,
                                                     Peptide curPeptide,
                                                     BulkInserter bulkInserter,
                                                     string locus,
@@ -1356,6 +1417,7 @@ namespace IDPicker.DataModel
                 offset = -1;
 
             Protein curProtein;
+            proteome.Protein pwizProtein;
             if (!dbProteins.TryGetValue(locus, out curProtein))
             {
                 //pro.isDecoy = Convert.ToBoolean(getAttributeAs<int>(reader, "decoy"));
@@ -1363,11 +1425,9 @@ namespace IDPicker.DataModel
                 string description = String.Empty;
 
                 int index = proteinList.find(locus);
-                using (pwiz.CLI.proteome.Protein pro = proteinList.protein(index))
-                {
-                    sequence = pro.sequence;
-                    description = pro.description;
-                }
+                pwizProtein = proteinList.protein(index);
+                sequence = pwizProtein.sequence;
+                description = pwizProtein.description;
 
                 curProtein = dbProteins[locus] = new Protein()
                 {
@@ -1381,42 +1441,37 @@ namespace IDPicker.DataModel
 
                 bulkInserter.Proteins.Add(curProtein);
             }
-
-            var peptideOffets = new List<int>();
-
-            // if necessary, look up the real offset(s) of the peptide
-            if (offset < 0 ||
-                (offset + curPeptide.Sequence.Length - 1) >= curProtein.Sequence.Length ||
-                curProtein.Sequence.Substring(offset, curPeptide.Sequence.Length) != curPeptide.Sequence)
-            {
-                int start = curProtein.Sequence.IndexOf(curPeptide.Sequence);
-                do
-                {
-                    peptideOffets.Add(start);
-                    start = curProtein.Sequence.IndexOf(curPeptide.Sequence, start + 1);
-                }
-                while (start >= 0);
-            }
             else
-                peptideOffets.Add(offset);
+                pwizProtein = proteinList.protein(proteinList.find(locus));
 
-            foreach (int peptideOffset in peptideOffets)
+            // get digestion metadata for each peptide instance
+            // TODO: get cleavage agent from analysis parameters
+            var digestion = new Digestion(pwizProtein,
+                                          CVID.MS_Trypsin_P,
+                                          new Digestion.Config(int.MaxValue,
+                                                               0,
+                                                               int.MaxValue,
+                                                               Digestion.Specificity.NonSpecific));
+
+            IList<DigestedPeptide> peptideInstances = digestion.find_all(curPeptide.Sequence);
+
+            foreach (DigestedPeptide instance in peptideInstances)
             {
                 var peptideInstance = new PeptideInstance()
                 {
                     Id = dbPeptideInstances.Count + 1,
                     Peptide = curPeptide,
                     Protein = curProtein,
-                    Offset = peptideOffset,
+                    Offset = instance.offset(),
                     Length = curPeptide.Sequence.Length,
-                    // TODO: GET REAL VALUES!!
-                    NTerminusIsSpecific = true,
-                    CTerminusIsSpecific = true,
-                    MissedCleavages = 0
                 };
 
                 if (!dbPeptideInstances.ContainsKey(peptideInstance))
                 {
+                    peptideInstance.NTerminusIsSpecific = instance.NTerminusIsSpecific();
+                    peptideInstance.CTerminusIsSpecific = instance.CTerminusIsSpecific();
+                    peptideInstance.MissedCleavages = instance.missedCleavages();
+
                     dbPeptideInstances.Add(peptideInstance, true);
                     curPeptide.Instances.Add(peptideInstance);
                     bulkInserter.PeptideInstances.Add(peptideInstance);

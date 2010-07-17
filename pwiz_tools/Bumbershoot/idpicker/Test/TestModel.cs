@@ -27,9 +27,11 @@ using System.Linq;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using IDPicker.DataModel;
+using NHibernate.Linq;
 
-using msdata = pwiz.CLI.msdata;
 using pwiz.CLI.chemistry;
+using proteome = pwiz.CLI.proteome;
+using msdata = pwiz.CLI.msdata;
 using PwizPeptide = pwiz.CLI.proteome.Peptide;
 using PwizMod = pwiz.CLI.proteome.Modification;
 using ModList = pwiz.CLI.proteome.ModificationList;
@@ -113,14 +115,14 @@ namespace Test
                 string analysisId = row.Analysis;
                 string peptideTuples = row.PeptideTuples;
 
-                SpectrumSourceGroup group = session.QueryOver<SpectrumSourceGroup>().Where(o => o.Name == groupName).SingleOrDefault();
+                SpectrumSourceGroup group = session.UniqueResult<SpectrumSourceGroup>(o => o.Name == groupName);
                 if (group == null)
                 {
                     group = new SpectrumSourceGroup() { Name = groupName };
                     session.Save(group);
                 }
 
-                SpectrumSource source = session.QueryOver<SpectrumSource>().Where(o => o.Name == sourceName).SingleOrDefault();
+                SpectrumSource source = session.UniqueResult<SpectrumSource>(o => o.Name == sourceName);
                 if (source == null)
                 {
                     source = new SpectrumSource() { Name = sourceName, Group = group };
@@ -139,7 +141,7 @@ namespace Test
                                 parentGroupName = "/";
 
                             // add the parent group if it doesn't exist yet
-                            SpectrumSourceGroup parentGroup = session.QueryOver<SpectrumSourceGroup>().Where(o => o.Name == parentGroupName).SingleOrDefault();
+                            SpectrumSourceGroup parentGroup = session.UniqueResult<SpectrumSourceGroup>(o => o.Name == parentGroupName);
                             if (parentGroup == null)
                             {
                                 parentGroup = new SpectrumSourceGroup() { Name = parentGroupName };
@@ -160,26 +162,27 @@ namespace Test
                     #endregion
                 }
 
-                Spectrum spectrum = session.QueryOver<Spectrum>().Where(o => o.Source.Id == source.Id &&
-                                                                             o.Index == spectrumId - 1).SingleOrDefault();
+                Spectrum spectrum = session.UniqueResult<Spectrum>(o => o.Source.Id == source.Id &&
+                                                                        o.Index == spectrumId - 1);
                 if (spectrum == null)
                 {
                     spectrum = new Spectrum()
                     {
                         Index = spectrumId - 1,
                         NativeID = "scan=" + spectrumId,
-                        Source = source
+                        Source = source,
+                        PrecursorMZ = 42
                     };
                     session.Save(spectrum);
                 }
 
-                Analysis analysis = session.QueryOver<Analysis>().Where(o => o.Name == analysisId).SingleOrDefault();
+                Analysis analysis = session.UniqueResult<Analysis>(o => o.Software.Name == analysisId);
                 if (analysis == null)
                 {
-                    int analysisCount = session.QueryOver<Analysis>().RowCount();
+                    int analysisCount = session.Query<Analysis>().Count();
                     analysis = new Analysis()
                     {
-                        Name = analysisId,
+                        Name = analysisId + " 1.0",
                         Software = new AnalysisSoftware() { Name = analysisId, Version = "1.0" },
                         StartTime = DateTime.Today.AddHours(analysisCount),
                         Type = AnalysisType.DatabaseSearch
@@ -216,19 +219,27 @@ namespace Test
                     {
                         PwizPeptide pwizPeptide = new PwizPeptide(peptideTuple.Sequence, ModParsing.ModificationParsing_Auto, ModDelimiter.ModificationDelimiter_Brackets);
 
-                        Peptide peptide = session.QueryOver<Peptide>().Where(o => o.Sequence == pwizPeptide.sequence).SingleOrDefault();
+                        Peptide peptide = session.UniqueResult<Peptide>(o => o.Sequence == pwizPeptide.sequence);
                         if (peptide == null)
                         {
                             peptide = new TestPeptide(pwizPeptide.sequence).Target as Peptide;
+                            peptide.MonoisotopicMass = pwizPeptide.monoisotopicMass(false);
+                            peptide.MolecularWeight = pwizPeptide.molecularWeight(false);
                             session.Save(peptide);
                             createTestPeptideInstances(session, peptide);
                         }
+
+                        double neutralPrecursorMass = (spectrum.PrecursorMZ * peptideTuple.Charge) - (peptideTuple.Charge * Proton.Mass);
 
                         var psm = new PeptideSpectrumMatch()
                         {
                             Peptide = peptide,
                             Spectrum = spectrum,
                             Analysis = analysis,
+                            MonoisotopicMass = pwizPeptide.monoisotopicMass(),
+                            MolecularWeight = pwizPeptide.molecularWeight(),
+                            MonoisotopicMassError = neutralPrecursorMass - pwizPeptide.monoisotopicMass(),
+                            MolecularWeightError = neutralPrecursorMass - pwizPeptide.molecularWeight(),
                             Charge = peptideTuple.Charge,
                             Rank = (peptideTuple.ScoreDivider == lastDivider ? rank : ++rank),
                             QValue = (rank == 1 ? row.QValue : PeptideSpectrumMatch.DefaultQValue),
@@ -249,7 +260,7 @@ namespace Test
                         {
                             foreach (PwizMod pwizMod in itr.Value)
                             {
-                                Modification mod = session.QueryOver<Modification>().Where(o => o.Formula == pwizMod.formula()).SingleOrDefault();
+                                Modification mod = session.UniqueResult<Modification>(o => o.Formula == pwizMod.formula());
                                 if (mod == null)
                                 {
                                     mod = new Modification()
@@ -280,7 +291,7 @@ namespace Test
         public void AddSubsetPeakData (NHibernate.ISession session)
         {
             session.Clear();
-            foreach (SpectrumSource source in session.QueryOver<SpectrumSource>().List())
+            foreach (SpectrumSource source in session.Query<SpectrumSource>())
             {
                 var subsetPeakData = new msdata.MSData();
                 subsetPeakData.id = subsetPeakData.run.id = source.Name;
@@ -317,7 +328,7 @@ namespace Test
             // the PeptideModification.Offset property needs access to the protein sequence
             pep.Instances = new List<PeptideInstance>();
 
-            foreach (Protein pro in session.QueryOver<Protein>().List<Protein>())
+            foreach (Protein pro in session.Query<Protein>())
             {
                 int start = pro.Sequence.IndexOf(pep.Sequence, 0);
                 while (start >= 0)
@@ -446,17 +457,45 @@ namespace Test
         [TestMethod]
         public void TestOverallCounts ()
         {
-            Assert.AreEqual(testProteinSequences.Length, session.QueryOver<Protein>().RowCount());
-            Assert.AreEqual(12, session.QueryOver<Peptide>().RowCount());
-            Assert.AreEqual(30, session.QueryOver<PeptideInstance>().RowCount());
-            Assert.AreEqual(90, session.QueryOver<PeptideSpectrumMatch>().RowCount());
+            Assert.AreEqual(6, session.Query<Protein>().Count());
+            Assert.AreEqual(12, session.Query<Peptide>().Count());
+            Assert.AreEqual(30, session.Query<PeptideInstance>().Count());
+            Assert.AreEqual(90, session.Query<PeptideSpectrumMatch>().Count());
             Assert.AreEqual(180, session.CreateSQLQuery("SELECT COUNT(*) FROM PeptideSpectrumMatchScores").UniqueResult<long>());
-            Assert.AreEqual(2, session.QueryOver<Analysis>().RowCount());
-            Assert.AreEqual(2, session.QueryOver<AnalysisParameter>().RowCount());
-            Assert.AreEqual(15, session.QueryOver<Spectrum>().RowCount());
-            Assert.AreEqual(5, session.QueryOver<SpectrumSource>().RowCount());
-            Assert.AreEqual(7, session.QueryOver<SpectrumSourceGroup>().RowCount());
-            Assert.AreEqual(15, session.QueryOver<SpectrumSourceGroupLink>().RowCount());
+            Assert.AreEqual(2, session.Query<Analysis>().Count());
+            Assert.AreEqual(2, session.Query<AnalysisParameter>().Count());
+            Assert.AreEqual(15, session.Query<Spectrum>().Count());
+            Assert.AreEqual(5, session.Query<SpectrumSource>().Count());
+            Assert.AreEqual(7, session.Query<SpectrumSourceGroup>().Count());
+            Assert.AreEqual(15, session.Query<SpectrumSourceGroupLink>().Count());
+
+            Assert.AreEqual(2, session.Get<PeptideSpectrumMatch>(1L).Scores.Count);
+
+            Assert.AreEqual(1, session.UniqueResult<Analysis>(o => o.Name == "Engine 1 1.0").Parameters.Count);
+            Assert.AreEqual(1, session.UniqueResult<Analysis>(o => o.Name == "Engine 2 1.0").Parameters.Count);
+
+            Assert.AreEqual(6, session.UniqueResult<Spectrum>(o => o.Index == 0 && o.Source.Name == "Source 1").Matches.Count);
+            Assert.AreEqual(6, session.UniqueResult<Spectrum>(o => o.Index == 1 && o.Source.Name == "Source 1").Matches.Count);
+            Assert.AreEqual(6, session.UniqueResult<Spectrum>(o => o.Index == 0 && o.Source.Name == "Source 2").Matches.Count);
+
+            Assert.AreEqual(3, session.UniqueResult<SpectrumSource>(o => o.Name == "Source 1").Groups.Count); // groups: /, /A, /A/1
+            Assert.AreEqual(3, session.UniqueResult<SpectrumSource>(o => o.Name == "Source 1").Spectra.Count);
+
+            Assert.AreEqual(3, session.UniqueResult<SpectrumSource>(o => o.Name == "Source 3").Groups.Count); // groups: /, /A, /A/2
+            Assert.AreEqual(3, session.UniqueResult<SpectrumSource>(o => o.Name == "Source 3").Spectra.Count);
+
+            Assert.AreEqual(5, session.UniqueResult<SpectrumSourceGroup>(o => o.Name == "/").Sources.Count);
+            Assert.AreEqual(3, session.UniqueResult<SpectrumSourceGroup>(o => o.Name == "/A").Sources.Count);
+            Assert.AreEqual(2, session.UniqueResult<SpectrumSourceGroup>(o => o.Name == "/A/1").Sources.Count);
+            Assert.AreEqual(1, session.UniqueResult<SpectrumSourceGroup>(o => o.Name == "/A/2").Sources.Count);
+
+            Assert.AreEqual(30, session.Query<PeptideSpectrumMatch>().Where(o => o.Rank == 1).Count());
+            Assert.AreEqual(30, session.Query<PeptideSpectrumMatch>().Where(o => o.Rank == 2).Count());
+            Assert.AreEqual(30, session.Query<PeptideSpectrumMatch>().Where(o => o.Rank == 3).Count());
+
+            Assert.AreEqual(18, session.Query<PeptideSpectrumMatch>().Where(o => o.Charge == 1).Count());
+            Assert.AreEqual(39, session.Query<PeptideSpectrumMatch>().Where(o => o.Charge == 2).Count());
+            Assert.AreEqual(6, session.Query<PeptideSpectrumMatch>().Where(o => o.Charge == 4).Count());
         }
 
         [TestMethod]
@@ -479,7 +518,8 @@ namespace Test
         [TestMethod]
         public void TestProteins()
         {
-            Protein pro1 = session.Get<Protein>(1L);
+            Protein pro1 = session.UniqueResult<Protein>(o => o.Accession == "PRO1");
+            Assert.AreEqual(11, pro1.Peptides.Count);
             Assert.AreEqual(3, pro1.Peptides.Count(o => o.Peptide.Sequence == "PEPTIDE"));
             Assert.AreEqual(1, pro1.Peptides.Count(o => o.Peptide.Sequence == "PEPTIDEK"));
             Assert.AreEqual(1, pro1.Peptides.Count(o => o.Peptide.Sequence == "PEPTIDER"));
@@ -489,14 +529,16 @@ namespace Test
             Assert.AreEqual(0, pro1.Peptides.Count(o => o.Peptide.Sequence == "EDIT"));
             Assert.AreEqual(0, pro1.Peptides.Count(o => o.Peptide.Sequence == "EPPIER"));
 
-            Protein pro5 = session.Get<Protein>(5L);
+            Protein pro5 = session.UniqueResult<Protein>(o => o.Accession == "PRO5");
+            Assert.AreEqual(3, pro5.Peptides.Count);
             Assert.AreEqual(2, pro5.Peptides.Count(o => o.Peptide.Sequence == "EDIT"));
             Assert.AreEqual(1, pro5.Peptides.Count(o => o.Peptide.Sequence == "EDITPEPK"));
             Assert.AreEqual(0, pro5.Peptides.Count(o => o.Peptide.Sequence == "EDITPEPR"));
             Assert.AreEqual(0, pro5.Peptides.Count(o => o.Peptide.Sequence == "PEPTIDE"));
             Assert.AreEqual(0, pro5.Peptides.Count(o => o.Peptide.Sequence == "EPPIER"));
 
-            Protein pro6 = session.Get<Protein>(6L);
+            Protein pro6 = session.UniqueResult<Protein>(o => o.Accession == "PRO6");
+            Assert.AreEqual(2, pro6.Peptides.Count);
             Assert.AreEqual(1, pro6.Peptides.Count(o => o.Peptide.Sequence == "EPPIER"));
             Assert.AreEqual(1, pro6.Peptides.Count(o => o.Peptide.Sequence == "PETPDETK"));
             Assert.AreEqual(0, pro6.Peptides.Count(o => o.Peptide.Sequence == "PEPTIDE"));
@@ -506,43 +548,41 @@ namespace Test
         [TestMethod]
         public void TestPeptides()
         {
-            Peptide pep1 = session.Get<Peptide>(1L);
-            Assert.AreEqual("PEPTIDE", pep1.Sequence);
+            Peptide pep1 = session.UniqueResult<Peptide>(o => o.Sequence == "PEPTIDE");
             Assert.AreEqual(4, pep1.Instances.Count);
             Assert.AreEqual(10, pep1.Matches.Count);
+            Assert.AreEqual(new PwizPeptide(pep1.Sequence).monoisotopicMass(), pep1.MonoisotopicMass, 1e-12);
+            Assert.AreEqual(new PwizPeptide(pep1.Sequence).molecularWeight(), pep1.MolecularWeight, 1e-12);
 
-            Peptide pep2 = session.Get<Peptide>(2L);
-            Assert.AreEqual("TIDERPEPTIDEK", pep2.Sequence);
+            Peptide pep2 = session.UniqueResult<Peptide>(o => o.Sequence == "TIDERPEPTIDEK");
             Assert.AreEqual(2, pep2.Instances.Count);
             Assert.AreEqual(6, pep2.Matches.Count);
 
-            Peptide pep3 = session.Get<Peptide>(3L);
-            Assert.AreEqual("EPPIER", pep3.Sequence);
+            Peptide pep3 = session.UniqueResult<Peptide>(o => o.Sequence == "EPPIER");
             Assert.AreEqual(1, pep3.Instances.Count);
             Assert.AreEqual(6, pep3.Matches.Count);
 
-            Peptide pep4 = session.Get<Peptide>(4L);
-            Assert.AreEqual("PEPTIDER", pep4.Sequence);
+            Peptide pep4 = session.UniqueResult<Peptide>(o => o.Sequence == "PEPTIDER");
             Assert.AreEqual(1, pep4.Instances.Count);
             Assert.AreEqual(4, pep4.Matches.Count);
 
-            Peptide pep7 = session.Get<Peptide>(7L);
-            Assert.AreEqual("PEPTIDEK", pep7.Sequence);
+            Peptide pep7 = session.UniqueResult<Peptide>(o => o.Sequence == "PEPTIDEK");
             Assert.AreEqual(2, pep7.Instances.Count);
             Assert.AreEqual(14, pep7.Matches.Count);
 
-            Peptide pep11 = session.Get<Peptide>(11L);
-            Assert.AreEqual("TIDE", pep11.Sequence);
+            Peptide pep11 = session.UniqueResult<Peptide>(o => o.Sequence == "TIDE");
             Assert.AreEqual(7, pep11.Instances.Count);
             Assert.AreEqual(6, pep11.Matches.Count);
+            Assert.AreEqual(new PwizPeptide(pep11.Sequence).monoisotopicMass(), pep11.MonoisotopicMass, 1e-12);
+            Assert.AreEqual(new PwizPeptide(pep11.Sequence).molecularWeight(), pep11.MolecularWeight, 1e-12);
         }
 
         [TestMethod]
         public void TestPeptideInstances()
         {
-            PeptideInstance pi1 = session.Get<PeptideInstance>(1L);
-            Assert.AreEqual(session.Get<Peptide>(1L), pi1.Peptide);
-            Assert.AreEqual(session.Get<Protein>(1L), pi1.Protein);
+            PeptideInstance pi1 = session.UniqueResult<PeptideInstance>(o => o.Protein.Accession == "PRO1" &&
+                                                                             o.Peptide.Sequence == "PEPTIDE" &&
+                                                                             o.Offset == 0);
             Assert.AreEqual(1, pi1.SpecificTermini);
             Assert.AreEqual(true, pi1.NTerminusIsSpecific);
             Assert.AreEqual(false, pi1.CTerminusIsSpecific);
@@ -550,9 +590,9 @@ namespace Test
             Assert.AreEqual(7, pi1.Length);
             Assert.AreEqual(0, pi1.MissedCleavages);
 
-            PeptideInstance pi5 = session.Get<PeptideInstance>(5L);
-            Assert.AreEqual(session.Get<Peptide>(2L), pi5.Peptide);
-            Assert.AreEqual(session.Get<Protein>(1L), pi5.Protein);
+            PeptideInstance pi5 = session.UniqueResult<PeptideInstance>(o => o.Protein.Accession == "PRO1" &&
+                                                                             o.Peptide.Sequence == "TIDERPEPTIDEK" &&
+                                                                             o.Offset == 3);
             Assert.AreEqual(1, pi5.SpecificTermini);
             Assert.AreEqual(false, pi5.NTerminusIsSpecific);
             Assert.AreEqual(true, pi5.CTerminusIsSpecific);
@@ -564,20 +604,17 @@ namespace Test
         [TestMethod]
         public void TestSpectrumSourceGroups()
         {
-            SpectrumSourceGroup ssg3 = session.Get<SpectrumSourceGroup>(3L);
-            Assert.AreEqual("/", ssg3.Name);
+            SpectrumSourceGroup ssg3 = session.UniqueResult<SpectrumSourceGroup>(o => o.Name == "/");
             Assert.AreEqual(5, ssg3.Sources.Count);
             Assert.AreEqual(0, ssg3.GetGroupDepth());
 
-            SpectrumSourceGroup ssg2 = session.Get<SpectrumSourceGroup>(2L);
-            Assert.AreEqual("/A", ssg2.Name);
+            SpectrumSourceGroup ssg2 = session.UniqueResult<SpectrumSourceGroup>(o => o.Name == "/A");
             Assert.AreEqual(3, ssg2.Sources.Count);
             Assert.AreEqual(1, ssg2.GetGroupDepth());
             Assert.IsTrue(ssg2.IsChildOf(ssg3));
             Assert.IsTrue(ssg2.IsImmediateChildOf(ssg3));
 
-            SpectrumSourceGroup ssg1 = session.Get<SpectrumSourceGroup>(1L);
-            Assert.AreEqual("/A/1", ssg1.Name);
+            SpectrumSourceGroup ssg1 = session.UniqueResult<SpectrumSourceGroup>(o => o.Name == "/A/1");
             Assert.AreEqual(2, ssg1.Sources.Count);
             Assert.AreEqual(2, ssg1.GetGroupDepth());
             Assert.IsTrue(ssg1.IsChildOf(ssg3));
@@ -585,8 +622,7 @@ namespace Test
             Assert.IsTrue(ssg1.IsChildOf(ssg2));
             Assert.IsTrue(ssg1.IsImmediateChildOf(ssg2));
 
-            SpectrumSourceGroup ssg5 = session.Get<SpectrumSourceGroup>(5L);
-            Assert.AreEqual("/B/1", ssg5.Name);
+            SpectrumSourceGroup ssg5 = session.UniqueResult<SpectrumSourceGroup>(o => o.Name == "/B/2");
             Assert.AreEqual(1, ssg5.Sources.Count);
             Assert.AreEqual(2, ssg5.GetGroupDepth());
             Assert.IsFalse(ssg5.IsChildOf(ssg2));
@@ -597,23 +633,22 @@ namespace Test
         [TestMethod]
         public void TestSpectrumSources()
         {
-            SpectrumSource ss1 = session.Get<SpectrumSource>(1L);
-            Assert.AreEqual("Source 1", ss1.Name);
-            Assert.AreEqual(session.Get<SpectrumSourceGroup>(1L), ss1.Group);
-            Assert.IsNotNull(ss1.Groups.SingleOrDefault(o => o.Group == session.Get<SpectrumSourceGroup>(1L)));
-            Assert.IsNotNull(ss1.Groups.SingleOrDefault(o => o.Group == session.Get<SpectrumSourceGroup>(2L)));
-            Assert.IsNotNull(ss1.Groups.SingleOrDefault(o => o.Group == session.Get<SpectrumSourceGroup>(3L)));
-            Assert.IsNull(ss1.Groups.SingleOrDefault(o => o.Group == session.Get<SpectrumSourceGroup>(5L)));
+            SpectrumSource ss1 = session.UniqueResult<SpectrumSource>(o => o.Name == "Source 1");
+            Assert.AreEqual(session.UniqueResult<SpectrumSourceGroup>(o => o.Name == "/A/1"), ss1.Group);
+            Assert.IsNotNull(ss1.Groups.SingleOrDefault(o => o.Group.Name == "/"));
+            Assert.IsNotNull(ss1.Groups.SingleOrDefault(o => o.Group.Name == "/A"));
+            Assert.IsNotNull(ss1.Groups.SingleOrDefault(o => o.Group.Name == "/A/1"));
+            Assert.IsNull(ss1.Groups.SingleOrDefault(o => o.Group.Name == "/B"));
             Assert.IsNotNull(ss1.Metadata);
             Assert.AreEqual(ss1.Name, ss1.Metadata.id);
             Assert.IsNotInstanceOfType(ss1.Metadata.run.spectrumList, typeof(msdata.SpectrumListSimple));
 
-            SpectrumSource ss4 = session.Get<SpectrumSource>(4L);
-            Assert.AreEqual("Source 4", ss4.Name);
-            Assert.AreEqual(session.Get<SpectrumSourceGroup>(5L), ss4.Group);
-            Assert.IsNotNull(ss4.Groups.SingleOrDefault(o => o.Group == session.Get<SpectrumSourceGroup>(5L)));
-            Assert.IsNotNull(ss4.Groups.SingleOrDefault(o => o.Group == session.Get<SpectrumSourceGroup>(3L)));
-            Assert.IsNull(ss4.Groups.SingleOrDefault(o => o.Group == session.Get<SpectrumSourceGroup>(1L)));
+            SpectrumSource ss4 = session.UniqueResult<SpectrumSource>(o => o.Name == "Source 4");
+            Assert.AreEqual(session.UniqueResult<SpectrumSourceGroup>(o => o.Name == "/B/1"), ss4.Group);
+            Assert.IsNotNull(ss4.Groups.SingleOrDefault(o => o.Group.Name == "/"));
+            Assert.IsNotNull(ss4.Groups.SingleOrDefault(o => o.Group.Name == "/B"));
+            Assert.IsNotNull(ss4.Groups.SingleOrDefault(o => o.Group.Name == "/B/1"));
+            Assert.IsNull(ss4.Groups.SingleOrDefault(o => o.Group.Name == "/A"));
             Assert.IsNotNull(ss4.Metadata);
             Assert.AreEqual(ss4.Name, ss4.Metadata.id);
             Assert.IsNotInstanceOfType(ss4.Metadata.run.spectrumList, typeof(msdata.SpectrumListSimple));
@@ -622,48 +657,47 @@ namespace Test
         [TestMethod]
         public void TestSpectra()
         {
-            Spectrum ss1s1 = session.Get<SpectrumSource>(1L).Spectra[0];
-            Assert.AreEqual(session.Get<SpectrumSource>(1L), ss1s1.Source);
-            Assert.AreEqual(0, ss1s1.Index);
+            Spectrum ss1s1 = session.UniqueResult<Spectrum>(o => o.Index == 0 &&
+                                                                 o.Source.Name == "Source 1");
             Assert.AreEqual("scan=1", ss1s1.NativeID);
             Assert.AreEqual(6, ss1s1.Matches.Count);
-            Assert.AreEqual(0, ss1s1.Metadata.index);
-            Assert.AreEqual("scan=1", ss1s1.Metadata.id);
+            Assert.AreEqual(42, ss1s1.PrecursorMZ, 1e-12);
+            Assert.AreEqual(ss1s1.Index, ss1s1.Metadata.index);
+            Assert.AreEqual(ss1s1.NativeID, ss1s1.Metadata.id);
             Assert.AreEqual(5UL, ss1s1.Metadata.defaultArrayLength);
             Assert.AreEqual(100, ss1s1.MetadataWithPeaks.getMZArray().data[0]);
 
-            Spectrum ss1s2 = session.Get<SpectrumSource>(1L).Spectra[1];
-            Assert.AreEqual(session.Get<SpectrumSource>(1L), ss1s2.Source);
-            Assert.AreEqual(1, ss1s2.Index);
+            Spectrum ss1s2 = session.UniqueResult<Spectrum>(o => o.Index == 1 &&
+                                                                 o.Source.Name == "Source 1");
             Assert.AreEqual("scan=2", ss1s2.NativeID);
             Assert.AreEqual(6, ss1s2.Matches.Count);
-            Assert.AreEqual(1, ss1s2.Metadata.index);
-            Assert.AreEqual("scan=2", ss1s2.Metadata.id);
+            Assert.AreEqual(ss1s2.Index, ss1s2.Metadata.index);
+            Assert.AreEqual(ss1s2.NativeID, ss1s2.Metadata.id);
             Assert.AreEqual(5UL, ss1s2.Metadata.defaultArrayLength);
-            Assert.AreEqual(100, ss1s2.MetadataWithPeaks.getMZArray().data[0]);
+            Assert.AreEqual(200, ss1s2.MetadataWithPeaks.getMZArray().data[1]);
 
-            Spectrum ss4s1 = session.Get<SpectrumSource>(4L).Spectra[0];
-            Assert.AreEqual(session.Get<SpectrumSource>(4L), ss4s1.Source);
-            Assert.AreEqual(0, ss4s1.Index);
+            Spectrum ss4s1 = session.UniqueResult<Spectrum>(o => o.Index == 0 &&
+                                                                 o.Source.Name == "Source 4");
             Assert.AreEqual("scan=1", ss4s1.NativeID);
             Assert.AreEqual(6, ss4s1.Matches.Count);
-            Assert.AreEqual(0, ss4s1.Metadata.index);
-            Assert.AreEqual("scan=1", ss4s1.Metadata.id);
+            Assert.AreEqual(42, ss4s1.PrecursorMZ, 1e-12);
+            Assert.AreEqual(ss4s1.Index, ss4s1.Metadata.index);
+            Assert.AreEqual(ss4s1.NativeID, ss4s1.Metadata.id);
             Assert.AreEqual(5UL, ss4s1.Metadata.defaultArrayLength);
-            Assert.AreEqual(100, ss4s1.MetadataWithPeaks.getMZArray().data[0]);
+            Assert.AreEqual(300, ss4s1.MetadataWithPeaks.getMZArray().data[2]);
         }
 
         [TestMethod]
         public void TestAnalyses()
         {
             Analysis a1 = session.Get<Analysis>(1L);
-            Assert.AreEqual("Engine 1", a1.Name);
+            Assert.AreEqual("Engine 1 1.0", a1.Name);
             Assert.AreEqual("Engine 1", a1.Software.Name);
             Assert.AreEqual("1.0", a1.Software.Version);
             Assert.AreEqual(45, a1.Matches.Count);
 
             Analysis a2 = session.Get<Analysis>(2L);
-            Assert.AreEqual("Engine 2", a2.Name);
+            Assert.AreEqual("Engine 2 1.0", a2.Name);
             Assert.AreEqual("Engine 2", a2.Software.Name);
             Assert.AreEqual("1.0", a2.Software.Version);
             Assert.AreEqual(45, a2.Matches.Count);
@@ -684,122 +718,169 @@ namespace Test
         [TestMethod]
         public void TestPeptideSpectrumMatches()
         {
-            PeptideSpectrumMatch ss1s1psm1 = session.Get<SpectrumSource>(1L).Spectra[0].Matches[0];
-            Assert.AreEqual(session.Get<Peptide>(1L), ss1s1psm1.Peptide);
-            Assert.AreEqual(session.Get<SpectrumSource>(1L).Spectra[0], ss1s1psm1.Spectrum);
-            Assert.AreEqual(session.Get<Analysis>(1L), ss1s1psm1.Analysis);
-            Assert.AreEqual(ss1s1psm1, session.Get<Analysis>(1L).Matches[0]);
+            var ss1 = session.UniqueResult<SpectrumSource>(o => o.Name == "Source 1");
+            var ss4 = session.UniqueResult<SpectrumSource>(o => o.Name == "Source 4");
+            var a1 = session.UniqueResult<Analysis>(o => o.Name == "Engine 1 1.0");
+            var a2 = session.UniqueResult<Analysis>(o => o.Name == "Engine 2 1.0");
+
+            // [C2H2O1]PEPTIDE
+            var ss1s1psm1 = session.UniqueResult<PeptideSpectrumMatch>(o => o.Spectrum.Source.Id == ss1.Id &&
+                                                                            o.Spectrum.Index == 0 &&
+                                                                            o.Analysis.Id == a1.Id &&
+                                                                            o.Rank == 1);
+            var pwizPeptide = new PwizPeptide("(C2H2O1)PEPTIDE", proteome.ModificationParsing.ModificationParsing_ByFormula);
+            Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "PEPTIDE"), ss1s1psm1.Peptide);
+            Assert.AreEqual(a1, ss1s1psm1.Analysis);
+            Assert.IsTrue(a1.Matches.Contains(ss1s1psm1));
+            Assert.AreEqual(1, ss1s1psm1.Modifications.Count);
+            Assert.AreEqual("C2H2O1", ss1s1psm1.Modifications[0].Modification.Formula);
+            Assert.AreEqual(int.MinValue, ss1s1psm1.Modifications[0].Offset);
             Assert.AreEqual(2, ss1s1psm1.Charge);
-            Assert.AreEqual(1, ss1s1psm1.Rank);
+            Assert.AreEqual(pwizPeptide.monoisotopicMass(), ss1s1psm1.MonoisotopicMass, 1e-12);
+            Assert.AreEqual(pwizPeptide.molecularWeight(), ss1s1psm1.MolecularWeight, 1e-12);
             Assert.AreEqual(12.0, ss1s1psm1.Scores["score1"], 1e-12);
             Assert.AreEqual(1 / 12.0, ss1s1psm1.Scores["score2"], 1e-12);
 
-            PeptideSpectrumMatch ss1s1psm1e2 = session.Get<SpectrumSource>(1L).Spectra[0].Matches[3];
-            Assert.AreEqual(session.Get<Peptide>(2L), ss1s1psm1e2.Peptide);
-            Assert.AreEqual(session.Get<SpectrumSource>(1L).Spectra[0], ss1s1psm1e2.Spectrum);
-            Assert.AreEqual(session.Get<Analysis>(2L), ss1s1psm1e2.Analysis);
-            Assert.AreEqual(ss1s1psm1e2, session.Get<Analysis>(2L).Matches[0]);
+            var ss1s1psm1e2 = session.UniqueResult<PeptideSpectrumMatch>(o => o.Spectrum.Source.Id == ss1.Id &&
+                                                                              o.Spectrum.Index == 0 &&
+                                                                              o.Analysis.Id == a2.Id &&
+                                                                              o.Rank == 1);
+            pwizPeptide = new PwizPeptide("TIDERPEPTIDEK");
+            Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "TIDERPEPTIDEK"), ss1s1psm1e2.Peptide);
+            Assert.AreEqual(a2, ss1s1psm1e2.Analysis);
+            Assert.IsTrue(a2.Matches.Contains(ss1s1psm1e2));
+            Assert.AreEqual(0, ss1s1psm1e2.Modifications.Count);
             Assert.AreEqual(4, ss1s1psm1e2.Charge);
-            Assert.AreEqual(1, ss1s1psm1e2.Rank);
+            Assert.AreEqual(pwizPeptide.monoisotopicMass(), ss1s1psm1e2.MonoisotopicMass, 1e-12);
+            Assert.AreEqual(pwizPeptide.molecularWeight(), ss1s1psm1e2.MolecularWeight, 1e-12);
             Assert.AreEqual(120.0, ss1s1psm1e2.Scores["score1"], 1e-12);
             Assert.AreEqual(1 / 120.0, ss1s1psm1e2.Scores["score2"], 1e-12);
 
-            PeptideSpectrumMatch ss1s1psm2 = session.Get<SpectrumSource>(1L).Spectra[0].Matches[1];
-            Assert.AreEqual(session.Get<Peptide>(2L), ss1s1psm2.Peptide);
-            Assert.AreEqual(session.Get<SpectrumSource>(1L).Spectra[0], ss1s1psm2.Spectrum);
-            Assert.AreEqual(session.Get<Analysis>(1L), ss1s1psm1.Analysis);
+            var ss1s1psm2 = session.UniqueResult<PeptideSpectrumMatch>(o => o.Spectrum.Source.Id == ss1.Id &&
+                                                                            o.Spectrum.Index == 0 &&
+                                                                            o.Analysis.Id == a1.Id &&
+                                                                            o.Rank == 2);
+            Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "TIDERPEPTIDEK"), ss1s1psm2.Peptide);
+            Assert.AreEqual(a1, ss1s1psm1.Analysis);
             Assert.AreEqual(4, ss1s1psm2.Charge);
             Assert.AreEqual(2, ss1s1psm2.Rank);
             Assert.AreEqual(12.0 / 2, ss1s1psm2.Scores["score1"], 1e-12);
             Assert.AreEqual(1 / (12.0 / 2), ss1s1psm2.Scores["score2"], 1e-12);
 
-            PeptideSpectrumMatch ss1s1psm3 = session.Get<SpectrumSource>(1L).Spectra[0].Matches[2];
-            Assert.AreEqual(session.Get<Peptide>(3L), ss1s1psm3.Peptide);
-            Assert.AreEqual(session.Get<SpectrumSource>(1L).Spectra[0], ss1s1psm3.Spectrum);
-            Assert.AreEqual(session.Get<Analysis>(1L), ss1s1psm3.Analysis);
+            var ss1s1psm3 = session.UniqueResult<PeptideSpectrumMatch>(o => o.Spectrum.Source.Id == ss1.Id &&
+                                                                            o.Spectrum.Index == 0 &&
+                                                                            o.Analysis.Id == a1.Id &&
+                                                                            o.Rank == 3);
+            Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "EPPIER"), ss1s1psm3.Peptide);
+            Assert.AreEqual(a1, ss1s1psm3.Analysis);
             Assert.AreEqual(1, ss1s1psm3.Charge);
-            Assert.AreEqual(3, ss1s1psm3.Rank);
-            Assert.AreEqual(12.0 / 3, ss1s1psm3.Scores["score1"], 1e-12);
-            Assert.AreEqual(1 / (12.0 / 3), ss1s1psm3.Scores["score2"], 1e-12);
 
-            PeptideSpectrumMatch ss4s1psm1 = session.Get<SpectrumSource>(4L).Spectra[0].Matches[0];
-            Assert.AreEqual(session.Get<Peptide>(2L), ss4s1psm1.Peptide);
-            Assert.AreEqual(session.Get<SpectrumSource>(4L).Spectra[0], ss4s1psm1.Spectrum);
-            Assert.AreEqual(session.Get<Analysis>(1L), ss4s1psm1.Analysis);
+            
+            // E[H-2O-1]DIT[P1O4]PEPR
+            var ss2s1psm2 = session.UniqueResult<PeptideSpectrumMatch>(o => o.Spectrum.Source.Id == 2 &&
+                                                                            o.Spectrum.Index == 0 &&
+                                                                            o.Analysis.Id == 1 &&
+                                                                            o.Rank == 2);
+            pwizPeptide = new PwizPeptide("E(H-2O-1)DIT(P1O4)PEPR", proteome.ModificationParsing.ModificationParsing_ByFormula);
+            Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "EDITPEPR"), ss2s1psm2.Peptide);
+            Assert.AreEqual(2, ss2s1psm2.Modifications.Count);
+            Assert.AreEqual("H-2O-1", ss2s1psm2.Modifications[0].Modification.Formula);
+            Assert.AreEqual(1, ss2s1psm2.Modifications[0].Offset);
+            Assert.AreEqual("O4P1", ss2s1psm2.Modifications[1].Modification.Formula);
+            Assert.AreEqual(4, ss2s1psm2.Modifications[1].Offset);
+            Assert.AreEqual(pwizPeptide.monoisotopicMass(), ss2s1psm2.MonoisotopicMass, 1e-12);
+            Assert.AreEqual(pwizPeptide.molecularWeight(), ss2s1psm2.MolecularWeight, 1e-12);
+
+            var ss4s1psm1 = session.UniqueResult<PeptideSpectrumMatch>(o => o.Spectrum.Source.Id == ss4.Id &&
+                                                                            o.Spectrum.Index == 0 &&
+                                                                            o.Analysis.Id == a1.Id &&
+                                                                            o.Rank == 1);
+            Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "TIDERPEPTIDEK"), ss4s1psm1.Peptide);
+            Assert.AreEqual(a1, ss4s1psm1.Analysis);
             Assert.AreEqual(4, ss4s1psm1.Charge);
-            Assert.AreEqual(1, ss4s1psm1.Rank);
-
-            Assert.AreEqual(30, session.QueryOver<PeptideSpectrumMatch>().Where(o => o.Rank == 1).RowCount());
-            Assert.AreEqual(30, session.QueryOver<PeptideSpectrumMatch>().Where(o => o.Rank == 2).RowCount());
-            Assert.AreEqual(30, session.QueryOver<PeptideSpectrumMatch>().Where(o => o.Rank == 3).RowCount());
-
-            Assert.AreEqual(18, session.QueryOver<PeptideSpectrumMatch>().Where(o => o.Charge == 1).RowCount());
-            Assert.AreEqual(39, session.QueryOver<PeptideSpectrumMatch>().Where(o => o.Charge == 2).RowCount());
-            Assert.AreEqual(6, session.QueryOver<PeptideSpectrumMatch>().Where(o => o.Charge == 4).RowCount());
         }
 
         [TestMethod]
         public void TestModifications()
         {
-            Modification mod1 = session.Get<Modification>(1L);
+            Modification mod1 = session.UniqueResult<Modification>(o => o.Formula == "C2H2O1");
             Assert.AreEqual("C2H2O1", mod1.Formula);
             Assert.AreEqual(mod1.Formula, mod1.Name);
             Assert.AreEqual(new Formula(mod1.Formula).monoisotopicMass(), mod1.MonoMassDelta);
             Assert.AreEqual(new Formula(mod1.Formula).molecularWeight(), mod1.AvgMassDelta);
 
-            Modification mod2 = session.Get<Modification>(2L);
+            Modification mod2 = session.UniqueResult<Modification>(o => o.Formula == "H-2O-1");
             Assert.AreEqual("H-2O-1", mod2.Formula);
             Assert.AreEqual(mod2.Formula, mod2.Name);
             Assert.AreEqual(new Formula(mod2.Formula).monoisotopicMass(), mod2.MonoMassDelta);
             Assert.AreEqual(new Formula(mod2.Formula).molecularWeight(), mod2.AvgMassDelta);
 
-            Modification mod3 = session.Get<Modification>(3L);
+            Modification mod3 = session.UniqueResult<Modification>(o => o.Formula == "O4P1");
             Assert.AreEqual("O4P1", mod3.Formula);
-            Assert.AreEqual(mod3.Name, mod3.Name);
+            Assert.AreEqual(mod3.Formula, mod3.Name);
             Assert.AreEqual(new Formula(mod3.Formula).monoisotopicMass(), mod3.MonoMassDelta);
             Assert.AreEqual(new Formula(mod3.Formula).molecularWeight(), mod3.AvgMassDelta);
 
             // [C2H2O1]PEPTIDE
-            PeptideModification pm1 = session.Get<PeptideModification>(1L);
-            Assert.AreEqual(mod1, pm1.Modification);
-            Assert.AreEqual(1, pm1.PeptideSpectrumMatch.Id);
+            PeptideModification pm1 = session.UniqueResult<PeptideModification>(o => o.PeptideSpectrumMatch.Peptide.Sequence == "PEPTIDE" &&
+                                                                                     o.Modification == mod1 &&
+                                                                                     o.Offset == int.MinValue);
             Assert.IsTrue(pm1.PeptideSpectrumMatch.Modifications.Contains(pm1));
-            Assert.AreEqual(int.MinValue, pm1.Offset);
             Assert.AreEqual('(', pm1.Site);
 
             // E[H-2O-1]DIT[P1O4]PEPR
-            PeptideModification pm2 = session.Get<PeptideModification>(2L);
+            PeptideModification pm2 = session.UniqueResult<PeptideModification>(o => o.PeptideSpectrumMatch.Peptide.Sequence == "EDITPEPR" &&
+                                                                                     o.Modification == mod2 &&
+                                                                                     o.Offset == 1);
             Assert.AreEqual(mod2, pm2.Modification);
-            Assert.AreEqual(11, pm2.PeptideSpectrumMatch.Id);
             Assert.IsTrue(pm2.PeptideSpectrumMatch.Modifications.Contains(pm2));
             Assert.AreEqual(1, pm2.Offset);
             Assert.AreEqual('E', pm2.Site);
 
-            PeptideModification pm3 = session.Get<PeptideModification>(3L);
+            PeptideModification pm3 = pm2.PeptideSpectrumMatch.Modifications.Where(o => o.Offset == 4).Single();
             Assert.AreEqual(mod3, pm3.Modification);
-            Assert.AreEqual(11, pm3.PeptideSpectrumMatch.Id);
             Assert.IsTrue(pm3.PeptideSpectrumMatch.Modifications.Contains(pm3));
-            Assert.AreEqual(4, pm3.Offset);
             Assert.AreEqual('T', pm3.Site);
 
             // PEPT[P1O4]IDEK
-            PeptideModification pm4 = session.Get<PeptideModification>(4L);
-            Assert.AreEqual(mod3, pm4.Modification);
-            Assert.AreEqual(16, pm4.PeptideSpectrumMatch.Id);
+            PeptideModification pm4 = session.UniqueResult<PeptideModification>(o => o.PeptideSpectrumMatch.Peptide.Sequence == "PEPTIDEK" &&
+                                                                                     o.Modification == mod3 &&
+                                                                                     o.Offset == 4);
             Assert.IsTrue(pm4.PeptideSpectrumMatch.Modifications.Contains(pm4));
-            Assert.AreEqual(4, pm4.Offset);
             Assert.AreEqual('T', pm4.Site);
         }
 
         [TestMethod]
-        public void TestImportExport ()
+        public void TestImportExportIdpXml ()
         {
+            IList<string> idpXmlPaths;
             using (var exporter = new Exporter(session))
             {
-                exporter.WriteIdpXml(true);
+                idpXmlPaths = exporter.WriteIdpXml(true, true, true);
+                exporter.WriteSpectra();
+            }
+            session.Close();
+
+            using (var parser = new Parser("testImportExport.idpDB"))
+            {
+                // ReadXml should pick up mzML files in the same directory as the idpXMLs
+                parser.ReadXml(".", idpXmlPaths.ToArray());
             }
 
-            //using (var parser = new Parser())
+            var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testImportExport.idpDB", false, false);
+            session = sessionFactory.OpenSession();
+
+            TestOverallCounts();
+            TestSanity();
+            TestProteins();
+            TestPeptides();
+            TestPeptideInstances();
+            TestSpectrumSourceGroups();
+            TestSpectrumSources();
+            TestSpectra();
+            TestAnalyses();
+            TestPeptideSpectrumMatches();
+            TestModifications();
         }
 
         private string createSimpleProteinSequence(string motif, int length)

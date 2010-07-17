@@ -34,6 +34,8 @@ using System.Linq;
 using NHibernate;
 using NHibernate.Linq;
 
+using pwiz.CLI.msdata;
+
 namespace IDPicker.DataModel
 {
     public class Exporter : IDisposable
@@ -51,7 +53,41 @@ namespace IDPicker.DataModel
             this.session = session;
         }
 
-        public void WriteIdpXml (bool includeProteinSequences)
+        public IList<string> WriteSpectra()
+        {
+            return WriteSpectra(new MSDataFile.WriteConfig());
+        }
+
+        public IList<string> WriteSpectra (MSDataFile.WriteConfig config)
+        {
+            var outputPaths = new List<string>();
+
+            foreach (SpectrumSource ss in session.Query<SpectrumSource>())
+            {
+                if (ss.Metadata == null)
+                    continue;
+
+                string outputSuffix;
+                switch (config.format)
+                {
+                    case MSDataFile.Format.Format_mzML: outputSuffix = ".mzML"; break;
+                    case MSDataFile.Format.Format_mzXML: outputSuffix = ".mzXML"; break;
+                    case MSDataFile.Format.Format_MGF: outputSuffix = ".mgf"; break;
+                    case MSDataFile.Format.Format_MS2: outputSuffix = ".ms2"; break;
+                    default:
+                        config.format = MSDataFile.Format.Format_mzML;
+                        outputSuffix = ".mzML";
+                        break;
+                }
+
+                MSDataFile.write(ss.Metadata, ss.Name + outputSuffix, config);
+
+                outputPaths.Add(ss.Name + outputSuffix);
+            }
+            return outputPaths;
+        }
+
+        public IList<string> WriteIdpXml (bool includeProteinSequences, bool includeScores, bool writeModFormula)
         {
             // get the set of distinct analysis/source pairs
             var analysisSourcePairs = session.CreateQuery("SELECT psm.Analysis, psm.Spectrum.Source " +
@@ -65,6 +101,8 @@ namespace IDPicker.DataModel
                                                            "GROUP BY psm.Spectrum.Source.id " +
                                                            "HAVING COUNT(DISTINCT psm.Analysis.id) > 1")
                                               .List<long>();
+
+            var outputPaths = new List<string>();
 
             foreach (object[] analysisSourcePair in analysisSourcePairs)
             {
@@ -82,8 +120,9 @@ namespace IDPicker.DataModel
                 string outputSuffix = ".idpXML";
                 if (multiAnalyzedSources.Contains(ss.Id.GetValueOrDefault()))
                     outputSuffix = "-" + a.Software.Name + "-" + a.StartTime.ToUniversalTime().ToString("yyyyMMddTHHmmss'Z'") + outputSuffix;
+                outputPaths.Add(ss.Name + outputSuffix);
 
-                var writer = XmlWriter.Create(ss.Name + outputSuffix, settings);
+                var writer = XmlWriter.Create(outputPaths.Last(), settings);
                 writer.WriteStartDocument();
                 writer.WriteStartElement("idPickerPeptides");
 
@@ -145,6 +184,7 @@ namespace IDPicker.DataModel
                 {
                     writer.WriteStartElement("spectraSource");
                     writer.WriteAttribute("name", ss.Name);
+                    writer.WriteAttribute("group", ss.Group.Name);
                     writer.WriteAttribute("count", ss.Spectra.Count);
                     {
                         #region <processingEventList>
@@ -157,6 +197,12 @@ namespace IDPicker.DataModel
                             writer.WriteAttribute("end", a.StartTime.ToString("MM/dd/yyyy@HH:mm:ss")); // TODO: do we need end time?
                             writer.WriteAttribute("params", a.Parameters.Count);
 
+                            if (a.Software != null)
+                            {
+                                a.Parameters.Add(new AnalysisParameter() { Name = "software name", Value = a.Software.Name });
+                                a.Parameters.Add(new AnalysisParameter() { Name = "software version", Value = a.Software.Version });
+                            }
+
                             foreach (AnalysisParameter ap in a.Parameters)
                             {
                                 writer.WriteStartElement("processingParam");
@@ -164,6 +210,13 @@ namespace IDPicker.DataModel
                                 writer.WriteAttribute("value", ap.Value);
                                 writer.WriteEndElement(); // processingParam
                             }
+
+                            if (a.Software != null)
+                            {
+                                a.Parameters.Remove(a.Parameters.Last());
+                                a.Parameters.Remove(a.Parameters.Last());
+                            }
+
                             writer.WriteEndElement(); // processingEvent
 
                             writer.WriteStartElement("processingEvent");
@@ -177,7 +230,6 @@ namespace IDPicker.DataModel
                                 new KeyValuePair<string, string>("software name", "IDPicker"),
                                 new KeyValuePair<string, string>("software version", IDPicker.Util.Version ),
                                 new KeyValuePair<string, string>("MaxFDR", "1"),
-                                new KeyValuePair<string, string>("MaxResultRank", "1"),
                             };
 
                             foreach (var ap in validationParameters)
@@ -194,12 +246,14 @@ namespace IDPicker.DataModel
 
                         foreach (Spectrum s in ss.Spectra)
                         {
-                            var psmList = s.Matches.Where(o => o.Analysis.Id == a.Id && o.Rank == 1).ToList();
+                            var psmList = s.Matches.Where(o => o.Analysis.Id == a.Id).OrderBy(o => o.Charge).ToList();
                             var distinctChargeStates = psmList.Select(o => o.Charge).Distinct();
 
+                            // idpXML spectra are written per distinct charge state
                             foreach (int charge in distinctChargeStates)
                             {
                                 var psmListAtCharge = psmList.Where(o => o.Charge == charge).ToList();
+                                var distinctRanksAtCharge = psmListAtCharge.Select(o => o.Rank).OrderBy(o => o).Distinct();
 
                                 #region <spectrum ...>
                                 writer.WriteStartElement("spectrum");
@@ -208,14 +262,25 @@ namespace IDPicker.DataModel
                                 writer.WriteAttribute("z", charge);
                                 writer.WriteAttribute("mass", (s.PrecursorMZ * charge) - (pwiz.CLI.chemistry.Proton.Mass * charge));
                                 // TODO: writer.WriteAttribute("time", s.ScanStartTime);
-                                writer.WriteAttribute("results", 1); // rank 1 only
-                                {
-                                    writer.WriteStartElement("result");
-                                    writer.WriteAttribute("rank", 1);
-                                    writer.WriteAttribute("FDR", psmListAtCharge[0].QValue);
-                                    writer.WriteAttribute("ids", psmListAtCharge.Count);
+                                writer.WriteAttribute("results", distinctRanksAtCharge.Count());
 
-                                    foreach (PeptideSpectrumMatch psm in psmListAtCharge)
+                                // a result is a set of ids at a distinct rank
+                                foreach (int rank in distinctRanksAtCharge)
+                                {
+                                    var psmListAtRank = psmList.Where(o => o.Rank == rank).ToList();
+
+                                    writer.WriteStartElement("result");
+                                    writer.WriteAttribute("rank", rank);
+                                    writer.WriteAttribute("FDR", psmListAtRank[0].QValue);
+                                    writer.WriteAttribute("ids", psmListAtRank.Count);
+
+                                    if (includeScores)
+                                    {
+                                        string scores = String.Join(" ", psmListAtRank[0].Scores.Select(o => String.Format("{0}={1}", o.Key, o.Value)).ToArray());
+                                        writer.WriteAttribute("scores", scores);
+                                    }
+
+                                    foreach (PeptideSpectrumMatch psm in psmListAtRank)
                                     {
                                         writer.WriteStartElement("id");
                                         writer.WriteAttribute("peptide", psm.Peptide.Id);
@@ -232,7 +297,7 @@ namespace IDPicker.DataModel
                                                     case int.MaxValue: offset = "c"; break;
                                                     default: offset = pm.Offset.ToString(); break;
                                                 }
-                                                mods.Add(String.Format("{0}:{1}", offset, pm.Modification.MonoMassDelta));
+                                                mods.Add(String.Format("{0}:{1}", offset, writeModFormula ? pm.Modification.Formula : pm.Modification.MonoMassDelta.ToString()));
                                             }
                                             writer.WriteAttribute("mods", String.Join(" ", mods.ToArray()));
                                         }
@@ -254,6 +319,8 @@ namespace IDPicker.DataModel
                 writer.WriteEndDocument();
                 writer.Close();
             }
+
+            return outputPaths;
         }
 
         #region IDisposable Members

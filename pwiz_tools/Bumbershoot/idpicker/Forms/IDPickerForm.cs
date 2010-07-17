@@ -523,7 +523,7 @@ namespace IDPicker
                         else // if only importing one source, don't ask about skipping mzML import
                             parser.SourceNotFound += new EventHandler<Parser.SourceNotFoundEventArgs>(sourceNotFoundOnVisualizeHandler);
                         parser.ParsingProgress += new EventHandler<Parser.ParsingProgressEventArgs>(pf.UpdateProgress);
-                        parser.ReadXml(xml_filepaths, ".");
+                        parser.ReadXml(".", xml_filepaths.ToArray());
 
                         if (!pf.Visible || pf.IsDisposed)
                             return;
