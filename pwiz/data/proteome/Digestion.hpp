@@ -55,9 +55,6 @@ enum PWIZ_API_DECL ProteolyticEnzyme
 };
 
 
-class Digestion;
-
-
 /// peptide subclass that contains extra metadata provided by digestion
 class PWIZ_API_DECL DigestedPeptide : public Peptide
 {
@@ -112,7 +109,6 @@ class PWIZ_API_DECL DigestedPeptide : public Peptide
     bool operator==(const DigestedPeptide& rhs) const;
 
     private:
-    friend class Digestion;
     size_t offset_;
     size_t missedCleavages_;
     bool NTerminusIsSpecific_;

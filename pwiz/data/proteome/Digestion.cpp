@@ -577,31 +577,37 @@ class Digestion::Impl
 
         BOOST_FOREACH(const_string_iterator_range& range, instances)
         {
-            DigestedPeptide p(peptide.sequence());
-
-            size_t& beginOffset = p.offset_ = range.begin() - sequence_.begin();
+            size_t beginOffset = range.begin() - sequence_.begin();
             size_t endOffset = beginOffset + peptide.sequence().length() - 1;
 
-            p.NTerminusIsSpecific_ = sitesSet_.count(int(beginOffset) - 1) > 0;
-            p.CTerminusIsSpecific_ = sitesSet_.count(int(endOffset)) > 0;
+            bool NTerminusIsSpecific = sitesSet_.count(int(beginOffset) - 1) > 0;
+            bool CTerminusIsSpecific = sitesSet_.count(int(endOffset)) > 0;
 
-            if (p.specificTermini() < (size_t) config_.minimumSpecificity)
+            if (((size_t) NTerminusIsSpecific + (size_t) CTerminusIsSpecific) < (size_t) config_.minimumSpecificity)
                 continue;
 
-            p.missedCleavages_ = 0;
+            size_t missedCleavages = 0;
             for (size_t i = beginOffset; i < endOffset; ++i)
                 if (sitesSet_.count((int) i) > 0)
-                    ++p.missedCleavages_;
+                    ++missedCleavages;
 
-            if (p.missedCleavages() > (size_t) config_.maximumMissedCleavages)
+            if (missedCleavages > (size_t) config_.maximumMissedCleavages)
                 continue;
 
+            string NTerminusPrefix, CTerminusSuffix;
             if (beginOffset > 0)
-			    p.NTerminusPrefix_ = sequence_.substr(beginOffset-1, 1);
+			    NTerminusPrefix = sequence_.substr(beginOffset-1, 1);
 		    if (endOffset+1 < sequence_.length())
-			    p.CTerminusSuffix_ = sequence_.substr(endOffset+1, 1);
+			    CTerminusSuffix = sequence_.substr(endOffset+1, 1);
 
-            result.push_back(p);
+            result.push_back(DigestedPeptide(peptide.sequence().begin(),
+                                             peptide.sequence().end(),
+                                             beginOffset,
+                                             missedCleavages,
+                                             NTerminusIsSpecific,
+                                             CTerminusIsSpecific,
+                                             NTerminusPrefix,
+                                             CTerminusSuffix));
         }
 
         return result;
@@ -628,38 +634,46 @@ class Digestion::Impl
 
         size_t endOffset = beginOffset + peptide.sequence().length() - 1;
 
-        result.missedCleavages_ = 0;
+        size_t missedCleavages = 0;
         for (size_t i = beginOffset; i < endOffset; ++i)
             if (sitesSet_.count((int) i) > 0)
-                ++result.missedCleavages_;
+                ++missedCleavages;
 
-        if (result.missedCleavages() > (size_t) config_.maximumMissedCleavages)
+        if (missedCleavages > (size_t) config_.maximumMissedCleavages)
             throw runtime_error("[Digestion::find_first()] Peptide \"" + peptide.sequence() + "\" not found in \"" + sequence_ + "\"");
 
+        bool NTerminusIsSpecific, CTerminusIsSpecific;
         do
         {
             endOffset = beginOffset + peptide.sequence().length() - 1;
 
-            result.NTerminusIsSpecific_ = sitesSet_.count(int(beginOffset)-1) > 0;
-            result.CTerminusIsSpecific_ = sitesSet_.count(int(endOffset)) > 0;
+            NTerminusIsSpecific = sitesSet_.count(int(beginOffset)-1) > 0;
+            CTerminusIsSpecific = sitesSet_.count(int(endOffset)) > 0;
 
-            if (result.specificTermini() >= (size_t) config_.minimumSpecificity)
+            if (((size_t) NTerminusIsSpecific + (size_t) CTerminusIsSpecific) >= (size_t) config_.minimumSpecificity)
                 break;
             beginOffset = sequence_.find(peptide.sequence(), beginOffset + 1);
         }
         while (beginOffset != string::npos);
 
         if (beginOffset == string::npos ||
-            result.specificTermini() < (size_t) config_.minimumSpecificity)
+            ((size_t) NTerminusIsSpecific + (size_t) CTerminusIsSpecific) < (size_t) config_.minimumSpecificity)
             throw runtime_error("[Digestion::find_first()] Peptide \"" + peptide.sequence() + "\" not found in \"" + sequence_ + "\"");
 
-        result.offset_ = beginOffset;
-
+        string NTerminusPrefix, CTerminusSuffix;
         if (beginOffset > 0)
-		    result.NTerminusPrefix_ = sequence_.substr(beginOffset-1, 1);
+		    NTerminusPrefix = sequence_.substr(beginOffset-1, 1);
 	    if (endOffset+1 < sequence_.length())
-		    result.CTerminusSuffix_ = sequence_.substr(endOffset+1, 1);
+		    CTerminusSuffix = sequence_.substr(endOffset+1, 1);
 
+        result = DigestedPeptide(peptide.sequence().begin(),
+                                 peptide.sequence().end(),
+                                 beginOffset,
+                                 missedCleavages,
+                                 NTerminusIsSpecific,
+                                 CTerminusIsSpecific,
+                                 NTerminusPrefix,
+                                 CTerminusSuffix);
         return result;
     }
 
