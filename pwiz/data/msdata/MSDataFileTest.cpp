@@ -71,6 +71,7 @@ void validateWriteRead(const MSDataFile::WriteConfig& writeConfig,
 
     string filename1 = filenameBase_ + ".1";
     string filename2 = filenameBase_ + ".2";
+    string filename3 = filenameBase_ + ".3";
 
     {
         // create MSData object in memory
@@ -118,12 +119,30 @@ void validateWriteRead(const MSDataFile::WriteConfig& writeConfig,
         diff(tiny, msd3);
         if (diff && os_) *os_ << diff << endl;
         unit_assert(!diff);
+
+        // test writing to a stream
+        ostringstream oss;
+        msd1.write(oss, writeConfig);
+        string ossStr = oss.str();
+        ofstream ofs(filename3.c_str());
+        ofs.write(ossStr.c_str(), ossStr.length());
+        ofs.close();
+
+        // read back into another MSDataFile object
+        MSDataFile msd4(filename3);
+        hackInMemoryMSData(msd4);
+
+        // compare
+        diff(tiny, msd4);
+        if (diff && os_) *os_ << diff << endl;
+        unit_assert(!diff);
 	}
 
     // remove temp files
     boost::filesystem::remove(filename1);
     boost::filesystem::remove(filename2);
     boost::filesystem::remove(filename1 + ".gz");
+    boost::filesystem::remove(filename3);
 }
 
 void test()

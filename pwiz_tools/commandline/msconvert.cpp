@@ -155,7 +155,7 @@ Config parseCommandLine(int argc, const char* argv[])
             ": specify text file containing filenames")
         ("outdir,o",
             po::value<string>(&config.outputPath)->default_value(config.outputPath),
-            ": set output directory [.]")
+            ": set output directory ('-' for stdout) [.]")
         ("config,c", 
             po::value<string>(&configFilename),
             ": configuration file (optionName=value)")
@@ -546,7 +546,10 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
         string outputFilename = config.outputFilename("merged-spectra", msd);
         cout << "writing output file: " << outputFilename << endl;
 
-        MSDataFile::write(msd, outputFilename, config.writeConfig, pILR);
+        if (config.outputPath == "-")
+            MSDataFile::write(msd, cout, config.writeConfig, pILR);
+        else
+            MSDataFile::write(msd, outputFilename, config.writeConfig, pILR);
     }
     catch (exception& e)
     {
@@ -596,7 +599,11 @@ void processFile(const string& filename, const Config& config, const ReaderList&
             // write out the new data file
             string outputFilename = config.outputFilename(filename, msd);
             cout << "writing output file: " << outputFilename << endl;
-            MSDataFile::write(msd, outputFilename, config.writeConfig, pILR);
+
+            if (config.outputPath == "-")
+                MSDataFile::write(msd, cout, config.writeConfig, pILR);
+            else
+                MSDataFile::write(msd, outputFilename, config.writeConfig, pILR);
         }
         catch (exception& e)
         {

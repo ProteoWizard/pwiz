@@ -72,6 +72,18 @@ struct PWIZ_API_DECL MSDataFile : public MSData
     void write(const std::string& filename,
                const WriteConfig& config = WriteConfig(),
                const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
+
+    /// static write function for any MSData object;
+    /// iterationListenerRegistry may be used for progress updates
+    static void write(const MSData& msd,
+                      std::ostream& os,
+                      const WriteConfig& config = WriteConfig(),
+                      const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
+
+    /// member write function 
+    void write(std::ostream& os,
+               const WriteConfig& config = WriteConfig(),
+               const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
 };
 
 

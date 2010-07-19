@@ -96,6 +96,15 @@ void MSDataFile::write(const string& filename,
 }
 
 
+PWIZ_API_DECL
+void MSDataFile::write(ostream& os,
+                       const WriteConfig& config,
+                       const IterationListenerRegistry* iterationListenerRegistry)
+{
+    write(*this, os, config, iterationListenerRegistry); 
+}
+
+
 namespace {
 
 
@@ -191,6 +200,18 @@ void MSDataFile::write(const MSData& msd,
 {
     shared_ptr<ostream> os = openFile(filename,config.gzipped);
     writeStream(*os, msd, config, iterationListenerRegistry);
+}
+
+
+PWIZ_API_DECL
+void MSDataFile::write(const MSData& msd,
+                       ostream& os,
+                       const WriteConfig& config,
+                       const IterationListenerRegistry* iterationListenerRegistry)
+{
+    WriteConfig config2(config);
+    config2.gzipped = false;
+    writeStream(os, msd, config2, iterationListenerRegistry);
 }
 
 
