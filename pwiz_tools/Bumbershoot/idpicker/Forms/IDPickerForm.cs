@@ -224,7 +224,7 @@ namespace IDPicker
 
         void basicFilterChanged ()
         {
-            dataFilter.SetBasicFilterView(session);
+            dataFilter.ApplyBasicFilters(session);
 
             proteinTableForm.SetData(session, dataFilter);
             peptideTableForm.SetData(session, dataFilter);
@@ -578,7 +578,7 @@ namespace IDPicker
                 }
 
                 if (!hasFilterView)
-                    dataFilter.SetBasicFilterView(session);
+                    dataFilter.ApplyBasicFilters(session);
 
                 breadCrumbControl.BreadCrumbs.Clear();
                 breadCrumbControl.BreadCrumbs.Add(dataFilter.GetBasicFilterControls(this));

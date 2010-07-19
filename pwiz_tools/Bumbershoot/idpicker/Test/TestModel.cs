@@ -199,7 +199,7 @@ namespace Test
 
                 // make sure peptides are sorted by their score divider (which will determine rank)
                 var peptideList = new SortedList<int, List<PeptideTuple>>();
-                foreach (string tuple in peptideTuples.Split(' '))
+                foreach (string tuple in peptideTuples.Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
                 {
                     var peptideTuple = new PeptideTuple()
                     {
@@ -358,7 +358,7 @@ namespace Test
         #endregion
 
         // shared session between TestModel methods
-        NHibernate.ISession session;
+        public NHibernate.ISession session;
         
         #region Example proteins
         string[] testProteinSequences = new string[]
@@ -413,7 +413,6 @@ namespace Test
             #endregion
 
             var sessionFactory = SessionFactoryFactory.CreateSessionFactory(":memory:", true, false);
-            var session2 = sessionFactory.OpenStatelessSession();
             session = sessionFactory.OpenSession();
 
             session.Transaction.Begin();
@@ -848,39 +847,6 @@ namespace Test
                                                                                      o.Offset == 4);
             Assert.IsTrue(pm4.PeptideSpectrumMatch.Modifications.Contains(pm4));
             Assert.AreEqual('T', pm4.Site);
-        }
-
-        [TestMethod]
-        public void TestImportExportIdpXml ()
-        {
-            IList<string> idpXmlPaths;
-            using (var exporter = new Exporter(session))
-            {
-                idpXmlPaths = exporter.WriteIdpXml(true, true, true);
-                exporter.WriteSpectra();
-            }
-            session.Close();
-
-            using (var parser = new Parser("testImportExport.idpDB"))
-            {
-                // ReadXml should pick up mzML files in the same directory as the idpXMLs
-                parser.ReadXml(".", idpXmlPaths.ToArray());
-            }
-
-            var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testImportExport.idpDB", false, false);
-            session = sessionFactory.OpenSession();
-
-            TestOverallCounts();
-            TestSanity();
-            TestProteins();
-            TestPeptides();
-            TestPeptideInstances();
-            TestSpectrumSourceGroups();
-            TestSpectrumSources();
-            TestSpectra();
-            TestAnalyses();
-            TestPeptideSpectrumMatches();
-            TestModifications();
         }
 
         private string createSimpleProteinSequence(string motif, int length)

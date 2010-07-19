@@ -204,7 +204,7 @@ namespace IDPicker.DataModel
                                  MinimumSpectraPerProtein);
         }
 
-        public void SetBasicFilterView (NHibernate.ISession session)
+        public void ApplyBasicFilters (NHibernate.ISession session)
         {
             // ignore errors if main tables haven't been created yet
 
@@ -253,32 +253,32 @@ namespace IDPicker.DataModel
                               MinimumDistinctPeptidesPerProtein,
                               MinimumSpectraPerProtein)).ExecuteUpdate();
 
-            session.CreateSQLQuery("CREATE TABLE FilteredPeptideInstances (Id INTEGER PRIMARY KEY, Protein INT, Peptide INT, Offset INT, Length INT, NTerminusIsSpecific INT, CTerminusIsSpecific INT, MissedCleavages INT);" +
-                                   "INSERT INTO FilteredPeptideInstances SELECT pi.* " +
-                                   "FROM PeptideInstances pi " +
-                                   "JOIN FilteredProteins pro ON pi.Protein = pro.Id;" +
-                                   "CREATE INDEX FilteredPeptideInstance_ProteinIndex ON FilteredPeptideInstances (Protein);" +
-                                   "CREATE INDEX FilteredPeptideInstance_PeptideIndex ON FilteredPeptideInstances (Peptide)"
-                                  ).ExecuteUpdate();
-
-            session.CreateSQLQuery("CREATE TABLE FilteredPeptides (Id INTEGER PRIMARY KEY, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC);" +
-                                   "INSERT INTO FilteredPeptides SELECT pep.* " +
-                                   "FROM Peptides pep " +
-                                   "JOIN FilteredPeptideInstances pi ON pep.Id = pi.Peptide " +
-                                   "JOIN FilteredProteins pro ON pi.Protein = pro.Id " +
-                                   "GROUP BY pep.Id"
-                                  ).ExecuteUpdate();
-
             session.CreateSQLQuery("CREATE TABLE FilteredPeptideSpectrumMatches (Id INTEGER PRIMARY KEY, Spectrum INT, Analysis INT, Peptide INT, QValue NUMERIC, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC, MonoisotopicMassError NUMERIC, MolecularWeightError NUMERIC, Rank INT, Charge INT);" +
                                    "INSERT INTO FilteredPeptideSpectrumMatches SELECT psm.* " +
                                    "FROM FilteredProteins pro " +
-                                   "JOIN FilteredPeptideInstances pi ON pro.Id = pi.Protein " +
+                                   "JOIN PeptideInstances pi ON pro.Id = pi.Protein " +
                                    "JOIN PeptideSpectrumMatches psm ON pi.Peptide = psm.Peptide " +
                                    "WHERE " + MaximumQValue.ToString() + " >= psm.QValue AND psm.Rank = 1 " +
                                    "GROUP BY psm.Id;" +
                                    "CREATE INDEX FilteredPeptideSpectrumMatch_SpectrumIndex ON FilteredPeptideSpectrumMatches (Spectrum);" +
                                    "CREATE INDEX FilteredPeptideSpectrumMatch_PeptideIndex ON FilteredPeptideSpectrumMatches (Peptide);" +
                                    "CREATE INDEX FilteredPeptideSpectrumMatch_QValueIndex ON FilteredPeptideSpectrumMatches (QValue)"
+                                  ).ExecuteUpdate();
+
+            session.CreateSQLQuery("CREATE TABLE FilteredPeptides (Id INTEGER PRIMARY KEY, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC);" +
+                                   "INSERT INTO FilteredPeptides SELECT pep.* " +
+                                   "FROM FilteredPeptideSpectrumMatches psm " +
+                                   "JOIN Peptides pep ON psm.Peptide = pep.Id " +
+                                   "GROUP BY pep.Id"
+                                  ).ExecuteUpdate();
+
+            session.CreateSQLQuery("CREATE TABLE FilteredPeptideInstances (Id INTEGER PRIMARY KEY, Protein INT, Peptide INT, Offset INT, Length INT, NTerminusIsSpecific INT, CTerminusIsSpecific INT, MissedCleavages INT);" +
+                                   "INSERT INTO FilteredPeptideInstances SELECT pi.* " +
+                                   "FROM FilteredProteins pro " +
+                                   "JOIN PeptideInstances pi ON pro.Id = pi.Protein " +
+                                   "JOIN FilteredPeptides pep ON pi.Peptide = pep.Id;" +
+                                   "CREATE INDEX FilteredPeptideInstance_ProteinIndex ON FilteredPeptideInstances (Protein);" +
+                                   "CREATE INDEX FilteredPeptideInstance_PeptideIndex ON FilteredPeptideInstances (Peptide)"
                                   ).ExecuteUpdate();
             #endregion
 
@@ -296,50 +296,86 @@ namespace IDPicker.DataModel
             session.CreateSQLQuery("ALTER TABLE FilteredPeptideSpectrumMatches RENAME TO PeptideSpectrumMatches").ExecuteUpdate();
             #endregion
 
-            #region Set ProteinGroups column (the groups change depending on the basic filters applied above)
-            {
-                var proteinGroupQuery = session.CreateSQLQuery("SELECT GROUP_CONCAT(DISTINCT pi.Peptide), pi.Protein " +
-                                                               "FROM PeptideInstances pi " +
-                                                               "GROUP BY pi.Protein " +
-                                                               "ORDER BY pi.Protein");
+            AssembleProteinGroups(session);
+            ApplyAdditionalPeptidesFilter(session);
+            AssembleClusters(session);
 
-                session.Transaction.Begin();
-                var cmd = session.Connection.CreateCommand();
-                cmd.CommandText = "UPDATE Proteins SET ProteinGroup = ? WHERE Id = ?";
-                var parameters = new List<System.Data.IDbDataParameter>();
-                for (int i = 0; i < 2; ++i)
-                {
-                    parameters.Add(cmd.CreateParameter());
-                    cmd.Parameters.Add(parameters[i]);
-                }
-                cmd.Prepare();
-                foreach (object[] itr in proteinGroupQuery.List<object[]>())
-                {
-                    parameters[0].Value = (string) itr[0];
-                    parameters[1].Value = (int) itr[1];
-                    cmd.ExecuteNonQuery();
-                }
-                session.Transaction.Commit();
-            }
+            #region Create FilteringCriteria table to store the basic filter parameters
+            try { session.CreateSQLQuery("DROP TABLE FilteringCriteria").ExecuteUpdate(); }
+            catch { }
+            session.CreateSQLQuery(
+                String.Format("CREATE TABLE FilteringCriteria (MaximumQValue NUMERIC, MinimumDistinctPeptidesPerProtein INT, MinimumSpectraPerProtein INT, MinimumAdditionalPeptidesPerProtein INT);" +
+                              "INSERT INTO FilteringCriteria SELECT {0}, {1}, {2}, {3}",
+                              MaximumQValue,
+                              MinimumDistinctPeptidesPerProtein,
+                              MinimumSpectraPerProtein,
+                              MinimumAdditionalPeptidesPerProtein)).ExecuteUpdate();
             #endregion
+        }
 
-            #region Calculate additional peptides and filter out proteins that don't meet the minimum
+        /// <summary>
+        /// Set ProteinGroups column (the groups change depending on the basic filters applied)
+        /// </summary>
+        void AssembleProteinGroups(NHibernate.ISession session)
+        {
+            var proteinGroupQuery = session.CreateSQLQuery("SELECT GROUP_CONCAT(DISTINCT pi.Peptide), pi.Protein " +
+                                                           "FROM PeptideInstances pi " +
+                                                           "GROUP BY pi.Protein " +
+                                                           "ORDER BY pi.Protein");
+
+            var cmd = session.Connection.CreateCommand();
+            cmd.CommandText = "UPDATE Proteins SET ProteinGroup = ? WHERE Id = ?";
+            var parameters = new List<System.Data.IDbDataParameter>();
+            for (int i = 0; i < 2; ++i)
+            {
+                parameters.Add(cmd.CreateParameter());
+                cmd.Parameters.Add(parameters[i]);
+            }
+            cmd.Prepare();
+            foreach (object[] itr in proteinGroupQuery.List<object[]>())
+            {
+                parameters[0].Value = (string) itr[0];
+                parameters[1].Value = (int) itr[1];
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        /// <summary>
+        /// Calculate additional peptides per protein and filter out proteins that don't meet the minimum
+        /// </summary>
+        void ApplyAdditionalPeptidesFilter(NHibernate.ISession session)
+        {
+            if (MinimumAdditionalPeptidesPerProtein == 0)
+                return;
+
             Map<long, long> additionalPeptidesByProteinId = calculateAdditionalPeptides(session);
 
             try { session.CreateSQLQuery("DROP TABLE AdditionalMatches").ExecuteUpdate(); } catch { }
-            var additionalMatchesTableCommand = new StringBuilder("BEGIN TRANSACTION;");
-            additionalMatchesTableCommand.Append("CREATE TABLE AdditionalMatches (ProteinId INTEGER PRIMARY KEY, AdditionalMatches INT);");
-            foreach (Map<long, long>.MapPair itr in additionalPeptidesByProteinId)
-                additionalMatchesTableCommand.AppendFormat("INSERT INTO AdditionalMatches VALUES ({0}, {1}); ", itr.Key, itr.Value);
-            additionalMatchesTableCommand.Append("END TRANSACTION");
+            session.CreateSQLQuery("CREATE TABLE AdditionalMatches (ProteinId INTEGER PRIMARY KEY, AdditionalMatches INT)").ExecuteUpdate();
 
+            // temporarily disable stdout SQL logging
+            var backup = System.Console.Out;
+            var nullOut = new System.IO.StringWriter();
+            System.Console.SetOut(nullOut);
+
+            var cmd = session.Connection.CreateCommand();
+            cmd.CommandText = "INSERT INTO AdditionalMatches VALUES (?, ?)";
+            var parameters = new List<System.Data.IDbDataParameter>();
+            for (int i = 0; i < 2; ++i)
             {
-                var backup = System.Console.Out;
-                var nullOut = new System.IO.StringWriter();
-                System.Console.SetOut(nullOut);
-                session.CreateSQLQuery(additionalMatchesTableCommand.ToString()).ExecuteUpdate();
-                System.Console.SetOut(backup);
+                parameters.Add(cmd.CreateParameter());
+                cmd.Parameters.Add(parameters[i]);
             }
+            cmd.Prepare();
+            foreach (Map<long, long>.MapPair itr in additionalPeptidesByProteinId)
+            {
+                parameters[0].Value = itr.Key;
+                parameters[1].Value = itr.Value;
+                cmd.ExecuteNonQuery();
+            }
+
+            // restore stdout
+            System.Console.SetOut(backup);
 
             var additionalPeptidesDeleteCommand = new StringBuilder();
 
@@ -363,42 +399,30 @@ namespace IDPicker.DataModel
             #endregion
 
             session.CreateSQLQuery(additionalPeptidesDeleteCommand.ToString()).ExecuteUpdate();
-            #endregion
+        }
 
-            #region Calculate clusters (connected components) for remaining proteins
+        /// <summary>
+        /// Calculate clusters (connected components) for proteins
+        /// </summary>
+        void AssembleClusters (NHibernate.ISession session)
+        {
+            Map<long, long> clusterByProteinId = calculateProteinClusters(session);
+
+            var cmd = session.Connection.CreateCommand();
+            cmd.CommandText = "UPDATE Proteins SET Cluster = ? WHERE Id = ?";
+            var parameters = new List<System.Data.IDbDataParameter>();
+            for (int i = 0; i < 2; ++i)
             {
-                Map<long, long> clusterByProteinId = calculateProteinClusters(session);
-
-                session.Transaction.Begin();
-                var cmd = session.Connection.CreateCommand();
-                cmd.CommandText = "UPDATE Proteins SET Cluster = ? WHERE Id = ?";
-                var parameters = new List<System.Data.IDbDataParameter>();
-                for (int i = 0; i < 2; ++i)
-                {
-                    parameters.Add(cmd.CreateParameter());
-                    cmd.Parameters.Add(parameters[i]);
-                }
-                cmd.Prepare();
-                foreach (Map<long, long>.MapPair itr in clusterByProteinId)
-                {
-                    parameters[0].Value = itr.Value;
-                    parameters[1].Value = itr.Key;
-                    cmd.ExecuteNonQuery();
-                }
-                session.Transaction.Commit();
+                parameters.Add(cmd.CreateParameter());
+                cmd.Parameters.Add(parameters[i]);
             }
-            #endregion
-
-            #region Create FilteringCriteria table to store the basic filter parameters
-            try { session.CreateSQLQuery("DROP TABLE FilteringCriteria").ExecuteUpdate(); } catch { }
-            session.CreateSQLQuery(
-                String.Format("CREATE TABLE FilteringCriteria (MaximumQValue NUMERIC, MinimumDistinctPeptidesPerProtein INT, MinimumSpectraPerProtein INT, MinimumAdditionalPeptidesPerProtein INT);" +
-                              "INSERT INTO FilteringCriteria SELECT {0}, {1}, {2}, {3}",
-                              MaximumQValue,
-                              MinimumDistinctPeptidesPerProtein,
-                              MinimumSpectraPerProtein,
-                              MinimumAdditionalPeptidesPerProtein)).ExecuteUpdate();
-            #endregion
+            cmd.Prepare();
+            foreach (Map<long, long>.MapPair itr in clusterByProteinId)
+            {
+                parameters[0].Value = itr.Value;
+                parameters[1].Value = itr.Key;
+                cmd.ExecuteNonQuery();
+            }
         }
 
         #region Definitions for common HQL strings
@@ -646,7 +670,7 @@ namespace IDPicker.DataModel
             var proteinGroupByProteinId = new Dictionary<long, string>();
             var proteinSetByProteinGroup = new Map<string, Set<long>>();
 
-            var query = session.CreateQuery("SELECT pro.id, pro.ProteinGroup, psm.id " +
+            var query = session.CreateQuery("SELECT pro.id, pro.ProteinGroup, pep.id " +
                                             GetFilteredQueryString(FromProtein, ProteinToPeptideSpectrumMatch));
 
             long maxProteinId = -1;
@@ -682,8 +706,8 @@ namespace IDPicker.DataModel
                 string maxProteinGroup = proteinGroupByProteinId[maxProteinId];
                 foreach (long proteinId in proteinSetByProteinGroup[maxProteinGroup])
                 {
-                    psmSetByProteinId.Remove(maxProteinId);
-                    additionalPeptidesByProteinId[maxProteinId] = maxExplainedCount;
+                    psmSetByProteinId.Remove(proteinId);
+                    additionalPeptidesByProteinId[proteinId] = maxExplainedCount;
                 }
 
                 maxExplainedCount = 0;
