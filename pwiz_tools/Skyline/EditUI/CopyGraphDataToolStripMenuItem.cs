@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.MSGraph;
 using ZedGraph;
 
 namespace pwiz.Skyline.EditUI
@@ -46,6 +47,8 @@ namespace pwiz.Skyline.EditUI
             {
                 return;
             }
+            double xMin = graphPane.XAxis.Scale.Min;
+            double xMax = graphPane.XAxis.Scale.Max;
             // Dictionary from X value to array of Y values.
             // Since there may be multiple Y values for a given X value, keep track of a list of Y value arrays.
             // The Key of the dictionary is either the X value, or, for ordinal axes, the integer index of the point.
@@ -54,17 +57,26 @@ namespace pwiz.Skyline.EditUI
             for (int iCurve = 0; iCurve < curves.Count; iCurve ++)
             {
                 var curve = curves[iCurve];
-                for (int iPt = 0; iPt < curve.Points.Count; iPt++)
+                IPointList pointList = curve.Points;
+                if (pointList is MSPointList)
+                {
+                    pointList = ((MSPointList) pointList).FullList;
+                }
+                for (int iPt = 0; iPt < pointList.Count; iPt++)
                 {
                     object label = null;
                     object key;
+                    if (pointList[iPt].X < xMin || pointList[iPt].X > xMax)
+                    {
+                        continue;
+                    }
                     if (graphPane.XAxis.Scale.IsOrdinal)
                     {
                         key = iPt;
                     }
                     else
                     {
-                        label = key = curve.Points[iPt].X;
+                        label = key = pointList[iPt].X;
                     }
                     if (graphPane.XAxis.Scale.IsText)
                     {
@@ -85,7 +97,7 @@ namespace pwiz.Skyline.EditUI
                     {
                         if (!valueEntry.Value[iValue][iCurve].HasValue)
                         {
-                            valueEntry.Value[iValue][iCurve] = curve.Points[iPt].Y;
+                            valueEntry.Value[iValue][iCurve] = pointList[iPt].Y;
                             added = true;
                             break;
                         }
@@ -94,7 +106,7 @@ namespace pwiz.Skyline.EditUI
                     if (!added)
                     {
                         var values = new double?[curves.Count];
-                        values[iCurve] = curve.Points[iPt].Y;
+                        values[iCurve] = pointList[iPt].Y;
                         valueEntry.Value.Add(values);
                     }
                 }
