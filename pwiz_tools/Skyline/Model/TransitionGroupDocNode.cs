@@ -313,34 +313,34 @@ namespace pwiz.Skyline.Model
 
                 // TODO: Use TransitionLossKey
                 Dictionary<TransitionLossKey, DocNode> mapIdToChild = CreateTransitionLossToChildMap();
-                foreach (TransitionDocNode nodeNew in TransitionGroup.GetTransitions(settingsNew, mods, precursorMz, libInfo, transitionRanks, true))
+                foreach (TransitionDocNode nodeTran in TransitionGroup.GetTransitions(settingsNew, mods, precursorMz, libInfo, transitionRanks, true))
                 {
-                    TransitionDocNode nodeTransition;
+                    TransitionDocNode nodeTranResult;
 
                     DocNode existing;
                     // Add values that existed before the change.
-                    if (mapIdToChild.TryGetValue(new TransitionLossKey(nodeNew.Transition, nodeNew.Losses), out existing))
+                    if (mapIdToChild.TryGetValue(nodeTran.Key, out existing))
                     {
-                        nodeTransition = (TransitionDocNode) existing;
+                        nodeTranResult = (TransitionDocNode) existing;
                         if (diff.DiffTransitionProps)
                         {
-                            var tran = nodeTransition.Transition;
-                            var losses = nodeTransition.Losses;
+                            var tran = nodeTranResult.Transition;
+                            var losses = nodeTranResult.Losses;
                             double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran);
                             var info = TransitionDocNode.GetLibInfo(tran, massH, transitionRanks);
-                            nodeTransition = new TransitionDocNode(tran, losses, massH, info);
+                            nodeTranResult = new TransitionDocNode(tran, losses, massH, info);
 
-                            Helpers.AssignIfEquals(ref nodeTransition, (TransitionDocNode) existing);
+                            Helpers.AssignIfEquals(ref nodeTranResult, (TransitionDocNode) existing);
                         }
                     }
-                        // Add the new node
+                    // Add the new node
                     else
                     {
-                        nodeTransition = nodeNew;
+                        nodeTranResult = nodeTran;
                     }
 
-                    if (nodeTransition != null)
-                        childrenNew.Add(nodeTransition);
+                    if (nodeTranResult != null)
+                        childrenNew.Add(nodeTranResult);
                 }
 
                 if (!ArrayUtil.ReferencesEqual(childrenNew, Children))
@@ -457,10 +457,7 @@ namespace pwiz.Skyline.Model
 
         private Dictionary<TransitionLossKey, DocNode> CreateTransitionLossToChildMap()
         {
-            var map = new Dictionary<TransitionLossKey, DocNode>();
-            foreach (TransitionDocNode nodeTran in Children)
-                map.Add(new TransitionLossKey(nodeTran.Transition, nodeTran.Losses), nodeTran);
-            return map;
+            return Children.ToDictionary(child => ((TransitionDocNode) child).Key);
         }
 
         private TransitionGroupDocNode UpdateResults(SrmSettings settingsNew, SrmSettingsDiff diff,

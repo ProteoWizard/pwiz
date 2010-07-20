@@ -101,7 +101,7 @@ namespace pwiz.Skyline.Model
 
                 foreach(PeptideDocNode nodePep in GetPeptideNodes(settingsNew, true))
                 {
-                    PeptideDocNode nodePeptide = nodePep;
+                    PeptideDocNode nodePepResult = nodePep;
                     SrmSettingsDiff diffNode = SrmSettingsDiff.ALL;
 
                     DocNode existing;
@@ -109,22 +109,22 @@ namespace pwiz.Skyline.Model
                     // global index, which will happen when explicit modifications are added,
                     // and then by content identity.
                     if (mapIndexToChild.TryGetValue(nodePep.Id.GlobalIndex, out existing) ||
-                        mapIdToChild.TryGetValue(new PeptideModKey(nodePep.Peptide, nodePep.ExplicitMods), out existing))
+                        mapIdToChild.TryGetValue(nodePep.Key, out existing))
                     {
-                        nodePeptide = (PeptideDocNode) existing;
+                        nodePepResult = (PeptideDocNode) existing;
                         diffNode = diff;
                     }
 
-                    if (nodePeptide != null)
+                    if (nodePepResult != null)
                     {
                         // Materialize children of the peptide.
-                        nodePeptide = nodePeptide.ChangeSettings(settingsNew, diffNode);
+                        nodePepResult = nodePepResult.ChangeSettings(settingsNew, diffNode);
 
-                        childrenNew.Add(nodePeptide);
+                        childrenNew.Add(nodePepResult);
 
                         // Make sure a single peptide group does not exceed document limits.
                         countPeptides++;
-                        countIons += nodePeptide.TransitionCount;
+                        countIons += nodePepResult.TransitionCount;
                         if (countIons > SrmDocument.MAX_TRANSITION_COUNT ||
                             countPeptides > SrmDocument.MAX_PEPTIDE_COUNT)
                             throw new InvalidDataException("Document size limit exceeded.");
@@ -274,7 +274,7 @@ namespace pwiz.Skyline.Model
             var map = new Dictionary<PeptideModKey, DocNode>();
             foreach (PeptideDocNode child in Children)
             {
-                var key = new PeptideModKey(child.Peptide, child.ExplicitMods);
+                var key = child.Key;
                 // Skip repeats.  These can only be created by the user, and should be
                 // matched by the global index dictionary.
                 if (!map.ContainsKey(key))
