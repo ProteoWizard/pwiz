@@ -425,57 +425,50 @@ namespace pwiz.Skyline.Model
 
                 // Merge library specs from clipboard document with current document.
                 var settings = Settings.ChangePeptideLibraries(lib =>
-                    lib.MergeLibrarySpecs(clipboardDocument.Settings.PeptideSettings.Libraries));                
-                newDocument = newDocument.ChangeSettings(settings);
+                    lib.MergeLibrarySpecs(clipboardDocument.Settings.PeptideSettings.Libraries));   
+                if(!Equals(settings, newDocument.Settings))
+                    newDocument = newDocument.ChangeSettings(settings);
 
-                if (!pasteToPeptideList)
+                List<PeptideGroupDocNode> peptideGroups = clipboardDocument.PeptideGroups.ToList();
+                if(pasteToPeptideList)
                 {
-                    // Create new explicit modifications for peptides pasted in from the clipboard. 
-                    IList<PeptideGroupDocNode> peptideGroupsNew = new List<PeptideGroupDocNode>();
-                    foreach (PeptideGroupDocNode groupNode in clipboardDocument.PeptideGroups)
-                    {
-                        IList<DocNode> peptidesNew = new List<DocNode>();
-                        foreach (PeptideDocNode nodePep in groupNode.Children)
-                        {
-                            PeptideDocNode nodePepModified = nodePep.EnsureMods(
-                                clipboardDocument.Settings.PeptideSettings.Modifications,
-                                newDocument.Settings.PeptideSettings.Modifications,
-                                staticMods, heavyMods);
-                            nodePepModified = nodePepModified.ChangeSettings(newDocument.Settings, SrmSettingsDiff.ALL);
-                            peptidesNew.Add(nodePepModified);
-                        }
-                        peptideGroupsNew.Add(
-                            (PeptideGroupDocNode) groupNode.ChangeChildrenChecked(peptidesNew.ToArray()));
-                    }
-                    return newDocument.AddPeptideGroups(peptideGroupsNew, false, to, out firstAdded);
+                    PeptideGroupDocNode peptideGroupDocNode = new PeptideGroupDocNode(new PeptideGroup(), null, null, new PeptideDocNode[0]);
+                    IList<DocNode> peptides = new List<DocNode>();
+                    foreach(PeptideDocNode peptide in clipboardDocument.Peptides)
+                        peptides.Add(peptide);
+                    peptideGroupDocNode = (PeptideGroupDocNode) peptideGroupDocNode.ChangeChildren(peptides);
+                    peptideGroups = new List<PeptideGroupDocNode> {peptideGroupDocNode};
                 }
-                else
+                // Create new explicit modifications for peptides and set auto-manage children
+                // when necessary for nodes pasted in from the clipboard. 
+                IList<PeptideGroupDocNode> peptideGroupsNew = new List<PeptideGroupDocNode>();
+                foreach (PeptideGroupDocNode groupNode in peptideGroups)
                 {
-                    PeptideGroupDocNode peptideGroupDocNode = clipboardDocument.PeptideGroups.ToList()[0];
+                    // Set explicit modifications first, since it may impact which
+                    // children will be present.
                     IList<DocNode> peptidesNew = new List<DocNode>();
-                    foreach (PeptideDocNode nodePep in clipboardDocument.Peptides)
+                    foreach (PeptideDocNode nodePep in groupNode.Children)
                     {
-                        PeptideDocNode nodePepModified = new PeptideDocNode(new Peptide(null, nodePep.Peptide.Sequence, null, null, nodePep.Peptide.MissedCleavages), 
-                            new TransitionGroupDocNode[0]);
-                        nodePepModified = (PeptideDocNode) nodePepModified.ChangeChildren(nodePep.Children);
-                        nodePepModified = nodePepModified.EnsureMods(
+                        PeptideDocNode nodePepModified = nodePep.EnsureMods(
                             clipboardDocument.Settings.PeptideSettings.Modifications,
                             newDocument.Settings.PeptideSettings.Modifications,
                             staticMods, heavyMods);
-                        nodePepModified = nodePepModified.ChangeSettings(newDocument.Settings, SrmSettingsDiff.ALL);
-                        peptidesNew.Add(nodePepModified);
+                       peptidesNew.Add(nodePepModified);
                     }
-                    peptideGroupDocNode = (PeptideGroupDocNode) peptideGroupDocNode.ChangeChildren(peptidesNew);
-                    return newDocument.AddPeptideGroups(new List<PeptideGroupDocNode> {peptideGroupDocNode}, true, to, out firstAdded);
+                    var groupNodeEnsured = (PeptideGroupDocNode)groupNode.ChangeChildrenChecked(peptidesNew.ToArray());
+                    groupNodeEnsured = groupNodeEnsured.EnsureChildren(newDocument.Settings, pasteToPeptideList);
+                    peptideGroupsNew.Add(groupNodeEnsured.ChangeSettings(newDocument.Settings, SrmSettingsDiff.ALL));
                 }
+                return newDocument.AddPeptideGroups(peptideGroupsNew, pasteToPeptideList, to, out firstAdded);
             }
+
             finally
             {
                 PeptideModifications.SetSerializationContext(null);
             }
         }
-       
-        public SrmDocument ImportFasta(TextReader reader, bool peptideList, IdentityPath to,
+
+       public SrmDocument ImportFasta(TextReader reader, bool peptideList, IdentityPath to,
                 out IdentityPath firstAdded)
         {
             FastaImporter importer = new FastaImporter(this, peptideList);
@@ -2173,7 +2166,7 @@ namespace pwiz.Skyline.Model
         /// <param name="node">The node to be modified</param>
         /// <param name="preserveIndexes">The GlobalIndex values of the nodes to preserve</param>
         /// <returns>A new instance of this node with nodes removed</returns>
-        private static DocNode RemoveAllBut(this DocNode node, ICollection<int> preserveIndexes)
+        public static DocNode RemoveAllBut(this DocNode node, ICollection<int> preserveIndexes)
         {
             bool preserve = preserveIndexes.Contains(node.Id.GlobalIndex);
 
@@ -2196,7 +2189,6 @@ namespace pwiz.Skyline.Model
             // set to preserve, then reset the children of this parent to only those.
             if (listNewChildren.Count > 0)
             {
-                nodeParent = nodeParent.ChangeAutoManageChildren(false);
                 return nodeParent.ChangeChildrenChecked(listNewChildren);
             }
             // Otherwise, if this node itself is to be preserved, then include all of

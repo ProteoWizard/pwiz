@@ -584,6 +584,18 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        public bool RadioAddNewChecked
+        {
+            get { return radioCreateNew.Checked;}
+            set { radioCreateNew.Checked = value; }
+        }
+
+        public bool RadioAddExistingChecked
+        {
+            get { return radioAddExisting.Checked; }
+            set { radioAddExisting.Checked = value; }
+        }
+
         private void btnOk_Click(object sender, EventArgs e)
         {
             OkDialog();

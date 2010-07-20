@@ -52,7 +52,7 @@ namespace pwiz.Skyline
         private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>();
         private bool _inGraphUpdate;
 
-        private RTGraphController RTGraphController
+        public RTGraphController RTGraphController
         {
             get
             {
@@ -1104,6 +1104,11 @@ namespace pwiz.Skyline
 
         private void thresholdRTContextMenuItem_Click(object sender, EventArgs e)
         {
+            ShowRTThresholdDlg();
+        }
+
+        public void ShowRTThresholdDlg()
+        {
             var dlg = new ShowRTThresholdDlg();
             double threshold = Settings.Default.ShowRetentionTimesThreshold;
             if (threshold > 0)
@@ -1113,7 +1118,7 @@ namespace pwiz.Skyline
             {
                 Settings.Default.ShowRetentionTimesThreshold = dlg.Threshold;
                 Settings.Default.ShowRetentionTimesEnum = ShowRTChrom.threshold.ToString();
-                UpdateChromGraphs();                
+                UpdateChromGraphs();
             }
         }
 
@@ -2026,6 +2031,11 @@ namespace pwiz.Skyline
 
         private void createRTRegressionContextMenuItem_Click(object sender, EventArgs e)
         {
+            CreateRegression();               
+        }
+
+        public void CreateRegression()
+        {
             if (_graphRetentionTime == null)
                 return;
 
@@ -2050,7 +2060,7 @@ namespace pwiz.Skyline
 
                 ModifyDocument(string.Format("Set regression {0}", regression.Name),
                     doc => doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(p => p.ChangeRetentionTime(regression))));
-            }            
+            }    
         }
 
         private void removeRTOutliersContextMenuItem_Click(object sender, EventArgs e)

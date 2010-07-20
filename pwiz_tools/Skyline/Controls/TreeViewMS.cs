@@ -67,6 +67,8 @@ namespace pwiz.Skyline.Controls
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ICollection<TreeNodeMS> SelectedNodes { get; private set; }
 
+	    private bool _allowDisjoint;
+
         /// <summary>
         /// For functional testing of multiple selection code.
         /// </summary>
@@ -74,13 +76,29 @@ namespace pwiz.Skyline.Controls
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public Keys? KeysOverride { get; set; }
 
-        private Keys ModifierKeysOverriden { get { return KeysOverride ?? ModifierKeys; } }
+        private Keys ModifierKeysOverriden
+        {
+            get
+            {
+                if (KeysOverride == Keys.Control)
+                    _allowDisjoint = true;
+                return KeysOverride ?? ModifierKeys;
+            }
+        }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            _allowDisjoint = keyData == (Keys.Control | Keys.LButton | Keys.ShiftKey);
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
 
         protected bool IsRangeSelect { get { return ModifierKeysOverriden == Keys.Shift; } }
-	    protected bool IsDisjointSelect
-	    {
-	        get { return ModifierKeysOverriden == Keys.Control && !DocumentContainer.InUndoRedo; }
-	    }
+        protected bool IsDisjointSelect
+        {
+            get { return ModifierKeysOverriden == Keys.Control && _allowDisjoint; }
+        }
+
+
 
         public void SelectNode(TreeNodeMS node, bool select)
         {

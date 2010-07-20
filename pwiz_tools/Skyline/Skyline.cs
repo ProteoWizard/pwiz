@@ -746,14 +746,8 @@ namespace pwiz.Skyline
             if (textSb.Length > 0)
                 dataObj.SetData(DataFormats.Text, textSb.AppendLine().ToString());
 
-            String selectionContainsProteins = "0";
-
-            foreach(DocNode node in SequenceTree.SelectedDocNodes)
-            {
-                PeptideGroupDocNode nodePepGroup = node as PeptideGroupDocNode;
-                if(nodePepGroup != null && !nodePepGroup.IsPeptideList)
-                    selectionContainsProteins = "";
-            }
+            bool selectionContainsProteins = SequenceTree.SelectedDocNodes.Contains(node =>
+                node is PeptideGroupDocNode); 
 
             var docCopy = DocumentUI.RemoveAllBut(sequenceTree.SelectedDocNodes);
             docCopy = docCopy.ChangeMeasuredResults(null);
@@ -764,8 +758,11 @@ namespace pwiz.Skyline
                 ser.Serialize(writer, docCopy);
             }
 
-
-            dataObj.SetData("Skyline Format", selectionContainsProteins + stringWriter);
+            var sbData = new StringBuilder();
+            sbData.Append("proteins-selected=").Append(selectionContainsProteins).AppendLine();
+            sbData.AppendLine();
+            sbData.Append(stringWriter);
+            dataObj.SetData("Skyline Format", sbData.ToString());
 
             Clipboard.SetDataObject(dataObj);
         }
@@ -785,7 +782,7 @@ namespace pwiz.Skyline
             if (StatementCompletionAction(textBox => textBox.Paste()))
                 return;
 
-            var dataObjectSkyline = (string) null; // Clipboard.GetData("Skyline Format");
+            var dataObjectSkyline = (string) Clipboard.GetData("Skyline Format");
         
             if (dataObjectSkyline != null)
             {
@@ -793,17 +790,16 @@ namespace pwiz.Skyline
 
                 bool pasteToPeptideList  = false;
 
-                if (dataObjectSkyline.Substring(0, 1) == "0")
+                if (dataObjectSkyline.Substring(0, dataObjectSkyline.IndexOf('\r')).Equals("proteins-selected=False")) 
                 {
                     if (nodePaste != null)
                         pasteToPeptideList = !(nodePaste.Path.GetIdentity((int) SrmDocument.Level.PeptideGroups) is FastaSequence);
-                    dataObjectSkyline = dataObjectSkyline.Substring(1);
                 }
 
                 IdentityPath selectPath = null;
 
                 ModifyDocument("Paste Skyline data", doc =>
-                    doc.ImportDocumentXml(new StringReader(dataObjectSkyline),
+                    doc.ImportDocumentXml(new StringReader(dataObjectSkyline.Substring(dataObjectSkyline.IndexOf('<'))),
                         Settings.Default.StaticModList, Settings.Default.HeavyModList,
                         nodePaste == null ? null : nodePaste.Path, out selectPath, pasteToPeptideList));
 

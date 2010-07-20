@@ -426,6 +426,36 @@ namespace pwiz.Skyline.Model
             return nodeResult;
         }
 
+        public DocNode EnsureChildren(PeptideDocNode parent, ExplicitMods mods, SrmSettings settings)
+        {
+            var result = this;
+
+            var changed = result.ChangeSettings(settings, mods, SrmSettingsDiff.ALL);
+            if (result.AutoManageChildren && !ArrayUtil.ReferencesEqual(result.Children, changed.Children))
+            {
+                changed = result = (TransitionGroupDocNode)result.ChangeAutoManageChildren(false);
+                changed = changed.ChangeSettings(settings, mods, SrmSettingsDiff.ALL);
+            }
+            // Make sure node points to correct parent.
+            if (!ReferenceEquals(parent.Peptide, TransitionGroup.Peptide))
+            {
+                result = new TransitionGroupDocNode(new TransitionGroup(parent.Peptide, TransitionGroup.PrecursorCharge, TransitionGroup.LabelType),
+                            Annotations, 0.0, RelativeRT, LibInfo, Results, new TransitionDocNode[0], result.AutoManageChildren);
+                result = new TransitionGroupDocNode(result, PrecursorMz, RelativeRT, new List<DocNode>());
+            }
+            var dictIndexToChild = Children.ToDictionary(child => child.Id.GlobalIndex);
+            var listChildren = new List<DocNode>();
+            foreach (TransitionDocNode nodePep in changed.Children)
+            {
+                DocNode child;
+                if (dictIndexToChild.TryGetValue(nodePep.Id.GlobalIndex, out child))
+                {
+                    listChildren.Add(((TransitionDocNode)child).EnsureChildren(result, settings));
+                }
+            }
+            return result.ChangeChildrenChecked(listChildren);
+        }
+
         private Dictionary<TransitionLossKey, DocNode> CreateTransitionLossToChildMap()
         {
             var map = new Dictionary<TransitionLossKey, DocNode>();

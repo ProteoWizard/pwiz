@@ -423,5 +423,10 @@ namespace pwiz.Skyline.SettingsUI
                 dlg.ShowDialog(this);
             }
         }
+
+        public void OkDialog()
+        {
+            btnOk.PerformClick();
+        }
     }
 }

@@ -386,6 +386,46 @@ namespace pwiz.Skyline.Model
             return nodeResult;
         }
 
+        public PeptideDocNode EnsureChildren(SrmSettings settings, bool peptideList)
+        {
+            var result = this;
+
+            var changed = result.ChangeSettings(settings, SrmSettingsDiff.ALL);
+            if (result.AutoManageChildren && !AreEquivalentChildren(result.Children, changed.Children))
+            {
+                changed = result = (PeptideDocNode)result.ChangeAutoManageChildren(false);
+                changed = changed.ChangeSettings(settings, SrmSettingsDiff.ALL);
+            }
+            if (peptideList && Peptide.FastaSequence != null)
+            {
+                result = new PeptideDocNode(new Peptide(null, Peptide.Sequence, null, null, Peptide.MissedCleavages),
+                                            new TransitionGroupDocNode[0], result.AutoManageChildren); 
+            }
+            var dictIndexToChild = Children.ToDictionary(child => child.Id.GlobalIndex);
+            var listChildren = new List<DocNode>();
+            foreach (TransitionGroupDocNode nodePep in changed.Children)
+            {
+                DocNode child;
+                if (dictIndexToChild.TryGetValue(nodePep.Id.GlobalIndex, out child))
+                {
+                    listChildren.Add(((TransitionGroupDocNode)child).EnsureChildren(result, ExplicitMods, settings));
+                }
+            }
+            return (PeptideDocNode)result.ChangeChildrenChecked(listChildren);
+        }
+
+        private static bool AreEquivalentChildren(IList<DocNode> children1, IList<DocNode> children2)
+        {
+            if(children1.Count != children2.Count)
+                return false;
+            for (int i = 0; i < children1.Count; i++)
+            {
+                if(!Equals(children1[i].Id, children2[i].Id))
+                    return false;
+            }
+            return true;
+        }
+
         public PeptideDocNode EnsureMods(PeptideModifications source, PeptideModifications target,
             MappedList<string, StaticMod> defSetStat, MappedList<string, StaticMod> defSetHeavy)
         {

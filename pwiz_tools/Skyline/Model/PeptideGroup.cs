@@ -186,6 +186,40 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public PeptideGroupDocNode EnsureChildren(SrmSettings settings, bool peptideList)
+        {
+            var result = this;
+
+            var changed = result.ChangeSettings(settings, SrmSettingsDiff.ALL);
+            if (result.AutoManageChildren && !AreEquivalentChildren(result.Children, changed.Children))
+            {
+                changed = result = (PeptideGroupDocNode) result.ChangeAutoManageChildren(false);
+                changed = changed.ChangeSettings(settings, SrmSettingsDiff.ALL);
+            }
+            var dictIndexToChild = Children.ToDictionary(child => child.Id.GlobalIndex);
+            var listChildren = new List<DocNode>();
+            foreach (PeptideDocNode nodePep in changed.Children)
+            {
+                DocNode child;
+                if (dictIndexToChild.TryGetValue(nodePep.Id.GlobalIndex, out child))
+                    listChildren.Add(((PeptideDocNode) child).EnsureChildren(settings, peptideList));
+            }
+            return (PeptideGroupDocNode) result.ChangeChildrenChecked(listChildren);
+        }
+
+        private bool AreEquivalentChildren(IList<DocNode> children1, IList<DocNode> children2)
+        {
+            if (children1.Count != children2.Count)
+                return false;
+            for (int i = 0; i < children1.Count; i++)
+            {
+                if(((PeptideDocNode) children1[i]).Key != ((PeptideDocNode) children2[i]).Key)
+                    return false;
+            }
+            return true;
+        }
+    
+
         public IEnumerable<PeptideDocNode> GetPeptideNodes(SrmSettings settings, bool useFilter)
         {
             // FASTA sequences can generate a comprehensive list of available peptides.

@@ -231,6 +231,13 @@ namespace pwiz.Skyline.Model
             return HasResults ? Results.GetAverageValue(getVal) : null;
         }
 
+        public DocNode EnsureChildren(TransitionGroupDocNode parent, SrmSettings settings)
+        {
+            return ReferenceEquals(parent.TransitionGroup, Transition.Group) ? this
+                : new TransitionDocNode(new Transition(parent.TransitionGroup, Transition.IonType, Transition.CleavageOffset, Transition.Charge), Annotations,
+                    Losses, 0.0, LibInfo, null) { Mz = Mz };
+        }
+
         #region Property change methods
 
         public TransitionDocNode ChangeLibInfo(TransitionLibInfo prop)
