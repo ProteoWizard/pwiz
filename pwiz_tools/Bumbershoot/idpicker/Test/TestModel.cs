@@ -27,6 +27,7 @@ using System.Linq;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using IDPicker.DataModel;
+using NHibernate;
 using NHibernate.Linq;
 
 using pwiz.CLI.chemistry;
@@ -85,7 +86,7 @@ namespace Test
 
         public class SpectrumTuple
         {
-            public SpectrumTuple (string group, string source, int spectrum, string analysis, int? score, double qvalue, string peptideTuples)
+            public SpectrumTuple (string group, int source, int spectrum, int analysis, int? score, double qvalue, string peptideTuples)
             {
                 Group = group;
                 Source = source;
@@ -97,9 +98,9 @@ namespace Test
             }
 
             public string Group { get; set; }
-            public string Source { get; set; }
+            public int Source { get; set; }
             public int Spectrum { get; set; }
-            public string Analysis { get; set; }
+            public int Analysis { get; set; }
             public int? Score { get; set; }
             public double QValue { get; set; }
             public string PeptideTuples { get; set; }
@@ -107,25 +108,42 @@ namespace Test
 
         public static void CreateTestData (NHibernate.ISession session, IList<SpectrumTuple> testPsmSummary)
         {
+            var dbGroups = new Map<string, SpectrumSourceGroup>();
+            foreach(var ssg in session.Query<SpectrumSourceGroup>())
+                dbGroups[ssg.Name] = ssg;
+
+            var dbSources = new Map<long, SpectrumSource>();
+            foreach (var ss in session.Query<SpectrumSource>())
+                dbSources[ss.Id.GetValueOrDefault()] = ss;
+
+            var dbAnalyses = new Map<long, Analysis>();
+            foreach (var a in session.Query<Analysis>())
+                dbAnalyses[a.Id.GetValueOrDefault()] = a;
+
+            var dbPeptides = new Map<string, Peptide>();
+            foreach (var pep in session.Query<Peptide>())
+                dbPeptides[pep.Sequence] = pep;
+
             foreach (SpectrumTuple row in testPsmSummary)
             {
                 string groupName = row.Group;
-                string sourceName = row.Source;
-                int spectrumId = row.Spectrum;
-                string analysisId = row.Analysis;
+                string sourceName = "Source " + row.Source;
+                string analysisId = "Engine " + row.Analysis;
                 string peptideTuples = row.PeptideTuples;
 
-                SpectrumSourceGroup group = session.UniqueResult<SpectrumSourceGroup>(o => o.Name == groupName);
-                if (group == null)
+                SpectrumSourceGroup group = dbGroups[groupName];
+                if (String.IsNullOrEmpty(group.Name))
                 {
-                    group = new SpectrumSourceGroup() { Name = groupName };
+                    group.Name = groupName;
                     session.Save(group);
                 }
 
-                SpectrumSource source = session.UniqueResult<SpectrumSource>(o => o.Name == sourceName);
-                if (source == null)
+                SpectrumSource source = dbSources[row.Source];
+                if (String.IsNullOrEmpty(source.Name))
                 {
-                    source = new SpectrumSource() { Name = sourceName, Group = group };
+                    source.Name = sourceName;
+                    source.Group = group;
+                    source.Spectra = new List<Spectrum>();
                     session.Save(source);
 
                     // add a source group link for the source's immediate group
@@ -162,31 +180,28 @@ namespace Test
                     #endregion
                 }
 
-                Spectrum spectrum = session.UniqueResult<Spectrum>(o => o.Source.Id == source.Id &&
-                                                                        o.Index == spectrumId - 1);
+                Spectrum spectrum = source.Spectra.SingleOrDefault(o => o.Source.Id == source.Id &&
+                                                                        o.Index == row.Spectrum - 1);
                 if (spectrum == null)
                 {
                     spectrum = new Spectrum()
                     {
-                        Index = spectrumId - 1,
-                        NativeID = "scan=" + spectrumId,
+                        Index = row.Spectrum - 1,
+                        NativeID = "scan=" + row.Spectrum,
                         Source = source,
                         PrecursorMZ = 42
                     };
+                    source.Spectra.Add(spectrum);
                     session.Save(spectrum);
                 }
 
-                Analysis analysis = session.UniqueResult<Analysis>(o => o.Software.Name == analysisId);
-                if (analysis == null)
+                Analysis analysis = dbAnalyses[row.Analysis];
+                if (String.IsNullOrEmpty(analysis.Name))
                 {
-                    int analysisCount = session.Query<Analysis>().Count();
-                    analysis = new Analysis()
-                    {
-                        Name = analysisId + " 1.0",
-                        Software = new AnalysisSoftware() { Name = analysisId, Version = "1.0" },
-                        StartTime = DateTime.Today.AddHours(analysisCount),
-                        Type = AnalysisType.DatabaseSearch
-                    };
+                    analysis.Name = analysisId + " 1.0";
+                    analysis.Software = new AnalysisSoftware() {Name = analysisId, Version = "1.0"};
+                    analysis.StartTime = DateTime.Today.AddHours(row.Analysis);
+                    analysis.Type = AnalysisType.DatabaseSearch;
                     session.Save(analysis);
 
                     session.Save(new AnalysisParameter()
@@ -219,12 +234,13 @@ namespace Test
                     {
                         PwizPeptide pwizPeptide = new PwizPeptide(peptideTuple.Sequence, ModParsing.ModificationParsing_Auto, ModDelimiter.ModificationDelimiter_Brackets);
 
-                        Peptide peptide = session.UniqueResult<Peptide>(o => o.Sequence == pwizPeptide.sequence);
-                        if (peptide == null)
+                        Peptide peptide = dbPeptides[pwizPeptide.sequence];
+                        if (String.IsNullOrEmpty(peptide.Sequence))
                         {
                             peptide = new TestPeptide(pwizPeptide.sequence).Target as Peptide;
                             peptide.MonoisotopicMass = pwizPeptide.monoisotopicMass(false);
                             peptide.MolecularWeight = pwizPeptide.molecularWeight(false);
+                            dbPeptides[pwizPeptide.sequence] = peptide;
                             session.Save(peptide);
                             createTestPeptideInstances(session, peptide);
                         }
@@ -286,6 +302,7 @@ namespace Test
                     }
                 session.Flush();
             }
+            session.Clear();
         }
 
         public void AddSubsetPeakData (NHibernate.ISession session)
@@ -377,38 +394,38 @@ namespace Test
             #region Example PSMs
             List<SpectrumTuple> testPsmSummary = new List<SpectrumTuple>()
             {
-                //                 Group    Source  Spectrum Analysis     Score  Q   List of Peptide@Charge/ScoreDivider
-                new SpectrumTuple("/A/1", "Source 1",   1,  "Engine 1",      12, 0, "[C2H2O1]PEPTIDE@2/1 TIDERPEPTIDEK@4/2 EPPIER@1/3"),
-                new SpectrumTuple("/A/1", "Source 1",   2,  "Engine 1",      23, 0, "PEPTIDER@2/1 PETPDETK@3/3 EDITPEPK@2/5"),
-                new SpectrumTuple("/A/1", "Source 1",   3,  "Engine 1",      34, 0, "PEPTIDEK@2/1 TIDER@1/4 PETPDETK@2/8"),
-                new SpectrumTuple("/A/1", "Source 2",   1,  "Engine 1",      43, 0, "PEPTIDE@2/1 E[H-2O-1]DIT[P1O4]PEPR@2/2 EPPIER@1/7"),
-                new SpectrumTuple("/A/1", "Source 2",   2,  "Engine 1",      32, 0, "PEPTIDER@3/1 EDITPEPK@3/4 EDITPEPR@3/5"),
-                new SpectrumTuple("/A/1", "Source 2",   3,  "Engine 1",      21, 0, "PEPT[P1O4]IDEK@3/1 TIDEK@1/7 PETPDETK@2/8"),
-                new SpectrumTuple("/A/2", "Source 3",   1,  "Engine 1",      56, 0, "TIDEK@2/1 TIDE@1/2 P[P1O4]EPTIDE@3/3"),
-                new SpectrumTuple("/A/2", "Source 3",   2,  "Engine 1",      45, 0, "TIDER@2/1 TIDERPEPTIDEK@4/3 PEPTIDEK@3/4"),
-                new SpectrumTuple("/A/2", "Source 3",   3,  "Engine 1",      34, 0, "TIDE@1/1 PEPTIDEK@3/6 TIDEK@1/7"),
-                new SpectrumTuple("/B/1", "Source 4",   1,  "Engine 1",      65, 0, "TIDERPEPTIDEK@4/1 PETPDETK@3/8 EDITPEPR@3/9"),
-                new SpectrumTuple("/B/1", "Source 4",   2,  "Engine 1",      53, 0, "E[H-2O-1]DITPEPK@2/1 PEPTIDEK@3/2 PEPTIDE@2/3"),
-                new SpectrumTuple("/B/1", "Source 4",   3,  "Engine 1",      42, 0, "EDIT@2/1 PEPTIDEK@3/3 EDITPEPR@2/4"),
-                new SpectrumTuple("/B/2", "Source 5",   1,  "Engine 1",      20, 0, "EPPIER@2/1 TIDE@1/7 PEPTIDE@2/9"),
-                new SpectrumTuple("/B/2", "Source 5",   2,  "Engine 1",      24, 0, "PETPDETK@2/1 PEPTIDEK@3/5 EDITPEPR@2/8"),
-                new SpectrumTuple("/B/2", "Source 5",   3,  "Engine 1",      24, 0, "PETPDETK@3/1 EDIT@1/4 TIDER@2/6"),
+                //               Group Source Spectrum Analysis     Score  Q   List of Peptide@Charge/ScoreDivider
+                new SpectrumTuple("/A/1", 1,   1,  1,      12, 0, "[C2H2O1]PEPTIDE@2/1 TIDERPEPTIDEK@4/2 EPPIER@1/3"),
+                new SpectrumTuple("/A/1", 1,   2,  1,      23, 0, "PEPTIDER@2/1 PETPDETK@3/3 EDITPEPK@2/5"),
+                new SpectrumTuple("/A/1", 1,   3,  1,      34, 0, "PEPTIDEK@2/1 TIDER@1/4 PETPDETK@2/8"),
+                new SpectrumTuple("/A/1", 2,   1,  1,      43, 0, "PEPTIDE@2/1 E[H-2O-1]DIT[P1O4]PEPR@2/2 EPPIER@1/7"),
+                new SpectrumTuple("/A/1", 2,   2,  1,      32, 0, "PEPTIDER@3/1 EDITPEPK@3/4 EDITPEPR@3/5"),
+                new SpectrumTuple("/A/1", 2,   3,  1,      21, 0, "PEPT[P1O4]IDEK@3/1 TIDEK@1/7 PETPDETK@2/8"),
+                new SpectrumTuple("/A/2", 3,   1,  1,      56, 0, "TIDEK@2/1 TIDE@1/2 P[P1O4]EPTIDE@3/3"),
+                new SpectrumTuple("/A/2", 3,   2,  1,      45, 0, "TIDER@2/1 TIDERPEPTIDEK@4/3 PEPTIDEK@3/4"),
+                new SpectrumTuple("/A/2", 3,   3,  1,      34, 0, "TIDE@1/1 PEPTIDEK@3/6 TIDEK@1/7"),
+                new SpectrumTuple("/B/1", 4,   1,  1,      65, 0, "TIDERPEPTIDEK@4/1 PETPDETK@3/8 EDITPEPR@3/9"),
+                new SpectrumTuple("/B/1", 4,   2,  1,      53, 0, "E[H-2O-1]DITPEPK@2/1 PEPTIDEK@3/2 PEPTIDE@2/3"),
+                new SpectrumTuple("/B/1", 4,   3,  1,      42, 0, "EDIT@2/1 PEPTIDEK@3/3 EDITPEPR@2/4"),
+                new SpectrumTuple("/B/2", 5,   1,  1,      20, 0, "EPPIER@2/1 TIDE@1/7 PEPTIDE@2/9"),
+                new SpectrumTuple("/B/2", 5,   2,  1,      24, 0, "PETPDETK@2/1 PEPTIDEK@3/5 EDITPEPR@2/8"),
+                new SpectrumTuple("/B/2", 5,   3,  1,      24, 0, "PETPDETK@3/1 EDIT@1/4 TIDER@2/6"),
 
-                new SpectrumTuple("/A/1", "Source 1",   1,  "Engine 2",     120, 0, "TIDERPEPTIDEK@4/1 PEPTIDE@2/2 EPPIER@1/3"),
-                new SpectrumTuple("/A/1", "Source 1",   2,  "Engine 2",     230, 0, "PEPTIDER@2/1 PETPDETK@3/3 EDITPEPK@2/5"),
-                new SpectrumTuple("/A/1", "Source 1",   3,  "Engine 2",     340, 0, "PEPTIDEK@2/1 TIDER@1/4 PETPDETK@2/8"),
-                new SpectrumTuple("/A/1", "Source 2",   1,  "Engine 2",     430, 0, "PEPTIDE@2/1 EDITPEPR@2/2 EPPIER@1/7"),
-                new SpectrumTuple("/A/1", "Source 2",   2,  "Engine 2",     320, 0, "PEPTIDER@3/1 EDITPEPK@3/4 EDITPEPR@3/5"),
-                new SpectrumTuple("/A/1", "Source 2",   3,  "Engine 2",     210, 0, "PEPT[P1O4]IDEK@3/1 TIDEK@1/7 PETPDETK@2/8"),
-                new SpectrumTuple("/A/2", "Source 3",   1,  "Engine 2",     560, 0, "TIDEK@2/1 TIDE@1/2 PEPTIDE@3/3"),
-                new SpectrumTuple("/A/2", "Source 3",   2,  "Engine 2",     450, 0, "TIDER@2/1 TIDERPEPTIDEK@4/3 PEPTIDEK@3/4"),
-                new SpectrumTuple("/A/2", "Source 3",   3,  "Engine 2",     340, 0, "TIDE@1/1 PEPTIDEK@3/6 TIDEK@1/7"),
-                new SpectrumTuple("/B/1", "Source 4",   1,  "Engine 2",     650, 0, "TIDERPEPTIDEK@4/1 PET[P1O4]PDETK@3/8 EDITPEPR@3/9"),
-                new SpectrumTuple("/B/1", "Source 4",   2,  "Engine 2",     530, 0, "EDITPEPK@2/1 PEPTIDEK@3/2 PEPTIDE@2/3"),
-                new SpectrumTuple("/B/1", "Source 4",   3,  "Engine 2",     420, 0, "EDIT@2/1 PEPTIDEK@3/3 EDITPEPR@2/4"),
-                new SpectrumTuple("/B/2", "Source 5",   1,  "Engine 2",     200, 0, "E[H-2O-1]PPIER@2/1 TIDE@1/7 PEPTIDE@2/9"),
-                new SpectrumTuple("/B/2", "Source 5",   2,  "Engine 2",     240, 0, "PEPTIDEK@2/1 PETPDETK@2/4 EDITPEPR@2/8"),
-                new SpectrumTuple("/B/2", "Source 5",   3,  "Engine 2",     240, 0, "PETPDETK@3/1 EDIT@1/4 TIDER@2/6"),
+                new SpectrumTuple("/A/1", 1,   1,  2,     120, 0, "TIDERPEPTIDEK@4/1 PEPTIDE@2/2 EPPIER@1/3"),
+                new SpectrumTuple("/A/1", 1,   2,  2,     230, 0, "PEPTIDER@2/1 PETPDETK@3/3 EDITPEPK@2/5"),
+                new SpectrumTuple("/A/1", 1,   3,  2,     340, 0, "PEPTIDEK@2/1 TIDER@1/4 PETPDETK@2/8"),
+                new SpectrumTuple("/A/1", 2,   1,  2,     430, 0, "PEPTIDE@2/1 EDITPEPR@2/2 EPPIER@1/7"),
+                new SpectrumTuple("/A/1", 2,   2,  2,     320, 0, "PEPTIDER@3/1 EDITPEPK@3/4 EDITPEPR@3/5"),
+                new SpectrumTuple("/A/1", 2,   3,  2,     210, 0, "PEPT[P1O4]IDEK@3/1 TIDEK@1/7 PETPDETK@2/8"),
+                new SpectrumTuple("/A/2", 3,   1,  2,     560, 0, "TIDEK@2/1 TIDE@1/2 PEPTIDE@3/3"),
+                new SpectrumTuple("/A/2", 3,   2,  2,     450, 0, "TIDER@2/1 TIDERPEPTIDEK@4/3 PEPTIDEK@3/4"),
+                new SpectrumTuple("/A/2", 3,   3,  2,     340, 0, "TIDE@1/1 PEPTIDEK@3/6 TIDEK@1/7"),
+                new SpectrumTuple("/B/1", 4,   1,  2,     650, 0, "TIDERPEPTIDEK@4/1 PET[P1O4]PDETK@3/8 EDITPEPR@3/9"),
+                new SpectrumTuple("/B/1", 4,   2,  2,     530, 0, "EDITPEPK@2/1 PEPTIDEK@3/2 PEPTIDE@2/3"),
+                new SpectrumTuple("/B/1", 4,   3,  2,     420, 0, "EDIT@2/1 PEPTIDEK@3/3 EDITPEPR@2/4"),
+                new SpectrumTuple("/B/2", 5,   1,  2,     200, 0, "E[H-2O-1]PPIER@2/1 TIDE@1/7 PEPTIDE@2/9"),
+                new SpectrumTuple("/B/2", 5,   2,  2,     240, 0, "PEPTIDEK@2/1 PETPDETK@2/4 EDITPEPR@2/8"),
+                new SpectrumTuple("/B/2", 5,   3,  2,     240, 0, "PETPDETK@3/1 EDIT@1/4 TIDER@2/6"),
             };
             #endregion
 
@@ -689,25 +706,23 @@ namespace Test
         [TestMethod]
         public void TestAnalyses()
         {
-            Analysis a1 = session.Get<Analysis>(1L);
+            Analysis a1 = session.UniqueResult<Analysis>(o => o.Software.Name == "Engine 1");
             Assert.AreEqual("Engine 1 1.0", a1.Name);
-            Assert.AreEqual("Engine 1", a1.Software.Name);
             Assert.AreEqual("1.0", a1.Software.Version);
             Assert.AreEqual(45, a1.Matches.Count);
 
-            Analysis a2 = session.Get<Analysis>(2L);
+            Analysis a2 = session.UniqueResult<Analysis>(o => o.Software.Name == "Engine 2");
             Assert.AreEqual("Engine 2 1.0", a2.Name);
-            Assert.AreEqual("Engine 2", a2.Software.Name);
             Assert.AreEqual("1.0", a2.Software.Version);
             Assert.AreEqual(45, a2.Matches.Count);
 
-            AnalysisParameter ap1 = session.Get<AnalysisParameter>(1L);
+            AnalysisParameter ap1 = a1.Parameters.First();
             Assert.AreEqual(a1, ap1.Analysis);
             Assert.AreEqual(ap1, a1.Parameters.First());
             Assert.AreEqual("Parameter 1", ap1.Name);
             Assert.AreEqual("Value 1", ap1.Value);
 
-            AnalysisParameter ap2 = session.Get<AnalysisParameter>(2L);
+            AnalysisParameter ap2 = a2.Parameters.First();
             Assert.AreEqual(a2, ap2.Analysis);
             Assert.AreEqual(ap2, a2.Parameters.First());
             Assert.AreEqual("Parameter 1", ap2.Name);
@@ -776,9 +791,9 @@ namespace Test
 
             
             // E[H-2O-1]DIT[P1O4]PEPR
-            var ss2s1psm2 = session.UniqueResult<PeptideSpectrumMatch>(o => o.Spectrum.Source.Id == 2 &&
+            var ss2s1psm2 = session.UniqueResult<PeptideSpectrumMatch>(o => o.Spectrum.Source.Name == "Source 2" &&
                                                                             o.Spectrum.Index == 0 &&
-                                                                            o.Analysis.Id == 1 &&
+                                                                            o.Analysis.Id == a1.Id &&
                                                                             o.Rank == 2);
             pwizPeptide = new PwizPeptide("E(H-2O-1)DIT(P1O4)PEPR", proteome.ModificationParsing.ModificationParsing_ByFormula);
             Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "EDITPEPR"), ss2s1psm2.Peptide);

@@ -134,29 +134,26 @@ namespace Test
             for (int source = 1; source <= sourceCount; ++source)
             for (int charge = 1; charge <= chargeCount; ++charge)
             {
-                string sourceName = "Source " + source.ToString();
-                string engineName = "Engine " + analysis.ToString();
-
                 List<SpectrumTuple> testPsmSummary = new List<SpectrumTuple>()
                 {
-                    //               Group    Source   Spectrum  Analysis     Score Q   List of Peptide@Charge/ScoreDivider
-                    new SpectrumTuple("/",  sourceName,     5,  engineName,     99, q, String.Format("TIDERPEPTIDEK@{0}/1 PEPTIDER@{0}/8", charge)),
-                    new SpectrumTuple("/",  sourceName,     11, engineName,     95, q, String.Format("TIDERPEPTIDEK@{0}/1 PEPTIDER@{0}/2", charge)),
-                    new SpectrumTuple("/",  sourceName,     12, engineName,     90, q, String.Format("PEPTIDEKPEP@{0}/1 THEQUICKBR@{0}/4", charge)),
-                    new SpectrumTuple("/",  sourceName,     16, engineName,     85, q, String.Format("EDITPEP@{0}/1 PEPTIDEK@{0}/2", charge)),
-                    new SpectrumTuple("/",  sourceName,     15, engineName,     80, q, String.Format("EDITPEPR@{0}/1 PEPTIDER@{0}/2", charge)),
-                    new SpectrumTuple("/",  sourceName,     17, engineName,     75, q, String.Format("TIDER@{0}/1 TIDERPEPTIDEK@{0}/3", charge)),
-                    new SpectrumTuple("/",  sourceName,     14, engineName,     70, q, String.Format("TIDER@{0}/1 PEPTIDER@{0}/2", charge)),
-                    new SpectrumTuple("/",  sourceName,     2,  engineName,     65, q, String.Format("THEQUICKBR@{0}/1 BKCIUQEHT@{0}/1 PEPTIDER@{0}/2", charge)),
-                    new SpectrumTuple("/",  sourceName,     7,  engineName,     60, q, String.Format("KEDITPEPR@{0}/1 DERPEPTIDEK@{0}/4", charge)),
-                    new SpectrumTuple("/",  sourceName,     4,  engineName,     50, q, String.Format("THELZYDG@{0}/1 PEPTI@{0}/3", charge)),
-                    new SpectrumTuple("/",  sourceName,     10, engineName,     55, q, String.Format("DERPEPTIDEK@{0}/1 PEPTIDEK@{0}/5", charge)),
-                    new SpectrumTuple("/",  sourceName,     8,  engineName,     45, q, String.Format("PEPTI@{0}/1 PEPTIDER@{0}/6", charge)),
-                    new SpectrumTuple("/",  sourceName,     9,  engineName,     40, q, String.Format("PEPTIDEK@{0}/1 THEQUICKBR@{0}/2", charge)),
-                    new SpectrumTuple("/",  sourceName,     3,  engineName,     35, q, String.Format("PEPKEDITPEPR@{0}/1 THELZYDG@{0}/2", charge)),
-                    new SpectrumTuple("/",  sourceName,     1,  engineName,     30, q, String.Format("GDYZLEHT@{0}/1 THEQUICKBR@{0}/2", charge)),
-                    new SpectrumTuple("/",  sourceName,     13, engineName,     25, q, String.Format("PEPTIDER@{0}/1 PEPKEDITPEPR@{0}/1 BKCIUQEHT@{0}/3", charge)),
-                    new SpectrumTuple("/",  sourceName,     6,  engineName,     20, q, String.Format("THEQUICKBR@{0}/1 DERPEPTIDEK@{0}/4", charge)),
+                    //               Group Source Spectrum  Analysis    Score Q   List of Peptide@Charge/ScoreDivider
+                    new SpectrumTuple("/",  source,     5,  analysis,     99, q, String.Format("TIDERPEPTIDEK@{0}/1 PEPTIDER@{0}/8", charge)),
+                    new SpectrumTuple("/",  source,     11, analysis,     95, q, String.Format("TIDERPEPTIDEK@{0}/1 PEPTIDER@{0}/2", charge)),
+                    new SpectrumTuple("/",  source,     12, analysis,     90, q, String.Format("PEPTIDEKPEP@{0}/1 THEQUICKBR@{0}/4", charge)),
+                    new SpectrumTuple("/",  source,     16, analysis,     85, q, String.Format("EDITPEP@{0}/1 PEPTIDEK@{0}/2", charge)),
+                    new SpectrumTuple("/",  source,     15, analysis,     80, q, String.Format("EDITPEPR@{0}/1 PEPTIDER@{0}/2", charge)),
+                    new SpectrumTuple("/",  source,     17, analysis,     75, q, String.Format("TIDER@{0}/1 TIDERPEPTIDEK@{0}/3", charge)),
+                    new SpectrumTuple("/",  source,     14, analysis,     70, q, String.Format("TIDER@{0}/1 PEPTIDER@{0}/2", charge)),
+                    new SpectrumTuple("/",  source,     2,  analysis,     65, q, String.Format("THEQUICKBR@{0}/1 BKCIUQEHT@{0}/1 PEPTIDER@{0}/2", charge)),
+                    new SpectrumTuple("/",  source,     7,  analysis,     60, q, String.Format("KEDITPEPR@{0}/1 DERPEPTIDEK@{0}/4", charge)),
+                    new SpectrumTuple("/",  source,     4,  analysis,     50, q, String.Format("THELZYDG@{0}/1 PEPTI@{0}/3", charge)),
+                    new SpectrumTuple("/",  source,     10, analysis,     55, q, String.Format("DERPEPTIDEK@{0}/1 PEPTIDEK@{0}/5", charge)),
+                    new SpectrumTuple("/",  source,     8,  analysis,     45, q, String.Format("PEPTI@{0}/1 PEPTIDER@{0}/6", charge)),
+                    new SpectrumTuple("/",  source,     9,  analysis,     40, q, String.Format("PEPTIDEK@{0}/1 THEQUICKBR@{0}/2", charge)),
+                    new SpectrumTuple("/",  source,     3,  analysis,     35, q, String.Format("PEPKEDITPEPR@{0}/1 THELZYDG@{0}/2", charge)),
+                    new SpectrumTuple("/",  source,     1,  analysis,     30, q, String.Format("GDYZLEHT@{0}/1 THEQUICKBR@{0}/2", charge)),
+                    new SpectrumTuple("/",  source,     13, analysis,     25, q, String.Format("PEPTIDER@{0}/1 PEPKEDITPEPR@{0}/1 BKCIUQEHT@{0}/3", charge)),
+                    new SpectrumTuple("/",  source,     6,  analysis,     20, q, String.Format("THEQUICKBR@{0}/1 DERPEPTIDEK@{0}/4", charge)),
                 };
 
                 TestModel.CreateTestData(session, testPsmSummary);
@@ -164,9 +161,9 @@ namespace Test
 
             List<SpectrumTuple> testPsmSummaryWithoutScores = new List<SpectrumTuple>()
             {
-                new SpectrumTuple("/", "Source 1", 1, "Engine 3", null, 0.01, "TIDERPEPTIDEK@1/1 PEPTIDER@3/8"),
-                new SpectrumTuple("/", "Source 1", 2, "Engine 3", null, 0.02, "PEPTIDEKPEP@2/1 PEPTIDEK@2/8"),
-                new SpectrumTuple("/", "Source 1", 3, "Engine 3", null, 0.03, "THEQUICKBR@3/1 THELZYDG@1/8"),
+                new SpectrumTuple("/", 1, 1, 3, null, 0.01, "TIDERPEPTIDEK@1/1 PEPTIDER@3/8"),
+                new SpectrumTuple("/", 1, 2, 3, null, 0.02, "PEPTIDEKPEP@2/1 PEPTIDEK@2/8"),
+                new SpectrumTuple("/", 1, 3, 3, null, 0.03, "THEQUICKBR@3/1 THELZYDG@1/8"),
             };
 
             TestModel.CreateTestData(session, testPsmSummaryWithoutScores);

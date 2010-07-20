@@ -666,12 +666,19 @@ namespace IDPicker.DataModel
         /// <returns></returns>
         Map<long, long> calculateAdditionalPeptides (NHibernate.ISession session)
         {
-            var psmSetByProteinId = new Map<long, Set<long>>();
+            var psmSetByProteinId = new Map<long, Set<Set<long>>>();
             var proteinGroupByProteinId = new Dictionary<long, string>();
             var proteinSetByProteinGroup = new Map<string, Set<long>>();
 
-            var query = session.CreateQuery("SELECT pro.id, pro.ProteinGroup, pep.id " +
-                                            GetFilteredQueryString(FromProtein, ProteinToPeptideSpectrumMatch));
+            // For each protein, get the list of peptides evidencing it;
+            // an ambiguous spectrum will show up as a nested list of peptides
+            var query = session.CreateSQLQuery("SELECT DISTINCT pro.Id, pro.ProteinGroup, t.Peptides " +
+                                               "FROM Proteins pro " +
+                                               "JOIN PeptideInstances pi ON pro.Id = pi.Protein " +
+                                               "JOIN PeptideSpectrumMatches psm ON pi.Peptide = psm.Peptide " +
+                                               "JOIN (SELECT psm.Spectrum, GROUP_CONCAT(DISTINCT psm.Peptide) AS Peptides " +
+                                               "      FROM PeptideSpectrumMatches psm " +
+                                               "      GROUP BY psm.Spectrum) AS t ON psm.Spectrum = t.Spectrum");
 
             long maxProteinId = -1;
             int maxExplainedCount = 0;
@@ -682,9 +689,11 @@ namespace IDPicker.DataModel
             {
                 long proteinId = (long) queryRow[0];
                 string proteinGroup = (string) queryRow[1];
-                long psmId = (long) queryRow[2];
-                Set<long> explainedPSMs = psmSetByProteinId[proteinId];
-                explainedPSMs.Add(psmId);
+                string psmIds = (string) queryRow[2];
+                string[] psmIdTokens = psmIds.Split(',');
+                Set<long> psmIdSet = new Set<long>(psmIdTokens.Select(o => Convert.ToInt64(o)));
+                Set<Set<long>> explainedPSMs = psmSetByProteinId[proteinId];
+                explainedPSMs.Add(psmIdSet);
                 if (explainedPSMs.Count > maxExplainedCount)
                 {
                     maxProteinId = proteinId;
@@ -702,7 +711,7 @@ namespace IDPicker.DataModel
             {
                 // remove proteins from the max. protein's group from the psmSetByProteinId map;
                 // subtract the max. protein's PSMs from the remaining proteins
-                Set<long> maxExplainedPSMs = psmSetByProteinId[maxProteinId];
+                Set<Set<long>> maxExplainedPSMs = psmSetByProteinId[maxProteinId];
                 string maxProteinGroup = proteinGroupByProteinId[maxProteinId];
                 foreach (long proteinId in proteinSetByProteinGroup[maxProteinGroup])
                 {
@@ -711,9 +720,9 @@ namespace IDPicker.DataModel
                 }
 
                 maxExplainedCount = 0;
-                foreach (Map<long, Set<long>>.MapPair itr in psmSetByProteinId)
+                foreach (Map<long, Set<Set<long>>>.MapPair itr in psmSetByProteinId)
                 {
-                    Set<long> explainedPSMs = itr.Value;
+                    Set<Set<long>> explainedPSMs = itr.Value;
                     explainedPSMs.Subtract(maxExplainedPSMs);
 
                     if (explainedPSMs.Count > maxExplainedCount)
@@ -726,7 +735,7 @@ namespace IDPicker.DataModel
                 // all remaining proteins present no additional evidence, so break the loop
                 if (maxExplainedCount == 0)
                 {
-                    foreach (Map<long, Set<long>>.MapPair itr in psmSetByProteinId)
+                    foreach (Map<long, Set<Set<long>>>.MapPair itr in psmSetByProteinId)
                         additionalPeptidesByProteinId[itr.Key] = 0;
                     break;
                 }
