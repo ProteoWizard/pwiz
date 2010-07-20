@@ -705,8 +705,6 @@ namespace pwiz.Skyline.Model.Results
 
                 if (cache != null)
                 {
-                    _setClone._cacheFinal = cache;
-
                     foreach (var cachePartial in _setClone._listPartialCaches)
                     {
                         // Close partial cache file
@@ -719,6 +717,7 @@ namespace pwiz.Skyline.Model.Results
                     }
 
                     _setClone._listPartialCaches = null;
+                    _setClone._cacheFinal = cache;
 
                     _loader.UpdateProgress(_status.ChangeSegments(0, 0).Complete());
                 }

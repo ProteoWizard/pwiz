@@ -177,7 +177,7 @@ namespace pwiz.Skyline.Model
             for (int modCount = 1; modCount <= maxModCount; modCount++)
             {
                 var modStateMachine = new VariableModStateMachine(nodePepUnmod, modCount, listListMods);
-                foreach (var nodePep in modStateMachine.GetPeptideNodes())
+                foreach (var nodePep in modStateMachine.GetStates())
                 {
                     if (filter.Accept(nodePep.Peptide, nodePep.ExplicitMods))
                         yield return nodePep;
@@ -190,116 +190,28 @@ namespace pwiz.Skyline.Model
         /// enumerating all modified states of a peptide, given the peptide, a number of
         /// possible modifications, and the set of possible modifications.
         /// </summary>
-        private sealed class VariableModStateMachine
+        private sealed class VariableModStateMachine : ModificationStateMachine<StaticMod, ExplicitMod, PeptideDocNode>
         {
             private readonly PeptideDocNode _nodePepUnmod;
-            private readonly int _modCount;
-            private readonly IList<KeyValuePair<IList<StaticMod>, int>> _listListMods;
-
-            /// <summary>
-            /// Contains indexes into _listListMods specifying amino acids currently
-            /// modified.
-            /// </summary>
-            private readonly int[] _arrayModIndexes1;
-
-            /// <summary>
-            /// Contains indexes into the static mod lists of _listListMods specifying
-            /// which modification is currently applied to the amino acid specified
-            /// by _arrayModIndexes1.
-            /// </summary>
-            private readonly int[] _arrayModIndexes2;
-
-            /// <summary>
-            /// Index to the currently active elements in _arrayModIndexes arrays.
-            /// </summary>
-            private int _cursorIndex;
 
             public VariableModStateMachine(PeptideDocNode nodePepUnmod, int modCount,
                 IList<KeyValuePair<IList<StaticMod>, int>> listListMods)
+                : base(modCount, listListMods)
             {
                 _nodePepUnmod = nodePepUnmod;
-                _modCount = modCount;
-                _listListMods = listListMods;
-
-                // Fill the mod indexes list with the first possible state
-                _arrayModIndexes1 = new int[_modCount];
-                for (int i = 0; i < modCount; i++)
-                    _arrayModIndexes1[i] = i;
-                // Second set of indexes start all zero initialized
-                _arrayModIndexes2 = new int[_modCount];
-                // Set the cursor to the last modification
-                _cursorIndex = modCount - 1;
             }
 
-            public IEnumerable<PeptideDocNode> GetPeptideNodes()
+            protected override ExplicitMod CreateMod(int indexAA, StaticMod mod)
             {
-                while (_cursorIndex >= 0)
-                {
-                    yield return CurrentPeptide;
-
-                    if (!ShiftCurrentMod())
-                    {
-                        // Attempt to advance any mod to the left of the current mod
-                        do
-                        {
-                            _cursorIndex--;
-                        }
-                        while (_cursorIndex >= 0 && !ShiftCurrentMod());
-
-                        // If a mod was successfully advanced, reset all mods to its right
-                        // and start over with them.
-                        if (_cursorIndex >= 0)
-                        {
-                            for (int i = 1; i < _modCount - _cursorIndex; i++)
-                            {
-                                _arrayModIndexes1[_cursorIndex + i] = _arrayModIndexes1[_cursorIndex] + i;
-                                _arrayModIndexes2[_cursorIndex + i] = 0;
-                            }
-                            _cursorIndex = _modCount - 1;
-                        }
-                    }
-                }
+                return new ExplicitMod(indexAA, mod);
             }
 
-            private bool ShiftCurrentMod()
+            protected override PeptideDocNode CreateState(ExplicitMod[] mods)
             {
-                int modIndex = _arrayModIndexes1[_cursorIndex];
-                if (_arrayModIndexes2[_cursorIndex] < _listListMods[modIndex].Key.Count - 1)
-                {
-                    // Shift the current amino acid through all possible modification states
-                    _arrayModIndexes2[_cursorIndex]++;
-                }
-                else if (modIndex < _listListMods.Count - _modCount + _cursorIndex)
-                {
-                    // Shift the current modification through all possible positions
-                    _arrayModIndexes1[_cursorIndex]++;
-                    _arrayModIndexes2[_cursorIndex] = 0;
-                }
-                else
-                {
-                    // Current modification has seen all possible states
-                    return false;
-                }
-                return true;
-            }
-
-            private PeptideDocNode CurrentPeptide
-            {
-                get
-                {
-                    var variableMods = new ExplicitMod[_modCount];
-                    for (int i = 0; i < _modCount; i++)
-                    {
-                        var pair = _listListMods[_arrayModIndexes1[i]];
-                        var mod = pair.Key[_arrayModIndexes2[i]];
-
-                        variableMods[i] = new ExplicitMod(pair.Value, mod);
-                    }
-                    var explicitMods = new ExplicitMods(_nodePepUnmod.Peptide, variableMods,
-                                                        new TypedExplicitModifications[0], true);
-                    // Make a new copy of the peptid ID to give it a new GlobalIndex.
-                    return new PeptideDocNode((Peptide)_nodePepUnmod.Peptide.Copy(), explicitMods);
-                }
+                var explicitMods = new ExplicitMods(_nodePepUnmod.Peptide, mods,
+                                                    new TypedExplicitModifications[0], true);
+                // Make a new copy of the peptid ID to give it a new GlobalIndex.
+                return new PeptideDocNode((Peptide)_nodePepUnmod.Peptide.Copy(), explicitMods);
             }
         }
 
@@ -385,6 +297,123 @@ namespace pwiz.Skyline.Model
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// State machine that provides a <see cref="IEnumerable{TState}"/> for
+    /// enumerating modified states of a peptide, given a number of possible
+    /// modifications, and the set of possible modifications in a list by amino
+    /// acid index.
+    /// </summary>
+    internal abstract class ModificationStateMachine<T, TMod, TState>
+    {
+        private readonly int _modCount;
+        private readonly IList<KeyValuePair<IList<T>, int>> _listListMods;
+
+        /// <summary>
+        /// Contains indexes into _listListMods specifying amino acids currently
+        /// modified.
+        /// </summary>
+        private readonly int[] _arrayModIndexes1;
+
+        /// <summary>
+        /// Contains indexes into the static mod lists of _listListMods specifying
+        /// which modification is currently applied to the amino acid specified
+        /// by _arrayModIndexes1.
+        /// </summary>
+        private readonly int[] _arrayModIndexes2;
+
+        /// <summary>
+        /// Index to the currently active elements in _arrayModIndexes arrays.
+        /// </summary>
+        private int _cursorIndex;
+
+        protected ModificationStateMachine(int modCount, IList<KeyValuePair<IList<T>, int>> listListMods)
+        {
+            _modCount = modCount;
+            _listListMods = listListMods;
+
+            // Fill the mod indexes list with the first possible state
+            _arrayModIndexes1 = new int[_modCount];
+            for (int i = 0; i < modCount; i++)
+                _arrayModIndexes1[i] = i;
+            // Second set of indexes start all zero initialized
+            _arrayModIndexes2 = new int[_modCount];
+            // Set the cursor to the last modification
+            _cursorIndex = modCount - 1;
+        }
+
+        public IEnumerable<TState> GetStates()
+        {
+            while (_cursorIndex >= 0)
+            {
+                yield return Current;
+
+                if (!ShiftCurrentMod())
+                {
+                    // Attempt to advance any mod to the left of the current mod
+                    do
+                    {
+                        _cursorIndex--;
+                    }
+                    while (_cursorIndex >= 0 && !ShiftCurrentMod());
+
+                    // If a mod was successfully advanced, reset all mods to its right
+                    // and start over with them.
+                    if (_cursorIndex >= 0)
+                    {
+                        for (int i = 1; i < _modCount - _cursorIndex; i++)
+                        {
+                            _arrayModIndexes1[_cursorIndex + i] = _arrayModIndexes1[_cursorIndex] + i;
+                            _arrayModIndexes2[_cursorIndex + i] = 0;
+                        }
+                        _cursorIndex = _modCount - 1;
+                    }
+                }
+            }
+        }
+
+        private bool ShiftCurrentMod()
+        {
+            int modIndex = _arrayModIndexes1[_cursorIndex];
+            if (_arrayModIndexes2[_cursorIndex] < _listListMods[modIndex].Key.Count - 1)
+            {
+                // Shift the current amino acid through all possible modification states
+                _arrayModIndexes2[_cursorIndex]++;
+            }
+            else if (modIndex < _listListMods.Count - _modCount + _cursorIndex)
+            {
+                // Shift the current modification through all possible positions
+                _arrayModIndexes1[_cursorIndex]++;
+                _arrayModIndexes2[_cursorIndex] = 0;
+            }
+            else
+            {
+                // Current modification has seen all possible states
+                return false;
+            }
+            return true;
+        }
+
+        private TState Current
+        {
+            get
+            {
+                var mods = new TMod[_modCount];
+                for (int i = 0; i < _modCount; i++)
+                {
+                    var pair = _listListMods[_arrayModIndexes1[i]];
+                    var mod = pair.Key[_arrayModIndexes2[i]];
+
+                    mods[i] = CreateMod(pair.Value, mod);
+                }
+                return CreateState(mods);
+            }
+        }
+
+        protected abstract TMod CreateMod(int indexAA, T mod);
+
+        protected abstract TState CreateState(TMod[] mods);
     }
 
     public sealed class PeptideModKey

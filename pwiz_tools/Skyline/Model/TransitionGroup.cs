@@ -271,7 +271,7 @@ namespace pwiz.Skyline.Model
             {
                 var lossStateMachine = new NeutralLossStateMachine(lossCount, listIndexedListLosses);
 
-                foreach (var listLosses in lossStateMachine.GetLosses())
+                foreach (var listLosses in lossStateMachine.GetStates())
                     listListLosses.Add(listLosses);
             }
             return listListLosses;
@@ -294,111 +294,22 @@ namespace pwiz.Skyline.Model
         /// enumerating all potential neutral loss states for a peptidw, given its sequence, 
         /// number of possible losses, and the set of possible losses.
         /// </summary>
-        private sealed class NeutralLossStateMachine
+        private sealed class NeutralLossStateMachine : ModificationStateMachine<TransitionLoss, ExplicitLoss, IList<ExplicitLoss>>
         {
-            private readonly int _lossCount;
-            private readonly IList<KeyValuePair<IList<TransitionLoss>, int>> _listListLosses;
-
-            /// <summary>
-            /// Contains indexes into _listListLosses specifying amino acids currently
-            /// modified.
-            /// </summary>
-            private readonly int[] _arrayLossIndexes1;
-
-            /// <summary>
-            /// Contains indexes into the static mod lists of _listListLosses specifying
-            /// which modification is currently applied to the amino acid specified
-            /// by _arrayLossIndexes1.
-            /// </summary>
-            private readonly int[] _arrayLossIndexes2;
-
-            /// <summary>
-            /// Index to the currently active elements in _arrayModIndexes arrays.
-            /// </summary>
-            private int _cursorIndex;
-
             public NeutralLossStateMachine(int lossCount,
-                IList<KeyValuePair<IList<TransitionLoss>, int>> listListMods)
+                IList<KeyValuePair<IList<TransitionLoss>, int>> listListLosses)
+                : base(lossCount, listListLosses)
             {
-                _lossCount = lossCount;
-                _listListLosses = listListMods;
-
-                // Fill the mod indexes list with the first possible state
-                _arrayLossIndexes1 = new int[_lossCount];
-                for (int i = 0; i < lossCount; i++)
-                    _arrayLossIndexes1[i] = i;
-                // Second set of indexes start all zero initialized
-                _arrayLossIndexes2 = new int[_lossCount];
-                // Set the cursor to the last modification
-                _cursorIndex = lossCount - 1;
             }
 
-            public IEnumerable<IList<ExplicitLoss>> GetLosses()
+            protected override ExplicitLoss CreateMod(int indexAA, TransitionLoss mod)
             {
-                while (_cursorIndex >= 0)
-                {
-                    yield return CurrentLosses;
-
-                    if (!ShiftCurrentLoss())
-                    {
-                        // Attempt to advance any loss to the left of the current loss
-                        do
-                        {
-                            _cursorIndex--;
-                        }
-                        while (_cursorIndex >= 0 && !ShiftCurrentLoss());
-
-                        // If a loss was successfully advanced, reset all losses to its right
-                        // and start over with them.
-                        if (_cursorIndex >= 0)
-                        {
-                            for (int i = 1; i < _lossCount - _cursorIndex; i++)
-                            {
-                                _arrayLossIndexes1[_cursorIndex + i] = _arrayLossIndexes1[_cursorIndex] + i;
-                                _arrayLossIndexes2[_cursorIndex + i] = 0;
-                            }
-                            _cursorIndex = _lossCount - 1;
-                        }
-                    }
-                }
+                return new ExplicitLoss(indexAA, mod);
             }
 
-            private bool ShiftCurrentLoss()
+            protected override IList<ExplicitLoss> CreateState(ExplicitLoss[] mods)
             {
-                int modIndex = _arrayLossIndexes1[_cursorIndex];
-                if (_arrayLossIndexes2[_cursorIndex] < _listListLosses[modIndex].Key.Count - 1)
-                {
-                    // Shift the current amino acid through all possible loss states
-                    _arrayLossIndexes2[_cursorIndex]++;
-                }
-                else if (modIndex < _listListLosses.Count - _lossCount + _cursorIndex)
-                {
-                    // Shift the current loss through all possible positions
-                    _arrayLossIndexes1[_cursorIndex]++;
-                    _arrayLossIndexes2[_cursorIndex] = 0;
-                }
-                else
-                {
-                    // Current loss has seen all possible states
-                    return false;
-                }
-                return true;
-            }
-
-            private IList<ExplicitLoss> CurrentLosses
-            {
-                get
-                {
-                    var explicitLosses = new ExplicitLoss[_lossCount];
-                    for (int i = 0; i < _lossCount; i++)
-                    {
-                        var pair = _listListLosses[_arrayLossIndexes1[i]];
-                        var loss = pair.Key[_arrayLossIndexes2[i]];
-
-                        explicitLosses[i] = new ExplicitLoss(pair.Value, loss);
-                    }
-                    return explicitLosses;
-                }
+                return mods;
             }
         }
 
