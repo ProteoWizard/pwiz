@@ -137,6 +137,7 @@
             // 
             // cbCreateCopy
             // 
+            this.cbCreateCopy.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.cbCreateCopy.AutoSize = true;
             this.cbCreateCopy.Location = new System.Drawing.Point(348, 84);
             this.cbCreateCopy.Name = "cbCreateCopy";
