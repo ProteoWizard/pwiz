@@ -34,6 +34,13 @@ namespace pwiz.Skyline.SettingsUI
             this.btnOk = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.toolTipSettings = new System.Windows.Forms.ToolTip(this.components);
+            this.comboStandardType = new System.Windows.Forms.ComboBox();
+            this.comboLabelType = new System.Windows.Forms.ComboBox();
+            this.listHeavyMods = new System.Windows.Forms.CheckedListBox();
+            this.listStaticMods = new System.Windows.Forms.CheckedListBox();
+            this.listStandardTypes = new System.Windows.Forms.CheckedListBox();
+            this.textMaxVariableMods = new System.Windows.Forms.TextBox();
+            this.textMaxNeutralLosses = new System.Windows.Forms.TextBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabDigestion = new System.Windows.Forms.TabPage();
             this.label2 = new System.Windows.Forms.Label();
@@ -76,21 +83,14 @@ namespace pwiz.Skyline.SettingsUI
             this.label11 = new System.Windows.Forms.Label();
             this.listLibraries = new System.Windows.Forms.CheckedListBox();
             this.tabModifications = new System.Windows.Forms.TabPage();
-            this.comboStandardType = new System.Windows.Forms.ComboBox();
+            this.label18 = new System.Windows.Forms.Label();
+            this.label17 = new System.Windows.Forms.Label();
             this.labelStandardType = new System.Windows.Forms.Label();
             this.label16 = new System.Windows.Forms.Label();
-            this.comboLabelType = new System.Windows.Forms.ComboBox();
             this.btnEditHeavyMods = new System.Windows.Forms.Button();
             this.label10 = new System.Windows.Forms.Label();
-            this.listHeavyMods = new System.Windows.Forms.CheckedListBox();
             this.btnEditStaticMods = new System.Windows.Forms.Button();
             this.label8 = new System.Windows.Forms.Label();
-            this.listStaticMods = new System.Windows.Forms.CheckedListBox();
-            this.listStandardTypes = new System.Windows.Forms.CheckedListBox();
-            this.textMaxVariableMods = new System.Windows.Forms.TextBox();
-            this.label17 = new System.Windows.Forms.Label();
-            this.textMaxNeutralLosses = new System.Windows.Forms.TextBox();
-            this.label18 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabDigestion.SuspendLayout();
             this.tabPrediction.SuspendLayout();
@@ -121,6 +121,81 @@ namespace pwiz.Skyline.SettingsUI
             this.btnCancel.TabIndex = 2;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
+            // 
+            // comboStandardType
+            // 
+            this.comboStandardType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboStandardType.FormattingEnabled = true;
+            this.comboStandardType.Location = new System.Drawing.Point(28, 395);
+            this.comboStandardType.Name = "comboStandardType";
+            this.comboStandardType.Size = new System.Drawing.Size(177, 21);
+            this.comboStandardType.TabIndex = 13;
+            this.toolTipSettings.SetToolTip(this.comboStandardType, "The type to use as the internal stadard, or the denomenator\r\nin peak area ratios." +
+                    "");
+            // 
+            // comboLabelType
+            // 
+            this.comboLabelType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboLabelType.FormattingEnabled = true;
+            this.comboLabelType.Location = new System.Drawing.Point(28, 223);
+            this.comboLabelType.Name = "comboLabelType";
+            this.comboLabelType.Size = new System.Drawing.Size(177, 21);
+            this.comboLabelType.TabIndex = 8;
+            this.toolTipSettings.SetToolTip(this.comboLabelType, "The currently active isotope label type for which isotope\r\nmodifications are bein" +
+                    "g chosen.");
+            this.comboLabelType.SelectedIndexChanged += new System.EventHandler(this.comboLabelType_SelectedIndexChanged);
+            // 
+            // listHeavyMods
+            // 
+            this.listHeavyMods.CheckOnClick = true;
+            this.listHeavyMods.FormattingEnabled = true;
+            this.listHeavyMods.Location = new System.Drawing.Point(28, 269);
+            this.listHeavyMods.Name = "listHeavyMods";
+            this.listHeavyMods.Size = new System.Drawing.Size(177, 94);
+            this.listHeavyMods.TabIndex = 10;
+            this.toolTipSettings.SetToolTip(this.listHeavyMods, "Modifications applied to any of the heavy forms of the peptides,\r\nwhich are typic" +
+                    "ally changes to the isotopic make-up of the\r\nmolecules, with no impact on struct" +
+                    "ure.");
+            // 
+            // listStaticMods
+            // 
+            this.listStaticMods.CheckOnClick = true;
+            this.listStaticMods.FormattingEnabled = true;
+            this.listStaticMods.Location = new System.Drawing.Point(28, 36);
+            this.listStaticMods.Name = "listStaticMods";
+            this.listStaticMods.Size = new System.Drawing.Size(177, 94);
+            this.listStaticMods.TabIndex = 1;
+            this.toolTipSettings.SetToolTip(this.listStaticMods, "Modifications applied to the light form of the peptides\r\nwhich are typically due " +
+                    "to changes in the molecular\r\nstructure of the peptide.");
+            // 
+            // listStandardTypes
+            // 
+            this.listStandardTypes.CheckOnClick = true;
+            this.listStandardTypes.FormattingEnabled = true;
+            this.listStandardTypes.Location = new System.Drawing.Point(28, 395);
+            this.listStandardTypes.Name = "listStandardTypes";
+            this.listStandardTypes.Size = new System.Drawing.Size(177, 49);
+            this.listStandardTypes.TabIndex = 14;
+            this.toolTipSettings.SetToolTip(this.listStandardTypes, "The types to use as internal stadards, or the denomenators\r\nin peak area ratios c" +
+                    "alculated for other types.");
+            // 
+            // textMaxVariableMods
+            // 
+            this.textMaxVariableMods.Location = new System.Drawing.Point(28, 163);
+            this.textMaxVariableMods.Name = "textMaxVariableMods";
+            this.textMaxVariableMods.Size = new System.Drawing.Size(90, 20);
+            this.textMaxVariableMods.TabIndex = 4;
+            this.toolTipSettings.SetToolTip(this.textMaxVariableMods, "The maximum number of variable modifications allowed\r\nto occur in combination on " +
+                    "any peptide instance.");
+            // 
+            // textMaxNeutralLosses
+            // 
+            this.textMaxNeutralLosses.Location = new System.Drawing.Point(155, 163);
+            this.textMaxNeutralLosses.Name = "textMaxNeutralLosses";
+            this.textMaxNeutralLosses.Size = new System.Drawing.Size(90, 20);
+            this.textMaxNeutralLosses.TabIndex = 6;
+            this.toolTipSettings.SetToolTip(this.textMaxNeutralLosses, "The maximum number of neutral loss events allowed\r\nto occur in combination on any" +
+                    " fragment instance.");
             // 
             // tabControl1
             // 
@@ -582,16 +657,23 @@ namespace pwiz.Skyline.SettingsUI
             this.tabModifications.Text = "Modifications";
             this.tabModifications.UseVisualStyleBackColor = true;
             // 
-            // comboStandardType
+            // label18
             // 
-            this.comboStandardType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboStandardType.FormattingEnabled = true;
-            this.comboStandardType.Location = new System.Drawing.Point(28, 395);
-            this.comboStandardType.Name = "comboStandardType";
-            this.comboStandardType.Size = new System.Drawing.Size(177, 21);
-            this.comboStandardType.TabIndex = 13;
-            this.toolTipSettings.SetToolTip(this.comboStandardType, "The type to use as the internal stadard, or the denomenator\r\nin peak area ratios." +
-                    "");
+            this.label18.AutoSize = true;
+            this.label18.Location = new System.Drawing.Point(152, 145);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(97, 13);
+            this.label18.TabIndex = 5;
+            this.label18.Text = "Max &neutral losses:";
+            // 
+            // label17
+            // 
+            this.label17.AutoSize = true;
+            this.label17.Location = new System.Drawing.Point(25, 145);
+            this.label17.Name = "label17";
+            this.label17.Size = new System.Drawing.Size(98, 13);
+            this.label17.TabIndex = 3;
+            this.label17.Text = "&Max variable mods:";
             // 
             // labelStandardType
             // 
@@ -610,18 +692,6 @@ namespace pwiz.Skyline.SettingsUI
             this.label16.Size = new System.Drawing.Size(93, 13);
             this.label16.TabIndex = 7;
             this.label16.Text = "Isotope label &type:";
-            // 
-            // comboLabelType
-            // 
-            this.comboLabelType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboLabelType.FormattingEnabled = true;
-            this.comboLabelType.Location = new System.Drawing.Point(28, 223);
-            this.comboLabelType.Name = "comboLabelType";
-            this.comboLabelType.Size = new System.Drawing.Size(177, 21);
-            this.comboLabelType.TabIndex = 8;
-            this.toolTipSettings.SetToolTip(this.comboLabelType, "The currently active isotope label type for which isotope\r\nmodifications are bein" +
-                    "g chosen.");
-            this.comboLabelType.SelectedIndexChanged += new System.EventHandler(this.comboLabelType_SelectedIndexChanged);
             // 
             // btnEditHeavyMods
             // 
@@ -642,18 +712,6 @@ namespace pwiz.Skyline.SettingsUI
             this.label10.TabIndex = 9;
             this.label10.Text = "&Isotope modifications:";
             // 
-            // listHeavyMods
-            // 
-            this.listHeavyMods.CheckOnClick = true;
-            this.listHeavyMods.FormattingEnabled = true;
-            this.listHeavyMods.Location = new System.Drawing.Point(28, 269);
-            this.listHeavyMods.Name = "listHeavyMods";
-            this.listHeavyMods.Size = new System.Drawing.Size(177, 94);
-            this.listHeavyMods.TabIndex = 10;
-            this.toolTipSettings.SetToolTip(this.listHeavyMods, "Modifications applied to any of the heavy forms of the peptides,\r\nwhich are typic" +
-                    "ally changes to the isotopic make-up of the\r\nmolecules, with no impact on struct" +
-                    "ure.");
-            // 
             // btnEditStaticMods
             // 
             this.btnEditStaticMods.Location = new System.Drawing.Point(211, 36);
@@ -672,66 +730,6 @@ namespace pwiz.Skyline.SettingsUI
             this.label8.Size = new System.Drawing.Size(119, 13);
             this.label8.TabIndex = 0;
             this.label8.Text = "&Structural modifications:";
-            // 
-            // listStaticMods
-            // 
-            this.listStaticMods.CheckOnClick = true;
-            this.listStaticMods.FormattingEnabled = true;
-            this.listStaticMods.Location = new System.Drawing.Point(28, 36);
-            this.listStaticMods.Name = "listStaticMods";
-            this.listStaticMods.Size = new System.Drawing.Size(177, 94);
-            this.listStaticMods.TabIndex = 1;
-            this.toolTipSettings.SetToolTip(this.listStaticMods, "Modifications applied to the light form of the peptides\r\nwhich are typically due " +
-                    "to changes in the molecular\r\nstructure of the peptide.");
-            // 
-            // listStandardTypes
-            // 
-            this.listStandardTypes.CheckOnClick = true;
-            this.listStandardTypes.FormattingEnabled = true;
-            this.listStandardTypes.Location = new System.Drawing.Point(28, 395);
-            this.listStandardTypes.Name = "listStandardTypes";
-            this.listStandardTypes.Size = new System.Drawing.Size(177, 49);
-            this.listStandardTypes.TabIndex = 14;
-            this.toolTipSettings.SetToolTip(this.listStandardTypes, "The types to use as internal stadards, or the denomenators\r\nin peak area ratios c" +
-                    "alculated for other types.");
-            // 
-            // textMaxVariableMods
-            // 
-            this.textMaxVariableMods.Location = new System.Drawing.Point(28, 163);
-            this.textMaxVariableMods.Name = "textMaxVariableMods";
-            this.textMaxVariableMods.Size = new System.Drawing.Size(90, 20);
-            this.textMaxVariableMods.TabIndex = 4;
-            this.toolTipSettings.SetToolTip(this.textMaxVariableMods, "The maximum number of variable modifications allowed\r\nto occur in combination on " +
-                    "any peptide instance.");
-            // 
-            // label17
-            // 
-            this.label17.AutoSize = true;
-            this.label17.Location = new System.Drawing.Point(25, 145);
-            this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size(98, 13);
-            this.label17.TabIndex = 3;
-            this.label17.Text = "&Max variable mods:";
-            // 
-            // textMaxNeutralLosses
-            // 
-            this.textMaxNeutralLosses.Location = new System.Drawing.Point(155, 163);
-            this.textMaxNeutralLosses.Name = "textMaxNeutralLosses";
-            this.textMaxNeutralLosses.Size = new System.Drawing.Size(90, 20);
-            this.textMaxNeutralLosses.TabIndex = 6;
-            this.toolTipSettings.SetToolTip(this.textMaxNeutralLosses, "The maximum number of neutral loss events allowed\r\nto occur in combination on any" +
-                    " fragment instance.");
-            this.textMaxNeutralLosses.Visible = false;
-            // 
-            // label18
-            // 
-            this.label18.AutoSize = true;
-            this.label18.Location = new System.Drawing.Point(155, 145);
-            this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(97, 13);
-            this.label18.TabIndex = 5;
-            this.label18.Text = "Max &neutral losses:";
-            this.label18.Visible = false;
             // 
             // PeptideSettingsUI
             // 

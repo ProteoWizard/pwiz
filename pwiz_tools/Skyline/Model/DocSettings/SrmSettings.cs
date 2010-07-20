@@ -1075,7 +1075,11 @@ namespace pwiz.Skyline.Model.DocSettings
                               !newTran.Libraries.Equals(oldTran.Libraries) ||
                               // Or libraries changed, and picking based on libraries
                               (libraryChange && DiffTransitionGroupProps &&
-                                    newTran.Libraries.Pick != TransitionLibraryPick.none);
+                                    newTran.Libraries.Pick != TransitionLibraryPick.none) ||
+                              // If loss modifications changed
+                              newPep.Modifications.MaxNeutralLosses != oldPep.Modifications.MaxNeutralLosses ||
+                              !ArrayUtil.EqualsDeep(newPep.Modifications.NeutralLossModifications.ToArray(),
+                                                    oldPep.Modifications.NeutralLossModifications.ToArray());
 
             // Any change in modifications or fragment mass-type forces a recalc
             // of transition m/z values, as

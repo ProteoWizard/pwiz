@@ -167,7 +167,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     EnsureData();
                     return _docNodes;
                 }
-                set
+                private set
                 {
                     _docNodes = MakeReadOnly(value);
                 }
@@ -180,7 +180,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     EnsureData();
                     return _docNodeLabels;
                 }
-                set
+                private set
                 {
                     _docNodeLabels = MakeReadOnly(value);
                 }
@@ -193,7 +193,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     EnsureData();
                     return _pointPairLists;
                 }
-                set
+                private set
                 {
                     _pointPairLists = MakeReadOnly(value);
                 }

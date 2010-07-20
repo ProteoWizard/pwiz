@@ -746,7 +746,7 @@ namespace pwiz.Skyline.EditUI
             if (transitions.Contains(nodeTran => Equals(nodeTran.Transition, transition)))
                 return peptideDocNode;
 
-            transitions.Add(new TransitionDocNode(transition, 
+            transitions.Add(new TransitionDocNode(transition, null, 
                 document.Settings.GetFragmentMass(transition, null), null));
             transitions.Sort(TransitionGroup.CompareTransitions);
 

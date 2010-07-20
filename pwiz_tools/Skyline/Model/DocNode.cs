@@ -226,10 +226,7 @@ namespace pwiz.Skyline.Model
         /// <returns>A map of children by their <see cref="Identity"/> values</returns>
         public Dictionary<Identity, DocNode> CreateIdContentToChildMap()
         {
-            var map = new Dictionary<Identity, DocNode>();
-            foreach (DocNode child in Children)
-                map.Add(child.Id, child);
-            return map;
+            return Children.ToDictionary(child => child.Id);
         }
         
         /// <summary>

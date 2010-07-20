@@ -407,7 +407,7 @@ namespace pwiz.Skyline.Model.Results
 
         public string GetFileSaveId(int index)
         {
-            return string.Format("{0}_f{1}", Name, index);
+            return string.Format("{0}_f{1}", Helpers.MakeXmlId(Name), index);
         }
 
         #endregion

@@ -24,6 +24,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Collections.ObjectModel;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.SettingsUI;
@@ -954,6 +955,48 @@ namespace pwiz.Skyline.Util
                     else if (char.IsLetterOrDigit(lastC))
                         lastC = ' ';
                 }
+            }
+            return sb.ToString();
+        }
+
+        private static readonly Regex REGEX_XML_ID = new Regex("/^[:_A-Za-z][-.:_A-Za-z0-9]*$/");
+        private const string XML_ID_FIRST_CHARS = ":_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        private const string XML_ID_FOLLOW_CHARS = "-.:_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        private const string XML_NON_ID_SEPARATOR_CHARS = ";[]{}()!|\\/\"'<>";
+        private const string XML_NON_ID_PUNCTUATION_CHARS = ",?";
+
+        public static string MakeXmlId(string name)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new InvalidOperationException("Failure creating XML ID. Input string may not be empty.");
+            if (REGEX_XML_ID.IsMatch(name))
+                return name;
+
+            var sb = new StringBuilder();
+            int i = 0;
+            if (XML_ID_FIRST_CHARS.Contains(name[i]))
+                sb.Append(name[i++]);
+            else
+            {
+                sb.Append('_');
+                // If the first character is not allowable, advance past it.
+                // Otherwise, keep it in the ID.
+                if (!XML_ID_FOLLOW_CHARS.Contains(name[i]))
+                    i++;
+            }
+            for (; i < name.Length; i++)
+            {
+                char c = name[i];
+                if (XML_ID_FOLLOW_CHARS.Contains(c))
+                    sb.Append(c);
+                else if (char.IsWhiteSpace(c))
+                    sb.Append('_');
+                else if (XML_NON_ID_SEPARATOR_CHARS.Contains(c))
+                    sb.Append(':');
+                else if (XML_NON_ID_PUNCTUATION_CHARS.Contains(c))
+                    sb.Append('.');
+                else
+                    sb.Append('-');
             }
             return sb.ToString();
         }

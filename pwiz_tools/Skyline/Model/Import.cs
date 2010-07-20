@@ -1170,7 +1170,7 @@ namespace pwiz.Skyline.Model
             }
             var tran = new Transition(_activeTransitionGroup, row.IonType, row.Offset, row.ProductCharge);
             // m/z and library info calculated later
-            _transitions.Add(new TransitionDocNode(tran, 0, null));
+            _transitions.Add(new TransitionDocNode(tran, null, 0, null));
         }
 
         private void CompletePeptide()

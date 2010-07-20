@@ -816,7 +816,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public IList<IsotopeLabelType> InternalStandardTypes
         {
             get { return _internalStandardTypes; }
-            set { _internalStandardTypes = MakeReadOnly(value); }
+            private set { _internalStandardTypes = MakeReadOnly(value); }
         }
 
         public IList<StaticMod> StaticModifications
@@ -835,6 +835,21 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 return from mod in StaticModifications
                        where mod.IsVariable
+                       select mod;
+            }
+        }
+
+        public bool HasNeutralLosses
+        {
+            get { return StaticModifications.Contains(mod => mod.HasLoss && !mod.IsExplicit); }
+        }
+
+        public IEnumerable<StaticMod> NeutralLossModifications
+        {
+            get
+            {
+                return from mod in StaticModifications
+                       where mod.HasLoss && !mod.IsExplicit
                        select mod;
             }
         }
@@ -1067,7 +1082,7 @@ namespace pwiz.Skyline.Model.DocSettings
             var internalStandardTypes = new[] {IsotopeLabelType.heavy};
 
             MaxVariableMods = reader.GetIntAttribute(ATTR.max_variable_mods, DEFAULT_MAX_VARIABLE_MODS);
-            MaxNeutralLosses = reader.GetIntAttribute(ATTR.max_variable_mods, DEFAULT_MAX_NEUTRAL_LOSSES);
+            MaxNeutralLosses = reader.GetIntAttribute(ATTR.max_neutral_losses, DEFAULT_MAX_NEUTRAL_LOSSES);
 
             // Consume tag
             if (reader.IsEmptyElement)

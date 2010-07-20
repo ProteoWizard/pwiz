@@ -579,7 +579,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                               ProductCharge = transition.Charge,
                                               ProductNeutralMass = SequenceMassCalc.PersistentNeutral(SequenceMassCalc.GetMH(nodeTran.Mz, transition.Charge)),
                                               ProductMz = SequenceMassCalc.PersistentMZ(nodeTran.Mz),
-                                              FragmentIon = transition.FragmentIonName,
+                                              FragmentIon = nodeTran.FragmentIonName,
                                               FragmentIonType = transition.IonType.ToString(),
                                               FragmentIonOrdinal = transition.Ordinal,
                                               CleavageAa = transition.AA.ToString(),

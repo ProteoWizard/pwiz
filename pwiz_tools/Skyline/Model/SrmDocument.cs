@@ -765,6 +765,8 @@ namespace pwiz.Skyline.Model
             explicit_modification,
             variable_modifications,
             variable_modification,
+            losses,
+            neutral_loss,
             peptide_results,
             peptide_result,
             precursor,
@@ -797,6 +799,7 @@ namespace pwiz.Skyline.Model
             next_aa,
             index_aa,
             modification_name,
+            loss_index,
             calc_neutral_pep_mass,
             num_missed_cleavages,
             predicted_retention_time,
@@ -1434,7 +1437,7 @@ namespace pwiz.Skyline.Model
                 // No heavy transition support in v0.1
                 double massH = Settings.GetFragmentMass(IsotopeLabelType.light, mods, transition);
 
-                curList.Add(new TransitionDocNode(transition, massH, null));
+                curList.Add(new TransitionDocNode(transition, info.Losses, massH, null));
             }
 
             double precursorMassH = Settings.GetPrecursorMass(IsotopeLabelType.light, peptide.Sequence, mods);
@@ -1491,7 +1494,7 @@ namespace pwiz.Skyline.Model
 
             double massH = Settings.GetFragmentMass(group.LabelType, mods, transition);
 
-            return new TransitionDocNode(transition, info.Annotations, massH, info.LibInfo, info.Results);
+            return new TransitionDocNode(transition, info.Annotations, info.Losses, massH, info.LibInfo, info.Results);
         }
 
         private static Annotations ReadAnnotations(XmlReader reader)
@@ -1521,6 +1524,7 @@ namespace pwiz.Skyline.Model
             public int Ordinal { get; private set; }
             public int PrecursorCharge { get; private set; }
             public int Charge { get; private set; }
+            public TransitionLosses Losses { get; private set; }
             public Annotations Annotations { get; private set; }
             public TransitionLibInfo LibInfo { get; private set; }
             public Results<TransitionChromInfo> Results { get; private set; }
@@ -1539,6 +1543,7 @@ namespace pwiz.Skyline.Model
                 {
                     reader.ReadStartElement();
                     Annotations = ReadAnnotations(reader);
+                    Losses = ReadTransitionLosses(reader, settings);
                     LibInfo = ReadTransitionLibInfo(reader);
                     Results = ReadTransitionResults(reader, settings);
 
@@ -1559,6 +1564,40 @@ namespace pwiz.Skyline.Model
 
                     reader.ReadEndElement();                                    
                 }
+            }
+
+            private static TransitionLosses ReadTransitionLosses(XmlReader reader, SrmSettings settings)
+            {
+                if (reader.IsStartElement(EL.losses))
+                {
+                    var staticMods = settings.PeptideSettings.Modifications.StaticModifications;
+                    MassType massType = settings.TransitionSettings.Prediction.FragmentMassType;
+
+                    reader.ReadStartElement();
+                    var listLosses = new List<TransitionLoss>();
+                    while (reader.IsStartElement(EL.neutral_loss))
+                    {
+                        string nameMod = reader.GetAttribute(ATTR.modification_name);
+                        if (string.IsNullOrEmpty(nameMod))
+                            listLosses.Add(new TransitionLoss(null, FragmentLoss.Deserialize(reader), massType));
+                        else
+                        {
+                            int indexLoss = reader.GetIntAttribute(ATTR.loss_index);
+                            int indexMod = staticMods.IndexOf(mod => Equals(nameMod, mod.Name));
+                            if (indexMod == -1)
+                                throw new InvalidDataException(string.Format("No modification named {0} was found in this document.", nameMod));
+                            StaticMod modLoss = staticMods[indexMod];
+                            if (!modLoss.HasLoss || indexLoss >= modLoss.Losses.Count)
+                                throw new InvalidDataException(string.Format("Invalid loss index {0} for modification {1}", indexLoss, nameMod));
+                            listLosses.Add(new TransitionLoss(modLoss, modLoss.Losses[indexLoss], massType));
+                        }
+                        reader.Read();
+                    }
+                    reader.ReadEndElement();
+
+                    return new TransitionLosses(listLosses, massType);
+                }
+                return null;
             }
 
             private static TransitionLibInfo ReadTransitionLibInfo(XmlReader reader)
@@ -1951,6 +1990,7 @@ namespace pwiz.Skyline.Model
             }
 
             WriteAnnotations(writer, nodeTransition.Annotations);
+            WriteTransitionLosses(writer, nodeTransition.Losses);
 
             if (nodeTransition.HasLibInfo)
             {
@@ -1979,6 +2019,30 @@ namespace pwiz.Skyline.Model
                 writer.WriteElementString(EL.declustering_potential,
                     deRegression.GetDeclustringPotential(precursorMz));
             }
+        }
+
+        private static void WriteTransitionLosses(XmlWriter writer, TransitionLosses losses)
+        {
+            if (losses == null)
+                return;
+            writer.WriteStartElement(EL.losses);
+            foreach (var loss in losses.Losses)
+            {
+                writer.WriteStartElement(EL.neutral_loss);
+                if (loss.PrecursorMod == null)
+                {
+                    loss.Loss.WriteXml(writer);
+                }
+                else
+                {
+                    writer.WriteAttribute(ATTR.modification_name, loss.PrecursorMod.Name);
+                    int indexLoss = loss.LossIndex;
+                    if (indexLoss != 0)
+                        writer.WriteAttribute(ATTR.loss_index, indexLoss);
+                }
+                writer.WriteEndElement();
+            }
+            writer.WriteEndElement();
         }
 
         private static void WriteTransitionChromInfo(XmlWriter writer, TransitionChromInfo chromInfo)

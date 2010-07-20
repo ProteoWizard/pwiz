@@ -74,7 +74,7 @@ namespace pwiz.Skyline.SettingsUI
 
             ShowLoss = false;
             // TODO: Implement handling of modifications with neutral loss
-//            if (heavy)
+            if (heavy)
                 btnLoss.Visible = false;
         }
 

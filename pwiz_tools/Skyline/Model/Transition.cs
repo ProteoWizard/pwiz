@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -33,15 +34,25 @@ namespace pwiz.Skyline.Model
 
     public class TransitionDocNode : DocNode
     {
-        public TransitionDocNode(Transition id, double massH, TransitionLibInfo libInfo)
-            : this(id, Annotations.EMPTY, massH, libInfo, null)
+        public TransitionDocNode(Transition id,
+                                 TransitionLosses losses,
+                                 double massH,
+                                 TransitionLibInfo libInfo)
+            : this(id, Annotations.EMPTY, losses, massH, libInfo, null)
         {
         }
 
-        public TransitionDocNode(Transition id, Annotations annotations, double massH,
-                TransitionLibInfo libInfo, Results<TransitionChromInfo> results)
+        public TransitionDocNode(Transition id,
+                                 Annotations annotations,
+                                 TransitionLosses losses,
+                                 double massH,
+                                 TransitionLibInfo libInfo,
+                                 Results<TransitionChromInfo> results)
             : base(id, annotations)
         {
+            Losses = losses;
+            if (losses != null)
+                massH -= losses.Mass;
             Mz = SequenceMassCalc.GetMZ(massH, id.Charge);
             LibInfo = libInfo;
             Results = results;
@@ -51,7 +62,43 @@ namespace pwiz.Skyline.Model
 
         public Transition Transition { get { return (Transition)Id; } }
 
+        public TransitionLossKey Key { get { return new TransitionLossKey(Transition, Losses); } }
+
         public double Mz { get; private set; }
+
+        public TransitionLosses Losses { get; private set; }
+
+        public bool HasLoss { get { return Losses != null; } }
+
+        public double LostMass { get { return HasLoss ? Losses.Mass : 0; } }
+
+        public bool IsLossPossible(int maxLossMods, IEnumerable<StaticMod> modsLossAvailable)
+        {
+            if (HasLoss)
+            {
+                var losses = Losses.Losses;
+                if (losses.Count > maxLossMods)
+                    return false;
+                foreach (var loss in losses)
+                {
+                    // If the same precursor mod exists, then it will also have the
+                    // loss in question, since modification equality depends on loss
+                    // equality also.
+                    if (!modsLossAvailable.Contains(loss.PrecursorMod))
+                        return false;
+                }
+            }
+            return true;
+        }
+
+        public string FragmentIonName
+        {
+            get
+            {
+                string ionName = Transition.FragmentIonName;
+                return (HasLoss ? string.Format("{0} - {1}", ionName, Math.Round(Losses.Mass, 1)) : ionName);
+            }
+        }
 
         public TransitionLibInfo LibInfo { get; private set; }
 
@@ -532,5 +579,44 @@ namespace pwiz.Skyline.Model
         }
 
         #endregion // object overrides
+    }
+
+    public sealed class TransitionLossKey
+    {
+        public TransitionLossKey(Transition transition, TransitionLosses losses)
+        {
+            Transition = transition;
+            Losses = losses;
+        }
+
+        public Transition Transition { get; private set; }
+        public TransitionLosses Losses { get; private set; }
+
+        #region object overrides
+
+        public bool Equals(TransitionLossKey other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(other.Transition, Transition) && Equals(other.Losses, Losses);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof (TransitionLossKey)) return false;
+            return Equals((TransitionLossKey) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (Transition.GetHashCode()*397) ^ (Losses != null ? Losses.GetHashCode() : 0);
+            }
+        }
+
+        #endregion
     }
 }

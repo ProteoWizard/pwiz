@@ -80,7 +80,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public IList<GridColumn> Columns
         {
             get { return _columns; }
-            set { _columns = MakeReadOnly(value); }
+            private set { _columns = MakeReadOnly(value); }
         }
 
         #region Implementation of IXmlSerializable

@@ -16,8 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Text;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Util;
 
@@ -142,9 +144,15 @@ namespace pwiz.Skyline.Controls.SeqNode
             Transition tran = nodeTran.Transition;
             string labelPrefix;
             if (tran.IsPrecursor())
+            {
                 labelPrefix = "precursor";
+                if (nodeTran.HasLoss)
+                    labelPrefix += string.Format(" [-{0}]", Math.Round(nodeTran.Losses.Mass, 1));
+            }
             else
-                labelPrefix = string.Format("{0} [{1}]", tran.AA, tran.FragmentIonName);
+            {
+                labelPrefix = string.Format("{0} [{1}]", tran.AA, nodeTran.FragmentIonName);
+            }
 
             if (!nodeTran.HasLibInfo)
             {
@@ -179,9 +187,26 @@ namespace pwiz.Skyline.Controls.SeqNode
             var table = new TableDesc();
             using (RenderTools rt = new RenderTools())
             {
-                table.AddDetailRow("Ion", nodeTran.Transition.IonType.ToString() + nodeTran.Transition.Ordinal, rt);
+                table.AddDetailRow("Ion", nodeTran.Transition.FragmentIonName, rt);
                 table.AddDetailRow("Charge", nodeTran.Transition.Charge.ToString(), rt);
                 table.AddDetailRow("Product m/z", string.Format("{0:F04}", nodeTran.Mz), rt);
+                if (nodeTran.HasLoss)
+                {
+                    // If there is only one loss, show its full description
+                    var losses = nodeTran.Losses;
+                    if (losses.Losses.Count == 1)
+                        table.AddDetailRow("Loss", losses.Losses[0].Loss.ToString(losses.MassType), rt);
+                    // Otherwise, just show the total mass for multiple losses
+                    // followed by individual losses
+                    else
+                    {
+                        table.AddDetailRow("Loss", string.Format("{0:F04}", nodeTran.Losses.Mass), rt);
+                        var sb = new StringBuilder();
+                        foreach (var loss in losses.Losses)
+                            sb.AppendLine(loss.Loss.ToString(losses.MassType));
+                        table.AddDetailRow("Losses", sb.ToString(), rt);
+                    }
+                }
                 if (nodeTran.HasLibInfo)
                 {
                     table.AddDetailRow("Library rank", nodeTran.LibInfo.Rank.ToString(), rt);

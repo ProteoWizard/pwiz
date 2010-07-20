@@ -181,7 +181,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public static string GetTitle(TransitionDocNode nodeTran)
         {
             var tran = nodeTran.Transition;
-            return string.Format("{0} - {1:F04}{2}", tran.FragmentIonName,
+            return string.Format("{0} - {1:F04}{2}", nodeTran.FragmentIonName,
                                  nodeTran.Mz, Transition.GetChargeIndicator(tran.Charge));            
         }
 

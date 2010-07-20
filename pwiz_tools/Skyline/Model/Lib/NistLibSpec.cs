@@ -616,7 +616,7 @@ namespace pwiz.Skyline.Model.Lib
         private static readonly Regex REGEX_COMMENT = new Regex(@"^Comment: ");
         private static readonly Regex REGEX_MODS = new Regex(@" Mods=([^ ]+) ");
         private static readonly Regex REGEX_TF_RATIO = new Regex(@" Tfratio=([^ ]+) ");
-        private static readonly Regex REGEX_SAMPLE = new Regex(@" Sample=(\d+)");
+        private static readonly Regex REGEX_SAMPLE = new Regex(@" Nreps=\d+/(\d+)");  // Observer spectrum count
         private static readonly char[] MAJOR_SEP = new[] {'/'};
         private static readonly char[] MINOR_SEP = new[] {','};
 

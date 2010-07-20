@@ -478,10 +478,11 @@ namespace pwiz.Skyline.Model
             foreach (TransitionDocNode nodeTran in nodeGroupMatching.Children)
             {
                 var transition = nodeTran.Transition;
+                var losses = nodeTran.Losses;
                 var tranNew = new Transition(tranGroup,
                     transition.IonType, transition.CleavageOffset, transition.Charge);
                 double massH = settings.GetFragmentMass(tranGroup.LabelType, explicitMods, tranNew);
-                listTrans.Add(new TransitionDocNode(tranNew, massH, null));
+                listTrans.Add(new TransitionDocNode(tranNew, losses, massH, null));
             }
             return listTrans.ToArray();
         }
@@ -1131,7 +1132,7 @@ namespace pwiz.Skyline.Model
             // Nothing to do, if no variable mods in the document
             if (mods.HasVariableModifications)
             {
-                // Enurate each amino acid in the sequence
+                // Enumerate each amino acid in the sequence
                 int len = Sequence.Length;
                 for (int i = 0; i < len; i++)
                 {
@@ -1152,7 +1153,7 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            // If not applicable modifications were found, return a single DocNode for the
+            // If no applicable modifications were found, return a single DocNode for the
             // peptide passed in
             if (listListMods == null)
                 yield break;
@@ -1160,8 +1161,8 @@ namespace pwiz.Skyline.Model
             int maxModCount = Math.Min(settings.PeptideSettings.Modifications.MaxVariableMods, listListMods.Count);
             for (int modCount = 1; modCount <= maxModCount; modCount++)
             {
-                var modeStateMachine = new VariableModStateMachine(nodePepUnmod, modCount, listListMods);
-                foreach (var nodePep in modeStateMachine.GetPeptideNodes())
+                var modStateMachine = new VariableModStateMachine(nodePepUnmod, modCount, listListMods);
+                foreach (var nodePep in modStateMachine.GetPeptideNodes())
                 {
                     if (filter.Accept(nodePep.Peptide, nodePep.ExplicitMods))
                         yield return nodePep;

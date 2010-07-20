@@ -312,22 +312,24 @@ namespace pwiz.Skyline.Model
             {
                 IList<DocNode> childrenNew = new List<DocNode>();
 
-                Dictionary<Identity, DocNode> mapIdToChild = CreateIdContentToChildMap();
+                // TODO: Use TransitionLossKey
+                Dictionary<TransitionLossKey, DocNode> mapIdToChild = CreateTransitionLossToChildMap();
                 foreach (TransitionDocNode nodeNew in TransitionGroup.GetTransitions(settingsNew, mods, precursorMz, libInfo, transitionRanks, true))
                 {
                     TransitionDocNode nodeTransition;
 
                     DocNode existing;
                     // Add values that existed before the change.
-                    if (mapIdToChild.TryGetValue(nodeNew.Transition, out existing))
+                    if (mapIdToChild.TryGetValue(new TransitionLossKey(nodeNew.Transition, nodeNew.Losses), out existing))
                     {
                         nodeTransition = (TransitionDocNode) existing;
                         if (diff.DiffTransitionProps)
                         {
                             var tran = nodeTransition.Transition;
+                            var losses = nodeTransition.Losses;
                             double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran);
                             var info = TransitionDocNode.GetLibInfo(tran, massH, transitionRanks);
-                            nodeTransition = new TransitionDocNode(tran, massH, info);
+                            nodeTransition = new TransitionDocNode(tran, losses, massH, info);
 
                             Helpers.AssignIfEquals(ref nodeTransition, (TransitionDocNode) existing);
                         }
@@ -355,35 +357,62 @@ namespace pwiz.Skyline.Model
                     }
                 }
             }
-            else if (diff.DiffTransitionProps)
+            else
             {
-                IList<DocNode> childrenNew = new List<DocNode>();
-
-                // Enumerate the nodes making necessary changes.
-                foreach (TransitionDocNode nodeTransition in Children)
+                if (diff.DiffTransitions && diff.SettingsOld != null)
                 {
-                    var tran = nodeTransition.Transition;
-                    var annotations = nodeTransition.Annotations;   // Don't lose annotations
-                    var results = nodeTransition.Results;           // Results changes happen later
-                    double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran);
-                    var info = TransitionDocNode.GetLibInfo(tran, massH, transitionRanks);
-                    var nodeNew = new TransitionDocNode(tran, annotations, massH, info, results);
+                    // If neutral loss modifications changed, remove all transitions with neutral
+                    // loss modifications which are no longer possible.
+                    var modsNew = settingsNew.PeptideSettings.Modifications;
+                    var modsLossNew = modsNew.NeutralLossModifications.ToArray();
+                    var modsOld = diff.SettingsOld.PeptideSettings.Modifications;
+                    var modsLossOld = modsOld.NeutralLossModifications.ToArray();
+                    if (modsNew.MaxNeutralLosses < modsOld.MaxNeutralLosses ||
+                            !ArrayUtil.EqualsDeep(modsLossNew, modsLossOld))
+                    {
+                        IList<DocNode> childrenNew = new List<DocNode>();
+                        foreach (TransitionDocNode nodeTransition in nodeResult.Children)
+                        {
+                            if (nodeTransition.IsLossPossible(modsNew.MaxNeutralLosses, modsLossNew))
+                                childrenNew.Add(nodeTransition);
+                        }
 
-                    Helpers.AssignIfEquals(ref nodeNew, nodeTransition);
-                    childrenNew.Add(nodeNew);
+                        nodeResult = (TransitionGroupDocNode)nodeResult.ChangeChildrenChecked(childrenNew);
+                    }
                 }
 
-                // Change as little as possible
-                if (!ArrayUtil.ReferencesEqual(childrenNew, Children))
-                    nodeResult = new TransitionGroupDocNode(this, precursorMz, relativeRT, childrenNew);
-                else if (precursorMz != PrecursorMz || relativeRT != RelativeRT)
-                    nodeResult = new TransitionGroupDocNode(this, precursorMz, relativeRT, Children);
-                else
-                    nodeResult = this;
-            }
-            else if (diff.DiffTransitionGroupProps)
-            {
-                nodeResult = new TransitionGroupDocNode(this, precursorMz, relativeRT, Children);
+                if (diff.DiffTransitionProps)
+                {
+                    IList<DocNode> childrenNew = new List<DocNode>();
+
+                    // Enumerate the nodes making necessary changes.
+                    foreach (TransitionDocNode nodeTransition in Children)
+                    {
+                        var tran = nodeTransition.Transition;
+                        var losses = nodeTransition.Losses;
+                        MassType massType = settingsNew.TransitionSettings.Prediction.FragmentMassType;
+                        if (losses != null && massType != losses.MassType)
+                            losses = losses.ChangeMassType(massType);
+                        var annotations = nodeTransition.Annotations;   // Don't lose annotations
+                        var results = nodeTransition.Results;           // Results changes happen later
+                        double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran);
+                        var info = TransitionDocNode.GetLibInfo(tran, massH, transitionRanks);
+                        var nodeNew = new TransitionDocNode(tran, annotations, losses, massH, info, results);
+
+                        Helpers.AssignIfEquals(ref nodeNew, nodeTransition);
+                        childrenNew.Add(nodeNew);
+                    }
+
+                    // Change as little as possible
+                    if (!ArrayUtil.ReferencesEqual(childrenNew, Children))
+                        nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, relativeRT, childrenNew);
+                    else if (precursorMz != PrecursorMz || relativeRT != RelativeRT)
+                        nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, relativeRT, Children);
+                }
+                else if (diff.DiffTransitionGroupProps)
+                {
+                    nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, relativeRT, Children);
+                }
             }
 
             // One final check for a library info change
@@ -395,6 +424,14 @@ namespace pwiz.Skyline.Model
                 nodeResult = nodeResult.UpdateResults(settingsNew, diff, this);
 
             return nodeResult;
+        }
+
+        private Dictionary<TransitionLossKey, DocNode> CreateTransitionLossToChildMap()
+        {
+            var map = new Dictionary<TransitionLossKey, DocNode>();
+            foreach (TransitionDocNode nodeTran in Children)
+                map.Add(new TransitionLossKey(nodeTran.Transition, nodeTran.Losses), nodeTran);
+            return map;
         }
 
         private TransitionGroupDocNode UpdateResults(SrmSettings settingsNew, SrmSettingsDiff diff,
@@ -1214,8 +1251,9 @@ namespace pwiz.Skyline.Model
                 {
                     var tranMatch = nodeTran.Transition;
                     var tran = new Transition(TransitionGroup, tranMatch.IonType, tranMatch.CleavageOffset, tranMatch.Charge);
+                    var losses = nodeTran.Losses;
                     // m/z and library info calculated later
-                    childrenNew.Add(new TransitionDocNode(tran, 0, null));
+                    childrenNew.Add(new TransitionDocNode(tran, losses, 0, null));
                 }
                 nodeResult = (TransitionGroupDocNode)nodeResult.ChangeChildrenChecked(childrenNew);
             }
@@ -1390,7 +1428,10 @@ namespace pwiz.Skyline.Model
             int diffCharge = tran1.Charge - tran2.Charge;
             if (diffCharge != 0)
                 return diffCharge;
-            return tran1.CleavageOffset - tran2.CleavageOffset;
+            int diffOffset = tran1.CleavageOffset - tran2.CleavageOffset;
+            if (diffOffset != 0)
+                return diffOffset;
+            return Comparer<double>.Default.Compare(node1.LostMass, node2.LostMass);
         }
 
         public IEnumerable<TransitionDocNode> GetTransitions(SrmSettings settings, ExplicitMods mods, double precursorMz,
@@ -1403,9 +1444,21 @@ namespace pwiz.Skyline.Model
             var calcPredict = settings.GetFragmentCalc(LabelType, mods);
 
             string sequence = Peptide.Sequence;
+
+            MassType massType = settings.TransitionSettings.Prediction.FragmentMassType;
+            var pepMods = settings.PeptideSettings.Modifications;
+            var potentialLosses = CalcPotentialLosses(sequence, pepMods, mods,
+                massType);
+            // Return the precursor ion
             double precursorMassPredict = calcPredict.GetPrecursorFragmentMass(sequence);
             if (!useFilter)
-                yield return CreateTransitionNode(precursorMassPredict, transitionRanks);
+            {
+                foreach (var nodeTran in CreateTransitionNodes(precursorMassPredict,
+                    transitionRanks, massType, potentialLosses))
+                {
+                    yield return nodeTran;                    
+                }
+            }
 
             double[,] massesPredict = calcPredict.GetFragmentIonMasses(sequence);
             int len = massesPredict.GetLength(1);
@@ -1461,7 +1514,7 @@ namespace pwiz.Skyline.Model
             {
                 foreach (int charge in charges)
                 {
-                    // Product ion charge can never be lower than precursor.
+                    // Precursor charge can never be lower than product ion charge.
                     if (PrecursorCharge < charge)
                         continue;
 
@@ -1479,6 +1532,7 @@ namespace pwiz.Skyline.Model
                         // Get the predicted m/z that would be used in the transition
                         double massH = massesPredict[(int) type, i];
                         double ionMz = SequenceMassCalc.GetMZ(massH, charge);
+
                         // Make sure the fragment m/z value falls within the valid instrument range.
                         // CONSIDER: This means that a heavy transition might excede the instrument
                         //           range where a light one is accepted, leading to a disparity
@@ -1489,12 +1543,18 @@ namespace pwiz.Skyline.Model
                         if (pick == TransitionLibraryPick.all)
                         {
                             if (!useFilter)
-                                yield return CreateTransitionNode(type, i, charge, massH, transitionRanks);
+                            {
+                                foreach (var nodeTran in CreateTransitionNodes(type, i, charge, massH,
+                                    transitionRanks, massType, potentialLosses))
+                                {
+                                    yield return nodeTran;
+                                }
+                            }
                             else
                             {
                                 LibraryRankedSpectrumInfo.RankedMI rmi;
                                 if (transitionRanks.TryGetValue(ionMz, out rmi) && rmi.IonType == type && rmi.Charge == charge)
-                                    yield return CreateTransitionNode(type, i, charge, massH, transitionRanks);
+                                    yield return CreateTransitionNode(type, i, charge, massH, null, transitionRanks);
                             }
                         }
                         else if ((start <= i && i <= end) ||
@@ -1502,27 +1562,319 @@ namespace pwiz.Skyline.Model
                             (gluasp && IsGluAsp(sequence, i)))
                         {
                             if (pick == TransitionLibraryPick.none)
-                                yield return CreateTransitionNode(type, i, charge, massH, transitionRanks);
+                                yield return CreateTransitionNode(type, i, charge, massH, null, transitionRanks);
                             else if (transitionRanks.ContainsKey(ionMz))
-                                yield return CreateTransitionNode(type, i, charge, massH, transitionRanks);
+                                yield return CreateTransitionNode(type, i, charge, massH, null, transitionRanks);
                         }
                     }
                 }
             }
         }
 
-        private TransitionDocNode CreateTransitionNode(double precursorMassH, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks)
+        private static IList<IList<ExplicitLoss>> CalcPotentialLosses(string sequence,
+            PeptideModifications pepMods, ExplicitMods mods, MassType massType)
+        {
+            // First build a list of the amino acids in this peptide which can be experience loss,
+            // and the losses which apply to them.
+            IList<KeyValuePair<IList<TransitionLoss>, int>> listIndexedListLosses = null;
+
+            // Add losses for any explicit static modifications
+            bool explicitStatic = (mods != null && mods.StaticModifications != null);
+            bool explicitLosses = (explicitStatic && mods.HasNeutralLosses);
+
+            // Add the losses for the implicit modifications, if there
+            // are no explicit static modifications, or if explicit static
+            // modifications exist, but they are for variable modifications.
+            bool implicitAllowed = (!explicitStatic || mods.IsVariableStaticMods);
+            bool implicitLosses = (implicitAllowed && pepMods.HasNeutralLosses);
+
+            if (explicitLosses || implicitLosses)
+            {
+                // Enumerate each amino acid in the sequence
+                int len = sequence.Length;
+                for (int i = 0; i < len; i++)
+                {
+                    char aa = sequence[i];
+                    if (implicitLosses)
+                    {
+                        // Test implicit modifications to see if they apply
+                        foreach (var mod in pepMods.NeutralLossModifications)
+                        {
+                            // If the modification does apply, store it in the list
+                            if (mod.IsLoss(aa, i, len))
+                                listIndexedListLosses = AddNeutralLosses(i, mod, massType, listIndexedListLosses);
+                        }
+                    }
+                    if (explicitLosses)
+                    {
+                        foreach (var mod in mods.NeutralLossModifications)
+                        {
+                            if (mod.IndexAA == i)
+                            {
+                                listIndexedListLosses = AddNeutralLosses(mod.IndexAA, mod.Modification,
+                                    massType, listIndexedListLosses);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // If no losses were found, return null
+            if (listIndexedListLosses == null)
+                return null;
+
+            var listListLosses = new List<IList<ExplicitLoss>>();
+            int maxLossCount = Math.Min(pepMods.MaxNeutralLosses, listIndexedListLosses.Count);
+            for (int lossCount = 1; lossCount <= maxLossCount; lossCount++)
+            {
+                var lossStateMachine = new NeutralLossStateMachine(lossCount, listIndexedListLosses);
+
+                foreach (var listLosses in lossStateMachine.GetLosses())
+                    listListLosses.Add(listLosses);
+            }
+            return listListLosses;
+        }
+
+        private static IList<KeyValuePair<IList<TransitionLoss>, int>> AddNeutralLosses(int indexAA,
+            StaticMod mod, MassType massType, IList<KeyValuePair<IList<TransitionLoss>, int>> listListMods)
+        {
+            if (listListMods == null)
+                listListMods = new List<KeyValuePair<IList<TransitionLoss>, int>>();
+            if (listListMods.Count == 0 || listListMods[listListMods.Count - 1].Value != indexAA)
+                listListMods.Add(new KeyValuePair<IList<TransitionLoss>, int>(new List<TransitionLoss>(), indexAA));
+            foreach (var loss in mod.Losses)
+                listListMods[listListMods.Count - 1].Key.Add(new TransitionLoss(mod, loss, massType));
+            return listListMods;
+        }
+
+        /// <summary>
+        /// State machine that provides an IEnumerable{IList{ExplicitMod}} for
+        /// enumerating all potential neutral loss states for a peptidw, given its sequence, 
+        /// number of possible losses, and the set of possible losses.
+        /// </summary>
+        private sealed class NeutralLossStateMachine
+        {
+            private readonly int _lossCount;
+            private readonly IList<KeyValuePair<IList<TransitionLoss>, int>> _listListLosses;
+
+            /// <summary>
+            /// Contains indexes into _listListLosses specifying amino acids currently
+            /// modified.
+            /// </summary>
+            private readonly int[] _arrayLossIndexes1;
+
+            /// <summary>
+            /// Contains indexes into the static mod lists of _listListLosses specifying
+            /// which modification is currently applied to the amino acid specified
+            /// by _arrayLossIndexes1.
+            /// </summary>
+            private readonly int[] _arrayLossIndexes2;
+
+            /// <summary>
+            /// Index to the currently active elements in _arrayModIndexes arrays.
+            /// </summary>
+            private int _cursorIndex;
+
+            public NeutralLossStateMachine(int lossCount,
+                IList<KeyValuePair<IList<TransitionLoss>, int>> listListMods)
+            {
+                _lossCount = lossCount;
+                _listListLosses = listListMods;
+
+                // Fill the mod indexes list with the first possible state
+                _arrayLossIndexes1 = new int[_lossCount];
+                for (int i = 0; i < lossCount; i++)
+                    _arrayLossIndexes1[i] = i;
+                // Second set of indexes start all zero initialized
+                _arrayLossIndexes2 = new int[_lossCount];
+                // Set the cursor to the last modification
+                _cursorIndex = lossCount - 1;
+            }
+
+            public IEnumerable<IList<ExplicitLoss>> GetLosses()
+            {
+                while (_cursorIndex >= 0)
+                {
+                    yield return CurrentLosses;
+
+                    if (!ShiftCurrentLoss())
+                    {
+                        // Attempt to advance any loss to the left of the current loss
+                        do
+                        {
+                            _cursorIndex--;
+                        }
+                        while (_cursorIndex >= 0 && !ShiftCurrentLoss());
+
+                        // If a loss was successfully advanced, reset all losses to its right
+                        // and start over with them.
+                        if (_cursorIndex >= 0)
+                        {
+                            for (int i = 1; i < _lossCount - _cursorIndex; i++)
+                            {
+                                _arrayLossIndexes1[_cursorIndex + i] = _arrayLossIndexes1[_cursorIndex] + i;
+                                _arrayLossIndexes2[_cursorIndex + i] = 0;
+                            }
+                            _cursorIndex = _lossCount - 1;
+                        }
+                    }
+                }
+            }
+
+            private bool ShiftCurrentLoss()
+            {
+                int modIndex = _arrayLossIndexes1[_cursorIndex];
+                if (_arrayLossIndexes2[_cursorIndex] < _listListLosses[modIndex].Key.Count - 1)
+                {
+                    // Shift the current amino acid through all possible loss states
+                    _arrayLossIndexes2[_cursorIndex]++;
+                }
+                else if (modIndex < _listListLosses.Count - _lossCount + _cursorIndex)
+                {
+                    // Shift the current loss through all possible positions
+                    _arrayLossIndexes1[_cursorIndex]++;
+                    _arrayLossIndexes2[_cursorIndex] = 0;
+                }
+                else
+                {
+                    // Current loss has seen all possible states
+                    return false;
+                }
+                return true;
+            }
+
+            private IList<ExplicitLoss> CurrentLosses
+            {
+                get
+                {
+                    var explicitLosses = new ExplicitLoss[_lossCount];
+                    for (int i = 0; i < _lossCount; i++)
+                    {
+                        var pair = _listListLosses[_arrayLossIndexes1[i]];
+                        var loss = pair.Key[_arrayLossIndexes2[i]];
+
+                        explicitLosses[i] = new ExplicitLoss(pair.Value, loss);
+                    }
+                    return explicitLosses;
+                }
+            }
+        }
+
+        private IEnumerable<TransitionDocNode>
+            CreateTransitionNodes(double precursorMassH,
+                                  IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks,
+                                  MassType massType,
+                                  IList<IList<ExplicitLoss>> potentialLosses)
+        {
+            foreach (var losses in CalcTransitionLosses(IonType.precursor, 0, massType, potentialLosses))
+                yield return CreateTransitionNode(precursorMassH, losses, transitionRanks);
+        }
+
+        private TransitionDocNode CreateTransitionNode(double precursorMassH, TransitionLosses losses,
+            IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks)
         {
             Transition transition = new Transition(this);
             var info = TransitionDocNode.GetLibInfo(transition, precursorMassH, transitionRanks);
-            return new TransitionDocNode(transition, precursorMassH, info);
+            return new TransitionDocNode(transition, losses, precursorMassH, info);
         }
 
-        private TransitionDocNode CreateTransitionNode(IonType type, int cleavageOffset, int charge, double massH, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks)
+        private IEnumerable<TransitionDocNode>
+            CreateTransitionNodes(IonType type,
+                                  int cleavageOffset,
+                                  int charge,
+                                  double massH,
+                                  IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks,
+                                  MassType massType,
+                                  IList<IList<ExplicitLoss>> potentialLosses)
+        {
+            foreach (var losses in CalcTransitionLosses(type, cleavageOffset, massType, potentialLosses))
+                yield return CreateTransitionNode(type, cleavageOffset, charge, massH, losses, transitionRanks);
+        }
+
+        /// <summary>
+        /// Calculate all possible transition losses that apply to a transition with
+        /// a specific type and cleavage offset, given all of the potential loss permutations
+        /// for the precursor.
+        /// </summary>
+        private static IEnumerable<TransitionLosses> CalcTransitionLosses(IonType type, int cleavageOffset,
+            MassType massType, IEnumerable<IList<ExplicitLoss>> potentialLosses)
+        {
+            // First return no losses
+            yield return null;
+
+            if (potentialLosses != null)
+            {
+                // Try to avoid allocating a whole list for this, as in many cases
+                // there should be only one loss
+                TransitionLosses firstLosses = null;
+                List<TransitionLosses> allLosses = null;
+                foreach (var losses in potentialLosses)
+                {
+                    var tranLosses = CalcTransitionLosses(type, cleavageOffset, massType, losses);
+                    if (tranLosses == null ||
+                            (firstLosses != null && firstLosses.Mass == tranLosses.Mass) ||
+                            (allLosses != null && allLosses.Contains(l => l.Mass == tranLosses.Mass)))
+                        continue;
+
+                    if (allLosses == null)
+                    {
+                        if (firstLosses == null)
+                            firstLosses = tranLosses;
+                        else
+                        {
+                            allLosses = new List<TransitionLosses> { firstLosses };
+                            firstLosses = null;
+                        }
+                    }
+                    if (allLosses != null)
+                        allLosses.Add(tranLosses);
+                }
+
+                // Handle the single losses case first
+                if (firstLosses != null)
+                    yield return firstLosses;
+                else if (allLosses != null)
+                {
+                    // If more then one set of transition losses return them sorted by mass
+                    allLosses.Sort((l1, l2) => Comparer<double>.Default.Compare(l1.Mass, l2.Mass));
+                    foreach (var tranLosses in allLosses)
+                        yield return tranLosses;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Calculate the transition losses that apply to a transition with
+        /// a specific type and cleavage offset for a single set of explicit losses.
+        /// </summary>
+        private static TransitionLosses CalcTransitionLosses(IonType type, int cleavageOffset,
+            MassType massType, IEnumerable<ExplicitLoss> losses)
+        {
+            List<TransitionLoss> listLosses = null;
+            foreach (var loss in losses)
+            {
+                if (!Transition.IsPrecursor(type))
+                {
+                    if (Transition.IsNTerminal(type) && loss.IndexAA > cleavageOffset)
+                        continue;
+                    if (Transition.IsCTerminal(type) && loss.IndexAA <= cleavageOffset)
+                        continue;
+                }
+                if (listLosses == null)
+                    listLosses = new List<TransitionLoss>();
+                listLosses.Add(loss.TransitionLoss);
+            }
+            if (listLosses == null)
+                return null;
+            return  new TransitionLosses(listLosses, massType);
+        }
+
+        private TransitionDocNode CreateTransitionNode(IonType type, int cleavageOffset, int charge, double massH,
+            TransitionLosses losses, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks)
         {
             Transition transition = new Transition(this, type, cleavageOffset, charge);
             var info = TransitionDocNode.GetLibInfo(transition, massH, transitionRanks);
-            return new TransitionDocNode(transition, massH, info);
+            return new TransitionDocNode(transition, losses, massH, info);
         }
 
         public void GetLibraryInfo(SrmSettings settings, ExplicitMods mods, bool useFilter,

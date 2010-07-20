@@ -232,7 +232,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
 
             // Not enough useful information in this tip yet
-            public bool HasTip { get { return false; } }
+            public bool HasTip { get { return _nodeTran.HasLoss; } }
 
             public Size RenderTip(Graphics g, Size sizeMax, bool draw)
             {
@@ -262,7 +262,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             nodePep = nodePep.ChangeSettings(DocSettings, SrmSettingsDiff.PROPS);
             nodeGroup = (TransitionGroupDocNode) nodePep.Children[iGroup];
             listChildrenNew = new List<DocNode>(nodeGroup.Children);
-            MergeChosen(listChildrenNew, useFilter);
+            MergeChosen(listChildrenNew, useFilter, node => ((TransitionDocNode)node).Key);
             return listChildrenNew;
         }
 

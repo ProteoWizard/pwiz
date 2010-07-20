@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Model.Results
         public IList<PeptideLabelRatio> LabelRatios
         {
             get { return _labelRatios; }
-            set { _labelRatios = MakeReadOnly(value); }
+            private set { _labelRatios = MakeReadOnly(value); }
         }
 
         #region object overrides
@@ -184,13 +184,13 @@ namespace pwiz.Skyline.Model.Results
         public IList<float?> Ratios
         {
             get { return _ratios; }
-            set { _ratios = MakeReadOnly(value); }
+            private set { _ratios = MakeReadOnly(value); }
         }
         public float? RatioStdev { get { return _ratioStdevs[0]; } }
         public IList<float?> RatioStdevs
         {
             get { return _ratioStdevs; }
-            set { _ratioStdevs = MakeReadOnly(value); }
+            private set { _ratioStdevs = MakeReadOnly(value); }
         }
         public float? LibraryDotProduct { get; private set; }
         public Annotations Annotations { get; private set; }
@@ -329,7 +329,7 @@ namespace pwiz.Skyline.Model.Results
         public IList<float?> Ratios
         {
             get { return _ratios; }
-            set { _ratios = MakeReadOnly(value); }
+            private set { _ratios = MakeReadOnly(value); }
         }
         public float? Ratio { get { return _ratios[0]; } }
 
