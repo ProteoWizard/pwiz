@@ -16,16 +16,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.SettingsUI;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -203,15 +200,6 @@ namespace pwiz.SkylineTestFunctional
         {
             Assert.AreEqual(((TransitionGroupDocNode) nodePep1.Children[index1]).PrecursorMz,
                             ((TransitionGroupDocNode) nodePep2.Children[index2]).PrecursorMz + deltaMass, tolerance);
-        }
-
-        private static void SetStaticModifications(Func<IList<string>, IList<string>> changeMods)
-        {
-            RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, dlg =>
-            {
-                dlg.PickedStaticMods = changeMods(dlg.PickedStaticMods).ToArray();
-                dlg.OkDialog();
-            });
         }
     }
 }

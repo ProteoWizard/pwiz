@@ -148,7 +148,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private IEnumerable<FragmentLoss> Losses
+        public IEnumerable<FragmentLoss> Losses
         {
             get
             {
@@ -588,5 +588,20 @@ namespace pwiz.Skyline.SettingsUI
             tbbEditLoss.Enabled = enable;
             tbbDeleteLoss.Enabled = enable;
         }
+
+        #region Functional test support
+
+        public int LossSelectedIndex
+        {
+            get { return listNeutralLosses.SelectedIndex; }
+            set { listNeutralLosses.SelectedIndex = value; }
+        }
+
+        public string GetLossText(int indexLoss)
+        {
+            return listNeutralLosses.Items[indexLoss].ToString();
+        }
+
+        #endregion
     }
 }

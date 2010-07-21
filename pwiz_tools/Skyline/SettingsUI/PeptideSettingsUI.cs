@@ -624,6 +624,18 @@ namespace pwiz.Skyline.SettingsUI
             set { _driverLabelType.SelectedName = value; }
         }
 
+        public int MaxVariableMods
+        {
+            get { return Convert.ToInt32(textMaxVariableMods.Text); }
+            set { textMaxVariableMods.Text = value.ToString(); }
+        }
+
+        public int MaxNeutralLosses
+        {
+            get { return Convert.ToInt32(textMaxNeutralLosses.Text); }
+            set { textMaxNeutralLosses.Text = value.ToString(); }
+        }
+
         public void LimitPeptides(String peptidesPerProtein, String rankBy)
         {
             comboRank.SelectedIndex = comboRank.FindString(rankBy);

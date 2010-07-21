@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Windows.Forms;
@@ -26,7 +27,9 @@ using Ionic.Zip;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 
 namespace pwiz.SkylineTestFunctional
 {
@@ -271,6 +274,65 @@ namespace pwiz.SkylineTestFunctional
         }
 
         protected abstract void DoTest();
+
+        #region Modification helpers
+
+        public static PeptideSettingsUI ShowPeptideSettings()
+        {
+            return ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+        }
+
+        public static EditListDlg<SettingsListBase<StaticMod>, StaticMod> ShowEditStaticModsDlg(PeptideSettingsUI peptideSettingsUI)
+        {
+            return ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(peptideSettingsUI.EditStaticMods);
+        }
+
+        public static EditListDlg<SettingsListBase<StaticMod>, StaticMod> ShowEditHeavyModsDlg(PeptideSettingsUI peptideSettingsUI)
+        {
+            return ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(peptideSettingsUI.EditHeavyMods);
+        }
+
+        public static EditStaticModDlg ShowAddModDlg(EditListDlg<SettingsListBase<StaticMod>, StaticMod> editModsDlg)
+        {
+            return ShowDialog<EditStaticModDlg>(editModsDlg.AddItem);
+        }
+
+        public static void AddStaticMod(StaticMod mod, PeptideSettingsUI peptideSettingsUI)
+        {
+            var editStaticModsDlg = ShowEditStaticModsDlg(peptideSettingsUI);
+            AddMod(mod, editStaticModsDlg);
+        }
+
+        public static void AddHeavyMod(StaticMod mod, PeptideSettingsUI peptideSettingsUI)
+        {
+            var editStaticModsDlg = ShowEditHeavyModsDlg(peptideSettingsUI);
+            AddMod(mod, editStaticModsDlg);
+        }
+
+        private static void AddMod(StaticMod mod, EditListDlg<SettingsListBase<StaticMod>, StaticMod> editModsDlg)
+        {
+            var addStaticModDlg = ShowAddModDlg(editModsDlg);
+            RunUI(() =>
+            {
+                addStaticModDlg.Modification = mod;
+                addStaticModDlg.OkDialog();
+            });
+            WaitForClosedForm(addStaticModDlg);
+
+            RunUI(editModsDlg.OkDialog);
+            WaitForClosedForm(editModsDlg);
+        }
+
+        public static void SetStaticModifications(Func<IList<string>, IList<string>> changeMods)
+        {
+            RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, dlg =>
+            {
+                dlg.PickedStaticMods = changeMods(dlg.PickedStaticMods).ToArray();
+                dlg.OkDialog();
+            });
+        }
+
+        #endregion
     }
 
     public static class ExtensionTestContext

@@ -35,6 +35,11 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private string _formula;
 
+        public FragmentLoss(string formula)
+            : this(formula, null, null)
+        {            
+        }
+
         public FragmentLoss(string formula, double? monoisotopicMass, double? averageMass)
         {
             MonoisotopicMass = monoisotopicMass ?? 0;

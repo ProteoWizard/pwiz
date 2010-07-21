@@ -145,9 +145,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             string labelPrefix;
             if (tran.IsPrecursor())
             {
-                labelPrefix = "precursor";
-                if (nodeTran.HasLoss)
-                    labelPrefix += string.Format(" [-{0}]", Math.Round(nodeTran.Losses.Mass, 1));
+                labelPrefix = nodeTran.FragmentIonName;
             }
             else
             {

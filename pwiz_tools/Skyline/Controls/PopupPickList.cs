@@ -471,7 +471,7 @@ namespace pwiz.Skyline.Controls
                 ToggleItem(i);
         }
 
-        private void ToggleItem(int iChange)
+        public void ToggleItem(int iChange)
         {
             SetItemChecked(iChange, !GetItemChecked(iChange));
             pickListMulti.Invalidate(pickListMulti.GetItemRectangle(iChange));

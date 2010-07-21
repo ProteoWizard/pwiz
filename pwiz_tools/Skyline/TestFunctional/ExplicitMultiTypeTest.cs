@@ -277,52 +277,6 @@ namespace pwiz.SkylineTestFunctional
                 ((TransitionGroupDocNode)nodePep2.Children[index2]).PrecursorMz);
         }
 
-        private static PeptideSettingsUI ShowPeptideSettings()
-        {
-            return ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-        }
-
-        private static EditListDlg<SettingsListBase<StaticMod>, StaticMod> ShowEditStaticModsDlg(PeptideSettingsUI peptideSettingsUI)
-        {
-            return ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(peptideSettingsUI.EditStaticMods);
-        }
-
-        private static EditListDlg<SettingsListBase<StaticMod>, StaticMod> ShowEditHeavyModsDlg(PeptideSettingsUI peptideSettingsUI)
-        {
-            return ShowDialog<EditListDlg<SettingsListBase<StaticMod>, StaticMod>>(peptideSettingsUI.EditHeavyMods);
-        }
-
-        private static EditStaticModDlg ShowAddModDlg(EditListDlg<SettingsListBase<StaticMod>, StaticMod> editModsDlg)
-        {
-            return ShowDialog<EditStaticModDlg>(editModsDlg.AddItem);
-        }
-
-        private static void AddStaticMod(StaticMod mod, PeptideSettingsUI peptideSettingsUI)
-        {
-            var editStaticModsDlg = ShowEditStaticModsDlg(peptideSettingsUI);
-            AddMod(mod, editStaticModsDlg);
-        }
-
-        private static void AddHeavyMod(StaticMod mod, PeptideSettingsUI peptideSettingsUI)
-        {
-            var editStaticModsDlg = ShowEditHeavyModsDlg(peptideSettingsUI);
-            AddMod(mod, editStaticModsDlg);
-        }
-
-        private static void AddMod(StaticMod mod, EditListDlg<SettingsListBase<StaticMod>, StaticMod> editModsDlg)
-        {
-            var addStaticModDlg = ShowAddModDlg(editModsDlg);
-            RunUI(() =>
-            {
-                addStaticModDlg.Modification = mod;
-                addStaticModDlg.OkDialog();
-            });
-            WaitForClosedForm(addStaticModDlg);
-
-            RunUI(editModsDlg.OkDialog);
-            WaitForClosedForm(editModsDlg);            
-        }
-
         private static EditPepModsDlg ShowModifyPeptide()
         {
             return ShowDialog<EditPepModsDlg>(SkylineWindow.ModifyPeptide);

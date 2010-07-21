@@ -18,6 +18,8 @@ IF EXIST Test\bin rmdir /s /q Test\bin
 IF EXIST Test\obj rmdir /s /q Test\obj
 IF EXIST TestFunctional\bin rmdir /s /q TestFunctional\bin
 IF EXIST TestFunctional\obj rmdir /s /q TestFunctional\obj
+IF EXIST TestTutorial\bin rmdir /s /q TestTutorial\bin
+IF EXIST TestTutorial\obj rmdir /s /q TestTutorial\obj
 IF EXIST TestResults rmdir /s /q TestResults
 IF EXIST ..\Shared\ProteomeDb\bin rmdir /s /q ..\Shared\ProteomeDb\bin
 IF EXIST ..\Shared\ProteomeDb\obj rmdir /s /q ..\Shared\ProteomeDb\obj

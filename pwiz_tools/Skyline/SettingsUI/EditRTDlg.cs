@@ -34,9 +34,6 @@ namespace pwiz.Skyline.SettingsUI
         private RetentionTimeRegression _regression;
         private readonly IEnumerable<RetentionTimeRegression> _existing;
         private RetentionTimeStatistics _statistics;
-        private bool _clickedOk;
-
-        private readonly MessageBoxHelper _helper;
 
         public EditRTDlg(IEnumerable<RetentionTimeRegression> existing)
         {
@@ -48,8 +45,6 @@ namespace pwiz.Skyline.SettingsUI
 
             foreach (string item in RetentionTimeRegression.GetRetentionScoreCalcNames())
                 comboCalculator.Items.Add(item);
-
-            _helper = new MessageBoxHelper(this);
 
             ShowPeptides(Settings.Default.EditRTVisible);
         }
@@ -91,62 +86,59 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        protected override void OnClosing(CancelEventArgs e)
+        public void OkDialog()
         {
-            if (_clickedOk)
+            // TODO: Remove this
+            var e = new CancelEventArgs();
+            var helper = new MessageBoxHelper(this);
+
+            string name;
+            if (!helper.ValidateNameTextBox(e, textName, out name))
+                return;
+
+            double slope;
+            if (!helper.ValidateDecimalTextBox(e, textSlope, out slope))
+                return;
+
+            double intercept;
+            if (!helper.ValidateDecimalTextBox(e, textIntercept, out intercept))
+                return;
+
+            double window;
+            if (!helper.ValidateDecimalTextBox(e, textTimeWindow, out window))
+                return;
+
+            if (window <= 0)
             {
-                _clickedOk = false; // Reset in case of failure.
-
-                string name;
-                if (!_helper.ValidateNameTextBox(e, textName, out name))
-                    return;
-
-                double slope;
-                if (!_helper.ValidateDecimalTextBox(e, textSlope, out slope))
-                    return;
-
-                double intercept;
-                if (!_helper.ValidateDecimalTextBox(e, textIntercept, out intercept))
-                    return;
-
-                double window;
-                if (!_helper.ValidateDecimalTextBox(e, textTimeWindow, out window))
-                    return;
-
-                if (window <= 0)
-                {
-                    _helper.ShowTextBoxError(textTimeWindow, "{0} must be greater than 0.");
-                    e.Cancel = true;
-                    return;
-                }
-
-                if (comboCalculator.SelectedIndex == -1)
-                {
-                    MessageBox.Show(this, "Retention time prediction requires a calculator algorithm.", Program.Name);
-                    comboCalculator.Focus();
-                    e.Cancel = true;
-                    return;
-                }
-                string calculator = comboCalculator.SelectedItem.ToString();
-
-                var listPeptides = new List<MeasuredRetentionTime>();
-                if (!ValidatePeptides(e, listPeptides))
-                    return;
-
-                RetentionTimeRegression regression =
-                    new RetentionTimeRegression(name, calculator, slope, intercept, window, listPeptides);
-
-                if (_regression == null && _existing.Contains(regression))
-                {
-                    _helper.ShowTextBoxError(textName, "The retention time regression '{0}' already exists.", name);
-                    e.Cancel = true;
-                    return;
-                }
-
-                _regression = regression;
+                helper.ShowTextBoxError(textTimeWindow, "{0} must be greater than 0.");
+                return;
             }
 
-            base.OnClosing(e);
+            if (comboCalculator.SelectedIndex == -1)
+            {
+                MessageBox.Show(this, "Retention time prediction requires a calculator algorithm.", Program.Name);
+                comboCalculator.Focus();
+                return;
+            }
+            string calculator = comboCalculator.SelectedItem.ToString();
+
+            var listPeptides = new List<MeasuredRetentionTime>();
+            if (!ValidatePeptides(e, listPeptides))
+                return;
+
+            RetentionTimeRegression regression =
+                new RetentionTimeRegression(name, calculator, slope, intercept, window, listPeptides);
+
+            if (_regression == null && _existing.Contains(regression))
+            {
+                helper.ShowTextBoxError(textName, "The retention time regression '{0}' already exists.", name);
+                e.Cancel = true;
+                return;
+            }
+
+            _regression = regression;
+
+            DialogResult = DialogResult.OK;
         }
 
         private bool ValidatePeptides(CancelEventArgs e, ICollection<MeasuredRetentionTime> listPeptides)
@@ -412,7 +404,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            _clickedOk = true;
+            OkDialog();
         }
 
         private void labelRValue_Click(object sender, EventArgs e)
@@ -422,11 +414,6 @@ namespace pwiz.Skyline.SettingsUI
                 RTDetails dlg = new RTDetails(_statistics);
                 dlg.ShowDialog(this);
             }
-        }
-
-        public void OkDialog()
-        {
-            btnOk.PerformClick();
         }
     }
 }
