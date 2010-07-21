@@ -23,7 +23,6 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Windows.Forms;
-using Ionic.Zip;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
@@ -31,7 +30,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 
-namespace pwiz.SkylineTestFunctional
+namespace pwiz.SkylineTestUtil
 {
     public abstract class AbstractFunctionalTest
     {
@@ -44,29 +43,46 @@ namespace pwiz.SkylineTestFunctional
         ///information about and functionality for the current test run.
         ///</summary>
         public TestContext TestContext { get; set; }
-        private string _testFilesZip;
+        private string[] _testFilesZips;
         public string TestFilesZip
         {
-            get { return _testFilesZip; }
+            get { return _testFilesZips[0]; }
+            set { TestFilesZipPaths = new[] {value}; }
+        }
+
+        public string[] TestFilesZipPaths
+        {
+            get { return _testFilesZips; }
             set
             {
-                string zipPath = value;
-                if (zipPath.Substring(0, 8).ToLower().Equals("https://") || zipPath.Substring(0, 7).ToLower().Equals("http://"))
+                string[] zipPaths = value;
+                _testFilesZips = new string[zipPaths.Length];
+                for (int i = 0; i < zipPaths.Length; i++)
                 {
-                    WebClient webClient = new WebClient();
-                    string fileName = zipPath.Substring(zipPath.LastIndexOf('/') + 1);
-                    _testFilesZip = Path.Combine(TestContext.TestDir, fileName);
-                    webClient.DownloadFile(value, _testFilesZip);
+                    var zipPath = zipPaths[i];
+                    if (zipPath.Substring(0, 8).ToLower().Equals("https://") || zipPath.Substring(0, 7).ToLower().Equals("http://"))
+                    {
+                        WebClient webClient = new WebClient();
+                        string fileName = zipPath.Substring(zipPath.LastIndexOf('/') + 1);
+                        string zipFileTestPath = Path.Combine(TestContext.TestDir, fileName);
+                        webClient.DownloadFile(zipPath, zipFileTestPath);
+                        _testFilesZips[i] = zipFileTestPath;
+                    }
+                    else
+                        _testFilesZips[i] = zipPath;
+                    
                 }
-                else
-                {
-                    _testFilesZip = zipPath;
-                }
-
             }
         }
+
         public string TestDirectoryName { get; set; }
-        public TestFilesDir TestFilesDir { get; set; }
+        public TestFilesDir TestFilesDir
+        {
+            get { return TestFilesDirs[0]; }
+            set { TestFilesDirs = new[] {value}; }
+        }
+        public TestFilesDir[] TestFilesDirs { get; set; }
+
         private readonly List<Exception> _testExceptions = new List<Exception>();
         private bool _testCompleted;
 
@@ -104,7 +120,7 @@ namespace pwiz.SkylineTestFunctional
                 try
                 {
                     foreach (var form in Application.OpenForms)
-                    {                        
+                    {
                         var tForm = form as T;
                         if (tForm != null && tForm.Created)
                         {
@@ -233,15 +249,20 @@ namespace pwiz.SkylineTestFunctional
                 }
                 Settings.Default.Reset();
 
-                if (TestFilesZip == null)
+                if (TestFilesZipPaths == null)
                 {
                     RunTest();
                 }
                 else
                 {
-                    TestFilesDir = new TestFilesDir(TestContext, TestFilesZip, TestDirectoryName);
+                    TestFilesDirs = new TestFilesDir[TestFilesZipPaths.Length];
+                    for (int i = 0; i < TestFilesZipPaths.Length; i++)
+                    {
+                        TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName);
+                    }
                     RunTest();
-                    TestFilesDir.Dispose();
+                    foreach(TestFilesDir dir in TestFilesDirs)
+                        dir.Dispose();
                 }
             }
             catch (Exception x)
@@ -333,129 +354,5 @@ namespace pwiz.SkylineTestFunctional
         }
 
         #endregion
-    }
-
-    public static class ExtensionTestContext
-    {
-        public static string GetTestPath(this TestContext testContext, string relativePath)
-        {
-            return Path.Combine(testContext.TestDir, relativePath);
-        }
-
-        public static String GetProjectDirectory(this TestContext testContext, string relativePath)
-        {
-            for (String directory = testContext.TestDir; directory.Length > 10; directory = Path.GetDirectoryName(directory))
-            {
-                if (Equals(Path.GetFileName(directory), "TestResults"))
-                {
-                    return Path.Combine(Path.GetDirectoryName(directory), relativePath);
-                }
-            }
-            return null;
-        }
-
-        public static void ExtractTestFiles(this TestContext testContext, string relativePathZip)
-        {
-            testContext.ExtractTestFiles(relativePathZip, testContext.TestDir);
-        }
-
-        public static void ExtractTestFiles(this TestContext testContext, string relativePathZip, string destDir)
-        {
-            string zipPath = testContext.GetProjectDirectory(relativePathZip);
-            using (ZipFile zipFile = ZipFile.Read(zipPath))
-            {
-                foreach (ZipEntry zipEntry in zipFile)
-                    zipEntry.Extract(destDir, ExtractExistingFileAction.OverwriteSilently);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Creates and cleans up a directory containing the contents of a
-    /// test ZIP file.
-    /// </summary>
-    public sealed class TestFilesDir : IDisposable
-    {
-        private TestContext TestContext { get; set; }
-
-        /// <summary>
-        /// Creates a sub-directory of the Test Results directory with the same
-        /// basename as a ZIP file in the test project tree.
-        /// </summary>
-        /// <param name="testContext">The test context for the test creating the directory</param>
-        /// <param name="relativePathZip">A root project relative path to the ZIP file</param>
-        /// <param name="directoryName">Name of directory to create in the test results</param>
-        public TestFilesDir(TestContext testContext, string relativePathZip, string directoryName)
-        {
-            TestContext = testContext;
-            if (directoryName == null)
-                directoryName = Path.GetFileNameWithoutExtension(relativePathZip);
-            FullPath = TestContext.GetTestPath(directoryName);
-            TestContext.ExtractTestFiles(relativePathZip, FullPath);
-        }
-
-        public string FullPath { get; private set; }
-
-        /// <summary>
-        /// Returns a full path to a file in the unzipped directory.
-        /// </summary>
-        /// <param name="relativePath">Relative path, as stored in the ZIP file, to the file</param>
-        /// <returns>Absolute path to the file for use in tests</returns>
-        public string GetTestPath(string relativePath)
-        {
-            return Path.Combine(FullPath, relativePath);
-        }
-
-        /// <summary>
-        /// Attempts to move the directory to make sure no file handles are open.
-        /// Used to delete the directory, but it can be useful to look at test
-        /// artifacts, after the tests complete.
-        /// </summary>
-        public void Dispose()
-        {
-            try
-            {
-                string guidName = Guid.NewGuid().ToString();
-                Directory.Move(FullPath, guidName);
-                Directory.Move(guidName, FullPath);
-            }
-            catch (IOException)
-            {
-                // Useful for debugging. Exception names file that is locked.
-                Directory.Delete(FullPath, true);
-            }
-        }
-    }
-
-    public static class AssertEx
-    {
-        public static void ThrowsException<T>(Action throwEx)
-            where T : Exception
-        {
-            ThrowsException<T>(() => { throwEx(); return null; });
-        }
-
-        public static void ThrowsException<T>(Func<object> throwEx)
-            where T : Exception
-        {
-            try
-            {
-                throwEx();
-                Assert.Fail("Exception expected");
-            }
-            catch (T)
-            {
-            }
-        }
-
-        public static void Contains(string value, params string[] parts)
-        {
-            Assert.IsNotNull(value, "No message found");
-            foreach (string part in parts)
-            {
-                Assert.IsTrue(value.Contains(part),
-                    string.Format("The text '{0}' does not contain '{1}'", value, part));
-            }
-        }
     }
 }

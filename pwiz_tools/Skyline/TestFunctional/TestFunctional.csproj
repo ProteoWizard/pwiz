@@ -97,7 +97,6 @@
     <Compile Include="LibraryBuildTest.cs" />
     <Compile Include="OptimizeTest.cs" />
     <Compile Include="SynchSiblingsTest.cs" />
-    <Compile Include="TestFunctional.cs" />
     <Compile Include="BackgroundProteomeTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -109,6 +108,10 @@
     <ProjectReference Include="..\Skyline.csproj">
       <Project>{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}</Project>
       <Name>Skyline</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TestUtil\TestUtil.csproj">
+      <Project>{1A76F2B4-353A-4BCF-9D15-70D4B387E480}</Project>
+      <Name>TestUtil</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

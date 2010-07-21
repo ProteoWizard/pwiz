@@ -24,6 +24,7 @@ using pwiz.Skyline;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.SettingsUI;
+using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
 {

@@ -28,6 +28,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
+using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest.Results
 {
@@ -249,7 +250,7 @@ namespace pwiz.SkylineTest.Results
                 nodeTran = (TransitionDocNode) docResults.FindNode(pathHeavy);
                 Assert.IsFalse(nodeTran.Results[0][0].Ratio.HasValue, "Unexpected transiton ratio found");
                 Assert.AreEqual(pathGroupHeavy, pathHeavy.Parent, "Transition found outside expected group");
-                nodePep = (PeptideDocNode) docResults.FindNode(pathFirstPep);
+//                nodePep = (PeptideDocNode) docResults.FindNode(pathFirstPep);
                 nodeGroupHeavy = (TransitionGroupDocNode) docResults.FindNode(pathGroupHeavy);
 //                Assert.AreEqual(nodePep.Results[0][0].RatioToStandard, nodeGroupHeavy.Results[0][0].Ratio,
 //                                "Peptide and group ratios not equal");

@@ -22,6 +22,7 @@ using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
+using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest.Proteome
 {

@@ -23,6 +23,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
+using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
 {

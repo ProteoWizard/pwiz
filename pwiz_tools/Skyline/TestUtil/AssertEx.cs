@@ -26,9 +26,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 
-namespace pwiz.SkylineTest
+namespace pwiz.SkylineTestUtil
 {
-    class AssertEx
+    public class AssertEx
     {
         public static void ThrowsException<T>(Action throwEx)
             where T : Exception
@@ -47,6 +47,16 @@ namespace pwiz.SkylineTest
             catch (T)
             {
             }            
+        }
+
+        public static void Contains(string value, params string[] parts)
+        {
+            Assert.IsNotNull(value, "No message found");
+            foreach (string part in parts)
+            {
+                Assert.IsTrue(value.Contains(part),
+                    string.Format("The text '{0}' does not contain '{1}'", value, part));
+            }
         }
 
         private const string XML_DIRECTIVE = "<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n";
@@ -266,10 +276,11 @@ namespace pwiz.SkylineTest
             IsDocumentState(document, revision, groups, peptides, peptides, transitions);
         }
 
-        public static void IsDocumentState(SrmDocument document, int revision, int groups, int peptides,
+        public static void IsDocumentState(SrmDocument document, int? revision, int groups, int peptides,
                                            int tranGroups, int transitions)
         {
-            Assert.AreEqual(revision, document.RevisionIndex);
+            if (revision != null)
+                Assert.AreEqual(revision, document.RevisionIndex);
             Assert.AreEqual(groups, document.PeptideGroupCount);
             Assert.AreEqual(peptides, document.PeptideCount);
             Assert.AreEqual(tranGroups, document.TransitionGroupCount);

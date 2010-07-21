@@ -22,6 +22,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProteowizardWrapper", "..\S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestTutorial", "TestTutorial\TestTutorial.csproj", "{6FCD5F27-637B-499A-BB66-F74D5FBBD500}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestUtil", "TestUtil\TestUtil.csproj", "{1A76F2B4-353A-4BCF-9D15-70D4B387E480}"
+EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = Skyline.vsmdi
@@ -125,6 +127,16 @@ Global
 		{6FCD5F27-637B-499A-BB66-F74D5FBBD500}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{6FCD5F27-637B-499A-BB66-F74D5FBBD500}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{6FCD5F27-637B-499A-BB66-F74D5FBBD500}.Release|x86.ActiveCfg = Release|Any CPU
+		{1A76F2B4-353A-4BCF-9D15-70D4B387E480}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A76F2B4-353A-4BCF-9D15-70D4B387E480}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A76F2B4-353A-4BCF-9D15-70D4B387E480}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{1A76F2B4-353A-4BCF-9D15-70D4B387E480}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{1A76F2B4-353A-4BCF-9D15-70D4B387E480}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1A76F2B4-353A-4BCF-9D15-70D4B387E480}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A76F2B4-353A-4BCF-9D15-70D4B387E480}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A76F2B4-353A-4BCF-9D15-70D4B387E480}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{1A76F2B4-353A-4BCF-9D15-70D4B387E480}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{1A76F2B4-353A-4BCF-9D15-70D4B387E480}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
