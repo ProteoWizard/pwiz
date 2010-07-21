@@ -25,6 +25,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -194,7 +195,7 @@ namespace pwiz.SkylineTestFunctional
             // Add a modification with multiple possible losses
             RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, dlg =>
             {
-                dlg.PickedStaticMods = new List<string>(peptideSettingsUI.PickedStaticMods)
+                dlg.PickedStaticMods = new List<string>(dlg.PickedStaticMods)
                     { multipleLossMod.Name }.ToArray();
                 dlg.OkDialog();
             });
@@ -225,20 +226,82 @@ namespace pwiz.SkylineTestFunctional
             });
 
             var docLossMultiAdded = WaitForDocumentChange(docLossMulti);
-
             Assert.AreEqual(1, GetLossCount(docLossMultiAdded, 2));
 
-            // Reset to just 1 neutral loss per fragment
+            // Add heavy modifications and make sure transition group is added with losses
             RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, dlg =>
             {
+                dlg.PickedHeavyMods = new[] { aquaMod.Name };
+                dlg.OkDialog();
+            });
+
+            var docLossMultiHeavy = WaitForDocumentChange(docLossMultiAdded);
+            Assert.AreEqual(4, docLossMultiHeavy.TransitionGroupCount);
+            Assert.AreEqual(8, GetLossCount(docLossMultiHeavy, 1));
+            Assert.AreEqual(2, GetLossCount(docLossMultiHeavy, 2));
+
+            // Make sure this document is serializable
+            AssertEx.Serializable(docLossMultiHeavy, AssertEx.DocumentCloned);
+
+            // Reset to just 1 neutral loss per fragment, and turn off heavy mod
+            RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, dlg =>
+            {
+                dlg.PickedHeavyMods = new string[0];
                 dlg.MaxNeutralLosses = 1;
                 dlg.OkDialog();
             });
 
-            var docLossMulti1 = WaitForDocumentChange(docLossMultiAdded);
-
+            var docLossMulti1 = WaitForDocumentChange(docLossMultiHeavy);
             Assert.AreEqual(3, GetLossCount(docLossMulti1, 1));
             Assert.AreEqual(0, GetLossCount(docLossMulti1, 2));
+
+            // Remove all neutral loss modifications currently on the document
+            // and add the constant numeric loss
+            RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, dlg =>
+            {
+                dlg.PickedStaticMods = new[] { explicitMassesLossMod.Name };
+                dlg.OkDialog();
+            });
+
+            var docNoLoss2 = WaitForDocumentChange(docLossMulti1);
+            Assert.AreEqual(0, GetLossCount(docNoLoss2, 1));
+
+            // Add a neutral loss transition with constant numeric loss
+            RunDlg<PopupPickList>(SkylineWindow.ShowPickChildren, dlg =>
+            {
+                dlg.ApplyFilter(false);
+                var losses = GetLossGroups(dlg.ItemNames).ToArray();
+                Assert.AreEqual(1, losses.Length);
+                VerifyLossGroup(losses, 0, 20, 85);
+                // Add new neutral loss transitions to the document
+                dlg.ToggleFind();
+                dlg.SearchString = "-20";
+                dlg.ToggleItem(0);
+                dlg.OnOk();
+            });
+
+            // Verify that the expected loss was added to the document
+            var docConstantMono = WaitForDocumentChange(docNoLoss2);
+            Assert.AreEqual(1, GetLossCount(docConstantMono, 1));
+            var pathTranLoss = docConstantMono.GetPathTo((int) SrmDocument.Level.Transitions, 0);
+            var nodeTranLos = (TransitionDocNode) docConstantMono.FindNode(pathTranLoss);
+            Assert.AreEqual("precursor -20", nodeTranLos.FragmentIonName);
+
+            // Switch mass type to average
+            RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, dlg =>
+            {
+                dlg.FragmentMassType = MassType.Average;
+                dlg.OkDialog();
+            });
+
+            // Make sure neutral loss changes as expected
+            var docConstantAverage = WaitForDocumentChange(docConstantMono);
+            Assert.AreEqual(1, GetLossCount(docConstantAverage, 1));
+            nodeTranLos = (TransitionDocNode)docConstantAverage.FindNode(pathTranLoss);
+            Assert.AreEqual("precursor -25", nodeTranLos.FragmentIonName);
+
+            // Make sure the resulting document is serializable
+            AssertEx.Serializable(docConstantAverage, AssertEx.DocumentCloned);
         }
 
         private static void VerifyLossGroup(IGrouping<double, string>[] losses, int i,

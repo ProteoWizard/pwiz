@@ -66,9 +66,9 @@ namespace pwiz.Skyline.SettingsUI
                 else
                 {
                     textLossFormula.Text = "";
-                    textLossMonoMass.Text = (_loss.MonoisotopicMass != null ?
+                    textLossMonoMass.Text = (_loss.MonoisotopicMass != 0 ?
                         _loss.MonoisotopicMass.ToString() : "");
-                    textLossAverageMass.Text = (_loss.AverageMass != null ?
+                    textLossAverageMass.Text = (_loss.AverageMass != 0 ?
                         _loss.AverageMass.ToString() : "");
                 }
             }

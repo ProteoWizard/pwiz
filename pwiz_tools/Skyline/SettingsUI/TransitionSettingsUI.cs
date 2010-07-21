@@ -308,6 +308,18 @@ namespace pwiz.Skyline.SettingsUI
 
         #region Functional testing support
 
+        public MassType PrecursorMassType
+        {
+            get { return Helpers.ParseEnum(comboPrecursorMass.SelectedItem.ToString(), MassType.Monoisotopic); }
+            set { comboPrecursorMass.SelectedItem = value.ToString(); }
+        }
+
+        public MassType FragmentMassType
+        {
+            get { return Helpers.ParseEnum(comboIonMass.SelectedItem.ToString(), MassType.Monoisotopic); }
+            set { comboIonMass.SelectedItem = value.ToString(); }
+        }
+
         public string PrecursorCharges
         {
             get { return textPrecursorCharges.Text; }

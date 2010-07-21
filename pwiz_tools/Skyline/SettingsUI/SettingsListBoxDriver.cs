@@ -108,13 +108,13 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                var pickedLibraries = new List<string>();
+                var checkedNames = new List<string>();
                 for (int i = 0; i < ListBox.Items.Count; i++)
                 {
                     if (ListBox.GetItemChecked(i))
-                        pickedLibraries.Add(ListBox.Items[i].ToString());
+                        checkedNames.Add(ListBox.Items[i].ToString());
                 }
-                return pickedLibraries.ToArray();                
+                return checkedNames.ToArray();                
             }
 
             set

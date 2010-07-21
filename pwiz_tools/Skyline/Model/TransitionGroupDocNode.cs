@@ -385,7 +385,7 @@ namespace pwiz.Skyline.Model
                     IList<DocNode> childrenNew = new List<DocNode>();
 
                     // Enumerate the nodes making necessary changes.
-                    foreach (TransitionDocNode nodeTransition in Children)
+                    foreach (TransitionDocNode nodeTransition in nodeResult.Children)
                     {
                         var tran = nodeTransition.Transition;
                         var losses = nodeTransition.Losses;
