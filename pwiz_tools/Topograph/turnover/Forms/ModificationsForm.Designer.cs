@@ -104,7 +104,6 @@
 
         private System.Windows.Forms.DataGridView dataGridView1;
         private System.Windows.Forms.DataGridViewTextBoxColumn colSymbol;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colDeltaMass;
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.DataGridViewTextBoxColumn colMassDelta;

@@ -44,7 +44,7 @@ namespace pwiz.Topograph.ui.Forms
             {
                     var row = dataGridView1.Rows[dataGridView1.Rows.Add()];
                     row.Cells[colSymbol.Index].Value = modification.Key;
-                    row.Cells[colDeltaMass.Index].Value = modification.Value;
+                    row.Cells[colMassDelta.Index].Value = modification.Value;
             }
         }
 
@@ -54,7 +54,7 @@ namespace pwiz.Topograph.ui.Forms
             for (int i = 0; i < dataGridView1.Rows.Count; i++)
             {
                 var row = dataGridView1.Rows[i];
-                var deltaMass = Convert.ToDouble(row.Cells[colDeltaMass.Index].Value);
+                var deltaMass = Convert.ToDouble(row.Cells[colMassDelta.Index].Value);
                 if (deltaMass == 0)
                 {
                     continue;
