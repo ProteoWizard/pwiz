@@ -131,14 +131,14 @@ namespace pwiz.Topograph.ui.Forms
             if (byFile)
             {
                 query = session.CreateQuery(
-                    "SELECT D.PrecursorEnrichment, Count(D.Id), D.PeptideFileAnalysis.PeptideAnalysis.Peptide.Sequence, D.PeptideFileAnalysis.MsDataFile.Label FROM DbPeptideDistribution D WHERE D.PeptideQuantity = 0 AND D.Score >= :minScore GROUP BY D.PrecursorEnrichment, D.PeptideFileAnalysis.MsDataFile.Label")
+                    "SELECT D.PrecursorEnrichment, Count(D.Id), D.PeptideFileAnalysis.PeptideAnalysis.Peptide.Sequence, D.PeptideFileAnalysis.MsDataFile.Label FROM DbPeptideDistribution D WHERE D.PeptideQuantity = 0 AND D.Score >= :minScore GROUP BY D.PeptideFileAnalysis.PeptideAnalysis.Peptide.Sequence, D.PrecursorEnrichment, D.PeptideFileAnalysis.MsDataFile.Label")
                     .SetParameter("minScore", minScore);
             }
             else
             {
                 query =
                     session.CreateQuery(
-                    "SELECT D.PrecursorEnrichment, Count(D.Id), D.PeptideFileAnalysis.PeptideAnalysis.Peptide.Sequence, D.PeptideFileAnalysis.MsDataFile.Cohort, D.PeptideFileAnalysis.MsDataFile.TimePoint FROM DbPeptideDistribution D WHERE D.PeptideQuantity = 0 AND D.Score >= :minScore GROUP BY D.PrecursorEnrichment, D.PeptideFileAnalysis.MsDataFile.Cohort, D.PeptideFileAnalysis.MsDataFile.TimePoint")
+                    "SELECT D.PrecursorEnrichment, Count(D.Id), D.PeptideFileAnalysis.PeptideAnalysis.Peptide.Sequence, D.PeptideFileAnalysis.MsDataFile.Cohort, D.PeptideFileAnalysis.MsDataFile.TimePoint FROM DbPeptideDistribution D WHERE D.PeptideQuantity = 0 AND D.Score >= :minScore GROUP BY D.PeptideFileAnalysis.PeptideAnalysis.Peptide.Sequence, D.PrecursorEnrichment, D.PeptideFileAnalysis.MsDataFile.Cohort, D.PeptideFileAnalysis.MsDataFile.TimePoint")
                     .SetParameter("minScore", minScore);
             }
             var result = new Dictionary<CohortKey, IDictionary<double, int>>();
@@ -170,7 +170,11 @@ namespace pwiz.Topograph.ui.Forms
                     dict = new Dictionary<double, int>();
                     result.Add(cohortKey, dict);
                 }
-                dict[Convert.ToDouble(row[0])] = Convert.ToInt32(row[1]);
+                int count;
+                double precursorEnrichment = Convert.ToDouble(row[0]);
+                dict.TryGetValue(precursorEnrichment, out count);
+                count += Convert.ToInt32(row[1]);
+                dict[precursorEnrichment] = count;
             }
             return result;
         }
