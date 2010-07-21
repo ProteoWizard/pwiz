@@ -232,7 +232,8 @@ namespace Test
                 foreach (var peptideTupleList in peptideList.Values)
                     foreach (var peptideTuple in peptideTupleList)
                     {
-                        PwizPeptide pwizPeptide = new PwizPeptide(peptideTuple.Sequence, ModParsing.ModificationParsing_Auto, ModDelimiter.ModificationDelimiter_Brackets);
+                        using (PwizPeptide pwizPeptide = new PwizPeptide(peptideTuple.Sequence, ModParsing.ModificationParsing_Auto, ModDelimiter.ModificationDelimiter_Brackets))
+                        {
 
                         Peptide peptide = dbPeptides[pwizPeptide.sequence];
                         if (String.IsNullOrEmpty(peptide.Sequence))
@@ -242,7 +243,7 @@ namespace Test
                             peptide.MolecularWeight = pwizPeptide.molecularWeight(false);
                             dbPeptides[pwizPeptide.sequence] = peptide;
                             session.Save(peptide);
-                            createTestPeptideInstances(session, peptide);
+                                createTestPeptideInstances(session, peptide);
                         }
 
                         double neutralPrecursorMass = (spectrum.PrecursorMZ * peptideTuple.Charge) - (peptideTuple.Charge * Proton.Mass);
@@ -258,8 +259,8 @@ namespace Test
                             MolecularWeightError = neutralPrecursorMass - pwizPeptide.molecularWeight(),
                             Charge = peptideTuple.Charge,
                             Rank = (peptideTuple.ScoreDivider == lastDivider ? rank : ++rank),
-                            QValue = (rank == 1 ? row.QValue : PeptideSpectrumMatch.DefaultQValue),
-                        };
+                                              QValue = (rank == 1 ? row.QValue : PeptideSpectrumMatch.DefaultQValue),
+                                          };
 
                         if (row.Score != null)
                             psm.Scores = new Dictionary<string, double>()
@@ -268,12 +269,12 @@ namespace Test
                                 {"score2", 1 / ((double) row.Score / peptideTuple.ScoreDivider)}
                             };
 
-                        session.Save(psm);
-                        lastDivider = peptideTuple.ScoreDivider;
+                            session.Save(psm);
+                            lastDivider = peptideTuple.ScoreDivider;
 
-                        // add PeptideModifications and Modifications
-                        foreach (KeyValuePair<int, ModList> itr in pwizPeptide.modifications())
-                        {
+                            // add PeptideModifications and Modifications
+                            foreach (KeyValuePair<int, ModList> itr in pwizPeptide.modifications())
+                            {
                             foreach (PwizMod pwizMod in itr.Value)
                             {
                                 Modification mod = session.UniqueResult<Modification>(o => o.Formula == pwizMod.formula());
@@ -296,7 +297,8 @@ namespace Test
                                     Offset = itr.Key == ModMap.NTerminus() ? int.MinValue
                                            : itr.Key == ModMap.CTerminus() ? int.MaxValue
                                            : itr.Key + 1
-                                });
+                                                     });
+                                }
                             }
                         }
                     }
