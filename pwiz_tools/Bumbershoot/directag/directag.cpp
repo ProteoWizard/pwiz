@@ -24,7 +24,7 @@
 #include "directag.h"
 #include "Histogram.h"
 #include "pwiz/data/msdata/Version.hpp"
-#include "pwiz/utility/proteome/Version.hpp"
+#include "pwiz/data/proteome/Version.hpp"
 #include "svnrev.hpp"
 
 #include "ranker.h"
@@ -48,7 +48,7 @@ namespace directag
 	vector<int>				highQualSpectraIndices;
 
     int Version::Major()                {return 1;}
-    int Version::Minor()                {return 2;}
+    int Version::Minor()                {return 3;}
     int Version::Revision()             {return SVN_REV;}
     string Version::LastModified()      {return SVN_REVDATE;}
     string Version::str()               
