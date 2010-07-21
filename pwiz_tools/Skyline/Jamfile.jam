@@ -79,34 +79,12 @@ if [ modules.peek : NT ]
         msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);OutDir=$(OUTPUT_PATH);TestProject=Test /nologo /verbosity:minimal
         set status=%ERRORLEVEL%
         $(TEST_POSTCOMMAND)
-    }
-    
-    rule do_skyline_test_functional ( targets + : sources * : properties * )
-    {
-        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
-    }
-
-    actions do_skyline_test_functional
-    {
-        IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
-        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
         echo Functional testing Skyline in $(CONFIGURATION:L) configuration...
         set name="Skyline functional test"
         $(TEST_PRECOMMAND)
         msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);OutDir=$(OUTPUT_PATH);TestProject=TestFunctional /nologo /verbosity:minimal
         set status=%ERRORLEVEL%
         $(TEST_POSTCOMMAND)
-    }
-    
-    rule do_skyline_test_passed ( targets + : sources * : properties * )
-    {
-        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
-    }
-
-    actions do_skyline_test_passed
-    {
-        IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
-        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
         echo Copying Skyline test output in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);OutDir=$(OUTPUT_PATH);TestProject=Test /t:MSTest:Clean /nologo /verbosity:minimal
     }
@@ -144,7 +122,8 @@ if [ modules.peek : NT ]
     }
 
 
-    make Skyline.exe
+    # make Skyline.exe Test.dll TestFunctional.dll
+    make TestFunctional.dll
         : # sources
         : # actions
             @do_skyline_build
@@ -164,7 +143,7 @@ if [ modules.peek : NT ]
             <dependency>../../pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters_masslynxraw/<location>$(SKYLINE_PATH)
         ;
         
-    make Test.dll
+    make Skyline.passed
         : # sources
         : # actions
             @do_skyline_test
@@ -173,32 +152,8 @@ if [ modules.peek : NT ]
             <address-model>64:<build>no
             <conditional>@no-msvc-express
             <conditional>@build-location
-            <dependency>Skyline.exe
-        ;
-    
-    make TestFunctional.dll
-        : # sources
-        : # actions
-            @do_skyline_test_functional
-        : # requirements
-            <link>shared:<build>no
-            <address-model>64:<build>no
-            <conditional>@no-msvc-express
-            <conditional>@build-location
-            <dependency>Skyline.exe
-        ;
-        
-    make Skyline.passed
-        : # sources
-        : # actions
-            @do_skyline_test_passed
-        : # requirements
-            <link>shared:<build>no
-            <address-model>64:<build>no
-            <conditional>@no-msvc-express
-            <conditional>@build-location
-            <dependency>Skyline.exe
-            <dependency>Test.dll
+#            <dependency>Skyline.exe
+#            <dependency>Test.dll
             <dependency>TestFunctional.dll
         ;
 }
