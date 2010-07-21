@@ -41,29 +41,46 @@ namespace pwiz.SkylineTestTutorial
         ///information about and functionality for the current test run.
         ///</summary>
         public TestContext TestContext { get; set; }
-        private string _testFilesZip;
+        private string[] _testFilesZips;
         public string TestFilesZip
         {
-            get { return _testFilesZip; }
+            get { return _testFilesZips[0]; }
+            set { TestFilesZipPaths = new[] {value}; }
+        }
+
+        public string[] TestFilesZipPaths
+        {
+            get { return _testFilesZips; }
             set
             {
-                string zipPath = value;
-                if (zipPath.Substring(0, 8).ToLower().Equals("https://") || zipPath.Substring(0, 7).ToLower().Equals("http://"))
+                string[] zipPaths = value;
+                _testFilesZips = new string[zipPaths.Length];
+                for (int i = 0; i < zipPaths.Length; i++)
                 {
-                    WebClient webClient = new WebClient();
-                    string fileName = zipPath.Substring(zipPath.LastIndexOf('/') + 1);
-                    _testFilesZip = Path.Combine(TestContext.TestDir, fileName);
-                    webClient.DownloadFile(value, _testFilesZip);
+                    var zipPath = zipPaths[i];
+                    if (zipPath.Substring(0, 8).ToLower().Equals("https://") || zipPath.Substring(0, 7).ToLower().Equals("http://"))
+                    {
+                        WebClient webClient = new WebClient();
+                        string fileName = zipPath.Substring(zipPath.LastIndexOf('/') + 1);
+                        string zipFileTestPath = Path.Combine(TestContext.TestDir, fileName);
+                        webClient.DownloadFile(zipPath, zipFileTestPath);
+                        _testFilesZips[i] = zipFileTestPath;
+                    }
+                    else
+                        _testFilesZips[i] = zipPath;
+                    
                 }
-                else
-                {
-                    _testFilesZip = zipPath;
-                }
-
             }
         }
+
         public string TestDirectoryName { get; set; }
-        public TestFilesDir TestFilesDir { get; set; }
+        public TestFilesDir TestFilesDir
+        {
+            get { return TestFilesDirs[0]; }
+            set { TestFilesDirs = new[] {value}; }
+        }
+        public TestFilesDir[] TestFilesDirs { get; set; }
+
         private readonly List<Exception> _testExceptions = new List<Exception>();
         private bool _testCompleted;
 
@@ -236,9 +253,14 @@ namespace pwiz.SkylineTestTutorial
                 }
                 else
                 {
-                    TestFilesDir = new TestFilesDir(TestContext, TestFilesZip, TestDirectoryName);
+                    TestFilesDirs = new TestFilesDir[TestFilesZipPaths.Length];
+                    for (int i = 0; i < TestFilesZipPaths.Length; i++)
+                    {
+                        TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName);
+                    }
                     RunTest();
-                    TestFilesDir.Dispose();
+                    foreach(TestFilesDir dir in TestFilesDirs)
+                        dir.Dispose();
                 }
             }
             catch (Exception x)
