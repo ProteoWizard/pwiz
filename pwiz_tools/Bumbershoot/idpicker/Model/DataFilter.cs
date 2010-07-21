@@ -348,7 +348,7 @@ namespace IDPicker.DataModel
             if (MinimumAdditionalPeptidesPerProtein == 0)
                 return;
 
-            Map<long, long> additionalPeptidesByProteinId = calculateAdditionalPeptides(session);
+            Map<long, long> additionalPeptidesByProteinId = CalculateAdditionalPeptides(session);
 
             try { session.CreateSQLQuery("DROP TABLE AdditionalMatches").ExecuteUpdate(); } catch { }
             session.CreateSQLQuery("CREATE TABLE AdditionalMatches (ProteinId INTEGER PRIMARY KEY, AdditionalMatches INT)").ExecuteUpdate();
@@ -636,7 +636,7 @@ namespace IDPicker.DataModel
             return result;
         }
 
-        void doubleTextBox_KeyDown (object sender, KeyEventArgs e)
+        static void doubleTextBox_KeyDown (object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Decimal || e.KeyCode == Keys.OemPeriod)
             {
@@ -650,7 +650,7 @@ namespace IDPicker.DataModel
                 e.SuppressKeyPress = true;
         }
 
-        void integerTextBox_KeyDown (object sender, KeyEventArgs e)
+        static void integerTextBox_KeyDown (object sender, KeyEventArgs e)
         {
             if (!(e.KeyCode >= Keys.D0 && e.KeyCode <= Keys.D9 ||
                 e.KeyCode >= Keys.NumPad0 && e.KeyCode <= Keys.NumPad9 ||
@@ -662,9 +662,7 @@ namespace IDPicker.DataModel
         /// <summary>
         /// Calculates (by a greedy algorithm) how many additional spectra each protein group explains.
         /// </summary>
-        /// <param name="queryRows"></param>
-        /// <returns></returns>
-        Map<long, long> calculateAdditionalPeptides (NHibernate.ISession session)
+        static Map<long, long> CalculateAdditionalPeptides (NHibernate.ISession session)
         {
             var psmSetByProteinId = new Map<long, Set<Set<long>>>();
             var proteinGroupByProteinId = new Dictionary<long, string>();
