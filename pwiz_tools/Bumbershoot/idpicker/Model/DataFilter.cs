@@ -660,80 +660,140 @@ namespace IDPicker.DataModel
         }
 
         /// <summary>
-        /// Calculates (by a greedy algorithm) how many additional spectra each protein group explains.
+        /// Calculates (by a greedy algorithm) how many additional results each protein group explains.
         /// </summary>
         static Map<long, long> CalculateAdditionalPeptides (NHibernate.ISession session)
         {
-            var psmSetByProteinId = new Map<long, Set<Set<long>>>();
+            var resultSetByProteinId = new Map<long, Set<Set<long>>>();
             var proteinGroupByProteinId = new Dictionary<long, string>();
             var proteinSetByProteinGroup = new Map<string, Set<long>>();
+            var sharedResultsByProteinId = new Map<long, long>();
+
+            session.CreateSQLQuery("CREATE TABLE SpectrumResults AS " +
+                                   "SELECT psm.Spectrum AS Spectrum, GROUP_CONCAT(DISTINCT psm.Peptide) AS Peptides, COUNT(DISTINCT pi.Protein) AS SharedResultCount " +
+                                   "FROM PeptideSpectrumMatches psm " +
+                                   "JOIN PeptideInstances pi ON psm.Peptide = pi.Peptide " +
+                                   "GROUP BY psm.Spectrum").ExecuteUpdate();
+
+            var queryByProtein = session.CreateSQLQuery("SELECT pro.Id, pro.ProteinGroup, SUM(sr.SharedResultCount) " +
+                                               "FROM Proteins pro " +
+                                               "JOIN (SELECT DISTINCT Peptide, Protein FROM PeptideInstances) pi ON pro.Id=pi.Protein " +
+                                               "JOIN (SELECT * FROM PeptideSpectrumMatches GROUP BY Peptide) psm ON pi.Peptide=psm.Peptide " +
+                                               "JOIN SpectrumResults sr ON psm.Spectrum = sr.Spectrum " +
+                                               "GROUP BY pro.Id");
 
             // For each protein, get the list of peptides evidencing it;
             // an ambiguous spectrum will show up as a nested list of peptides
-            var query = session.CreateSQLQuery("SELECT DISTINCT pro.Id, pro.ProteinGroup, t.Peptides " +
+            var queryByResult = session.CreateSQLQuery("SELECT pro.Id, GROUP_CONCAT(sr.Peptides) " +
                                                "FROM Proteins pro " +
-                                               "JOIN PeptideInstances pi ON pro.Id = pi.Protein " +
-                                               "JOIN PeptideSpectrumMatches psm ON pi.Peptide = psm.Peptide " +
-                                               "JOIN (SELECT psm.Spectrum, GROUP_CONCAT(DISTINCT psm.Peptide) AS Peptides " +
-                                               "      FROM PeptideSpectrumMatches psm " +
-                                               "      GROUP BY psm.Spectrum) AS t ON psm.Spectrum = t.Spectrum");
+                                               "JOIN (SELECT DISTINCT Peptide, Protein FROM PeptideInstances) pi ON pro.Id=pi.Protein " +
+                                               "JOIN (SELECT * FROM PeptideSpectrumMatches GROUP BY Peptide) psm ON pi.Peptide=psm.Peptide " +
+                                               "JOIN SpectrumResults sr ON psm.Spectrum = sr.Spectrum " +
+                                               "GROUP BY pro.Id, sr.Peptides");
 
-            long maxProteinId = -1;
+            // keep track of the proteins that explain the most results
+            Set<long> maxProteinIds = new Set<long>();
             int maxExplainedCount = 0;
+            long minSharedResults = 0;
 
-            // construct the PSM set for each protein;
-            // keep track of the max. protein (the one that explains the most PSMs)
-            foreach (var queryRow in query.List<object[]>())
+            foreach(var queryRow in queryByProtein.List<object[]>())
             {
                 long proteinId = (long) queryRow[0];
                 string proteinGroup = (string) queryRow[1];
-                string psmIds = (string) queryRow[2];
-                string[] psmIdTokens = psmIds.Split(',');
-                Set<long> psmIdSet = new Set<long>(psmIdTokens.Select(o => Convert.ToInt64(o)));
-                Set<Set<long>> explainedPSMs = psmSetByProteinId[proteinId];
-                explainedPSMs.Add(psmIdSet);
-                if (explainedPSMs.Count > maxExplainedCount)
-                {
-                    maxProteinId = proteinId;
-                    maxExplainedCount = explainedPSMs.Count;
-                }
+                sharedResultsByProteinId[proteinId] = (long) queryRow[2];
 
                 proteinGroupByProteinId[proteinId] = proteinGroup;
                 proteinSetByProteinGroup[proteinGroup].Add(proteinId);
             }
 
+            // construct the result set for each protein
+            foreach (var queryRow in queryByResult.List<object[]>())
+            {
+                long proteinId = (long) queryRow[0];
+                string resultIds = (string) queryRow[1];
+                string[] resultIdTokens = resultIds.Split(',');
+                Set<long> resultIdSet = new Set<long>(resultIdTokens.Select(o => Convert.ToInt64(o)));
+                Set<Set<long>> explainedResults = resultSetByProteinId[proteinId];
+                explainedResults.Add(resultIdSet);
+
+                long sharedResults = sharedResultsByProteinId[proteinId];
+
+                if (explainedResults.Count > maxExplainedCount)
+                {
+                    maxProteinIds.Clear();
+                    maxProteinIds.Add(proteinId);
+                    maxExplainedCount = explainedResults.Count;
+                    minSharedResults = sharedResults;
+                }
+                else if (explainedResults.Count == maxExplainedCount)
+                {
+                    if (sharedResults < minSharedResults)
+                    {
+                        maxProteinIds.Clear();
+                        maxProteinIds.Add(proteinId);
+                        minSharedResults = sharedResults;
+                    }
+                    else if (sharedResults == minSharedResults)
+                        maxProteinIds.Add(proteinId);
+                }
+            }
+
             var additionalPeptidesByProteinId = new Map<long, long>();
 
-            // loop until the psmSetByProteinId map is empty
-            while (psmSetByProteinId.Count > 0)
+            // loop until the maxProteinIdsSetByProteinId map is empty
+            while (resultSetByProteinId.Count > 0)
             {
-                // remove proteins from the max. protein's group from the psmSetByProteinId map;
-                // subtract the max. protein's PSMs from the remaining proteins
-                Set<Set<long>> maxExplainedPSMs = psmSetByProteinId[maxProteinId];
-                string maxProteinGroup = proteinGroupByProteinId[maxProteinId];
-                foreach (long proteinId in proteinSetByProteinGroup[maxProteinGroup])
+                // the set of results explained by the max. proteins
+                Set<Set<long>> maxExplainedResults = null;
+
+                // remove max. proteins from the resultSetByProteinId map
+                foreach (long maxProteinId in maxProteinIds)
                 {
-                    psmSetByProteinId.Remove(proteinId);
-                    additionalPeptidesByProteinId[proteinId] = maxExplainedCount;
+                    if (maxExplainedResults == null)
+                        maxExplainedResults = resultSetByProteinId[maxProteinId];
+                    else
+                        maxExplainedResults.Union(resultSetByProteinId[maxProteinId]);
+
+                    resultSetByProteinId.Remove(maxProteinId);
+                    additionalPeptidesByProteinId[maxProteinId] = maxExplainedCount;
                 }
 
+                // subtract the max. proteins' results from the remaining proteins
+                maxProteinIds.Clear();
                 maxExplainedCount = 0;
-                foreach (Map<long, Set<Set<long>>>.MapPair itr in psmSetByProteinId)
-                {
-                    Set<Set<long>> explainedPSMs = itr.Value;
-                    explainedPSMs.Subtract(maxExplainedPSMs);
+                minSharedResults = 0;
 
-                    if (explainedPSMs.Count > maxExplainedCount)
+                foreach (Map<long, Set<Set<long>>>.MapPair itr in resultSetByProteinId)
+                {
+                    Set<Set<long>> explainedResults = itr.Value;
+                    explainedResults.Subtract(maxExplainedResults);
+
+                    long sharedResults = sharedResultsByProteinId[itr.Key];
+
+                    if (explainedResults.Count > maxExplainedCount)
                     {
-                        maxProteinId = itr.Key;
-                        maxExplainedCount = explainedPSMs.Count;
+                        maxProteinIds.Clear();
+                        maxProteinIds.Add(itr.Key);
+                        maxExplainedCount = explainedResults.Count;
+                        minSharedResults = sharedResults;
+                    }
+                    else if (explainedResults.Count == maxExplainedCount)
+                    {
+                        if (sharedResults < minSharedResults)
+                        {
+                            maxProteinIds.Clear();
+                            maxProteinIds.Add(itr.Key);
+                            minSharedResults = sharedResults;
+                        }
+                        else if (sharedResults == minSharedResults)
+                            maxProteinIds.Add(itr.Key);
                     }
                 }
 
                 // all remaining proteins present no additional evidence, so break the loop
                 if (maxExplainedCount == 0)
                 {
-                    foreach (Map<long, Set<Set<long>>>.MapPair itr in psmSetByProteinId)
+                    foreach (Map<long, Set<Set<long>>>.MapPair itr in resultSetByProteinId)
                         additionalPeptidesByProteinId[itr.Key] = 0;
                     break;
                 }

@@ -373,6 +373,9 @@ namespace Test
                     start = pro.Sequence.IndexOf(pep.Sequence, start + 1);
                 }
             }
+
+            if (pep.Instances.Count == 0)
+                throw new ArgumentException("peptide " + pep.Sequence + " does not occur in any proteins");
         }
         #endregion
 

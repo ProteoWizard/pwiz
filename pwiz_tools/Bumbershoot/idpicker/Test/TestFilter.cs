@@ -337,31 +337,54 @@ namespace Test
                 createSimpleProteinSequence("WWWWYYYYZZZZ", 36),
                 createSimpleProteinSequence("YYYYZZZZFFFF", 24),
                 
-                createSimpleProteinSequence("AAAAZZZZBBBB", 24), // PRO35
-                createSimpleProteinSequence("AAAAZZZZBBBB", 36),
-                createSimpleProteinSequence("ZZZZBBBBWWWW", 24),
-                createSimpleProteinSequence("ZZZZBBBBWWWW", 36),
+                createSimpleProteinSequence("AAAACCCCEEEE", 24), // PRO35
+                createSimpleProteinSequence("AAAACCCCEEEE", 36),
+                createSimpleProteinSequence("CCCCEEEEGGGG", 24),
+                createSimpleProteinSequence("CCCCEEEEGGGG", 36),
 
-                createSimpleProteinSequence("BBBBBYYYYY", 20),
-                createSimpleProteinSequence("BBBBYYYY", 24), // PRO40
-                createSimpleProteinSequence("CBBBBYYYY", 21),
-                createSimpleProteinSequence("DBBBYYY", 20),
-                createSimpleProteinSequence("EBBYY", 21),
+                createSimpleProteinSequence("BBBBBDDDDD", 20),
+                createSimpleProteinSequence("BBBBDDDD", 24), // PRO40
+                createSimpleProteinSequence("ZBBBBDDD", 24),
+                createSimpleProteinSequence("YBBBDDD", 20),
+                createSimpleProteinSequence("WBBDD", 21),
 
-                createSimpleProteinSequence("CCCCCWWWWW", 20),
-                createSimpleProteinSequence("WWWWWDDDDD", 20), // PRO45
+                createSimpleProteinSequence("DDDDDFFFFF", 20),
+                createSimpleProteinSequence("FFFFFHHHHH", 20), // PRO45
 
-                createSimpleProteinSequence("DDDDDVVVVV", 20),
-                createSimpleProteinSequence("DDDDDVVVVV", 30),
-                createSimpleProteinSequence("VVVVVEEEEE", 20),
+                createSimpleProteinSequence("HHHHHKKKKK", 20),
+                createSimpleProteinSequence("HHHHHKKKKK", 30),
+                createSimpleProteinSequence("KKKKKMMMMM", 20),
 
-                createSimpleProteinSequence("EEEEEUUUUU", 20),
-                createSimpleProteinSequence("UUUUUFFFFF", 20), // PRO50
-                createSimpleProteinSequence("UUUUUFFFFF", 30),
+                createSimpleProteinSequence("LLLLLNNNNN", 20),
+                createSimpleProteinSequence("NNNNNQQQQQ", 20), // PRO50
+                createSimpleProteinSequence("NNNNNQQQQQ", 30),
 
-                createSimpleProteinSequence("FFFFFTTTTT", 20),
-                createSimpleProteinSequence("TTTTTGGGGG", 20),
-                createSimpleProteinSequence("TTTTGGGG", 24),
+                createSimpleProteinSequence("MMMMMPPPPP", 20),
+                createSimpleProteinSequence("PPPPPRRRRR", 20),
+                createSimpleProteinSequence("PPPPPRRRR", 24),
+
+                createSimpleProteinSequence("QQQQSSSSUUUU", 24), // PRO55
+                createSimpleProteinSequence("SSSSUUUUYYYY", 24),
+
+                createSimpleProteinSequence("RRRRTTTTWWWWZZZZ", 32),
+                createSimpleProteinSequence("TTTTWWWWZZZZBBBB", 32),
+                createSimpleProteinSequence("RRRRTTTTZZZZBBBBTTTTWWWW", 24),
+
+                createSimpleProteinSequence("AAAADDDDGGGGKKKK", 32), // PRO60
+                createSimpleProteinSequence("DDDDGGGGKKKKNNNN", 32),
+                createSimpleProteinSequence("AAAADDDDKKKKNNNN", 32),
+
+                createSimpleProteinSequence("BBBBEEEEHHHH", 24),
+                createSimpleProteinSequence("EEEEHHHHLLLL", 24),
+                createSimpleProteinSequence("HHHHLLLLPPPP", 24), // PRO65
+
+                createSimpleProteinSequence("CCCCFFFFIIII", 24),
+                createSimpleProteinSequence("FFFFIIIIMMMM", 24),
+                createSimpleProteinSequence("IIIIMMMMQQQQ", 24),
+
+                createSimpleProteinSequence("NNNNRRRRUUUU", 24),
+                createSimpleProteinSequence("RRRRUUUUZZZZ", 24), // PRO70
+                createSimpleProteinSequence("UUUUZZZZCCCC", 24),
             };
             
             var session = sessionFactory.OpenSession();
@@ -462,57 +485,108 @@ namespace Test
 
                     // 2 proteins (PRO35,36) to 3 peptides = 3 additional peptides (ambiguous protein group)
                     // 2 proteins (PRO37,38) to 1 of the above peptides and 1 extra peptide = 1 additional peptides (ambiguous protein group)
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("AAAAZZZZ@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("AAAAZZZ@{0}/1  BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("ZZZZBBBB@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBWWWW@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("AAAACCCC@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("AAAACCC@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("CCCCEEEE@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("EEEEGGGG@{0}/1 BBBBBBBBBB@{0}/8", charge)),
 
                     // 1 protein (PRO39) to 5 peptides = 5 additional peptides
                     // 1 protein (PRO40) to 4 of the above peptides = 0 additional peptides
                     // 1 protein (PRO41) to 3 of the above peptides and 1 extra peptides = 1 additional peptides
                     // 1 protein (PRO42) to 2 of the above peptides and 2 extra peptides = 2 additional peptides
                     // 1 protein (PRO43) to 1 of the above peptides and 3 extra peptides = 3 additional peptides
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBBYYYYY@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBBYYYY@{0}/1  BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBYYYY@{0}/1   AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBYYY@{0}/1     BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBYY@{0}/1       AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("CBBBBYYYY@{0}/1  BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DBBBYY@{0}/1     AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DBBBYYY@{0}/1    BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("EBB@{0}/1        AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("EBBY@{0}/1       BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("EBBYY@{0}/1      AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBBDDDDD@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBDDDD@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBDDD@{0}/1    AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBDD@{0}/1      BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBDD@{0}/1       AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("ZBBBBDDD@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("YBBBDD@{0}/1     AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("YBBBDDD@{0}/1    BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("WBB@{0}/1        AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("WBBD@{0}/1       BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("WBBDD@{0}/1      AAAAAAAAAA@{0}/8", charge)),
 
                     // 1 protein (PRO44) to 3 peptides, 1 of which is evidenced by an ambiguous spectrum = 3 additional peptides
                     // 1 protein (PRO45) to 1 peptide evidenced by the ambiguous spectrum above and 1 extra peptide = 1 additional peptides
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("CCCCCWWWWW@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("CCCCCWWWW@{0}/1  BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("CWWWWW@{0}/1 WWWWWD@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("WWWWWDDDDD@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DDDDDFFFFF@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DDDDDFFFF@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DFFFFF@{0}/1 FFFFFH@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("FFFFFHHHHH@{0}/1 BBBBBBBBBB@{0}/8", charge)),
                     
                     // 2 proteins (PRO46,47) to 3 peptides, 1 of which is evidenced by an ambiguous spectrum = 3 additional peptides
                     // 1 protein (PRO48) to 1 peptide evidenced by the ambiguous spectrum above and 1 extra peptide = 1 additional peptides
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DDDDDVVVVV@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DDDDDVVVV@{0}/1  BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DVVVVV@{0}/1 VVVVVE@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("VVVVVEEEEE@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("HHHHHKKKKK@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("HHHHHKKKK@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("HKKKKK@{0}/1 KKKKKM@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("KKKKKMMMMM@{0}/1 BBBBBBBBBB@{0}/8", charge)),
                     
                     // 1 protein (PRO49) to 3 peptides, 1 of which is evidenced by an ambiguous spectrum = 3 additional peptides
                     // 2 proteins (PRO50,51) to 1 peptide evidenced by the ambiguous spectrum above and 1 extra peptide = 1 additional peptides
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("EEEEEUUUUU@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("EEEEEUUUU@{0}/1  BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("EUUUUU@{0}/1 UUUUUF@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("UUUUUFFFFF@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("LLLLLNNNNN@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("LLLLLNNNN@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("LNNNNN@{0}/1 NNNNNQ@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("NNNNNQQQQQ@{0}/1 BBBBBBBBBB@{0}/8", charge)),
                     
                     // 1 protein (PRO52) to 3 peptides, 2 of which are evidenced by ambiguous spectra = 3 additional peptides
                     // 1 protein (PRO53) to 1 peptide evidenced by an ambiguous spectrum above and 1 extra peptide = 1 additional peptides
                     // 1 protein (PRO54) to 1 peptide evidenced by the other ambiguous spectrum above and 1 extra peptide = 1 additional peptides
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("FFFFFTTTTT@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("FTTTTT@{0}/1 TGGGGG@{0}/1 BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("TTTTTGGGGG@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("FTTTTT@{0}/1 TGGGGT@{0}/1 BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("TTTTGGGGT@{0}/1  AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("MMMMMPPPPP@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("MPPPPP@{0}/1 PRRRRR@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("PPPPPRRRRR@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("MPPPP@{0}/1 PRRRRP@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("PPPPRRRRP@{0}/1  AAAAAAAAAA@{0}/8", charge)),
+
+                    // PRO55 -> QQQQSSSS, SSSSUUUU = 2 additional peptides
+                    // PRO56 -> UUUUYYYY, SSSSUUUU = 2 additional peptides
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("QQQQSSSS@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("SSSSUUUU@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("UUUUYYYY@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+
+                    // PRO57 -> RRRRTTTT, WWWWZZZZ, TTTTWWWW = 3 additional peptides
+                    // PRO58 -> ZZZZBBBB, WWWWZZZZ, TTTTWWWW = 3 additional peptides
+                    // PRO59 -> RRRRTTTT, ZZZZBBBB, TTTTWWWW = 3 additional peptides
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("RRRRTTTT@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("WWWWZZZZ@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("TTTTWWWW@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("ZZZZBBBB@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+
+                    // PRO60 -> AAAADDDD, DDDDGGGG, GGGGKKKK = 3 additional peptides
+                    // PRO61 -> DDDDGGGG, GGGGKKKK, KKKKNNNN = 3 additional peptides
+                    // PRO62 -> AAAADDDD, KKKKNNNN = 0 additional peptides
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("AAAADDDD@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DDDDGGGG@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("GGGGKKKK@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("KKKKNNNN@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+
+                    // PRO63 -> BBBBEEEE, EEEEHHHH = 2 additional peptides
+                    // PRO64 -> EEEEHHHH, HHHHLLLL = 0 additional peptides
+                    // PRO65 -> HHHHLLLL, LLLLPPPP = 2 additional peptides
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBEEEE@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("EEEEHHHH@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("HHHHLLLL@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("LLLLPPPP@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+                    
+                    // PRO66 -> CCCCFFFF, CFFFFI, FFFFIIII = 3 additional peptides
+                    // PRO67 -> FFFFIIII, FIIIIM, IIIIMMMM = 1 additional peptides
+                    // PRO68 -> IIIIMMMM, IMMMMQ, MMMMQQQQ = 3 additional peptides
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("CCCCFFFF@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("CFFFFI@{0}/1     BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("FFFFIIII@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("FIIIIM@{0}/1     BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("IIIIMMMM@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("IMMMMQ@{0}/1     BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("MMMMQQQQ@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+                    
+                    // PRO69 -> NNNNRRRR, RRRRUUUU, RRRRUUU = 3 additional peptides
+                    // PRO70 -> RRRRUUUU, RRRRUUU, UUUUZZZZ = 0 additional peptides
+                    // PRO71 -> UUUUZZZZ, UZZZZC, ZZZZCCCC = 3 additional peptides
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("NNNNRRRR@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("RRRRUUUU@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("RRRRUUU@{0}/1    AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("UUUUZZZZ@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("UZZZZC@{0}/1     AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("ZZZZCCCC@{0}/1   BBBBBBBBBB@{0}/8", charge)),
                 };
 
                 TestModel.CreateTestData(session, testPsmSummary);
@@ -646,10 +720,46 @@ namespace Test
             Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO52").Id.GetValueOrDefault()]);
             Assert.AreEqual(1, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO53").Id.GetValueOrDefault()]);
             Assert.AreEqual(1, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO54").Id.GetValueOrDefault()]);
+            
+            // PRO55 -> QQQQSSSS, SSSSUUUU = 2 additional peptides
+            // PRO56 -> UUUUYYYY, SSSSUUUU = 2 additional peptides
+            Assert.AreEqual(2, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO55").Id.GetValueOrDefault()]);
+            Assert.AreEqual(2, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO56").Id.GetValueOrDefault()]);
 
-            // TODO: add tests for cases where proteins are tied on the number of explained peptide sets
-            // add a tie-breaker based on preferring protein groups with fewer shared peptides
-            // if proteins are still tied, assign them all the number of explained peptide sets
+            // PRO57 -> RRRRTTTT, WWWWZZZZ, TTTTWWWW = 3 additional peptides
+            // PRO58 -> QQQQKKKK, WWWWZZZZ, TTTTWWWW = 3 additional peptides
+            // PRO59 -> RRRRTTTT, TTTTZZZZ, TTTTWWWW = 3 additional peptides
+            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO57").Id.GetValueOrDefault()]);
+            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO58").Id.GetValueOrDefault()]);
+            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO59").Id.GetValueOrDefault()]);
+
+            // PRO60 -> AAAADDDD, DDDDGGGG, GGGGKKKK = 3 additional peptides
+            // PRO61 -> DDDDGGGG, GGGGKKKK, KKKKNNNN = 3 additional peptides
+            // PRO62 -> AAAADDDD, KKKKNNNN = 0 additional peptides
+            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO60").Id.GetValueOrDefault()]);
+            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO61").Id.GetValueOrDefault()]);
+            Assert.AreEqual(0, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO62").Id.GetValueOrDefault()]);
+
+            // PRO63 -> BBBBEEEE, EEEEHHHH = 2 additional peptides
+            // PRO64 -> EEEEHHHH, HHHHLLLL = 0 additional peptides
+            // PRO65 -> HHHHLLLL, LLLLPPPP = 2 additional peptides
+            Assert.AreEqual(2, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO63").Id.GetValueOrDefault()]);
+            Assert.AreEqual(0, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO64").Id.GetValueOrDefault()]);
+            Assert.AreEqual(2, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO65").Id.GetValueOrDefault()]);
+
+            // PRO66 -> CCCCFFFF, CFFFFI, FFFFIIII = 3 additional peptides
+            // PRO67 -> FFFFIIII, FIIIIM, IIIIMMMM = 1 additional peptides
+            // PRO68 -> IIIIMMMM, IMMMMQ, MMMMQQQQ = 3 additional peptides
+            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO66").Id.GetValueOrDefault()]);
+            Assert.AreEqual(1, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO67").Id.GetValueOrDefault()]);
+            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO68").Id.GetValueOrDefault()]);
+
+            // PRO69 -> NNNNRRRR, RRRRU, RRRRUUUU = 3 additional peptides
+            // PRO70 -> RRRRUUUU, RUUUUZ, UUUUZZZZ = 0 additional peptides
+            // PRO71 -> UUUUZZZZ, UZZZZC, ZZZZCCCC = 3 additional peptides
+            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO69").Id.GetValueOrDefault()]);
+            Assert.AreEqual(0, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO70").Id.GetValueOrDefault()]);
+            Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO71").Id.GetValueOrDefault()]);
 
             session.Transaction.Rollback();
             session.Close();
