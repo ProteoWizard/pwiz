@@ -1002,7 +1002,7 @@ namespace pwiz.Skyline.Model.DocSettings
             explicitMods = listModsGlobal.ToDictionary(mod => mod.Name);
             foreach (StaticMod mod in mods)
             {
-                if (mod.IsVariable || !mod.IsExplicit)
+                if (!mod.IsUserSet)
                 {
                     implicitMods.Add(mod);
                     explicitMods.Remove(mod.Name);
@@ -1032,7 +1032,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         // Otherwise, use the one attached to the explicit mod
                         modStatic = mod.Modification;
                     // Make sure it is marked explicit
-                    if (!modStatic.IsExplicit)
+                    if (!modStatic.IsUserSet)
                         modStatic = modStatic.ChangeExplicit(true);
                     mods.Add(modStatic);
                 }

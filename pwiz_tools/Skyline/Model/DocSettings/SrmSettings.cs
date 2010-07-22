@@ -705,8 +705,13 @@ namespace pwiz.Skyline.Model.DocSettings
 
             foreach (var mod in PeptideSettings.Modifications.GetModifications(IsotopeLabelType.light))
             {
-                if (!defSet.StaticModList.Contains(mod))
+                if (!defSet.StaticModList.Contains(mod) &&
+                        // A variable modification set explicitly, can show up as explicit only in a document.
+                        // This condition makes sure it doesn't overwrite the existing variable mod.
+                        (!mod.IsExplicit || !defSet.StaticModList.Contains(mod.ChangeVariable(true))))
+                {
                     defSet.StaticModList.Add(mod.IsExplicit ? mod.ChangeExplicit(false) : mod);
+                }
             }
 
             foreach (var typedMods in PeptideSettings.Modifications.GetHeavyModifications())

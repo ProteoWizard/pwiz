@@ -200,7 +200,7 @@ namespace pwiz.Skyline.Controls
 
                     // Set new selection to contain all visible nodes between top and bottom
                     SelectedNodes.Clear();
-                    while (!ReferenceEquals(upperNode, bottomNode))
+                    while (upperNode != null && !ReferenceEquals(upperNode, bottomNode))
                     {
                         SelectNode(upperNode, true);
                         upperNode = (TreeNodeMS)upperNode.NextVisibleNode;

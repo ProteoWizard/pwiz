@@ -147,6 +147,13 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public bool IsExplicit { get; private set; }
 
+        /// <summary>
+        /// Because variable modifications are now also set as "explicit",
+        /// the IsUserSet field was added to destinguish between explict
+        /// variable modification and explicit user set modifications.
+        /// </summary>
+        public bool IsUserSet { get { return IsExplicit && !IsVariable; } }
+
         public bool IsMod(string sequence)
         {
             for (int i = 0; i < sequence.Length; i++)
@@ -207,6 +214,11 @@ namespace pwiz.Skyline.Model.DocSettings
                                                      im.IsExplicit = prop;
                                                      im.IsVariable = false;
                                                  });
+        }
+
+        public StaticMod ChangeVariable(bool prop)
+        {
+            return ChangeProp(ImClone(this), im => im.IsVariable = im.IsExplicit = prop);
         }
 
         #endregion
@@ -822,7 +834,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // settings context is the explicit flag necessary to destinguish
             // between the global implicit modifications and the explicit modifications
             // which do not apply to everything.
-            if (modification.IsExplicit && !modification.IsVariable)
+            if (modification.IsUserSet)
                 modification = modification.ChangeExplicit(false);
             Modification = modification;
         }

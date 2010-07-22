@@ -23,6 +23,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -163,7 +164,7 @@ namespace pwiz.SkylineTestFunctional
             // Reset should still return to implicit heavy mods
             RunDlg<EditPepModsDlg>(SkylineWindow.ModifyPeptide, dlg =>
             {
-                dlg.SelectModification(IsotopeLabelType.light, sequence.IndexOf('C'),carbMod.Name);
+                dlg.SelectModification(IsotopeLabelType.light, sequence.IndexOf('C'), carbMod.Name);
                 dlg.OkDialog();
             });
             var docExCarb = WaitForDocumentChange(docReset);
@@ -185,6 +186,62 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsFalse(peptideResetImplicit.HasExplicitMods);
             AssertPrecursorMzIsModified(peptideOrig, 0, peptideResetImplicit, 0, modCarbMz, 0.1);
             AssertPrecursorMzIsModified(peptideOrig, 1, peptideResetImplicit, 1, modCarbMz, 0.1);
+
+            // Turn off the variable modifications and explicitly modify using a variable mod
+            RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, dlg =>
+            {
+                dlg.PickedStaticMods = new string[0];
+                dlg.OkDialog();
+            });
+
+            var docNoStaticMods = WaitForDocumentChange(docResetImplicit);
+
+            // Explicitly modify the first peptide
+            var pathPeptideFirst = docNoStaticMods.GetPathTo((int) SrmDocument.Level.Peptides, 0);
+            var peptideUnmod = (PeptideDocNode) docNoStaticMods.FindNode(pathPeptideFirst);
+            RunUI(() => SkylineWindow.SelectedPath = pathPeptideFirst);
+            RunDlg<EditPepModsDlg>(SkylineWindow.ModifyPeptide, dlg =>
+            {
+                var sequenceUnmod = peptideUnmod.Peptide.Sequence;
+                dlg.SelectModification(IsotopeLabelType.light, sequenceUnmod.IndexOf('M'), variableMod.Name);
+                dlg.OkDialog();
+            });
+
+            var docExplicitVarMod = WaitForDocumentChange(docNoStaticMods);
+            var peptideExplicitVarMod = (PeptideDocNode) docExplicitVarMod.FindNode(pathPeptideFirst);
+            Assert.IsTrue(peptideExplicitVarMod.HasExplicitMods);
+            Assert.IsTrue(peptideExplicitVarMod.ExplicitMods.StaticModifications != null);
+            var varModPeptide = peptideExplicitVarMod.ExplicitMods.StaticModifications[0].Modification;
+            Assert.AreEqual(variableMod.Name, varModPeptide.Name);
+            // The modification instance on the peptide should not be marked as variable
+            Assert.IsFalse(varModPeptide.IsVariable);
+            var varModSettings = docExplicitVarMod.Settings.PeptideSettings.Modifications.StaticModifications[0];
+            Assert.AreEqual(variableMod.Name, varModSettings.Name);
+            Assert.IsTrue(varModSettings.IsExplicit);
+            Assert.IsFalse(varModSettings.IsVariable);
+
+            // Make sure this did not turn on the variable modification in the settings UI
+            RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, dlg =>
+            {
+                Assert.AreEqual(0, dlg.PickedStaticMods.Length);
+                dlg.OkDialog();
+            });
+
+            string saveFilePath = TestContext.GetTestPath("TestExplicitVariable.sky");
+            RunUI(() =>
+                {
+                    Assert.IsTrue(SkylineWindow.SaveDocument(saveFilePath));
+                    SkylineWindow.NewDocument();
+                    Assert.IsTrue(SkylineWindow.OpenFile(saveFilePath));
+                });
+
+            var docRestored = SkylineWindow.Document;
+            var pathPeptideFirstNew = docRestored.GetPathTo((int) SrmDocument.Level.Peptides, 0);
+            var peptideExplicitVarModNew = docRestored.FindNode(pathPeptideFirstNew);
+            Assert.AreEqual(peptideExplicitVarMod, peptideExplicitVarModNew,
+                "Saved peptide with explicit variable modification was not restored correctly.");
+            Assert.IsTrue(Settings.Default.StaticModList.Contains(variableMod),
+                "Expected variable modification has been removed from the global list.");
         }
 
 // ReSharper disable SuggestBaseTypeForParameter
