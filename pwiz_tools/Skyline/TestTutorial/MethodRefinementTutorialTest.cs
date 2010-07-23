@@ -100,9 +100,9 @@ namespace pwiz.SkylineTestTutorial
                      });
             WaitForConditionUI(() => SkylineWindow.RTGraphController.RegressionRefined != null);
             RunDlg<EditRTDlg>(SkylineWindow.CreateRegression, editRTDlg => editRTDlg.OkDialog());
-            WaitForConditionUI(() => false);
-            
-        //   RunUI(() => SkylineWindow.RTGraphController.GraphSummary
+
+            // WaitForConditionUI(() => false);
+            // RunUI(() => SkylineWindow.RTGraphController.GraphSummary
         }
     }
 }
