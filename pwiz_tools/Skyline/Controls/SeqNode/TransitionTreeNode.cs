@@ -192,16 +192,13 @@ namespace pwiz.Skyline.Controls.SeqNode
                     // If there is only one loss, show its full description
                     var losses = nodeTran.Losses;
                     if (losses.Losses.Count == 1)
-                        table.AddDetailRow("Loss", losses.Losses[0].Loss.ToString(losses.MassType), rt);
+                        table.AddDetailRow("Loss", losses.ToStrings()[0], rt);
                     // Otherwise, just show the total mass for multiple losses
                     // followed by individual losses
                     else
                     {
-                        table.AddDetailRow("Loss", string.Format("{0:F04}", nodeTran.Losses.Mass), rt);
-                        var sb = new StringBuilder();
-                        foreach (var loss in losses.Losses)
-                            sb.AppendLine(loss.Loss.ToString(losses.MassType));
-                        table.AddDetailRow("Losses", sb.ToString(), rt);
+                        table.AddDetailRow("Loss", string.Format("{0:F04}", losses.Mass), rt);
+                        table.AddDetailRow("Losses", string.Join("\n", losses.ToStrings()), rt);
                     }
                 }
                 if (nodeTran.HasLibInfo)

@@ -262,6 +262,12 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+
+        public string[] ToStrings()
+        {
+            return (from loss in Losses
+                    select loss.Loss.ToString(MassType)).ToArray();
+        }
     }
 
     public struct TransitionLoss

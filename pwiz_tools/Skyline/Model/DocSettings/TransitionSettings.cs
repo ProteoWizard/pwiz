@@ -750,7 +750,8 @@ namespace pwiz.Skyline.Model.DocSettings
             {
             }
 
-            public abstract int FindStartFragment(double[,] masses, IonType type, int charge, double precursorMz);
+            public abstract int FindStartFragment(double[,] masses, IonType type, int charge,
+                                                  double precursorMz, out double startMz);
         }
 
         private class OrdinalFragmentFinder : StartFragmentFinder
@@ -765,8 +766,10 @@ namespace pwiz.Skyline.Model.DocSettings
 
             #region IStartFragmentFinder Members
 
-            public override int FindStartFragment(double[,] masses, IonType type, int charge, double precursorMz)
+            public override int FindStartFragment(double[,] masses, IonType type, int charge,
+                                                  double precursorMz, out double startMz)
             {
+                startMz = 0;
                 int length = masses.GetLength(1);
                 Debug.Assert(length > 0);
 
@@ -791,7 +794,22 @@ namespace pwiz.Skyline.Model.DocSettings
 
             #region IStartFragmentFinder Members
 
-            public override int FindStartFragment(double[,] masses, IonType type, int charge, double precursorMz)
+            public override int FindStartFragment(double[,] masses, IonType type, int charge,
+                                                  double precursorMz, out double startMz)
+            {
+                int start = FindStartFragment(masses, type, charge, precursorMz);
+                // If the start is not the precursor m/z, but some offset from it, use the
+                // m/z of the fragment that was chosen as the start.  Otherwise, use the precursor m/z.
+                // Unfortunately, this means you really want ion m/z values >= start m/z
+                // when start m/z is based on the first allowable fragment, but
+                // m/z values > start m/z when start m/z is the precursor m/z. At this point,
+                // using >= always is recommended for simplicity.
+                startMz = (_offset != 0 ? SequenceMassCalc.GetMZ(masses[(int) type, start], charge) : precursorMz);
+                return start;
+            }
+
+            private int FindStartFragment(double[,] masses, IonType type, int charge,
+                                                  double precursorMz)
             {
                 int length = masses.GetLength(1);
                 Debug.Assert(length > 0);
@@ -888,7 +906,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
     public interface IStartFragmentFinder : IKeyContainer<string>
     {
-        int FindStartFragment(double[,] masses, IonType type, int charge, double precursorMz);
+        int FindStartFragment(double[,] masses, IonType type, int charge, double precursorMz, out double startMz);
     }
 
     public interface IEndFragmentFinder : IKeyContainer<string>

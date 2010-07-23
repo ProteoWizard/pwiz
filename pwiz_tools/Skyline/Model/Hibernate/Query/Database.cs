@@ -583,9 +583,14 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                               FragmentIonType = transition.IonType.ToString(),
                                               FragmentIonOrdinal = transition.Ordinal,
                                               CleavageAa = transition.AA.ToString(),
+                                              LossNeutralMass = nodeTran.LostMass,
                                               Note = nodeTran.Note
                                           };
 
+            if (nodeTran.HasLoss)
+            {
+                dbTransition.Losses = string.Join(", ", nodeTran.Losses.ToStrings());
+            }
             if (nodeTran.HasLibInfo)
             {
                 dbTransition.LibraryIntensity = nodeTran.LibInfo.Intensity;

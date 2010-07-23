@@ -327,7 +327,7 @@ namespace pwiz.Skyline.Model
                             var tran = nodeTranResult.Transition;
                             var losses = nodeTranResult.Losses;
                             double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran);
-                            var info = TransitionDocNode.GetLibInfo(tran, massH, transitionRanks);
+                            var info = TransitionDocNode.GetLibInfo(tran, Transition.CalcMass(massH, losses), transitionRanks);
                             nodeTranResult = new TransitionDocNode(tran, losses, massH, info);
 
                             Helpers.AssignIfEquals(ref nodeTranResult, (TransitionDocNode) existing);
@@ -395,7 +395,7 @@ namespace pwiz.Skyline.Model
                         var annotations = nodeTransition.Annotations;   // Don't lose annotations
                         var results = nodeTransition.Results;           // Results changes happen later
                         double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran);
-                        var info = TransitionDocNode.GetLibInfo(tran, massH, transitionRanks);
+                        var info = TransitionDocNode.GetLibInfo(tran, Transition.CalcMass(massH, losses), transitionRanks);
                         var nodeNew = new TransitionDocNode(tran, annotations, losses, massH, info, results);
 
                         Helpers.AssignIfEquals(ref nodeNew, nodeTransition);
@@ -1095,6 +1095,9 @@ namespace pwiz.Skyline.Model
                 TransitionDocNode nodeTran1 = (TransitionDocNode) Children[i];
                 TransitionDocNode nodeTran2 = (TransitionDocNode) nodeGroup.Children[i];
                 if (!nodeTran1.Transition.Equivalent(nodeTran2.Transition))
+                    return false;
+                // Losses must also be equal
+                if (!Equals(nodeTran1.Losses, nodeTran2.Losses))
                     return false;
             }
             return true;

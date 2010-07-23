@@ -105,7 +105,7 @@ namespace pwiz.Skyline.Model
                     // will now fall below the minimum measurable value for the instrument
                     if (losses != null)
                     {
-                        double ionMz = SequenceMassCalc.GetMZ(CalcMass(precursorMassPredict, losses), PrecursorCharge);
+                        double ionMz = SequenceMassCalc.GetMZ(Transition.CalcMass(precursorMassPredict, losses), PrecursorCharge);
                         if (minMz > ionMz)
                             continue;
                     }
@@ -137,6 +137,12 @@ namespace pwiz.Skyline.Model
             var endFinder = filter.FragmentRangeLast;
             bool pro = filter.IncludeNProline;
             bool gluasp = filter.IncludeCGluAsp;
+            // A start m/z will need to be calculated if the start fragment
+            // finder uses m/z and their are losses to consider.  If the filter
+            // is set to only consider fragments with m/z greater than the
+            // precursor, the code below needs to also prevent loss fragments
+            // from being under that m/z.
+            double startMz = 0;
 
             // Get library settings
             var pick = tranSettings.Libraries.Pick;
@@ -174,7 +180,7 @@ namespace pwiz.Skyline.Model
                     int start = 0, end = 0;
                     if (pick != TransitionLibraryPick.all)
                     {
-                        start = startFinder.FindStartFragment(massesFilter, type, charge, precursorMz);
+                        start = startFinder.FindStartFragment(massesFilter, type, charge, precursorMz, out startMz);
                         end = endFinder.FindEndFragment(type, start, len);
                         if (Transition.IsCTerminal(type))
                             Helpers.Swap(ref start, ref end);
@@ -186,7 +192,7 @@ namespace pwiz.Skyline.Model
                         double massH = massesPredict[(int)type, i];
                         foreach (var losses in CalcTransitionLosses(type, i, massType, potentialLosses))
                         {
-                            double ionMz = SequenceMassCalc.GetMZ(CalcMass(massH, losses), charge);
+                            double ionMz = SequenceMassCalc.GetMZ(Transition.CalcMass(massH, losses), charge);
 
                             // Make sure the fragment m/z value falls within the valid instrument range.
                             // CONSIDER: This means that a heavy transition might excede the instrument
@@ -208,7 +214,7 @@ namespace pwiz.Skyline.Model
                                         yield return CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);
                                 }
                             }
-                            else if ((start <= i && i <= end) ||
+                            else if ((start <= i && i <= end && startMz <= ionMz) ||
                                 (pro && IsPro(sequence, i)) ||
                                 (gluasp && IsGluAsp(sequence, i)))
                             {
@@ -217,13 +223,8 @@ namespace pwiz.Skyline.Model
                                 else
                                 {
                                     LibraryRankedSpectrumInfo.RankedMI rmi;
-                                    if (transitionRanks.TryGetValue(ionMz, out rmi))
-                                    {
-                                         if (rmi.IonType == type && rmi.Charge == charge && Equals(rmi.Losses, losses))
-                                             yield return CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);
-                                         else
-                                             Console.WriteLine("Skipping");
-                                    }
+                                    if (transitionRanks.TryGetValue(ionMz, out rmi) && rmi.IonType == type && rmi.Charge == charge && Equals(rmi.Losses, losses))
+                                         yield return CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);
                                 }
                             }
                         }
@@ -336,7 +337,7 @@ namespace pwiz.Skyline.Model
             IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks)
         {
             Transition transition = new Transition(this);
-            var info = TransitionDocNode.GetLibInfo(transition, CalcMass(precursorMassH, losses), transitionRanks);
+            var info = TransitionDocNode.GetLibInfo(transition, Transition.CalcMass(precursorMassH, losses), transitionRanks);
             return new TransitionDocNode(transition, losses, precursorMassH, info);
         }
 
@@ -344,13 +345,8 @@ namespace pwiz.Skyline.Model
             TransitionLosses losses, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks)
         {
             Transition transition = new Transition(this, type, cleavageOffset, charge);
-            var info = TransitionDocNode.GetLibInfo(transition, CalcMass(massH, losses), transitionRanks);
+            var info = TransitionDocNode.GetLibInfo(transition, Transition.CalcMass(massH, losses), transitionRanks);
             return new TransitionDocNode(transition, losses, massH, info);
-        }
-
-        private static double CalcMass(double massH, TransitionLosses losses)
-        {
-            return massH - (losses != null ? losses.Mass : 0);
         }
 
         /// <summary>

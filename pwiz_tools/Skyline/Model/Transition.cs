@@ -184,6 +184,11 @@ namespace pwiz.Skyline.Model
             get { return GetFragmentCTermAA(_group.Peptide.Sequence, CleavageOffset); }
         }
 
+        public static double CalcMass(double massH, TransitionLosses losses)
+        {
+            return massH - (losses != null ? losses.Mass : 0);
+        }
+
         private void Validate()
         {
             if (IsPrecursor())

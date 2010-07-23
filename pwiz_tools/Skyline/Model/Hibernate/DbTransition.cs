@@ -35,6 +35,8 @@ namespace pwiz.Skyline.Model.Hibernate
         public virtual string FragmentIonType { get; set; }
         public virtual int FragmentIonOrdinal { get; set; }
         public virtual string CleavageAa { get; set; }
+        public virtual double LossNeutralMass { get; set; }
+        public virtual string Losses { get; set; }
         [QueryColumn(FullName="TransitionNote")]
         public virtual string Note { get; set; }
         public virtual int? LibraryRank { get; set; }

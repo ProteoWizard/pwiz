@@ -1099,7 +1099,7 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         foreach (var losses in TransitionGroup.CalcTransitionLosses(type, 0, rp.massType, rp.potentialLosses))
                         {
-                            if (!MatchNext(rp, type, len, losses, rp.precursorCharge, len + 1, filter, len, len))
+                            if (!MatchNext(rp, type, len, losses, rp.precursorCharge, len + 1, filter, len, len, 0))
                             {
                                 // If matched return.  Otherwise look for other ion types.
                                 if (rp.matched)
@@ -1119,9 +1119,10 @@ namespace pwiz.Skyline.Model.Lib
                             continue;
 
                         int start = 0, end = 0;
+                        double startMz = 0;
                         if (filter)
                         {
-                            start = rp.startFinder.FindStartFragment(rp.massesMatch, type, charge, rp.precursorMz);
+                            start = rp.startFinder.FindStartFragment(rp.massesMatch, type, charge, rp.precursorMz, out startMz);
                             end = rp.endFinder.FindEndFragment(type, start, len);
                             if (Transition.IsCTerminal(type))
                                 Helpers.Swap(ref start, ref end);
@@ -1137,14 +1138,14 @@ namespace pwiz.Skyline.Model.Lib
                             {
                                 foreach (var losses in TransitionGroup.CalcTransitionLosses(type, i, rp.massType, rp.potentialLosses))
                                 {
-                                    if (!MatchNext(rp, type, i, losses, charge, len, filter, end, start))
+                                    if (!MatchNext(rp, type, i, losses, charge, len, filter, end, start, startMz))
                                     {
                                         if (rp.matched)
                                         {
                                             rp.Clean();
                                             return;
                                         }
-                                        i = -1;
+                                        i = -1; // Terminate loop on i
                                         break;
                                     }
                                 }
@@ -1156,14 +1157,14 @@ namespace pwiz.Skyline.Model.Lib
                             {
                                 foreach (var losses in TransitionGroup.CalcTransitionLosses(type, i, rp.massType, rp.potentialLosses))
                                 {
-                                    if (!MatchNext(rp, type, i, losses, charge, len, filter, end, start))
+                                    if (!MatchNext(rp, type, i, losses, charge, len, filter, end, start, startMz))
                                     {
                                         if (rp.matched)
                                         {
                                             rp.Clean();
                                             return;
                                         }
-                                        i = len;
+                                        i = len; // Terminate loop on i
                                         break;
                                     }
                                 }
@@ -1173,7 +1174,7 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
 
-            private bool MatchNext(RankParams rp, IonType type, int offset, TransitionLosses losses, int charge, int len, bool filter, int end, int start)
+            private bool MatchNext(RankParams rp, IonType type, int offset, TransitionLosses losses, int charge, int len, bool filter, int end, int start, double startMz)
             {
                 bool precursorMatch = Transition.IsPrecursor(type);
                 double ionMass = !precursorMatch ? rp.massesMatch[(int)type, offset] : rp.massPreMatch;
@@ -1215,7 +1216,7 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             rp.Seen(predictedMz);
 
-                            if (!filter || (start <= offset && offset <= end) ||
+                            if (!filter || (start <= offset && offset <= end && startMz <= ionMz) ||
                                 (rp.pro && TransitionGroup.IsPro(rp.sequence, offset)) ||
                                 (rp.gluasp && TransitionGroup.IsGluAsp(rp.sequence, offset)))
                             {

@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -75,6 +76,14 @@ namespace pwiz.SkylineTestFunctional
             // Create the modification and library spec used in this test
             var phosphLossMod = new StaticMod("Phospho Loss", "S, T", null, true, "HPO3",
                                               LabelAtoms.None, RelativeRT.Matching, null, null,  new[] { new FragmentLoss("H3PO4"), });
+            var multipleLossMod = new StaticMod("Multiple Loss-only", "D", null, false, null,
+                LabelAtoms.None, RelativeRT.Matching, null, null, new[]
+                {
+                    new FragmentLoss("NH3"),
+                    new FragmentLoss("H2O"),
+                    new FragmentLoss(null, 20, 25)
+                });
+            var heavyKMod = new StaticMod("Heavy K", "K", ModTerminus.C, null, LabelAtoms.C13 | LabelAtoms.N15, null, null);
             var librarySpec = new BiblioSpecLiteSpec("Phospho Library",
                                                      TestFilesDir.GetTestPath("phospho_30882_v2.blib"));
 
@@ -82,14 +91,17 @@ namespace pwiz.SkylineTestFunctional
             Settings.Default.StaticModList.Clear();
             Settings.Default.StaticModList.AddRange(StaticModList.GetDefaultsOn());
             Settings.Default.StaticModList.Add(phosphLossMod);
+            Settings.Default.HeavyModList.Clear();
+            Settings.Default.HeavyModList.Add(heavyKMod);
             Settings.Default.SpectralLibraryList.Clear();
             Settings.Default.SpectralLibraryList.Add(librarySpec);
 
             // Prepare document settings for this test
+            const int countIons = 6;
             var settings = SrmSettingsList.GetDefault()
                 .ChangePeptideModifications(mods => mods.ChangeStaticModifications(new List<StaticMod>(mods.StaticModifications) { phosphLossMod }))
                 .ChangePeptideLibraries(lib => lib.ChangeLibrarySpecs(new[] { librarySpec }))
-                .ChangeTransitionLibraries(tlib => tlib.ChangeIonCount(6));
+                .ChangeTransitionLibraries(tlib => tlib.ChangeIonCount(countIons));
 
             RunUI(() => SkylineWindow.ModifyDocument("Set test settings",
                                                      doc => doc.ChangeSettings(settings)));
@@ -104,7 +116,6 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(7, GetLossCount(docLibLoss, 1));
 
             string lossLabel = "-" + Math.Round(phosphLossMod.Losses[0].MonoisotopicMass, 1);
-            int checkedCount = 0;
             for (int i = 0; i < docLibLoss.TransitionGroupCount; i++)
             {
                 var pathTranGroup = docLibLoss.GetPathTo((int) SrmDocument.Level.TransitionGroups, i);
@@ -123,18 +134,82 @@ namespace pwiz.SkylineTestFunctional
                 // Make sure the transition tree nodes contain -98 ions
                 RunUI(() => Assert.IsTrue(GetChildLabels(SkylineWindow.SelectedNode).Contains(label => label.Contains(lossLabel)),
                     string.Format("Missing loss labels in transition tree nodes for {0}", nodeGroup.TransitionGroup.Peptide.Sequence)));
-
-                checkedCount++;
             }
-        }
 
-        private static string[] GetChildLabels(TreeNode nodeTree)
-        {
-            nodeTree.Expand();
-            var listLabels = new List<string>();
-            foreach (TreeNode nodeChild in nodeTree.Nodes)
-                listLabels.Add(nodeChild.Text);
-            return listLabels.ToArray();
+            // Make the settings significantly more complex
+            // - 2 neutral losses
+            // - a second modification with 3 potential neutral losses
+            // - a heavy labeling modification
+            // - only ions between precursor m/z and last ion
+            // - allow both y- and b- ions
+            // - no proline peaks
+            // - only use filtered ions to match library
+            RunUI(() => SkylineWindow.ModifyDocument("Set test settings", doc =>
+                doc.ChangeSettings(doc.Settings.ChangePeptideModifications(mod =>
+                        mod.ChangeMaxNeutralLosses(2)
+                            .ChangeStaticModifications(new List<StaticMod>(mod.StaticModifications) {multipleLossMod})
+                            .ChangeHeavyModifications(new[] { heavyKMod }))
+                    .ChangeTransitionFilter(filter =>
+                        filter.ChangeFragmentRangeFirstName("m/z > precursor")
+                            .ChangeFragmentRangeLastName("last ion")
+                            .ChangeIonTypes(new[] { IonType.y, IonType.b })
+                            .ChangeIncludeNProline(false))
+                    .ChangeTransitionLibraries(lib =>
+                        lib.ChangePick(TransitionLibraryPick.filter)))));
+
+            var docComplex = WaitForDocumentChange(docLibLoss);
+
+            // The document has 2 variable mod peptides at the protein terminus
+            Assert.AreEqual(docLibLoss.TransitionGroupCount*2 - 2, docComplex.TransitionGroupCount);
+            Assert.AreEqual(4, GetLossCount(docComplex, 2));
+            Assert.AreEqual(16, GetLossCount(docComplex, 1));
+            foreach (var nodePep in docComplex.Peptides)
+            {
+                if (nodePep.Children.Count != 2)
+                    continue;
+                var nodeGroup1 = (TransitionGroupDocNode)nodePep.Children[0];
+                var nodeGroup2 = (TransitionGroupDocNode)nodePep.Children[1];
+
+                Assert.IsTrue(nodeGroup1.EquivalentChildren(nodeGroup2));
+            }
+            // CONSIDER: Can't check cloned because of libraries.  Maybe add a new method for this
+            // AssertEx.Serializable(docComplex, AssertEx.DocumentCloned);
+
+            SelectNode(SrmDocument.Level.Peptides, 1);
+            WaitForGraphs();
+
+            // Verify that the ion labels in the graph match those in the tree view
+            RunUI(() =>
+                      {
+                          var nodePepSelected = (PeptideDocNode) docComplex.FindNode(SkylineWindow.SelectedPath);
+                          string[] ionLabels = SkylineWindow.GraphSpectrum.IonLabels.ToArray();
+
+                          foreach (TransitionGroupDocNode nodeGroup in nodePepSelected.Children)
+                          {
+                              var setSeenRanks = new HashSet<int>();
+                              foreach (TransitionDocNode nodeTran in nodeGroup.Children)
+                              {
+                                  Assert.IsTrue(nodeTran.HasLibInfo);
+                                  // Make sure the rank has not been seen
+                                  int rankTran = nodeTran.LibInfo.Rank;
+                                  Assert.IsFalse(setSeenRanks.Contains(rankTran));
+                                  setSeenRanks.Add(rankTran);
+                                  // And it is within the expected range
+                                  Assert.IsTrue(1 <= rankTran && rankTran <= countIons);
+                                  // Make sure there is a matching label in the spectrum graph
+                                  var regexRank = nodeTran.HasLoss ? 
+                                      new Regex(string.Format(@"(\w)(\d+) -([^ +]+).* \(rank {0}\)", rankTran)) :
+                                      new Regex(string.Format(@"(\w)(\d+).* \(rank {0}\)", rankTran));
+                                  int iLabel = ionLabels.IndexOf(regexRank.IsMatch);
+                                  Assert.IsTrue(iLabel != -1);
+                                  var match = regexRank.Match(ionLabels[iLabel]);
+                                  Assert.AreEqual(nodeTran.Transition.IonType.ToString(), match.Groups[1].Value);
+                                  Assert.AreEqual(nodeTran.Transition.Ordinal, int.Parse(match.Groups[2].Value));
+                                  if (nodeTran.HasLoss)
+                                      Assert.AreEqual(nodeTran.Losses.Mass, double.Parse(match.Groups[3].Value), 0.1);
+                              }
+                          }
+                      });
         }
 
         private static int GetLossCount(SrmDocument document, int minLosses)
@@ -146,6 +221,15 @@ namespace pwiz.SkylineTestFunctional
                     count++;
             }
             return count;
+        }
+
+        private static string[] GetChildLabels(TreeNode nodeTree)
+        {
+            nodeTree.Expand();
+            var listLabels = new List<string>();
+            foreach (TreeNode nodeChild in nodeTree.Nodes)
+                listLabels.Add(nodeChild.Text);
+            return listLabels.ToArray();
         }
     }
 }

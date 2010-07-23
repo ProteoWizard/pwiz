@@ -145,6 +145,8 @@
     <property name="FragmentIonType" length="1"/>
     <property name="FragmentIonOrdinal" />
     <property name="CleavageAa" length="1"/>
+    <property name="LossNeutralMass"/>
+    <property name="Losses" length="256"/>
     <property name="Note" length="10000" />
     <property name="LibraryRank" />
     <property name="LibraryIntensity" />
