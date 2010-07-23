@@ -798,7 +798,7 @@ namespace pwiz.Skyline
 
                 IdentityPath selectPath = null;
 
-                ModifyDocument("Paste Skyline data", doc =>
+                ModifyDocument("Paste " + (pasteToPeptideList ? "peptides" : "proteins"), doc =>
                     doc.ImportDocumentXml(new StringReader(dataObjectSkyline.Substring(dataObjectSkyline.IndexOf('<'))),
                         Settings.Default.StaticModList, Settings.Default.HeavyModList,
                         nodePaste == null ? null : nodePaste.Path, out selectPath, pasteToPeptideList));

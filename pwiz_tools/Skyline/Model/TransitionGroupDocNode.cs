@@ -428,9 +428,9 @@ namespace pwiz.Skyline.Model
         public DocNode EnsureChildren(PeptideDocNode parent, ExplicitMods mods, SrmSettings settings)
         {
             var result = this;
-
+            // Check if children will change as a result of ChangeSettings.
             var changed = result.ChangeSettings(settings, mods, SrmSettingsDiff.ALL);
-            if (result.AutoManageChildren && !ArrayUtil.ReferencesEqual(result.Children, changed.Children))
+            if (result.AutoManageChildren && !AreEquivalentChildren(result.Children, changed.Children))
             {
                 changed = result = (TransitionGroupDocNode)result.ChangeAutoManageChildren(false);
                 changed = changed.ChangeSettings(settings, mods, SrmSettingsDiff.ALL);
@@ -442,6 +442,7 @@ namespace pwiz.Skyline.Model
                                                     Annotations, 0.0, RelativeRT, LibInfo, Results, new TransitionDocNode[0], result.AutoManageChildren);
                 result = new TransitionGroupDocNode(result, PrecursorMz, RelativeRT, new List<DocNode>());
             }
+            // Match children resulting from ChangeSettings to current children
             var dictIndexToChild = Children.ToDictionary(child => child.Id.GlobalIndex);
             var listChildren = new List<DocNode>();
             foreach (TransitionDocNode nodePep in changed.Children)
@@ -453,6 +454,18 @@ namespace pwiz.Skyline.Model
                 }
             }
             return result.ChangeChildrenChecked(listChildren);
+        }
+
+        private static bool AreEquivalentChildren(IList<DocNode> children1, IList<DocNode> children2)
+        {
+            if (children1.Count != children2.Count)
+                return false;
+            for (int i = 0; i < children1.Count; i++)
+            {
+                if (!Equals(((TransitionDocNode)children1[i]).Key, ((TransitionDocNode)children2[i]).Key))
+                    return false;
+            }
+            return true;
         }
 
         private Dictionary<TransitionLossKey, DocNode> CreateTransitionLossToChildMap()

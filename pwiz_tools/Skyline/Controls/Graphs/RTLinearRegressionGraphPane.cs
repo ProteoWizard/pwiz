@@ -88,6 +88,11 @@ namespace pwiz.Skyline.Controls.Graphs
             return false;
         }
 
+        public void SelectPeptide(PeptideDocNode node)
+        {
+            throw new NotImplementedException();
+        }
+
         public bool AllowDeletePoint(PointF point)
         {
             return PeptideIndexFromPoint(point) != null;

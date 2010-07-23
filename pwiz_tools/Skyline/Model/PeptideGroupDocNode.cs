@@ -186,13 +186,14 @@ namespace pwiz.Skyline.Model
         public PeptideGroupDocNode EnsureChildren(SrmSettings settings, bool peptideList)
         {
             var result = this;
-
+            // Check if children will change as a result of ChangeSettings.
             var changed = result.ChangeSettings(settings, SrmSettingsDiff.ALL);
             if (result.AutoManageChildren && !AreEquivalentChildren(result.Children, changed.Children))
             {
                 changed = result = (PeptideGroupDocNode) result.ChangeAutoManageChildren(false);
                 changed = changed.ChangeSettings(settings, SrmSettingsDiff.ALL);
             }
+            // Match children resulting from ChangeSettings to current children.
             var dictIndexToChild = Children.ToDictionary(child => child.Id.GlobalIndex);
             var listChildren = new List<DocNode>();
             foreach (PeptideDocNode nodePep in changed.Children)
@@ -210,7 +211,7 @@ namespace pwiz.Skyline.Model
                 return false;
             for (int i = 0; i < children1.Count; i++)
             {
-                if(((PeptideDocNode) children1[i]).Key != ((PeptideDocNode) children2[i]).Key)
+                if(!Equals(((PeptideDocNode) children1[i]).Key, ((PeptideDocNode) children2[i]).Key))
                     return false;
             }
             return true;

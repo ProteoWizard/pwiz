@@ -409,7 +409,7 @@ namespace pwiz.Skyline.Model
                                              MappedList<string, StaticMod> heavyMods,
                                              IdentityPath to,
                                              out IdentityPath firstAdded,
-                                                bool pasteToPeptideList)
+                                             bool pasteToPeptideList)
         {
             try
             {
@@ -419,8 +419,8 @@ namespace pwiz.Skyline.Model
                 SrmDocument clipboardDocument = (SrmDocument) ser.Deserialize(reader);
 
                 // Add clipboard modifications to default modifications.
-                clipboardDocument.Settings.UpdateDefaultModifications();
-
+                clipboardDocument.Settings.UpdateDefaultModifications(false);
+                
                 var newDocument = this;
 
                 // Merge library specs from clipboard document with current document.
@@ -442,7 +442,7 @@ namespace pwiz.Skyline.Model
                 // Create new explicit modifications for peptides and set auto-manage children
                 // when necessary for nodes pasted in from the clipboard. 
                 IList<PeptideGroupDocNode> peptideGroupsNew = new List<PeptideGroupDocNode>();
-                foreach (PeptideGroupDocNode groupNode in peptideGroups)
+               foreach (PeptideGroupDocNode groupNode in peptideGroups)
                 {
                     // Set explicit modifications first, since it may impact which
                     // children will be present.
@@ -459,7 +459,12 @@ namespace pwiz.Skyline.Model
                     groupNodeEnsured = groupNodeEnsured.EnsureChildren(newDocument.Settings, pasteToPeptideList);
                     peptideGroupsNew.Add(groupNodeEnsured.ChangeSettings(newDocument.Settings, SrmSettingsDiff.ALL));
                 }
-                return newDocument.AddPeptideGroups(peptideGroupsNew, pasteToPeptideList, to, out firstAdded);
+                newDocument = newDocument.AddPeptideGroups(peptideGroupsNew, pasteToPeptideList, to, out firstAdded);
+                var modifications = Settings.PeptideSettings.Modifications.DeclareExplicitMods(newDocument, staticMods,
+                                                                                               heavyMods);
+                newDocument = newDocument.ChangeSettings(Settings.ChangePeptideSettings(Settings.PeptideSettings.ChangeModifications(modifications)));
+                
+                return newDocument;
             }
 
             finally

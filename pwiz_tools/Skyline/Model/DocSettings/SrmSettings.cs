@@ -614,7 +614,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         defSet.SpectralLibraryList.Add(librarySpec);
                 }
             }
-            UpdateDefaultModifications();
+            UpdateDefaultModifications(true);
             if (TransitionSettings.Prediction != null)
             {
                 TransitionPrediction prediction = TransitionSettings.Prediction;
@@ -699,31 +699,59 @@ namespace pwiz.Skyline.Model.DocSettings
                 new BackgroundProteome(backgroundProteomeSpecNew)));
         }
 
-        public void UpdateDefaultModifications()
+        public void UpdateDefaultModifications(bool overwrite)
         {
             var defSet = Settings.Default;
 
+            IList<StaticMod> newStaticMods = new List<StaticMod>();
+            IList<StaticMod> newHeavyMods = new List<StaticMod>();
+
             foreach (var mod in PeptideSettings.Modifications.GetModifications(IsotopeLabelType.light))
             {
-                if (!defSet.StaticModList.Contains(mod) &&
+                if (!defSet.StaticModList.Contains(mod.ChangeExplicit(true)) && !defSet.StaticModList.Contains(mod.ChangeExplicit(false)) &&
                         // A variable modification set explicitly, can show up as explicit only in a document.
                         // This condition makes sure it doesn't overwrite the existing variable mod.
                         (!mod.IsExplicit || !defSet.StaticModList.Contains(mod.ChangeVariable(true))))
                 {
-                    // User set (IsExplicit && !IsVariable) is a document-only state
-                    defSet.StaticModList.Add(mod.IsUserSet ? mod.ChangeExplicit(false) : mod);
+                    newStaticMods.Add(mod.IsUserSet ? mod.ChangeExplicit(false) : mod);
+                    if (!overwrite)
+                    {
+                        var modName = mod.Name;
+                        foreach (StaticMod existingMod in defSet.StaticModList)
+                        {
+                            if (Equals(existingMod.Name, modName))
+                                throw new InvalidDataException(
+                                    string.Format("The modification '{0}' already exists with a different definition.", modName));
+                        }
+                    }
                 }
             }
 
             foreach (var typedMods in PeptideSettings.Modifications.GetHeavyModifications())
             {
-                foreach (var mod in typedMods.Modifications)
+                foreach (StaticMod mod in typedMods.Modifications)
                 {
-                    if (!defSet.HeavyModList.Contains(mod))
-                        defSet.HeavyModList.Add(mod.IsExplicit ? mod.ChangeExplicit(false) : mod);
+                    if (!defSet.HeavyModList.Contains(mod.ChangeExplicit(false)) && !defSet.HeavyModList.Contains(mod.ChangeExplicit(true)))
+                    {
+                        newHeavyMods.Add(mod.IsExplicit ? mod.ChangeExplicit(false) : mod);
+                        if (!overwrite)
+                        {
+                            var modName = mod.Name;
+                            foreach (StaticMod existingMod in defSet.HeavyModList)
+                            {
+                                if (Equals(existingMod.Name, modName))
+                                    throw new InvalidDataException(
+                                        string.Format("The modification '{0}' already exists with a different definition.", modName));
+                            }
+                        }
+                    }
                 }
             }
-        }
+            foreach(StaticMod mod in newStaticMods)
+                defSet.StaticModList.Add(mod);
+            foreach(StaticMod mod in newHeavyMods)
+                defSet.HeavyModList.Add(mod);
+         }
 
         #region Implementation of IXmlSerializable
 
@@ -876,8 +904,7 @@ namespace pwiz.Skyline.Model.DocSettings
     public interface IPrecursorMassCalc
     {
         double GetPrecursorMass(string seq);
-        bool IsModified(string seq);
-        string GetModifiedSequence(string seq, bool formatNarrow);
+        bool IsModified(string seq);string GetModifiedSequence(string seq, bool formatNarrow);
     }
 
     public interface IFragmentMassCalc

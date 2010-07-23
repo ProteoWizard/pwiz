@@ -67,6 +67,7 @@ namespace pwiz.Skyline.Controls
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public ICollection<TreeNodeMS> SelectedNodes { get; private set; }
 
+        // If true, disjoint select is enabled.
 	    private bool _allowDisjoint;
 
         /// <summary>
@@ -78,6 +79,7 @@ namespace pwiz.Skyline.Controls
 
         private Keys ModifierKeysOverriden
         {
+            // If the control key is overriden, we can assume disjoint select was intended. 
             get
             {
                 if (KeysOverride == Keys.Control)
@@ -88,17 +90,22 @@ namespace pwiz.Skyline.Controls
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
+            // It is necessary to make sure that just the CTRL key is pressed and no modifiers -
+            // else, CTRL+C, CTRL+V, CTRL+Z .. etc can all cause incorrect selections.
+            // The combination below represents just the CTRL key command key.
+            // Modifiers to CTRL are sent as a seperate, following command key, which will disable disjoint select.
             _allowDisjoint = keyData == (Keys.Control | Keys.LButton | Keys.ShiftKey);
             return base.ProcessCmdKey(ref msg, keyData);
         }
 
-        protected bool IsRangeSelect { get { return ModifierKeysOverriden == Keys.Shift; } }
         protected bool IsDisjointSelect
         {
+            // Disjoint select only occurs when the control key is held, so check that first then check
+            // allow disjoint to check for modifiers to the control key.
             get { return ModifierKeysOverriden == Keys.Control && _allowDisjoint; }
         }
 
-
+        protected bool IsRangeSelect { get { return ModifierKeysOverriden == Keys.Shift; } }
 
         public void SelectNode(TreeNodeMS node, bool select)
         {

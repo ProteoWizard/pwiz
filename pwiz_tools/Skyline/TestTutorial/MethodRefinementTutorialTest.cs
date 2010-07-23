@@ -19,9 +19,12 @@
 
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
+
 
 namespace pwiz.SkylineTestTutorial
 {
@@ -35,8 +38,9 @@ namespace pwiz.SkylineTestTutorial
         public void TestMethodRefinementTutorial()
         {
             // Need to deal with this issue.
-            TestFilesZip = @"https://brendanx-uw1.gs.washington.edu/tutorials/MethodRefineSupplement.zip";
-            TestFilesZip = @"https://brendanx-uw1.gs.washington.edu/tutorials/MethodRefine.zip";
+            TestFilesZipPaths = new[] { @"https://brendanx-uw1.gs.washington.edu/tutorials/MethodRefineSupplement.zip",
+                    @"https://brendanx-uw1.gs.washington.edu/tutorials/MethodRefine.zip" 
+                 };
             RunFunctionalTest();
         }
 
@@ -44,7 +48,7 @@ namespace pwiz.SkylineTestTutorial
         {
             RunUI(() =>
                   {
-                      SkylineWindow.OpenFile(TestFilesDir.GetTestPath(@"MethodRefine\WormUnrefined.sky"));
+                      SkylineWindow.OpenFile(TestFilesDirs[1].GetTestPath(@"MethodRefine\WormUnrefined.sky"));
                       SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0];
                   });
             var exportDialog = ShowDialog<ExportMethodDlg>(() =>
@@ -56,8 +60,7 @@ namespace pwiz.SkylineTestTutorial
                     exportDialog.OptimizeType = ExportOptimize.NONE;
                     exportDialog.MaxTransitions = 59;
                 });
-            OkDialog(exportDialog, () => exportDialog.OkDialog(TestFilesDir.GetTestPath(@"MethodRefine\worm")));
-            TestContext.ExtractTestFiles(TestContext.TestDir + @"\MethodRefineSupplement.zip");
+            OkDialog(exportDialog, () => exportDialog.OkDialog(TestFilesDirs[1].GetTestPath(@"MethodRefine\worm")));
             RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, manageResultsDlg =>
                  {
                      manageResultsDlg.Remove();
@@ -67,37 +70,39 @@ namespace pwiz.SkylineTestTutorial
             RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg =>
                   {
                       importResultsDlg.RadioAddNewChecked = true;
-                      importResultsDlg.NamedPathSets = ImportResultsDlg.GetDataSourcePathsDir(TestContext.TestDir).Take(15).ToArray();
+                      importResultsDlg.NamedPathSets = ImportResultsDlg.GetDataSourcePathsDir(TestFilesDirs[0].FullPath).Take(15).ToArray();
                       importResultsDlg.OptimizationName = ExportOptimize.CE;
                       importResultsDlg.OkDialog();
-                    });
+                  });
             WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
-            //RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg =>
-            //{
-            //    importResultsDlg.RadioAddExistingChecked = true;
-            //    importResultsDlg.NamedPathSets = ImportResultsDlg.GetDataSourcePathsDir(TestContext.TestDir).Skip(15).ToArray();
-            //    importResultsDlg.OptimizationName = ExportOptimize.CE;
-            //    importResultsDlg.OkDialog();
-            //});
-            //WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
-            //RunUI(() =>
-            //          {
-            //              SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0];
-            //              SkylineWindow.AutoZoomNone();
-            //              SkylineWindow.AutoZoomBestPeak();
-            //              SkylineWindow.EditDelete();
-            //              SkylineWindow.ShowRTLinearRegressionGraph();
-            //          });
-            //RunDlg<ShowRTThresholdDlg>(SkylineWindow.ShowRTThresholdDlg, rtThresholdDlg =>
-            //         {
-            //             rtThresholdDlg.Threshold = 0.95;
-            //             rtThresholdDlg.OkDialog();
-            //         });
-            //WaitForConditionUI(() => SkylineWindow.RTGraphController.RegressionRefined != null);
-            //RunDlg<EditRTDlg>(SkylineWindow.CreateRegression, editRTDlg => editRTDlg.OkDialog());
-            // WaitForConditionUI(() => false);
+            RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg =>
+            {
+                importResultsDlg.RadioAddExistingChecked = true;
+
+
+                importResultsDlg.NamedPathSets = ImportResultsDlg.GetDataSourcePathsDir(TestFilesDirs[0].FullPath).Skip(15).ToArray();
+                importResultsDlg.OptimizationName = ExportOptimize.CE;
+                importResultsDlg.OkDialog();
+            });
+            WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+            RunUI(() =>
+                      {
+                          SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0];
+                          SkylineWindow.AutoZoomNone();
+                          SkylineWindow.AutoZoomBestPeak();
+                          SkylineWindow.EditDelete();
+                          SkylineWindow.ShowRTLinearRegressionGraph();
+                      });
+            RunDlg<ShowRTThresholdDlg>(SkylineWindow.ShowRTThresholdDlg, rtThresholdDlg =>
+                     {
+                         rtThresholdDlg.Threshold = 0.95;
+                         rtThresholdDlg.OkDialog();
+                     });
+            WaitForConditionUI(() => SkylineWindow.RTGraphController.RegressionRefined != null);
+            RunDlg<EditRTDlg>(SkylineWindow.CreateRegression, editRTDlg => editRTDlg.OkDialog());
+            WaitForConditionUI(() => false);
             
-            // RunUI(() => SkylineWindow.RTGraphController.GraphSummary.GraphPane );
+        //   RunUI(() => SkylineWindow.RTGraphController.GraphSummary
         }
     }
 }
