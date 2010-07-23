@@ -669,7 +669,8 @@ namespace IDPicker.DataModel
             var proteinSetByProteinGroup = new Map<string, Set<long>>();
             var sharedResultsByProteinId = new Map<long, long>();
 
-            session.CreateSQLQuery("CREATE TABLE SpectrumResults AS " +
+            try { session.CreateSQLQuery("DROP TABLE SpectrumResults").ExecuteUpdate(); } catch { }
+            session.CreateSQLQuery("CREATE TEMP TABLE SpectrumResults AS " +
                                    "SELECT psm.Spectrum AS Spectrum, GROUP_CONCAT(DISTINCT psm.Peptide) AS Peptides, COUNT(DISTINCT pi.Protein) AS SharedResultCount " +
                                    "FROM PeptideSpectrumMatches psm " +
                                    "JOIN PeptideInstances pi ON psm.Peptide = pi.Peptide " +

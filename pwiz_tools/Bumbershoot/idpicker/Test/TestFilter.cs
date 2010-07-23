@@ -754,12 +754,410 @@ namespace Test
             Assert.AreEqual(1, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO67").Id.GetValueOrDefault()]);
             Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO68").Id.GetValueOrDefault()]);
 
-            // PRO69 -> NNNNRRRR, RRRRU, RRRRUUUU = 3 additional peptides
-            // PRO70 -> RRRRUUUU, RUUUUZ, UUUUZZZZ = 0 additional peptides
+            // PRO69 -> NNNNRRRR, RRRRUUUU, RRRRUUU = 3 additional peptides
+            // PRO70 -> RRRRUUUU, RRRRUUU, UUUUZZZZ = 0 additional peptides
             // PRO71 -> UUUUZZZZ, UZZZZC, ZZZZCCCC = 3 additional peptides
             Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO69").Id.GetValueOrDefault()]);
             Assert.AreEqual(0, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO70").Id.GetValueOrDefault()]);
             Assert.AreEqual(3, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO71").Id.GetValueOrDefault()]);
+
+            // test that the MinimumAdditionalPeptidesPerProtein filter is applied correctly;
+            // proteins filtered out by it should cascade to PeptideInstances, Peptides, and PSMs
+
+            dataFilter.MinimumAdditionalPeptidesPerProtein = 1;
+            dataFilter.ApplyBasicFilters(session);
+
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO55"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO56"));
+
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO57"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO58"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO59"));
+
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO60"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO61"));
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Accession == "PRO62"));
+            Assert.IsNull(session.UniqueResult<PeptideInstance>(o => o.Protein.Accession == "PRO62"));
+            Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "AAAADDDD"));
+            Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "KKKKNNNN"));
+
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO63"));
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Accession == "PRO64"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO65"));
+            Assert.IsNull(session.UniqueResult<PeptideInstance>(o => o.Protein.Accession == "PRO64"));
+            Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "EEEEHHHH"));
+            Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "HHHHLLLL"));
+
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO66"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO67"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO68"));
+
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO69"));
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Accession == "PRO70"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO71"));
+            Assert.IsNull(session.UniqueResult<PeptideInstance>(o => o.Protein.Accession == "PRO70"));
+            Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "RRRRUUUU"));
+            Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "RRRRUUU"));
+            Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "UUUUZZZZ"));
+
+            dataFilter.MinimumAdditionalPeptidesPerProtein = 2;
+            dataFilter.ApplyBasicFilters(session);
+
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO55"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO56"));
+
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO57"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO58"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO59"));
+
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO60"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO61"));
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Accession == "PRO62"));
+            Assert.IsNull(session.UniqueResult<PeptideInstance>(o => o.Protein.Accession == "PRO62"));
+
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO63"));
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Accession == "PRO64"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO65"));
+            Assert.IsNull(session.UniqueResult<PeptideInstance>(o => o.Protein.Accession == "PRO64"));
+
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO66"));
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Accession == "PRO67"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO68"));
+            Assert.IsNull(session.UniqueResult<PeptideInstance>(o => o.Protein.Accession == "PRO67"));
+            Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "FIIIIM"));
+            Assert.IsNull(session.UniqueResult<PeptideSpectrumMatch>(o => o.Peptide.Sequence == "FIIIIM"));
+
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO69"));
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Accession == "PRO70"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO71"));
+            Assert.IsNull(session.UniqueResult<PeptideInstance>(o => o.Protein.Accession == "PRO70"));
+
+            dataFilter.MinimumAdditionalPeptidesPerProtein = 3;
+            dataFilter.ApplyBasicFilters(session);
+
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Accession == "PRO55"));
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Accession == "PRO56"));
+            Assert.IsNull(session.UniqueResult<PeptideInstance>(o => o.Protein.Accession == "PRO55"));
+            Assert.IsNull(session.UniqueResult<PeptideInstance>(o => o.Protein.Accession == "PRO56"));
+            Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "QQQQSSSS"));
+            Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "SSSSUUUU"));
+            Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "UUUUYYYY"));
+            Assert.IsNull(session.UniqueResult<PeptideSpectrumMatch>(o => o.Peptide.Sequence == "QQQQSSSS"));
+            Assert.IsNull(session.UniqueResult<PeptideSpectrumMatch>(o => o.Peptide.Sequence == "SSSSUUUU"));
+            Assert.IsNull(session.UniqueResult<PeptideSpectrumMatch>(o => o.Peptide.Sequence == "UUUUYYYY"));
+
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO57"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO58"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO59"));
+
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO60"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO61"));
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Accession == "PRO62"));
+            Assert.IsNull(session.UniqueResult<PeptideInstance>(o => o.Protein.Accession == "PRO62"));
+
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Accession == "PRO63"));
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Accession == "PRO64"));
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Accession == "PRO65"));
+            Assert.IsNull(session.UniqueResult<PeptideInstance>(o => o.Protein.Accession == "PRO63"));
+            Assert.IsNull(session.UniqueResult<PeptideInstance>(o => o.Protein.Accession == "PRO64"));
+            Assert.IsNull(session.UniqueResult<PeptideInstance>(o => o.Protein.Accession == "PRO65"));
+            Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "BBBBEEEE"));
+            Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "EEEEHHHH"));
+            Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "HHHHLLLL"));
+            Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "LLLLPPPP"));
+            Assert.IsNull(session.UniqueResult<PeptideSpectrumMatch>(o => o.Peptide.Sequence == "BBBBEEEE"));
+            Assert.IsNull(session.UniqueResult<PeptideSpectrumMatch>(o => o.Peptide.Sequence == "EEEEHHHH"));
+            Assert.IsNull(session.UniqueResult<PeptideSpectrumMatch>(o => o.Peptide.Sequence == "HHHHLLLL"));
+            Assert.IsNull(session.UniqueResult<PeptideSpectrumMatch>(o => o.Peptide.Sequence == "LLLLPPPP"));
+
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO66"));
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Accession == "PRO67"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO68"));
+            Assert.IsNull(session.UniqueResult<PeptideInstance>(o => o.Protein.Accession == "PRO67"));
+
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO69"));
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Accession == "PRO70"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO71"));
+            Assert.IsNull(session.UniqueResult<PeptideInstance>(o => o.Protein.Accession == "PRO70"));
+
+            dataFilter.MinimumAdditionalPeptidesPerProtein = 4;
+            dataFilter.ApplyBasicFilters(session);
+
+            Assert.AreEqual(1, session.Query<Protein>().Count());
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO39"));
+            Assert.IsNull(session.UniqueResult<PeptideInstance>(o => o.Protein.Accession != "PRO39"));
+
+            var remainingPeptides = new string[] { "BBBBBDDDDD", "BBBBDDDD", "BBBBDDD", "BBBDD", "BBDD" };
+            Assert.AreEqual(5, session.Query<Peptide>().Count());
+            Assert.IsNotNull(session.UniqueResult<Peptide>(o => remainingPeptides.Contains(o.Sequence)));
+            Assert.IsNull(session.UniqueResult<Peptide>(o => !remainingPeptides.Contains(o.Sequence)));
+            Assert.IsNotNull(session.UniqueResult<PeptideSpectrumMatch>(o => remainingPeptides.Contains(o.Peptide.Sequence)));
+            Assert.IsNull(session.UniqueResult<PeptideSpectrumMatch>(o => !remainingPeptides.Contains(o.Peptide.Sequence)));
+
+            dataFilter.MinimumAdditionalPeptidesPerProtein = 5;
+            dataFilter.ApplyBasicFilters(session);
+
+            Assert.AreEqual(1, session.Query<Protein>().Count());
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Accession == "PRO39"));
+            Assert.IsNull(session.UniqueResult<PeptideInstance>(o => o.Protein.Accession != "PRO39"));
+
+            dataFilter.MinimumAdditionalPeptidesPerProtein = 6;
+            dataFilter.ApplyBasicFilters(session);
+
+            Assert.AreEqual(0, session.Query<Protein>().Count());
+            Assert.AreEqual(0, session.Query<PeptideInstance>().Count());
+            Assert.AreEqual(0, session.Query<Peptide>().Count());
+            Assert.AreEqual(0, session.Query<PeptideSpectrumMatch>().Count());
+
+            session.Transaction.Rollback();
+            session.Close();
+        }
+
+        [TestMethod]
+        public void TestClusters ()
+        {
+            // each protein in the test scenarios is created from simple repeating motifs
+            var testProteinSequences = new string[]
+            {
+                createSimpleProteinSequence("A", 20), // PRO1
+
+                createSimpleProteinSequence("B", 20),
+
+                createSimpleProteinSequence("C", 20),
+
+                createSimpleProteinSequence("D", 20),
+
+                createSimpleProteinSequence("E", 20), // PRO5
+                createSimpleProteinSequence("E", 21),
+
+                createSimpleProteinSequence("F", 20),
+                createSimpleProteinSequence("F", 21),
+
+                createSimpleProteinSequence("G", 20),
+                createSimpleProteinSequence("G", 21), // PRO10
+                
+                createSimpleProteinSequence("H", 20),
+                createSimpleProteinSequence("H", 21),
+                
+                createSimpleProteinSequence("AAAABBBBCCCC", 24),
+                createSimpleProteinSequence("AAAABBBB", 24),
+                createSimpleProteinSequence("BBBBCCCC", 24), // PRO15
+
+                createSimpleProteinSequence("BBBBBDDDDD", 20),
+                createSimpleProteinSequence("BBBBDDDD", 24),
+                createSimpleProteinSequence("ZBBBBDDD", 24),
+                createSimpleProteinSequence("YBBBDDD", 20),
+                createSimpleProteinSequence("WBBDD", 21), // PRO20
+
+                createSimpleProteinSequence("DDDDDFFFFF", 20),
+                createSimpleProteinSequence("FFFFFHHHHH", 20),
+
+                createSimpleProteinSequence("HHHHHKKKKK", 20),
+                createSimpleProteinSequence("HHHHHKKKKK", 30),
+                createSimpleProteinSequence("KKKKKMMMMM", 20), // PRO25
+
+                createSimpleProteinSequence("LLLLLNNNNN", 20),
+                createSimpleProteinSequence("NNNNNQQQQQ", 20),
+                createSimpleProteinSequence("NNNNNQQQQQ", 30),
+
+                createSimpleProteinSequence("MMMMMPPPPP", 20),
+                createSimpleProteinSequence("PPPPPRRRRR", 20), // PRO30
+                createSimpleProteinSequence("PPPPPRRRR", 24),
+            };
+
+
+            var session = sessionFactory.OpenSession();
+
+            session.Transaction.Begin();
+            TestModel.CreateTestProteins(session, testProteinSequences);
+
+            const int analysisCount = 2;
+            const int sourceCount = 1;
+            const int chargeCount = 2;
+
+            for (int analysis = 1; analysis <= analysisCount; ++analysis)
+            for (int source = 1; source <= sourceCount; ++source)
+            for (int charge = 1; charge <= chargeCount; ++charge)
+            {
+                int scan = 0;
+
+                List<SpectrumTuple> testPsmSummary = new List<SpectrumTuple>()
+                {
+                    // Columns:     Group  Source Spectrum Analysis Score Q List of Peptide@Charge/ScoreDivider
+                    
+                    // 1 protein to 1 peptide to 1 spectrum = 1 additional peptide
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("AAAAAAAAAA@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+
+                    // 1 protein to 1 peptide to 2 spectra = 1 additional peptide
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBBBBBBB@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBBBBBBB@{0}/1 CCCCCCCCCC@{0}/8", charge)),
+
+                    // 1 protein to 2 peptides to 1 spectrum (each)
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("CCCCCCCCCC@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("CCCCCCCCC@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+
+                    // 1 protein to 2 peptides to 2 spectra (each)
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DDDDDDDDDD@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DDDDDDDDDD@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DDDDDDDDD@{0}/1  AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DDDDDDDDD@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+
+                    // 2 proteins to 1 peptide to 1 spectrum (ambiguous protein group)
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("EEEEEEEEEE@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+
+                    // 2 proteins to 1 peptide to 2 spectra (ambiguous protein group)
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("FFFFFFFFFF@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("FFFFFFFFFF@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+
+                    // 2 proteins to 2 peptides to 1 spectrum (each) (ambiguous protein group)
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("GGGGGGGGGG@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("GGGGGGGGG@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+
+                    // 2 proteins to 2 peptides to 2 spectra (each) (ambiguous protein group)
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("HHHHHHHHHH@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("HHHHHHHHHH@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("HHHHHHHHH@{0}/1  AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("HHHHHHHHH@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+
+                    // 1 protein to 2 peptides
+                    // 1 protein to 1 of the above peptides (subsumed protein)
+                    // 1 protein to the other above peptide (subsumed protein)
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("AAAABBBB@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBCCCC@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+
+                    // 1 protein to 5 peptides
+                    // 1 protein to 4 of the above peptides
+                    // 1 protein to 3 of the above peptides and 1 extra peptides
+                    // 1 protein to 2 of the above peptides and 2 extra peptides
+                    // 1 protein to 1 of the above peptides and 3 extra peptides
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBBDDDDD@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBDDDD@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBDDD@{0}/1    AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBDD@{0}/1      BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBDD@{0}/1       AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("ZBBBBDDD@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("YBBBDD@{0}/1     AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("YBBBDDD@{0}/1    BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("WBB@{0}/1        AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("WBBD@{0}/1       BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("WBBDD@{0}/1      AAAAAAAAAA@{0}/8", charge)),
+
+                    // 1 protein to 3 peptides, 1 of which is evidenced by an ambiguous spectrum
+                    // 1 protein to 1 peptide evidenced by the ambiguous spectrum above and 1 extra peptide
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DDDDDFFFFF@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DDDDDFFFF@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DFFFFF@{0}/1 FFFFFH@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("FFFFFHHHHH@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+                    
+                    // 2 proteins to 3 peptides, 1 of which is evidenced by an ambiguous spectrum
+                    // 1 protein to 1 peptide evidenced by the ambiguous spectrum above and 1 extra peptide
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("HHHHHKKKKK@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("HHHHHKKKK@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("HKKKKK@{0}/1 KKKKKM@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("KKKKKMMMMM@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+                    
+                    // 1 protein to 3 peptides, 1 of which is evidenced by an ambiguous spectrum
+                    // 2 proteins to 1 peptide evidenced by the ambiguous spectrum above and 1 extra peptide
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("LLLLLNNNNN@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("LLLLLNNNN@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("LNNNNN@{0}/1 NNNNNQ@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("NNNNNQQQQQ@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+                    
+                    // 1 protein to 3 peptides, 2 of which are evidenced by ambiguous spectra
+                    // 1 protein to 1 peptide evidenced by an ambiguous spectrum above and 1 extra peptide
+                    // 1 protein to 1 peptide evidenced by the other ambiguous spectrum above and 1 extra peptide
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("MMMMMPPPPP@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("MPPPPP@{0}/1 PRRRRR@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("PPPPPRRRRR@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("MPPPP@{0}/1 PRRRRP@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("PPPPRRRRP@{0}/1  AAAAAAAAAA@{0}/8", charge)),
+
+                };
+
+                TestModel.CreateTestData(session, testPsmSummary);
+            }
+
+            var dataFilter = new DataFilter_Accessor()
+            {
+                MaximumQValue = 1,
+                MinimumDistinctPeptidesPerProtein = 0,
+                MinimumSpectraPerProtein = 0,
+                MinimumAdditionalPeptidesPerProtein = 0
+            };
+            dataFilter.ApplyBasicFilters(session);
+
+            // clear session so objects are loaded from database
+            session.Clear();
+
+            // 1 protein to 1 peptide to 1 spectrum
+            Assert.AreEqual(1, session.UniqueResult<Protein>(o => o.Accession == "PRO1").Cluster);
+
+            // 1 protein to 1 peptide to 2 spectra
+            Assert.AreEqual(2, session.UniqueResult<Protein>(o => o.Accession == "PRO2").Cluster);
+
+            // 1 protein to 2 peptides to 1 spectrum (each)
+            Assert.AreEqual(3, session.UniqueResult<Protein>(o => o.Accession == "PRO3").Cluster);
+
+            // 1 protein to 2 peptides to 2 spectra (each)
+            Assert.AreEqual(4, session.UniqueResult<Protein>(o => o.Accession == "PRO4").Cluster);
+
+            // 2 proteins to 1 peptide to 1 spectrum (ambiguous protein group)
+            Assert.AreEqual(5, session.UniqueResult<Protein>(o => o.Accession == "PRO5").Cluster);
+            Assert.AreEqual(5, session.UniqueResult<Protein>(o => o.Accession == "PRO6").Cluster);
+
+            // 2 proteins to 1 peptide to 2 spectra (ambiguous protein group)
+            Assert.AreEqual(6, session.UniqueResult<Protein>(o => o.Accession == "PRO7").Cluster);
+            Assert.AreEqual(6, session.UniqueResult<Protein>(o => o.Accession == "PRO8").Cluster);
+
+            // 2 proteins to 2 peptides to 1 spectrum (each) (ambiguous protein group)
+            Assert.AreEqual(7, session.UniqueResult<Protein>(o => o.Accession == "PRO9").Cluster);
+            Assert.AreEqual(7, session.UniqueResult<Protein>(o => o.Accession == "PRO10").Cluster);
+
+            // 2 proteins to 2 peptides to 2 spectra (each) (ambiguous protein group)
+            Assert.AreEqual(8, session.UniqueResult<Protein>(o => o.Accession == "PRO11").Cluster);
+            Assert.AreEqual(8, session.UniqueResult<Protein>(o => o.Accession == "PRO12").Cluster);
+
+            // 1 protein to 2 peptides to 1 spectrum (each)
+            // 1 protein to 1 of the above peptides (subsumed protein)
+            // 1 protein to the other above peptide (subsumed protein)
+            Assert.AreEqual(9, session.UniqueResult<Protein>(o => o.Accession == "PRO13").Cluster);
+            Assert.AreEqual(9, session.UniqueResult<Protein>(o => o.Accession == "PRO14").Cluster);
+            Assert.AreEqual(9, session.UniqueResult<Protein>(o => o.Accession == "PRO15").Cluster);
+
+            // 1 protein to 5 peptides
+            // 1 protein to 4 of the above peptides
+            // 1 protein to 3 of the above peptides and 1 extra peptides
+            // 1 protein to 2 of the above peptides and 2 extra peptides
+            // 1 protein to 1 of the above peptides and 3 extra peptides
+            Assert.AreEqual(10, session.UniqueResult<Protein>(o => o.Accession == "PRO16").Cluster);
+            Assert.AreEqual(10, session.UniqueResult<Protein>(o => o.Accession == "PRO17").Cluster);
+            Assert.AreEqual(10, session.UniqueResult<Protein>(o => o.Accession == "PRO18").Cluster);
+            Assert.AreEqual(10, session.UniqueResult<Protein>(o => o.Accession == "PRO19").Cluster);
+            Assert.AreEqual(10, session.UniqueResult<Protein>(o => o.Accession == "PRO20").Cluster);
+
+            // 1 protein to 3 peptides, 1 of which is evidenced by an ambiguous spectrum
+            // 1 protein to 1 peptide evidenced by the ambiguous spectrum above and 1 extra peptide
+            Assert.AreEqual(11, session.UniqueResult<Protein>(o => o.Accession == "PRO21").Cluster);
+            Assert.AreEqual(11, session.UniqueResult<Protein>(o => o.Accession == "PRO22").Cluster);
+
+            // 2 proteins to 3 peptides, 1 of which is evidenced by an ambiguous spectrum
+            // 1 protein to 1 peptide evidenced by the ambiguous spectrum above and 1 extra peptide
+            Assert.AreEqual(12, session.UniqueResult<Protein>(o => o.Accession == "PRO23").Cluster);
+            Assert.AreEqual(12, session.UniqueResult<Protein>(o => o.Accession == "PRO24").Cluster);
+            Assert.AreEqual(12, session.UniqueResult<Protein>(o => o.Accession == "PRO25").Cluster);
+
+            // 1 protein to 3 peptides, 1 of which is evidenced by an ambiguous spectrum
+            // 2 proteins to 1 peptide evidenced by the ambiguous spectrum above and 1 extra peptide
+            Assert.AreEqual(13, session.UniqueResult<Protein>(o => o.Accession == "PRO26").Cluster);
+            Assert.AreEqual(13, session.UniqueResult<Protein>(o => o.Accession == "PRO27").Cluster);
+            Assert.AreEqual(13, session.UniqueResult<Protein>(o => o.Accession == "PRO28").Cluster);
+
+            // 1 protein to 3 peptides, 2 of which are evidenced by ambiguous spectra
+            // 1 protein to 1 peptide evidenced by an ambiguous spectrum above and 1 extra peptide
+            // 1 protein to 1 peptide evidenced by the other ambiguous spectrum above and 1 extra peptide
+            Assert.AreEqual(14, session.UniqueResult<Protein>(o => o.Accession == "PRO29").Cluster);
+            Assert.AreEqual(14, session.UniqueResult<Protein>(o => o.Accession == "PRO30").Cluster);
+            Assert.AreEqual(14, session.UniqueResult<Protein>(o => o.Accession == "PRO31").Cluster);
 
             session.Transaction.Rollback();
             session.Close();
