@@ -49,6 +49,7 @@ struct Config
     
     string usageOptions;
 
+    vector<string> files;
     string inputFilename;
     string outputFilename;
     string outDirectory;
@@ -100,7 +101,7 @@ Config parseCommandArgs(int argc, const char* argv[])
          po::value<string>(&config.inputFilename)->default_value(
              config.inputFilename),
          ": input file name")
-        ("outputfile,i",
+        ("outputfile,o",
          po::value<string>(&config.outputFilename)->default_value(
              config.outputFilename),
          ": output file name")
@@ -121,25 +122,25 @@ Config parseCommandArgs(int argc, const char* argv[])
 
     po::options_description od_args1;
 
-    const char* label_inputfile = "inputfile";
-    od_args1.add_options()(label_inputfile,
-                           po::value<string>(&config.inputFilename),
+    const char* label_file = "files";
+    od_args1.add_options()(label_file,
+                           po::value< vector<string> >(&config.files),
                            "");
 
-    po::options_description od_args2;
-    const char* label_outputfile = "outputfile";
-    od_args2.add_options()(label_outputfile,
-                           po::value<string>(&config.outputFilename),
-                           "");
+    //po::options_description od_args2;
+    //const char* label_outputfile = "outputfile";
+    //od_args2.add_options()(label_outputfile,
+    //                       po::value<string>(&config.outputFilename),
+    //                       "");
 
     po::positional_options_description pod_args;
-    pod_args.add(label_inputfile, 1);
-    pod_args.add(label_outputfile, 1);
+    pod_args.add(label_file, -1);
+    //pod_args.add(label_outputfile, 1);
 
     
     po::options_description od_parse;
     od_parse.add(od_config).add(od_args1);
-    od_parse.add(od_config).add(od_args2);
+    //od_parse.add(od_config).add(od_args2);
 
     // parse command line
 
@@ -159,7 +160,13 @@ Config parseCommandArgs(int argc, const char* argv[])
     
     if (vm.count("debug"))
         config.debug = true;
-    
+
+    if (config.files.size())
+        config.inputFilename = config.files.at(0);
+
+    if (config.files.size()>1)
+        config.outputFilename = config.files.at(1);
+
     return config;
 }
 
@@ -170,7 +177,8 @@ int main(int argc, const char* argv[])
     try
     {
         Config config = parseCommandArgs(argc, argv);
-        string inFile, outFile;
+        if (config.inputFilename.empty())
+            throw runtime_error(config.usageOptions.c_str());
 
         // TODO read in kw->cv map file.
         vector<CVMapPtr> cvmaps;
@@ -180,6 +188,8 @@ int main(int argc, const char* argv[])
             ifstream mapis((*i).c_str());
             mapis >> cvmaps;
         }
+
+        cout << "openning ifstream: " << config.inputFilename << "\n";
         
         ifstream in(config.inputFilename.c_str());
 

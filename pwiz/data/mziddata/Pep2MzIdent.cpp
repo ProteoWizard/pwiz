@@ -30,7 +30,11 @@
 #include "boost/tokenizer.hpp"
 
 // Debug macro to be used if needed.
+#ifdef DEBUG
 #define DOUT(a) do{ if(debug) std::cout << a << endl; } while(0)
+#else
+#define DOUT(a) 
+#endif // DEBUG
 
 using namespace pwiz;
 using namespace pwiz::cv;
@@ -48,7 +52,7 @@ namespace pwiz {
 namespace mziddata {
 
 // Utility structs
-struct Pep2MzIdent::Indices
+struct Indices
 {
     Indices()
         : dbseq(0), enzyme(0), sip(0), peptide(0),
@@ -68,6 +72,115 @@ struct Pep2MzIdent::Indices
     size_t sil;
     size_t pdp;
 };
+
+struct Pep2MzIdent::Impl
+{
+    Impl(const MSMSPipelineAnalysis& mspa, MzIdentMLPtr mzid)
+        :_mspa(&mspa), mzid(mzid), debug(false),
+         precursorMonoisotopic(false), fragmentMonoisotopic(false),
+         indices(new Indices())
+    {}
+
+    void clear();
+    
+    /// Translates pepXML data needed for the mzIdentML tag.
+    void translateRoot();
+
+    /// Copies the data in the enzyme tag into the mzIdentML tree. 
+    void translateEnzyme(const SampleEnzyme& sampleEnzyme, MzIdentMLPtr result);
+
+    /// Copies the data in an individual search tag into the mzIdentML tree.
+    void translateSearch(const SearchSummaryPtr searchSummary, MzIdentMLPtr result);
+    void translateQueries(const SpectrumQueryPtr query, MzIdentMLPtr result);
+
+    /// Translates parameter tags into mzIdentML tree elements. 
+    void earlyMetadata();
+
+    /// Translates parameter tags into mzIdentML tree
+    /// elements. Parameters that require a child tree to be populated
+    /// before being processed go here. 
+    void lateMetadata();
+
+    /// Translates spectrum_query data into a spectrum identification
+    /// list subtree.
+    void translateSpectrumQuery(SpectrumIdentificationListPtr result,
+                                const SpectrumQueryPtr sq);
+
+    /// Checks a parameter for data that can be processed without
+    /// additional data.
+    void earlyParameters(ParameterPtr param, MzIdentMLPtr mzid);
+
+    /// Checks a parameter for unprocessed data with a known mzIdentML
+    /// destination.
+    void lateParameters(ParameterPtr param, MzIdentMLPtr mzid);
+
+    /// Creates a Peptide element for the search_hit element's peptide
+    /// attribute.
+    const std::string addPeptide(const SearchHitPtr sq, MzIdentMLPtr& x);
+
+    /// Adds a modification element to peptides that match the
+    /// aminoacid_modification.
+    void addModifications(const std::vector<AminoAcidModification>& mods,
+                          PeptidePtr peptide, MzIdentMLPtr result);
+
+    /// Adds a SpectraData object to the data collection's input.
+    void addSpectraData(const MSMSRunSummary& msmsRunSummary,
+                   MzIdentMLPtr result);
+    // Adds any additional elements needed after all other data has
+    // been processed.
+    void addFinalElements();
+
+    // Returns the CVID for a name or description. If CVTranslator
+    // return CVID_Unknown, the a guess is made against common names
+    // found in pepXML.
+    CVID getCVID(const std::string& name);
+
+    /// Maps known odd software names to the most applicable CVID.
+    /// TODO make this loadable from a file. 
+    CVID mapToNearestSoftware(const std::string& softwareName,
+                              std::vector<std::string>& customization);
+    
+    /// Translates the search_score with the given name into a CVParam
+    /// object using getParamForSearchScore.
+    CVParam translateSearchScore(const std::string& name,
+                                 const std::vector<SearchScorePtr>& searchScore);
+
+    /// Creates a CVParam from a SearchScorePtr object.
+    CVParam getParamForSearchScore(const SearchScorePtr searchScore);
+
+    // Returns the CVID for a name or description. If CVTranslator
+    // return CVID_Unknown, the a guess is made against names
+    // found in the search_score name attribute.
+    CVID cvidFromSearchScore(const std::string& name);
+
+
+    ///////////////////////////////////////////////////////////////////////
+    // Instance variables
+    
+    // old member variables
+    const MSMSPipelineAnalysis* _mspa;
+    MzIdentMLPtr mzid;
+    bool _translated; // No longer used
+    bool debug;
+    bool verbose;
+
+    std::vector<CVMapPtr> parameterMap;
+    
+    // recursor flags.
+    bool precursorMonoisotopic;
+    bool fragmentMonoisotopic;
+
+    // Handy state variables 
+    boost::shared_ptr<Indices> indices;
+
+    std::vector< std::pair<std::string, PeptidePtr> > seqPeptidePairs;
+    
+    pwiz::data::CVTranslator translator;
+
+    const std::vector<AminoAcidModification>* aminoAcidModifications;
+
+};
+
 
 } // namespace pwiz 
 } // namespace mziddata 
@@ -920,101 +1033,10 @@ bool fileExtension2Type(const string& file,
 namespace pwiz {
 namespace mziddata {
 
-//
-// Pep2MzIdent
-//
-
-Pep2MzIdent::Pep2MzIdent(const MSMSPipelineAnalysis& mspa, MzIdentMLPtr mzid)
-    : _mspa(&mspa), mzid(mzid), debug(false),
-      precursorMonoisotopic(false), fragmentMonoisotopic(false),
-      indices(new Indices())
-{
-    //mzid->cvs.push_back(cv::cv("MS"));
-    //mzid->cvs.push_back(cv::cv("UO"));
-    //translate();
-}
-
-void Pep2MzIdent::setMspa(const MSMSPipelineAnalysis& mspa)
-{
-    clear();
-    
-    _mspa = &mspa;
-}
-
-bool Pep2MzIdent::operator()(const MSMSPipelineAnalysis& pepxml, MzIdentMLPtr mzid)
-{
-    _mspa = &pepxml;
-    this->mzid = mzid;
-
-    translate();
-
-    // TODO Change this meaningless return into somethingn good.
-    return true;
-}
-
-void Pep2MzIdent::clear()
-{
-    indices = shared_ptr<Indices>(new Indices());
-
-    _mspa = NULL;
-
-    mzid = MzIdentMLPtr(new MzIdentML());
-    mzid->cvs.push_back(cv::cv("MS"));
-    mzid->cvs.push_back(cv::cv("UO"));
-
-    _translated = false;
-
-    precursorMonoisotopic = false;
-    fragmentMonoisotopic = false;
-
-    seqPeptidePairs.clear();
-    aminoAcidModifications = NULL;
-}
-
-void Pep2MzIdent::setDebug(bool debug)
-{
-    this->debug = debug;
-}
-
-bool Pep2MzIdent::getDebug() const
-{
-    return this->debug;
-}
-
-void Pep2MzIdent::setVerbose(bool verbose)
-{
-    this->verbose = verbose;
-}
-
-bool Pep2MzIdent::getVerbose() const
-{
-    return this->verbose;
-}
-
-// pepxml parameter -> cvid mapping methods.
-
-void Pep2MzIdent::addParamMap(vector<CVMapPtr>& map)
-{
-    parameterMap.insert(parameterMap.begin(),
-                        map.begin(), map.end());
-}
-
-void Pep2MzIdent::setParamMap(vector<CVMapPtr>& map)
-{
-    parameterMap.clear();
-
-    parameterMap.assign(map.begin(), map.end());
-}
-
-const vector<CVMapPtr>& Pep2MzIdent::getParamMap() const
-{
-    return parameterMap;
-}
-
 // Private methods belong below this line
 // ------------------------------------------------------------------------
 
-void Pep2MzIdent::translateRoot()
+void Pep2MzIdent::Impl::translateRoot()
 {
     mzid->creationDate = _mspa->date;
 
@@ -1040,7 +1062,7 @@ void Pep2MzIdent::translateRoot()
     addFinalElements();
 }
 
-void Pep2MzIdent::addSpectraData(const MSMSRunSummary& msmsRunSummary,
+void Pep2MzIdent::Impl::addSpectraData(const MSMSRunSummary& msmsRunSummary,
                                  MzIdentMLPtr result)
 {
     SpectraDataPtr sd(new SpectraData(
@@ -1067,7 +1089,7 @@ void Pep2MzIdent::addSpectraData(const MSMSRunSummary& msmsRunSummary,
     mzid->dataCollection.inputs.spectraData.push_back(sd);
 }
 
-void Pep2MzIdent::translateEnzyme(const SampleEnzyme& sampleEnzyme,
+void Pep2MzIdent::Impl::translateEnzyme(const SampleEnzyme& sampleEnzyme,
                                   MzIdentMLPtr result)
 {
     SpectrumIdentificationProtocolPtr sip(
@@ -1118,7 +1140,7 @@ void Pep2MzIdent::translateEnzyme(const SampleEnzyme& sampleEnzyme,
         spectrumIdentificationProtocol.push_back(sip);
 }
 
-CVParam Pep2MzIdent::translateSearchScore(const string& name, const vector<SearchScorePtr>& searchScore)
+CVParam Pep2MzIdent::Impl::translateSearchScore(const string& name, const vector<SearchScorePtr>& searchScore)
 {
     typedef vector<SearchScorePtr>::const_iterator CIt;
     
@@ -1135,7 +1157,7 @@ CVParam Pep2MzIdent::translateSearchScore(const string& name, const vector<Searc
 }
 
 
-CVParam Pep2MzIdent::getParamForSearchScore(const SearchScorePtr searchScore)
+CVParam Pep2MzIdent::Impl::getParamForSearchScore(const SearchScorePtr searchScore)
 {
     CVID id = cvidFromSearchScore(searchScore->name);
 
@@ -1144,7 +1166,7 @@ CVParam Pep2MzIdent::getParamForSearchScore(const SearchScorePtr searchScore)
     return cvParam;
 }
 
-CVID Pep2MzIdent::cvidFromSearchScore(const string& name)
+CVID Pep2MzIdent::Impl::cvidFromSearchScore(const string& name)
 {
     CVID id = translator.translate(name);
 
@@ -1168,7 +1190,7 @@ CVID Pep2MzIdent::cvidFromSearchScore(const string& name)
 }
 
 
-void Pep2MzIdent::translateSearch(const SearchSummaryPtr summary,
+void Pep2MzIdent::Impl::translateSearch(const SearchSummaryPtr summary,
                                   MzIdentMLPtr result)
 {
     namespace fs = boost::filesystem;
@@ -1265,7 +1287,7 @@ void Pep2MzIdent::translateSearch(const SearchSummaryPtr summary,
 }
 
 
-CVID Pep2MzIdent::mapToNearestSoftware(const string& softwareName,
+CVID Pep2MzIdent::Impl::mapToNearestSoftware(const string& softwareName,
                                        vector<string>& customizations)
 {
     // TODO clean this up and move the patterns into a separate class
@@ -1298,7 +1320,7 @@ CVID Pep2MzIdent::mapToNearestSoftware(const string& softwareName,
 }
 
 
-void Pep2MzIdent::addModifications(
+void Pep2MzIdent::Impl::addModifications(
     const vector<AminoAcidModification>& aminoAcidModifications,
     PeptidePtr peptide, MzIdentMLPtr result)
 {
@@ -1358,7 +1380,7 @@ void Pep2MzIdent::addModifications(
 }
 
 
-void Pep2MzIdent::translateQueries(const SpectrumQueryPtr query,
+void Pep2MzIdent::Impl::translateQueries(const SpectrumQueryPtr query,
                                    MzIdentMLPtr result)
 {
     for(vector<SearchResultPtr>::iterator srit=query->searchResult.begin();
@@ -1482,7 +1504,7 @@ void Pep2MzIdent::translateQueries(const SpectrumQueryPtr query,
                 sirp->spectraDataPtr = mzid->dataCollection.inputs.
                     spectraData.at(0);
             else
-                throw runtime_error("[Pep2MzIdent::translateQueries] no "
+                throw runtime_error("[Pep2MzIdent::Impl::translateQueries] no "
                                     "SpectraData");
 
             // Get the last added SpectrumIdentificationList, or if
@@ -1513,18 +1535,18 @@ void Pep2MzIdent::translateQueries(const SpectrumQueryPtr query,
 
 MzIdentMLPtr Pep2MzIdent::translate()
 {
-    if (mzid.get() == NULL)
-        mzid = MzIdentMLPtr(new MzIdentML());
+    if (pimpl->mzid.get() == NULL)
+        pimpl->mzid = MzIdentMLPtr(new MzIdentML());
     
-    mzid->cvs.push_back(cv::cv("MS"));
-    mzid->cvs.push_back(cv::cv("UO"));
+    pimpl->mzid->cvs.push_back(cv::cv("MS"));
+    pimpl->mzid->cvs.push_back(cv::cv("UO"));
    
-    translateRoot();
+    pimpl->translateRoot();
 
-    return mzid;
+    return pimpl->mzid;
 }
 
-void Pep2MzIdent::earlyParameters(ParameterPtr parameter,
+void Pep2MzIdent::Impl::earlyParameters(ParameterPtr parameter,
                                         MzIdentMLPtr mzid)
 {
     /*
@@ -1574,9 +1596,11 @@ void Pep2MzIdent::earlyParameters(ParameterPtr parameter,
         CVParam cvParam(info.cvid, parameter->value);
         if (!addCvByPath(cvParam, (*it)->path, (*mzid)))
         {
+            cerr << "addCvByPath found a parameter "
+                 << "but couldn't add it.\n";
             // Notify us of the error.
-            throw runtime_error("addCvByPath found a parameter "
-                                "but couldn't add it.");
+            //throw runtime_error("addCvByPath found a parameter "
+            //                    "but couldn't add it.");
         }
         else
             cout << "added CVMapped parameter "
@@ -1793,7 +1817,7 @@ void Pep2MzIdent::earlyParameters(ParameterPtr parameter,
     }
 }
 
-void Pep2MzIdent::lateParameters(ParameterPtr parameter,
+void Pep2MzIdent::Impl::lateParameters(ParameterPtr parameter,
                                        MzIdentMLPtr mzid)
 {
     if (parameter->name == "USERNAME" ||
@@ -1837,7 +1861,7 @@ void Pep2MzIdent::lateParameters(ParameterPtr parameter,
     // TODO stick the rest in UserParam objects somewhere.
 }
 
-void Pep2MzIdent::earlyMetadata()
+void Pep2MzIdent::Impl::earlyMetadata()
 {
     const vector<SearchSummaryPtr>* ss = &_mspa->msmsRunSummary.searchSummary;
     for (vector<SearchSummaryPtr>::const_iterator sit = ss->begin();
@@ -1852,7 +1876,7 @@ void Pep2MzIdent::earlyMetadata()
     }
 }
 
-void Pep2MzIdent::lateMetadata()
+void Pep2MzIdent::Impl::lateMetadata()
 {
     const vector<SearchSummaryPtr>* ss = &_mspa->msmsRunSummary.searchSummary;
     for (vector<SearchSummaryPtr>::const_iterator sit = ss->begin();
@@ -1867,7 +1891,7 @@ void Pep2MzIdent::lateMetadata()
     }
 }
 
-const string Pep2MzIdent::addPeptide(const SearchHitPtr sh, MzIdentMLPtr& mzid)
+const string Pep2MzIdent::Impl::addPeptide(const SearchHitPtr sh, MzIdentMLPtr& mzid)
 {
     // If we've already seen this sequence, continue on.
     if (find_if(mzid->sequenceCollection.peptides.begin(),
@@ -1888,7 +1912,7 @@ const string Pep2MzIdent::addPeptide(const SearchHitPtr sh, MzIdentMLPtr& mzid)
 }
 
 
-CVID Pep2MzIdent::getCVID(const string& name)
+CVID Pep2MzIdent::Impl::getCVID(const string& name)
 {
     CVID id = translator.translate(name);
 
@@ -1915,15 +1939,16 @@ CVID Pep2MzIdent::getCVID(const string& name)
     return id;
 }
 
-void Pep2MzIdent::addFinalElements()
+void Pep2MzIdent::Impl::addFinalElements()
 {
     SpectrumIdentificationPtr sip(new SpectrumIdentification("SI"));
     sip->activityDate = mzid->creationDate;
 
     sip->spectrumIdentificationProtocolPtr = mzid->analysisProtocolCollection.
         spectrumIdentificationProtocol.back();
-    sip->spectrumIdentificationListPtr = mzid->dataCollection.
-        analysisData.spectrumIdentificationList.back();
+    if (mzid->dataCollection.analysisData.spectrumIdentificationList.size())
+        sip->spectrumIdentificationListPtr = mzid->dataCollection.
+            analysisData.spectrumIdentificationList.back();
 
     for (vector<SpectraDataPtr>::const_iterator it=mzid->dataCollection.
              inputs.spectraData.begin();
@@ -1940,6 +1965,104 @@ void Pep2MzIdent::addFinalElements()
     }
 
     mzid->analysisCollection.spectrumIdentification.push_back(sip);
+}
+
+void Pep2MzIdent::Impl::clear()
+{
+    indices = shared_ptr<Indices>(new Indices());
+
+    _mspa = NULL;
+
+    mzid = MzIdentMLPtr(new MzIdentML());
+    mzid->cvs.push_back(cv::cv("MS"));
+    mzid->cvs.push_back(cv::cv("UO"));
+
+    _translated = false;
+
+    precursorMonoisotopic = false;
+    fragmentMonoisotopic = false;
+
+    seqPeptidePairs.clear();
+    aminoAcidModifications = NULL;
+}
+//
+// Pep2MzIdent
+//
+
+Pep2MzIdent::Pep2MzIdent(const MSMSPipelineAnalysis& mspa, MzIdentMLPtr mzid)
+    : pimpl(new Impl(mspa, mzid))
+{
+    //mzid->cvs.push_back(cv::cv("MS"));
+    //mzid->cvs.push_back(cv::cv("UO"));
+    //translate();
+}
+
+void Pep2MzIdent::setMspa(const MSMSPipelineAnalysis& mspa)
+{
+    clear();
+    
+    pimpl->_mspa = &mspa;
+}
+
+MzIdentMLPtr Pep2MzIdent::getMzIdentML() const
+{
+    return pimpl->mzid;
+}
+
+bool Pep2MzIdent::operator()(const MSMSPipelineAnalysis& pepxml, MzIdentMLPtr mzid)
+{
+    pimpl->_mspa = &pepxml;
+    pimpl->mzid = mzid;
+
+    translate();
+
+    // TODO Change this meaningless return into somethingn good.
+    return true;
+}
+
+void Pep2MzIdent::clear()
+{
+    pimpl->clear();
+}
+
+void Pep2MzIdent::setDebug(bool debug)
+{
+    pimpl->debug = debug;
+}
+
+bool Pep2MzIdent::getDebug() const
+{
+    return pimpl->debug;
+}
+
+void Pep2MzIdent::setVerbose(bool verbose)
+{
+    pimpl->verbose = verbose;
+}
+
+bool Pep2MzIdent::getVerbose() const
+{
+    return pimpl->verbose;
+}
+
+// pepxml parameter -> cvid mapping methods.
+
+void Pep2MzIdent::addParamMap(vector<CVMapPtr>& map)
+{
+    pimpl->parameterMap.insert(pimpl->parameterMap.begin(),
+                        map.begin(), map.end());
+}
+
+void Pep2MzIdent::setParamMap(vector<CVMapPtr>& map)
+{
+    pimpl->parameterMap.clear();
+
+    pimpl->parameterMap.assign(map.begin(), map.end());
+}
+
+const vector<CVMapPtr>& Pep2MzIdent::getParamMap() const
+{
+    return pimpl->parameterMap;
 }
 
 } // namespace pwiz 

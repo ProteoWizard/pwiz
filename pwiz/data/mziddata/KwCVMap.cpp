@@ -295,6 +295,8 @@ istream& operator>>(istream& is, vector<CVMapPtr>& cmVec)
         catch(length_error le)
         {
             // This occurs after the last record has been read.
+            cerr << "length error caught on "
+                "operator>>(...vector<CVMapPtr>&)\n";
         }
     }
 
