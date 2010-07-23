@@ -798,9 +798,15 @@ namespace pwiz.Skyline.Model.Lib
 
             // Get values of interest from the settings.
             var tranSettings = settings.TransitionSettings;
+            var predict = tranSettings.Prediction;
             var filter = tranSettings.Filter;
             var libraries = tranSettings.Libraries;
             var instrument = tranSettings.Instrument;
+
+            // Get potential losses to all fragments in this peptide
+            rp.massType = predict.FragmentMassType;
+            rp.potentialLosses = TransitionGroup.CalcPotentialLosses(rp.sequence,
+                settings.PeptideSettings.Modifications, mods, rp.massType);
 
             // Create arrays because ReadOnlyCollection enumerators are too slow
             // In some cases these collections must be enumerated for every ion
@@ -995,6 +1001,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             public string sequence { get; set; }
             public int precursorCharge { get; set; }
+            public MassType massType { get; set; }
             public double precursorMz { get; set; }
             public double massPreMatch { get; set; }
             public double massPrePredict { get; set; }
@@ -1004,6 +1011,7 @@ namespace pwiz.Skyline.Model.Lib
             public IEnumerable<IonType> types { get; set; }
             public IEnumerable<int> rankCharges { get; set; }
             public IEnumerable<IonType> rankTypes { get; set; }
+            public IList<IList<ExplicitLoss>> potentialLosses { get; set; }
             public IStartFragmentFinder startFinder { get; set; }
             public IEndFragmentFinder endFinder { get; set; }
             public bool pro { get; set; }
@@ -1021,6 +1029,7 @@ namespace pwiz.Skyline.Model.Lib
                 return _seenMz.Contains(mz);
             }
             public bool HasSeenOnce { get { return _seenFirst != 0; } }
+            public bool HasLosses { get { return potentialLosses != null; } }
 
             public void Seen(double mz)
             {
@@ -1066,6 +1075,9 @@ namespace pwiz.Skyline.Model.Lib
             public int Charge { get; private set; }
             public int Charge2 { get; private set; }
 
+            public TransitionLosses Losses { get; private set; }
+            public TransitionLosses Losses2 { get; private set; }
+
             public int IndexMz { get; private set; }
 
             public float Intensity { get { return _mi.Intensity; } }
@@ -1085,13 +1097,16 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     if (Transition.IsPrecursor(type))
                     {
-                        if (!MatchNext(rp, type, len, rp.precursorCharge, len+1, filter, len, len))
+                        foreach (var losses in TransitionGroup.CalcTransitionLosses(type, 0, rp.massType, rp.potentialLosses))
                         {
-                            // If matched return.  Otherwise look for other ion types.
-                            if (rp.matched)
+                            if (!MatchNext(rp, type, len, losses, rp.precursorCharge, len + 1, filter, len, len))
                             {
-                                rp.Clean();
-                                return;
+                                // If matched return.  Otherwise look for other ion types.
+                                if (rp.matched)
+                                {
+                                    rp.Clean();
+                                    return;
+                                }
                             }
                         }
                         continue;
@@ -1099,7 +1114,7 @@ namespace pwiz.Skyline.Model.Lib
 
                     foreach (int charge in rp.charges)
                     {
-                        // Product ion charge can never be lower than precursor.
+                        // Precursor charge can never be lower than product ion charge.
                         if (rp.precursorCharge < charge)
                             continue;
 
@@ -1120,14 +1135,18 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             for (int i = len - 1; i >= 0; i--)
                             {
-                                if (!MatchNext(rp, type, i, charge, len, filter, end, start))
+                                foreach (var losses in TransitionGroup.CalcTransitionLosses(type, i, rp.massType, rp.potentialLosses))
                                 {
-                                    if (rp.matched)
+                                    if (!MatchNext(rp, type, i, losses, charge, len, filter, end, start))
                                     {
-                                        rp.Clean();
-                                        return;                                        
+                                        if (rp.matched)
+                                        {
+                                            rp.Clean();
+                                            return;
+                                        }
+                                        i = -1;
+                                        break;
                                     }
-                                    break;
                                 }
                             }
                         }
@@ -1135,14 +1154,18 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             for (int i = 0; i < len; i++)
                             {
-                                if (!MatchNext(rp, type, i, charge, len, filter, end, start))
+                                foreach (var losses in TransitionGroup.CalcTransitionLosses(type, i, rp.massType, rp.potentialLosses))
                                 {
-                                    if (rp.matched)
+                                    if (!MatchNext(rp, type, i, losses, charge, len, filter, end, start))
                                     {
-                                        rp.Clean();
-                                        return;
+                                        if (rp.matched)
+                                        {
+                                            rp.Clean();
+                                            return;
+                                        }
+                                        i = len;
+                                        break;
                                     }
-                                    break;
                                 }
                             }
                         }
@@ -1150,13 +1173,15 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
 
-            private bool MatchNext(RankParams rp, IonType type, int offset, int charge, int len, bool filter, int end, int start)
+            private bool MatchNext(RankParams rp, IonType type, int offset, TransitionLosses losses, int charge, int len, bool filter, int end, int start)
             {
                 bool precursorMatch = Transition.IsPrecursor(type);
                 double ionMass = !precursorMatch ? rp.massesMatch[(int)type, offset] : rp.massPreMatch;
+                if (losses != null)
+                    ionMass -= losses.Mass;
                 double ionMz = SequenceMassCalc.GetMZ(ionMass, charge);
                 // Unless trying to match everything, stop looking outside the instrument range
-                if (!rp.matchAll && ionMz > rp.maxMz)
+                if (!rp.matchAll && !rp.HasLosses && ionMz > rp.maxMz)
                     return false;
                 // Check filter properties, if apropriate
                 if ((rp.matchAll || ionMz >= rp.minMz) && Math.Abs(ionMz - ObservedMz) < rp.tolerance)
@@ -1174,6 +1199,7 @@ namespace pwiz.Skyline.Model.Lib
                         IonType2 = type;
                         Charge2 = charge;
                         Ordinal2 = ordinal;
+                        Losses2 = losses;
                         rp.matched = true;
                         return false;
                     }
@@ -1182,6 +1208,8 @@ namespace pwiz.Skyline.Model.Lib
                         // Avoid using the same predicted m/z on two different peaks
                         double predictedMass = !precursorMatch ?
                             rp.massesPredict[(int)type, offset] : rp.massPrePredict;
+                        if (losses != null)
+                            predictedMass -= losses.Mass;
                         double predictedMz = SequenceMassCalc.GetMZ(predictedMass, charge);
                         if (predictedMz == ionMz || !rp.IsSeen(predictedMz))
                         {
@@ -1198,13 +1226,16 @@ namespace pwiz.Skyline.Model.Lib
                             IonType = type;
                             Charge = charge;
                             Ordinal = ordinal;
+                            Losses = losses;
                             PredictedMz = predictedMz;
                             rp.matched = (!rp.matchAll);
                             return rp.matchAll;
                         }
                     }
                 }
-                // Stop looking once the mass has been passed
+                // Stop looking once the mass has been passed, unless there are losses to consider
+                if (rp.HasLosses)
+                    return true;
                 return (ionMz <= ObservedMz);
             }
         }

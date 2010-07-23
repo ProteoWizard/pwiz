@@ -154,14 +154,13 @@ namespace pwiz.SkylineTestFunctional
 
             // Show losses in the pick list
             var docFasta = SkylineWindow.Document;
-            var pathGroup = docFasta.GetPathTo((int) SrmDocument.Level.TransitionGroups, 0);
-            RunUI(() => SkylineWindow.SelectedPath = pathGroup);
+            SelectNode(SrmDocument.Level.TransitionGroups, 0);
             RunDlg<PopupPickList>(SkylineWindow.ShowPickChildren, dlg =>
             {
                 dlg.ApplyFilter(false);
                 var losses = GetLossGroups(dlg.ItemNames).ToArray();
                 Assert.AreEqual(1, losses.Length);
-                VerifyLossGroup(losses, 0, 98, 117);
+                VerifyLossGroup(losses, 0, 98, 124);
                 dlg.ToggleFind();
                 dlg.SearchString = "-98";
                 dlg.ToggleItem(0);
@@ -182,13 +181,14 @@ namespace pwiz.SkylineTestFunctional
             var docLoss2 = WaitForDocumentChange(docLoss);
 
             // Make sure 2 phospho losses are now possible
+            IGrouping<double, string>[] losses1 = null;
             RunDlg<PopupPickList>(SkylineWindow.ShowPickChildren, dlg =>
             {
                 dlg.ApplyFilter(false);
-                var losses = GetLossGroups(dlg.ItemNames).ToArray();
-                Assert.AreEqual(2, losses.Length);
-                VerifyLossGroup(losses, 0, 98, 117);
-                VerifyLossGroup(losses, 1, 196, 99);
+                losses1 = GetLossGroups(dlg.ItemNames).ToArray();
+                Assert.AreEqual(2, losses1.Length);
+                VerifyLossGroup(losses1, 0, 98, 124);
+                VerifyLossGroup(losses1, 1, 196, 109);
                 dlg.OnCancel();
             });
 
@@ -210,12 +210,14 @@ namespace pwiz.SkylineTestFunctional
                 dlg.ApplyFilter(false);
                 var losses = GetLossGroups(dlg.ItemNames).ToArray();
                 Assert.AreEqual(6, losses.Length);
-                VerifyLossGroup(losses, 0, 17, 65);
-                VerifyLossGroup(losses, 1, 18, 65);
-                VerifyLossGroup(losses, 2, 98, 117);
-                VerifyLossGroup(losses, 3, 115, 59);
-                VerifyLossGroup(losses, 4, 116, 59);
-                VerifyLossGroup(losses, 5, 196, 99);
+                VerifyLossGroup(losses, 0, 17, 66);
+                VerifyLossGroup(losses, 1, 18, 66);
+                VerifyLossGroup(losses, 2, 98, 124);
+                VerifyLossGroup(losses, 3, 115, 61);
+                VerifyLossGroup(losses, 4, 116, 61);
+                VerifyLossGroup(losses, 5, 196, 109);
+                AssertEx.NoDiff(string.Join("\n", losses1[0].ToArray()), string.Join("\n", losses[2].ToArray()));
+                AssertEx.NoDiff(string.Join("\n", losses1[1].ToArray()), string.Join("\n", losses[5].ToArray()));
                 // Add new neutral loss transitions to the document
                 dlg.ToggleFind();
                 dlg.SearchString = "-17]";

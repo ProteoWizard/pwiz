@@ -16,12 +16,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
 using pwiz.MSGraph;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using ZedGraph;
 
@@ -196,21 +198,6 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!_ionMatches.TryGetValue(point.X, out rmi) || !IsVisibleIon(rmi))
                 return null;
 
-            string[] parts = new string[2];
-            int i = 0;
-            if (IsVisibleIon(rmi.IonType, rmi.Ordinal, rmi.Charge))
-                parts[i++] = GetLabel(rmi.IonType, rmi.Ordinal, rmi.Charge, rmi.Rank);
-            if (IsVisibleIon(rmi.IonType2, rmi.Ordinal2, rmi.Charge2))
-                parts[i] = GetLabel(rmi.IonType2, rmi.Ordinal2, rmi.Charge2, 0);
-            StringBuilder sb = new StringBuilder();
-            foreach (string part in parts)
-            {
-                if (part == null)
-                    continue;
-                if (sb.Length > 0)
-                    sb.Append(", ");
-                sb.Append(part);
-            }
             FontSpec fontSpec;
             switch (rmi.IonType)
             {
@@ -225,18 +212,53 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             if (IsMatch(rmi.PredictedMz))
                 fontSpec = FONT_SPEC_SELECTED;
-            return new PointAnnotation(sb.ToString(), fontSpec);
+            return new PointAnnotation(GetLabel(rmi), fontSpec);
         }
 
-        private string GetLabel(IonType type, int ordinal, int charge, int rank)
+        public IEnumerable<string> IonLabels
         {
-            string chargeIndicator = (charge == 1 ? "" : Transition.GetChargeIndicator(charge));
-            string label = type.ToString();
+            get
+            {
+                foreach (var rmi in _ionMatches.Values)
+                    yield return GetLabel(rmi);
+            }
+        }
+
+        private string GetLabel(LibraryRankedSpectrumInfo.RankedMI rmi)
+        {
+            string[] parts = new string[2];
+            int i = 0;
+            if (IsVisibleIon(rmi.IonType, rmi.Ordinal, rmi.Charge))
+                parts[i++] = GetLabel(rmi.IonType, rmi.Ordinal, rmi.Losses, rmi.Charge, rmi.Rank);
+            if (IsVisibleIon(rmi.IonType2, rmi.Ordinal2, rmi.Charge2))
+                parts[i] = GetLabel(rmi.IonType2, rmi.Ordinal2, rmi.Losses2, rmi.Charge2, 0);
+            StringBuilder sb = new StringBuilder();
+            foreach (string part in parts)
+            {
+                if (part == null)
+                    continue;
+                if (sb.Length > 0)
+                    sb.Append(", ");
+                sb.Append(part);
+            }
+            return sb.ToString();
+        }
+
+        private string GetLabel(IonType type, int ordinal, TransitionLosses losses, int charge, int rank)
+        {
+            var label = new StringBuilder(type.ToString());
             if (!Transition.IsPrecursor(type))
-                label = label + ordinal + chargeIndicator;
+                label.Append(ordinal.ToString());
+            if (losses != null)
+            {
+                label.Append(" -");
+                label.Append(Math.Round(losses.Mass, 1));
+            }
+            string chargeIndicator = (charge == 1 ? "" : Transition.GetChargeIndicator(charge));
+            label.Append(chargeIndicator);
             if (rank > 0 && ShowRanks)
-                label = string.Format("{0} (rank {1})", label, rank);
-            return label;
+                return string.Format("{0} (rank {1})", label, rank);
+            return label.ToString();
         }
 
         private bool IsVisibleIon(LibraryRankedSpectrumInfo.RankedMI rmi)

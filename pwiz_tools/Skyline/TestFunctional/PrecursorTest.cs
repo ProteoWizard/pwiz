@@ -68,17 +68,18 @@ namespace pwiz.SkylineTestFunctional
             WaitForGraphs();
             RunUI(() => Assert.AreEqual(ionCount + 1, SkylineWindow.GraphSpectrum.PeaksMatchedCount));
 
-            string precursorName = IonType.precursor.ToString();
+            string precursorPrefix = IonType.precursor.ToString();
+            string precursorLabel = precursorPrefix + Transition.GetChargeIndicator(2);
 
             SrmDocument docCurrent = SkylineWindow.Document;
             var pickList0 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildren);
             RunUI(() =>
                       {
-                          Assert.IsFalse(pickList0.ItemNames.Contains(name => name.StartsWith(precursorName)));
+                          Assert.IsFalse(pickList0.ItemNames.Contains(name => name.StartsWith(precursorPrefix)));
                           pickList0.ApplyFilter(false);
-                          Assert.IsTrue(pickList0.ItemNames.Contains(name => name.StartsWith(precursorName)));
+                          Assert.IsTrue(pickList0.ItemNames.Contains(name => name.StartsWith(precursorPrefix)));
                           pickList0.ToggleFind();
-                          pickList0.SearchString = precursorName;
+                          pickList0.SearchString = precursorPrefix;
                           pickList0.SetItemChecked(0, true);
                           pickList0.OnOk();
                       });
@@ -87,7 +88,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(IonType.precursor, new List<TransitionDocNode>(docCurrent.Transitions)[0].Transition.IonType,
                 "First transition is not precursor type.");
             SelectNode(SrmDocument.Level.Transitions, 0);
-            VerifySelectedIon(precursorName);
+            VerifySelectedIon(precursorLabel);
 
             SelectNode(SrmDocument.Level.TransitionGroups, 2);  // Charge 3
             docCurrent = SkylineWindow.Document;
@@ -139,7 +140,7 @@ namespace pwiz.SkylineTestFunctional
                 "First transition is not precursor type.");
 
             SelectNode(SrmDocument.Level.Transitions, 0);
-            VerifySelectedIon(precursorName);
+            VerifySelectedIon(precursorLabel);
         }
 
         private static void VerifySelectedIon(string ionName)
@@ -149,8 +150,11 @@ namespace pwiz.SkylineTestFunctional
                       {
                           // Unfortunately, label hiding may mean the precursor label is not present
                           string ionSelected = SkylineWindow.GraphSpectrum.SelectedIonLabel;
-                          if (SkylineWindow.GraphSpectrum.IonLabels.Contains("precursor"))
+                          if ((ionSelected != null && ionSelected.Contains("precursor")) ||
+                                SkylineWindow.GraphSpectrum.IonLabels.Contains("precursor"))
+                          {
                               Assert.AreEqual(ionName, ionSelected);
+                          }
                           else
                           {
                               Assert.IsNull(ionSelected,

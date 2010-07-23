@@ -100,18 +100,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public int PeaksCount { get { return GraphItem.PeaksCount; } }
         public int PeaksMatchedCount { get { return GraphItem.PeaksMatchedCount; } }
         public int PeaksRankedCount { get { return GraphItem.PeaksRankedCount; } }        
-        public IEnumerable<string> IonLabels
-        {
-            get
-            {
-                foreach (var graphObj in GraphPane.GraphObjList)
-                {
-                    var label = graphObj as TextObj;
-                    if (label != null)
-                        yield return label.Text;
-                }
-            }
-        }
+        public IEnumerable<string> IonLabels { get { return GraphItem.IonLabels; } }
 
         public string SelectedIonLabel
         {

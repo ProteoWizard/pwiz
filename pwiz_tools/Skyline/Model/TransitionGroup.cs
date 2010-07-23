@@ -87,7 +87,11 @@ namespace pwiz.Skyline.Model
 
             string sequence = Peptide.Sequence;
 
-            MassType massType = settings.TransitionSettings.Prediction.FragmentMassType;
+            var tranSettings = settings.TransitionSettings;
+            MassType massType = tranSettings.Prediction.FragmentMassType;
+            int minMz = tranSettings.Instrument.MinMz;
+            int maxMz = tranSettings.Instrument.MaxMz;
+
             var pepMods = settings.PeptideSettings.Modifications;
             var potentialLosses = CalcPotentialLosses(sequence, pepMods, mods,
                 massType);
@@ -95,10 +99,18 @@ namespace pwiz.Skyline.Model
             double precursorMassPredict = calcPredict.GetPrecursorFragmentMass(sequence);
             if (!useFilter)
             {
-                foreach (var nodeTran in CreateTransitionNodes(precursorMassPredict,
-                    transitionRanks, massType, potentialLosses))
+                foreach (var losses in CalcTransitionLosses(IonType.precursor, 0, massType, potentialLosses))
                 {
-                    yield return nodeTran;                    
+                    // If there was loss, it is possible (though not likely) that the ion m/z value
+                    // will now fall below the minimum measurable value for the instrument
+                    if (losses != null)
+                    {
+                        double ionMz = SequenceMassCalc.GetMZ(CalcMass(precursorMassPredict, losses), PrecursorCharge);
+                        if (minMz > ionMz)
+                            continue;
+                    }
+
+                    yield return CreateTransitionNode(precursorMassPredict, losses, transitionRanks);                    
                 }
             }
 
@@ -116,7 +128,6 @@ namespace pwiz.Skyline.Model
                 massesFilter = calcFilter.GetFragmentIonMasses(sequence);
             }
 
-            var tranSettings = settings.TransitionSettings;
             var filter = tranSettings.Filter;
 
             // Get filter settings
@@ -147,9 +158,9 @@ namespace pwiz.Skyline.Model
                     yield break;
             }
 
-            // Get instrument settings
-            int minMz = tranSettings.Instrument.MinMz;
-            int maxMz = tranSettings.Instrument.MaxMz;
+            // If filtering without library picking, then don't include the losses
+            if (pick == TransitionLibraryPick.none)
+                potentialLosses = null;
 
             // Loop over potential product ions picking transitions
             foreach (IonType type in types)
@@ -172,48 +183,56 @@ namespace pwiz.Skyline.Model
                     for (int i = 0; i < len; i++)
                     {
                         // Get the predicted m/z that would be used in the transition
-                        double massH = massesPredict[(int) type, i];
-                        double ionMz = SequenceMassCalc.GetMZ(massH, charge);
-
-                        // Make sure the fragment m/z value falls within the valid instrument range.
-                        // CONSIDER: This means that a heavy transition might excede the instrument
-                        //           range where a light one is accepted, leading to a disparity
-                        //           between heavy and light transtions picked.
-                        if (minMz > ionMz || ionMz > maxMz)
-                            continue;
-
-                        if (pick == TransitionLibraryPick.all)
+                        double massH = massesPredict[(int)type, i];
+                        foreach (var losses in CalcTransitionLosses(type, i, massType, potentialLosses))
                         {
-                            if (!useFilter)
+                            double ionMz = SequenceMassCalc.GetMZ(CalcMass(massH, losses), charge);
+
+                            // Make sure the fragment m/z value falls within the valid instrument range.
+                            // CONSIDER: This means that a heavy transition might excede the instrument
+                            //           range where a light one is accepted, leading to a disparity
+                            //           between heavy and light transtions picked.
+                            if (minMz > ionMz || ionMz > maxMz)
+                                continue;
+
+                            if (pick == TransitionLibraryPick.all)
                             {
-                                foreach (var nodeTran in CreateTransitionNodes(type, i, charge, massH,
-                                    transitionRanks, massType, potentialLosses))
+                                if (!useFilter)
                                 {
-                                    yield return nodeTran;
+                                    yield return CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);
+                                }
+                                else
+                                {
+                                    LibraryRankedSpectrumInfo.RankedMI rmi;
+                                    if (transitionRanks.TryGetValue(ionMz, out rmi) && rmi.IonType == type && rmi.Charge == charge && Equals(rmi.Losses, losses))
+                                        yield return CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);
                                 }
                             }
-                            else
+                            else if ((start <= i && i <= end) ||
+                                (pro && IsPro(sequence, i)) ||
+                                (gluasp && IsGluAsp(sequence, i)))
                             {
-                                LibraryRankedSpectrumInfo.RankedMI rmi;
-                                if (transitionRanks.TryGetValue(ionMz, out rmi) && rmi.IonType == type && rmi.Charge == charge)
-                                    yield return CreateTransitionNode(type, i, charge, massH, null, transitionRanks);
+                                if (pick == TransitionLibraryPick.none)
+                                    yield return CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);
+                                else
+                                {
+                                    LibraryRankedSpectrumInfo.RankedMI rmi;
+                                    if (transitionRanks.TryGetValue(ionMz, out rmi))
+                                    {
+                                         if (rmi.IonType == type && rmi.Charge == charge && Equals(rmi.Losses, losses))
+                                             yield return CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);
+                                         else
+                                             Console.WriteLine("Skipping");
+                                    }
+                                }
                             }
-                        }
-                        else if ((start <= i && i <= end) ||
-                            (pro && IsPro(sequence, i)) ||
-                            (gluasp && IsGluAsp(sequence, i)))
-                        {
-                            if (pick == TransitionLibraryPick.none)
-                                yield return CreateTransitionNode(type, i, charge, massH, null, transitionRanks);
-                            else if (transitionRanks.ContainsKey(ionMz))
-                                yield return CreateTransitionNode(type, i, charge, massH, null, transitionRanks);
                         }
                     }
                 }
             }
         }
 
-        private static IList<IList<ExplicitLoss>> CalcPotentialLosses(string sequence,
+        public static IList<IList<ExplicitLoss>> CalcPotentialLosses(string sequence,
             PeptideModifications pepMods, ExplicitMods mods, MassType massType)
         {
             // First build a list of the amino acids in this peptide which can be experience loss,
@@ -313,35 +332,25 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private IEnumerable<TransitionDocNode>
-            CreateTransitionNodes(double precursorMassH,
-                                  IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks,
-                                  MassType massType,
-                                  IList<IList<ExplicitLoss>> potentialLosses)
-        {
-            foreach (var losses in CalcTransitionLosses(IonType.precursor, 0, massType, potentialLosses))
-                yield return CreateTransitionNode(precursorMassH, losses, transitionRanks);
-        }
-
         private TransitionDocNode CreateTransitionNode(double precursorMassH, TransitionLosses losses,
             IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks)
         {
             Transition transition = new Transition(this);
-            var info = TransitionDocNode.GetLibInfo(transition, precursorMassH, transitionRanks);
+            var info = TransitionDocNode.GetLibInfo(transition, CalcMass(precursorMassH, losses), transitionRanks);
             return new TransitionDocNode(transition, losses, precursorMassH, info);
         }
 
-        private IEnumerable<TransitionDocNode>
-            CreateTransitionNodes(IonType type,
-                                  int cleavageOffset,
-                                  int charge,
-                                  double massH,
-                                  IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks,
-                                  MassType massType,
-                                  IList<IList<ExplicitLoss>> potentialLosses)
+        private TransitionDocNode CreateTransitionNode(IonType type, int cleavageOffset, int charge, double massH,
+            TransitionLosses losses, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks)
         {
-            foreach (var losses in CalcTransitionLosses(type, cleavageOffset, massType, potentialLosses))
-                yield return CreateTransitionNode(type, cleavageOffset, charge, massH, losses, transitionRanks);
+            Transition transition = new Transition(this, type, cleavageOffset, charge);
+            var info = TransitionDocNode.GetLibInfo(transition, CalcMass(massH, losses), transitionRanks);
+            return new TransitionDocNode(transition, losses, massH, info);
+        }
+
+        private static double CalcMass(double massH, TransitionLosses losses)
+        {
+            return massH - (losses != null ? losses.Mass : 0);
         }
 
         /// <summary>
@@ -349,7 +358,7 @@ namespace pwiz.Skyline.Model
         /// a specific type and cleavage offset, given all of the potential loss permutations
         /// for the precursor.
         /// </summary>
-        private static IEnumerable<TransitionLosses> CalcTransitionLosses(IonType type, int cleavageOffset,
+        public static IEnumerable<TransitionLosses> CalcTransitionLosses(IonType type, int cleavageOffset,
             MassType massType, IEnumerable<IList<ExplicitLoss>> potentialLosses)
         {
             // First return no losses
@@ -420,14 +429,6 @@ namespace pwiz.Skyline.Model
             if (listLosses == null)
                 return null;
             return  new TransitionLosses(listLosses, massType);
-        }
-
-        private TransitionDocNode CreateTransitionNode(IonType type, int cleavageOffset, int charge, double massH,
-            TransitionLosses losses, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks)
-        {
-            Transition transition = new Transition(this, type, cleavageOffset, charge);
-            var info = TransitionDocNode.GetLibInfo(transition, massH, transitionRanks);
-            return new TransitionDocNode(transition, losses, massH, info);
         }
 
         public void GetLibraryInfo(SrmSettings settings, ExplicitMods mods, bool useFilter,

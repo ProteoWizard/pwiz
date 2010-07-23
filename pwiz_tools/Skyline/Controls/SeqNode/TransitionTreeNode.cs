@@ -16,7 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Text;
@@ -208,7 +207,8 @@ namespace pwiz.Skyline.Controls.SeqNode
                 if (nodeTran.HasLibInfo)
                 {
                     table.AddDetailRow("Library rank", nodeTran.LibInfo.Rank.ToString(), rt);
-                    table.AddDetailRow("Library intensity", string.Format("{0:F0}", nodeTran.LibInfo.Intensity), rt);
+                    float intensity = nodeTran.LibInfo.Intensity;
+                    table.AddDetailRow("Library intensity", MathEx.RoundAboveZero(intensity, (intensity < 10 ? 1 : 0), 4).ToString(), rt);
                 }
                 if (!string.IsNullOrEmpty(nodeTran.Note))
                     table.AddDetailRow("Note", nodeTran.Note, rt);

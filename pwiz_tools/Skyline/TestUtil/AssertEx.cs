@@ -271,7 +271,7 @@ namespace pwiz.SkylineTestUtil
             return sb.ToString();
         }
 
-        public static void IsDocumentState(SrmDocument document, int revision, int groups, int peptides, int transitions)
+        public static void IsDocumentState(SrmDocument document, int? revision, int groups, int peptides, int transitions)
         {
             IsDocumentState(document, revision, groups, peptides, peptides, transitions);
         }

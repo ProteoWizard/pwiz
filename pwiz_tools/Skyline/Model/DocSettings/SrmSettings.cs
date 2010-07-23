@@ -710,7 +710,8 @@ namespace pwiz.Skyline.Model.DocSettings
                         // This condition makes sure it doesn't overwrite the existing variable mod.
                         (!mod.IsExplicit || !defSet.StaticModList.Contains(mod.ChangeVariable(true))))
                 {
-                    defSet.StaticModList.Add(mod.IsExplicit ? mod.ChangeExplicit(false) : mod);
+                    // User set (IsExplicit && !IsVariable) is a document-only state
+                    defSet.StaticModList.Add(mod.IsUserSet ? mod.ChangeExplicit(false) : mod);
                 }
             }
 
