@@ -432,9 +432,11 @@ namespace pwiz.Skyline.FileUI
                 if (listDataPaths.Count == 0)
                     continue;
 
+                listDataPaths.Sort();
                 listNamedPaths.Add(new KeyValuePair<string, string[]>(
                                        subDirInfo.Name, listDataPaths.ToArray()));
             }
+            listNamedPaths.Sort((p1, p2) => Comparer<string>.Default.Compare(p1.Key, p2.Key));
             return listNamedPaths.ToArray();
         }
 

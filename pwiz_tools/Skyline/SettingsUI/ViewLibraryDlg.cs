@@ -73,7 +73,7 @@ namespace pwiz.Skyline.SettingsUI
     public partial class ViewLibraryDlg : Form, IGraphContainer, IStateProvider
     {
         // Used to parse the modification string in a given sequence
-        private const string REGEX_MODIFICATION_PATTERN = @"\[.*\]";
+        private const string REGEX_MODIFICATION_PATTERN = @"\[[^\]]*\]";
 
         /// <summary>
         /// Data structure containing information on a single peptide. It is
@@ -626,7 +626,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             IList<ModificationInfo> modList = new List<ModificationInfo>();
             string sequence = pep.Sequence;
-            int iMod = 0;
+            int iMod = -1;
             for (int i = 0; i < sequence.Length; i++)
             {
                 if (sequence[i] != '[')
@@ -657,6 +657,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     modList.Add(new ModificationInfo(iMod, sequence[iAa], massDiff*signVal));
                 }
+                i = iEnd;
             }
             return modList;
         }
