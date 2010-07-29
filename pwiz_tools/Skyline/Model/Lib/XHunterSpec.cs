@@ -182,6 +182,7 @@ namespace pwiz.Skyline.Model.Lib
 
         private static readonly Regex REGEX_HEADER = new Regex(@"HLF v=(\d+) s=([^ ]+) d=(\d\d\d\d\.\d\d.\d\d)");
         private Dictionary<LibKey, XHunterSpectrumInfo> _dictLibrary;
+        private HashSet<LibSeqKey> _setSequences;
         private IPooledStream _readStream;
 
         public static XHunterLibrary Load(XHunterLibSpec spec, ILoadMonitor loader)
@@ -315,6 +316,7 @@ namespace pwiz.Skyline.Model.Lib
                 }
 
                 var dictLibrary = new Dictionary<LibKey, XHunterSpectrumInfo>(size);
+                var setSequences = new HashSet<LibSeqKey>();
 
                 int countHeader = (version == 1 ? (int) SpectrumHeaders1.count : (int) SpectrumHeaders2.count)*4;
                 byte[] specHeader = new byte[1024];
@@ -399,10 +401,12 @@ namespace pwiz.Skyline.Model.Lib
                     LibKey key = new LibKey(sequence, 0, seqLength, charge);
                     if (!dictLibrary.ContainsKey(key))
                         dictLibrary.Add(key, new XHunterSpectrumInfo(i2, expect, numPeaks, location));
+                    setSequences.Add(new LibSeqKey(key));
                 }
 
                 // Checksum = checksum.ChecksumValue;
                 _dictLibrary = dictLibrary;
+                _setSequences = setSequences;
                 loader.UpdateProgress(status.Complete());
                 return true;
             }
@@ -462,6 +466,11 @@ namespace pwiz.Skyline.Model.Lib
         public override bool Contains(LibKey key)
         {
             return (_dictLibrary != null && _dictLibrary.ContainsKey(key));
+        }
+
+        public override bool ContainsAny(LibSeqKey key)
+        {
+            return (_setSequences != null && _setSequences.Contains(key));
         }
 
         public override bool TryGetLibInfo(LibKey key, out SpectrumHeaderInfo libInfo)

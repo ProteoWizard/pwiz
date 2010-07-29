@@ -349,6 +349,7 @@ namespace pwiz.Skyline.Model.Lib
             };
 
         private NistSpectrumInfo[] _libraryEntries;
+        private HashSet<LibSeqKey> _setSequences;
 
         private IPooledStream _readStream;
 
@@ -524,6 +525,7 @@ namespace pwiz.Skyline.Model.Lib
 
                 int numSpectra = GetInt32(libHeader, (int) LibHeaders.num_spectra);
                 var libraryEntries = new NistSpectrumInfo[numSpectra];
+                var setSequences = new HashSet<LibSeqKey>();
 
                 // Seek to beginning of spectrum headers
                 long locationHeaders = BitConverter.ToInt64(libHeader, ((int)LibHeaders.location_headers_lo)*4);
@@ -570,10 +572,12 @@ namespace pwiz.Skyline.Model.Lib
                     LibKey key = new LibKey(specSequence, 0, seqLength, charge);
                     libraryEntries[i] = new NistSpectrumInfo(key, tfRatio, totalIntensity,
                                                               (ushort)copies, (ushort)numPeaks, compressedSize, location);
+                    setSequences.Add(new LibSeqKey(key));
                 }
 
                 // Checksum = checksum.ChecksumValue;
                 _libraryEntries = libraryEntries;
+                _setSequences = setSequences;
                 loader.UpdateProgress(status.Complete());
                 return true;
             }
@@ -857,6 +861,11 @@ namespace pwiz.Skyline.Model.Lib
         public override bool Contains(LibKey key)
         {
             return FindEntry(key) != -1;
+        }
+
+        public override bool ContainsAny(LibSeqKey key)
+        {
+            return (_setSequences != null && _setSequences.Contains(key));
         }
 
         public override bool TryGetLibInfo(LibKey key, out SpectrumHeaderInfo libInfo)

@@ -487,7 +487,6 @@
     <Compile Include="Model\Lib\XHunterSpec.cs" />
     <Compile Include="Model\Lib\Library.cs" />
     <Compile Include="Model\Lib\BiblioSpec.cs" />
-    <Compile Include="Model\PasteFormat.cs" />
     <Compile Include="Model\PeptideGroup.cs" />
     <Compile Include="Model\Peptide.cs" />
     <Compile Include="Model\DocSettings\PeptideSettings.cs" />

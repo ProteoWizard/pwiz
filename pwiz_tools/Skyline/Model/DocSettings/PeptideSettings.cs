@@ -475,8 +475,10 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         /// <param name="peptide">The peptide being considered</param>
         /// <param name="explicitMods">Any modifications which will be applied to the peptide, or null for none</param>
+        /// <param name="allowVariableMods">True if variable modifications of this peptide may produce
+        /// acceptable variants of this peptide</param>
         /// <returns>True if the peptide should be included</returns>
-        bool Accept(Peptide peptide, ExplicitMods explicitMods);
+        bool Accept(Peptide peptide, ExplicitMods explicitMods, out bool allowVariableMods);
     }
 
     [XmlRoot("peptide_filter")]
@@ -551,9 +553,12 @@ namespace pwiz.Skyline.Model.DocSettings
         }
         #endregion
 
-        public bool Accept(Peptide peptide, ExplicitMods explicitMods)
+        public bool Accept(Peptide peptide, ExplicitMods explicitMods, out bool allowVariableMods)
         {
-            return Accept(peptide.Sequence, peptide.Begin);
+            // Any peptide that is rejected from this filter, will likewise be rejected
+            // with any variable modifications.
+            bool accept = allowVariableMods = Accept(peptide.Sequence, peptide.Begin);
+            return accept;
         }
 
         private bool Accept(string sequence, int? begin)
@@ -751,8 +756,9 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             #region Implementation of IPeptideFilter
 
-            public bool Accept(Peptide peptide, ExplicitMods explicitMods)
+            public bool Accept(Peptide peptide, ExplicitMods explicitMods, out bool allowVariableMods)
             {
+                allowVariableMods = true;
                 return true;
             }
 
@@ -1350,6 +1356,18 @@ namespace pwiz.Skyline.Model.DocSettings
             foreach (Library lib in _libraries)
             {
                 if (lib != null && lib.Contains(key))
+                    return true;
+            }
+            return false;
+        }
+
+        public bool ContainsAny(LibSeqKey key)
+        {
+            Debug.Assert(IsLoaded);
+
+            foreach (Library lib in _libraries)
+            {
+                if (lib != null && lib.ContainsAny(key))
                     return true;
             }
             return false;

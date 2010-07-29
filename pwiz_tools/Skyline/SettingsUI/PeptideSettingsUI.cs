@@ -292,7 +292,6 @@ namespace pwiz.Skyline.SettingsUI
                 _peptideSettings = settings;
             }
             DialogResult = DialogResult.OK;
-            Close();
         }
 
         private void enzyme_SelectedIndexChanged(object sender, EventArgs e)
@@ -644,6 +643,15 @@ namespace pwiz.Skyline.SettingsUI
                 cbLimitPeptides.Checked = true;
                 textPeptideCount.Enabled = true;
                 textPeptideCount.Text = peptidesPerProtein;
+            }
+        }
+
+        public IEnumerable<IsotopeLabelType> LabelTypes
+        {
+            get
+            {
+                return from mod in _driverLabelType.GetHeavyModifications()
+                       select mod.LabelType;
             }
         }
 

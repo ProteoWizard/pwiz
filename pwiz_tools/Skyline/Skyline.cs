@@ -892,7 +892,11 @@ namespace pwiz.Skyline
                 else if (columnTypes[columnTypes.Length - 1] != typeof(FastaSequence))
                     throw new InvalidDataException("Protein sequence not found.\nThe protein sequence must be the last value in each line.");
                 else
-                    ImportFasta(new StringReader(FastaImporter.ToFasta(text, separator)), false, "Paste proteins");
+                {
+                    string textFasta = FastaImporter.ToFasta(text, separator);
+                    ImportFasta(new StringReader(textFasta), Helpers.CountLinesInString(textFasta),
+                        false, "Paste proteins");
+                }
             }
             // Otherwise, look for a list of peptides, or a bare sequence
             else
@@ -961,7 +965,8 @@ namespace pwiz.Skyline
             }
 
             string description = (peptideList ? "Paste peptide list" : "Paste FASTA");
-            ImportFasta(new StringReader(text), peptideList, description);
+            ImportFasta(new StringReader(text), Helpers.CountLinesInString(text),
+                peptideList, description);
         }
 
         public static string GetPeptideGroupId(SrmDocument document, bool peptideList)

@@ -131,6 +131,7 @@ namespace pwiz.Skyline.EditUI
             tbxError.BackColor = Color.Red;
             tbxError.Text = pasteError.Message;
         }
+
         public void ShowNoErrors()
         {
             _noErrors = true;
@@ -475,13 +476,13 @@ namespace pwiz.Skyline.EditUI
                     }
                 }
             }
-            var importer = new FastaImporter(DocumentUiContainer.DocumentUI, false);
+            var importer = new FastaImporter(document, false);
             try
             {
                 var reader = new StringReader(tbxFasta.Text);
                 IdentityPath to = SelectedPath;
                 IdentityPath firstAdded;
-                document = document.AddPeptideGroups(importer.Import(reader), false, to, out firstAdded);
+                document = document.AddPeptideGroups(importer.Import(reader, null, -1), false, to, out firstAdded);
                 SelectedPath = firstAdded;
             }
             catch (Exception exception)
@@ -1239,5 +1240,13 @@ namespace pwiz.Skyline.EditUI
         protein_list,
         peptide_list,
         transition_list,
+    }
+
+    public class PasteError
+    {
+        public String Message { get; set; }
+        public int Line { get; set; }
+        public int Column { get; set; }
+        public int Length { get; set; }
     }
 }

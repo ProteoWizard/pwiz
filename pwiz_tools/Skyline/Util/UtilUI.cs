@@ -75,8 +75,31 @@ namespace pwiz.Skyline.Util
     }
 
     /// <summary>
+    /// Broker communication between a long operation and the user,
+    /// usually used with <see cref="pwiz.Skyline.Controls.LongWaitDlg"/>.
+    /// </summary>
+    public interface ILongWaitBroker
+    {
+        /// <summary>
+        /// True if the use has canceled the long operation
+        /// </summary>
+        bool IsCanceled { get; }
+
+        /// <summary>
+        /// Percent complete in the progress indicator shown to the user
+        /// </summary>
+        int ProgressValue { get; set; }
+
+        /// <summary>
+        /// Message shown to the user
+        /// </summary>
+        string Message { set; }
+    }
+
+    /// <summary>
     /// Use this interface to provide a progress sink for a long operation,
-    /// and let the operation know, if it has been cancelled.
+    /// and let the operation know, if it has been cancelled.  Usually used
+    /// with status bar progress for background operations.
     /// </summary>
     public interface IProgressMonitor
     {

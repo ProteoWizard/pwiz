@@ -23,27 +23,6 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
 {
-    /// <summary>
-    /// Broker communication between a long operation and the user
-    /// </summary>
-    public interface ILongWaitBroker
-    {
-        /// <summary>
-        /// True if the use has canceled the long operation
-        /// </summary>
-        bool IsCanceled { get; }
-
-        /// <summary>
-        /// Percent complete in the progress indicator shown to the user
-        /// </summary>
-        int ProgressValue { get; set; }
-
-        /// <summary>
-        /// Message shown to the user
-        /// </summary>
-        string Message { set; }
-    }    
-
     public partial class LongWaitDlg : Form, ILongWaitBroker
     {
         private const string CANCEL_MESSAGE = " (canceled)";

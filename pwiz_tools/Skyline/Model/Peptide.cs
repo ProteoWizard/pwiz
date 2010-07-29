@@ -136,8 +136,13 @@ namespace pwiz.Skyline.Model
         {
             // Always return the unmodified peptide doc node first
             var nodePepUnmod = new PeptideDocNode(this, new TransitionGroupDocNode[0]);
-            if (filter.Accept(this, null))
+            bool allowVariableMods;
+            if (filter.Accept(this, null, out allowVariableMods))
                 yield return nodePepUnmod;
+
+            // Stop if no variable modifications are allowed for this peptide.
+            if (!allowVariableMods)
+                yield break;
 
             // First build a list of the amino acids in this peptide which can be modified,
             // and the modifications which apply to them.
@@ -179,7 +184,7 @@ namespace pwiz.Skyline.Model
                 var modStateMachine = new VariableModStateMachine(nodePepUnmod, modCount, listListMods);
                 foreach (var nodePep in modStateMachine.GetStates())
                 {
-                    if (filter.Accept(nodePep.Peptide, nodePep.ExplicitMods))
+                    if (filter.Accept(nodePep.Peptide, nodePep.ExplicitMods, out allowVariableMods))
                         yield return nodePep;
                 }
             }

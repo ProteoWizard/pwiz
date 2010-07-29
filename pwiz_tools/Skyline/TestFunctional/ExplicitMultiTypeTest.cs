@@ -99,10 +99,10 @@ namespace pwiz.SkylineTestFunctional
             // Add new label types
             peptideSettingsUI = ShowPeptideSettings();
             string[] heavyLabelNames = new[] { "heavy AA", "heavy All" };
-            var editLabelTypeListDlg = SetHeavyLabelNames(peptideSettingsUI, heavyLabelNames);
+            SetHeavyLabelNames(peptideSettingsUI, heavyLabelNames);
 
             // Make sure label type list edit worked
-            IsotopeLabelType[] heavyLabelTypes = editLabelTypeListDlg.LabelTypes.ToArray();
+            IsotopeLabelType[] heavyLabelTypes = peptideSettingsUI.LabelTypes.ToArray();
             Assert.AreEqual(2, heavyLabelTypes.Length);
             var labelTypeAa = heavyLabelTypes[0];
             var labelTypeAll = heavyLabelTypes[1];
@@ -288,7 +288,7 @@ namespace pwiz.SkylineTestFunctional
             return ShowDialog<EditLabelTypeListDlg>(peptideSettingsUI.EditLabelTypeList);
         }
 
-        private static EditLabelTypeListDlg SetHeavyLabelNames(PeptideSettingsUI peptideSettingsUI, string[] heavyLabelNames)
+        private static void SetHeavyLabelNames(PeptideSettingsUI peptideSettingsUI, string[] heavyLabelNames)
         {
             var editLabelTypeListDlg = ShowEditLabelTypeListDlg(peptideSettingsUI);
             RunUI(() =>
@@ -297,7 +297,6 @@ namespace pwiz.SkylineTestFunctional
                 editLabelTypeListDlg.OkDialog();
             });
             WaitForClosedForm(editLabelTypeListDlg);
-            return editLabelTypeListDlg;
         }
     }
 }

@@ -78,6 +78,7 @@ namespace pwiz.Skyline.Model.Lib
         public const string DEFAULT_AUTHORITY = "proteome.gs.washington.edu";
 
         private IDictionary<LibKey, BiblioLiteSpectrumInfo> _dictLibrary;
+        private HashSet<LibSeqKey> _setSequences;
 
         private PooledSqliteConnection _sqliteConnection;
 
@@ -250,6 +251,7 @@ namespace pwiz.Skyline.Model.Lib
 
                     // Then read in spectrum headers
                     _dictLibrary = new Dictionary<LibKey, BiblioLiteSpectrumInfo>(rows);
+                    _setSequences = new HashSet<LibSeqKey>();
 
                     select.CommandText = "SELECT * FROM [RefSpectra]";
                     using (SQLiteDataReader reader = select.ExecuteReader())
@@ -288,6 +290,7 @@ namespace pwiz.Skyline.Model.Lib
                             var key = new LibKey(sequence, charge);
                             if (!_dictLibrary.ContainsKey(key))
                                 _dictLibrary.Add(key, new BiblioLiteSpectrumInfo(copies, numPeaks, id));
+                            _setSequences.Add(new LibSeqKey(key));
                         }
                     }
                 }
@@ -317,6 +320,11 @@ namespace pwiz.Skyline.Model.Lib
         public override bool Contains(LibKey key)
         {
             return (_dictLibrary != null && _dictLibrary.ContainsKey(key));
+        }
+
+        public override bool ContainsAny(LibSeqKey key)
+        {
+            return (_setSequences != null && _setSequences.Contains(key));
         }
 
         public override bool TryGetLibInfo(LibKey key, out SpectrumHeaderInfo libInfo)

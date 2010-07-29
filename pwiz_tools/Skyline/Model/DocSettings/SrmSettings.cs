@@ -143,7 +143,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 // If requesting the light calculator or an unmodified heavy,
                 // then no explicit calculator is required.
-                if (Equals(labelType, IsotopeLabelType.light) || !mods.IsModified(labelType))
+                if (labelType.IsLight || !mods.IsModified(labelType))
                     return null;
                 
                 // Otherwise, use its calculator as the base for a heavy type
@@ -171,7 +171,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private static SequenceMassCalc GetMassCalc(IsotopeLabelType labelType, IList<TypedMassCalc> massCalcs)
         {
-            int index = massCalcs.IndexOf(calc => Equals(labelType, calc.LabelType));
+            int index = massCalcs.IndexOf(calc => ReferenceEquals(labelType, calc.LabelType));
             if (index == -1)
                 return null;
             return massCalcs[index].MassCalc;
@@ -196,7 +196,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (!labelType.IsLight && !mods.HasModifications(labelType))
                     return null;
                 return new ExplicitSequenceMassCalc(massCalcBase,
-                                                    mods.GetModMasses(massCalcBase.MassType, labelType),
+                                                    mods.GetModMasses(massCalcBase.MassType, labelType).ToArray(),
                                                     mods.IsVariableStaticMods);
             }
             return GetMassCalc(labelType, _precursorMassCalcs);
@@ -380,27 +380,52 @@ namespace pwiz.Skyline.Model.DocSettings
             return calc;
         }
 
-        public bool Contains(string sequence, int charge, ExplicitMods mods, out IsotopeLabelType type)
+        public bool LibrariesContainMeasurablePeptide(Peptide peptide, IEnumerable<int> precursorCharges, ExplicitMods mods)
         {
-            var libraries = PeptideSettings.Libraries;
-
-            type = IsotopeLabelType.light;
-
-            string sequenceMod = GetModifiedSequence(sequence, IsotopeLabelType.light, mods);
-            if (libraries.Contains(new LibKey(sequenceMod, charge)))
+            if (LibrariesContainMeasurablePeptide(peptide, IsotopeLabelType.light, precursorCharges, mods))
                 return true;
 
+            // If light version not found, try heavy
             foreach (var labelType in GetHeavyLabelTypes(mods))
             {                
-                // If light version not found, try heavy
-                sequenceMod = GetModifiedSequence(sequence, labelType, mods);
-                if (libraries.Contains(new LibKey(sequenceMod, charge)))
-                {
-                    type = labelType;
+                if (LibrariesContainMeasurablePeptide(peptide, labelType, precursorCharges, mods))
                     return true;
-                }                
             }
             return false;
+        }
+
+        private bool LibrariesContainMeasurablePeptide(Peptide peptide, IsotopeLabelType labelType,
+            IEnumerable<int> precursorCharges, ExplicitMods mods)
+        {
+            string sequenceMod = GetModifiedSequence(peptide.Sequence, labelType, mods);
+            foreach (int charge in precursorCharges)
+            {
+                if (LibrariesContain(sequenceMod, charge))
+                {
+                    // Make sure the peptide for the found spectrum is measurable on
+                    // the current instrument.
+                    double precursorMass = GetPrecursorMass(labelType, peptide.Sequence, mods);
+                    if (IsMeasurable(precursorMass, charge))
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        private bool IsMeasurable(double precursorMass, int charge)
+        {
+            double precursorMz = SequenceMassCalc.GetMZ(precursorMass, charge);
+            return TransitionSettings.Instrument.IsMeasurable(precursorMz);
+        }
+
+        public bool LibrariesContain(string sequenceMod, int charge)
+        {
+            return PeptideSettings.Libraries.Contains(new LibKey(sequenceMod, charge));
+        }
+
+        public bool LibrariesContainAny(string sequence)
+        {
+            return PeptideSettings.Libraries.ContainsAny(new LibSeqKey(sequence));
         }
 
         public bool TryGetLibInfo(string sequence, int charge, ExplicitMods mods,
@@ -495,10 +520,13 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #region Implementation of IPeptideFilter
 
-        public bool Accept(Peptide peptide, ExplicitMods explicitMods)
+        public bool Accept(Peptide peptide, ExplicitMods explicitMods, out bool allowVariableMods)
         {
-            return Accept(peptide, explicitMods, TransitionSettings.Filter.PrecursorCharges,
-                          PeptideFilterType.fasta);
+            return Accept(peptide,
+                          explicitMods,
+                          TransitionSettings.Filter.PrecursorCharges,
+                          PeptideFilterType.fasta,
+                          out allowVariableMods);
         }
 
         /// <summary>
@@ -519,7 +547,8 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public bool Accept(Peptide peptide, ExplicitMods mods, int charge)
         {
-            return Accept(peptide, mods, new[] { charge }, PeptideFilterType.library);
+            bool allowVariableMods;
+            return Accept(peptide, mods, new[] { charge }, PeptideFilterType.library, out allowVariableMods);
         }
 
         private enum PeptideFilterType
@@ -529,8 +558,14 @@ namespace pwiz.Skyline.Model.DocSettings
             library // Only filter with library settings
         }
 
-        private bool Accept(Peptide peptide, ExplicitMods mods, IEnumerable<int> precursorCharges, PeptideFilterType filterType)
+        private bool Accept(Peptide peptide,
+                            ExplicitMods mods,
+                            IEnumerable<int> precursorCharges,
+                            PeptideFilterType filterType,
+                            out bool allowVariableMods)
         {
+            // Assume variable modifications are not allowed until proven otherwise
+            allowVariableMods = false;
             // Only filter user specified peptides based on the heuristic
             // filter when explicitly requested.
             bool useFilter = filterType == PeptideFilterType.full;
@@ -540,7 +575,12 @@ namespace pwiz.Skyline.Model.DocSettings
             var libraries = PeptideSettings.Libraries;
             if (!libraries.HasLibraries || libraries.Pick == PeptidePick.filter)
             {
-                return !useFilter || PeptideSettings.Filter.Accept(peptide, null);
+                if (!useFilter)
+                {
+                    allowVariableMods = true;
+                    return true;
+                }
+                return PeptideSettings.Filter.Accept(peptide, null, out allowVariableMods);
             }
 
             // Check if the peptide is in the library for one of the
@@ -549,23 +589,17 @@ namespace pwiz.Skyline.Model.DocSettings
             // If the libraries are not fully loaded, then act like nothing
             // could be found in the libraries.  This will be corrected when
             // the libraries are loaded.
-            if (libraries.IsLoaded)
+            if (libraries.IsLoaded && 
+                // Only check the library, if this is already a variable modification,
+                // or the library contains some form of the peptide.
+                ((mods != null && mods.IsVariableStaticMods) || LibrariesContainAny(peptide.Sequence)))
             {
-                double? precursorMass = null;
-                foreach (int charge in precursorCharges)
-                {
-                    IsotopeLabelType labelType;
-                    if (Contains(peptide.Sequence, charge, mods, out labelType))
-                    {
-                        // It is in the library.  Make sure it is measurable on the selected instrument.
-                        precursorMass = precursorMass ??
-                            GetPrecursorMass(IsotopeLabelType.light, peptide.Sequence, null);
-                        double precursorMz = SequenceMassCalc.GetMZ(precursorMass.Value, charge);
-                        var instrument = TransitionSettings.Instrument;
-                        if (instrument.IsMeasurable(precursorMz))
-                            inLibrary = true;
-                    }
-                }
+                // Only allow variable modifications, if the peptide has no modifications
+                // or already checking variable modifications, and there is reason to check
+                // the library.  Failing to do this check profiled as a performance bottleneck.
+                allowVariableMods = mods == null || mods.IsVariableStaticMods;
+
+                inLibrary = LibrariesContainMeasurablePeptide(peptide, precursorCharges, mods);
             }
 
             switch (libraries.Pick)
@@ -573,9 +607,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 case PeptidePick.library:
                     return inLibrary;
                 case PeptidePick.both:
-                    return inLibrary && (!useFilter || PeptideSettings.Filter.Accept(peptide, null));
+                    return inLibrary && (!useFilter || PeptideSettings.Filter.Accept(peptide, null, out allowVariableMods));
                 default:
-                    return inLibrary || (!useFilter || PeptideSettings.Filter.Accept(peptide, null));
+                    return inLibrary || (!useFilter || PeptideSettings.Filter.Accept(peptide, null, out allowVariableMods));
             }
         }
 

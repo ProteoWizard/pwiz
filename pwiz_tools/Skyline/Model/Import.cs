@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Model
         public SrmDocument Document { get; private set; }
         public bool PeptideList { get; private set; }
 
-        public IEnumerable<PeptideGroupDocNode> Import(TextReader reader)
+        public IEnumerable<PeptideGroupDocNode> Import(TextReader reader, ILongWaitBroker longWaitBroker, long lineCount)
         {
             // Set starting values for limit counters
             _countPeptides = Document.PeptideCount;
@@ -62,9 +62,22 @@ namespace pwiz.Skyline.Model
             List<PeptideGroupDocNode> peptideGroupsNew = new List<PeptideGroupDocNode>();
             PeptideGroupBuilder seqBuilder = null;
 
+            long linesRead = 0;
+            int progressPercent = 0;
+
             string line;
             while ((line = reader.ReadLine()) != null)
             {
+                linesRead++;
+                if (longWaitBroker != null)
+                {
+                    if (longWaitBroker.IsCanceled)
+                        return new PeptideGroupDocNode[0];
+                    int progressNew = (int) (linesRead*100/lineCount);
+                    if (progressPercent != progressNew)
+                        longWaitBroker.ProgressValue = progressPercent = progressNew;
+                }
+
                 if (line.StartsWith(">"))
                 {
                     if (_countIons > SrmDocument.MAX_TRANSITION_COUNT ||
@@ -75,6 +88,8 @@ namespace pwiz.Skyline.Model
                         AddPeptideGroup(peptideGroupsNew, set, seqBuilder);
 
                     seqBuilder = new PeptideGroupBuilder(line, PeptideList, Document.Settings);
+                    if (longWaitBroker != null)
+                        longWaitBroker.Message = string.Format("Adding protein {0}", seqBuilder.Name);
                 }
                 else if (seqBuilder == null)
                 {

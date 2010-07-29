@@ -24,7 +24,6 @@ using System.Reflection;
 using System.Text;
 using NHibernate;
 using NHibernate.Tool.hbm2ddl;
-using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;

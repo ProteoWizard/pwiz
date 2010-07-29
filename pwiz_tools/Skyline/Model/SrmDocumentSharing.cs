@@ -1,10 +1,9 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using Ionic.Zip;
-using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.DocSettings.Extensions;

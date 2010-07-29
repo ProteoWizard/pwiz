@@ -166,6 +166,7 @@ namespace pwiz.Skyline.Model.Lib
         private bool _bigEndian;
         private bool _linuxFormat;
         private Dictionary<LibKey, BiblioSpectrumInfo> _dictLibrary;
+        private HashSet<LibSeqKey> _setSequences;
         private IPooledStream _readStream;
 
         public static BiblioSpecLibrary Load(BiblioSpecLibSpec spec, ILoadMonitor loader)
@@ -303,6 +304,7 @@ namespace pwiz.Skyline.Model.Lib
 
                 int numSpectra = GetInt32(libHeader, (int) LibHeaders.num_spectra);
                 var dictLibrary = new Dictionary<LibKey, BiblioSpectrumInfo>(numSpectra);
+                var setSequences = new HashSet<LibSeqKey>();
 
                 string revStr = string.Format("{0}.{1}",
                                               GetInt32(libHeader, (int) LibHeaders.version1),
@@ -382,6 +384,7 @@ namespace pwiz.Skyline.Model.Lib
                         LibKey key = new LibKey(GetCModified(specSequence, ref seqLength), 0, seqLength, charge);
                         if (!dictLibrary.ContainsKey(key))
                             dictLibrary.Add(key, new BiblioSpectrumInfo((short)copies, (short)numPeaks, lenRead));
+                        setSequences.Add(new LibSeqKey(key));
                     }
 
                     // Read over peaks
@@ -394,6 +397,7 @@ namespace pwiz.Skyline.Model.Lib
 
                 // Checksum = checksum.ChecksumValue;
                 _dictLibrary = dictLibrary;
+                _setSequences = setSequences;
                 loader.UpdateProgress(status.Complete());
                 return true;
             }
@@ -464,6 +468,11 @@ namespace pwiz.Skyline.Model.Lib
         public override bool Contains(LibKey key)
         {
             return (_dictLibrary != null && _dictLibrary.ContainsKey(key));
+        }
+
+        public override bool ContainsAny(LibSeqKey key)
+        {
+            return (_setSequences != null && _setSequences.Contains(key));
         }
 
         public override bool TryGetLibInfo(LibKey key, out SpectrumHeaderInfo libInfo)

@@ -88,13 +88,8 @@ namespace pwiz.Skyline.Model.DocSettings
             Formula = formula;
             LabelAtoms = labelAtoms;
             RelativeRT = relativeRT;
-
-            // Only allow masses, if formula is not specified.
-            if (string.IsNullOrEmpty(formula))
-            {
-                MonoisotopicMass = monoMass;
-                AverageMass = avgMass;                
-            }
+            MonoisotopicMass = monoMass;
+            AverageMass = avgMass;                
 
             Losses = losses;
 
@@ -286,18 +281,20 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             else
             {
+                // No explicit masses with formula or label atoms
+                if (MonoisotopicMass != null || AverageMass != null)
+                    throw new InvalidDataException("Modification with a formula may not specify modification masses.");
                 if (Formula != null)
                 {
                     if (string.IsNullOrEmpty(Formula))
                         throw new InvalidDataException("Modification formula may not be empty.");
                     if (LabelAtoms != LabelAtoms.None)
                         throw new InvalidDataException("Formula not allowed with labeled atoms.");
+                    // Cache mass values to improve performance of variable modifications
                     // Throws an exception, if given an invalid formula.
-                    SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, Formula);                    
+                    MonoisotopicMass = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, Formula);
+                    AverageMass = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, Formula);
                 }
-                // No explicit masses with formula or label atoms
-                if (MonoisotopicMass != null || AverageMass != null)
-                    throw new InvalidDataException("Modification with a formula may not specify modification masses.");
             }
         }
 
@@ -379,8 +376,11 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttribute(ATTR.label_18O, Label18O);
             writer.WriteAttribute(ATTR.label_2H, Label2H);
             writer.WriteAttribute(ATTR.relative_rt, RelativeRT, RelativeRT.Matching);
-            writer.WriteAttributeNullable(ATTR.massdiff_monoisotopic, MonoisotopicMass);
-            writer.WriteAttributeNullable(ATTR.massdiff_average, AverageMass);
+            if (string.IsNullOrEmpty(Formula))
+            {
+                writer.WriteAttributeNullable(ATTR.massdiff_monoisotopic, MonoisotopicMass);
+                writer.WriteAttributeNullable(ATTR.massdiff_average, AverageMass);
+            }
             if (!IsVariable)
                 writer.WriteAttribute(ATTR.explicit_decl, IsExplicit);
 
@@ -660,7 +660,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private int GetModIndex(IsotopeLabelType labelType)
         {
-            return _modifications.IndexOf(mod => Equals(labelType, mod.LabelType));
+            return _modifications.IndexOf(mod => ReferenceEquals(labelType, mod.LabelType));
         }
 
         public IEnumerable<TypedExplicitModifications> GetHeavyModifications()

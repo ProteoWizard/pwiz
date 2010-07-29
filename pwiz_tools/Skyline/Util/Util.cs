@@ -21,6 +21,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Collections.ObjectModel;
@@ -999,6 +1000,39 @@ namespace pwiz.Skyline.Util
                     sb.Append('-');
             }
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// Count the number of lines in the file specified.
+        /// </summary>
+        /// <param name="f">The filename to count lines in.</param>
+        /// <returns>The number of lines in the file.</returns>
+        public static long CountLinesInFile(string f)
+        {
+            long count = 0;
+            using (StreamReader r = new StreamReader(f))
+            {
+                while (r.ReadLine() != null)
+                    count++;
+            }
+            return count;
+        }
+
+        /// <summary>
+        /// Count the number of lines in the string specified.
+        /// </summary>
+        /// <param name="s">The string to count lines in.</param>
+        /// <returns>The number of lines in the string.</returns>
+        public static long CountLinesInString(string s)
+        {
+            long count = 1;
+            int start = 0;
+            while ((start = s.IndexOf('\n', start)) != -1)
+            {
+                count++;
+                start++;
+            }
+            return count;
         }
     }
 

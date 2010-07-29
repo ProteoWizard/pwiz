@@ -613,42 +613,52 @@ namespace pwiz.Skyline
             {
                 Settings.Default.FastaDirectory = Path.GetDirectoryName(dlg.FileName);
 
-                StreamReader readerFasta = null;
                 try
                 {
-                    using (new LongOp(this))
+                    long lineCount = Helpers.CountLinesInFile(dlg.FileName);
+                    using (var readerFasta = new StreamReader(dlg.FileName))
                     {
-                        readerFasta = new StreamReader(dlg.FileName);
-
-                        ImportFasta(readerFasta, false, "Import FASTA");
+                        ImportFasta(readerFasta, lineCount, false, "Import FASTA");
                     }
                 }
                 catch (Exception x)
                 {
                     MessageBox.Show(string.Format("Failed reading the file {0}. {1}", dlg.FileName, x.Message));
                 }
-                finally
-                {
-                    if (readerFasta != null)
-                    {
-                        try { readerFasta.Close(); }
-                        catch (IOException) { }
-                    }
-                }
             }
         }
 
-        private void ImportFasta(TextReader reader, bool peptideList, string description)
+        private void ImportFasta(TextReader reader, long lineCount, bool peptideList, string description)
         {
             SrmTreeNode nodePaste = sequenceTree.SelectedNode as SrmTreeNode;
 
             IdentityPath selectPath = null;
 
-            ModifyDocument(description, doc => doc.ImportFasta(reader, peptideList,
-                nodePaste == null ? null : nodePaste.Path, out selectPath));
+            var docCurrent = DocumentUI;
+            LongWaitDlg longWaitDlg = new LongWaitDlg
+            {
+                Text = description,
+            };
+            SrmDocument docNew = null;
+            longWaitDlg.PerformWork(this, 1000, () =>
+                docNew = docCurrent.ImportFasta(reader,
+                                                longWaitDlg,
+                                                lineCount,
+                                                peptideList,
+                                                nodePaste != null ? nodePaste.Path : null,
+                                                out selectPath));
+            if (docNew != null)
+            {
+                ModifyDocument(description, doc =>
+                {
+                    if (doc != docCurrent)
+                        throw new InvalidDataException("Unexpected document change during operation.");
+                    return docNew;
+                });
 
-            if (selectPath != null)
-                sequenceTree.SelectedPath = selectPath;
+                if (selectPath != null)
+                    sequenceTree.SelectedPath = selectPath;
+            }
         }
 
         private void importMassListMenuItem_Click(object sender, EventArgs e)

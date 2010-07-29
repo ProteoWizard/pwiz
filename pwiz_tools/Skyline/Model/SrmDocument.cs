@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -473,11 +473,17 @@ namespace pwiz.Skyline.Model
             }
         }
 
-       public SrmDocument ImportFasta(TextReader reader, bool peptideList, IdentityPath to,
-                out IdentityPath firstAdded)
+        public SrmDocument ImportFasta(TextReader reader, bool peptideList,
+                IdentityPath to, out IdentityPath firstAdded)
+        {
+            return ImportFasta(reader, null, -1, peptideList, to, out firstAdded);
+        }
+
+        public SrmDocument ImportFasta(TextReader reader, ILongWaitBroker longWaitBroker, long lines, bool peptideList,
+                IdentityPath to, out IdentityPath firstAdded)
         {
             FastaImporter importer = new FastaImporter(this, peptideList);
-            return AddPeptideGroups(importer.Import(reader), peptideList, to, out firstAdded);
+            return AddPeptideGroups(importer.Import(reader, longWaitBroker, lines), peptideList, to, out firstAdded);
         }
 
         public SrmDocument ImportMassList(TextReader reader, IFormatProvider provider, char separator,

@@ -236,14 +236,21 @@ namespace pwiz.Skyline.Model
 
         public double GetModMass(char aa, StaticMod mod)
         {
+            if (_massCalc.MassType == MassType.Monoisotopic)
+            {
+                if (mod.MonoisotopicMass.HasValue)
+                    return mod.MonoisotopicMass.Value;
+            }
+            else
+            {
+                if (mod.AverageMass.HasValue)
+                    return mod.AverageMass.Value;
+            }
             if (!string.IsNullOrEmpty(mod.Formula))
                 return ParseModMass(mod.Formula);
             else if (mod.LabelAtoms != LabelAtoms.None)
                 return ParseModMass(GetHeavyFormula(aa, mod.LabelAtoms));
-            else if (_massCalc.MassType == MassType.Monoisotopic)
-                return mod.MonoisotopicMass ?? 0;
-            else
-                return mod.AverageMass ?? 0;            
+            return 0;
         }
 
         public void AddStaticModifications(IEnumerable<StaticMod> mods)
@@ -335,10 +342,10 @@ namespace pwiz.Skyline.Model
 
             // Otherwise, build a modified sequence string like AMC[+57.0]LP[-37.1]K
             StringBuilder sb = new StringBuilder();
+            var modMasses = GetModMasses(mods);
             for (int i = 0, len = seq.Length; i < len; i++)
             {
                 char c = seq[i];
-                var modMasses = GetModMasses(mods);
 
                 double mod = modMasses._aminoModMasses[c];
                 // Explicit modifications

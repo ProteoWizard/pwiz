@@ -332,11 +332,19 @@ namespace pwiz.Skyline.Model.Lib
         public abstract int CompareRevisions(Library library);
 
         /// <summary>
-        /// Determines if the library contains a specific (sequence, charge) pair.
+        /// Determines if the library contains a specific (modified sequence, charge) pair.
         /// </summary>
         /// <param name="key">A sequence, charge pair</param>
         /// <returns>True if the library contains the key</returns>
         public abstract bool Contains(LibKey key);
+
+        /// <summary>
+        /// Determines if the library contains any spectra for a peptide, based on its
+        /// unmodified amino acid sequence.
+        /// </summary>
+        /// <param name="key">An unmodified sequence optimized to consume minimal memory</param>
+        /// <returns>True if the library contains any spectra for this peptide regardless of modification or charge</returns>
+        public abstract bool ContainsAny(LibSeqKey key);
 
         /// <summary>
         /// Attempts to get spectrum header information for a specific
@@ -1290,6 +1298,11 @@ namespace pwiz.Skyline.Model.Lib
         public int Charge { get { return _key[0]; } }
         public bool IsModified { get { return _key.Contains((byte)'['); } }
 
+        /// <summary>
+        /// Only for use by <see cref="LibSeqKey"/>
+        /// </summary>
+        public byte[] Key { get { return _key; }}
+
         public void WriteSequence(Stream outStream)
         {
             outStream.Write(BitConverter.GetBytes(_key.Length - 1), 0, sizeof(int));
@@ -1372,6 +1385,106 @@ namespace pwiz.Skyline.Model.Lib
         public override string ToString()
         {
             return Sequence + Transition.GetChargeIndicator(Charge);
+        }
+
+        #endregion
+    }
+
+    /// <summary>
+    /// This key represents a plain, unmodified peptide amino acid sequence, but
+    /// allows either a plain string or the bytes from a potentially modified
+    /// <see cref="LibKey"/> to be used as the internal representation of the
+    /// amino acides.  Using the <see cref="LibKey"/> bytes greatly reduces the
+    /// memory cost of keeping a set of these in every library.
+    /// </summary>
+    public struct LibSeqKey
+    {
+        private readonly int _length;
+        private readonly string _seq;
+        private readonly byte[] _libKeyBytes;
+
+        /// <summary>
+        /// Creates a key from a plain string of amino acid characters.
+        /// </summary>
+        /// <param name="seq">String of amino acid characters</param>
+        public LibSeqKey(string seq) : this()
+        {
+            _seq = seq;
+            _length = seq.Length;
+        }
+
+        /// <summary>
+        /// Creates a key from an existing <see cref="LibKey"/> using the same
+        /// key bytes to minimize memory impact.
+        /// </summary>
+        /// <param name="key">A <see cref="LibKey"/> with modified sequence bytes from a library</param>
+        public LibSeqKey(LibKey key) : this()
+        {
+            _libKeyBytes = key.Key;
+            _length = AminoAcids.Count();
+        }
+
+        /// <summary>
+        /// Enumerates the amino acid characters of the sequence, with special handling for
+        /// the case where the internal representation is the byte sequence from at
+        /// <see cref="LibKey"/>.
+        /// </summary>
+        IEnumerable<char> AminoAcids
+        {
+            get
+            {
+                if (_seq != null)
+                {
+                    foreach (char aa in _seq)
+                        yield return aa;
+                }
+                else
+                {
+                    for (int i = 1; i < _libKeyBytes.Length; i++)
+                    {
+                        char aa = (char)_libKeyBytes[i];
+                        if (AminoAcid.IsExAA(aa))
+                            yield return aa;
+                    }
+                }
+            }
+        }
+
+        #region object overrides
+
+        public bool Equals(LibSeqKey obj)
+        {
+            // Length check short-cut
+            if (obj._length != _length)
+                return false;
+
+            // Compare each amino acid
+            var enumObjAa = obj.AminoAcids.GetEnumerator();
+            foreach (char aa in AminoAcids)
+            {
+                enumObjAa.MoveNext();
+                if (aa != enumObjAa.Current)
+                    return false;
+            }
+
+            return true;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj.GetType() != typeof(LibSeqKey)) return false;
+            return Equals((LibSeqKey)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var result = _length.GetHashCode();
+                foreach (char aa in AminoAcids)
+                    result = (result * 31) ^ aa;
+                return result;
+            }
         }
 
         #endregion
