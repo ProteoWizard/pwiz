@@ -387,12 +387,18 @@ path-constant ZLIB_SOURCE : $(zlib_src) ;
 
 using ext-boost : 1.43.0 : $(BOOST_SOURCE) : <zlib-src-location>$(ZLIB_SOURCE) ;
 
-# HACK: bug in boost::iostreams 1.43 requires this little patch to support building with link=shared
-# Boost bug ticket: https://svn.boost.org/trac/boost/ticket/4335
 if [ modules.peek : NT ]
 {
     import path ;
-    echo [ SHELL "copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\file_descriptor.hpp $(PWIZ_LIBRARIES_PATH)\\boost_1_43_0\\boost\\iostreams\\device" ] ;
+    
+    # HACK: bug in boost::iostreams 1.43 requires a patch to support building with link=shared
+    # Boost bug ticket: https://svn.boost.org/trac/boost/ticket/4335
+    SHELL "@copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\file_descriptor.hpp $(PWIZ_LIBRARIES_PATH)\\boost_1_43_0\\boost\\iostreams\\device" ;
+
+    # HACK: bug in boost::thread 1.43 requires a patch for thread-safe static usage of call_once (i.e. singletons)
+    # Boost bug ticket: https://svn.boost.org/trac/boost/ticket/4225
+    SHELL "@copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\once.hpp $(PWIZ_LIBRARIES_PATH)\\boost_1_43_0\\boost\\thread\\win32" ;
+    SHELL "@copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\thread_primitives.hpp $(PWIZ_LIBRARIES_PATH)\\boost_1_43_0\\boost\\thread\\win32" ;
 }
 
 
