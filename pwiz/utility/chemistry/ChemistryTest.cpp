@@ -21,9 +21,9 @@
 //
 
 
+#include "pwiz/utility/misc/unit.hpp"
 #include "Chemistry.hpp"
 #include "Ion.hpp"
-#include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/math/round.hpp"
 #include <cstring>
 #include "pwiz/utility/misc/Std.hpp"
@@ -191,15 +191,27 @@ void testThreadSafetyWorker(boost::barrier* testBarrier)
 {
     testBarrier->wait(); // wait until all threads have started
 
-    unit_assert_equal(Element::Info::record(Element::C).atomicNumber, 6.0, 0);
-
-    testFormula();
-    testFormulaOperations();
+    try
+    {
+        testMassAbundance();
+        testFormula();
+        testFormulaOperations();
+        testInfo();
+        infoExample();
+        testPolysiloxane();
+    }
+    catch (exception& e)
+    {
+        cerr << "Exception in worker thread: " << e.what() << endl;
+    }
+    catch (...)
+    {
+        cerr << "Unhandled exception in worker thread." << endl;
+    }
 }
 
-void testThreadSafety()
+void testThreadSafety(const int& testThreadCount)
 {
-    const int testThreadCount = 100;
     boost::barrier testBarrier(testThreadCount);
     boost::thread_group testThreadGroup;
     for (int i=0; i < testThreadCount; ++i)
@@ -210,25 +222,28 @@ void testThreadSafety()
 
 int main(int argc, char* argv[])
 {
+    if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
+    if (os_) *os_ << "ChemistryTest\n" << setprecision(12);
 
     try
     {
-        if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
-        if (os_) *os_ << "ChemistryTest\n" << setprecision(12);
-        testMassAbundance();
-        testFormula();
-        testFormulaOperations();
-        testInfo();
-        infoExample();
-        testPolysiloxane();
-        testThreadSafety();
+        testThreadSafety(1); // does not test thread-safety of singleton initialization
+        testThreadSafety(2);
+        testThreadSafety(4);
+        testThreadSafety(8);
+        testThreadSafety(16);
         return 0;
     }
     catch (exception& e)
     {
         cerr << e.what() << endl;
-        return 1;
     }
+    catch (...)
+    {
+        cerr << "Caught unknown exception.\n";
+    }
+
+    return 1;
 }
 
 

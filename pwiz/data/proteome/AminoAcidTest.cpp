@@ -21,8 +21,8 @@
 //
 
 
-#include "AminoAcid.hpp"
 #include "pwiz/utility/misc/unit.hpp"
+#include "AminoAcid.hpp"
 #include <cstring>
 #include "pwiz/utility/misc/Std.hpp"
 #include "boost/thread/thread.hpp"
@@ -192,12 +192,22 @@ void testThreadSafetyWorker(boost::barrier* testBarrier)
 {
     testBarrier->wait(); // wait until all threads have started
 
-    unit_assert(AminoAcid::Info::record(Glycine).symbol == 'G');
+    try
+    {
+        test();
+    }
+    catch (exception& e)
+    {
+        cerr << "Exception in worker thread: " << e.what() << endl;
+    }
+    catch (...)
+    {
+        cerr << "Unhandled exception in worker thread." << endl;
+    }
 }
 
-void testThreadSafety()
+void testThreadSafety(const int& testThreadCount)
 {
-    const int testThreadCount = 100;
     boost::barrier testBarrier(testThreadCount);
     boost::thread_group testThreadGroup;
     for (int i=0; i < testThreadCount; ++i)
@@ -208,19 +218,28 @@ void testThreadSafety()
 
 int main(int argc, char* argv[])
 {
+    if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
+    if (os_) *os_ << "AminoAcidTest\n";
+
     try
     {
-        if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
-        if (os_) *os_ << "AminoAcidTest\n";
-        test();
-        testThreadSafety();
+        testThreadSafety(1); // does not test thread-safety of singleton initialization
+        testThreadSafety(2);
+        testThreadSafety(4);
+        testThreadSafety(8);
+        testThreadSafety(16);
         return 0;
     }
     catch (exception& e)
     {
         cerr << e.what() << endl;
-        return 1;
     }
+    catch (...)
+    {
+        cerr << "Caught unknown exception.\n";
+    }
+
+    return 1;
 }
 
 

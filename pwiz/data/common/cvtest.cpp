@@ -21,9 +21,11 @@
 //
 
 
-#include "cv.hpp"
 #include "pwiz/utility/misc/unit.hpp"
+#include "cv.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "boost/thread/thread.hpp"
+#include "boost/thread/barrier.hpp"
 #include <cstring>
 
 
@@ -111,9 +113,9 @@ void testIDTranslation()
 }
 
 
-int main(int argc, char* argv[])
+void testThreadSafetyWorker(boost::barrier* testBarrier)
 {
-    if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout; 
+    testBarrier->wait(); // wait until all threads have started
 
     try
     {
@@ -122,6 +124,38 @@ int main(int argc, char* argv[])
         testOtherRelations();
         testSynonyms();
         testIDTranslation();
+    }
+    catch (exception& e)
+    {
+        cerr << "Exception in worker thread: " << e.what() << endl;
+    }
+    catch (...)
+    {
+        cerr << "Unhandled exception in worker thread." << endl;
+    }
+}
+
+void testThreadSafety(const int& testThreadCount)
+{
+    boost::barrier testBarrier(testThreadCount);
+    boost::thread_group testThreadGroup;
+    for (int i=0; i < testThreadCount; ++i)
+        testThreadGroup.add_thread(new boost::thread(&testThreadSafetyWorker, &testBarrier));
+    testThreadGroup.join_all();
+}
+
+
+int main(int argc, char* argv[])
+{
+    if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout; 
+
+    try
+    {
+        testThreadSafety(1); // does not test thread-safety of singleton initialization
+        testThreadSafety(2);
+        testThreadSafety(4);
+        testThreadSafety(8);
+        testThreadSafety(16);
         return 0;
     }
     catch (exception& e)

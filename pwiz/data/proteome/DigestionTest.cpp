@@ -22,9 +22,9 @@
 //
 
 
+#include "pwiz/utility/misc/unit.hpp"
 #include "Peptide.hpp"
 #include "Digestion.hpp"
-#include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include "boost/thread/thread.hpp"
 #include "boost/thread/barrier.hpp"
@@ -603,9 +603,8 @@ void testThreadSafetyWorker(boost::barrier* testBarrier)
     }
 }
 
-void testThreadSafety()
+void testThreadSafety(const int& testThreadCount)
 {
-    const int testThreadCount = 10;
     boost::barrier testBarrier(testThreadCount);
     boost::thread_group testThreadGroup;
     for (int i=0; i < testThreadCount; ++i)
@@ -616,19 +615,26 @@ void testThreadSafety()
 
 int main(int argc, char* argv[])
 {
+    if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
+    if (os_) *os_ << "DigestionTest\n";
+
     try
     {
-        if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
-        if (os_) *os_ << "DigestionTest\n";
-        testCleavageAgents();
-        testBSADigestion();
-        testFind();
-        testThreadSafety();
+        testThreadSafety(1); // does not test thread-safety of singleton initialization
+        testThreadSafety(2);
+        testThreadSafety(4);
+        testThreadSafety(8);
+        testThreadSafety(16);
         return 0;
     }
     catch (exception& e)
     {
         cerr << e.what() << endl;
-        return 1;
     }
+    catch (...)
+    {
+        cerr << "Caught unknown exception.\n";
+    }
+
+    return 1;
 }
