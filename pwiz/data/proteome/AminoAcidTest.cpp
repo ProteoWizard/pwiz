@@ -223,7 +223,7 @@ int main(int argc, char* argv[])
 
     try
     {
-        testThreadSafety(1); // does not test thread-safety of singleton initialization
+        //testThreadSafety(1); // does not test thread-safety of singleton initialization
         testThreadSafety(2);
         testThreadSafety(4);
         testThreadSafety(8);
