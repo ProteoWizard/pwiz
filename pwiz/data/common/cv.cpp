@@ -29,6 +29,7 @@
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Container.hpp"
 #include "pwiz/utility/misc/Exception.hpp"
+#include "boost/utility/singleton.hpp"
 
 
 namespace pwiz {
@@ -5506,55 +5507,61 @@ CVIDStringPair relationsExactSynonym_[] =
 const size_t relationsExactSynonymSize_ = sizeof(relationsExactSynonym_)/sizeof(CVIDStringPair);
 
 
-bool initialized_ = false;
-map<CVID,CVTermInfo> infoMap_;
-map<string,CV> cvMap_;
-vector<CVID> cvids_;
-
-
-void initialize()
+class CVTermData : public boost::singleton<CVTermData>
 {
-    for (const TermInfo* it=termInfos_; it!=termInfos_+termInfosSize_; ++it)
+    public:
+    CVTermData(boost::restricted)
     {
-        CVTermInfo temp;
-        temp.cvid = it->cvid;
-        temp.id = it->id;
-        temp.name = it->name;
-        temp.def = it->def;
-        temp.isObsolete = it->isObsolete;
-        infoMap_[temp.cvid] = temp;
-        cvids_.push_back(it->cvid);
+        for (const TermInfo* it=termInfos_; it!=termInfos_+termInfosSize_; ++it)
+        {
+            CVTermInfo temp;
+            temp.cvid = it->cvid;
+            temp.id = it->id;
+            temp.name = it->name;
+            temp.def = it->def;
+            temp.isObsolete = it->isObsolete;
+            infoMap_[temp.cvid] = temp;
+            cvids_.push_back(it->cvid);
+        }
+
+        for (const CVIDPair* it=relationsIsA_; it!=relationsIsA_+relationsIsASize_; ++it)
+            infoMap_[it->first].parentsIsA.push_back(it->second);
+
+        for (const CVIDPair* it=relationsPartOf_; it!=relationsPartOf_+relationsPartOfSize_; ++it)
+            infoMap_[it->first].parentsPartOf.push_back(it->second);
+
+        for (const OtherRelationPair* it=relationsOther_; it!=relationsOther_+relationsOtherSize_; ++it)
+            infoMap_[it->subject].otherRelations.insert(make_pair(it->relation, it->object));
+
+        for (const CVIDStringPair* it=relationsExactSynonym_; it!=relationsExactSynonym_+relationsExactSynonymSize_; ++it)
+            infoMap_[it->first].exactSynonyms.push_back(it->second);
+
+        cvMap_["MS"].fullName = "Proteomics Standards Initiative Mass Spectrometry Ontology";
+        cvMap_["MS"].URI = "http://psidev.cvs.sourceforge.net/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo";
+
+        cvMap_["UO"].fullName = "Unit Ontology";
+        cvMap_["UO"].URI = "http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo";
+
+        cvMap_["MS"].id = "MS";
+        cvMap_["MS"].version = "2.33.1";
+
+        cvMap_["UO"].id = "UO";
+        cvMap_["UO"].version = "11:02:2010";
+
+        cvMap_["UNIMOD"].id = "UNIMOD";
+        cvMap_["UNIMOD"].version = "19:11:2008";
+
     }
 
-    for (const CVIDPair* it=relationsIsA_; it!=relationsIsA_+relationsIsASize_; ++it)
-        infoMap_[it->first].parentsIsA.push_back(it->second);
+    inline const map<CVID,CVTermInfo>& infoMap() const {return infoMap_;}
+    inline const map<string,CV>& cvMap() const {return cvMap_;}
+    inline const vector<CVID>& cvids() const {return cvids_;}
 
-    for (const CVIDPair* it=relationsPartOf_; it!=relationsPartOf_+relationsPartOfSize_; ++it)
-        infoMap_[it->first].parentsPartOf.push_back(it->second);
-
-    for (const OtherRelationPair* it=relationsOther_; it!=relationsOther_+relationsOtherSize_; ++it)
-        infoMap_[it->subject].otherRelations.insert(make_pair(it->relation, it->object));
-
-    for (const CVIDStringPair* it=relationsExactSynonym_; it!=relationsExactSynonym_+relationsExactSynonymSize_; ++it)
-        infoMap_[it->first].exactSynonyms.push_back(it->second);
-
-    cvMap_["MS"].fullName = "Proteomics Standards Initiative Mass Spectrometry Ontology";
-    cvMap_["MS"].URI = "http://psidev.cvs.sourceforge.net/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo";
-
-    cvMap_["UO"].fullName = "Unit Ontology";
-    cvMap_["UO"].URI = "http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo";
-
-    cvMap_["MS"].id = "MS";
-    cvMap_["MS"].version = "2.33.1";
-
-    cvMap_["UO"].id = "UO";
-    cvMap_["UO"].version = "11:02:2010";
-
-    cvMap_["UNIMOD"].id = "UNIMOD";
-    cvMap_["UNIMOD"].version = "19:11:2008";
-
-    initialized_ = true;
-}
+    private:
+    map<CVID,CVTermInfo> infoMap_;
+    map<string,CV> cvMap_;
+    vector<CVID> cvids_;
+};
 
 
 const char* oboPrefixes_[] =
@@ -5596,8 +5603,10 @@ PWIZ_API_DECL bool CV::empty() const
 
 PWIZ_API_DECL const CV& cv(const string& prefix)
 {
-    if (!initialized_) initialize();
-    return cvMap_[prefix];
+    const map<string,CV>& cvMap = CVTermData::instance->cvMap();
+    if (cvMap.find(prefix) == cvMap.end())
+        throw invalid_argument("[cv()] no CV associated with prefix \"" + prefix + "\"");
+    return cvMap.find(prefix)->second;
 }
 
 
@@ -5619,8 +5628,11 @@ PWIZ_API_DECL string CVTermInfo::prefix() const
 
 PWIZ_API_DECL const CVTermInfo& cvTermInfo(CVID cvid)
 {
-   if (!initialized_) initialize();
-   return infoMap_[cvid];
+    const map<CVID,CVTermInfo>& infoMap = CVTermData::instance->infoMap();
+    map<CVID,CVTermInfo>::const_iterator itr = infoMap.find(cvid);
+    if (itr == infoMap.end())
+        throw invalid_argument("[cvTermInfo()] no term associated with CVID \"" + lexical_cast<string>(cvid) + "\"");
+    return itr->second;
 }
 
 
@@ -5639,14 +5651,13 @@ inline unsigned int stringToCVID(const std::string& str)
 
 PWIZ_API_DECL const CVTermInfo& cvTermInfo(const string& id)
 {
-    if (!initialized_) initialize();
     CVID cvid = CVID_Unknown;
 
     vector<string> tokens;
     tokens.reserve(2);
     bal::split(tokens, id, bal::is_any_of(":"));
     if (tokens.size() != 2)
-        throw runtime_error("[cvinfo] Error splitting id \"" + id + "\" into prefix and numeric components");
+        throw invalid_argument("[cvTermInfo()] Error splitting id \"" + id + "\" into prefix and numeric components");
     const string& prefix = tokens[0];
     const string& cvidStr = tokens[1];
 
@@ -5656,7 +5667,7 @@ PWIZ_API_DECL const CVTermInfo& cvTermInfo(const string& id)
     if (it != oboPrefixes_+oboPrefixesSize_)
        cvid = (CVID)((it-oboPrefixes_)*enumBlockSize_ + stringToCVID(cvidStr));
 
-    return infoMap_[cvid];
+    return CVTermData::instance->infoMap().find(cvid)->second;
 }
 
 
@@ -5672,8 +5683,7 @@ PWIZ_API_DECL bool cvIsA(CVID child, CVID parent)
 
 PWIZ_API_DECL const vector<CVID>& cvids()
 {
-   if (!initialized_) initialize();
-   return cvids_;
+   return CVTermData::instance->cvids();
 }
 
 

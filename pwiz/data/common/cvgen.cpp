@@ -250,6 +250,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
        << "#include \"pwiz/utility/misc/String.hpp\"\n"
        << "#include \"pwiz/utility/misc/Container.hpp\"\n"
        << "#include \"pwiz/utility/misc/Exception.hpp\"\n"
+       << "#include \"boost/utility/singleton.hpp\"\n"
        << "\n\n";
 
     namespaceBegin(os, basename);
@@ -368,51 +369,49 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
     os << "const size_t relationsExactSynonymSize_ = sizeof(relationsExactSynonym_)/sizeof(CVIDStringPair);\n\n\n";
 
-    os << "bool initialized_ = false;\n"
-          "map<CVID,CVTermInfo> infoMap_;\n"
-          "map<string,CV> cvMap_;\n"
-          "vector<CVID> cvids_;\n"
-          "\n\n";
 
-    os << "void initialize()\n"
+    os << "class CVTermData : public boost::singleton<CVTermData>\n"
           "{\n"
-          "    for (const TermInfo* it=termInfos_; it!=termInfos_+termInfosSize_; ++it)\n" 
+          "    public:\n"
+          "    CVTermData(boost::restricted)\n"
           "    {\n"
-          "        CVTermInfo temp;\n"
-          "        temp.cvid = it->cvid;\n"
-          "        temp.id = it->id;\n"
-          "        temp.name = it->name;\n"
-          "        temp.def = it->def;\n"
-          "        temp.isObsolete = it->isObsolete;\n"
-          "        infoMap_[temp.cvid] = temp;\n"
-          "        cvids_.push_back(it->cvid);\n"
-          "    }\n"
+          "        for (const TermInfo* it=termInfos_; it!=termInfos_+termInfosSize_; ++it)\n" 
+          "        {\n"
+          "            CVTermInfo temp;\n"
+          "            temp.cvid = it->cvid;\n"
+          "            temp.id = it->id;\n"
+          "            temp.name = it->name;\n"
+          "            temp.def = it->def;\n"
+          "            temp.isObsolete = it->isObsolete;\n"
+          "            infoMap_[temp.cvid] = temp;\n"
+          "            cvids_.push_back(it->cvid);\n"
+          "        }\n"
           "\n"
-          "    for (const CVIDPair* it=relationsIsA_; it!=relationsIsA_+relationsIsASize_; ++it)\n"
-          "        infoMap_[it->first].parentsIsA.push_back(it->second);\n"
+          "        for (const CVIDPair* it=relationsIsA_; it!=relationsIsA_+relationsIsASize_; ++it)\n"
+          "            infoMap_[it->first].parentsIsA.push_back(it->second);\n"
           "\n"
-          "    for (const CVIDPair* it=relationsPartOf_; it!=relationsPartOf_+relationsPartOfSize_; ++it)\n"
-          "        infoMap_[it->first].parentsPartOf.push_back(it->second);\n"
+          "        for (const CVIDPair* it=relationsPartOf_; it!=relationsPartOf_+relationsPartOfSize_; ++it)\n"
+          "            infoMap_[it->first].parentsPartOf.push_back(it->second);\n"
           "\n"
-          "    for (const OtherRelationPair* it=relationsOther_; it!=relationsOther_+relationsOtherSize_; ++it)\n"
-          "        infoMap_[it->subject].otherRelations.insert(make_pair(it->relation, it->object));\n"
+          "        for (const OtherRelationPair* it=relationsOther_; it!=relationsOther_+relationsOtherSize_; ++it)\n"
+          "            infoMap_[it->subject].otherRelations.insert(make_pair(it->relation, it->object));\n"
           "\n"
-          "    for (const CVIDStringPair* it=relationsExactSynonym_; it!=relationsExactSynonym_+relationsExactSynonymSize_; ++it)\n"
-          "        infoMap_[it->first].exactSynonyms.push_back(it->second);\n"
+          "        for (const CVIDStringPair* it=relationsExactSynonym_; it!=relationsExactSynonym_+relationsExactSynonymSize_; ++it)\n"
+          "            infoMap_[it->first].exactSynonyms.push_back(it->second);\n"
           "\n";
 
     // TODO: is there a way to get these from the OBOs?
-    os << "    cvMap_[\"MS\"].fullName = \"Proteomics Standards Initiative Mass Spectrometry Ontology\";\n"
-          "    cvMap_[\"MS\"].URI = \"http://psidev.cvs.sourceforge.net/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo\";\n"
+    os << "        cvMap_[\"MS\"].fullName = \"Proteomics Standards Initiative Mass Spectrometry Ontology\";\n"
+          "        cvMap_[\"MS\"].URI = \"http://psidev.cvs.sourceforge.net/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo\";\n"
           "\n"
-          "    cvMap_[\"UO\"].fullName = \"Unit Ontology\";\n"
-          "    cvMap_[\"UO\"].URI = \"http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo\";\n"
+          "        cvMap_[\"UO\"].fullName = \"Unit Ontology\";\n"
+          "        cvMap_[\"UO\"].URI = \"http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo\";\n"
           "\n";
 
     // populate CV ids and versions from OBO headers
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
     {
-        os << "    cvMap_[\"" << obo->prefix << "\"].id = \"" << obo->prefix << "\";\n";
+        os << "        cvMap_[\"" << obo->prefix << "\"].id = \"" << obo->prefix << "\";\n";
 
         string version;
         for (size_t i=0; i < obo->header.size(); ++i)
@@ -437,11 +436,20 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
         if (version.empty())
             version = "unknown";
 
-        os << "    cvMap_[\"" << obo->prefix << "\"].version = \"" << version << "\";\n\n";
+        os << "        cvMap_[\"" << obo->prefix << "\"].version = \"" << version << "\";\n\n";
     }
 
-    os << "    initialized_ = true;\n"
-          "}\n\n\n";
+    os << "    }\n"
+          "\n"
+          "    inline const map<CVID,CVTermInfo>& infoMap() const {return infoMap_;}\n"
+          "    inline const map<string,CV>& cvMap() const {return cvMap_;}\n"
+          "    inline const vector<CVID>& cvids() const {return cvids_;}\n"
+          "\n"
+          "    private:\n"
+          "    map<CVID,CVTermInfo> infoMap_;\n"
+          "    map<string,CV> cvMap_;\n"
+          "    vector<CVID> cvids_;\n"
+          "};\n\n\n";
 
     os << "const char* oboPrefixes_[] =\n"
           "{\n";
@@ -474,8 +482,10 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
     os << "PWIZ_API_DECL const CV& cv(const string& prefix)\n"
           "{\n"
-          "    if (!initialized_) initialize();\n"
-          "    return cvMap_[prefix];\n"
+          "    const map<string,CV>& cvMap = CVTermData::instance->cvMap();\n"
+          "    if (cvMap.find(prefix) == cvMap.end())\n"
+          "        throw invalid_argument(\"[cv()] no CV associated with prefix \\\"\" + prefix + \"\\\"\");\n"
+          "    return cvMap.find(prefix)->second;\n"
           "}\n\n\n";
 
     os << "PWIZ_API_DECL const string& CVTermInfo::shortName() const\n"
@@ -494,8 +504,11 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
     os << "PWIZ_API_DECL const CVTermInfo& cvTermInfo(CVID cvid)\n"
           "{\n"
-          "   if (!initialized_) initialize();\n"
-          "   return infoMap_[cvid];\n"
+          "    const map<CVID,CVTermInfo>& infoMap = CVTermData::instance->infoMap();\n"
+          "    map<CVID,CVTermInfo>::const_iterator itr = infoMap.find(cvid);\n"
+          "    if (itr == infoMap.end())\n"
+          "        throw invalid_argument(\"[cvTermInfo()] no term associated with CVID \\\"\" + lexical_cast<string>(cvid) + \"\\\"\");\n"
+          "    return itr->second;\n"
           "}\n\n\n";
 
     os << "inline unsigned int stringToCVID(const std::string& str)\n"
@@ -512,14 +525,13 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
     os << "PWIZ_API_DECL const CVTermInfo& cvTermInfo(const string& id)\n"
           "{\n"
-          "    if (!initialized_) initialize();\n"
           "    CVID cvid = CVID_Unknown;\n"
           "\n"
           "    vector<string> tokens;\n"
           "    tokens.reserve(2);\n"
           "    bal::split(tokens, id, bal::is_any_of(\":\"));\n"
           "    if (tokens.size() != 2)\n"
-          "        throw runtime_error(\"[cvinfo] Error splitting id \\\"\" + id + \"\\\" into prefix and numeric components\");\n"
+          "        throw invalid_argument(\"[cvTermInfo()] Error splitting id \\\"\" + id + \"\\\" into prefix and numeric components\");\n"
           "    const string& prefix = tokens[0];\n"
           "    const string& cvidStr = tokens[1];\n"
           "\n"
@@ -529,7 +541,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "    if (it != oboPrefixes_+oboPrefixesSize_)\n"
           "       cvid = (CVID)((it-oboPrefixes_)*enumBlockSize_ + stringToCVID(cvidStr));\n"
           "\n"
-          "    return infoMap_[cvid];\n"
+          "    return CVTermData::instance->infoMap().find(cvid)->second;\n"
           "}\n\n\n";
 
     os << "PWIZ_API_DECL bool cvIsA(CVID child, CVID parent)\n"
@@ -543,8 +555,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
     os << "PWIZ_API_DECL const vector<CVID>& cvids()\n"
           "{\n"
-          "   if (!initialized_) initialize();\n"
-          "   return cvids_;\n"
+          "   return CVTermData::instance->cvids();\n"
           "}\n\n\n";
 
     namespaceEnd(os, basename);
