@@ -385,21 +385,41 @@ namespace pwiz.Skyline.Model
             return nodeResult;
         }
 
+        /// <summary>
+        /// Make sure children are preserved as much as possible.  It may not be possible
+        /// to always preserve children, because the settings in the target document may
+        /// not allow certain states (e.g. label types that to not exist in the target).
+        /// </summary>
         public PeptideDocNode EnsureChildren(SrmSettings settings, bool peptideList)
-        {
+       {
             var result = this;
 
+            // Make a first attempt at changing to the new settings to figure out
+            // whether this will change the children.
             var changed = result.ChangeSettings(settings, SrmSettingsDiff.ALL);
+            // If the children are auto-managed, and they changed, figure out whether turning off
+            // auto-manage will allow the children to be preserved better.
             if (result.AutoManageChildren && !AreEquivalentChildren(result.Children, changed.Children))
             {
-                changed = result = (PeptideDocNode)result.ChangeAutoManageChildren(false);
-                changed = changed.ChangeSettings(settings, SrmSettingsDiff.ALL);
+                // Turn off auto-manage and change again.
+                var resultAutoManageFalse = (PeptideDocNode)result.ChangeAutoManageChildren(false);
+                var changedAutoManageFalse = resultAutoManageFalse.ChangeSettings(settings, SrmSettingsDiff.ALL);
+                // If the children are not the same as they were with auto-manage on, then use
+                // a the version of this node with auto-manage turned off.
+                if (!AreEquivalentChildren(changed.Children, changedAutoManageFalse.Children))
+                {
+                    result = resultAutoManageFalse;
+                    changed = changedAutoManageFalse;
+                }
             }
+            // If this is being added to a peptide list, but was a FASTA sequence,
+            // make sure the Peptide ID no longer points to the old FASTA sequence.
             if (peptideList && Peptide.FastaSequence != null)
             {
                 result = new PeptideDocNode(new Peptide(null, Peptide.Sequence, null, null, Peptide.MissedCleavages),
                                             new TransitionGroupDocNode[0], result.AutoManageChildren); 
             }
+            // Create a new child list, using existing children where GlobalIndexes match.
             var dictIndexToChild = Children.ToDictionary(child => child.Id.GlobalIndex);
             var listChildren = new List<DocNode>();
             foreach (TransitionGroupDocNode nodePep in changed.Children)
@@ -436,44 +456,40 @@ namespace pwiz.Skyline.Model
             if (sourceImplicitMods.Equals(targetImplicitMods))
                 return this;
 
-            // If the target document contains any implicit mods matching explicit mods on the node, drop these modifcations.
-            IList<ExplicitMod> newExplicitStaticMods = (HasExplicitMods && ExplicitMods.StaticModifications != null)? ExplicitMods.StaticModifications.ToList()
-                                                           : new List<ExplicitMod>();
-            foreach(ExplicitMod mod in targetImplicitMods.StaticModifications)
+            // Add explicit mods if static mods not implicit in the target document.
+            IList<ExplicitMod> newExplicitStaticMods = null;
+            bool preserveVariable = HasVariableMods;
+            // Preserve non-variable explicit modifications
+            if (!preserveVariable && HasExplicitMods && ExplicitMods.StaticModifications != null)
             {
-                newExplicitStaticMods.Remove(mod);
+                // If they are not the same as the implicit modifications in the new document
+                if (!ArrayUtil.EqualsDeep(ExplicitMods.StaticModifications, targetImplicitMods.StaticModifications))
+                    newExplicitStaticMods = ExplicitMods.StaticModifications;
             }
-
-            // Add explicit modifications for an implicit modifications from the source document that are not in the target document.
-            foreach(ExplicitMod mod in sourceImplicitMods.StaticModifications)
+            else if (!ArrayUtil.EqualsDeep(sourceImplicitMods.StaticModifications, targetImplicitMods.StaticModifications))
             {
-                if (!targetImplicitMods.StaticModifications.Contains(mod))
-                    newExplicitStaticMods.Add(mod);
+                preserveVariable = false;
+                newExplicitStaticMods = sourceImplicitMods.StaticModifications;
             }
-
-            // Foreach heavy mod label type, add explicit mods for any heavy modification from the source docment that is not in the target document.
+            else if (preserveVariable)
+            {
+                newExplicitStaticMods = ExplicitMods.StaticModifications;
+            }
+                
+            // Drop explicit mods if matching implicit mods are found in the target document.
             IList<TypedExplicitModifications> newExplicitHeavyMods = new List<TypedExplicitModifications>();
+            // For each heavy label type, add explicit mods if static mods not found in the target document.
             foreach (TypedExplicitModifications targetDocMod in targetImplicitMods.GetHeavyModifications())
             {
-                IList<ExplicitMod> heavyMods = sourceImplicitMods.GetModifications(targetDocMod.LabelType);
-                
-                if (heavyMods == null || targetDocMod.Modifications.Equals(heavyMods))
-                    continue;
-
-                IList<ExplicitMod> missingHeavyMods = new List<ExplicitMod>();
-                foreach (ExplicitMod sourceDocMod in heavyMods)
-                {
-                    if(!targetDocMod.Modifications.Contains(sourceDocMod))
-                        missingHeavyMods.Add(sourceDocMod);
-                }
-                if (missingHeavyMods.Count > 0)
-                    newExplicitHeavyMods.Add(new TypedExplicitModifications(Peptide, targetDocMod.LabelType, missingHeavyMods));
+                // Use explicit modifications when available.  Otherwise, compare against new implicit modifications
+                IList<ExplicitMod> heavyMods = (HasExplicitMods ? ExplicitMods.GetModifications(targetDocMod.LabelType) : null) ??
+                    sourceImplicitMods.GetModifications(targetDocMod.LabelType);
+                if (heavyMods != null && !ArrayUtil.EqualsDeep(heavyMods, targetDocMod.Modifications) && heavyMods.Count > 0)
+                    newExplicitHeavyMods.Add(new TypedExplicitModifications(Peptide, targetDocMod.LabelType, heavyMods));
             }
 
-            if (newExplicitStaticMods.Count() > 0)
-                return ChangeExplicitMods(new ExplicitMods(Peptide, newExplicitStaticMods, newExplicitHeavyMods));
-            else if (newExplicitHeavyMods.Count > 0)
-                return ChangeExplicitMods(new ExplicitMods(Peptide, null, newExplicitHeavyMods));
+            if (newExplicitStaticMods != null || newExplicitHeavyMods.Count > 0)
+                return ChangeExplicitMods(new ExplicitMods(Peptide, newExplicitStaticMods, newExplicitHeavyMods, preserveVariable));
             return ChangeExplicitMods(null);
         }
 
@@ -1017,11 +1033,15 @@ namespace pwiz.Skyline.Model
 
         #region object overrides
 
-        public bool Equals(PeptideDocNode obj)
+        public bool Equals(PeptideDocNode other)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return base.Equals(obj) && obj.Rank.Equals(Rank);
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return base.Equals(other) &&
+                Equals(other.ExplicitMods, ExplicitMods) &&
+                other.Rank.Equals(Rank) &&
+                Equals(other.Results, Results) &&
+                other.BestResult == BestResult;
         }
 
         public override bool Equals(object obj)
@@ -1035,7 +1055,12 @@ namespace pwiz.Skyline.Model
         {
             unchecked
             {
-                return (base.GetHashCode()*397) ^ (Rank.HasValue ? Rank.Value : 0);
+                int result = base.GetHashCode();
+                result = (result*397) ^ (ExplicitMods != null ? ExplicitMods.GetHashCode() : 0);
+                result = (result*397) ^ (Rank.HasValue ? Rank.Value : 0);
+                result = (result*397) ^ (Results != null ? Results.GetHashCode() : 0);
+                result = (result*397) ^ BestResult;
+                return result;
             }
         }
 

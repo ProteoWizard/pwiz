@@ -543,7 +543,10 @@ namespace pwiz.Skyline.Model.DocSettings
                 // If the peptide has variable modifications, make them all override
                 // the modification state of the default implicit mods
                 if (nodePep.HasVariableMods)
-                    explicitMods = MergeExplicitMods(nodePep.ExplicitMods.StaticModifications, explicitMods);
+                {
+                    explicitMods = MergeExplicitMods(nodePep.ExplicitMods.StaticModifications,
+                        explicitMods, staticMods);
+                }
                 staticTypedMods = new TypedExplicitModifications(Peptide,
                     IsotopeLabelType.light, explicitMods);
                 modifications.Add(staticTypedMods);
@@ -559,33 +562,36 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         private static IList<ExplicitMod> MergeExplicitMods(IList<ExplicitMod> modsPrimary,
-                                                            IList<ExplicitMod> modsSecondary)
+            IList<ExplicitMod> modsSecondary, IEnumerable<StaticMod> modifications)
         {
-            if (modsSecondary.Count == 0)
-                return modsPrimary;
-            if (modsPrimary.Count == 0)
-                return modsSecondary;
-
             var listExplicitMods = new List<ExplicitMod>();
             int iPrimary = 0, iSecondary = 0;
             while (iPrimary < modsPrimary.Count || iSecondary < modsSecondary.Count)
             {
                 if (iSecondary >= modsSecondary.Count)
-                    listExplicitMods.Add(modsPrimary[iPrimary++]);
+                    MergeMod(modsPrimary[iPrimary++], modifications, listExplicitMods);
                 else if (iPrimary >= modsPrimary.Count)
-                    listExplicitMods.Add(modsSecondary[iSecondary++]);
+                    MergeMod(modsSecondary[iSecondary++], modifications, listExplicitMods);
                 else if (modsPrimary[iPrimary].IndexAA < modsSecondary[iSecondary].IndexAA)
-                    listExplicitMods.Add(modsPrimary[iPrimary++]);
+                    MergeMod(modsPrimary[iPrimary++], modifications, listExplicitMods);
                 else if (modsPrimary[iPrimary].IndexAA > modsSecondary[iSecondary].IndexAA)
-                    listExplicitMods.Add(modsSecondary[iSecondary++]);
+                    MergeMod(modsSecondary[iSecondary++], modifications, listExplicitMods);
                 else  // Equal
                 {
-                    listExplicitMods.Add(modsPrimary[iPrimary++]);
+                    MergeMod(modsPrimary[iPrimary++], modifications, listExplicitMods);
                     iSecondary++;
                 }
             }
             return listExplicitMods.ToArray();
         }
+
+        private static void MergeMod(ExplicitMod explicitMod, IEnumerable<StaticMod> docMods,
+            ICollection<ExplicitMod> explicitMods)
+        {
+            if (docMods.Contains(explicitMod.Modification))
+                explicitMods.Add(explicitMod);
+        }
+
 
         /// <summary>
         /// Builds a list of <see cref="ExplicitMod"/> objects from the implicit modifications

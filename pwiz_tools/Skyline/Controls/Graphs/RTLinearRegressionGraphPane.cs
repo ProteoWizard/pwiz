@@ -75,22 +75,23 @@ namespace pwiz.Skyline.Controls.Graphs
                 var document = GraphSummary.DocumentUIContainer.DocumentUI;
                 var pathSelect = document.GetPathTo((int) SrmDocument.Level.Peptides,
                                                     peptideIndex.IndexDoc);
-                GraphSummary.StateProvider.SelectedPath = pathSelect;
-                if (ShowReplicate == ReplicateDisplay.best)
-                {
-                    var nodePep = (PeptideDocNode) document.FindNode(pathSelect);
-                    int iBest = nodePep.BestResult;
-                    if (iBest != -1)
-                        GraphSummary.StateProvider.SelectedResultsIndex = iBest;
-                }
+                SelectPeptide(pathSelect);
                 return true;
             }
             return false;
         }
 
-        public void SelectPeptide(PeptideDocNode node)
+        public void SelectPeptide(IdentityPath peptidePath)
         {
-            throw new NotImplementedException();
+            GraphSummary.StateProvider.SelectedPath = peptidePath;
+            if (ShowReplicate == ReplicateDisplay.best)
+            {
+                var document = GraphSummary.DocumentUIContainer.DocumentUI;
+                var nodePep = (PeptideDocNode)document.FindNode(peptidePath);
+                int iBest = nodePep.BestResult;
+                if (iBest != -1)
+                    GraphSummary.StateProvider.SelectedResultsIndex = iBest;
+            }
         }
 
         public bool AllowDeletePoint(PointF point)

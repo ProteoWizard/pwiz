@@ -101,8 +101,16 @@ namespace pwiz.SkylineTestTutorial
             WaitForConditionUI(() => SkylineWindow.RTGraphController.RegressionRefined != null);
             RunDlg<EditRTDlg>(SkylineWindow.CreateRegression, editRTDlg => editRTDlg.OkDialog());
 
-            // WaitForConditionUI(() => false);
-            // RunUI(() => SkylineWindow.RTGraphController.GraphSummary
+            RunUI(() =>
+                      {
+                          SkylineWindow.RTGraphController.SelectPeptide(SkylineWindow.Document.GetPathTo(1, 163));
+                          Assert.AreEqual(SkylineWindow.SequenceTree.SelectedNode.Text, "YLAEVASEDR");
+                          SkylineWindow.RTGraphController.GraphSummary.DocumentUIContainer.FocusDocument();
+                          SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.SelectedNode.PrevNode;
+             //             var chrome = SkylineWindow.GraphChromatograms;
+                      });
+
+           // WaitForConditionUI(() => false);
         }
     }
 }

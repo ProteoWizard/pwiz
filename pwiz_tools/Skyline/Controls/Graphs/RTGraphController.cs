@@ -43,11 +43,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 regressionGraphPane.AllowDeletePoint(new PointF(mousePt.X, mousePt.Y)) : false);
         } 
 
-        public void SelectPeptide(PeptideDocNode node)
+        public void SelectPeptide(IdentityPath peptidePath)
         {
             var regressionGraphPane = GraphSummary.GraphPane as RTLinearRegressionGraphPane;
-            if (regressionGraphPane == null)
-                regressionGraphPane.SelectPeptide(node);
+            if (regressionGraphPane != null)
+                regressionGraphPane.SelectPeptide(peptidePath);
         }
 
         public bool ShowDeleteOutliers

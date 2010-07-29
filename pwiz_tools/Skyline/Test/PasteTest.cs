@@ -21,6 +21,40 @@ namespace pwiz.SkylineTest
     [TestClass]
     public class PasteTest
     {
+        private static readonly StaticMod VAR_MET_OXIDIZED = new StaticMod("Methionine Oxidized", "M", null, true, "O",
+          LabelAtoms.None, RelativeRT.Matching, null, null, null);
+
+        private static readonly List<StaticMod> HEAVY_MODS_13_C = new List<StaticMod>
+            {
+                new StaticMod("13C K", "K", ModTerminus.C, null, LabelAtoms.C13, null, null),
+                new StaticMod("13C R", "R", ModTerminus.C, null, LabelAtoms.C13, null, null),
+                new StaticMod("13C V", "V", LabelAtoms.C13).ChangeExplicit(true),
+                new StaticMod("13C L", "L", LabelAtoms.C13).ChangeExplicit(true)
+            };
+
+        private static readonly List<StaticMod> HEAVY_C_K_DIFDEF = new List<StaticMod>
+           {
+               new StaticMod("13C K", "R", ModTerminus.C, null, LabelAtoms.C13, null, null)
+           };
+
+        private readonly SrmDocument _yeastDocReadOnly;
+        private readonly SrmDocument _study7DocReadOnly;
+        private SrmDocument _yeastDoc;
+        private SrmDocument _study7Doc;
+
+        public PasteTest()
+        {
+            ClearDefaultModifications();
+            _yeastDoc = new SrmDocument(SrmSettingsList.GetDefault());
+            _yeastDoc = _yeastDoc.ChangeSettings(_yeastDoc.Settings.ChangeTransitionFilter(filter =>
+                                                                                           filter.ChangeIncludeNProline(false)));
+            IdentityPath path;
+            _yeastDocReadOnly = _yeastDoc = _yeastDoc.ImportFasta(new StringReader(LibraryLoadTest.TEXT_FASTA_YEAST_LIB),
+                false, IdentityPath.ROOT, out path);
+
+            _study7DocReadOnly = _study7Doc = CreateStudy7Doc();
+        }
+
         /// <summary>
         /// Gets or sets the test context which provides
         /// information about and functionality for the current test run.
@@ -49,124 +83,82 @@ namespace pwiz.SkylineTest
         //
         #endregion
 
-
-        // private static readonly IsotopeLabelType LABEL_TYPE13_C = new IsotopeLabelType("KR 13C", IsotopeLabelType.FirstHeavy);
-
-        private static readonly IsotopeLabelType LABEL_TYPE15_N = new IsotopeLabelType("All 15N", IsotopeLabelType.FirstHeavy);
-        private static readonly IsotopeLabelType LABEL_TYPE13_C_SORTORDER_2 = new IsotopeLabelType("KR 13C", IsotopeLabelType.FirstHeavy+1);
-       
-        private static readonly List<StaticMod> HEAVY_MODS_13_C = new List<StaticMod>
-            {
-                new StaticMod("13C K", "K", ModTerminus.C, null, LabelAtoms.C13, null, null),
-                new StaticMod("13C R", "R", ModTerminus.C, null, LabelAtoms.C13, null, null),
-                new StaticMod("13C V", "V", LabelAtoms.C13).ChangeExplicit(true),
-                new StaticMod("13C L", "L", LabelAtoms.C13).ChangeExplicit(true)
-            };
-        private static readonly List<StaticMod> HEAVY_MODS_15_N = new List<StaticMod>
-            {
-                new StaticMod("15N", null, null, null, LabelAtoms.N15, null, null),
-            };
-
-        private static readonly List<StaticMod> HEAVY_C_K_DIFDEF = new List<StaticMod>
-           {
-               new StaticMod("13C K", "R", ModTerminus.C, null, LabelAtoms.C13, null, null)
-           };
-
-        private static readonly StaticMod CARB_CYSTEINE = new StaticMod("Carbamidomethyl Cysteine", "C", "C2H3ON");
-        private static readonly StaticMod HEAVY13_C_K = new StaticMod("13C K", "K", ModTerminus.C, null, LabelAtoms.C13, null, null);
-
-        private SrmDocument _yeastDoc;
-        private SrmDocument _study7Doc;
-        
         [TestMethod]
         public void TestPaste()
         {
             IdentityPath pathRoot = IdentityPath.ROOT;
-            ResetDocuments();
-
+            
             // Test pasting into document with same implicit modifications does not create any extra explicit modifications.
-            IdentityPath path = _study7Doc.GetPathTo((int) SrmDocument.Level.Peptides, 1);
-            var peptideDocNode = (PeptideDocNode) _study7Doc.FindNode(path);
-            TestEnsureMods(_study7Doc, _study7Doc, peptideDocNode, false);
+            var study7EmptyDoc = (SrmDocument) _study7Doc.ChangeChildren(new DocNode[0]);
+            var study7PasteDoc = CopyPaste(_study7Doc, null, study7EmptyDoc, pathRoot);
+            var arrayPeptides = _study7Doc.Peptides.ToArray();
+            var arrayPastePeptides = study7PasteDoc.Peptides.ToArray();
+            Assert.AreEqual(arrayPeptides.Length, arrayPastePeptides.Length);
+            Assert.AreEqual(_study7Doc, study7PasteDoc);
 
             // Test implicit mods in source document become explicit mods in target document.
-            _yeastDoc = CopyPaste(_study7Doc, null, _yeastDoc, pathRoot);
-            Assert.IsTrue(_yeastDoc.Settings.PeptideSettings.Modifications.HasHeavyModifications);
-
-            // Test explicit mods are dropped if the target document has matching implicit modifications.
             ResetDocuments();
-            var pathYeastPeptide = _yeastDoc.GetPathTo((int)SrmDocument.Level.Peptides, 0);
-            var peptideYeast = (PeptideDocNode)_yeastDoc.FindNode(pathYeastPeptide);
-            var heavy13Ck = new TypedExplicitModifications(peptideYeast.Peptide, IsotopeLabelType.heavy,
-                                                           new List<ExplicitMod> { new ExplicitMod(9, HEAVY13_C_K) });
-            var explicitMods = new ExplicitMods(peptideYeast.Peptide, new List<ExplicitMod>(),
-                                                new List<TypedExplicitModifications> { heavy13Ck });
-            _yeastDoc = _yeastDoc.ChangePeptideMods(pathYeastPeptide, explicitMods, new List<StaticMod> { CARB_CYSTEINE },
-                                                  new List<StaticMod> { HEAVY13_C_K });
-            TestEnsureMods(_yeastDoc, _study7Doc, peptideYeast, false);
+            _yeastDoc = (SrmDocument) _yeastDoc.ChangeChildren(new DocNode[0]);
+            var settings = _yeastDoc.Settings;
+            var listStaticMods = new List<StaticMod>();
+            _yeastDoc = _yeastDoc.ChangeSettings(settings.ChangePeptideModifications(mods =>
+                mods.ChangeStaticModifications(listStaticMods.ToArray())));
+            _yeastDoc = CopyPaste(_study7Doc, null, _yeastDoc, pathRoot);
+            var pepMods = _yeastDoc.Settings.PeptideSettings.Modifications;
+            Assert.IsTrue(pepMods.StaticModifications != null);
+            Assert.IsTrue(pepMods.HasHeavyModifications);
+            Assert.IsFalse(pepMods.StaticModifications.Contains(mod => !mod.IsExplicit));
+            Assert.IsFalse(pepMods.HeavyModifications.Contains(mod => !mod.IsExplicit));
+            
+            // Test explicit mods are dropped if the target document has matching implicit modifications.
+            study7PasteDoc = CopyPaste(_yeastDoc, null, study7EmptyDoc, pathRoot);
+            Assert.AreEqual(_study7Doc, study7PasteDoc);
 
             // Add new label type to source document.
             ResetDocuments();
+            const string labelTypeName13C = "heavy 13C";
+            var labelType13C = new IsotopeLabelType(labelTypeName13C, IsotopeLabelType.light.SortOrder + 1);
             _yeastDoc = ChangePeptideModifications(_yeastDoc,
-                 new[] {new TypedModifications(IsotopeLabelType.heavy, HEAVY_MODS_13_C)});
+                 new[] {new TypedModifications(labelType13C, HEAVY_MODS_13_C)});
+            Assert.IsTrue(_yeastDoc.TransitionGroups.Contains(nodeGroup =>
+                Equals(nodeGroup.TransitionGroup.LabelType, labelType13C)));
            // Test pasting into the same document with new label type.
             _yeastDoc = CopyPaste(_yeastDoc, null, _yeastDoc, pathRoot);
             // Check all transition have correct label type references.
-            foreach (var peptide in _yeastDoc.Peptides)
-            {
-                foreach (TransitionGroupDocNode transGroup in peptide.Children)
+            Assert.IsFalse(_yeastDoc.TransitionGroups.Contains(nodeGroup =>
                 {
-                    IsotopeLabelType labelType = transGroup.TransitionGroup.LabelType;
-                    Assert.IsTrue(ReferenceEquals(labelType,
-                                                  PeptideMods(_yeastDoc).GetModificationsByName(labelType.Name).LabelType));
-                }
-            }
+                    IsotopeLabelType labelType = nodeGroup.TransitionGroup.LabelType;
+                    return !ReferenceEquals(labelType,
+                        _yeastDoc.Settings.PeptideSettings.Modifications.GetModificationsByName(labelType.Name).LabelType);
+                }));
+
             // Check new document still serializes correctly.
             AssertEx.Serializable(_yeastDoc, AssertEx.DocumentCloned);
 
             // Test pasting into new document drops label types from source document that are not found in the target document.
             _yeastDoc = CopyPaste(_yeastDoc, null, new SrmDocument(SrmSettingsList.GetDefault()), pathRoot);
-            Assert.AreEqual(1, PeptideMods(_yeastDoc).GetHeavyModifications().Count());
-
-            // Test sort order of label types does not interfere with paste.
-            // Put new label types on target document, with different sort order than source document. 
-            _study7Doc = ChangePeptideModifications(_study7Doc, 
-                new[] {new TypedModifications(LABEL_TYPE15_N, HEAVY_MODS_15_N),
-                       new TypedModifications(LABEL_TYPE13_C_SORTORDER_2, HEAVY_MODS_13_C)});
-                       
-            _study7Doc = CopyPaste(_yeastDoc, null, _study7Doc, pathRoot);
-            // Check all transition have correct label type references.
-            foreach (var peptide in _study7Doc.Peptides)
-            {
-                foreach (TransitionGroupDocNode transGroup in peptide.Children)
-                {
-                    IsotopeLabelType labelType = transGroup.TransitionGroup.LabelType;
-                    Assert.IsTrue(ReferenceEquals(labelType,
-                        PeptideMods(_study7Doc).GetModificationsByName(labelType.Name).LabelType));
-                }
-            }
+            Assert.IsNull(_yeastDoc.Settings.PeptideSettings.Modifications.GetModificationsByName(labelTypeName13C));
 
             // If only specific children are selected, test that only these children get copied.
             ResetDocuments();
-            int transitionCount = _study7Doc.TransitionCount;
+            var arrayTrans = _study7Doc.Transitions.ToArray();
             IList<DocNode> selNodes = new List<DocNode>();
-            for (int i = 0; i < _study7Doc.TransitionCount; i += 2)
+            for (int i = 0; i < arrayTrans.Length; i += 2)
             {
-                selNodes.Add(_study7Doc.Transitions.ToArray()[i]);
+                selNodes.Add(arrayTrans[i]);
             }
             _study7Doc = CopyPaste(_study7Doc, selNodes, _study7Doc, pathRoot);
-            Assert.AreEqual(transitionCount + selNodes.Count, _study7Doc.TransitionCount);
+            Assert.AreEqual(arrayTrans.Length + selNodes.Count, _study7Doc.TransitionCount);
 
             // Test after pasting to a peptide list, all children have been updated to point to the correct parent.
             ResetDocuments();
-            _study7Doc = CopyPaste(_yeastDoc, new List<DocNode> { _yeastDoc.Peptides.ToList()[0] }, _study7Doc,
-                                  _study7Doc.GetPathTo(0, 0));
-            Assert.IsTrue(_study7Doc.Peptides.ToList()[0].Peptide ==
-                          _study7Doc.TransitionGroups.ToList()[0].TransitionGroup.Peptide
-                          &&
-                          _study7Doc.TransitionGroups.ToList()[0].TransitionGroup ==
-                          _study7Doc.Transitions.ToList()[0].Transition.Group);
-
+            _study7Doc = CopyPaste(_yeastDoc, new[] { _yeastDoc.Peptides.ToArray()[0] }, _study7Doc,
+                                  _study7Doc.GetPathTo((int) SrmDocument.Level.PeptideGroups, 0));
+            Assert.AreEqual(_yeastDoc.Peptides.ToArray()[0].Peptide, _study7Doc.Peptides.ToArray()[0].Peptide);
+            Assert.AreEqual(_study7Doc.Peptides.ToArray()[0].Peptide,
+                          _study7Doc.TransitionGroups.ToArray()[0].TransitionGroup.Peptide);
+            Assert.AreEqual(_study7Doc.TransitionGroups.ToArray()[0].TransitionGroup,
+                          _study7Doc.Transitions.ToArray()[0].Transition.Group);
 
             // If only specific transition are selected for a peptide, but all transition groups are included, test AutoManageChildren is true.
             ResetDocuments();
@@ -186,13 +178,34 @@ namespace pwiz.SkylineTest
                 new[] { new TypedModifications(IsotopeLabelType.heavy, HEAVY_C_K_DIFDEF) });
             SetDefaultModifications(_study7Doc);
             AssertEx.ThrowsException<Exception>(() => _yeastDoc.Settings.UpdateDefaultModifications(false));
+
+            // Test variable modifications kept if target document has matching variable modifications turned on.
+            ResetDocuments();
+            settings = _yeastDoc.Settings;
+            var modsDefault = settings.PeptideSettings.Modifications;
+            listStaticMods = new List<StaticMod>(modsDefault.StaticModifications) { VAR_MET_OXIDIZED };
+            _yeastDoc = _yeastDoc.ChangeSettings(settings.ChangePeptideModifications(mods =>
+                mods.ChangeStaticModifications(listStaticMods.ToArray())));
+            // Make sure there is an implicitly modified peptide in the yeast document
+            Assert.IsTrue(_yeastDoc.Peptides.Contains(nodePep => nodePep.Peptide.Sequence.Contains("C")));
+            Assert.IsTrue(_yeastDoc.Peptides.Contains(nodePep => nodePep.HasVariableMods));
+            _yeastDoc = CopyPaste(_yeastDoc, null, _yeastDoc, pathRoot);
+            Assert.IsFalse(_yeastDoc.Peptides.Contains(nodePep => nodePep.HasExplicitMods && !nodePep.HasVariableMods));
+
+            // Otherwise the variable modifications become only explicit modifications.
+            var yeastDocVar = _yeastDoc;
+            _yeastDoc = _yeastDoc.ChangeSettings(_yeastDoc.Settings.ChangePeptideModifications(mods => modsDefault));
+            _yeastDoc = CopyPaste(yeastDocVar, null, _yeastDoc, pathRoot);
+            Assert.IsFalse(_yeastDoc.Settings.PeptideSettings.Modifications.HasVariableModifications);
+            Assert.IsTrue(_yeastDoc.Peptides.Contains(nodePep => nodePep.HasExplicitMods));
+            Assert.IsFalse(_yeastDoc.Peptides.Contains(nodePep => nodePep.HasVariableMods));
         }
 
-        private static SrmDocument ChangePeptideModifications(SrmDocument doc, IEnumerable<TypedModifications> typedMods)
+        private static SrmDocument ChangePeptideModifications(SrmDocument doc, IEnumerable<TypedModifications> typedHeavyMods)
         {
             var settingsNew =
                 doc.Settings.ChangePeptideModifications(mods => new PeptideModifications(mods.StaticModifications,
-                   typedMods));
+                   typedHeavyMods));
             return doc.ChangeSettings(settingsNew);
         }
 
@@ -230,36 +243,17 @@ namespace pwiz.SkylineTest
 
         private void ResetDocuments()
         {
-            ClearDefaultModifications();
-            _yeastDoc = new SrmDocument(SrmSettingsList.GetDefault());
-            IdentityPath path;
-            _yeastDoc = _yeastDoc.ImportFasta(new StringReader(LibraryLoadTest.TEXT_FASTA_YEAST_LIB), false, IdentityPath.ROOT,
-                                            out path);
-            _study7Doc = CreateStudy7Doc();
-        }
-
-        private static PeptideModifications PeptideMods(SrmDocument doc)
-        {
-            return doc.Settings.PeptideSettings.Modifications;
-        }
-
-        private static void TestEnsureMods(SrmDocument source, SrmDocument target, PeptideDocNode node, bool hasMods)
-        {
-           node= node.EnsureMods(PeptideMods(source), PeptideMods(target), Settings.Default.StaticModList, Settings.Default.HeavyModList);
-            if (hasMods) 
-                Assert.IsTrue(node.HasExplicitMods);
-            else 
-                Assert.IsTrue(!node.HasExplicitMods);
+            _yeastDoc = _yeastDocReadOnly;
+            _study7Doc = _study7DocReadOnly;
         }
 
         private static SrmDocument CreateStudy7Doc()
         {
             XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
-            var stream = typeof(ExplicitModTest).Assembly.GetManifestResourceStream("pwiz.SkylineTest.Study7.sky");
+            var stream = typeof(ExplicitModTest).Assembly.GetManifestResourceStream("pwiz.SkylineTest.Study7_0-7.sky");
             Assert.IsNotNull(stream);
             Debug.Assert(stream != null);   // Keep ReSharper from warning
             SrmDocument docStudy7 = (SrmDocument)xmlSerializer.Deserialize(stream);
-            AssertEx.IsDocumentState(docStudy7, 0, 7, 11, 22, 66);
             return docStudy7;
         }
     }
