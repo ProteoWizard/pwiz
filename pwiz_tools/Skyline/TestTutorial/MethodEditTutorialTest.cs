@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
@@ -101,11 +102,13 @@ namespace pwiz.SkylineTestTutorial
             }));
 
             // Pasting FASTA Sequences, p. 4
-            RunUI(() =>
-            {
-                SetClipboardText(@"MethodEdit\FASTA\fasta.txt");
-                SkylineWindow.Paste();
-            });
+            RunUI(() => SetClipboardText(@"MethodEdit\FASTA\fasta.txt"));
+
+            // New in v0.7 : Skyline asks about removing empty proteins.
+            var emptyProteinsDlg = ShowDialog<EmptyProteinsDlg>(SkylineWindow.Paste);
+            RunUI(() => emptyProteinsDlg.IsKeepEmptyProteins = true);
+            OkDialog(emptyProteinsDlg, emptyProteinsDlg.OkDialog);
+
             WaitForCondition(() => SkylineWindow.SequenceTree.Nodes.Count > 4);
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 35, 25, 25, 75);
             RunUI(() =>

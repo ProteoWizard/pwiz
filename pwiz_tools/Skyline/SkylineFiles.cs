@@ -647,18 +647,46 @@ namespace pwiz.Skyline
                                                 peptideList,
                                                 nodePaste != null ? nodePaste.Path : null,
                                                 out selectPath));
-            if (docNew != null)
-            {
-                ModifyDocument(description, doc =>
-                {
-                    if (doc != docCurrent)
-                        throw new InvalidDataException("Unexpected document change during operation.");
-                    return docNew;
-                });
+            if (docNew == null)
+                return;
 
-                if (selectPath != null)
-                    sequenceTree.SelectedPath = selectPath;
+            // If importing the FASTA produced any childless proteins
+            int countEmpty = docNew.PeptideGroups.Count(nodePepGroup => nodePepGroup.Children.Count == 0);
+            if (countEmpty > 0)
+            {
+                int countEmptyCurrent = docCurrent.PeptideGroups.Count(nodePepGroup => nodePepGroup.Children.Count == 0);
+                if (countEmpty > countEmptyCurrent)
+                {
+                    var dlg = new EmptyProteinsDlg(countEmpty - countEmptyCurrent);
+                    if (dlg.ShowDialog(this) == DialogResult.Cancel)
+                        return;
+                    // Remove all empty proteins, if requested by the user.
+                    if (!dlg.IsKeepEmptyProteins)
+                    {
+                        docNew = new RefinementSettings {MinPeptidesPerProtein = 1}.Refine(docNew);
+                        selectPath = null;
+                        var enumGroupsCurrent = docCurrent.PeptideGroups.GetEnumerator();
+                        foreach (PeptideGroupDocNode nodePepGroup in docNew.PeptideGroups)
+                        {
+                            if (enumGroupsCurrent.MoveNext() && !ReferenceEquals(nodePepGroup, enumGroupsCurrent.Current))
+                            {
+                                selectPath = new IdentityPath(nodePepGroup.Id);
+                                break;
+                            }
+                        }
+                    }
+                }
             }
+
+            ModifyDocument(description, doc =>
+            {
+                if (doc != docCurrent)
+                    throw new InvalidDataException("Unexpected document change during operation.");
+                return docNew;
+            });
+
+            if (selectPath != null)
+                sequenceTree.SelectedPath = selectPath;
         }
 
         private void importMassListMenuItem_Click(object sender, EventArgs e)
