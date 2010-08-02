@@ -36,11 +36,14 @@ struct PWIZ_API_DECL CVMap
     CVMap();
     CVMap(const std::string& keyword, cv::CVID cvid,
           const std::string& path);
+    CVMap(const std::string& keyword, cv::CVID cvid,
+          const std::string& path, const std::string& dependant);
     virtual ~CVMap() {}
     
     std::string keyword;
     cv::CVID cvid;
     std::string path;
+    std::string dependant;
 
     static CVMap* createMap(const std::vector<std::string>& quad);
 
@@ -57,6 +60,8 @@ struct PWIZ_API_DECL RegexCVMap : public CVMap
     RegexCVMap();
     RegexCVMap(const std::string& pattern, cv::CVID cvid,
                const std::string& path);
+    RegexCVMap(const std::string& pattern, cv::CVID cvid,
+               const std::string& path, const std::string& dependant);
     virtual ~RegexCVMap();
     
     void setPattern(const std::string& pattern);

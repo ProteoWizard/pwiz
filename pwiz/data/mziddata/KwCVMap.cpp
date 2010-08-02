@@ -50,29 +50,39 @@ CVMap::CVMap(const string& keyword, CVID cvid, const string& path)
 {
 }
 
-CVMap* CVMap::createMap(const vector<string>& quad) 
+CVMap::CVMap(const string& keyword, CVID cvid, const string& path, const string& dep)
+    : keyword(keyword), cvid(cvid), path(path), dependant(dep)
+{
+}
+
+CVMap* CVMap::createMap(const vector<string>& fields) 
 {
     CVMap* map;
-
-    if (quad.size() < 4)
-        throw runtime_error("[CVMap::createMap] Too few elements in createMap quad");
-
-    CVID cvid = cvTermInfo(quad[2]).cvid;
     string path;
-    if (quad[3].size() == 0)
+
+    if (fields.size() < 4)
+        throw runtime_error("[CVMap::createMap] Too few elements in createMap fields");
+
+    string dependant;
+    if (fields.size() > 4)
+        dependant = fields[4];
+    
+    CVID cvid = cvTermInfo(fields[2]).cvid;
+    
+    if (fields[3].size() == 0)
         throw runtime_error("[CVMap::createMap] Blank path.");
-    path = quad[3];
+    path = fields[3];
 
     if (cvid == CVID_Unknown)
-        throw runtime_error(("[CVMap::createMap] Unknown CVID: "+quad[2]).c_str());
+        throw runtime_error(("[CVMap::createMap] Unknown CVID: "+fields[2]).c_str());
     
-    if (quad[0] == "plain")
-        map = new CVMap(quad[1], cvid, path);
-    else if (quad[0] == "regex")
-        map = new RegexCVMap(quad[1], cvid, path);
+    if (fields[0] == "plain")
+        map = new CVMap(fields[1], cvid, path, dependant);
+    else if (fields[0] == "regex")
+        map = new RegexCVMap(fields[1], cvid, path, dependant);
     else
-        throw runtime_error(("[CVMap::createMap] Unknown map: "+quad[0]).c_str());
-    
+        throw runtime_error(("[CVMap::createMap] Unknown map: "+fields[0]).c_str());
+
     return map;
 }
 
@@ -98,12 +108,18 @@ bool CVMap::operator==(const CVMap& right) const
 //
 
 RegexCVMap::RegexCVMap()
-    : CVMap(".*", CVID_Unknown, "/"), pattern(".*")
+    : CVMap(".*", CVID_Unknown, "/", ""), pattern(".*")
 {
 }
 
 RegexCVMap::RegexCVMap(const string& pattern, CVID cvid, const string& path)
     : CVMap(pattern, cvid, path), pattern(pattern)
+{
+}
+
+RegexCVMap::RegexCVMap(const string& pattern, CVID cvid, const string& path,
+                       const string& dep)
+    : CVMap(pattern, cvid, path, dep), pattern(pattern)
 {
 }
 
@@ -147,7 +163,7 @@ bool RegexCVMap::operator()(const string& text) const
 //
 
 StringMatchCVMap::StringMatchCVMap(const string& keyword)
-    : CVMap(keyword, CVID_Unknown, "/")
+    : CVMap(keyword, CVID_Unknown, "/", "")
 {
 }
 
@@ -176,7 +192,7 @@ bool StringMatchCVMap::operator==(const CVMapPtr& right) const
 //
 
 CVIDMatchCVMap::CVIDMatchCVMap(CVID cvid)
-    : CVMap("", cvid, "/")
+    : CVMap("", cvid, "/", "")
 {
 }
 
@@ -238,7 +254,9 @@ istream& operator>>(istream& is, CVMapPtr& cm)
     getline(is, line);
 
     if (!line.size())
-        throw length_error("empty line found where record expected.");
+        //throw length_error("empty line found where record
+        //expected.");
+        return is;
     
     vector<string> tokens;
     char_separator<char> delim("\t");
@@ -290,7 +308,8 @@ istream& operator>>(istream& is, vector<CVMapPtr>& cmVec)
         try {
             CVMapPtr ptr;
             is >> ptr;
-            cmVec.push_back(ptr);
+            if (ptr.get())
+                cmVec.push_back(ptr);
         }
         catch(length_error le)
         {

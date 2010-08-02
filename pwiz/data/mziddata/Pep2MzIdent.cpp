@@ -42,14 +42,14 @@ using namespace pwiz::mziddata;
 using namespace pwiz::data::pepxml;
 using namespace pwiz::chemistry;
 
-using namespace boost; // FIXME: this is a bad idea
-
 // String constants
 
 const char* PERSON_DOC_OWNER = "PERSON_DOC_OWNER";
 
 namespace pwiz {
 namespace mziddata {
+
+using namespace boost;
 
 // Utility structs
 struct Indices
@@ -72,6 +72,32 @@ struct Indices
     size_t sil;
     size_t pdp;
 };
+
+struct pending_insert
+{
+    CVMapPtr rule;
+    string   value;
+
+    pending_insert(){}
+
+    pending_insert(CVMapPtr rule,string value)
+        : rule(rule), value(value)
+    {
+    }
+    
+    struct rule_dep_p
+    {
+        CVMapPtr rule;
+        
+        rule_dep_p(CVMapPtr rule) : rule(rule) {}
+
+        bool operator()(const pending_insert& p) const
+        {
+            return p.rule->dependant == rule->dependant;
+        }
+    };
+};
+
 
 struct Pep2MzIdent::Impl
 {
@@ -153,14 +179,14 @@ struct Pep2MzIdent::Impl
     // found in the search_score name attribute.
     CVID cvidFromSearchScore(const std::string& name);
 
-
+    CVParam assembleCVParam(CVMapPtr rule, const string value);
+    
     ///////////////////////////////////////////////////////////////////////
     // Instance variables
     
     // old member variables
     const MSMSPipelineAnalysis* _mspa;
     MzIdentMLPtr mzid;
-    bool _translated; // No longer used
     bool debug;
     bool verbose;
 
@@ -179,6 +205,8 @@ struct Pep2MzIdent::Impl
 
     const std::vector<AminoAcidModification>* aminoAcidModifications;
 
+    // pepXML's parameter tag translation list
+    vector<pending_insert> pendingInserts;
 };
 
 
@@ -408,7 +436,6 @@ struct path_out
 bool addToContactRoleCV(CVParam& param, vector<string>& path,
                   ContactRole& contactRole)
 {
-    cout << "\taddToContactRoleCV\n";
     if (path.size() &&
         path.at(0) == "role")
     {
@@ -422,7 +449,6 @@ bool addToContactRoleCV(CVParam& param, vector<string>& path,
 bool addToContactCV(CVParam& param, vector<string>& path,
                   vector<ContactPtr>& contacts)
 {
-    cout << "\taddToContactCV\n";
     string nextTag = path.at(0);
     path.erase(path.begin());
 
@@ -466,7 +492,6 @@ bool addToContactCV(CVParam& param, vector<string>& path,
 bool addToProteinDetectionProtocol(CVParam& param, vector<string>& path,
                                    ProteinDetectionProtocolPtr& pdp)
 {
-    cout << "\taddToProteinDetectionProtocol\n";
     string nextTag = path.at(0);
     path.erase(path.begin());
 
@@ -490,7 +515,6 @@ bool addToProteinDetectionProtocol(CVParam& param, vector<string>& path,
 bool addToAnalysisSoftwareLevel(CVParam& param, vector<string>& path,
                               AnalysisSoftwarePtr as)
 {
-    cout << "\taddToAnalysisSoftwareLevel\n";
     if (path.size() == 0 || path.at(0).size() == 0)
         throw runtime_error("[addAnalysisSoftwareLevel] empty path string passed in");
 
@@ -518,7 +542,6 @@ bool addToAnalysisSoftwareLevel(CVParam& param, vector<string>& path,
 
 bool addToSample(CVParam& param, vector<string>& path, SamplePtr sample)
 {
-    cout << "\taddToSample\n";
     if (!path.size())
     {
         sample->cvParams.cvParams.push_back(param);
@@ -567,6 +590,8 @@ bool addToSearchModification(CVParam& param, vector<string>& path,
 bool addToSpectrumIdentificationProtocol(CVParam& param, vector<string>& path,
                                      SpectrumIdentificationProtocolPtr& sip)
 {
+    bool result = false;
+    
     if (!sip.get())
         throw runtime_error("addToSpectrumIdentificationProtocol: NULL "
                             "value in sip variable");
@@ -577,12 +602,12 @@ bool addToSpectrumIdentificationProtocol(CVParam& param, vector<string>& path,
     if (iequals(tag, "SearchType"))
     {
         sip->searchType.cvParams.push_back(param);
-        return true;
+        result = true;
     }
     else if (iequals(tag, "AdditionalSearchParams"))
     {
         sip->additionalSearchParams.cvParams.push_back(param);
-        return true;
+        result = true;
     }
     else if (iequals(tag, "ModificationParams"))
     {
@@ -604,7 +629,7 @@ bool addToSpectrumIdentificationProtocol(CVParam& param, vector<string>& path,
 
         enzyme->enzymeName.cvParams.push_back(param);
         
-        return true;
+        result = true;
     }
     else if (iequals(tag, "MassTable") &&
              iequals(path.at(0), "AmbiguousResidue"))
@@ -617,23 +642,25 @@ bool addToSpectrumIdentificationProtocol(CVParam& param, vector<string>& path,
         ar = sip->massTable.ambiguousResidue.back();
         ar->params.cvParams.push_back(param);
 
-        return true;
+        result = true;
     }
     else if (iequals(tag, "FragmentTolerance"))
     {
-        
+        sip->fragmentTolerance.cvParams.push_back(param);
+        result = true;
     }
     else if (iequals(tag, "ParentTolerance"))
     {
-        
+        sip->parentTolerance.cvParams.push_back(param);
+        result = true;
     }
     else if (iequals(tag, "Threshold"))
     {
-        
+        sip->parentTolerance.cvParams.push_back(param);
+        result = true;
     }
     else if (iequals(tag, "DatabaseFilters"))
     {
-        
     }
     else if (iequals(tag, "DatabaseTranslation"))
     {
@@ -643,7 +670,7 @@ bool addToSpectrumIdentificationProtocol(CVParam& param, vector<string>& path,
         throw runtime_error(("Unsupported tag in mzIdentML path: "+
                              path.at(0)).c_str());
     
-    return false;
+    return result;
 }
 
 bool addToAnalysisProtocolCollection(CVParam& param, vector<string>& path,
@@ -681,7 +708,6 @@ bool addToAnalysisProtocolCollection(CVParam& param, vector<string>& path,
 
 bool addToMzIdentMLLevel(CVParam& param, vector<string>& path, MzIdentML& mzid)
 {
-    cout << "\taddToMzIdentMLLevel\n";
     /*
       "AnalysisSoftware",
         "Provider",
@@ -769,7 +795,6 @@ bool addToMzIdentMLLevel(CVParam& param, vector<string>& path, MzIdentML& mzid)
 // Adds a cvParam to allocation in the mzIdentML tree.
 bool addCvByPath(CVParam param, const std::string& path, MzIdentML& mzid)
 {
-    cout << "\taddCvByPath\n";
     vector<string> parts;
     
     char_separator<char> sep("/@");
@@ -1311,7 +1336,6 @@ CVID Pep2MzIdent::Impl::mapToNearestSoftware(const string& softwareName,
                 )
             {
                 customizations.push_back(what[1]);
-                cout << "Customization: " << what[1] << endl;
             }
         }
     }
@@ -1546,6 +1570,65 @@ MzIdentMLPtr Pep2MzIdent::translate()
     return pimpl->mzid;
 }
 
+CVParam Pep2MzIdent::Impl::assembleCVParam(CVMapPtr rule, const string value)
+{
+    vector<pending_insert>::iterator pi;
+    CVTermInfo info = cvTermInfo(rule->cvid);
+
+    CVID valueCV = CVID_Unknown;
+    CVID unitCV = CVID_Unknown;
+
+    string valueStr;
+
+    //cout << "is independant? " << (rule->dependant.empty()?"true":"false")
+    //     << endl;
+    if (!rule->dependant.empty())
+    {
+        pending_insert::rule_dep_p perp(rule);
+        
+        pi = find_if(pendingInserts.begin(), pendingInserts.end(),
+                     perp);
+
+        if (pi == pendingInserts.end())
+        {
+            pending_insert queued_pi(rule, value);
+            pendingInserts.push_back(queued_pi);
+            return CVParam(CVID_Unknown);
+        }
+        //else
+        //    cout << "found pending insert\n";
+        
+        // Which one is a UO_unit?
+        if (cvIsA(rule->cvid, UO_unit))
+        {
+            unitCV = getCVID(value);
+            
+            valueCV = pi->rule->cvid;
+            valueStr = pi->value;
+        }
+        else if (cvIsA(pi->rule->cvid, UO_unit))
+        {
+            unitCV = getCVID(pi->value);
+            
+            valueCV = rule->cvid;
+            valueStr = value;
+        }
+        else
+            throw runtime_error("[Pep2MzIdent::Impl::assembleCVParam] "
+                                "No units found.");
+    }
+    else
+    {
+        valueCV = rule->cvid;
+        valueStr = value;
+    }
+    
+    // Put the value somewhere useful.
+    CVParam cvParam(valueCV, valueStr, unitCV);
+
+    return cvParam;
+}
+
 void Pep2MzIdent::Impl::earlyParameters(ParameterPtr parameter,
                                         MzIdentMLPtr mzid)
 {
@@ -1582,7 +1665,7 @@ void Pep2MzIdent::Impl::earlyParameters(ParameterPtr parameter,
      */
     if (iequals(parameter->name, "TAXONOMY"))
     {
-        cout << "\n\n\tSearching for Taxonomy\n\t";
+        //cout << "\n\n\tSearching for Taxonomy\n\t";
         cout << parameterMap.size() << endl;
     }
     vector<CVMapPtr>::const_iterator it = find_if(
@@ -1590,10 +1673,11 @@ void Pep2MzIdent::Impl::earlyParameters(ParameterPtr parameter,
         /*shared_ptr<CVMap>(new */StringMatchCVMap(parameter->name))/*)*/;
     if (it != parameterMap.end())
     {
-        // Put the value somewhere useful.
-        CVTermInfo info = cvTermInfo((*it)->cvid);
+        CVParam cvParam=assembleCVParam((*it), parameter->value);
 
-        CVParam cvParam(info.cvid, parameter->value);
+        if (cvParam.cvid == CVID_Unknown)
+            return;
+        
         if (!addCvByPath(cvParam, (*it)->path, (*mzid)))
         {
             cerr << "addCvByPath found a parameter "
@@ -1611,10 +1695,10 @@ void Pep2MzIdent::Impl::earlyParameters(ParameterPtr parameter,
         // if/else if structure.
         return ;
     }
-    else
-    {
-        cout << "No cvmap found for " << parameter->name << endl;
-    }
+    //else
+    //{
+    //    cout << "No cvmap found for " << parameter->name << endl;
+    //}
     
     /*else*/ if (parameter->name == "USERNAME")
     {
@@ -1976,8 +2060,6 @@ void Pep2MzIdent::Impl::clear()
     mzid = MzIdentMLPtr(new MzIdentML());
     mzid->cvs.push_back(cv::cv("MS"));
     mzid->cvs.push_back(cv::cv("UO"));
-
-    _translated = false;
 
     precursorMonoisotopic = false;
     fragmentMonoisotopic = false;

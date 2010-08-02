@@ -128,8 +128,6 @@ DelimReader::DelimReader()
 
 DelimReader::~DelimReader()
 {
-    //if (pimpl)
-    //    delete pimpl;
 }
 
 DelimReader& DelimReader::set(Param param, const string& value)
