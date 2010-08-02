@@ -993,7 +993,7 @@ namespace pwiz.Skyline.Model
             }
             writer.Write(nodePep.Peptide.Sequence);
             writer.Write(FieldSeparator);
-            writer.Write(nodePepGroup.Name);
+            writer.WriteDsvField(nodePepGroup.Name, FieldSeparator);
             writer.Write(FieldSeparator);
             writer.Write(nodeTran.Transition.FragmentIonName);
             writer.Write(FieldSeparator);
@@ -1002,7 +1002,7 @@ namespace pwiz.Skyline.Model
             if (Document.Settings.PeptideSettings.Modifications.HasHeavyModifications)
             {
                 writer.Write(FieldSeparator);
-                writer.Write(nodeTranGroup.TransitionGroup.LabelType);
+                writer.WriteDsvField(nodeTranGroup.TransitionGroup.LabelType.ToString(), FieldSeparator);
             }
 
             writer.WriteLine();
@@ -1096,16 +1096,14 @@ namespace pwiz.Skyline.Model
             }
             writer.Write(FieldSeparator);
 
-            // Write special ID for ABI software
-            writer.Write(nodePepGroup.Name);
-            writer.Write('.');
-            writer.Write(nodePep.Peptide.Sequence);
-            writer.Write('.');
-            if (nodeTran.HasLibInfo)
-                writer.Write(nodeTran.LibInfo.Rank);
-            writer.Write(nodeTran.Transition.FragmentIonName);
-            writer.Write('.');
-            writer.Write(nodeTranGroup.TransitionGroup.LabelType);
+            // Write special ID for AB software
+            string extPeptideId = string.Format("{0}.{1}.{2}{3}.{4}",
+                                                nodePepGroup.Name,
+                                                nodePep.Peptide.Sequence,
+                                                nodeTran.HasLibInfo ? nodeTran.LibInfo.Rank.ToString() : "",
+                                                nodeTran.Transition.FragmentIonName,
+                                                nodeTranGroup.TransitionGroup.LabelType);
+            writer.WriteDsvField(extPeptideId, FieldSeparator);
             writer.Write(FieldSeparator);
 
             writer.Write(Math.Round(GetDeclusteringPotential(nodePep, nodeTranGroup, nodeTran, step), 1));
@@ -1303,7 +1301,7 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
-            writer.Write(nodePepGroup.Name.Replace(' ', '_'));  // Quanpedia can't handle spaces
+            writer.WriteDsvField(nodePepGroup.Name.Replace(' ', '_'), FieldSeparator);  // Quanpedia can't handle spaces
             writer.Write(FieldSeparator);
             // Write special ID to ensure 1-to-1 relationship between this ID and precursor m/z
             writer.Write(Document.Settings.GetModifiedSequence(nodePep.Peptide.Sequence,
@@ -1361,7 +1359,7 @@ namespace pwiz.Skyline.Model
             if (Document.Settings.PeptideSettings.Modifications.HasHeavyModifications)
             {
                 writer.Write(FieldSeparator);
-                writer.Write(nodeTranGroup.TransitionGroup.LabelType);
+                writer.WriteDsvField(nodeTranGroup.TransitionGroup.LabelType.ToString(), FieldSeparator);
             }
             writer.WriteLine();
         }

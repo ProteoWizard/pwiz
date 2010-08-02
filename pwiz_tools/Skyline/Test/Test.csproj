@@ -99,6 +99,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StatisticsTest.cs" />
     <Compile Include="UndoManagerTest.cs" />
+    <Compile Include="UtilTest.cs" />
     <Compile Include="VariableModTest.cs" />
   </ItemGroup>
   <ItemGroup>

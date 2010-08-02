@@ -763,6 +763,7 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Util\BioMassCalc.cs" />
+    <Compile Include="Util\Extensions\Text.cs" />
     <Compile Include="Util\Extensions\UtilProcess.cs" />
     <Compile Include="Util\FormAnimator.cs" />
     <Compile Include="Util\SystemMetrics.cs" />

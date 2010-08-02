@@ -28,6 +28,7 @@ using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -207,15 +208,7 @@ namespace pwiz.Skyline.FileUI
                                     if (iColumn > 0)
                                         writer.Write(separator);
                                     string value = resultSet.FormatValue(iRow, iColumn);
-                                    if (value.IndexOf(separator) == -1)
-                                        writer.Write(value);
-                                    else
-                                    {
-                                        // Quote fields that contain the separator value
-                                        writer.Write("\"");
-                                        writer.Write(value);
-                                        writer.Write("\"");
-                                    }
+                                    writer.WriteDsvField(value, separator);
                                 }
                                 writer.WriteLine();
                             }

@@ -27,6 +27,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
@@ -173,7 +174,7 @@ namespace pwiz.Skyline.Model
             string line = reader.ReadLine();
             if (line == null)
                 throw new InvalidDataException("Empty mass list.");
-            string[] fields = MassListRowReader.GetFields(line, Separator);
+            string[] fields = line.ParseDsvFields(Separator);
             if (fields.Length < 3)
                 throw new InvalidDataException("Invalid mass list.  Mass lists must contain at least precursor m/z, product m/z, and peptide sequence.");
 
@@ -376,7 +377,7 @@ namespace pwiz.Skyline.Model
 
             public void NextRow(string line, int lineNum)
             {
-                Fields = GetFields(line, Separator);
+                Fields = line.ParseDsvFields(Separator);
 
                 ExTransitionInfo info = CalcTransitionInfo(lineNum);
                 if (!FastaSequence.IsExSequence(info.PeptideSequence))
@@ -545,14 +546,6 @@ namespace pwiz.Skyline.Model
 
                 return -1;
             }
-
-            public static string[] GetFields(string line, char separator)
-            {
-                string[] fields = line.Split(new[] { separator });
-                for (int i = 0; i < fields.Length; i++)
-                    fields[i] = fields[i].Trim();
-                return fields;
-            }
         }
 
         private class GeneralRowReader : MassListRowReader
@@ -618,7 +611,7 @@ namespace pwiz.Skyline.Model
             {
                 // Split the first line into fields.
                 Debug.Assert(lines.Count > 0);
-                string[] fields = GetFields(lines[0], separator);
+                string[] fields = lines[0].ParseDsvFields(separator);
 
                 int iLabelType = FindLabelType(fields, lines, separator);
 
@@ -755,7 +748,7 @@ namespace pwiz.Skyline.Model
                         valueCounts[i] = new Dictionary<string, int>();
                     foreach (string line in lines)
                     {
-                        string[] fieldsNext = GetFields(line, separator);
+                        string[] fieldsNext = line.ParseDsvFields(separator);
                         AddCount(fieldsNext[iSequence], sequenceCounts);
                         for (int i = 0; i < valueCounts.Length; i++)
                         {
@@ -807,7 +800,7 @@ namespace pwiz.Skyline.Model
                 // Make sure all other rows have just L or H in this column
                 foreach (string line in lines)
                 {
-                    string[] fieldsNext = GetFields(line, separator);
+                    string[] fieldsNext = line.ParseDsvFields(separator);
                     if (!Equals(fieldsNext[iLabelType], "H") && !Equals(fieldsNext[iLabelType], "L"))
                         return -1;
                 }
@@ -878,7 +871,7 @@ namespace pwiz.Skyline.Model
             {
                 // Split the first line into fields.
                 Debug.Assert(lines.Count > 0);
-                string[] fields = GetFields(lines[0], separator);
+                string[] fields = lines[0].ParseDsvFields(separator);
 
                 // Create the ExPeptide regular expression
                 var modSettings = settings.PeptideSettings.Modifications;
