@@ -27,7 +27,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
-    [XmlRoot("loss_definition")]
+    [XmlRoot("potential_loss")]
     public sealed class FragmentLoss : Immutable, IXmlSerializable
     {
         public const double MIN_LOSS_MASS = 0.0001;
