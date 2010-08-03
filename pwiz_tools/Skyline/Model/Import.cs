@@ -331,6 +331,7 @@ namespace pwiz.Skyline.Model
             public int? ProductCharge { get; set; }
             public IonType? IonType { get; set; }
             public int? FragmentOrdinal { get; set; }
+            public TransitionLosses Losses { get; set; }
             public IsotopeLabelType LabelType { get; set; }
             public bool LabelTypeExplicit { get; set; }
         }
@@ -367,6 +368,7 @@ namespace pwiz.Skyline.Model
             // Transition
             public IonType IonType { get; private set; }
             public int Ordinal { get; private set; }
+            public TransitionLosses Losses { get; private set; }
             public int Offset { get { return Transition.OrdinalToOffset(IonType, Ordinal, PeptideSequence.Length); } }
             public int ProductCharge { get; private set; }
 
@@ -430,14 +432,22 @@ namespace pwiz.Skyline.Model
                 {
                     double productPrecursorMass = calc.GetPrecursorFragmentMass(seq);
                     double[,] productMasses = calc.GetFragmentIonMasses(seq);
+                    // TODO: Allow variable modifications
+                    var potentialLosses = TransitionGroup.CalcPotentialLosses(seq,
+                        Settings.PeptideSettings.Modifications, null, calc.MassType);
+                    
                     IonType? ionType;
                     int? ordinal;
-                    info.ProductCharge = CalcProductCharge(productPrecursorMass, precursorCharge, productMasses,
-                        productMz, MzMatchTolerance, out ionType, out ordinal);
+                    TransitionLosses losses;
+                    info.ProductCharge = TransitionCalc.CalcProductCharge(productPrecursorMass, precursorCharge,
+                        productMasses, potentialLosses, productMz, MzMatchTolerance, calc.MassType,
+                        out ionType, out ordinal, out losses);
+
                     if (info.ProductCharge > 0)
                     {
                         info.IonType = ionType;
                         info.FragmentOrdinal = ordinal;
+                        info.Losses = losses;
                     }
                 }
                 if (info.ProductCharge < 1)
@@ -453,6 +463,7 @@ namespace pwiz.Skyline.Model
                 PrecursorCharge = precursorCharge;
                 IonType = info.IonType.Value;
                 Ordinal = info.FragmentOrdinal.Value;
+                Losses = info.Losses;
                 LabelType = info.LabelType;
                 ProductCharge = info.ProductCharge.Value;
             }
@@ -462,13 +473,6 @@ namespace pwiz.Skyline.Model
             protected static int CalcPrecursorCharge(double precursorMassH, double precursorMz, double tolerance)
             {
                 return TransitionCalc.CalcPrecursorCharge(precursorMassH, precursorMz, tolerance);
-            }
-
-            private static int CalcProductCharge(double productPrecursorMass, int precursorCharge, double[,] productMasses,
-                double productMz, double tolerance, out IonType? ionType, out int? ordinal)
-            {
-                return TransitionCalc.CalcProductCharge(productPrecursorMass, precursorCharge, productMasses,
-                    productMz, tolerance, out ionType, out ordinal);
             }
 
             private static bool MatchMz(double mz1, double mz2, double tolerance)
@@ -526,6 +530,9 @@ namespace pwiz.Skyline.Model
                 var calc = settings.GetFragmentCalc(labelType, null);
                 double productPrecursorMass = calc.GetPrecursorFragmentMass(sequence);
                 double[,] productMasses = calc.GetFragmentIonMasses(sequence);
+                // TODO: Allow variable modifications
+                var potentialLosses = TransitionGroup.CalcPotentialLosses(sequence,
+                    settings.PeptideSettings.Modifications, null, calc.MassType);
 
                 for (int i = 0; i < fields.Length; i++)
                 {
@@ -538,8 +545,10 @@ namespace pwiz.Skyline.Model
 
                     IonType? ionType;
                     int? ordinal;
-                    int charge = CalcProductCharge(productPrecursorMass, precursoCharge,
-                        productMasses, productMz, tolerance, out ionType, out ordinal);
+                    TransitionLosses losses;
+                    int charge = TransitionCalc.CalcProductCharge(productPrecursorMass, precursoCharge,
+                        productMasses, potentialLosses, productMz, tolerance, calc.MassType,
+                        out ionType, out ordinal, out losses);
                     if (charge > 0)
                         return i;
                 }
@@ -1031,6 +1040,7 @@ namespace pwiz.Skyline.Model
         int Ordinal { get; }
         int Offset { get; }
         int ProductCharge { get; }
+        TransitionLosses Losses { get; }
     }
 
     
@@ -1178,7 +1188,7 @@ namespace pwiz.Skyline.Model
             }
             var tran = new Transition(_activeTransitionGroup, row.IonType, row.Offset, row.ProductCharge);
             // m/z and library info calculated later
-            _transitions.Add(new TransitionDocNode(tran, null, 0, null));
+            _transitions.Add(new TransitionDocNode(tran, row.Losses, 0, null));
         }
 
         private void CompletePeptide()

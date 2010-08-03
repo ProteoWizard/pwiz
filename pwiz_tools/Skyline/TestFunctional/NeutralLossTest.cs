@@ -53,7 +53,7 @@ namespace pwiz.SkylineTestFunctional
         {
             // Create modifications used in this test
             var aquaMod = new StaticMod("Aqua 13C", "K, R", ModTerminus.C, null, LabelAtoms.C13|LabelAtoms.N15, null, null);
-            var phosphLossMod = new StaticMod("Phospho Loss", "S, T, Y", null, false, "HPO3",
+            var phosphoLossMod = new StaticMod("Phospho Loss", "S, T, Y", null, false, "HPO3",
                 LabelAtoms.None, RelativeRT.Matching, null, null,  new[] { new FragmentLoss("H3PO4"), });
             var multipleLossMod = new StaticMod("Multiple Loss-only", "A", null, false, null,
                 LabelAtoms.None, RelativeRT.Matching, null, null, new[] { new FragmentLoss("NH3"), new FragmentLoss("H2O") });
@@ -79,15 +79,15 @@ namespace pwiz.SkylineTestFunctional
             // Try a few things with new loss UI on the phospho loss modification
             RunUI(() =>
             {
-                addModDlg.Modification = phosphLossMod;
-                Assert.IsTrue(addModDlg.GetLossText(0).EndsWith(phosphLossMod.Losses[0].Formula));
+                addModDlg.Modification = phosphoLossMod;
+                Assert.IsTrue(addModDlg.GetLossText(0).EndsWith(phosphoLossMod.Losses[0].Formula));
                 addModDlg.LossSelectedIndex = 0;
                 addModDlg.DeleteLoss();
             });
             // Add back the original loss with the new loss editor dialog
             RunDlg<EditFragmentLossDlg>(addModDlg.AddLoss, dlg =>
             {
-                dlg.Loss = phosphLossMod.Losses[0];
+                dlg.Loss = phosphoLossMod.Losses[0];
                 dlg.OkDialog();
             });
             // Add a smaller formula loss with the new loss editor dialog
@@ -109,7 +109,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 VerifyLossText(addModDlg.GetLossText(0), fragmentLossWater);
                 VerifyLossText(addModDlg.GetLossText(1), fragmentLossConstants);
-                VerifyLossText(addModDlg.GetLossText(2), phosphLossMod.Losses[0]);
+                VerifyLossText(addModDlg.GetLossText(2), phosphoLossMod.Losses[0]);
                 addModDlg.LossSelectedIndex = 0;
                 addModDlg.DeleteLoss();
                 addModDlg.DeleteLoss();
@@ -144,7 +144,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(editModsDlg, editModsDlg.OkDialog);
             // Check the phospho loss modification
             RunUI(() => peptideSettingsUI.PickedStaticMods =
-                new List<string>(peptideSettingsUI.PickedStaticMods) { phosphLossMod.Name }.ToArray());
+                new List<string>(peptideSettingsUI.PickedStaticMods) { phosphoLossMod.Name }.ToArray());
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
 
             // Add FASTA sequence

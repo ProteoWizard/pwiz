@@ -63,7 +63,7 @@ namespace pwiz.SkylineTest
         #endregion
 
         /// <summary>
-        /// Test of <see cref="SrmDocument.ImportFasta"/> functionality
+        /// Test of SrmDocument.ImportFasta functionality
         /// </summary>
         [TestMethod]
         public void ImportFastaTest()

@@ -621,10 +621,17 @@ namespace pwiz.Skyline.EditUI
                 var calc = document.Settings.GetFragmentCalc(labelType, null);
                 double productPrecursorMass = calc.GetPrecursorFragmentMass(peptideSequence);
                 double[,] productMasses = calc.GetFragmentIonMasses(peptideSequence);
+                // TODO: Allow variable modifications
+                var potentialLosses = TransitionGroup.CalcPotentialLosses(peptideSequence,
+                    document.Settings.PeptideSettings.Modifications, null, calc.MassType);
+                
                 IonType? ionType;
                 int? ordinal;
-                int productCharge = TransitionCalc.CalcProductCharge(productPrecursorMass, precursorCharge, productMasses,
-                    productMz, mzMatchTolerance, out ionType, out ordinal);
+                TransitionLosses losses;
+                int productCharge = TransitionCalc.CalcProductCharge(productPrecursorMass, precursorCharge,
+                    productMasses, potentialLosses, productMz, mzMatchTolerance, calc.MassType,
+                    out ionType, out ordinal, out losses);
+
                 if (productCharge < 1)
                 {
                     ShowTransitionError(new PasteError
@@ -665,7 +672,7 @@ namespace pwiz.Skyline.EditUI
                     if (peptideDocNode.Peptide.Sequence == peptideSequence)
                     {
                         children.Add(AddTransition(document, peptideDocNode, precursorCharge, labelType, productCharge,
-                                      ionType.Value, ordinal.Value));
+                                      ionType.Value, ordinal.Value, losses));
                         transitionAdded = true;
                     }
                     else
@@ -701,7 +708,7 @@ namespace pwiz.Skyline.EditUI
                         peptideDocNode = new PeptideDocNode(newPeptide, new TransitionGroupDocNode[0], false);
                     }
                     children.Add(AddTransition(document, peptideDocNode, precursorCharge, labelType,
-                                                      productCharge, ionType.Value, ordinal.Value));
+                                                      productCharge, ionType.Value, ordinal.Value, losses));
 
                 }
                 var newPeptideGroupDocNode = new PeptideGroupDocNode(peptideGroupDocNode.PeptideGroup, peptideGroupDocNode.Annotations,
@@ -712,7 +719,7 @@ namespace pwiz.Skyline.EditUI
         }
 
         private static PeptideDocNode AddTransition(SrmDocument document, PeptideDocNode peptideDocNode, int precursorCharge, 
-            IsotopeLabelType labelType, int productCharge, IonType ionType, int ordinal)
+            IsotopeLabelType labelType, int productCharge, IonType ionType, int ordinal, TransitionLosses losses)
         {
             TransitionGroupDocNode transitionGroupDocNode = null;
             var transitionGroups = new List<TransitionGroupDocNode>();
@@ -744,10 +751,11 @@ namespace pwiz.Skyline.EditUI
 
             var transition = new Transition(transitionGroupDocNode.TransitionGroup, ionType, offset, productCharge);
             // Avoid adding the same transition multiple times
-            if (transitions.Contains(nodeTran => Equals(nodeTran.Transition, transition)))
+            var transitionKey = new TransitionLossKey(transition, losses);
+            if (transitions.Contains(nodeTran => Equals(nodeTran.Key, transitionKey)))
                 return peptideDocNode;
 
-            transitions.Add(new TransitionDocNode(transition, null, 
+            transitions.Add(new TransitionDocNode(transition, losses, 
                 document.Settings.GetFragmentMass(transition, null), null));
             transitions.Sort(TransitionGroup.CompareTransitions);
 

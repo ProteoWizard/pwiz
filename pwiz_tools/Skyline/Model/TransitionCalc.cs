@@ -17,7 +17,10 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
@@ -75,19 +78,32 @@ namespace pwiz.Skyline.Model
                 maxCharge);
         }
 
-        public static int CalcProductCharge(double productPrecursorMass, int precursorCharge, double[,] productMasses, double productMz, double tolerance,
-            out IonType? ionType, out int? ordinal)
+        public static int CalcProductCharge(double productPrecursorMass,
+                                            int precursorCharge,
+                                            double[,] productMasses,
+                                            IList<IList<ExplicitLoss>> potentialLosses,
+                                            double productMz,
+                                            double tolerance,
+                                            MassType massType,
+                                            out IonType? ionType,
+                                            out int? ordinal,
+                                            out TransitionLosses losses)
         {
             // Get length of fragment ion mass array
             int len = productMasses.GetLength(1);
 
             // Check to see if it is the precursor
-            int charge = CalcProductCharge(productPrecursorMass, productMz, tolerance, precursorCharge);
-            if (charge == precursorCharge)
+            foreach (var lossesTrial in TransitionGroup.CalcTransitionLosses(IonType.precursor, 0, massType, potentialLosses))
             {
-                ionType = IonType.precursor;
-                ordinal = len + 1;
-                return charge;
+                double productMass = productPrecursorMass - (lossesTrial != null ? lossesTrial.Mass : 0);
+                int charge = CalcProductCharge(productMass, productMz, tolerance, precursorCharge);
+                if (charge == precursorCharge)
+                {
+                    ionType = IonType.precursor;
+                    ordinal = len + 1;
+                    losses = lossesTrial;
+                    return charge;
+                }
             }
 
             // Check all possible ion types and offsets
@@ -95,24 +111,32 @@ namespace pwiz.Skyline.Model
             int bestCharge = 0;
             IonType? bestIonType = null;
             int? bestOrdinal = null;
+            TransitionLosses bestLosses = null;
+
             foreach (IonType type in Transition.ALL_TYPES)
             {
                 for (int offset = 0; offset < len; offset++)
                 {
-                    // Look for the closest match.
-                    double productMass = productMasses[(int) type, offset];
-                    charge = CalcProductCharge(productMass, productMz, tolerance, precursorCharge);
-                    if (charge > 0)
+                    foreach (var lossesTrial in TransitionGroup.CalcTransitionLosses(type, offset, massType, potentialLosses))
                     {
-                        double delta = Math.Abs(productMz - SequenceMassCalc.GetMZ(productMass, charge));
-                        if (minDelta > delta)
+                        // Look for the closest match.
+                        double productMass = productMasses[(int) type, offset];
+                        if (lossesTrial != null)
+                            productMass -= lossesTrial.Mass;
+                        int charge = CalcProductCharge(productMass, productMz, tolerance, precursorCharge);
+                        if (charge > 0)
                         {
-                            bestCharge = charge;
-                            bestIonType = type;
-                            // The peptide length is 1 longer than the mass array
-                            bestOrdinal = Transition.OffsetToOrdinal(type, offset, len + 1);
+                            double delta = Math.Abs(productMz - SequenceMassCalc.GetMZ(productMass, charge));
+                            if (minDelta > delta)
+                            {
+                                bestCharge = charge;
+                                bestIonType = type;
+                                // The peptide length is 1 longer than the mass array
+                                bestOrdinal = Transition.OffsetToOrdinal(type, offset, len + 1);
+                                bestLosses = lossesTrial;
 
-                            minDelta = delta;
+                                minDelta = delta;
+                            }
                         }
                     }
                 }
@@ -120,6 +144,8 @@ namespace pwiz.Skyline.Model
 
             ionType = bestIonType;
             ordinal = bestOrdinal;
+            losses = bestLosses;
+
             return bestCharge;
         }
 

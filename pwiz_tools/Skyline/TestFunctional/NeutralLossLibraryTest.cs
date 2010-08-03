@@ -74,7 +74,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             // Create the modification and library spec used in this test
-            var phosphLossMod = new StaticMod("Phospho Loss", "S, T", null, true, "HPO3",
+            var phosphoLossMod = new StaticMod("Phospho Loss", "S, T", null, true, "HPO3",
                                               LabelAtoms.None, RelativeRT.Matching, null, null,  new[] { new FragmentLoss("H3PO4"), });
             var multipleLossMod = new StaticMod("Multiple Loss-only", "D", null, false, null,
                 LabelAtoms.None, RelativeRT.Matching, null, null, new[]
@@ -90,7 +90,7 @@ namespace pwiz.SkylineTestFunctional
             // Prepare settings for this test
             Settings.Default.StaticModList.Clear();
             Settings.Default.StaticModList.AddRange(StaticModList.GetDefaultsOn());
-            Settings.Default.StaticModList.Add(phosphLossMod);
+            Settings.Default.StaticModList.Add(phosphoLossMod);
             Settings.Default.HeavyModList.Clear();
             Settings.Default.HeavyModList.Add(heavyKMod);
             Settings.Default.SpectralLibraryList.Clear();
@@ -99,7 +99,7 @@ namespace pwiz.SkylineTestFunctional
             // Prepare document settings for this test
             const int countIons = 6;
             var settings = SrmSettingsList.GetDefault()
-                .ChangePeptideModifications(mods => mods.ChangeStaticModifications(new List<StaticMod>(mods.StaticModifications) { phosphLossMod }))
+                .ChangePeptideModifications(mods => mods.ChangeStaticModifications(new List<StaticMod>(mods.StaticModifications) { phosphoLossMod }))
                 .ChangePeptideLibraries(lib => lib.ChangeLibrarySpecs(new[] { librarySpec }))
                 .ChangeTransitionLibraries(tlib => tlib.ChangeIonCount(countIons));
 
@@ -115,7 +115,7 @@ namespace pwiz.SkylineTestFunctional
             AssertEx.IsDocumentState(docLibLoss, null, 3, 4, 24);
             Assert.AreEqual(7, GetLossCount(docLibLoss, 1));
 
-            string lossLabel = "-" + Math.Round(phosphLossMod.Losses[0].MonoisotopicMass, 1);
+            string lossLabel = "-" + Math.Round(phosphoLossMod.Losses[0].MonoisotopicMass, 1);
             for (int i = 0; i < docLibLoss.TransitionGroupCount; i++)
             {
                 var pathTranGroup = docLibLoss.GetPathTo((int) SrmDocument.Level.TransitionGroups, i);

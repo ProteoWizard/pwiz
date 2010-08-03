@@ -477,6 +477,8 @@ namespace pwiz.Skyline.Model
 
         protected abstract string InstrumentType { get; }
 
+        public virtual bool HasHeaders { get { return false; } }
+
         protected virtual void WriteHeaders(TextWriter writer) { /* No headers by default */ }
 
         protected abstract void WriteTransition(TextWriter writer,
@@ -1134,6 +1136,8 @@ namespace pwiz.Skyline.Model
             get { return ExportInstrumentType.Agilent; }
         }
 
+        public override bool HasHeaders { get { return true; } }
+
         protected override void WriteHeaders(TextWriter writer)
         {
             writer.Write("Compound Name");
@@ -1263,6 +1267,8 @@ namespace pwiz.Skyline.Model
         {
             get { return ExportInstrumentType.Waters; }
         }
+
+        public override bool HasHeaders { get { return true; } }
 
         protected override void WriteHeaders(TextWriter writer)
         {

@@ -937,12 +937,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
     public interface IPrecursorMassCalc
     {
+        MassType MassType { get;}
         double GetPrecursorMass(string seq);
         bool IsModified(string seq);string GetModifiedSequence(string seq, bool formatNarrow);
     }
 
     public interface IFragmentMassCalc
     {
+        MassType MassType { get; }
         double[,] GetFragmentIonMasses(string seq);
         double GetFragmentMass(Transition transition);
         double GetFragmentMass(string seq, IonType type, int ordinal);

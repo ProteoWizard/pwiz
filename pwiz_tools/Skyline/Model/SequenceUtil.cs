@@ -652,6 +652,11 @@ namespace pwiz.Skyline.Model
                 { Mods = mods, RequiresAllCalcMods = requiresAllCalcMods};
         }
 
+        public MassType MassType
+        {
+            get { return _massCalcBase.MassType; }
+        }
+
         public double GetPrecursorMass(string seq)
         {
             return _massCalcBase.GetPrecursorMass(seq, _mods);

@@ -886,10 +886,10 @@ namespace pwiz.Skyline
                 InitialDirectory = Settings.Default.ActiveDirectory,
                 CheckPathExists = true,
                 SupportMultiDottedExtensions = true,
-                DefaultExt = "*.sky",
+                DefaultExt = SrmDocument.EXT,
                 Filter = string.Join("|", new[]
                     {
-                        "Mass List Text (*.sky)|*.sky",
+                        "Skyline Documents (*." + SrmDocument.EXT + ")|*." + SrmDocument.EXT,
                         "All Files (*.*)|*.*"
                     })
             };

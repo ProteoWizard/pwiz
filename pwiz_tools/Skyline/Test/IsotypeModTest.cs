@@ -16,12 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -165,10 +161,10 @@ namespace pwiz.SkylineTest
             var docMulti = docFasta.ChangeSettings(settings);
 
             // Make sure transition lists export to various formats and roundtrip
-            VerifyExportRoundTrip(new ThermoMassListExporter(docMulti), false, docFasta);
-            VerifyExportRoundTrip(new AbiMassListExporter(docMulti), false, docFasta);
-            VerifyExportRoundTrip(new AgilentMassListExporter(docMulti), true, docFasta);
-            VerifyExportRoundTrip(new WatersMassListExporter(docMulti), true, docFasta);
+            VerifyExportRoundTrip(new ThermoMassListExporter(docMulti), docFasta);
+            VerifyExportRoundTrip(new AbiMassListExporter(docMulti), docFasta);
+            VerifyExportRoundTrip(new AgilentMassListExporter(docMulti), docFasta);
+            VerifyExportRoundTrip(new WatersMassListExporter(docMulti), docFasta);
         }
 
         [TestMethod]
@@ -227,54 +223,12 @@ namespace pwiz.SkylineTest
             AssertEx.Serializable(document, 3, AssertEx.DocumentCloned);
         }
 
-        private static void VerifyExportRoundTrip(MassListExporter exporter, bool hasHeader, SrmDocument docFasta)
+        private static void VerifyExportRoundTrip(MassListExporter exporter, SrmDocument docFasta)
         {
-            exporter.Export(null);
-
-            // Reveres the output lines and import into a new document
-            var docExport = exporter.Document;
-            var docImport = new SrmDocument(docExport.Settings);
-            string transitionList = exporter.MemoryOutput.Values.ToArray()[0].ToString();
-            using (var readerImport = new StringReader(ReverseLines(transitionList, hasHeader)))
-            {
-                IdentityPath pathAdded;
-                IFormatProvider provider = CultureInfo.InvariantCulture;
-                docImport = docImport.ImportMassList(readerImport, provider, ',',
-                                                     null, IdentityPath.ROOT, out pathAdded);
-            }
-
-            AssertEx.IsDocumentState(docImport, 1,
-                                     docExport.PeptideGroupCount,
-                                     docExport.PeptideCount,
-                                     docExport.TransitionGroupCount,
-                                     docExport.TransitionCount);
+            var docImport = AssertEx.RoundTripTransitionList(exporter);
 
             int countProteinTermTran, countProteinTerm;
             VerifyMultiLabelContent(docFasta, docImport, out countProteinTerm, out countProteinTermTran);
-        }
-
-        private static string ReverseLines(string transitionList, bool hasHeader)
-        {
-            var listLines = new List<string>();
-            using (var readerList = new StringReader(transitionList))
-            {
-                string line;
-                while ((line = readerList.ReadLine()) != null)
-                    listLines.Add(line);
-            }
-
-            string lineHeader = (hasHeader ? listLines[0] : null);
-            if (hasHeader)
-                listLines.RemoveAt(0);
-
-            listLines.Reverse();
-
-            if (hasHeader)
-                listLines.Insert(0, lineHeader);
-
-            var sb = new StringBuilder();
-            listLines.ForEach(line => sb.AppendLine(line));
-            return sb.ToString();
         }
 
         private static void VerifyMultiLabelContent(SrmDocument docFasta, SrmDocument docMulti,

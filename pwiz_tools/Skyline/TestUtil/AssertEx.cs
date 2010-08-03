@@ -18,7 +18,9 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
@@ -180,6 +182,54 @@ namespace pwiz.SkylineTestUtil
             }
 
             return null;
+        }
+
+        public static SrmDocument RoundTripTransitionList(MassListExporter exporter)
+        {
+            exporter.Export(null);
+
+            // Reverse the output lines and import into a new document
+            var docExport = exporter.Document;
+            var docImport = new SrmDocument(docExport.Settings);
+            string transitionList = exporter.MemoryOutput.Values.ToArray()[0].ToString();
+            using (var readerImport = new StringReader(ReverseLines(transitionList, exporter.HasHeaders)))
+            {
+                IdentityPath pathAdded;
+                IFormatProvider provider = CultureInfo.InvariantCulture;
+                docImport = docImport.ImportMassList(readerImport, provider, ',',
+                                                     null, IdentityPath.ROOT, out pathAdded);
+            }
+
+            IsDocumentState(docImport, 1,
+                                     docExport.PeptideGroupCount,
+                                     docExport.PeptideCount,
+                                     docExport.TransitionGroupCount,
+                                     docExport.TransitionCount);
+            return docImport;
+        }
+
+        private static string ReverseLines(string transitionList, bool hasHeader)
+        {
+            var listLines = new List<string>();
+            using (var readerList = new StringReader(transitionList))
+            {
+                string line;
+                while ((line = readerList.ReadLine()) != null)
+                    listLines.Add(line);
+            }
+
+            string lineHeader = (hasHeader ? listLines[0] : null);
+            if (hasHeader)
+                listLines.RemoveAt(0);
+
+            listLines.Reverse();
+
+            if (hasHeader)
+                listLines.Insert(0, lineHeader);
+
+            var sb = new StringBuilder();
+            listLines.ForEach(line => sb.AppendLine(line));
+            return sb.ToString();
         }
 
         public static void NoDiff(string target, string actual)
