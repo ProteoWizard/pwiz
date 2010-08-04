@@ -26,6 +26,8 @@ namespace BumberDash
         private bool _breakRecursion = false;
         private bool _validMods = true;
         private bool _fileChanged = false;
+        private double _factorX;
+        private double _factorY;
         private bool[] _changed = new bool[52];
         private Regex _statRx = new Regex("^[\\(\\)ACDEFGHIKLMNPQRSTUVWXY]$");
         private Regex _dynRx = new Regex("^(?:\\(|\\)|(?:\\(|{\\(})?(?:(?:\\[[ACDEFGHIKLMNPQRSTUVWXY]+\\])|(?:{[ACDEFGHIKLMNPQRSTUVWXY]+})|(?:[ACDEFGHIKLMNPQRSTUVWXY]))+!?(?:(?:\\[[ACDEFGHIKLMNPQRSTUVWXY]+\\])|(?:{[ACDEFGHIKLMNPQRSTUVWXY]+})|(?:[ACDEFGHIKLMNPQRSTUVWXY]))*(?:\\)|{\\)})?)$");
@@ -38,7 +40,15 @@ namespace BumberDash
             InitializeComponent();
             _saveDestinationPath = newFilePath;
             _outputDirectory = newOutputDirectory;
-            _destinationProgram = configProgram;
+            _destinationProgram = configProgram;            
+        }
+
+        protected override void ScaleControl(SizeF factor, BoundsSpecified specified)
+        {
+            base.ScaleControl(factor, specified);
+
+            _factorX = factor.Width;
+            _factorY = factor.Height;
         }
 
         private void ConfigForm_Load(object sender, EventArgs e)
@@ -76,6 +86,8 @@ namespace BumberDash
                     direcTagToolStripMenuItem_Click(0, new EventArgs());
                     break;
             }
+
+            
         }
 
         
@@ -2018,34 +2030,34 @@ namespace BumberDash
             CTerminusMzToleranceUnitsBox.SelectedIndex = 0;
             
             AdjustPrecursorMassLabel.Text = "Adjust for C13 errors:";
-            AdjustPrecursorMassLabel.Location = new Point(21,6);
+            AdjustPrecursorMassLabel.Location = new Point((int)(21 * _factorX), (int)(6 * _factorY));
             DTNewOptionsPanel.Parent = DirecTagGB;
-            DTNewOptionsPanel.Location = new Point(11, 77);
+            DTNewOptionsPanel.Location = new Point((int)(11 * _factorX), (int)(77 * _factorY));
 
 
-            ChargeGB.Location = new Point(282, 6);
-            InstrumentGB.Height = 76;
-            ScoringGB.Location = new Point(282, 155);
-            ScoringGB.Width = 242;
-            ScoringGB.Height = 151;
-            SubsetGB.Location = new Point(282, 86);
-            SubsetGB.Width = 242;
-            SubsetGB.Height = 67;
-            MaxResultsPanel.Location = new Point(4, 7);
-            MiscGB.Location = new Point(282,307);
-            MiscGB.Width = 241;
-            MiscGB.Height = 40;
-            ToleranceGB.Height = 106;
-            ToleranceGB.Location = new Point(7, 6);
-            PrecursorPannel.Location = new Point(7, 45);
-            FragmentPannel.Location = new Point(262, 45);
-            TagReconTolerancePanel.Location = new Point(3, 72);
-            ModGB.Location = new Point(7, 120);
-            tabControl1.Height = 460;
-            this.Height = 530;
+            ChargeGB.Location = new Point((int)(282 * _factorX), (int)(6 * _factorY));
+            InstrumentGB.Height = (int)(76*_factorY);
+            ScoringGB.Location = new Point((int)(282 * _factorX), (int)(155 * _factorY));
+            ScoringGB.Width = (int)(242*_factorX);
+            ScoringGB.Height = (int)(151*_factorY);
+            SubsetGB.Location = new Point((int)(282 * _factorX), (int)(86 * _factorY));
+            SubsetGB.Width = (int)(242*_factorX);
+            SubsetGB.Height = (int)(67*_factorY);
+            MaxResultsPanel.Location = new Point((int)(4 * _factorX), (int)(7 * _factorY));
+            MiscGB.Location = new Point((int)(282 * _factorX), (int)(307 * _factorY));
+            MiscGB.Width = (int)(241*_factorX);
+            MiscGB.Height = (int)(40*_factorY);
+            ToleranceGB.Height = (int)(106*_factorY);
+            ToleranceGB.Location = new Point((int)(7 * _factorX), (int)(6 * _factorY));
+            PrecursorPannel.Location = new Point((int)(7 * _factorX), (int)(45 * _factorY));
+            FragmentPannel.Location = new Point((int)(262 * _factorX), (int)(45 * _factorY));
+            TagReconTolerancePanel.Location = new Point((int)(3 * _factorX), (int)(72 * _factorY));
+            ModGB.Location = new Point((int)(7 * _factorX), (int)(120 * _factorY));
+            tabControl1.Height = (int)(460*_factorY);
+            this.Height = (int)(530*_factorY);
 
             InstrumentPannel.Parent = ToleranceGB;
-            InstrumentPannel.Location = new Point(167, 10);
+            InstrumentPannel.Location = new Point((int)(167 * _factorX), (int)(10 * _factorY));
             InstrumentGB.Visible = false;
             ToleranceGB.Text = string.Empty;
 
@@ -2125,7 +2137,7 @@ namespace BumberDash
                     _preferredSave.Add(AppliedModDGV.Rows[x].Cells[0].Value.ToString());
                     AppliedModDGV.Rows[x].Cells[2].Value = "Dynamic";
                     SoftMessageLabel.Text = "Some modifications had to be converted to \"Dynamic\"";
-                    SoftMessageLabel.Location = new Point(50, 5);
+                    SoftMessageLabel.Location = new Point((int)(50 * _factorX), (int)(5 * _factorY));
                     SoftMessageFadeTimer.Enabled = true;
                 }
             }
@@ -2133,33 +2145,33 @@ namespace BumberDash
             //box size and position adjustments
 
             AdjustPrecursorMassLabel.Text = "Adjust Precursor Mass:";
-            AdjustPrecursorMassLabel.Location = new Point(11, 6);
+            AdjustPrecursorMassLabel.Location = new Point((int)(11 * _factorX), (int)(6 * _factorY));
             DTNewOptionsPanel.Parent = MiscGB;
-            DTNewOptionsPanel.Location = new Point(5, 63);
+            DTNewOptionsPanel.Location = new Point((int)(5 * _factorX), (int)(63 * _factorY));
 
-            ChargeGB.Location = new Point(282, 6);
-            SequenceGB.Location = new Point(282, 86);
-            ScoringGB.Location = new Point(5, 81);
-            ScoringGB.Width = 267;
-            ScoringGB.Height = 68;
-            InstrumentGB.Height = 117;
-            SubsetGB.Location = new Point(5, 154);
-            SubsetGB.Width = 267;
-            SubsetGB.Height = 127;
-            MiscGB.Location= new Point(282,180);
-            MiscGB.Width = 242;
-            MiscGB.Height = 160;
-            ToleranceGB.Width = 514;
-            ToleranceGB.Height = 46;
-            ToleranceGB.Location = new Point(7, 129);
-            PrecursorPannel.Location = new Point(7, 10);
-            FragmentPannel.Location = new Point(262, 10);
-            ModGB.Location = new Point(7, 181);
-            tabControl1.Height = 525;
-            this.Height = 595;
+            ChargeGB.Location = new Point((int)(282 * _factorX), (int)(6 * _factorY));
+            SequenceGB.Location = new Point((int)(282 * _factorX), (int)(86 * _factorY));
+            ScoringGB.Location = new Point((int)(5 * _factorX), (int)(81 * _factorY));
+            ScoringGB.Width = (int)(267*_factorX) ;
+            ScoringGB.Height = (int)(68*_factorY);
+            InstrumentGB.Height = (int)(117*_factorY);
+            SubsetGB.Location = new Point((int)(5 * _factorX), (int)(154 * _factorY));
+            SubsetGB.Width = (int)(267* _factorX);
+            SubsetGB.Height = (int)(127*_factorY);
+            MiscGB.Location= new Point((int)(282 * _factorX), (int)(180 * _factorY));
+            MiscGB.Width = (int)(242*_factorX);
+            MiscGB.Height = (int)(160*_factorY);
+            ToleranceGB.Width = (int)(514*_factorX);
+            ToleranceGB.Height = (int)(46*_factorY);
+            ToleranceGB.Location = new Point((int)(7 * _factorX), (int)(129 * _factorY));
+            PrecursorPannel.Location = new Point((int)(7 * _factorX), (int)(10 * _factorY));
+            FragmentPannel.Location = new Point((int)(262 * _factorX), (int)(10 * _factorY));
+            ModGB.Location = new Point((int)(7 * _factorX), (int)(181 * _factorY));
+            tabControl1.Height = (int)(525*_factorY);
+            this.Height = (int)(595*_factorY);
 
             InstrumentPannel.Parent = InstrumentGB;
-            InstrumentPannel.Location = new Point(39, 30);
+            InstrumentPannel.Location = new Point((int)(39 * _factorX), (int)(30 * _factorY));
             InstrumentGB.Visible = true;
             ToleranceGB.Text = "Tolerance";
 
@@ -2242,7 +2254,7 @@ namespace BumberDash
                 {
                     AppliedModDGV.Rows[x].Cells[2].Value = "PreferredPTM";
                     SoftMessageLabel.Text = "Saved modifications have been restored to \"PreferredPTM\"";
-                    SoftMessageLabel.Location = new Point(25, 5);
+                    SoftMessageLabel.Location = new Point((int)(25 * _factorX), (int)(5 * _factorY));
                     SoftMessageFadeTimer.Enabled = true;
                     ExplainUnknownMassShiftsAsBox.Text = "PreferredPTMs";
                 }
@@ -2256,32 +2268,32 @@ namespace BumberDash
             AdjustPrecursorMassLabel.Text = "Adjust for C13 errors:";
             AdjustPrecursorMassLabel.Location = new Point(21, 6);
             DTNewOptionsPanel.Parent = MiscGB;
-            DTNewOptionsPanel.Location = new Point(5, 63);
+            DTNewOptionsPanel.Location = new Point((int)(5 * _factorX), (int)(63 * _factorY));
 
-            ChargeGB.Location = new Point(282, 6);
-            SubsetGB.Location = new Point(282, 86);
-            SubsetGB.Width = 242;
-            SubsetGB.Height = 127;
-            ScoringGB.Location = new Point(5, 81);
-            ScoringGB.Width = 267;
-            ScoringGB.Height = 70;
-            InstrumentGB.Height = 117;
-            SequenceGB.Location = new Point(281, 216);
-            MiscGB.Location = new Point(281, 310);
-            MiscGB.Height = 160;
-            MiscGB.Width = 241;
-            ToleranceGB.Height = 76;
-            ToleranceGB.Width = 514;
-            ToleranceGB.Location = new Point(8, 130);
-            PrecursorPannel.Location = new Point(7, 11);
-            FragmentPannel.Location = new Point(262, 10);
-            TagReconTolerancePanel.Location = new Point(3, 37);
-            ModGB.Location = new Point(8, 212);
-            tabControl1.Height = 565;
-            this.Height = 635;
+            ChargeGB.Location = new Point((int)(282 * _factorX), (int)(6 * _factorY));
+            SubsetGB.Location = new Point((int)(282 * _factorX), (int)(86 * _factorY));
+            SubsetGB.Width = (int)(242*_factorX);
+            SubsetGB.Height = (int)(127*_factorY);
+            ScoringGB.Location = new Point((int)(5 * _factorX), (int)(81 * _factorY));
+            ScoringGB.Width = (int)(267*_factorX);
+            ScoringGB.Height = (int)(70*_factorY);
+            InstrumentGB.Height = (int)(117*_factorY);
+            SequenceGB.Location = new Point((int)(281 * _factorX), (int)(216 * _factorY));
+            MiscGB.Location = new Point((int)(281 * _factorX), (int)(310 * _factorY));
+            MiscGB.Height = (int)(160*_factorY);
+            MiscGB.Width = (int)(241*_factorX);
+            ToleranceGB.Height = (int)(76*_factorY);
+            ToleranceGB.Width = (int)(514*_factorX);
+            ToleranceGB.Location = new Point((int)(8 * _factorX), (int)(130 * _factorY));
+            PrecursorPannel.Location = new Point((int)(7 * _factorX), (int)(11 * _factorY));
+            FragmentPannel.Location = new Point((int)(262 * _factorX), (int)(10 * _factorY));
+            TagReconTolerancePanel.Location = new Point((int)(3 * _factorX), (int)(37 * _factorY));
+            ModGB.Location = new Point((int)(8 * _factorX), (int)(212 * _factorY));
+            tabControl1.Height = (int)(565*_factorY);
+            this.Height = (int)(635*_factorY);
 
             InstrumentPannel.Parent = InstrumentGB;
-            InstrumentPannel.Location = new Point(39, 30);
+            InstrumentPannel.Location = new Point((int)(39 * _factorX), (int)(30 * _factorY));
             InstrumentGB.Visible = true;
             ToleranceGB.Text = "Tolerance";
 

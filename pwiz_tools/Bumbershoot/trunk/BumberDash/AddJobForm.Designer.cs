@@ -51,6 +51,11 @@
             this.InitialDirectoryButton = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
             this.ConfigGB = new System.Windows.Forms.GroupBox();
+            this.ConfigDatabasePanel = new System.Windows.Forms.Panel();
+            this.MyriConfigBox = new System.Windows.Forms.ComboBox();
+            this.MyriEditButton = new System.Windows.Forms.Button();
+            this.MyriConfigButton = new System.Windows.Forms.Button();
+            this.label13 = new System.Windows.Forms.Label();
             this.ConfigTagPanel = new System.Windows.Forms.Panel();
             this.DTConfigBox = new System.Windows.Forms.ComboBox();
             this.TRConfigBox = new System.Windows.Forms.ComboBox();
@@ -60,16 +65,11 @@
             this.DTEditButton = new System.Windows.Forms.Button();
             this.DTConfigButton = new System.Windows.Forms.Button();
             this.label11 = new System.Windows.Forms.Label();
-            this.ConfigDatabasePanel = new System.Windows.Forms.Panel();
-            this.MyriConfigBox = new System.Windows.Forms.ComboBox();
-            this.MyriEditButton = new System.Windows.Forms.Button();
-            this.MyriConfigButton = new System.Windows.Forms.Button();
-            this.label13 = new System.Windows.Forms.Label();
             this.FolderPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.CPUsBox)).BeginInit();
             this.ConfigGB.SuspendLayout();
-            this.ConfigTagPanel.SuspendLayout();
             this.ConfigDatabasePanel.SuspendLayout();
+            this.ConfigTagPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // FolderPanel
@@ -139,16 +139,16 @@
             // 
             // NameBox
             // 
-            this.NameBox.Location = new System.Drawing.Point(90, 103);
+            this.NameBox.Location = new System.Drawing.Point(28, 103);
             this.NameBox.Name = "NameBox";
-            this.NameBox.Size = new System.Drawing.Size(245, 20);
+            this.NameBox.Size = new System.Drawing.Size(300, 20);
             this.NameBox.TabIndex = 28;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(187, 82);
+            this.label1.Location = new System.Drawing.Point(25, 82);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(50, 18);
             this.label1.TabIndex = 27;
@@ -157,9 +157,9 @@
             // DatabaseLocBox
             // 
             this.DatabaseLocBox.FormattingEnabled = true;
-            this.DatabaseLocBox.Location = new System.Drawing.Point(56, 235);
+            this.DatabaseLocBox.Location = new System.Drawing.Point(28, 235);
             this.DatabaseLocBox.Name = "DatabaseLocBox";
-            this.DatabaseLocBox.Size = new System.Drawing.Size(245, 21);
+            this.DatabaseLocBox.Size = new System.Drawing.Size(300, 21);
             this.DatabaseLocBox.TabIndex = 25;
             // 
             // TagRadio
@@ -178,9 +178,9 @@
             // OutputDirectoryBox
             // 
             this.OutputDirectoryBox.FormattingEnabled = true;
-            this.OutputDirectoryBox.Location = new System.Drawing.Point(56, 191);
+            this.OutputDirectoryBox.Location = new System.Drawing.Point(28, 191);
             this.OutputDirectoryBox.Name = "OutputDirectoryBox";
-            this.OutputDirectoryBox.Size = new System.Drawing.Size(245, 21);
+            this.OutputDirectoryBox.Size = new System.Drawing.Size(300, 21);
             this.OutputDirectoryBox.TabIndex = 24;
             this.OutputDirectoryBox.TextChanged += new System.EventHandler(this.OutputDirectoryBox_TextChanged);
             // 
@@ -200,9 +200,9 @@
             // InputFilesBox
             // 
             this.InputFilesBox.FormattingEnabled = true;
-            this.InputFilesBox.Location = new System.Drawing.Point(56, 147);
+            this.InputFilesBox.Location = new System.Drawing.Point(28, 147);
             this.InputFilesBox.Name = "InputFilesBox";
-            this.InputFilesBox.Size = new System.Drawing.Size(245, 21);
+            this.InputFilesBox.Size = new System.Drawing.Size(300, 21);
             this.InputFilesBox.TabIndex = 23;
             // 
             // label2
@@ -217,7 +217,7 @@
             // 
             // DataFilesButton
             // 
-            this.DataFilesButton.Location = new System.Drawing.Point(307, 146);
+            this.DataFilesButton.Location = new System.Drawing.Point(338, 146);
             this.DataFilesButton.Name = "DataFilesButton";
             this.DataFilesButton.Size = new System.Drawing.Size(55, 21);
             this.DataFilesButton.TabIndex = 7;
@@ -251,7 +251,7 @@
             // 
             this.label7.AutoSize = true;
             this.label7.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label7.Location = new System.Drawing.Point(173, 126);
+            this.label7.Location = new System.Drawing.Point(25, 126);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(79, 18);
             this.label7.TabIndex = 5;
@@ -259,7 +259,7 @@
             // 
             // DatabaseLocButton
             // 
-            this.DatabaseLocButton.Location = new System.Drawing.Point(307, 234);
+            this.DatabaseLocButton.Location = new System.Drawing.Point(338, 234);
             this.DatabaseLocButton.Name = "DatabaseLocButton";
             this.DatabaseLocButton.Size = new System.Drawing.Size(55, 21);
             this.DatabaseLocButton.TabIndex = 8;
@@ -271,7 +271,7 @@
             // 
             this.label5.AutoSize = true;
             this.label5.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label5.Location = new System.Drawing.Point(115, 214);
+            this.label5.Location = new System.Drawing.Point(25, 215);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(195, 18);
             this.label5.TabIndex = 6;
@@ -279,7 +279,7 @@
             // 
             // InitialDirectoryButton
             // 
-            this.InitialDirectoryButton.Location = new System.Drawing.Point(307, 190);
+            this.InitialDirectoryButton.Location = new System.Drawing.Point(338, 190);
             this.InitialDirectoryButton.Name = "InitialDirectoryButton";
             this.InitialDirectoryButton.Size = new System.Drawing.Size(55, 21);
             this.InitialDirectoryButton.TabIndex = 4;
@@ -291,7 +291,7 @@
             // 
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label4.Location = new System.Drawing.Point(151, 170);
+            this.label4.Location = new System.Drawing.Point(25, 171);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(122, 18);
             this.label4.TabIndex = 2;
@@ -308,6 +308,57 @@
             this.ConfigGB.TabStop = false;
             this.ConfigGB.Text = "Configuration";
             this.ConfigGB.Visible = false;
+            // 
+            // ConfigDatabasePanel
+            // 
+            this.ConfigDatabasePanel.Controls.Add(this.MyriConfigBox);
+            this.ConfigDatabasePanel.Controls.Add(this.MyriEditButton);
+            this.ConfigDatabasePanel.Controls.Add(this.MyriConfigButton);
+            this.ConfigDatabasePanel.Controls.Add(this.label13);
+            this.ConfigDatabasePanel.Location = new System.Drawing.Point(10, 14);
+            this.ConfigDatabasePanel.Name = "ConfigDatabasePanel";
+            this.ConfigDatabasePanel.Size = new System.Drawing.Size(379, 61);
+            this.ConfigDatabasePanel.TabIndex = 17;
+            this.ConfigDatabasePanel.Visible = false;
+            // 
+            // MyriConfigBox
+            // 
+            this.MyriConfigBox.FormattingEnabled = true;
+            this.MyriConfigBox.Location = new System.Drawing.Point(6, 26);
+            this.MyriConfigBox.Name = "MyriConfigBox";
+            this.MyriConfigBox.Size = new System.Drawing.Size(245, 21);
+            this.MyriConfigBox.TabIndex = 26;
+            // 
+            // MyriEditButton
+            // 
+            this.MyriEditButton.Location = new System.Drawing.Point(318, 25);
+            this.MyriEditButton.Name = "MyriEditButton";
+            this.MyriEditButton.Size = new System.Drawing.Size(55, 21);
+            this.MyriEditButton.TabIndex = 16;
+            this.MyriEditButton.Text = "Edit";
+            this.MyriEditButton.UseVisualStyleBackColor = true;
+            this.MyriEditButton.Visible = false;
+            this.MyriEditButton.Click += new System.EventHandler(this.MyriEditButton_Click);
+            // 
+            // MyriConfigButton
+            // 
+            this.MyriConfigButton.Location = new System.Drawing.Point(257, 25);
+            this.MyriConfigButton.Name = "MyriConfigButton";
+            this.MyriConfigButton.Size = new System.Drawing.Size(55, 21);
+            this.MyriConfigButton.TabIndex = 15;
+            this.MyriConfigButton.Text = "Browse";
+            this.MyriConfigButton.UseVisualStyleBackColor = true;
+            this.MyriConfigButton.Click += new System.EventHandler(this.MyriConfigButton_Click);
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label13.Location = new System.Drawing.Point(3, 5);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(129, 18);
+            this.label13.TabIndex = 13;
+            this.label13.Text = "MyriMatch Config:";
             // 
             // ConfigTagPanel
             // 
@@ -366,7 +417,7 @@
             // 
             this.label12.AutoSize = true;
             this.label12.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label12.Location = new System.Drawing.Point(129, 44);
+            this.label12.Location = new System.Drawing.Point(3, 44);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(121, 18);
             this.label12.TabIndex = 13;
@@ -397,62 +448,11 @@
             // 
             this.label11.AutoSize = true;
             this.label11.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label11.Location = new System.Drawing.Point(131, 0);
+            this.label11.Location = new System.Drawing.Point(3, 0);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(117, 18);
             this.label11.TabIndex = 9;
             this.label11.Text = "DirecTag Config:";
-            // 
-            // ConfigDatabasePanel
-            // 
-            this.ConfigDatabasePanel.Controls.Add(this.MyriConfigBox);
-            this.ConfigDatabasePanel.Controls.Add(this.MyriEditButton);
-            this.ConfigDatabasePanel.Controls.Add(this.MyriConfigButton);
-            this.ConfigDatabasePanel.Controls.Add(this.label13);
-            this.ConfigDatabasePanel.Location = new System.Drawing.Point(10, 14);
-            this.ConfigDatabasePanel.Name = "ConfigDatabasePanel";
-            this.ConfigDatabasePanel.Size = new System.Drawing.Size(379, 61);
-            this.ConfigDatabasePanel.TabIndex = 17;
-            this.ConfigDatabasePanel.Visible = false;
-            // 
-            // MyriConfigBox
-            // 
-            this.MyriConfigBox.FormattingEnabled = true;
-            this.MyriConfigBox.Location = new System.Drawing.Point(6, 26);
-            this.MyriConfigBox.Name = "MyriConfigBox";
-            this.MyriConfigBox.Size = new System.Drawing.Size(245, 21);
-            this.MyriConfigBox.TabIndex = 26;
-            // 
-            // MyriEditButton
-            // 
-            this.MyriEditButton.Location = new System.Drawing.Point(318, 25);
-            this.MyriEditButton.Name = "MyriEditButton";
-            this.MyriEditButton.Size = new System.Drawing.Size(55, 21);
-            this.MyriEditButton.TabIndex = 16;
-            this.MyriEditButton.Text = "Edit";
-            this.MyriEditButton.UseVisualStyleBackColor = true;
-            this.MyriEditButton.Visible = false;
-            this.MyriEditButton.Click += new System.EventHandler(this.MyriEditButton_Click);
-            // 
-            // MyriConfigButton
-            // 
-            this.MyriConfigButton.Location = new System.Drawing.Point(257, 25);
-            this.MyriConfigButton.Name = "MyriConfigButton";
-            this.MyriConfigButton.Size = new System.Drawing.Size(55, 21);
-            this.MyriConfigButton.TabIndex = 15;
-            this.MyriConfigButton.Text = "Browse";
-            this.MyriConfigButton.UseVisualStyleBackColor = true;
-            this.MyriConfigButton.Click += new System.EventHandler(this.MyriConfigButton_Click);
-            // 
-            // label13
-            // 
-            this.label13.AutoSize = true;
-            this.label13.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label13.Location = new System.Drawing.Point(125, 5);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(129, 18);
-            this.label13.TabIndex = 13;
-            this.label13.Text = "MyriMatch Config:";
             // 
             // AddJobForm
             // 
@@ -469,10 +469,10 @@
             this.FolderPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.CPUsBox)).EndInit();
             this.ConfigGB.ResumeLayout(false);
-            this.ConfigTagPanel.ResumeLayout(false);
-            this.ConfigTagPanel.PerformLayout();
             this.ConfigDatabasePanel.ResumeLayout(false);
             this.ConfigDatabasePanel.PerformLayout();
+            this.ConfigTagPanel.ResumeLayout(false);
+            this.ConfigTagPanel.PerformLayout();
             this.ResumeLayout(false);
 
         }

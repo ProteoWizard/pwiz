@@ -159,7 +159,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="BumberIcon.ico" />
     <Content Include="DirecTag.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

@@ -20,3 +20,14 @@ C:\Dev\BumberDash\DataAccess\bin\Release\DataMapping.pdb
 C:\Dev\BumberDash\DataAccess\obj\Release\ResolveAssemblyReference.cache
 C:\Dev\BumberDash\DataAccess\obj\Release\DataAccess.dll
 C:\Dev\BumberDash\DataAccess\obj\Release\DataAccess.pdb
+C:\Dev\bumberdash\trunk\DataAccess\bin\Release\DataAccess.dll
+C:\Dev\bumberdash\trunk\DataAccess\bin\Release\DataAccess.pdb
+C:\Dev\bumberdash\trunk\DataAccess\bin\Release\DataMapping.dll
+C:\Dev\bumberdash\trunk\DataAccess\bin\Release\Iesi.Collections.dll
+C:\Dev\bumberdash\trunk\DataAccess\bin\Release\NHibernate.dll
+C:\Dev\bumberdash\trunk\DataAccess\bin\Release\log4net.dll
+C:\Dev\bumberdash\trunk\DataAccess\bin\Release\Antlr3.Runtime.dll
+C:\Dev\bumberdash\trunk\DataAccess\bin\Release\DataMapping.pdb
+C:\Dev\bumberdash\trunk\DataAccess\obj\Release\ResolveAssemblyReference.cache
+C:\Dev\bumberdash\trunk\DataAccess\obj\Release\DataAccess.dll
+C:\Dev\bumberdash\trunk\DataAccess\obj\Release\DataAccess.pdb
