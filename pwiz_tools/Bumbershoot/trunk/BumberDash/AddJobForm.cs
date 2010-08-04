@@ -202,22 +202,6 @@ namespace BumberDash
             MainList.CancelEdit();
         }
 
-        private void OutputDirectoryBox_TextChanged(object sender, EventArgs e)
-        {
-            if (!string.IsNullOrEmpty(OutputDirectoryBox.Text) && Directory.Exists(OutputDirectoryBox.Text))
-            {
-                MyriEditButton.Visible = true;
-                DTEditButton.Visible = true;
-                TREditButton.Visible = true;
-            }
-            else
-            {
-                MyriEditButton.Visible = false;
-                DTEditButton.Visible = false;
-                TREditButton.Visible = false;
-            }
-        }
-
         private void CPUsBox_ValueChanged(object sender, EventArgs e)
         {
             if (CPUsBox.Value == 0)

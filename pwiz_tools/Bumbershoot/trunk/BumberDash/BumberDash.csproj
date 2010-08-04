@@ -169,6 +169,7 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\BumberIcon.ico" />
+    <None Include="Resources\SearchFolder.gif" />
     <Content Include="TagRecon.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

@@ -66,5 +66,12 @@ namespace BumberDash.Properties {
                 return ((System.Drawing.Icon)(obj));
             }
         }
+        
+        internal static System.Drawing.Bitmap SearchFolder {
+            get {
+                object obj = ResourceManager.GetObject("SearchFolder", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
     }
 }

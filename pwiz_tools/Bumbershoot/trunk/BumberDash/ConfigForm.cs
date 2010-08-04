@@ -2053,8 +2053,8 @@ namespace BumberDash
             FragmentPannel.Location = new Point((int)(262 * _factorX), (int)(45 * _factorY));
             TagReconTolerancePanel.Location = new Point((int)(3 * _factorX), (int)(72 * _factorY));
             ModGB.Location = new Point((int)(7 * _factorX), (int)(120 * _factorY));
-            tabControl1.Height = (int)(460*_factorY);
-            this.Height = (int)(530*_factorY);
+            tabControl1.Height = (int)(455*_factorY);
+            this.Height = (int)(525*_factorY);
 
             InstrumentPannel.Parent = ToleranceGB;
             InstrumentPannel.Location = new Point((int)(167 * _factorX), (int)(10 * _factorY));
@@ -2164,11 +2164,11 @@ namespace BumberDash
             ToleranceGB.Width = (int)(514*_factorX);
             ToleranceGB.Height = (int)(46*_factorY);
             ToleranceGB.Location = new Point((int)(7 * _factorX), (int)(129 * _factorY));
-            PrecursorPannel.Location = new Point((int)(7 * _factorX), (int)(10 * _factorY));
-            FragmentPannel.Location = new Point((int)(262 * _factorX), (int)(10 * _factorY));
+            PrecursorPannel.Location = new Point((int)(7 * _factorX), (int)(14 * _factorY));
+            FragmentPannel.Location = new Point((int)(262 * _factorX), (int)(14 * _factorY));
             ModGB.Location = new Point((int)(7 * _factorX), (int)(181 * _factorY));
-            tabControl1.Height = (int)(525*_factorY);
-            this.Height = (int)(595*_factorY);
+            tabControl1.Height = (int)(515*_factorY);
+            this.Height = (int)(585*_factorY);
 
             InstrumentPannel.Parent = InstrumentGB;
             InstrumentPannel.Location = new Point((int)(39 * _factorX), (int)(30 * _factorY));
@@ -2266,7 +2266,7 @@ namespace BumberDash
             CTerminusMzToleranceUnitsBox.SelectedIndex = 0;
 
             AdjustPrecursorMassLabel.Text = "Adjust for C13 errors:";
-            AdjustPrecursorMassLabel.Location = new Point(21, 6);
+            AdjustPrecursorMassLabel.Location = new Point((int)(21 * _factorX), (int)(6 * _factorY));
             DTNewOptionsPanel.Parent = MiscGB;
             DTNewOptionsPanel.Location = new Point((int)(5 * _factorX), (int)(63 * _factorY));
 
@@ -2285,12 +2285,12 @@ namespace BumberDash
             ToleranceGB.Height = (int)(76*_factorY);
             ToleranceGB.Width = (int)(514*_factorX);
             ToleranceGB.Location = new Point((int)(8 * _factorX), (int)(130 * _factorY));
-            PrecursorPannel.Location = new Point((int)(7 * _factorX), (int)(11 * _factorY));
-            FragmentPannel.Location = new Point((int)(262 * _factorX), (int)(10 * _factorY));
-            TagReconTolerancePanel.Location = new Point((int)(3 * _factorX), (int)(37 * _factorY));
+            PrecursorPannel.Location = new Point((int)(7 * _factorX), (int)(14 * _factorY));
+            FragmentPannel.Location = new Point((int)(262 * _factorX), (int)(14 * _factorY));
+            TagReconTolerancePanel.Location = new Point((int)(3 * _factorX), (int)(41 * _factorY));
             ModGB.Location = new Point((int)(8 * _factorX), (int)(212 * _factorY));
-            tabControl1.Height = (int)(565*_factorY);
-            this.Height = (int)(635*_factorY);
+            tabControl1.Height = (int)(550*_factorY);
+            this.Height = (int)(620*_factorY);
 
             InstrumentPannel.Parent = InstrumentGB;
             InstrumentPannel.Location = new Point((int)(39 * _factorX), (int)(30 * _factorY));
@@ -3950,7 +3950,8 @@ namespace BumberDash
 
             SaveFileDialog sfd = new SaveFileDialog();
             sfd.RestoreDirectory = true;
-            sfd.InitialDirectory = _outputDirectory;
+            if (Directory.Exists(_outputDirectory))
+                sfd.InitialDirectory = _outputDirectory;
             sfd.CheckPathExists = true;
             sfd.DefaultExt = ".cfg";
             sfd.Filter = "Config File(.cfg)|*.cfg";

@@ -310,7 +310,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.MaxTagCountBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.TagLengthBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.MaxPeakCountBox)).BeginInit();
-            this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // tabControl1
@@ -332,7 +331,7 @@
             this.Gentab.Controls.Add(this.ToleranceGB);
             this.Gentab.Location = new System.Drawing.Point(4, 22);
             this.Gentab.Name = "Gentab";
-            this.Gentab.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+            this.Gentab.Padding = new System.Windows.Forms.Padding(3);
             this.Gentab.Size = new System.Drawing.Size(528, 539);
             this.Gentab.TabIndex = 0;
             this.Gentab.Text = "General";
@@ -343,9 +342,9 @@
             this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.Controls.Add(this.SoftMessageLabel);
-            this.panel1.Location = new System.Drawing.Point(0, 511);
+            this.panel1.Location = new System.Drawing.Point(0, 514);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(528, 28);
+            this.panel1.Size = new System.Drawing.Size(528, 25);
             this.panel1.TabIndex = 4;
             // 
             // SoftMessageLabel
@@ -354,7 +353,7 @@
             this.SoftMessageLabel.AutoSize = true;
             this.SoftMessageLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.SoftMessageLabel.ForeColor = System.Drawing.Color.Red;
-            this.SoftMessageLabel.Location = new System.Drawing.Point(50, 5);
+            this.SoftMessageLabel.Location = new System.Drawing.Point(50, 2);
             this.SoftMessageLabel.Name = "SoftMessageLabel";
             this.SoftMessageLabel.Size = new System.Drawing.Size(439, 20);
             this.SoftMessageLabel.TabIndex = 82;
@@ -973,12 +972,11 @@
             this.FragmentPannel.Controls.Add(this.FragmentMzToleranceLabel);
             this.FragmentPannel.Location = new System.Drawing.Point(262, 10);
             this.FragmentPannel.Name = "FragmentPannel";
-            this.FragmentPannel.Size = new System.Drawing.Size(246, 30);
+            this.FragmentPannel.Size = new System.Drawing.Size(246, 26);
             this.FragmentPannel.TabIndex = 47;
             // 
             // FragmentMzToleranceBox
             // 
-            this.FragmentMzToleranceBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.FragmentMzToleranceBox.Enabled = false;
             this.FragmentMzToleranceBox.Location = new System.Drawing.Point(127, 3);
             this.FragmentMzToleranceBox.Name = "FragmentMzToleranceBox";
@@ -991,7 +989,6 @@
             // 
             // FragmentMzToleranceUnitsBox
             // 
-            this.FragmentMzToleranceUnitsBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.FragmentMzToleranceUnitsBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.FragmentMzToleranceUnitsBox.Enabled = false;
             this.FragmentMzToleranceUnitsBox.FormattingEnabled = true;
@@ -1006,7 +1003,6 @@
             // 
             // FragmentMzToleranceInfo
             // 
-            this.FragmentMzToleranceInfo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.FragmentMzToleranceInfo.AutoSize = true;
             this.FragmentMzToleranceInfo.Cursor = System.Windows.Forms.Cursors.Hand;
             this.FragmentMzToleranceInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -1022,7 +1018,6 @@
             // 
             // FragmentMzToleranceLabel
             // 
-            this.FragmentMzToleranceLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.FragmentMzToleranceLabel.AutoSize = true;
             this.FragmentMzToleranceLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.FragmentMzToleranceLabel.Location = new System.Drawing.Point(-1, 7);
@@ -1043,7 +1038,7 @@
             this.TagReconTolerancePanel.Controls.Add(this.NTerminusMzToleranceLabel);
             this.TagReconTolerancePanel.Location = new System.Drawing.Point(3, 37);
             this.TagReconTolerancePanel.Name = "TagReconTolerancePanel";
-            this.TagReconTolerancePanel.Size = new System.Drawing.Size(505, 35);
+            this.TagReconTolerancePanel.Size = new System.Drawing.Size(505, 30);
             this.TagReconTolerancePanel.TabIndex = 15;
             this.TagReconTolerancePanel.Visible = false;
             // 
@@ -1101,7 +1096,7 @@
             this.CTerminusMzToleranceInfo.Cursor = System.Windows.Forms.Cursors.Hand;
             this.CTerminusMzToleranceInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.CTerminusMzToleranceInfo.ForeColor = System.Drawing.Color.MediumBlue;
-            this.CTerminusMzToleranceInfo.Location = new System.Drawing.Point(375, 0);
+            this.CTerminusMzToleranceInfo.Location = new System.Drawing.Point(375, 1);
             this.CTerminusMzToleranceInfo.Name = "CTerminusMzToleranceInfo";
             this.CTerminusMzToleranceInfo.Size = new System.Drawing.Size(13, 13);
             this.CTerminusMzToleranceInfo.TabIndex = 74;
@@ -1127,7 +1122,6 @@
             // 
             // CTerminusMzToleranceLabel
             // 
-            this.CTerminusMzToleranceLabel.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.CTerminusMzToleranceLabel.AutoSize = true;
             this.CTerminusMzToleranceLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.CTerminusMzToleranceLabel.Location = new System.Drawing.Point(254, 7);
@@ -1138,7 +1132,6 @@
             // 
             // NTerminusMzToleranceLabel
             // 
-            this.NTerminusMzToleranceLabel.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.NTerminusMzToleranceLabel.AutoSize = true;
             this.NTerminusMzToleranceLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 7.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.NTerminusMzToleranceLabel.Location = new System.Drawing.Point(-2, 7);
@@ -1160,7 +1153,7 @@
             this.AdvTab.Controls.Add(this.DirecTagGB);
             this.AdvTab.Location = new System.Drawing.Point(4, 22);
             this.AdvTab.Name = "AdvTab";
-            this.AdvTab.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+            this.AdvTab.Padding = new System.Windows.Forms.Padding(3);
             this.AdvTab.Size = new System.Drawing.Size(528, 539);
             this.AdvTab.TabIndex = 1;
             this.AdvTab.Text = "Advanced";
@@ -2334,11 +2327,11 @@
             // 
             // UnimodXMLBrowse
             // 
+            this.UnimodXMLBrowse.Image = global::BumberDash.Properties.Resources.SearchFolder;
             this.UnimodXMLBrowse.Location = new System.Drawing.Point(234, 52);
             this.UnimodXMLBrowse.Name = "UnimodXMLBrowse";
             this.UnimodXMLBrowse.Size = new System.Drawing.Size(26, 23);
             this.UnimodXMLBrowse.TabIndex = 0;
-            this.UnimodXMLBrowse.Text = "->";
             this.UnimodXMLBrowse.UseVisualStyleBackColor = true;
             this.UnimodXMLBrowse.Click += new System.EventHandler(this.UnimodXMLBrowse_Click);
             // 
@@ -2401,11 +2394,11 @@
             // 
             // BlosumBrowse
             // 
+            this.BlosumBrowse.Image = global::BumberDash.Properties.Resources.SearchFolder;
             this.BlosumBrowse.Location = new System.Drawing.Point(234, 81);
             this.BlosumBrowse.Name = "BlosumBrowse";
             this.BlosumBrowse.Size = new System.Drawing.Size(26, 23);
             this.BlosumBrowse.TabIndex = 1;
-            this.BlosumBrowse.Text = "->";
             this.BlosumBrowse.UseVisualStyleBackColor = true;
             this.BlosumBrowse.Click += new System.EventHandler(this.BlosumBrowse_Click);
             // 
@@ -2921,9 +2914,6 @@
             // menuStrip1
             // 
             this.menuStrip1.BackColor = System.Drawing.SystemColors.Control;
-            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.fileToolStripMenuItem,
-            this.programToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(534, 24);
@@ -3039,11 +3029,11 @@
             // 
             this.SaveAsNewButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.SaveAsNewButton.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.SaveAsNewButton.Location = new System.Drawing.Point(303, 571);
+            this.SaveAsNewButton.Location = new System.Drawing.Point(348, 571);
             this.SaveAsNewButton.Name = "SaveAsNewButton";
-            this.SaveAsNewButton.Size = new System.Drawing.Size(138, 23);
+            this.SaveAsNewButton.Size = new System.Drawing.Size(93, 23);
             this.SaveAsNewButton.TabIndex = 18;
-            this.SaveAsNewButton.Text = "Save in Output Directory";
+            this.SaveAsNewButton.Text = "Save As New";
             this.SaveAsNewButton.UseVisualStyleBackColor = true;
             this.SaveAsNewButton.Click += new System.EventHandler(this.SaveAsNewButton_Click);
             // 
@@ -3051,7 +3041,7 @@
             // 
             this.SaveOverOldButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.SaveOverOldButton.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.SaveOverOldButton.Location = new System.Drawing.Point(204, 571);
+            this.SaveOverOldButton.Location = new System.Drawing.Point(249, 571);
             this.SaveOverOldButton.Name = "SaveOverOldButton";
             this.SaveOverOldButton.Size = new System.Drawing.Size(93, 23);
             this.SaveOverOldButton.TabIndex = 19;
@@ -3158,8 +3148,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.MaxTagCountBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.TagLengthBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.MaxPeakCountBox)).EndInit();
-            this.menuStrip1.ResumeLayout(false);
-            this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
