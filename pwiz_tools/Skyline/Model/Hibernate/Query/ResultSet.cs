@@ -36,6 +36,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             {
                 _columnIndexes.Add(columns[i].ReportColumn, i);
             }
+
             foreach (var row in rows)
             {
                 if (row is Object[])
@@ -51,10 +52,12 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 
         public IList<ColumnInfo> ColumnInfos { get; private set; }
         public int RowCount { get { return _rows.Count;} }
+
         public Object[] GetRow(int index)
         {
             return _rows[index];
         }
+
         public Object GetValue(int rowIndex, int columnIndex)
         {
             Object[] row = _rows[rowIndex];
@@ -64,7 +67,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             }
             return row[columnIndex];
         }
-        public String FormatValue(int rowIndex, int columnIndex)
+
+        public String FormatValue(int rowIndex, int columnIndex, IFormatProvider formatProvider)
         {
             Object value = GetValue(rowIndex, columnIndex);
             if (value == null)
@@ -72,12 +76,14 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 return GetNullValueString(columnIndex, "");
             }
             ColumnInfo columnInfo = ColumnInfos[columnIndex];
-            if (columnInfo.Format != null)
+            if (columnInfo.Format != null || value is double || value is float)
             {
                 try
                 {
                     double dblValue = (double)Convert.ChangeType(value, typeof(Double));
-                    return dblValue.ToString(columnInfo.Format);
+                    return (columnInfo.Format != null ?
+                        dblValue.ToString(columnInfo.Format, formatProvider) :
+                        dblValue.ToString(formatProvider));
                 }
 // ReSharper disable EmptyGeneralCatchClause
                 catch
@@ -88,14 +94,17 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             }
             return value.ToString();
         }
+
         public Object GetValue(int rowIndex, ReportColumn identifier)
         {
             return GetValue(rowIndex, _columnIndexes[identifier]);
         }
+
         public String GetNullValueString(int columnIndex, String defaultValue)
         {
             return (ColumnInfos[columnIndex].IsNumeric ? "#N/A" : defaultValue);
         }
+
         public ColumnInfo GetColumnInfo(ReportColumn identifier)
         {
             return ColumnInfos[_columnIndexes[identifier]];
@@ -109,11 +118,13 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         public String Caption { get; set; }
         public Type ColumnType { get; set; }
         private bool _isHidden;
+
         public bool IsHidden
         {
             get { return _isHidden || Caption == null; }
             set { _isHidden = value; }
         }
+
         public bool IsNumeric
         {
             get

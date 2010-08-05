@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -43,6 +44,8 @@ namespace pwiz.Skyline.FileUI
 
             InitializeComponent();
 
+            CultureInfo = CultureInfo.CurrentCulture;
+
             LoadList();
 
             if (listboxReports.Items.Count > 0)
@@ -54,6 +57,8 @@ namespace pwiz.Skyline.FileUI
             get { return ListBox.SelectedItem != null ? ListBox.SelectedItem.ToString() : null; }
             set { ListBox.SelectedItem = value; }
         }
+
+        public CultureInfo CultureInfo { get; set; }
 
         private ListBox ListBox { get { return listboxReports; } }
 
@@ -140,7 +145,8 @@ namespace pwiz.Skyline.FileUI
                     break;
                 // CSV
                 default:
-                    separator = ',';
+                    // Use the local culture CSV separator
+                    separator = TextUtil.GetCsvSeparator(CultureInfo);
                     break;
             }
 
@@ -207,7 +213,7 @@ namespace pwiz.Skyline.FileUI
 
                                     if (iColumn > 0)
                                         writer.Write(separator);
-                                    string value = resultSet.FormatValue(iRow, iColumn);
+                                    string value = resultSet.FormatValue(iRow, iColumn, CultureInfo);
                                     writer.WriteDsvField(value, separator);
                                 }
                                 writer.WriteLine();

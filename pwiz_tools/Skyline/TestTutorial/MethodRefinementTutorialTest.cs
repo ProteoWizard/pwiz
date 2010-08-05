@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.Globalization;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.EditUI;
@@ -37,6 +38,10 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestMethodRefinementTutorial()
         {
+            // TODO: Remove this when MSFileReader is fixed
+            Assert.AreEqual(".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator,
+                "MSFileReader requires period decimal separator.  Check control panel language settings");
+
             // Need to deal with this issue.
             TestFilesZipPaths = new[] { @"https://brendanx-uw1.gs.washington.edu/tutorials/MethodRefineSupplement.zip",
                     @"https://brendanx-uw1.gs.washington.edu/tutorials/MethodRefine.zip" 

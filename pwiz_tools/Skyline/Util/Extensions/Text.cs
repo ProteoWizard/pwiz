@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 
@@ -30,6 +31,27 @@ namespace pwiz.Skyline.Util.Extensions
         public const char SEPARATOR_CSV = ',';
         public const char SEPARATOR_CSV_INTL = ';'; // International CSV for comma-decimal locales
         public const char SEPARATOR_TSV = '\t';
+
+        /// <summary>
+        /// The CSV separator character for the current culture.  Like Excel, a comma
+        /// is used unless the decimal separator is a comma.  This allows exported CSV
+        /// files to be imported directly into Excel on the same system.
+        /// </summary>
+        public static char CsvSeparator
+        {
+            get { return GetCsvSeparator(CultureInfo.CurrentCulture); }
+        }
+
+        /// <summary>
+        /// The CSV separator character for a given culture.  Like Excel, a comma
+        /// is used unless the decimal separator is a comma.  This allows exported CSV
+        /// files to be imported directly into Excel on the same system.
+        /// <param name="cultureInfo">The culture for which the separator is requested.</param>
+        /// </summary>
+        public static char GetCsvSeparator(CultureInfo cultureInfo)
+        {
+            return (Equals(",", cultureInfo.NumberFormat.NumberDecimalSeparator) ? ';' : ',');
+        }
 
         /// <summary>
         /// Writes a text string as a value in a delimiter-separated value file, ensuring

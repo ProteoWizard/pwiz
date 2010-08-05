@@ -20,6 +20,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -381,7 +382,7 @@ namespace pwiz.Skyline.Model.Lib
                             // CONSIDER: Add modifications on the same residue?
                             if (iPos > iLast)
                                 sb.Append(Encoding.Default.GetString(specSequence, iLast, iPos - iLast));
-                            sb.Append(string.Format("[{0}{1:F01}]", (mod > 0 ? "+" : ""), mod));
+                            sb.Append(SequenceMassCalc.GetModDiffDescription(mod));
                             iLast = iPos;
                         }                        
                         sb.Append(Encoding.Default.GetString(specSequence, iLast, seqLength - iLast));

@@ -90,7 +90,12 @@ namespace pwiz.Skyline.Model
         public double OptimizeStepSize { get; set; }
         public int OptimizeStepCount { get; set; }
 
-        // TODO: Persist transition lists with correct number format
+        // CONSIDER: Should transition lists ever be exported with local culture
+        //           CSV format?  This would allow them to be opened directly into
+        //           Excel on the same system, but multiple vendors do not support
+        //           international settings on their instrument control computers,
+        //           which means the resulting CSVs probably wouldn't import correctly
+        //           into methods.
         private CultureInfo _cultureInfo;
         public CultureInfo CultureInfo
         {
@@ -98,8 +103,7 @@ namespace pwiz.Skyline.Model
             set
             {
                 _cultureInfo = value;
-                FieldSeparator = Equals(",", _cultureInfo.NumberFormat.NumberDecimalSeparator) ?
-                    ';' : ',';
+                FieldSeparator = TextUtil.GetCsvSeparator(_cultureInfo);
             }
         }
         public char FieldSeparator { get; private set; }
@@ -948,11 +952,11 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
-            writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz));
+            writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
             writer.Write(FieldSeparator);
-            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step));
+            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo));
             writer.Write(FieldSeparator);
-            writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1));
+            writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));
             writer.Write(FieldSeparator);
             if (MethodType == ExportMethodType.Scheduled)
             {
@@ -969,9 +973,9 @@ namespace pwiz.Skyline.Model
                 predictedRT = RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT);
                 if (predictedRT.HasValue)
                 {
-                    writer.Write(Math.Max(0, predictedRT.Value - windowRT / 2));    // No negative retention times
+                    writer.Write(Math.Max(0, predictedRT.Value - windowRT / 2).ToString(CultureInfo));    // No negative retention times
                     writer.Write(FieldSeparator);
-                    writer.Write(predictedRT.Value + windowRT / 2);
+                    writer.Write((predictedRT.Value + windowRT / 2).ToString(CultureInfo));
                     writer.Write(FieldSeparator);
                     writer.Write('1');  // Polarity
                     writer.Write(FieldSeparator);                    
@@ -1081,9 +1085,9 @@ namespace pwiz.Skyline.Model
                                                 TransitionDocNode nodeTran,
                                                 int step)
         {
-            writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz));
+            writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
             writer.Write(FieldSeparator);
-            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step));
+            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo));
             writer.Write(FieldSeparator);
             if (MethodType == ExportMethodType.Standard)
                 writer.Write(Math.Round(DwellTime, 2));
@@ -1094,7 +1098,7 @@ namespace pwiz.Skyline.Model
                 double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
                     HasResults, out windowRT);
                 if (predictedRT.HasValue)
-                    writer.Write(RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT));
+                    writer.Write(RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT).Value.ToString(CultureInfo));
             }
             writer.Write(FieldSeparator);
 
@@ -1108,9 +1112,9 @@ namespace pwiz.Skyline.Model
             writer.WriteDsvField(extPeptideId, FieldSeparator);
             writer.Write(FieldSeparator);
 
-            writer.Write(Math.Round(GetDeclusteringPotential(nodePep, nodeTranGroup, nodeTran, step), 1));
+            writer.Write(Math.Round(GetDeclusteringPotential(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));
             writer.Write(FieldSeparator);
-            writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1));
+            writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));
             writer.WriteLine();
         }
     }
@@ -1190,24 +1194,24 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.Write(nodeTranGroup.TransitionGroup.LabelType.IsLight ? "FALSE" : "TRUE");
             writer.Write(FieldSeparator);
-            writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz));
+            writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
             writer.Write(FieldSeparator);
             writer.Write("Unit");
             writer.Write(FieldSeparator);
-            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step));
+            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo));
             writer.Write(FieldSeparator);
             writer.Write("Unit");
             writer.Write(FieldSeparator);
 
             if (MethodType == ExportMethodType.Standard)
             {
-                writer.Write(Math.Round(DwellTime, 2));
+                writer.Write(Math.Round(DwellTime, 2).ToString(CultureInfo));
                 writer.Write(FieldSeparator);                
             }
 
-            writer.Write(Fragmentor);
+            writer.Write(Fragmentor.ToString(CultureInfo));
             writer.Write(FieldSeparator);
-            writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1));
+            writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));
             writer.Write(FieldSeparator);
 
             if (MethodType != ExportMethodType.Standard)
@@ -1219,9 +1223,9 @@ namespace pwiz.Skyline.Model
                     false, out windowRT);
                 if (predictedRT.HasValue)
                 {
-                    writer.Write(RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT));
+                    writer.Write(RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT).Value.ToString(CultureInfo));
                     writer.Write(FieldSeparator);
-                    writer.Write(Math.Round(windowRT, 1));
+                    writer.Write(Math.Round(windowRT, 1).ToString(CultureInfo));
                     writer.Write(FieldSeparator);
                 }
                 else
@@ -1320,13 +1324,13 @@ namespace pwiz.Skyline.Model
                 writer.Write(step);
             }
             writer.Write(FieldSeparator);
-            writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz));
+            writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
             writer.Write(FieldSeparator);
 
             if (MethodType == ExportMethodType.Standard)
             {
                 RTWindow = RunLength;   // Store for later use
-                writer.Write(RunLength / 2);
+                writer.Write((RunLength / 2).ToString(CultureInfo));
             }
             else
             {
@@ -1338,13 +1342,13 @@ namespace pwiz.Skyline.Model
                 if (predictedRT.HasValue)
                 {
                     RTWindow = windowRT;    // Store for later use
-                    writer.Write(RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT));
+                    writer.Write(RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT).Value.ToString(CultureInfo));
                 }
             }
 
             writer.Write(FieldSeparator);
 
-            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step));
+            writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo));
             writer.Write(FieldSeparator);
 
             // Waters only excepts integers for CE and CV

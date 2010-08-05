@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -70,6 +71,16 @@ namespace pwiz.SkylineTest.Results
 
         private const string ZIP_FILE = @"Test\Results\ThermoQuant.zip";
 
+        private static bool CanImportThermoRaw
+        {
+            get { return Equals(".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator); }
+        }
+
+        private static string ExtThermoRaw
+        {
+            get { return CanImportThermoRaw ? ".RAW" : ".mzML"; }
+        }
+
         /// <summary>
         /// Verifies that canceling an import cleans up correctly.
         /// </summary>
@@ -82,12 +93,12 @@ namespace pwiz.SkylineTest.Results
             var docContainer = new ResultsTestDocumentContainer(doc, docPath);
             // Verify mzML and RAW contain same results
             AssertResult.MatchChromatograms(docContainer,
-                                        testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.RAW"),
+                                        testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" + ExtThermoRaw),
                                         testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.mzML"),
                                         0, 0);
             // Verify mzXML and RAW contain same results (some small peaks are different)
             AssertResult.MatchChromatograms(docContainer,
-                                        testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.RAW"),
+                                        testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" + ExtThermoRaw),
                                         testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.mzXML"),
                                         2, 0);
             // Release file handles
@@ -105,7 +116,7 @@ namespace pwiz.SkylineTest.Results
             string docPath;
             SrmDocument doc = InitThermoDocument(testFilesDir, out docPath);
             var docContainer = new ResultsTestDocumentContainer(doc, docPath);
-            string resultsPath = testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.RAW");
+            string resultsPath = testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" + ExtThermoRaw);
             string dirPath = Path.GetDirectoryName(resultsPath);
             // Remove any existing temp and cache files
             foreach (var path in Directory.GetFiles(dirPath))
@@ -163,12 +174,12 @@ namespace pwiz.SkylineTest.Results
                                             new ChromatogramSet("rep03", new[]
                                                                              {
                                                                                  testFilesDir.GetTestPath(
-                                                                                     "Site20_STUDY9P_PHASEII_QC_03.RAW")
+                                                                                     "Site20_STUDY9P_PHASEII_QC_03" + ExtThermoRaw)
                                                                              }),
                                             new ChromatogramSet("rep05", new[]
                                                                              {
                                                                                  testFilesDir.GetTestPath(
-                                                                                     "Site20_STUDY9P_PHASEII_QC_05.RAW")
+                                                                                     "Site20_STUDY9P_PHASEII_QC_05" + ExtThermoRaw)
                                                                              })
                                         };
             var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));

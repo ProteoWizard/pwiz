@@ -19,13 +19,17 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Text;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.V01
 {
     public abstract class XmlMassListExporter
     {
+        protected readonly CultureInfo _cultureInfo = CultureInfo.InvariantCulture;
+
         private readonly XmlSrmDocument _document;
 
         protected XmlMassListExporter(XmlSrmDocument document)
@@ -188,26 +192,27 @@ namespace pwiz.Skyline.Model.V01
                                                 XmlPeptide peptide,
                                                 XmlTransition transition)
         {
-            writer.Write(transition.PrecursorMz);
-            writer.Write(',');
-            writer.Write(transition.ProductMz);
-            writer.Write(',');
-            writer.Write(Math.Round(transition.CollisionEnergy, 1));
-            writer.Write(',');
+            char separator = TextUtil.GetCsvSeparator(_cultureInfo);
+            writer.Write(transition.PrecursorMz.ToString(_cultureInfo));
+            writer.Write(separator);
+            writer.Write(transition.ProductMz.ToString(_cultureInfo));
+            writer.Write(separator);
+            writer.Write(Math.Round(transition.CollisionEnergy, 1).ToString(_cultureInfo));
+            writer.Write(separator);
             if (MethodType == ExportMethodType.Scheduled)
             {
                 Debug.Assert(transition.StartRT.HasValue && transition.StartRT.HasValue);
-                writer.Write(transition.StartRT.Value);
-                writer.Write(',');
-                writer.Write(transition.StopRT.Value);
-                writer.Write(',');
+                writer.Write(transition.StartRT.Value.ToString(_cultureInfo));
+                writer.Write(separator);
+                writer.Write(transition.StopRT.Value.ToString(_cultureInfo));
+                writer.Write(separator);
                 writer.Write('1');
-                writer.Write(',');
+                writer.Write(separator);
             }
             writer.Write(peptide.Sequence);
-            writer.Write(',');
+            writer.Write(separator);
             writer.Write(sequence.Name);
-            writer.Write('\n');
+            writer.WriteLine();
         }
     }
 
@@ -225,18 +230,19 @@ namespace pwiz.Skyline.Model.V01
                                                 XmlPeptide peptide,
                                                 XmlTransition transition)
         {
-            writer.Write(transition.PrecursorMz);
-            writer.Write(',');
-            writer.Write(transition.ProductMz);
-            writer.Write(',');
+            char separator = TextUtil.GetCsvSeparator(_cultureInfo);
+            writer.Write(transition.PrecursorMz.ToString(_cultureInfo));
+            writer.Write(separator);
+            writer.Write(transition.ProductMz.ToString(_cultureInfo));
+            writer.Write(separator);
             if (MethodType == ExportMethodType.Standard)
-                writer.Write(Math.Round(DwellTime, 2));
+                writer.Write(Math.Round(DwellTime, 2).ToString(_cultureInfo));
             else
             {
                 Debug.Assert(peptide.PredictedRetentionTime.HasValue);
-                writer.Write(peptide.PredictedRetentionTime.Value);
+                writer.Write(peptide.PredictedRetentionTime.Value.ToString(_cultureInfo));
             }
-            writer.Write(',');
+            writer.Write(separator);
 
             // Write special ID for ABI software
             writer.Write(sequence.Name);
@@ -250,18 +256,18 @@ namespace pwiz.Skyline.Model.V01
             writer.Write('.');
             // OLD_DO: Support for heavy
             writer.Write("light");
-            writer.Write(',');
+            writer.Write(separator);
 
-            writer.Write(Math.Round(transition.DeclusteringPotential ?? 0, 1));
+            writer.Write(Math.Round(transition.DeclusteringPotential ?? 0, 1).ToString(_cultureInfo));
 //            Removed in v0.2 for test compatibility
-//            writer.Write(',');
+//            writer.Write(separator);
             // EP : not used by Paulovich Lab
-            writer.Write(',');
-            writer.Write(Math.Round(transition.CollisionEnergy, 1));
+            writer.Write(separator);
+            writer.Write(Math.Round(transition.CollisionEnergy, 1).ToString(_cultureInfo));
 //            Removed in v0.2 for test compatibility
-//            writer.Write(',');
+//            writer.Write(separator);
             // CXP : not used by Paulovich Lab
-            writer.Write('\n');
+            writer.WriteLine();
         }
     }
 }

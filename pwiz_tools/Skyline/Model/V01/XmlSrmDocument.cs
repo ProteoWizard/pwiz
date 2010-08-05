@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Xml.Serialization;
 using pwiz.Skyline.Model.DocSettings;
@@ -249,7 +250,7 @@ namespace pwiz.Skyline.Model.V01
             get { return XmlUtil.ToAttr(PredictedRetentionTime); }
             set
             {
-                PredictedRetentionTime = double.Parse(value);
+                PredictedRetentionTime = double.Parse(value, CultureInfo.InvariantCulture);
 
                 // Predicted retention time of 0 is not valid, and
                 // is assigned null for backward compatibility.
@@ -346,7 +347,7 @@ namespace pwiz.Skyline.Model.V01
         public string DeclusteringPotentialAttr
         {
             get { return XmlUtil.ToAttr(StartRT); }            
-            set { DeclusteringPotential = double.Parse(value); }
+            set { DeclusteringPotential = double.Parse(value, CultureInfo.InvariantCulture); }
         }
 
         [XmlIgnore]
@@ -357,7 +358,7 @@ namespace pwiz.Skyline.Model.V01
         public string StartRTAttr
         {
             get { return XmlUtil.ToAttr(StartRT); }            
-            set { StartRT = double.Parse(value); }
+            set { StartRT = double.Parse(value, CultureInfo.InvariantCulture); }
         }
 
         [XmlIgnore]
@@ -368,7 +369,7 @@ namespace pwiz.Skyline.Model.V01
         public string StopRTAttr
         {
             get { return XmlUtil.ToAttr(StopRT); }
-            set { StopRT = double.Parse(value); }
+            set { StopRT = double.Parse(value, CultureInfo.InvariantCulture); }
         }
 
         [XmlIgnore]

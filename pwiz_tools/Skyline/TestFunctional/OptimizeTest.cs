@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
@@ -37,6 +38,16 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class OptimizeTest : AbstractFunctionalTest
     {
+        private static bool CanImportThermoRaw
+        {
+            get { return Equals(".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator); }
+        }
+
+        private static string ExtThermoRaw
+        {
+            get { return CanImportThermoRaw ? ".RAW" : ".mzML"; }
+        }
+
         [TestMethod]
         public void TestOptimization()
         {
@@ -51,6 +62,13 @@ namespace pwiz.SkylineTestFunctional
         /// </summary>
         protected override void DoTest()
         {
+            // Remove all results files with the wrong extension for the current locale
+            foreach (var fileName in Directory.GetFiles(TestFilesDir.FullPath, "*_REP*.*", SearchOption.AllDirectories))
+            {
+                if (!fileName.ToLower().EndsWith(ExtThermoRaw.ToLower()))
+                    File.Delete(fileName);
+            }
+
             // Open the .sky file
             string documentPath = TestFilesDir.GetTestPath("CE_Vantage_15mTorr_scheduled_mini.sky");
             RunUI(() => SkylineWindow.OpenFile(documentPath));
@@ -315,12 +333,14 @@ namespace pwiz.SkylineTestFunctional
             double lastProductMz = 0;
             double lastCE = 0;
 
+            var cultureInfo = CultureInfo.InvariantCulture;
+
             foreach (string line in lines)
             {
                 string[] row = line.Split(',');
-                double precursorMz = double.Parse(row[COL_PREC_MZ]);
-                double productMz = double.Parse(row[COL_PROD_MZ]);
-                double ce = double.Parse(row[COL_CE]);
+                double precursorMz = double.Parse(row[COL_PREC_MZ], cultureInfo);
+                double productMz = double.Parse(row[COL_PROD_MZ], cultureInfo);
+                double ce = double.Parse(row[COL_CE], cultureInfo);
                 if (precursorMz != lastPrecursorMz ||
                     Math.Abs((productMz - lastProductMz) - ChromatogramInfo.OPTIMIZE_SHIFT_SIZE) > 0.0001)
                 {
@@ -379,11 +399,11 @@ namespace pwiz.SkylineTestFunctional
             {
                 if (nodeGroup.IsLight)
                     dictLightCEs.Clear();
-                double firstCE = double.Parse(lines1[iLine].Split(',')[COL_CE]);
+                double firstCE = double.Parse(lines1[iLine].Split(',')[COL_CE], CultureInfo.InvariantCulture);
                 foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                 {
                     string[] row1 = lines1[iLine].Split(',');
-                    double tranCE = double.Parse(row1[COL_CE]);
+                    double tranCE = double.Parse(row1[COL_CE], CultureInfo.InvariantCulture);
                     if (lines2 != null)
                     {
                         // Check to see if the two files differ

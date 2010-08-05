@@ -28,6 +28,7 @@ using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -183,12 +184,12 @@ namespace pwiz.SkylineTestFunctional
         {
             string[] lines = File.ReadAllLines(fileName);
             Assert.AreEqual(rowCount, lines.Length - 1);
-            string[] columnHeaderNames = lines[0].Split(',');
+            string[] columnHeaderNames = lines[0].ParseCsvFields();
             Assert.IsTrue(ArrayUtil.EqualsDeep(columnNames, columnHeaderNames));
 
             for (int i = 1; i < lines.Length; i++)
             {
-                string[] values = lines[i].Split(',');
+                string[] values = lines[i].ParseCsvFields();
                 for (int j = 0; j < columnHeaderNames.Length; j++)
                 {
                     string columnName = columnNames[j];
