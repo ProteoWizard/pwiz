@@ -2910,6 +2910,8 @@
             this.AdvModeLabel.Size = new System.Drawing.Size(111, 13);
             this.AdvModeLabel.TabIndex = 16;
             this.AdvModeLabel.Text = "Use Advanced Mode:";
+            this.AdvModeLabel.Click += new System.EventHandler(this.AdvModeLabel_Click);
+            this.AdvModeLabel.MouseEnter += new System.EventHandler(this.AdvModeLabel_MouseEnter);
             // 
             // menuStrip1
             // 

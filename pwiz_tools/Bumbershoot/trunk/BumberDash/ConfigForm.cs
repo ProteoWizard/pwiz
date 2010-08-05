@@ -4003,6 +4003,14 @@ namespace BumberDash
                 BlosumBox.BackColor = Color.White;
         }
 
+        private void AdvModeLabel_Click(object sender, EventArgs e)
+        {
+            if (AdvModeBox.Checked)
+                AdvModeBox.Checked = false;
+            else
+                AdvModeBox.Checked = true;
+        }
+
 
 
     }
