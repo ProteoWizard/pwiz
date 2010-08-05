@@ -122,7 +122,7 @@ namespace BumberDash
 
             for (int x = JobQueueDGV.Rows.Count-2; x >= 0; x--)
             {
-                if ((string)JobQueueDGV.Rows[x].Tag == "Finished")
+                if ((string)JobQueueDGV.Rows[x].Tag == "Finished" || (string)JobQueueDGV.Rows[x].Tag == "Unsuccessful")
                 {
                     _lastCompleted = x;
                     break;
@@ -2010,19 +2010,13 @@ namespace BumberDash
            }
        }
 
-        bool tipShownOnce = false;
-
         private void QueueForm_Resize(object sender, EventArgs e)
         {
             if (WindowState == FormWindowState.Minimized)
             {
                 Hide();
                 TrayIcon.Visible = true;
-                if (!tipShownOnce)
-                {
-                    TrayIcon.ShowBalloonTip(5000);
-                    tipShownOnce = true;
-                }
+                TrayIcon.ShowBalloonTip(5000);
             }
             else
             {
