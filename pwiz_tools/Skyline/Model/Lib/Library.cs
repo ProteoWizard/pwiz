@@ -1093,6 +1093,7 @@ namespace pwiz.Skyline.Model.Lib
             public double ObservedMz { get { return _mi.Mz; } }
 
             public double PredictedMz { get; private set; }
+            public double PredictedMz2 { get; private set; }
 
             public void CalculateRank(RankParams rp)
             {
@@ -1203,23 +1204,24 @@ namespace pwiz.Skyline.Model.Lib
 
                     int ordinal = Transition.OffsetToOrdinal(type, offset, len + 1);
                     // If this m/z aready matched a different ion, just remember the second ion.
+                    double predictedMass = !precursorMatch ?
+                        rp.massesPredict[(int)type, offset] : rp.massPrePredict;
+                    if (losses != null)
+                        predictedMass -= losses.Mass;
+                    double predictedMz = SequenceMassCalc.GetMZ(predictedMass, charge);
                     if (Ordinal > 0)
                     {
                         IonType2 = type;
                         Charge2 = charge;
                         Ordinal2 = ordinal;
                         Losses2 = losses;
+                        PredictedMz2 = predictedMz;
                         rp.matched = true;
                         return false;
                     }
                     else
                     {
                         // Avoid using the same predicted m/z on two different peaks
-                        double predictedMass = !precursorMatch ?
-                            rp.massesPredict[(int)type, offset] : rp.massPrePredict;
-                        if (losses != null)
-                            predictedMass -= losses.Mass;
-                        double predictedMz = SequenceMassCalc.GetMZ(predictedMass, charge);
                         if (predictedMz == ionMz || !rp.IsSeen(predictedMz))
                         {
                             rp.Seen(predictedMz);

@@ -89,6 +89,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public ICollection<IonType> ShowTypes { get; set; }
         public ICollection<int> ShowCharges { get; set; }
         public bool ShowRanks { get; set; }
+        public bool ShowMz { get; set; }
+        public bool ShowObservedMz { get; set; }
         public bool ShowDuplicates { get; set; }
         public int LineWidth { get; set; }
         public float FontSize { get; set; }
@@ -223,28 +225,60 @@ namespace pwiz.Skyline.Controls.Graphs
                     yield return GetLabel(rmi);
             }
         }
-
+       
         private string GetLabel(LibraryRankedSpectrumInfo.RankedMI rmi)
         {
             string[] parts = new string[2];
             int i = 0;
-            if (IsVisibleIon(rmi.IonType, rmi.Ordinal, rmi.Charge))
-                parts[i++] = GetLabel(rmi.IonType, rmi.Ordinal, rmi.Losses, rmi.Charge, rmi.Rank);
-            if (IsVisibleIon(rmi.IonType2, rmi.Ordinal2, rmi.Charge2))
-                parts[i] = GetLabel(rmi.IonType2, rmi.Ordinal2, rmi.Losses2, rmi.Charge2, 0);
+            bool visible1 = IsVisibleIon(rmi.IonType, rmi.Ordinal, rmi.Charge);
+            bool visible2 = IsVisibleIon(rmi.IonType2, rmi.Ordinal2, rmi.Charge2);
+            // Show the m/z values in the labels, if they should both be visible, and
+            // they have different display values.
+            bool showMzInLabel = ShowMz && visible1 && visible2 &&
+                GetDisplayMz(rmi.PredictedMz) != GetDisplayMz(rmi.PredictedMz2);
+
+            if (visible1)
+            {
+                parts[i++] = GetLabel(rmi.IonType, rmi.Ordinal, rmi.Losses,
+                    rmi.Charge, rmi.PredictedMz, rmi.Rank, showMzInLabel);
+            }
+            if (visible2)
+            {
+                parts[i] = GetLabel(rmi.IonType2, rmi.Ordinal2, rmi.Losses2,
+                    rmi.Charge2, rmi.PredictedMz2, 0, showMzInLabel);
+            }
             StringBuilder sb = new StringBuilder();
             foreach (string part in parts)
             {
                 if (part == null)
                     continue;
                 if (sb.Length > 0)
-                    sb.Append(", ");
+                {
+                    if (showMzInLabel)
+                        sb.AppendLine();
+                    else
+                        sb.Append(", ");
+                }
                 sb.Append(part);
+            }
+            // If predicted m/z should be displayed, but hasn't been yet, then display now.
+            double displayMz = 0;
+            if (ShowMz && !showMzInLabel)
+            {
+                displayMz = GetDisplayMz(rmi.PredictedMz);
+                sb.AppendLine().Append(displayMz);
+            }
+            // If showing observed m/z, and it is different from the predicted m/z, then display it last.
+            if (ShowObservedMz)
+            {
+                double displayObservedMz = GetDisplayMz(rmi.ObservedMz);
+                if (displayMz != displayObservedMz)
+                    sb.AppendLine().Append(displayObservedMz);
             }
             return sb.ToString();
         }
 
-        private string GetLabel(IonType type, int ordinal, TransitionLosses losses, int charge, int rank)
+        private string GetLabel(IonType type, int ordinal, TransitionLosses losses, int charge, double mz, int rank, bool showMz)
         {
             var label = new StringBuilder(type.ToString());
             if (!Transition.IsPrecursor(type))
@@ -256,9 +290,16 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             string chargeIndicator = (charge == 1 ? "" : Transition.GetChargeIndicator(charge));
             label.Append(chargeIndicator);
+            if (showMz)
+                label.Append(string.Format(" = {0:F01}", mz));
             if (rank > 0 && ShowRanks)
-                return string.Format("{0} (rank {1})", label, rank);
+                label.Append(string.Format(" (rank {0})", rank));
             return label.ToString();
+        }
+
+        private static double GetDisplayMz(double mz)
+        {
+            return Math.Round(mz, 1);
         }
 
         private bool IsVisibleIon(LibraryRankedSpectrumInfo.RankedMI rmi)

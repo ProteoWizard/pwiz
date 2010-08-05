@@ -887,6 +887,10 @@ namespace pwiz.Skyline.SettingsUI
             menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
             ranksContextMenuItem.Checked = set.ShowRanks;
             menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
+            ionMzValuesContextMenuItem.Checked = set.ShowIonMz;
+            menuStrip.Items.Insert(iInsert++, ionMzValuesContextMenuItem);
+            observedMzValuesContextMenuItem.Checked = set.ShowObservedMz;
+            menuStrip.Items.Insert(iInsert++, observedMzValuesContextMenuItem);
             duplicatesContextMenuItem.Checked = set.ShowDuplicateIons;
             menuStrip.Items.Insert(iInsert++, duplicatesContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator13);
@@ -1009,9 +1013,12 @@ namespace pwiz.Skyline.SettingsUI
                                                                           rankTypes);
 
                         GraphItem = new ViewLibSpectrumGraphItem(spectrumInfoR, group, _selectedLibrary)
-                                        {   ShowTypes = types,
+                                        {
+                                            ShowTypes = types,
                                             ShowCharges = charges,
                                             ShowRanks = Settings.Default.ShowRanks,
+                                            ShowMz = Settings.Default.ShowIonMz,
+                                            ShowObservedMz = Settings.Default.ShowObservedMz,
                                             ShowDuplicates = Settings.Default.ShowDuplicateIons,
                                             FontSize = Settings.Default.SpectrumFontSize,
                                             LineWidth = Settings.Default.SpectrumLineWidth
@@ -1153,6 +1160,18 @@ namespace pwiz.Skyline.SettingsUI
         private void ranksContextMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowRanks = !Settings.Default.ShowRanks;
+            UpdateUI();
+        }
+
+        private void ionMzValuesContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowIonMz = !Settings.Default.ShowIonMz;
+            UpdateUI();
+        }
+
+        private void observedMzValuesContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowObservedMz = !Settings.Default.ShowObservedMz;
             UpdateUI();
         }
 

@@ -329,6 +329,8 @@ namespace pwiz.Skyline.Controls.Graphs
                                                 ShowTypes = types,
                                                 ShowCharges = charges,
                                                 ShowRanks = Settings.Default.ShowRanks,
+                                                ShowMz = Settings.Default.ShowIonMz,
+                                                ShowObservedMz = Settings.Default.ShowObservedMz,
                                                 ShowDuplicates = Settings.Default.ShowDuplicateIons,
                                                 FontSize = Settings.Default.SpectrumFontSize,
                                                 LineWidth = Settings.Default.SpectrumLineWidth

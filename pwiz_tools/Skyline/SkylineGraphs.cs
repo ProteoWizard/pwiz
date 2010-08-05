@@ -618,6 +618,18 @@ namespace pwiz.Skyline
             UpdateSpectrumGraph();
         }
 
+        private void ionMzValuesContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowIonMz = !Settings.Default.ShowIonMz;
+            UpdateSpectrumGraph();
+        }
+
+        private void observedMzValuesContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowObservedMz = !Settings.Default.ShowObservedMz;
+            UpdateSpectrumGraph();
+        }
+
         void GraphSpectrum.IStateProvider.BuildSpectrumMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
         {
             // Store original menuitems in an array, and insert a separator
@@ -659,6 +671,10 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
             ranksContextMenuItem.Checked = set.ShowRanks;
             menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
+            ionMzValuesContextMenuItem.Checked = set.ShowIonMz;
+            menuStrip.Items.Insert(iInsert++, ionMzValuesContextMenuItem);
+            observedMzValuesContextMenuItem.Checked = set.ShowObservedMz;
+            menuStrip.Items.Insert(iInsert++, observedMzValuesContextMenuItem);
             duplicatesContextMenuItem.Checked = set.ShowDuplicateIons;
             menuStrip.Items.Insert(iInsert++, duplicatesContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator13);

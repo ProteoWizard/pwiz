@@ -1231,5 +1231,29 @@ namespace pwiz.Skyline.Properties {
                 this["ShowTreeReplicateEnum"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShowIonMz {
+            get {
+                return ((bool)(this["ShowIonMz"]));
+            }
+            set {
+                this["ShowIonMz"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShowObservedMz {
+            get {
+                return ((bool)(this["ShowObservedMz"]));
+            }
+            set {
+                this["ShowObservedMz"] = value;
+            }
+        }
     }
 }

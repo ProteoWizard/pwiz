@@ -305,5 +305,11 @@
     <Setting Name="ShowTreeReplicateEnum" Type="System.String" Scope="User">
       <Value Profile="(Default)">single</Value>
     </Setting>
+    <Setting Name="ShowIonMz" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="ShowObservedMz" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
