@@ -209,5 +209,44 @@ namespace BumberDash
             else
                 CPUsAutoLabel.Visible = false;
         }
+
+        private void MyriConfigBox_TextChanged(object sender, EventArgs e)
+        {
+            if (File.Exists(MyriConfigBox.Text))
+            {
+                if ((new FileInfo(MyriConfigBox.Text)).Extension.Equals(".cfg"))
+                    MyriEditButton.Text = "Edit";
+                else if ((new FileInfo(MyriConfigBox.Text)).Extension.Equals(".pepXML"))
+                    MyriEditButton.Text = "Convert";
+            }
+            else
+                MyriEditButton.Text = "New";
+        }
+
+        private void DTConfigBox_TextChanged(object sender, EventArgs e)
+        {
+            if (File.Exists(DTConfigBox.Text))
+            {
+                if ((new FileInfo(DTConfigBox.Text)).Extension.Equals(".cfg"))
+                    DTEditButton.Text = "Edit";
+                else if ((new FileInfo(DTConfigBox.Text)).Extension.Equals(".tags"))
+                    DTEditButton.Text = "Convert";
+            }
+            else
+                DTEditButton.Text = "New";
+        }
+
+        private void TRConfigBox_TextChanged(object sender, EventArgs e)
+        {
+            if (File.Exists(TRConfigBox.Text))
+            {
+                if ((new FileInfo(TRConfigBox.Text)).Extension.Equals(".cfg"))
+                    TREditButton.Text = "Edit";
+                else if ((new FileInfo(TRConfigBox.Text)).Extension.Equals(".pepXML"))
+                    TREditButton.Text = "Convert";
+            }
+            else
+                TREditButton.Text = "New";
+        }
     }
 }

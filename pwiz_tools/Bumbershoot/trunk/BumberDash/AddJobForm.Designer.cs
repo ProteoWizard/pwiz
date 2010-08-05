@@ -272,9 +272,9 @@
             this.label5.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.label5.Location = new System.Drawing.Point(25, 215);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(195, 18);
+            this.label5.Size = new System.Drawing.Size(120, 18);
             this.label5.TabIndex = 6;
-            this.label5.Text = "Which database will be used?";
+            this.label5.Text = "FASTA Database:";
             // 
             // InitialDirectoryButton
             // 
@@ -298,8 +298,8 @@
             // 
             // ConfigGB
             // 
-            this.ConfigGB.Controls.Add(this.ConfigTagPanel);
             this.ConfigGB.Controls.Add(this.ConfigDatabasePanel);
+            this.ConfigGB.Controls.Add(this.ConfigTagPanel);
             this.ConfigGB.Location = new System.Drawing.Point(12, 262);
             this.ConfigGB.Name = "ConfigGB";
             this.ConfigGB.Size = new System.Drawing.Size(398, 105);
@@ -331,6 +331,7 @@
             this.DTConfigBox.Name = "DTConfigBox";
             this.DTConfigBox.Size = new System.Drawing.Size(245, 21);
             this.DTConfigBox.TabIndex = 27;
+            this.DTConfigBox.TextChanged += new System.EventHandler(this.DTConfigBox_TextChanged);
             // 
             // TRConfigBox
             // 
@@ -339,6 +340,7 @@
             this.TRConfigBox.Name = "TRConfigBox";
             this.TRConfigBox.Size = new System.Drawing.Size(245, 21);
             this.TRConfigBox.TabIndex = 28;
+            this.TRConfigBox.TextChanged += new System.EventHandler(this.TRConfigBox_TextChanged);
             // 
             // TREditButton
             // 
@@ -346,7 +348,7 @@
             this.TREditButton.Name = "TREditButton";
             this.TREditButton.Size = new System.Drawing.Size(55, 21);
             this.TREditButton.TabIndex = 16;
-            this.TREditButton.Text = "Edit";
+            this.TREditButton.Text = "New";
             this.TREditButton.UseVisualStyleBackColor = true;
             this.TREditButton.Click += new System.EventHandler(this.TREditButton_Click);
             // 
@@ -376,7 +378,7 @@
             this.DTEditButton.Name = "DTEditButton";
             this.DTEditButton.Size = new System.Drawing.Size(55, 21);
             this.DTEditButton.TabIndex = 12;
-            this.DTEditButton.Text = "Edit";
+            this.DTEditButton.Text = "New";
             this.DTEditButton.UseVisualStyleBackColor = true;
             this.DTEditButton.Click += new System.EventHandler(this.DTEditButton_Click);
             // 
@@ -419,6 +421,7 @@
             this.MyriConfigBox.Name = "MyriConfigBox";
             this.MyriConfigBox.Size = new System.Drawing.Size(245, 21);
             this.MyriConfigBox.TabIndex = 26;
+            this.MyriConfigBox.TextChanged += new System.EventHandler(this.MyriConfigBox_TextChanged);
             // 
             // MyriEditButton
             // 
@@ -426,7 +429,7 @@
             this.MyriEditButton.Name = "MyriEditButton";
             this.MyriEditButton.Size = new System.Drawing.Size(55, 21);
             this.MyriEditButton.TabIndex = 16;
-            this.MyriEditButton.Text = "Edit";
+            this.MyriEditButton.Text = "New";
             this.MyriEditButton.UseVisualStyleBackColor = true;
             this.MyriEditButton.Click += new System.EventHandler(this.MyriEditButton_Click);
             // 
