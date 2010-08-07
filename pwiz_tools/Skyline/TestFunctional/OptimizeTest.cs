@@ -38,16 +38,6 @@ namespace pwiz.SkylineTestFunctional
     [TestClass]
     public class OptimizeTest : AbstractFunctionalTest
     {
-        private static bool CanImportThermoRaw
-        {
-            get { return Equals(".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator); }
-        }
-
-        private static string ExtThermoRaw
-        {
-            get { return CanImportThermoRaw ? ".RAW" : ".mzML"; }
-        }
-
         [TestMethod]
         public void TestOptimization()
         {
@@ -65,7 +55,7 @@ namespace pwiz.SkylineTestFunctional
             // Remove all results files with the wrong extension for the current locale
             foreach (var fileName in Directory.GetFiles(TestFilesDir.FullPath, "*_REP*.*", SearchOption.AllDirectories))
             {
-                if (!fileName.ToLower().EndsWith(ExtThermoRaw.ToLower()))
+                if (!fileName.ToLower().EndsWith(ExtensionTestContext.ExtThermoRaw.ToLower()))
                     File.Delete(fileName);
             }
 

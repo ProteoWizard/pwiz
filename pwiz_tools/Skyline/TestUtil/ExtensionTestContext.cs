@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Globalization;
 using System.IO;
 using Ionic.Zip;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -53,6 +54,16 @@ namespace pwiz.SkylineTestUtil
                 foreach (ZipEntry zipEntry in zipFile)
                     zipEntry.Extract(destDir, ExtractExistingFileAction.OverwriteSilently);
             }
+        }
+
+        public static bool CanImportThermoRaw
+        {
+            get { return Equals(".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator); }
+        }
+
+        public static string ExtThermoRaw
+        {
+            get { return CanImportThermoRaw ? ".RAW" : ".mzML"; }
         }
     }
 }
