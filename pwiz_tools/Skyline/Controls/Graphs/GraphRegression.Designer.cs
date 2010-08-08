@@ -40,8 +40,8 @@
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.graphControl.EditButtons = System.Windows.Forms.MouseButtons.Left;
             this.graphControl.EditModifierKeys = System.Windows.Forms.Keys.None;
-            this.graphControl.Location = new System.Drawing.Point(8, 8);
             this.graphControl.IsShowCopyMessage = false;
+            this.graphControl.Location = new System.Drawing.Point(8, 8);
             this.graphControl.Name = "graphControl";
             this.graphControl.ScrollGrace = 0;
             this.graphControl.ScrollMaxX = 0;
@@ -52,10 +52,12 @@
             this.graphControl.ScrollMinY2 = 0;
             this.graphControl.Size = new System.Drawing.Size(501, 234);
             this.graphControl.TabIndex = 1;
+            this.graphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.graphControl_ContextMenuBuilder);
             // 
             // btnClose
             // 
             this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnClose.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnClose.Location = new System.Drawing.Point(434, 255);
             this.btnClose.Name = "btnClose";
             this.btnClose.Size = new System.Drawing.Size(75, 23);

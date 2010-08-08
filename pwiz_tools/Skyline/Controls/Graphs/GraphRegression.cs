@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -68,6 +69,20 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             DialogResult = DialogResult.Cancel;
             Close();
+        }
+
+        private void graphControl_ContextMenuBuilder(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip,
+            Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
+        {
+            for (int i = menuStrip.Items.Count - 1; i >= 0; i--)
+            {
+                string tag = (string)menuStrip.Items[i].Tag;
+                if (tag == "unzoom")
+                    menuStrip.Items.Insert(i, new ToolStripSeparator());
+                if (tag == "set_default" || tag == "show_val")
+                    menuStrip.Items.RemoveAt(i);
+            }
+            CopyEmfToolStripMenuItem.AddToContextMenu(zedGraphControl, menuStrip);
         }
     }
 

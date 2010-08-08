@@ -1,10 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Drawing;
+﻿/*
+ * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2009 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Drawing.Imaging;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Windows.Forms;
 using ZedGraph;
 
@@ -12,7 +26,7 @@ namespace pwiz.Skyline.EditUI
 {
     /// <summary>
     /// Menu item which copies a metafile to the clipboard.
-    /// TODO(nicksh): it would be nice if this also copied CF_BITMAP format to the clipboard,
+    /// CONSIDER(nicksh): it would be nice if this also copied CF_BITMAP format to the clipboard,
     /// but I haven't been able to get that to work.
     /// </summary>
     public class CopyEmfToolStripMenuItem : ToolStripMenuItem
@@ -50,7 +64,7 @@ namespace pwiz.Skyline.EditUI
                 {
                     success = true;
                     SetClipboardData(14 /*CF_ENHMETAFILE*/, mf.GetHenhmetafile());
-                    // TODO (nicksh): It would be nice if we also set the CF_BITMAP
+                    // CONSIDER(nicksh): It would be nice if we also set the CF_BITMAP
                     CloseClipboard();
                 }
             }

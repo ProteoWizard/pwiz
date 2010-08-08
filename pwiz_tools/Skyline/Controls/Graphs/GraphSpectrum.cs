@@ -176,13 +176,18 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     // If it has, update the list, trying to maintain selection, if possible.
                     object selected = comboSpectrum.SelectedItem;
+                    // Unless the current selected index is the one matching the one currently
+                    // in use by the precursor (zero), then try to stay viewing the in-use spectrum (zero)
+                    int selectedIndex = comboSpectrum.SelectedIndex;
+
                     comboSpectrum.Items.Clear();
                     foreach (string name in listNames)
                     {
                         comboSpectrum.Items.Add(name);
                     }
-                    if ((selected == null) ||
-                        (comboSpectrum.Items.IndexOf(selected) == -1))
+
+                    if (selectedIndex == 0 || selected == null ||
+                        comboSpectrum.Items.IndexOf(selected) == -1)
                     {
                         comboSpectrum.SelectedIndex = 0;
                     }

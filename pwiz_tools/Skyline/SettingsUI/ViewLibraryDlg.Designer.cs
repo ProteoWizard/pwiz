@@ -76,6 +76,8 @@ namespace pwiz.Skyline.SettingsUI
             this.charge2ContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator12 = new System.Windows.Forms.ToolStripSeparator();
             this.ranksContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.ionMzValuesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.observedMzValuesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.duplicatesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator13 = new System.Windows.Forms.ToolStripSeparator();
             this.lockYaxisContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -84,8 +86,6 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStripSeparator15 = new System.Windows.Forms.ToolStripSeparator();
             this.zoomSpectrumContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator27 = new System.Windows.Forms.ToolStripSeparator();
-            this.ionMzValuesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.observedMzValuesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.splitMain.Panel1.SuspendLayout();
             this.splitMain.Panel2.SuspendLayout();
             this.splitMain.SuspendLayout();
@@ -533,7 +533,7 @@ namespace pwiz.Skyline.SettingsUI
             this.zoomSpectrumContextMenuItem,
             this.toolStripSeparator27});
             this.contextMenuSpectrum.Name = "contextMenuSpectrum";
-            this.contextMenuSpectrum.Size = new System.Drawing.Size(186, 414);
+            this.contextMenuSpectrum.Size = new System.Drawing.Size(186, 392);
             // 
             // aionsContextMenuItem
             // 
@@ -624,6 +624,22 @@ namespace pwiz.Skyline.SettingsUI
             this.ranksContextMenuItem.Text = "Ranks";
             this.ranksContextMenuItem.Click += new System.EventHandler(this.ranksContextMenuItem_Click);
             // 
+            // ionMzValuesContextMenuItem
+            // 
+            this.ionMzValuesContextMenuItem.CheckOnClick = true;
+            this.ionMzValuesContextMenuItem.Name = "ionMzValuesContextMenuItem";
+            this.ionMzValuesContextMenuItem.Size = new System.Drawing.Size(185, 22);
+            this.ionMzValuesContextMenuItem.Text = "Ion m/z Values";
+            this.ionMzValuesContextMenuItem.Click += new System.EventHandler(this.ionMzValuesContextMenuItem_Click);
+            // 
+            // observedMzValuesContextMenuItem
+            // 
+            this.observedMzValuesContextMenuItem.CheckOnClick = true;
+            this.observedMzValuesContextMenuItem.Name = "observedMzValuesContextMenuItem";
+            this.observedMzValuesContextMenuItem.Size = new System.Drawing.Size(185, 22);
+            this.observedMzValuesContextMenuItem.Text = "Observed m/z Values";
+            this.observedMzValuesContextMenuItem.Click += new System.EventHandler(this.observedMzValuesContextMenuItem_Click);
+            // 
             // duplicatesContextMenuItem
             // 
             this.duplicatesContextMenuItem.CheckOnClick = true;
@@ -673,22 +689,6 @@ namespace pwiz.Skyline.SettingsUI
             // 
             this.toolStripSeparator27.Name = "toolStripSeparator27";
             this.toolStripSeparator27.Size = new System.Drawing.Size(182, 6);
-            // 
-            // ionMzValuesContextMenuItem
-            // 
-            this.ionMzValuesContextMenuItem.CheckOnClick = true;
-            this.ionMzValuesContextMenuItem.Name = "ionMzValuesContextMenuItem";
-            this.ionMzValuesContextMenuItem.Size = new System.Drawing.Size(185, 22);
-            this.ionMzValuesContextMenuItem.Text = "Ion m/z Values";
-            this.ionMzValuesContextMenuItem.Click += new System.EventHandler(this.ionMzValuesContextMenuItem_Click);
-            // 
-            // observedMzValuesContextMenuItem
-            // 
-            this.observedMzValuesContextMenuItem.CheckOnClick = true;
-            this.observedMzValuesContextMenuItem.Name = "observedMzValuesContextMenuItem";
-            this.observedMzValuesContextMenuItem.Size = new System.Drawing.Size(185, 22);
-            this.observedMzValuesContextMenuItem.Text = "Observed m/z Values";
-            this.observedMzValuesContextMenuItem.Click += new System.EventHandler(this.observedMzValuesContextMenuItem_Click);
             // 
             // ViewLibraryDlg
             // 
