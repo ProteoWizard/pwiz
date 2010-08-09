@@ -14,6 +14,7 @@ namespace BumberDash
         private bool _scanning = false;
         private bool _killed = false;
         private bool _barMode = false;
+        private bool _versionCaught = false;
         private int _currentRow;
         private int _fileProcessing;
         private int _filesToProcess;
@@ -123,6 +124,7 @@ namespace BumberDash
         internal void StartNewJob(int rowNumber)
         {
             _scanning = true;
+            _versionCaught = false;
             _currentRow = rowNumber;
             _minPercentage = 0;
             _fileProcessing = 0;
@@ -356,6 +358,16 @@ namespace BumberDash
                 BrokenLine[1] = BrokenLine[1].Remove(BrokenLine[1].Length - 2);
                 _completedFiles.Add(BrokenLine[1]);
             }
+            else if (!_versionCaught)
+            {
+                Match introMatch = Regex.Match(recievedLine, @"MyriMatch (\d+.\d+.\d)");
+                if (introMatch.Success && introMatch.Groups.Count == 2)
+                {
+                    Properties.Settings.Default.MyriMatchVersion = introMatch.Groups[1].Value;
+                    _versionCaught = true;
+                    Properties.Settings.Default.Save();
+                }
+            }
         }
 
         private void HandleDTLine(string recievedLine)
@@ -436,6 +448,16 @@ namespace BumberDash
 
                 BrokenLine[1] = BrokenLine[1].Remove(BrokenLine[1].Length - 2);
                 _completedFiles.Add(BrokenLine[1]);
+            }
+            else if (!_versionCaught)
+            {
+                Match introMatch = Regex.Match(recievedLine, @"DirecTag (\d+.\d+.\d)");
+                if (introMatch.Success && introMatch.Groups.Count == 2)
+                {
+                    Properties.Settings.Default.DirecTagVersion = introMatch.Groups[1].Value;
+                    _versionCaught = true;
+                    Properties.Settings.Default.Save();
+                }
             }
         }
 
@@ -521,6 +543,16 @@ namespace BumberDash
 
                 BrokenLine[1] = BrokenLine[1].Remove(BrokenLine[1].Length - 2);
                 _completedFiles.Add(BrokenLine[1]);
+            }
+            else if (!_versionCaught)
+            {
+                Match introMatch = Regex.Match(recievedLine, @"TagRecon (\d+.\d+.\d)");
+                if (introMatch.Success && introMatch.Groups.Count == 2)
+                {
+                    Properties.Settings.Default.TagReconVersion = introMatch.Groups[1].Value;
+                    _versionCaught = true;
+                    Properties.Settings.Default.Save();
+                }
             }
         }
 

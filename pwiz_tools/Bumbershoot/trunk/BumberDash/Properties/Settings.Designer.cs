@@ -34,5 +34,41 @@ namespace BumberDash.Properties {
                 this["IDPickerLocation"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1.6.7")]
+        public string MyriMatchVersion {
+            get {
+                return ((string)(this["MyriMatchVersion"]));
+            }
+            set {
+                this["MyriMatchVersion"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1.2.1")]
+        public string DirecTagVersion {
+            get {
+                return ((string)(this["DirecTagVersion"]));
+            }
+            set {
+                this["DirecTagVersion"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1.2.3")]
+        public string TagReconVersion {
+            get {
+                return ((string)(this["TagReconVersion"]));
+            }
+            set {
+                this["TagReconVersion"] = value;
+            }
+        }
     }
 }

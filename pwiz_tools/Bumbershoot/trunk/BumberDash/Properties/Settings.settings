@@ -5,5 +5,14 @@
     <Setting Name="IDPickerLocation" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="MyriMatchVersion" Type="System.String" Scope="User">
+      <Value Profile="(Default)">1.6.7</Value>
+    </Setting>
+    <Setting Name="DirecTagVersion" Type="System.String" Scope="User">
+      <Value Profile="(Default)">1.2.1</Value>
+    </Setting>
+    <Setting Name="TagReconVersion" Type="System.String" Scope="User">
+      <Value Profile="(Default)">1.2.3</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

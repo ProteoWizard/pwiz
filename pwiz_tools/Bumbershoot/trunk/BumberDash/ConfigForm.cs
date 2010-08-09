@@ -4114,8 +4114,8 @@ namespace BumberDash
             OutputSuffix = String.Empty;
             Modifications = new List<string>();
             MassReconMode = false;
-            Blosum = Application.StartupPath + @"\tagrecon\blosum62.fas";
-            UnimodXML = Application.StartupPath + @"\tagrecon\unimod.xml";
+            Blosum = "Default";
+            UnimodXML = "Default";
             BlosumThreshold = 0;
             MaxModificationMassPlus = 300;
             MaxModificationMassMinus = 150;

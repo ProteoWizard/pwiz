@@ -28,7 +28,7 @@ namespace BumberDash
         private bool _lockEdit = false; //true if editing a locked row (prevents unlock on edit end)
         internal int _lastCompleted = -1; //keeps track of where the scanner is in the list
         private bool programmaticallyPaused = false; //indicates if a job can run
-        private bool manuallyPaused = true; //indicates if a job can run
+        private bool manuallyPaused = false; //indicates if a job can run
         internal SessionManager _manager;
 
         #endregion
@@ -691,6 +691,7 @@ namespace BumberDash
                    #endregion
 
                    CheckForRunableJob();
+                   SaveRowNumbers();
                }
            }
 
@@ -1641,6 +1642,7 @@ namespace BumberDash
                
 
                programmaticallyPaused = false;
+               SaveRowNumbers();
                CheckForRunableJob();
            }
 
@@ -2042,6 +2044,14 @@ namespace BumberDash
             Show();
             WindowState = FormWindowState.Normal;
             TrayIcon.Visible = false;
+        }
+
+        private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AboutForm af = new AboutForm();
+            af.ShowDialog();
+            af.Close();
+            af.Dispose();
         }
 
        
