@@ -597,7 +597,7 @@ namespace pwiz.Skyline.Model.Results
                                 }
                                 catch (Exception x)
                                 {
-                                    Fail(x);
+                                    Fail(new IOException(string.Format("Failure attempting to load the data cache file {0}", partPath), x));
                                     return;
                                 }
                             }

@@ -505,9 +505,15 @@
     <Compile Include="Model\Results\ChromCacheBuilder.cs" />
     <Compile Include="Model\Results\ChromCacheJoiner.cs" />
     <Compile Include="Model\Results\ChromCacheWriter.cs" />
+    <Compile Include="Model\Results\ChromData.cs" />
+    <Compile Include="Model\Results\ChromDataProvider.cs" />
+    <Compile Include="Model\Results\ChromDataSet.cs" />
     <Compile Include="Model\Results\ChromHeaderInfo.cs" />
     <Compile Include="Model\Results\DocNodeChromInfo.cs" />
+    <Compile Include="Model\Results\Exception.cs" />
     <Compile Include="Model\Results\MeasuredResults.cs" />
+    <Compile Include="Model\Results\PeptideChromData.cs" />
+    <Compile Include="Model\Results\VendorIssueHelper.cs" />
     <Compile Include="Model\SrmDocument.cs" />
     <Compile Include="Model\SrmDocumentExtensions.cs" />
     <Compile Include="Model\SrmDocumentSharing.cs" />
@@ -1141,6 +1147,9 @@
     <EmbeddedResource Include="Resources\Print.bmp" />
     <EmbeddedResource Include="Resources\ProteoWizard.bmp" />
     <None Include="Resources\add-pro32.bmp" />
+    <Content Include="mzWiff.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Resources\RedXTransparentBackground.bmp" />
     <Content Include="SkylineData.ico" />
     <Content Include="SkylineDoc.ico" />

@@ -160,6 +160,31 @@ namespace pwiz.ProteowizardWrapper
             return false;
         }
 
+        public bool IsABFile
+        {
+            get { return IsProcessedBy("Analyst"); }
+        }
+
+        public bool IsMzWiffXml
+        {
+            get { return IsProcessedBy("mzWiff"); }
+        }
+
+        public bool IsAgilentFile
+        {
+            get { return IsProcessedBy("MassHunter"); }
+        }
+
+        public bool IsThermoFile
+        {
+            get { return IsProcessedBy("Xcalibur"); }
+        }
+
+        public bool IsWatersFile
+        {
+            get { return IsProcessedBy("MassLynx"); }
+        }
+
         private ChromatogramList ChromatogramList
         {
             get
@@ -178,7 +203,7 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
-        private static bool _preferVendorPeakPicking = true;
+        private const bool PREFER_VENDOR_PEAK_PICKING = true;
         private SpectrumList SpectrumListCentroided
         {
             get
@@ -186,7 +211,7 @@ namespace pwiz.ProteowizardWrapper
                 return _spectrumListCentroided 
                     = _spectrumListCentroided 
                     ?? new SpectrumList_PeakPicker(
-                        SpectrumList, new LocalMaximumPeakDetector(3), _preferVendorPeakPicking, new[] {1, 2});
+                        SpectrumList, new LocalMaximumPeakDetector(3), PREFER_VENDOR_PEAK_PICKING, new[] {1, 2});
             }
         }
 

@@ -557,6 +557,12 @@ namespace pwiz.Skyline.Util
         {
             return !IsDirectory(path);
         }
+
+        public static void DeleteIfPossible(string path)
+        {
+            try { File.Delete(path); }
+            catch(IOException) {}
+        }
     }
 
     public static class PathEx
