@@ -117,6 +117,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_142AAAC9A9CD451E8038A8C1A9EE3EE1"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_1A4A46DA62144D42A3295AC1E933CD95"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -137,6 +143,12 @@
         {
         "MsmKey" = "8:_1D960563488F16A65665C55B4E2D668F"
         "OwnerKey" = "8:_B70B6012569E4DA9A5FB94A4BA681E01"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_205B8796FC7B4417BFC241E3C0675E29"
+        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -201,6 +213,18 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_41EA4C99D9FC4662BEBB17A34210E16C"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_44FB6EF9228B44DF9F0C4A51F0C0E0CA"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_45CE4300F0854224AA8705F174061093"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -226,6 +250,12 @@
         "Entry"
         {
         "MsmKey" = "8:_4E47D732A89847F1B79AEADF447AFE4B"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_5644A6A6B3A74C21A2FCD5F283B884AD"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -261,6 +291,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_5E02F60786F34278BE22F4415E160A17"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_601683D865F14DD6BD960EE9902C676D"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -268,6 +304,12 @@
         "Entry"
         {
         "MsmKey" = "8:_62C09081691D4215B3AE6E46E775B3E8"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_63EC642B82124248BC4246B98ABD68AD"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -305,6 +347,12 @@
         {
         "MsmKey" = "8:_6622B242FD902BC1366389E2E6ED5B67"
         "OwnerKey" = "8:_0FFCFF591DF44E00663E369C405B0C3A"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_67E251098C3F4C569399E73E65F8D9E9"
+        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -369,6 +417,18 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_71B770D80A3A4A8FA863C7D43B50ACE8"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_7573D051C8E5424F87C62770009176A8"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_7E54256BE5967800D9CB38DDFB68D034"
         "OwnerKey" = "8:_991E73867F36D2AB386F9096B5DFAFBF"
         "MsmSig" = "8:_UNDEFINED"
@@ -376,6 +436,12 @@
         "Entry"
         {
         "MsmKey" = "8:_7ED19A7AE44E4D1C91CB1D24652465BA"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_7F4695C0B0FF4DF79CE5E1B4E5924772"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -555,6 +621,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_B6E1CBD056284893914A700CF9B4BA8B"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_B70B6012569E4DA9A5FB94A4BA681E01"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
@@ -617,6 +689,18 @@
         {
         "MsmKey" = "8:_BE752362ADCE297FFF6811C1427E8955"
         "OwnerKey" = "8:_5B22CB4A010DB87823A02F732A5E7BA8"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C1073F2BBFEB4AD296361E72433BFE8C"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_C12841C795294CC18780DB8CDD8C10AB"
+        "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
         "Entry"
@@ -717,6 +801,12 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_DEE722043B314C3CB07FFD82BD657BDF"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_DF147EF3FEACB49C26F5A9B874B11618"
         "OwnerKey" = "8:_991E73867F36D2AB386F9096B5DFAFBF"
         "MsmSig" = "8:_UNDEFINED"
@@ -795,7 +885,19 @@
         }
         "Entry"
         {
+        "MsmKey" = "8:_EF74E9F90DDF4D74AD10485F9C24E322"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
         "MsmKey" = "8:_F079454FAE4249219144F04747A4E4AD"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_F294586B65CB472BAE6655A4350E9F53"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -808,6 +910,12 @@
         "Entry"
         {
         "MsmKey" = "8:_F67CF5AE4B8941669B2257EAA2199254"
+        "OwnerKey" = "8:_UNDEFINED"
+        "MsmSig" = "8:_UNDEFINED"
+        }
+        "Entry"
+        {
+        "MsmKey" = "8:_F6C75DFC2DFB4762842EBF5272B7BBAB"
         "OwnerKey" = "8:_UNDEFINED"
         "MsmSig" = "8:_UNDEFINED"
         }
@@ -1450,6 +1558,26 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_142AAAC9A9CD451E8038A8C1A9EE3EE1"
+            {
+            "SourcePath" = "8:..\\BumberDash\\bin\\Release\\BumberDash Help 2_files\\themedata.thmx"
+            "TargetName" = "8:themedata.thmx"
+            "Tag" = "8:"
+            "Folder" = "8:_911A6E8075FC4CC1A5B86857E49D104B"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_1A4A46DA62144D42A3295AC1E933CD95"
             {
             "SourcePath" = "8:..\\BumberDash\\bin\\Release\\directag\\libfftw3-3.dll"
@@ -1550,6 +1678,26 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_205B8796FC7B4417BFC241E3C0675E29"
+            {
+            "SourcePath" = "8:..\\BumberDash\\bin\\Release\\BumberDash Help 2_files\\image008.jpg"
+            "TargetName" = "8:image008.jpg"
+            "Tag" = "8:"
+            "Folder" = "8:_911A6E8075FC4CC1A5B86857E49D104B"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_238C197846DCB1856DBF0AED0985B23E"
@@ -1754,6 +1902,46 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_41EA4C99D9FC4662BEBB17A34210E16C"
+            {
+            "SourcePath" = "8:..\\BumberDash\\bin\\Release\\BumberDash Help 2_files\\item0001.xml"
+            "TargetName" = "8:item0001.xml"
+            "Tag" = "8:"
+            "Folder" = "8:_911A6E8075FC4CC1A5B86857E49D104B"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_44FB6EF9228B44DF9F0C4A51F0C0E0CA"
+            {
+            "SourcePath" = "8:..\\BumberDash\\bin\\Release\\BumberDash Help 2_files\\image004.jpg"
+            "TargetName" = "8:image004.jpg"
+            "Tag" = "8:"
+            "Folder" = "8:_911A6E8075FC4CC1A5B86857E49D104B"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_45CE4300F0854224AA8705F174061093"
             {
             "SourcePath" = "8:..\\BumberDash\\bin\\Release\\tagrecon\\MSFileReader.XRawfile2.SxS.manifest"
@@ -1865,6 +2053,26 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_5644A6A6B3A74C21A2FCD5F283B884AD"
+            {
+            "SourcePath" = "8:..\\BumberDash\\bin\\Release\\BumberDash Help 2_files\\image005.png"
+            "TargetName" = "8:image005.png"
+            "Tag" = "8:"
+            "Folder" = "8:_911A6E8075FC4CC1A5B86857E49D104B"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_5B22CB4A010DB87823A02F732A5E7BA8"
             {
             "AssemblyRegister" = "3:1"
@@ -1896,6 +2104,26 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_5E02F60786F34278BE22F4415E160A17"
+            {
+            "SourcePath" = "8:..\\BumberDash\\bin\\Release\\BumberDash Help 2_files\\filelist.xml"
+            "TargetName" = "8:filelist.xml"
+            "Tag" = "8:"
+            "Folder" = "8:_911A6E8075FC4CC1A5B86857E49D104B"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_601683D865F14DD6BD960EE9902C676D"
             {
             "SourcePath" = "8:..\\BumberDash\\bin\\Release\\myrimatch\\fileio.dll"
@@ -1920,6 +2148,26 @@
             {
             "SourcePath" = "8:..\\BumberDash\\bin\\Release\\DataMapping.pdb"
             "TargetName" = "8:DataMapping.pdb"
+            "Tag" = "8:"
+            "Folder" = "8:_91D61D268CBE4A548BF3AADB80E64F8B"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_63EC642B82124248BC4246B98ABD68AD"
+            {
+            "SourcePath" = "8:..\\BumberDash\\bin\\Release\\BumberDash Help 2.htm"
+            "TargetName" = "8:BumberDash Help 2.htm"
             "Tag" = "8:"
             "Folder" = "8:_91D61D268CBE4A548BF3AADB80E64F8B"
             "Condition" = "8:"
@@ -1985,6 +2233,26 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_67E251098C3F4C569399E73E65F8D9E9"
+            {
+            "SourcePath" = "8:..\\BumberDash\\bin\\Release\\BumberDash Help 2_files\\props0002.xml"
+            "TargetName" = "8:props0002.xml"
+            "Tag" = "8:"
+            "Folder" = "8:_911A6E8075FC4CC1A5B86857E49D104B"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_68F5B049694145DB914B5463C8323BD4"
@@ -2111,6 +2379,46 @@
             "IsDependency" = "11:TRUE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_71B770D80A3A4A8FA863C7D43B50ACE8"
+            {
+            "SourcePath" = "8:..\\BumberDash\\bin\\Release\\BumberDash Help 2_files\\colorschememapping.xml"
+            "TargetName" = "8:colorschememapping.xml"
+            "Tag" = "8:"
+            "Folder" = "8:_911A6E8075FC4CC1A5B86857E49D104B"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_7573D051C8E5424F87C62770009176A8"
+            {
+            "SourcePath" = "8:..\\BumberDash\\bin\\Release\\BumberDash Help 2_files\\image003.png"
+            "TargetName" = "8:image003.png"
+            "Tag" = "8:"
+            "Folder" = "8:_911A6E8075FC4CC1A5B86857E49D104B"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_7E54256BE5967800D9CB38DDFB68D034"
             {
             "AssemblyRegister" = "3:1"
@@ -2148,6 +2456,26 @@
             "TargetName" = "8:Bumbershoot.db"
             "Tag" = "8:"
             "Folder" = "8:_91D61D268CBE4A548BF3AADB80E64F8B"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_7F4695C0B0FF4DF79CE5E1B4E5924772"
+            {
+            "SourcePath" = "8:..\\BumberDash\\bin\\Release\\BumberDash Help 2_files\\image002.jpg"
+            "TargetName" = "8:image002.jpg"
+            "Tag" = "8:"
+            "Folder" = "8:_911A6E8075FC4CC1A5B86857E49D104B"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -2699,6 +3027,26 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_B6E1CBD056284893914A700CF9B4BA8B"
+            {
+            "SourcePath" = "8:..\\BumberDash\\bin\\Release\\BumberDash Help 2_files\\image011.png"
+            "TargetName" = "8:image011.png"
+            "Tag" = "8:"
+            "Folder" = "8:_911A6E8075FC4CC1A5B86857E49D104B"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_B70B6012569E4DA9A5FB94A4BA681E01"
             {
             "AssemblyRegister" = "3:1"
@@ -2759,6 +3107,46 @@
             "Register" = "3:1"
             "Exclude" = "11:FALSE"
             "IsDependency" = "11:TRUE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_C1073F2BBFEB4AD296361E72433BFE8C"
+            {
+            "SourcePath" = "8:..\\BumberDash\\bin\\Release\\BumberDash Help 2_files\\image007.png"
+            "TargetName" = "8:image007.png"
+            "Tag" = "8:"
+            "Folder" = "8:_911A6E8075FC4CC1A5B86857E49D104B"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_C12841C795294CC18780DB8CDD8C10AB"
+            {
+            "SourcePath" = "8:..\\BumberDash\\bin\\Release\\BumberDash Help 2_files\\image001.png"
+            "TargetName" = "8:image001.png"
+            "Tag" = "8:"
+            "Folder" = "8:_911A6E8075FC4CC1A5B86857E49D104B"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
             "{9F6F8455-1EF1-4B85-886A-4223BCC8E7F7}:_C232D75A000CFF16DF151B10492E6EB6"
@@ -2962,6 +3350,26 @@
             "TargetName" = "8:NTB-vc80-mt-4_3_61.dll"
             "Tag" = "8:"
             "Folder" = "8:_8ED80F55CD744D08805A65C99F8B6E22"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_DEE722043B314C3CB07FFD82BD657BDF"
+            {
+            "SourcePath" = "8:..\\BumberDash\\bin\\Release\\BumberDash Help 2_files\\image006.jpg"
+            "TargetName" = "8:image006.jpg"
+            "Tag" = "8:"
+            "Folder" = "8:_911A6E8075FC4CC1A5B86857E49D104B"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -3191,12 +3599,52 @@
             "IsDependency" = "11:FALSE"
             "IsolateTo" = "8:"
             }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_EF74E9F90DDF4D74AD10485F9C24E322"
+            {
+            "SourcePath" = "8:..\\BumberDash\\bin\\Release\\BumberDash Help 2_files\\image010.jpg"
+            "TargetName" = "8:image010.jpg"
+            "Tag" = "8:"
+            "Folder" = "8:_911A6E8075FC4CC1A5B86857E49D104B"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
             "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F079454FAE4249219144F04747A4E4AD"
             {
             "SourcePath" = "8:..\\BumberDash\\bin\\Release\\myrimatch\\boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll"
             "TargetName" = "8:boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll"
             "Tag" = "8:"
             "Folder" = "8:_B62EF671F40C44199CEAEAA45B7BEB0A"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F294586B65CB472BAE6655A4350E9F53"
+            {
+            "SourcePath" = "8:..\\BumberDash\\bin\\Release\\BumberDash Help 2_files\\image012.jpg"
+            "TargetName" = "8:image012.jpg"
+            "Tag" = "8:"
+            "Folder" = "8:_911A6E8075FC4CC1A5B86857E49D104B"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -3248,6 +3696,26 @@
             "TargetName" = "8:TagRecon.html"
             "Tag" = "8:"
             "Folder" = "8:_91D61D268CBE4A548BF3AADB80E64F8B"
+            "Condition" = "8:"
+            "Transitive" = "11:FALSE"
+            "Vital" = "11:TRUE"
+            "ReadOnly" = "11:FALSE"
+            "Hidden" = "11:FALSE"
+            "System" = "11:FALSE"
+            "Permanent" = "11:FALSE"
+            "SharedLegacy" = "11:FALSE"
+            "PackageAs" = "3:1"
+            "Register" = "3:1"
+            "Exclude" = "11:FALSE"
+            "IsDependency" = "11:FALSE"
+            "IsolateTo" = "8:"
+            }
+            "{1FB2D0AE-D3B9-43D4-B9DD-F88EC61E35DE}:_F6C75DFC2DFB4762842EBF5272B7BBAB"
+            {
+            "SourcePath" = "8:..\\BumberDash\\bin\\Release\\BumberDash Help 2_files\\image009.png"
+            "TargetName" = "8:image009.png"
+            "Tag" = "8:"
+            "Folder" = "8:_911A6E8075FC4CC1A5B86857E49D104B"
             "Condition" = "8:"
             "Transitive" = "11:FALSE"
             "Vital" = "11:TRUE"
@@ -3422,6 +3890,17 @@
                         {
                         }
                     }
+                    "{9EF0B969-E518-4E46-987F-47570745A589}:_911A6E8075FC4CC1A5B86857E49D104B"
+                    {
+                    "Name" = "8:BumberDash Help 2_files"
+                    "AlwaysCreate" = "11:FALSE"
+                    "Condition" = "8:"
+                    "Transitive" = "11:FALSE"
+                    "Property" = "8:_581BC5D2CFB748CD840666729D777EB6"
+                        "Folders"
+                        {
+                        }
+                    }
                     "{9EF0B969-E518-4E46-987F-47570745A589}:_B62EF671F40C44199CEAEAA45B7BEB0A"
                     {
                     "Name" = "8:myrimatch"
@@ -3485,7 +3964,7 @@
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:BumberDash"
         "ProductCode" = "8:{D699DF29-1654-4E3F-8152-C5D6E0714493}"
-        "PackageCode" = "8:{F3B9B10A-11A8-4ADB-8849-80DEF6DE03E7}"
+        "PackageCode" = "8:{B338F0FC-4D2F-48AB-A9AB-779394B6CB8F}"
         "UpgradeCode" = "8:{5E0E2BAA-8F65-4B7F-A50B-C81A7EA0A00A}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
