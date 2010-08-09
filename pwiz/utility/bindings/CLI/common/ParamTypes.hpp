@@ -95,6 +95,30 @@ public ref class CV
     /// returns true iff id, URI, fullName, and version are all empty
     /// </summary>
     bool empty();
+
+
+    /// <summary>
+    /// returns CV term info for the specified CVID
+    /// </summary>
+    static CVTermInfo^ cvTermInfo(CVID cvid);
+
+
+    /// <summary>
+    /// returns CV term info for the specified id (accession number)
+    /// </summary>
+    static CVTermInfo^ cvTermInfo(System::String^ id);
+
+
+    /// <summary>
+    /// returns true iff child IsA parent in the CV
+    /// </summary>
+    static bool cvIsA(CVID child, CVID parent);
+
+
+    /// <summary>
+    /// returns vector of all valid CVIDs
+    /// </summary>
+    static System::Collections::Generic::IList<CVID>^ cvids();
 };
 
 

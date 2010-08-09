@@ -51,6 +51,14 @@ void test()
     unit_assert(gcnew CVParam(CVID::MS_m_z) == CVID::MS_m_z);
     unit_assert((bool) params[5]->value == true);
     unit_assert((bool) params[6]->value == false);
+
+    unit_assert(CV::cvTermInfo(CVID::MS_LTQ)->cvid == (gcnew CVTermInfo(CVID::MS_LTQ))->cvid);
+    unit_assert(CV::cvTermInfo("MS:1000447")->cvid == (gcnew CVTermInfo("MS:1000447"))->cvid);
+    unit_assert(CV::cvIsA(CVID::MS_LTQ, CVID::MS_Thermo_Scientific_instrument_model));
+    unit_assert(!CV::cvIsA(CVID::MS_QSTAR, CVID::MS_Thermo_Scientific_instrument_model));
+
+    System::Collections::Generic::IList<CVID>^ cvids = CV::cvids();
+    unit_assert(cvids->Count > 0);
 }
 
 

@@ -24,16 +24,16 @@
 #include "ParamTypes.hpp"
 
 
-namespace b = pwiz::data;
-
-
 namespace pwiz {
 namespace CLI {
 namespace cv {
 
 
+namespace b = pwiz::data;
+
+
 CV::CV()
-: base_(new pwiz::cv::CV()), owner_(nullptr)
+: base_(new b::CV()), owner_(nullptr)
 {}
 
 System::String^ CV::id::get() {return gcnew System::String(base_->id.c_str());}
@@ -54,10 +54,36 @@ bool CV::empty()
 }
 
 
+CVTermInfo^ CV::cvTermInfo(CVID cvid)
+{
+    return gcnew CVTermInfo(cvid);
+}
+
+CVTermInfo^ CV::cvTermInfo(System::String^ id)
+{
+    return gcnew CVTermInfo(id);
+}
+
+bool CV::cvIsA(CVID child, CVID parent)
+{
+    return b::cvIsA((b::CVID) child, (b::CVID) parent);
+}
+
+System::Collections::Generic::IList<CVID>^ CV::cvids()
+{
+    return gcnew CVIDList(const_cast<std::vector<b::CVID>*>(&b::cvids()));
+}
+
+
 } // namespace cv
 
 
+
+
 namespace data {
+
+
+namespace b = pwiz::data;
 
 
 CVParamValue::CVParamValue(boost::shared_ptr<b::CVParam>* base)
