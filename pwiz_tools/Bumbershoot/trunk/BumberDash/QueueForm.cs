@@ -2054,6 +2054,13 @@ namespace BumberDash
             af.Dispose();
         }
 
+        private void documentationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string helpFile = string.Empty;
+            helpFile = String.Format("\"file:///{0}/BumberDash Help 2.htm\"", Environment.CurrentDirectory.ToString().Replace("\\", "/"));
+            System.Diagnostics.Process.Start(helpFile);
+        }
+
        
     }
 }
