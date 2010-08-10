@@ -20,7 +20,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -371,20 +370,29 @@ namespace pwiz.Skyline.Model.Lib
 
                         ReadComplete(stream, specHeader, (4 + sizeof (double))*numMods);
                         int iLast = 0;
+                        double modTotal = 0;
                         for (int j = 0; j < numMods; j++)
                         {
                             int iPos = GetInt32(specHeader, j*3);
                             double mod = BitConverter.ToDouble(specHeader, (j*3 + 1)*4);
 
                             // X! Hunter allows multiple modifications on the same
-                            // residue.  This just appends them all, which will never
-                            // match the strings generated from the SequenceMassCalculator.
-                            // CONSIDER: Add modifications on the same residue?
+                            // residue.  So, they need to be totaled, and assigned to a
+                            // single residue to allow them to match Skyline modification
+                            // settings.
                             if (iPos > iLast)
+                            {
+                                if (modTotal != 0)
+                                    sb.Append(SequenceMassCalc.GetModDiffDescription(modTotal));
                                 sb.Append(Encoding.Default.GetString(specSequence, iLast, iPos - iLast));
-                            sb.Append(SequenceMassCalc.GetModDiffDescription(mod));
+
+                                modTotal = 0;
+                            }
+                            modTotal += mod;
                             iLast = iPos;
-                        }                        
+                        }
+                        if (modTotal != 0)
+                            sb.Append(SequenceMassCalc.GetModDiffDescription(modTotal));
                         sb.Append(Encoding.Default.GetString(specSequence, iLast, seqLength - iLast));
                         sequence = Encoding.Default.GetBytes(sb.ToString());
                         seqLength = sb.Length;

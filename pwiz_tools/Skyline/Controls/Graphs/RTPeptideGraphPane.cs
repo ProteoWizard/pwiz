@@ -79,10 +79,20 @@ namespace pwiz.Skyline.Controls.Graphs
             public override double MinValueSetting { get { return Settings.Default.PeakTimeMin; } }
             public override double MaxCVSetting { get { return Settings.Default.PeakTimeMaxCv; } }
 
+            protected override PointPair CreatePointPairMissing(int iGroup)
+            {
+                if (RTValue != RTPeptideValue.All)
+                    return base.CreatePointPairMissing(iGroup);
+                return RTPointPairMissing(iGroup);
+            }
+
             protected override PointPair CreatePointPair(int iGroup, TransitionGroupDocNode nodeGroup, ref double maxY, ref double minY)
             {
-                if (!nodeGroup.HasResults || RTValue != RTPeptideValue.All)
+                if (RTValue != RTPeptideValue.All)
                     return base.CreatePointPair(iGroup, nodeGroup, ref maxY, ref minY);
+
+                if (!nodeGroup.HasResults)
+                    return RTPointPairMissing(iGroup);
 
                 var listTimes = new List<double>();
                 var listStarts = new List<double>();
@@ -122,8 +132,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
             protected override PointPair CreatePointPair(int iGroup, TransitionDocNode nodeTran, ref double maxY, ref double minY)
             {
-                if (!nodeTran.HasResults || RTValue != RTPeptideValue.All)
+                if (RTValue != RTPeptideValue.All)
                     return base.CreatePointPair(iGroup, nodeTran, ref maxY, ref minY);
+
+                if (!nodeTran.HasResults)
+                    return RTPointPairMissing(iGroup);
 
                 var listTimes = new List<double>();
                 var listStarts = new List<double>();

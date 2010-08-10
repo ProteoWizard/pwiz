@@ -317,7 +317,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         if (peptideOrder == SummaryPeptideOrder.time)
                         {
                             label += string.Format(" ({0:F01})", displayTotals ?
-                                                                                   dataPoint.TimePep : dataPoint.TimeGroup);                            
+                                                                                   dataPoint.TimePepCharge : dataPoint.TimeGroup);                            
                         }
                         labels.Add(label);
                         xscalePaths.Add(dataPoint.IdentityPath);
@@ -325,7 +325,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     double groupMaxY = 0;
                     double groupMinY = double.MaxValue;
-                    
+
+                    // ReSharper disable DoNotCallOverridableMethodsInConstructor
                     if (displayTotals)
                     {
                         var labelType = nodeGroup.TransitionGroup.LabelType;
@@ -337,7 +338,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         {
                             var pointPairList = pointPairLists[i];
                             if (i >= nodeGroup.Children.Count)
-                                pointPairList.Add(PointPairMissing(iGroup));
+                                pointPairList.Add(CreatePointPairMissing(iGroup));
                             else
                             {
                                 pointPairList.Add(CreatePointPair(iGroup,
@@ -345,6 +346,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             }
                         }
                     }
+                    // ReSharper restore DoNotCallOverridableMethodsInConstructor
 
                     // Save the selected index and its y extent
                     if (ReferenceEquals(selectedGroup, nodeGroup))
@@ -389,7 +391,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (ReferenceEquals(p1.NodePep, p2.NodePep))
                     return Peptide.CompareGroups(p1.NodeGroup, p2.NodeGroup);
-                return Comparer.Default.Compare(p1.TimePep, p2.TimePep);
+                return Comparer.Default.Compare(p1.TimePepCharge, p2.TimePepCharge);
             }
 
             private static int CompareGroupTimes(GraphPointData p1, GraphPointData p2)
@@ -401,7 +403,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (ReferenceEquals(p2.NodePep, p1.NodePep))
                     return Peptide.CompareGroups(p2.NodeGroup, p1.NodeGroup);
-                return Comparer.Default.Compare(p2.AreaPep, p1.AreaPep);
+                return Comparer.Default.Compare(p2.AreaPepCharge, p1.AreaPepCharge);
             }
 
             private static int CompareGroupAreas(GraphPointData p1, GraphPointData p2)
@@ -409,12 +411,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 return Comparer.Default.Compare(p2.AreaGroup, p1.AreaGroup);
             }
 
-            private static void LevelPointPairLists(List<PointPairList> lists)
+            private void LevelPointPairLists(List<PointPairList> lists)
             {
                 // Add missing points to lists to make them all of equal length
                 int maxPoints = 0;
                 lists.ForEach(l => maxPoints = Math.Max(maxPoints, l.Count));
-                lists.ForEach(l => { if (l.Count < maxPoints) l.Add(PointPairMissing(maxPoints - 1)); });
+                lists.ForEach(l => { if (l.Count < maxPoints) l.Add(CreatePointPairMissing(maxPoints - 1)); });
             }
 
 // ReSharper disable SuggestBaseTypeForParameter
@@ -438,6 +440,11 @@ namespace pwiz.Skyline.Controls.Graphs
             protected static PointPair PointPairMissing(int iGroup)
             {
                 return MeanErrorBarItem.MakePointPair(iGroup, PointPairBase.Missing, PointPairBase.Missing);
+            }
+
+            protected virtual PointPair CreatePointPairMissing(int iGroup)
+            {
+                return PointPairMissing(iGroup);
             }
 
             protected virtual PointPair CreatePointPair(int iGroup, TransitionGroupDocNode nodeGroup, ref double maxY, ref double minY)
@@ -583,9 +590,9 @@ namespace pwiz.Skyline.Controls.Graphs
             public TransitionGroupDocNode NodeGroup { get; private set; }
             public IdentityPath IdentityPath { get; private set; }
             public double AreaGroup { get; private set; }
-            public double AreaPep { get; private set; }
+            public double AreaPepCharge { get; private set; }
             public double TimeGroup { get; private set; }
-            public double TimePep { get; private set; }
+            public double TimePepCharge { get; private set; }
 
 // ReSharper disable SuggestBaseTypeForParameter
             private void CalcStats(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup)
@@ -597,6 +604,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     double meanArea, meanTime;
                     CalcStats(nodePepChild, out meanArea, out meanTime);
+                    if (nodeGroup.TransitionGroup.PrecursorCharge != nodePepChild.TransitionGroup.PrecursorCharge)
+                        continue;
                     areas.Add(meanArea);
                     times.Add(meanTime);
                     if (ReferenceEquals(nodeGroup, nodePepChild))
@@ -605,8 +614,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         TimeGroup = meanTime;
                     }
                 }
-                AreaPep = (areas.Count > 0 ? new Statistics(areas).Mean() : 0);
-                TimePep = (times.Count > 0 ? new Statistics(times).Mean() : 0);
+                AreaPepCharge = (areas.Count > 0 ? new Statistics(areas).Mean() : 0);
+                TimePepCharge = (times.Count > 0 ? new Statistics(times).Mean() : 0);
             }
 
             private static void CalcStats(TransitionGroupDocNode nodeGroup, out double meanArea, out double meanTime)
