@@ -45,7 +45,7 @@ namespace Agilent {
 
 
 namespace {
-        
+
 MHDAC::IMsdrPeakFilter^ msdrPeakFilter(PeakFilterPtr peakFilter)
 {
     MHDAC::IMsdrPeakFilter^ result = gcnew MHDAC::MsdrPeakFilter();
@@ -112,6 +112,13 @@ class MassHunterDataImpl : public MassHunterData
     automation_vector<float> ticIntensities_, bpcIntensities_;
     set<Transition> transitions_;
     map<Transition, int> transitionToChromatogramIndexMap_;
+
+    // cached because MassHunter can only load all chromatograms
+    // at the same time. Not caching caused serious performance problems.
+    gcroot<array<MHDAC::IBDAChromData^>^> chromMrm_;
+    // unable to achieve identical results with cached SIM chromatograms
+    // gcroot<array<MHDAC::IBDAChromData^>^> chromSim_;
+
 };
 
 typedef boost::shared_ptr<MassHunterDataImpl> MassHunterDataImplPtr;
@@ -212,12 +219,15 @@ MassHunterDataImpl::MassHunterDataImpl(const std::string& path)
         ToAutomationVector(bpc->XArray, bpcTimes_);
         ToAutomationVector(bpc->YArray, bpcIntensities_);
 
-        // calculate total chromatograms present
+		// chromatograms are always read completely into memory, and failing
+		// to store them on this object after reading cost a 50x performance
+		// hit on large MRM files.
+        filter = gcnew MHDAC::BDAChromFilter();
+        filter->DoCycleSum = false;
         filter->ExtractOneChromatogramPerScanSegment = true;
-
-        // note: we use this instead of MassSpecDataReader.MRMTransitions in case of time segments
         filter->ChromatogramType = MHDAC::ChromType::MultipleReactionMode;
-        for each (MHDAC::IBDAChromData^ chromatogram in reader_->GetChromatogram(filter))
+        array<MHDAC::IBDAChromData^>^ chromatograms = reader_->GetChromatogram(filter);
+        for each (MHDAC::IBDAChromData^ chromatogram in chromatograms)
         {
             if (chromatogram->MZOfInterest->Length == 0 ||
                 chromatogram->MeasuredMassRange->Length == 0)
@@ -240,11 +250,13 @@ MassHunterDataImpl::MassHunterDataImpl(const std::string& path)
             transitionToChromatogramIndexMap_[t] = transitions_.size();
             transitions_.insert(t);
         }
+        chromMrm_ = chromatograms;
 
         int mrmCount = transitions_.size();
 
         filter->ChromatogramType = MHDAC::ChromType::SelectedIonMonitoring;
-        for each (MHDAC::IBDAChromData^ chromatogram in reader_->GetChromatogram(filter))
+        chromatograms = reader_->GetChromatogram(filter);
+        for each (MHDAC::IBDAChromData^ chromatogram in chromatograms)
         {
             if (chromatogram->MeasuredMassRange->Length == 0)
                 // TODO: log this anomaly
@@ -266,6 +278,11 @@ MassHunterDataImpl::MassHunterDataImpl(const std::string& path)
             transitionToChromatogramIndexMap_[t] = transitions_.size() - mrmCount;
             transitions_.insert(t);
         }
+        // unfortunately, storing the chromatograms read here for SelectedIonMonitoring
+        // even with the new filter did not produce results identical to the original
+        // code, causing tests to fail.
+        // someone with more knowledge of the tests and SIM would have to fix this.
+        // chromSim_ = chromatograms;
     }
     CATCH_AND_FORWARD
 }
@@ -349,17 +366,24 @@ ChromatogramPtr MassHunterDataImpl::getChromatogram(const Transition& transition
 {
     try
     {
-        MHDAC::IBDAChromFilter^ filter = gcnew MHDAC::BDAChromFilter();
-        filter->ChromatogramType = transition.type == Transition::MRM ? MHDAC::ChromType::MultipleReactionMode
-                                                                      : MHDAC::ChromType::SelectedIonMonitoring;
-        filter->ExtractOneChromatogramPerScanSegment = true;
-        filter->DoCycleSum = false;
-
         if (!transitionToChromatogramIndexMap_.count(transition))
             throw gcnew System::Exception("[MassHunterData::getChromatogram()] No chromatogram corresponds to the transition.");
 
         int index = transitionToChromatogramIndexMap_.find(transition)->second;
-        ChromatogramImplPtr chromatogramPtr(new ChromatogramImpl(reader_->GetChromatogram(filter)[index]));
+        // until someone can figure out why storing SIM chromatograms in the constructor
+        // causes the unit test to fail, only MRM uses faster way of retrieving chromatograms
+        // while SIM continues to use the original, slower method.
+		array<MHDAC::IBDAChromData^>^ chromatograms = chromMrm_; // transition.type == Transition::MRM ? chromMrm_ : chromSim_;
+		if (transition.type != Transition::MRM)
+		{
+            MHDAC::IBDAChromFilter^ filter = gcnew MHDAC::BDAChromFilter();
+			filter->ChromatogramType = MHDAC::ChromType::SelectedIonMonitoring;
+			filter->ExtractOneChromatogramPerScanSegment = true;
+			filter->DoCycleSum = false;
+			chromatograms = reader_->GetChromatogram(filter);
+		}
+
+        ChromatogramImplPtr chromatogramPtr(new ChromatogramImpl(chromatograms[index]));
         return chromatogramPtr;
     }
     CATCH_AND_FORWARD
