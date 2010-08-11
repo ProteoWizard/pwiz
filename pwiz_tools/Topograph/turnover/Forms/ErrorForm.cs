@@ -43,7 +43,14 @@ namespace pwiz.Topograph.ui.Forms
         {
             try
             {
-                BeginInvoke(new Action(() => UpdateRow(dataGridView1.Rows[dataGridView1.Rows.Add()], error)));
+                BeginInvoke(new Action(() =>
+                                           {
+                                               while (dataGridView1.Rows.Count >= ErrorHandler.MaxErrorCount)
+                                               {
+                                                   dataGridView1.Rows.RemoveAt(0);
+                                               }
+                                               UpdateRow(dataGridView1.Rows[dataGridView1.Rows.Add()], error);
+                                           }));
             }
             catch
             {

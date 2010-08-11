@@ -7,11 +7,16 @@ namespace pwiz.Topograph.Util
 {
     public static class ErrorHandler
     {
+        public const int MaxErrorCount = 1000;
         static readonly List<Error> errors = new List<Error>();
         public static void AddError(Error error)
         {
             lock(errors)
             {
+                while (errors.Count >= MaxErrorCount)
+                {
+                    errors.RemoveAt(0);
+                }
                 errors.Add(error);
             }
             var handler = ErrorAdded;
