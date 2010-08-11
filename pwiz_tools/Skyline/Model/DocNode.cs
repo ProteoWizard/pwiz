@@ -315,6 +315,68 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
+        /// Gets an array of position indexes for each level below this parent
+        /// of a specified child node.
+        /// </summary>
+        /// <param name="id">The id of the child for which positions are requested</param>
+        /// <returns>An array of position values for each level in this node</returns>
+        public int[] GetNodePositions(Identity id)
+        {
+            int[] positions = new int[Depth];
+            for (int i = 0; i < Children.Count; i++)
+            {
+                if (ReferenceEquals(id, Children[i].Id))
+                    break;
+
+                // Add one for the child level
+                positions[0]++;
+                // If the child is a parent itself, then add all of it node
+                // counts to the lower levels.
+                var childParent = Children[i] as DocNodeParent;
+                if (childParent != null)
+                {
+                    for (int j = 0; j < childParent.Depth; j++)
+                        positions[j + 1] += childParent.GetCount(j);
+                }
+            }
+            return positions;
+        }
+
+        /// <summary>
+        /// Gets the position in children and dependents of a specified path.
+        /// If the path ends at a parent node with children, then its position
+        /// at deeper levels is considered to be its first descendent at that
+        /// level.
+        /// </summary>
+        /// <param name="path">An <see cref="IdentityPath"/> to the desired descendant</param>
+        /// <returns>An array of position values for each level in this node</returns>
+        public int[] GetNodePositions(IdentityPath path)
+        {
+            return GetNodePositions(new IdentityPathTraversal(path));
+        }
+
+        private int[] GetNodePositions(IdentityPathTraversal traversal)
+        {
+            if (traversal.HasNext)
+            {
+                int[] positions = GetNodePositions(traversal.Next);
+                if (!traversal.HasNext)
+                    return positions;
+                else if (Children[positions[0]] is DocNodeParent)
+                {
+                    // Get the positions of the next id in the path, and add them to
+                    // the positions for the current id.
+                    var childPositions = ((DocNodeParent) Children[positions[0]]).GetNodePositions(traversal);
+                    for (int i = 0; i < childPositions.Length; i++)
+                        positions[i + 1] += childPositions[i];
+                    return positions;
+                }
+                return null;
+            }
+            return new[] {0};
+        }
+
+        /// <summary>
         /// Gets a <see cref="IdentityPath"/> to a child by index.
         /// </summary>
         /// <param name="index">Index to the child</param>

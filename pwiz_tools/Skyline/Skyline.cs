@@ -648,6 +648,7 @@ namespace pwiz.Skyline
 
             // Update any visible graphs
             UpdateGraphPanes();
+            UpdateNodeCountStatus();
         }
 
         private bool StatementCompletionAction(Action<TextBox> act)
@@ -2301,18 +2302,49 @@ namespace pwiz.Skyline
 
         private void UpdateNodeCountStatus()
         {
-            UpdateStatusCounter(statusSequences, DocumentUI.PeptideGroupCount, "prot");
-            UpdateStatusCounter(statusPeptides, DocumentUI.PeptideCount, "pep");
-            UpdateStatusCounter(statusPrecursors, DocumentUI.TransitionGroupCount, "prec");
-            UpdateStatusCounter(statusIons, DocumentUI.TransitionCount, "tran");
+            var selectedPath = SelectedPath;
+            int[] positions;
+            if (selectedPath != null && !SequenceTree.IsInsertPath(selectedPath))
+            {
+                positions = DocumentUI.GetNodePositions(SelectedPath);
+            }
+            else
+            {
+                positions = new int[DocumentUI.Depth];
+                for (int i = 0; i < positions.Length; i++)
+                    positions[i] = -1;
+            }
+
+            UpdateStatusCounter(statusSequences, positions, SrmDocument.Level.PeptideGroups, "prot");
+            UpdateStatusCounter(statusPeptides, positions, SrmDocument.Level.Peptides, "pep");
+            UpdateStatusCounter(statusPrecursors, positions, SrmDocument.Level.TransitionGroups, "prec");
+            UpdateStatusCounter(statusIons, positions, SrmDocument.Level.Transitions, "tran");
         }
 
-        private static void UpdateStatusCounter(ToolStripItem label, int count, string text)
+        private void UpdateStatusCounter(ToolStripItem label, int[] positions, SrmDocument.Level level, string text)
         {
-            if (!Equals(label.Tag, count))
+            int l = (int)level;
+            int count = DocumentUI.GetCount(l);
+            string tag;
+            if (count == 0)
+                tag = count.ToString();
+            else
             {
-                label.Text = count + " " + text;
-                label.Tag = count;
+                int pos = 0;
+                if (positions != null && l < positions.Length)
+                    pos = positions[l];
+
+                if (pos != -1)
+                    pos++;
+                else
+                    pos = count;
+                tag = pos + "/" + count;
+            }
+
+            if (!Equals(label.Tag, tag))
+            {
+                label.Text = tag + " " + text;
+                label.Tag = tag;
             }
         }
 
