@@ -31,9 +31,16 @@ namespace pwiz.Topograph.MsData
                 }
                 using (var session = Workspace.OpenWriteSession())
                 {
-                    session.BeginTransaction();
-                    session.Save(DbLock);
-                    session.Transaction.Commit();
+                    try
+                    {
+                        session.BeginTransaction();
+                        session.Save(DbLock);
+                        session.Transaction.Commit();
+                    }
+                    catch (HibernateException hibernateException)
+                    {
+                        throw new LockException("Could not insert lock", hibernateException);
+                    }
                 }
             }
         }
@@ -75,6 +82,12 @@ namespace pwiz.Topograph.MsData
                     DbLock = null;
                 }
             }
+        }
+    }
+    public class LockException : ApplicationException
+    {
+        public LockException(string message, Exception cause) : base(message, cause)
+        {
         }
     }
 }

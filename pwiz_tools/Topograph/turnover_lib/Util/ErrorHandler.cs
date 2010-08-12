@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using pwiz.Topograph.MsData;
 
 namespace pwiz.Topograph.Util
 {
@@ -28,6 +29,10 @@ namespace pwiz.Topograph.Util
 
         public static void LogException(String component, String message, Exception exception)
         {
+            if (exception is LockException)
+            {
+                return;
+            }
             AddError(new Error(component, message, exception));
             Console.Out.WriteLine(exception);
         }

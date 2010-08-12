@@ -178,15 +178,22 @@ namespace pwiz.Topograph.MsData
                         DbLock dbLock;
                         using (_session = _workspace.OpenWriteSession())
                         {
-                            _session.BeginTransaction();
-                            dbLock = new DbLock()
-                                         {
-                                             InstanceIdGuid = _workspace.InstanceId,
-                                             LockType = LockType.results,
-                                             PeptideAnalysisId = peptideAnalysisId
-                                         };
-                            _session.Save(dbLock);
-                            _session.Transaction.Commit();
+                            try
+                            {
+                                _session.BeginTransaction();
+                                dbLock = new DbLock()
+                                {
+                                    InstanceIdGuid = _workspace.InstanceId,
+                                    LockType = LockType.results,
+                                    PeptideAnalysisId = peptideAnalysisId
+                                };
+                                _session.Save(dbLock);
+                                _session.Transaction.Commit();
+                            }
+                            catch (HibernateException hibernateException)
+                            {
+                                throw new LockException("Could not insert lock", hibernateException);
+                            }
                         }
                         return new ResultCalculatorTask(peptideAnalysis, dbLock);
                     }
