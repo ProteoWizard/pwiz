@@ -31,16 +31,16 @@
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.btnRefresh = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
-            this.tbxMinScore = new System.Windows.Forms.TextBox();
             this.cbxByFile = new System.Windows.Forms.CheckBox();
+            this.tbxMinScore = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.tbxMinTracers = new System.Windows.Forms.TextBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.colCohort = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colMean = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colStdDev = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colMedian = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.label2 = new System.Windows.Forms.Label();
-            this.tbxMinTracers = new System.Windows.Forms.TextBox();
             this.tableLayoutPanel1.SuspendLayout();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -88,13 +88,6 @@
             this.label1.TabIndex = 1;
             this.label1.Text = "Min Score:";
             // 
-            // tbxMinScore
-            // 
-            this.tbxMinScore.Location = new System.Drawing.Point(203, 3);
-            this.tbxMinScore.Name = "tbxMinScore";
-            this.tbxMinScore.Size = new System.Drawing.Size(162, 20);
-            this.tbxMinScore.TabIndex = 2;
-            // 
             // cbxByFile
             // 
             this.cbxByFile.AutoSize = true;
@@ -104,6 +97,30 @@
             this.cbxByFile.TabIndex = 3;
             this.cbxByFile.Text = "By file";
             this.cbxByFile.UseVisualStyleBackColor = true;
+            // 
+            // tbxMinScore
+            // 
+            this.tbxMinScore.Location = new System.Drawing.Point(203, 3);
+            this.tbxMinScore.Name = "tbxMinScore";
+            this.tbxMinScore.Size = new System.Drawing.Size(162, 20);
+            this.tbxMinScore.TabIndex = 2;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(3, 40);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(81, 13);
+            this.label2.TabIndex = 4;
+            this.label2.Text = "Min # of tracers";
+            // 
+            // tbxMinTracers
+            // 
+            this.tbxMinTracers.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tbxMinTracers.Location = new System.Drawing.Point(203, 43);
+            this.tbxMinTracers.Name = "tbxMinTracers";
+            this.tbxMinTracers.Size = new System.Drawing.Size(194, 20);
+            this.tbxMinTracers.TabIndex = 5;
             // 
             // splitContainer1
             // 
@@ -159,23 +176,6 @@
             this.colMedian.HeaderText = "Median";
             this.colMedian.Name = "colMedian";
             this.colMedian.ReadOnly = true;
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(3, 40);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(81, 13);
-            this.label2.TabIndex = 4;
-            this.label2.Text = "Min # of tracers";
-            // 
-            // tbxMinTracers
-            // 
-            this.tbxMinTracers.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tbxMinTracers.Location = new System.Drawing.Point(203, 43);
-            this.tbxMinTracers.Name = "tbxMinTracers";
-            this.tbxMinTracers.Size = new System.Drawing.Size(194, 20);
-            this.tbxMinTracers.TabIndex = 5;
             // 
             // PrecursorEnrichmentForm
             // 
