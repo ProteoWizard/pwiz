@@ -45,7 +45,7 @@ namespace pwiz.SkylineTest.Reporting
         {
             Database database = new Database();
             Schema schema = database.GetSchema();
-            foreach (PivotType pivotType in new[]{PivotType.REPLICATE, PivotType.ISOTOPE_LABEL})
+            foreach (PivotType pivotType in new[]{PivotType.REPLICATE, PivotType.ISOTOPE_LABEL, PivotType.REPLICATE_ISOTOPE_LABEL})
             {
                 foreach (Type table in schema.GetTables())
                 {
@@ -53,7 +53,7 @@ namespace pwiz.SkylineTest.Reporting
                     var columns = pivotType.GetGroupByColumns(reportColumns);
                     if (columns.Count == 0)
                     {
-                        Assert.IsNull(pivotType.GetCrosstabHeader(reportColumns),
+                        Assert.AreEqual(0, pivotType.GetCrosstabHeaders(reportColumns).Count,
                             string.Format("No groupby columns, but crosstab headers for table {0} and pivot type {1}", table, pivotType.GetType()));
                         continue;
                     }
@@ -61,7 +61,10 @@ namespace pwiz.SkylineTest.Reporting
                     {
                         Assert.IsNotNull(schema.GetColumnInfo(column));
                     }
-                    Assert.IsNotNull(schema.GetColumnInfo(pivotType.GetCrosstabHeader(reportColumns)));
+                    foreach (var column in pivotType.GetCrosstabHeaders(reportColumns))
+                    {
+                        Assert.IsNotNull(schema.GetColumnInfo(column));
+                    }
                 }
             }
         }

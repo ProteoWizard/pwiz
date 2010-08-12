@@ -173,7 +173,7 @@ namespace pwiz.SkylineTest.Reporting
             List<NodeData> columnInfos;
             columnSet.GetColumnInfos(report, treeView, out columnInfos);
             Assert.AreEqual(report.Columns.Count, columnInfos.Count);
-            SimpleReport reportCompare = (SimpleReport) columnSet.GetReport(columnInfos, new List<PivotType>());
+            SimpleReport reportCompare = (SimpleReport) columnSet.GetReport(columnInfos, null);
             Assert.IsTrue(ArrayUtil.EqualsDeep(report.Columns, reportCompare.Columns));
         }
 

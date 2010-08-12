@@ -447,16 +447,15 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             return new Identifier(modPrefix(new Identifier(prefix, suffix.Parts[0])), suffix.RemovePrefix(1));
         }
 
-        private SimpleReport Pivot(SimpleReport simpleReport, IEnumerable<PivotType> pivotTypes)
+        private SimpleReport Pivot(SimpleReport simpleReport, PivotType pivotType)
         {
-            ICollection<ReportColumn> groupByColumns = new List<ReportColumn>();
-            var crossTabHeaders = new List<ReportColumn>();
-            foreach (PivotType pivotType in pivotTypes)
-            {
-                var pivotGroupByColumns = pivotType.GetGroupByColumns(simpleReport.Columns);
-                groupByColumns = PivotType.Intersect(groupByColumns, pivotGroupByColumns);
-                crossTabHeaders.Add(pivotType.GetCrosstabHeader(simpleReport.Columns));
-            }
+            var crossTabHeaders = pivotType == null 
+                ? new ReportColumn[0] 
+                : pivotType.GetCrosstabHeaders(simpleReport.Columns);
+            var groupByColumns = pivotType == null 
+                ? new ReportColumn[0]
+                : pivotType.GetGroupByColumns(simpleReport.Columns);
+
             foreach (ReportColumn id in crossTabHeaders)
             {
                 groupByColumns.Remove(id);
@@ -468,16 +467,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 Type table;
                 String column;
                 Schema.Resolve(id.Table, id.Column, out table, out column);
-                bool crossTabColumn = false;
-                foreach (PivotType pivotType in pivotTypes)
-                {
-                    if (pivotType.IsCrosstabValue(table, column))
-                    {
-                        crossTabColumn = true;
-                        break;
-                    }
-                }
-                if (crossTabColumn)
+                if (pivotType != null && pivotType.IsCrosstabValue(table, column))
                 {
                     crossTabColumns.Add(id);
                 }
@@ -505,7 +495,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         /// Also, a PivotReport will be returned if any columns from a Results table were
         /// selected, and pivotResults is true.
         /// </summary>
-        public Report GetReport(List<NodeData> columnInfos, IList<PivotType> pivotTypes)
+        public Report GetReport(List<NodeData> columnInfos, PivotType pivotType)
         {
             // Get the common prefix, and the ancestor table it represents
             Identifier commonPrefix = GetCommonPrefix(columnInfos);
@@ -541,7 +531,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                            {
                                Columns = displayColumns
                            };
-            return Pivot(simpleReport, pivotTypes);
+            return Pivot(simpleReport, pivotType);
         }
     }
 

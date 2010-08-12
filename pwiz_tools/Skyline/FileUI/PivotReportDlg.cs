@@ -115,16 +115,23 @@ namespace pwiz.Skyline.FileUI
 
         public Report GetReport()
         {
-            List<PivotType> pivotTypes = new List<PivotType>();
-            if (cbxPivotReplicate.Enabled && cbxPivotReplicate.Checked)
+            bool replicate = cbxPivotReplicate.Enabled && cbxPivotReplicate.Checked;
+            bool isotopeLabel = cbxPivotIsotopeLabel.Enabled && cbxPivotIsotopeLabel.Checked;
+
+            PivotType pivotType = null;
+            if (replicate && isotopeLabel)
             {
-                pivotTypes.Add(PivotType.REPLICATE);
+                pivotType = PivotType.REPLICATE_ISOTOPE_LABEL;
             }
-            if (cbxPivotIsotopeLabel.Enabled && cbxPivotIsotopeLabel.Checked)
+            else if (replicate)
             {
-                pivotTypes.Add(PivotType.ISOTOPE_LABEL);
+                pivotType = PivotType.REPLICATE;
             }
-            return _columnSet.GetReport(_columns, pivotTypes);
+            else if (isotopeLabel)
+            {
+                pivotType = PivotType.ISOTOPE_LABEL;
+            }
+            return _columnSet.GetReport(_columns, pivotType);
         }
 
         public ReportSpec GetReportSpec()
@@ -150,11 +157,11 @@ namespace pwiz.Skyline.FileUI
                 var testColumns = pivotReport.Columns.Union(pivotReport.CrossTabValues).ToArray();
                 foreach(var id in pivotReport.CrossTabHeaders)
                 {
-                    if (id.Equals(PivotType.REPLICATE.GetCrosstabHeader(testColumns)))
+                    if (PivotType.REPLICATE.GetCrosstabHeaders(testColumns).Contains(id))
                     {
                         cbxPivotReplicate.Checked = true;
                     }
-                    if (id.Equals(PivotType.ISOTOPE_LABEL.GetCrosstabHeader(testColumns)))
+                    if (PivotType.ISOTOPE_LABEL.GetCrosstabHeaders(testColumns).Contains(id))
                     {
                         cbxPivotIsotopeLabel.Checked = true;
                     }

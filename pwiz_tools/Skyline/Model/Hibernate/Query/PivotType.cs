@@ -34,12 +34,13 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 
         public static readonly PivotType REPLICATE = new ReplicatePivotType();
         public static readonly PivotType ISOTOPE_LABEL = new IsotopeLabelPivotType();
+        public static readonly PivotType REPLICATE_ISOTOPE_LABEL = new ReplicateIsotopeLabelPivotType();
 
         /// <summary>
         /// Returns the column whose values supply the names going across horizontally
         /// in the crosstab.
         /// </summary>
-        public abstract ReportColumn GetCrosstabHeader(IList<ReportColumn> columns);
+        public abstract IList<ReportColumn> GetCrosstabHeaders(IList<ReportColumn> columns);
         /// <summary>
         /// Returns the set of columns which, along with the column returned by GetCrosstabHeader,
         /// uniquely identifier rows in the table.
@@ -128,14 +129,14 @@ namespace pwiz.Skyline.Model.Hibernate.Query
     /// </summary>
     public class ReplicatePivotType : PivotType
     {
-        public override ReportColumn GetCrosstabHeader(IList<ReportColumn> columns)
+        public override IList<ReportColumn> GetCrosstabHeaders(IList<ReportColumn> columns)
         {
             int i = columns.IndexOf(column => IsResultTable(column.Table));
             if (i != -1)
             {
-                return new ReportColumn(columns[i].Table, REPLICATE_NAME_ID);
+                return new[] {new ReportColumn(columns[i].Table, REPLICATE_NAME_ID)};
             }
-            return null;
+            return new ReportColumn[0];
         }
 
         public override IList<ReportColumn> GetGroupByColumns(IList<ReportColumn> columns)
@@ -178,16 +179,16 @@ namespace pwiz.Skyline.Model.Hibernate.Query
     /// </summary>
     public class IsotopeLabelPivotType : PivotType
     {
-        public override ReportColumn GetCrosstabHeader(IList<ReportColumn> columns)
+        public override IList<ReportColumn> GetCrosstabHeaders(IList<ReportColumn> columns)
         {
             if (columns.Count > 0)
             {
                 if (columns.Contains(column => IsPrecursorType(column.Table)))
-                    return new ReportColumn(typeof(DbPrecursor), "IsotopeLabelType");
+                    return new [] {new ReportColumn(typeof(DbPrecursor), "IsotopeLabelType")};
                 if (columns.Contains(column => IsTransitionType(column.Table)))
-                    return new ReportColumn(typeof(DbTransition), "Precursor", "IsotopeLabelType");
+                    return new [] {new ReportColumn(typeof(DbTransition), "Precursor", "IsotopeLabelType")};
             }
-            return null;
+            return new ReportColumn[0];
         }
 
         private static bool IsPrecursorType(Type table)
@@ -271,6 +272,36 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 return TRANSITION_CROSSTAB_VALUES.Contains(column);
             }
             return false;
+        }
+    }
+    public class ReplicateIsotopeLabelPivotType : PivotType
+    {
+        public override IList<ReportColumn> GetCrosstabHeaders(IList<ReportColumn> columns)
+        {
+            var result = new List<ReportColumn>();
+            result.AddRange(REPLICATE.GetCrosstabHeaders(columns));
+            result.AddRange(ISOTOPE_LABEL.GetCrosstabHeaders(columns));
+            return result;
+        }
+
+        public override IList<ReportColumn> GetGroupByColumns(IList<ReportColumn> columns)
+        {
+            var result = new List<ReportColumn>();
+            if (Contains(columns, typeof(DbPrecursorResult)) || Contains(columns, typeof(DbTransitionResult)))
+            {
+                result.AddRange(ISOTOPE_LABEL.GetGroupByColumns(columns));
+            }
+            else
+            {
+                result.AddRange(REPLICATE.GetGroupByColumns(columns));
+                result.AddRange(ISOTOPE_LABEL.GetGroupByColumns(columns));
+            }
+            return result;
+        }
+
+        public override bool IsCrosstabValue(Type table, string column)
+        {
+            return REPLICATE.IsCrosstabValue(table, column) || ISOTOPE_LABEL.IsCrosstabValue(table, column);
         }
     }
 }
