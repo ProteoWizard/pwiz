@@ -902,7 +902,16 @@ namespace BumberDash
         /// <param name="e"></param>
            private void iDPickerToolStripMenuItem_Click(object sender, EventArgs e)
            {
-               System.Diagnostics.Process.Start(Properties.Settings.Default.IDPickerLocation);
+               try
+               {
+                   System.Diagnostics.Process.Start(Properties.Settings.Default.IDPickerLocation);
+               }
+               catch
+               {
+                   MessageBox.Show("IDPicker location invalid, please re-define correct location");
+                   Properties.Settings.Default.IDPickerLocation = string.Empty;
+                   Properties.Settings.Default.Save();
+               }
            }
 
         /// <summary>
