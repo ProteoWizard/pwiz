@@ -87,6 +87,8 @@ namespace BumberDash
                     break;
             }
 
+            NumMaxMissedCleavagesAuto.Height = (int)((double)NumMaxMissedCleavagesAuto.Height / _factorY);
+
             
         }
 
@@ -1959,14 +1961,42 @@ namespace BumberDash
             else
                 Text = "DirecTag Config Editor | " + _configName.Substring(_configName.LastIndexOf('\\') + 1);
 
+            UpdateTemplateMenuItems();
+            if (_currentTemplate < _formTemplate.Length)
+            {
+                _skipAutomation = true;
+                InstrumentBox.SelectedIndex = _currentTemplate - 1;
+                _skipAutomation = false;
+                ChangeCheck(_formTemplate[_currentTemplate]);
+            }
+            else
+                _currentTemplate = 0;
+
             if (String.IsNullOrEmpty(_configName))
             {
-                TicCutoffPercentageBox.Value = ((decimal)1);
-                DeisotopingModeBox.SelectedIndex = 1;
-                MaxResultsBox.Value = 30;
-                _fileContents.DeisotopingMode = 1;
-                _fileContents.TicCutoffPercentage = ((double)1);
-                _fileContents.MaxResults = 30;
+                if (TicCutoffPercentageBox.Value == ((decimal)0.98))
+                {
+                    TicCutoffPercentageBox.Value = ((decimal)1);
+                    _fileContents.TicCutoffPercentage = ((double)1);
+                }
+
+                if (DeisotopingModeBox.SelectedIndex == 0)
+                {
+                    DeisotopingModeBox.SelectedIndex = 1;
+                    _fileContents.DeisotopingMode = 1;
+                }
+
+                if (MaxResultsBox.Value == 5)
+                {
+                    MaxResultsBox.Value = 30;
+                    _fileContents.MaxResults = 30;
+                }
+
+                if (MaxPeakCountBox.Value == 300)
+                {
+                    MaxPeakCountBox.Value = 100;
+                    _fileContents.MaxPeakCount = 100;
+                }
             }
 
             //main visibility settings
@@ -2033,6 +2063,10 @@ namespace BumberDash
             AdjustPrecursorMassLabel.Location = new Point((int)(21 * _factorX), (int)(6 * _factorY));
             DTNewOptionsPanel.Parent = DirecTagGB;
             DTNewOptionsPanel.Location = new Point((int)(11 * _factorX), (int)(77 * _factorY));
+            MaxPeakPanel.Parent = DirecTagGB;
+            MaxPeakPanel.Location = new Point((int)(56 * _factorX), (int)(51 * _factorY));
+            ComputeXCorrPanel.Parent = TagReconGB;
+            ComputeXCorrPanel.Location = new Point((int)(39 * _factorX), (int)(35 * _factorY));
 
 
             ChargeGB.Location = new Point((int)(282 * _factorX), (int)(6 * _factorY));
@@ -2043,10 +2077,10 @@ namespace BumberDash
             SubsetGB.Location = new Point((int)(282 * _factorX), (int)(86 * _factorY));
             SubsetGB.Width = (int)(242*_factorX);
             SubsetGB.Height = (int)(67*_factorY);
-            MaxResultsPanel.Location = new Point((int)(4 * _factorX), (int)(7 * _factorY));
+            MaxResultsPanel.Location = new Point((int)(4 * _factorX), (int)(10 * _factorY));
             MiscGB.Location = new Point((int)(282 * _factorX), (int)(307 * _factorY));
             MiscGB.Width = (int)(241*_factorX);
-            MiscGB.Height = (int)(40*_factorY);
+            MiscGB.Height = (int)(45*_factorY);
             ToleranceGB.Height = (int)(106*_factorY);
             ToleranceGB.Location = new Point((int)(7 * _factorX), (int)(6 * _factorY));
             PrecursorPannel.Location = new Point((int)(7 * _factorX), (int)(45 * _factorY));
@@ -2080,14 +2114,42 @@ namespace BumberDash
             else
                 Text = "MyriMatch Config Editor | " + _configName.Substring(_configName.LastIndexOf('\\') + 1);
 
+            UpdateTemplateMenuItems();
+            if (_currentTemplate < _formTemplate.Length)
+            {
+                _skipAutomation = true;
+                InstrumentBox.SelectedIndex = _currentTemplate - 1;
+                _skipAutomation = false;
+                ChangeCheck(_formTemplate[_currentTemplate]);
+            }
+            else
+                _currentTemplate = 0;
+
             if (String.IsNullOrEmpty(_configName))
             {
-                TicCutoffPercentageBox.Value = ((decimal)0.98);
-                DeisotopingModeBox.SelectedIndex = 0;
-                MaxResultsBox.Value = 5;
-                _fileContents.DeisotopingMode = 0;
-                _fileContents.TicCutoffPercentage = ((double)0.98);
-                _fileContents.MaxResults = 5;
+                if (TicCutoffPercentageBox.Value == ((decimal)1))
+                {
+                    TicCutoffPercentageBox.Value = ((decimal)0.98);
+                    _fileContents.TicCutoffPercentage = ((double)0.98);
+                }
+
+                if (DeisotopingModeBox.SelectedIndex == 1)
+                {
+                    DeisotopingModeBox.SelectedIndex = 0;
+                    _fileContents.DeisotopingMode = 0;
+                }
+
+                if (MaxResultsBox.Value == 30)
+                {
+                    MaxResultsBox.Value = 5;
+                    _fileContents.MaxResults = 5;
+                }
+
+                if (MaxPeakCountBox.Value == 100)
+                {
+                    MaxPeakCountBox.Value = 300;
+                    _fileContents.MaxPeakCount = 300;
+                }
             }
 
             TagReconGB.Visible = false;
@@ -2148,6 +2210,10 @@ namespace BumberDash
             AdjustPrecursorMassLabel.Location = new Point((int)(11 * _factorX), (int)(6 * _factorY));
             DTNewOptionsPanel.Parent = MiscGB;
             DTNewOptionsPanel.Location = new Point((int)(5 * _factorX), (int)(63 * _factorY));
+            MaxPeakPanel.Parent = MiscGB;
+            MaxPeakPanel.Location = new Point((int)(50 * _factorX), (int)(146 * _factorY));
+            ComputeXCorrPanel.Parent = MiscGB;
+            ComputeXCorrPanel.Location = new Point((int)(74 * _factorX), (int)(176 * _factorY));
 
             ChargeGB.Location = new Point((int)(282 * _factorX), (int)(6 * _factorY));
             SequenceGB.Location = new Point((int)(282 * _factorX), (int)(86 * _factorY));
@@ -2160,7 +2226,7 @@ namespace BumberDash
             SubsetGB.Height = (int)(127*_factorY);
             MiscGB.Location= new Point((int)(282 * _factorX), (int)(180 * _factorY));
             MiscGB.Width = (int)(242*_factorX);
-            MiscGB.Height = (int)(160*_factorY);
+            MiscGB.Height = (int)(200 * _factorY);
             ToleranceGB.Width = (int)(514*_factorX);
             ToleranceGB.Height = (int)(46*_factorY);
             ToleranceGB.Location = new Point((int)(7 * _factorX), (int)(129 * _factorY));
@@ -2194,15 +2260,37 @@ namespace BumberDash
             else
                 Text = "TagRecon Config Editor | " + _configName.Substring(_configName.LastIndexOf('\\') + 1);
 
+            UpdateTemplateMenuItems();
+            if (_currentTemplate < _formTemplate.Length)
+            {
+                _skipAutomation = true;
+                InstrumentBox.SelectedIndex = _currentTemplate - 1;
+                _skipAutomation = false;
+                ChangeCheck(_formTemplate[_currentTemplate]);
+            }
+            else
+                _currentTemplate = 0;
+
             if (String.IsNullOrEmpty(_configName))
             {
-                
-                TicCutoffPercentageBox.Value = ((decimal)0.98);
-                DeisotopingModeBox.SelectedIndex = 0;
-                MaxResultsBox.Value = 5;
-                _fileContents.DeisotopingMode = 0;
-                _fileContents.TicCutoffPercentage = ((double)0.98);
-                _fileContents.MaxResults = 5;
+                if (TicCutoffPercentageBox.Value == ((decimal)1))
+                {
+                    TicCutoffPercentageBox.Value = ((decimal)0.98);
+                    _fileContents.TicCutoffPercentage = ((double)0.98);
+                }
+
+                if (DeisotopingModeBox.SelectedIndex == 1)
+                {
+                    DeisotopingModeBox.SelectedIndex = 0;
+                    _fileContents.DeisotopingMode = 0;
+                }
+
+                if (MaxResultsBox.Value == 30)
+                {
+                    MaxResultsBox.Value = 5;
+                    _fileContents.MaxResults = 5;
+                }
+
             }
 
             TagReconGB.Visible = true;
@@ -2269,6 +2357,10 @@ namespace BumberDash
             AdjustPrecursorMassLabel.Location = new Point((int)(21 * _factorX), (int)(6 * _factorY));
             DTNewOptionsPanel.Parent = MiscGB;
             DTNewOptionsPanel.Location = new Point((int)(5 * _factorX), (int)(63 * _factorY));
+            MaxPeakPanel.Parent = DirecTagGB;
+            MaxPeakPanel.Location = new Point((int)(56 * _factorX), (int)(51 * _factorY));
+            ComputeXCorrPanel.Parent = TagReconGB;
+            ComputeXCorrPanel.Location = new Point((int)(39 * _factorX), (int)(35 * _factorY));
 
             ChargeGB.Location = new Point((int)(282 * _factorX), (int)(6 * _factorY));
             SubsetGB.Location = new Point((int)(282 * _factorX), (int)(86 * _factorY));
@@ -2311,17 +2403,20 @@ namespace BumberDash
 
         //Functions used by menu items
         private void UpdateTemplateMenuItems()
-        {   
+        {
+            int templatesInProgram = 0;
+            int templateStart = 0;
+            string tempString = string.Empty;
             string[] EntireFile;
             string[] EntireTemplate;
             string[] EntireInstruction;
             string[] Delimiter = new string[1];
-            StreamReader cin;
+            StreamReader fileIn;
 
             #region Open template file
             try
             {
-                cin = new StreamReader("Templates.cfg");
+                fileIn = new StreamReader("Templates.cfg");
             }
             catch
             {
@@ -2329,10 +2424,11 @@ namespace BumberDash
                 {
                     try
                     {
-                        StreamWriter cout = new StreamWriter("Templates.cfg");
-                        cout.Close();
-                        cout.Dispose();
-                        cin = new StreamReader("Templates.cfg");
+                        StreamWriter fileOut = new StreamWriter("Templates.cfg");
+                        fileOut.WriteLine(String.Format("--Myrimatch--{0}{0}--DirecTag--{0}{0}--TagRecon--", System.Environment.NewLine));
+                        fileOut.Close();
+                        fileOut.Dispose();
+                        fileIn = new StreamReader("Templates.cfg");
                     }
                     catch
                     {
@@ -2352,27 +2448,48 @@ namespace BumberDash
             //clear old menu
             InstrumentBox.Items.Clear();
 
-            //find number of custom templates
-            EntireFile = cin.ReadToEnd().Split(System.Environment.NewLine.ToCharArray(), System.StringSplitOptions.RemoveEmptyEntries);
-            cin.Close();
-            _formTemplate = new Template[EntireFile.Length + 1];
+            //read file and close stream
+            EntireFile = fileIn.ReadToEnd().Split(System.Environment.NewLine.ToCharArray(), System.StringSplitOptions.RemoveEmptyEntries);
+            fileIn.Close();
+
+            //Move to correct program in template file
+            for (templateStart = 0; tempString != String.Format("--{0}--", _destinationProgram); templateStart++)
+            {
+                if (templateStart < EntireFile.Length)
+                    tempString = EntireFile[templateStart];
+                else
+                {
+                    MessageBox.Show("Invalid templates file, cannot load");
+                    return;
+                }
+            }
+
+            //Find number of templates for program
+            while (templateStart + templatesInProgram < EntireFile.Length &&
+                   EntireFile[templateStart + templatesInProgram] != "--DirecTag--" &&
+                   EntireFile[templateStart + templatesInProgram] != "--TagRecon--")
+                templatesInProgram++;
+
+            //set up Template object
+            _formTemplate = new Template[templatesInProgram + 1];
             _formTemplate[0].SetAsDefaultTemplate();
             if (_destinationProgram == "DirecTag")
                 _formTemplate[0].SetDirecTag();
-            for (int TempNum = 1; TempNum <= EntireFile.Length; TempNum++)
+
+            for (int TempNum = 1; TempNum <= templatesInProgram; TempNum++)
             {
                 Delimiter[0] = "||";
-                EntireTemplate = EntireFile[TempNum-1].Split(Delimiter, StringSplitOptions.RemoveEmptyEntries);
+                EntireTemplate = EntireFile[templateStart + TempNum - 1].Split(Delimiter, StringSplitOptions.RemoveEmptyEntries);
                 Delimiter[0] = "..";
 
-                #region Set up template 
+                #region Set up template
                 try
                 {
                     //name
                     _formTemplate[TempNum].Name = EntireTemplate[0];
 
                     //UseChargeStateFromMS
-                    EntireInstruction = EntireTemplate[1].Split(Delimiter,StringSplitOptions.RemoveEmptyEntries);
+                    EntireInstruction = EntireTemplate[1].Split(Delimiter, StringSplitOptions.RemoveEmptyEntries);
                     _formTemplate[TempNum].UseChargeStateFromMS = bool.Parse(EntireInstruction[1]);
 
                     //AdjustPrecursorMass
@@ -2506,7 +2623,7 @@ namespace BumberDash
                     //FragmentMzToleranceUnits
                     EntireInstruction = EntireTemplate[33].Split(Delimiter, StringSplitOptions.RemoveEmptyEntries);
                     _formTemplate[TempNum].FragmentMzToleranceUnits = EntireInstruction[1];
-                                     
+
                     //MassReconMode
                     EntireInstruction = EntireTemplate[34].Split(Delimiter, StringSplitOptions.RemoveEmptyEntries);
                     _formTemplate[TempNum].MassReconMode = bool.Parse(EntireInstruction[1]);
@@ -2514,7 +2631,7 @@ namespace BumberDash
                     //Blosum
                     EntireInstruction = EntireTemplate[35].Split(Delimiter, StringSplitOptions.RemoveEmptyEntries);
                     if (EntireInstruction.Length == 1)
-                        _formTemplate[TempNum].Blosum = "Default";
+                        _formTemplate[TempNum].Blosum = string.Empty;
                     else
                         _formTemplate[TempNum].Blosum = EntireInstruction[1];
 
@@ -2525,7 +2642,7 @@ namespace BumberDash
                     //UnimodXML
                     EntireInstruction = EntireTemplate[37].Split(Delimiter, StringSplitOptions.RemoveEmptyEntries);
                     if (EntireInstruction.Length == 1)
-                        _formTemplate[TempNum].UnimodXML = "Default";
+                        _formTemplate[TempNum].UnimodXML = string.Empty;
                     else
                         _formTemplate[TempNum].UnimodXML = EntireInstruction[1];
 
@@ -2564,7 +2681,7 @@ namespace BumberDash
                     //ComplementScoreWeight
                     EntireInstruction = EntireTemplate[46].Split(Delimiter, StringSplitOptions.RemoveEmptyEntries);
                     _formTemplate[TempNum].ComplementScoreWeight = double.Parse(EntireInstruction[1]);
-                   
+
                     //ExplainUnknownMassShiftsAs
                     EntireInstruction = EntireTemplate[47].Split(Delimiter, StringSplitOptions.RemoveEmptyEntries);
                     if (EntireInstruction.Length == 1)
@@ -2603,7 +2720,7 @@ namespace BumberDash
             }
 
             //populate menu and droplist items
-            for (int x = (_formTemplate.Length-1); x > 0; x--)
+            for (int x = (_formTemplate.Length - 1); x > 0; x--)
                 InstrumentBox.Items.Insert(0, _formTemplate[x].Name);
 
 
@@ -3367,6 +3484,17 @@ namespace BumberDash
                 #region 14. Secondary TagRecon group
                     CommandGroup = string.Empty;
 
+                    if (_destinationProgram == "TagRecon" || _destinationProgram == "Myrimatch")
+                    {
+                        if (_changed[43])
+                        {
+                            CommandGroup += "ComputeXCorr = " +
+                                        ComputeXCorrBox.Checked.ToString().ToLower() +
+                                        System.Environment.NewLine;
+                            _fileContents.ComputeXCorr = ComputeXCorrBox.Checked;
+                        }
+                    }
+
                     if (_destinationProgram == "TagRecon")
                     {
                         if (_changed[42])
@@ -3375,14 +3503,6 @@ namespace BumberDash
                                         UseNETAdjustmentBox.Checked.ToString().ToLower() +
                                         System.Environment.NewLine;
                             _fileContents.UseNETAdjustment = UseNETAdjustmentBox.Checked;
-                        }
-
-                        if (_changed[43])
-                        {
-                            CommandGroup += "ComputeXCorr = " +
-                                        ComputeXCorrBox.Checked.ToString().ToLower() +
-                                        System.Environment.NewLine;
-                            _fileContents.ComputeXCorr = ComputeXCorrBox.Checked;
                         }
 
                         if (_changed[44])
@@ -3402,7 +3522,7 @@ namespace BumberDash
                 #region 15. DirecTag group
                     CommandGroup = string.Empty;
 
-                    if (_destinationProgram == "DirecTag")
+                    if (_destinationProgram == "DirecTag" || _destinationProgram == "Myrimatch")
                     {
                         if (_changed[45])
                         {
@@ -3411,6 +3531,10 @@ namespace BumberDash
                                         System.Environment.NewLine;
                             _fileContents.MaxPeakCount = ((int)MaxPeakCountBox.Value);
                         }
+                    }
+
+                    if (_destinationProgram == "DirecTag")
+                    {
 
                         if (_changed[46])
                         {
@@ -4121,7 +4245,7 @@ namespace BumberDash
             MaxModificationMassMinus = 150;
             NTerminusMzTolerance = 0.75;
             CTerminusMzTolerance = 0.5;
-            MaxPeakCount = 100;
+            MaxPeakCount = 300;
             TagLength = 3;
             IntensityScoreWeight = 1;
             MzFidelityScoreWeight = 1;
@@ -4139,6 +4263,7 @@ namespace BumberDash
             TicCutoffPercentage = 0.98;
             DeisotopingMode = 0;
             MaxResults = 5;
+            MaxPeakCount = 300;
         }
 
         public void SetDirecTag()
@@ -4146,6 +4271,7 @@ namespace BumberDash
             TicCutoffPercentage = 1;
             DeisotopingMode = 1;
             MaxResults = 30;
+            MaxPeakCount = 100;
         }
     }
 

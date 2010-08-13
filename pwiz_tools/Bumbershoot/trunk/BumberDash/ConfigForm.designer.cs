@@ -177,12 +177,31 @@
             this.AdjustPrecursorMassInfo = new System.Windows.Forms.Label();
             this.TagReconGB = new System.Windows.Forms.GroupBox();
             this.MassReconModeBox = new System.Windows.Forms.CheckBox();
+            this.MassReconModeInfo = new System.Windows.Forms.Label();
+            this.MassReconModeLabel = new System.Windows.Forms.Label();
+            this.ComputeXCorrPanel = new System.Windows.Forms.Panel();
             this.ComputeXCorrBox = new System.Windows.Forms.CheckBox();
             this.ComputeXCorrLabel = new System.Windows.Forms.Label();
             this.UseNETAdjustmentBox = new System.Windows.Forms.CheckBox();
             this.UseNETAdjustmentLabel = new System.Windows.Forms.Label();
-            this.MassReconModeInfo = new System.Windows.Forms.Label();
-            this.MassReconModeLabel = new System.Windows.Forms.Label();
+            this.DirecTagGB = new System.Windows.Forms.GroupBox();
+            this.MaxPeakPanel = new System.Windows.Forms.Panel();
+            this.MaxPeakCountBox = new System.Windows.Forms.NumericUpDown();
+            this.MaxPeakCountInfo = new System.Windows.Forms.Label();
+            this.MaxPeakCountLabel = new System.Windows.Forms.Label();
+            this.MaxTagCountBox = new System.Windows.Forms.NumericUpDown();
+            this.MaxTagScoreBox = new System.Windows.Forms.TextBox();
+            this.MaxTagCountLabel = new System.Windows.Forms.Label();
+            this.MaxTagScoreLabel = new System.Windows.Forms.Label();
+            this.IsotopeMzToleranceBox = new System.Windows.Forms.TextBox();
+            this.ComplementMzToleranceBox = new System.Windows.Forms.TextBox();
+            this.TagLengthBox = new System.Windows.Forms.NumericUpDown();
+            this.ComplementMzToleranceInfo = new System.Windows.Forms.Label();
+            this.IsotopeMzToleranceInfo = new System.Windows.Forms.Label();
+            this.TagLengthInfo = new System.Windows.Forms.Label();
+            this.ComplementMzToleranceLabel = new System.Windows.Forms.Label();
+            this.TagLengthLabel = new System.Windows.Forms.Label();
+            this.IsotopeMzToleranceLabel = new System.Windows.Forms.Label();
             this.TRModOptionsGB = new System.Windows.Forms.GroupBox();
             this.ExplainUnknownMassShiftsAsBox = new System.Windows.Forms.ComboBox();
             this.MaxModificationMassPlusBox = new System.Windows.Forms.NumericUpDown();
@@ -220,23 +239,6 @@
             this.NumIntensityClassesInfo = new System.Windows.Forms.Label();
             this.NumIntensityClassesLabel = new System.Windows.Forms.Label();
             this.ClassSizeMultiplierLabel = new System.Windows.Forms.Label();
-            this.DirecTagGB = new System.Windows.Forms.GroupBox();
-            this.MaxTagCountBox = new System.Windows.Forms.NumericUpDown();
-            this.MaxTagScoreBox = new System.Windows.Forms.TextBox();
-            this.MaxTagCountLabel = new System.Windows.Forms.Label();
-            this.MaxTagScoreLabel = new System.Windows.Forms.Label();
-            this.IsotopeMzToleranceBox = new System.Windows.Forms.TextBox();
-            this.ComplementMzToleranceBox = new System.Windows.Forms.TextBox();
-            this.TagLengthBox = new System.Windows.Forms.NumericUpDown();
-            this.MaxPeakCountBox = new System.Windows.Forms.NumericUpDown();
-            this.ComplementMzToleranceInfo = new System.Windows.Forms.Label();
-            this.IsotopeMzToleranceInfo = new System.Windows.Forms.Label();
-            this.TagLengthInfo = new System.Windows.Forms.Label();
-            this.MaxPeakCountInfo = new System.Windows.Forms.Label();
-            this.ComplementMzToleranceLabel = new System.Windows.Forms.Label();
-            this.TagLengthLabel = new System.Windows.Forms.Label();
-            this.IsotopeMzToleranceLabel = new System.Windows.Forms.Label();
-            this.MaxPeakCountLabel = new System.Windows.Forms.Label();
             this.AdvModeBox = new System.Windows.Forms.CheckBox();
             this.AdvModeLabel = new System.Windows.Forms.Label();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
@@ -295,6 +297,12 @@
             ((System.ComponentModel.ISupportInitialize)(this.MinPrecursorAdjustmentBox)).BeginInit();
             this.AdjustPanel.SuspendLayout();
             this.TagReconGB.SuspendLayout();
+            this.ComputeXCorrPanel.SuspendLayout();
+            this.DirecTagGB.SuspendLayout();
+            this.MaxPeakPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.MaxPeakCountBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.MaxTagCountBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.TagLengthBox)).BeginInit();
             this.TRModOptionsGB.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.MaxModificationMassPlusBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.BlosumThresholdBox)).BeginInit();
@@ -306,10 +314,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.IntensityScoreWeightBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.ClassSizeMultiplierBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.NumIntensityClassesBox)).BeginInit();
-            this.DirecTagGB.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.MaxTagCountBox)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.TagLengthBox)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.MaxPeakCountBox)).BeginInit();
             this.SuspendLayout();
             // 
             // tabControl1
@@ -1148,9 +1152,9 @@
             this.AdvTab.Controls.Add(this.MiscGB);
             this.AdvTab.Controls.Add(this.PrecursorGbox);
             this.AdvTab.Controls.Add(this.TagReconGB);
+            this.AdvTab.Controls.Add(this.DirecTagGB);
             this.AdvTab.Controls.Add(this.TRModOptionsGB);
             this.AdvTab.Controls.Add(this.ScoringGB);
-            this.AdvTab.Controls.Add(this.DirecTagGB);
             this.AdvTab.Location = new System.Drawing.Point(4, 22);
             this.AdvTab.Name = "AdvTab";
             this.AdvTab.Padding = new System.Windows.Forms.Padding(3);
@@ -1886,7 +1890,7 @@
             this.ProteinSampleSizeInfo.Cursor = System.Windows.Forms.Cursors.Hand;
             this.ProteinSampleSizeInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ProteinSampleSizeInfo.ForeColor = System.Drawing.Color.MediumBlue;
-            this.ProteinSampleSizeInfo.Location = new System.Drawing.Point(173, 121);
+            this.ProteinSampleSizeInfo.Location = new System.Drawing.Point(175, 118);
             this.ProteinSampleSizeInfo.Name = "ProteinSampleSizeInfo";
             this.ProteinSampleSizeInfo.Size = new System.Drawing.Size(13, 13);
             this.ProteinSampleSizeInfo.TabIndex = 97;
@@ -1995,8 +1999,8 @@
             // AdjustPanel
             // 
             this.AdjustPanel.Controls.Add(this.AdjustPrecursorMassBox);
-            this.AdjustPanel.Controls.Add(this.AdjustPrecursorMassLabel);
             this.AdjustPanel.Controls.Add(this.AdjustPrecursorMassInfo);
+            this.AdjustPanel.Controls.Add(this.AdjustPrecursorMassLabel);
             this.AdjustPanel.Location = new System.Drawing.Point(53, 10);
             this.AdjustPanel.Name = "AdjustPanel";
             this.AdjustPanel.Size = new System.Drawing.Size(150, 25);
@@ -2043,12 +2047,11 @@
             // TagReconGB
             // 
             this.TagReconGB.Controls.Add(this.MassReconModeBox);
-            this.TagReconGB.Controls.Add(this.ComputeXCorrBox);
-            this.TagReconGB.Controls.Add(this.ComputeXCorrLabel);
-            this.TagReconGB.Controls.Add(this.UseNETAdjustmentBox);
-            this.TagReconGB.Controls.Add(this.UseNETAdjustmentLabel);
             this.TagReconGB.Controls.Add(this.MassReconModeInfo);
             this.TagReconGB.Controls.Add(this.MassReconModeLabel);
+            this.TagReconGB.Controls.Add(this.ComputeXCorrPanel);
+            this.TagReconGB.Controls.Add(this.UseNETAdjustmentBox);
+            this.TagReconGB.Controls.Add(this.UseNETAdjustmentLabel);
             this.TagReconGB.Location = new System.Drawing.Point(5, 357);
             this.TagReconGB.Name = "TagReconGB";
             this.TagReconGB.Size = new System.Drawing.Size(267, 78);
@@ -2066,48 +2069,6 @@
             this.MassReconModeBox.TabIndex = 2;
             this.MassReconModeBox.UseVisualStyleBackColor = true;
             this.MassReconModeBox.CheckedChanged += new System.EventHandler(this.ValueBox_Leave);
-            // 
-            // ComputeXCorrBox
-            // 
-            this.ComputeXCorrBox.AutoSize = true;
-            this.ComputeXCorrBox.Checked = true;
-            this.ComputeXCorrBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.ComputeXCorrBox.Location = new System.Drawing.Point(183, 38);
-            this.ComputeXCorrBox.Name = "ComputeXCorrBox";
-            this.ComputeXCorrBox.Size = new System.Drawing.Size(15, 14);
-            this.ComputeXCorrBox.TabIndex = 1;
-            this.ComputeXCorrBox.UseVisualStyleBackColor = true;
-            this.ComputeXCorrBox.CheckedChanged += new System.EventHandler(this.ValueBox_Leave);
-            // 
-            // ComputeXCorrLabel
-            // 
-            this.ComputeXCorrLabel.AutoSize = true;
-            this.ComputeXCorrLabel.Location = new System.Drawing.Point(99, 38);
-            this.ComputeXCorrLabel.Name = "ComputeXCorrLabel";
-            this.ComputeXCorrLabel.Size = new System.Drawing.Size(78, 13);
-            this.ComputeXCorrLabel.TabIndex = 80;
-            this.ComputeXCorrLabel.Text = "ComputeXCorr:";
-            // 
-            // UseNETAdjustmentBox
-            // 
-            this.UseNETAdjustmentBox.AutoSize = true;
-            this.UseNETAdjustmentBox.Checked = true;
-            this.UseNETAdjustmentBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.UseNETAdjustmentBox.Location = new System.Drawing.Point(183, 18);
-            this.UseNETAdjustmentBox.Name = "UseNETAdjustmentBox";
-            this.UseNETAdjustmentBox.Size = new System.Drawing.Size(15, 14);
-            this.UseNETAdjustmentBox.TabIndex = 0;
-            this.UseNETAdjustmentBox.UseVisualStyleBackColor = true;
-            this.UseNETAdjustmentBox.CheckedChanged += new System.EventHandler(this.UseNETAdjustmentBox_CheckedChanged);
-            // 
-            // UseNETAdjustmentLabel
-            // 
-            this.UseNETAdjustmentLabel.AutoSize = true;
-            this.UseNETAdjustmentLabel.Location = new System.Drawing.Point(68, 18);
-            this.UseNETAdjustmentLabel.Name = "UseNETAdjustmentLabel";
-            this.UseNETAdjustmentLabel.Size = new System.Drawing.Size(109, 13);
-            this.UseNETAdjustmentLabel.TabIndex = 77;
-            this.UseNETAdjustmentLabel.Text = "Use NET Adjustment:";
             // 
             // MassReconModeInfo
             // 
@@ -2133,11 +2094,293 @@
             this.MassReconModeLabel.TabIndex = 67;
             this.MassReconModeLabel.Text = "Mass Recon Mode:";
             // 
+            // ComputeXCorrPanel
+            // 
+            this.ComputeXCorrPanel.Controls.Add(this.ComputeXCorrBox);
+            this.ComputeXCorrPanel.Controls.Add(this.ComputeXCorrLabel);
+            this.ComputeXCorrPanel.Location = new System.Drawing.Point(39, 34);
+            this.ComputeXCorrPanel.Name = "ComputeXCorrPanel";
+            this.ComputeXCorrPanel.Size = new System.Drawing.Size(189, 18);
+            this.ComputeXCorrPanel.TabIndex = 82;
+            // 
+            // ComputeXCorrBox
+            // 
+            this.ComputeXCorrBox.AutoSize = true;
+            this.ComputeXCorrBox.Checked = true;
+            this.ComputeXCorrBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.ComputeXCorrBox.Location = new System.Drawing.Point(144, 3);
+            this.ComputeXCorrBox.Name = "ComputeXCorrBox";
+            this.ComputeXCorrBox.Size = new System.Drawing.Size(15, 14);
+            this.ComputeXCorrBox.TabIndex = 1;
+            this.ComputeXCorrBox.UseVisualStyleBackColor = true;
+            // 
+            // ComputeXCorrLabel
+            // 
+            this.ComputeXCorrLabel.AutoSize = true;
+            this.ComputeXCorrLabel.Location = new System.Drawing.Point(60, 3);
+            this.ComputeXCorrLabel.Name = "ComputeXCorrLabel";
+            this.ComputeXCorrLabel.Size = new System.Drawing.Size(78, 13);
+            this.ComputeXCorrLabel.TabIndex = 80;
+            this.ComputeXCorrLabel.Text = "ComputeXCorr:";
+            // 
+            // UseNETAdjustmentBox
+            // 
+            this.UseNETAdjustmentBox.AutoSize = true;
+            this.UseNETAdjustmentBox.Checked = true;
+            this.UseNETAdjustmentBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.UseNETAdjustmentBox.Location = new System.Drawing.Point(183, 16);
+            this.UseNETAdjustmentBox.Name = "UseNETAdjustmentBox";
+            this.UseNETAdjustmentBox.Size = new System.Drawing.Size(15, 14);
+            this.UseNETAdjustmentBox.TabIndex = 0;
+            this.UseNETAdjustmentBox.UseVisualStyleBackColor = true;
+            this.UseNETAdjustmentBox.CheckedChanged += new System.EventHandler(this.UseNETAdjustmentBox_CheckedChanged);
+            // 
+            // UseNETAdjustmentLabel
+            // 
+            this.UseNETAdjustmentLabel.AutoSize = true;
+            this.UseNETAdjustmentLabel.Location = new System.Drawing.Point(68, 16);
+            this.UseNETAdjustmentLabel.Name = "UseNETAdjustmentLabel";
+            this.UseNETAdjustmentLabel.Size = new System.Drawing.Size(109, 13);
+            this.UseNETAdjustmentLabel.TabIndex = 77;
+            this.UseNETAdjustmentLabel.Text = "Use NET Adjustment:";
+            // 
+            // DirecTagGB
+            // 
+            this.DirecTagGB.Controls.Add(this.MaxPeakPanel);
+            this.DirecTagGB.Controls.Add(this.MaxTagCountBox);
+            this.DirecTagGB.Controls.Add(this.MaxTagScoreBox);
+            this.DirecTagGB.Controls.Add(this.MaxTagCountLabel);
+            this.DirecTagGB.Controls.Add(this.MaxTagScoreLabel);
+            this.DirecTagGB.Controls.Add(this.IsotopeMzToleranceBox);
+            this.DirecTagGB.Controls.Add(this.ComplementMzToleranceBox);
+            this.DirecTagGB.Controls.Add(this.TagLengthBox);
+            this.DirecTagGB.Controls.Add(this.ComplementMzToleranceInfo);
+            this.DirecTagGB.Controls.Add(this.IsotopeMzToleranceInfo);
+            this.DirecTagGB.Controls.Add(this.TagLengthInfo);
+            this.DirecTagGB.Controls.Add(this.ComplementMzToleranceLabel);
+            this.DirecTagGB.Controls.Add(this.TagLengthLabel);
+            this.DirecTagGB.Controls.Add(this.IsotopeMzToleranceLabel);
+            this.DirecTagGB.Location = new System.Drawing.Point(5, 86);
+            this.DirecTagGB.Name = "DirecTagGB";
+            this.DirecTagGB.Size = new System.Drawing.Size(267, 241);
+            this.DirecTagGB.TabIndex = 74;
+            this.DirecTagGB.TabStop = false;
+            this.DirecTagGB.Text = "DirecTag Options";
+            this.DirecTagGB.Visible = false;
+            // 
+            // MaxPeakPanel
+            // 
+            this.MaxPeakPanel.Controls.Add(this.MaxPeakCountBox);
+            this.MaxPeakPanel.Controls.Add(this.MaxPeakCountInfo);
+            this.MaxPeakPanel.Controls.Add(this.MaxPeakCountLabel);
+            this.MaxPeakPanel.Location = new System.Drawing.Point(56, 53);
+            this.MaxPeakPanel.Name = "MaxPeakPanel";
+            this.MaxPeakPanel.Size = new System.Drawing.Size(191, 27);
+            this.MaxPeakPanel.TabIndex = 92;
+            // 
+            // MaxPeakCountBox
+            // 
+            this.MaxPeakCountBox.Location = new System.Drawing.Point(136, 5);
+            this.MaxPeakCountBox.Maximum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            this.MaxPeakCountBox.Name = "MaxPeakCountBox";
+            this.MaxPeakCountBox.Size = new System.Drawing.Size(45, 20);
+            this.MaxPeakCountBox.TabIndex = 1;
+            this.MaxPeakCountBox.Value = new decimal(new int[] {
+            100,
+            0,
+            0,
+            0});
+            // 
+            // MaxPeakCountInfo
+            // 
+            this.MaxPeakCountInfo.AutoSize = true;
+            this.MaxPeakCountInfo.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.MaxPeakCountInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.MaxPeakCountInfo.ForeColor = System.Drawing.Color.MediumBlue;
+            this.MaxPeakCountInfo.Location = new System.Drawing.Point(124, -1);
+            this.MaxPeakCountInfo.Name = "MaxPeakCountInfo";
+            this.MaxPeakCountInfo.Size = new System.Drawing.Size(13, 13);
+            this.MaxPeakCountInfo.TabIndex = 79;
+            this.MaxPeakCountInfo.Text = "?";
+            // 
+            // MaxPeakCountLabel
+            // 
+            this.MaxPeakCountLabel.AutoSize = true;
+            this.MaxPeakCountLabel.Location = new System.Drawing.Point(40, 7);
+            this.MaxPeakCountLabel.Name = "MaxPeakCountLabel";
+            this.MaxPeakCountLabel.Size = new System.Drawing.Size(89, 13);
+            this.MaxPeakCountLabel.TabIndex = 0;
+            this.MaxPeakCountLabel.Text = "Max Peak Count:";
+            // 
+            // MaxTagCountBox
+            // 
+            this.MaxTagCountBox.Location = new System.Drawing.Point(192, 188);
+            this.MaxTagCountBox.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.MaxTagCountBox.Name = "MaxTagCountBox";
+            this.MaxTagCountBox.Size = new System.Drawing.Size(45, 20);
+            this.MaxTagCountBox.TabIndex = 82;
+            this.MaxTagCountBox.Value = new decimal(new int[] {
+            50,
+            0,
+            0,
+            0});
+            // 
+            // MaxTagScoreBox
+            // 
+            this.MaxTagScoreBox.Location = new System.Drawing.Point(192, 214);
+            this.MaxTagScoreBox.Name = "MaxTagScoreBox";
+            this.MaxTagScoreBox.Size = new System.Drawing.Size(45, 20);
+            this.MaxTagScoreBox.TabIndex = 90;
+            this.MaxTagScoreBox.Text = "20";
+            this.MaxTagScoreBox.TextChanged += new System.EventHandler(this.ValueBox_Leave);
+            this.MaxTagScoreBox.Leave += new System.EventHandler(this.NumericTextBox_Leave);
+            this.MaxTagScoreBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumericTextBox_KeyPress);
+            // 
+            // MaxTagCountLabel
+            // 
+            this.MaxTagCountLabel.AutoSize = true;
+            this.MaxTagCountLabel.Location = new System.Drawing.Point(103, 191);
+            this.MaxTagCountLabel.Name = "MaxTagCountLabel";
+            this.MaxTagCountLabel.Size = new System.Drawing.Size(83, 13);
+            this.MaxTagCountLabel.TabIndex = 86;
+            this.MaxTagCountLabel.Text = "Max Tag Count:";
+            // 
+            // MaxTagScoreLabel
+            // 
+            this.MaxTagScoreLabel.AutoSize = true;
+            this.MaxTagScoreLabel.Location = new System.Drawing.Point(103, 217);
+            this.MaxTagScoreLabel.Name = "MaxTagScoreLabel";
+            this.MaxTagScoreLabel.Size = new System.Drawing.Size(83, 13);
+            this.MaxTagScoreLabel.TabIndex = 85;
+            this.MaxTagScoreLabel.Text = "Max Tag Score:";
+            // 
+            // IsotopeMzToleranceBox
+            // 
+            this.IsotopeMzToleranceBox.Location = new System.Drawing.Point(192, 162);
+            this.IsotopeMzToleranceBox.Name = "IsotopeMzToleranceBox";
+            this.IsotopeMzToleranceBox.Size = new System.Drawing.Size(45, 20);
+            this.IsotopeMzToleranceBox.TabIndex = 84;
+            this.IsotopeMzToleranceBox.Text = "0.25";
+            this.IsotopeMzToleranceBox.TextChanged += new System.EventHandler(this.ValueBox_Leave);
+            this.IsotopeMzToleranceBox.Leave += new System.EventHandler(this.NumericTextBox_Leave);
+            this.IsotopeMzToleranceBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumericTextBox_KeyPress);
+            // 
+            // ComplementMzToleranceBox
+            // 
+            this.ComplementMzToleranceBox.Location = new System.Drawing.Point(192, 136);
+            this.ComplementMzToleranceBox.Name = "ComplementMzToleranceBox";
+            this.ComplementMzToleranceBox.Size = new System.Drawing.Size(45, 20);
+            this.ComplementMzToleranceBox.TabIndex = 83;
+            this.ComplementMzToleranceBox.Text = "0.5";
+            this.ComplementMzToleranceBox.TextChanged += new System.EventHandler(this.ValueBox_Leave);
+            this.ComplementMzToleranceBox.Leave += new System.EventHandler(this.NumericTextBox_Leave);
+            this.ComplementMzToleranceBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumericTextBox_KeyPress);
+            // 
+            // TagLengthBox
+            // 
+            this.TagLengthBox.Location = new System.Drawing.Point(192, 29);
+            this.TagLengthBox.Maximum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            this.TagLengthBox.Name = "TagLengthBox";
+            this.TagLengthBox.Size = new System.Drawing.Size(45, 20);
+            this.TagLengthBox.TabIndex = 3;
+            this.TagLengthBox.Value = new decimal(new int[] {
+            3,
+            0,
+            0,
+            0});
+            this.TagLengthBox.ValueChanged += new System.EventHandler(this.ValueBox_Leave);
+            this.TagLengthBox.Leave += new System.EventHandler(this.NumUpDownBox_Leave);
+            // 
+            // ComplementMzToleranceInfo
+            // 
+            this.ComplementMzToleranceInfo.AutoSize = true;
+            this.ComplementMzToleranceInfo.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.ComplementMzToleranceInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ComplementMzToleranceInfo.ForeColor = System.Drawing.Color.MediumBlue;
+            this.ComplementMzToleranceInfo.Location = new System.Drawing.Point(181, 131);
+            this.ComplementMzToleranceInfo.Name = "ComplementMzToleranceInfo";
+            this.ComplementMzToleranceInfo.Size = new System.Drawing.Size(13, 13);
+            this.ComplementMzToleranceInfo.TabIndex = 82;
+            this.ComplementMzToleranceInfo.Text = "?";
+            this.ComplementMzToleranceInfo.MouseLeave += new System.EventHandler(this.Info_MouseLeave);
+            this.ComplementMzToleranceInfo.Click += new System.EventHandler(this.Info_Click);
+            this.ComplementMzToleranceInfo.MouseEnter += new System.EventHandler(this.Info_MouseEnter);
+            // 
+            // IsotopeMzToleranceInfo
+            // 
+            this.IsotopeMzToleranceInfo.AutoSize = true;
+            this.IsotopeMzToleranceInfo.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.IsotopeMzToleranceInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.IsotopeMzToleranceInfo.ForeColor = System.Drawing.Color.MediumBlue;
+            this.IsotopeMzToleranceInfo.Location = new System.Drawing.Point(180, 157);
+            this.IsotopeMzToleranceInfo.Name = "IsotopeMzToleranceInfo";
+            this.IsotopeMzToleranceInfo.Size = new System.Drawing.Size(13, 13);
+            this.IsotopeMzToleranceInfo.TabIndex = 81;
+            this.IsotopeMzToleranceInfo.Text = "?";
+            this.IsotopeMzToleranceInfo.MouseLeave += new System.EventHandler(this.Info_MouseLeave);
+            this.IsotopeMzToleranceInfo.Click += new System.EventHandler(this.Info_Click);
+            this.IsotopeMzToleranceInfo.MouseEnter += new System.EventHandler(this.Info_MouseEnter);
+            // 
+            // TagLengthInfo
+            // 
+            this.TagLengthInfo.AutoSize = true;
+            this.TagLengthInfo.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.TagLengthInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TagLengthInfo.ForeColor = System.Drawing.Color.MediumBlue;
+            this.TagLengthInfo.Location = new System.Drawing.Point(180, 23);
+            this.TagLengthInfo.Name = "TagLengthInfo";
+            this.TagLengthInfo.Size = new System.Drawing.Size(13, 13);
+            this.TagLengthInfo.TabIndex = 80;
+            this.TagLengthInfo.Text = "?";
+            this.TagLengthInfo.MouseLeave += new System.EventHandler(this.Info_MouseLeave);
+            this.TagLengthInfo.Click += new System.EventHandler(this.Info_Click);
+            this.TagLengthInfo.MouseEnter += new System.EventHandler(this.Info_MouseEnter);
+            // 
+            // ComplementMzToleranceLabel
+            // 
+            this.ComplementMzToleranceLabel.AutoSize = true;
+            this.ComplementMzToleranceLabel.Location = new System.Drawing.Point(50, 139);
+            this.ComplementMzToleranceLabel.Name = "ComplementMzToleranceLabel";
+            this.ComplementMzToleranceLabel.Size = new System.Drawing.Size(136, 13);
+            this.ComplementMzToleranceLabel.TabIndex = 15;
+            this.ComplementMzToleranceLabel.Text = "Compliment m/z Tolerance:";
+            // 
+            // TagLengthLabel
+            // 
+            this.TagLengthLabel.AutoSize = true;
+            this.TagLengthLabel.Location = new System.Drawing.Point(120, 31);
+            this.TagLengthLabel.Name = "TagLengthLabel";
+            this.TagLengthLabel.Size = new System.Drawing.Size(65, 13);
+            this.TagLengthLabel.TabIndex = 2;
+            this.TagLengthLabel.Text = "Tag Length:";
+            // 
+            // IsotopeMzToleranceLabel
+            // 
+            this.IsotopeMzToleranceLabel.AutoSize = true;
+            this.IsotopeMzToleranceLabel.Location = new System.Drawing.Point(68, 165);
+            this.IsotopeMzToleranceLabel.Name = "IsotopeMzToleranceLabel";
+            this.IsotopeMzToleranceLabel.Size = new System.Drawing.Size(117, 13);
+            this.IsotopeMzToleranceLabel.TabIndex = 13;
+            this.IsotopeMzToleranceLabel.Text = "Isotope m/z Tolerance:";
+            // 
             // TRModOptionsGB
             // 
+            this.TRModOptionsGB.Controls.Add(this.BlosumThresholdBox);
+            this.TRModOptionsGB.Controls.Add(this.BlosumThresholdInfo);
             this.TRModOptionsGB.Controls.Add(this.ExplainUnknownMassShiftsAsBox);
             this.TRModOptionsGB.Controls.Add(this.MaxModificationMassPlusBox);
-            this.TRModOptionsGB.Controls.Add(this.BlosumThresholdBox);
             this.TRModOptionsGB.Controls.Add(this.BlosumBox);
             this.TRModOptionsGB.Controls.Add(this.MaxModificationMassMinusBox);
             this.TRModOptionsGB.Controls.Add(this.UnimodXMLBox);
@@ -2146,7 +2389,6 @@
             this.TRModOptionsGB.Controls.Add(this.BlosumInfo);
             this.TRModOptionsGB.Controls.Add(this.UnimodXMLInfo);
             this.TRModOptionsGB.Controls.Add(this.BlosumLabel);
-            this.TRModOptionsGB.Controls.Add(this.BlosumThresholdInfo);
             this.TRModOptionsGB.Controls.Add(this.UnimodXMLBrowse);
             this.TRModOptionsGB.Controls.Add(this.MaxModificationMassMinusLabel);
             this.TRModOptionsGB.Controls.Add(this.MaxModificationMassPlusInfo);
@@ -2661,234 +2903,6 @@
             this.ClassSizeMultiplierLabel.TabIndex = 11;
             this.ClassSizeMultiplierLabel.Text = "Class Size Multiplier:";
             // 
-            // DirecTagGB
-            // 
-            this.DirecTagGB.Controls.Add(this.MaxTagCountBox);
-            this.DirecTagGB.Controls.Add(this.MaxTagScoreBox);
-            this.DirecTagGB.Controls.Add(this.MaxTagCountLabel);
-            this.DirecTagGB.Controls.Add(this.MaxTagScoreLabel);
-            this.DirecTagGB.Controls.Add(this.IsotopeMzToleranceBox);
-            this.DirecTagGB.Controls.Add(this.ComplementMzToleranceBox);
-            this.DirecTagGB.Controls.Add(this.TagLengthBox);
-            this.DirecTagGB.Controls.Add(this.MaxPeakCountBox);
-            this.DirecTagGB.Controls.Add(this.ComplementMzToleranceInfo);
-            this.DirecTagGB.Controls.Add(this.IsotopeMzToleranceInfo);
-            this.DirecTagGB.Controls.Add(this.TagLengthInfo);
-            this.DirecTagGB.Controls.Add(this.MaxPeakCountInfo);
-            this.DirecTagGB.Controls.Add(this.ComplementMzToleranceLabel);
-            this.DirecTagGB.Controls.Add(this.TagLengthLabel);
-            this.DirecTagGB.Controls.Add(this.IsotopeMzToleranceLabel);
-            this.DirecTagGB.Controls.Add(this.MaxPeakCountLabel);
-            this.DirecTagGB.Location = new System.Drawing.Point(5, 86);
-            this.DirecTagGB.Name = "DirecTagGB";
-            this.DirecTagGB.Size = new System.Drawing.Size(267, 241);
-            this.DirecTagGB.TabIndex = 74;
-            this.DirecTagGB.TabStop = false;
-            this.DirecTagGB.Text = "DirecTag Options";
-            this.DirecTagGB.Visible = false;
-            // 
-            // MaxTagCountBox
-            // 
-            this.MaxTagCountBox.Location = new System.Drawing.Point(192, 188);
-            this.MaxTagCountBox.Maximum = new decimal(new int[] {
-            1000,
-            0,
-            0,
-            0});
-            this.MaxTagCountBox.Name = "MaxTagCountBox";
-            this.MaxTagCountBox.Size = new System.Drawing.Size(45, 20);
-            this.MaxTagCountBox.TabIndex = 82;
-            this.MaxTagCountBox.Value = new decimal(new int[] {
-            50,
-            0,
-            0,
-            0});
-            // 
-            // MaxTagScoreBox
-            // 
-            this.MaxTagScoreBox.Location = new System.Drawing.Point(192, 214);
-            this.MaxTagScoreBox.Name = "MaxTagScoreBox";
-            this.MaxTagScoreBox.Size = new System.Drawing.Size(45, 20);
-            this.MaxTagScoreBox.TabIndex = 90;
-            this.MaxTagScoreBox.Text = "20";
-            this.MaxTagScoreBox.TextChanged += new System.EventHandler(this.ValueBox_Leave);
-            this.MaxTagScoreBox.Leave += new System.EventHandler(this.NumericTextBox_Leave);
-            this.MaxTagScoreBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumericTextBox_KeyPress);
-            // 
-            // MaxTagCountLabel
-            // 
-            this.MaxTagCountLabel.AutoSize = true;
-            this.MaxTagCountLabel.Location = new System.Drawing.Point(103, 191);
-            this.MaxTagCountLabel.Name = "MaxTagCountLabel";
-            this.MaxTagCountLabel.Size = new System.Drawing.Size(83, 13);
-            this.MaxTagCountLabel.TabIndex = 86;
-            this.MaxTagCountLabel.Text = "Max Tag Count:";
-            // 
-            // MaxTagScoreLabel
-            // 
-            this.MaxTagScoreLabel.AutoSize = true;
-            this.MaxTagScoreLabel.Location = new System.Drawing.Point(103, 217);
-            this.MaxTagScoreLabel.Name = "MaxTagScoreLabel";
-            this.MaxTagScoreLabel.Size = new System.Drawing.Size(83, 13);
-            this.MaxTagScoreLabel.TabIndex = 85;
-            this.MaxTagScoreLabel.Text = "Max Tag Score:";
-            // 
-            // IsotopeMzToleranceBox
-            // 
-            this.IsotopeMzToleranceBox.Location = new System.Drawing.Point(192, 162);
-            this.IsotopeMzToleranceBox.Name = "IsotopeMzToleranceBox";
-            this.IsotopeMzToleranceBox.Size = new System.Drawing.Size(45, 20);
-            this.IsotopeMzToleranceBox.TabIndex = 84;
-            this.IsotopeMzToleranceBox.Text = "0.25";
-            this.IsotopeMzToleranceBox.TextChanged += new System.EventHandler(this.ValueBox_Leave);
-            this.IsotopeMzToleranceBox.Leave += new System.EventHandler(this.NumericTextBox_Leave);
-            this.IsotopeMzToleranceBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumericTextBox_KeyPress);
-            // 
-            // ComplementMzToleranceBox
-            // 
-            this.ComplementMzToleranceBox.Location = new System.Drawing.Point(192, 136);
-            this.ComplementMzToleranceBox.Name = "ComplementMzToleranceBox";
-            this.ComplementMzToleranceBox.Size = new System.Drawing.Size(45, 20);
-            this.ComplementMzToleranceBox.TabIndex = 83;
-            this.ComplementMzToleranceBox.Text = "0.5";
-            this.ComplementMzToleranceBox.TextChanged += new System.EventHandler(this.ValueBox_Leave);
-            this.ComplementMzToleranceBox.Leave += new System.EventHandler(this.NumericTextBox_Leave);
-            this.ComplementMzToleranceBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumericTextBox_KeyPress);
-            // 
-            // TagLengthBox
-            // 
-            this.TagLengthBox.Location = new System.Drawing.Point(161, 32);
-            this.TagLengthBox.Maximum = new decimal(new int[] {
-            10000,
-            0,
-            0,
-            0});
-            this.TagLengthBox.Name = "TagLengthBox";
-            this.TagLengthBox.Size = new System.Drawing.Size(76, 20);
-            this.TagLengthBox.TabIndex = 3;
-            this.TagLengthBox.Value = new decimal(new int[] {
-            3,
-            0,
-            0,
-            0});
-            this.TagLengthBox.ValueChanged += new System.EventHandler(this.ValueBox_Leave);
-            this.TagLengthBox.Leave += new System.EventHandler(this.NumUpDownBox_Leave);
-            // 
-            // MaxPeakCountBox
-            // 
-            this.MaxPeakCountBox.Location = new System.Drawing.Point(161, 58);
-            this.MaxPeakCountBox.Maximum = new decimal(new int[] {
-            10000,
-            0,
-            0,
-            0});
-            this.MaxPeakCountBox.Name = "MaxPeakCountBox";
-            this.MaxPeakCountBox.Size = new System.Drawing.Size(76, 20);
-            this.MaxPeakCountBox.TabIndex = 1;
-            this.MaxPeakCountBox.Value = new decimal(new int[] {
-            100,
-            0,
-            0,
-            0});
-            this.MaxPeakCountBox.ValueChanged += new System.EventHandler(this.ValueBox_Leave);
-            this.MaxPeakCountBox.Leave += new System.EventHandler(this.NumUpDownBox_Leave);
-            // 
-            // ComplementMzToleranceInfo
-            // 
-            this.ComplementMzToleranceInfo.AutoSize = true;
-            this.ComplementMzToleranceInfo.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.ComplementMzToleranceInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ComplementMzToleranceInfo.ForeColor = System.Drawing.Color.MediumBlue;
-            this.ComplementMzToleranceInfo.Location = new System.Drawing.Point(181, 131);
-            this.ComplementMzToleranceInfo.Name = "ComplementMzToleranceInfo";
-            this.ComplementMzToleranceInfo.Size = new System.Drawing.Size(13, 13);
-            this.ComplementMzToleranceInfo.TabIndex = 82;
-            this.ComplementMzToleranceInfo.Text = "?";
-            this.ComplementMzToleranceInfo.MouseLeave += new System.EventHandler(this.Info_MouseLeave);
-            this.ComplementMzToleranceInfo.Click += new System.EventHandler(this.Info_Click);
-            this.ComplementMzToleranceInfo.MouseEnter += new System.EventHandler(this.Info_MouseEnter);
-            // 
-            // IsotopeMzToleranceInfo
-            // 
-            this.IsotopeMzToleranceInfo.AutoSize = true;
-            this.IsotopeMzToleranceInfo.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.IsotopeMzToleranceInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.IsotopeMzToleranceInfo.ForeColor = System.Drawing.Color.MediumBlue;
-            this.IsotopeMzToleranceInfo.Location = new System.Drawing.Point(180, 157);
-            this.IsotopeMzToleranceInfo.Name = "IsotopeMzToleranceInfo";
-            this.IsotopeMzToleranceInfo.Size = new System.Drawing.Size(13, 13);
-            this.IsotopeMzToleranceInfo.TabIndex = 81;
-            this.IsotopeMzToleranceInfo.Text = "?";
-            this.IsotopeMzToleranceInfo.MouseLeave += new System.EventHandler(this.Info_MouseLeave);
-            this.IsotopeMzToleranceInfo.Click += new System.EventHandler(this.Info_Click);
-            this.IsotopeMzToleranceInfo.MouseEnter += new System.EventHandler(this.Info_MouseEnter);
-            // 
-            // TagLengthInfo
-            // 
-            this.TagLengthInfo.AutoSize = true;
-            this.TagLengthInfo.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.TagLengthInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TagLengthInfo.ForeColor = System.Drawing.Color.MediumBlue;
-            this.TagLengthInfo.Location = new System.Drawing.Point(150, 26);
-            this.TagLengthInfo.Name = "TagLengthInfo";
-            this.TagLengthInfo.Size = new System.Drawing.Size(13, 13);
-            this.TagLengthInfo.TabIndex = 80;
-            this.TagLengthInfo.Text = "?";
-            this.TagLengthInfo.MouseLeave += new System.EventHandler(this.Info_MouseLeave);
-            this.TagLengthInfo.Click += new System.EventHandler(this.Info_Click);
-            this.TagLengthInfo.MouseEnter += new System.EventHandler(this.Info_MouseEnter);
-            // 
-            // MaxPeakCountInfo
-            // 
-            this.MaxPeakCountInfo.AutoSize = true;
-            this.MaxPeakCountInfo.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.MaxPeakCountInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.MaxPeakCountInfo.ForeColor = System.Drawing.Color.MediumBlue;
-            this.MaxPeakCountInfo.Location = new System.Drawing.Point(150, 52);
-            this.MaxPeakCountInfo.Name = "MaxPeakCountInfo";
-            this.MaxPeakCountInfo.Size = new System.Drawing.Size(13, 13);
-            this.MaxPeakCountInfo.TabIndex = 79;
-            this.MaxPeakCountInfo.Text = "?";
-            this.MaxPeakCountInfo.MouseLeave += new System.EventHandler(this.Info_MouseLeave);
-            this.MaxPeakCountInfo.Click += new System.EventHandler(this.Info_Click);
-            this.MaxPeakCountInfo.MouseEnter += new System.EventHandler(this.Info_MouseEnter);
-            // 
-            // ComplementMzToleranceLabel
-            // 
-            this.ComplementMzToleranceLabel.AutoSize = true;
-            this.ComplementMzToleranceLabel.Location = new System.Drawing.Point(50, 139);
-            this.ComplementMzToleranceLabel.Name = "ComplementMzToleranceLabel";
-            this.ComplementMzToleranceLabel.Size = new System.Drawing.Size(136, 13);
-            this.ComplementMzToleranceLabel.TabIndex = 15;
-            this.ComplementMzToleranceLabel.Text = "Compliment m/z Tolerance:";
-            // 
-            // TagLengthLabel
-            // 
-            this.TagLengthLabel.AutoSize = true;
-            this.TagLengthLabel.Location = new System.Drawing.Point(90, 34);
-            this.TagLengthLabel.Name = "TagLengthLabel";
-            this.TagLengthLabel.Size = new System.Drawing.Size(65, 13);
-            this.TagLengthLabel.TabIndex = 2;
-            this.TagLengthLabel.Text = "Tag Length:";
-            // 
-            // IsotopeMzToleranceLabel
-            // 
-            this.IsotopeMzToleranceLabel.AutoSize = true;
-            this.IsotopeMzToleranceLabel.Location = new System.Drawing.Point(68, 165);
-            this.IsotopeMzToleranceLabel.Name = "IsotopeMzToleranceLabel";
-            this.IsotopeMzToleranceLabel.Size = new System.Drawing.Size(117, 13);
-            this.IsotopeMzToleranceLabel.TabIndex = 13;
-            this.IsotopeMzToleranceLabel.Text = "Isotope m/z Tolerance:";
-            // 
-            // MaxPeakCountLabel
-            // 
-            this.MaxPeakCountLabel.AutoSize = true;
-            this.MaxPeakCountLabel.Location = new System.Drawing.Point(66, 60);
-            this.MaxPeakCountLabel.Name = "MaxPeakCountLabel";
-            this.MaxPeakCountLabel.Size = new System.Drawing.Size(89, 13);
-            this.MaxPeakCountLabel.TabIndex = 0;
-            this.MaxPeakCountLabel.Text = "Max Peak Count:";
-            // 
             // AdvModeBox
             // 
             this.AdvModeBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
@@ -3130,6 +3144,15 @@
             this.AdjustPanel.PerformLayout();
             this.TagReconGB.ResumeLayout(false);
             this.TagReconGB.PerformLayout();
+            this.ComputeXCorrPanel.ResumeLayout(false);
+            this.ComputeXCorrPanel.PerformLayout();
+            this.DirecTagGB.ResumeLayout(false);
+            this.DirecTagGB.PerformLayout();
+            this.MaxPeakPanel.ResumeLayout(false);
+            this.MaxPeakPanel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.MaxPeakCountBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.MaxTagCountBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.TagLengthBox)).EndInit();
             this.TRModOptionsGB.ResumeLayout(false);
             this.TRModOptionsGB.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.MaxModificationMassPlusBox)).EndInit();
@@ -3144,11 +3167,6 @@
             ((System.ComponentModel.ISupportInitialize)(this.IntensityScoreWeightBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.ClassSizeMultiplierBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.NumIntensityClassesBox)).EndInit();
-            this.DirecTagGB.ResumeLayout(false);
-            this.DirecTagGB.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.MaxTagCountBox)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.TagLengthBox)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.MaxPeakCountBox)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -3235,10 +3253,8 @@
         private System.Windows.Forms.Label NTerminusMzToleranceLabel;
         private System.Windows.Forms.Label CTerminusMzToleranceLabel;
         private System.Windows.Forms.GroupBox DirecTagGB;
-        private System.Windows.Forms.Label MaxPeakCountLabel;
         private System.Windows.Forms.NumericUpDown TagLengthBox;
         private System.Windows.Forms.Label TagLengthLabel;
-        private System.Windows.Forms.NumericUpDown MaxPeakCountBox;
         private System.Windows.Forms.NumericUpDown ComplementScoreWeightBox;
         private System.Windows.Forms.Label ComplementScoreWeightLabel;
         private System.Windows.Forms.NumericUpDown MzFidelityScoreWeightBox;
@@ -3251,8 +3267,6 @@
         private System.Windows.Forms.Label ExplainUnknownMassShiftsAsLabel;
         private System.Windows.Forms.Label UseNETAdjustmentLabel;
         private System.Windows.Forms.CheckBox UseNETAdjustmentBox;
-        private System.Windows.Forms.CheckBox ComputeXCorrBox;
-        private System.Windows.Forms.Label ComputeXCorrLabel;
         private System.Windows.Forms.ComboBox NumMinTerminiCleavagesBox;
         private System.Windows.Forms.Label UseSmartPlusThreeModelLabel;
         private System.Windows.Forms.CheckBox UseSmartPlusThreeModelBox;
@@ -3280,7 +3294,6 @@
         private System.Windows.Forms.Label ComplementMzToleranceInfo;
         private System.Windows.Forms.Label IsotopeMzToleranceInfo;
         private System.Windows.Forms.Label TagLengthInfo;
-        private System.Windows.Forms.Label MaxPeakCountInfo;
         private System.Windows.Forms.Label MaxModificationMassMinusInfo;
         private System.Windows.Forms.Label MaxModificationMassPlusInfo;
         private System.Windows.Forms.Label BlosumThresholdInfo;
@@ -3366,6 +3379,13 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn Column1;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column2;
         private System.Windows.Forms.DataGridViewComboBoxColumn Column3;
+        private System.Windows.Forms.Panel ComputeXCorrPanel;
+        private System.Windows.Forms.CheckBox ComputeXCorrBox;
+        private System.Windows.Forms.Label ComputeXCorrLabel;
+        private System.Windows.Forms.Panel MaxPeakPanel;
+        private System.Windows.Forms.NumericUpDown MaxPeakCountBox;
+        private System.Windows.Forms.Label MaxPeakCountLabel;
+        private System.Windows.Forms.Label MaxPeakCountInfo;
     }
 }
 
