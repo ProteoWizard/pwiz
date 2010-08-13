@@ -51,6 +51,11 @@
             this.InitialDirectoryButton = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
             this.ConfigGB = new System.Windows.Forms.GroupBox();
+            this.ConfigDatabasePanel = new System.Windows.Forms.Panel();
+            this.MyriConfigBox = new System.Windows.Forms.ComboBox();
+            this.MyriEditButton = new System.Windows.Forms.Button();
+            this.MyriConfigButton = new System.Windows.Forms.Button();
+            this.label13 = new System.Windows.Forms.Label();
             this.ConfigTagPanel = new System.Windows.Forms.Panel();
             this.DTConfigBox = new System.Windows.Forms.ComboBox();
             this.TRConfigBox = new System.Windows.Forms.ComboBox();
@@ -60,16 +65,11 @@
             this.DTEditButton = new System.Windows.Forms.Button();
             this.DTConfigButton = new System.Windows.Forms.Button();
             this.label11 = new System.Windows.Forms.Label();
-            this.ConfigDatabasePanel = new System.Windows.Forms.Panel();
-            this.MyriConfigBox = new System.Windows.Forms.ComboBox();
-            this.MyriEditButton = new System.Windows.Forms.Button();
-            this.MyriConfigButton = new System.Windows.Forms.Button();
-            this.label13 = new System.Windows.Forms.Label();
             this.FolderPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.CPUsBox)).BeginInit();
             this.ConfigGB.SuspendLayout();
-            this.ConfigTagPanel.SuspendLayout();
             this.ConfigDatabasePanel.SuspendLayout();
+            this.ConfigTagPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // FolderPanel
@@ -97,13 +97,13 @@
             this.FolderPanel.Controls.Add(this.ConfigGB);
             this.FolderPanel.Location = new System.Drawing.Point(0, 0);
             this.FolderPanel.Name = "FolderPanel";
-            this.FolderPanel.Size = new System.Drawing.Size(425, 406);
+            this.FolderPanel.Size = new System.Drawing.Size(425, 415);
             this.FolderPanel.TabIndex = 3;
             // 
             // IntermediateBox
             // 
             this.IntermediateBox.AutoSize = true;
-            this.IntermediateBox.Location = new System.Drawing.Point(12, 377);
+            this.IntermediateBox.Location = new System.Drawing.Point(12, 380);
             this.IntermediateBox.Name = "IntermediateBox";
             this.IntermediateBox.Size = new System.Drawing.Size(107, 17);
             this.IntermediateBox.TabIndex = 32;
@@ -114,7 +114,7 @@
             // CPUsAutoLabel
             // 
             this.CPUsAutoLabel.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            this.CPUsAutoLabel.Location = new System.Drawing.Point(362, 378);
+            this.CPUsAutoLabel.Location = new System.Drawing.Point(362, 381);
             this.CPUsAutoLabel.Name = "CPUsAutoLabel";
             this.CPUsAutoLabel.Size = new System.Drawing.Size(31, 15);
             this.CPUsAutoLabel.TabIndex = 31;
@@ -122,7 +122,7 @@
             // 
             // CPUsBox
             // 
-            this.CPUsBox.Location = new System.Drawing.Point(361, 376);
+            this.CPUsBox.Location = new System.Drawing.Point(361, 379);
             this.CPUsBox.Name = "CPUsBox";
             this.CPUsBox.Size = new System.Drawing.Size(49, 20);
             this.CPUsBox.TabIndex = 30;
@@ -131,7 +131,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(321, 378);
+            this.label3.Location = new System.Drawing.Point(321, 381);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(34, 13);
             this.label3.TabIndex = 29;
@@ -227,7 +227,7 @@
             // AddJobRunButton
             // 
             this.AddJobRunButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.AddJobRunButton.Location = new System.Drawing.Point(215, 373);
+            this.AddJobRunButton.Location = new System.Drawing.Point(215, 385);
             this.AddJobRunButton.Name = "AddJobRunButton";
             this.AddJobRunButton.Size = new System.Drawing.Size(75, 23);
             this.AddJobRunButton.TabIndex = 18;
@@ -238,7 +238,7 @@
             // AddJobCancelButton
             // 
             this.AddJobCancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.AddJobCancelButton.Location = new System.Drawing.Point(134, 373);
+            this.AddJobCancelButton.Location = new System.Drawing.Point(134, 385);
             this.AddJobCancelButton.Name = "AddJobCancelButton";
             this.AddJobCancelButton.Size = new System.Drawing.Size(75, 23);
             this.AddJobCancelButton.TabIndex = 22;
@@ -298,15 +298,66 @@
             // 
             // ConfigGB
             // 
-            this.ConfigGB.Controls.Add(this.ConfigDatabasePanel);
             this.ConfigGB.Controls.Add(this.ConfigTagPanel);
+            this.ConfigGB.Controls.Add(this.ConfigDatabasePanel);
             this.ConfigGB.Location = new System.Drawing.Point(12, 262);
             this.ConfigGB.Name = "ConfigGB";
-            this.ConfigGB.Size = new System.Drawing.Size(398, 105);
+            this.ConfigGB.Size = new System.Drawing.Size(398, 110);
             this.ConfigGB.TabIndex = 26;
             this.ConfigGB.TabStop = false;
             this.ConfigGB.Text = "Configuration";
             this.ConfigGB.Visible = false;
+            // 
+            // ConfigDatabasePanel
+            // 
+            this.ConfigDatabasePanel.Controls.Add(this.MyriConfigBox);
+            this.ConfigDatabasePanel.Controls.Add(this.MyriEditButton);
+            this.ConfigDatabasePanel.Controls.Add(this.MyriConfigButton);
+            this.ConfigDatabasePanel.Controls.Add(this.label13);
+            this.ConfigDatabasePanel.Location = new System.Drawing.Point(10, 14);
+            this.ConfigDatabasePanel.Name = "ConfigDatabasePanel";
+            this.ConfigDatabasePanel.Size = new System.Drawing.Size(379, 61);
+            this.ConfigDatabasePanel.TabIndex = 17;
+            this.ConfigDatabasePanel.Visible = false;
+            // 
+            // MyriConfigBox
+            // 
+            this.MyriConfigBox.FormattingEnabled = true;
+            this.MyriConfigBox.Location = new System.Drawing.Point(6, 26);
+            this.MyriConfigBox.Name = "MyriConfigBox";
+            this.MyriConfigBox.Size = new System.Drawing.Size(245, 21);
+            this.MyriConfigBox.TabIndex = 26;
+            this.MyriConfigBox.TextChanged += new System.EventHandler(this.MyriConfigBox_TextChanged);
+            // 
+            // MyriEditButton
+            // 
+            this.MyriEditButton.Location = new System.Drawing.Point(318, 25);
+            this.MyriEditButton.Name = "MyriEditButton";
+            this.MyriEditButton.Size = new System.Drawing.Size(55, 21);
+            this.MyriEditButton.TabIndex = 16;
+            this.MyriEditButton.Text = "New";
+            this.MyriEditButton.UseVisualStyleBackColor = true;
+            this.MyriEditButton.Click += new System.EventHandler(this.MyriEditButton_Click);
+            // 
+            // MyriConfigButton
+            // 
+            this.MyriConfigButton.Location = new System.Drawing.Point(257, 25);
+            this.MyriConfigButton.Name = "MyriConfigButton";
+            this.MyriConfigButton.Size = new System.Drawing.Size(55, 21);
+            this.MyriConfigButton.TabIndex = 15;
+            this.MyriConfigButton.Text = "Browse";
+            this.MyriConfigButton.UseVisualStyleBackColor = true;
+            this.MyriConfigButton.Click += new System.EventHandler(this.MyriConfigButton_Click);
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label13.Location = new System.Drawing.Point(3, 5);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(129, 18);
+            this.label13.TabIndex = 13;
+            this.label13.Text = "MyriMatch Config:";
             // 
             // ConfigTagPanel
             // 
@@ -320,7 +371,7 @@
             this.ConfigTagPanel.Controls.Add(this.label11);
             this.ConfigTagPanel.Location = new System.Drawing.Point(10, 14);
             this.ConfigTagPanel.Name = "ConfigTagPanel";
-            this.ConfigTagPanel.Size = new System.Drawing.Size(379, 90);
+            this.ConfigTagPanel.Size = new System.Drawing.Size(379, 94);
             this.ConfigTagPanel.TabIndex = 11;
             this.ConfigTagPanel.Visible = false;
             // 
@@ -402,62 +453,11 @@
             this.label11.TabIndex = 9;
             this.label11.Text = "DirecTag Config:";
             // 
-            // ConfigDatabasePanel
-            // 
-            this.ConfigDatabasePanel.Controls.Add(this.MyriConfigBox);
-            this.ConfigDatabasePanel.Controls.Add(this.MyriEditButton);
-            this.ConfigDatabasePanel.Controls.Add(this.MyriConfigButton);
-            this.ConfigDatabasePanel.Controls.Add(this.label13);
-            this.ConfigDatabasePanel.Location = new System.Drawing.Point(10, 14);
-            this.ConfigDatabasePanel.Name = "ConfigDatabasePanel";
-            this.ConfigDatabasePanel.Size = new System.Drawing.Size(379, 61);
-            this.ConfigDatabasePanel.TabIndex = 17;
-            this.ConfigDatabasePanel.Visible = false;
-            // 
-            // MyriConfigBox
-            // 
-            this.MyriConfigBox.FormattingEnabled = true;
-            this.MyriConfigBox.Location = new System.Drawing.Point(6, 26);
-            this.MyriConfigBox.Name = "MyriConfigBox";
-            this.MyriConfigBox.Size = new System.Drawing.Size(245, 21);
-            this.MyriConfigBox.TabIndex = 26;
-            this.MyriConfigBox.TextChanged += new System.EventHandler(this.MyriConfigBox_TextChanged);
-            // 
-            // MyriEditButton
-            // 
-            this.MyriEditButton.Location = new System.Drawing.Point(318, 25);
-            this.MyriEditButton.Name = "MyriEditButton";
-            this.MyriEditButton.Size = new System.Drawing.Size(55, 21);
-            this.MyriEditButton.TabIndex = 16;
-            this.MyriEditButton.Text = "New";
-            this.MyriEditButton.UseVisualStyleBackColor = true;
-            this.MyriEditButton.Click += new System.EventHandler(this.MyriEditButton_Click);
-            // 
-            // MyriConfigButton
-            // 
-            this.MyriConfigButton.Location = new System.Drawing.Point(257, 25);
-            this.MyriConfigButton.Name = "MyriConfigButton";
-            this.MyriConfigButton.Size = new System.Drawing.Size(55, 21);
-            this.MyriConfigButton.TabIndex = 15;
-            this.MyriConfigButton.Text = "Browse";
-            this.MyriConfigButton.UseVisualStyleBackColor = true;
-            this.MyriConfigButton.Click += new System.EventHandler(this.MyriConfigButton_Click);
-            // 
-            // label13
-            // 
-            this.label13.AutoSize = true;
-            this.label13.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label13.Location = new System.Drawing.Point(3, 5);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(129, 18);
-            this.label13.TabIndex = 13;
-            this.label13.Text = "MyriMatch Config:";
-            // 
             // AddJobForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(422, 405);
+            this.ClientSize = new System.Drawing.Size(422, 411);
             this.Controls.Add(this.FolderPanel);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "AddJobForm";
@@ -468,10 +468,10 @@
             this.FolderPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.CPUsBox)).EndInit();
             this.ConfigGB.ResumeLayout(false);
-            this.ConfigTagPanel.ResumeLayout(false);
-            this.ConfigTagPanel.PerformLayout();
             this.ConfigDatabasePanel.ResumeLayout(false);
             this.ConfigDatabasePanel.PerformLayout();
+            this.ConfigTagPanel.ResumeLayout(false);
+            this.ConfigTagPanel.PerformLayout();
             this.ResumeLayout(false);
 
         }
