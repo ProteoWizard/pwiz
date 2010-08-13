@@ -808,6 +808,8 @@ class ScanInfoImpl : public ScanInfo
     virtual long channelCount() const {return channelCount_;}
     virtual bool isUniformTime() const {return isUniformTime_;}
     virtual double frequency() const {return frequency_;}
+	virtual bool FAIMSOn() const {return faimsOn_;}
+	virtual double CompensationVoltage() const {return compensationVoltage_;}
 
     virtual long statusLogSize() const {initStatusLog(); return statusLogSize_;}
     virtual double statusLogRT() const {initStatusLog(); return statusLogRT_;}
@@ -848,6 +850,8 @@ class ScanInfoImpl : public ScanInfo
     long channelCount_;
     bool isUniformTime_;
     double frequency_;
+	bool faimsOn_;
+	double compensationVoltage_;
 
     mutable once_flag_proxy statusLogInitialized_;
     mutable long statusLogSize_;
@@ -1011,6 +1015,8 @@ void ScanInfoImpl::parseFilterString()
     precursorActivationEnergies_.insert(precursorActivationEnergies_.end(), filterParser.cidEnergy_.begin(), filterParser.cidEnergy_.end());
     isProfileScan_ = filterParser.dataPointType_ == DataPointType_Profile;
     isCentroidScan_ = filterParser.dataPointType_ == DataPointType_Centroid;
+	faimsOn_ = filterParser.faimsOn_;
+	compensationVoltage_ = filterParser.compensationVoltage_;
 }
 
 vector<PrecursorInfo> ScanInfoImpl::precursorInfo() const

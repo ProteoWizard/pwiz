@@ -1,16 +1,17 @@
 format-version: 1.2
-date: 15:02:2010 10:00
-saved-by: andreas_bertsch
+date: 19:07:2010 12:00
+saved-by: edeutsch
 auto-generated-by: OBO-Edit 1.101
 default-namespace: MS
 remark: namespace: MS
-remark: version: 2.33.1
-remark: release date: 2010-02-23
+remark: version: 2.38.0
+remark: release date: 2010-08-11
 remark: coverage: Mass spectrometer output files and spectra interpretation
 remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
 remark: creator: Marius Kallhardt <Marius.Kallhardt <-at-> bdal.de>
 remark: creator: Eric Deutsch <edeutsch <-at-> systemsbiology.org>
+remark: creator: Fredrik Levander <fredrik.levander <-at-> immun.lth.se>
 remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group and HUPO Proteomics Standards Initiative Proteomics Informatics Working Group 
 remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
 import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo?revision=1.21
@@ -306,7 +307,6 @@ def: "The charge state of the ion, single or multiple and positive or negatively
 xref: value-type:xsd\:int "The allowed value-type for this CV term."
 is_a: MS:1000455 ! ion selection attribute
 synonym: "z" EXACT []
-xref: value-type:xsd\:int "The allowed value-type for this CV term."
 
 [Term]
 id: MS:1000042
@@ -4315,7 +4315,7 @@ is_a: MS:1000494 ! Thermo Scientific instrument model
 
 [Term]
 id: MS:1000650
-name: Proteomics Discoverer
+name: Proteome Discoverer
 def: "Thermo Scientific software for data analysis of peptides and proteins." [PSI:MS]
 is_a: MS:1000693 ! Thermo Finnigan software
 is_a: MS:1001456 ! analysis software
@@ -6208,7 +6208,43 @@ def: "The integer rank given an interpretation of an observed product ion. For e
 xref: value-type:xsd\:positiveInteger "The allowed value-type for this CV term."
 is_a: MS:1001221 ! fragmentation information
 
+[Term]
+id: MS:1000927
+name: ion injection time
+def: "The length of time spent filling an ion trapping device." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
+is_a: MS:1000503 ! scan attribute
+relationship: has_units UO:0000028 ! millisecond
 
+[Term]
+id: MS:1000928
+name: calibration spectrum
+def: "A spectrum derived from a special calibration source, rather than from the primary injected sample. A calibration spectrum is typically derived from a substance that can be used to correct systematic shift in m/z for spectra of the primary inject sample." [PSI:MS]
+is_a: MS:1000559 ! spectrum type
+
+[Term]
+id: MS:1000929
+name: Shimadzu Biotech nativeID format
+def: "source=xsd:string start=xsd:nonNegativeInteger end=xsd:nonNegativeInteger." [PSI:MS]
+is_a: MS:1000767 ! native spectrum identifier format
+
+[Term]
+id: MS:1000930
+name: Shimadzu Biotech database entity
+def: "Shimadzu Biotech format." [PSI:MS]
+is_a: MS:1000560 ! mass spectrometer file format
+
+[Term]
+id: MS:1000931
+name: AB SCIEX QTRAP 5500
+def: "Applied Biosystems|MDS SCIEX QTRAP 5500." [PSI:MS]
+is_a: MS:1000121 ! AB SCIEX instrument model
+
+[Term]
+id: MS:1000932
+name: AB SCIEX TripleTOF 5600
+def: "Applied Biosystems|MDS SCIEX TripleTOF 5500, a quadrupole - quadrupole - time-of-flight mass spectrometer." [PSI:MS]
+is_a: MS:1000121 ! AB SCIEX instrument model
 
 [Term]
 id: MS:1001000
@@ -6987,6 +7023,7 @@ is_a: MS:1001129 ! quantification information
 id: MS:1001139
 name: quantitation software name
 def: "Quantitation software name." [PSI:PI]
+is_a: MS:1000531 ! software
 is_a: MS:1001129 ! quantification information
 
 [Term]
@@ -9602,6 +9639,41 @@ name: Scaffold: Protein Probability
 def: "Scaffold protein probability score." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001116 ! single protein result details
+
+[Term]
+id: MS:1001580
+name: SpectrumMill: Discriminant Score
+def: "Discriminant score from Agilent SpectrumMill software." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1001143 ! search engine specific score for peptides
+is_a: MS:1001153 ! search engine specific score
+
+[Term]
+id: MS:1001581
+name: FAIMS compensation voltage
+def: "The DC potential applied to the asymmetric waveform in FAIMS that compensates for the difference between high and low field mobility of an ion." [PSI:MS]
+synonym: "FAIMS CV" EXACT []
+is_a: MS:1000503 ! scan attribute
+
+[Term]
+id: MS:1001582
+name: XCMS
+def: "Bioconductor package XCMS for preprocessing high-throughput, untargeted analyte profiling data." [PSI:MS]
+is_a: MS:1001456 ! analysis software
+is_a: MS:1001457 ! data processing software
+
+[Term]
+id: MS:1001583
+name: MaxQuant
+def: "MaxQuant is a quantitative proteomics software package designed for analyzing large mass spectrometric data sets. It is specifically aimed at high resolution MS data." [PSI:MS]
+is_a: MS:1001456 ! analysis software
+is_a: MS:1001139 ! quantitation software name
+
+[Term]
+id: MS:1001584
+name: combined pmf + ms-ms search
+def: "Search that includes data from Peptide Mass Fingerprint (PMF) and MS/MS (aka Peptide Fragment Fingerprint - PFF)." [PSI:MS]
+is_a: MS:1001080 ! search type
 
 [Typedef]
 id: has_regexp

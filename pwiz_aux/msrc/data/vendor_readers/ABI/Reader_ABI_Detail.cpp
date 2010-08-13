@@ -73,8 +73,8 @@ InstrumentConfigurationPtr translateAsInstrumentConfiguration(WiffFilePtr wifffi
         case API2000QTrap:
         case API3200QTrap:
         case API4000QTrap:
+        case API5500QTrap:
         case CaribouQTrap:
-        case CaribouQTrapSm:
             ic.componentList.push_back(source);
             ic.componentList.push_back(Component(MS_quadrupole, 2));
             ic.componentList.push_back(Component(MS_quadrupole, 3));
@@ -87,6 +87,7 @@ InstrumentConfigurationPtr translateAsInstrumentConfiguration(WiffFilePtr wifffi
         case QStarPulsarI:
         case QStarXL:
         case QStarElite:
+        case API5600TripleTOF:
         case NlxTof:
             ic.componentList.push_back(source);
             ic.componentList.push_back(Component(MS_quadrupole, 2));
@@ -119,13 +120,14 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModel instrumentModel)
         case API4000:           return MS_API_4000;
         case API4000QTrap:      return MS_4000_Q_TRAP;
         case API5000:           return MS_API_5000;
+        case API5600TripleTOF:  return MS_AB_SCIEX_TripleTOF_5600;
+        case API5500QTrap:      return MS_AB_SCIEX_QTRAP_5500;
         case QStar:             return MS_QSTAR;
         case QStarPulsarI:      return MS_QSTAR_Pulsar;
         case QStarXL:           return MS_QSTAR_XL;
         case QStarElite:        return MS_QSTAR_Elite;
 
         case CaribouQTrap:
-        case CaribouQTrapSm:
         case NlxTof:
         case API100:
         case API100LC:

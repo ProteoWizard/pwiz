@@ -54,6 +54,7 @@ class PWIZ_API_DECL ScanFilter
 	ScanType parseScanType(const std::string& word);
 	ActivationType parseActivationType(const std::string& word);
 	AccurateMassType parseAccurateMassType(const std::string& word);
+    TriBool parseCompensationVoltage(const std::string& word, double& voltage);
 
     // these two fields are only in Exactive files: {<segment>,<event>}
     // -1 means "unknown"
@@ -74,10 +75,12 @@ class PWIZ_API_DECL ScanFilter
     TriBool supplementalCIDOn_;
 	TriBool widebandOn_; // wideband activation
     TriBool lockMassOn_;
+    TriBool faimsOn_;
 	AccurateMassType accurateMassType_;
 	ScanType scanType_;
 	int msLevel_; // n, in MSn: >0; msLevel == -1 for precursor ion scans
 	ActivationType activationType_;
+    double compensationVoltage_;
 
 	std::vector<double> cidParentMass_; // one entry per ms level for level >= 2
 	std::vector<double> cidEnergy_; // relative units; one entry per ms level for level >= 2

@@ -519,6 +519,9 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
     string basePeakMz = spectrum.cvParam(MS_base_peak_m_z).value;
     string basePeakIntensity = spectrum.cvParam(MS_base_peak_intensity).value;
     string totIonCurrent = spectrum.cvParam(MS_total_ion_current).value;
+	string compensationVoltage;
+	if (spectrum.hasCVParam(MS_FAIMS) && spectrum.cvParam(MS_FAIMS).value == "true")
+        compensationVoltage = spectrum.cvParam(MS_FAIMS_compensation_voltage).value;
     bool isCentroided = spectrum.hasCVParam(MS_centroid_spectrum);
 
     vector<PrecursorInfo> precursorInfo = getPrecursorInfo(spectrum, spectrumListPtr, nativeIdFormat);
@@ -558,6 +561,8 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
         attributes.push_back(make_pair("basePeakIntensity", basePeakIntensity));
     if (!totIonCurrent.empty())
         attributes.push_back(make_pair("totIonCurrent", totIonCurrent));
+    if (!compensationVoltage.empty())
+        attributes.push_back(make_pair("CompensationVoltage", compensationVoltage));
 
     if (scan.instrumentConfigurationPtr.get())
         attributes.push_back(make_pair("msInstrumentID", scan.instrumentConfigurationPtr->id));

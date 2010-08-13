@@ -35,18 +35,19 @@
 
 // [psi-ms.obo]
 //   format-version: 1.2
-//   date: 15:02:2010 10:00
-//   saved-by: andreas_bertsch
+//   date: 19:07:2010 12:00
+//   saved-by: edeutsch
 //   auto-generated-by: OBO-Edit 1.101
 //   default-namespace: MS
 //   remark: namespace: MS
-//   remark: version: 2.33.1
-//   remark: release date: 2010-02-23
+//   remark: version: 2.38.0
+//   remark: release date: 2010-08-11
 //   remark: coverage: Mass spectrometer output files and spectra interpretation
 //   remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 //   remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
 //   remark: creator: Marius Kallhardt <Marius.Kallhardt <-at-> bdal.de>
 //   remark: creator: Eric Deutsch <edeutsch <-at-> systemsbiology.org>
+//   remark: creator: Fredrik Levander <fredrik.levander <-at-> immun.lth.se>
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group and HUPO Proteomics Standards Initiative Proteomics Informatics Working Group 
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
 //   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo?revision=1.21
@@ -2441,8 +2442,8 @@ enum PWIZ_API_DECL CVID
     /// Exactive: Thermo Scientific Exactive MS
     MS_Exactive = 1000649,
 
-    /// Proteomics Discoverer: Thermo Scientific software for data analysis of peptides and proteins.
-    MS_Proteomics_Discoverer = 1000650,
+    /// Proteome Discoverer: Thermo Scientific software for data analysis of peptides and proteins.
+    MS_Proteome_Discoverer = 1000650,
 
     /// 3200 QTRAP: AB SCIEX or Applied Biosystems|MDS SCIEX QTRAP 3200.
     MS_3200_QTRAP = 1000651,
@@ -3307,6 +3308,24 @@ enum PWIZ_API_DECL CVID
 
     /// product interpretation rank: The integer rank given an interpretation of an observed product ion. For example, if y8 is selected as the most likely interpretation of a peak, then it is assigned a rank of 1.
     MS_product_interpretation_rank = 1000926,
+
+    /// ion injection time: The length of time spent filling an ion trapping device.
+    MS_ion_injection_time = 1000927,
+
+    /// calibration spectrum: A spectrum derived from a special calibration source, rather than from the primary injected sample. A calibration spectrum is typically derived from a substance that can be used to correct systematic shift in m/z for spectra of the primary inject sample.
+    MS_calibration_spectrum = 1000928,
+
+    /// Shimadzu Biotech nativeID format: source=xsd:string start=xsd:nonNegativeInteger end=xsd:nonNegativeInteger.
+    MS_Shimadzu_Biotech_nativeID_format = 1000929,
+
+    /// Shimadzu Biotech database entity: Shimadzu Biotech format.
+    MS_Shimadzu_Biotech_database_entity = 1000930,
+
+    /// AB SCIEX QTRAP 5500: Applied Biosystems|MDS SCIEX QTRAP 5500.
+    MS_AB_SCIEX_QTRAP_5500 = 1000931,
+
+    /// AB SCIEX TripleTOF 5600: Applied Biosystems|MDS SCIEX TripleTOF 5500, a quadrupole - quadrupole - time-of-flight mass spectrometer.
+    MS_AB_SCIEX_TripleTOF_5600 = 1000932,
 
     /// spectrum interpretation: Collection of terms from the PSI Proteome Informatics standards describing the interpretation of spectra.
     MS_spectrum_interpretation = 1001000,
@@ -4921,6 +4940,24 @@ enum PWIZ_API_DECL CVID
 
     /// Scaffold: Protein Probability: Scaffold protein probability score.
     MS_Scaffold__Protein_Probability = 1001579,
+
+    /// SpectrumMill: Discriminant Score: Discriminant score from Agilent SpectrumMill software.
+    MS_SpectrumMill__Discriminant_Score = 1001580,
+
+    /// FAIMS compensation voltage: The DC potential applied to the asymmetric waveform in FAIMS that compensates for the difference between high and low field mobility of an ion.
+    MS_FAIMS_compensation_voltage = 1001581,
+
+    /// FAIMS CV (FAIMS compensation voltage): The DC potential applied to the asymmetric waveform in FAIMS that compensates for the difference between high and low field mobility of an ion.
+    MS_FAIMS_CV = MS_FAIMS_compensation_voltage,
+
+    /// XCMS: Bioconductor package XCMS for preprocessing high-throughput, untargeted analyte profiling data.
+    MS_XCMS = 1001582,
+
+    /// MaxQuant: MaxQuant is a quantitative proteomics software package designed for analyzing large mass spectrometric data sets. It is specifically aimed at high resolution MS data.
+    MS_MaxQuant = 1001583,
+
+    /// combined pmf + ms-ms search: Search that includes data from Peptide Mass Fingerprint (PMF) and MS/MS (aka Peptide Fragment Fingerprint - PFF).
+    MS_combined_pmf___ms_ms_search = 1001584,
 
     /// ProteinScape:ProfoundProbability: The Profound probability score stored by ProteinScape.
     MS_ProteinScape_ProfoundProbability = 1001597,

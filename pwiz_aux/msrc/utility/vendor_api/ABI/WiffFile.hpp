@@ -84,12 +84,13 @@ PWIZ_API_DECL enum InstrumentModel
     API3200QTrap = 16,
     API5000 = 17,
     CaribouQTrap = 21,
-    CaribouQTrapSm = 22,
+    API5500QTrap = 22,
     QStar = 2001,
     NlxTof = 2002,
     QStarPulsarI = 2003,
     QStarXL = 2004,
-    QStarElite = 2005
+    QStarElite = 2005,
+    API5600TripleTOF = 2006,
 };
 
 PWIZ_API_DECL enum InstrumentType

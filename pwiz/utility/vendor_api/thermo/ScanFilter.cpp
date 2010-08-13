@@ -244,6 +244,18 @@ ScanFilter::parseAccurateMassType(const string& word)
 	}
 }
 
+TriBool
+ScanFilter::parseCompensationVoltage(const string& word, double& voltage) {
+  if (word.find("CV=") == string::npos)
+    return TriBool_False;
+  else {
+	vector<string> nameVal;
+	boost::split(nameVal, word, boost::is_any_of("="));
+    voltage = lexical_cast<double>(nameVal[1]);
+    return TriBool_True;
+  }
+}
+
 ScanType 
 ScanFilter::parseScanType(const string& word)
 {
@@ -353,6 +365,10 @@ ScanFilter::print()
 		cout << "wideband: " << widebandOn_ << endl;
 	}
 
+	if (faimsOn_ != TriBool_Unknown) {
+		cout << "FAIMS: " << faimsOn_ << endl;
+	}
+
 	if (accurateMassType_ > AccurateMass_Unknown) {
 		cout << "accurate mass: " << accurateMassType_ << endl;
 	}
@@ -397,12 +413,14 @@ ScanFilter::initialize()
     supplementalCIDOn_ = TriBool_Unknown;
     widebandOn_ = TriBool_Unknown;
     lockMassOn_ = TriBool_Unknown;
+    faimsOn_ = TriBool_Unknown;
 
     msLevel_ = 0;
     cidParentMass_.clear();
 	cidEnergy_.clear();
 	scanRangeMin_.clear();
 	scanRangeMax_.clear();
+    compensationVoltage_ = 0.;
 }
 
 
@@ -577,6 +595,10 @@ ScanFilter::parse(string filterLine)
 		advance = false;
 	}
 
+    faimsOn_ = parseCompensationVoltage(w, compensationVoltage_);
+
+    if (faimsOn_ == TriBool_True)
+        s >> w;
 
 	// dependent type
 	if (w == "!D") {

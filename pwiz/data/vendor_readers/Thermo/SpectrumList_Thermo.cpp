@@ -286,6 +286,12 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         result->set(MS_base_peak_intensity, scanInfo->basePeakIntensity(), MS_number_of_counts);
         result->set(MS_total_ion_current, scanInfo->totalIonCurrent());
 
+        if (scanInfo->FAIMSOn())
+		{
+            result->set(MS_FAIMS, true);
+            result->set(MS_FAIMS_compensation_voltage, scanInfo->CompensationVoltage());
+        }
+
         scan.scanWindows.push_back(ScanWindow(scanInfo->lowMass(), scanInfo->highMass(), MS_m_z));
 
         if (msLevel > 1)

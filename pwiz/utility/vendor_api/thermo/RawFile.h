@@ -291,6 +291,8 @@ class PWIZ_API_DECL ScanInfo
     virtual long channelCount() const = 0;
     virtual bool isUniformTime() const = 0;
     virtual double frequency() const = 0;
+    virtual bool FAIMSOn() const = 0;
+    virtual double CompensationVoltage() const = 0;
 
     virtual long statusLogSize() const = 0;
     virtual double statusLogRT() const = 0;
