@@ -257,7 +257,7 @@ namespace BumberDash
             {
                 try
                 {
-                    Anchor = String.Format("\"file:///{0}/MyriMatch.html#{1}\"", Environment.CurrentDirectory.ToString().Replace("\\", "/"), Anchor);
+                    Anchor = String.Format("\"file:///{0}/ConfigEditor/MyriMatch.html#{1}\"", Environment.CurrentDirectory.ToString().Replace("\\", "/"), Anchor);
                     System.Diagnostics.Process.Start(Anchor);
                 }
                 catch
@@ -270,7 +270,7 @@ namespace BumberDash
             {
                 try
                 {
-                Anchor = String.Format("\"file:///{0}/DirecTag.html#{1}\"", Environment.CurrentDirectory.ToString().Replace("\\", "/"), Anchor);
+                Anchor = String.Format("\"file:///{0}/ConfigEditor/DirecTag.html#{1}\"", Environment.CurrentDirectory.ToString().Replace("\\", "/"), Anchor);
                 System.Diagnostics.Process.Start(Anchor);
                 }
                 catch
@@ -282,7 +282,7 @@ namespace BumberDash
             {
                 try
                 {
-                    Anchor = String.Format("\"file:///{0}/TagRecon.html#{1}\"", Environment.CurrentDirectory.ToString().Replace("\\", "/"), Anchor);
+                    Anchor = String.Format("\"file:///{0}/ConfigEditor/TagRecon.html#{1}\"", Environment.CurrentDirectory.ToString().Replace("\\", "/"), Anchor);
                     System.Diagnostics.Process.Start(Anchor);
                 }
                 catch
@@ -2416,7 +2416,7 @@ namespace BumberDash
             #region Open template file
             try
             {
-                fileIn = new StreamReader("Templates.cfg");
+                fileIn = new StreamReader(String.Format(@"{0}\ConfigEditor\Templates.cfg", Application.StartupPath));
             }
             catch
             {
