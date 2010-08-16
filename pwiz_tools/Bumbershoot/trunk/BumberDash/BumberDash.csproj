@@ -541,46 +541,46 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\BumberIcon.ico" />
-    <None Include="..\lib\BumberDash Help 2_files\themedata.thmx">
+    <Content Include="..\lib\BumberDash Help 2_files\themedata.thmx">
       <Link>BumberDash Help 2_files\themedata.thmx</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="..\lib\configeditor\Templates.cfg">
+    </Content>
+    <Content Include="..\lib\configeditor\Templates.cfg">
       <Link>ConfigEditor\Templates.cfg</Link>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="..\lib\directag\Interop.EDAL.SxS.manifest">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\directag\Interop.EDAL.SxS.manifest">
       <Link>directag\Interop.EDAL.SxS.manifest</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="..\lib\directag\MSFileReader.XRawfile2.SxS.manifest">
+    </Content>
+    <Content Include="..\lib\directag\MSFileReader.XRawfile2.SxS.manifest">
       <Link>directag\MSFileReader.XRawfile2.SxS.manifest</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="..\lib\myrimatch\Interop.EDAL.SxS.manifest">
+    </Content>
+    <Content Include="..\lib\myrimatch\Interop.EDAL.SxS.manifest">
       <Link>myrimatch\Interop.EDAL.SxS.manifest</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="..\lib\myrimatch\MSFileReader.XRawfile2.SxS.manifest">
+    </Content>
+    <Content Include="..\lib\myrimatch\MSFileReader.XRawfile2.SxS.manifest">
       <Link>myrimatch\MSFileReader.XRawfile2.SxS.manifest</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="..\lib\System.Data.SQLite.lib">
+    </Content>
+    <Content Include="..\lib\System.Data.SQLite.lib">
       <Link>System.Data.SQLite.lib</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="..\lib\tagrecon\blosum62.fas">
+    </Content>
+    <Content Include="..\lib\tagrecon\blosum62.fas">
       <Link>tagrecon\blosum62.fas</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="..\lib\tagrecon\Interop.EDAL.SxS.manifest">
+    </Content>
+    <Content Include="..\lib\tagrecon\Interop.EDAL.SxS.manifest">
       <Link>tagrecon\Interop.EDAL.SxS.manifest</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="..\lib\tagrecon\MSFileReader.XRawfile2.SxS.manifest">
+    </Content>
+    <Content Include="..\lib\tagrecon\MSFileReader.XRawfile2.SxS.manifest">
       <Link>tagrecon\MSFileReader.XRawfile2.SxS.manifest</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Content>
     <None Include="Resources\SearchFolder.gif" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
