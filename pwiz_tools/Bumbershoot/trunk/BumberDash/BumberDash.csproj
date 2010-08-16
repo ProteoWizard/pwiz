@@ -169,20 +169,419 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="DirecTag.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <Content Include="..\lib\BumberDash Help 2.htm">
+      <Link>BumberDash Help 2.htm</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\BumberDash Help 2_files\colorschememapping.xml">
+      <Link>BumberDash Help 2_files\colorschememapping.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\BumberDash Help 2_files\filelist.xml">
+      <Link>BumberDash Help 2_files\filelist.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\BumberDash Help 2_files\image001.png">
+      <Link>BumberDash Help 2_files\image001.png</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\BumberDash Help 2_files\image002.jpg">
+      <Link>BumberDash Help 2_files\image002.jpg</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\BumberDash Help 2_files\image003.png">
+      <Link>BumberDash Help 2_files\image003.png</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\BumberDash Help 2_files\image004.jpg">
+      <Link>BumberDash Help 2_files\image004.jpg</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\BumberDash Help 2_files\image005.png">
+      <Link>BumberDash Help 2_files\image005.png</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\BumberDash Help 2_files\image006.jpg">
+      <Link>BumberDash Help 2_files\image006.jpg</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\BumberDash Help 2_files\image007.png">
+      <Link>BumberDash Help 2_files\image007.png</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\BumberDash Help 2_files\image008.jpg">
+      <Link>BumberDash Help 2_files\image008.jpg</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\BumberDash Help 2_files\image009.png">
+      <Link>BumberDash Help 2_files\image009.png</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\BumberDash Help 2_files\image010.jpg">
+      <Link>BumberDash Help 2_files\image010.jpg</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\BumberDash Help 2_files\image011.png">
+      <Link>BumberDash Help 2_files\image011.png</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\BumberDash Help 2_files\image012.jpg">
+      <Link>BumberDash Help 2_files\image012.jpg</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\BumberDash Help 2_files\item0001.xml">
+      <Link>BumberDash Help 2_files\item0001.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\BumberDash Help 2_files\item0018.xml">
+      <Link>BumberDash Help 2_files\item0018.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\BumberDash Help 2_files\props0002.xml">
+      <Link>BumberDash Help 2_files\props0002.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\BumberDash Help 2_files\props0019.xml">
+      <Link>BumberDash Help 2_files\props0019.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\configeditor\ConfigEditor.exe">
+      <Link>ConfigEditor\ConfigEditor.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\configeditor\DirecTag.html">
+      <Link>ConfigEditor\DirecTag.html</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\configeditor\Myrimatch.html">
+      <Link>ConfigEditor\Myrimatch.html</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\configeditor\TagRecon.html">
+      <Link>ConfigEditor\TagRecon.html</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\directag\agtsampleinforw.dll">
+      <Link>directag\agtsampleinforw.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\directag\BaseCommon.dll">
+      <Link>directag\BaseCommon.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\directag\BaseDataAccess.dll">
+      <Link>directag\BaseDataAccess.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\directag\BaseError.dll">
+      <Link>directag\BaseError.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\directag\BaseTof.dll">
+      <Link>directag\BaseTof.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\directag\BDal.CXt.Lc.dll">
+      <Link>directag\BDal.CXt.Lc.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\directag\BDal.CXt.Lc.Factory.dll">
+      <Link>directag\BDal.CXt.Lc.Factory.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\directag\BDal.CXt.Lc.Interfaces.dll">
+      <Link>directag\BDal.CXt.Lc.Interfaces.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\directag\BDal.CXt.Lc.UntU2.dll">
+      <Link>directag\BDal.CXt.Lc.UntU2.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\directag\boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll">
+      <Link>directag\boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\directag\boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll">
+      <Link>directag\boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\directag\CompassXtractMS.dll">
+      <Link>directag\CompassXtractMS.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\directag\directag.exe">
+      <Link>directag\directag.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\directag\fileio.dll">
+      <Link>directag\fileio.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\directag\fregistry.dll">
+      <Link>directag\fregistry.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\directag\Interop.EDAL.dll">
+      <Link>directag\Interop.EDAL.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\directag\libfftw3-3.dll">
+      <Link>directag\libfftw3-3.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\directag\libfftw3f-3.dll">
+      <Link>directag\libfftw3f-3.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\directag\MassSpecDataReader.dll">
+      <Link>directag\MassSpecDataReader.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\directag\MSFileReader.XRawfile2.dll">
+      <Link>directag\MSFileReader.XRawfile2.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\directag\NTB-vc80-mt-4_3_61.dll">
+      <Link>directag\NTB-vc80-mt-4_3_61.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\myrimatch\agtsampleinforw.dll">
+      <Link>myrimatch\agtsampleinforw.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\myrimatch\BaseCommon.dll">
+      <Link>myrimatch\BaseCommon.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\myrimatch\BaseDataAccess.dll">
+      <Link>myrimatch\BaseDataAccess.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\myrimatch\BaseError.dll">
+      <Link>myrimatch\BaseError.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\myrimatch\BaseTof.dll">
+      <Link>myrimatch\BaseTof.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\myrimatch\BDal.CXt.Lc.dll">
+      <Link>myrimatch\BDal.CXt.Lc.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\myrimatch\BDal.CXt.Lc.Factory.dll">
+      <Link>myrimatch\BDal.CXt.Lc.Factory.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\myrimatch\BDal.CXt.Lc.Interfaces.dll">
+      <Link>myrimatch\BDal.CXt.Lc.Interfaces.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\myrimatch\BDal.CXt.Lc.UntU2.dll">
+      <Link>myrimatch\BDal.CXt.Lc.UntU2.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\myrimatch\boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll">
+      <Link>myrimatch\boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\myrimatch\boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll">
+      <Link>myrimatch\boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\myrimatch\CompassXtractMS.dll">
+      <Link>myrimatch\CompassXtractMS.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\myrimatch\fileio.dll">
+      <Link>myrimatch\fileio.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\myrimatch\fregistry.dll">
+      <Link>myrimatch\fregistry.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\myrimatch\Interop.DataExplorer.dll">
+      <Link>myrimatch\Interop.DataExplorer.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\myrimatch\Interop.EDAL.dll">
+      <Link>myrimatch\Interop.EDAL.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\myrimatch\libfftw3-3.dll">
+      <Link>myrimatch\libfftw3-3.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\myrimatch\libfftw3f-3.dll">
+      <Link>myrimatch\libfftw3f-3.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\myrimatch\MassSpecDataReader.dll">
+      <Link>myrimatch\MassSpecDataReader.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\myrimatch\MSFileReader.XRawfile2.dll">
+      <Link>myrimatch\MSFileReader.XRawfile2.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\myrimatch\myrimatch.exe">
+      <Link>myrimatch\myrimatch.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\myrimatch\NTB-vc80-mt-4_3_61.dll">
+      <Link>myrimatch\NTB-vc80-mt-4_3_61.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\Nhibernate\nunit.core.dll">
+      <Link>nunit.core.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\Nhibernate\nunit.framework.dll">
+      <Link>nunit.framework.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\System.Data.SQLite.XML">
+      <Link>System.Data.SQLite.XML</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\tagrecon\agtsampleinforw.dll">
+      <Link>tagrecon\agtsampleinforw.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\tagrecon\BaseCommon.dll">
+      <Link>tagrecon\BaseCommon.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\tagrecon\BaseDataAccess.dll">
+      <Link>tagrecon\BaseDataAccess.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\tagrecon\BaseError.dll">
+      <Link>tagrecon\BaseError.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\tagrecon\BaseTof.dll">
+      <Link>tagrecon\BaseTof.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\tagrecon\BDal.CXt.Lc.dll">
+      <Link>tagrecon\BDal.CXt.Lc.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\tagrecon\BDal.CXt.Lc.Factory.dll">
+      <Link>tagrecon\BDal.CXt.Lc.Factory.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\tagrecon\BDal.CXt.Lc.Interfaces.dll">
+      <Link>tagrecon\BDal.CXt.Lc.Interfaces.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\tagrecon\BDal.CXt.Lc.UntU2.dll">
+      <Link>tagrecon\BDal.CXt.Lc.UntU2.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\tagrecon\boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll">
+      <Link>tagrecon\boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\tagrecon\boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll">
+      <Link>tagrecon\boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\tagrecon\CompassXtractMS.dll">
+      <Link>tagrecon\CompassXtractMS.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\tagrecon\fileio.dll">
+      <Link>tagrecon\fileio.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\tagrecon\fregistry.dll">
+      <Link>tagrecon\fregistry.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\tagrecon\Interop.DataExplorer.dll">
+      <Link>tagrecon\Interop.DataExplorer.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\tagrecon\Interop.EDAL.dll">
+      <Link>tagrecon\Interop.EDAL.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\tagrecon\libfftw3-3.dll">
+      <Link>tagrecon\libfftw3-3.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\tagrecon\libfftw3f-3.dll">
+      <Link>tagrecon\libfftw3f-3.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\tagrecon\MassSpecDataReader.dll">
+      <Link>tagrecon\MassSpecDataReader.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\tagrecon\MSFileReader.XRawfile2.dll">
+      <Link>tagrecon\MSFileReader.XRawfile2.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\tagrecon\NTB-vc80-mt-4_3_61.dll">
+      <Link>tagrecon\NTB-vc80-mt-4_3_61.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\tagrecon\tagrecon.exe">
+      <Link>tagrecon\tagrecon.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\lib\tagrecon\unimod.xml">
+      <Link>tagrecon\unimod.xml</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="hibernate.cfg.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="Myrimatch.html">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="Resources\BumberIcon.ico" />
-    <None Include="Resources\SearchFolder.gif" />
-    <Content Include="TagRecon.html">
+    <None Include="..\lib\BumberDash Help 2_files\themedata.thmx">
+      <Link>BumberDash Help 2_files\themedata.thmx</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\lib\configeditor\Templates.cfg">
+      <Link>ConfigEditor\Templates.cfg</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    </None>
+    <None Include="..\lib\directag\Interop.EDAL.SxS.manifest">
+      <Link>directag\Interop.EDAL.SxS.manifest</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\lib\directag\MSFileReader.XRawfile2.SxS.manifest">
+      <Link>directag\MSFileReader.XRawfile2.SxS.manifest</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\lib\myrimatch\Interop.EDAL.SxS.manifest">
+      <Link>myrimatch\Interop.EDAL.SxS.manifest</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\lib\myrimatch\MSFileReader.XRawfile2.SxS.manifest">
+      <Link>myrimatch\MSFileReader.XRawfile2.SxS.manifest</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\lib\System.Data.SQLite.lib">
+      <Link>System.Data.SQLite.lib</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\lib\tagrecon\blosum62.fas">
+      <Link>tagrecon\blosum62.fas</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\lib\tagrecon\Interop.EDAL.SxS.manifest">
+      <Link>tagrecon\Interop.EDAL.SxS.manifest</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="..\lib\tagrecon\MSFileReader.XRawfile2.SxS.manifest">
+      <Link>tagrecon\MSFileReader.XRawfile2.SxS.manifest</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Resources\SearchFolder.gif" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
