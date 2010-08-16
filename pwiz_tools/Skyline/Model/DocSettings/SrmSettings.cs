@@ -939,7 +939,8 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         MassType MassType { get;}
         double GetPrecursorMass(string seq);
-        bool IsModified(string seq);string GetModifiedSequence(string seq, bool formatNarrow);
+        bool IsModified(string seq);
+        string GetModifiedSequence(string seq, bool formatNarrow);
     }
 
     public interface IFragmentMassCalc
@@ -1017,6 +1018,18 @@ namespace pwiz.Skyline.Model.DocSettings
             DiffResults = diff.DiffResults || diffUnion.DiffResults;
             DiffResultsAll = diff.DiffResultsAll || diffUnion.DiffResultsAll;
             SettingsOld = diff.SettingsOld;
+        }
+
+        public SrmSettingsDiff(bool diffPeptides, bool diffPeptideProps,
+            bool diffTransitionGroups, bool diffTransitionGroupProps,
+            bool diffTransitions, bool diffTransitionProps)
+        {
+            DiffPeptides = diffPeptides;
+            DiffPeptideProps = diffPeptideProps;
+            DiffTransitionGroups = diffTransitionGroups;
+            DiffTransitionGroupProps = diffTransitionGroupProps;
+            DiffTransitions = diffTransitions;
+            DiffTransitionProps = diffTransitionProps;
         }
 
         public SrmSettingsDiff(SrmSettings settingsCurrent, bool allResults)

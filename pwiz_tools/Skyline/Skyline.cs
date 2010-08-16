@@ -555,7 +555,6 @@ namespace pwiz.Skyline
         protected override void OnGotFocus(EventArgs e)
         {
             base.OnGotFocus(e);
-
             FocusDocument();
         }
 
@@ -1585,10 +1584,16 @@ namespace pwiz.Skyline
 
         public void ShowPeptideSettingsUI()
         {
-            PeptideSettingsUI ps = new PeptideSettingsUI(this, _libraryManager);
+            ShowPeptideSettingsUI(null);
+        }
+
+        public void ShowPeptideSettingsUI(PeptideSettingsUI.TABS? tab)
+        {
+            PeptideSettingsUI ps = new PeptideSettingsUI(this, _libraryManager) {TabControlSel = tab};
             if (ps.ShowDialog(this) == DialogResult.OK)
             {
-                // At this point the dialog does everything by itself.
+                if (ps.IsShowLibraryExplorer)
+                    OwnedForms[OwnedForms.IndexOf(form => form is ViewLibraryDlg)].Activate();
             }
 
             // In case user shows/hides things via the Spectral Library 
@@ -2553,6 +2558,33 @@ namespace pwiz.Skyline
             cutToolBarButton.Enabled = cutMenuItem.Enabled = enabled;
             copyToolBarButton.Enabled = copyMenuItem.Enabled = enabled;
             deleteMenuItem.Enabled = enabled;
+        }
+
+        private void spectralLibrariesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (Settings.Default.SpectralLibraryList.Count == 0)
+            {
+                var result = MessageBox.Show(this, "No libraries to show. Would you like to add a library?",
+                                             Program.Name, MessageBoxButtons.OKCancel);
+                if (result == DialogResult.Cancel)
+                    return;
+                ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Library);
+            }
+            else
+            {
+                var index = OwnedForms.IndexOf(form => form is ViewLibraryDlg);
+                if (index != -1)
+                    OwnedForms[index].Activate();
+                else
+                {
+                    var libraries = Document.Settings.PeptideSettings.Libraries.Libraries;
+                    var indexLib = libraries.IndexOf(library => library.IsLoaded);
+                    var libraryName = indexLib != -1 ? libraries[indexLib].Name : "";
+                    var viewLibraryDlg = new ViewLibraryDlg(_libraryManager, libraryName, this) {Owner = this};
+                    viewLibraryDlg.Show();
+                }
+            }
+
         }
     }
 }

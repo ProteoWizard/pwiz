@@ -88,6 +88,12 @@ namespace pwiz.Skyline.Model
                                                                   ((TransitionGroupDocNode)nodeGroup).TransitionGroup.LabelType));
         }
 
+        public bool HasChildCharge(int charge)
+        {
+            return Children.Contains(nodeGroup => Equals(charge,
+                                                         ((TransitionGroupDocNode) nodeGroup).TransitionGroup.PrecursorCharge));
+        }
+
         public int? Rank { get; private set; }
 
         public Results<PeptideChromInfo> Results { get; private set; }
@@ -433,7 +439,7 @@ namespace pwiz.Skyline.Model
             return (PeptideDocNode)result.ChangeChildrenChecked(listChildren);
         }
 
-        private static bool AreEquivalentChildren(IList<DocNode> children1, IList<DocNode> children2)
+        public static bool AreEquivalentChildren(IList<DocNode> children1, IList<DocNode> children2)
         {
             if(children1.Count != children2.Count)
                 return false;

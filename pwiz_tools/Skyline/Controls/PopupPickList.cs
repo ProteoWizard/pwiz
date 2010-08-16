@@ -28,7 +28,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
 {
-    public partial class PopupPickList : Form
+    public partial class PopupPickList : Form, ITipDisplayer
     {
         /// <summary>
         /// Current size used for all popup pick-lists.
@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Controls
             cbItems.Text = childHeading;
 
             _modFonts = new ModFontHolder(pickListMulti);
-            _nodeTip = new NodeTip(pickListMulti);
+            _nodeTip = new NodeTip(this);
 
             _picker = picker;
             _chosenAtStart = new List<DocNode>(picker.Chosen);
@@ -596,6 +596,21 @@ namespace pwiz.Skyline.Controls
             public DocNode Choice { get; private set; }
             public string Label { get; private set; }
             public bool Chosen { get; set; }
+        }
+
+        public Rectangle ScreenRect
+        {
+            get { return Screen.GetBounds(pickListMulti); }
+        }
+
+        public bool AllowDisplayTip
+        {
+            get { return pickListMulti.Focused; }
+        }
+
+        public Rectangle RectToScreen(Rectangle r)
+        {
+            return pickListMulti.RectangleToScreen(r);
         }
     }
 }

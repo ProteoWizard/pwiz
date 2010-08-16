@@ -29,10 +29,17 @@ namespace pwiz.Skyline.Controls
     public class MessageBoxHelper
     {
         private readonly Form _parent;
+        private static bool _showMessages;
 
         public MessageBoxHelper(Form parent)
         {
+            new MessageBoxHelper(parent, true);
+        }
+
+        public MessageBoxHelper(Form parent, bool showMessages)
+        {
             _parent = parent;
+            _showMessages = showMessages;
         }
 
         public bool ValidateNameTextBox(CancelEventArgs e, TextBox control, out string val)
@@ -89,7 +96,7 @@ namespace pwiz.Skyline.Controls
             TextBox control, double min, double max, out double val)
         {
             bool valid = ValidateDecimalTextBox(e, control, min, max, out val);
-            if (!valid && tabControl.SelectedIndex != tabIndex)
+            if (!valid && tabControl.SelectedIndex != tabIndex && _showMessages)
             {
                 tabControl.SelectedIndex = tabIndex;
                 control.Focus();
@@ -136,7 +143,7 @@ namespace pwiz.Skyline.Controls
             TextBox control, int min, int max, out int val)
         {
             bool valid = ValidateNumberTextBox(e, control, min, max, out val);
-            if (!valid && tabControl.SelectedIndex != tabIndex)
+            if (!valid && tabControl.SelectedIndex != tabIndex && _showMessages)
             {
                 tabControl.SelectedIndex = tabIndex;
                 control.Focus();                
@@ -186,6 +193,8 @@ namespace pwiz.Skyline.Controls
         /// <param name="vals">Objects for use in the format string</param>
         public void ShowTextBoxError(TextBox control, string message, params object[] vals)
         {
+            if(!_showMessages)
+                return;
             if (vals.Length > 0 && vals[0] == null)
                 vals[0] = GetControlMessage(control);
             MessageBox.Show(_parent, string.Format(message, vals), Program.Name);
@@ -222,6 +231,8 @@ namespace pwiz.Skyline.Controls
         /// <param name="x">An <see cref="Exception"/> thrown during XML parsing</param>
         public static void ShowXmlParsingError(IWin32Window parent, string firstLine, string path, Exception x)
         {
+            if(_showMessages)
+                return;
             string messageException = GetInvalidDataMessage(path, x);
             MessageBox.Show(parent, firstLine + "\n" + messageException, Program.Name);
         }

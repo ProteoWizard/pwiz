@@ -62,6 +62,36 @@ namespace pwiz.Skyline.EditUI
 
         public RefinementSettings RefinementSettings { get; private set; }
 
+        public string MaxTransitionPeakRank
+        { 
+            get { return textMaxPeakRank.Text;}
+            set { textMaxPeakRank.Text = value; }
+        }
+
+        public bool PreferLargerIons
+        {
+            get { return cbPreferLarger.Checked;  }
+            set { cbPreferLarger.Checked = value; }
+        }
+
+        public bool RemoveMissingResults
+        {
+            get { return radioRemoveMissing.Checked; }
+            set { radioRemoveMissing.Checked = value; }
+        }
+
+        public string RTRegressionThreshold
+        {
+            get { return textRTRegressionThreshold.Text; }
+            set { textRTRegressionThreshold.Text = value; }
+        }
+
+        public string DotProductThreshold
+        {
+            get { return textMinDotProduct.Text; }
+            set { textMinDotProduct.Text = value; }
+        }
+
         public void OkDialog()
         {
             // TODO: Remove this

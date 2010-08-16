@@ -786,24 +786,46 @@ namespace pwiz.Skyline.Controls.SeqNode
         Size RenderTip(Graphics g, Size sizeMax, bool draw);
     }
 
+    /// <summary>
+    /// Implement to enable a control to display tool tips.
+    /// </summary>
+    public interface ITipDisplayer
+    {
+        /// <summary>
+        /// Gets the bounds of the control in which the tip is displayed.
+        /// </summary>
+        Rectangle ScreenRect { get; }
+
+        /// <summary>
+        /// Indicates if the tip should be displayed.
+        /// </summary>
+        bool AllowDisplayTip { get; }
+
+        /// <summary>
+        /// Gets the screen coordinates of the given rectangle, 
+        /// which in this case is the node whose tip we are displaying.
+        /// </summary>
+        Rectangle RectToScreen(Rectangle r);
+    }
+
     public class NodeTip : CustomTip
     {
         public static string FontFace { get { return "Arial"; } }
         public static float FontSize { get { return 8f; } }
 
         private ITipProvider _tipProvider;
+        private readonly ITipDisplayer _tipDisplayer;
         private Rectangle _rectItem;
-        private readonly Control _tipControl;
         private readonly Timer _timer;
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
 
         private const int NODE_SPACE_Y = 5;
 
-        public NodeTip(Control tipControl)
+        public NodeTip(ITipDisplayer tipDisplayer)
         {
-            _tipControl = tipControl;
             _timer = new Timer { Interval = 500 };
             _timer.Tick += Timer_Tick;
+            _tipDisplayer = tipDisplayer;
         }
 
         public void HideTip()
@@ -823,7 +845,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                     HideAnimate(animate);
                 }
                 _tipProvider = tipProvider;
-                _rectItem = _tipControl.RectangleToScreen(rectItem);
+                _rectItem = _tipDisplayer.RectToScreen(rectItem);
                 _moveThreshold.Location = cursorPos;
                 if (tipProvider != null)
                     _timer.Start();
@@ -852,10 +874,10 @@ namespace pwiz.Skyline.Controls.SeqNode
         private void Timer_Tick(Object sender, EventArgs e)
         {
             _timer.Stop();
-            if (_tipControl == null || !_tipControl.Focused)
+            if (_tipDisplayer == null || !_tipDisplayer.AllowDisplayTip)
                 return;
 
-            Rectangle rectScreen = Screen.GetBounds(_tipControl);
+            Rectangle rectScreen = _tipDisplayer.ScreenRect;
             AnimateMode animate = AnimateMode.SlideTopToBottom;
 
             using (Bitmap bitmap1 = new Bitmap(1, 1, PixelFormat.Format32bppArgb))

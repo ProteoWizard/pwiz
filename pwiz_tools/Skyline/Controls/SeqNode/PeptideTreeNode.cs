@@ -179,7 +179,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             return CreateTextSequences(DocNode, DocSettings, Text, g, SequenceTree.ModFonts);
         }
 
-        private static TextSequence[] CreateTextSequences(PeptideDocNode nodePep,
+        public static TextSequence[] CreateTextSequences(PeptideDocNode nodePep,
             SrmSettings settings, string label, IDeviceContext g, ModFontHolder fonts)
         {
             // Store text and font information for all label types
@@ -359,7 +359,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         /// <summary>
         /// Creates a text sequence with normal font.
         /// </summary>
-        private static TextSequence CreatePlainTextSequence(string text, ModFontHolder fonts)
+        public static TextSequence CreatePlainTextSequence(string text, ModFontHolder fonts)
         {
             return new TextSequence
                        {
@@ -369,10 +369,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                            IsPlainText = true
                        };
         }
-
         
-        
-
         /// <summary>
         /// Creates a text sequence for a peptide sequence with modifications
         /// </summary>

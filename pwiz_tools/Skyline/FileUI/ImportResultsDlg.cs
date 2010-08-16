@@ -387,7 +387,12 @@ namespace pwiz.Skyline.FileUI
             return null;
         }
 
-        private KeyValuePair<string, string[]>[] GetDataSourcePathsDir()
+        public void SetDataSourcePathsDir()
+        {
+            NamedPathSets = GetDataSourcePathsDir();
+        }
+
+        public KeyValuePair<string, string[]>[] GetDataSourcePathsDir()
         {
             string initialDir = Path.GetDirectoryName(_documentSavedPath);
             FolderBrowserDialog dlg = new FolderBrowserDialog
@@ -596,6 +601,12 @@ namespace pwiz.Skyline.FileUI
         {
             get { return radioAddExisting.Checked; }
             set { radioAddExisting.Checked = value; }
+        }
+
+        public bool RadioCreateMultipleMultiChecked
+        {
+            get { return radioCreateMultipleMulti.Checked; }
+            set { radioCreateMultipleMulti.Checked = value; }
         }
 
         private void btnOk_Click(object sender, EventArgs e)

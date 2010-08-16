@@ -138,6 +138,19 @@ namespace pwiz.Skyline.Controls.Graphs
         private bool IsGroupActive { get { return _nodeGroups.SafeLength() > 0; } }
         private bool IsMultiGroup { get { return _nodeGroups.SafeLength() > 1; } }
 
+        public IList<String> Files
+        {
+            get
+            {
+                IList<string> files = new List<string>();
+                foreach (object file in comboFiles.Items)
+                {
+                    files.Add(file.ToString());
+                }
+                return files;
+            }
+        }
+
         [Browsable(true)]
         public event EventHandler<PickedPeakEventArgs> PickedPeak;
 

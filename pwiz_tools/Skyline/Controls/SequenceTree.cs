@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Controls
     /// http://www.codeproject.com/KB/tree/CustomizedLabelEdit.aspx?display=Print
     /// </para>
     /// </summary>
-    public class SequenceTree : TreeViewMS
+    public class SequenceTree : TreeViewMS, ITipDisplayer
     {
         private Image _dropImage;
         private TreeNode _nodeCapture;
@@ -1039,6 +1039,21 @@ namespace pwiz.Skyline.Controls
                     TopNode = nodeTop;
                 }
             }
+        }
+
+        public Rectangle ScreenRect
+        {
+            get { return Screen.GetBounds(this); }
+        }
+
+        public bool AllowDisplayTip
+        {
+            get { return Focused; }
+        }
+
+        public Rectangle RectToScreen(Rectangle r)
+        {
+            return RectangleToScreen(r);
         }
     }
 

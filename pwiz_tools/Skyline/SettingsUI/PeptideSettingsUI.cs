@@ -38,7 +38,7 @@ namespace pwiz.Skyline.SettingsUI
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Local
-        private enum TABS { Digest, Prediction, Filter, Library, Modifications }
+        public enum TABS { Digest, Prediction, Filter, Library, Modifications }
 // ReSharper restore UnusedMember.Local
 // ReSharper restore InconsistentNaming
 
@@ -102,7 +102,7 @@ namespace pwiz.Skyline.SettingsUI
             panelPick.Visible = listLibrarySpecs.Count > 0;
             btnExplore.Enabled = listLibraries.Items.Count > 0;
 
-            comboMatching.SelectedIndex = (int)Libraries.Pick;
+            comboMatching.SelectedIndex = (int) Libraries.Pick;
 
             _lastRankId = Libraries.RankId;
             _lastPeptideCount = Libraries.PeptideCount.ToString();
@@ -117,6 +117,8 @@ namespace pwiz.Skyline.SettingsUI
                 labelStandardType, comboStandardType, listStandardTypes);
             textMaxVariableMods.Text = Modifications.MaxVariableMods.ToString();
             textMaxNeutralLosses.Text = Modifications.MaxNeutralLosses.ToString();
+
+            IsShowLibraryExplorer = false;
         }
 
         public DigestSettings Digest { get { return _peptideSettings.DigestSettings; } }
@@ -124,17 +126,21 @@ namespace pwiz.Skyline.SettingsUI
         public PeptideFilter Filter { get { return _peptideSettings.Filter; } }
         public PeptideLibraries Libraries { get { return _peptideSettings.Libraries; } }
         public PeptideModifications Modifications { get { return _peptideSettings.Modifications; } }
+        public bool IsShowLibraryExplorer { get; set; }
+        public TABS? TabControlSel { get; set; }
 
         protected override void OnShown(EventArgs e)
         {
+            if (TabControlSel != null) 
+                tabControl1.SelectedIndex = (int) TabControlSel; 
             tabControl1.FocusFirstTabStop();
         }
 
-        public void OkDialog()
+        private PeptideSettings ValidateNewSettings(bool showMessages)
         {
             // TODO: Remove this
             var e = new CancelEventArgs();
-            var helper = new MessageBoxHelper(this);
+            var helper = new MessageBoxHelper(this, showMessages);
 
 
             // Validate and hold digestion settings
@@ -161,7 +167,7 @@ namespace pwiz.Skyline.SettingsUI
                     tabControl1.SelectedIndex = 0;
                     _driverBackgroundProteome.Combo.Focus();
                     e.Cancel = true;
-                    return;
+                    return null;
                 }
             }
             Helpers.AssignIfEquals(ref backgroundProteome, _peptideSettings.BackgroundProteome);
@@ -179,7 +185,7 @@ namespace pwiz.Skyline.SettingsUI
                 const double maxWindow = PeptidePrediction.MAX_MEASURED_RT_WINDOW;
                 if (!helper.ValidateDecimalTextBox(e, tabControl1, (int) TABS.Prediction,
                         textMeasureRTWindow, minWindow, maxWindow, out measuredRTWindowOut))
-                    return;
+                    return null;
                 measuredRTWindow = measuredRTWindowOut;
             }
             PeptidePrediction prediction = new PeptidePrediction(retentionTime, useMeasuredRT, measuredRTWindow);
@@ -189,15 +195,15 @@ namespace pwiz.Skyline.SettingsUI
             int excludeNTermAAs;
             if (!helper.ValidateNumberTextBox(e, tabControl1, (int) TABS.Filter, textExcludeAAs,
                     PeptideFilter.MIN_EXCLUDE_NTERM_AA, PeptideFilter.MAX_EXCLUDE_NTERM_AA, out excludeNTermAAs))
-                return;
+                return null;
             int minPeptideLength;
             if (!helper.ValidateNumberTextBox(e, tabControl1, (int) TABS.Filter, textMinLength,
                     PeptideFilter.MIN_MIN_LENGTH, PeptideFilter.MAX_MIN_LENGTH, out minPeptideLength))
-                return;
+                return null;
             int maxPeptideLength;
             if (!helper.ValidateNumberTextBox(e, tabControl1, (int)TABS.Filter, textMaxLength,
                     Math.Max(PeptideFilter.MIN_MAX_LENGTH, minPeptideLength), PeptideFilter.MAX_MAX_LENGTH, out maxPeptideLength))
-                return;
+                return null;
 
             PeptideExcludeRegex[] exclusions = _driverExlusion.Chosen;
 
@@ -223,7 +229,7 @@ namespace pwiz.Skyline.SettingsUI
                     int peptideCountVal;
                     if (!helper.ValidateNumberTextBox(e, textPeptideCount, PeptideLibraries.MIN_PEPTIDE_COUNT,
                             PeptideLibraries.MAX_PEPTIDE_COUNT, out peptideCountVal))
-                        return;
+                        return null;
                     peptideCount = peptideCountVal;
                 }
                 PeptidePick pick = (PeptidePick) comboMatching.SelectedIndex;
@@ -257,18 +263,18 @@ namespace pwiz.Skyline.SettingsUI
             int maxVariableMods;
             if (!helper.ValidateNumberTextBox(e, tabControl1, (int)TABS.Modifications, textMaxVariableMods,
                     PeptideModifications.MIN_MAX_VARIABLE_MODS, PeptideModifications.MAX_MAX_VARIABLE_MODS, out maxVariableMods))
-                return;
+                return null;
             int maxNeutralLosses;
             if (!helper.ValidateNumberTextBox(e, tabControl1, (int)TABS.Modifications, textMaxNeutralLosses,
                     PeptideModifications.MIN_MAX_NEUTRAL_LOSSES, PeptideModifications.MAX_MAX_NEUTRAL_LOSSES, out maxNeutralLosses))
-                return;
+                return null;
 
             var standardTypes = _driverLabelType.InternalStandardTypes;
             if (standardTypes.Count < 1)
             {
                 MessageDlg.Show(this, "Choose at least one internal standard type.");
                 e.Cancel = true;
-                return;
+                return null;
             }
             PeptideModifications modifications = new PeptideModifications(
                 _driverStaticMod.Chosen, maxVariableMods, maxNeutralLosses,
@@ -278,9 +284,14 @@ namespace pwiz.Skyline.SettingsUI
             modifications = modifications.DeclareExplicitMods(_parent.DocumentUI,
                 Settings.Default.StaticModList, Settings.Default.HeavyModList);
             Helpers.AssignIfEquals(ref modifications, _peptideSettings.Modifications);
-            PeptideSettings settings = new PeptideSettings(enzyme, digest, prediction,
+            return new PeptideSettings(enzyme, digest, prediction,
                     filter, libraries, modifications, backgroundProteome);
+        }
 
+        public void OkDialog()
+        {
+            PeptideSettings settings = ValidateNewSettings(true);
+            
             // Only update, if anything changed
             if (!Equals(settings, _peptideSettings))
             {
@@ -518,17 +529,51 @@ namespace pwiz.Skyline.SettingsUI
         {
             ShowViewLibraryDlg();
         }
-
+        
         public void ShowViewLibraryDlg()
         {
-            ShowViewLibraryDlg(String.Empty);
-        }
-
-        public void ShowViewLibraryDlg(String libName)
-        {
-            var dlg = new ViewLibraryDlg(_libraryManager, _driverLibrary, libName);
-            if (dlg.ShowDialog(this) == DialogResult.OK)
+            // Validate new settings without showing message boxes
+            PeptideSettings settings = ValidateNewSettings(false);
+            // Only update, if anything changed
+            if (!Equals(settings, _peptideSettings))
             {
+                var result = MessageBox.Show(this, "Peptide settings have been changed. Save changes?", Program.Name,
+                                MessageBoxButtons.YesNoCancel);
+                switch (result)
+                {
+                    case DialogResult.Yes:
+                        // If settings are null, then validation failed the first time
+                        if (settings == null)
+                        {
+                            // Show the error this time
+                            ValidateNewSettings(true);
+                            return;
+                        }
+                        SrmSettings newSettings = _parent.DocumentUI.Settings.ChangePeptideSettings(settings);
+                        if (_parent.ChangeSettings(newSettings, true))
+                        {
+                            _peptideSettings = settings;
+                        }
+                        break;
+                    case DialogResult.No:
+                        break;
+                    case DialogResult.Cancel:
+                        return;
+                }
+            }
+            IsShowLibraryExplorer = true;
+            DialogResult = DialogResult.OK;
+            var index = _parent.OwnedForms.IndexOf(form => form is ViewLibraryDlg);
+            if (index == -1)
+            {
+                // Selected library name should be the ListBox selected item if possible, else the first checked item, 
+                // else the empty string. 
+                string libName = _driverLibrary.ListBox.SelectedItem != null
+                                     ? _driverLibrary.ListBox.SelectedItem.ToString()
+                                     :
+                                         (_driverLibrary.CheckedNames.Count() > 0 ? _driverLibrary.CheckedNames[0] : "");
+                var viewLibraryDlg = new ViewLibraryDlg(_libraryManager, libName, _parent) { Owner = Owner };
+                viewLibraryDlg.Show();
             }
         }
 

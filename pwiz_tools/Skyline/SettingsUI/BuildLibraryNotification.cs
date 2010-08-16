@@ -201,9 +201,22 @@ namespace pwiz.Skyline.SettingsUI
 
         private void ShowViewLibraryUI(String libName)
         {
-            var dlg = new ViewLibraryDlg(NotificationContainer.LibraryManager, null, libName);
-            if (dlg.ShowDialog(TopMostApplicationForm) == DialogResult.OK)
+            var indexPepSetUI = Program.MainWindow.OwnedForms.IndexOf(form => form is PeptideSettingsUI);
+            if (indexPepSetUI != -1)
             {
+                ((PeptideSettingsUI)Program.MainWindow.OwnedForms[indexPepSetUI]).ShowViewLibraryDlg();
+            }          
+            var indexViewLibDlg = Program.MainWindow.OwnedForms.IndexOf(form => form is ViewLibraryDlg);
+            if (indexViewLibDlg == -1)
+            {
+                var dlg = new ViewLibraryDlg(NotificationContainer.LibraryManager, libName, Program.MainWindow) { Owner = Program.MainWindow };
+                dlg.Show();
+            }
+            else
+            {
+                ViewLibraryDlg viewLibDlg = (ViewLibraryDlg) Program.MainWindow.OwnedForms[indexViewLibDlg];
+                viewLibDlg.Activate();
+                viewLibDlg.ChangeSelectedLibrary(libName);
             }
         }
 

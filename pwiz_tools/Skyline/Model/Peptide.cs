@@ -70,6 +70,11 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public static int CompareGroups(DocNode node1, DocNode node2)
+        {
+            return CompareGroups((TransitionGroupDocNode) node1, (TransitionGroupDocNode) node2);    
+        }
+
         public static int CompareGroups(TransitionGroupDocNode node1, TransitionGroupDocNode node2)
         {
             return CompareGroups(node1.TransitionGroup, node2.TransitionGroup);

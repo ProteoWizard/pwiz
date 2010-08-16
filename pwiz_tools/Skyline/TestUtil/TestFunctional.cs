@@ -103,11 +103,19 @@ namespace pwiz.SkylineTestUtil
 
         protected static void RunDlg<T>(Action show, Action<T> act) where T : Form
         {
+            RunDlg(show, false, act);
+        }
+
+        protected static void RunDlg<T>(Action show, bool waitForDocument, Action<T> act) where T : Form
+        {
+            var doc = SkylineWindow.Document;
             T dlg = ShowDialog<T>(show);
             RunUI(() => act(dlg));
             WaitForClosedForm(dlg);
+            if (waitForDocument)
+                WaitForDocumentChange(doc);
         }
-
+        
         protected static void SelectNode(SrmDocument.Level level, int iNode)
         {
             var pathSelect = SkylineWindow.Document.GetPathTo((int)level, iNode);

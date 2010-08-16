@@ -2795,5 +2795,14 @@ namespace pwiz.Skyline
         }
 
         #endregion
+
+        #region Testing
+
+        public GraphChromatogram GetGraphChromatogram(string text)
+        {
+            return _listGraphChrom.Find(graph => graph.TabText == "Unrefined");   
+        }
+
+        #endregion
     }
 }

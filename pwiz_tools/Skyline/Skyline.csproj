@@ -146,6 +146,12 @@
     <Compile Include="Alerts\AboutDlg.Designer.cs">
       <DependentUpon>AboutDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Alerts\MultiButtonMsgDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\MultiButtonMsgDlg.Designer.cs">
+      <DependentUpon>MultiButtonMsgDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Alerts\EmptyProteinsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -885,6 +891,9 @@
     <Content Include="Microsoft.VC90.MFC\Microsoft.VC90.MFC.manifest">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Alerts\MultiButtonMsgDlg.resx">
+      <DependentUpon>MultiButtonMsgDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\EmptyProteinsDlg.resx">
       <DependentUpon>EmptyProteinsDlg.cs</DependentUpon>
       <SubType>Designer</SubType>

@@ -105,6 +105,8 @@ namespace pwiz.Skyline
             this.arrangedTabbedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.groupedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator32 = new System.Windows.Forms.ToolStripSeparator();
+            this.spectralLibrariesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator39 = new System.Windows.Forms.ToolStripSeparator();
             this.graphsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ionTypesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -893,6 +895,8 @@ namespace pwiz.Skyline
             this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.arrangeGraphsToolStripMenuItem,
             this.toolStripSeparator32,
+            this.spectralLibrariesToolStripMenuItem,
+            this.toolStripSeparator39,
             this.graphsToolStripMenuItem,
             this.ionTypesMenuItem,
             this.chargesMenuItem,
@@ -952,6 +956,18 @@ namespace pwiz.Skyline
             // 
             this.toolStripSeparator32.Name = "toolStripSeparator32";
             this.toolStripSeparator32.Size = new System.Drawing.Size(188, 6);
+            // 
+            // spectralLibrariesToolStripMenuItem
+            // 
+            this.spectralLibrariesToolStripMenuItem.Name = "spectralLibrariesToolStripMenuItem";
+            this.spectralLibrariesToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.spectralLibrariesToolStripMenuItem.Text = "Spectral Libraries";
+            this.spectralLibrariesToolStripMenuItem.Click += new System.EventHandler(this.spectralLibrariesToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator39
+            // 
+            this.toolStripSeparator39.Name = "toolStripSeparator39";
+            this.toolStripSeparator39.Size = new System.Drawing.Size(188, 6);
             // 
             // graphsToolStripMenuItem
             // 
@@ -3009,6 +3025,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem importDocumentMenuItem;
         private System.Windows.Forms.ToolStripMenuItem ionMzValuesContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem observedMzValuesContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem spectralLibrariesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator39;
     }
 }
 
