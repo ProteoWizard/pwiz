@@ -16,7 +16,7 @@ namespace BumberDash
     {
         #region Globals
 
-        private string _configLocation = String.Format(@"{0}\ConfigEditor.exe", Application.StartupPath);
+        private string _configLocation = String.Format(@"{0}\ConfigEditor\ConfigEditor.exe", Application.StartupPath);
 
         private Rectangle dragBoxFromMouseDown; //Created on valid mousedown
         internal ProgramHandler _jobProcess; //eventual implememtation of program running
