@@ -92,7 +92,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void VariableModBasicTest()
         {
-            SrmDocument document = new SrmDocument(SrmSettingsList.GetDefault());
+            SrmDocument document = new SrmDocument(SrmSettingsList.GetDefault0_6());
 
             // Make sure default document produces no variable modifications
             IdentityPath path = IdentityPath.ROOT;

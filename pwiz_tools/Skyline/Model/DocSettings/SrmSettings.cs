@@ -658,6 +658,14 @@ namespace pwiz.Skyline.Model.DocSettings
                         !defSet.DeclusterPotentialList.Contains(prediction.DeclusteringPotential))
                     defSet.DeclusterPotentialList.Add(prediction.DeclusteringPotential);
             }
+            if (TransitionSettings.Filter != null)
+            {
+                foreach (var measuredIon in TransitionSettings.Filter.MeasuredIons)
+                {
+                    if (!defSet.MeasuredIonList.Contains(measuredIon))
+                        defSet.MeasuredIonList.Add(measuredIon);
+                }
+            }
             foreach (var annotationDef in DataSettings.AnnotationDefs)
             {
                 if (!defSet.AnnotationDefList.ContainsKey(annotationDef.Name))
@@ -1132,8 +1140,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
             // Change transition groups if precursor charges or heavy group
             // existence changed
-            DiffTransitionGroups = precursorsDiff || diffHeavyMods;
-                
+            bool diffInstrumentRange = newTran.Instrument.MinMz != oldTran.Instrument.MinMz ||
+                                       newTran.Instrument.MaxMz != oldTran.Instrument.MaxMz;
+            DiffTransitionGroups = precursorsDiff || diffHeavyMods || diffInstrumentRange;                
 
             // If libraries changed, then transition groups should change whenever
             // peptides change also.
@@ -1158,6 +1167,9 @@ namespace pwiz.Skyline.Model.DocSettings
                               // Or libraries changed, and picking based on libraries
                               (libraryChange && DiffTransitionGroupProps &&
                                     newTran.Libraries.Pick != TransitionLibraryPick.none) ||
+                              // If instrument min or max m/z changed
+                              diffInstrumentRange ||
+                              newTran.Instrument.IsDynamicMin != oldTran.Instrument.IsDynamicMin ||
                               // If loss modifications changed
                               newPep.Modifications.MaxNeutralLosses != oldPep.Modifications.MaxNeutralLosses ||
                               !ArrayUtil.EqualsDeep(newPep.Modifications.NeutralLossModifications.ToArray(),

@@ -626,6 +626,14 @@ namespace pwiz.SkylineTest
                 "include_n_prolene=\"false\" include_c_glu_asp=\"false\" auto_select=\"false\" />");
             AssertEx.DeserializeNoError<TransitionFilter>("<transition_filter precursor_charges=\"2\" product_charges=\"1\" " +
                 "fragment_range_first=\"m/z > precursor\" fragment_range_last=\"last y-ion - 3\" />");
+            // v0.7 measured_ion examples
+            AssertEx.DeserializeNoError<TransitionFilter>("<transition_filter precursor_charges=\"2\" product_charges=\"1\" " +
+                "fragment_range_first=\"m/z > precursor\" fragment_range_last=\"last y-ion - 3\">" +
+                "<measured_ion name=\"N-terminal to Proline\" cut=\"P\" sense=\"N\"/>" +
+                "<measured_ion name=\"Reporter Test\" formula=\"C4H2O\"/>" +
+                "</transition_filter>");
+            AssertEx.DeserializeNoError<TransitionFilter>("<transition_filter precursor_charges=\"2\" product_charges=\"1\" " +
+                "fragment_range_first=\"m/z > precursor\" fragment_range_last=\"last y-ion - 3\" precursor_mz_window=\"" + TransitionFilter.MAX_EXCLUSION_WINDOW + "\"/>");
 
             // Bad charges
             AssertEx.DeserializeError<TransitionFilter>("<transition_filter precursor_charges=\"0\" product_charges=\"1\" " +
@@ -648,6 +656,75 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeError<TransitionFilter>("<transition_filter precursor_charges=\"2\" product_charges=\"1\" " +
                 "fragment_range_first=\"y1\" fragment_range_last=\"last z-ion\" />");
             AssertEx.DeserializeError<TransitionFilter>("<transition_filter precursor_charges=\"2\" product_charges=\"1\" />");
+            // Out of range precursor m/z window
+            AssertEx.DeserializeError<TransitionFilter>("<transition_filter precursor_charges=\"2\" product_charges=\"1\" " +
+                "fragment_range_first=\"m/z > precursor\" fragment_range_last=\"last y-ion - 3\" precursor_mz_window=\"" + (TransitionFilter.MAX_EXCLUSION_WINDOW*2) + "\"/>");
+            AssertEx.DeserializeError<TransitionFilter>("<transition_filter precursor_charges=\"2\" product_charges=\"1\" " +
+                "fragment_range_first=\"m/z > precursor\" fragment_range_last=\"last y-ion - 3\" precursor_mz_window=\"" + (TransitionFilter.MIN_EXCLUSION_WINDOW/2) + "\"/>");
+        }
+
+        /// <summary>
+        /// Test error handling in XML deserialization of <see cref="MeasuredIon"/>.
+        /// </summary>
+        [TestMethod]
+        public void SerializeMeasuredIonTest()
+        {
+            // Valid first
+            AssertEx.DeserializeNoError<MeasuredIon>("<measured_ion name=\"C-terminal Glu or Asp restricted\"" +
+                " cut=\"ED\" no_cut=\"A\" sense=\"C\" min_length=\"" + MeasuredIon.MAX_MIN_FRAGMENT_LENGTH + "\"/>");
+            AssertEx.DeserializeNoError<MeasuredIon>("<measured_ion name=\"N-terminal many\"" +
+                " cut=\"ACPESTID\" no_cut=\"ACPESTID\" sense=\"N\" min_length=\"" + MeasuredIon.MIN_MIN_FRAGMENT_LENGTH + "\"/>");
+            AssertEx.DeserializeNoError<MeasuredIon>("<measured_ion name=\"Minimal\"" +
+                " cut=\"P\" sense=\"N\"/>");
+            AssertEx.DeserializeNoError<MeasuredIon>("<measured_ion name=\"Reporter formula\"" +
+                " formula=\"H4P2O5\"/>");
+            AssertEx.DeserializeNoError<MeasuredIon>("<measured_ion name=\"Reporter numeric\"" +
+                " mass_monoisotopic=\"" + MeasuredIon.MIN_REPORTER_MASS + "\" mass_average=\"" + MeasuredIon.MAX_REPORTER_MASS + "\"/>");
+
+            // No name
+            AssertEx.DeserializeError<MeasuredIon>("<measured_ion" +
+                " cut=\"P\" sense=\"N\"/>");
+            // No cut attribute
+            AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Minimal\"" +
+                " sense=\"N\"/>");
+            // Invalid cut attribute
+            AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Minimal\"" +
+                " cut=\"b\" sense=\"N\"/>");
+            // Invalid no_cut attribute
+            AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Minimal\"" +
+                " cut=\"P\" no_cut=\"b\" sense=\"N\"/>");
+            // Missing sense attribute
+            AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Minimal\"" +
+                " cut=\"P\"/>");
+            // Invalid sense attribute
+            AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Minimal\"" +
+                " cut=\"P\" sense=\"x\"/>");
+            // Min length too short
+            AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"C-terminal Glu or Asp restricted\"" +
+                " cut=\"ED\" no_cut=\"A\" sense=\"C\" min_length=\"" + (MeasuredIon.MIN_MIN_FRAGMENT_LENGTH - 1) + "\"/>");
+            // Min length too long
+            AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"C-terminal Glu or Asp restricted\"" +
+                " cut=\"ED\" no_cut=\"A\" sense=\"C\" min_length=\"" + (MeasuredIon.MAX_MIN_FRAGMENT_LENGTH + 1) + "\"/>");
+            // Reporter with bad formulas
+            AssertEx.DeserializeError<MeasuredIon, ArgumentException>("<measured_ion name=\"Reporter formula\"" +
+                " formula=\"\"/>");
+            AssertEx.DeserializeError<MeasuredIon, ArgumentException>("<measured_ion name=\"Reporter formula\"" +
+                " formula=\"Au3\"/>");
+            // Reporter with formulas producing out of range masses
+            AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Reporter formula\"" +
+                " formula=\"H2O\"/>");
+            AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Reporter formula\"" +
+                " formula=\"HP23O15\"/>");
+            // Reporter without formula and without both masses
+            AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Reporter numeric\"" +
+                " mass_monoisotopic=\"" + MeasuredIon.MIN_REPORTER_MASS + "\" />");
+            AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Reporter numeric\"" +
+                " mass_average=\"" + MeasuredIon.MAX_REPORTER_MASS + "\"/>");
+            // Reporter without formula and out of range masses
+            AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Reporter numeric\"" +
+                " mass_monoisotopic=\"" + (MeasuredIon.MIN_REPORTER_MASS - 0.1) + "\" mass_average=\"" + MeasuredIon.MAX_REPORTER_MASS + "\"/>");
+            AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Reporter numeric\"" +
+                " mass_monoisotopic=\"" + MeasuredIon.MIN_REPORTER_MASS + "\" mass_average=\"" + (MeasuredIon.MAX_REPORTER_MASS + 0.1) + "\"/>");
         }
 
         /// <summary>
@@ -661,6 +738,8 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"10\" max_mz=\"5000\" />");
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"10\" max_mz=\"5000\" mz_match_tolerance=\"0.4\"/>");
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"10\" max_mz=\"5000\" mz_match_tolerance=\"0.001\"/>");
+            AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"10\" max_mz=\"5000\" dynamic_min=\"true\"/>");
+
 
             // Empty element
             AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument />");
@@ -669,6 +748,7 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"100\" />");
             AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"10\" max_mz=\"5000\" mz_match_tolerance=\"0\"/>");
             AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"10\" max_mz=\"5000\" mz_match_tolerance=\"0.65\"/>");
+            AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"10\" max_mz=\"5000\" dynamic_min=\"maybe\"/>");
         }
 
         private static void CheckSettingsList<TItem>(SettingsList<TItem> target, SettingsList<TItem> copy)

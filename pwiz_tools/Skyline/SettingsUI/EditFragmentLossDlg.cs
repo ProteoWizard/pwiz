@@ -87,12 +87,22 @@ namespace pwiz.Skyline.SettingsUI
             {
                 try
                 {
-                    SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, formulaLoss);
+                    double massMono = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, formulaLoss);
+                    double massAverage = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, formulaLoss);
+                    if (FragmentLoss.MIN_LOSS_MASS > massMono || FragmentLoss.MIN_LOSS_MASS > massAverage)
+                    {
+                        helper.ShowTextBoxError(textLossFormula, string.Format("Neutral loss masses must be greater than or equal to {0}.", FragmentLoss.MIN_LOSS_MASS));
+                        return;
+                    }
+                    if (massMono > FragmentLoss.MAX_LOSS_MASS || massAverage > FragmentLoss.MAX_LOSS_MASS)
+                    {
+                        helper.ShowTextBoxError(textLossFormula, string.Format("Neutral loss masses must be less than or equal to {0}.", FragmentLoss.MAX_LOSS_MASS));
+                        return;
+                    }
                 }
                 catch (ArgumentException x)
                 {
                     helper.ShowTextBoxError(textLossFormula, x.Message);
-                    e.Cancel = true;
                     return;
                 }
             }
@@ -107,6 +117,11 @@ namespace pwiz.Skyline.SettingsUI
                 if (!helper.ValidateDecimalTextBox(e, textLossAverageMass, FragmentLoss.MIN_LOSS_MASS, FragmentLoss.MAX_LOSS_MASS, out mass))
                     return;
                 avgLoss = mass;
+            }
+            else
+            {
+                helper.ShowTextBoxError(textLossFormula, "Please specify a formula or constant masses.");
+                return;
             }
 
             // Make sure the new loss does not already exist.

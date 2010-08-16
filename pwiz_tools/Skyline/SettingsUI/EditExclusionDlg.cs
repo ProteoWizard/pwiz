@@ -19,10 +19,10 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -78,15 +78,16 @@ namespace pwiz.Skyline.SettingsUI
                 if (!_helper.ValidateNameTextBox(e, textName, out name))
                     return;
 
-                string exRegex = textExclusionRegex.Text.Trim();
-
-                PeptideExcludeRegex exclusion = new PeptideExcludeRegex(name, exRegex);
-                if (_exclusion == null && _existing.Contains(exclusion))
+                if (_existing.Contains(exc => !ReferenceEquals(_exclusion, exc) && Equals(name, exc.Name)))
                 {
                     _helper.ShowTextBoxError(textName, "The peptide exclusion '{0}' already exists.", name);
                     e.Cancel = true;
                     return;
                 }
+
+                string exRegex = textExclusionRegex.Text.Trim();
+
+                PeptideExcludeRegex exclusion = new PeptideExcludeRegex(name, exRegex);
 
                 _exclusion = exclusion;
             }

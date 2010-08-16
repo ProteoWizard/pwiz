@@ -821,8 +821,7 @@ namespace pwiz.Skyline.Model.Lib
             // allowed in the library specturm.
             rp.startFinder = filter.FragmentRangeFirst;
             rp.endFinder = filter.FragmentRangeLast;
-            rp.pro = filter.IncludeNProline;
-            rp.gluasp = filter.IncludeCGluAsp;
+            rp.filter = filter;
 
             // Get library settings
             rp.tolerance = libraries.IonMatchTolerance;
@@ -1022,8 +1021,7 @@ namespace pwiz.Skyline.Model.Lib
             public IList<IList<ExplicitLoss>> potentialLosses { get; set; }
             public IStartFragmentFinder startFinder { get; set; }
             public IEndFragmentFinder endFinder { get; set; }
-            public bool pro { get; set; }
-            public bool gluasp { get; set; }
+            public TransitionFilter filter { get; set; }
             public TransitionLibraryPick pick { get; set; }
             public double tolerance { get; set; }
             public double minMz { get; set; }
@@ -1131,7 +1129,8 @@ namespace pwiz.Skyline.Model.Lib
                         double startMz = 0;
                         if (filter)
                         {
-                            start = rp.startFinder.FindStartFragment(rp.massesMatch, type, charge, rp.precursorMz, out startMz);
+                            start = rp.startFinder.FindStartFragment(rp.massesMatch, type, charge,
+                                rp.precursorMz, rp.filter.PrecursorMzWindow, out startMz);
                             end = rp.endFinder.FindEndFragment(type, start, len);
                             if (Transition.IsCTerminal(type))
                                 Helpers.Swap(ref start, ref end);
@@ -1226,9 +1225,7 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             rp.Seen(predictedMz);
 
-                            if (!filter || (start <= offset && offset <= end && startMz <= ionMz) ||
-                                (rp.pro && TransitionGroup.IsPro(rp.sequence, offset)) ||
-                                (rp.gluasp && TransitionGroup.IsGluAsp(rp.sequence, offset)))
+                            if (!filter || rp.filter.Accept(rp.sequence, rp.precursorMz, type, offset, ionMz, start, end, startMz))
                             {
                                 if (!rp.matchAll || (rp.minMz <= ionMz && ionMz <= rp.maxMz &&
                                                      rp.rankTypes.Contains(type) && rp.rankCharges.Contains(charge)))

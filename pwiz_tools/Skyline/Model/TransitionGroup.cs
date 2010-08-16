@@ -87,9 +87,15 @@ namespace pwiz.Skyline.Model
 
             string sequence = Peptide.Sequence;
 
+            if (!ReferenceEquals(calcFilter, calcPredict))
+            {
+                // Get the normal precursor m/z for filtering, so that light and heavy ion picks will match.
+                precursorMz = SequenceMassCalc.GetMZ(calcFilterPre.GetPrecursorMass(sequence), PrecursorCharge);
+            }
+
             var tranSettings = settings.TransitionSettings;
             MassType massType = tranSettings.Prediction.FragmentMassType;
-            int minMz = tranSettings.Instrument.MinMz;
+            int minMz = tranSettings.Instrument.GetMinMz(precursorMz);
             int maxMz = tranSettings.Instrument.MaxMz;
 
             var pepMods = settings.PeptideSettings.Modifications;
@@ -124,7 +130,6 @@ namespace pwiz.Skyline.Model
             {
                 // Get the normal m/z values for filtering, so that light and heavy
                 // ion picks will match.
-                precursorMz = SequenceMassCalc.GetMZ(calcFilterPre.GetPrecursorMass(sequence), PrecursorCharge);
                 massesFilter = calcFilter.GetFragmentIonMasses(sequence);
             }
 
@@ -135,8 +140,7 @@ namespace pwiz.Skyline.Model
             var types = filter.IonTypes;
             var startFinder = filter.FragmentRangeFirst;
             var endFinder = filter.FragmentRangeLast;
-            bool pro = filter.IncludeNProline;
-            bool gluasp = filter.IncludeCGluAsp;
+            double precursorMzWindow = filter.PrecursorMzWindow;
             // A start m/z will need to be calculated if the start fragment
             // finder uses m/z and their are losses to consider.  If the filter
             // is set to only consider fragments with m/z greater than the
@@ -180,7 +184,8 @@ namespace pwiz.Skyline.Model
                     int start = 0, end = 0;
                     if (pick != TransitionLibraryPick.all)
                     {
-                        start = startFinder.FindStartFragment(massesFilter, type, charge, precursorMz, out startMz);
+                        start = startFinder.FindStartFragment(massesFilter, type, charge,
+                            precursorMz, precursorMzWindow, out startMz);
                         end = endFinder.FindEndFragment(type, start, len);
                         if (Transition.IsCTerminal(type))
                             Helpers.Swap(ref start, ref end);
@@ -201,7 +206,7 @@ namespace pwiz.Skyline.Model
                             if (minMz > ionMz || ionMz > maxMz)
                                 continue;
 
-                            if (pick == TransitionLibraryPick.all)
+                            if (pick == TransitionLibraryPick.all || pick == TransitionLibraryPick.all_plus)
                             {
                                 if (!useFilter)
                                 {
@@ -212,11 +217,15 @@ namespace pwiz.Skyline.Model
                                     LibraryRankedSpectrumInfo.RankedMI rmi;
                                     if (transitionRanks.TryGetValue(ionMz, out rmi) && rmi.IonType == type && rmi.Charge == charge && Equals(rmi.Losses, losses))
                                         yield return CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);
+                                    // If allowing library or filter, check the filter to decide whether to accept
+                                    else if (pick == TransitionLibraryPick.all_plus &&
+                                            filter.Accept(sequence, precursorMz, type, i, ionMz, start, end, startMz))
+                                    {
+                                        yield return CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);
+                                    }
                                 }
                             }
-                            else if ((start <= i && i <= end && startMz <= ionMz) ||
-                                (pro && IsPro(sequence, i)) ||
-                                (gluasp && IsGluAsp(sequence, i)))
+                            else if (filter.Accept(sequence, precursorMz, type, i, ionMz, start, end, startMz))
                             {
                                 if (pick == TransitionLibraryPick.none)
                                     yield return CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);

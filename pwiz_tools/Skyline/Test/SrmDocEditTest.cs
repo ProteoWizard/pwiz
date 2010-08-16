@@ -68,7 +68,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void ImportFastaTest()
         {
-            SrmDocument document = new SrmDocument(SrmSettingsList.GetDefault());
+            SrmDocument document = new SrmDocument(SrmSettingsList.GetDefault0_6());
             IdentityPath path = IdentityPath.ROOT;
             SrmDocument docFasta = document.ImportFasta(new StringReader(TEXT_FASTA_YEAST), false, path, out path);
             AssertEx.IsDocumentState(docFasta, 1, 2, 98, 311);
@@ -335,7 +335,7 @@ namespace pwiz.SkylineTest
         public void RemoveDuplicatePeptidesTest()
         {
             // First try removals with no impact
-            SrmDocument document = new SrmDocument(SrmSettingsList.GetDefault());
+            SrmDocument document = new SrmDocument(SrmSettingsList.GetDefault0_6());
             IdentityPath path;
             SrmDocument docFasta = document.ImportFasta(new StringReader(string.Format(TEXT_FASTA_YEAST_FRAGMENT, 1)),
                 false, IdentityPath.ROOT, out path);

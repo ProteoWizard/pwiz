@@ -24,6 +24,7 @@ using System.IO;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
@@ -371,24 +372,35 @@ namespace pwiz.Skyline.Model.DocSettings
     [XmlRoot("transition_filter")]
     public class TransitionFilter : Immutable, IXmlSerializable
     {
+        public const double MIN_EXCLUSION_WINDOW = 0.01;
+        public const double MAX_EXCLUSION_WINDOW = 50.0;
+
         private ReadOnlyCollection<int> _precursorCharges;
         private ReadOnlyCollection<int> _productCharges;
         private ReadOnlyCollection<IonType> _ionTypes;
+        private ReadOnlyCollection<MeasuredIon> _measuredIons;
         private StartFragmentFinder _fragmentRangeFirst;
         private EndFragmentFinder _fragmentRangeLast;
 
-        public TransitionFilter(IList<int> precursorCharges, IList<int> productCharges, IList<IonType> ionTypes,
-                                string fragmentRangeFirstName, string fragmentRangeLastName,
-                                bool includeNProline, bool includeCGluAsp, bool autoSelect)
+        public TransitionFilter(IList<int> precursorCharges,
+                                IList<int> productCharges,
+                                IList<IonType> ionTypes,
+                                string fragmentRangeFirstName,
+                                string fragmentRangeLastName,
+                                IList<MeasuredIon> measuredIons,
+                                double precursorMzWindow,
+                                bool autoSelect)
         {
             PrecursorCharges = precursorCharges;
             ProductCharges = productCharges;
             IonTypes = ionTypes;
             FragmentRangeFirstName = fragmentRangeFirstName;
             FragmentRangeLastName = fragmentRangeLastName;
-            IncludeNProline = includeNProline;
-            IncludeCGluAsp = includeCGluAsp;
+            MeasuredIons = measuredIons;
+            PrecursorMzWindow = precursorMzWindow;
             AutoSelect = autoSelect;
+
+            Validate();
         }
 
         public IList<int> PrecursorCharges
@@ -450,9 +462,39 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
-        public bool IncludeNProline { get; private set; }
+        public IList<MeasuredIon> MeasuredIons
+        {
+            get { return _measuredIons; }
+            private set { _measuredIons = MakeReadOnly(value); }
+        }
 
-        public bool IncludeCGluAsp { get; private set; }
+        public bool IsSpecialFragment(string sequence, IonType ionType, int cleavageOffset)
+        {
+            return MeasuredIons.Contains(m => m.IsMatch(sequence, ionType, cleavageOffset));
+        }
+
+        /// <summary>
+        /// A m/z window width around the precursor m/z where transitions are not allowed.
+        /// </summary>
+        public double PrecursorMzWindow { get; private set; }
+
+        /// <summary>
+        /// Returns true if the ion m/z value is within the precursor m/z exclusion window.
+        /// i.e. within 1/2 of the window width of the precursor m/z.
+        /// </summary>
+        public bool IsExcluded(double ionMz, double precursorMz)
+        {
+            return PrecursorMzWindow != 0 && Math.Abs(ionMz - precursorMz)*2 < PrecursorMzWindow;
+        }
+
+        public bool Accept(string sequence, double precursorMz, IonType type, int cleavageOffset, double ionMz, int start, int end, double startMz)
+        {
+            if (IsExcluded(ionMz, precursorMz))
+                return false;
+            if (start <= cleavageOffset && cleavageOffset <= end && startMz <= ionMz)
+                return true;            
+            return IsSpecialFragment(sequence, type, cleavageOffset);
+        }
 
         public bool AutoSelect { get; private set; }
 
@@ -460,42 +502,42 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public TransitionFilter ChangePrecursorCharges(IList<int> prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.PrecursorCharges = v, prop);
+            return ChangeProp(ImClone(this), im => im.PrecursorCharges = prop);
         }
 
         public TransitionFilter ChangeProductCharges(IList<int> prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.ProductCharges = v, prop);
+            return ChangeProp(ImClone(this), im => im.ProductCharges = prop);
         }
 
         public TransitionFilter ChangeIonTypes(IList<IonType> prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.IonTypes = v, prop);
+            return ChangeProp(ImClone(this), im => im.IonTypes = prop);
         }
 
         public TransitionFilter ChangeFragmentRangeFirstName(string prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.FragmentRangeFirstName = v, prop);
+            return ChangeProp(ImClone(this), im => im.FragmentRangeFirstName = prop);
         }
 
         public TransitionFilter ChangeFragmentRangeLastName(string prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.FragmentRangeLastName = v, prop);
+            return ChangeProp(ImClone(this), im => im.FragmentRangeLastName = prop);
         }
 
-        public TransitionFilter ChangeIncludeNProline(bool prop)
+        public TransitionFilter ChangeMeasuredIons(IList<MeasuredIon> prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.IncludeNProline = v, prop);
+            return ChangeProp(ImClone(this), im => im.MeasuredIons = prop);
         }
 
-        public TransitionFilter ChangeIncludeCGluAsp(bool prop)
+        public TransitionFilter ChangePrecursorMzWindow(double prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.IncludeCGluAsp = v, prop);
+            return ChangeProp(ImClone(this), im => im.PrecursorMzWindow = prop);
         }
 
         public TransitionFilter ChangeAutoSelect(bool prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.AutoSelect = v, prop);
+            return ChangeProp(ImClone(this), im => im.AutoSelect = prop);
         }
 
         #endregion
@@ -520,6 +562,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // Old misspelling v0.1
             include_n_prolene,
             include_c_glu_asp,
+            precursor_mz_window,
             auto_select
         }
 
@@ -536,6 +579,15 @@ namespace pwiz.Skyline.Model.DocSettings
                     throw new InvalidDataException(string.Format("Invalid charge {1} found.  {0} must be between {2} and {3}.", label, charge, min, max));
                 seen.Add(charge);
             }            
+        }
+
+        public void Validate()
+        {
+            if (PrecursorMzWindow != 0)
+            {
+                if (MIN_EXCLUSION_WINDOW > PrecursorMzWindow || PrecursorMzWindow > MAX_EXCLUSION_WINDOW)
+                    throw new InvalidDataException(string.Format("A precursor exclusion window must be between {0} and {1}.", MIN_EXCLUSION_WINDOW, MAX_EXCLUSION_WINDOW));
+            }
         }
 
         public static TransitionFilter Deserialize(XmlReader reader)
@@ -556,15 +608,32 @@ namespace pwiz.Skyline.Model.DocSettings
             IonTypes = ParseTypes(reader.GetAttribute(ATTR.fragment_types));
             FragmentRangeFirstName = reader.GetAttribute(ATTR.fragment_range_first);
             FragmentRangeLastName = reader.GetAttribute(ATTR.fragment_range_last);
-            // First, try old misspeelling of proline
-            IncludeNProline = reader.GetBoolAttribute(ATTR.include_n_prolene);
+            PrecursorMzWindow = reader.GetIntAttribute(ATTR.precursor_mz_window);
+            // First, try old misspelling of proline
+            bool legacyProline = reader.GetBoolAttribute(ATTR.include_n_prolene);
             // Second, try correct spelling
-            IncludeNProline = reader.GetBoolAttribute(ATTR.include_n_proline, IncludeNProline);
-            IncludeCGluAsp = reader.GetBoolAttribute(ATTR.include_c_glu_asp);
+            legacyProline = reader.GetBoolAttribute(ATTR.include_n_proline, legacyProline);
+            bool lecacyGluAsp = reader.GetBoolAttribute(ATTR.include_c_glu_asp);
             AutoSelect = reader.GetBoolAttribute(ATTR.auto_select);
 
             // Consume tag
             reader.Read();
+
+            // Read special ions
+            var measuredIons = new List<MeasuredIon>();
+            reader.ReadElements(measuredIons);
+
+            if (measuredIons.Count > 0)
+                reader.ReadEndElement();
+            
+            if (legacyProline)
+                measuredIons.Add(MeasuredIonList.NTERM_PROLINE_LEGACY);
+            if (lecacyGluAsp)
+                measuredIons.Add(MeasuredIonList.CTERM_GLU_ASP_LEGACY);
+
+            MeasuredIons = measuredIons.ToArray();
+
+            Validate();
         }
 
         public void WriteXml(XmlWriter writer)
@@ -575,9 +644,9 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttributeString(ATTR.fragment_types, IonTypes.ToString(","));
             writer.WriteAttributeString(ATTR.fragment_range_first, FragmentRangeFirstName);
             writer.WriteAttributeString(ATTR.fragment_range_last, FragmentRangeLastName);
-            writer.WriteAttribute(ATTR.include_n_proline, IncludeNProline);
-            writer.WriteAttribute(ATTR.include_c_glu_asp, IncludeCGluAsp);
+            writer.WriteAttribute(ATTR.precursor_mz_window, PrecursorMzWindow);
             writer.WriteAttribute(ATTR.auto_select, AutoSelect);
+            writer.WriteElements(MeasuredIons);
         }
 
         private static int[] ParseInts(string s)
@@ -604,8 +673,8 @@ namespace pwiz.Skyline.Model.DocSettings
                    ArrayUtil.EqualsDeep(obj._ionTypes, _ionTypes) &&
                    Equals(obj.FragmentRangeFirst, FragmentRangeFirst) &&
                    Equals(obj.FragmentRangeLast, FragmentRangeLast) &&
-                   obj.IncludeNProline.Equals(IncludeNProline) &&
-                   obj.IncludeCGluAsp.Equals(IncludeCGluAsp) &&
+                   ArrayUtil.EqualsDeep(obj.MeasuredIons, MeasuredIons) &&
+                   obj.PrecursorMzWindow.Equals(PrecursorMzWindow) &&
                    obj.AutoSelect.Equals(AutoSelect);
         }
 
@@ -626,8 +695,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ _ionTypes.GetHashCodeDeep();
                 result = (result*397) ^ FragmentRangeFirst.GetHashCode();
                 result = (result*397) ^ FragmentRangeLast.GetHashCode();
-                result = (result*397) ^ IncludeNProline.GetHashCode();
-                result = (result*397) ^ IncludeCGluAsp.GetHashCode();
+                result = (result*397) ^ MeasuredIons.GetHashCodeDeep();
+                result = (result*397) ^ PrecursorMzWindow.GetHashCode();
                 result = (result*397) ^ AutoSelect.GetHashCode();
                 return result;
             }
@@ -750,8 +819,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
             }
 
-            public abstract int FindStartFragment(double[,] masses, IonType type, int charge,
-                                                  double precursorMz, out double startMz);
+            public abstract int FindStartFragment(double[,] masses, IonType type, int charge, double precursorMz, double precursorMzWindow, out double startMz);
         }
 
         private class OrdinalFragmentFinder : StartFragmentFinder
@@ -766,8 +834,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             #region IStartFragmentFinder Members
 
-            public override int FindStartFragment(double[,] masses, IonType type, int charge,
-                                                  double precursorMz, out double startMz)
+            public override int FindStartFragment(double[,] masses, IonType type, int charge, double precursorMz, double precursorMzWindow, out double startMz)
             {
                 startMz = 0;
                 int length = masses.GetLength(1);
@@ -795,9 +862,9 @@ namespace pwiz.Skyline.Model.DocSettings
             #region IStartFragmentFinder Members
 
             public override int FindStartFragment(double[,] masses, IonType type, int charge,
-                                                  double precursorMz, out double startMz)
+                double precursorMz, double precursorMzWindow, out double startMz)
             {
-                int start = FindStartFragment(masses, type, charge, precursorMz);
+                int start = FindStartFragment(masses, type, charge, precursorMz, precursorMzWindow);
                 // If the start is not the precursor m/z, but some offset from it, use the
                 // m/z of the fragment that was chosen as the start.  Otherwise, use the precursor m/z.
                 // Unfortunately, this means you really want ion m/z values >= start m/z
@@ -809,17 +876,32 @@ namespace pwiz.Skyline.Model.DocSettings
             }
 
             private int FindStartFragment(double[,] masses, IonType type, int charge,
-                                                  double precursorMz)
+                                          double precursorMz, double precursorMzWindow)
             {
+                int offset = _offset;
                 int length = masses.GetLength(1);
                 Debug.Assert(length > 0);
+
+                // Make sure to start outside the precursor m/z window
+                double thresholdMz = precursorMz + precursorMzWindow / 2;
 
                 if (Transition.IsNTerminal(type))
                 {
                     for (int i = 0; i < length; i++)
                     {
-                        if (SequenceMassCalc.GetMZ(masses[(int)type, i], charge) > precursorMz)
-                            return (Math.Max(0, Math.Min(length - 1, i + _offset)));
+                        if (SequenceMassCalc.GetMZ(masses[(int)type, i], charge) > thresholdMz)
+                        {
+                            int indexRet;
+                            do
+                            {
+                                indexRet = Math.Max(0, Math.Min(length - 1, i + offset));
+                                offset--;
+                            }
+                            // Be sure not to start with a m/z value inside the exclusion window
+                            while (precursorMzWindow > 0 && offset < 0 && i + offset >= 0 &&
+                                Math.Abs(SequenceMassCalc.GetMZ(masses[(int)type, indexRet], charge) - precursorMz)*2 < precursorMzWindow);
+                            return indexRet;
+                        }
                     }
                     return length - 1;
                 }
@@ -827,8 +909,19 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     for (int i = length - 1; i >= 0; i--)
                     {
-                        if (SequenceMassCalc.GetMZ(masses[(int)type, i], charge) > precursorMz)
-                            return (Math.Max(0, Math.Min(length - 1, i - _offset)));                        
+                        if (SequenceMassCalc.GetMZ(masses[(int)type, i], charge) > thresholdMz)
+                        {
+                            int indexRet;
+                            do
+                            {
+                                indexRet = Math.Max(0, Math.Min(length - 1, i - offset));
+                                offset--;
+                            }
+                            // Be sure not to start with a m/z value inside the exclusion window
+                            while (precursorMzWindow > 0 && offset < 0 && i - offset < length &&
+                                Math.Abs(SequenceMassCalc.GetMZ(masses[(int)type, indexRet], charge) - precursorMz)*2 < precursorMzWindow);
+                            return indexRet;
+                        }
                     }
                     return 0;
                 }
@@ -906,7 +999,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
     public interface IStartFragmentFinder : IKeyContainer<string>
     {
-        int FindStartFragment(double[,] masses, IonType type, int charge, double precursorMz, out double startMz);
+        int FindStartFragment(double[,] masses, IonType type, int charge, double precursorMz, double precursorMzWindow, out double startMz);
     }
 
     public interface IEndFragmentFinder : IKeyContainer<string>
@@ -919,7 +1012,7 @@ namespace pwiz.Skyline.Model.DocSettings
         int Count { get; }
     }
 
-    public enum TransitionLibraryPick { none, all, filter }
+    public enum TransitionLibraryPick { none, all, filter, all_plus }
 
     [XmlRoot("transition_libraries")]
     public class TransitionLibraries : Immutable, IValidating, IXmlSerializable
@@ -1072,10 +1165,17 @@ namespace pwiz.Skyline.Model.DocSettings
         public const int MIN_TRANSITION_MAX = 50;
         public const int MAX_TRANSITION_MAX = 10000;
 
-        public TransitionInstrument(int minMz, int maxMz, double mzMatchTolerance, int? maxTransitions)
+        public static double GetThermoDynamicMin(double precursorMz)
+        {
+            const double activationQ = 0.25;
+            return ((int) (precursorMz*(activationQ/0.908))/5.0)*5.0;
+        }
+
+        public TransitionInstrument(int minMz, int maxMz, bool isDynamicMin, double mzMatchTolerance, int? maxTransitions)
         {
             MinMz = minMz;
             MaxMz = maxMz;
+            IsDynamicMin = isDynamicMin;
             MzMatchTolerance = mzMatchTolerance;
             MaxTransitions = maxTransitions;
 
@@ -1091,6 +1191,21 @@ namespace pwiz.Skyline.Model.DocSettings
             return MinMz <= mz && mz <= MaxMz;
         }
 
+        public bool IsDynamicMin { get; private set; }
+
+        public int GetMinMz(double precursorMz)
+        {
+            return (IsDynamicMin ? (int)GetThermoDynamicMin(precursorMz) : MinMz);
+        }
+
+        public bool IsMeasurable(double mz, double precursorMz)
+        {
+            if (IsDynamicMin && mz <= GetMinMz(precursorMz))
+                return false;
+
+            return GetMinMz(precursorMz) <= mz && mz <= MaxMz;
+        }
+
         public double MzMatchTolerance { get; private set; }
 
         public bool IsMzMatch(double mz1, double mz2)
@@ -1104,22 +1219,27 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public TransitionInstrument ChangeMinMz(int prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.MinMz = v, prop);
+            return ChangeProp(ImClone(this), im => im.MinMz = prop);
         }
 
         public TransitionInstrument ChangeMaxMz(int prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.MaxMz = v, prop);
+            return ChangeProp(ImClone(this), im => im.MaxMz = prop);
+        }
+
+        public TransitionInstrument ChangeIsDynamicMin(bool prop)
+        {
+            return ChangeProp(ImClone(this), im => im.IsDynamicMin = prop);
         }
 
         public TransitionInstrument ChangeMzMatchTolerance(double prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.MzMatchTolerance = v, prop);
+            return ChangeProp(ImClone(this), im => im.MzMatchTolerance = prop);
         }
 
         public TransitionInstrument ChangeMaxTransitions(int? prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.MaxTransitions = v, prop);
+            return ChangeProp(ImClone(this), im => im.MaxTransitions = prop);
         }
 
         #endregion
@@ -1137,6 +1257,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             min_mz,
             max_mz,
+            dynamic_min,
             mz_match_tolerance,
             max_transitions
         }
@@ -1188,6 +1309,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public void ReadXml(XmlReader reader)
         {
             // Read start tag attributes
+            IsDynamicMin = reader.GetBoolAttribute(ATTR.dynamic_min);
             MinMz = reader.GetIntAttribute(ATTR.min_mz);
             MaxMz = reader.GetIntAttribute(ATTR.max_mz);
             MzMatchTolerance = reader.GetDoubleAttribute(ATTR.mz_match_tolerance, DEFAULT_MZ_MATCH_TOLERANCE);
@@ -1202,6 +1324,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public void WriteXml(XmlWriter writer)
         {
             // Write attributes
+            writer.WriteAttribute(ATTR.dynamic_min, IsDynamicMin);
             writer.WriteAttribute(ATTR.min_mz, MinMz);
             writer.WriteAttribute(ATTR.max_mz, MaxMz);
             writer.WriteAttribute(ATTR.mz_match_tolerance, MzMatchTolerance);
@@ -1218,6 +1341,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(this, other)) return true;
             return other.MinMz == MinMz &&
                 other.MaxMz == MaxMz &&
+                other.IsDynamicMin == IsDynamicMin &&
                 other.MzMatchTolerance == MzMatchTolerance &&
                 other.MaxTransitions.Equals(MaxTransitions);
         }
@@ -1236,6 +1360,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 int result = MinMz;
                 result = (result*397) ^ MaxMz;
+                result = (result*397) ^ IsDynamicMin.GetHashCode();
                 result = (result*397) ^ MzMatchTolerance.GetHashCode();
                 result = (result*397) ^ (MaxTransitions.HasValue ? MaxTransitions.Value : 0);
                 return result;

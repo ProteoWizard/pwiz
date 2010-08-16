@@ -392,7 +392,7 @@ namespace pwiz.Skyline.Model
                 double precursorMassH = Settings.GetPrecursorMass(info.LabelType, info.PeptideSequence, null);
                 double precursorMz = ColumnMz(Fields, PrecursorColumn, FormatProvider);
                 var instrument = Settings.TransitionSettings.Instrument;
-                if (instrument.MinMz > precursorMz || precursorMz > instrument.MaxMz)
+                if (!instrument.IsMeasurable(precursorMz))
                     throw new InvalidDataException(string.Format("The precursor m/z {0} is out of range for the instrument settings, line {1}.\nCheck the Instrument tab in the Transition Settings.", precursorMz, lineNum));
 
                 int precursorCharge = CalcPrecursorCharge(precursorMassH, precursorMz, MzMatchTolerance);
@@ -417,7 +417,7 @@ namespace pwiz.Skyline.Model
                 }
 
                 double productMz = ColumnMz(Fields, ProductColumn, FormatProvider);
-                if (instrument.MinMz > productMz || productMz > instrument.MaxMz)
+                if (!instrument.IsMeasurable(productMz, precursorMz))
                     throw new InvalidDataException(string.Format("The product m/z value {0} is out of range for the instrument settings, line {1}.\nCheck the Instrument tab in the Transition Settings.", productMz, lineNum));
 
                 var calc = Settings.GetFragmentCalc(info.LabelType, null);

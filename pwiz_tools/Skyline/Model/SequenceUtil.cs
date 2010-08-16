@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Text;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
@@ -78,6 +79,19 @@ namespace pwiz.Skyline.Model
                     return true;
                 default:
                     return false;
+            }
+        }
+
+        public static void ValidateAAList(IEnumerable<char> seq)
+        {
+            HashSet<char> seen = new HashSet<char>();
+            foreach (char c in seq)
+            {
+                if (!IsAA(c))
+                    throw new InvalidDataException(string.Format("Invalid amino acid '{0}' found in the value '{1}'.", c, seq));
+                if (seen.Contains(c))
+                    throw new InvalidDataException(string.Format("The amino acid '{0}' is repeated in the value '{1}'.", c, seq));
+                seen.Add(c);
             }
         }
     }

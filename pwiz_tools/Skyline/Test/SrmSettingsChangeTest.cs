@@ -345,7 +345,7 @@ namespace pwiz.SkylineTest
             SrmDocument docFasta = CreateMixedDoc();
             SrmSettings settings = docFasta.Settings;
             SrmDocument docFastaNoP = docFasta.ChangeSettings(settings.ChangeTransitionFilter(
-                f => f.ChangeIncludeNProline(false)));
+                f => f.ChangeMeasuredIons(new MeasuredIon[0])));
 
             // Fixed start and end positions
             SrmDocument docFasta2 = CheckTranstions(docFastaNoP, "ion 1", "last ion", 1);
@@ -428,7 +428,7 @@ namespace pwiz.SkylineTest
 
         private static SrmDocument CreateMixedDoc()
         {
-            SrmDocument document = new SrmDocument(SrmSettingsList.GetDefault());
+            SrmDocument document = new SrmDocument(SrmSettingsList.GetDefault0_6());
             IdentityPath path;
             // Add fasta sequences
             SrmDocument docFasta = document.ImportFasta(new StringReader(SrmDocEditTest.TEXT_FASTA_YEAST),

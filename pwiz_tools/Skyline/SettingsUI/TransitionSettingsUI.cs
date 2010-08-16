@@ -31,7 +31,7 @@ namespace pwiz.Skyline.SettingsUI
     public partial class TransitionSettingsUI : Form
     {
 // ReSharper disable InconsistentNaming
-        public enum Page { Prediction, Filter }
+        public enum TABS { Prediction, Filter, Library, Instrument }
 // ReSharper restore InconsistentNaming
 
         private readonly SkylineWindow _parent;
@@ -39,7 +39,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private readonly SettingsListComboDriver<CollisionEnergyRegression> _driverCE;
         private readonly SettingsListComboDriver<DeclusteringPotentialRegression> _driverDP;
-        private readonly MessageBoxHelper _helper;
+        private readonly SettingsListBoxDriver<MeasuredIon> _driverIons;
 
         public TransitionSettingsUI(SkylineWindow parent)
         {
@@ -50,8 +50,6 @@ namespace pwiz.Skyline.SettingsUI
                 comboRangeFrom.Items.Add(item);
             foreach (string item in TransitionFilter.GetEndFragmentFinderNames())
                 comboRangeTo.Items.Add(item);
-
-            _helper = new MessageBoxHelper(this);
 
             _parent = parent;
             _transitionSettings = _parent.DocumentUI.Settings.TransitionSettings;
@@ -82,9 +80,11 @@ namespace pwiz.Skyline.SettingsUI
             textIonTypes.Text = Filter.IonTypes.ToArray().ToString(", ");
             comboRangeFrom.SelectedItem = Filter.FragmentRangeFirst.GetKey();
             comboRangeTo.SelectedItem = Filter.FragmentRangeLast.GetKey();
-            cbProlene.Checked = Filter.IncludeNProline;
-            cbGluAsp.Checked = Filter.IncludeCGluAsp;            
+            textExclusionWindow.Text = Filter.PrecursorMzWindow != 0 ? Filter.PrecursorMzWindow.ToString() : "";            
             cbAutoSelect.Checked = Filter.AutoSelect;
+
+            _driverIons = new SettingsListBoxDriver<MeasuredIon>(listAlwaysAdd, Settings.Default.MeasuredIonList);
+            _driverIons.LoadList(Filter.MeasuredIons);
 
             // Initialize library settings
             cbLibraryPick.Checked = (Libraries.Pick != TransitionLibraryPick.none);
@@ -93,10 +93,13 @@ namespace pwiz.Skyline.SettingsUI
             textIonCount.Text = Libraries.IonCount.ToString();
             if (Libraries.Pick == TransitionLibraryPick.filter)
                 radioFiltered.Checked = true;
+            else if (Libraries.Pick == TransitionLibraryPick.all_plus)
+                radioAllAndFiltered.Checked = true;
 
             // Initialize instrument settings
             textMinMz.Text = Instrument.MinMz.ToString();
             textMaxMz.Text = Instrument.MaxMz.ToString();
+            cbDynamicMinimum.Checked = Instrument.IsDynamicMin;
             textMzMatchTolerance.Text = Instrument.MzMatchTolerance.ToString();
             if (Instrument.MaxTransitions.HasValue)
                 textMaxTrans.Text = Instrument.MaxTransitions.Value.ToString();
@@ -116,6 +119,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             // TODO: Remove this
             var e = new CancelEventArgs();
+            var helper = new MessageBoxHelper(this);
 
             // Validate and store prediction settings
             string massType = comboPrecursorMass.SelectedItem.ToString();
@@ -146,14 +150,16 @@ namespace pwiz.Skyline.SettingsUI
             int[] precursorCharges;
             int min = TransitionGroup.MIN_PRECURSOR_CHARGE;
             int max = TransitionGroup.MAX_PRECURSOR_CHARGE;
-            if (!_helper.ValidateNumberListTextBox(e, textPrecursorCharges, min, max, out precursorCharges))
+            if (!helper.ValidateNumberListTextBox(e, tabControl1, (int) TABS.Filter, textPrecursorCharges,
+                    min, max, out precursorCharges))
                 return;
             precursorCharges = precursorCharges.Distinct().ToArray();
 
             int[] productCharges;
             min = Transition.MIN_PRODUCT_CHARGE;
             max = Transition.MAX_PRODUCT_CHARGE;
-            if (!_helper.ValidateNumberListTextBox(e, textIonCharges, min, max, out productCharges))
+            if (!helper.ValidateNumberListTextBox(e, tabControl1, (int) TABS.Filter, textIonCharges,
+                    min, max, out productCharges))
                 return;
             productCharges = productCharges.Distinct().ToArray();
 
@@ -161,21 +167,30 @@ namespace pwiz.Skyline.SettingsUI
                                               v => (IonType) Enum.Parse(typeof (IonType), v), ',', new IonType[0]);
             if (types.Length == 0)
             {
-                _helper.ShowTextBoxError(textIonTypes,
+                helper.ShowTextBoxError(tabControl1, (int) TABS.Filter, textIonTypes,
                                          "Ion types must contain a comma separated list of ion types a, b, c, x, y and z.");
                 e.Cancel = true;
                 return;
             }
             types = types.Distinct().ToArray();
 
+            double exclusionWindow = 0;
+            if (!string.IsNullOrEmpty(textExclusionWindow.Text) && !Equals(textExclusionWindow.Text, exclusionWindow.ToString()))
+            {
+                if (!helper.ValidateDecimalTextBox(e, tabControl1, (int)TABS.Filter, textExclusionWindow,
+                        TransitionFilter.MIN_EXCLUSION_WINDOW, TransitionFilter.MAX_EXCLUSION_WINDOW, out exclusionWindow))
+                {
+                    return;
+                }
+            }
+
             string fragmentRangeFirst = comboRangeFrom.SelectedItem.ToString();
             string fragmentRangeLast = comboRangeTo.SelectedItem.ToString();
-            bool includeNProline = cbProlene.Checked;
-            bool includeCGluAsp = cbGluAsp.Checked;
+            var measuredIons = _driverIons.Chosen;
             bool autoSelect = cbAutoSelect.Checked;
             TransitionFilter filter = new TransitionFilter(precursorCharges, productCharges, types,
-                                                           fragmentRangeFirst, fragmentRangeLast, includeNProline,
-                                                           includeCGluAsp, autoSelect);
+                                                           fragmentRangeFirst, fragmentRangeLast, measuredIons,
+                                                           exclusionWindow, autoSelect);
             Helpers.AssignIfEquals(ref filter, Filter);
 
             // Validate and store library settings
@@ -184,6 +199,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (radioAll.Checked)
                     pick = TransitionLibraryPick.all;
+                else if (radioAllAndFiltered.Checked)
+                    pick = TransitionLibraryPick.all_plus;
                 else
                     pick = TransitionLibraryPick.filter;
             }
@@ -192,7 +209,8 @@ namespace pwiz.Skyline.SettingsUI
 
             double minTol = TransitionLibraries.MIN_MATCH_TOLERANCE;
             double maxTol = TransitionLibraries.MAX_MATCH_TOLERANCE;
-            if (!_helper.ValidateDecimalTextBox(e, textTolerance, minTol, maxTol, out ionMatchTolerance))
+            if (!helper.ValidateDecimalTextBox(e, tabControl1, (int) TABS.Library, textTolerance,
+                    minTol, maxTol, out ionMatchTolerance))
                 return;
 
             int ionCount = Libraries.IonCount;
@@ -201,7 +219,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 min = TransitionLibraries.MIN_ION_COUNT;
                 max = TransitionLibraries.MAX_ION_COUNT;
-                if (!_helper.ValidateNumberTextBox(e, textIonCount, min, max, out ionCount))
+                if (!helper.ValidateNumberTextBox(e, tabControl1, (int) TABS.Library, textIonCount,
+                        min, max, out ionCount))
                     return;
             }
 
@@ -215,17 +234,19 @@ namespace pwiz.Skyline.SettingsUI
             int minMz;
             min = TransitionInstrument.MIN_MEASUREABLE_MZ;
             max = TransitionInstrument.MAX_MEASURABLE_MZ - TransitionInstrument.MIN_MZ_RANGE;
-            if (!_helper.ValidateNumberTextBox(e, textMinMz, min, max, out minMz))
+            if (!helper.ValidateNumberTextBox(e, tabControl1, (int) TABS.Instrument, textMinMz, min, max, out minMz))
                 return;
             int maxMz;
             min = minMz + TransitionInstrument.MIN_MZ_RANGE;
             max = TransitionInstrument.MAX_MEASURABLE_MZ;
-            if (!_helper.ValidateNumberTextBox(e, textMaxMz, min, max, out maxMz))
+            if (!helper.ValidateNumberTextBox(e, tabControl1, (int) TABS.Instrument, textMaxMz, min, max, out maxMz))
                 return;
+            bool isDynamicMin = cbDynamicMinimum.Checked;
             double mzMatchTolerance;
             minTol = TransitionInstrument.MIN_MZ_MATCH_TOLERANCE;
             maxTol = TransitionInstrument.MAX_MZ_MATCH_TOLERANCE;
-            if (!_helper.ValidateDecimalTextBox(e, textMzMatchTolerance, minTol, maxTol, out mzMatchTolerance))
+            if (!helper.ValidateDecimalTextBox(e, tabControl1, (int) TABS.Instrument, textMzMatchTolerance,
+                    minTol, maxTol, out mzMatchTolerance))
                 return;
             int? maxTrans = null;
             if (!string.IsNullOrEmpty(textMaxTrans.Text))
@@ -233,12 +254,13 @@ namespace pwiz.Skyline.SettingsUI
                 int maxTransTemp;
                 min = TransitionInstrument.MIN_TRANSITION_MAX;
                 max = TransitionInstrument.MAX_TRANSITION_MAX;
-                if (!_helper.ValidateNumberTextBox(e, textMaxTrans, min, max, out maxTransTemp))
+                if (!helper.ValidateNumberTextBox(e, tabControl1, (int) TABS.Instrument, textMaxTrans,
+                        min, max, out maxTransTemp))
                     return;
                 maxTrans = maxTransTemp;
             }
 
-            TransitionInstrument instrument = new TransitionInstrument(minMz, maxMz, mzMatchTolerance, maxTrans);
+            TransitionInstrument instrument = new TransitionInstrument(minMz, maxMz, isDynamicMin, mzMatchTolerance, maxTrans);
             Helpers.AssignIfEquals(ref instrument, Instrument);
 
             TransitionSettings settings = new TransitionSettings(prediction,
@@ -255,29 +277,42 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 _transitionSettings = settings;
             }
+
             DialogResult = DialogResult.OK;
-            Close();
         }
 
         private void comboRangeTo_SelectedIndexChanged(object sender, EventArgs e)
         {
+            // If nothing is checked yet, start with what is in the settings
+            if (!radioAll.Checked && !radioAllAndFiltered.Checked && !radioFiltered.Checked)
+            {
+                switch (Libraries.Pick)
+                {
+                    case TransitionLibraryPick.all:
+                        radioAll.Checked = true;
+                        break;
+                    case TransitionLibraryPick.all_plus:
+                        radioAllAndFiltered.Checked = true;
+                        break;
+                    default:
+                        radioFiltered.Checked = true;
+                        break;
+                }               
+            }
+
             string fragmentRangeLastName = comboRangeTo.SelectedItem.ToString();
             var countFinder = TransitionFilter.GetEndFragmentFinder(fragmentRangeLastName) as IEndCountFragmentFinder;
             if (countFinder != null)
             {
                 textIonCount.Text = countFinder.Count.ToString();
-                radioAll.Checked = true;
-                radioAll.Enabled = false;
+                if (!radioAllAndFiltered.Checked)
+                    radioAll.Checked = true;
                 radioFiltered.Enabled = false;
             }
             else
             {
                 textIonCount.Text = Libraries.IonCount.ToString();
-                radioAll.Enabled = true;
                 radioFiltered.Enabled = true;
-                bool pickAll = Libraries.Pick == TransitionLibraryPick.all;
-                radioAll.Checked = pickAll;
-                radioFiltered.Checked = !pickAll;
             }
         }
 
@@ -299,6 +334,11 @@ namespace pwiz.Skyline.SettingsUI
         private void cbUseOptimized_CheckedChanged(object sender, EventArgs e)
         {
             labelOptimizeType.Visible = comboOptimizeType.Visible = cbUseOptimized.Checked;
+        }
+
+        private void btnEditSpecialTransitions_Click(object sender, EventArgs e)
+        {
+            _driverIons.EditList();
         }
 
         private void btnOk_Click(object sender, EventArgs e)

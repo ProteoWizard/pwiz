@@ -99,6 +99,7 @@
     <Compile Include="SSRCalc3Test.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StatisticsTest.cs" />
+    <Compile Include="TransitionSettings07Test.cs" />
     <Compile Include="UndoManagerTest.cs" />
     <Compile Include="UtilTest.cs" />
     <Compile Include="VariableModTest.cs" />

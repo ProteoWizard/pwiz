@@ -204,34 +204,14 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (string.IsNullOrEmpty(Cleavage))
                 throw new InvalidDataException("Enzymes must have at least one cleavage point.");
-            ValidateAAList(Cleavage);
+            AminoAcid.ValidateAAList(Cleavage);
             if (!string.IsNullOrEmpty(Restrict))
-                ValidateAAList(Restrict);
+                AminoAcid.ValidateAAList(Restrict);
         }
 
-        private static void ValidateAAList(IEnumerable<char> seq)
+        private static SequenceTerminus ToSeqTerminus(string value)
         {
-            HashSet<char> seen = new HashSet<char>();
-            foreach (char c in seq)
-            {
-                if (!AminoAcid.IsAA(c))
-                    throw new InvalidDataException(string.Format("Invalid amino acid '{0}' found in the property value '{1}'.", c, seq));
-                if (seen.Contains(c))
-                    throw new InvalidDataException(string.Format("The amino acid '{0}' is repeated in the property value '{1}'.", c, seq));
-                seen.Add(c);
-            }
-        }
-
-        private static SequenceTerminus ToSeqTerminus(String value)
-        {
-            try
-            {
-                return (SequenceTerminus)Enum.Parse(typeof(SequenceTerminus), value, true);
-            }
-            catch (ArgumentException)
-            {
-                throw new ArgumentException(string.Format("Invalid terminus '{0}'.", value));
-            }
+            return (SequenceTerminus)Enum.Parse(typeof(SequenceTerminus), value, true);
         }
 
         public static Enzyme Deserialize(XmlReader reader)

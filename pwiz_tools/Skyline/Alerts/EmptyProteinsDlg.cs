@@ -31,7 +31,8 @@ namespace pwiz.Skyline.Alerts
         {
             InitializeComponent();
 
-            string message = string.Format(labelMessage.Text, countEmpty);
+            string message = string.Format(labelMessage.Text, countEmpty == 1 ?
+                "1 new protein" : string.Format("{0} new proteins", countEmpty));
             if (countEmpty < 500)
                 message = message.Substring(0, message.LastIndexOf('\r'));
             labelMessage.Text = message;

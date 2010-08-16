@@ -48,8 +48,11 @@
             this.label8 = new System.Windows.Forms.Label();
             this.cbAutoSelect = new System.Windows.Forms.CheckBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.cbGluAsp = new System.Windows.Forms.CheckBox();
-            this.cbProlene = new System.Windows.Forms.CheckBox();
+            this.textExclusionWindow = new System.Windows.Forms.TextBox();
+            this.label19 = new System.Windows.Forms.Label();
+            this.btnEditSpecialTransitions = new System.Windows.Forms.Button();
+            this.label18 = new System.Windows.Forms.Label();
+            this.listAlwaysAdd = new System.Windows.Forms.CheckedListBox();
             this.comboRangeFrom = new System.Windows.Forms.ComboBox();
             this.label3 = new System.Windows.Forms.Label();
             this.comboRangeTo = new System.Windows.Forms.ComboBox();
@@ -61,6 +64,7 @@
             this.tabLibrary = new System.Windows.Forms.TabPage();
             this.label9 = new System.Windows.Forms.Label();
             this.panelPick = new System.Windows.Forms.Panel();
+            this.radioAllAndFiltered = new System.Windows.Forms.RadioButton();
             this.radioFiltered = new System.Windows.Forms.RadioButton();
             this.radioAll = new System.Windows.Forms.RadioButton();
             this.label14 = new System.Windows.Forms.Label();
@@ -70,6 +74,7 @@
             this.cbLibraryPick = new System.Windows.Forms.CheckBox();
             this.label13 = new System.Windows.Forms.Label();
             this.tabInstrument = new System.Windows.Forms.TabPage();
+            this.cbDynamicMinimum = new System.Windows.Forms.CheckBox();
             this.textMaxTrans = new System.Windows.Forms.TextBox();
             this.label17 = new System.Windows.Forms.Label();
             this.textMzMatchTolerance = new System.Windows.Forms.TextBox();
@@ -89,8 +94,9 @@
             // 
             // btnCancel
             // 
+            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(308, 348);
+            this.btnCancel.Location = new System.Drawing.Point(308, 410);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 2;
@@ -99,7 +105,8 @@
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(227, 348);
+            this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnOk.Location = new System.Drawing.Point(227, 410);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 1;
@@ -120,7 +127,7 @@
             this.tabControl1.Location = new System.Drawing.Point(12, 12);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = global::pwiz.Skyline.Properties.Settings.Default.TransitionSettingsTab;
-            this.tabControl1.Size = new System.Drawing.Size(371, 328);
+            this.tabControl1.Size = new System.Drawing.Size(371, 390);
             this.tabControl1.TabIndex = 0;
             // 
             // tabGeneral
@@ -139,7 +146,7 @@
             this.tabGeneral.Location = new System.Drawing.Point(4, 22);
             this.tabGeneral.Name = "tabGeneral";
             this.tabGeneral.Padding = new System.Windows.Forms.Padding(3);
-            this.tabGeneral.Size = new System.Drawing.Size(363, 302);
+            this.tabGeneral.Size = new System.Drawing.Size(363, 364);
             this.tabGeneral.TabIndex = 0;
             this.tabGeneral.Text = "Prediction";
             this.tabGeneral.UseVisualStyleBackColor = true;
@@ -271,7 +278,7 @@
             this.tabFilter.Location = new System.Drawing.Point(4, 22);
             this.tabFilter.Name = "tabFilter";
             this.tabFilter.Padding = new System.Windows.Forms.Padding(3);
-            this.tabFilter.Size = new System.Drawing.Size(363, 302);
+            this.tabFilter.Size = new System.Drawing.Size(363, 364);
             this.tabFilter.TabIndex = 1;
             this.tabFilter.Text = "Filter";
             this.tabFilter.UseVisualStyleBackColor = true;
@@ -295,7 +302,7 @@
             // cbAutoSelect
             // 
             this.cbAutoSelect.AutoSize = true;
-            this.cbAutoSelect.Location = new System.Drawing.Point(21, 258);
+            this.cbAutoSelect.Location = new System.Drawing.Point(21, 332);
             this.cbAutoSelect.Name = "cbAutoSelect";
             this.cbAutoSelect.Size = new System.Drawing.Size(188, 17);
             this.cbAutoSelect.TabIndex = 7;
@@ -304,38 +311,65 @@
             // 
             // groupBox1
             // 
-            this.groupBox1.Controls.Add(this.cbGluAsp);
-            this.groupBox1.Controls.Add(this.cbProlene);
+            this.groupBox1.Controls.Add(this.textExclusionWindow);
+            this.groupBox1.Controls.Add(this.label19);
+            this.groupBox1.Controls.Add(this.btnEditSpecialTransitions);
+            this.groupBox1.Controls.Add(this.label18);
+            this.groupBox1.Controls.Add(this.listAlwaysAdd);
             this.groupBox1.Controls.Add(this.comboRangeFrom);
             this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Controls.Add(this.comboRangeTo);
             this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Location = new System.Drawing.Point(21, 83);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(321, 148);
+            this.groupBox1.Size = new System.Drawing.Size(321, 238);
             this.groupBox1.TabIndex = 6;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Product ions";
             // 
-            // cbGluAsp
+            // textExclusionWindow
             // 
-            this.cbGluAsp.AutoSize = true;
-            this.cbGluAsp.Location = new System.Drawing.Point(16, 110);
-            this.cbGluAsp.Name = "cbGluAsp";
-            this.cbGluAsp.Size = new System.Drawing.Size(196, 17);
-            this.cbGluAsp.TabIndex = 5;
-            this.cbGluAsp.Text = "Include ions C-terminal to &Glu or Asp";
-            this.cbGluAsp.UseVisualStyleBackColor = true;
+            this.textExclusionWindow.Location = new System.Drawing.Point(16, 205);
+            this.textExclusionWindow.Name = "textExclusionWindow";
+            this.textExclusionWindow.Size = new System.Drawing.Size(76, 20);
+            this.textExclusionWindow.TabIndex = 8;
             // 
-            // cbProlene
+            // label19
             // 
-            this.cbProlene.AutoSize = true;
-            this.cbProlene.Location = new System.Drawing.Point(16, 87);
-            this.cbProlene.Name = "cbProlene";
-            this.cbProlene.Size = new System.Drawing.Size(180, 17);
-            this.cbProlene.TabIndex = 4;
-            this.cbProlene.Text = "Include ions N-terminal to &Proline";
-            this.cbProlene.UseVisualStyleBackColor = true;
+            this.label19.AutoSize = true;
+            this.label19.Location = new System.Drawing.Point(13, 189);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(162, 13);
+            this.label19.TabIndex = 7;
+            this.label19.Text = "Precursor m/z exclusion window:";
+            // 
+            // btnEditSpecialTransitions
+            // 
+            this.btnEditSpecialTransitions.Location = new System.Drawing.Point(209, 103);
+            this.btnEditSpecialTransitions.Name = "btnEditSpecialTransitions";
+            this.btnEditSpecialTransitions.Size = new System.Drawing.Size(75, 23);
+            this.btnEditSpecialTransitions.TabIndex = 6;
+            this.btnEditSpecialTransitions.Text = "&Edit List...";
+            this.btnEditSpecialTransitions.UseVisualStyleBackColor = true;
+            this.btnEditSpecialTransitions.Click += new System.EventHandler(this.btnEditSpecialTransitions_Click);
+            // 
+            // label18
+            // 
+            this.label18.AutoSize = true;
+            this.label18.Location = new System.Drawing.Point(13, 87);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(64, 13);
+            this.label18.TabIndex = 4;
+            this.label18.Text = "Al&ways add:";
+            // 
+            // listAlwaysAdd
+            // 
+            this.listAlwaysAdd.CheckOnClick = true;
+            this.listAlwaysAdd.FormattingEnabled = true;
+            this.listAlwaysAdd.Location = new System.Drawing.Point(16, 103);
+            this.listAlwaysAdd.Name = "listAlwaysAdd";
+            this.listAlwaysAdd.Size = new System.Drawing.Size(187, 64);
+            this.listAlwaysAdd.TabIndex = 5;
             // 
             // comboRangeFrom
             // 
@@ -359,7 +393,7 @@
             // 
             this.comboRangeTo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboRangeTo.FormattingEnabled = true;
-            this.comboRangeTo.Location = new System.Drawing.Point(161, 44);
+            this.comboRangeTo.Location = new System.Drawing.Point(163, 43);
             this.comboRangeTo.Name = "comboRangeTo";
             this.comboRangeTo.Size = new System.Drawing.Size(121, 21);
             this.comboRangeTo.TabIndex = 3;
@@ -368,7 +402,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(158, 27);
+            this.label4.Location = new System.Drawing.Point(160, 27);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(23, 13);
             this.label4.TabIndex = 2;
@@ -416,7 +450,7 @@
             this.tabLibrary.Location = new System.Drawing.Point(4, 22);
             this.tabLibrary.Name = "tabLibrary";
             this.tabLibrary.Padding = new System.Windows.Forms.Padding(3);
-            this.tabLibrary.Size = new System.Drawing.Size(363, 302);
+            this.tabLibrary.Size = new System.Drawing.Size(363, 364);
             this.tabLibrary.TabIndex = 3;
             this.tabLibrary.Text = "Library";
             this.tabLibrary.UseVisualStyleBackColor = true;
@@ -432,6 +466,7 @@
             // 
             // panelPick
             // 
+            this.panelPick.Controls.Add(this.radioAllAndFiltered);
             this.panelPick.Controls.Add(this.radioFiltered);
             this.panelPick.Controls.Add(this.radioAll);
             this.panelPick.Controls.Add(this.label14);
@@ -439,16 +474,27 @@
             this.panelPick.Controls.Add(this.textIonCount);
             this.panelPick.Location = new System.Drawing.Point(3, 117);
             this.panelPick.Name = "panelPick";
-            this.panelPick.Size = new System.Drawing.Size(357, 117);
+            this.panelPick.Size = new System.Drawing.Size(357, 142);
             this.panelPick.TabIndex = 4;
+            // 
+            // radioAllAndFiltered
+            // 
+            this.radioAllAndFiltered.AutoSize = true;
+            this.radioAllAndFiltered.Location = new System.Drawing.Point(17, 91);
+            this.radioAllAndFiltered.Name = "radioAllAndFiltered";
+            this.radioAllAndFiltered.Size = new System.Drawing.Size(306, 17);
+            this.radioAllAndFiltered.TabIndex = 4;
+            this.radioAllAndFiltered.TabStop = true;
+            this.radioAllAndFiltered.Text = "From filtered ion charges and types pl&us filtered product ions";
+            this.radioAllAndFiltered.UseVisualStyleBackColor = true;
             // 
             // radioFiltered
             // 
             this.radioFiltered.AutoSize = true;
-            this.radioFiltered.Location = new System.Drawing.Point(17, 91);
+            this.radioFiltered.Location = new System.Drawing.Point(17, 114);
             this.radioFiltered.Name = "radioFiltered";
             this.radioFiltered.Size = new System.Drawing.Size(143, 17);
-            this.radioFiltered.TabIndex = 4;
+            this.radioFiltered.TabIndex = 5;
             this.radioFiltered.TabStop = true;
             this.radioFiltered.Text = "From filtered pro&duct ions";
             this.radioFiltered.UseVisualStyleBackColor = true;
@@ -518,6 +564,7 @@
             // 
             // tabInstrument
             // 
+            this.tabInstrument.Controls.Add(this.cbDynamicMinimum);
             this.tabInstrument.Controls.Add(this.textMaxTrans);
             this.tabInstrument.Controls.Add(this.label17);
             this.tabInstrument.Controls.Add(this.textMzMatchTolerance);
@@ -528,47 +575,57 @@
             this.tabInstrument.Controls.Add(this.textMinMz);
             this.tabInstrument.Location = new System.Drawing.Point(4, 22);
             this.tabInstrument.Name = "tabInstrument";
-            this.tabInstrument.Size = new System.Drawing.Size(363, 302);
+            this.tabInstrument.Size = new System.Drawing.Size(363, 364);
             this.tabInstrument.TabIndex = 2;
             this.tabInstrument.Text = "Instrument";
             this.tabInstrument.UseVisualStyleBackColor = true;
             // 
+            // cbDynamicMinimum
+            // 
+            this.cbDynamicMinimum.AutoSize = true;
+            this.cbDynamicMinimum.Location = new System.Drawing.Point(27, 64);
+            this.cbDynamicMinimum.Name = "cbDynamicMinimum";
+            this.cbDynamicMinimum.Size = new System.Drawing.Size(146, 17);
+            this.cbDynamicMinimum.TabIndex = 4;
+            this.cbDynamicMinimum.Text = "Dynamic min product m/z";
+            this.cbDynamicMinimum.UseVisualStyleBackColor = true;
+            // 
             // textMaxTrans
             // 
-            this.textMaxTrans.Location = new System.Drawing.Point(27, 160);
+            this.textMaxTrans.Location = new System.Drawing.Point(27, 185);
             this.textMaxTrans.Name = "textMaxTrans";
             this.textMaxTrans.Size = new System.Drawing.Size(68, 20);
-            this.textMaxTrans.TabIndex = 7;
+            this.textMaxTrans.TabIndex = 8;
             // 
             // label17
             // 
             this.label17.AutoSize = true;
-            this.label17.Location = new System.Drawing.Point(24, 144);
+            this.label17.Location = new System.Drawing.Point(24, 169);
             this.label17.Name = "label17";
             this.label17.Size = new System.Drawing.Size(80, 13);
-            this.label17.TabIndex = 6;
+            this.label17.TabIndex = 7;
             this.label17.Text = "M&ax transitions:";
             // 
             // textMzMatchTolerance
             // 
-            this.textMzMatchTolerance.Location = new System.Drawing.Point(27, 99);
+            this.textMzMatchTolerance.Location = new System.Drawing.Point(27, 124);
             this.textMzMatchTolerance.Name = "textMzMatchTolerance";
             this.textMzMatchTolerance.Size = new System.Drawing.Size(68, 20);
-            this.textMzMatchTolerance.TabIndex = 5;
+            this.textMzMatchTolerance.TabIndex = 6;
             // 
             // label16
             // 
             this.label16.AutoSize = true;
-            this.label16.Location = new System.Drawing.Point(24, 83);
+            this.label16.Location = new System.Drawing.Point(24, 108);
             this.label16.Name = "label16";
             this.label16.Size = new System.Drawing.Size(110, 13);
-            this.label16.TabIndex = 4;
+            this.label16.TabIndex = 5;
             this.label16.Text = "M/Z match &tolerance:";
             // 
             // label10
             // 
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(132, 22);
+            this.label10.Location = new System.Drawing.Point(187, 22);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(51, 13);
             this.label10.TabIndex = 2;
@@ -585,7 +642,7 @@
             // 
             // textMaxMz
             // 
-            this.textMaxMz.Location = new System.Drawing.Point(135, 38);
+            this.textMaxMz.Location = new System.Drawing.Point(190, 38);
             this.textMaxMz.Name = "textMaxMz";
             this.textMaxMz.Size = new System.Drawing.Size(68, 20);
             this.textMaxMz.TabIndex = 3;
@@ -603,7 +660,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(395, 383);
+            this.ClientSize = new System.Drawing.Size(395, 445);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.tabControl1);
@@ -653,8 +710,6 @@
         private System.Windows.Forms.TextBox textIonCharges;
         private System.Windows.Forms.TextBox textPrecursorCharges;
         private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.CheckBox cbGluAsp;
-        private System.Windows.Forms.CheckBox cbProlene;
         private System.Windows.Forms.CheckBox cbAutoSelect;
         private System.Windows.Forms.TabPage tabInstrument;
         private System.Windows.Forms.Label label10;
@@ -683,5 +738,12 @@
         private System.Windows.Forms.Label labelOptimizeType;
         private System.Windows.Forms.TextBox textMaxTrans;
         private System.Windows.Forms.Label label17;
+        private System.Windows.Forms.CheckBox cbDynamicMinimum;
+        private System.Windows.Forms.RadioButton radioAllAndFiltered;
+        private System.Windows.Forms.Label label18;
+        private System.Windows.Forms.CheckedListBox listAlwaysAdd;
+        private System.Windows.Forms.TextBox textExclusionWindow;
+        private System.Windows.Forms.Label label19;
+        private System.Windows.Forms.Button btnEditSpecialTransitions;
     }
 }

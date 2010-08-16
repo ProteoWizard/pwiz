@@ -133,7 +133,10 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var axis = GraphPane.XAxis;
             var instrument = DocumentUI.Settings.TransitionSettings.Instrument;
-            axis.Scale.Min = instrument.MinMz;
+            if (!instrument.IsDynamicMin || _nodeGroup == null)
+                axis.Scale.Min = instrument.MinMz;
+            else
+                axis.Scale.Min = instrument.GetMinMz(_nodeGroup.PrecursorMz);
             axis.Scale.MinAuto = false;
             axis.Scale.Max = instrument.MaxMz;
             axis.Scale.MaxAuto = false;
@@ -296,6 +299,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         {   
                             UpdateToolbar(spectra);
                             _nodeGroup = nodeGroup;
+                            if (settings.TransitionSettings.Instrument.IsDynamicMin)
+                                ZoomSpectrumToSettings();
                         }
 
                         int selectedIndex = GetSelectedSpectrumIndex(spectra);

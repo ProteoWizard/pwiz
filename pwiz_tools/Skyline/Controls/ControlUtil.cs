@@ -32,8 +32,8 @@ namespace pwiz.Skyline.Controls
         private static bool _showMessages;
 
         public MessageBoxHelper(Form parent)
+            : this(parent, true)
         {
-            new MessageBoxHelper(parent, true);
         }
 
         public MessageBoxHelper(Form parent, bool showMessages)
@@ -151,6 +151,18 @@ namespace pwiz.Skyline.Controls
             return valid;
         }
 
+        public bool ValidateNumberListTextBox(CancelEventArgs e, TabControl tabControl, int tabIndex,
+                                              TextBox control, int min, int max, out int[] val)
+        {
+            bool valid = ValidateNumberListTextBox(e, control, min, max, out val);
+            if (!valid && tabControl.SelectedIndex != tabIndex)
+            {
+                tabControl.SelectedIndex = tabIndex;
+                control.Focus();
+            }
+            return valid;
+        }
+
         public bool ValidateNumberListTextBox(CancelEventArgs e, TextBox control,
                                               int min, int max, out int[] val)
         {
@@ -175,6 +187,13 @@ namespace pwiz.Skyline.Controls
         {
             ShowTextBoxError(control, message, vals);
             e.Cancel = true;
+        }
+
+        public void ShowTextBoxError(TabControl tabControl, int tabIndex, TextBox control, string message)
+        {
+            ShowTextBoxError(control, message);
+            tabControl.SelectedIndex = tabIndex;
+            control.Focus();
         }
 
         public void ShowTextBoxError(TextBox control, string message)
@@ -212,7 +231,7 @@ namespace pwiz.Skyline.Controls
             Control label = _parent.GetNextControl(control, false);
             string message = (label == null ? "Field" : label.Text);
             message = message.Replace("&", "");
-            if (message[message.Length - 1] == ':')
+            if (message.Length > 0 && message[message.Length - 1] == ':')
                 message = message.Substring(0, message.Length - 1);
             return message;
         }

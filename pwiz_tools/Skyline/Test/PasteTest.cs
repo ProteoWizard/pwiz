@@ -47,7 +47,7 @@ namespace pwiz.SkylineTest
             ClearDefaultModifications();
             _yeastDoc = new SrmDocument(SrmSettingsList.GetDefault());
             _yeastDoc = _yeastDoc.ChangeSettings(_yeastDoc.Settings.ChangeTransitionFilter(filter =>
-                                                                                           filter.ChangeIncludeNProline(false)));
+                                                                                           filter.ChangeMeasuredIons(new MeasuredIon[0])));
             IdentityPath path;
             _yeastDocReadOnly = _yeastDoc = _yeastDoc.ImportFasta(new StringReader(LibraryLoadTest.TEXT_FASTA_YEAST_LIB),
                 false, IdentityPath.ROOT, out path);

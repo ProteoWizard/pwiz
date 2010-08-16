@@ -107,7 +107,7 @@ namespace pwiz.SkylineTest
             libraryManager = new LibraryManager { StreamManager = streamManager };
             docContainer = new TestDocumentContainer();
 
-            SrmSettings settings = SrmSettingsList.GetDefault();
+            SrmSettings settings = SrmSettingsList.GetDefault0_6();
             settings = settings.ChangePeptideLibraries(l => l.ChangeLibrarySpecs(new[] { librarySpec }));
 
             return CreateLibraryDocument(settings, textFasta, peptideList, docContainer, libraryManager, out startRev);            
@@ -117,7 +117,7 @@ namespace pwiz.SkylineTest
             TestDocumentContainer docContainer, BackgroundLoader libraryManager, out int startRev)
         {
             startRev = 0;
-            SrmDocument document = new SrmDocument(SrmSettingsList.GetDefault());
+            SrmDocument document = new SrmDocument(SrmSettingsList.GetDefault0_6());
             Assert.IsTrue(docContainer.SetDocument(document, null));
 
             // Register after first set document
@@ -346,7 +346,7 @@ namespace pwiz.SkylineTest
             Assert.IsFalse(HasMaxTransitionRank(docFilteredIons, 5));
 
             settings = settings.ChangeTransitionFilter(f => f.ChangeFragmentRangeFirstName("ion 4")
-                .ChangeFragmentRangeLastName("last ion").ChangeIncludeNProline(false));
+                .ChangeFragmentRangeLastName("last ion").ChangeMeasuredIons(new MeasuredIon[0]));
             settings = settings.ChangeTransitionLibraries(l => l.ChangePick(TransitionLibraryPick.filter));
             SrmDocument docRankedFiltered = docFilteredIons.ChangeSettings(settings);
             AssertEx.IsDocumentState(docRankedFiltered, ++startRev, 2, 4, 20);

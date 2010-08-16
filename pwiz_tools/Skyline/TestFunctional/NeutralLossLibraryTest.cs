@@ -153,7 +153,7 @@ namespace pwiz.SkylineTestFunctional
                         filter.ChangeFragmentRangeFirstName("m/z > precursor")
                             .ChangeFragmentRangeLastName("last ion")
                             .ChangeIonTypes(new[] { IonType.y, IonType.b })
-                            .ChangeIncludeNProline(false))
+                            .ChangeMeasuredIons(new MeasuredIon[0]))
                     .ChangeTransitionLibraries(lib =>
                         lib.ChangePick(TransitionLibraryPick.filter)))));
 

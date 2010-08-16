@@ -23,6 +23,7 @@ using System.Xml.Serialization;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Model.Lib;
@@ -330,6 +331,34 @@ namespace pwiz.Skyline.Properties
             set
             {
                 this[typeof(DeclusterPotentialList).Name] = value;
+            }
+        }
+
+        public MeasuredIon GetMeasuredIonByName(string name)
+        {
+            MeasuredIon ion;
+            if (!MeasuredIonList.TryGetValue(name, out ion))
+                return null;
+            return ion;
+        }
+
+        [System.Configuration.UserScopedSettingAttribute]
+        public MeasuredIonList MeasuredIonList
+        {
+            get
+            {
+                MeasuredIonList list = (MeasuredIonList)this[typeof(MeasuredIonList).Name];
+                if (list == null)
+                {
+                    list = new MeasuredIonList();
+                    list.AddDefaults();
+                    MeasuredIonList = list;
+                }
+                return list;
+            }
+            set
+            {
+                this[typeof(MeasuredIonList).Name] = value;
             }
         }
 
@@ -905,6 +934,43 @@ namespace pwiz.Skyline.Properties
         public override bool ExcludeDefault { get { return true; } }
     }
 
+    public sealed class MeasuredIonList : SettingsList<MeasuredIon>
+    {
+        public static readonly MeasuredIon NTERM_PROLINE =
+            new MeasuredIon("N-terminal to Proline", "P", null, SequenceTerminus.N, 3);
+        public static readonly MeasuredIon NTERM_PROLINE_LEGACY =
+            new MeasuredIon("N-terminal to Proline (legacy)", "P", null, SequenceTerminus.N, 1);
+
+        public static readonly MeasuredIon CTERM_GLU_ASP =
+            new MeasuredIon("C-terminal to Glu or Asp", "ED", null, SequenceTerminus.C, 3);
+        public static readonly MeasuredIon CTERM_GLU_ASP_LEGACY =
+            new MeasuredIon("C-terminal to Glu or Asp (legacy)", "ED", null, SequenceTerminus.C, 1);
+
+        public override IEnumerable<MeasuredIon> GetDefaults(int revisionIndex)
+        {
+            return new[] { NTERM_PROLINE, CTERM_GLU_ASP };
+        }
+
+        public override MeasuredIon EditItem(Control owner, MeasuredIon item,
+            IEnumerable<MeasuredIon> existing, object tag)
+        {
+            EditMeasuredIonDlg editIon = new EditMeasuredIonDlg(existing ?? this) { MeasuredIon = item };
+            if (editIon.ShowDialog() == DialogResult.OK)
+                return editIon.MeasuredIon;
+
+            return null;
+        }
+
+        public override MeasuredIon CopyItem(MeasuredIon item)
+        {
+            return (MeasuredIon)item.ChangeName(string.Empty);
+        }
+
+        public override string Title { get { return "Edit Special Ions"; } }
+
+        public override string Label { get { return "&Special ion:"; } }
+    }
+
     public sealed class SrmSettingsList : SettingsListBase<SrmSettings>, IListSerializer<SrmSettings>
     {
         private static readonly SrmSettings DEFAULT = new SrmSettings
@@ -958,8 +1024,8 @@ namespace pwiz.Skyline.Properties
                         new[] { IonType.y }, // FragmentTypes
                         "m/z > precursor", // FragmentRangeFirst
                         "3 ions",       // FragmentRangeLast
-                        true,  // IncludeNProline
-                        false, // IncludeCGluAsp
+                        new[] {MeasuredIonList.NTERM_PROLINE},  // MeasuredIon
+                        0,     // PrecursorMzWindow
                         true   // AutoSelect
                     ),
                     new TransitionLibraries
@@ -973,6 +1039,7 @@ namespace pwiz.Skyline.Properties
                     (
                         50,   // MinMz
                         1500, // MaxMz
+                        false, // IsDynamicMin
                         TransitionInstrument.DEFAULT_MZ_MATCH_TOLERANCE, // MzMatchTolerance
                         null  // MaxTransitions
                     )
@@ -983,6 +1050,15 @@ namespace pwiz.Skyline.Properties
         public static string DefaultName
         {
             get { return "Default"; }
+        }
+
+        /// <summary>
+        /// For tests written before v0.7, these settings mimic the v0.6 settings
+        /// </summary>
+        public static SrmSettings GetDefault0_6()
+        {
+            return GetDefault().ChangeTransitionFilter(filter =>
+                filter.ChangeMeasuredIons(new[] {MeasuredIonList.NTERM_PROLINE_LEGACY}));
         }
 
         public static SrmSettings GetDefault()

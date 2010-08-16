@@ -20,12 +20,12 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -96,6 +96,13 @@ namespace pwiz.Skyline.SettingsUI
             if (!helper.ValidateNameTextBox(e, textName, out name))
                 return;
 
+            if (_existing.Contains(r => !ReferenceEquals(_regression, r) && Equals(name, r.Name)))
+            {
+                helper.ShowTextBoxError(textName, "The retention time regression '{0}' already exists.", name);
+                e.Cancel = true;
+                return;
+            }
+
             double slope;
             if (!helper.ValidateDecimalTextBox(e, textSlope, out slope))
                 return;
@@ -128,13 +135,6 @@ namespace pwiz.Skyline.SettingsUI
 
             RetentionTimeRegression regression =
                 new RetentionTimeRegression(name, calculator, slope, intercept, window, listPeptides);
-
-            if (_regression == null && _existing.Contains(regression))
-            {
-                helper.ShowTextBoxError(textName, "The retention time regression '{0}' already exists.", name);
-                e.Cancel = true;
-                return;
-            }
 
             _regression = regression;
 

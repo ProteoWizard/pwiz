@@ -664,6 +664,10 @@ namespace pwiz.Skyline
                     if (!dlg.IsKeepEmptyProteins)
                     {
                         docNew = new RefinementSettings {MinPeptidesPerProtein = 1}.Refine(docNew);
+                        // This may result in no change from the original, if all proteins were empty
+                        if (Equals(docNew, docCurrent))
+                            return;
+
                         selectPath = null;
                         var enumGroupsCurrent = docCurrent.PeptideGroups.GetEnumerator();
                         foreach (PeptideGroupDocNode nodePepGroup in docNew.PeptideGroups)

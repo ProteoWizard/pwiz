@@ -89,7 +89,7 @@ namespace pwiz.Skyline.SettingsUI
             if (!helper.ValidateNameTextBox(e, textName, out name))
                 return;
 
-            if (_regression == null && _existing.Contains(r => Equals(name, r.Name)))
+            if (_existing.Contains(r => !ReferenceEquals(_regression, r) && Equals(name, r.Name)))
             {
                 helper.ShowTextBoxError(textName, "The declustering potential regression '{0}' already exists.", name);
                 return;
