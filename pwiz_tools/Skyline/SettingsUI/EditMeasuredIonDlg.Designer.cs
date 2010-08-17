@@ -69,7 +69,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(29, 104);
+            this.label1.Location = new System.Drawing.Point(11, 80);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(76, 13);
             this.label1.TabIndex = 3;
@@ -77,7 +77,7 @@
             // 
             // textFragment
             // 
-            this.textFragment.Location = new System.Drawing.Point(32, 121);
+            this.textFragment.Location = new System.Drawing.Point(14, 97);
             this.textFragment.Name = "textFragment";
             this.textFragment.Size = new System.Drawing.Size(87, 20);
             this.textFragment.TabIndex = 4;
@@ -86,7 +86,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(147, 104);
+            this.label2.Location = new System.Drawing.Point(129, 80);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(87, 13);
             this.label2.TabIndex = 5;
@@ -94,7 +94,7 @@
             // 
             // textRestrict
             // 
-            this.textRestrict.Location = new System.Drawing.Point(147, 121);
+            this.textRestrict.Location = new System.Drawing.Point(129, 97);
             this.textRestrict.Name = "textRestrict";
             this.textRestrict.Size = new System.Drawing.Size(87, 20);
             this.textRestrict.TabIndex = 6;
@@ -107,7 +107,7 @@
             this.comboDirection.Items.AddRange(new object[] {
             "C-terminus",
             "N-terminus"});
-            this.comboDirection.Location = new System.Drawing.Point(32, 176);
+            this.comboDirection.Location = new System.Drawing.Point(14, 152);
             this.comboDirection.Name = "comboDirection";
             this.comboDirection.Size = new System.Drawing.Size(87, 21);
             this.comboDirection.TabIndex = 8;
@@ -115,7 +115,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(29, 157);
+            this.label3.Location = new System.Drawing.Point(11, 133);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(34, 13);
             this.label3.TabIndex = 7;
@@ -124,7 +124,7 @@
             // btnOk
             // 
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.Location = new System.Drawing.Point(254, 14);
+            this.btnOk.Location = new System.Drawing.Point(238, 14);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 18;
@@ -136,7 +136,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(254, 44);
+            this.btnCancel.Location = new System.Drawing.Point(238, 44);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 19;
@@ -145,9 +145,11 @@
             // 
             // textName
             // 
+            this.textName.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.textName.Location = new System.Drawing.Point(13, 30);
             this.textName.Name = "textName";
-            this.textName.Size = new System.Drawing.Size(221, 20);
+            this.textName.Size = new System.Drawing.Size(205, 20);
             this.textName.TabIndex = 1;
             // 
             // labelName
@@ -163,43 +165,47 @@
             // 
             this.radioFragment.AutoSize = true;
             this.radioFragment.Checked = true;
-            this.radioFragment.Location = new System.Drawing.Point(13, 75);
+            this.radioFragment.Location = new System.Drawing.Point(-5, 51);
             this.radioFragment.Name = "radioFragment";
             this.radioFragment.Size = new System.Drawing.Size(104, 17);
             this.radioFragment.TabIndex = 2;
             this.radioFragment.TabStop = true;
             this.radioFragment.Text = "Inten&se fragment";
             this.radioFragment.UseVisualStyleBackColor = true;
+            this.radioFragment.Visible = false;
             this.radioFragment.CheckedChanged += new System.EventHandler(this.radioFragment_CheckedChanged);
             // 
             // radioReporter
             // 
             this.radioReporter.AutoSize = true;
-            this.radioReporter.Location = new System.Drawing.Point(13, 229);
+            this.radioReporter.Location = new System.Drawing.Point(-5, 205);
             this.radioReporter.Name = "radioReporter";
             this.radioReporter.Size = new System.Drawing.Size(83, 17);
             this.radioReporter.TabIndex = 11;
             this.radioReporter.Text = "&Reporter ion";
             this.radioReporter.UseVisualStyleBackColor = true;
+            this.radioReporter.Visible = false;
             // 
             // labelFormula
             // 
             this.labelFormula.AutoSize = true;
             this.labelFormula.Enabled = false;
-            this.labelFormula.Location = new System.Drawing.Point(29, 258);
+            this.labelFormula.Location = new System.Drawing.Point(11, 234);
             this.labelFormula.Name = "labelFormula";
             this.labelFormula.Size = new System.Drawing.Size(135, 13);
             this.labelFormula.TabIndex = 12;
             this.labelFormula.Text = "Molecule &chemical formula:";
+            this.labelFormula.Visible = false;
             // 
             // panelLossFormula
             // 
             this.panelLossFormula.Controls.Add(this.btnFormulaPopup);
             this.panelLossFormula.Controls.Add(this.textFormula);
-            this.panelLossFormula.Location = new System.Drawing.Point(26, 271);
+            this.panelLossFormula.Location = new System.Drawing.Point(8, 247);
             this.panelLossFormula.Name = "panelLossFormula";
             this.panelLossFormula.Size = new System.Drawing.Size(230, 31);
             this.panelLossFormula.TabIndex = 13;
+            this.panelLossFormula.Visible = false;
             // 
             // btnFormulaPopup
             // 
@@ -224,42 +230,46 @@
             // textMonoMass
             // 
             this.textMonoMass.Enabled = false;
-            this.textMonoMass.Location = new System.Drawing.Point(32, 330);
+            this.textMonoMass.Location = new System.Drawing.Point(14, 306);
             this.textMonoMass.Name = "textMonoMass";
             this.textMonoMass.Size = new System.Drawing.Size(87, 20);
             this.textMonoMass.TabIndex = 15;
+            this.textMonoMass.Visible = false;
             // 
             // textAverageMass
             // 
             this.textAverageMass.Enabled = false;
-            this.textAverageMass.Location = new System.Drawing.Point(147, 330);
+            this.textAverageMass.Location = new System.Drawing.Point(129, 306);
             this.textAverageMass.Name = "textAverageMass";
             this.textAverageMass.Size = new System.Drawing.Size(87, 20);
             this.textAverageMass.TabIndex = 17;
+            this.textAverageMass.Visible = false;
             // 
             // label7
             // 
             this.label7.AutoSize = true;
             this.label7.Enabled = false;
-            this.label7.Location = new System.Drawing.Point(147, 314);
+            this.label7.Location = new System.Drawing.Point(129, 290);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(77, 13);
             this.label7.TabIndex = 16;
             this.label7.Text = "A&verage mass:";
+            this.label7.Visible = false;
             // 
             // label8
             // 
             this.label8.AutoSize = true;
             this.label8.Enabled = false;
-            this.label8.Location = new System.Drawing.Point(29, 314);
+            this.label8.Location = new System.Drawing.Point(11, 290);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(100, 13);
             this.label8.TabIndex = 14;
             this.label8.Text = "&Monoisotopic mass:";
+            this.label8.Visible = false;
             // 
             // textMinAas
             // 
-            this.textMinAas.Location = new System.Drawing.Point(147, 176);
+            this.textMinAas.Location = new System.Drawing.Point(129, 152);
             this.textMinAas.Name = "textMinAas";
             this.textMinAas.Size = new System.Drawing.Size(87, 20);
             this.textMinAas.TabIndex = 10;
@@ -267,7 +277,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(147, 157);
+            this.label4.Location = new System.Drawing.Point(129, 133);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(49, 13);
             this.label4.TabIndex = 9;
@@ -365,7 +375,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(341, 368);
+            this.ClientSize = new System.Drawing.Size(325, 368);
             this.Controls.Add(this.textMinAas);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.labelFormula);

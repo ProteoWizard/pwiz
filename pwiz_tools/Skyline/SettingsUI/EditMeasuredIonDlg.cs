@@ -47,6 +47,8 @@ namespace pwiz.Skyline.SettingsUI
             Bitmap bm = Resources.PopupBtn;
             bm.MakeTransparent(Color.Fuchsia);
             btnFormulaPopup.Image = bm;
+
+            Height -= ClientRectangle.Height - comboDirection.Bottom - 16;
         }
 
         public MeasuredIon MeasuredIon
