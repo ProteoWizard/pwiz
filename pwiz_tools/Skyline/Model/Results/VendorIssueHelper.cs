@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 throw new IOException(string.Format("The file {0} cannot be imported by the AB Sciex WiffFileDataReader library in a reasonable time frame. " +
                     "To work around this issue requires Analyst to be installed on the computer running {1}.\n" +
-                    "Please install Analyst, or run this import on a coputure with Analyst installed", filePathWiff, Program.Name));
+                    "Please install Analyst, or run this import on a computure with Analyst installed", filePathWiff, Program.Name));
             }
 
             var argv = new[]
