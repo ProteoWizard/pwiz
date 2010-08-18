@@ -81,28 +81,29 @@ namespace pwiz.SkylineTestFunctional
             _viewLibUI = ShowDialog<ViewLibraryDlg>(PeptideSettingsUI.ShowViewLibraryDlg);
 
             // Ensure the appropriate default library is selected
+            ComboBox libComboBox = null;
+            ListBox pepList = null;
             string libSelected = null;
-            var libComboBox = (ComboBox)_viewLibUI.Controls.Find("comboLibrary", true)[0];
-            Assert.IsNotNull(libComboBox);
             RunUI(() =>
             {
+                libComboBox = (ComboBox)_viewLibUI.Controls.Find("comboLibrary", true)[0];
+                Assert.IsNotNull(libComboBox);
                 libSelected = libComboBox.SelectedItem.ToString();
+
+                // Find the peptides list control
+                pepList = (ListBox)_viewLibUI.Controls.Find("listPeptide", true)[0];
+                Assert.IsNotNull(pepList);
             });
             Assert.AreEqual(_testLibs[0].Name, libSelected);
 
-            // Find the peptides list control
-            var pepList = (ListBox)_viewLibUI.Controls.Find("listPeptide", true)[0];
-            Assert.IsNotNull(pepList);
-
             // Initially, peptide with index 0 should be selected
+            WaitForConditionUI(() => pepList.SelectedIndex != -1);
+
             ViewLibraryDlg.PepInfo previousPeptide = new ViewLibraryDlg.PepInfo();
             int peptideIndex = -1;
-            WaitForConditionUI(() => pepList.SelectedIndex != -1);
-            object selItem = null;
-            RunUI(() => selItem = pepList.SelectedItem);
             RunUI(() =>
             {
-                previousPeptide = (ViewLibraryDlg.PepInfo)selItem;
+                previousPeptide = (ViewLibraryDlg.PepInfo)pepList.SelectedItem;
                 peptideIndex = pepList.SelectedIndex;
             });
             Assert.IsNotNull(previousPeptide);
@@ -125,18 +126,26 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreNotEqual(previousPeptide, selPeptide);
 
             // Click the "Next" link
-            var nextLink = (IButtonControl)_viewLibUI.Controls.Find("NextLink", true)[0];
-            Assert.IsNotNull(nextLink);
-            RunUI(nextLink.PerformClick);
+            RunUI(() =>
+                      {
+                          var nextLink = (IButtonControl)_viewLibUI.Controls.Find("NextLink", true)[0];
+                          Assert.IsNotNull(nextLink);
+
+                          nextLink.PerformClick();
+                      });
             RunUI(() =>
             {
                 previousPeptide = (ViewLibraryDlg.PepInfo)pepList.SelectedItem;
             });
 
             // Click "Previous" link and ensure the peptide selected changes
-            var previousLink = (IButtonControl)_viewLibUI.Controls.Find("PreviousLink", true)[0];
-            Assert.IsNotNull(previousLink);
-            RunUI(previousLink.PerformClick);
+            RunUI(() =>
+                      {
+                          var previousLink = (IButtonControl) _viewLibUI.Controls.Find("PreviousLink", true)[0];
+                          Assert.IsNotNull(previousLink);
+
+                          previousLink.PerformClick();
+                      });
             RunUI(() =>
             {
                 selPeptide = (ViewLibraryDlg.PepInfo)pepList.SelectedItem;
@@ -145,10 +154,12 @@ namespace pwiz.SkylineTestFunctional
 
 
             // Test valid peptide search
-            var pepTextBox = (TextBox)_viewLibUI.Controls.Find("textPeptide", true)[0];
-            Assert.IsNotNull(pepTextBox);
+            TextBox pepTextBox = null;
             RunUI(() =>
             {
+                pepTextBox = (TextBox)_viewLibUI.Controls.Find("textPeptide", true)[0];
+                Assert.IsNotNull(pepTextBox);
+
                 pepTextBox.Focus();
                 pepTextBox.Text = _testLibs[0].UniquePeptide;
             });
@@ -405,18 +416,16 @@ namespace pwiz.SkylineTestFunctional
 
         private void AddLibrary(EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec> editListUI, TestLibInfo info)
         {
-            var addLibUI = ShowDialog<EditLibraryDlg>(editListUI.AddItem);
-            var nameTextBox = (TextBox)addLibUI.Controls.Find("textName", true)[0];
-            Assert.IsNotNull(nameTextBox);
-            var pathTextBox = (TextBox)addLibUI.Controls.Find("textPath", true)[0];
-            Assert.IsNotNull(pathTextBox);
-            RunUI(() =>
+            RunDlg<EditLibraryDlg>(editListUI.AddItem, addLibUI =>
             {
+                var nameTextBox = (TextBox)addLibUI.Controls.Find("textName", true)[0];
+                Assert.IsNotNull(nameTextBox);
+                var pathTextBox = (TextBox)addLibUI.Controls.Find("textPath", true)[0];
+                Assert.IsNotNull(pathTextBox);
                 nameTextBox.Text = info.Name;
                 pathTextBox.Text = TestFilesDir.GetTestPath(info.Filename);
                 addLibUI.OkDialog();
             });
-            WaitForClosedForm(addLibUI);
         }
 
         private static void TestForDuplicatePeptides()
