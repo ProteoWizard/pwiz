@@ -961,7 +961,7 @@ namespace pwiz.Skyline
             // 
             this.spectralLibrariesToolStripMenuItem.Name = "spectralLibrariesToolStripMenuItem";
             this.spectralLibrariesToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
-            this.spectralLibrariesToolStripMenuItem.Text = "Spectral Libraries";
+            this.spectralLibrariesToolStripMenuItem.Text = "Spectral &Libraries";
             this.spectralLibrariesToolStripMenuItem.Click += new System.EventHandler(this.spectralLibrariesToolStripMenuItem_Click);
             // 
             // toolStripSeparator39
@@ -1345,7 +1345,7 @@ namespace pwiz.Skyline
             this.resultsGridMenuItem.Name = "resultsGridMenuItem";
             this.resultsGridMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.D2)));
             this.resultsGridMenuItem.Size = new System.Drawing.Size(191, 22);
-            this.resultsGridMenuItem.Text = "Results Grid";
+            this.resultsGridMenuItem.Text = "Results &Grid";
             this.resultsGridMenuItem.Click += new System.EventHandler(this.resultsGridMenuItem_Click);
             // 
             // toolStripSeparator36

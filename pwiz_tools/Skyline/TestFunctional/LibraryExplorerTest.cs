@@ -72,64 +72,6 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
-        private void LaunchPeptideSettings()
-        {
-            PeptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-        }
-
-        private void AddLibraries()
-        {
-            var editListUI = ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(PeptideSettingsUI.EditLibraryList);
-            int numLibs = _testLibs.Length;
-            for (int i = 0; i < numLibs; i++)
-            {
-                AddLibrary(editListUI, _testLibs[i]);
-            }
-            RunUI(editListUI.OkDialog);
-            WaitForClosedForm(editListUI);
-
-        }
-
-        private void AddLibrary(EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec> editListUI, TestLibInfo info)
-        {
-            var addLibUI = ShowDialog<EditLibraryDlg>(editListUI.AddItem);
-            var nameTextBox = (TextBox) addLibUI.Controls.Find("textName", true)[0];
-            Assert.IsNotNull(nameTextBox);
-            var pathTextBox = (TextBox) addLibUI.Controls.Find("textPath", true)[0];
-            Assert.IsNotNull(pathTextBox);
-            RunUI(() =>
-            {
-                nameTextBox.Text = info.Name;
-                pathTextBox.Text = TestFilesDir.GetTestPath(info.Filename);
-                addLibUI.OkDialog();
-            });
-            WaitForClosedForm(addLibUI);
-        }
-
-        private static void TestForDuplicatePeptides()
-        {
-            Assert.AreEqual(SkylineWindow.Document.PeptideCount,
-                            (from nodePep in SkylineWindow.Document.Peptides
-                             group nodePep by nodePep.Key into g
-                             select g).Count());
-        }
-
-        private static void TestForDuplicateTransitionGroups()
-        {
-            Assert.AreEqual(SkylineWindow.Document.TransitionGroupCount,
-                (from nodePep in SkylineWindow.Document.TransitionGroups
-                 group nodePep by nodePep.Id into g
-                 select g).Count());
-        }
-
-        private void TestSamePeptides(IEnumerable<PeptideDocNode> peptides)
-        {
-            foreach(PeptideDocNode nodePep in peptides)
-            {
-                Assert.IsTrue(SkylineWindow.Document.Peptides.Contains(nodePep));
-            }
-        }
-
         protected override void DoTest()
         {
             LaunchPeptideSettings();
@@ -439,6 +381,66 @@ namespace pwiz.SkylineTestFunctional
 
             // Close the Library Explorer dialog
             OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
+        }
+
+        private void LaunchPeptideSettings()
+        {
+            PeptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+        }
+
+        private void AddLibraries()
+        {
+            var editListUI = ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(PeptideSettingsUI.EditLibraryList);
+            int numLibs = _testLibs.Length;
+            for (int i = 0; i < numLibs; i++)
+            {
+                AddLibrary(editListUI, _testLibs[i]);
+            }
+            RunUI(editListUI.OkDialog);
+            WaitForClosedForm(editListUI);
+
+            // Make sure the libraries actually show up in the peptide settings dialog before continuing.
+            WaitForConditionUI(() => PeptideSettingsUI.AvailableLibraries.Count() == _testLibs.Length);
+        }
+
+        private void AddLibrary(EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec> editListUI, TestLibInfo info)
+        {
+            var addLibUI = ShowDialog<EditLibraryDlg>(editListUI.AddItem);
+            var nameTextBox = (TextBox)addLibUI.Controls.Find("textName", true)[0];
+            Assert.IsNotNull(nameTextBox);
+            var pathTextBox = (TextBox)addLibUI.Controls.Find("textPath", true)[0];
+            Assert.IsNotNull(pathTextBox);
+            RunUI(() =>
+            {
+                nameTextBox.Text = info.Name;
+                pathTextBox.Text = TestFilesDir.GetTestPath(info.Filename);
+                addLibUI.OkDialog();
+            });
+            WaitForClosedForm(addLibUI);
+        }
+
+        private static void TestForDuplicatePeptides()
+        {
+            Assert.AreEqual(SkylineWindow.Document.PeptideCount,
+                            (from nodePep in SkylineWindow.Document.Peptides
+                             group nodePep by nodePep.Key into g
+                             select g).Count());
+        }
+
+        private static void TestForDuplicateTransitionGroups()
+        {
+            Assert.AreEqual(SkylineWindow.Document.TransitionGroupCount,
+                (from nodePep in SkylineWindow.Document.TransitionGroups
+                 group nodePep by nodePep.Id into g
+                 select g).Count());
+        }
+
+        private static void TestSamePeptides(IEnumerable<PeptideDocNode> peptides)
+        {
+            foreach (PeptideDocNode nodePep in peptides)
+            {
+                Assert.IsTrue(SkylineWindow.Document.Peptides.Contains(nodePep));
+            }
         }
     }
 }
