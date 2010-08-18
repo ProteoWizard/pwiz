@@ -74,7 +74,8 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            LaunchPeptideSettings();
+            PeptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            Assert.IsNotNull(PeptideSettingsUI);
             AddLibraries();
 
             // Launch the Library Explorer dialog
@@ -392,11 +393,6 @@ namespace pwiz.SkylineTestFunctional
 
             // Close the Library Explorer dialog
             OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
-        }
-
-        private void LaunchPeptideSettings()
-        {
-            PeptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
         }
 
         private void AddLibraries()
