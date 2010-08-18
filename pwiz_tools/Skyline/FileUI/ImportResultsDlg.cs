@@ -234,7 +234,7 @@ namespace pwiz.Skyline.FileUI
             return true;
         }
 
-        private KeyValuePair<string, string[]>[] GetDataSourcePathsFile(string name)
+        public KeyValuePair<string, string[]>[] GetDataSourcePathsFile(string name)
         {
             OpenDataSourceDialog dlgOpen = new OpenDataSourceDialog
                                                {

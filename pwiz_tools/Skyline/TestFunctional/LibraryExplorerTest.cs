@@ -262,7 +262,7 @@ namespace pwiz.SkylineTestFunctional
                           {
                               sequenceTree.SelectedNode = nodePeps[i];
                           }
-                          sequenceTree.KeysOverride = null;
+                          sequenceTree.KeysOverride = Keys.None;
                           SkylineWindow.EditDelete();
                       });
             RunDlg<MultiButtonMsgDlg>(_viewLibUI.AddAllPeptides, true, addLibraryPepsDlg => addLibraryPepsDlg.Btn1Click());
@@ -349,7 +349,7 @@ namespace pwiz.SkylineTestFunctional
                                                        doc => doc.ChangeSettings(metOxidizedSettings));
                       });
             // User prompted to add library since not in current settings.
-            RunDlg<MultiButtonMsgDlg>(_viewLibUI.CheckLibraryInSettings, msgDlg => msgDlg.Btn0Click());
+            RunDlg<MultiButtonMsgDlg>(() => _viewLibUI.CheckLibraryInSettings(), msgDlg => msgDlg.Btn0Click());
             // Add single peptide to the document.
             RunUI(_viewLibUI.AddPeptide);
             var nodePepAdded = SkylineWindow.SequenceTree.Nodes[0].Nodes[0];
@@ -378,7 +378,7 @@ namespace pwiz.SkylineTestFunctional
                 SkylineWindow.Document.Settings.ChangePeptideModifications(mods => mods.ChangeStaticModifications(new[] { phosphoLossMod }));
             RunUI(() =>
                 SkylineWindow.ModifyDocument("Change static mods", doc => doc.ChangeSettings(phosphoLossSettings)));
-            RunDlg<MultiButtonMsgDlg>(_viewLibUI.CheckLibraryInSettings, msgDlg => msgDlg.Btn0Click());
+            RunDlg<MultiButtonMsgDlg>(() => _viewLibUI.CheckLibraryInSettings(), msgDlg => msgDlg.Btn0Click());
             // Again, we should be able to match all peptides since the document settings match use the peptides found 
             // in the library.
             RunDlg<MultiButtonMsgDlg>(_viewLibUI.AddAllPeptides, msgDlg =>

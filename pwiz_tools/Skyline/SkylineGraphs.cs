@@ -720,7 +720,7 @@ namespace pwiz.Skyline
                 _graphSpectrum.ZoomSpectrumToSettings();
         }
 
-        private void ShowGraphSpectrum(bool show)
+        public void ShowGraphSpectrum(bool show)
         {
             if (show)
             {
@@ -2332,6 +2332,11 @@ namespace pwiz.Skyline
         }
 
         private void areaReplicateComparisonMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowPeakAreaReplicateComparison();
+        }
+
+        public void ShowPeakAreaReplicateComparison()
         {
             Settings.Default.AreaGraphType = GraphTypeArea.replicate.ToString();
             ShowGraphPeakArea(true);

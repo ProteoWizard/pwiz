@@ -1099,7 +1099,7 @@ namespace pwiz.Skyline
             }
             SequenceTree.KeysOverride = Keys.Shift;
             SequenceTree.SelectedNode = node;
-            SequenceTree.KeysOverride = null;
+            SequenceTree.KeysOverride = Keys.None;
         }
 
         
@@ -1460,10 +1460,15 @@ namespace pwiz.Skyline
 
         private void removeMissingResultsMenuItem_Click(object sender, EventArgs e)
         {
+            RemoveMissingResults();
+        }
+
+        public void RemoveMissingResults()
+        {
             var refinementSettings = new RefinementSettings { RemoveMissingResults = true };
             ModifyDocument("Remove missing results", refinementSettings.Refine);
         }
-
+        
         #endregion // Edit menu
 
         #region Context menu

@@ -48,6 +48,8 @@ namespace pwiz.Skyline.Controls
 
         public TreeViewMS()
         {
+            InTest = false;
+
             SelectedNodes = new TreeNodeSelectionMS();
 
             DashBrush = new TextureBrush(Resources.Dash) { WrapMode = WrapMode.Tile };
@@ -75,7 +77,9 @@ namespace pwiz.Skyline.Controls
         /// </summary>
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-        public Keys? KeysOverride { get; set; }
+        public Keys KeysOverride { get; set; }
+
+        public bool InTest { get; set; }
 
         private Keys ModifierKeysOverriden
         {
@@ -84,7 +88,7 @@ namespace pwiz.Skyline.Controls
             {
                 if (KeysOverride == Keys.Control)
                     _allowDisjoint = true;
-                return KeysOverride ?? ModifierKeys;
+                return InTest ? KeysOverride : ModifierKeys;
             }
         }
 
@@ -94,7 +98,8 @@ namespace pwiz.Skyline.Controls
             // else, CTRL+C, CTRL+V, CTRL+Z .. etc can all cause incorrect selections.
             // The combination below represents just the CTRL key command key.
             // Modifiers to CTRL are sent as a seperate, following command key, which will disable disjoint select.
-            _allowDisjoint = keyData == (Keys.Control | Keys.LButton | Keys.ShiftKey);
+            if (!InTest)
+                _allowDisjoint = keyData == (Keys.Control | Keys.LButton | Keys.ShiftKey);
             return base.ProcessCmdKey(ref msg, keyData);
         }
 

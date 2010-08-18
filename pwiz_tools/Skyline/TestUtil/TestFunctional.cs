@@ -283,6 +283,7 @@ namespace pwiz.SkylineTestUtil
 
         private void RunTest()
         {
+            SkylineWindow.SequenceTree.InTest = true;
             DoTest();
             EndTest();
         }

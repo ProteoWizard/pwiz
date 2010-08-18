@@ -131,6 +131,15 @@ namespace pwiz.Skyline.FileUI
 
         public string[] DataSources { get; private set; }
 
+        public void SelectAllFileType(string extension)
+        {
+            foreach(ListViewItem item in listView.Items)
+            {
+                if (item.Text.ToLower().EndsWith(extension.ToLower()))
+                    listView.SelectedIndices.Add(item.Index);
+            }
+        }
+
         private string _sourceTypeName;
         public string SourceTypeName
         {
@@ -688,21 +697,27 @@ namespace pwiz.Skyline.FileUI
 
         private void openButton_Click( object sender, EventArgs e )
         {
-            if( listView.SelectedItems.Count > 0 )
+            Open();
+        }
+
+        public void Open()
+        {
+            if (listView.SelectedItems.Count > 0)
             {
                 List<string> dataSourceList = new List<string>();
-                foreach( ListViewItem item in listView.SelectedItems )
+                foreach (ListViewItem item in listView.SelectedItems)
                 {
-                    if( item.SubItems[1].Text != "File Folder" )
-                        dataSourceList.Add( Path.Combine( CurrentDirectory, item.SubItems[0].Text ) );
+                    if (item.SubItems[1].Text != "File Folder")
+                        dataSourceList.Add(Path.Combine(CurrentDirectory, item.SubItems[0].Text));
                 }
                 DataSources = dataSourceList.ToArray();
                 _abortPopulateList = true;
                 DialogResult = DialogResult.OK;
                 Close();
                 Application.DoEvents();
-            } else
-                MessageBox.Show( "Please select one or more data sources.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error );
+            }
+            else
+                MessageBox.Show("Please select one or more data sources.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         private void cancelButton_Click( object sender, EventArgs e )

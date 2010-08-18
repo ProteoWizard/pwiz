@@ -268,6 +268,11 @@ namespace pwiz.Skyline.Model
 
         public PeptideDocNode ChangeSettings(SrmSettings settingsNew, SrmSettingsDiff diff)
         {
+            return ChangeSettings(settingsNew, diff, true);
+        }
+
+        public PeptideDocNode ChangeSettings(SrmSettings settingsNew, SrmSettingsDiff diff, bool recurse)
+        {
             Debug.Assert(!diff.DiffPeptideProps); // No settings dependent properties yet.
 
             // If the peptide has explicit modifications, and the modifications have
@@ -320,7 +325,7 @@ namespace pwiz.Skyline.Model
 
                     if (nodeGroup != null)
                     {
-                        TransitionGroupDocNode nodeChanged = nodeGroup.ChangeSettings(settingsNew, explicitMods, diffNode);
+                        TransitionGroupDocNode nodeChanged = recurse? nodeGroup.ChangeSettings(settingsNew, explicitMods, diffNode) : nodeGroup;
                         if (instrument.IsMeasurable(nodeChanged.PrecursorMz))
                             childrenNew.Add(nodeChanged);
                     }

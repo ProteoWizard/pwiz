@@ -87,7 +87,7 @@ namespace pwiz.SkylineTestFunctional
             ClearExpectedSelection();
             RunUI(() =>
             {
-                SkylineWindow.SequenceTree.KeysOverride = null;
+                SkylineWindow.SequenceTree.KeysOverride = Keys.None;
                 SkylineWindow.SequenceTree.SelectedNode = null;
             });
 
@@ -115,7 +115,7 @@ namespace pwiz.SkylineTestFunctional
             ExpectedSelNodesAddRemove(node, true);
             RunUI(() =>
                       {
-                          SkylineWindow.SequenceTree.KeysOverride = null;
+                          SkylineWindow.SequenceTree.KeysOverride = Keys.None;
                           SkylineWindow.EditDelete();
                           node = SkylineWindow.SequenceTree.Nodes[SkylineWindow.SequenceTree.Nodes.Count - 2];
                       });
@@ -126,7 +126,7 @@ namespace pwiz.SkylineTestFunctional
             ClearExpectedSelection();
             RunUI(() =>
             {
-                SkylineWindow.SequenceTree.KeysOverride = null;
+                SkylineWindow.SequenceTree.KeysOverride = Keys.None;
                 SkylineWindow.SequenceTree.SelectedNode = null;
             });
         }
@@ -156,7 +156,7 @@ namespace pwiz.SkylineTestFunctional
                 ExpectedSelNodesAddRemove(node, true);
             _expectedSelNode = _expectedSelNodes[0];
             TestSelectNode(nodes[0], Keys.Shift);
-            RunUI(() => SkylineWindow.SequenceTree.KeysOverride = null);
+            RunUI(() => SkylineWindow.SequenceTree.KeysOverride = Keys.None);
        }
 
         private void TestDeleteUndo(TreeNode expectedSelNode)
@@ -252,7 +252,7 @@ namespace pwiz.SkylineTestFunctional
         {
             RunUI(() => 
                 {
-                    SkylineWindow.SequenceTree.KeysOverride = keys;
+                    SkylineWindow.SequenceTree.KeysOverride = keys ?? Keys.None;
                     SkylineWindow.SequenceTree.SelectedNode = node;
                 });
             CheckSelectedNodes();

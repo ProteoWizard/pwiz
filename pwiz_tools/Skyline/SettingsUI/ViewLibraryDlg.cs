@@ -1077,7 +1077,8 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddPeptide()
         {
-            CheckLibraryInSettings();
+            if (CheckLibraryInSettings() == DialogResult.Cancel)
+                return;
 
             var pepInfo = (PepInfo)listPeptide.SelectedItem;
             var pepMatcher = new PeptideMatchHelper(Document, _selectedLibrary, _selectedSpec, _lookupPool,
@@ -1103,7 +1104,7 @@ namespace pwiz.Skyline.SettingsUI
             Program.MainWindow.SelectedPath = selectedPath;
         }
 
-        public void CheckLibraryInSettings()
+        public DialogResult CheckLibraryInSettings()
         {
             // Check to see if the library is part of the settings. If not, prompt the user to add it.
             var docLibraries = Document.Settings.PeptideSettings.Libraries;
@@ -1116,13 +1117,14 @@ namespace pwiz.Skyline.SettingsUI
                             _selectedLibName), "Yes", "No");
                 var result = libraryNotAddedMsgDlg.ShowDialog();
                 if (result == DialogResult.Cancel)
-                    return;
+                    return result;
                 if (result == DialogResult.Yes)
                     Program.MainWindow.ModifyDocument("Add Library", doc =>
                         doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(pepLibraries =>
                             pepLibraries.ChangeLibraries(new List<LibrarySpec>(docLibraries.LibrarySpecs) { _selectedSpec },
                             new List<Library>(docLibraries.Libraries) { _selectedLibrary }))));
             }
+            return DialogResult.OK;
         }
 
         /// <summary>
@@ -1135,7 +1137,8 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddAllPeptides()
         {
-            CheckLibraryInSettings();
+            if(CheckLibraryInSettings() == DialogResult.Cancel)
+                return;
             
             var startingDocument = Document;
             
@@ -1148,6 +1151,10 @@ namespace pwiz.Skyline.SettingsUI
                 Message = "Matching library peptides to current settings"
             };
             longWaitDlg.PerformWork(this, 1000, pepMatcher.MatchAllPeptides);
+
+            // User clicked cancel.
+            if(pepMatcher.PeptideMatches == null)
+                return;
 
             int numMatchedPeptides = pepMatcher.MatchedPeptideCount;
             if (numMatchedPeptides == 0)
@@ -1885,7 +1892,7 @@ namespace pwiz.Skyline.SettingsUI
                 // Create all variations of this peptide matching the settings.
                 foreach (var nodePep in peptide.CreateDocNodes(settings, settings))
                 {
-                    PeptideDocNode nodePepMod = nodePep.ChangeSettings(settings, diff);
+                    PeptideDocNode nodePepMod = nodePep.ChangeSettings(settings, diff, false);
                     foreach (TransitionGroupDocNode nodeGroup in nodePepMod.Children)
                     {
                         var calc = settings.GetPrecursorCalc(nodeGroup.TransitionGroup.LabelType, nodePepMod.ExplicitMods);

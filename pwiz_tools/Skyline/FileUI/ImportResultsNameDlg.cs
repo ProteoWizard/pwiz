@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -34,9 +33,13 @@ namespace pwiz.Skyline.FileUI
             textPrefix.Text = _prefixInitial = prefix;
         }
 
-        public string Prefix { get { return textPrefix.Text; } }
+        public string Prefix 
+        {
+            get { return textPrefix.Text; }
+            set { textPrefix.Text = value; } 
+        }
 
-        private void OkDialog(DialogResult result)
+        public void OkDialog(DialogResult result)
         {
             if (DialogResult != DialogResult.Cancel)
             {

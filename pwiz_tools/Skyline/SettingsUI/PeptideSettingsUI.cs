@@ -700,6 +700,12 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        public string TimeWindow
+        {
+            get { return textMeasureRTWindow.Text; }
+            set { textMeasureRTWindow.Text = value; }
+        }
+
         #endregion
 
         private sealed class LabelTypeComboDriver

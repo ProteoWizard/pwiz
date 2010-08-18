@@ -58,7 +58,7 @@ namespace pwiz.SkylineTestFunctional
 
                 // Test single node copy.
                 sequenceTree.ExpandAll();
-                sequenceTree.KeysOverride = null;
+                sequenceTree.KeysOverride = Keys.None;
                 sequenceTree.SelectedNode = sequenceTree.Nodes[0];
                 SkylineWindow.Copy();
                 CheckCopiedNodes(0, 1);
@@ -70,14 +70,14 @@ namespace pwiz.SkylineTestFunctional
 
                 // Test multiple selection disjoint, reverse order copy.
                 CheckCopiedNodes(0, 1);
-                sequenceTree.KeysOverride = null;
+                sequenceTree.KeysOverride = Keys.None;
                 sequenceTree.SelectedNode = sequenceTree.Nodes[1].Nodes[0];
                 sequenceTree.KeysOverride = Keys.Control;
                 sequenceTree.SelectedNode = sequenceTree.Nodes[0].Nodes[0];
                 SkylineWindow.Copy();
                 // After copying in reverse order, reselect the nodes in sorted order so we don't have to
                 // sort them in the test code.
-                sequenceTree.KeysOverride = null;
+                sequenceTree.KeysOverride = Keys.None;
                 sequenceTree.SelectedNode = sequenceTree.Nodes[0];
                 sequenceTree.SelectedNode = sequenceTree.Nodes[0].Nodes[0];
                 sequenceTree.KeysOverride = Keys.Control;
@@ -85,7 +85,7 @@ namespace pwiz.SkylineTestFunctional
                 CheckCopiedNodes(1, 2);
 
                 // Test no space between parent and descendents if immediate child is not selected.
-                sequenceTree.KeysOverride = null;
+                sequenceTree.KeysOverride = Keys.None;
                 sequenceTree.SelectedNode = sequenceTree.Nodes[0];
                 sequenceTree.KeysOverride = Keys.Control;
                 sequenceTree.SelectedNode = sequenceTree.Nodes[0].Nodes[0].Nodes[0].Nodes[0];
@@ -94,7 +94,7 @@ namespace pwiz.SkylineTestFunctional
                 CheckCopiedNodes(0, 1);
 
                 // Test paste menu item enabled, copy menu item disabled when dummy node is selected.
-                sequenceTree.KeysOverride = null;
+                sequenceTree.KeysOverride = Keys.None;
                 sequenceTree.SelectedNode =
                   sequenceTree.Nodes[SkylineWindow.SequenceTree.Nodes.Count - 1];
                 Assert.IsFalse(SkylineWindow.CopyMenuItemEnabled());
