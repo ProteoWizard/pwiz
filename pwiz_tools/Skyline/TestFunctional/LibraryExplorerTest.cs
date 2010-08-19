@@ -75,8 +75,20 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             PeptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+
             Assert.IsNotNull(PeptideSettingsUI);
-            AddLibraries();
+
+            var editListUI = ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(PeptideSettingsUI.EditLibraryList);
+            int numLibs = _testLibs.Length;
+            for (int i = 0; i < numLibs; i++)
+            {
+                AddLibrary(editListUI, _testLibs[i]);
+            }
+            RunUI(editListUI.OkDialog);
+            WaitForClosedForm(editListUI);
+
+            // Make sure the libraries actually show up in the peptide settings dialog before continuing.
+            WaitForConditionUI(() => PeptideSettingsUI.AvailableLibraries.Count() == _testLibs.Length);
 
             // Launch the Library Explorer dialog
             _viewLibUI = ShowDialog<ViewLibraryDlg>(PeptideSettingsUI.ShowViewLibraryDlg);
@@ -393,21 +405,6 @@ namespace pwiz.SkylineTestFunctional
 
             // Close the Library Explorer dialog
             OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
-        }
-
-        private void AddLibraries()
-        {
-            var editListUI = ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(PeptideSettingsUI.EditLibraryList);
-            int numLibs = _testLibs.Length;
-            for (int i = 0; i < numLibs; i++)
-            {
-                AddLibrary(editListUI, _testLibs[i]);
-            }
-            RunUI(editListUI.OkDialog);
-            WaitForClosedForm(editListUI);
-
-            // Make sure the libraries actually show up in the peptide settings dialog before continuing.
-            WaitForConditionUI(() => PeptideSettingsUI.AvailableLibraries.Count() == _testLibs.Length);
         }
 
         private void AddLibrary(EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec> editListUI, TestLibInfo info)
