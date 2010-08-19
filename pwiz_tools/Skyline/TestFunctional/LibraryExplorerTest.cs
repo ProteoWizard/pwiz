@@ -90,10 +90,7 @@ namespace pwiz.SkylineTestFunctional
             // Make sure the libraries actually show up in the peptide settings dialog before continuing.
             WaitForConditionUI(() => _testLibs.Length == PeptideSettingsUI.AvailableLibraries.Count());
 
-            RunUI(() =>
-                      {
-                          Assert.IsFalse(PeptideSettingsUI.IsSettingsChanged);
-                      });
+            RunUI(() => Assert.IsFalse(PeptideSettingsUI.IsSettingsChanged));
 
             // Launch the Library Explorer dialog
             _viewLibUI = ShowDialog<ViewLibraryDlg>(PeptideSettingsUI.ShowViewLibraryDlg);

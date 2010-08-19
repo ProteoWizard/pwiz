@@ -283,7 +283,14 @@ namespace pwiz.SkylineTestUtil
 
         private void RunTest()
         {
-            SkylineWindow.SequenceTree.InTest = true;
+            // Clean-up before running the test
+            RunUI(() => 
+                {
+                    SkylineWindow.SequenceTree.InTest = true;
+                    SkylineWindow.ModifyDocument("Set test settings",
+                                                 doc => doc.ChangeSettings(SrmSettingsList.GetDefault()));
+                });
+            
             DoTest();
             EndTest();
         }
