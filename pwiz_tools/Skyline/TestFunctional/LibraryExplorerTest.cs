@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
@@ -74,6 +75,7 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
+            Console.WriteLine("Running LibraryExplorerTest");
             PeptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
 
             Assert.IsNotNull(PeptideSettingsUI);
@@ -88,7 +90,13 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(editListUI);
 
             // Make sure the libraries actually show up in the peptide settings dialog before continuing.
-            WaitForConditionUI(() => PeptideSettingsUI.AvailableLibraries.Count() == _testLibs.Length);
+            WaitForConditionUI(() => _testLibs.Length == PeptideSettingsUI.AvailableLibraries.Count());
+
+            RunUI(() =>
+                      {
+                          Assert.AreEqual(_testLibs.Length, PeptideSettingsUI.AvailableLibraries.Count());
+                          Assert.IsFalse(PeptideSettingsUI.IsSettingsChanged);
+                      });
 
             // Launch the Library Explorer dialog
             _viewLibUI = ShowDialog<ViewLibraryDlg>(PeptideSettingsUI.ShowViewLibraryDlg);
