@@ -968,7 +968,7 @@ void ScanInfoImpl::initStatusLogHelper() const
 
 void ScanInfoImpl::initTrailerExtra() const
 {
-    boost::call_once(statusLogInitialized_.flag, boost::bind(&ScanInfoImpl::initTrailerExtraHelper, this));
+    boost::call_once(trailerExtraInitialized_.flag, boost::bind(&ScanInfoImpl::initTrailerExtraHelper, this));
 }
 
 void ScanInfoImpl::initTrailerExtraHelper() const
