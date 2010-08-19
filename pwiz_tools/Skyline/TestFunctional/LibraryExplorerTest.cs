@@ -16,7 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
@@ -75,7 +74,6 @@ namespace pwiz.SkylineTestFunctional
 
         protected override void DoTest()
         {
-            Console.WriteLine("Running LibraryExplorerTest");
             PeptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
 
             Assert.IsNotNull(PeptideSettingsUI);
@@ -94,7 +92,6 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() =>
                       {
-                          Assert.AreEqual(_testLibs.Length, PeptideSettingsUI.AvailableLibraries.Count());
                           Assert.IsFalse(PeptideSettingsUI.IsSettingsChanged);
                       });
 

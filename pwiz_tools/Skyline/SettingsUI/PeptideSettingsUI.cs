@@ -537,14 +537,11 @@ namespace pwiz.Skyline.SettingsUI
 
         public void ShowViewLibraryDlg()
         {
-            Console.WriteLine("Showing Library Explorer");
-
             // Validate new settings without showing message boxes
             PeptideSettings settings = ValidateNewSettings(false);
             // Only update, if anything changed
             if (!Equals(settings, _peptideSettings))
             {
-                Console.WriteLine("Settings not equal");
                 var result = MessageBox.Show(this, "Peptide settings have been changed. Save changes?", Program.Name,
                                 MessageBoxButtons.YesNoCancel);
                 switch (result)
