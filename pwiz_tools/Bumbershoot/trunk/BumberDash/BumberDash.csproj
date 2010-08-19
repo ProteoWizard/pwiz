@@ -441,6 +441,14 @@
       <Link>nunit.framework.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="..\lib\System.Data.SQLite.dll">
+      <Link>System.Data.SQLite.dll</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="..\lib\System.Data.SQLite.Linq.dll">
+      <Link>System.Data.SQLite.Linq.dll</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <Content Include="..\lib\System.Data.SQLite.XML">
       <Link>System.Data.SQLite.XML</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
