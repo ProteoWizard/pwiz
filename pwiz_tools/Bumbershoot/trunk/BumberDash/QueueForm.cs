@@ -775,6 +775,7 @@ namespace BumberDash
                     _addJob.InputFilesBox.Text = jobQueueDGVRow.Cells[0].ToolTipText;
                     _addJob.OutputDirectoryBox.Text = jobQueueDGVRow.Cells[1].ToolTipText;
                     _addJob.DatabaseLocBox.Text = jobQueueDGVRow.Cells[2].ToolTipText;
+                    _addJob.CPUsBox.Value = int.Parse(jobQueueDGVRow.Cells[6].Tag.ToString());
                     if (jobQueueDGVRow.Cells[4].Value.ToString() == "Database Search")
                     {
                         _addJob.MyriConfigBox.Text = jobQueueDGVRow.Cells[3].ToolTipText;
