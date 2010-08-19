@@ -80,6 +80,12 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        public bool TrySelect(Identifier id)
+        {
+            Select(id);
+            return treeView.SelectedNode != null;
+        }
+        
         public void Select(Identifier id)
         {
             treeView.SelectedNode = FindNode(treeView.Nodes, id);

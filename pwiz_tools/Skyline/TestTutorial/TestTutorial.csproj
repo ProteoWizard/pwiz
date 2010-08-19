@@ -64,6 +64,7 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CustomReportsTutorialTest.cs" />
     <Compile Include="MethodEditTutorialTest.cs" />
     <Compile Include="MethodRefinementTutorialTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

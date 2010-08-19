@@ -32,14 +32,9 @@ namespace pwiz.Skyline.FileUI
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(OpenDataSourceDialog));
             this.listView = new System.Windows.Forms.ListView();
             this.SourceName = new System.Windows.Forms.ColumnHeader();
-            this.SourceType = new System.Windows.Forms.ColumnHeader();
-            this.Spectra = new System.Windows.Forms.ColumnHeader();
+            this.FileType = new System.Windows.Forms.ColumnHeader();
             this.SourceSize = new System.Windows.Forms.ColumnHeader();
             this.DateModified = new System.Windows.Forms.ColumnHeader();
-            this.IonSourceType = new System.Windows.Forms.ColumnHeader();
-            this.AnalyzerType = new System.Windows.Forms.ColumnHeader();
-            this.DetectorType = new System.Windows.Forms.ColumnHeader();
-            this.ContentType = new System.Windows.Forms.ColumnHeader();
             this.lookInComboBox = new System.Windows.Forms.ComboBox();
             this.labelLookIn = new System.Windows.Forms.Label();
             this.sourcePathTextBox = new System.Windows.Forms.TextBox();
@@ -52,8 +47,6 @@ namespace pwiz.Skyline.FileUI
             this.backButton = new System.Windows.Forms.ToolStripButton();
             this.upOneLevelButton = new System.Windows.Forms.ToolStripButton();
             this.viewsDropDownButton = new System.Windows.Forms.ToolStripDropDownButton();
-            this.smallIconsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.largeIconsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.listToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.detailsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -70,23 +63,20 @@ namespace pwiz.Skyline.FileUI
             // 
             // listView
             // 
+            this.listView.AllowColumnReorder = true;
             this.listView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.listView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.SourceName,
-            this.SourceType,
-            this.Spectra,
+            this.FileType,
             this.SourceSize,
-            this.DateModified,
-            this.IonSourceType,
-            this.AnalyzerType,
-            this.DetectorType,
-            this.ContentType});
+            this.DateModified});
             this.listView.Location = new System.Drawing.Point(118, 45);
             this.listView.Name = "listView";
             this.listView.Size = new System.Drawing.Size(452, 280);
             this.listView.TabIndex = 0;
+            this.listView.TileSize = new System.Drawing.Size(150, 35);
             this.listView.UseCompatibleStateImageBehavior = false;
             this.listView.View = System.Windows.Forms.View.List;
             this.listView.ItemActivate += new System.EventHandler(this.listView_ItemActivate);
@@ -97,17 +87,12 @@ namespace pwiz.Skyline.FileUI
             // SourceName
             // 
             this.SourceName.Text = "Name";
-            this.SourceName.Width = 200;
+            this.SourceName.Width = -1;
             // 
-            // SourceType
+            // FileType
             // 
-            this.SourceType.Text = "Type";
-            this.SourceType.Width = 80;
-            // 
-            // Spectra
-            // 
-            this.Spectra.Text = "Spectra";
-            this.Spectra.Width = 65;
+            this.FileType.Text = "FileType";
+            this.FileType.Width = 120;
             // 
             // SourceSize
             // 
@@ -117,22 +102,6 @@ namespace pwiz.Skyline.FileUI
             // 
             this.DateModified.Text = "Date Modified";
             this.DateModified.Width = 120;
-            // 
-            // IonSourceType
-            // 
-            this.IonSourceType.Text = "Source";
-            // 
-            // AnalyzerType
-            // 
-            this.AnalyzerType.Text = "Analyzer";
-            // 
-            // DetectorType
-            // 
-            this.DetectorType.Text = "Detector";
-            // 
-            // ContentType
-            // 
-            this.ContentType.Text = "Content Type";
             // 
             // lookInComboBox
             // 
@@ -271,8 +240,6 @@ namespace pwiz.Skyline.FileUI
             // 
             this.viewsDropDownButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.viewsDropDownButton.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.smallIconsToolStripMenuItem,
-            this.largeIconsToolStripMenuItem,
             this.tilesToolStripMenuItem,
             this.listToolStripMenuItem,
             this.detailsToolStripMenuItem});
@@ -283,24 +250,10 @@ namespace pwiz.Skyline.FileUI
             this.viewsDropDownButton.Text = "Views";
             this.viewsDropDownButton.ToolTipText = "Views";
             // 
-            // smallIconsToolStripMenuItem
-            // 
-            this.smallIconsToolStripMenuItem.Name = "smallIconsToolStripMenuItem";
-            this.smallIconsToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
-            this.smallIconsToolStripMenuItem.Text = "Small Icons";
-            this.smallIconsToolStripMenuItem.Click += new System.EventHandler(this.smallIconsToolStripMenuItem_Click);
-            // 
-            // largeIconsToolStripMenuItem
-            // 
-            this.largeIconsToolStripMenuItem.Name = "largeIconsToolStripMenuItem";
-            this.largeIconsToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
-            this.largeIconsToolStripMenuItem.Text = "Large Icons";
-            this.largeIconsToolStripMenuItem.Click += new System.EventHandler(this.largeIconsToolStripMenuItem_Click);
-            // 
             // tilesToolStripMenuItem
             // 
             this.tilesToolStripMenuItem.Name = "tilesToolStripMenuItem";
-            this.tilesToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
+            this.tilesToolStripMenuItem.Size = new System.Drawing.Size(109, 22);
             this.tilesToolStripMenuItem.Text = "Tiles";
             this.tilesToolStripMenuItem.Click += new System.EventHandler(this.tilesToolStripMenuItem_Click);
             // 
@@ -309,14 +262,14 @@ namespace pwiz.Skyline.FileUI
             this.listToolStripMenuItem.Checked = true;
             this.listToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.listToolStripMenuItem.Name = "listToolStripMenuItem";
-            this.listToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
+            this.listToolStripMenuItem.Size = new System.Drawing.Size(109, 22);
             this.listToolStripMenuItem.Text = "List";
             this.listToolStripMenuItem.Click += new System.EventHandler(this.listToolStripMenuItem_Click);
             // 
             // detailsToolStripMenuItem
             // 
             this.detailsToolStripMenuItem.Name = "detailsToolStripMenuItem";
-            this.detailsToolStripMenuItem.Size = new System.Drawing.Size(134, 22);
+            this.detailsToolStripMenuItem.Size = new System.Drawing.Size(109, 22);
             this.detailsToolStripMenuItem.Text = "Details";
             this.detailsToolStripMenuItem.Click += new System.EventHandler(this.detailsToolStripMenuItem_Click);
             // 
@@ -474,16 +427,12 @@ namespace pwiz.Skyline.FileUI
         private System.Windows.Forms.Button openButton;
         private System.Windows.Forms.Button cancelButton;
         private System.Windows.Forms.ColumnHeader SourceName;
-        private System.Windows.Forms.ColumnHeader Spectra;
-        private System.Windows.Forms.ColumnHeader SourceType;
         private System.Windows.Forms.ColumnHeader SourceSize;
         private System.Windows.Forms.ColumnHeader DateModified;
         private System.Windows.Forms.ToolStrip navToolStrip;
         private System.Windows.Forms.ToolStripButton backButton;
         private System.Windows.Forms.ToolStripButton upOneLevelButton;
         private System.Windows.Forms.ToolStripDropDownButton viewsDropDownButton;
-        private System.Windows.Forms.ToolStripMenuItem smallIconsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem largeIconsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem tilesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem listToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem detailsToolStripMenuItem;
@@ -494,9 +443,6 @@ namespace pwiz.Skyline.FileUI
         private System.Windows.Forms.Button myDocumentsButton;
         private System.Windows.Forms.Button myComputerButton;
         private System.Windows.Forms.ImageList lookInImageList;
-        private System.Windows.Forms.ColumnHeader IonSourceType;
-        private System.Windows.Forms.ColumnHeader AnalyzerType;
-        private System.Windows.Forms.ColumnHeader DetectorType;
-        private System.Windows.Forms.ColumnHeader ContentType;
+        private System.Windows.Forms.ColumnHeader FileType;
     }
 }

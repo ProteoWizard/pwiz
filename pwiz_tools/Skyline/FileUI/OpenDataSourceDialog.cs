@@ -22,7 +22,6 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.IO;
 using System.Xml;
-using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
@@ -68,14 +67,15 @@ namespace pwiz.Skyline.FileUI
             sourceTypeComboBox.Items.AddRange( sourceTypes );
             sourceTypeComboBox.SelectedIndex = 0;
 
-            ImageList smallImageList = new ImageList {ColorDepth = ColorDepth.Depth32Bit};
-            smallImageList.Images.Add(Properties.Resources.Folder);
-            smallImageList.Images.Add(Properties.Resources.File);
-            smallImageList.Images.Add(Properties.Resources.DataProcessing);
-            smallImageList.Images.Add(lookInImageList.Images[5]);
-            smallImageList.Images.Add(lookInImageList.Images[6]);
-            smallImageList.Images.Add(lookInImageList.Images[7]);
-            listView.SmallImageList = smallImageList;
+            ImageList imageList = new ImageList {ColorDepth = ColorDepth.Depth32Bit};
+            imageList.Images.Add(Properties.Resources.Folder);
+            imageList.Images.Add(Properties.Resources.File);
+            imageList.Images.Add(Properties.Resources.DataProcessing);
+            imageList.Images.Add(lookInImageList.Images[5]);
+            imageList.Images.Add(lookInImageList.Images[6]);
+            imageList.Images.Add(lookInImageList.Images[7]);
+            listView.SmallImageList = imageList;
+            listView.LargeImageList = imageList;
 
             TreeView tv = new TreeView {Indent = 8};
             TreeNode lookInNode = tv.Nodes.Add( "My Recent Documents", "My Recent Documents", 0, 0 );
@@ -171,13 +171,8 @@ namespace pwiz.Skyline.FileUI
             public string name;
             public string type;
             public int imageIndex;
-            public int spectra;
             public UInt64 size;
             public DateTime dateModified;
-            private string ionSource;
-            private string analyzer;
-            private string detector;
-            private string contentType;
 // ReSharper restore InconsistentNaming
 
             public bool isFolder
@@ -190,16 +185,6 @@ namespace pwiz.Skyline.FileUI
                 get { return isUnknownType(type); }
             }
 
-            public void populateFromMSData(MsDataFileImpl msInfo)
-            {
-                var configInfo = msInfo.ConfigInfo;
-                analyzer = configInfo.Analyzer;
-                contentType = configInfo.ContentType;
-                detector = configInfo.Detector;
-                ionSource = configInfo.IonSource;
-                spectra = configInfo.Spectra;
-            }
-
             public string[] ToArray()
             {
                 if( type == FOLDER_TYPE )
@@ -209,13 +194,8 @@ namespace pwiz.Skyline.FileUI
                         name,
                         type,
                         "",
-                        "",
                         String.Format( "{0} {1}", dateModified.ToShortDateString(),
-                                                  dateModified.ToShortTimeString()),
-                        "",
-                        "",
-                        "",
-                        ""
+                                                  dateModified.ToShortTimeString())
                     };
                 }
                 else
@@ -224,14 +204,9 @@ namespace pwiz.Skyline.FileUI
                     {
                         name,
                         type,
-                        spectra.ToString(),
                         String.Format( new FileSizeFormatProvider(), "{0:fs}", size ),
                         String.Format( "{0} {1}", dateModified.ToShortDateString(),
-                                                  dateModified.ToShortTimeString() ),
-                        ionSource,
-                        analyzer,
-                        detector,
-                        contentType
+                                                  dateModified.ToShortTimeString() )
                     };
                 }
             }
@@ -247,26 +222,33 @@ namespace pwiz.Skyline.FileUI
             };
             using(XmlReader reader = XmlReader.Create( new StreamReader( filepath, true ), settings ))
             {
-                while( reader.Read() )
+                try
                 {
-                    if( reader.NodeType == XmlNodeType.Element )
+                    while (reader.Read())
                     {
-                        switch( reader.Name.ToLower() )
+                        if (reader.NodeType == XmlNodeType.Element)
                         {
-                            case "mzml":
-                            case "indexmzml":
-                                return "mzML";
-                            case "mzxml":
-                            case "msrun":
-                                return "mzXML";
-                            //case "mzdata":
-                            //    return "mzData";
-                            case "root":
-                                return "Bruker Data Exchange";
-                            default:
-                                return SourceInfo.UNKNOWN_TYPE;
+                            switch (reader.Name.ToLower())
+                            {
+                                case "mzml":
+                                case "indexmzml":
+                                    return "mzML";
+                                case "mzxml":
+                                case "msrun":
+                                    return "mzXML";
+                                    //case "mzdata":
+                                    //    return "mzData";
+                                case "root":
+                                    return "Bruker Data Exchange";
+                                default:
+                                    return SourceInfo.UNKNOWN_TYPE;
+                            }
                         }
                     }
+                }
+                catch(XmlException)
+                {
+                    return SourceInfo.UNKNOWN_TYPE;
                 }
             }
             return SourceInfo.UNKNOWN_TYPE;
@@ -337,17 +319,6 @@ namespace pwiz.Skyline.FileUI
             }
             else if(!sourceInfo.isUnknown)
             {
-                try
-                {
-                    MsDataFileImpl msInfo = new MsDataFileImpl(dirInfo.FullName);
-                    sourceInfo.populateFromMSData(msInfo);
-                }
-                catch
-                {
-                    sourceInfo.spectra = 0;
-                    sourceInfo.type = "Invalid " + sourceInfo.type;
-                }
-
                 sourceInfo.size = 0;
                 foreach( FileInfo fileInfo in dirInfo.GetFiles() )
                     sourceInfo.size += (UInt64) fileInfo.Length;
@@ -371,18 +342,6 @@ namespace pwiz.Skyline.FileUI
                         (sourceTypeComboBox.SelectedIndex > 0 &&
                          sourceTypeComboBox.SelectedItem.ToString() != sourceInfo.type))
                     return sourceInfo;
-
-                try
-                {
-                    MsDataFileImpl msInfo = new MsDataFileImpl( fileInfo.FullName );
-                    sourceInfo.populateFromMSData( msInfo );
-                }
-                catch
-                {
-                    sourceInfo.spectra = 0;
-                    sourceInfo.type = "Invalid " + sourceInfo.type;
-                }
-
                 sourceInfo.size = (UInt64) fileInfo.Length;
                 sourceInfo.dateModified = fileInfo.LastWriteTime;
                 return sourceInfo;
@@ -517,8 +476,9 @@ namespace pwiz.Skyline.FileUI
                              sourceInfo.isFolder))
                     {
                         ListViewItem item = new ListViewItem(sourceInfo.ToArray(), sourceInfo.imageIndex);
-                        item.SubItems[3].Tag = sourceInfo.size;
-                        item.SubItems[4].Tag = sourceInfo.dateModified;
+                        item.SubItems[2].Tag = sourceInfo.size;
+                        item.SubItems[3].Tag = sourceInfo.dateModified;
+                        
                         listView.Items.Add(item);
                     }
                 }
@@ -728,36 +688,23 @@ namespace pwiz.Skyline.FileUI
             Application.DoEvents();
         }
 
-        private void smallIconsToolStripMenuItem_Click( object sender, EventArgs e )
-        {
-            foreach( ToolStripDropDownItem item in viewsDropDownButton.DropDownItems )
-                ( (ToolStripMenuItem) item ).Checked = false;
-            ( (ToolStripMenuItem) viewsDropDownButton.DropDownItems[0] ).Checked = true;
-            listView.View = View.SmallIcon;
-        }
-
-        private void largeIconsToolStripMenuItem_Click( object sender, EventArgs e )
-        {
-            foreach( ToolStripDropDownItem item in viewsDropDownButton.DropDownItems )
-                ( (ToolStripMenuItem) item ).Checked = false;
-            ( (ToolStripMenuItem) viewsDropDownButton.DropDownItems[1] ).Checked = true;
-            listView.View = View.LargeIcon;
-        }
-
         private void tilesToolStripMenuItem_Click( object sender, EventArgs e )
         {
             foreach( ToolStripDropDownItem item in viewsDropDownButton.DropDownItems )
                 ( (ToolStripMenuItem) item ).Checked = false;
-            ( (ToolStripMenuItem) viewsDropDownButton.DropDownItems[2] ).Checked = true;
+            ( (ToolStripMenuItem) viewsDropDownButton.DropDownItems[0] ).Checked = true;
+            listView.BeginUpdate();
             listView.View = View.Tile;
+            listView.EndUpdate();
         }
 
         private void listToolStripMenuItem_Click( object sender, EventArgs e )
         {
             foreach( ToolStripDropDownItem item in viewsDropDownButton.DropDownItems )
                 ( (ToolStripMenuItem) item ).Checked = false;
-            ( (ToolStripMenuItem) viewsDropDownButton.DropDownItems[3] ).Checked = true;
+            ( (ToolStripMenuItem) viewsDropDownButton.DropDownItems[1] ).Checked = true;
             listView.View = View.List;
+            listView.Columns[0].Width = -1;
         }
 
         private void detailsToolStripMenuItem_Click( object sender, EventArgs e )
@@ -766,9 +713,10 @@ namespace pwiz.Skyline.FileUI
             {
                 foreach( ToolStripDropDownItem item in viewsDropDownButton.DropDownItems )
                     ( (ToolStripMenuItem) item ).Checked = false;
-                ( (ToolStripMenuItem) viewsDropDownButton.DropDownItems[4] ).Checked = true;
+                ( (ToolStripMenuItem) viewsDropDownButton.DropDownItems[2] ).Checked = true;
                 listView.View = View.Details;
                 populateListViewFromDirectory( _currentDirectory );
+                listView.Columns[0].Width = 200;
             }
         }
 

@@ -356,6 +356,12 @@ namespace pwiz.Skyline.FileUI
             OkDialog();
         }
 
+        public void CancelClick()
+        {
+            // Use for testing.
+            btnCancel.PerformClick();
+        }
+
         private void btnOk_Click(object sender, EventArgs e)
         {
             OkDialog();
