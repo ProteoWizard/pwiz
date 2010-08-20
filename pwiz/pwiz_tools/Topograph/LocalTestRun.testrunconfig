@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TestRunConfiguration name="Local Test Run" id="85bb6021-5a00-46b6-a1c5-2b287b4dc457" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2006">
+  <Description>This is a default test run configuration for a local test run.</Description>
+  <Deployment>
+    <DeploymentItem filename="..\Shared\Lib\System.Data.SQLite.DLL" />
+    <DeploymentItem filename="..\Shared\ProteowizardWrapper\obj\x86\MassLynxRaw.dll" />
+    <DeploymentItem filename="..\Shared\ProteowizardWrapper\obj\x86\rscoree.dll" />
+    <DeploymentItem filename="..\Shared\ProteowizardWrapper\obj\x86\Interop.EDAL.SxS.manifest" />
+    <DeploymentItem filename="..\Shared\ProteowizardWrapper\obj\x86\MSFileReader.XRawfile2.SxS.manifest" />
+    <DeploymentItem filename="..\Shared\ProteowizardWrapper\obj\x86\MSFileReader.XRawfile2.dll" />
+    <DeploymentItem filename="..\Shared\ProteowizardWrapper\obj\x86\fileio.dll" />
+    <DeploymentItem filename="..\Shared\ProteowizardWrapper\obj\x86\fregistry.dll" />
+  </Deployment>
+  <TestTypeSpecific />
+</TestRunConfiguration>

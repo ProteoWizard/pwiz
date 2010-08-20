@@ -1,0 +1,13 @@
+#!/bin/bash
+
+for i in $(seq 1 20)
+do
+    for a in $(cat $i.list)
+    do
+        error=$(tail $i/peak.$a.log | grep error: | sed 's/error: //g')
+        f0=$(tlp cat $i/peak.$a.final.tlp | sed 's/.*f0=\([0-9.]*\).*/\1/g')
+        mass=$(cat $i/tlpmatches | grep peak\.$a | sed 's/[ ]*\([0-9.]*\).*/\1/g')
+        echo $i $a $error $f0 $mass
+    done
+done
+

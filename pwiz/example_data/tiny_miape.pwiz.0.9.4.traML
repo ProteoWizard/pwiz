@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<TraML xmlns="http://psi.hupo.org/ms/traml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://psi.hupo.org/ms/traml http://www.peptideatlas.org/tmp/TraML/0.9.4/TraML0.9.4.xsd" version="0.9.4">
+  <cvList>
+    <cv id="MS" fullName="Proteomics Standards Initiative Mass Spectrometry Ontology" version="2.33.1" URI="http://psidev.cvs.sourceforge.net/*checkout*/psidev/psi/psi-ms/mzML/controlledVocabulary/psi-ms.obo"/>
+    <cv id="UNIMOD" fullName="" version="19:11:2008" URI=""/>
+    <cv id="UO" fullName="Unit Ontology" version="11:02:2010" URI="http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo"/>
+  </cvList>
+  <ContactList>
+    <Contact id="JQP">
+      <cvParam cvRef="MS" accession="MS:1000586" name="contact name" value="John Q. Public"/>
+      <cvParam cvRef="MS" accession="MS:1000590" name="contact organization" value="Department of Redundancy Department"/>
+      <cvParam cvRef="MS" accession="MS:1000587" name="contact address" value="1600 Pennsylvania Ave."/>
+    </Contact>
+  </ContactList>
+  <PublicationList>
+    <Publication id="Al_et_al">
+      <cvParam cvRef="MS" accession="MS:1000879" name="PubMed identifier" value="123456"/>
+    </Publication>
+  </PublicationList>
+  <InstrumentList>
+    <Instrument id="LCQ">
+      <cvParam cvRef="MS" accession="MS:1000554" name="LCQ Deca" value=""/>
+      <cvParam cvRef="MS" accession="MS:1000529" name="instrument serial number" value="23433"/>
+    </Instrument>
+    <Instrument id="QTRAP">
+      <cvParam cvRef="MS" accession="MS:1000139" name="4000 Q TRAP" value=""/>
+    </Instrument>
+  </InstrumentList>
+  <SoftwareList>
+    <Software id="MaRiMba" version="0.5">
+      <cvParam cvRef="MS" accession="MS:1000872" name="MaRiMba" value=""/>
+    </Software>
+    <Software id="pwiz" version="1.0">
+      <cvParam cvRef="MS" accession="MS:1000615" name="ProteoWizard" value=""/>
+    </Software>
+    <Software id="Xcalibur" version="2.0.5">
+      <cvParam cvRef="MS" accession="MS:1000532" name="Xcalibur" value=""/>
+    </Software>
+  </SoftwareList>
+  <ProteinList>
+    <Protein id="Q123">
+      <cvParam cvRef="MS" accession="MS:1000885" name="protein accession" value="Q123"/>
+      <cvParam cvRef="MS" accession="MS:1000886" name="protein name" value="A short protein."/>
+      <cvParam cvRef="MS" accession="MS:1000224" name="molecular mass" value="12345" unitCvRef="UO" unitAccession="UO:0000221" unitName="dalton"/>
+      <Sequence>
+        ABCD
+      </Sequence>
+    </Protein>
+  </ProteinList>
+  <CompoundList>
+    <Peptide id="Pep1" sequence="AB">
+      <cvParam cvRef="MS" accession="MS:1001117" name="theoretical mass" value="1234" unitCvRef="UO" unitAccession="UO:0000221" unitName="dalton"/>
+      <ProteinRef ref="Q123"/>
+      <Modification location="1" monoisotopicMassDelta="123" averageMassDelta="0">
+        <cvParam cvRef="UNIMOD" accession="UNIMOD:914" name="Methylmalonylation" value=""/>
+      </Modification>
+      <RetentionTimeList>
+        <RetentionTime softwareRef="MaRiMba">
+          <cvParam cvRef="MS" accession="MS:1000897" name="predicted retention time" value="42" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+        </RetentionTime>
+      </RetentionTimeList>
+      <Evidence>
+        <cvParam cvRef="MS" accession="MS:1001100" name="confident peptide" value="6"/>
+      </Evidence>
+    </Peptide>
+    <Compound id="Cmp1">
+      <cvParam cvRef="MS" accession="MS:1001117" name="theoretical mass" value="1234" unitCvRef="UO" unitAccession="UO:0000221" unitName="dalton"/>
+      <RetentionTimeList>
+        <RetentionTime softwareRef="MaRiMba">
+          <cvParam cvRef="MS" accession="MS:1000897" name="predicted retention time" value="42" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+        </RetentionTime>
+      </RetentionTimeList>
+    </Compound>
+  </CompoundList>
+  <TransitionList>
+    <Transition id="Transition1" peptideRef="Pep1">
+      <Precursor>
+        <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="456.77999999999997" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000041" name="charge state" value="2"/>
+      </Precursor>
+      <Product>
+        <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="678.89999999999998" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000041" name="charge state" value="1"/>
+      </Product>
+      <RetentionTime>
+        <cvParam cvRef="MS" accession="MS:1000895" name="local retention time" value="40.020000000000003" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+        <cvParam cvRef="MS" accession="MS:1000916" name="retention time window lower offset" value="3" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+        <cvParam cvRef="MS" accession="MS:1000917" name="retention time window upper offset" value="3" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+      </RetentionTime>
+      <Prediction softwareRef="MaRiMba">
+        <cvParam cvRef="MS" accession="MS:1000912" name="transition purported from an MS/MS spectrum on a different, specified instrument" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000291" name="linear ion trap" value=""/>
+        <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="10000" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+        <cvParam cvRef="MS" accession="MS:1000906" name="peak intensity rank" value="1"/>
+        <cvParam cvRef="MS" accession="MS:1000907" name="peak targeting suitability rank" value="1"/>
+      </Prediction>
+      <ConfigurationList>
+        <Configuration contactRef="JQP" instrumentRef="QTRAP">
+          <cvParam cvRef="MS" accession="MS:1000502" name="dwell time" value="0.12" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
+          <cvParam cvRef="MS" accession="MS:1000419" name="collision gas" value="argon"/>
+          <cvParam cvRef="MS" accession="MS:1000869" name="collision gas pressure" value="12" unitCvRef="UO" unitAccession="UO:0000110" unitName="pascal"/>
+          <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="26" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+          <cvParam cvRef="MS" accession="MS:1000876" name="cone voltage" value="1200" unitCvRef="UO" unitAccession="UO:0000218" unitName="volt"/>
+          <cvParam cvRef="MS" accession="MS:1000880" name="interchannel delay" value="0.10000000000000001" unitCvRef="UO" unitAccession="UO:0000010" unitName="second"/>
+          <cvParam cvRef="MS" accession="MS:1000877" name="tube lens" value="23" unitCvRef="UO" unitAccession="UO:0000218" unitName="volt"/>
+          <Validation>
+            <cvParam cvRef="MS" accession="MS:1000910" name="transition optimized on specified instrument" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000139" name="4000 Q TRAP" value=""/>
+            <cvParam cvRef="MS" accession="MS:1000042" name="peak intensity" value="4072" unitCvRef="MS" unitAccession="MS:1000905" unitName="percent of base peak times 100"/>
+            <cvParam cvRef="MS" accession="MS:1000906" name="peak intensity rank" value="2"/>
+            <cvParam cvRef="MS" accession="MS:1000907" name="peak targeting suitability rank" value="1"/>
+          </Validation>
+        </Configuration>
+      </ConfigurationList>
+    </Transition>
+    <Transition id="Transition2" compoundRef="Cmp1">
+      <Precursor>
+        <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="456.77999999999997" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000041" name="charge state" value="2"/>
+      </Precursor>
+      <Product>
+        <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="789" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+        <cvParam cvRef="MS" accession="MS:1000041" name="charge state" value="1"/>
+      </Product>
+    </Transition>
+  </TransitionList>
+  <TargetList>
+    <cvParam cvRef="MS" accession="MS:1000920" name="includes supersede excludes" value=""/>
+    <TargetIncludeList>
+      <Target id="Target2" compoundRef="Cmp1">
+        <Precursor>
+          <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="567.88999999999999" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+          <cvParam cvRef="MS" accession="MS:1000041" name="charge state" value="2"/>
+        </Precursor>
+        <RetentionTime>
+          <cvParam cvRef="MS" accession="MS:1000895" name="local retention time" value="12.300000000000001" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+          <cvParam cvRef="MS" accession="MS:1000916" name="retention time window lower offset" value="1" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+          <cvParam cvRef="MS" accession="MS:1000917" name="retention time window upper offset" value="2" unitCvRef="UO" unitAccession="UO:0000031" unitName="minute"/>
+        </RetentionTime>
+        <ConfigurationList>
+          <Configuration contactRef="JQP" instrumentRef="LCQ">
+            <cvParam cvRef="MS" accession="MS:1000045" name="collision energy" value="42" unitCvRef="UO" unitAccession="UO:0000266" unitName="electronvolt"/>
+          </Configuration>
+        </ConfigurationList>
+      </Target>
+    </TargetIncludeList>
+    <TargetExcludeList>
+      <Target id="Target1" peptideRef="Pep1">
+        <Precursor>
+          <cvParam cvRef="MS" accession="MS:1000827" name="isolation window target m/z" value="456.77999999999997" unitCvRef="MS" unitAccession="MS:1000040" unitName="m/z"/>
+          <cvParam cvRef="MS" accession="MS:1000041" name="charge state" value="2"/>
+        </Precursor>
+      </Target>
+    </TargetExcludeList>
+  </TargetList>
+</TraML>

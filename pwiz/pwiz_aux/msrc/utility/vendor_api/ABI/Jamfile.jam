@@ -1,0 +1,155 @@
+#
+# $Id$
+#
+#
+# Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+#
+# Copyright 2009 Vanderbilt University - Nashville, TN 37232
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+
+
+import modules ;
+import path ;
+
+
+path-constant API_PATH : . ;
+
+
+if [ modules.peek : NT ]
+{
+
+import os common ;
+local ProgramFiles = [ os.environ ProgramFiles ] ;
+ProgramFiles ?= "C:\\Program Files" ;
+local ProteinPilot = "$(ProgramFiles)\\Applied Biosystems MDS Analytical Technologies\\ProteinPilot" ;
+if [ path.exists $(API_PATH)\\ABSciex.DataAccess.WiffFileDataReader.dll ]
+{
+    .hasDLLs = true ;
+}
+
+if ! $(.hasDLLs) && [ path.exists $(ProteinPilot)\\ABSciex.DataAccess.WiffFileDataReader.dll ]
+{
+    .hasDLLs = true ;
+    local destination = [ path.native $(API_PATH) ] ;
+    echo "Copying WiffFileDataReader DLLs from \"$(ProteinPilot)\" to \"$(destination)\"" ;
+    echo [ SHELL "copy \"$(ProteinPilot)\\ABSciex.DataAccess.WiffFileDataReader.dll \"  \"$(destination)\"" ] ;
+    echo [ SHELL "copy \"$(ProteinPilot)\\Clearcore.dll\"  \"$(destination)\"" ] ;
+    echo [ SHELL "copy \"$(ProteinPilot)\\ClearCore.Storage.dll\" \"$(destination)\"" ] ;
+    echo [ SHELL "copy \"$(ProteinPilot)\\rscoree.dll\" \"$(destination)\"" ] ;
+    RESCAN ;
+}
+
+rule vendor-api-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties) &&
+       $(.hasDLLs)
+    {
+        # Even though the vendor API is forced to <link>static and <asynch-exceptions>on,
+        # its pwiz and boost dependencies should not follow suit.
+        # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
+        if <link>shared in $(properties) || link=shared in [ modules.peek : ARGV ]
+        {
+            result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<asynch-exceptions>off/<link>shared ;
+        }
+        else
+        {
+            result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<asynch-exceptions>off ;
+        }
+        result += <linkflags>/FORCE:MULTIPLE ; # HACK HACK HACK: the duplicate date_time symbols must be fixed, but how?!
+        result += <assembly>$(API_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll ;
+        result += <assembly>$(API_PATH)/Clearcore.dll ;
+        result += <assembly>$(API_PATH)/ClearCore.Storage.dll ;
+        result += <assembly-dependency>$(API_PATH)/rscoree.dll ;
+        result += <define>PWIZ_READER_ABI ;
+    }
+    else
+    {
+        result += <build>no ;
+    }
+    return $(result) ;
+}
+
+lib pwiz_vendor_api_abi
+    : # sources
+        WiffFile.cpp
+    : # requirements
+
+        # - when boost::thread is link=static, the exe header is tweaked to call
+        #   thread-local storage initialization routines (before main())
+        # - when a /clr object is link=static, the exe header is similarly tweaked
+        #   to initialize the CLR
+        # - these two tweaks are incompatible: either boost::thread must be link=shared,
+        #   or the CLR object must be
+        # HACK: not needed when using hacked tss_pe.cpp
+        #<link>shared
+
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+        <conditional>@vendor-api-requirements
+        <using-clr>true # requires hacked msvc.jam
+        <link>static # <using-clr>true and <link>shared don't mix
+        <address-model>64:<build>no
+    : # default-build
+    : # usage-requirements
+        <conditional>@vendor-api-requirements
+    ;
+
+
+# a test utility, not a unit test
+exe WiffFileTest
+    : WiffFileTest.cpp
+      pwiz_vendor_api_abi
+    ;
+
+explicit WiffFileTest ;
+
+
+install install_pwiz_vendor_api_abi
+    : [ path.glob $(API_PATH) : *.dll ]
+    ;
+
+explicit install_pwiz_vendor_api_abi ;
+
+if [ path.exists $(API_PATH)/ClearCore.dll ]
+{
+# for application build and install
+install install_pwiz_vendor_api_abi_app
+    : ClearCore.dll
+      ClearCore.Storage.dll
+    ;
+}
+else if [ path.exists $(ProteinPilot)\\ClearCore.dll ]
+{
+# for application build and install
+install install_pwiz_vendor_api_abi_app
+    : $(ProteinPilot)\\ClearCore.dll
+      $(ProteinPilot)\\ClearCore.Storage.dll
+    ;
+}
+else
+{
+
+echo "Creating dummy ClearCore.dll and ClearCore.Storage.dll." ;
+SHELL "echo \"This is a dummy ClearCore.dll for Visual Studio projects to reference.\" > \"$(API_PATH)\\stub\\ClearCore.dll\"" ;
+SHELL "echo \"This is a dummy ClearCore.Storage.dll for Visual Studio projects to reference.\" > \"$(API_PATH)\\stub\\ClearCore.Storage.dll\"" ;
+
+# for application build and install
+install install_pwiz_vendor_api_abi_app
+    : stub/ClearCore.dll
+      stub/ClearCore.Storage.dll
+    ;
+}
+explicit install_pwiz_vendor_api_abi_app ;
+}

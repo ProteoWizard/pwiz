@@ -1,0 +1,176 @@
+#
+# $Id$
+#
+#
+# Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
+#
+# Copyright 2009 Vanderbilt University - Nashville, TN 37232
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+#
+# http:#www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+#
+
+
+# TODO: get Data Explorer on TeamCity build agent so this will work
+# build-project T2D ;
+
+
+# ABI WIFF support status:
+# - DLLs are .NET and thus MSVC only
+# - cannot redistribute DLLs and we can't compile the API without them
+
+
+project
+    : requirements 
+        <toolset>gcc:<cxxflags>-fno-strict-aliasing
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+    ;
+
+
+path-constant READER_PATH : . ;
+path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/ABI ;
+path-constant TEST_DATA_PATH : ./Reader_ABI_Test.data ;
+constant READER_PATH : "pwiz_aux/msrc/data/vendor_readers/ABI" ;
+constant READER_NAME : "Reader_ABI" ;
+
+
+import os common ;
+local ProgramFiles = [ os.environ ProgramFiles ] ;
+ProgramFiles ?= "C:\\Program Files" ;
+local ProteinPilot = "$(ProgramFiles)\\Applied Biosystems MDS Analytical Technologies\\ProteinPilot" ;
+if [ path.exists $(API_PATH)\\ABSciex.DataAccess.WiffFileDataReader.dll ] ||
+   [ path.exists $(ProteinPilot)\\ABSciex.DataAccess.WiffFileDataReader.dll ]
+{
+    .hasDLLs = true ;
+}
+
+
+import path ;
+rule vendor-api-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties) && $(.hasDLLs)
+    {
+        result += <source>Reader_ABI_Detail.cpp ;
+    }
+    return $(result) [ vendor-api-usage-requirements $(properties) ] ;
+}
+
+rule vendor-api-usage-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties) &&
+       ! ( <address-model>64 in $(properties) ) &&
+       [ project-exists $(API_PATH) ] &&
+       $(.hasDLLs)
+    {
+        result += <define>PWIZ_READER_ABI ;
+        result += <library>$(API_PATH)//pwiz_vendor_api_abi ;
+    }
+    else if ! $(.warn-once)
+    {
+        .warn-once = true ;
+        if ! <toolset>msvc in $(properties)
+        {
+            echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME) can only identify files, not read them." ;
+        }
+        else if <address-model>64 in $(properties)
+        {
+            echo "[$(READER_PATH)] 64-bit MSVC build: $(READER_NAME) can only identify files, not read them." ;
+        }
+        else if ! [ project-exists $(API_PATH) ]
+        {
+            echo "[$(READER_PATH)] Missing API: $(READER_NAME) can only identify files, not read them." ;
+        }
+        else if ! $(.hasDLLs)
+        {
+            echo "[$(READER_PATH)] Missing DLL: $(READER_NAME) can only identify files, not read them." ;
+        }
+    }
+    return $(result) ;
+}
+
+lib pwiz_aux_msrc_reader_abi
+    : # sources
+        Reader_ABI.cpp
+        SpectrumList_ABI.cpp
+        ChromatogramList_ABI.cpp
+    : # requirements
+        <conditional>@vendor-api-requirements
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+    : # default-build
+    : # usage-requirements
+		<conditional>@vendor-api-usage-requirements
+        <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+    ;
+
+
+import tar ;
+rule test-requirements ( properties * )
+{
+    # decompress test data if available (on any platform)
+    if ! $(.extract-once) && [ path.exists $(TEST_DATA_PATH).tar.bz2 ]
+    {
+        .extract-once = true ;
+        import tar ;
+        tar.extract $(TEST_DATA_PATH).tar.bz2 : : : : check-last-file-only ;
+    }
+
+    local result ;
+    
+    if ! $(.warn-once-test)
+    {
+        .warn-once-test = true ;
+        if ! [ path.exists $(TEST_DATA_PATH) ]
+        {
+            echo "[$(READER_PATH)] Missing test data." ;
+            result += <build>no ;
+        }
+        else if ! <toolset>msvc in $(properties)
+        {
+            echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+        }
+        else if <address-model>64 in $(properties)
+        {
+            echo "[$(READER_PATH)] 64-bit MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+        }
+        else if ! [ project-exists $(API_PATH) ]
+        {
+            echo "[$(READER_PATH)] Missing API: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+        }
+        else if ! $(.hasDLLs)
+        {
+            echo "[$(READER_PATH)] Missing DLL: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+        }
+    }
+    return $(result) ;
+}
+
+local generate-mzML = [ MATCH (--generate-mzML) : [ modules.peek : ARGV ] ] ;
+
+# special run target for Reader_ABI_Test, which needs external data 
+# use --preserve-test-targets to prevent bjam from deleting the executable
+run Reader_ABI_Test.cpp $(PWIZ_ROOT_PATH)/pwiz/utility/misc/VendorReaderTestHarness.cpp
+    : # args
+        \"$(TEST_DATA_PATH)\" $(generate-mzML)
+    : # input-files
+    : # requirements
+        <library>pwiz_aux_msrc_reader_abi
+        <conditional>@test-requirements
+
+        # configuration file sets the "useLegacyV2RuntimeActivationPolicy" attribute
+        <toolset>msvc-10.0:<configuration-file>Reader_ABI_Test.exe.config
+    : # target name
+        Reader_ABI_Test 
+    : # default-build
+    ;
+
