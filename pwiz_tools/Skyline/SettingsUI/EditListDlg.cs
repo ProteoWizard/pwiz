@@ -174,6 +174,11 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnUp_Click(object sender, EventArgs e)
         {
+            MoveItemUp();
+        }
+
+        public void MoveItemUp()
+        {
             int i = listBox.SelectedIndex;
             if (i > 0)
             {
@@ -191,6 +196,11 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         private void btnDown_Click(object sender, EventArgs e)
+        {
+            MoveItemDown();
+        }
+
+        public void MoveItemDown()
         {
             int i = listBox.SelectedIndex;
             if (i < listBox.Items.Count - 1)

@@ -300,14 +300,26 @@ namespace pwiz.Skyline.FileUI
             int indexSel = lbxColumns.SelectedIndex;
             if (indexSel != -1)
             {
-                _columns.RemoveAt(indexSel);
-                lbxColumns.Items.RemoveAt(indexSel);
-                if (indexSel < lbxColumns.Items.Count)
-                    lbxColumns.SelectedIndex = indexSel;
-                else if (indexSel > 0)
-                    lbxColumns.SelectedIndex = indexSel - 1;
+                RemoveIndexSel(indexSel);
             }
             UpdatePivotCheckboxEnabled();
+        }
+
+        private void RemoveIndexSel(int indexSel)
+        {
+            _columns.RemoveAt(indexSel);
+            lbxColumns.Items.RemoveAt(indexSel);
+            if (indexSel < lbxColumns.Items.Count)
+                lbxColumns.SelectedIndex = indexSel;
+            else if (indexSel > 0)
+                lbxColumns.SelectedIndex = indexSel - 1;
+        }
+
+        public void RemoveColumn(string column)
+        {
+            int index = _columns.FindIndex(nodeData => nodeData.Caption == column);
+            if(index != -1)
+                RemoveIndexSel(index);
         }
 
         private void btnUp_Click(object sender, EventArgs e)

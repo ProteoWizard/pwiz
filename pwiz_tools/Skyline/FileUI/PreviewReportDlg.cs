@@ -37,6 +37,7 @@ namespace pwiz.Skyline.FileUI
 
         public DataGridView DataGridView { get { return dataGridView; } }
         public int RowCount { get { return dataGridView.RowCount; } }
+        public int ColumnCount { get { return dataGridView.ColumnCount; } }
         public IEnumerable<string> ColumnHeaderNames
         {
             get
