@@ -29,7 +29,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest
+namespace pwiz.SkylineTestA
 {
     /// <summary>
     /// Summary description for LibrarySettingsTest
@@ -84,7 +84,7 @@ namespace pwiz.SkylineTest
         private static SrmDocument CreateNISTLibraryDocument(out LibraryManager libraryManager,
             out TestDocumentContainer docContainer, out int startRev)
         {
-            SrmDocument docLoaded = CreateNISTLibraryDocument(LibraryLoadTest.TEXT_FASTA_YEAST_LIB,
+            SrmDocument docLoaded = CreateNISTLibraryDocument(ExampleText.TEXT_FASTA_YEAST_LIB,
                                                               false,
                                                               LibraryLoadTest.TEXT_LIB_YEAST_NIST,
                                                               out libraryManager,
@@ -403,7 +403,7 @@ namespace pwiz.SkylineTest
             settings = settings.ChangePeptideLibraries(l => l.ChangeLibrarySpecs(new LibrarySpec[] { hunterSpec, bilbioSpec, nistSpec }));
 
             int startRev;
-            SrmDocument docLoaded = CreateLibraryDocument(settings, LibraryLoadTest.TEXT_FASTA_YEAST_LIB, false,
+            SrmDocument docLoaded = CreateLibraryDocument(settings, ExampleText.TEXT_FASTA_YEAST_LIB, false,
                 docContainer, libraryManager, out startRev);
             AssertEx.IsDocumentState(docLoaded, startRev, 2, 4, 12);
             Assert.IsTrue(HasLibraryInfo(docLoaded, typeof(XHunterSpectrumHeaderInfo)));
@@ -458,7 +458,7 @@ namespace pwiz.SkylineTest
             settings = settings.ChangePeptideLibraries(l => l.ChangeLibrarySpecs(new LibrarySpec[] { hunterSpec }));
 
             int startRev;
-            SrmDocument docLoaded = CreateLibraryDocument(settings, LibraryLoadTest.TEXT_FASTA_YEAST_LIB, false,
+            SrmDocument docLoaded = CreateLibraryDocument(settings, ExampleText.TEXT_FASTA_YEAST_LIB, false,
                 docContainer, libraryManager, out startRev);
             // Peptides should have been chosen, but no transitions, since the spectra are garbage
             AssertEx.IsDocumentState(docLoaded, startRev, 2, 4, 0);

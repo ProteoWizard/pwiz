@@ -25,7 +25,7 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest
+namespace pwiz.SkylineTestA
 {
     /// <summary>
     /// Tests for <see cref="IsotopeLabelType"/> modifications.
@@ -87,7 +87,7 @@ namespace pwiz.SkylineTest
 
             // Add some FASTA
             IdentityPath path, pathRoot = IdentityPath.ROOT;
-            SrmDocument docFasta = document.ImportFasta(new StringReader(LibraryLoadTest.TEXT_FASTA_YEAST_LIB), false, pathRoot, out path);
+            SrmDocument docFasta = document.ImportFasta(new StringReader(ExampleText.TEXT_FASTA_YEAST_LIB), false, pathRoot, out path);
             const int initProt = 2, initPep = 26, initTran = 89;
             AssertEx.IsDocumentState(docFasta, ++startRev, initProt, initPep, initTran);
 
@@ -134,7 +134,7 @@ namespace pwiz.SkylineTest
             var docEmpty = (SrmDocument) docNoAutoLabeled.ChangeChildren(new PeptideGroupDocNode[0]);
 
             // Paste FASTA back in
-            var docRePaste = docEmpty.ImportFasta(new StringReader(LibraryLoadTest.TEXT_FASTA_YEAST_LIB), false, pathRoot, out path);
+            var docRePaste = docEmpty.ImportFasta(new StringReader(ExampleText.TEXT_FASTA_YEAST_LIB), false, pathRoot, out path);
             // This should produce the same document as the original settings change
             Assert.AreEqual(docMulti, docRePaste);
         }
@@ -147,7 +147,7 @@ namespace pwiz.SkylineTest
 
             // Add some FASTA
             IdentityPath path, pathRoot = IdentityPath.ROOT;
-            SrmDocument docFasta = document.ImportFasta(new StringReader(LibraryLoadTest.TEXT_FASTA_YEAST_LIB), false, pathRoot, out path);
+            SrmDocument docFasta = document.ImportFasta(new StringReader(ExampleText.TEXT_FASTA_YEAST_LIB), false, pathRoot, out path);
             const int initProt = 2, initPep = 26, initTran = 89;
             AssertEx.IsDocumentState(docFasta, ++startRev, initProt, initPep, initTran);
 

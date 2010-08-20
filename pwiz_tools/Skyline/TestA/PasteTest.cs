@@ -13,7 +13,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest
+namespace pwiz.SkylineTestA
 {
     /// <summary>
     /// Summary description for PasteTest
@@ -49,7 +49,7 @@ namespace pwiz.SkylineTest
             _yeastDoc = _yeastDoc.ChangeSettings(_yeastDoc.Settings.ChangeTransitionFilter(filter =>
                                                                                            filter.ChangeMeasuredIons(new MeasuredIon[0])));
             IdentityPath path;
-            _yeastDocReadOnly = _yeastDoc = _yeastDoc.ImportFasta(new StringReader(LibraryLoadTest.TEXT_FASTA_YEAST_LIB),
+            _yeastDocReadOnly = _yeastDoc = _yeastDoc.ImportFasta(new StringReader(ExampleText.TEXT_FASTA_YEAST_LIB),
                 false, IdentityPath.ROOT, out path);
 
             _study7DocReadOnly = _study7Doc = CreateStudy7Doc();
@@ -183,9 +183,9 @@ namespace pwiz.SkylineTest
             ResetDocuments();
             settings = _yeastDoc.Settings;
             var modsDefault = settings.PeptideSettings.Modifications;
-            listStaticMods = new List<StaticMod>(modsDefault.StaticModifications) { VAR_MET_OXIDIZED };
+            var listVariableMods = new List<StaticMod>(modsDefault.StaticModifications) { VAR_MET_OXIDIZED };
             _yeastDoc = _yeastDoc.ChangeSettings(settings.ChangePeptideModifications(mods =>
-                mods.ChangeStaticModifications(listStaticMods.ToArray())));
+                mods.ChangeStaticModifications(listVariableMods.ToArray())));
             // Make sure there is an implicitly modified peptide in the yeast document
             Assert.IsTrue(_yeastDoc.Peptides.Contains(nodePep => nodePep.Peptide.Sequence.Contains("C")));
             Assert.IsTrue(_yeastDoc.Peptides.Contains(nodePep => nodePep.HasVariableMods));
@@ -250,7 +250,7 @@ namespace pwiz.SkylineTest
         private static SrmDocument CreateStudy7Doc()
         {
             XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
-            var stream = typeof(ExplicitModTest).Assembly.GetManifestResourceStream("pwiz.SkylineTest.Study7_0-7.sky");
+            var stream = typeof(PasteTest).Assembly.GetManifestResourceStream("pwiz.SkylineTestA.Study7_0-7.sky");
             Assert.IsNotNull(stream);
             Debug.Assert(stream != null);   // Keep ReSharper from warning
             SrmDocument docStudy7 = (SrmDocument)xmlSerializer.Deserialize(stream);

@@ -16,6 +16,8 @@ IF EXIST Interop.EDAL.SxS.manifest del /q Interop.EDAL.SxS.manifest
 IF EXIST MassLynxRaw.dll del /q MassLynxRaw.dll
 IF EXIST Test\bin rmdir /s /q Test\bin
 IF EXIST Test\obj rmdir /s /q Test\obj
+IF EXIST TestA\bin rmdir /s /q TestA\bin
+IF EXIST TestA\obj rmdir /s /q TestA\obj
 IF EXIST TestFunctional\bin rmdir /s /q TestFunctional\bin
 IF EXIST TestFunctional\obj rmdir /s /q TestFunctional\obj
 IF EXIST TestTutorial\bin rmdir /s /q TestTutorial\bin

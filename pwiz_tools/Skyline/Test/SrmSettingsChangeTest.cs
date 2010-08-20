@@ -431,7 +431,7 @@ namespace pwiz.SkylineTest
             SrmDocument document = new SrmDocument(SrmSettingsList.GetDefault0_6());
             IdentityPath path;
             // Add fasta sequences
-            SrmDocument docFasta = document.ImportFasta(new StringReader(SrmDocEditTest.TEXT_FASTA_YEAST),
+            SrmDocument docFasta = document.ImportFasta(new StringReader(ExampleText.TEXT_FASTA_YEAST),
                 false, IdentityPath.ROOT, out path);
             AssertEx.IsDocumentState(docFasta, 1, 2, 98, 311);
             // Insert peptide list at beginnning

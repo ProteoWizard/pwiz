@@ -29,7 +29,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest
+namespace pwiz.SkylineTestA
 {
     /// <summary>
     /// Summary description for VariableModTest
@@ -96,7 +96,7 @@ namespace pwiz.SkylineTest
 
             // Make sure default document produces no variable modifications
             IdentityPath path = IdentityPath.ROOT;
-            var docYeast = document.ImportFasta(new StringReader(SrmDocEditTest.TEXT_FASTA_YEAST), false, path, out path);
+            var docYeast = document.ImportFasta(new StringReader(ExampleText.TEXT_FASTA_YEAST), false, path, out path);
             Assert.AreEqual(0, GetVariableModCount(docYeast));
 
             // Add a single variable modification
@@ -108,7 +108,7 @@ namespace pwiz.SkylineTest
 
             // Make sure variable modifications are added as expected to imported FASTA
             path = IdentityPath.ROOT;
-            var docMoYeast = docMetOxidized.ImportFasta(new StringReader(SrmDocEditTest.TEXT_FASTA_YEAST), false, path, out path);
+            var docMoYeast = docMetOxidized.ImportFasta(new StringReader(ExampleText.TEXT_FASTA_YEAST), false, path, out path);
             Assert.AreEqual(21, GetVariableModCount(docMoYeast));
             AssertEx.IsDocumentState(docMoYeast, 2, 2, 119, 374);
 
@@ -237,7 +237,7 @@ namespace pwiz.SkylineTest
                                      };
             var docVarMods = document.ChangeSettings(settings.ChangePeptideModifications(mods =>
                 mods.ChangeStaticModifications(listStaticMods.ToArray())));
-            var docVmYeast = docVarMods.ImportFasta(new StringReader(SrmDocEditTest.TEXT_FASTA_YEAST), false, path, out path);
+            var docVmYeast = docVarMods.ImportFasta(new StringReader(ExampleText.TEXT_FASTA_YEAST), false, path, out path);
             Assert.AreEqual(315, GetVariableModCount(docVmYeast));
 
             AssertEx.Serializable(docVmYeast, 3, AssertEx.DocumentCloned);

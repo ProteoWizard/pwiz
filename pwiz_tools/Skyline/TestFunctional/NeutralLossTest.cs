@@ -68,10 +68,6 @@ namespace pwiz.SkylineTestFunctional
             Settings.Default.StaticModList.AddRange(StaticModList.GetDefaultsOn());
             Settings.Default.StaticModList.Add(variableLossMod);
 
-            // Clean-up before running the test
-            RunUI(() => SkylineWindow.ModifyDocument("Set test settings",
-                                                     doc => doc.ChangeSettings(SrmSettingsList.GetDefault())));
-
             // Bring up add modification dialog
             var peptideSettingsUI = ShowPeptideSettings();
             var editModsDlg = ShowEditStaticModsDlg(peptideSettingsUI);

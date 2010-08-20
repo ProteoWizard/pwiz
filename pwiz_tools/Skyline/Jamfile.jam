@@ -63,6 +63,8 @@ if [ modules.peek : NT ]
         # HACK: Removed the switch /verbosity:minimal because TeamCity failures can be avoided by doing so
         echo Building Skyline Test in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:Test /nologo
+        echo Building Skyline Test A in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:TestA /nologo
         echo Building Skyline TestFunctional in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:TestFunctional /nologo        
     }
@@ -80,6 +82,23 @@ if [ modules.peek : NT ]
         set name="Skyline unit test"
         $(TEST_PRECOMMAND)
         msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);OutDir=$(OUTPUT_PATH);TestProject=Test /nologo /verbosity:minimal
+        set status=%ERRORLEVEL%
+        $(TEST_POSTCOMMAND)
+    }
+    
+    rule do_skyline_test_a ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions do_skyline_test_a
+    {
+        IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
+        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
+        echo Unit A testing Skyline in $(CONFIGURATION:L) configuration...
+        set name="Skyline unit test A"
+        $(TEST_PRECOMMAND)
+        msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);OutDir=$(OUTPUT_PATH);TestProject=TestA /nologo /verbosity:minimal
         set status=%ERRORLEVEL%
         $(TEST_POSTCOMMAND)
     }
@@ -179,6 +198,18 @@ if [ modules.peek : NT ]
             <dependency>Skyline.exe
         ;
     
+    make TestA.dll
+        : # sources
+        : # actions
+            @do_skyline_test_a
+        : # requirements
+            <link>shared:<build>no
+            <address-model>64:<build>no
+            <conditional>@no-msvc-express
+            <conditional>@build-location
+            <dependency>Skyline.exe
+        ;
+
     make TestFunctional.dll
         : # sources
         : # actions
@@ -202,6 +233,7 @@ if [ modules.peek : NT ]
             <conditional>@build-location
             <dependency>Skyline.exe
             <dependency>Test.dll
+            <dependency>TestA.dll
             <dependency>TestFunctional.dll
         ;
 }

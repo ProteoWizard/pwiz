@@ -70,7 +70,7 @@ namespace pwiz.SkylineTest
         {
             SrmDocument document = new SrmDocument(SrmSettingsList.GetDefault0_6());
             IdentityPath path = IdentityPath.ROOT;
-            SrmDocument docFasta = document.ImportFasta(new StringReader(TEXT_FASTA_YEAST), false, path, out path);
+            SrmDocument docFasta = document.ImportFasta(new StringReader(ExampleText.TEXT_FASTA_YEAST), false, path, out path);
             AssertEx.IsDocumentState(docFasta, 1, 2, 98, 311);
             Assert.AreEqual("YAL001C", ((PeptideGroupDocNode)docFasta.Children[0]).Name);
             Assert.AreEqual("YAL002W", ((PeptideGroupDocNode)docFasta.Children[1]).Name);
@@ -137,7 +137,7 @@ namespace pwiz.SkylineTest
 
             // Re-paste of fasta should have no impact.
             // path = IdentityPath.ROOT; use null as substitute for Root
-            SrmDocument docFasta2 = docFasta.ImportFasta(new StringReader(TEXT_FASTA_YEAST), false, null, out path);
+            SrmDocument docFasta2 = docFasta.ImportFasta(new StringReader(ExampleText.TEXT_FASTA_YEAST), false, null, out path);
             // Returns the original document to avoid adding undo record in running app
             Assert.AreSame(docFasta, docFasta2);
             Assert.IsNull(path);
@@ -259,7 +259,7 @@ namespace pwiz.SkylineTest
         {
             SrmDocument document = new SrmDocument(SrmSettingsList.GetDefault());
             IdentityPath path = IdentityPath.ROOT;
-            SrmDocument docFasta = document.ImportFasta(new StringReader(TEXT_FASTA_YEAST), false, path, out path);
+            SrmDocument docFasta = document.ImportFasta(new StringReader(ExampleText.TEXT_FASTA_YEAST), false, path, out path);
             // 1. From peptide group to root
             SrmDocument docMoved = docFasta.MoveNode(docFasta.GetPathTo(0), IdentityPath.ROOT, out path);
             Assert.AreEqual(1, docMoved.FindNodeIndex(path));
@@ -366,52 +366,6 @@ namespace pwiz.SkylineTest
             Assert.AreNotSame(docPeptides2, docPeptides3);
             AssertEx.IsDocumentState(docPeptides3, 3, 2, 1, 3);
         }
-
-        public const string TEXT_FASTA_YEAST =
-            ">YAL001C TFC3 SGDID:S000000001, Chr I from 151168-151099,151008-147596, reverse complement, Verified ORF, \"Largest of six subunits of the RNA polymerase III transcription initiation factor complex (TFIIIC); part of the TauB domain of TFIIIC that binds DNA at the BoxB promoter sites of tRNA and similar genes; cooperates with Tfc6p in DNA binding\"\n" +
-            "MVLTIYPDELVQIVSDKIASNKGKITLNQLWDISGKYFDLSDKKVKQFVLSCVILKKDIE\n" +
-            "VYCDGAITTKNVTDIIGDANHSYSVGITEDSLWTLLTGYTKKESTIGNSAFELLLEVAKS\n" +
-            "GEKGINTMDLAQVTGQDPRSVTGRIKKINHLLTSSQLIYKGHVVKQLKLKKFSHDGVDSN\n" +
-            "PYINIRDHLATIVEVVKRSKNGIRQIIDLKRELKFDKEKRLSKAFIAAIAWLDEKEYLKK\n" +
-            "VLVVSPKNPAIKIRCVKYVKDIPDSKGSPSFEYDSNSADEDSVSDSKAAFEDEDLVEGLD\n" +
-            "NFNATDLLQNQGLVMEEKEDAVKNEVLLNRFYPLQNQTYDIADKSGLKGISTMDVVNRIT\n" +
-            "GKEFQRAFTKSSEYYLESVDKQKENTGGYRLFRIYDFEGKKKFFRLFTAQNFQKLTNAED\n" +
-            "EISVPKGFDELGKSRTDLKTLNEDNFVALNNTVRFTTDSDGQDIFFWHGELKIPPNSKKT\n" +
-            "PNKNKRKRQVKNSTNASVAGNISNPKRIKLEQHVSTAQEPKSAEDSPSSNGGTVVKGKVV\n" +
-            "NFGGFSARSLRSLQRQRAILKVMNTIGGVAYLREQFYESVSKYMGSTTTLDKKTVRGDVD\n" +
-            "LMVESEKLGARTEPVSGRKIIFLPTVGEDAIQRYILKEKDSKKATFTDVIHDTEIYFFDQ\n" +
-            "TEKNRFHRGKKSVERIRKFQNRQKNAKIKASDDAISKKSTSVNVSDGKIKRRDKKVSAGR\n" +
-            "TTVVVENTKEDKTVYHAGTKDGVQALIRAVVVTKSIKNEIMWDKITKLFPNNSLDNLKKK\n" +
-            "WTARRVRMGHSGWRAYVDKWKKMLVLAIKSEKISLRDVEELDLIKLLDIWTSFDEKEIKR\n" +
-            "PLFLYKNYEENRKKFTLVRDDTLTHSGNDLAMSSMIQREISSLKKTYTRKISASTKDLSK\n" +
-            "SQSDDYIRTVIRSILIESPSTTRNEIEALKNVGNESIDNVIMDMAKEKQIYLHGSKLECT\n" +
-            "DTLPDILENRGNYKDFGVAFQYRCKVNELLEAGNAIVINQEPSDISSWVLIDLISGELLN\n" +
-            "MDVIPMVRNVRPLTYTSRRFEIRTLTPPLIIYANSQTKLNTARKSAVKVPLGKPFSRLWV\n" +
-            "NGSGSIRPNIWKQVVTMVVNEIIFHPGITLSRLQSRCREVLSLHEISEICKWLLERQVLI\n" +
-            "TTDFDGYWVNHNWYSIYEST*\n" +
-            ">YAL002W VPS8 SGDID:S000000002, Chr I from 143709-147533, Verified ORF, \"Membrane-associated hydrophilic protein that interacts with the small GTPase, Vps21p, to facilitate soluble vacuolar protein localization; required for localization and trafficking of the CPY sorting receptor; contains a RING finger motif\"\n" +
-            "MEQNGLDHDSRSSIDTTINDTQKTFLEFRSYTQLSEKLASSSSYTAPPLNEDGPKGVASA\n" +
-            "VSQGSESVVSWTTLTHVYSILGAYGGPTCLYPTATYFLMGTSKGCVLIFNYNEHLQTILV\n" +
-            "PTLSEDPSIHSIRSPVKSIVICSDGTHVAASYETGNICIWNLNVGYRVKPTSEPTNGMTP\n" +
-            "TPALPAVLHIDDHVNKEITGLDFFGARHTALIVSDRTGKVSLYNGYRRGFWQLVYNSKKI\n" +
-            "LDVNSSKEKLIRSKLSPLISREKISTNLLSVLTTTHFALILLSPHVSLMFQETVEPSVQN\n" +
-            "SLVVNSSISWTQNCSRVAYSVNNKISVISISSSDFNVQSASHSPEFAESILSIQWIDQLL\n" +
-            "LGVLTISHQFLVLHPQHDFKILLRLDFLIHDLMIPPNKYFVISRRSFYLLTNYSFKIGKF\n" +
-            "VSWSDITLRHILKGDYLGALEFIESLLQPYCPLANLLKLDNNTEERTKQLMEPFYNLSLA\n" +
-            "ALRFLIKKDNADYNRVYQLLMVVVRVLQQSSKKLDSIPSLDVFLEQGLEFFELKDNAVYF\n" +
-            "EVVANIVAQGSVTSISPVLFRSIIDYYAKEENLKVIEDLIIMLNPTTLDVDLAVKLCQKY\n" +
-            "NLFDLLIYIWNKIFDDYQTPVVDLIYRISNQSEKCVIFNGPQVPPETTIFDYVTYILTGR\n" +
-            "QYPQNLSISPSDKCSKIQRELSAFIFSGFSIKWPSNSNHKLYICENPEEEPAFPYFHLLL\n" +
-            "KSNPSRFLAMLNEVFEASLFNDDNDMVASVGEAELVSRQYVIDLLLDAMKDTGNSDNIRV\n" +
-            "LVAIFIATSISKYPQFIKVSNQALDCVVNTICSSRVQGIYEISQIALESLLPYYHSRTTE\n" +
-            "NFILELKEKNFNKVLFHIYKSENKYASALSLILETKDIEKEYNTDIVSITDYILKKCPPG\n" +
-            "SLECGKVTEVIETNFDLLLSRIGIEKCVTIFSDFDYNLHQEILEVKNEETQQKYLDKLFS\n" +
-            "TPNINNKVDKRLRNLHIELNCKYKSKREMILWLNGTVLSNAESLQILDLLNQDSNFEAAA\n" +
-            "IIHERLESFNLAVRDLLSFIEQCLNEGKTNISTLLESLRRAFDDCNSAGTEKKSCWILLI\n" +
-            "TFLITLYGKYPSHDERKDLCNKLLQEAFLGLVRSKSSSQKDSGGEFWEIMSSVLEHQDVI\n" +
-            "LMKVQDLKQLLLNVFNTYKLERSLSELIQKIIEDSSQDLVQQYRKFLSEGWSIHTDDCEI\n" +
-            "CGKKIWGAGLDPLLFLAWENVQRHQDMISVDLKTPLVIFKCHHGFHQTCLENLAQKPDEY\n" +
-            "SCLICQTESNPKIV*";
 
         public const string TEXT_FASTA_YEAST_FRAGMENT = ">>Sequence{0}\n" +
             "MVLTIYPDELVQIVSDKIASNKGKITLNQLWDISGKYFDLSDKKVKQFVLSCVILKKDIE\n" +

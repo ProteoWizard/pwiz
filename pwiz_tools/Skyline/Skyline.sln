@@ -24,6 +24,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestTutorial", "TestTutoria
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestUtil", "TestUtil\TestUtil.csproj", "{1A76F2B4-353A-4BCF-9D15-70D4B387E480}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestA", "TestA\TestA.csproj", "{F1A6D016-7608-4A7B-8D68-FB32B8344D4B}"
+EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = Skyline.vsmdi
@@ -141,6 +143,16 @@ Global
 		{1A76F2B4-353A-4BCF-9D15-70D4B387E480}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{1A76F2B4-353A-4BCF-9D15-70D4B387E480}.Release|x86.ActiveCfg = Release|x86
 		{1A76F2B4-353A-4BCF-9D15-70D4B387E480}.Release|x86.Build.0 = Release|x86
+		{F1A6D016-7608-4A7B-8D68-FB32B8344D4B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F1A6D016-7608-4A7B-8D68-FB32B8344D4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F1A6D016-7608-4A7B-8D68-FB32B8344D4B}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{F1A6D016-7608-4A7B-8D68-FB32B8344D4B}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{F1A6D016-7608-4A7B-8D68-FB32B8344D4B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F1A6D016-7608-4A7B-8D68-FB32B8344D4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F1A6D016-7608-4A7B-8D68-FB32B8344D4B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F1A6D016-7608-4A7B-8D68-FB32B8344D4B}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{F1A6D016-7608-4A7B-8D68-FB32B8344D4B}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{F1A6D016-7608-4A7B-8D68-FB32B8344D4B}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

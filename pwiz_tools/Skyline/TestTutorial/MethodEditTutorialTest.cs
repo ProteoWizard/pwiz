@@ -54,10 +54,6 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
-            // Skyline Targeted Method Editing
-            RunUI(() => SkylineWindow.ModifyDocument("Set test settings",
-                                                     doc => doc.ChangeSettings(SrmSettingsList.GetDefault())));
-
             // Creating a MS/MS Spectral Library, p. 1
             PeptideSettingsUI peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             RunDlg<BuildLibraryDlg>(peptideSettingsUI.ShowBuildLibraryDlg, buildLibraryDlg =>

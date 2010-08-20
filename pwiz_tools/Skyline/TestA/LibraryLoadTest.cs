@@ -23,7 +23,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest
+namespace pwiz.SkylineTestA
 {
     /// <summary>
     /// Summary description for NistLibraryTest
@@ -197,23 +197,6 @@ namespace pwiz.SkylineTest
             {
             }
         }
-
-        public const string TEXT_FASTA_YEAST_LIB =
-            ">YAL008W FUN14 SGDID:S000000006, Chr I from 136916-137512, Verified ORF, \"Mitochondrial protein of unknown function\"\n" +
-            "MTLAFNMQRLVFRNLNVGKRMFKNVPLWRFNVANKLGKPLTRSVGLGGAGIVAGGFYLMN\n" +
-            "RQPSKLIFNDSLGAAVKQQGPLEPTVGNSTAITEERRNKISSHKQMFLGSLFGVVLGVTV\n" +
-            "AKISILFMYVGITSMLLCEWLRYKGWIRINLKNIKSVIVLKDVDLKKLLIDGLLGTEYMG\n" +
-            "FKVFFTLSFVLASLNANK*\n" +
-            ">YAL010C MDM10 SGDID:S000000008, Chr I from 135667-134186, reverse complement, Verified ORF, \"Subunit of the mitochondrial sorting and assembly machinery (SAM complex); has a role in assembly of the TOM complex, which mediates protein import through the outer membrane; required for normal mitochondrial morphology and inheritance\"\n" +
-            "MLPYMDQVLRAFYQSTHWSTQNSYEDITATSRTLLDFRIPSAIHLQISNKSTPNTFNSLD\n" +
-            "FSTRSRINGSLSYLYSDAQQLEKFMRNSTDIPLQDATETYRQLQPNLNFSVSSANTLSSD\n" +
-            "NTTVDNDKKLLHDSKFVKKSLYYGRMYYPSSDLEAMIIKRLSPQTQFMLKGVSSFKESLN\n" +
-            "VLTCYFQRDSHRNLQEWIFSTSDLLCGYRVLHNFLTTPSKFNTSLYNNSSLSLGAEFWLG\n" +
-            "LVSLSPGCSTTLRYYTHSTNTGRPLTLTLSWQPLFGHISSTYSAKTGTNSTFCAKYDFNL\n" +
-            "YSIESNLSFGCEFWQKKHHLLETNKNNNDKLEPISDELVDINPNSRATKLLHENVPDLNS\n" +
-            "AVNDIPSTLDIPVHKQKLLNDLTYAFSSSLRKIDEERSTIEKFDNKINSSIFTSVWKLST\n" +
-            "SLRDKTLKLLWEGKWRGFLISAGTELVFTRGFQESLSDDEKNDNAISISATDTENGNIPV\n" +
-            "FPAKFGIQFQYST*";
 
         public static readonly LibKey[] KEYS_LIB_YEAST_NIST = new[]
             {
