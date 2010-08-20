@@ -28,7 +28,6 @@
 #include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/data/proteome/Version.hpp"
 #include "svnrev.hpp"
-#include "ScoreDiscriminant.h"
 
 namespace freicore
 {

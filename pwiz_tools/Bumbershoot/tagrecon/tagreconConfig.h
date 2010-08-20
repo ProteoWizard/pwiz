@@ -85,8 +85,8 @@ using namespace pwiz;
     RTCONFIG_VARIABLE( double,			MaxModificationMassPlus,	300.0			) \
 	RTCONFIG_VARIABLE( double,			MaxModificationMassMinus,	150.0			) \
     RTCONFIG_VARIABLE( double,			MinModificationMass,		NEUTRON			) \
-    RTCONFIG_VARIABLE( double,			NTerminusMzTolerance,		0.75 			) \
-    RTCONFIG_VARIABLE( double,			CTerminusMzTolerance,		0.5	    		) \
+    RTCONFIG_VARIABLE( double,			NTerminusMzTolerance,		1.5 			) \
+    RTCONFIG_VARIABLE( double,			CTerminusMzTolerance,		1.25    		) \
     RTCONFIG_VARIABLE( bool,            MassReconMode,              false           ) \
     RTCONFIG_VARIABLE( int,				ResultsPerBatch, 		    200000		    ) \
     RTCONFIG_VARIABLE( string,			PreferredDeltaMasses,	    ""   		    ) \
