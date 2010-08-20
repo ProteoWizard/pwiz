@@ -2381,7 +2381,7 @@ namespace pwiz.Skyline
             NormalizeAreaGraphToTotal(areaPercentViewContextMenuItem.Checked);
         }
 
-        private void NormalizeAreaGraphToTotal(bool normalize)
+        public void NormalizeAreaGraphToTotal(bool normalize)
         {
             Settings.Default.AreaPercentView = normalize;
             Settings.Default.AreaRatioView = false;

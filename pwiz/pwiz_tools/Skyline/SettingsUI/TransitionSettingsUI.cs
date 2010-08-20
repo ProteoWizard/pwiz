@@ -401,6 +401,11 @@ namespace pwiz.Skyline.SettingsUI
             _driverCE.EditList();
         }
 
+        public void AddToCEList()
+        {
+            _driverCE.AddItem();
+        }
+
         public void EditDPList()
         {
             _driverDP.EditList();

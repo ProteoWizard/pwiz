@@ -17,12 +17,12 @@
  * limitations under the License.
  */
 
-using System;
-using System.Text;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -40,7 +40,7 @@ namespace pwiz.SkylineTestTutorial
     {
         
         [TestMethod]
-        public void TestMethod1()
+        public void TestCEOptimizationTutorial()
         {
             TestFilesZip = @"https://brendanx-uw1.gs.washington.edu/tutorials/OptimizeCE.zip";
             RunFunctionalTest();
@@ -76,18 +76,84 @@ namespace pwiz.SkylineTestTutorial
                 exportMethodDlg.OkDialog(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_unscheduled.csv"));
             });
 
-            //RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg =>
-            //{
-            //    importResultsDlg.RadioAddNewChecked = true;
-            //    importResultsDlg.GetDataSourcePathsFile(
-            //        TestFilesDir.GetTestPath(@"OptimizeCE\CE_Vantage_15mTorr_unscheduled.raw"));
-            //    importResultsDlg.NamedPathSets[0] =
-            //        new KeyValuePair<string, string[]>("Unscheduled", importResultsDlg.NamedPathSets[0].Value);
-            //    importResultsDlg.OkDialog();
-            //});
-            //AssertEx.IsDocumentState(SkylineWindow.Document, null, 7, 27, 120);
+            RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg =>
+            {
+                importResultsDlg.RadioAddNewChecked = true;
+                var path =
+                    new[] {new KeyValuePair<string, string[]>("Unscheduled",
+                        new[] { TestFilesDir.GetTestPath("CE_Vantage_15mTorr_unscheduled.raw")})};
+                importResultsDlg.NamedPathSets = path;
+                importResultsDlg.OkDialog();
+            });
+            WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 7, 27, 30, 120);
 
+            // Creating Optimization Methods, p. 5
+            RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List), exportMethodDlg =>
+            {
+                exportMethodDlg.InstrumentType = ExportInstrumentType.Thermo;
+                exportMethodDlg.ExportStrategy = ExportStrategy.Buckets;
+                exportMethodDlg.MaxTransitions = 110;
+                exportMethodDlg.IgnoreProteins = true;
+                exportMethodDlg.OptimizeType = ExportOptimize.CE;
+                exportMethodDlg.MethodType = ExportMethodType.Scheduled;
+                exportMethodDlg.OkDialog(TestFilesDir.GetTestPath(@"OptimizeCE\CE_Vantage_15mTorr.csv"));
+            });
+            
+            // Analyze Optimization Data, p. 7
+            RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg =>
+            {
+                importResultsDlg.RadioAddNewChecked = true;
+                importResultsDlg.OptimizationName = ExportOptimize.CE;
+                importResultsDlg.NamedPathSets = ImportResultsDlg.GetDataSourcePathsDir(TestFilesDirs[0].FullPath).Take(5).ToArray();
+                importResultsDlg.NamedPathSets[0] =
+                     new KeyValuePair<string, string[]>("Optimize CE", importResultsDlg.NamedPathSets[0].Value);
+                importResultsDlg.OkDialog();
+            });
+            RunUI(() => 
+            {
+                SkylineWindow.ShowSingleTransition();
+                SkylineWindow.ShowPeakAreaReplicateComparison();
+                SkylineWindow.ExpandProteins();
+                SkylineWindow.ExpandPeptides();
+                SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0];
+                SkylineWindow.ArrangeGraphsTiled();
 
+            });
+            WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+            RunDlg<FindPeptideDlg>(SkylineWindow.ShowFindPeptideDlg, findPeptideDlg =>
+            {
+                findPeptideDlg.Sequence = "IDALNENK";
+                findPeptideDlg.OkDialog();
+            });
+            RunUI(() => SkylineWindow.NormalizeAreaGraphToTotal(true));
+
+            // Creating a New Equation for CE, p. 9
+            var transitionSettingsUI1 = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
+            var editCEDlg1 = ShowDialog<EditCEDlg>(transitionSettingsUI1.AddToCEList);
+            RunUI(() =>
+            {
+                editCEDlg1.RegressionName = "Thermo Vantage Tutorial";
+                editCEDlg1.UseCurrentData();
+            });
+            RunDlg<GraphRegression>(editCEDlg1.ShowGraph, graphRegression => graphRegression.CloseDialog());
+            RunUI(editCEDlg1.OkDialog);
+            WaitForClosedForm(editCEDlg1);
+            RunUI(transitionSettingsUI1.OkDialog);
+            WaitForClosedForm(transitionSettingsUI1);
+
+            // Optimizing Each Transition, p. 10
+            RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI2 =>
+            {
+                transitionSettingsUI2.UseOptimized = true;
+                transitionSettingsUI2.OptimizeType = OptimizedMethodType.Transition.ToString();
+                transitionSettingsUI2.OkDialog();
+            });
+            RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List), exportMethodDlg =>
+            {
+                exportMethodDlg.ExportStrategy = ExportStrategy.Single;
+                exportMethodDlg.OkDialog(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_optimized.csv"));
+            });
         }
     }
 }
