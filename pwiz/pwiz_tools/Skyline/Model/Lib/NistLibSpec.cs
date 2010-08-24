@@ -319,7 +319,7 @@ namespace pwiz.Skyline.Model.Lib
 
     public abstract class NistLibraryBase : Library
     {
-        private const int FORMAT_VERSION_CACHE = 1;
+        private const int FORMAT_VERSION_CACHE = 2;
 
         private static readonly Regex REGEX_BASENAME = new Regex(@"NIST_(.*)_v(\d+\.\d+)_(\d\d\d\d\-\d\d-\d\d)");
 

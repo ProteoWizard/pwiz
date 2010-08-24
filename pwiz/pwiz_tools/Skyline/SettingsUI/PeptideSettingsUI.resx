@@ -117,7 +117,24 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <metadata name="toolTipSettings.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
+  <data name="comboMatching.ToolTip" xml:space="preserve">
+    <value>Specifies the peptide picking strategy:
+Library - picks only peptides that match a library spectrum
+Filter - ignores library contents for picking and uses the settings on the Filter tab instead
+Library and Filter - picks peptides that match both a library spectrum and the filter
+Library or Filter - picks peptides that match either a library spectrum or the filter</value>
+  </data>
+  <data name="listLibraries.ToolTip" xml:space="preserve">
+    <value>The set of MS/MS spectral libraries matched with the peptides and
+transitions in the current document.  These libraries may be used
+to rank and pick both peptides and transitions in the document.
+
+Library spectra are automatically matched in the order they appear
+in this list, with light spectra matched first, followed by isotope
+labeled spectra in the order the label types are listed in the
+modifications tab.</value>
+  </data>
 </root>

@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.textName = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -44,6 +45,7 @@
             this.label6 = new System.Windows.Forms.Label();
             this.btnShowGraph = new System.Windows.Forms.Button();
             this.btnUseCurrent = new System.Windows.Forms.Button();
+            this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.SuspendLayout();
             // 
             // textName
@@ -54,6 +56,7 @@
             this.textName.Name = "textName";
             this.textName.Size = new System.Drawing.Size(245, 20);
             this.textName.TabIndex = 1;
+            this.helpTip.SetToolTip(this.textName, "Name used to list this equation in the Transition Settings form");
             // 
             // label4
             // 
@@ -92,6 +95,9 @@
             this.textIntercept.Name = "textIntercept";
             this.textIntercept.Size = new System.Drawing.Size(100, 20);
             this.textIntercept.TabIndex = 5;
+            this.helpTip.SetToolTip(this.textIntercept, "Intercept used to calculate the predicted optimal declustering potential\r\nfrom th" +
+                    "e precursor m/z with an equation of the form:\r\n\r\nDP = slope * precursor m/z + in" +
+                    "tercept");
             // 
             // label2
             // 
@@ -108,6 +114,9 @@
             this.textSlope.Name = "textSlope";
             this.textSlope.Size = new System.Drawing.Size(100, 20);
             this.textSlope.TabIndex = 3;
+            this.helpTip.SetToolTip(this.textSlope, "Slope used to calculate the predicted optimal declustering potential\r\nfrom the pr" +
+                    "ecursor m/z with an equation of the form:\r\n\r\nDP = slope * precursor m/z + interc" +
+                    "ept");
             // 
             // label1
             // 
@@ -124,6 +133,9 @@
             this.textStepCount.Name = "textStepCount";
             this.textStepCount.Size = new System.Drawing.Size(100, 20);
             this.textStepCount.TabIndex = 11;
+            this.helpTip.SetToolTip(this.textStepCount, "Number of values used in DP optimization methods where the predicted optimal\r\nDP " +
+                    "is measured, along with this number of values on either side of the predicted\r\nv" +
+                    "alue, each separated by step size units");
             // 
             // label3
             // 
@@ -140,6 +152,9 @@
             this.textStepSize.Name = "textStepSize";
             this.textStepSize.Size = new System.Drawing.Size(100, 20);
             this.textStepSize.TabIndex = 9;
+            this.helpTip.SetToolTip(this.textStepSize, "Interval used in DP optimization methods where the predicted optimal\r\nDP is measu" +
+                    "red, along with step count values on either side of the predicted\r\nvalue, each s" +
+                    "eparated by step size units");
             // 
             // label5
             // 
@@ -174,6 +189,8 @@
             this.btnShowGraph.Size = new System.Drawing.Size(89, 23);
             this.btnShowGraph.TabIndex = 13;
             this.btnShowGraph.Text = "&Show Graph...";
+            this.helpTip.SetToolTip(this.btnShowGraph, "Show a linear regression graph  of  currently imported optimization results data\r" +
+                    "\nfor peptides in this document");
             this.btnShowGraph.UseVisualStyleBackColor = true;
             this.btnShowGraph.Click += new System.EventHandler(this.btnShowGraph_Click);
             // 
@@ -185,6 +202,8 @@
             this.btnUseCurrent.Size = new System.Drawing.Size(89, 23);
             this.btnUseCurrent.TabIndex = 12;
             this.btnUseCurrent.Text = "&Use Results";
+            this.helpTip.SetToolTip(this.btnUseCurrent, "Click to use currently imported optimization results data for peptides\r\nin this d" +
+                    "ocument to calculate equations with linear regression");
             this.btnUseCurrent.UseVisualStyleBackColor = true;
             this.btnUseCurrent.Click += new System.EventHandler(this.btnUseCurrent_Click);
             // 
@@ -217,7 +236,7 @@
             this.Name = "EditDPDlg";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Edit Declustering Potential Regression";
+            this.Text = "Edit Declustering Potential Equation";
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -241,5 +260,6 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Button btnShowGraph;
         private System.Windows.Forms.Button btnUseCurrent;
+        private System.Windows.Forms.ToolTip helpTip;
     }
 }

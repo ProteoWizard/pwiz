@@ -28,6 +28,8 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(TransitionSettingsUI));
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
             this.tabControl1 = new System.Windows.Forms.TabControl();
@@ -83,6 +85,7 @@
             this.label11 = new System.Windows.Forms.Label();
             this.textMaxMz = new System.Windows.Forms.TextBox();
             this.textMinMz = new System.Windows.Forms.TextBox();
+            this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.tabControl1.SuspendLayout();
             this.tabGeneral.SuspendLayout();
             this.tabFilter.SuspendLayout();
@@ -172,6 +175,8 @@
             this.comboOptimizeType.Name = "comboOptimizeType";
             this.comboOptimizeType.Size = new System.Drawing.Size(121, 21);
             this.comboOptimizeType.TabIndex = 10;
+            this.helpTip.SetToolTip(this.comboOptimizeType, "Specifies if optimization is to be done either for all transitions\r\nin each precu" +
+                    "rsor totaled or for each transition separately");
             this.comboOptimizeType.Visible = false;
             // 
             // cbUseOptimized
@@ -182,6 +187,9 @@
             this.cbUseOptimized.Size = new System.Drawing.Size(204, 17);
             this.cbUseOptimized.TabIndex = 8;
             this.cbUseOptimized.Text = "&Use optimization values when present";
+            this.helpTip.SetToolTip(this.cbUseOptimized, "If checked, the any measured CE or DP optimization values will\r\nbe used to select" +
+                    " the value exported in methods and transition\r\nlists.  The value producing the m" +
+                    "aximum total peak area will be\r\nchosen.");
             this.cbUseOptimized.UseVisualStyleBackColor = true;
             this.cbUseOptimized.CheckedChanged += new System.EventHandler(this.cbUseOptimized_CheckedChanged);
             // 
@@ -193,6 +201,7 @@
             this.comboDeclusterPotential.Name = "comboDeclusterPotential";
             this.comboDeclusterPotential.Size = new System.Drawing.Size(121, 21);
             this.comboDeclusterPotential.TabIndex = 7;
+            this.helpTip.SetToolTip(this.comboDeclusterPotential, resources.GetString("comboDeclusterPotential.ToolTip"));
             this.comboDeclusterPotential.SelectedIndexChanged += new System.EventHandler(this.comboDeclusterPotential_SelectedIndexChanged);
             // 
             // label12
@@ -212,6 +221,9 @@
             this.comboCollisionEnergy.Name = "comboCollisionEnergy";
             this.comboCollisionEnergy.Size = new System.Drawing.Size(121, 21);
             this.comboCollisionEnergy.TabIndex = 5;
+            this.helpTip.SetToolTip(this.comboCollisionEnergy, "A linear equation used to predict the optimal collsion energy (CE)\r\nfor each prec" +
+                    "ursor from its mass-to-charge ratio.  Isotope labeled\r\npeptides use the predicte" +
+                    "d CE for the unlabeled form.");
             this.comboCollisionEnergy.SelectedIndexChanged += new System.EventHandler(this.comboCollisionEnergy_SelectedIndexChanged);
             // 
             // label7
@@ -234,6 +246,8 @@
             this.comboIonMass.Name = "comboIonMass";
             this.comboIonMass.Size = new System.Drawing.Size(121, 21);
             this.comboIonMass.TabIndex = 3;
+            this.helpTip.SetToolTip(this.comboIonMass, "Molecular mass calculation strategy (monoisotopic or average)\r\nto use in calculat" +
+                    "ing all product ion masses");
             // 
             // label2
             // 
@@ -255,6 +269,8 @@
             this.comboPrecursorMass.Name = "comboPrecursorMass";
             this.comboPrecursorMass.Size = new System.Drawing.Size(121, 21);
             this.comboPrecursorMass.TabIndex = 1;
+            this.helpTip.SetToolTip(this.comboPrecursorMass, "Molecular mass calculation strategy (monoisotopic or average)\r\nto use in calculat" +
+                    "ing all precursor masses");
             // 
             // label1
             // 
@@ -289,6 +305,8 @@
             this.textIonTypes.Name = "textIonTypes";
             this.textIonTypes.Size = new System.Drawing.Size(76, 20);
             this.textIonTypes.TabIndex = 5;
+            this.helpTip.SetToolTip(this.textIonTypes, "A list of comma separated product ion types (a, b, c, x, y or z) to use\r\nfor calc" +
+                    "ulating potential product ions");
             // 
             // label8
             // 
@@ -307,6 +325,9 @@
             this.cbAutoSelect.Size = new System.Drawing.Size(188, 17);
             this.cbAutoSelect.TabIndex = 7;
             this.cbAutoSelect.Text = "&Auto-select all matching transitions";
+            this.helpTip.SetToolTip(this.cbAutoSelect, "If checked, tranitions are automatically chosen for peptides\r\nusing specified fil" +
+                    "ter and library settings.  Otherwise, all transition\r\nselection must be done by " +
+                    "manual document editing.");
             this.cbAutoSelect.UseVisualStyleBackColor = true;
             // 
             // groupBox1
@@ -333,6 +354,9 @@
             this.textExclusionWindow.Name = "textExclusionWindow";
             this.textExclusionWindow.Size = new System.Drawing.Size(76, 20);
             this.textExclusionWindow.TabIndex = 8;
+            this.helpTip.SetToolTip(this.textExclusionWindow, "A m/z window around the precursor m/z within which transitions\r\nare excluded, or " +
+                    "blank.  A window of 20 will exclude all transitions\r\nwithin 10 on either side of" +
+                    " the precursor m/z.");
             // 
             // label19
             // 
@@ -350,6 +374,7 @@
             this.btnEditSpecialTransitions.Size = new System.Drawing.Size(75, 23);
             this.btnEditSpecialTransitions.TabIndex = 6;
             this.btnEditSpecialTransitions.Text = "&Edit List...";
+            this.helpTip.SetToolTip(this.btnEditSpecialTransitions, "Edit the list of available special product ions");
             this.btnEditSpecialTransitions.UseVisualStyleBackColor = true;
             this.btnEditSpecialTransitions.Click += new System.EventHandler(this.btnEditSpecialTransitions_Click);
             // 
@@ -370,6 +395,8 @@
             this.listAlwaysAdd.Name = "listAlwaysAdd";
             this.listAlwaysAdd.Size = new System.Drawing.Size(187, 64);
             this.listAlwaysAdd.TabIndex = 5;
+            this.helpTip.SetToolTip(this.listAlwaysAdd, "Set of special product ions to measure when present, even outside\r\nthe filtered r" +
+                    "ange");
             // 
             // comboRangeFrom
             // 
@@ -379,6 +406,7 @@
             this.comboRangeFrom.Name = "comboRangeFrom";
             this.comboRangeFrom.Size = new System.Drawing.Size(121, 21);
             this.comboRangeFrom.TabIndex = 1;
+            this.helpTip.SetToolTip(this.comboRangeFrom, "Starting product ion for a filtered range of ions");
             // 
             // label3
             // 
@@ -397,6 +425,7 @@
             this.comboRangeTo.Name = "comboRangeTo";
             this.comboRangeTo.Size = new System.Drawing.Size(121, 21);
             this.comboRangeTo.TabIndex = 3;
+            this.helpTip.SetToolTip(this.comboRangeTo, "End point for a filtered range of product ions");
             this.comboRangeTo.SelectedIndexChanged += new System.EventHandler(this.comboRangeTo_SelectedIndexChanged);
             // 
             // label4
@@ -414,6 +443,8 @@
             this.textIonCharges.Name = "textIonCharges";
             this.textIonCharges.Size = new System.Drawing.Size(76, 20);
             this.textIonCharges.TabIndex = 3;
+            this.helpTip.SetToolTip(this.textIonCharges, "A list of comma separated charge states to use for calculating\r\nproduct ion mass-" +
+                    "to-charge ratios");
             // 
             // textPrecursorCharges
             // 
@@ -421,6 +452,8 @@
             this.textPrecursorCharges.Name = "textPrecursorCharges";
             this.textPrecursorCharges.Size = new System.Drawing.Size(76, 20);
             this.textPrecursorCharges.TabIndex = 1;
+            this.helpTip.SetToolTip(this.textPrecursorCharges, "A list of comma separated charge states to use for calculating\r\nprecursur mass-to" +
+                    "-charge ratios");
             // 
             // label6
             // 
@@ -486,6 +519,7 @@
             this.radioAllAndFiltered.TabIndex = 4;
             this.radioAllAndFiltered.TabStop = true;
             this.radioAllAndFiltered.Text = "From filtered ion charges and types pl&us filtered product ions";
+            this.helpTip.SetToolTip(this.radioAllAndFiltered, resources.GetString("radioAllAndFiltered.ToolTip"));
             this.radioAllAndFiltered.UseVisualStyleBackColor = true;
             // 
             // radioFiltered
@@ -497,6 +531,8 @@
             this.radioFiltered.TabIndex = 5;
             this.radioFiltered.TabStop = true;
             this.radioFiltered.Text = "From filtered pro&duct ions";
+            this.helpTip.SetToolTip(this.radioFiltered, "Apply parameters from the Filter tab to the selection of MS/MS\r\npeaks matching io" +
+                    "ns for ranking");
             this.radioFiltered.UseVisualStyleBackColor = true;
             // 
             // radioAll
@@ -508,6 +544,8 @@
             this.radioAll.TabIndex = 3;
             this.radioAll.TabStop = true;
             this.radioAll.Text = "From filtered ion &charges and types";
+            this.helpTip.SetToolTip(this.radioAll, "Apply only the ion charges and types from the Filter tab to\r\nthe selection of MS/" +
+                    "MS peaks matching ions for ranking");
             this.radioAll.UseVisualStyleBackColor = true;
             // 
             // label14
@@ -534,6 +572,8 @@
             this.textIonCount.Name = "textIonCount";
             this.textIonCount.Size = new System.Drawing.Size(67, 20);
             this.textIonCount.TabIndex = 1;
+            this.helpTip.SetToolTip(this.textIonCount, "Pick this many transitions for each precursor by library spectrum\r\npeak intensity" +
+                    " ranking");
             // 
             // textTolerance
             // 
@@ -541,6 +581,8 @@
             this.textTolerance.Name = "textTolerance";
             this.textTolerance.Size = new System.Drawing.Size(67, 20);
             this.textTolerance.TabIndex = 1;
+            this.helpTip.SetToolTip(this.textTolerance, "Maximum delta allowed when matching predicted product ion\r\nm/z values with measur" +
+                    "ed MS/MS spectral library peak m/z values");
             // 
             // cbLibraryPick
             // 
@@ -550,6 +592,8 @@
             this.cbLibraryPick.Size = new System.Drawing.Size(295, 17);
             this.cbLibraryPick.TabIndex = 3;
             this.cbLibraryPick.Text = "If a library &spectrum is available, pick its most intense ions";
+            this.helpTip.SetToolTip(this.cbLibraryPick, "If checked, the transition filter is based on MS/MS spectral library peaks\r\nwhene" +
+                    "ver peptides are matched to library spectrum.");
             this.cbLibraryPick.UseVisualStyleBackColor = true;
             this.cbLibraryPick.CheckedChanged += new System.EventHandler(this.cbLibraryPick_CheckedChanged);
             // 
@@ -588,6 +632,9 @@
             this.cbDynamicMinimum.Size = new System.Drawing.Size(146, 17);
             this.cbDynamicMinimum.TabIndex = 4;
             this.cbDynamicMinimum.Text = "Dynamic min product m/z";
+            this.helpTip.SetToolTip(this.cbDynamicMinimum, "If checked, minimum m/z value for product ions is calculate\r\ndynamically from the" +
+                    " precursor m/z using a specific equation\r\nprovided by Thermo-Scientific for LTQ " +
+                    "instruments");
             this.cbDynamicMinimum.UseVisualStyleBackColor = true;
             // 
             // textMaxTrans
@@ -596,6 +643,8 @@
             this.textMaxTrans.Name = "textMaxTrans";
             this.textMaxTrans.Size = new System.Drawing.Size(68, 20);
             this.textMaxTrans.TabIndex = 8;
+            this.helpTip.SetToolTip(this.textMaxTrans, "Maximum total number of transitions measurable by the target\r\ninstrument in a sin" +
+                    "gle injection or blank if no maximum applies");
             // 
             // label17
             // 
@@ -612,6 +661,8 @@
             this.textMzMatchTolerance.Name = "textMzMatchTolerance";
             this.textMzMatchTolerance.Size = new System.Drawing.Size(68, 20);
             this.textMzMatchTolerance.TabIndex = 6;
+            this.helpTip.SetToolTip(this.textMzMatchTolerance, "Maximum delta for matching measured transition m/z values\r\nwith predicted transit" +
+                    "ion m/z values");
             // 
             // label16
             // 
@@ -646,6 +697,7 @@
             this.textMaxMz.Name = "textMaxMz";
             this.textMaxMz.Size = new System.Drawing.Size(68, 20);
             this.textMaxMz.TabIndex = 3;
+            this.helpTip.SetToolTip(this.textMaxMz, "Maximum measurable m/z value for the target instrument");
             // 
             // textMinMz
             // 
@@ -653,6 +705,7 @@
             this.textMinMz.Name = "textMinMz";
             this.textMinMz.Size = new System.Drawing.Size(68, 20);
             this.textMinMz.TabIndex = 1;
+            this.helpTip.SetToolTip(this.textMinMz, "Minimum measurable m/z value for the target instrument");
             // 
             // TransitionSettingsUI
             // 
@@ -745,5 +798,6 @@
         private System.Windows.Forms.TextBox textExclusionWindow;
         private System.Windows.Forms.Label label19;
         private System.Windows.Forms.Button btnEditSpecialTransitions;
+        private System.Windows.Forms.ToolTip helpTip;
     }
 }

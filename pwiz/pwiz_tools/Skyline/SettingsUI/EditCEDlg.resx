@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
   <metadata name="Charge.UserAddedColumn" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
@@ -126,4 +129,22 @@
   <metadata name="Intercept.UserAddedColumn" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
   </metadata>
+  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <data name="gridRegression.ToolTip" xml:space="preserve">
+    <value>Slope and intercept values used to calculate the predicted optimal collision
+energy from the precursor m/z with an equation of the form:
+
+CE = slope * precursor m/z + intercept
+
+Equations for multiple precursor charge states are permitted.  If a precursor
+charge stat is not represented in this list, its closest match is used.</value>
+  </data>
+  <data name="textStepCount.ToolTip" xml:space="preserve">
+    <value>Number of CE values used in CE optimization methods where the
+predicted optimal CE is measured, along with this number of values
+on either side of the predicted value, each separated by step size
+CE volts</value>
+  </data>
 </root>

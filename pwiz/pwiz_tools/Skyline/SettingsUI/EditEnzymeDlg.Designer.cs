@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.label1 = new System.Windows.Forms.Label();
             this.textCleavage = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
@@ -38,6 +39,7 @@
             this.btnCancel = new System.Windows.Forms.Button();
             this.textName = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
+            this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.SuspendLayout();
             // 
             // label1
@@ -55,6 +57,7 @@
             this.textCleavage.Name = "textCleavage";
             this.textCleavage.Size = new System.Drawing.Size(160, 20);
             this.textCleavage.TabIndex = 3;
+            this.helpTip.SetToolTip(this.textCleavage, "String of amino acid residues (without separator) at which cleavage occurs");
             // 
             // label2
             // 
@@ -71,6 +74,8 @@
             this.textRestrict.Name = "textRestrict";
             this.textRestrict.Size = new System.Drawing.Size(160, 20);
             this.textRestrict.TabIndex = 5;
+            this.helpTip.SetToolTip(this.textRestrict, "List of amino acid residues (without separator) which\r\ninhibit cleavage when they" +
+                    " are adjacent to the cleavage\r\namino acid residues");
             // 
             // comboDirection
             // 
@@ -83,6 +88,8 @@
             this.comboDirection.Name = "comboDirection";
             this.comboDirection.Size = new System.Drawing.Size(157, 21);
             this.comboDirection.TabIndex = 7;
+            this.helpTip.SetToolTip(this.comboDirection, "Terminal side (N- or C-) of the cleavage amino acid residues\r\nat which cleavage o" +
+                    "ccurs");
             // 
             // label3
             // 
@@ -120,6 +127,7 @@
             this.textName.Name = "textName";
             this.textName.Size = new System.Drawing.Size(160, 20);
             this.textName.TabIndex = 1;
+            this.helpTip.SetToolTip(this.textName, "Name used to list this protease enzyme in the Peptide Settings form");
             // 
             // label4
             // 
@@ -171,5 +179,6 @@
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.TextBox textName;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.ToolTip helpTip;
     }
 }
