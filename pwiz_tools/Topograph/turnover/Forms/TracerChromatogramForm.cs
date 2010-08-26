@@ -121,7 +121,14 @@ namespace pwiz.Topograph.ui.Forms
                 var tracerFormula = entries[i].Key;
                 labels.Add(tracerFormula.ToDisplayString());
                 observedDistribution.Add(i, amounts[tracerFormula]);
-                matchedDistribution.Add(i, bestMatch[tracerFormula]);
+                if (bestMatch == null)
+                {
+                    matchedDistribution.Add(i, 1.0);
+                }
+                else
+                {
+                    matchedDistribution.Add(i, bestMatch[tracerFormula]);
+                }
             }
             _tracerAmountsGraph.GraphPane.AddBar("Observed", observedDistribution, Color.Black);
             _tracerAmountsGraph.GraphPane.AddBar("Predicted", matchedDistribution, Color.Blue);
