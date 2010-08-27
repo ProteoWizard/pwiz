@@ -177,10 +177,7 @@ namespace pwiz.Skyline
             if (newFile)
             {
                 // CONSIDER: Reload last document?
-                SrmSettings settingsDefault = Settings.Default.SrmSettingsList[0];
-                settingsDefault.UpdateLists();
-                SrmDocument documentNew = new SrmDocument(settingsDefault);
-                SetDocument(documentNew, null);
+                NewDocument();
             }
         }
 

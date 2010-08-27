@@ -84,7 +84,8 @@ namespace pwiz.Skyline
                 return;
 
             // Create a new document with the default settings.
-            SrmDocument document = new SrmDocument(Settings.Default.SrmSettingsList[0]);
+            SrmDocument document = ConnectDocument(new SrmDocument(Settings.Default.SrmSettingsList[0]), null) ??
+                                   new SrmDocument(SrmSettingsList.GetDefault());
 
             // Make sure settings lists contain correct values for
             // this document.
@@ -126,10 +127,7 @@ namespace pwiz.Skyline
                 using (new LongOp(this))
                 {
                     XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
-                    SrmDocument document = ConnectLibrarySpecs((SrmDocument)ser.Deserialize(reader), path);
-                    if (document == null)
-                        return false;
-                    document = ConnectBackgroundProteome(document, path);
+                    SrmDocument document = ConnectDocument((SrmDocument)ser.Deserialize(reader), path);
                     if (document == null)
                         return false;   // User cancelled
 
@@ -155,6 +153,12 @@ namespace pwiz.Skyline
             return true;
         }
 
+        private SrmDocument ConnectDocument(SrmDocument document, string path)
+        {
+            document = ConnectLibrarySpecs(document, path);
+            return document != null ? ConnectBackgroundProteome(document, path) : null;
+        }
+
         private SrmDocument ConnectLibrarySpecs(SrmDocument document, string path)
         {
             var settings = document.Settings.ConnectLibrarySpecs(library =>
@@ -162,6 +166,8 @@ namespace pwiz.Skyline
                     LibrarySpec spec;
                     if (Settings.Default.SpectralLibraryList.TryGetValue(library.Name, out spec))
                         return spec;
+                    if (path == null)
+                        return null;
 
                     string fileName = library.FileNameHint;
                     if (fileName != null)
@@ -220,9 +226,10 @@ namespace pwiz.Skyline
         {
             var result = Settings.Default.BackgroundProteomeList.GetBackgroundProteomeSpec(backgroundProteomeSpec.Name);
             if (result != null)
-            {
                 return result;
-            }
+            if (documentPath == null)
+                return null;
+
             string fileName = Path.GetFileName(backgroundProteomeSpec.DatabasePath);
             // First look for the file name in the document directory
             string pathBackgroundProteome = Path.Combine(Path.GetDirectoryName(documentPath), fileName);
@@ -353,6 +360,7 @@ namespace pwiz.Skyline
             if (!DocumentUI.Settings.IsLoaded)
             {
                 MessageDlg.Show(this, "The document must be fully loaded before it can be saved to a new name.");
+                return false;
             }
 
             SaveFileDialog dlg = new SaveFileDialog
