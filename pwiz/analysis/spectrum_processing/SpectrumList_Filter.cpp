@@ -315,6 +315,57 @@ PWIZ_API_DECL bool SpectrumList_FilterPredicate_MS2ActivationType::accept(const 
 	return false; // even with hasNoneOf we don't want MS1
 }
 
+//
+// SpectrumList_FilterPredicate_AnalyzerType
+//
+
+PWIZ_API_DECL SpectrumList_FilterPredicate_AnalyzerType::SpectrumList_FilterPredicate_AnalyzerType(const set<CVID> cvFilterItems_)
+{
+    BOOST_FOREACH(const CVID cvid, cvFilterItems_)
+    {
+        CVTermInfo info = cvTermInfo(cvid); 
+        if (std::find(info.parentsIsA.begin(), info.parentsIsA.end(), MS_mass_analyzer_type) == info.parentsIsA.end())
+        {
+            throw runtime_error("first argument not an analyzer type");
+        }
+
+        cvFilterItems.insert(cvid);
+    }
+
+}
+
+PWIZ_API_DECL bool SpectrumList_FilterPredicate_AnalyzerType::accept(const msdata::Spectrum& spectrum) const
+{
+    bool res = false;
+    Scan dummy;
+    const Scan& scan = spectrum.scanList.scans.empty() ? dummy : spectrum.scanList.scans[0];
+
+    CVID massAnalyzerType = CVID_Unknown;
+    if (scan.instrumentConfigurationPtr.get())
+        try
+        {
+            massAnalyzerType = scan.instrumentConfigurationPtr->componentList.analyzer(0)
+                                        .cvParamChild(MS_mass_analyzer_type).cvid;
+        }
+        catch (out_of_range&)
+        {
+            // ignore out-of-range exception
+        }
+
+    BOOST_FOREACH(const CVID cvid, cvFilterItems)
+    {
+        CVTermInfo info = cvTermInfo(massAnalyzerType); 
+        if (std::find(info.parentsIsA.begin(), info.parentsIsA.end(), cvid) != info.parentsIsA.end() ||
+            massAnalyzerType == cvid)
+        {
+            res = true;
+            break;
+        }
+    }
+
+    return res;
+}
+
 
 } // namespace analysis
 } // namespace pwiz

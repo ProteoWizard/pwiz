@@ -43,7 +43,7 @@ void testMetadata(MSDataCache& cache)
     if (os_) *os_ << "testMetadata()\n";
 
     if (os_) *os_ << "spectrumCount: " << cache.size() << endl;
-    unit_assert(cache.size() == 4);
+    unit_assert(cache.size() == 5);
 
     unit_assert(cache[0].index == 0);
     unit_assert(cache[0].id == "scan=19");

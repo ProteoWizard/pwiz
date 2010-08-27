@@ -121,12 +121,12 @@ void testWrapMSLevel()
 
     SpectrumListPtr& sl = msd.run.spectrumListPtr;
     unit_assert(sl.get());
-    unit_assert(sl->size() == 4);
+    unit_assert(sl->size() == 5);
 
     ostringstream oss;
     oss << "msLevel 2";
     SpectrumListFactory::wrap(msd, oss.str());
-    unit_assert(sl->size() == 1);
+    unit_assert(sl->size() == 2);
     unit_assert(sl->spectrumIdentity(0).id == "scan=20");
 }
 
@@ -140,10 +140,10 @@ void testWrapDefaultArrayLength()
 
         SpectrumListPtr& sl = msd.run.spectrumListPtr;
         unit_assert(sl.get());
-        unit_assert(sl->size() == 4);
+        unit_assert(sl->size() == 5);
 
         SpectrumListFactory::wrap(msd, "defaultArrayLength 0-");
-        unit_assert(sl->size() == 4);
+        unit_assert(sl->size() == 5);
     }
 
     // test filtering out all spectra
@@ -163,7 +163,7 @@ void testWrapDefaultArrayLength()
         SpectrumListPtr& sl = msd.run.spectrumListPtr;
 
         SpectrumListFactory::wrap(msd, "defaultArrayLength 1-");
-        unit_assert(sl->size() == 3);
+        unit_assert(sl->size() == 4);
         unit_assert(sl->find("scan=21") == sl->size());
     }
 
@@ -186,11 +186,104 @@ void testWrapDefaultArrayLength()
         SpectrumListPtr& sl = msd.run.spectrumListPtr;
 
         SpectrumListFactory::wrap(msd, "defaultArrayLength 1-14");
-        unit_assert(sl->size() == 1);
+        unit_assert(sl->size() == 2);
         unit_assert(sl->find("scan=20") == 0);
     }
 }
 
+void testWrapActivation()
+{
+    // test filter by CID activation
+    {
+        MSData msd;
+        examples::initializeTiny(msd);
+
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert(sl.get());
+        unit_assert(sl->size() == 5);
+
+        SpectrumListFactory::wrap(msd, "activation CID");
+        unit_assert(sl->size() == 1);
+    }
+    // test filter by ETD activation
+    {
+        MSData msd;
+        examples::initializeTiny(msd);
+
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert(sl.get());
+        unit_assert(sl->size() == 5);
+
+        SpectrumListFactory::wrap(msd, "activation ETD");
+        unit_assert(sl->size() == 1);
+    }
+    // test invalid argument
+    {
+        MSData msd;
+        examples::initializeTiny(msd);
+
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert(sl.get());
+        unit_assert(sl->size() == 5);
+
+        try
+        {
+            SpectrumListFactory::wrap(msd, "activation UNEXPECTED_INPUT");
+            unit_assert(false);
+        }
+        catch (runtime_error& e)
+        {
+        }
+    }
+
+}
+
+void testWrapMassAnalyzer()
+{
+    // test filter by ITMS analyzer type
+    {
+        MSData msd;
+        examples::initializeTiny(msd);
+
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert(sl.get());
+        unit_assert(sl->size() == 5);
+
+        SpectrumListFactory::wrap(msd, "analyzerType ITMS");
+        size_t siz = sl->size();
+        unit_assert(sl->size() == 5);
+    }
+    // test filter by FTMS analyzer type
+    {
+        MSData msd;
+        examples::initializeTiny(msd);
+
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert(sl.get());
+        unit_assert(sl->size() == 5);
+
+        SpectrumListFactory::wrap(msd, "analyzerType FTMS");
+        unit_assert(sl->size() == 0);
+    }
+    // test invalid argument
+    {
+        MSData msd;
+        examples::initializeTiny(msd);
+
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert(sl.get());
+        unit_assert(sl->size() == 5);
+
+        try
+        {
+            SpectrumListFactory::wrap(msd, "analyzerType UNEXPECTED_INPUT");
+            unit_assert(false);
+        }
+        catch (runtime_error& e)
+        {
+        }
+    }
+}
 
 void test()
 {
@@ -200,6 +293,8 @@ void test()
     testWrapMZWindow();
     testWrapMSLevel();
     testWrapDefaultArrayLength();
+    testWrapActivation();
+    testWrapMassAnalyzer();
 }
 
 

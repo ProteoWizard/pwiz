@@ -394,14 +394,26 @@ vector<PrecursorInfo> getPrecursorInfo(const Spectrum& spectrum,
         }
         if (!it->activation.empty())
         {
-            switch (it->activation.cvParamChild(MS_dissociation_method).cvid)
+            if (it->activation.hasCVParam(MS_ETD))
             {
-                case MS_CID: info.activation = "CID"; break;
-                case MS_ETD: info.activation = "ETD"; break;
-                case MS_ECD: info.activation = "ECD"; break;
-                default: break; /* TODO: log an error, an exception would be too harsh here */
+                info.activation = "ETD";
+
+                if (it->activation.hasCVParam(MS_CID))
+                {
+                    info.activation += "+SA";
+                }
             }
-            info.collisionEnergy = it->activation.cvParam(MS_collision_energy).value;
+            else if (it->activation.hasCVParam(MS_ECD))
+            {
+                info.activation = "ECD";
+            }
+            else if (it->activation.hasCVParam(MS_CID))
+            {
+                info.activation = "CID";
+            }
+
+            if (it->activation.hasCVParam(MS_CID))
+                info.collisionEnergy = it->activation.cvParam(MS_collision_energy).value;
         }
         if (!info.empty()) result.push_back(info);
     }

@@ -173,6 +173,20 @@ public:
 
 };
 
+class PWIZ_API_DECL SpectrumList_FilterPredicate_AnalyzerType : public SpectrumList_Filter::Predicate
+{
+public:
+
+    SpectrumList_FilterPredicate_AnalyzerType(const std::set<pwiz::cv::CVID> filterItem);
+
+    virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const {return boost::logic::indeterminate;}
+    virtual bool accept(const msdata::Spectrum& spectrum) const;
+
+    private:
+    std::set<pwiz::cv::CVID> cvFilterItems;
+
+};
+
 } // namespace analysis
 } // namespace pwiz
 

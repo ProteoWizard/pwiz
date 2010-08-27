@@ -82,7 +82,7 @@ void test(bool indexed)
     // check easy functions
 
     unit_assert(sl.get());
-    unit_assert(sl->size() == 3);
+    unit_assert(sl->size() == 4);
 
     unit_assert(sl->find("scan=19") == 0);
     IndexList indexList = sl->findNameValue("scan", "19");
@@ -199,6 +199,24 @@ void test(bool indexed)
     unit_assert(exampleUserParam.name == "example");
     unit_assert(exampleUserParam.value == "spectrum with no data");
     unit_assert(exampleUserParam.type == "xsd:string");
+
+    // check scan 22 (for ETD precursor activation)
+
+    unit_assert(sl->spectrumIdentity(3).index == 3);
+    unit_assert(sl->spectrumIdentity(3).id == "scan=22");
+
+    s = sl->spectrum(3, false);
+    unit_assert(s.get());
+    unit_assert(s->id == "scan=22");
+    unit_assert(s->precursors.size() == 1);
+    Precursor& precursor22 = s->precursors[0];
+    unit_assert(precursor22.selectedIons.size() == 1);
+    unit_assert(precursor22.selectedIons[0].hasCVParam(MS_selected_ion_m_z));
+    unit_assert(precursor22.selectedIons[0].hasCVParam(MS_peak_intensity));
+    unit_assert(precursor22.selectedIons[0].hasCVParam(MS_charge_state));
+    unit_assert(precursor22.activation.hasCVParam(MS_ETD));
+    unit_assert(precursor22.activation.hasCVParam(MS_CID));
+    unit_assert(precursor22.activation.hasCVParam(MS_collision_energy));
 }
 
 

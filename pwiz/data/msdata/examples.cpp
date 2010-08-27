@@ -185,6 +185,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     spectrumList->spectra.push_back(SpectrumPtr(new Spectrum));
     spectrumList->spectra.push_back(SpectrumPtr(new Spectrum));
     spectrumList->spectra.push_back(SpectrumPtr(new Spectrum));
+    spectrumList->spectra.push_back(SpectrumPtr(new Spectrum));
 
     Spectrum& s19 = *spectrumList->spectra[0];
     s19.id = "scan=19";
@@ -303,36 +304,95 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     s21.scanList.scans.back().instrumentConfigurationPtr = instrumentConfigurationPtr;
     s21.scanList.set(MS_no_combination);
 
-    // spectrum with MALDI spot information
-    Spectrum& s22 = *spectrumList->spectra[3];
-    s22.id = "sample=1 period=1 cycle=22 experiment=1";
-    s22.index = 3;
-    s22.spotID = "A1,42x42,4242x4242";
-    s22.sourceFilePtr = sfp2;
+    // Cover ETD, ETD+SA, and ECD precursor activation mode usage
 
-    s22.set(MS_ms_level, 1);
-    s22.set(MS_centroid_spectrum);
-    s22.set(MS_lowest_observed_m_z, 142.39, MS_m_z);
-    s22.set(MS_highest_observed_m_z, 942.56, MS_m_z);
-    s22.set(MS_base_peak_m_z, 422.42, MS_m_z);
-    s22.set(MS_base_peak_intensity, 42, MS_number_of_counts);
-    s22.set(MS_total_ion_current, 4200);
-    s22.userParams.push_back(UserParam("alternate source file", "to test a different nativeID format"));
-    s22.paramGroupPtrs.push_back(pg1);
+    Spectrum& s22 = *spectrumList->spectra[3];
+    s22.id = "scan=22";
+    s22.index = 3;
+
+    s22.paramGroupPtrs.push_back(pg2);
+    s22.set(MS_ms_level, 2);
+
+    s22.set(MS_profile_spectrum);
+    s22.set(MS_lowest_observed_m_z, 320.39, MS_m_z);
+    s22.set(MS_highest_observed_m_z, 1003.56, MS_m_z);
+    s22.set(MS_base_peak_m_z, 456.347, MS_m_z);
+    s22.set(MS_base_peak_intensity, 23433, MS_number_of_counts);
+    s22.set(MS_total_ion_current, 1.66755e+007);
+
+    s22.precursors.resize(1);
+    Precursor& precursor22 = s22.precursors.front();
+    precursor22.spectrumID= s19.id;
+    precursor22.isolationWindow.set(MS_isolation_window_target_m_z, 545.3, MS_m_z);
+    precursor22.isolationWindow.set(MS_isolation_window_lower_offset, .5, MS_m_z);
+    precursor22.isolationWindow.set(MS_isolation_window_upper_offset, .5, MS_m_z);
+    precursor22.selectedIons.resize(1);
+    precursor22.selectedIons[0].set(MS_selected_ion_m_z, 545.34, MS_m_z);
+    precursor22.selectedIons[0].set(MS_peak_intensity, 120053, MS_number_of_counts);
+    precursor22.selectedIons[0].set(MS_charge_state, 2);
+    precursor22.activation.set(MS_ETD);
+    precursor22.activation.set(MS_CID);
+    precursor22.activation.set(MS_collision_energy, 60.00, UO_electronvolt);
     s22.scanList.scans.push_back(Scan());
     s22.scanList.set(MS_no_combination);
     Scan& s22scan = s22.scanList.scans.back();
     s22scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
-    s22scan.set(MS_scan_start_time, 42.0500, UO_second);
-    s22scan.set(MS_filter_string, "+ c MALDI Full ms [100.00-1000.00]");
+    s22scan.set(MS_scan_start_time, 6.5, UO_minute);
+    s22scan.set(MS_filter_string, "+ c d Full ms2  445.35@etd60.00 [ 110.00-905.00]");
+    s22scan.set(MS_preset_scan_configuration, 4);
     s22scan.scanWindows.resize(1);
-    ScanWindow& window3 = s22scan.scanWindows.front();
+    window2 = s22scan.scanWindows.front();
+    window2.set(MS_scan_window_lower_limit, 110.000000, MS_m_z);
+    window2.set(MS_scan_window_upper_limit, 905.000000, MS_m_z);
+
+    BinaryDataArrayPtr s22_mz(new BinaryDataArray);
+    s22_mz->dataProcessingPtr = dpCompassXtract;
+    s22_mz->set(MS_m_z_array, "", MS_m_z);
+    s22_mz->data.resize(10);
+    for (int i=0; i<10; i++)
+        s22_mz->data[i] = i*2;
+
+    BinaryDataArrayPtr s22_intensity(new BinaryDataArray);
+    s22_intensity->dataProcessingPtr = dpCompassXtract;
+    s22_intensity->set(MS_intensity_array, "", MS_number_of_counts);
+    s22_intensity->data.resize(10);
+    for (int i=0; i<10; i++)
+        s22_intensity->data[i] = (10-i)*2;
+
+    s22.binaryDataArrayPtrs.push_back(s22_mz);
+    s22.binaryDataArrayPtrs.push_back(s22_intensity);
+    s22.defaultArrayLength = s22_mz->data.size();
+
+    // spectrum with MALDI spot information
+    Spectrum& s23 = *spectrumList->spectra[4];
+    s23.id = "sample=1 period=1 cycle=23 experiment=1";
+    s23.index = 4;
+    s23.spotID = "A1,42x42,4242x4242";
+    s23.sourceFilePtr = sfp2;
+
+    s23.set(MS_ms_level, 1);
+    s23.set(MS_centroid_spectrum);
+    s23.set(MS_lowest_observed_m_z, 142.39, MS_m_z);
+    s23.set(MS_highest_observed_m_z, 942.56, MS_m_z);
+    s23.set(MS_base_peak_m_z, 422.42, MS_m_z);
+    s23.set(MS_base_peak_intensity, 42, MS_number_of_counts);
+    s23.set(MS_total_ion_current, 4200);
+    s23.userParams.push_back(UserParam("alternate source file", "to test a different nativeID format"));
+    s23.paramGroupPtrs.push_back(pg1);
+    s23.scanList.scans.push_back(Scan());
+    s23.scanList.set(MS_no_combination);
+    Scan& s23scan = s23.scanList.scans.back();
+    s23scan.instrumentConfigurationPtr = instrumentConfigurationPtr;
+    s23scan.set(MS_scan_start_time, 42.0500, UO_second);
+    s23scan.set(MS_filter_string, "+ c MALDI Full ms [100.00-1000.00]");
+    s23scan.scanWindows.resize(1);
+    ScanWindow& window3 = s23scan.scanWindows.front();
     window3.set(MS_scan_window_lower_limit, 100.000000, MS_m_z);
     window3.set(MS_scan_window_upper_limit, 1000.000000, MS_m_z);
 
-    s22.binaryDataArrayPtrs.push_back(s19_mz);
-    s22.binaryDataArrayPtrs.push_back(s19_intensity);
-    s22.defaultArrayLength = s19_mz->data.size();
+    s23.binaryDataArrayPtrs.push_back(s19_mz);
+    s23.binaryDataArrayPtrs.push_back(s19_intensity);
+    s23.defaultArrayLength = s19_mz->data.size();
 
 
     // chromatograms

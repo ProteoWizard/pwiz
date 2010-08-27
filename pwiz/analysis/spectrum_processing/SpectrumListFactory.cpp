@@ -294,6 +294,10 @@ SpectrumListPtr filterCreator_ActivationType(const MSData& msd, const string& ar
     {
         cvIDs.insert(MS_electron_transfer_dissociation);
     }
+    else
+    {
+        throw runtime_error("[SpectrumListFactory::filterCreator_ActivationType()] invalid filter argument.");
+    }
 
     return SpectrumListPtr(new 
     SpectrumList_Filter(msd.run.spectrumListPtr, 
@@ -301,6 +305,39 @@ SpectrumListPtr filterCreator_ActivationType(const MSData& msd, const string& ar
 
 }
 
+/**
+ *  Handler for --filter "analyzerType".  TODO: this should probably be extended to other
+ *  mass analyzer types (like quadrupole and TOF) - basic implementation serves thermo orbitrap
+ *  sorting of high resolution (Orbitrap) and low resolution (ITMS) scans.
+ */
+
+SpectrumListPtr filterCreator_AnalyzerType(const MSData& msd, const string& arg)
+{
+    istringstream parser(arg);
+    string sAnalyzerType;
+    parser >> sAnalyzerType;
+
+    set<CVID> cvIDs;
+
+    if (sAnalyzerType == "FTMS")
+    {
+        cvIDs.insert(MS_orbitrap);
+        cvIDs.insert(MS_fourier_transform_ion_cyclotron_resonance_mass_spectrometer);
+    }
+    else if (sAnalyzerType == "ITMS")
+    {
+        cvIDs.insert(MS_ion_trap);
+    }
+    else
+    {
+        throw runtime_error("[SpectrumListFactory::filterCreator_AnalyzerType()] invalid filter argument.");
+    }
+
+    return SpectrumListPtr(new 
+    SpectrumList_Filter(msd.run.spectrumListPtr, 
+                        SpectrumList_FilterPredicate_AnalyzerType(cvIDs)));
+
+}
 
 SpectrumListPtr filterCreator_thresholdFilter(const MSData& msd, const string& arg)
 {
@@ -365,6 +402,7 @@ JumpTableEntry jumpTable_[] =
     // MSn Spectrum Processing/Filtering
     {"ETDFilter", "removePrecursor:<default:true|false>  removeChargeReduced:<default:true|false>  removeNeutralLoss:<default:true|false>  blanketRemoval:<default:true|false>  MatchingTolerance:(val <PPM|MZ>) (default:3.1 MZ)", filterCreator_ETDFilter},
     {"activation", "<ETD|CID|SA|HCD> (filter by precursor activation type)", filterCreator_ActivationType},
+    {"analyzerType", "<FTMS|ITMS> (filter by mass analyzer type)", filterCreator_AnalyzerType}
 };
 
 

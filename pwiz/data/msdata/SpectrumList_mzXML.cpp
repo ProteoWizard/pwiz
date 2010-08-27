@@ -123,12 +123,11 @@ struct HandlerPrecursor : public SAXParser::Handler
         if (name == "precursorMz")
         {
             string precursorScanNum("0"), precursorIntensity, precursorCharge,
-                possibleCharges, activationMethod;
+                possibleCharges;
             getAttribute(attributes, "precursorScanNum", precursorScanNum);
             getAttribute(attributes, "precursorIntensity", precursorIntensity);
             getAttribute(attributes, "precursorCharge", precursorCharge);
             getAttribute(attributes, "possibleCharges", possibleCharges);
-            getAttribute(attributes, "activationMethod", activationMethod);
 
             precursor->spectrumID = id::translateScanNumberToNativeID(nativeIdFormat, precursorScanNum);
 
@@ -150,18 +149,6 @@ struct HandlerPrecursor : public SAXParser::Handler
 					precursor->selectedIons.back().cvParams.push_back(CVParam(MS_possible_charge_state, lexical_cast<int>(charge)));
 				}
 			}
-
-            if (activationMethod.empty() || activationMethod == "CID")
-            {
-                // TODO: is it reasonable to assume CID if activation method is unspecified (i.e. older mzXMLs)?
-                precursor->activation.set(MS_CID);
-            }
-            else if (activationMethod == "ETD")
-                precursor->activation.set(MS_ETD);
-            else if (activationMethod == "ECD")
-                precursor->activation.set(MS_ECD);
-            //else
-                // TODO: log about invalid attribute value
 
             return Status::Ok;
         }
@@ -332,6 +319,7 @@ class HandlerScan : public SAXParser::Handler
             //TODO: use this: getAttribute(attributes, "cidGasPressure", cidGasPressure);
             getAttribute(attributes, "startMz", startMz);
             getAttribute(attributes, "endMz", endMz);
+            getAttribute(attributes, "activationMethod", activationMethod_);
 
             spectrum_.id = id::translateScanNumberToNativeID(nativeIdFormat_, scanNumber_);
             if (spectrum_.id.empty())
@@ -444,6 +432,23 @@ class HandlerScan : public SAXParser::Handler
             if (!collisionEnergy_.empty())
                 precursor.activation.set(MS_collision_energy, collisionEnergy_, UO_electronvolt);
 
+            if (activationMethod_.empty() || activationMethod_ == "CID")
+            {
+                // TODO: is it reasonable to assume CID if activation method is unspecified (i.e. older mzXMLs)?
+                precursor.activation.set(MS_CID);
+            }
+            else if (activationMethod_ == "ETD")
+                precursor.activation.set(MS_ETD);
+            else if (activationMethod_ == "ETD+SA")
+            {
+                precursor.activation.set(MS_ETD);
+                precursor.activation.set(MS_CID);
+            }
+            else if (activationMethod_ == "ECD")
+                precursor.activation.set(MS_ECD);
+            //else
+                // TODO: log about invalid attribute value
+
             handlerPrecursor_.precursor = &precursor; 
             return Status(Status::Delegate, &handlerPrecursor_);
         }
@@ -492,6 +497,7 @@ class HandlerScan : public SAXParser::Handler
     bool getBinaryData_;
     string scanNumber_;
     string collisionEnergy_;
+    string activationMethod_;
     HandlerPeaks handlerPeaks_;
     HandlerPrecursor handlerPrecursor_;
     CVID nativeIdFormat_;
