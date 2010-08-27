@@ -1470,23 +1470,23 @@ namespace pwiz.Skyline.Model
         public static UIntPtr HKEY_LOCAL_MACHINE = new UIntPtr(0x80000002u);
         public static UIntPtr HKEY_CURRENT_USER = new UIntPtr(0x80000001u);
 
-        public const int KEY_ALL_ACCESS = 0x3F;
+        public const int KEY_READ = 0x20019;  
 
         public const int REG_SZ = 1;
 // ReSharper restore InconsistentNaming
 
         public static string GetPathFromProgId(string progId)
         {
-            String clsid = RegQueryKeyValue(HKEY_LOCAL_MACHINE, @"Software\Classes\" + progId + @"\CLSID");
+            String clsid = RegQueryKeyValue(HKEY_LOCAL_MACHINE, @"SOFTWARE\Classes\" + progId + @"\CLSID");
             if (clsid == null)
                 return null;
-            return RegQueryKeyValue(HKEY_LOCAL_MACHINE, @"Software\Classes\CLSID\" + clsid + @"\InprocServer32");
+            return RegQueryKeyValue(HKEY_LOCAL_MACHINE, @"SOFTWARE\Classes\CLSID\" + clsid + @"\InprocServer32");
         }
 
         public static string RegQueryKeyValue(UIntPtr hKey, string path)
         {
             UIntPtr hKeyQuery;
-            if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, path, 0, KEY_ALL_ACCESS, out hKeyQuery) != 0)
+            if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, path, 0, KEY_READ, out hKeyQuery) != 0)
                 return null;
 
             uint size = 1024;

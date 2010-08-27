@@ -22,6 +22,8 @@ IF EXIST TestFunctional\bin rmdir /s /q TestFunctional\bin
 IF EXIST TestFunctional\obj rmdir /s /q TestFunctional\obj
 IF EXIST TestTutorial\bin rmdir /s /q TestTutorial\bin
 IF EXIST TestTutorial\obj rmdir /s /q TestTutorial\obj
+IF EXIST TestUtil\bin rmdir /s /q TestUtil\bin
+IF EXIST TestUtil\obj rmdir /s /q TestUtil\obj
 IF EXIST TestResults rmdir /s /q TestResults
 IF EXIST ..\Shared\ProteomeDb\bin rmdir /s /q ..\Shared\ProteomeDb\bin
 IF EXIST ..\Shared\ProteomeDb\obj rmdir /s /q ..\Shared\ProteomeDb\obj

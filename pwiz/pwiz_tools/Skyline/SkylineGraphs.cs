@@ -1589,7 +1589,8 @@ namespace pwiz.Skyline
 
         private DockPane FindPane(IDockableForm dockableForm)
         {
-            int iPane = dockPanel.Panes.IndexOf(pane => pane.Contents.Contains(dockableForm));
+            // Floating panes may be created but hidden for windows that allow floating
+            int iPane = dockPanel.Panes.IndexOf(pane => !pane.IsHidden && pane.Contents.Contains(dockableForm));
             return (iPane != -1 ? dockPanel.Panes[iPane] : null);
         }
 
@@ -2610,6 +2611,8 @@ namespace pwiz.Skyline
             {
                 if (order != dlg.GroupOrder || reversed != dlg.Reversed)
                     listGraphs = GetArrangeableGraphs(dlg.GroupOrder, dlg.Reversed);
+                if (listGraphs.Count < 2)
+                    return;
 
                 using (new DockPanelLayoutLock(dockPanel, true))
                 {
@@ -2624,8 +2627,9 @@ namespace pwiz.Skyline
             ArrangeGraphsTabbed(listGraphs);
 
             // Figure out how to distribute the panes into rows and columns
-            double width = dockPanel.Width;
-            double height = dockPanel.Height;
+            var documentPane = FindPane(listGraphs[0]);
+            double width = documentPane.Width;
+            double height = documentPane.Height;
             int rows = 1;
             while ((height/rows) / (width/(groups/rows + (groups % rows > 0 ? 1 : 0))) > MAX_TILED_ASPECT_RATIO)
                 rows++;
@@ -2682,7 +2686,7 @@ namespace pwiz.Skyline
                 }                
             }
 
-            // Place to forms in the dock panel
+            // Place the forms in the dock panel
             // Rows first
             for (int i = 1; i < rows; i++)
             {
