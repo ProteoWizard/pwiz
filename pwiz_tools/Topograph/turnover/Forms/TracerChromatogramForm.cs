@@ -18,6 +18,9 @@ namespace pwiz.Topograph.ui.Forms
     public partial class TracerChromatogramForm : AbstractChromatogramForm
     {
         private ZedGraphControl _tracerAmountsGraph;
+        private IDictionary<TracerFormula, IPointList> _points;
+        private IPointList _scorePoints;
+        private bool _smoothed;
         public TracerChromatogramForm(PeptideFileAnalysis peptideFileAnalysis) 
             : base(peptideFileAnalysis)
         {
@@ -145,6 +148,11 @@ namespace pwiz.Topograph.ui.Forms
 
         private IDictionary<TracerFormula,IPointList> GetPoints(out IPointList scorePoints)
         {
+            if (_points != null && _smoothed == Smooth)
+            {
+                scorePoints = _scorePoints;
+                return _points;
+            }
             var pointDict = new Dictionary<TracerFormula, IList<double>>();
             var chromatograms = new Dictionary<MzKey, IList<double>>();
             bool smooth = Smooth;
@@ -197,6 +205,9 @@ namespace pwiz.Topograph.ui.Forms
                 points.Add(entry.Key, new PointPairList(times, entry.Value.ToArray()));
             }
             scorePoints = new PointPairList(times, scores);
+            _points = points;
+            _scorePoints = scorePoints;
+            _smoothed = smooth;
             return points;
         }
 

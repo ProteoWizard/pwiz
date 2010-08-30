@@ -553,6 +553,10 @@ namespace pwiz.Topograph.MsData
                     {
                         continue;
                     }
+                    if (analysis.Times.Count == 0)
+                    {
+                        continue;
+                    }
                     dbPeptideFileAnalysis.Times = analysis.Times.ToArray();
                     dbPeptideFileAnalysis.ScanIndexes = analysis.ScanIndexes.ToArray();
                     dbPeptideFileAnalysis.ChromatogramCount = analysis.Chromatograms.Count;
