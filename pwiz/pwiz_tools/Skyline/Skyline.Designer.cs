@@ -1488,7 +1488,7 @@ namespace pwiz.Skyline
             // 
             this.statusGeneral.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.statusGeneral.Name = "statusGeneral";
-            this.statusGeneral.Size = new System.Drawing.Size(414, 17);
+            this.statusGeneral.Size = new System.Drawing.Size(246, 17);
             this.statusGeneral.Spring = true;
             this.statusGeneral.Text = "Ready";
             this.statusGeneral.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -1504,7 +1504,7 @@ namespace pwiz.Skyline
             this.statusSequences.AutoSize = false;
             this.statusSequences.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.statusSequences.Name = "statusSequences";
-            this.statusSequences.Size = new System.Drawing.Size(70, 17);
+            this.statusSequences.Size = new System.Drawing.Size(75, 17);
             this.statusSequences.Text = "0 prot";
             this.statusSequences.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
@@ -1513,7 +1513,7 @@ namespace pwiz.Skyline
             this.statusPeptides.AutoSize = false;
             this.statusPeptides.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.statusPeptides.Name = "statusPeptides";
-            this.statusPeptides.Size = new System.Drawing.Size(75, 17);
+            this.statusPeptides.Size = new System.Drawing.Size(85, 17);
             this.statusPeptides.Text = "0 pep";
             this.statusPeptides.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
@@ -1522,7 +1522,7 @@ namespace pwiz.Skyline
             this.statusPrecursors.AutoSize = false;
             this.statusPrecursors.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.statusPrecursors.Name = "statusPrecursors";
-            this.statusPrecursors.Size = new System.Drawing.Size(75, 17);
+            this.statusPrecursors.Size = new System.Drawing.Size(85, 17);
             this.statusPrecursors.Text = "0 prec";
             this.statusPrecursors.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
@@ -1530,7 +1530,7 @@ namespace pwiz.Skyline
             // 
             this.statusIons.AutoSize = false;
             this.statusIons.Name = "statusIons";
-            this.statusIons.Size = new System.Drawing.Size(85, 17);
+            this.statusIons.Size = new System.Drawing.Size(95, 17);
             this.statusIons.Text = "0 tran";
             this.statusIons.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
@@ -1744,6 +1744,7 @@ namespace pwiz.Skyline
             this.sequenceTree.Name = "sequenceTree";
             this.sequenceTree.Size = new System.Drawing.Size(271, 444);
             this.sequenceTree.TabIndex = 2;
+            this.sequenceTree.UseKeysOverride = false;
             this.sequenceTree.PickedChildrenEvent += new System.EventHandler<pwiz.Skyline.Controls.SeqNode.PickedChildrenEventArgs>(this.sequenceTree_PickedChildrenEvent);
             this.sequenceTree.AfterNodeEdit += new System.EventHandler<System.Windows.Forms.NodeLabelEditEventArgs>(this.sequenceTree_AfterLabelEdit);
             this.sequenceTree.MouseUp += new System.Windows.Forms.MouseEventHandler(this.sequenceTree_MouseUp);

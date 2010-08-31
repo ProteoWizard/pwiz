@@ -146,6 +146,12 @@
     <Compile Include="Alerts\AboutDlg.Designer.cs">
       <DependentUpon>AboutDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Alerts\FilterMatchedPeptidesDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\FilterMatchedPeptidesDlg.Designer.cs">
+      <DependentUpon>FilterMatchedPeptidesDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Alerts\MultiButtonMsgDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -587,6 +593,8 @@
     <Compile Include="SettingsUI\BuildLibraryNotification.Designer.cs">
       <DependentUpon>BuildLibraryNotification.cs</DependentUpon>
     </Compile>
+    <Compile Include="SettingsUI\ViewLibraryPepInfo.cs" />
+    <Compile Include="SettingsUI\ViewLibraryPepMatching.cs" />
     <Compile Include="SettingsUI\SettingsListBoxDriver.cs" />
     <Compile Include="SettingsUI\SettingsListComboDriver.cs">
     </Compile>
@@ -908,6 +916,9 @@
     <EmbeddedResource Include="Alerts\MissingBackgroundProteomeDlg.resx">
       <DependentUpon>MissingBackgroundProteomeDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Alerts\FilterMatchedPeptidesDlg.resx">
+      <DependentUpon>FilterMatchedPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ShareTypeDlg.resx">
       <DependentUpon>ShareTypeDlg.cs</DependentUpon>

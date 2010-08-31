@@ -1094,9 +1094,12 @@ namespace pwiz.Skyline
             {
                 node = node.NextVisibleNode;
             }
+            bool usingKeysOverride = SequenceTree.UseKeysOverride;
+            SequenceTree.UseKeysOverride = true;
             SequenceTree.KeysOverride = Keys.Shift;
             SequenceTree.SelectedNode = node;
             SequenceTree.KeysOverride = Keys.None;
+            SequenceTree.UseKeysOverride = usingKeysOverride;
         }
 
         

@@ -114,11 +114,11 @@ namespace pwiz.SkylineTestFunctional
             // Initially, peptide with index 0 should be selected
             WaitForConditionUI(() => pepList.SelectedIndex != -1);
 
-            ViewLibraryDlg.PepInfo previousPeptide = new ViewLibraryDlg.PepInfo();
+            ViewLibraryPepInfo previousPeptide = new ViewLibraryPepInfo();
             int peptideIndex = -1;
             RunUI(() =>
             {
-                previousPeptide = (ViewLibraryDlg.PepInfo)pepList.SelectedItem;
+                previousPeptide = (ViewLibraryPepInfo)pepList.SelectedItem;
                 peptideIndex = pepList.SelectedIndex;
             });
             Assert.IsNotNull(previousPeptide);
@@ -132,10 +132,10 @@ namespace pwiz.SkylineTestFunctional
                 pepList.SelectedIndex = selectPeptideIndex;
             });
 
-            ViewLibraryDlg.PepInfo selPeptide = new ViewLibraryDlg.PepInfo();
+            ViewLibraryPepInfo selPeptide = new ViewLibraryPepInfo();
             RunUI(() =>
             {
-                selPeptide = (ViewLibraryDlg.PepInfo)pepList.SelectedItem;
+                selPeptide = (ViewLibraryPepInfo)pepList.SelectedItem;
             });
             Assert.IsNotNull(selPeptide);
             Assert.AreNotEqual(previousPeptide, selPeptide);
@@ -150,7 +150,7 @@ namespace pwiz.SkylineTestFunctional
                       });
             RunUI(() =>
             {
-                previousPeptide = (ViewLibraryDlg.PepInfo)pepList.SelectedItem;
+                previousPeptide = (ViewLibraryPepInfo)pepList.SelectedItem;
             });
 
             // Click "Previous" link and ensure the peptide selected changes
@@ -163,7 +163,7 @@ namespace pwiz.SkylineTestFunctional
                       });
             RunUI(() =>
             {
-                selPeptide = (ViewLibraryDlg.PepInfo)pepList.SelectedItem;
+                selPeptide = (ViewLibraryPepInfo)pepList.SelectedItem;
             });
             Assert.AreNotEqual(previousPeptide, selPeptide);
 
@@ -181,7 +181,7 @@ namespace pwiz.SkylineTestFunctional
             int pepsCount = 0;
             RunUI(() =>
             {
-                selPeptide = (ViewLibraryDlg.PepInfo)pepList.SelectedItem;
+                selPeptide = (ViewLibraryPepInfo)pepList.SelectedItem;
                 pepsCount = pepList.Items.Count;
             });
             Assert.AreEqual(_testLibs[0].UniquePeptide, selPeptide.DisplayString);
@@ -205,10 +205,10 @@ namespace pwiz.SkylineTestFunctional
                 pepTextBox.Focus();
                 pepTextBox.Text = "";
             });
-            selPeptide = new ViewLibraryDlg.PepInfo();
+            selPeptide = new ViewLibraryPepInfo();
             RunUI(() =>
             {
-                selPeptide = (ViewLibraryDlg.PepInfo)pepList.SelectedItem;
+                selPeptide = (ViewLibraryPepInfo)pepList.SelectedItem;
                 pepsCount = pepList.Items.Count;
             });
             Assert.IsNotNull(selPeptide);
@@ -227,7 +227,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(libSelected, _testLibs[1].Name);
             RunUI(() =>
             {
-                selPeptide = (ViewLibraryDlg.PepInfo)pepList.SelectedItem;
+                selPeptide = (ViewLibraryPepInfo)pepList.SelectedItem;
             });
             Assert.IsNotNull(selPeptide);
             Assert.AreNotEqual(previousPeptide, selPeptide);

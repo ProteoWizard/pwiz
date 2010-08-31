@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -99,14 +98,14 @@ namespace pwiz.Skyline.SettingsUI
         public int LineWidth { get; set; }
         public float FontSize { get; set; }
 
-        private PepInfo[] _peptides;
+        private ViewLibraryPepInfo[] _peptides;
         private byte[] _lookupPool;
 
         private bool _activated;
 
         private readonly NodeTip _nodeTip;
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
-        private PepInfo? _lastTipNode;
+        private ViewLibraryPepInfo? _lastTipNode;
         private ITipProvider _lastTipProvider;
 
         private ModFontHolder ModFonts { get; set; }
@@ -192,11 +191,6 @@ namespace pwiz.Skyline.SettingsUI
             comboLibrary.SelectedItem = SelectedLibraryName;
 
             comboLibrary.EndUpdate();
-        }
-
-        public PeptideMatchHelper InitializePeptideMatcher()
-        {
-            return new PeptideMatchHelper(Document, _selectedLibrary, _selectedSpec, _lookupPool, _peptides.ToList());
         }
 
         /// <summary>
@@ -303,7 +297,7 @@ namespace pwiz.Skyline.SettingsUI
                             string.Format("The library {0} is no longer part of the document settings. Reload the library explorer?", 
                             _selectedLibName),
                             "Yes", "No");
-                    var result = reloadExplorerMsg.ShowDialog();
+                    var result = reloadExplorerMsg.ShowDialog(this);
                     if (result == DialogResult.Yes)
                     {
                         if (newSpectralLibraryList.Count == 0)
@@ -391,7 +385,7 @@ namespace pwiz.Skyline.SettingsUI
                     });
                     if (status.IsError)
                     {
-                        MessageBox.Show(this, status.ErrorException.Message);
+                        MessageBox.Show(this, status.ErrorException.Message, Program.Name);
                     }
                 }
                 catch (Exception x)
@@ -412,13 +406,13 @@ namespace pwiz.Skyline.SettingsUI
         private void InitializePeptides()
         {
             var lookupPool = new List<byte>();
-            _peptides = new PepInfo[_selectedLibrary != null ? _selectedLibrary.Count : 0];
+            _peptides = new ViewLibraryPepInfo[_selectedLibrary != null ? _selectedLibrary.Count : 0];
             if (_selectedLibrary != null)
             {
                 int index = 0;
                 foreach (var libKey in _selectedLibrary.Keys)
                 {
-                    var pepInfo = new PepInfo(libKey, lookupPool);
+                    var pepInfo = new ViewLibraryPepInfo(libKey, lookupPool);
                     _peptides[index] = pepInfo;
                     index++;
                 }
@@ -473,8 +467,8 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private void UpdateListPeptide(int selectPeptideIndex)
         {
-            var pepMatcher = new PeptideMatchHelper(Document, _selectedLibrary, _selectedSpec, _lookupPool,
-                            _peptides.ToList());
+            var pepMatcher = new ViewLibraryPepMatching(Document,
+                _selectedLibrary, _selectedSpec, _lookupPool, _peptides.ToList());
             listPeptide.BeginUpdate();
             listPeptide.Items.Clear();
             if (_currentRange.Count > 0)
@@ -483,7 +477,7 @@ namespace pwiz.Skyline.SettingsUI
                 int end = _pageInfo.EndIndex;
                 for (int i = start; i < end; i++)
                 {
-                    PepInfo pepInfo = _peptides[i];
+                    ViewLibraryPepInfo pepInfo = _peptides[i];
                     int charge = pepInfo.Key.Charge;
                     var diff = new SrmSettingsDiff(true, false, true, false, false, false);
                     listPeptide.Items.Add(pepMatcher.AssociateMatchingPeptide(pepInfo, charge, diff));
@@ -523,8 +517,8 @@ namespace pwiz.Skyline.SettingsUI
                         var rankCharges = settings.TransitionSettings.Filter.ProductCharges;
 
                         ExplicitMods mods = null;
-                        var pepInfo = (PepInfo)listPeptide.SelectedItem;
-                        var nodPep = pepInfo.Peptide;
+                        var pepInfo = (ViewLibraryPepInfo)listPeptide.SelectedItem;
+                        var nodPep = pepInfo.PeptideNode;
                         if (nodPep != null)
                         {
                             mods = nodPep.ExplicitMods;
@@ -641,7 +635,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (_currentRange.Count > 0)
             {
-                string selPeptide = ((PepInfo)listPeptide.SelectedItem).DisplayString;
+                string selPeptide = ((ViewLibraryPepInfo)listPeptide.SelectedItem).DisplayString;
                 string selPeptideAASequence = Regex.Replace(selPeptide, REGEX_MODIFICATION_PATTERN, string.Empty);
 
                 Range selPeptideRange = BinaryRangeSearch(selPeptideAASequence, new Range(_currentRange));
@@ -780,19 +774,18 @@ namespace pwiz.Skyline.SettingsUI
 
         private IEnumerable<TextSequence> GetTextSequences(DrawItemEventArgs e)
         {
-            PepInfo pepInfo = ((PepInfo)listPeptide.Items[e.Index]);
-            string sequence = pepInfo.DisplayString;
+            ViewLibraryPepInfo pepInfo = ((ViewLibraryPepInfo)listPeptide.Items[e.Index]);
             IList<TextSequence> textSequences = new List<TextSequence>();
             // If a matching peptide exists, use the text sequences for that peptide.
-            if (pepInfo.Peptide != null)
+            if (pepInfo.HasPeptide)
             {
-                textSequences = PeptideTreeNode.CreateTextSequences(pepInfo.Peptide, Document.Settings,
-                    pepInfo.PlainDisplayString, null, new ModFontHolder(this)).ToList();
+                textSequences = PeptideTreeNode.CreateTextSequences(pepInfo.PeptideNode, Document.Settings,
+                    pepInfo.GetPlainDisplayString(_lookupPool), null, new ModFontHolder(this));
             }
             // If no modifications, use a single plain test sequence
-            else if (!sequence.Contains('['))
+            else if (!pepInfo.IsModified)
             {
-                textSequences.Add(CreateTextSequence(sequence, false));
+                textSequences.Add(CreateTextSequence(pepInfo.DisplayString, false));
             }
             // Otherwise bold-underline all modifications
             else
@@ -800,6 +793,7 @@ namespace pwiz.Skyline.SettingsUI
                 var sb = new StringBuilder(128);
                 bool inMod = false;
 
+                string sequence = pepInfo.DisplayString;
                 for (int i = 0; i < sequence.Length; i++)
                 {
                     bool isMod = i < sequence.Length - 1 && sequence[i + 1] == '[';
@@ -850,7 +844,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 // Draw the current item text based on the current Font 
                 // and a black brush.
-                TextRenderer.DrawText(e.Graphics, ((PepInfo)listPeptide.Items[e.Index]).DisplayString,
+                TextRenderer.DrawText(e.Graphics, ((ViewLibraryPepInfo)listPeptide.Items[e.Index]).DisplayString,
                                       e.Font, e.Bounds, e.ForeColor, backColor,
                                       FORMAT_PLAIN);
             }
@@ -858,10 +852,10 @@ namespace pwiz.Skyline.SettingsUI
             {
                 // Draw formatted text and the peptide image, if a peptide has been successfully
                 // associated with this item
-                PepInfo pepInfo = ((PepInfo)listPeptide.Items[e.Index]);
+                ViewLibraryPepInfo pepInfo = ((ViewLibraryPepInfo)listPeptide.Items[e.Index]);
                 Rectangle bounds = e.Bounds;
                 var imgWidth = _peptideImg.Width;
-                if (pepInfo.Peptide != null)
+                if (pepInfo.PeptideNode != null)
                     e.Graphics.DrawImage(_peptideImg, bounds.Left, bounds.Top, imgWidth, bounds.Height);
                 Rectangle rectDraw = new Rectangle(0, bounds.Y, 0, bounds.Height);
                 foreach (var textSequence in GetTextSequences(e))
@@ -1073,6 +1067,10 @@ namespace pwiz.Skyline.SettingsUI
         private void btnAdd_Click(object sender, EventArgs e)
         {
             AddPeptide();
+
+            // Set focus back to the peptide edit box to allow further navigation
+            // of the peptide list, and possibly more adding of peptides.
+            textPeptide.Focus();
         }
 
         public void AddPeptide()
@@ -1080,28 +1078,58 @@ namespace pwiz.Skyline.SettingsUI
             if (CheckLibraryInSettings() == DialogResult.Cancel)
                 return;
 
-            var pepInfo = (PepInfo)listPeptide.SelectedItem;
-            var pepMatcher = new PeptideMatchHelper(Document, _selectedLibrary, _selectedSpec, _lookupPool,
-                                                    _peptides.ToList());
+            var startingDocument = Document;
+
+            var pepInfo = (ViewLibraryPepInfo)listPeptide.SelectedItem;
+            var pepMatcher = new ViewLibraryPepMatching(startingDocument,
+                                                        _selectedLibrary,
+                                                        _selectedSpec,
+                                                        _lookupPool,
+                                                        _peptides.ToList());
+
+            if (!EnsureBackgroundProteome(startingDocument, pepMatcher))
+                return;
+
             var nodePepMatched = pepMatcher.MatchSinglePeptide(pepInfo);
             if (nodePepMatched == null)
             {
                 MessageDlg.Show(this, "Modifications for this peptide do not match current document settings.");
                 return;
             }
-            if (Document.Peptides.Contains(nodePep => Equals(nodePep.Key, nodePepMatched.Key)))
+            var keyMatched = nodePepMatched.SequenceKey;
+            int chargeMatched = ((TransitionGroupDocNode) nodePepMatched.Children[0]).TransitionGroup.PrecursorCharge;
+            if (Document.Peptides.Contains(nodePep => Equals(nodePep.SequenceKey, keyMatched) && nodePep.HasChildCharge(chargeMatched)))
             {
-                MessageDlg.Show(this, string.Format("The peptide {0} already exists in the current document.", nodePepMatched.Peptide));
+                MessageDlg.Show(this, string.Format("The peptide {0} already exists with charge {1} in the current document.", nodePepMatched.Peptide, chargeMatched));
                 return;
             }
+
+            if (pepMatcher.EnsureDuplicateProteinFilter(this, true) == DialogResult.Cancel)
+                return;
+
             IdentityPath toPath = Program.MainWindow.SelectedPath;
             IdentityPath selectedPath = toPath;
             
             string message = string.Format("Add library peptide {0}", nodePepMatched.Peptide.Sequence);
             Program.MainWindow.ModifyDocument(message, doc =>
-                pepMatcher.AddPeptides(doc, toPath, out selectedPath));
+                pepMatcher.AddPeptides(doc, null, toPath, out selectedPath));
             
             Program.MainWindow.SelectedPath = selectedPath;
+        }
+
+        private bool EnsureBackgroundProteome(SrmDocument document, ViewLibraryPepMatching pepMatcher)
+        {
+            if (cbAssociateProteins.Checked)
+            {
+                var backgroundProteome = document.Settings.PeptideSettings.BackgroundProteome;
+                if (backgroundProteome.BackgroundProteomeSpec.IsNone)
+                {
+                    MessageDlg.Show(this, "A background proteome is required to associate proteins.");
+                    return false;
+                }
+                pepMatcher.SetBackgroundProteome(backgroundProteome);
+            }
+            return true;
         }
 
         public DialogResult CheckLibraryInSettings()
@@ -1115,7 +1143,7 @@ namespace pwiz.Skyline.SettingsUI
                         string.Format(
                             "The library {0} is not currently added to your document.\nWould you like to add it?",
                             _selectedLibName), "Yes", "No");
-                var result = libraryNotAddedMsgDlg.ShowDialog();
+                var result = libraryNotAddedMsgDlg.ShowDialog(this);
                 if (result == DialogResult.Cancel)
                     return result;
                 if (result == DialogResult.Yes)
@@ -1141,32 +1169,35 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             
             var startingDocument = Document;
-            
-            var pepMatcher = new PeptideMatchHelper(Document, _selectedLibrary, _selectedSpec, _lookupPool,
-                            _peptides.ToList());
-            // First match PeptideDocNodes to all peptides in the library.
-            LongWaitDlg longWaitDlg = new LongWaitDlg
-            {
-                Text = "Matching Peptides",
-                Message = "Matching library peptides to current settings"
-            };
-            longWaitDlg.PerformWork(this, 1000, pepMatcher.MatchAllPeptides);
 
-            // User clicked cancel.
-            if(pepMatcher.PeptideMatches == null)
+            var pepMatcher = new ViewLibraryPepMatching(startingDocument,
+                                                        _selectedLibrary,
+                                                        _selectedSpec,
+                                                        _lookupPool,
+                                                        _peptides.ToList());
+
+            if (!EnsureBackgroundProteome(startingDocument, pepMatcher))
                 return;
 
-            int numMatchedPeptides = pepMatcher.MatchedPeptideCount;
+            pepMatcher.AddAllPeptidesSelectedPath = Program.MainWindow.SelectedPath;
+
+            LongWaitDlg longWaitDlg = new LongWaitDlg
+                                          {
+                                              Text = "Matching Peptides",
+                                              Message = "Matching peptides to the current document settings"
+                                          };
+            longWaitDlg.PerformWork(this, 1000, pepMatcher.AddAllPeptidesToDocument);
+            var newDocument = pepMatcher.DocAllPeptides;
+            if (longWaitDlg.IsCanceled || newDocument == null)
+                return;
+
+            var selectedPath = pepMatcher.AddAllPeptidesSelectedPath;
+            var numMatchedPeptides = pepMatcher.MatchedPeptideCount;
             if (numMatchedPeptides == 0)
             {
                 MessageDlg.Show(this, "No peptides match the current document settings.");
                 return;
             }
-
-            // Call AddPeptides to get a preview of the new document, but do not modify the actual document yet.
-            IdentityPath selectedPath;
-            IdentityPath toPath = Program.MainWindow.SelectedPath;
-            var newDocument = pepMatcher.AddPeptides(startingDocument, toPath, out selectedPath);
 
             // Calculate changes that will occur.
             var peptideCountDiff = newDocument.PeptideCount - startingDocument.PeptideCount;
@@ -1196,10 +1227,11 @@ namespace pwiz.Skyline.SettingsUI
                 msg = string.Format(format, msg, duplicatePeptides, unmatchedPeptides, entrySuffix);
             }
             var addLibraryPepsDlg = new MultiButtonMsgDlg(msg, "Add All") { Tag = numUnmatchedPeptides };
-            if(addLibraryPepsDlg.ShowDialog() == DialogResult.Cancel)
+            if(addLibraryPepsDlg.ShowDialog(this) == DialogResult.Cancel)
                 return;
 
             // If the user chooses to continue with the operation, call AddPeptides again in case the document has changed.
+            var toPath = Program.MainWindow.SelectedPath;
             Program.MainWindow.ModifyDocument(string.Format("Add all peptides from {0} library", SelectedLibraryName),
                 doc =>
                 {
@@ -1210,7 +1242,7 @@ namespace pwiz.Skyline.SettingsUI
                         selectedPath = toPath;
                         throw new InvalidDataException("The document changed during processing.\nPlease retry this operation.");
                     }
-                    return pepMatcher.AddPeptides(doc, toPath, out selectedPath);
+                    return pepMatcher.AddPeptides(doc, null, toPath, out selectedPath);
                 });
 
             Program.MainWindow.SelectedPath = selectedPath;
@@ -1341,7 +1373,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             else
             {
-                var pepInfo = ((PepInfo)listPeptide.Items[i]);
+                var pepInfo = ((ViewLibraryPepInfo)listPeptide.Items[i]);
                 if (!Equals(pepInfo, _lastTipNode))
                 {
                     _lastTipNode = pepInfo;
@@ -1392,18 +1424,18 @@ namespace pwiz.Skyline.SettingsUI
 
         #endregion
 
-        # region PepInfo Helpers
+        # region ViewLibraryPepInfo Helpers
 
-        // Gets the display string for the given PepInfo object, minus the
+        // Gets the display string for the given ViewLibraryPepInfo object, minus the
         // modification characters.
-        private string GetUnmodifiedDisplayString(PepInfo pep)
+        private string GetUnmodifiedDisplayString(ViewLibraryPepInfo pep)
         {
             return pep.GetAASequence(_lookupPool) + Transition.GetChargeIndicator(pep.Charge);
         }
 
         // Computes each ModificationInfo for the given peptide and returns a 
         // list of all modifications.
-        private static IList<ModificationInfo> GetModifications(PepInfo pep)
+        private static IList<ModificationInfo> GetModifications(ViewLibraryPepInfo pep)
         {
             IList<ModificationInfo> modList = new List<ModificationInfo>();
             string sequence = pep.Sequence;
@@ -1445,96 +1477,19 @@ namespace pwiz.Skyline.SettingsUI
 
         // Compares the display string minus the modification characters for 
         // the given peptide with the string passed in.
-        private int Compare(PepInfo pep, string s)
+        private int Compare(ViewLibraryPepInfo pep, string s)
         {
             return string.Compare(GetUnmodifiedDisplayString(pep), 0, s, 0, s.Length, true);
         }
 
         // Checks to see if the display string minus the modification
         // characters starts with the string passed in. 
-        private bool IsMatch(PepInfo pep, string s)
+        private bool IsMatch(ViewLibraryPepInfo pep, string s)
         {
             return GetUnmodifiedDisplayString(pep).StartsWith(s, StringComparison.InvariantCultureIgnoreCase);
         }
 
         #endregion
-
-        /// <summary>
-        /// Data structure containing information on a single peptide. It is
-        /// basically a very lightweight wrapper for the LibKey object.
-        /// </summary>
-        public struct PepInfo
-        {
-            private const int PEPTIDE_CHARGE_OFFSET = 3;
-            //            private const int PEPTIDE_MODIFICATION_OFFSET_LOWER = 2;
-            //            private const int PEPTIDE_MODIFICATION_OFFSET_UPPER = 1;
-
-            public PepInfo(LibKey key, ICollection<byte> lookupPool)
-                : this()
-            {
-                Key = key;
-                IndexLookup = lookupPool.Count;
-                foreach (char aa in key.AminoAcids)
-                    lookupPool.Add((byte)aa);
-
-                // Order extra bytes so that a byte-by-byte comparison of the
-                // lookup bytes will order correctly.
-                lookupPool.Add((byte)key.Charge);
-                int countMods = key.ModificationCount;
-                lookupPool.Add((byte)(countMods & 0xFF));
-                lookupPool.Add((byte)((countMods >> 8) & 0xFF)); // probably never non-zero, but to be safe
-                LengthLookup = lookupPool.Count - IndexLookup;
-            }
-
-            public LibKey Key { get; private set; }
-            private int IndexLookup { get; set; }
-            private int LengthLookup { get; set; }
-
-            public string DisplayString { get { return Key.ToString(); } }
-            public string PlainDisplayString { get { return Peptide.Peptide.Sequence + Transition.GetChargeIndicator(Charge); } }
-            public int Charge { get { return Key.Charge; } }
-            public string Sequence { get { return Key.Sequence; } }
-            public bool IsModified { get { return Key.IsModified; } }
-            public PeptideDocNode Peptide { get; set; }
-
-            private int SequenceLength { get { return LengthLookup - PEPTIDE_CHARGE_OFFSET; } }
-
-            public string GetAASequence(byte[] lookupPool)
-            {
-                return Encoding.Default.GetString(lookupPool, IndexLookup, SequenceLength);
-            }
-
-            public static int Compare(PepInfo p1, PepInfo p2, IList<byte> lookupPool)
-            {
-                // If they point to the same look-up index, then they are equal.
-                if (p1.IndexLookup == p2.IndexLookup)
-                    return 0;
-
-                int lenP1 = p1.SequenceLength;
-                int lenP2 = p2.SequenceLength;
-                // If sequences are equal length compare charge and mod count also
-                int lenCompare = lenP1 == lenP2 ? p1.LengthLookup : Math.Min(lenP1, lenP2);
-                // Compare bytes in the lookup pool
-                for (int i = 0; i < lenCompare; i++)
-                {
-                    byte b1 = lookupPool[p1.IndexLookup + i];
-                    byte b2 = lookupPool[p2.IndexLookup + i];
-                    // If unequal bytes are found, compare the bytes
-                    if (b1 != b2)
-                        return b1 - b2;
-                }
-
-                // If sequence length is not equal, the shorter should be first.
-                if (lenP1 != lenP2)
-                    return lenP1 - lenP2;
-
-                // p1 and p2 have the same unmodified sequence, same number
-                // of charges, and same number of modifications. Just 
-                // compare their display strings directly in this case.
-                return Comparer.Default.Compare(p1.DisplayString, p2.DisplayString);
-            }
-        }
-
 
         /// <summary>
         /// Data structure to store information on a modification for a given
@@ -1555,8 +1510,8 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         /// <summary>
-        /// IComparer implementation to compare two PepInfo objects. It is used
-        /// to sort the array of PepInfo objects we load from each library so 
+        /// IComparer implementation to compare two ViewLibraryPepInfo objects. It is used
+        /// to sort the array of ViewLibraryPepInfo objects we load from each library so 
         /// that we can show it in alphabetical order in the list, and also 
         /// show the modified peptides right below the unmodified versions. 
         /// Here's an example:
@@ -1565,7 +1520,7 @@ namespace pwiz.Skyline.SettingsUI
         /// DEYACR++
         /// DEYAC[+57.0]R++
         /// </summary>
-        private class PepInfoComparer : IComparer<PepInfo>
+        private class PepInfoComparer : IComparer<ViewLibraryPepInfo>
         {
             private readonly List<byte> _lookupPool;
 
@@ -1577,9 +1532,9 @@ namespace pwiz.Skyline.SettingsUI
 
             // Compares peptides in PeptideInfo according to the CompareOptions
             // specified in the constructor.
-            public int Compare(PepInfo p1, PepInfo p2)
+            public int Compare(ViewLibraryPepInfo p1, ViewLibraryPepInfo p2)
             {
-                return PepInfo.Compare(p1, p2, _lookupPool);
+                return ViewLibraryPepInfo.Compare(p1, p2, _lookupPool);
             }
         }
 
@@ -1772,232 +1727,12 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
         }
-
-        /// <summary>
-        /// Matches document peptides to library peptides.
-        /// </summary>
-        public class PeptideMatchHelper
-        {
-            private readonly SrmDocument _document;
-            private readonly Library _selectedLibrary;
-            private readonly LibrarySpec _selectedSpec;
-            private readonly byte[] _lookupPool;
-            private readonly List<PepInfo> _peptides;
-            private SrmSettings[] _chargeSettingsMap;
-
-            public Dictionary<PeptideModKey, PeptideDocNode> PeptideMatches { get; private set; }
-
-            public int MatchedPeptideCount { get; private set; }
-            public int SkippedPeptideCount { get; private set; }
-
-            public SrmSettings Settings { get { return _document.Settings; } }
-
-            public PeptideMatchHelper(SrmDocument document, Library library, LibrarySpec spec, byte[] lookupPool, List<PepInfo> peptides)
-            {
-                _document = document;
-                _selectedLibrary = library;
-                _selectedSpec = spec;
-                _lookupPool = lookupPool;
-                _peptides = peptides;
-                _chargeSettingsMap = new SrmSettings[128];
-            }
-
-            /// <summary>
-            /// Tries to match each library peptide to document settings.
-            /// </summary>
-            public void MatchAllPeptides(ILongWaitBroker broker)
-            {
-                _chargeSettingsMap = new SrmSettings[128];
-                
-                Dictionary<PeptideModKey, PeptideDocNode> dictNewNodePeps = new Dictionary<PeptideModKey, PeptideDocNode>();
-                PeptideMatches = null;
-                MatchedPeptideCount = 0;
-                
-                int peptides = 0;
-                int totalPeptides = _peptides.Count();
-
-                foreach (PepInfo pepInfo in _peptides)
-                {
-                    if (broker.IsCanceled)
-                        return;
-
-                    int charge = pepInfo.Key.Charge;
-                    // Find the matching peptide.
-                    var nodePepMatched = AssociateMatchingPeptide(pepInfo, charge).Peptide;
-                    if (nodePepMatched != null)
-                    {
-                        MatchedPeptideCount++;
-
-                        PeptideDocNode nodePepInDict;
-                        // If peptide is already in the dictionary of peptides to add, merge the children.
-                        if (!dictNewNodePeps.TryGetValue(nodePepMatched.Key, out nodePepInDict))
-                            dictNewNodePeps.Add(nodePepMatched.Key, nodePepMatched);
-                        else
-                        {
-                            PeptideDocNode nodePepInDictionary = nodePepInDict;
-                            if (!nodePepInDictionary.HasChildCharge(charge))
-                            {
-                                List<DocNode> newChildren = nodePepInDictionary.Children.ToList();
-                                newChildren.AddRange(nodePepMatched.Children);
-                                newChildren.Sort(Peptide.CompareGroups);
-                                dictNewNodePeps.Remove(nodePepMatched.Key);
-                                dictNewNodePeps.Add(nodePepMatched.Key, (PeptideDocNode) nodePepInDictionary.ChangeChildren(newChildren));
-                            }
-                        }
-                    }
-                    peptides++;
-                    int progressValue = (int)((peptides + 0.0) / totalPeptides * 100);
-                    if (progressValue != broker.ProgressValue)
-                        broker.ProgressValue = progressValue;
-                }
-                 
-                PeptideMatches = dictNewNodePeps;
-            }
-
-            public PeptideDocNode MatchSinglePeptide(PepInfo pepInfo)
-            {
-                _chargeSettingsMap = new SrmSettings[128];
-                var nodePep = AssociateMatchingPeptide(pepInfo, pepInfo.Key.Charge).Peptide;
-                if(nodePep != null)
-                    PeptideMatches = new Dictionary<PeptideModKey, PeptideDocNode> { { nodePep.Key, nodePep } };
-                return nodePep;
-            }
-
-            public PepInfo AssociateMatchingPeptide(PepInfo pepInfo, int charge)
-            {
-                return AssociateMatchingPeptide(pepInfo, charge, null);
-            }
-
-            public PepInfo AssociateMatchingPeptide(PepInfo pepInfo, int charge, SrmSettingsDiff settingsDiff)
-            {
-                var settings = _chargeSettingsMap[charge];
-                // Change current document settings to match the current library and change the charge filter to
-                // match the current peptide.
-                if (settings == null)
-                {
-                    settings = _document.Settings.ChangePeptideLibraries(lib =>
-                        lib.ChangeLibraries(new[] { _selectedSpec }, new[] { _selectedLibrary })
-                        .ChangePick(PeptidePick.library))
-                        .ChangeTransitionFilter(filter =>
-                    filter.ChangePrecursorCharges(new[] { charge })
-                        .ChangeAutoSelect(true))
-                    .ChangeMeasuredResults(null);
-
-                    _chargeSettingsMap[charge] = settings;
-                }
-                var diff = settingsDiff ?? SrmSettingsDiff.ALL;
-                var sequence = pepInfo.GetAASequence(_lookupPool);
-                var key = pepInfo.Key;
-                Peptide peptide = new Peptide(null, sequence, null, null, 0);
-                // Create all variations of this peptide matching the settings.
-                foreach (var nodePep in peptide.CreateDocNodes(settings, settings))
-                {
-                    PeptideDocNode nodePepMod = nodePep.ChangeSettings(settings, diff, false);
-                    foreach (TransitionGroupDocNode nodeGroup in nodePepMod.Children)
-                    {
-                        var calc = settings.GetPrecursorCalc(nodeGroup.TransitionGroup.LabelType, nodePepMod.ExplicitMods);
-                        if (calc == null)
-                            continue;
-                        string modSequence = calc.GetModifiedSequence(nodePep.Peptide.Sequence, false);
-                        // If this sequence matches the sequence of the library peptide, a match has been found.
-                        if (!Equals(key.Sequence, modSequence))
-                            continue;
-
-                        if (settingsDiff == null)
-                        {
-                            nodePepMod = (PeptideDocNode) nodePepMod.ChangeAutoManageChildren(false);
-                        }
-                        else
-                        {
-                            // Keep only the matching transition group, so that modifications
-                            // will be highlighted differently for light and heavy forms.
-                            // Only performed when getting peptides for display in the explorer.
-                            nodePepMod = (PeptideDocNode)nodePep.ChangeChildrenChecked(
-                                                             new DocNode[] { nodeGroup });
-                        }
-                        pepInfo.Peptide = nodePepMod;
-                        return pepInfo;
-                    }
-                }
-                return pepInfo;
-            }
-
-            /// <summary>
-            /// Adds a list of PeptideDocNodes found in the library to the current document.
-            /// </summary>
-            public SrmDocument AddPeptides(SrmDocument document,
-                                                  IdentityPath toPath,
-                                                  out IdentityPath selectedPath)
-            {
-                SkippedPeptideCount = 0;
-                var dicNodePepsToAddCopy = new Dictionary<PeptideModKey, PeptideDocNode>(PeptideMatches);
-
-                // Enumerate all document peptides.
-                // If a library peptide already exists in the current document, update the transition groups for that document peptide
-                // and remove the peptide from the list to add.
-                IList<DocNode> nodePepGroups = new List<DocNode>();
-                foreach (PeptideGroupDocNode nodePepGroup in document.PeptideGroups)
-                {
-                    IList<DocNode> nodePeps = new List<DocNode>();
-                    foreach (PeptideDocNode nodePep in nodePepGroup.Children)
-                    {
-                        var key = nodePep.Key;
-                        PeptideDocNode nodePepMatch;
-                        if (!dicNodePepsToAddCopy.TryGetValue(key, out nodePepMatch))
-                        {
-                            nodePeps.Add(nodePep);
-                        }
-                        else
-                        {
-                            PeptideDocNode nodePepSettings = null;
-                            var newChildren = nodePep.Children.ToList();
-                            foreach (TransitionGroupDocNode nodeGroup in nodePepMatch.Children)
-                            {
-                                int chargeGroup = nodeGroup.TransitionGroup.PrecursorCharge;
-                                if (nodePepMatch.HasChildCharge(chargeGroup))
-                                    SkippedPeptideCount++;
-                                else
-                                {
-                                    if (nodePepSettings == null)
-                                        nodePepSettings = nodePepMatch.ChangeSettings(document.Settings, SrmSettingsDiff.ALL);
-                                    newChildren.Add(nodePepSettings.FindNode(nodeGroup.TransitionGroup));
-                                }
-                            }
-                            newChildren.Sort(Peptide.CompareGroups);
-                            var nodePepAdd = nodePep.ChangeChildrenChecked(newChildren);
-                            if (nodePep.AutoManageChildren && !ReferenceEquals(nodePep, nodePepAdd))
-                                nodePepAdd = nodePepAdd.ChangeAutoManageChildren(false);
-                            nodePeps.Add(nodePepAdd);
-                            dicNodePepsToAddCopy.Remove(key);
-                        }
-                    }
-                    nodePepGroups.Add(nodePepGroup.ChangeChildrenChecked(nodePeps));
-                }
-                SrmDocument newDocument = (SrmDocument)document.ChangeChildrenChecked(nodePepGroups);
-
-                var dictCopy = dicNodePepsToAddCopy;
-
-                // Add all remaining peptides as a peptide list.
-                PeptideGroupDocNode nodePepGroupNew =
-                    (PeptideGroupDocNode)new PeptideGroupDocNode(new PeptideGroup(), "Library Peptides", "", new PeptideDocNode[0])
-                    .ChangeChildren(dictCopy.Values.ToList().ConvertAll(nodePep => (DocNode) nodePep.ChangeSettings(document.Settings, SrmSettingsDiff.ALL)));
-                if (toPath != null &&
-                        toPath.Depth == (int)SrmDocument.Level.PeptideGroups &&
-                        toPath.GetIdentity((int)SrmDocument.Level.PeptideGroups) == SequenceTree.NODE_INSERT_ID)
-                {
-                    toPath = null;
-                }
-                newDocument = newDocument.AddPeptideGroups(new[] { nodePepGroupNew }, true,
-                                                           toPath, out selectedPath);
-                return newDocument;
-            }
-        }
-
+        
         private class PeptideTipProvider : ITipProvider
         {
-            private PepInfo _pepInfo;
+            private ViewLibraryPepInfo _pepInfo;
 
-            public PeptideTipProvider(PepInfo pepInfo)
+            public PeptideTipProvider(ViewLibraryPepInfo pepInfo)
             {
                 _pepInfo = pepInfo;
             }
@@ -2021,7 +1756,5 @@ namespace pwiz.Skyline.SettingsUI
                 return new Size((int)size.Width + 2, (int)size.Height + 2);
             }
         }
-
-
     }
 }

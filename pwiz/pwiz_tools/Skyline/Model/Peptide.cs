@@ -466,4 +466,45 @@ namespace pwiz.Skyline.Model
 
         #endregion
     }
+
+    public sealed class PeptideSequenceModKey
+    {
+        public PeptideSequenceModKey(string sequence, ExplicitMods modifications)
+        {
+            Sequence = sequence;
+            Modifications = modifications;
+        }
+
+        private string Sequence { get; set; }
+        private ExplicitMods Modifications { get; set; }
+
+        #region object overrides
+
+        private bool Equals(PeptideSequenceModKey other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(other.Sequence, Sequence) &&
+                Equals(other.Modifications, Modifications);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof(PeptideSequenceModKey)) return false;
+            return Equals((PeptideSequenceModKey)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (Sequence.GetHashCode() * 397) ^
+                    (Modifications != null ? Modifications.GetHashCode() : 0);
+            }
+        }
+
+        #endregion
+    }
 }

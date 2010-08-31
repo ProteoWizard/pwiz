@@ -27,6 +27,7 @@ namespace pwiz.Skyline.Controls
     {
         private const string CANCEL_MESSAGE = " (canceled)";
 
+        private Control _parentForm;
         private Exception _exception;
         private bool _clickedCancel;
         private int _progressValue = -1;
@@ -49,6 +50,16 @@ namespace pwiz.Skyline.Controls
             set { Interlocked.Exchange(ref _progressValue, value); }
         }
 
+        public DialogResult ShowDialog(Func<IWin32Window, DialogResult> show)
+        {
+            // If the window handle is created, show the message in its thread,
+            // parented to it.  Otherwise, use the intended parent of this form.
+            var parent = (IsHandleCreated ? this : _parentForm);
+            DialogResult result = DialogResult.OK;
+            parent.Invoke((Action) (() => result = show(parent)));
+            return result;
+        }
+
         public void PerformWork(Control parent, int delayMillis, Action performWork)
         {
             var indefiniteWaitBroker = new IndefiniteWaitBroker(performWork);
@@ -64,6 +75,7 @@ namespace pwiz.Skyline.Controls
 
         public void PerformWork(Control parent, int delayMillis, Action<ILongWaitBroker> performWork)
         {
+            _parentForm = parent;
             try
             {
                 Action<Action<ILongWaitBroker>> runner = RunWork;

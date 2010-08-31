@@ -60,6 +60,7 @@ namespace pwiz.Skyline.SettingsUI
             this.btnSave = new System.Windows.Forms.ToolStripButton();
             this.btnPrint = new System.Windows.Forms.ToolStripButton();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.cbAssociateProteins = new System.Windows.Forms.CheckBox();
             this.btnAdd = new System.Windows.Forms.Button();
             this.btnAddAll = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -476,6 +477,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // panel2
             // 
+            this.panel2.Controls.Add(this.cbAssociateProteins);
             this.panel2.Controls.Add(this.btnAdd);
             this.panel2.Controls.Add(this.btnAddAll);
             this.panel2.Controls.Add(this.btnCancel);
@@ -485,6 +487,16 @@ namespace pwiz.Skyline.SettingsUI
             this.panel2.Size = new System.Drawing.Size(477, 56);
             this.panel2.TabIndex = 1;
             // 
+            // cbAssociateProteins
+            // 
+            this.cbAssociateProteins.AutoSize = true;
+            this.cbAssociateProteins.Location = new System.Drawing.Point(163, 36);
+            this.cbAssociateProteins.Name = "cbAssociateProteins";
+            this.cbAssociateProteins.Size = new System.Drawing.Size(112, 17);
+            this.cbAssociateProteins.TabIndex = 3;
+            this.cbAssociateProteins.Text = "Asso&ciate proteins";
+            this.cbAssociateProteins.UseVisualStyleBackColor = true;
+            // 
             // btnAdd
             // 
             this.btnAdd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
@@ -492,7 +504,7 @@ namespace pwiz.Skyline.SettingsUI
             this.btnAdd.Name = "btnAdd";
             this.btnAdd.Size = new System.Drawing.Size(75, 23);
             this.btnAdd.TabIndex = 2;
-            this.btnAdd.Text = "Add";
+            this.btnAdd.Text = "&Add";
             this.btnAdd.UseVisualStyleBackColor = true;
             this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
             // 
@@ -503,7 +515,7 @@ namespace pwiz.Skyline.SettingsUI
             this.btnAddAll.Name = "btnAddAll";
             this.btnAddAll.Size = new System.Drawing.Size(75, 23);
             this.btnAddAll.TabIndex = 1;
-            this.btnAddAll.Text = "Add All...";
+            this.btnAddAll.Text = "A&dd All...";
             this.btnAddAll.UseVisualStyleBackColor = true;
             this.btnAddAll.Click += new System.EventHandler(this.btnAddAll_Click);
             // 
@@ -758,6 +770,7 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.panel2.ResumeLayout(false);
+            this.panel2.PerformLayout();
             this.ViewLibraryPanel.ResumeLayout(false);
             this.contextMenuSpectrum.ResumeLayout(false);
             this.ResumeLayout(false);
@@ -826,6 +839,7 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.ToolStripMenuItem observedMzValuesContextMenuItem;
         private System.Windows.Forms.Button btnAddAll;
         private System.Windows.Forms.Button btnAdd;
+        private System.Windows.Forms.CheckBox cbAssociateProteins;
 
 
 

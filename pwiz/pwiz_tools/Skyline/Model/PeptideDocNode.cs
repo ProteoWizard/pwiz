@@ -56,13 +56,15 @@ namespace pwiz.Skyline.Model
 
         public Peptide Peptide { get { return (Peptide)Id; } }
 
-        public PeptideModKey Key { get { return new PeptideModKey(Peptide, ExplicitMods);}}
+        public PeptideModKey Key { get { return new PeptideModKey(Peptide, ExplicitMods); } }
+
+        public PeptideSequenceModKey SequenceKey { get { return new PeptideSequenceModKey(Peptide.Sequence, ExplicitMods); } }
 
         public override AnnotationDef.AnnotationTarget AnnotationTarget { get { return AnnotationDef.AnnotationTarget.peptide; } }
 
         public ExplicitMods ExplicitMods { get; private set; }
 
-        public bool HasExplicitMods { get { return ExplicitMods != null; }}
+        public bool HasExplicitMods { get { return ExplicitMods != null; } }
 
         public bool HasVariableMods { get { return HasExplicitMods && ExplicitMods.IsVariableStaticMods; } }
 

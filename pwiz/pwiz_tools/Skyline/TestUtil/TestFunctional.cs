@@ -286,7 +286,7 @@ namespace pwiz.SkylineTestUtil
             // Clean-up before running the test
             RunUI(() => 
                 {
-                    SkylineWindow.SequenceTree.InTest = true;
+                    SkylineWindow.SequenceTree.UseKeysOverride = true;
                     SkylineWindow.ModifyDocument("Set test settings",
                                                  doc => doc.ChangeSettings(SrmSettingsList.GetDefault()));
                 });
