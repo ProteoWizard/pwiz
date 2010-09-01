@@ -105,6 +105,9 @@ project pwiz
 
         # any module which links with .NET (either dynamically or statically) must use the shared runtime
         <toolset>msvc:<runtime-link>shared
+        
+        # SEH exceptions crossing native/managed boundaries are problematic with this set to off
+        <toolset>msvc:<asynch-exceptions>on
 
         # special msvc hacks
         <toolset>msvc:<define>WIN32                     # windows
