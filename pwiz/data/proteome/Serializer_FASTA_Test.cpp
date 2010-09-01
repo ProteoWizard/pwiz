@@ -26,6 +26,8 @@
 #include "pwiz/data/common/BinaryIndexStream.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "boost/thread/thread.hpp"
+#include "boost/thread/barrier.hpp"
 
 
 using namespace pwiz::util;
@@ -71,12 +73,52 @@ void testWriteRead()
 }
 
 
+void testThreadSafetyWorker(pair<boost::barrier*, ProteomeData*>* args)
+{
+    args->first->wait(); // wait until all threads have started
+
+    try
+    {
+        testWriteRead();
+
+        for (int i=0; i < 3; ++i)
+        {
+            for (size_t j=0; j < args->second->proteinListPtr->size(); ++j)
+                unit_assert(args->second->proteinListPtr->protein(j)->index == j);   
+        }
+    }
+    catch (exception& e)
+    {
+        cerr << "Exception in worker thread: " << e.what() << endl;
+    }
+    catch (...)
+    {
+        cerr << "Unhandled exception in worker thread." << endl;
+    }
+}
+
+void testThreadSafety(const int& testThreadCount)
+{
+    ProteomeData pd;
+    examples::initializeTiny(pd);
+
+    boost::barrier testBarrier(testThreadCount);
+    boost::thread_group testThreadGroup;
+    for (int i=0; i < testThreadCount; ++i)
+        testThreadGroup.add_thread(new boost::thread(&testThreadSafetyWorker, new pair<boost::barrier*, ProteomeData*>(&testBarrier, &pd)));
+    testThreadGroup.join_all();
+}
+
+
 int main(int argc, char* argv[])
 {
     try
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         testWriteRead();
+        testThreadSafety(2);
+        testThreadSafety(4);
+        testThreadSafety(8);
         return 0;
     }
     catch (exception& e)

@@ -769,9 +769,8 @@ void testThreadSafetyWorker(boost::barrier* testBarrier)
     }
 }
 
-void testThreadSafety()
+void testThreadSafety(const int& testThreadCount)
 {
-    const int testThreadCount = 100;
     boost::barrier testBarrier(testThreadCount);
     boost::thread_group testThreadGroup;
     for (int i=0; i < testThreadCount; ++i)
@@ -788,10 +787,12 @@ int main(int argc, char* argv[])
         if (os_) *os_ << "PeptideTest\n";
         //test();
         //isotopeTest();
-        peptideTest();
-        modificationTest();
-        fragmentTest();
-        testThreadSafety();
+
+        //testThreadSafety(1); // does not test thread-safety of singleton initialization
+        testThreadSafety(2);
+        testThreadSafety(4);
+        testThreadSafety(8);
+        testThreadSafety(16);
         return 0;
     }
     catch (exception& e)

@@ -68,22 +68,23 @@ class PWIZ_API_DECL DigestedPeptide : public Peptide
                     size_t offset,
                     size_t missedCleavages,
                     bool NTerminusIsSpecific,
-                    bool CTerminusIsSpecific);
+                    bool CTerminusIsSpecific, 
+                    std::string NTerminusPrefix = "",
+                    std::string CTerminusSuffix = "");
 
-    DigestedPeptide(std::string::const_iterator begin,
-                    std::string::const_iterator end,
+    DigestedPeptide(const Peptide& peptide,
                     size_t offset,
                     size_t missedCleavages,
                     bool NTerminusIsSpecific,
                     bool CTerminusIsSpecific, 
-                    std::string NTerminusPrefix,
-                    std::string CTerminusSuffix);
+                    std::string NTerminusPrefix = "",
+                    std::string CTerminusSuffix = "");
 
     DigestedPeptide(const DigestedPeptide&);
     DigestedPeptide& operator=(const DigestedPeptide&);
-    ~DigestedPeptide();
+    virtual ~DigestedPeptide();
 
-    /// returns the offset of the N terminus of the peptide
+    /// returns the zero-based offset of the N terminus of the peptide
     /// in the polypeptide from which it was digested
     size_t offset() const;
 

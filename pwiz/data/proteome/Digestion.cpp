@@ -62,25 +62,28 @@ DigestedPeptide::DigestedPeptide(std::string::const_iterator begin,
                                  size_t offset,
                                  size_t missedCleavages,
                                  bool NTerminusIsSpecific,
-                                 bool CTerminusIsSpecific)
+                                 bool CTerminusIsSpecific, 
+                                 std::string NTerminusPrefix,
+                                 std::string CTerminusSuffix)
 :   Peptide(begin, end),
     offset_(offset),
     missedCleavages_(missedCleavages),
     NTerminusIsSpecific_(NTerminusIsSpecific),
-    CTerminusIsSpecific_(CTerminusIsSpecific)
+    CTerminusIsSpecific_(CTerminusIsSpecific),
+    NTerminusPrefix_(NTerminusPrefix),
+    CTerminusSuffix_(CTerminusSuffix)
 {
 }
 
 PWIZ_API_DECL
-DigestedPeptide::DigestedPeptide(std::string::const_iterator begin,
-                                 std::string::const_iterator end,
+DigestedPeptide::DigestedPeptide(const Peptide& peptide,
                                  size_t offset,
                                  size_t missedCleavages,
                                  bool NTerminusIsSpecific,
                                  bool CTerminusIsSpecific, 
-				 std::string NTerminusPrefix,
-				 std::string CTerminusSuffix )
-:   Peptide(begin, end),
+                                 std::string NTerminusPrefix,
+                                 std::string CTerminusSuffix)
+:   Peptide(peptide),
     offset_(offset),
     missedCleavages_(missedCleavages),
     NTerminusIsSpecific_(NTerminusIsSpecific),
@@ -560,13 +563,15 @@ class Digestion::Impl
         }
     }
 
-    inline vector<DigestedPeptide>& find_all(vector<DigestedPeptide>& result, const Peptide& peptide)
+    inline vector<DigestedPeptide> find_all(const Peptide& peptide)
     {
         typedef boost::iterator_range<string::const_iterator> const_string_iterator_range;
 
         digest(); // populate sites_ member if necessary
 
         const string& sequence_ = peptide_.sequence();
+
+        vector<DigestedPeptide> result;
 
         if ((int) peptide.sequence().length() > config_.maximumLength ||
             (int) peptide.sequence().length() < config_.minimumLength)
@@ -600,8 +605,7 @@ class Digestion::Impl
 		    if (endOffset+1 < sequence_.length())
 			    CTerminusSuffix = sequence_.substr(endOffset+1, 1);
 
-            result.push_back(DigestedPeptide(peptide.sequence().begin(),
-                                             peptide.sequence().end(),
+            result.push_back(DigestedPeptide(peptide,
                                              beginOffset,
                                              missedCleavages,
                                              NTerminusIsSpecific,
@@ -613,7 +617,7 @@ class Digestion::Impl
         return result;
     }
 
-    inline DigestedPeptide& find_first(DigestedPeptide& result, const Peptide& peptide, int offsetHint)
+    inline DigestedPeptide find_first(const Peptide& peptide, int offsetHint)
     {
         digest(); // populate sites_ member if necessary
         const string& sequence_ = peptide_.sequence();
@@ -666,15 +670,13 @@ class Digestion::Impl
 	    if (endOffset+1 < sequence_.length())
 		    CTerminusSuffix = sequence_.substr(endOffset+1, 1);
 
-        result = DigestedPeptide(peptide.sequence().begin(),
-                                 peptide.sequence().end(),
-                                 beginOffset,
-                                 missedCleavages,
-                                 NTerminusIsSpecific,
-                                 CTerminusIsSpecific,
-                                 NTerminusPrefix,
-                                 CTerminusSuffix);
-        return result;
+        return DigestedPeptide(peptide,
+                               beginOffset,
+                               missedCleavages,
+                               NTerminusIsSpecific,
+                               CTerminusIsSpecific,
+                               NTerminusPrefix,
+                               CTerminusSuffix);
     }
 
     private:
@@ -758,14 +760,12 @@ PWIZ_API_DECL Digestion::~Digestion()
 
 PWIZ_API_DECL vector<DigestedPeptide> Digestion::find_all(const Peptide& peptide) const
 {
-    vector<DigestedPeptide> instances;
-    return impl_->find_all(instances, peptide);
+    return impl_->find_all(peptide);
 }
 
 PWIZ_API_DECL DigestedPeptide Digestion::find_first(const Peptide& peptide, size_t offsetHint) const
 {
-    DigestedPeptide result(peptide.sequence());
-    return impl_->find_first(result, peptide, offsetHint);
+    return impl_->find_first(peptide, offsetHint);
 }
 
 PWIZ_API_DECL Digestion::const_iterator Digestion::begin() const

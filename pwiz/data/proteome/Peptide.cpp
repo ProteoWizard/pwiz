@@ -44,25 +44,25 @@ class Peptide::Impl
 {
     public:
 
-    Impl(Peptide* peptide, const std::string& sequence, ModificationParsing mp, ModificationDelimiter md)
+    Impl(const std::string& sequence, ModificationParsing mp, ModificationDelimiter md)
         :   sequence_(new string(sequence))
     {
         parse(mp, md);
     }
 
-    Impl(Peptide* peptide, const char* sequence, ModificationParsing mp, ModificationDelimiter md)
+    Impl(const char* sequence, ModificationParsing mp, ModificationDelimiter md)
         :   sequence_(new string(sequence))
     {
         parse(mp, md);
     }
 
-    Impl(Peptide* peptide, string::const_iterator begin, string::const_iterator end, ModificationParsing mp, ModificationDelimiter md)
+    Impl(string::const_iterator begin, string::const_iterator end, ModificationParsing mp, ModificationDelimiter md)
         :   sequence_(new string(begin, end))
     {
         parse(mp, md);
     }
 
-    Impl(Peptide* peptide, const char* begin, const char* end, ModificationParsing mp, ModificationDelimiter md)
+    Impl(const char* begin, const char* end, ModificationParsing mp, ModificationDelimiter md)
         :   sequence_(new string(begin, end))
     {
         parse(mp, md);
@@ -85,9 +85,6 @@ class Peptide::Impl
 
     inline Formula formula(bool modified) const
     {
-        const static Formula H1("H1");
-        const static Formula O1H1("O1H1");
-
         string& sequence = *sequence_;
 
         // an empty or unparsable sequence returns an empty formula
@@ -100,7 +97,7 @@ class Peptide::Impl
         if (mods_.get()) modItr = mods_->begin();
 
         // add N terminus formula and modifications
-        formula += H1;
+        formula[Element::H] += 1;
         if (mods_.get() && modified && modItr != mods_->end() && modItr->first == ModificationMap::NTerminus())
         {
             const ModificationList& modList = modItr->second;
@@ -134,7 +131,8 @@ class Peptide::Impl
         }
 
         // add C terminus formula and modifications
-        formula += O1H1;
+        formula[Element::O] += 1;
+        formula[Element::H] += 1;
         if (mods_.get() && modified && modItr != mods_->end() && modItr->first == ModificationMap::CTerminus())
         {
             const ModificationList& modList = modItr->second;
@@ -352,22 +350,22 @@ class Peptide::Impl
 
 
 PWIZ_API_DECL Peptide::Peptide(const string& sequence, ModificationParsing mp, ModificationDelimiter md)
-:   impl_(new Impl(this, sequence, mp, md)) {}
+:   impl_(new Impl(sequence, mp, md)) {}
 
 PWIZ_API_DECL Peptide::Peptide(const char* sequence, ModificationParsing mp, ModificationDelimiter md)
-:   impl_(new Impl(this, sequence, mp, md)) {}
+:   impl_(new Impl(sequence, mp, md)) {}
 
 PWIZ_API_DECL Peptide::Peptide(std::string::const_iterator begin,
                                std::string::const_iterator end,
                                ModificationParsing mp,
                                ModificationDelimiter md)
-:   impl_(new Impl(this, begin, end, mp, md)) {}
+:   impl_(new Impl(begin, end, mp, md)) {}
 
 PWIZ_API_DECL Peptide::Peptide(const char* begin,
                                const char* end,
                                ModificationParsing mp,
                                ModificationDelimiter md)
-:   impl_(new Impl(this, begin, end, mp, md)) {}
+:   impl_(new Impl(begin, end, mp, md)) {}
 
 PWIZ_API_DECL Peptide::Peptide(const Peptide& other)
 :   impl_(new Impl(*other.impl_))

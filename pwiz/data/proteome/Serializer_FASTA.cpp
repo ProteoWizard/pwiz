@@ -241,7 +241,7 @@ PWIZ_API_DECL void Serializer_FASTA::read(shared_ptr<istream> is, ProteomeData& 
 
     // TODO: make these regexes user-configurable
     vector<string> idAndDescriptionRegexes;
-    idAndDescriptionRegexes.push_back(">\\s*(\\S*?IPI\\S+?)(?:\\s|\\|)(.*)");
+    idAndDescriptionRegexes.push_back(">\\s*(\\S*?IPI\\d+?\\.\\d+?)(?:\\s|\\|)(.*)");
     idAndDescriptionRegexes.push_back(">\\s*(\\S+)\\s?(.*)");
     pd.proteinListPtr.reset(new ProteinList_FASTA(is, config_.indexPtr, idAndDescriptionRegexes));
 }
