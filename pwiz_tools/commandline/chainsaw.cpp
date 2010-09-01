@@ -149,7 +149,7 @@ Config parseCommandLine(int argc, const char* argv[])
         {
             expand_pathmask(bfs::path(filename), globbedFilenames);
             if (!globbedFilenames.size())
-                 cout <<  "[chainsaw] no files found matching \"" << filename << "\"" << endl;
+                 cout << "[chainsaw] no files found matching \"" << filename << "\"" << endl;
         }
 
         config.filenames.clear();
@@ -158,7 +158,7 @@ Config parseCommandLine(int argc, const char* argv[])
 
         // skip usage if user passed some files but none existed
         if (config.filenames.empty())
-            throw exception("");
+            throw exception();
     }
 
     // usage if incorrect
