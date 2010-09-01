@@ -27,6 +27,14 @@
 #pragma warning( push )
 #pragma warning( disable : 4634 4635 )
 
+#pragma unmanaged
+#include "pwiz/data/common/cv.hpp"
+#include "pwiz/data/proteome/AminoAcid.hpp"
+#include "pwiz/data/proteome/Peptide.hpp"
+#include "pwiz/data/proteome/Digestion.hpp"
+#include "pwiz/data/proteome/Version.hpp"
+#pragma managed
+
 #ifdef PWIZ_BINDINGS_CLI_COMBINED
     #include "../common/ParamTypes.hpp"
 #else
@@ -34,12 +42,7 @@
     #using "pwiz_bindings_cli_common.dll" as_friend
 #endif
 
-#include "pwiz/data/common/cv.hpp"
 #include "../chemistry/chemistry.hpp"
-#include "pwiz/data/proteome/AminoAcid.hpp"
-#include "pwiz/data/proteome/Peptide.hpp"
-#include "pwiz/data/proteome/Digestion.hpp"
-#include "pwiz/data/proteome/Version.hpp"
 #pragma warning( pop )
 
 
@@ -610,11 +613,19 @@ public ref class Digestion : public System::Collections::Generic::IEnumerable<Di
     /// </summary>
     ref class Enumerator : public System::Collections::Generic::IEnumerator<DigestedPeptide^>
     {
-        internal: pwiz::proteome::Digestion* base_;
+        internal: Digestion^ digestion_;
+                  pwiz::proteome::Digestion* base_;
                   pwiz::proteome::Digestion::const_iterator* itr_;
                   bool isReset_;
 
-        public: Enumerator(pwiz::proteome::Digestion* base) : base_(base), itr_(new pwiz::proteome::Digestion::const_iterator(base->end())), isReset_(true) {}
+        public:
+
+        Enumerator(Digestion^ digestion)
+        : digestion_(digestion),
+          base_(&digestion->base()),
+          itr_(new pwiz::proteome::Digestion::const_iterator(digestion->base().end())),
+          isReset_(true)
+        {}
 
         property DigestedPeptide^ Current
         {
@@ -645,8 +656,8 @@ public ref class Digestion : public System::Collections::Generic::IEnumerable<Di
         ~Enumerator() {delete itr_;}
     };
 
-    virtual System::Collections::Generic::IEnumerator<DigestedPeptide^>^ GetEnumerator() {return gcnew Enumerator(base_);}
-    virtual System::Collections::IEnumerator^ GetEnumerator2() sealed = System::Collections::IEnumerable::GetEnumerator {return gcnew Enumerator(base_);}
+    virtual System::Collections::Generic::IEnumerator<DigestedPeptide^>^ GetEnumerator() {return gcnew Enumerator(this);}
+    virtual System::Collections::IEnumerator^ GetEnumerator2() sealed = System::Collections::IEnumerable::GetEnumerator {return gcnew Enumerator(this);}
 };
 
 

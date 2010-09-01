@@ -68,8 +68,8 @@ ElementInfo::Record^ ElementInfo::record(Element element)
 
 Formula::Formula() : base_(new b::Formula()) {}
 Formula::Formula(System::String^ formula) : base_(new b::Formula(ToStdString(formula))) {}
-Formula::Formula(const Formula^& other) : base_(new b::Formula(*other->base_)) {}
-Formula% Formula::operator=(Formula% other) {base() = *other.base_; return *this;}
+Formula::Formula(const Formula% other) : base_(new b::Formula(*other.base_)) {}
+Formula% Formula::operator=(const Formula% other) {base() = *other.base_; return *this;}
 
 double Formula::monoisotopicMass() {return base().monoisotopicMass();}
 double Formula::molecularWeight() {return base().molecularWeight();}

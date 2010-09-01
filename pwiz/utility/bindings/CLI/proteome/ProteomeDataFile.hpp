@@ -66,7 +66,7 @@ public ref class ProteomeDataFile : public ProteomeData
     /// <summary>
     /// supported data formats for write()
     /// </summary>
-    enum class Format {Text, FASTA};
+    enum class Format {FASTA, Text};
 
     /// <summary>
     /// configuration options for write()

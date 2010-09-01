@@ -40,16 +40,16 @@ using namespace pwiz::util;
 
 #ifdef GC_DEBUG
 #define LOG_DESTRUCT(msg, willDelete) \
-    pwiz::CLI::util::ObjectStructorLog::Log->Append("In " + msg + \
-                                                " destructor (will delete: " + \
-                                                ((willDelete) ? "yes" : "no") + ").\n");
+    pwiz::CLI::util::ObjectStructorLog::WriteLine("In " + msg + \
+                                                  " destructor (will delete: " + \
+                                                  ((willDelete) ? "yes" : "no") + ").\n");
 #define LOG_CONSTRUCT(msg) \
-    pwiz::CLI::util::ObjectStructorLog::Log->Append("In " + msg + " constructor.\n");
+    pwiz::CLI::util::ObjectStructorLog::WriteLine("In " + msg + " constructor.\n");
 
 namespace pwiz { namespace CLI { namespace util {
 public ref class ObjectStructorLog
 {
-    static System::Text::StringBuilder^ log = gcnew System::Text::StringBuilder();
+    static System::IO::TextWriter^ writer = gcnew System::IO::StringWriter();
 
     // Explicit static constructor to tell C# compiler
     // not to mark type as beforefieldinit
@@ -61,10 +61,25 @@ public ref class ObjectStructorLog
     {
     }
 
+    static System::Object^ mutex = gcnew System::Object();
+
     public:
-    static property System::Text::StringBuilder^ Log
+
+    static property System::IO::TextWriter^ OutputStream
     {
-        System::Text::StringBuilder^ get() {return log;}
+        void set(System::IO::TextWriter^ value)
+        {
+            System::Threading::Monitor::Enter(mutex);
+            writer = value;
+            System::Threading::Monitor::Exit(mutex);
+        }
+    }
+
+    static void WriteLine(System::String^ line)
+    {
+        System::Threading::Monitor::Enter(mutex);
+        writer->WriteLine(line);
+        System::Threading::Monitor::Exit(mutex);
     }
 };
 } } }

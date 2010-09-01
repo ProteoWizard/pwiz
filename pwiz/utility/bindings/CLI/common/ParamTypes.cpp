@@ -71,7 +71,7 @@ bool CV::cvIsA(CVID child, CVID parent)
 
 System::Collections::Generic::IList<CVID>^ CV::cvids()
 {
-    return gcnew CVIDList(const_cast<std::vector<b::CVID>*>(&b::cvids()));
+    return gcnew CVIDList(const_cast<std::vector<b::CVID>*>(&b::cvids()), gcnew System::Object());
 }
 
 

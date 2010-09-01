@@ -26,8 +26,12 @@
 
 #pragma warning( push )
 #pragma warning( disable : 4634 4635 )
-#include "../common/SharedCLI.hpp"
+
+#pragma unmanaged
 #include "pwiz/utility/chemistry/Chemistry.hpp"
+#pragma managed
+
+#include "../common/SharedCLI.hpp"
 #pragma warning( pop )
 
 
@@ -124,8 +128,8 @@ public ref class Formula
     /// <summary>formula string given by symbol/count pairs, e.g. water: "H2 O1" (whitespace optional)</summary>
     Formula(System::String^ formula);
 
-    Formula(const Formula^& other);
-    Formula% operator=(Formula% other);
+    Formula(const Formula% other);
+    Formula% operator=(const Formula% other);
 
     double monoisotopicMass();
     double molecularWeight();

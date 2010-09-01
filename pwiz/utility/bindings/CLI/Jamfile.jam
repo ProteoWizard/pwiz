@@ -41,10 +41,10 @@ project
 
 # The DLL is forced to be <link>shared, but its dependencies may be static or shared depending on
 # the build request. The default is link=static, so the command-line is tested for link=shared.
-local bound_lib_requirements = <link>static/<asynch-exceptions>off/<using-clr>false ;
+local bound_lib_requirements = <link>static/<asynch-exceptions>on/<using-clr>false ;
 if link=shared in [ modules.peek : ARGV ]
 {
-    bound_lib_requirements = <link>shared/<asynch-exceptions>off/<using-clr>false ;
+    bound_lib_requirements = <link>shared/<asynch-exceptions>on/<using-clr>false ;
 }
 
 local bound_libs =

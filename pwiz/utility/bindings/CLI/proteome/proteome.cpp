@@ -107,6 +107,7 @@ Fragmentation::Fragmentation(Peptide^ peptide,
                              bool modified)
 :   base_(new b::Fragmentation(peptide->base_->fragmentation(monoisotopic, modified))), owner_(nullptr)
 {
+    System::GC::KeepAlive(peptide);
 }
 
 double Fragmentation::a(int length, int charge) {return base_->a((size_t) length, (size_t) charge);}
@@ -158,13 +159,15 @@ int ModificationMap::CTerminus() {return b::ModificationMap::CTerminus();}
 
 
 DigestedPeptide::DigestedPeptide(String^ sequence)
-: base_(new b::DigestedPeptide(ToStdString(sequence)))
-{owner_ = nullptr;}
+{
+    Peptide::base_ = base_ = new b::DigestedPeptide(ToStdString(sequence));
+    owner_ = nullptr;
+}
 
 DigestedPeptide::DigestedPeptide(String^ sequence, int offset, int missedCleavages, bool NTerminusIsSpecific, bool CTerminusIsSpecific)
 {
     std::string sequenceNative = ToStdString(sequence);
-    base_ = new b::DigestedPeptide(sequenceNative.begin(), sequenceNative.end(), (size_t) offset, (size_t) missedCleavages, NTerminusIsSpecific, CTerminusIsSpecific);
+    Peptide::base_ = base_ = new b::DigestedPeptide(sequenceNative.begin(), sequenceNative.end(), (size_t) offset, (size_t) missedCleavages, NTerminusIsSpecific, CTerminusIsSpecific);
     owner_ = nullptr;
 }
 
@@ -201,6 +204,7 @@ Digestion::Config::Config(int maximumMissedCleavages,
 Digestion::Digestion(Peptide^ peptide, CVID cleavageAgent)
 {
     base_ = new b::Digestion(peptide->base(), (pwiz::cv::CVID) cleavageAgent);
+    System::GC::KeepAlive(peptide);
 }
 
 Digestion::Digestion(Peptide^ peptide, CVID cleavageAgent, Config^ config)
@@ -210,6 +214,8 @@ Digestion::Digestion(Peptide^ peptide, CVID cleavageAgent, Config^ config)
                                                       config->minimumLength,
                                                       config->maximumLength,
                                                       (b::Digestion::Specificity) config->minimumSpecificity));
+    System::GC::KeepAlive(peptide);
+    System::GC::KeepAlive(config);
 }
 
 Digestion::Digestion(Peptide^ peptide, IEnumerable<CVID>^ cleavageAgents)
@@ -219,6 +225,8 @@ Digestion::Digestion(Peptide^ peptide, IEnumerable<CVID>^ cleavageAgents)
         cleavageAgentsNative.push_back((pwiz::cv::CVID) cvid);
 
     base_ = new b::Digestion(peptide->base(), cleavageAgentsNative);
+    System::GC::KeepAlive(peptide);
+    System::GC::KeepAlive(cleavageAgents);
 }
 
 Digestion::Digestion(Peptide^ peptide, IEnumerable<CVID>^ cleavageAgents, Config^ config)
@@ -232,11 +240,15 @@ Digestion::Digestion(Peptide^ peptide, IEnumerable<CVID>^ cleavageAgents, Config
                                                       config->minimumLength,
                                                       config->maximumLength,
                                                       (b::Digestion::Specificity) config->minimumSpecificity));
+    System::GC::KeepAlive(peptide);
+    System::GC::KeepAlive(cleavageAgents);
+    System::GC::KeepAlive(config);
 }
 
 Digestion::Digestion(Peptide^ peptide, System::String^ cleavageAgentRegex)
 {
     base_ = new b::Digestion(peptide->base(), ToStdString(cleavageAgentRegex));
+    System::GC::KeepAlive(peptide);
 }
 
 Digestion::Digestion(Peptide^ peptide, System::String^ cleavageAgentRegex, Config^ config)
@@ -246,6 +258,8 @@ Digestion::Digestion(Peptide^ peptide, System::String^ cleavageAgentRegex, Confi
                                                       config->minimumLength,
                                                       config->maximumLength,
                                                       (b::Digestion::Specificity) config->minimumSpecificity));
+    System::GC::KeepAlive(peptide);
+    System::GC::KeepAlive(config);
 }
 
 CVID Digestion::getCleavageAgentByName(System::String^ agentName)
@@ -278,19 +292,26 @@ List<CVID>^ Digestion::getCleavageAgents()
     return cleavageAgents;
 }
 
-System::Collections::Generic::IList<DigestedPeptide^>^ Digestion::find_all(Peptide^ peptide)
+IList<DigestedPeptide^>^ Digestion::find_all(Peptide^ peptide)
 {
     List<DigestedPeptide^>^ instances = gcnew List<DigestedPeptide^>();
-    // make copies of the native DigestedPeptides because the vector is transient
-    BOOST_FOREACH(const b::DigestedPeptide& p, base().find_all(peptide->base()))
-        instances->Add(gcnew DigestedPeptide(new pwiz::proteome::DigestedPeptide(p)));
 
+    std::vector<b::DigestedPeptide> nativeInstances = base().find_all(peptide->base());
+
+    // make copies of the native DigestedPeptides because the vector is transient
+    for (std::vector<b::DigestedPeptide>::const_iterator itr = nativeInstances.begin();
+         itr != nativeInstances.end();
+         ++itr)
+        instances->Add(gcnew DigestedPeptide(new b::DigestedPeptide(*itr)));
+
+    System::GC::KeepAlive(peptide);
     return instances;
 }
 
-System::Collections::Generic::IList<DigestedPeptide^>^ Digestion::find_all(String^ peptide)
+IList<DigestedPeptide^>^ Digestion::find_all(String^ sequence)
 {
-    return find_all(gcnew Peptide(peptide));
+    Peptide peptide(sequence);
+    return find_all(%peptide);
 }
 
 DigestedPeptide^ Digestion::find_first(Peptide^ peptide)
@@ -298,22 +319,33 @@ DigestedPeptide^ Digestion::find_first(Peptide^ peptide)
     return find_first(peptide, 0);
 }
 
-DigestedPeptide^ Digestion::find_first(String^ peptide)
+DigestedPeptide^ Digestion::find_first(String^ sequence)
 {
-    return find_first(gcnew Peptide(peptide));
+    return find_first(sequence, 0);
 }
 
 DigestedPeptide^ Digestion::find_first(Peptide^ peptide, int offsetHint)
 {
-    b::DigestedPeptide instance = base().find_first(peptide->base(), (size_t) offsetHint);
+    try
+    {
+        b::DigestedPeptide instance = base().find_first(peptide->base(), (size_t) offsetHint);
+        System::GC::KeepAlive(peptide);
 
-    // make a copy of the native DigestedPeptide because the return value is transient
-    return gcnew DigestedPeptide(new pwiz::proteome::DigestedPeptide(instance));
+        // make a copy of the native DigestedPeptide because the instance is transient
+        return gcnew DigestedPeptide(new b::DigestedPeptide(instance));
+    }
+    CATCH_AND_FORWARD
 }
 
-DigestedPeptide^ Digestion::find_first(String^ peptide, int offsetHint)
+DigestedPeptide^ Digestion::find_first(String^ sequence, int offsetHint)
 {
-    return find_first(gcnew Peptide(peptide), offsetHint);
+    try
+    {
+        DigestedPeptide^ instance = gcnew DigestedPeptide(new b::DigestedPeptide("K"));
+        instance->base() = base().find_first(ToStdString(sequence), (size_t) offsetHint);
+        return instance;
+    }
+    CATCH_AND_FORWARD
 }
 
 
