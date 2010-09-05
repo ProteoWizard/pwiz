@@ -19,6 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
+using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Skyline.Util;
@@ -40,6 +42,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// with other built in columns or attributes.
         /// </summary>
         public const string ANNOTATION_PREFIX = "annotation_";
+
         public AnnotationDef(String name, AnnotationTarget annotationTargets, AnnotationType type, IList<String> items) : base(name)
         {
             AnnotationTargets = annotationTargets;
@@ -103,7 +106,8 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
 
-#region object overrides
+        #region object overrides
+
         public bool Equals(AnnotationDef other)
         {
             if (ReferenceEquals(null, other)) return false;
@@ -128,7 +132,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 return result;
             }
         }
-#endregion
+
+        #endregion
 
         [Flags]
         public enum AnnotationTarget
@@ -146,6 +151,98 @@ namespace pwiz.Skyline.Model.DocSettings
             text,
             true_false,
             value_list,
+        }
+
+        public static string GetKey(string annotationName)
+        {
+            return escape(annotationName);
+        }
+
+        public static string GetColumnName(string annotationName)
+        {
+            return ANNOTATION_PREFIX + GetKey(annotationName);
+        }
+
+        public static string GetColumnKey(string columnName)
+        {
+            return columnName.Substring(ANNOTATION_PREFIX.Length);
+        }
+
+        public static string GetColumnDisplayName(string columnName)
+        {
+            return unescape(GetColumnKey(columnName));
+        }
+
+        public static bool IsAnnotationProperty(string propertyName)
+        {
+            return propertyName.StartsWith(ANNOTATION_PREFIX);
+        }
+
+        /// <summary>
+        /// Converts free-text annotation name to a format that can be used
+        /// as a column name in HQL.
+        /// </summary>
+        private static string escape(string annotationName)
+        {
+            StringBuilder result = new StringBuilder();
+            foreach (char c in annotationName)
+            {
+                if (c == '_')
+                    result.Append("__");
+                else if (Char.IsLetterOrDigit(c))
+                    result.Append(c);
+                else
+                    result.Append('_').Append(((int) c).ToString("X2")).Append('_');
+            }
+            return result.ToString();
+        }
+
+        /// <summary>
+        /// Converts and escaped annotation name back to its free-text form.
+        /// </summary>
+        private static string unescape(string key)
+        {
+            // All escaping is based on the underscore character.  If it
+            // is not present, then this key doesn't require unescaping.
+            if (!key.Contains("_"))
+                return key;
+
+            StringBuilder result = new StringBuilder();
+            for (int i = 0; i < key.Length; i++)
+            {
+                char c = key[i];
+                if (c != '_')
+                    result.Append(c);
+                else
+                {
+                    int start = i + 1;
+                    // find the matching underscore character
+                    int end = key.IndexOf('_', start);
+                    // if none found, to be safe, append the rest of the string and quit
+                    if (end == -1)
+                    {
+                        result.Append(key.Substring(i));
+                        break;
+                    }
+                    int charVal;
+                    // double underscore gets converted to underscore
+                    if (end == start)
+                        result.Append('_');
+                        // _XX_ gets converted to the corresponding character code for XX
+                    else if (Int32.TryParse(key.Substring(start, end - start),
+                                          NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out charVal))
+                    {
+                        result.Append((char)charVal);
+                    }
+                        // otherwise just preserve the original text
+                    else
+                    {
+                        result.Append(key.Substring(i, end - i + 1));
+                    }
+                    i = end;
+                }
+            }
+            return result.ToString();
         }
     }
 }

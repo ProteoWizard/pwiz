@@ -119,7 +119,7 @@ namespace pwiz.Skyline.Model.Hibernate
                 {
                     continue;
                 }
-                string columnName = AnnotationPropertyAccessor.GetColumnName(annotationDef.Name);
+                string columnName = AnnotationDef.GetColumnName(annotationDef.Name);
                 var isBoolAttribute = annotationDef.Type == AnnotationDef.AnnotationType.true_false;
                 AddColumn(mapping, columnName, isBoolAttribute ?
                     typeof(BoolAnnotationPropertyAccessor) : typeof(AnnotationPropertyAccessor));
@@ -132,6 +132,9 @@ namespace pwiz.Skyline.Model.Hibernate
             bool isNullable = typeName[typeName.Length - 1] == '?';
             if (isNullable)
                 typeName = typeName.Substring(0, typeName.Length - 1);
+
+            // String annotations can be null also
+            isNullable = isNullable || Equals(STRING_TYPE_NAME, typeName);
 
             var column = new Column(columnName) {IsNullable = isNullable};
             mapping.Table.AddColumn(column);

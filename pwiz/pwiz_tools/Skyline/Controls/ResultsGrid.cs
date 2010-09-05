@@ -695,7 +695,7 @@ namespace pwiz.Skyline.Controls
                 {
                     continue;
                 }
-                var name = AnnotationPropertyAccessor.GetColumnName(annotationDef.Name);
+                var name = AnnotationDef.GetColumnName(annotationDef.Name);
                 DataGridViewColumn column;
                 _annotationColumns.TryGetValue(name, out column);
                 if (column != null)

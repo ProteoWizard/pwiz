@@ -214,8 +214,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 bool isRatio = RatioPropertyAccessor.IsRatioProperty(label);
                 if (isRatio)
                     label = RatioPropertyAccessor.GetDisplayName(label);
-                else if (AnnotationPropertyAccessor.IsAnnotationProperty(label))
-                    label = AnnotationPropertyAccessor.GetDisplayName(label);
+                else if (AnnotationDef.IsAnnotationProperty(label))
+                    label = AnnotationDef.GetColumnDisplayName(label);
                 else if (label.IndexOf("Ratio") != -1)
                     lastRatioIndex = result.Count;
                 var columnInfo = CreateColumnInfo(identifier, classMetadata, propertyName);

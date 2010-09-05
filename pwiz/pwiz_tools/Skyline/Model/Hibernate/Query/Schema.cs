@@ -37,7 +37,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             {
                 foreach (var annotationDef in dataSettings.AnnotationDefs)
                 {
-                    _annotationDefNames.Add(annotationDef.Name);
+                    _annotationDefNames.Add(AnnotationDef.GetKey(annotationDef.Name));
                 }
             }
         }
@@ -54,13 +54,13 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 ReportColumn = new ReportColumn(table, new Identifier(column)),
                 Caption = column
             };
-            if (AnnotationPropertyAccessor.IsAnnotationProperty(column))
+            if (AnnotationDef.IsAnnotationProperty(column))
             {
                 var classMetadata = GetClassMetadata(table);
-                var annotationName = AnnotationPropertyAccessor.GetDisplayName(column);
-                columnInfo.Caption = annotationName;
+                columnInfo.Caption = AnnotationDef.GetColumnDisplayName(column);
                 columnInfo.ColumnType = classMetadata.GetPropertyType(column).ReturnedClass;
-                columnInfo.IsHidden = !_annotationDefNames.Contains(annotationName);
+                columnInfo.IsHidden = !_annotationDefNames.Contains(
+                    AnnotationDef.GetColumnKey(column));
             }
             else if (RatioPropertyAccessor.IsRatioProperty(column))
             {
