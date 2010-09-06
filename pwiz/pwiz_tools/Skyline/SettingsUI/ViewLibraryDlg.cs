@@ -280,7 +280,8 @@ namespace pwiz.Skyline.SettingsUI
         {
             // Used to set correct highlight color for selected item in the listPeptide.
             _activated = true;
-            listPeptide.Invalidate(listPeptide.GetItemRectangle(listPeptide.SelectedIndex));
+            if (listPeptide.SelectedIndex != -1)
+                listPeptide.Invalidate(listPeptide.GetItemRectangle(listPeptide.SelectedIndex));
 
             // Check to see if the library list has changed.
             var newSpectralLibraryList = Settings.Default.SpectralLibraryList.ToList();
@@ -323,7 +324,8 @@ namespace pwiz.Skyline.SettingsUI
         private void ViewLibraryDlg_Deactivate(object sender, EventArgs e)
         {
             _activated = false;
-            listPeptide.Invalidate(listPeptide.GetItemRectangle(listPeptide.SelectedIndex));
+            if (listPeptide.SelectedIndex != -1)
+                listPeptide.Invalidate(listPeptide.GetItemRectangle(listPeptide.SelectedIndex));
         }
 
         protected override void OnClosed(EventArgs e)

@@ -467,9 +467,13 @@ namespace pwiz.Skyline.Model.Results
 
                 // Try loading the final cache from disk, if progressive loading has not started
                 string cachePath = ChromatogramCache.FinalPathForName(_documentPath, null);
-                if (_setClone._listPartialCaches == null)
+                // Always try to load, if the cache exists, since the list of partial caches
+                // may be populated because the user chose Undo.  In this case, failing to
+                // attempt a cache load will force a complete reload of all files in the cache.
+                bool cacheExists = File.Exists(cachePath);
+                if (_setClone._listPartialCaches == null || cacheExists)
                 {
-                    if (File.Exists(cachePath))
+                    if (cacheExists)
                     {
                         try
                         {
