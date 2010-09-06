@@ -699,8 +699,6 @@ namespace pwiz.Skyline.Model.DocSettings
                         throw new InvalidDataException("Settings missing library spec.");
                     continue;
                 }
-                // Library specs should always be null after loading
-                Debug.Assert(libraries.LibrarySpecs[i] == null);
 
                 librarySpecs[i] = findLibrarySpec(library);
                 if (librarySpecs[i] == null)
