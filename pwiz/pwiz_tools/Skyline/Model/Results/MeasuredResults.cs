@@ -471,7 +471,8 @@ namespace pwiz.Skyline.Model.Results
                 // may be populated because the user chose Undo.  In this case, failing to
                 // attempt a cache load will force a complete reload of all files in the cache.
                 bool cacheExists = File.Exists(cachePath);
-                if (_setClone._listPartialCaches == null || cacheExists)
+                if (_setClone._listPartialCaches == null ||
+                        (cacheExists && !_setClone._listPartialCaches.Contains(cache => cache.CachePath == cachePath)))
                 {
                     if (cacheExists)
                     {
