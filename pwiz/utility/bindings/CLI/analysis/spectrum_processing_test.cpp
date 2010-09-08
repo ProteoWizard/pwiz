@@ -31,7 +31,43 @@ using namespace System;
 using namespace System::Collections::Generic;
 
 
-// TODO: test .NET filter predicate
+bool isIndexEven(Spectrum^ s)
+{
+    return (s->index % 2) == 0;
+}
+
+void testFilter()
+{
+    SpectrumListSimple^ sl = gcnew SpectrumListSimple();
+
+    for (int i=0; i < 10; ++i)
+    {
+        Spectrum^ s = gcnew Spectrum();
+        s->id = i.ToString();
+        s->index = i;
+        sl->spectra->Add(s);
+    }
+
+    SpectrumList_FilterAcceptSpectrum^ fas = gcnew SpectrumList_FilterAcceptSpectrum(isIndexEven);
+    SpectrumList_Filter^ slf = gcnew SpectrumList_Filter(sl, fas);
+
+    unit_assert(slf->size() == 5);
+    for (int i=0; i < 5; ++i)
+    {
+        unit_assert(slf->spectrum(i)->index == i); // index is remapped
+        unit_assert(Convert::ToInt32(slf->spectrum(i)->id) == i*2); // id is not remapped
+    }
+
+    SpectrumList_FilterPredicate^ fp = gcnew SpectrumList_FilterPredicate_IndexSet("4-6"); // {4 5 6}
+    slf = gcnew SpectrumList_Filter(sl, fp);
+    
+    unit_assert(slf->size() == 3);
+    for (int i=0; i < 2; ++i)
+    {
+        unit_assert(slf->spectrum(i)->index == i); // index is remapped
+        unit_assert(Convert::ToInt32(slf->spectrum(i)->id) == i+4); // id is not remapped
+    }
+}
 
 
 void testPeakFilter()
@@ -65,6 +101,7 @@ int main()
 {
     try
     {
+        testFilter();
         testPeakFilter();
         return 0;
     }

@@ -88,59 +88,42 @@ namespace analysis {
 public delegate bool SpectrumList_FilterAcceptSpectrum(msdata::Spectrum^);
 private delegate bool SpectrumList_FilterAcceptSpectrumWrapper(const pwiz::msdata::Spectrum*);
 
-/// <summary>
-/// Base predicate intended to be overriden with custom predicate for filtering spectra in SpectrumList_Filter
-/// </summary>
-class SpectrumList_FilterPredicate : public pwiz::analysis::SpectrumList_Filter::Predicate
+
+public ref class SpectrumList_FilterPredicate abstract
 {
-    bool(*filterDelegatePtr)(const pwiz::msdata::Spectrum*);
-
-    public:
-    SpectrumList_FilterPredicate(void* filterDelegatePtr);
-
-    virtual boost::logic::tribool accept(const pwiz::msdata::SpectrumIdentity& spectrumIdentity) const;
-
-    virtual bool accept(const pwiz::msdata::Spectrum& spectrum) const;
-
-    virtual bool done();
+    internal:
+    pwiz::analysis::SpectrumList_Filter::Predicate* base_;
+    ~SpectrumList_FilterPredicate() {SAFEDELETE(base_);}
 };
 
-/* TODO: bind to these built-in predicates
-
-public ref class SpectrumList_FilterPredicate_IndexSet : public SpectrumList_FilterPredicate
+public ref class SpectrumList_FilterPredicate_IndexSet : SpectrumList_FilterPredicate
 {
-    public:
-    SpectrumList_FilterPredicate_IndexSet(const util::IntegerSet& indexSet);
+    public: SpectrumList_FilterPredicate_IndexSet(System::String^ indexSet);
 };
 
 
-public ref class SpectrumList_FilterPredicate_ScanNumberSet : public SpectrumList_FilterPredicate
+public ref class SpectrumList_FilterPredicate_ScanNumberSet : SpectrumList_FilterPredicate
 {
-    public:
-    SpectrumList_FilterPredicate_ScanNumberSet(const util::IntegerSet& scanNumberSet);
+    public: SpectrumList_FilterPredicate_ScanNumberSet(System::String^ scanNumberSet);
 };
 
 
-public ref class SpectrumList_FilterPredicate_ScanEventSet : public SpectrumList_FilterPredicate
+public ref class SpectrumList_FilterPredicate_ScanEventSet : SpectrumList_FilterPredicate
 {
-    public:
-    SpectrumList_FilterPredicate_ScanEventSet(const util::IntegerSet& scanEventSet);
+    public: SpectrumList_FilterPredicate_ScanEventSet(System::String^ scanEventSet);
 };
 
 
-public ref class SpectrumList_FilterPredicate_ScanTimeRange : public SpectrumList_FilterPredicate
+public ref class SpectrumList_FilterPredicate_ScanTimeRange : SpectrumList_FilterPredicate
 {
-    public:
-    SpectrumList_FilterPredicate_ScanTimeRange(double scanTimeLow, double scanTimeHigh);
+    public: SpectrumList_FilterPredicate_ScanTimeRange(double scanTimeLow, double scanTimeHigh);
 };
 
 
-public ref class SpectrumList_FilterPredicate_MSLevelSet : public SpectrumList_FilterPredicate
+public ref class SpectrumList_FilterPredicate_MSLevelSet : SpectrumList_FilterPredicate
 {
-    public:
-    SpectrumList_FilterPredicate_MSLevelSet(const util::IntegerSet& msLevelSet);
-}
-*/
+    public: SpectrumList_FilterPredicate_MSLevelSet(System::String^ msLevelSet);
+};
 
 
 /*public interface IPredicate
@@ -175,10 +158,14 @@ public ref class SpectrumList_Filter : public msdata::SpectrumList
     SpectrumList_Filter(msdata::SpectrumList^ inner,
                         SpectrumList_FilterAcceptSpectrum^ predicate);
 
+    SpectrumList_Filter(msdata::SpectrumList^ inner,
+                        SpectrumList_FilterPredicate^ predicate);
 
     private:
 
-    SpectrumList_FilterAcceptSpectrum^ managedPredicate;
+    SpectrumList_FilterAcceptSpectrum^ userManagedPredicate;
+    SpectrumList_FilterAcceptSpectrumWrapper^ userManagedPredicateWrapper;
+    SpectrumList_FilterPredicate^ managedPredicate;
     bool marshal(const pwiz::msdata::Spectrum* s);
 };
 
