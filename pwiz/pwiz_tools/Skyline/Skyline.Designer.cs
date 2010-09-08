@@ -1488,7 +1488,7 @@ namespace pwiz.Skyline
             // 
             this.statusGeneral.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.statusGeneral.Name = "statusGeneral";
-            this.statusGeneral.Size = new System.Drawing.Size(246, 17);
+            this.statusGeneral.Size = new System.Drawing.Size(379, 17);
             this.statusGeneral.Spring = true;
             this.statusGeneral.Text = "Ready";
             this.statusGeneral.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;

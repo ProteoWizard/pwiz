@@ -37,6 +37,8 @@ namespace pwiz.Skyline.Controls
     {
         private readonly Dictionary<RowIdentifier, DataGridViewRow> _chromInfoRows 
             = new Dictionary<RowIdentifier, DataGridViewRow>();
+        private readonly Stack<DataGridViewRow> _unassignedRows
+            = new Stack<DataGridViewRow>();
 
         private Dictionary<string, DataGridViewColumn> _annotationColumns 
             = new Dictionary<string, DataGridViewColumn>();
@@ -618,7 +620,13 @@ namespace pwiz.Skyline.Controls
             {
                 return row;
             }
-            row = Rows[Rows.Add(new DataGridViewRow {Tag = rowIdentifier})];
+            if (_unassignedRows.Count == 0)
+                row = Rows[Rows.Add(new DataGridViewRow {Tag = rowIdentifier})];
+            else
+            {
+                row = _unassignedRows.Pop();
+                row.Tag = rowIdentifier;
+            }
             row.Cells[OptStepColumn.Index].Value = rowIdentifier.OptimizationStep;
             _chromInfoRows.Add(rowIdentifier, row);
             return row;
@@ -636,9 +644,27 @@ namespace pwiz.Skyline.Controls
             return EnsureRow(iReplicate, 0, 0, rowIds);
         }
 
-        private void ClearRows()
+        /// <summary>
+        /// Removes all rows from the grid
+        /// </summary>
+        private void RemoveAllRows()
         {
             Rows.Clear();
+            _chromInfoRows.Clear();
+        }
+
+        /// <summary>
+        /// Clears row assignments leaving the actual rows in the grid for reassignment
+        /// </summary>
+        private void ClearAllRows()
+        {
+            for (int i = Rows.Count - 1; i >= 0; i--)
+            {
+                var row = Rows[i];
+
+                row.Tag = null;
+                _unassignedRows.Push(row);
+            }
             _chromInfoRows.Clear();
         }
 
@@ -665,13 +691,19 @@ namespace pwiz.Skyline.Controls
                 SelectedTransitionGroupDocNode = null;
                 SelectedPeptideDocNode = null;
                 SelectedPath = null;
-                ClearRows();
+                RemoveAllRows();
                 HideColumns();
                 return;
             }
-            var newPath = srmTreeNode.Path;
-            if (SelectedPath != null && SelectedPath.Depth != newPath.Depth)
-                ClearRows();
+
+            // Always clear all rows (accept in a commit), and allow them to have their row
+            // IDs reset.  It turns out that this produces a much more stable user experience
+            // than trying to match up existing row ID.  Because part of the row ID is the file
+            // index, row correspondence was getting completely messed up when switching between
+            // nodes collected in different results files.
+            if (!_inCommitEdit)
+                ClearAllRows();
+
             SelectedPath = srmTreeNode.Path;
             SelectedTransitionDocNode = srmTreeNode.Model as TransitionDocNode;
             if (SelectedTransitionDocNode != null)
@@ -1040,6 +1072,10 @@ namespace pwiz.Skyline.Controls
             {
                 Rows.Remove(_chromInfoRows[rowId]);
                 _chromInfoRows.Remove(rowId);
+            }
+            while (_unassignedRows.Count > 0)
+            {
+                Rows.Remove(_unassignedRows.Pop());
             }
 
             // Update column visibility from the settings.  This has to be done

@@ -1211,7 +1211,7 @@ namespace pwiz.Skyline
                     while (i < menu.DropDownItems.Count)
                         menu.DropDownItems.RemoveAt(i);
 
-                    RemovePeakHandler handler = new RemovePeakHandler(this, pathGroup, nodeTran);
+                    RemovePeakHandler handler = new RemovePeakHandler(this, pathGroup, nodeGroup, nodeTran);
                     item = new ToolStripMenuItem(name, null, handler.menuItem_Click);
                     menu.DropDownItems.Insert(i, item);
                 }
@@ -1222,24 +1222,34 @@ namespace pwiz.Skyline
             // Remove the rest of the existing items
             while (i < menu.DropDownItems.Count)
                 menu.DropDownItems.RemoveAt(i);
+
+            if (i > 1)
+            {
+                RemovePeakHandler handler = new RemovePeakHandler(this, pathGroup, nodeGroup, null);
+                var item = new ToolStripMenuItem("All", null, handler.menuItem_Click);
+                menu.DropDownItems.Insert(i, item);
+            }
         }
 
         private class RemovePeakHandler
         {
             private readonly SkylineWindow _skyline;
             private readonly IdentityPath _groupPath;
+            private readonly TransitionGroupDocNode _nodeGroup;
             private readonly TransitionDocNode _nodeTran;
 
-            public RemovePeakHandler(SkylineWindow skyline, IdentityPath groupPath, TransitionDocNode nodeTran)
+            public RemovePeakHandler(SkylineWindow skyline, IdentityPath groupPath,
+                TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
             {
                 _skyline = skyline;
                 _groupPath = groupPath;
+                _nodeGroup = nodeGroup;
                 _nodeTran = nodeTran;
             }
 
             public void menuItem_Click(object sender, EventArgs e)
             {
-                _skyline.RemovePeak(_groupPath, _nodeTran);
+                _skyline.RemovePeak(_groupPath, _nodeGroup, _nodeTran);
             }
         }
 
@@ -1248,13 +1258,31 @@ namespace pwiz.Skyline
             var nodeTranTree = SelectedNode as TransitionTreeNode;
             if (nodeTranTree == null)
                 return;
-            RemovePeak(SelectedPath.Parent, nodeTranTree.DocNode);
+            var nodeGroup = ((TransitionGroupTreeNode) nodeTranTree.Parent).DocNode;
+            var nodeTran = nodeTranTree.DocNode;
+            RemovePeak(SelectedPath.Parent, nodeGroup, nodeTran);
         }
 
-        private void RemovePeak(IdentityPath groupPath, TransitionDocNode nodeTran)
+        private void RemovePeak(IdentityPath groupPath,
+            TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
         {
+            string message;
+            ChromInfo chromInfo;
+            Transition transition;
+
             int iResults = sequenceTree.ResultsIndex;
-            var chromInfo = GetTransitionChromInfo(nodeTran, iResults);
+            if (nodeTran == null)
+            {
+                message = string.Format("Remove all peaks from {0}", ChromGraphItem.GetTitle(nodeGroup));
+                chromInfo = GetTransitionGroupChromInfo(nodeGroup, iResults);
+                transition = null;
+            }
+            else
+            {
+                message = string.Format("Remove peak from {0}", ChromGraphItem.GetTitle(nodeTran));
+                chromInfo = GetTransitionChromInfo(nodeTran, iResults);
+                transition = nodeTran.Transition;
+            }
             if (chromInfo == null)
                 return;
 
@@ -1263,9 +1291,19 @@ namespace pwiz.Skyline
             if (name == null)
                 return;
 
-            ModifyDocument(string.Format("Remove peak from {0}", ChromGraphItem.GetTitle(nodeTran)),
-                doc => doc.ChangePeak(groupPath, name, filePath, nodeTran.Transition, 0, 0));
+            ModifyDocument(message,
+                doc => doc.ChangePeak(groupPath, name, filePath, transition, 0, 0));
             
+        }
+
+        private static TransitionGroupChromInfo GetTransitionGroupChromInfo(TransitionGroupDocNode nodeGroup, int iResults)
+        {
+            if (iResults == -1 || !nodeGroup.HasResults || iResults >= nodeGroup.Results.Count)
+                return null;
+            var listChromInfo = nodeGroup.Results[iResults];
+            if (listChromInfo == null)
+                return null;
+            return listChromInfo[0];
         }
 
         private static TransitionChromInfo GetTransitionChromInfo(TransitionDocNode nodeTran, int iResults)

@@ -472,7 +472,7 @@ namespace pwiz.Skyline.Model.Results
                 // attempt a cache load will force a complete reload of all files in the cache.
                 bool cacheExists = File.Exists(cachePath);
                 if (_setClone._listPartialCaches == null ||
-                        (cacheExists && !_setClone._listPartialCaches.Contains(cache => cache.CachePath == cachePath)))
+                        (cacheExists && !_setClone._listPartialCaches.Contains(cache => Equals(cache.CachePath, cachePath))))
                 {
                     if (cacheExists)
                     {
