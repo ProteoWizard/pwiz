@@ -313,16 +313,16 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
             double injectionTime = scanInfo->trailerExtraValueDouble("Ion Injection Time (ms):");
             scan.set(MS_ion_injection_time, injectionTime, UO_millisecond);
 
-			/* TODO: add verbosity settings to Reader interface
-			if (analyzerType == MassAnalyzerType_Orbitrap || analyzerType == MassAnalyzerType_FTICR)
-			{
-				string ftSettings = scanInfo->trailerExtraValue("FT Analyzer Settings:");
-				string ftMessage = scanInfo->trailerExtraValue("FT Analyzer Message:");
-				scan.userParams.push_back(UserParam("FT Analyzer Settings", ftSettings, "xsd:string"));
-				scan.userParams.push_back(UserParam("FT Analyzer Message", ftMessage, "xsd:string"));
-				string msResolution = scanInfo->trailerExtraValue("FT Resolution:");
-				scan.cvParams.push_back(CVParam(MS_mass_resolution, msResolution));
-			}*/
+            /* TODO: add verbosity settings to Reader interface
+            if (analyzerType == MassAnalyzerType_Orbitrap || analyzerType == MassAnalyzerType_FTICR)
+            {
+                string ftSettings = scanInfo->trailerExtraValue("FT Analyzer Settings:");
+                string ftMessage = scanInfo->trailerExtraValue("FT Analyzer Message:");
+                scan.userParams.push_back(UserParam("FT Analyzer Settings", ftSettings, "xsd:string"));
+                scan.userParams.push_back(UserParam("FT Analyzer Message", ftMessage, "xsd:string"));
+                string msResolution = scanInfo->trailerExtraValue("FT Resolution:");
+                scan.cvParams.push_back(CVParam(MS_mass_resolution, msResolution));
+            }*/
         }
         catch (RawEgg&)
         {
@@ -402,11 +402,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
                     /* TODO: figure out why this fails with HRESULT=6 on some files
                     MassRangePtr massRange = MassRangePtr(new MassRange());
                     if (isolationWidth == 0)
-                    	massRange->low = isolationMz-1.5; massRange->high = isolationMz+2.5;
+                        massRange->low = isolationMz-1.5; massRange->high = isolationMz+2.5;
                     else
                     {
-                    	massRange->low = isolationMz-isolationWidth;
-                    	massRange->high = isolationMz+isolationWidth;
+                        massRange->low = isolationMz-isolationWidth;
+                        massRange->high = isolationMz+isolationWidth;
                     }	
                     MassListPtr massList = rawfile_->getMassList(precursorScanIndex, "", Cutoff_None, 0, 0, true, MassList_Current, massRange);
                     double peakIntensity = 0;
@@ -424,9 +424,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
                     // TODO: determine correct window around precursor m/z
                     ostringstream massRangeStream;
                     if (isolationWidth == 0)
-						massRangeStream << setprecision(7) << (isolationMz-1.5) << '-' << (isolationMz+2.5);
-					else
-						massRangeStream << setprecision(7) << (isolationMz-isolationWidth) << '-' << (isolationMz+isolationWidth);
+                        massRangeStream << setprecision(7) << (isolationMz-1.5) << '-' << (isolationMz+2.5);
+                    else
+                        massRangeStream << setprecision(7) << (isolationMz-isolationWidth) << '-' << (isolationMz+isolationWidth);
                     double precursorScanTime = rawfile_->rt(index_[precursorScanIndex].scan);
                     ChromatogramDataPtr c = rawfile_->getChromatogramData(Type_BasePeak, Operator_None, Type_MassRange,
                                                                           "",
