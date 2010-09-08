@@ -91,9 +91,7 @@ void test()
         new SpectrumList_Sorter(originalList, MSLevelSorter(), true));
 
     SpectrumListPtr sillySortedList(
-        new SpectrumList_Sorter(
-            SpectrumListPtr(new SpectrumList_Sorter(originalList, MSLevelSorter())),
-            DefaultArrayLengthSorter()));
+        new SpectrumList_Sorter(msLevelStableSortedList, DefaultArrayLengthSorter()));
 
     if (os_)
     {
@@ -248,6 +246,10 @@ int main(int argc, char* argv[])
     catch (exception& e)
     {
         cerr << e.what() << endl;
+    }
+    catch(...)
+    {
+        cerr << "Unknown exception." << endl;
     }
     
     return 1;
