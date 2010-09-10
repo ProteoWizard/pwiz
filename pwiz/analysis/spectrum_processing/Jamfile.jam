@@ -54,6 +54,8 @@ lib pwiz_analysis_spectrum_processing
         SpectrumList_MetadataFixer.cpp
         PrecursorRecalculatorDefault.cpp
         PrecursorMassFilter.cpp
+		MS2NoiseFilter.cpp
+		MS2Deisotoper.cpp
         ThresholdFilter.cpp
     : # requirements
         <library>../../data/msdata//pwiz_data_msdata

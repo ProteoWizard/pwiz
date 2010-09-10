@@ -22,6 +22,8 @@
 #include "pwiz/data/msdata/MSData.hpp"
 #include "PrecursorMassFilter.hpp"
 #include "ThresholdFilter.hpp"
+#include "MS2Deisotoper.hpp"
+#include "MS2NoiseFilter.hpp"
 #include "SpectrumList_PeakFilter.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/data/msdata/examples.hpp"
@@ -132,7 +134,7 @@ TestETDMassFilter testETDMassFilterData[] =
 
 const size_t testETDMassFilterDataSize = sizeof(testETDMassFilterData) / sizeof(TestETDMassFilter);
 
-void testMassRemoval()
+void testPrecursorMassRemoval()
 {
     for (size_t i=0; i < testETDMassFilterDataSize; ++i)
     {
@@ -318,10 +320,169 @@ void testIntensityThresholding()
     }
 }
 
+////////////////////////////////////////////////////////////////////////////
+//  Markey Deisotoper test
+////////////////////////////////////////////////////////////////////////////
+
+struct TestDeisotoper
+{
+    // space-delimited doubles
+    const char* inputMZArray;
+    const char* inputIntensityArray;
+    const char* outputMZArray;
+    const char* outputIntensityArray;
+
+    MZTolerance tol;
+    bool hires;
+};
+
+TestDeisotoper TestDeisotopers[] =
+{
+    // Markey method
+    {   
+        "101 102 103 104 105", 
+        "10 20 30 20 10", 
+        "101 102 103", 
+        "10 20 30", 
+        0.5,
+        false
+    },
+};
+
+const size_t testDeisotopersSize = sizeof(TestDeisotopers) / sizeof(TestDeisotoper);
+
+void testDeisotoping()
+{
+    for (size_t i=0; i < testDeisotopersSize; ++i)
+    {
+
+        SpectrumListSimple* sl = new SpectrumListSimple;
+        SpectrumListPtr originalList(sl);
+        SpectrumPtr s(new Spectrum);
+        sl->spectra.push_back(s);
+
+        TestDeisotoper& t = TestDeisotopers[i];
+
+        vector<double> inputMZArray = parseDoubleArray(t.inputMZArray);
+        vector<double> inputIntensityArray = parseDoubleArray(t.inputIntensityArray);
+        s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_counts);
+        s->set(MS_MSn_spectrum);
+        s->set(MS_ms_level, 2);
+        s->precursors.resize(1);
+        s->precursors[0].activation.set(MS_electron_transfer_dissociation);
+        s->precursors[0].selectedIons.resize(1);
+        s->precursors[0].selectedIons[0].set(MS_selected_ion_m_z, PRECURSOR_MZ, MS_m_z);
+        s->precursors[0].selectedIons[0].set(MS_charge_state, PRECURSOR_CHARGE);
+
+        SpectrumDataFilterPtr pFilter = SpectrumDataFilterPtr(new MS2Deisotoper(MS2Deisotoper::Config(t.tol, t.hires)));
+        SpectrumListPtr deisotopedList(new SpectrumList_PeakFilter(originalList, pFilter));
+
+        vector<double> outputMZArray = parseDoubleArray(t.outputMZArray);
+        vector<double> outputIntensityArray = parseDoubleArray(t.outputIntensityArray);
+
+        SpectrumPtr deisotopedSpectrum = deisotopedList->spectrum(0, true);
+        unit_assert(deisotopedSpectrum->defaultArrayLength == outputMZArray.size());
+        for (size_t i=0; i < outputMZArray.size(); ++i)
+        {
+            unit_assert(deisotopedSpectrum->getMZArray()->data[i] == outputMZArray[i]);
+            unit_assert(deisotopedSpectrum->getIntensityArray()->data[i] == outputIntensityArray[i]);
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////
+//  Moving Window MS2 Denoise test
+////////////////////////////////////////////////////////////////////////////
+
+struct TestMS2Denoise
+{
+    // space-delimited doubles
+    const char* inputMZArray;
+    const char* inputIntensityArray;
+    const char* outputMZArray;
+    const char* outputIntensityArray;
+
+    double precursorMass;
+    int precursorCharge;
+    double windowSize;
+    int keepTopN;
+    bool relaxLowMass;
+};
+
+TestMS2Denoise TestMS2DenoiseArr[] =
+{
+    {   // basic test
+        "101 102 103 104 105", 
+        "10 20 30 20 10", 
+        "102 103 104", 
+        "20 30 20", 
+        500.0,
+        2,
+        10.0,
+        3,
+        false
+    },
+    {   // verify removal of precursor and masses above parent mass minus glycine
+        "101 102 103 104 105 500 945", 
+        "10 20 30 20 10 10 10", 
+        "102 103 104", 
+        "20 30 20", 
+        500.0,
+        2,
+        10.0,
+        3,
+        false
+    },
+};
+
+const size_t testMS2DenoiseSize = sizeof(TestMS2DenoiseArr) / sizeof(TestMS2Denoise);
+
+void testMS2Denoising()
+{
+    for (size_t i=0; i < testMS2DenoiseSize; ++i)
+    {
+
+        SpectrumListSimple* sl = new SpectrumListSimple;
+        SpectrumListPtr originalList(sl);
+        SpectrumPtr s(new Spectrum);
+        sl->spectra.push_back(s);
+
+        TestMS2Denoise& t = TestMS2DenoiseArr[i];
+
+        vector<double> inputMZArray = parseDoubleArray(t.inputMZArray);
+        vector<double> inputIntensityArray = parseDoubleArray(t.inputIntensityArray);
+        s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_counts);
+        s->set(MS_MSn_spectrum);
+        s->set(MS_ms_level, 2);
+        s->precursors.resize(1);
+        s->precursors[0].activation.set(MS_electron_transfer_dissociation);
+        s->precursors[0].selectedIons.resize(1);
+        s->precursors[0].selectedIons[0].set(MS_selected_ion_m_z, t.precursorMass, MS_m_z);
+        s->precursors[0].selectedIons[0].set(MS_charge_state, t.precursorCharge);
+
+        SpectrumDataFilterPtr pFilter = SpectrumDataFilterPtr(new MS2NoiseFilter(MS2NoiseFilter::Config(t.keepTopN, t.windowSize, t.relaxLowMass)));
+        SpectrumListPtr filteredList(new SpectrumList_PeakFilter(originalList, pFilter));
+
+        vector<double> outputMZArray = parseDoubleArray(t.outputMZArray);
+        vector<double> outputIntensityArray = parseDoubleArray(t.outputIntensityArray);
+
+        SpectrumPtr filteredSpectrum = filteredList->spectrum(0, true);
+        unit_assert(filteredSpectrum->defaultArrayLength == outputMZArray.size());
+        for (size_t i=0; i < outputMZArray.size(); ++i)
+        {
+            unit_assert(filteredSpectrum->getMZArray()->data[i] == outputMZArray[i]);
+            unit_assert(filteredSpectrum->getIntensityArray()->data[i] == outputIntensityArray[i]);
+        }
+    }
+    
+}
+
 void test()
 {
     testIntensityThresholding();
-    testMassRemoval();
+    testPrecursorMassRemoval();
+    testDeisotoping();
+    testMS2Denoising();
 }
 
 int main(int argc, char* argv[])

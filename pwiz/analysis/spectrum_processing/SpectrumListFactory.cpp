@@ -34,6 +34,8 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_MetadataFixer.hpp"
 #include "pwiz/analysis/spectrum_processing/PrecursorMassFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/ThresholdFilter.hpp"
+#include "pwiz/analysis/spectrum_processing/MS2NoiseFilter.hpp"
+#include "pwiz/analysis/spectrum_processing/MS2Deisotoper.hpp"
 #include "pwiz/data/msdata/SpectrumInfo.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 
@@ -175,6 +177,56 @@ SpectrumListPtr filterCreator_ETDFilter(const MSData& msd, const string& arg)
                                 filter));
 }
 
+SpectrumListPtr filterCreator_MS2Denoise(const MSData& msd, const string& arg)
+{
+    istringstream parser(arg);
+
+    size_t  numPeaksInWindow = 6;
+    double  windowSize = 30.;
+    bool    relaxLowMass = false;
+
+    string npeaks, wsize, relax;
+    parser >> npeaks;
+    if (npeaks.empty() == false)
+        numPeaksInWindow = lexical_cast<int>(npeaks);
+    parser >> wsize;
+    if (wsize.empty() == false)
+        windowSize = lexical_cast<double>(wsize);
+    parser >> relax;
+    if (relax.empty() == false)
+        relaxLowMass = lexical_cast<bool>(relax);
+
+    SpectrumDataFilterPtr filter = SpectrumDataFilterPtr(new MS2NoiseFilter(MS2NoiseFilter::Config(numPeaksInWindow, windowSize, relaxLowMass)));
+    return SpectrumListPtr(new 
+            SpectrumList_PeakFilter(msd.run.spectrumListPtr,
+                                   filter));
+}
+
+SpectrumListPtr filterCreator_MS2Deisotope(const MSData& msd, const string& arg)
+{
+    istringstream parser(arg);
+
+    bool hires = false;
+    string buf;
+    parser >> buf;
+    if (buf.empty() == false)
+    {
+        if (buf == "true")
+            hires = true;
+    }
+
+    MZTolerance mzt(hires? 0.01 : 0.5);
+    if (parser.good())
+    {
+        parser >> mzt;
+    }
+
+
+    SpectrumDataFilterPtr filter = SpectrumDataFilterPtr(new MS2Deisotoper(MS2Deisotoper::Config(mzt, hires)));
+    return SpectrumListPtr(new 
+            SpectrumList_PeakFilter(msd.run.spectrumListPtr,
+                                   filter));
+}
 struct StripIonTrapSurveyScans : public SpectrumList_Filter::Predicate
 {
     virtual boost::logic::tribool accept(const SpectrumIdentity& spectrumIdentity) const
@@ -267,6 +319,7 @@ SpectrumListPtr filterCreator_ActivationType(const MSData& msd, const string& ar
     // ------------------------------------------------------------
     //  ETD                Yes         No              C/Z
     //  CID                No          Yes             B/Y
+    //  HCD                No          Yes             B/Y
     //  ETD/SA             Yes         Yes             C/Z
     //
     // Check for presence or absense of ETD flag only.
@@ -400,6 +453,8 @@ JumpTableEntry jumpTable_[] =
     {"defaultArrayLength", "int_set", filterCreator_defaultArrayLength},
 
     // MSn Spectrum Processing/Filtering
+    {"MS2Denoise", "moving window filter for MS2: num peaks to select in window:int_val(default 6) window width (Da):val (default 30) multicharge fragment relaxation: <true|false> (default true)", filterCreator_MS2Denoise},
+    {"MS2Deisotope", "deisotope ms2 spectra using Markey method", filterCreator_MS2Deisotope},
     {"ETDFilter", "removePrecursor:<default:true|false>  removeChargeReduced:<default:true|false>  removeNeutralLoss:<default:true|false>  blanketRemoval:<default:true|false>  MatchingTolerance:(val <PPM|MZ>) (default:3.1 MZ)", filterCreator_ETDFilter},
     {"activation", "<ETD|CID|SA|HCD> (filter by precursor activation type)", filterCreator_ActivationType},
     {"analyzerType", "<FTMS|ITMS> (filter by mass analyzer type)", filterCreator_AnalyzerType}
