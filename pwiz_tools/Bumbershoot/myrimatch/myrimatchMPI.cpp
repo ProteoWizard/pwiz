@@ -607,7 +607,7 @@ namespace myrimatch
             Serializer_FASTA unpacker;
             shared_ptr<ProteomeData> subsetProteinsPtr(new ProteomeData);
             unpacker.read(proteinStream, *subsetProteinsPtr);
-            proteins = proteinStore(subsetProteinsPtr);
+            proteins = proteinStore(subsetProteinsPtr, "");
 		} catch( exception& e )
 		{
 			cerr << g_hostString << " had an error: " << typeid(e).name() << " (" << e.what() << ")" << endl;
