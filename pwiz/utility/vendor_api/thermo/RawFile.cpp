@@ -1015,7 +1015,7 @@ void ScanInfoImpl::parseFilterString()
     precursorActivationEnergies_.insert(precursorActivationEnergies_.end(), filterParser.cidEnergy_.begin(), filterParser.cidEnergy_.end());
     isProfileScan_ = filterParser.dataPointType_ == DataPointType_Profile;
     isCentroidScan_ = filterParser.dataPointType_ == DataPointType_Centroid;
-	faimsOn_ = filterParser.faimsOn_;
+	faimsOn_ = filterParser.faimsOn_ == TriBool_True;
 	compensationVoltage_ = filterParser.compensationVoltage_;
 }
 
