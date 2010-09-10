@@ -89,6 +89,7 @@ rule vendor-api-requirements ( properties * )
     if <toolset>msvc in $(properties) &&
        [ path.exists $(API_PATH)/DACServer.dll ]
     {
+        result += <linkflags>/FORCE:MULTIPLE ; # HACK FIXME: workaround for multiply defined Reader::~Reader()
         result += <define>PWIZ_READER_WATERS_LEGACY ;
         result += <dependency>$(API_PATH)/DACServer.dll ;
         result += <dependency>$(API_PATH)/genutil.dll ;
