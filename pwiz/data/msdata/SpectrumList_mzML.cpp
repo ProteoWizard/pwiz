@@ -61,6 +61,7 @@ class SpectrumList_mzMLImpl : public SpectrumList_mzML
     private:
     shared_ptr<istream> is_;
     const MSData& msd_;
+    int schemaVersion_;
     mutable bool indexed_;
 
     mutable util::once_flag_proxy indexSizeSet_;
@@ -69,6 +70,7 @@ class SpectrumList_mzMLImpl : public SpectrumList_mzML
     mutable vector<SpectrumIdentity> index_;
     mutable map<string,size_t> idToIndex_;
     mutable map<string,IndexList> spotIDToIndexList_;
+    mutable map<string,string> legacyIdRefToNativeId_;
 
     void setIndexSize() const; // set the index size from the spectrumList count attribute
     void readIndex() const;
@@ -83,6 +85,7 @@ SpectrumList_mzMLImpl::SpectrumList_mzMLImpl(shared_ptr<istream> is, const MSDat
     indexSizeSet_(util::init_once_flag_proxy),
     indexInitialized_(util::init_once_flag_proxy)
 {
+    schemaVersion_ = bal::starts_with(msd_.version(), "1.0") ? 1 : 0;
 }
 
 
@@ -131,7 +134,6 @@ SpectrumPtr SpectrumList_mzMLImpl::spectrum(size_t index, bool getBinaryData) co
         throw runtime_error("[SpectrumList_mzML::spectrum()] Out of memory.");
 
     IO::BinaryDataFlag binaryDataFlag = getBinaryData ? IO::ReadBinaryData : IO::IgnoreBinaryData;
-    int schemaVersion = msd_.version().find("1.0") == 0 ? 1 : 0;
 
     try
     {
@@ -139,7 +141,7 @@ SpectrumPtr SpectrumList_mzMLImpl::spectrum(size_t index, bool getBinaryData) co
         if (!*is_) 
             throw runtime_error("[SpectrumList_mzML::spectrum()] Error seeking to <spectrum>.");
 
-        IO::read(*is_, *result, binaryDataFlag, schemaVersion, &msd_);
+        IO::read(*is_, *result, binaryDataFlag, schemaVersion_, &legacyIdRefToNativeId_, &msd_);
 
         // test for reading the wrong spectrum
         if (result->index != index)
@@ -154,7 +156,7 @@ SpectrumPtr SpectrumList_mzMLImpl::spectrum(size_t index, bool getBinaryData) co
         createIndex();
 
         is_->seekg(offset_to_position(index_[index].sourceFilePosition));
-        IO::read(*is_, *result, binaryDataFlag, schemaVersion, &msd_);
+        IO::read(*is_, *result, binaryDataFlag, schemaVersion_, &legacyIdRefToNativeId_, &msd_);
     }
 
     // resolve any references into the MSData object
@@ -178,7 +180,7 @@ class HandlerIndexListOffset : public SAXParser::Handler
                                 stream_offset position)
     {
         if (name != "indexListOffset")
-            throw runtime_error(("[SpectrumList_mzML::HandlerIndexOffset] Unexpected element name: " + name).c_str());
+            throw runtime_error("[SpectrumList_mzML::HandlerIndexOffset] Unexpected element name: " + name);
         return Status::Ok;
     }
 
@@ -196,7 +198,8 @@ class HandlerIndexListOffset : public SAXParser::Handler
 
 struct HandlerOffset : public SAXParser::Handler
 {
-    SpectrumIdentity* spectrumIdentity; 
+    SpectrumIdentity* spectrumIdentity;
+    map<string,string>* legacyIdRefToNativeId;
 
     HandlerOffset() : spectrumIdentity(0) {}
 
@@ -208,10 +211,33 @@ struct HandlerOffset : public SAXParser::Handler
             throw runtime_error("[SpectrumList_mzML::HandlerOffset] Null spectrumIdentity."); 
 
         if (name != "offset")
-            throw runtime_error(("[SpectrumList_mzML::HandlerOffset] Unexpected element name: " + name).c_str());
+            throw runtime_error("[SpectrumList_mzML::HandlerOffset] Unexpected element name: " + name);
 
         getAttribute(attributes, "idRef", spectrumIdentity->id);
         getAttribute(attributes, "spotID", spectrumIdentity->spotID);
+
+        // mzML 1.0
+        if (version == 1)
+        {
+            string idRef, nativeID;
+            getAttribute(attributes, "idRef", idRef);
+            getAttribute(attributes, "nativeID", nativeID);
+            if (nativeID.empty())
+                spectrumIdentity->id = idRef;
+            else
+            {
+                try
+                {
+                    lexical_cast<int>(nativeID);
+                    spectrumIdentity->id = "scan=" + nativeID;
+                }
+                catch(exception&)
+                {
+                    spectrumIdentity->id = nativeID;
+                }
+                (*legacyIdRefToNativeId)[idRef] = spectrumIdentity->id;
+            }
+        }
 
         return Status::Ok;
     }
@@ -232,10 +258,12 @@ class HandlerIndex : public SAXParser::Handler
 {
     public:
 
-    HandlerIndex(vector<SpectrumIdentity>& index)
+    HandlerIndex(vector<SpectrumIdentity>& index, map<string,string>& legacyIdRefToNativeId, int version)
     :   index_(index), offsetCount_(0)
     {
         handlerOffset_.autoUnescapeCharacters = false;
+        handlerOffset_.version = version;
+        handlerOffset_.legacyIdRefToNativeId = &legacyIdRefToNativeId;
     }
 
     virtual Status startElement(const string& name, 
@@ -276,8 +304,8 @@ class HandlerIndexList : public SAXParser::Handler
 {
     public:
 
-    HandlerIndexList(vector<SpectrumIdentity>& index)
-    :   handlerIndex_(index)
+    HandlerIndexList(vector<SpectrumIdentity>& index, map<string,string>& legacyIdRefToNativeId, int version)
+    :   handlerIndex_(index, legacyIdRefToNativeId, version)
     {}
 
     virtual Status startElement(const string& name, 
@@ -373,7 +401,7 @@ void SpectrumList_mzMLImpl::readIndex() const
     if (!*is_) 
         throw runtime_error("[SpectrumList_mzML::readIndex()] Error seeking to <index>.");
 
-    HandlerIndexList handlerIndexList(index_);
+    HandlerIndexList handlerIndexList(index_, legacyIdRefToNativeId_, schemaVersion_);
     SAXParser::parse(*is_, handlerIndexList);
 }
 

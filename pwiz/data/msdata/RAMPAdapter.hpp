@@ -51,6 +51,9 @@ class PWIZ_API_DECL RAMPAdapter
     /// returns scanCount() if scanNumber is not found
     size_t index(int scanNumber) const;
 
+    /// returns the scan number for a specified scan
+    int getScanNumber(size_t index) const;
+
     /// fills in RAMP ScanHeaderStruct for a specified scan
     void getScanHeader(size_t index, ScanHeaderStruct& result) const;
 

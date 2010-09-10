@@ -121,7 +121,7 @@ PWIZ_API_DECL void read(std::istream& is, Activation& activation);
     
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Precursor& precursor);
-PWIZ_API_DECL void read(std::istream& is, Precursor& precursor);
+PWIZ_API_DECL void read(std::istream& is, Precursor& precursor, const std::map<std::string,std::string>* legacyIdRefToNativeId = 0);
     
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Product& product);
@@ -155,7 +155,9 @@ void write(minimxml::XMLWriter& writer, const Spectrum& spectrum, const MSData& 
 PWIZ_API_DECL
 void read(std::istream& is, Spectrum& spectrum, 
           BinaryDataFlag binaryDataFlag = IgnoreBinaryData,
-          int version = 0, const MSData* msd = 0);
+          int version = 0,
+          const std::map<std::string,std::string>* legacyIdRefToNativeId = 0,
+          const MSData* msd = 0);
 
 
 PWIZ_API_DECL

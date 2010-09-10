@@ -43,7 +43,10 @@ class RAMPAdapter::Impl
     public:
 
     Impl(const string& filename) 
-    :   msd_(filename), firstIndex_((size_t)-1), lastIndex_(0)
+    :   msd_(filename),
+        nativeIdFormat_(id::getDefaultNativeIDFormat(msd_)),
+        firstIndex_((size_t)-1),
+        lastIndex_(0)
     {
         if (!msd_.run.spectrumListPtr.get())
             throw runtime_error("[RAMPAdapter] Null spectrumListPtr.");
@@ -88,6 +91,7 @@ class RAMPAdapter::Impl
         return msd_.run.spectrumListPtr->find(id);
     }
 
+    int getScanNumber(size_t index) const;
     void getScanHeader(size_t index, ScanHeaderStruct& result) const;
     void getScanPeaks(size_t index, std::vector<double>& result) const;
     void getRunHeader(RunHeaderStruct& result) const;
@@ -95,6 +99,7 @@ class RAMPAdapter::Impl
 
     private:
     MSDataFile msd_;
+    CVID nativeIdFormat_;
     CVTranslator cvTranslator_;
     vector<bool> nonDefaultSpectra_;
     size_t firstIndex_, lastIndex_;
@@ -117,6 +122,21 @@ double retentionTime(const Scan& scan)
 } // namespace
 
 
+int RAMPAdapter::Impl::getScanNumber(size_t index) const
+{
+    const SpectrumIdentity& si = msd_.run.spectrumListPtr->spectrumIdentity(index);
+    string scanNumber = id::translateNativeIDToScanNumber(nativeIdFormat_, si.id);
+
+    if (scanNumber.empty()) // unsupported nativeID type
+    {
+        // assume scanNumber is a 1-based index, consistent with this->index() method
+        return static_cast<int>(index) + 1;
+    } 
+    else
+        return lexical_cast<int>(scanNumber);
+}
+
+
 void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result) const
 {
     const SpectrumList& spectrumList = *msd_.run.spectrumListPtr;
@@ -125,18 +145,8 @@ void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result) co
     Scan dummy;
     Scan& scan = spectrum->scanList.scans.empty() ? dummy : spectrum->scanList.scans[0];
 
-    CVID nativeIdFormat = id::getDefaultNativeIDFormat(msd_);
-    string scanNumber = id::translateNativeIDToScanNumber(nativeIdFormat, spectrum->id);
     result.seqNum = static_cast<int>(index + 1);
-    if (scanNumber.empty()) // unsupported nativeID type
-    {
-        // assume scanNumber is a 1-based index, consistent with this->index() method
-        result.acquisitionNum = result.seqNum;
-    } 
-    else 
-    {
-        result.acquisitionNum = lexical_cast<int>(scanNumber);
-    }
+    result.acquisitionNum = getScanNumber(index);
     result.msLevel = spectrum->cvParam(MS_ms_level).valueAs<int>();
     result.peaksCount = static_cast<int>(spectrum->defaultArrayLength);
     result.totIonCurrent = spectrum->cvParam(MS_total_ion_current).valueAs<double>();
@@ -161,7 +171,7 @@ void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result) co
         if (precursorIndex < spectrumList.size())
         {
             SpectrumPtr precursorSpectrum = spectrumList.spectrum(precursorIndex);
-            string precursorScanNumber = id::translateNativeIDToScanNumber(nativeIdFormat, precursorSpectrum->id);
+            string precursorScanNumber = id::translateNativeIDToScanNumber(nativeIdFormat_, precursorSpectrum->id);
             
             if (precursorScanNumber.empty()) // unsupported nativeID type
             {
@@ -271,6 +281,7 @@ void RAMPAdapter::Impl::getInstrument(InstrumentStruct& result) const
 PWIZ_API_DECL RAMPAdapter::RAMPAdapter(const std::string& filename) : impl_(new Impl(filename)) {}
 PWIZ_API_DECL size_t RAMPAdapter::scanCount() const {return impl_->scanCount();}
 PWIZ_API_DECL size_t RAMPAdapter::index(int scanNumber) const {return impl_->index(scanNumber);}
+PWIZ_API_DECL int RAMPAdapter::getScanNumber(size_t index) const {return impl_->getScanNumber(index);}
 PWIZ_API_DECL void RAMPAdapter::getScanHeader(size_t index, ScanHeaderStruct& result) const {impl_->getScanHeader(index, result);}
 PWIZ_API_DECL void RAMPAdapter::getScanPeaks(size_t index, std::vector<double>& result) const {impl_->getScanPeaks(index, result);}
 PWIZ_API_DECL void RAMPAdapter::getRunHeader(RunHeaderStruct& result) const {impl_->getRunHeader(result);}

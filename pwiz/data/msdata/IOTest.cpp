@@ -346,7 +346,7 @@ void testPrecursor()
 {
     Precursor a;
     
-    a.spectrumID = "19";
+    a.spectrumID = "scan=19";
     a.isolationWindow.set(MS_isolation_window_target_m_z, 123456, MS_m_z);
     a.isolationWindow.set(MS_isolation_window_lower_offset, 2, MS_m_z);
     a.isolationWindow.set(MS_isolation_window_upper_offset, 3, MS_m_z);
@@ -355,8 +355,11 @@ void testPrecursor()
     a.selectedIons[1].set(MS_charge_state, 2);
     a.activation.set(MS_collision_induced_dissociation);
     a.activation.set(MS_collision_energy, 35.00);
-  
+
     testObject(a);
+
+    // TODO: fix this to test mzML 1.0 precursors;
+    // (requires fixing the framework to support testing different schema versions)
 }
 
 

@@ -1233,9 +1233,11 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Precursor& precursor
 struct HandlerPrecursor : public HandlerParamContainer
 {
     Precursor* precursor;
+    const map<string,string>* legacyIdRefToNativeId;
 
-    HandlerPrecursor(Precursor* _precursor = 0)
+    HandlerPrecursor(Precursor* _precursor = 0, const map<string, string>* legacyIdRefToNativeId = 0)
     :   precursor(_precursor), 
+        legacyIdRefToNativeId(legacyIdRefToNativeId),
         handlerIsolationWindow_("isolationWindow"), 
         handlerSelectedIon_("selectedIon"), 
         handlerActivation_("activation")
@@ -1252,6 +1254,14 @@ struct HandlerPrecursor : public HandlerParamContainer
         {
             getAttribute(attributes, "spectrumRef", precursor->spectrumID); // not an XML:IDREF
             getAttribute(attributes, "externalSpectrumID", precursor->externalSpectrumID);
+
+            // mzML 1.0
+            if (version == 1 && legacyIdRefToNativeId && !precursor->spectrumID.empty())
+            {
+                map<string,string>::const_iterator itr = legacyIdRefToNativeId->find(precursor->spectrumID);
+                if (itr != legacyIdRefToNativeId->end())
+                    precursor->spectrumID = itr->second;
+            }
 
             // note: placeholder
             string sourceFileRef;
@@ -1293,9 +1303,9 @@ struct HandlerPrecursor : public HandlerParamContainer
 };
 
 
-PWIZ_API_DECL void read(std::istream& is, Precursor& precursor)
+PWIZ_API_DECL void read(std::istream& is, Precursor& precursor, const map<string,string>* legacyIdRefToNativeId)
 {
-    HandlerPrecursor handler(&precursor);
+    HandlerPrecursor handler(&precursor, legacyIdRefToNativeId);
     SAXParser::parse(is, handler);
 }
 
@@ -1873,15 +1883,20 @@ struct HandlerSpectrum : public HandlerParamContainer
 {
     BinaryDataFlag binaryDataFlag;
     Spectrum* spectrum;
+    const map<string,string>* legacyIdRefToNativeId;
     const MSData* msd;
 
     HandlerSpectrum(BinaryDataFlag _binaryDataFlag,
                     Spectrum* _spectrum = 0,
+                    const map<string,string>* legacyIdRefToNativeId = 0,
                     const MSData* _msd = 0)
     :   binaryDataFlag(_binaryDataFlag),
         spectrum(_spectrum),
-        msd(_msd)
-    {}
+        legacyIdRefToNativeId(legacyIdRefToNativeId),
+        msd(_msd),
+        handlerPrecursor_(0, legacyIdRefToNativeId)
+    {
+    }
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
@@ -1900,26 +1915,11 @@ struct HandlerSpectrum : public HandlerParamContainer
             getAttribute(attributes, "id", spectrum->id); // not an XML:ID
 
             // mzML 1.0
-            if (version == 1)
+            if (version == 1 && legacyIdRefToNativeId)
             {
-                string nativeID;
-                getAttribute(attributes, "nativeID", nativeID);
-                if (nativeID.empty())
-                    getAttribute(attributes, "id", spectrum->id); // not an XML:ID
-                else
-                {
-                    try
-                    {
-                        lexical_cast<int>(nativeID);
-                        //cerr << "[IO::HandlerSpectrum] Warning - mzML 1.0: <spectrum>::nativeID\n";
-                        spectrum->id = "scan=" + nativeID;
-                    }
-                    catch(exception&)
-                    {
-                        //cerr << "[IO::HandlerSpectrum] Warning - mzML 1.0: non-integral <spectrum>::nativeID; id format unknown\n";
-                        spectrum->id = nativeID;
-                    }
-                }
+                map<string,string>::const_iterator itr = legacyIdRefToNativeId->find(spectrum->id);
+                if (itr != legacyIdRefToNativeId->end())
+                    spectrum->id = itr->second;
             }
 
             // note: placeholder
@@ -1950,6 +1950,7 @@ struct HandlerSpectrum : public HandlerParamContainer
         {
             spectrum->precursors.push_back(Precursor());
             handlerPrecursor_.precursor = &spectrum->precursors.back();
+            handlerPrecursor_.version = version;
             return Status(Status::Delegate, &handlerPrecursor_);
         }
         else if (name == "product")
@@ -2001,9 +2002,11 @@ struct HandlerSpectrum : public HandlerParamContainer
 
 PWIZ_API_DECL void read(std::istream& is, Spectrum& spectrum,
                         BinaryDataFlag binaryDataFlag,
-                        int version, const MSData* msd)
+                        int version,
+                        const map<string,string>* legacyIdRefToNativeId,
+                        const MSData* msd)
 {
-    HandlerSpectrum handler(binaryDataFlag, &spectrum, msd);
+    HandlerSpectrum handler(binaryDataFlag, &spectrum, legacyIdRefToNativeId, msd);
     handler.version = version;
     SAXParser::parse(is, handler);
 }
