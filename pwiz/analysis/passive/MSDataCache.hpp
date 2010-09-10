@@ -81,7 +81,7 @@ class PWIZ_API_DECL MSDataCache : public std::vector<SpectrumInfo>,
     struct PWIZ_API_DECL Config
     {
         size_t binaryDataCacheSize;
-        Config() : binaryDataCacheSize(1) {}
+        Config(size_t cacheSize = 1) : binaryDataCacheSize(cacheSize) {}
     };
 
     MSDataCache(const Config& config = Config());

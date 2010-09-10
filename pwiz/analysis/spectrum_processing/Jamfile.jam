@@ -52,6 +52,7 @@ lib pwiz_analysis_spectrum_processing
         SpectrumList_ChargeStateCalculator.cpp
         SpectrumList_MZWindow.cpp
         SpectrumList_MetadataFixer.cpp
+		SpectrumList_PrecursorRefine.cpp
         PrecursorRecalculatorDefault.cpp
         PrecursorMassFilter.cpp
 		MS2NoiseFilter.cpp
@@ -104,6 +105,14 @@ run SpectrumList_PrecursorRecalculatorTest.cpp pwiz_analysis_spectrum_processing
     : SpectrumList_PrecursorRecalculatorTest.data/5peptideFT.mzML # input-files
     : # requirements
     : SpectrumList_PrecursorRecalculatorTest # target name
+    : # default-build
+    ;
+
+run SpectrumList_PrecursorRefineTest.cpp pwiz_analysis_spectrum_processing 
+    : # args
+    : SpectrumList_PrecursorRecalculatorTest.data/PrecursorRefineOrbi.mzML # input-files
+    : # requirements
+    : SpectrumList_PrecursorRefineTest # target name
     : # default-build
     ;
 

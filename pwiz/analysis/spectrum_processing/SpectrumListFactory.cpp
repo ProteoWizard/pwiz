@@ -30,6 +30,7 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PeakFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_ChargeStateCalculator.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PrecursorRecalculator.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_PrecursorRefine.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_MZWindow.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_MetadataFixer.hpp"
 #include "pwiz/analysis/spectrum_processing/PrecursorMassFilter.hpp"
@@ -255,6 +256,11 @@ SpectrumListPtr filterCreator_precursorRecalculation(const MSData& msd, const st
 }
 
 
+SpectrumListPtr filterCreator_precursorRefine(const MSData& msd, const string& arg)
+{
+    return SpectrumListPtr(new SpectrumList_PrecursorRefine(msd));
+}
+
 SpectrumListPtr filterCreator_mzWindow(const MSData& msd, const string& arg)
 {
     double mzLow = 0;
@@ -442,6 +448,7 @@ JumpTableEntry jumpTable_[] =
     {"index", "int_set", filterCreator_index},
     {"msLevel", "int_set", filterCreator_msLevel},
     {"precursorRecalculation", " (based on ms1 data)", filterCreator_precursorRecalculation},
+    {"precursorRefine", " (based on ms1 data)", filterCreator_precursorRefine},
     {"peakPicking", "prefer_vendor:<true|false>  int_set(MS levels)", filterCreator_nativeCentroid},
     {"scanNumber", "int_set", filterCreator_scanNumber},
     {"scanEvent", "int_set", filterCreator_scanEvent},
