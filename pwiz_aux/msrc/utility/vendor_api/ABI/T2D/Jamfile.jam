@@ -43,11 +43,11 @@ rule vendor-api-requirements ( properties * )
         # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
         if <link>shared in $(properties) || link=shared in [ modules.peek : ARGV ]
         {
-            result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<asynch-exceptions>off/<link>shared ;
+            result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<link>shared ;
         }
         else
         {
-            result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<asynch-exceptions>off ;
+            result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc ;
         }
         result += <linkflags>/FORCE:MULTIPLE ; # HACK HACK HACK: the duplicate date_time symbols must be fixed, but how?!
         result += <assembly>$(API_PATH)/Interop.DataExplorer.dll ;
