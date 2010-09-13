@@ -37,16 +37,14 @@ rule vendor-api-requirements ( properties * )
     if <toolset>msvc in $(properties) &&
        [ path.exists $(API_PATH)/Interop.EDAL.dll ]
     {
-        # Even though the vendor API is forced to <link>static and <asynch-exceptions>on,
-        # its pwiz and boost dependencies should not follow suit.
         # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
         if <link>shared in $(properties) || link=shared in [ modules.peek : ARGV ]
         {
-            result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<asynch-exceptions>off/<link>shared ;
+            result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<link>shared ;
         }
         else
         {
-            result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<asynch-exceptions>off ;
+            result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc ;
         }
         result += <linkflags>/FORCE:MULTIPLE ; # HACK HACK HACK: the duplicate date_time symbols must be fixed, but how?!
         result += <assembly>$(API_PATH)/Interop.EDAL.dll ;
@@ -57,9 +55,11 @@ rule vendor-api-requirements ( properties * )
         result += <assembly-dependency>$(API_PATH)/CompassXtractMS.dll ;
         result += <assembly-dependency>$(API_PATH)/boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll ;
         result += <assembly-dependency>$(API_PATH)/boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll ;
+        #result += <assembly-dependency>$(API_PATH)/boost_date_time-vc80-mt-1_33_1-BDAL_20070424.dll ;
         result += <assembly-dependency>$(API_PATH)/libfftw3-3.dll ;
         result += <assembly-dependency>$(API_PATH)/libfftw3f-3.dll ;
         result += <assembly-dependency>$(API_PATH)/NTB-vc80-mt-4_3_61.dll ;
+        #result += <assembly-dependency>$(API_PATH)/NTB-vc80-mt-1_5_97.dll ;
         result += <manifest-dependency>$(API_PATH)/Interop.EDAL.dll ;
         result += <assembly-dependency>$(API_PATH)/Interop.EDAL.SxS.manifest ;
     }
