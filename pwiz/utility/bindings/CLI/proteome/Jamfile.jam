@@ -37,42 +37,6 @@ project
         release
 	;
 
-local bound_libs =
-        <dependency>../common//pwiz_bindings_cli_common
-
-        <library>$(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome/<link>static/<asynch-exceptions>off
-        <library>$(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome_examples/<link>static/<asynch-exceptions>off
-    ;
-
-obj proteome         : proteome.cpp         : $(bound_libs) <assembly-dependency>../common//pwiz_bindings_cli_common ;
-obj Diff             : Diff.cpp             : $(bound_libs) <assembly-dependency>../common//pwiz_bindings_cli_common ;
-obj ProteomeData     : ProteomeData.cpp     : $(bound_libs) <assembly-dependency>../common//pwiz_bindings_cli_common ;
-obj ProteomeDataFile : ProteomeDataFile.cpp : $(bound_libs) <assembly-dependency>../common//pwiz_bindings_cli_common ;
-obj Reader           : Reader.cpp           : $(bound_libs) <assembly-dependency>../common//pwiz_bindings_cli_common ;
-obj examples         : examples.cpp         : $(bound_libs) <assembly-dependency>../common//pwiz_bindings_cli_common ;
-
-explicit proteome Diff ProteomeData ProteomeDataFile Reader examples ;
-
-lib pwiz_bindings_cli_proteome
-    : # sources
-        ../common//SharedCLITest
-        proteome
-        Diff
-        ProteomeData
-        ProteomeDataFile
-        Reader
-        examples
-    : # requirements
-        $(bound_libs)
-        <link>shared
-        <linkflags>"/MACHINE:X86 /FIXED:No" # /KEYFILE:$(CLI_ROOT)/signature.snk"
-    : # default-build
-    : # usage-requirements
-        $(bound_libs)
-        <assembly>../common//pwiz_bindings_cli_common
-    ;
-explicit pwiz_bindings_cli_proteome ;
-
 
 unit-test proteome_test : proteome_test.cpp : <conditional>@unit-test-requirements ;
 unit-test ProteomeDataTest : ProteomeDataTest.cpp : <conditional>@unit-test-requirements ;
