@@ -143,6 +143,8 @@ namespace seems
             paneList = new PaneList();
             paneLayout = PaneLayout.SingleColumn;
 
+		    msGraphControl.BorderStyle = BorderStyle.None;
+
             msGraphControl.MasterPane.InnerPaneGap = 1;
             msGraphControl.MouseDownEvent += new ZedGraphControl.ZedMouseEventHandler( msGraphControl_MouseDownEvent );
             msGraphControl.MouseMoveEvent += new ZedGraphControl.ZedMouseEventHandler( msGraphControl_MouseMoveEvent );
@@ -258,6 +260,8 @@ namespace seems
         public override void Refresh()
         {
             MasterPane mp = msGraphControl.MasterPane;
+            mp.Border.IsVisible = false;
+            //pane.Chart.Border.IsVisible = false;
             
             if( mp.PaneList.Count != paneList.Count )
             {
@@ -265,6 +269,7 @@ namespace seems
                 foreach( Pane logicalPane in paneList )
                 {
                     MSGraphPane pane = new MSGraphPane();
+                    pane.Border.IsVisible = false;
                     pane.IsFontsScaled = false;
                     mp.Add( pane );
                 }
@@ -274,6 +279,7 @@ namespace seems
                 for( int i=0; i < paneList.Count; ++i )
                 {
                     MSGraphPane pane = mp.PaneList[i] as MSGraphPane;
+                    pane.Border.IsVisible = false;
                     pane.CurveList.Clear();
                     pane.GraphObjList.Clear();
                 }
@@ -284,6 +290,7 @@ namespace seems
                 Pane logicalPane = paneList[i];
                 MSGraphPane pane = mp.PaneList[i] as MSGraphPane;
                 pane.IsFontsScaled = false;
+                pane.Border.IsVisible = false;
 
                 foreach( GraphItem item in logicalPane )
                 {
