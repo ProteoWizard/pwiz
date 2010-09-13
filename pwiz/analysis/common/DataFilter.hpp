@@ -25,7 +25,7 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "boost/shared_ptr.hpp"
+#include "pwiz/data/msdata/MSData.hpp"
 
 
 namespace pwiz {

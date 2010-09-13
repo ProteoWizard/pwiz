@@ -19,15 +19,13 @@
 // limitations under the License.
 //
 
+#define PWIZ_SOURCE
 
-#include "pwiz/data/msdata/MSData.hpp"
-#include "pwiz/analysis/common/DataFilter.hpp"
+
 #include "MS2Deisotoper.hpp"
 #include "pwiz/analysis/peakdetect/PeakFamilyDetectorFT.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include "boost/foreach.hpp"
-#include "boost/shared_ptr.hpp"
-#include <iostream>
+#include "pwiz/utility/misc/Std.hpp"
+
 
 namespace pwiz {
 namespace analysis {
@@ -38,6 +36,29 @@ using namespace pwiz::data;
 using namespace pwiz::data::peakdata;
 
 using boost::shared_ptr;
+
+namespace {
+
+struct PWIZ_API_DECL FilterSpectrum
+{
+    FilterSpectrum(const MS2Deisotoper::Config& params_, 
+                   const pwiz::msdata::SpectrumPtr spectrum_);
+    ~FilterSpectrum()
+    {
+    }
+
+    void DeIsotopeHiRes() { /* TODO: call peak family detector */ }
+    void DeIsotopeLowRes();
+
+    // data
+    const MS2Deisotoper::Config params;
+
+    const pwiz::msdata::SpectrumPtr spectrum;
+    std::vector<double>&            massList_;
+    std::vector<double>&            intensities_;
+    double                          precursorMZ;
+    int                             precursorCharge;
+};
 
 vector<pair<double, int> > GetPrecursors(const SpectrumPtr spectrum)
 {
@@ -70,8 +91,8 @@ vector<pair<double, int> > GetPrecursors(const SpectrumPtr spectrum)
     return precursorList;
 }
 
-MS2Deisotoper::FilterSpectrum::FilterSpectrum(const MS2Deisotoper::Config& params_, 
-                    const pwiz::msdata::SpectrumPtr spectrum_) 
+FilterSpectrum::FilterSpectrum(const MS2Deisotoper::Config& params_, 
+                               const pwiz::msdata::SpectrumPtr spectrum_) 
                     : params(params_), 
                       spectrum(spectrum_), 
                       massList_(spectrum->getMZArray()->data), 
@@ -108,7 +129,7 @@ bool operator < (const indexValuePair& lhs, const indexValuePair& rhs)
     return lhs.val > rhs.val;
 }
 
-void MS2Deisotoper::FilterSpectrum::DeIsotopeLowRes()
+void FilterSpectrum::DeIsotopeLowRes()
 {
     vector<indexValuePair> indexValuePairs;
 
@@ -163,6 +184,9 @@ void MS2Deisotoper::FilterSpectrum::DeIsotopeLowRes()
     spectrum->defaultArrayLength = massList_.size();
 }
 
+} // namespace
+
+
 void MS2Deisotoper::describe(ProcessingMethod& method) const
 {
     //method.set(MS_ECD_ETD_Precursor_Mass_Filter);
@@ -185,8 +209,6 @@ void MS2Deisotoper::operator () (const SpectrumPtr spectrum) const
         FilterSpectrum(params, spectrum);
     }
 }
-
-
 
 } // namespace analysis 
 } // namespace pwiz

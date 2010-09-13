@@ -24,6 +24,11 @@
 #define _MS2_NOISE_FILTER_HPP_ 
 
 
+#include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/data/msdata/MSData.hpp"
+#include "pwiz/analysis/common/DataFilter.hpp"
+
+
 namespace pwiz {
 namespace analysis {
 
@@ -38,10 +43,10 @@ namespace analysis {
 //    Juri Rappsilber, Dominic Winter, Judith A. J. Steen, Fred A. Hamprecht and Hanno Steen
 //    Proteomics, 9, 4978-4984, 2009.
 
-struct MS2NoiseFilter : public SpectrumDataFilter
+struct PWIZ_API_DECL MS2NoiseFilter : public SpectrumDataFilter
 {
-     /// MS2NoiseFilter's parameters
-    struct Config
+    /// MS2NoiseFilter's parameters
+    struct PWIZ_API_DECL Config
     {
         Config(
             int           	numMassesInWindow_ = 5, 
@@ -54,32 +59,13 @@ struct MS2NoiseFilter : public SpectrumDataFilter
         bool    relaxLowMass;
     };
 
-    struct FilterSpectrum
-    {
-        FilterSpectrum( const MS2NoiseFilter::Config& params_, 
-                        const pwiz::msdata::SpectrumPtr spectrum_);
-        ~FilterSpectrum()
-        {
-        }
-
-        void RetrievePrecursorMass();
-
-        // data
-        const MS2NoiseFilter::Config params;
-
-        const pwiz::msdata::SpectrumPtr spectrum;
-        std::vector<double>&            massList_;
-        std::vector<double>&            intensities_;
-        double                          precursorMZ;
-        int                             precursorCharge;
-    };
-
     MS2NoiseFilter(const MS2NoiseFilter::Config params_) : params(params_) {}
     virtual void operator () (const pwiz::msdata::SpectrumPtr) const;
     virtual void describe(pwiz::msdata::ProcessingMethod&) const;
 
     const MS2NoiseFilter::Config params;
 };
+
 
 } // namespace analysis 
 } // namespace pwiz

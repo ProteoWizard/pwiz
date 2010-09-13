@@ -19,12 +19,12 @@
 // limitations under the License.
 //
 
+#define PWIZ_SOURCE
 
-#include "pwiz/data/msdata/MSData.hpp"
-#include "pwiz/analysis/common/DataFilter.hpp"
+
 #include "MS2NoiseFilter.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include "boost/foreach.hpp"
+#include "pwiz/utility/misc/Std.hpp"
+
 
 namespace pwiz {
 namespace analysis {
@@ -34,7 +34,7 @@ using namespace msdata;
 
 const double factor = 0.5;
 
-MS2NoiseFilter::Config::Config(
+PWIZ_API_DECL MS2NoiseFilter::Config::Config(
             int           	numMassesInWindow_, 
             double          windowWidth_,
             bool            relaxLowMass_)
@@ -44,6 +44,9 @@ MS2NoiseFilter::Config::Config(
     relaxLowMass(relaxLowMass_)
 {
 }
+
+
+namespace {
 
 struct indexValuePair
 {
@@ -65,7 +68,27 @@ static double PropogateNulls(double& arg1, double& arg2)
         return arg2;
 }
 
-void MS2NoiseFilter::FilterSpectrum::RetrievePrecursorMass()
+struct FilterSpectrum
+{
+    FilterSpectrum( const MS2NoiseFilter::Config& params_, 
+                    const pwiz::msdata::SpectrumPtr spectrum_);
+    ~FilterSpectrum()
+    {
+    }
+
+    void RetrievePrecursorMass();
+
+    // data
+    const MS2NoiseFilter::Config params;
+
+    const pwiz::msdata::SpectrumPtr spectrum;
+    std::vector<double>&            massList_;
+    std::vector<double>&            intensities_;
+    double                          precursorMZ;
+    int                             precursorCharge;
+};
+
+void FilterSpectrum::RetrievePrecursorMass()
 {
     BOOST_FOREACH(Precursor& precursor, spectrum->precursors)
     {
@@ -98,8 +121,8 @@ void MS2NoiseFilter::FilterSpectrum::RetrievePrecursorMass()
     }
 }
 
-MS2NoiseFilter::FilterSpectrum::FilterSpectrum(const MS2NoiseFilter::Config& params_, 
-                    const pwiz::msdata::SpectrumPtr spectrum_) 
+FilterSpectrum::FilterSpectrum(const MS2NoiseFilter::Config& params_, 
+                               const pwiz::msdata::SpectrumPtr spectrum_) 
                     : params(params_), 
                       spectrum(spectrum_), 
                       massList_(spectrum->getMZArray()->data), 
@@ -201,7 +224,10 @@ MS2NoiseFilter::FilterSpectrum::FilterSpectrum(const MS2NoiseFilter::Config& par
     spectrum->defaultArrayLength = massList_.size();
 }
 
-void MS2NoiseFilter::describe(ProcessingMethod& method) const
+} // namespace
+
+
+PWIZ_API_DECL void MS2NoiseFilter::describe(ProcessingMethod& method) const
 {
     method.set(MS_SpectraFilter);
     method.userParams.push_back(UserParam("num masses in window", lexical_cast<string>(params.numMassesInWindow)));
@@ -209,7 +235,7 @@ void MS2NoiseFilter::describe(ProcessingMethod& method) const
     method.userParams.push_back(UserParam("allow more data below multiply charged precursor", lexical_cast<string>(params.relaxLowMass)));
 }
 
-void MS2NoiseFilter::operator () (const SpectrumPtr spectrum) const
+PWIZ_API_DECL void MS2NoiseFilter::operator () (const SpectrumPtr spectrum) const
 {
     if (spectrum->cvParam(MS_ms_level).valueAs<int>() > 1 &&
         spectrum->cvParam(MS_MSn_spectrum).empty() == false &&

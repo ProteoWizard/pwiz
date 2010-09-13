@@ -23,7 +23,10 @@
 #ifndef _MS2DEISOTOPER_HPP_ 
 #define _MS2DEISOTOPER_HPP_ 
 
+
+#include "pwiz/analysis/common/DataFilter.hpp"
 #include "pwiz/analysis/peakdetect/MZTolerance.hpp"
+
 
 namespace pwiz {
 namespace analysis {
@@ -31,10 +34,10 @@ namespace analysis {
 
 // Deisotope high resolution ms2 spectra
 
-struct MS2Deisotoper : public SpectrumDataFilter
+struct PWIZ_API_DECL MS2Deisotoper : public SpectrumDataFilter
 {
      /// PrecursorMassFilter's parameters
-    struct Config
+    struct PWIZ_API_DECL Config
     {
         Config(MZTolerance tol = MZTolerance(0.5), bool hires_ = false) 
             : matchingTolerance(tol), hires(hires_) {}
@@ -43,33 +46,13 @@ struct MS2Deisotoper : public SpectrumDataFilter
         bool hires;
     };
 
-    struct FilterSpectrum
-    {
-        FilterSpectrum( const MS2Deisotoper::Config& params_, 
-                        const pwiz::msdata::SpectrumPtr spectrum_);
-        ~FilterSpectrum()
-        {
-        }
-
-        void DeIsotopeHiRes() { /* TODO: call peak family detector */ }
-        void DeIsotopeLowRes();
-
-        // data
-        const MS2Deisotoper::Config params;
-
-        const pwiz::msdata::SpectrumPtr spectrum;
-        std::vector<double>&            massList_;
-        std::vector<double>&            intensities_;
-        double                          precursorMZ;
-        int                             precursorCharge;
-    };
-
     MS2Deisotoper(const MS2Deisotoper::Config params_) : params(params_) {}
     virtual void operator () (const pwiz::msdata::SpectrumPtr) const;
     virtual void describe(pwiz::msdata::ProcessingMethod&) const;
 
     const MS2Deisotoper::Config params;
 };
+
 
 } // namespace analysis 
 } // namespace pwiz
