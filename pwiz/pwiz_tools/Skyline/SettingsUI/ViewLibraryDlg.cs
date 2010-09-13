@@ -260,6 +260,24 @@ namespace pwiz.Skyline.SettingsUI
             return searchRange;
         }
 
+        public bool AssociateMatchingProteins
+        {
+            get { return cbAssociateProteins.Checked; }
+            set { cbAssociateProteins.Checked = value; }
+        }
+
+        public void ChangeSelectedPeptide(string text)
+        {
+            foreach(ViewLibraryPepInfo pepInfo in listPeptide.Items)
+            {
+                if (pepInfo.DisplayString.Contains(text))
+                {
+                    listPeptide.SelectedItem = pepInfo;
+                    return;
+                }
+            }
+        }
+
         #region Dialog Events
 
         private void ViewLibraryDlg_Load(object sender, EventArgs e)
@@ -1100,7 +1118,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             var keyMatched = nodePepMatched.SequenceKey;
             int chargeMatched = ((TransitionGroupDocNode) nodePepMatched.Children[0]).TransitionGroup.PrecursorCharge;
-            if (Document.Peptides.Contains(nodePep => Equals(nodePep.SequenceKey, keyMatched) && nodePep.HasChildCharge(chargeMatched)))
+            if (!cbAssociateProteins.Checked && Document.Peptides.Contains(nodePep => Equals(nodePep.SequenceKey, keyMatched) && nodePep.HasChildCharge(chargeMatched)))
             {
                 MessageDlg.Show(this, string.Format("The peptide {0} already exists with charge {1} in the current document.", nodePepMatched.Peptide, chargeMatched));
                 return;
@@ -1209,11 +1227,13 @@ namespace pwiz.Skyline.SettingsUI
                 MessageDlg.Show(this, "All library peptides already exist in the current document.");
                 return;
             }
-
-            string msg =
-                string.Format(
-                    "This operation will add {0} peptides, {1} precursors and {2} transitions to the document.",
-                    peptideCountDiff, groupCountDiff, newDocument.TransitionCount - startingDocument.TransitionCount);
+            var pepGroupCountDiff = newDocument.PeptideGroupCount - startingDocument.PeptideGroupCount;
+            string proteins = cbAssociateProteins.Checked ? string.Format("{0} proteins,", pepGroupCountDiff)
+                : "";
+            string msg = string.Format(
+                    "This operation will add {0} {1} peptides, {2} precursors and {3} transitions to the document.",
+                    proteins, peptideCountDiff, groupCountDiff, 
+                    newDocument.TransitionCount - startingDocument.TransitionCount);
             var numSkipped = pepMatcher.SkippedPeptideCount;          
             var hasSkipped = numSkipped > 0;
             var numUnmatchedPeptides = PeptidesCount - numMatchedPeptides;

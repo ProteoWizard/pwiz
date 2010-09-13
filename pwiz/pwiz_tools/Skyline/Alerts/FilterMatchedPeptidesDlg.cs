@@ -19,38 +19,110 @@
 
 using System;
 using System.Windows.Forms;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 
 namespace pwiz.Skyline.Alerts
 {
     public sealed partial class FilterMatchedPeptidesDlg : Form
     {
-        public FilterMatchedPeptidesDlg(int numWithDuplicates, bool single)
+        public FilterMatchedPeptidesDlg(int numWithDuplicates, int numUnmatched, int numFiltered, bool single)
         {
             InitializeComponent();
 
             Text = Program.Name;
-            msg.Text = string.Format("{0} peptide{1} found in multiple protein sequences.\n"
-                + "How would you like to handle {2}?", numWithDuplicates > 1 ? numWithDuplicates.ToString() : (single ? "This" : "A"),
-                                numWithDuplicates > 1 ? "s were" : " was", 
-                                numWithDuplicates > 1 ? "these peptides" : "the peptide");
-        }
 
-        public ViewLibraryPepMatching.DuplicateProteinsFilter PeptidesDuplicateProteins
-        {
-            get; private set;
+            if(ViewLibraryPepMatching.FilterMultipleProteinMatches == ViewLibraryPepMatching.DuplicateProteinsFilter.AddToAll)
+                radioAddToAll.Checked = true;
+            else if (ViewLibraryPepMatching.FilterMultipleProteinMatches == ViewLibraryPepMatching.DuplicateProteinsFilter.FirstOccurence)
+                radioFirstOccurence.Checked = true;
+            else
+                radioNoDuplicates.Checked = true;
+
+            radioAddUnmatched.Checked = Settings.Default.LibraryPeptidesAddUnmatched;
+            radioFilterUnmatched.Checked = !radioAddUnmatched.Checked;
+
+            radioKeepFiltered.Checked = Settings.Default.LibraryPeptidesKeepFiltered;
+            radioDoNotAddFiltered.Checked = !radioKeepFiltered.Checked;
+            
+            if (numWithDuplicates != 0)
+                msgDuplicatePeptides.Text = single ? "This peptide matches multiple proteins."
+                    : (numWithDuplicates == 1 ? "1 peptide matching multiple proteins."
+                    : string.Format("{0} peptides matching multiple proteins.", numWithDuplicates));
+            else
+            {
+                int delta = panelUnmatched.Top - panelMultiple.Top;
+                panelMultiple.Hide();
+                panelUnmatched.Top -= delta;
+                panelFiltered.Top -= delta;
+                Height -= delta;
+            }
+            if (numUnmatched != 0)
+                msgUnmatchedPeptides.Text = single ? "This peptide does not have a matching protein."
+                    : (numUnmatched == 1 ? "1 peptide without a matching protein."
+                    : string.Format("{0} peptides without matching proteins.", numUnmatched));
+            else
+            {
+                int delta = panelFiltered.Top - panelUnmatched.Top;
+                panelUnmatched.Hide();
+                panelFiltered.Top -= delta;
+                Height -= delta;
+            }
+            if (numFiltered != 0)
+                msgFilteredPeptides.Text = single ? "This peptide does not match the current filter settings."
+                    : (numFiltered == 1 ? "1 peptide not matching the current filter settings."
+                    : string.Format("{0} peptides not matching the current filter settings.", numFiltered));
+            else
+            {
+                int delta = panelFiltered.Bottom - panelFiltered.Top;
+                panelFiltered.Hide();
+                Height -= delta;
+            }
         }
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            if (btnNoDuplicates.Checked)
-                PeptidesDuplicateProteins = ViewLibraryPepMatching.DuplicateProteinsFilter.NoDuplicates;
-            else if (btnFirstOccurence.Checked)
-                PeptidesDuplicateProteins = ViewLibraryPepMatching.DuplicateProteinsFilter.FirstOccurence;
-            else
-                PeptidesDuplicateProteins = ViewLibraryPepMatching.DuplicateProteinsFilter.AddToAll;
+            OkDialog();
+        }
 
+        public void OkDialog()
+        {
+            var duplicateProteinsFilter = ViewLibraryPepMatching.DuplicateProteinsFilter.AddToAll;
+            if (radioNoDuplicates.Checked)
+                duplicateProteinsFilter = ViewLibraryPepMatching.DuplicateProteinsFilter.NoDuplicates;
+            else if (radioFirstOccurence.Checked)
+                duplicateProteinsFilter = ViewLibraryPepMatching.DuplicateProteinsFilter.FirstOccurence;
+
+            Settings.Default.LibraryPeptidesAddDuplicatesEnum = duplicateProteinsFilter.ToString();
+
+            Settings.Default.LibraryPeptidesAddUnmatched = radioAddUnmatched.Checked;
+            Settings.Default.LibraryPeptidesKeepFiltered = radioKeepFiltered.Checked;
+            
             DialogResult = DialogResult.OK;
+        }
+
+        // For testing.
+        public void SetFilter(ViewLibraryPepMatching.DuplicateProteinsFilter filter)
+        {
+            if(Equals(filter, ViewLibraryPepMatching.DuplicateProteinsFilter.NoDuplicates))
+                radioNoDuplicates.Checked = true;
+            else if(Equals(filter, ViewLibraryPepMatching.DuplicateProteinsFilter.FirstOccurence))
+                radioFirstOccurence.Checked = true;
+            else
+                radioAddToAll.Checked = true;
+        }
+
+        public bool AddUnmatched
+        {
+            get
+            {
+                return radioAddUnmatched.Checked;
+            }
+            set 
+            { 
+                radioAddUnmatched.Checked = value;
+                radioFilterUnmatched.Checked = !radioAddUnmatched.Checked;
+            }
         }
     }
 }

@@ -273,8 +273,10 @@ namespace pwiz.Skyline.EditUI
                     }
                     else
                     {
-                        PeptideGroup peptideGroup = backgroundProteome.GetFastaSequence(proteinName) ??
-                                                    new PeptideGroup();
+
+                        PeptideGroup peptideGroup = backgroundProteome.IsNone ? new PeptideGroup() 
+                            : (backgroundProteome.GetFastaSequence(proteinName) ??
+                                                    new PeptideGroup());
                         peptideGroupDocNode = new PeptideGroupDocNode(peptideGroup, proteinName, peptideGroup.Description, new PeptideDocNode[0]);
                     }
                     // Add to the end, if no insert node

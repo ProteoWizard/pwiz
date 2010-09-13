@@ -317,5 +317,14 @@
     <Setting Name="ViewLibrarySize" Type="System.Drawing.Size" Scope="User">
       <Value Profile="(Default)">0, 0</Value>
     </Setting>
+    <Setting Name="LibraryPeptidesAddUnmatched" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="LibraryPeptidesKeepFiltered" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="LibraryPeptidesAddDuplicatesEnum" Type="System.String" Scope="User">
+      <Value Profile="(Default)">AddToAll</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

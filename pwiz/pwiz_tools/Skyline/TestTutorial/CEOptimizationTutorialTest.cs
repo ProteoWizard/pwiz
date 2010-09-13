@@ -42,15 +42,16 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestCEOptimizationTutorial()
         {
-            TestFilesZip = @"https://brendanx-uw1.gs.washington.edu/tutorials/OptimizeCE.zip";
+            TestFilesZip = ExtensionTestContext.CanImportThermoRaw ?  @"https://brendanx-uw1.gs.washington.edu/tutorials/OptimizeCE.zip"
+                : @"https://brendanx-uw1.gs.washington.edu/tutorials/OptimizeCEMzml.zip";
             RunFunctionalTest();
         }
 
         protected override void DoTest()
         {
             // Skyline Collision Energy Optimization
-
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath(@"OptimizeCE\CE_Vantage_15mTorr.sky")));
+            var folderOptimizeCE = ExtensionTestContext.CanImportThermoRaw ? "OptimizeCE" : "OptimizeCEMzml";
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath(folderOptimizeCE + @"\CE_Vantage_15mTorr.sky")));
 
             // Deriving a New Linear Equation, p. 2
             var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
@@ -81,7 +82,7 @@ namespace pwiz.SkylineTestTutorial
                 importResultsDlg.RadioAddNewChecked = true;
                 var path =
                     new[] {new KeyValuePair<string, string[]>("Unscheduled",
-                        new[] { TestFilesDir.GetTestPath("CE_Vantage_15mTorr_unscheduled.raw")})};
+                        new[] { TestFilesDir.GetTestPath("CE_Vantage_15mTorr_unscheduled" + ExtensionTestContext.ExtThermoRaw)})};
                 importResultsDlg.NamedPathSets = path;
                 importResultsDlg.OkDialog();
             });
@@ -97,7 +98,7 @@ namespace pwiz.SkylineTestTutorial
                 exportMethodDlg.IgnoreProteins = true;
                 exportMethodDlg.OptimizeType = ExportOptimize.CE;
                 exportMethodDlg.MethodType = ExportMethodType.Scheduled;
-                exportMethodDlg.OkDialog(TestFilesDir.GetTestPath(@"OptimizeCE\CE_Vantage_15mTorr.csv"));
+                exportMethodDlg.OkDialog(TestFilesDir.GetTestPath(folderOptimizeCE + @"\CE_Vantage_15mTorr.csv"));
             });
             
             // Analyze Optimization Data, p. 7

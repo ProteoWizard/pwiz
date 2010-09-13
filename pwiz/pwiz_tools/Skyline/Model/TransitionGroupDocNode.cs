@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Model
             Results = results;
         }
 
-        private TransitionGroupDocNode(TransitionGroupDocNode group,
+        public TransitionGroupDocNode(TransitionGroupDocNode group,
                                        double precursorMz,
                                        RelativeRT relativeRT,
                                        IList<DocNode> children)

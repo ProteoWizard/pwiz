@@ -124,6 +124,7 @@
     <None Include="BackgroundProteomeTest.zip" />
     <None Include="CopyPasteTest.zip" />
     <None Include="LibraryBuildTest.zip" />
+    <None Include="LibraryExplorerTest.zip" />
     <None Include="ManageResultsTest.zip" />
     <None Include="NeutralLossLibraryTest.zip" />
     <None Include="OptimizeTest.zip" />

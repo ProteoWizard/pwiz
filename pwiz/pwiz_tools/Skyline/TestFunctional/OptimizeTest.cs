@@ -88,7 +88,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(editList, editList.OkDialog);
             RunUI(() =>
                       {
-                          transitionSettingsUI1.RegressionCE = newCEName;
+                          transitionSettingsUI1.RegressionCEName = newCEName;
                       });
             OkDialog(transitionSettingsUI1, transitionSettingsUI1.OkDialog);
 
@@ -223,7 +223,7 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(editList4, editList4.OkDialog);
             RunUI(() =>
             {
-                transitionSettingsUI4.RegressionCE = reoptimizeCEName;
+                transitionSettingsUI4.RegressionCEName = reoptimizeCEName;
                 transitionSettingsUI4.OptimizeType = OptimizedMethodType.None.ToString();
             });
             OkDialog(transitionSettingsUI4, transitionSettingsUI4.OkDialog);

@@ -45,10 +45,12 @@ namespace pwiz.SkylineTestTutorial
                 @"https://brendanx-uw1.gs.washington.edu/tutorials/MethodRefineSupplement.zip" :
                 @"https://brendanx-uw1.gs.washington.edu/tutorials/MethodRefineSupplementMzml.zip");
 
-            // Need to deal with this issue.
-            TestFilesZipPaths = new[] { supplementZip,
-                    @"https://brendanx-uw1.gs.washington.edu/tutorials/MethodRefine.zip" 
+            TestFilesZipPaths = new[] { supplementZip, ExtensionTestContext.CanImportThermoRaw ?
+                    @"https://brendanx-uw1.gs.washington.edu/tutorials/MethodRefine.zip" :
+                    @"https://brendanx-uw1.gs.washington.edu/tutorials/MethodRefineMzml.zip"
                  };
+
+         
             RunFunctionalTest();
         }
 
@@ -56,10 +58,12 @@ namespace pwiz.SkylineTestTutorial
         {
             // Skyline Targeted Method Refinement
 
+            var folderMethodRefine = ExtensionTestContext.CanImportThermoRaw ? "MethodRefine" : "MethodRefineMzml";
+
             // Results Data, p. 2
             RunUI(() =>
             {
-              SkylineWindow.OpenFile(TestFilesDirs[1].GetTestPath(@"MethodRefine\WormUnrefined.sky"));
+              SkylineWindow.OpenFile(TestFilesDirs[1].GetTestPath(folderMethodRefine + @"\WormUnrefined.sky"));
               SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0];
             });
 
@@ -70,7 +74,7 @@ namespace pwiz.SkylineTestTutorial
                 exportDlg.MethodType = ExportMethodType.Standard;
                 exportDlg.OptimizeType = ExportOptimize.NONE;
                 exportDlg.MaxTransitions = 59;
-                exportDlg.OkDialog(TestFilesDirs[1].GetTestPath(@"MethodRefine\worm"));
+                exportDlg.OkDialog(TestFilesDirs[1].GetTestPath(folderMethodRefine + @"\worm"));
             });
 
             // Importing Multiple Injection Data, p. 4
@@ -140,10 +144,10 @@ namespace pwiz.SkylineTestTutorial
                  // Picking Measurable Peptides and Transitions, p. 12
                  SkylineWindow.ExpandPeptides();
                  SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0];
-                 Assert.IsTrue(SkylineWindow.SequenceTree.SelectedNode.Nodes[0].Text.Contains("0.78"));
+                 Assert.IsTrue(SkylineWindow.SequenceTree.SelectedNode.Nodes[0].Text.Contains((0.78).ToString()));
                  SkylineWindow.EditDelete();
                  SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0];
-                 Assert.IsTrue(SkylineWindow.SequenceTree.SelectedNode.Nodes[0].Text.Contains("0.63"));
+                 Assert.IsTrue(SkylineWindow.SequenceTree.SelectedNode.Nodes[0].Text.Contains((0.63).ToString()));
                  SkylineWindow.EditDelete();
                  PeptideTreeNode nodePep;
                  for (int i = 0; i < 2; i++)
@@ -188,11 +192,11 @@ namespace pwiz.SkylineTestTutorial
            // Automated Refinement, p. 16
            RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, refineDlg =>
            {
-                refineDlg.MaxTransitionPeakRank = "3";
+                refineDlg.MaxTransitionPeakRank = 3;
                 refineDlg.PreferLargerIons = true;
                 refineDlg.RemoveMissingResults = true;
-                refineDlg.RTRegressionThreshold = "0.95";
-                refineDlg.DotProductThreshold = "0.95";
+                refineDlg.RTRegressionThreshold = 0.95;
+                refineDlg.DotProductThreshold = 0.95;
                 refineDlg.OkDialog();
            });
            WaitForCondition(() => SkylineWindow.Document.PeptideCount == 72);
@@ -205,10 +209,10 @@ namespace pwiz.SkylineTestTutorial
            });
            RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, refineDlg =>
            {
-                refineDlg.MaxTransitionPeakRank = "6";
+                refineDlg.MaxTransitionPeakRank = 6;
                 refineDlg.RemoveMissingResults = true;
-                refineDlg.RTRegressionThreshold = "0.90";
-                refineDlg.DotProductThreshold = "0.90";
+                refineDlg.RTRegressionThreshold = 0.90;
+                refineDlg.DotProductThreshold = 0.90;
                 refineDlg.OkDialog();
            });
            WaitForCondition(() => SkylineWindow.Document.PeptideCount == 110);
@@ -231,11 +235,15 @@ namespace pwiz.SkylineTestTutorial
                 importResultsDlg0.RadioCreateMultipleMultiChecked = true;
                 var pathSets = new KeyValuePair<string, string[]>[2];
                 pathSets[0] = new KeyValuePair<string, string[]>("Unscheduled01",
-                 new[] {TestFilesDirs[1].FullPath + "\\MethodRefine\\Unscheduled01\\Unscheduled_REP01_0001.RAW",
-                    TestFilesDirs[1].FullPath + "\\MethodRefine\\Unscheduled01\\Unscheduled_REP01_0002.RAW"});
+                 new[] {string.Format("{0}\\{1}\\Unscheduled01\\Unscheduled_REP01_0001{2}", 
+                    TestFilesDirs[1].FullPath, folderMethodRefine, ExtensionTestContext.ExtThermoRaw),
+                    string.Format("{0}\\{1}\\Unscheduled01\\Unscheduled_REP01_0002{2}", 
+                    TestFilesDirs[1].FullPath, folderMethodRefine, ExtensionTestContext.ExtThermoRaw)});
                 pathSets[1] = new KeyValuePair<string, string[]>("Unscheduled02",
-                 new[] {TestFilesDirs[1].FullPath + "\\MethodRefine\\Unscheduled02\\Unscheduled_REP02_0001.RAW",
-                    TestFilesDirs[1].FullPath + "\\MethodRefine\\Unscheduled02\\Unscheduled_REP02_0002.RAW"});
+                 new[] {string.Format("{0}\\{1}\\Unscheduled02\\Unscheduled_REP02_0001{2}", 
+                    TestFilesDirs[1].FullPath, folderMethodRefine, ExtensionTestContext.ExtThermoRaw),
+                    string.Format("{0}\\{1}\\Unscheduled02\\Unscheduled_REP02_0002{2}", 
+                    TestFilesDirs[1].FullPath, folderMethodRefine, ExtensionTestContext.ExtThermoRaw)});
                 importResultsDlg0.NamedPathSets = pathSets;
            });
            var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg0.OkDialog);
@@ -268,7 +276,7 @@ namespace pwiz.SkylineTestTutorial
            // Creating a Scheduled Transition List, p. 20 
            RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUI =>
            {
-                peptideSettingsUI.TimeWindow = "4";
+                peptideSettingsUI.TimeWindow = 4;
                 peptideSettingsUI.OkDialog();
            });
            RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List), exportMethodDlg =>
@@ -287,7 +295,7 @@ namespace pwiz.SkylineTestTutorial
            RunDlg<OpenDataSourceDialog>(() => importResultsDlg1.NamedPathSets = importResultsDlg1.GetDataSourcePathsFile(null),
                openDataSourceDialog =>
                {
-                       openDataSourceDialog.SelectAllFileType(".raw");
+                   openDataSourceDialog.SelectAllFileType(ExtensionTestContext.ExtThermoRaw);
                        openDataSourceDialog.Open();
                });
            RunDlg<ImportResultsNameDlg>(importResultsDlg1.OkDialog, importResultsNameDlg0 =>
