@@ -782,13 +782,18 @@ namespace pwiz.Topograph.ui.Forms
         public PeptideAnalysis LoadPeptideAnalysis(long id)
         {
             PeptideAnalysis peptideAnalysis;
-            LoadPeptideAnalyses(new[] {id}).TryGetValue(id, out peptideAnalysis);
+            LoadPeptideAnalyses(new[] {id}, true).TryGetValue(id, out peptideAnalysis);
             return peptideAnalysis;
         }
 
         public Dictionary<long,PeptideAnalysis> LoadPeptideAnalyses(ICollection<long> ids)
         {
-            var job = new LoadPeptideAnalysisSnapshot(Workspace, ids);
+            return LoadPeptideAnalyses(ids, false);
+        }
+
+        public Dictionary<long, PeptideAnalysis> LoadPeptideAnalyses(ICollection<long> ids, bool loadChromatograms)
+        {
+            var job = new LoadPeptideAnalysisSnapshot(Workspace, ids, loadChromatograms);
             var title = ids.Count == 1 ? "Loading peptide analysis" : "Loading " + ids.Count + " peptide analyses";
             new LongOperationBroker(job, new LongWaitDialog(this, title)).LaunchJob();
             return job.PeptideAnalyses;

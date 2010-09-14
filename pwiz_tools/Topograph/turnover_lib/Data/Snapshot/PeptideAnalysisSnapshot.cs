@@ -12,7 +12,8 @@ namespace pwiz.Topograph.Data.Snapshot
     {
         public DbPeptideAnalysis DbPeptideAnalysis { get; private set; }
         public Dictionary<long, PeptideFileAnalysisSnapshot> FileAnalysisSnapshots { get; private set;}
-        public static Dictionary<long, PeptideAnalysisSnapshot> Query(ISession session, ICollection<long> peptideAnalysisIds, bool loadAllChromatograms)
+        public bool ChromatogramsWereLoaded { get; private set; }
+        private static Dictionary<long, PeptideAnalysisSnapshot> Query(ISession session, ICollection<long> peptideAnalysisIds, bool loadAllChromatograms)
         {
             var result = new Dictionary<long, PeptideAnalysisSnapshot>();
             if (peptideAnalysisIds.Count == 0)
@@ -43,10 +44,30 @@ namespace pwiz.Topograph.Data.Snapshot
                 result.Add(id, new PeptideAnalysisSnapshot
                                    {
                                        DbPeptideAnalysis = dbPeptideAnalysis,
-                                       FileAnalysisSnapshots = fileAnalysisSnapshots.ToDictionary(f=>f.Id)
+                                       FileAnalysisSnapshots = fileAnalysisSnapshots.ToDictionary(f=>f.Id),
+                                       ChromatogramsWereLoaded = loadAllChromatograms
                                    });
             }
             return result;
+        }
+        public static Dictionary<long, PeptideAnalysisSnapshot> Query(ISession session, ICollection<long> peptideAnalysisIdsToSnapshot, ICollection<long> peptideAnalysisIdsToSnapshotWithoutChromatograms)
+        {
+            Dictionary<long, PeptideAnalysisSnapshot> peptideAnalysisSnapshots = new Dictionary<long, PeptideAnalysisSnapshot>();
+            if (peptideAnalysisIdsToSnapshot.Count != 0)
+            {
+                foreach (var entry in Query(session, peptideAnalysisIdsToSnapshot, true))
+                {
+                    peptideAnalysisSnapshots.Add(entry.Key, entry.Value);
+                }
+            }
+            if (peptideAnalysisIdsToSnapshotWithoutChromatograms.Count != 0)
+            {
+                foreach (var entry in Query(session, peptideAnalysisIdsToSnapshotWithoutChromatograms, false))
+                {
+                    peptideAnalysisSnapshots.Add(entry.Key, entry.Value);
+                }
+            }
+            return peptideAnalysisSnapshots;
         }
         public static PeptideAnalysisSnapshot LoadSnapshot(Workspace workspace, long id, bool loadAllChromatograms)
         {

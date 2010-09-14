@@ -93,39 +93,46 @@ namespace pwiz.Topograph.MsData
             return _workspace.PeptideAnalyses.ListChildren().ToDictionary(a => a.Id.Value);
         }
 
-        public bool LoadPeptideAnalyses(Dictionary<long, PeptideAnalysis> peptideAnalyses)
+        public bool LoadPeptideAnalyses(Dictionary<long, PeptideAnalysis> peptideAnalyses, bool loadChromatograms)
         {
             lock(this)
             {
+                var peptideAnalysisDict = new Dictionary<long, KeyValuePair<PeptideAnalysis, bool>>();
                 var activePeptideAnalyses = GetActivePeptideAnalyses();
-                var missingIds = new List<long>();
+                var anyMissing = false;
+
                 foreach (var id in peptideAnalyses.Keys.ToArray())
                 {
                     PeptideAnalysis peptideAnalysis;
-                    if (activePeptideAnalyses.TryGetValue(id, out peptideAnalysis))
+                    if (activePeptideAnalyses.TryGetValue(id, out peptideAnalysis) && (!loadChromatograms || peptideAnalysis.ChromatogramsWereLoaded))
                     {
                         peptideAnalyses[id] = peptideAnalysis;
                     }
                     else
                     {
-                        missingIds.Add(id);
+                        if (peptideAnalysis == null || (loadChromatograms && !peptideAnalysis.ChromatogramsWereLoaded))
+                        {
+                            peptideAnalysisDict.Add(id, new KeyValuePair<PeptideAnalysis, bool>(
+                                peptideAnalysis, 
+                                loadChromatograms));
+                            anyMissing = true;
+                        }
                     }
                 }
-                if (missingIds.Count == 0)
+                if (!anyMissing)
                 {
                     return true;
                 }
-                foreach (var id in missingIds)
-                {
-                    activePeptideAnalyses[id] = null;
-                }
-                if (!ReconcileNow(activePeptideAnalyses))
+                if (!ReconcileNow(peptideAnalysisDict))
                 {
                     return false;
                 }
-                foreach (var id in missingIds)
+                foreach (var entry in peptideAnalysisDict)
                 {
-                    peptideAnalyses[id] = activePeptideAnalyses[id];
+                    if (entry.Value.Key != null)
+                    {
+                        peptideAnalyses[entry.Key] = entry.Value.Key;
+                    }
                 }
                 return true;
             }
@@ -137,19 +144,12 @@ namespace pwiz.Topograph.MsData
             {
                 lock(this)
                 {
-                    var activePeptideAnalyses = GetActivePeptideAnalyses();
-                    PeptideAnalysis peptideAnalysis;
-                    activePeptideAnalyses.TryGetValue(id, out peptideAnalysis);
-                    if (peptideAnalysis != null)
+                    var dict = new Dictionary<long, PeptideAnalysis>{{id,null}};
+                    if (!LoadPeptideAnalyses(dict, true))
                     {
-                        return peptideAnalysis;
+                        return null;
                     }
-                    activePeptideAnalyses.Add(id, null);
-                    if (!ReconcileNow(activePeptideAnalyses))
-                    {
-                        continue;
-                    }
-                    return activePeptideAnalyses[id];
+                    return dict[id];
                 }
             }
         }
@@ -158,13 +158,17 @@ namespace pwiz.Topograph.MsData
         {
             lock(this)
             {
-                return ReconcileNow(GetActivePeptideAnalyses());
+                var dict = GetActivePeptideAnalyses().ToDictionary(kvp => kvp.Key,
+                                                                   kvp =>
+                                                                   new KeyValuePair<PeptideAnalysis, bool>(
+                                                                       kvp.Value, kvp.Value.ChromatogramsWereLoaded));
+                return ReconcileNow(dict);
             }
         }
 
 
         private const int max_requery_count = 100;
-        private bool ReconcileNow(Dictionary<long, PeptideAnalysis> activePeptideAnalyses)
+        private bool ReconcileNow(Dictionary<long, KeyValuePair<PeptideAnalysis, bool>> activePeptideAnalyses)
         {
             var msDataFileIds = new HashSet<long>();
             var peptideIds = new HashSet<long>();
@@ -225,19 +229,27 @@ namespace pwiz.Topograph.MsData
                     dbWorkspace = (DbWorkspace) session.CreateCriteria(typeof (DbWorkspace)).UniqueResult();
                 }
 
-                var peptideAnalysisIdsToSnapshot = new HashSet<long>(activePeptideAnalyses.Keys);
-                peptideAnalysisIdsToSnapshot.IntersectWith(peptideAnalysisIds);
+                var peptideAnalysisIdsToSnapshot = new HashSet<long>(activePeptideAnalyses.Keys.Where(id=>activePeptideAnalyses[id].Value && activePeptideAnalyses[id].Key == null));
+                var peptideAnalysisIdsToSnapshotWithoutChromatograms =
+                    new HashSet<long>(activePeptideAnalyses.Keys.Where(id => !activePeptideAnalyses[id].Value && activePeptideAnalyses[id].Key == null));
                 foreach (var entry in activePeptideAnalyses)
                 {
-                    if (entry.Value == null)
+                    if (entry.Value.Value)
                     {
-                        peptideAnalysisIdsToSnapshot.Add(entry.Key);
+                        if (entry.Value.Key == null || !entry.Value.Key.ChromatogramsWereLoaded)
+                        {
+                            peptideAnalysisIdsToSnapshot.Add(entry.Key);
+                        }
+                    }
+                    else if (entry.Value.Key == null)
+                    {
+                        peptideAnalysisIdsToSnapshotWithoutChromatograms.Add(entry.Key);
                     }
                 }
 
-                if (peptideAnalysisIdsToSnapshot.Count > 0)
+                if (peptideAnalysisIdsToSnapshot.Count + peptideAnalysisIdsToSnapshotWithoutChromatograms.Count > 0)
                 {
-                    peptideAnalysisSnapshots = PeptideAnalysisSnapshot.Query(session, peptideAnalysisIdsToSnapshot, true);
+                    peptideAnalysisSnapshots = PeptideAnalysisSnapshot.Query(session, peptideAnalysisIdsToSnapshot, peptideAnalysisIdsToSnapshotWithoutChromatograms);
                 }
                 else
                 {
@@ -355,7 +367,8 @@ namespace pwiz.Topograph.MsData
                     }
                     if (peptideAnalysis != null)
                     {
-                        activePeptideAnalyses[peptideAnalysis.Id.Value] = peptideAnalysis;
+                        activePeptideAnalyses[peptideAnalysis.Id.Value] = new KeyValuePair<PeptideAnalysis, bool>(
+                            peptideAnalysis, activePeptideAnalyses[peptideAnalysis.Id.Value].Value);
                     }
                 }
                 _workspace.AddChangedPeptideAnalyses(peptideAnalyses);

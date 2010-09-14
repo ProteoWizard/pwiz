@@ -9,7 +9,7 @@ namespace pwiz.Topograph.Data.Snapshot
 {
     public class LoadPeptideAnalysisSnapshot : ILongOperationJob
     {
-        public LoadPeptideAnalysisSnapshot(Workspace workspace, ICollection<long> peptideAnalysisIds)
+        public LoadPeptideAnalysisSnapshot(Workspace workspace, ICollection<long> peptideAnalysisIds, bool loadChromatograms)
         {
             Workspace = workspace;
             PeptideAnalyses = new Dictionary<long, PeptideAnalysis>();
@@ -17,10 +17,12 @@ namespace pwiz.Topograph.Data.Snapshot
             {
                 PeptideAnalyses[id] = null;
             }
+            LoadChromatograms = loadChromatograms;
         }
 
         public Workspace Workspace { get; private set; }
         public Dictionary<long, PeptideAnalysis> PeptideAnalyses { get; private set; }
+        public bool LoadChromatograms { get; private set; }
 
         public void Run(LongOperationBroker longOperationBroker)
         {
@@ -28,7 +30,7 @@ namespace pwiz.Topograph.Data.Snapshot
             longOperationBroker.UpdateStatusMessage("Loading peptide analyses");
             while (true)
             {
-                if (Workspace.Reconciler.LoadPeptideAnalyses(PeptideAnalyses))
+                if (Workspace.Reconciler.LoadPeptideAnalyses(PeptideAnalyses, LoadChromatograms))
                 {
                     break;
                 }

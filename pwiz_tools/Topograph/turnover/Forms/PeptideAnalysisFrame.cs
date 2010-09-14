@@ -100,6 +100,7 @@ namespace pwiz.Topograph.ui.Forms
                 form.Activate();
                 return form;
             }
+            peptideAnalysis = TurnoverForm.Instance.LoadPeptideAnalysis(peptideAnalysis.Id.Value);
             form = new PeptideAnalysisFrame(peptideAnalysis);
             form.Show(TurnoverForm.Instance.DocumentPanel, DockState.Document);
             return form;

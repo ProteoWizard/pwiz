@@ -44,6 +44,7 @@ namespace pwiz.Topograph.Model
             FileAnalyses = new PeptideFileAnalyses(this, dbPeptideAnalysis);
             ExcludedMzs.ChangedEvent += ExcludedMzs_ChangedEvent;
             SetWorkspaceVersion(workspace.WorkspaceVersion);
+            ChromatogramsWereLoaded = true;
         }
 
         public PeptideAnalysis(Workspace workspace, PeptideAnalysisSnapshot snapshot) : this(workspace, snapshot.DbPeptideAnalysis)
@@ -145,6 +146,7 @@ namespace pwiz.Topograph.Model
                 }
                 fileAnalysis.Merge(snapshot);
             }
+            ChromatogramsWereLoaded = peptideAnalysisSnapshot.ChromatogramsWereLoaded;
         }
 
         void ExcludedMzs_ChangedEvent(ExcludedMzs obj)
@@ -322,6 +324,7 @@ namespace pwiz.Topograph.Model
                 peptideFileAnalysis.SetWorkspaceVersion(newWorkspaceVersion);
             }
         }
+        public bool ChromatogramsWereLoaded { get; private set; }
     }
     public enum IntensityScaleMode
     {
