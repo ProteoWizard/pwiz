@@ -191,12 +191,13 @@ namespace pwiz.SkylineTestUtil
 
     public class MemoryPooledStream : IPooledStream
     {
-        private static int _indexNext;
+        private static int _indexNext;        
 
         public MemoryPooledStream(Stream stream)
         {
             GlobalIndex = _indexNext++;
             Stream = stream;
+            IsOpen = true;
         }
 
         public int GlobalIndex { get; private set; }
@@ -208,9 +209,12 @@ namespace pwiz.SkylineTestUtil
             get { return false; }
         }
 
+        public bool IsOpen { get; private set; }
+
         public void CloseStream()
         {
             // Do nothing for in-memory read-only streams.
+            IsOpen = false;
         }
     }
 }

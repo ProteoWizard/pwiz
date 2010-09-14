@@ -563,6 +563,15 @@ namespace pwiz.Skyline.Model
 
                     if (measuredResults.TryLoadChromatogram(chromatograms, this, mzMatchTolerance, false, out arrayChromInfo))
                     {
+                        // Make sure each file only appears once in the list, since downstream
+                        // code has problems with multiple measurements in the same file.
+                        // Most measuremenst should happen only once per replicate, meaning this
+                        // if clause is an unusual case.  A race condition pre-0.7 occasionally
+                        // resulted in writing precursor entries multiple times to the cache file.
+                        // This code also corrects that problem by ignoring all but the first
+                        // instance.
+                        if (arrayChromInfo.Length > 1)
+                            arrayChromInfo = arrayChromInfo.Distinct(ChromatogramGroupInfo.PathComparer).ToArray();
                         // Find the file indexes once
                         int countGroupInfos = arrayChromInfo.Length;
                         int[] fileIndexes = new int[countGroupInfos];

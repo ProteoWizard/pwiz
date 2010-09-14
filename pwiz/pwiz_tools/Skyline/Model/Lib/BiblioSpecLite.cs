@@ -508,9 +508,13 @@ namespace pwiz.Skyline.Model.Lib
                 get
                 {
                     // If it is still in the pool, then it can't have been modified
-                    return ConnectionPool.IsInPool(this) ||
-                        !Equals(FileTime, File.GetLastWriteTime(FilePath));
+                    return !IsOpen && !Equals(FileTime, File.GetLastWriteTime(FilePath));
                 }
+            }
+
+            public bool IsOpen
+            {
+                get { return ConnectionPool.IsInPool(this); }
             }
 
             public void CloseStream()

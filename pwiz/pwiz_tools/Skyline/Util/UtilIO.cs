@@ -312,6 +312,11 @@ namespace pwiz.Skyline.Util
         bool IsModified { get; }
 
         /// <summary>
+        /// True if the stream is currently open.
+        /// </summary>
+        bool IsOpen { get; }
+
+        /// <summary>
         /// Used to close the stream when it is not associated with the active
         /// document.
         /// </summary>
@@ -359,9 +364,13 @@ namespace pwiz.Skyline.Util
             get
             {
                 // If it is still in the pool, then it can't have been modified
-                return !ConnectionPool.IsInPool(this) &&
-                    !Equals(FileTime, File.GetLastWriteTime(FilePath));
+                return !IsOpen && !Equals(FileTime, File.GetLastWriteTime(FilePath));
             }
+        }
+
+        public bool IsOpen
+        {
+            get { return ConnectionPool.IsInPool(this); }
         }
 
         /// <summary>

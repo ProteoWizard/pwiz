@@ -176,7 +176,7 @@ namespace pwiz.Skyline.Model.Results
                 //           cached files that are not the same, but very
                 //           unlikely.  So, ignored for the moment.
                 var listUnionCaches = new List<ChromatogramCache>(
-                    results._listPartialCaches.Union(_listPartialCaches));
+                    results._listPartialCaches.Union(_listPartialCaches, ChromatogramCache.PathComparer));
                 if (listUnionCaches.Count != results._listPartialCaches.Count)
                 {
                     // Use the more advanced status
@@ -467,12 +467,22 @@ namespace pwiz.Skyline.Model.Results
 
                 // Try loading the final cache from disk, if progressive loading has not started
                 string cachePath = ChromatogramCache.FinalPathForName(_documentPath, null);
-                // Always try to load, if the cache exists, since the list of partial caches
-                // may be populated because the user chose Undo.  In this case, failing to
-                // attempt a cache load will force a complete reload of all files in the cache.
+                // If the final cache exists and it is not in the partial caches or partial caches
+                // contain the final cache, but it is not open (Undo-Redo case), then make sure it
+                // is reloaded from scratch, as it may have changed since it was last open.
                 bool cacheExists = File.Exists(cachePath);
-                if (_setClone._listPartialCaches == null ||
-                        (cacheExists && !_setClone._listPartialCaches.Contains(cache => Equals(cache.CachePath, cachePath))))
+                if (_setClone._listPartialCaches != null && cacheExists)
+                {
+                    int finalIndex = _setClone._listPartialCaches.IndexOf(cache =>
+                        Equals(cache.CachePath, cachePath));
+                    if (finalIndex == -1 || _setClone._listPartialCaches[finalIndex].ReadStream.IsModified)
+                    {
+                        foreach (var cache in _setClone._listPartialCaches)
+                            cache.ReadStream.CloseStream();
+                        _setClone._listPartialCaches = null;
+                    }
+                }
+                if (_setClone._listPartialCaches == null)
                 {
                     if (cacheExists)
                     {

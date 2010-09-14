@@ -618,5 +618,25 @@ namespace pwiz.Skyline.Model.Results
                                          // Create a new read stream, for the newly created file
                                          streamManager.CreatePooledStream(cachePathOpt, false));
         }
+
+        public class PathEqualityComparer : IEqualityComparer<ChromatogramCache>
+        {
+            public bool Equals(ChromatogramCache x, ChromatogramCache y)
+            {
+                return Equals(x.CachePath, y.CachePath);
+            }
+
+            public int GetHashCode(ChromatogramCache obj)
+            {
+                return obj.CachePath.GetHashCode();
+            }
+        }
+
+        public static PathEqualityComparer PathComparer { get; private set; }
+
+        static ChromatogramCache()
+        {
+            PathComparer = new PathEqualityComparer();
+        }
     }
 }
