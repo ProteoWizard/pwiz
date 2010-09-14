@@ -19,7 +19,7 @@
 using System;
 using System.Threading;
 using System.Windows.Forms;
-using pwiz.Skyline.Alerts;
+//using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 
@@ -61,12 +61,13 @@ namespace pwiz.Skyline
                     // they must have agreed to the current license agreement during
                     // installation.  Otherwise, make sure they agree to the new
                     // license agreement.
-                    if (licenseVersion != 0 || !Settings.Default.MainWindowSize.IsEmpty)
-                    {
-                        var dlg = new UpgradeDlg(licenseVersion);
-                        if (dlg.ShowDialog() == DialogResult.Cancel)
-                            return;
-                    }
+// Update Skyline-daily users to the new license automatically.
+//                    if (licenseVersion != 0 || !Settings.Default.MainWindowSize.IsEmpty)
+//                    {
+//                        var dlg = new UpgradeDlg(licenseVersion);
+//                        if (dlg.ShowDialog() == DialogResult.Cancel)
+//                            return;
+//                    }
                 }
                 // Make sure the user never sees this again for this license version
                 Settings.Default.LicenseVersionAccepted = LICENSE_VERSION_CURRENT;
