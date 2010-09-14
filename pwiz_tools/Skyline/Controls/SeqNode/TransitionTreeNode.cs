@@ -18,7 +18,6 @@
  */
 using System.Diagnostics;
 using System.Drawing;
-using System.Text;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Util;
 
@@ -43,7 +42,11 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public PeptideDocNode PepNode
         {
-            get { return (Parent != null ? ((PeptideTreeNode) Parent.Parent).DocNode : null); }
+            get
+            {
+                return (Parent != null && Parent.Parent != null ?
+                    ((PeptideTreeNode) Parent.Parent).DocNode : null);
+            }
         }
 
         public override string Heading

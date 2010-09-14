@@ -177,10 +177,7 @@ namespace pwiz.Skyline
             if (newFile)
             {
                 // CONSIDER: Reload last document?
-                SrmSettings settingsDefault = Settings.Default.SrmSettingsList[0];
-                settingsDefault.UpdateLists();
-                SrmDocument documentNew = new SrmDocument(settingsDefault);
-                SetDocument(documentNew, null);
+                NewDocument();
             }
         }
 
@@ -1097,9 +1094,12 @@ namespace pwiz.Skyline
             {
                 node = node.NextVisibleNode;
             }
+            bool usingKeysOverride = SequenceTree.UseKeysOverride;
+            SequenceTree.UseKeysOverride = true;
             SequenceTree.KeysOverride = Keys.Shift;
             SequenceTree.SelectedNode = node;
             SequenceTree.KeysOverride = Keys.None;
+            SequenceTree.UseKeysOverride = usingKeysOverride;
         }
 
         

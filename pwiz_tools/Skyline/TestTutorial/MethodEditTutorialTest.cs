@@ -119,11 +119,10 @@ namespace pwiz.SkylineTestTutorial
             });
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI =>
             {
-                var textIonCount = transitionSettingsUI.Controls.Find("textIonCount", true)[0];
                 transitionSettingsUI.PrecursorCharges = "2,3";
                 transitionSettingsUI.ProductCharges = "1";
                 transitionSettingsUI.FragmentTypes = "y,b";
-                textIonCount.Text = "5";
+                transitionSettingsUI.IonCount = 5;
                 transitionSettingsUI.OkDialog();
             });
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 35, 28, 31, 155);
@@ -133,10 +132,6 @@ namespace pwiz.SkylineTestTutorial
             var editListUI =
                 ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(peptideSettingsUI.EditLibraryList);
             var addLibUI = ShowDialog<EditLibraryDlg>(editListUI.AddItem);
-            var nameTextBox = addLibUI.Controls.Find("textName", true)[0] as TextBox;
-            Assert.IsNotNull(nameTextBox);
-            var pathTextBox = addLibUI.Controls.Find("textPath", true)[0] as TextBox;
-            Assert.IsNotNull(pathTextBox);
             RunUI(() => addLibUI.LibrarySpec = 
                 new BiblioSpecLibSpec(YEAST_GPM, TestFilesDir.GetTestPath(@"MethodEdit\Library\yeast_cmp_20.hlf")));
             OkDialog(addLibUI, addLibUI.OkDialog);
@@ -155,7 +150,9 @@ namespace pwiz.SkylineTestTutorial
 
             RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUI2 =>
                {
-                   peptideSettingsUI2.LimitPeptides("3", "Expect");
+                   peptideSettingsUI2.LimitPeptides = true;
+                   peptideSettingsUI2.RankID = new PeptideRankId("Expect");
+                   peptideSettingsUI2.PeptidesPerProtein = 3;
                    peptideSettingsUI2.OkDialog();
                });
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 35, 47, 47, 223);
@@ -205,7 +202,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => findPeptideDlg.Sequence = "IPEE");
             OkDialog(findPeptideDlg, findPeptideDlg.OkDialog);
             RefineDlg refineDlg = ShowDialog<RefineDlg>(SkylineWindow.ShowRefineDlg);
-            RunUI(() => refineDlg.SetMinTransitions(5));
+            RunUI(() => refineDlg.MinTransitions = 5);
             OkDialog(refineDlg, refineDlg.OkDialog);
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 35, 64, 64, 320);
 
@@ -299,9 +296,9 @@ namespace pwiz.SkylineTestTutorial
             // Preparing to Measure, p. 20
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI =>
             {
-                transitionSettingsUI.RegressionCE = "ABI 4000 QTrap";
-                transitionSettingsUI.RegressionDP = "ABI";
-                transitionSettingsUI.MaxMz = "1800";
+                transitionSettingsUI.RegressionCE = Settings.Default.GetCollisionEnergyByName("ABI 4000 QTrap");
+                transitionSettingsUI.RegressionDP = Settings.Default.GetDeclusterPotentialByName("ABI");
+                transitionSettingsUI.MaxMz = 1800;
                 transitionSettingsUI.OkDialog();
             });
             RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("MethodEdit Tutorial.sky")));

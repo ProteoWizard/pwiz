@@ -109,12 +109,12 @@ namespace pwiz.Skyline.Model.Results
                 // chromatograms, while Thermo files remain fairly consistent.
                 if (_dataFile.IsABFile)
                 {
-                    _readMaxMinutes = 10;
+                    _readMaxMinutes = 4;
                     _slowLoadWorkAround = LoadingTooSlowlyException.Solution.mzwiff_conversion;
                 }
                 else if (_dataFile.IsThermoFile)
                 {
-                    _readMaxMinutes = 5;
+                    _readMaxMinutes = 4;
                     _slowLoadWorkAround = LoadingTooSlowlyException.Solution.local_file;
                 }
             }

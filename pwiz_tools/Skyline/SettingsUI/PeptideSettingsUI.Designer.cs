@@ -31,9 +31,10 @@ namespace pwiz.Skyline.SettingsUI
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PeptideSettingsUI));
             this.btnOk = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
-            this.toolTipSettings = new System.Windows.Forms.ToolTip(this.components);
+            this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.comboStandardType = new System.Windows.Forms.ComboBox();
             this.comboLabelType = new System.Windows.Forms.ComboBox();
             this.listHeavyMods = new System.Windows.Forms.CheckedListBox();
@@ -130,7 +131,7 @@ namespace pwiz.Skyline.SettingsUI
             this.comboStandardType.Name = "comboStandardType";
             this.comboStandardType.Size = new System.Drawing.Size(177, 21);
             this.comboStandardType.TabIndex = 13;
-            this.toolTipSettings.SetToolTip(this.comboStandardType, "The type to use as the internal stadard, or the denomenator\r\nin peak area ratios." +
+            this.helpTip.SetToolTip(this.comboStandardType, "The type to use as the internal stadard, or the denomenator\r\nin peak area ratios." +
                     "");
             // 
             // comboLabelType
@@ -141,7 +142,7 @@ namespace pwiz.Skyline.SettingsUI
             this.comboLabelType.Name = "comboLabelType";
             this.comboLabelType.Size = new System.Drawing.Size(177, 21);
             this.comboLabelType.TabIndex = 8;
-            this.toolTipSettings.SetToolTip(this.comboLabelType, "The currently active isotope label type for which isotope\r\nmodifications are bein" +
+            this.helpTip.SetToolTip(this.comboLabelType, "The currently active isotope label type for which isotope\r\nmodifications are bein" +
                     "g chosen.");
             this.comboLabelType.SelectedIndexChanged += new System.EventHandler(this.comboLabelType_SelectedIndexChanged);
             // 
@@ -153,7 +154,7 @@ namespace pwiz.Skyline.SettingsUI
             this.listHeavyMods.Name = "listHeavyMods";
             this.listHeavyMods.Size = new System.Drawing.Size(177, 94);
             this.listHeavyMods.TabIndex = 10;
-            this.toolTipSettings.SetToolTip(this.listHeavyMods, "Modifications applied to any of the heavy forms of the peptides,\r\nwhich are typic" +
+            this.helpTip.SetToolTip(this.listHeavyMods, "Modifications applied to any of the heavy forms of the peptides,\r\nwhich are typic" +
                     "ally changes to the isotopic make-up of the\r\nmolecules, with no impact on struct" +
                     "ure.");
             // 
@@ -165,7 +166,7 @@ namespace pwiz.Skyline.SettingsUI
             this.listStaticMods.Name = "listStaticMods";
             this.listStaticMods.Size = new System.Drawing.Size(177, 94);
             this.listStaticMods.TabIndex = 1;
-            this.toolTipSettings.SetToolTip(this.listStaticMods, "Modifications applied to the light form of the peptides\r\nwhich are typically due " +
+            this.helpTip.SetToolTip(this.listStaticMods, "Modifications applied to the light form of the peptides\r\nwhich are typically due " +
                     "to changes in the molecular\r\nstructure of the peptide.");
             // 
             // listStandardTypes
@@ -176,7 +177,7 @@ namespace pwiz.Skyline.SettingsUI
             this.listStandardTypes.Name = "listStandardTypes";
             this.listStandardTypes.Size = new System.Drawing.Size(177, 49);
             this.listStandardTypes.TabIndex = 14;
-            this.toolTipSettings.SetToolTip(this.listStandardTypes, "The types to use as internal stadards, or the denomenators\r\nin peak area ratios c" +
+            this.helpTip.SetToolTip(this.listStandardTypes, "The types to use as internal stadards, or the denomenators\r\nin peak area ratios c" +
                     "alculated for other types.");
             // 
             // textMaxVariableMods
@@ -185,7 +186,7 @@ namespace pwiz.Skyline.SettingsUI
             this.textMaxVariableMods.Name = "textMaxVariableMods";
             this.textMaxVariableMods.Size = new System.Drawing.Size(90, 20);
             this.textMaxVariableMods.TabIndex = 4;
-            this.toolTipSettings.SetToolTip(this.textMaxVariableMods, "The maximum number of variable modifications allowed\r\nto occur in combination on " +
+            this.helpTip.SetToolTip(this.textMaxVariableMods, "The maximum number of variable modifications allowed\r\nto occur in combination on " +
                     "any peptide instance.");
             // 
             // textMaxNeutralLosses
@@ -194,7 +195,7 @@ namespace pwiz.Skyline.SettingsUI
             this.textMaxNeutralLosses.Name = "textMaxNeutralLosses";
             this.textMaxNeutralLosses.Size = new System.Drawing.Size(90, 20);
             this.textMaxNeutralLosses.TabIndex = 6;
-            this.toolTipSettings.SetToolTip(this.textMaxNeutralLosses, "The maximum number of neutral loss events allowed\r\nto occur in combination on any" +
+            this.helpTip.SetToolTip(this.textMaxNeutralLosses, "The maximum number of neutral loss events allowed\r\nto occur in combination on any" +
                     " fragment instance.");
             // 
             // tabControl1
@@ -258,6 +259,8 @@ namespace pwiz.Skyline.SettingsUI
             this.cbMissedCleavages.Name = "cbMissedCleavages";
             this.cbMissedCleavages.Size = new System.Drawing.Size(44, 21);
             this.cbMissedCleavages.TabIndex = 3;
+            this.helpTip.SetToolTip(this.cbMissedCleavages, "The maximum number of missed cleavages allowed in a peptide when\r\nconsidering pro" +
+                    "tein digestion.");
             // 
             // label1
             // 
@@ -276,6 +279,8 @@ namespace pwiz.Skyline.SettingsUI
             this.comboEnzyme.Name = "comboEnzyme";
             this.comboEnzyme.Size = new System.Drawing.Size(169, 21);
             this.comboEnzyme.TabIndex = 1;
+            this.helpTip.SetToolTip(this.comboEnzyme, "The protease enzyme used for digesting proteins into peptides prior\r\nto injection" +
+                    " into the mass spectrometer\r\n");
             this.comboEnzyme.SelectedIndexChanged += new System.EventHandler(this.enzyme_SelectedIndexChanged);
             // 
             // label15
@@ -295,6 +300,8 @@ namespace pwiz.Skyline.SettingsUI
             this.comboBackgroundProteome.Name = "comboBackgroundProteome";
             this.comboBackgroundProteome.Size = new System.Drawing.Size(169, 21);
             this.comboBackgroundProteome.TabIndex = 5;
+            this.helpTip.SetToolTip(this.comboBackgroundProteome, "Processed FASTA sequence information specifying the full\r\nset of proteins that ma" +
+                    "y be present in the sample matrix to be\r\ninjected into the mass spectrometer.");
             this.comboBackgroundProteome.SelectedIndexChanged += new System.EventHandler(this.comboBackgroundProteome_SelectedIndexChanged);
             // 
             // tabPrediction
@@ -327,6 +334,8 @@ namespace pwiz.Skyline.SettingsUI
             this.textMeasureRTWindow.Name = "textMeasureRTWindow";
             this.textMeasureRTWindow.Size = new System.Drawing.Size(100, 20);
             this.textMeasureRTWindow.TabIndex = 14;
+            this.helpTip.SetToolTip(this.textMeasureRTWindow, "Time window in minutes around a measured peak center (i.e. (start + end)/2)\r\nused" +
+                    " in scheduling future peptide measurements.");
             // 
             // cbUseMeasuredRT
             // 
@@ -336,6 +345,8 @@ namespace pwiz.Skyline.SettingsUI
             this.cbUseMeasuredRT.Size = new System.Drawing.Size(232, 17);
             this.cbUseMeasuredRT.TabIndex = 13;
             this.cbUseMeasuredRT.Text = "&Use measured retention times when present";
+            this.helpTip.SetToolTip(this.cbUseMeasuredRT, "If checked, then previously measured retention times will be used\r\nto predict ret" +
+                    "ention times for scheduling of future peptide measurements.");
             this.cbUseMeasuredRT.UseVisualStyleBackColor = true;
             this.cbUseMeasuredRT.CheckedChanged += new System.EventHandler(this.cbUseMeasuredRT_CheckedChanged);
             // 
@@ -356,6 +367,8 @@ namespace pwiz.Skyline.SettingsUI
             this.comboRetentionTime.Name = "comboRetentionTime";
             this.comboRetentionTime.Size = new System.Drawing.Size(169, 21);
             this.comboRetentionTime.TabIndex = 11;
+            this.helpTip.SetToolTip(this.comboRetentionTime, "Specifies a linear equation that may be used to predict retention\r\ntimes from a p" +
+                    "eptide specific hydrophobicity score.");
             this.comboRetentionTime.SelectedIndexChanged += new System.EventHandler(this.comboRetentionTime_SelectedIndexChanged);
             // 
             // label9
@@ -363,9 +376,9 @@ namespace pwiz.Skyline.SettingsUI
             this.label9.AutoSize = true;
             this.label9.Location = new System.Drawing.Point(25, 20);
             this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(129, 13);
+            this.label9.Size = new System.Drawing.Size(122, 13);
             this.label9.TabIndex = 10;
-            this.label9.Text = "&Retention time regression:";
+            this.label9.Text = "&Retention time equation:";
             // 
             // tabFilter
             // 
@@ -396,6 +409,9 @@ namespace pwiz.Skyline.SettingsUI
             this.cbAutoSelect.Size = new System.Drawing.Size(181, 17);
             this.cbAutoSelect.TabIndex = 12;
             this.cbAutoSelect.Text = "&Auto-select all matching peptides";
+            this.helpTip.SetToolTip(this.cbAutoSelect, "If checked, peptides are automatically chosen from proteins\r\nusing specified filt" +
+                    "er and library settings.  Otherwise, all peptide\r\nselection must be done by manu" +
+                    "al document editing.");
             this.cbAutoSelect.UseVisualStyleBackColor = true;
             // 
             // label3
@@ -413,6 +429,7 @@ namespace pwiz.Skyline.SettingsUI
             this.textExcludeAAs.Name = "textExcludeAAs";
             this.textExcludeAAs.Size = new System.Drawing.Size(44, 20);
             this.textExcludeAAs.TabIndex = 7;
+            this.helpTip.SetToolTip(this.textExcludeAAs, "Exclude all peptides starting before this amino acid position\r\nin each protein");
             // 
             // cbRaggedEnds
             // 
@@ -422,6 +439,8 @@ namespace pwiz.Skyline.SettingsUI
             this.cbRaggedEnds.Size = new System.Drawing.Size(169, 17);
             this.cbRaggedEnds.TabIndex = 8;
             this.cbRaggedEnds.Text = "Exclude potential &ragged ends";
+            this.helpTip.SetToolTip(this.cbRaggedEnds, "Exclude peptides resulting from cleavage sites with immediate\r\npreceding or follo" +
+                    "wing cleavage sites.  e.g.  RR, KK, RK, KR for trypsin");
             this.cbRaggedEnds.UseVisualStyleBackColor = true;
             // 
             // btnEditExlusions
@@ -431,6 +450,7 @@ namespace pwiz.Skyline.SettingsUI
             this.btnEditExlusions.Size = new System.Drawing.Size(75, 23);
             this.btnEditExlusions.TabIndex = 11;
             this.btnEditExlusions.Text = "E&dit list...";
+            this.helpTip.SetToolTip(this.btnEditExlusions, "Edit the list of available peptide exclusions");
             this.btnEditExlusions.UseVisualStyleBackColor = true;
             this.btnEditExlusions.Click += new System.EventHandler(this.btnEditExlusions_Click);
             // 
@@ -442,6 +462,7 @@ namespace pwiz.Skyline.SettingsUI
             this.listboxExclusions.Name = "listboxExclusions";
             this.listboxExclusions.Size = new System.Drawing.Size(171, 94);
             this.listboxExclusions.TabIndex = 10;
+            this.helpTip.SetToolTip(this.listboxExclusions, "Regular expression patterns that may be used to exclude certain peptides");
             // 
             // label6
             // 
@@ -476,6 +497,7 @@ namespace pwiz.Skyline.SettingsUI
             this.textMaxLength.Name = "textMaxLength";
             this.textMaxLength.Size = new System.Drawing.Size(45, 20);
             this.textMaxLength.TabIndex = 3;
+            this.helpTip.SetToolTip(this.textMaxLength, "Maximum number of amino acids allowed in peptides matching\r\nthis filter");
             // 
             // textMinLength
             // 
@@ -483,6 +505,7 @@ namespace pwiz.Skyline.SettingsUI
             this.textMinLength.Name = "textMinLength";
             this.textMinLength.Size = new System.Drawing.Size(45, 20);
             this.textMinLength.TabIndex = 1;
+            this.helpTip.SetToolTip(this.textMinLength, "Minimum number of amino acids allowed in peptides matching\r\nthis filter");
             // 
             // tabLibrary
             // 
@@ -506,6 +529,7 @@ namespace pwiz.Skyline.SettingsUI
             this.btnExplore.Size = new System.Drawing.Size(75, 23);
             this.btnExplore.TabIndex = 5;
             this.btnExplore.Text = "&Explore...";
+            this.helpTip.SetToolTip(this.btnExplore, "Open the MS/MS spectral library explorer");
             this.btnExplore.UseVisualStyleBackColor = true;
             this.btnExplore.Click += new System.EventHandler(this.btnExplore_Click);
             // 
@@ -516,6 +540,8 @@ namespace pwiz.Skyline.SettingsUI
             this.btnBuildLibrary.Size = new System.Drawing.Size(75, 23);
             this.btnBuildLibrary.TabIndex = 4;
             this.btnBuildLibrary.Text = "&Build...";
+            this.helpTip.SetToolTip(this.btnBuildLibrary, "Build a MS/MS spectral library from peptide search results\r\nfrom various peptide " +
+                    "search engines.");
             this.btnBuildLibrary.UseVisualStyleBackColor = true;
             this.btnBuildLibrary.Click += new System.EventHandler(this.btnBuildLibrary_Click);
             // 
@@ -541,6 +567,9 @@ namespace pwiz.Skyline.SettingsUI
             this.comboRank.Name = "comboRank";
             this.comboRank.Size = new System.Drawing.Size(143, 21);
             this.comboRank.TabIndex = 3;
+            this.helpTip.SetToolTip(this.comboRank, "Specifies a value associated with each spectrum in a library that may\r\nbe used to" +
+                    " rank matching peptides.  Not all library formats provide the\r\nsame values for r" +
+                    "anking.");
             this.comboRank.SelectedIndexChanged += new System.EventHandler(this.comboRank_SelectedIndexChanged);
             // 
             // labelPeptides
@@ -567,6 +596,7 @@ namespace pwiz.Skyline.SettingsUI
             this.textPeptideCount.Name = "textPeptideCount";
             this.textPeptideCount.Size = new System.Drawing.Size(68, 20);
             this.textPeptideCount.TabIndex = 5;
+            this.helpTip.SetToolTip(this.textPeptideCount, "The number of top ranking peptides to choose for each protein");
             this.textPeptideCount.TextChanged += new System.EventHandler(this.textPeptideCount_TextChanged);
             // 
             // comboMatching
@@ -582,6 +612,7 @@ namespace pwiz.Skyline.SettingsUI
             this.comboMatching.Name = "comboMatching";
             this.comboMatching.Size = new System.Drawing.Size(143, 21);
             this.comboMatching.TabIndex = 1;
+            this.helpTip.SetToolTip(this.comboMatching, resources.GetString("comboMatching.ToolTip"));
             this.comboMatching.SelectedIndexChanged += new System.EventHandler(this.comboMatching_SelectedIndexChanged);
             // 
             // cbLimitPeptides
@@ -592,6 +623,8 @@ namespace pwiz.Skyline.SettingsUI
             this.cbLimitPeptides.Size = new System.Drawing.Size(143, 17);
             this.cbLimitPeptides.TabIndex = 4;
             this.cbLimitPeptides.Text = "&Limit peptides per protein";
+            this.helpTip.SetToolTip(this.cbLimitPeptides, "If checked, only a specified number of top ranking peptides are\r\npicked for each " +
+                    "protein.");
             this.cbLimitPeptides.UseVisualStyleBackColor = true;
             this.cbLimitPeptides.CheckedChanged += new System.EventHandler(this.cbLimitPeptides_CheckedChanged);
             // 
@@ -611,6 +644,7 @@ namespace pwiz.Skyline.SettingsUI
             this.editLibraries.Size = new System.Drawing.Size(75, 23);
             this.editLibraries.TabIndex = 2;
             this.editLibraries.Text = "&Edit list...";
+            this.helpTip.SetToolTip(this.editLibraries, "Edit the list of available MS/MS spectral libraries.");
             this.editLibraries.UseVisualStyleBackColor = true;
             this.editLibraries.Click += new System.EventHandler(this.editLibraries_Click);
             // 
@@ -631,6 +665,7 @@ namespace pwiz.Skyline.SettingsUI
             this.listLibraries.Name = "listLibraries";
             this.listLibraries.Size = new System.Drawing.Size(226, 94);
             this.listLibraries.TabIndex = 1;
+            this.helpTip.SetToolTip(this.listLibraries, resources.GetString("listLibraries.ToolTip"));
             this.listLibraries.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.listLibraries_ItemCheck);
             // 
             // tabModifications
@@ -769,7 +804,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private System.Windows.Forms.Button btnOk;
         private System.Windows.Forms.Button btnCancel;
-        private System.Windows.Forms.ToolTip toolTipSettings;
+        private System.Windows.Forms.ToolTip helpTip;
         private System.Windows.Forms.TabPage tabFilter;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox textExcludeAAs;

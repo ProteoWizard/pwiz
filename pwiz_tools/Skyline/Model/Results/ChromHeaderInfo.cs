@@ -790,6 +790,26 @@ namespace pwiz.Skyline.Model.Results
             IntensityArray = intensities;
             Times = times;
         }
+
+        public class PathEqualityComparer : IEqualityComparer<ChromatogramGroupInfo>
+        {
+            public bool Equals(ChromatogramGroupInfo x, ChromatogramGroupInfo y)
+            {
+                return Equals(x.FilePath, y.FilePath);
+            }
+
+            public int GetHashCode(ChromatogramGroupInfo obj)
+            {
+                return obj.FilePath.GetHashCode();
+            }
+        }
+
+        public static PathEqualityComparer PathComparer { get; private set; }
+
+        static ChromatogramGroupInfo()
+        {
+            PathComparer = new PathEqualityComparer();
+        }
     }
 
 // ReSharper disable InconsistentNaming

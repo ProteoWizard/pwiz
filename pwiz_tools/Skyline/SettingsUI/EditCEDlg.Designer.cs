@@ -28,9 +28,11 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
+            this.components = new System.ComponentModel.Container();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle7 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle8 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle9 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditCEDlg));
             this.textName = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -48,6 +50,7 @@
             this.textStepSize = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.btnShowGraph = new System.Windows.Forms.Button();
+            this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.gridRegression)).BeginInit();
             this.SuspendLayout();
             // 
@@ -57,6 +60,7 @@
             this.textName.Name = "textName";
             this.textName.Size = new System.Drawing.Size(160, 20);
             this.textName.TabIndex = 1;
+            this.helpTip.SetToolTip(this.textName, "Name used to list this equation in the Transition Settings form");
             // 
             // label4
             // 
@@ -89,39 +93,40 @@
             // 
             // gridRegression
             // 
-            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.gridRegression.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle7.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle7.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle7.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle7.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle7.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle7.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle7.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridRegression.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle7;
             this.gridRegression.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.gridRegression.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Charge,
             this.Slope,
             this.Intercept});
-            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle5.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.gridRegression.DefaultCellStyle = dataGridViewCellStyle5;
+            dataGridViewCellStyle8.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle8.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle8.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle8.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle8.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle8.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle8.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.gridRegression.DefaultCellStyle = dataGridViewCellStyle8;
             this.gridRegression.Location = new System.Drawing.Point(12, 95);
             this.gridRegression.Name = "gridRegression";
-            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle6.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.gridRegression.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
+            dataGridViewCellStyle9.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle9.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle9.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle9.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle9.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle9.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle9.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridRegression.RowHeadersDefaultCellStyle = dataGridViewCellStyle9;
             this.gridRegression.Size = new System.Drawing.Size(251, 157);
             this.gridRegression.TabIndex = 3;
+            this.helpTip.SetToolTip(this.gridRegression, resources.GetString("gridRegression.ToolTip"));
             this.gridRegression.KeyDown += new System.Windows.Forms.KeyEventHandler(this.gridRegression_KeyDown);
             // 
             // Charge
@@ -176,6 +181,8 @@
             this.btnUseCurrent.Size = new System.Drawing.Size(89, 23);
             this.btnUseCurrent.TabIndex = 10;
             this.btnUseCurrent.Text = "&Use Results";
+            this.helpTip.SetToolTip(this.btnUseCurrent, "Click to use currently imported optimization results data for peptides\r\nin this d" +
+                    "ocument to calculate equations with linear regression");
             this.btnUseCurrent.UseVisualStyleBackColor = true;
             this.btnUseCurrent.Click += new System.EventHandler(this.btnUseCurrent_Click);
             // 
@@ -185,6 +192,7 @@
             this.textStepCount.Name = "textStepCount";
             this.textStepCount.Size = new System.Drawing.Size(100, 20);
             this.textStepCount.TabIndex = 9;
+            this.helpTip.SetToolTip(this.textStepCount, resources.GetString("textStepCount.ToolTip"));
             // 
             // label3
             // 
@@ -201,6 +209,9 @@
             this.textStepSize.Name = "textStepSize";
             this.textStepSize.Size = new System.Drawing.Size(100, 20);
             this.textStepSize.TabIndex = 7;
+            this.helpTip.SetToolTip(this.textStepSize, "Voltage interval used in CE optimization methods where the\r\npredicted optimal CE " +
+                    "is measured, along with step count values\r\non either side of the predicted value" +
+                    ", each separated by step size\r\nCE volts");
             // 
             // label5
             // 
@@ -218,6 +229,8 @@
             this.btnShowGraph.Size = new System.Drawing.Size(89, 23);
             this.btnShowGraph.TabIndex = 11;
             this.btnShowGraph.Text = "&Show Graph...";
+            this.helpTip.SetToolTip(this.btnShowGraph, "Show a linear regression graph  of  currently imported optimization results data\r" +
+                    "\nfor peptides in this document");
             this.btnShowGraph.UseVisualStyleBackColor = true;
             this.btnShowGraph.Click += new System.EventHandler(this.btnShowGraph_Click);
             // 
@@ -248,7 +261,7 @@
             this.Name = "EditCEDlg";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Edit Collision Energy Regression";
+            this.Text = "Edit Collision Energy Equation";
             ((System.ComponentModel.ISupportInitialize)(this.gridRegression)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -274,5 +287,6 @@
         private System.Windows.Forms.TextBox textStepSize;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Button btnShowGraph;
+        private System.Windows.Forms.ToolTip helpTip;
     }
 }

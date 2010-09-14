@@ -198,7 +198,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                               Sequence = peptideGroup.Sequence,
                                               Note = nodeGroup.Note
                                           };
-                AddAnnotations(dbProtein, nodeGroup.Annotations);
+                AddAnnotations(docInfo, dbProtein, nodeGroup.Annotations);
                 _session.Save(dbProtein);
                 Dictionary<DbResultFile, DbProteinResult> proteinResults = new Dictionary<DbResultFile, DbProteinResult>();
                 if (srmDocument.Settings.HasResults)
@@ -239,11 +239,11 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             transaction.Commit();
         }
 
-        private static void AddAnnotations(DbEntity dbEntity, Annotations annotations)
+        private static void AddAnnotations(DocInfo docInfo, DbEntity dbEntity, Annotations annotations)
         {
             foreach (var entry in annotations.ListAnnotations())
             {
-                dbEntity.Annotations[entry.Key] = entry.Value;
+                dbEntity.Annotations[docInfo.GetAnnotationKey(entry.Key)] = entry.Value;
             }
         }
 
@@ -299,7 +299,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 double rt = docInfo.PeptidePrediction.RetentionTime.GetRetentionTime(peptide.Sequence);                
                 dbPeptide.PredictedRetentionTime = rt;
             }
-            AddAnnotations(dbPeptide, nodePeptide.Annotations);
+            AddAnnotations(docInfo, dbPeptide, nodePeptide.Annotations);
             session.Save(dbPeptide);
             var peptideResults = new Dictionary<DbResultFile, DbPeptideResult>();
             docInfo.PeptideResults.Add(dbPeptide, peptideResults);
@@ -412,7 +412,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                             Mz = SequenceMassCalc.PersistentMZ(nodeGroup.PrecursorMz),
                                             Note = nodeGroup.Note
                                         };
-            AddAnnotations(dbPrecursor, nodeGroup.Annotations);
+            AddAnnotations(docInfo, dbPrecursor, nodeGroup.Annotations);
             double regressionMz = docInfo.Settings.GetRegressionMz(nodePeptide, nodeGroup);
             dbPrecursor.CollisionEnergy = predictTran.CollisionEnergy.GetCollisionEnergy(
                 tranGroup.PrecursorCharge, regressionMz);
@@ -519,7 +519,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                         double sumTotalArea;
                         if (chromInfo.Area.HasValue && replicateSummary.DictTotalAreas.TryGetValue(labelType, out sumTotalArea) && sumTotalArea != 0)
                             precursorResult.TotalAreaNormalized = chromInfo.Area/sumTotalArea;
-                        AddAnnotations(precursorResult, chromInfo.Annotations);
+                        AddAnnotations(docInfo, precursorResult, chromInfo.Annotations);
                         // Set the optimization step no matter what, so that replicates without
                         // optimization data will join with those with it.
                         precursorResult.OptStep = chromInfo.OptimizationStep;
@@ -595,7 +595,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 dbTransition.LibraryIntensity = nodeTran.LibInfo.Intensity;
                 dbTransition.LibraryRank = nodeTran.LibInfo.Rank;
             }
-            AddAnnotations(dbTransition, nodeTran.Annotations);
+            AddAnnotations(docInfo, dbTransition, nodeTran.Annotations);
             session.Save(dbTransition);
             var precursorResults = docInfo.PrecursorResults[dbPrecursor];
             if (nodeTran.HasResults)
@@ -642,7 +642,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                 transitionResult.LabelRatios[columnName] = chromInfo.Ratios[j];
                             }
                         }
-                        AddAnnotations(transitionResult, chromInfo.Annotations);
+                        AddAnnotations(docInfo, transitionResult, chromInfo.Annotations);
                         if (!chromInfo.IsEmpty)
                         {
                             transitionResult.RetentionTime = chromInfo.RetentionTime;
@@ -690,7 +690,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         /// Holds information about the entire document that is passed around while
         /// we are populating the database.
         /// </summary>
-        class DocInfo
+        private class DocInfo
         {
             public DocInfo(SrmDocument srmDocument)
             {
@@ -730,7 +730,9 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 ProteinResults = new Dictionary<DbProtein, Dictionary<DbResultFile, DbProteinResult>>();
                 PeptideResults = new Dictionary<DbPeptide, Dictionary<DbResultFile, DbPeptideResult>>();
                 PrecursorResults = new Dictionary<DbPrecursor, Dictionary<ResultKey, DbPrecursorResult>>();
+                AnnotationKeys = new Dictionary<string, string>();
             }
+
             public SrmSettings Settings { get; private set; }
             public PeptidePrediction PeptidePrediction { get { return Settings.PeptideSettings.Prediction; } }
             public MeasuredResults MeasuredResults { get { return Settings.MeasuredResults; } }
@@ -739,6 +741,19 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             public Dictionary<DbProtein, Dictionary<DbResultFile, DbProteinResult>> ProteinResults { get; private set; }
             public Dictionary<DbPeptide, Dictionary<DbResultFile, DbPeptideResult>> PeptideResults { get; private set; }
             public Dictionary<DbPrecursor, Dictionary<ResultKey, DbPrecursorResult>> PrecursorResults { get; private set; }
+
+            private Dictionary<string, string> AnnotationKeys { get; set; }
+
+            public string GetAnnotationKey(string annotationName)
+            {
+                string key;
+                if (!AnnotationKeys.TryGetValue(annotationName, out key))
+                {
+                    key = AnnotationDef.GetKey(annotationName);
+                    AnnotationKeys[annotationName] = key;
+                }
+                return key;
+            }
         }
 
         class ReplicateSummaryValues

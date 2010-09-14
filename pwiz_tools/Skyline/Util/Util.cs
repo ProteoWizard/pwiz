@@ -905,7 +905,7 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Parses an emum value from a string, returning a default value,
+        /// Parses an enum value from a string, returning a default value,
         /// if the string fails to parse.
         /// </summary>
         /// <typeparam name="T">The enum type</typeparam>

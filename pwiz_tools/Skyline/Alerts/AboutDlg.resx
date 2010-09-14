@@ -127,8 +127,14 @@ from Vanderbilt University under NIH/NCI grant number U24CA126479
 for the NCI CPTAC program.</value>
   </data>
   <data name="textBox1.Text" xml:space="preserve">
-    <value>Agilent Technologies
-Agilent Native Data Import Libraries
+    <value>AB Sciex
+WIFF File Reader Library
+Copyright © 2010 by AB Sciex LLC.
+All rights reserved.
+http://www.absciex.com/
+
+Agilent Technologies
+Mass Hunter Data Access Component
 http://www.agilent.com
 
 BiblioSpec
@@ -151,12 +157,16 @@ JetBrains Software
 Development tools: ReSharper and dotTrace
 http://www.jetbrains.com/index.html
 
+Matrix Science
+Mascot Parser
+http://www.matrixscience.com
+
 NHibernate
 Object Relational Mapping
 http://www.nhibernate.org
 
 ProteoWizard
-Mass Spectrometry Data Import, MSChart Control
+Mass Spectrometry Data Import
 http://proteowizard.sourceforge.net
 
 SQLite
@@ -173,8 +183,11 @@ Copyright © 2009 by Thermo Fisher Scientific, Inc.
 All rights reserved.
 http://www.thermo.com
 
-Waters Technologies Corportation
+Waters Technologies Corporation
 Method export library
+Waters Raw Data Access Component
+Copyright © 2010 by Waters Corportation.
+All rights reserved.
 http://www.waters.com
 
 ZedGraph

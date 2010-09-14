@@ -62,10 +62,10 @@ namespace pwiz.Skyline.EditUI
 
         public RefinementSettings RefinementSettings { get; private set; }
 
-        public string MaxTransitionPeakRank
+        public int MaxTransitionPeakRank
         { 
-            get { return textMaxPeakRank.Text;}
-            set { textMaxPeakRank.Text = value; }
+            get { return Convert.ToInt32(textMaxPeakRank.Text);}
+            set { textMaxPeakRank.Text = value.ToString(); }
         }
 
         public bool PreferLargerIons
@@ -80,16 +80,16 @@ namespace pwiz.Skyline.EditUI
             set { radioRemoveMissing.Checked = value; }
         }
 
-        public string RTRegressionThreshold
+        public double RTRegressionThreshold
         {
-            get { return textRTRegressionThreshold.Text; }
-            set { textRTRegressionThreshold.Text = value; }
+            get { return Convert.ToDouble(textRTRegressionThreshold.Text); }
+            set { textRTRegressionThreshold.Text = value.ToString(); }
         }
 
-        public string DotProductThreshold
+        public double DotProductThreshold
         {
-            get { return textMinDotProduct.Text; }
-            set { textMinDotProduct.Text = value; }
+            get { return Convert.ToDouble(textMinDotProduct.Text); }
+            set { textMinDotProduct.Text = value.ToString(); }
         }
 
         public void OkDialog()
@@ -219,9 +219,11 @@ namespace pwiz.Skyline.EditUI
                 cbPreferLarger.Checked = false;
         }
 
-        public void SetMinTransitions(int minTransitions)
+        public int MinTransitions
         {
-            textMinTransitions.Text = minTransitions.ToString();
+            get { return Convert.ToInt32(textMinTransitions.Text); }
+            set { textMinTransitions.Text = value.ToString(); }
         }
+
     }
 }

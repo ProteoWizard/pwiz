@@ -132,7 +132,8 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            if (proc == null || proc.ExitCode != 0)
+            // Exit code -4 is a compatibility warning but not necessarily an error
+            if (proc == null || (proc.ExitCode != 0 && proc.ExitCode != -4))
             {
                 throw new IOException(string.Format("Failure attempting to convert sample {0} in {1} to mzXML to work around a performance issue in the AB Sciex WiffFileDataReader library.",
                     sampleIndex, filePathWiff));

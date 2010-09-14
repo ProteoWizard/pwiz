@@ -28,9 +28,11 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditRTDlg));
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
             this.textName = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -51,6 +53,7 @@
             this.Sequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.RetentionTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.btnUseCurrent = new System.Windows.Forms.Button();
+            this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.gridPeptides)).BeginInit();
             this.SuspendLayout();
             // 
@@ -62,6 +65,7 @@
             this.textName.Name = "textName";
             this.textName.Size = new System.Drawing.Size(245, 20);
             this.textName.TabIndex = 1;
+            this.helpTip.SetToolTip(this.textName, "Name used to list this equation in the Peptide Settings form");
             // 
             // label4
             // 
@@ -109,6 +113,8 @@
             this.textSlope.Name = "textSlope";
             this.textSlope.Size = new System.Drawing.Size(100, 20);
             this.textSlope.TabIndex = 3;
+            this.helpTip.SetToolTip(this.textSlope, "Slope used to calculate the predicted retention time from\r\na calculated peptide s" +
+                    "core with an equation of the form:\r\n\r\nRT = slope * score + intercept");
             // 
             // label2
             // 
@@ -125,6 +131,8 @@
             this.textIntercept.Name = "textIntercept";
             this.textIntercept.Size = new System.Drawing.Size(100, 20);
             this.textIntercept.TabIndex = 5;
+            this.helpTip.SetToolTip(this.textIntercept, "Y-intercept used to calculate the predicted retention time from\r\na calculated pep" +
+                    "tide score with an equation of the form:\r\n\r\nRT = slope * score + intercept\r\n");
             // 
             // btnCalculate
             // 
@@ -134,6 +142,7 @@
             this.btnCalculate.Size = new System.Drawing.Size(75, 23);
             this.btnCalculate.TabIndex = 12;
             this.btnCalculate.Text = "&Calculate >>";
+            this.helpTip.SetToolTip(this.btnCalculate, "Show/hide peptide values used to calculate the equation with\r\nlinear regression");
             this.btnCalculate.UseVisualStyleBackColor = true;
             this.btnCalculate.Click += new System.EventHandler(this.btnCalculate_Click);
             // 
@@ -155,6 +164,8 @@
             this.labelRValue.Size = new System.Drawing.Size(103, 13);
             this.labelRValue.TabIndex = 13;
             this.labelRValue.Text = "(0 peptides, R = 0.0)";
+            this.helpTip.SetToolTip(this.labelRValue, "Number of peptides currently used to calculate the equation with\r\nlinear regressi" +
+                    "on, and R for the regression");
             this.labelRValue.Click += new System.EventHandler(this.labelRValue_Click);
             // 
             // label3
@@ -172,6 +183,7 @@
             this.textTimeWindow.Name = "textTimeWindow";
             this.textTimeWindow.Size = new System.Drawing.Size(100, 20);
             this.textTimeWindow.TabIndex = 8;
+            this.helpTip.SetToolTip(this.textTimeWindow, resources.GetString("textTimeWindow.ToolTip"));
             // 
             // label5
             // 
@@ -191,6 +203,8 @@
             this.comboCalculator.Name = "comboCalculator";
             this.comboCalculator.Size = new System.Drawing.Size(245, 21);
             this.comboCalculator.TabIndex = 11;
+            this.helpTip.SetToolTip(this.comboCalculator, "Calculator algorithm to use:\r\nSSRCalc - Sequence Specific Retention Calculator, a" +
+                    " hydrophobicity calculator (Krokhin, et al.)");
             this.comboCalculator.SelectedIndexChanged += new System.EventHandler(this.comboCalculator_SelectedIndexChanged);
             // 
             // label6
@@ -207,39 +221,41 @@
             this.gridPeptides.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.gridPeptides.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridPeptides.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
             this.gridPeptides.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.gridPeptides.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Sequence,
             this.RetentionTime});
             this.gridPeptides.DataBindings.Add(new System.Windows.Forms.Binding("Visible", global::pwiz.Skyline.Properties.Settings.Default, "EditRTVisible", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.gridPeptides.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle5.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.gridPeptides.DefaultCellStyle = dataGridViewCellStyle5;
             this.gridPeptides.Location = new System.Drawing.Point(15, 255);
             this.gridPeptides.Name = "gridPeptides";
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.gridPeptides.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle6.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridPeptides.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
             this.gridPeptides.Size = new System.Drawing.Size(342, 217);
             this.gridPeptides.TabIndex = 15;
+            this.helpTip.SetToolTip(this.gridPeptides, "Peptides and their measured retention times used to calculate the equation\r\nwith " +
+                    "linear regression");
             this.gridPeptides.Visible = global::pwiz.Skyline.Properties.Settings.Default.EditRTVisible;
             this.gridPeptides.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridPeptides_CellEndEdit);
             this.gridPeptides.KeyDown += new System.Windows.Forms.KeyEventHandler(this.gridPeptides_KeyDown);
@@ -268,6 +284,8 @@
             this.btnUseCurrent.Size = new System.Drawing.Size(75, 23);
             this.btnUseCurrent.TabIndex = 18;
             this.btnUseCurrent.Text = "&Use results";
+            this.helpTip.SetToolTip(this.btnUseCurrent, "Click to use currently imported results data with peptides in this\r\ndocument to c" +
+                    "alculate the equation with linear regression");
             this.btnUseCurrent.UseVisualStyleBackColor = true;
             this.btnUseCurrent.Click += new System.EventHandler(this.btnUseCurrent_Click);
             // 
@@ -301,7 +319,7 @@
             this.Name = "EditRTDlg";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Edit Retention Time Regression";
+            this.Text = "Edit Retention Time Equation";
             ((System.ComponentModel.ISupportInitialize)(this.gridPeptides)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -330,5 +348,6 @@
         private System.Windows.Forms.ComboBox comboCalculator;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.Button btnUseCurrent;
+        private System.Windows.Forms.ToolTip helpTip;
     }
 }

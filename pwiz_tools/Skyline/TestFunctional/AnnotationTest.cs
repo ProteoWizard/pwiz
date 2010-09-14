@@ -47,6 +47,9 @@ namespace pwiz.SkylineTestFunctional
             RunFunctionalTest();
         }
 
+        private const string COL_PROTEIN_TEXT = "proteinText";
+        private const string COL_PRECURSOR_RESULTS_ITEMS = "precursor-Result+Items";
+
         /// <summary>
         /// Test annotations.  Defines some annotations, then opens up a Skyline document that has 
         /// results and optimization steps in it.  Enables the annotations in the document, and sets
@@ -58,18 +61,18 @@ namespace pwiz.SkylineTestFunctional
             var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(chooseAnnotationsDlg.EditList);
             // Define the annotations that we are going to be using in this test.
             RunUI(editListDlg.ResetList);
-            DefineAnnotation(editListDlg, "proteinText", AnnotationDef.AnnotationTarget.protein, AnnotationDef.AnnotationType.text, null);
-            DefineAnnotation(editListDlg, "peptideItems", AnnotationDef.AnnotationTarget.peptide,
+            DefineAnnotation(editListDlg, COL_PROTEIN_TEXT, AnnotationDef.AnnotationTarget.protein, AnnotationDef.AnnotationType.text, null);
+            DefineAnnotation(editListDlg, "peptide Items", AnnotationDef.AnnotationTarget.peptide,
                              AnnotationDef.AnnotationType.value_list, new[] {"one","two","three"});
-            DefineAnnotation(editListDlg, "precursorTrueFalse", AnnotationDef.AnnotationTarget.precursor,
+            DefineAnnotation(editListDlg, "precursor 'True' 'False'", AnnotationDef.AnnotationTarget.precursor,
                              AnnotationDef.AnnotationType.true_false, null);
-            DefineAnnotation(editListDlg, "transitionText", AnnotationDef.AnnotationTarget.transition, 
+            DefineAnnotation(editListDlg, "transition_Text", AnnotationDef.AnnotationTarget.transition, 
                 AnnotationDef.AnnotationType.text, null);
-            DefineAnnotation(editListDlg, "precursorResultItems", AnnotationDef.AnnotationTarget.precursor_result,
+            DefineAnnotation(editListDlg, COL_PRECURSOR_RESULTS_ITEMS, AnnotationDef.AnnotationTarget.precursor_result,
                              AnnotationDef.AnnotationType.value_list, new[] {"a", "b", "c"});
-            DefineAnnotation(editListDlg, "transitionTrueFalse", AnnotationDef.AnnotationTarget.transition_result,
+            DefineAnnotation(editListDlg, "transition_True|False_", AnnotationDef.AnnotationTarget.transition_result,
                              AnnotationDef.AnnotationType.true_false, null);
-            DefineAnnotation(editListDlg, "all",
+            DefineAnnotation(editListDlg, "\"all\"",
                              AnnotationDef.AnnotationTarget.protein |
                              AnnotationDef.AnnotationTarget.protein |
                              AnnotationDef.AnnotationTarget.protein |
@@ -94,11 +97,11 @@ namespace pwiz.SkylineTestFunctional
             OkDialog(chooseAnnotationsDlg, chooseAnnotationsDlg.OkDialog);
             // Edit the _note_ on the root node.
             var editNoteDlg = ShowDialog<EditNoteDlg>(SkylineWindow.EditNote);
-            Assert.IsNull(SkylineWindow.Document.PeptideGroups.First().Annotations.GetAnnotation("proteinText"));
-            RunUI(() => SetAnnotationValue(editNoteDlg, "proteinText", "proteinTextValue"));
+            Assert.IsNull(SkylineWindow.Document.PeptideGroups.First().Annotations.GetAnnotation(COL_PROTEIN_TEXT));
+            RunUI(() => SetAnnotationValue(editNoteDlg, COL_PROTEIN_TEXT, "proteinTextValue"));
             OkDialog(editNoteDlg, ()=>editNoteDlg.DialogResult = DialogResult.OK);
             Assert.AreEqual("proteinTextValue",
-                            SkylineWindow.Document.PeptideGroups.First().Annotations.GetAnnotation("proteinText"));
+                            SkylineWindow.Document.PeptideGroups.First().Annotations.GetAnnotation(COL_PROTEIN_TEXT));
             // Show the ResultsGrid
             var resultsGridForm = ShowDialog<ResultsGridForm>(() => SkylineWindow.ShowResultsGrid(true));
             var resultsGrid = resultsGridForm.ResultsGrid;
@@ -111,16 +114,16 @@ namespace pwiz.SkylineTestFunctional
             var precursorTreeNode = (SrmTreeNode) SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0];
             RunUI(() => SkylineWindow.SequenceTree.SelectedNode = precursorTreeNode);
             var chromInfo = ((TransitionGroupDocNode)precursorTreeNode.Model).Results[0][0];
-            Assert.IsNull(chromInfo.Annotations.GetAnnotation("precursorResultItems"));
+            Assert.IsNull(chromInfo.Annotations.GetAnnotation(COL_PRECURSOR_RESULTS_ITEMS));
             WaitForGraphPanesToUpdate();
             // Show the "precursorResultItems" annotation column
             var chooseColumnsDlg = ShowDialog<ColumnChooser>(resultsGridForm.ChooseColumns);
             RunUI(()=>chooseColumnsDlg.CheckedListBox.SetItemChecked(
-                chooseColumnsDlg.CheckedListBox.Items.IndexOf("precursorResultItems"), true));
+                chooseColumnsDlg.CheckedListBox.Items.IndexOf(COL_PRECURSOR_RESULTS_ITEMS), true));
             OkDialog(chooseColumnsDlg, ()=>chooseColumnsDlg.DialogResult=DialogResult.OK);
             var colPrecursorResultItems =
                 resultsGrid.Columns[
-                    AnnotationDef.ANNOTATION_PREFIX + "precursorResultItems"];
+                    AnnotationDef.GetColumnName(COL_PRECURSOR_RESULTS_ITEMS)];
             // Set the annotation value on the first two rows in the ResultsGrid.
             // The annotation is a dropdown with values {blank, "a", "b", "c"}
             Assert.IsNotNull(colPrecursorResultItems);
@@ -141,9 +144,9 @@ namespace pwiz.SkylineTestFunctional
             // Assert that the annotations have their new values.
             var precursorDocNode = ((TransitionGroupDocNode) precursorTreeNode.Model);
             Assert.AreEqual("b", precursorDocNode.Results[0][0]
-                .Annotations.GetAnnotation("precursorResultItems"));
+                .Annotations.GetAnnotation(COL_PRECURSOR_RESULTS_ITEMS));
             Assert.AreEqual("a", precursorDocNode.Results[0][1]
-                .Annotations.GetAnnotation("precursorResultItems"));
+                .Annotations.GetAnnotation(COL_PRECURSOR_RESULTS_ITEMS));
         }
 
         private static void DefineAnnotation(EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef> dialog,

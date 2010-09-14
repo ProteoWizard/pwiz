@@ -27,10 +27,14 @@ namespace pwiz.ProteomeDatabase.API
         private List<AlternativeName> _alternativeNames;
         private String _name;
         private String _description;
-        public Protein(ProteomeDb proteomeDb, DbProtein protein) : this(proteomeDb, protein,(DbProteinName) null)
+        
+        public Protein(ProteomeDb proteomeDb, DbProtein protein)
+            : this(proteomeDb, protein,(DbProteinName) null)
         {
         }
-        public Protein(ProteomeDb proteomeDb, DbProtein protein, DbProteinName primaryName) : base(proteomeDb, protein)
+
+        public Protein(ProteomeDb proteomeDb, DbProtein protein, DbProteinName primaryName)
+            : base(proteomeDb, protein)
         {
             Sequence = protein.Sequence;
             if (primaryName != null)
@@ -39,7 +43,9 @@ namespace pwiz.ProteomeDatabase.API
                 _description = primaryName.Description;
             }
         }
-        public Protein(ProteomeDb proteomeDb, DbProtein protein, List<DbProteinName> proteinNames) : this(proteomeDb, protein, (DbProteinName) null)
+
+        public Protein(ProteomeDb proteomeDb, DbProtein protein, List<DbProteinName> proteinNames)
+            : this(proteomeDb, protein, (DbProteinName) null)
         {
             _alternativeNames = new List<AlternativeName>();
             foreach (DbProteinName proteinName in proteinNames)
@@ -53,10 +59,11 @@ namespace pwiz.ProteomeDatabase.API
                 {
                     _alternativeNames.Add(new AlternativeName{ Description = proteinName.Description, Name = proteinName.Name});
                 }
-            }
-           
+            }           
         }
-        private void InitNames() {
+
+        private void InitNames()
+        {
             if (_alternativeNames != null)
             {
                 return;
@@ -83,25 +90,30 @@ namespace pwiz.ProteomeDatabase.API
                 }
             }
         }
-        public String Name { get
+
+        public String Name
         {
-            if (_name == null)
+            get
             {
-                InitNames();
+                if (_name == null)
+                    InitNames();
+                return _name;
             }
-            return _name;
-        } 
         }
-        public String Description { get
+
+        public String Description
         {
-            if (_description == null)
+            get
             {
-                InitNames();
+                if (_description == null)
+                    InitNames();
+                return _description;
             }
-            return _description;
-        } }
+        }
+
         public String Sequence { get; private set; }
-        public IList<AlternativeName> AlternativeNames {
+        public IList<AlternativeName> AlternativeNames
+        {
             get
             {
                 InitNames();
@@ -114,6 +126,7 @@ namespace pwiz.ProteomeDatabase.API
             return Name.CompareTo(other.Name);
         }
     }
+
     public class AlternativeName
     {
         public String Name { get; set; }

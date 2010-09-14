@@ -1279,5 +1279,41 @@ namespace pwiz.Skyline.Properties {
                 this["ViewLibrarySize"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool LibraryPeptidesAddUnmatched {
+            get {
+                return ((bool)(this["LibraryPeptidesAddUnmatched"]));
+            }
+            set {
+                this["LibraryPeptidesAddUnmatched"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool LibraryPeptidesKeepFiltered {
+            get {
+                return ((bool)(this["LibraryPeptidesKeepFiltered"]));
+            }
+            set {
+                this["LibraryPeptidesKeepFiltered"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("AddToAll")]
+        public string LibraryPeptidesAddDuplicatesEnum {
+            get {
+                return ((string)(this["LibraryPeptidesAddDuplicatesEnum"]));
+            }
+            set {
+                this["LibraryPeptidesAddDuplicatesEnum"] = value;
+            }
+        }
     }
 }

@@ -41,32 +41,37 @@ namespace pwiz.ProteomeDatabase.API
         public String Description { get; private set; }
         public int MinSequenceLength { get; private set; }
         public int MaxSequenceLength { get; private set; }
+
         public List<Protein> GetProteinsWithSequence(String sequence)
         {
             List<Protein> proteins = new List<Protein>();
-            using(ISession session = ProteomeDb.OpenSession())
+            using (ISession session = ProteomeDb.OpenSession())
             {
                 DbDigestion digestion = GetEntity(session);
                 String sequencePrefix = sequence.Substring(0, Math.Min(sequence.Length, MaxSequenceLength));
-                String hql = "SELECT DISTINCT pp.Protein FROM " + typeof(DbDigestedPeptideProtein) + " pp "
-                 + "\nWHERE pp.Peptide.Digestion = :Digestion"
+                String hql = "SELECT DISTINCT pp.Protein, pn"
+                 + "\nFROM " + typeof(DbDigestedPeptideProtein) + " pp, " + typeof(DbProteinName) + " pn"
+                 + "\nWHERE pp.Protein.Id = pn.Protein.Id AND pn.IsPrimary <> 0"
+                 + "\nAND pp.Peptide.Digestion = :Digestion"
                  + "\nAND pp.Peptide.Sequence = :Sequence";
                 IQuery query = session.CreateQuery(hql);
                 query.SetParameter("Digestion", digestion);
                 query.SetParameter("Sequence", sequencePrefix);
-                foreach (DbProtein protein in query.List())
+                foreach (object[] values in query.List())
                 {
+                    var protein = (DbProtein)values[0];
+                    var name = (DbProteinName)values[1];
+
                     if (protein.Sequence.IndexOf(sequence) < 0)
-                    {
                         continue;
-                    }
-                    proteins.Add(new Protein(ProteomeDb, protein));
+
+                    proteins.Add(new Protein(ProteomeDb, protein, name));
                 }
             }
             return proteins;
         }
 
-        public List<KeyValuePair<Protein,String>> GetProteinsWithSequencePrefix(String sequence, int maxResults)
+        public List<KeyValuePair<Protein, String>> GetProteinsWithSequencePrefix(String sequence, int maxResults)
         {
             List<KeyValuePair<Protein,String>> proteinSequences = new List<KeyValuePair<Protein,String>>();
             using (ISession session = ProteomeDb.OpenSession())

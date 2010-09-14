@@ -18,11 +18,12 @@
  */
 using System;
 using System.Collections;
+using System.Globalization;
 using System.Reflection;
+using System.Text;
 using NHibernate.Engine;
 using NHibernate.Properties;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Hibernate
 {
@@ -32,36 +33,14 @@ namespace pwiz.Skyline.Model.Hibernate
     /// </summary>
     public class AnnotationPropertyAccessor : IPropertyAccessor
     {
-        public const string ANNOTATION_PREFIX = AnnotationDef.ANNOTATION_PREFIX;
-
-        public static string GetKey(string annotationName)
-        {
-            return Helpers.MakeId(annotationName);
-        }
-
-        public static string GetColumnName(string annotationName)
-        {
-            return ANNOTATION_PREFIX + GetKey(annotationName);
-        }
-
-        public static string GetDisplayName(string propertyName)
-        {
-            return propertyName.Substring(ANNOTATION_PREFIX.Length);
-        }
-
-        public static bool IsAnnotationProperty(string propertyName)
-        {
-            return propertyName.StartsWith(ANNOTATION_PREFIX);
-        }
-
         public IGetter GetGetter(Type theClass, string propertyName)
         {
-            return new Getter(GetDisplayName(propertyName));
+            return new Getter(AnnotationDef.GetColumnKey(propertyName));
         }
 
         public ISetter GetSetter(Type theClass, string propertyName)
         {
-            return new Setter(GetDisplayName(propertyName));
+            return new Setter(AnnotationDef.GetColumnKey(propertyName));
         }
 
         public bool CanAccessThroughReflectionOptimizer
@@ -142,16 +121,14 @@ namespace pwiz.Skyline.Model.Hibernate
 
     public class BoolAnnotationPropertyAccessor : IPropertyAccessor
     {
-        private const string ANNOTATION_PREFIX = AnnotationPropertyAccessor.ANNOTATION_PREFIX;
-
         public IGetter GetGetter(Type theClass, string propertyName)
         {
-            return new Getter(propertyName.Substring(ANNOTATION_PREFIX.Length));
+            return new Getter(AnnotationDef.GetColumnKey(propertyName));
         }
 
         public ISetter GetSetter(Type theClass, string propertyName)
         {
-            return new Setter(propertyName.Substring(ANNOTATION_PREFIX.Length));
+            return new Setter(AnnotationDef.GetColumnKey(propertyName));
         }
 
         public bool CanAccessThroughReflectionOptimizer

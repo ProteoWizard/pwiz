@@ -94,6 +94,11 @@ namespace pwiz.Skyline.Util
         /// Message shown to the user
         /// </summary>
         string Message { set; }
+
+        /// <summary>
+        /// Shows a dialog box on the right thread, parented to the progress form
+        /// </summary>
+        DialogResult ShowDialog(Func<IWin32Window, DialogResult> show);
     }
 
     /// <summary>

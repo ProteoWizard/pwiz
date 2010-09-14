@@ -21,7 +21,7 @@ using System.Windows.Forms;
 
 namespace pwiz.Skyline.Alerts
 {
-    public partial class MultiButtonMsgDlg : Form
+    public sealed partial class MultiButtonMsgDlg : Form
     {
         public MultiButtonMsgDlg(string message, string btnText)
             : this(message, null, btnText)
@@ -31,6 +31,8 @@ namespace pwiz.Skyline.Alerts
         public MultiButtonMsgDlg(string message, string btn0Text, string btn1Text)
         {
             InitializeComponent();
+
+            Text = Program.Name;
 
             if (btn0Text != null)
             {

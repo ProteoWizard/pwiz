@@ -1700,7 +1700,11 @@ namespace pwiz.Skyline.Model
                 {
                     if (arrayListChromInfos[index] == null)
                         arrayListChromInfos[index] = new List<T>();
-                    arrayListChromInfos[index].Add(chromInfo);                    
+                    // Deal with cache corruption issue where the same results info could
+                    // get written multiple times for the same precursor.
+                    var listChromInfos = arrayListChromInfos[index];
+                    if (listChromInfos.Count == 0 || !Equals(chromInfo, listChromInfos[listChromInfos.Count - 1]))
+                        arrayListChromInfos[index].Add(chromInfo);
                 }
             }
             reader.ReadEndElement();

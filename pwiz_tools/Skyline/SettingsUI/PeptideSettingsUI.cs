@@ -632,6 +632,11 @@ namespace pwiz.Skyline.SettingsUI
             _driverBackgroundProteome.LoadList(dlg.BackgroundProteomeSpec.Name);
         }
 
+        public void AddBackgroundProteome()
+        {
+            
+        }
+
         public int MissedCleavages
         { 
             get { return Convert.ToInt32(cbMissedCleavages.SelectedItem); }
@@ -685,15 +690,22 @@ namespace pwiz.Skyline.SettingsUI
             set { textMaxNeutralLosses.Text = value.ToString(); }
         }
 
-        public void LimitPeptides(String peptidesPerProtein, String rankBy)
+        public PeptideRankId RankID
         {
-            comboRank.SelectedIndex = comboRank.FindString(rankBy);
-            if(peptidesPerProtein != null)
-            {
-                cbLimitPeptides.Checked = true;
-                textPeptideCount.Enabled = true;
-                textPeptideCount.Text = peptidesPerProtein;
-            }
+            get { return (PeptideRankId) comboRank.SelectedItem;  }
+            set { comboRank.SelectedIndex = comboRank.FindString(value.Label); }
+        }
+
+        public bool LimitPeptides
+        {
+            get { return cbLimitPeptides.Checked; }
+            set { cbLimitPeptides.Checked = value; }
+        }
+
+        public int PeptidesPerProtein
+        {
+            get { return Convert.ToInt32(textPeptideCount.Text); }
+            set { textPeptideCount.Text = value.ToString(); }
         }
 
         public IEnumerable<IsotopeLabelType> LabelTypes
@@ -705,10 +717,10 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public string TimeWindow
+        public int TimeWindow
         {
-            get { return textMeasureRTWindow.Text; }
-            set { textMeasureRTWindow.Text = value; }
+            get { return Convert.ToInt32(textMeasureRTWindow.Text); }
+            set { textMeasureRTWindow.Text = value.ToString(); }
         }
 
         #endregion

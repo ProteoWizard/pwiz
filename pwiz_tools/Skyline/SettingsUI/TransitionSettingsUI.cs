@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
@@ -384,21 +385,32 @@ namespace pwiz.Skyline.SettingsUI
             set { textMaxMz.Text = value; }
         }
 
-        public string RegressionCE
+        public CollisionEnergyRegression RegressionCE
+        {
+            get { return (CollisionEnergyRegression) comboCollisionEnergy.SelectedItem; }
+            set { comboCollisionEnergy.SelectedItem = value; }
+        }
+
+        public string RegressionCEName
         {
             get { return comboCollisionEnergy.SelectedItem.ToString(); }
             set { comboCollisionEnergy.SelectedItem = value; }
         }
 
-        public string RegressionDP
+        public DeclusteringPotentialRegression RegressionDP
         {
-            get { return comboDeclusterPotential.SelectedItem.ToString(); }
+            get { return (DeclusteringPotentialRegression) comboDeclusterPotential.SelectedItem; }
             set { comboDeclusterPotential.SelectedItem = value; }
         }
 
         public void EditCEList()
         {
             _driverCE.EditList();
+        }
+
+        public void AddToCEList()
+        {
+            _driverCE.AddItem();
         }
 
         public void EditDPList()
@@ -425,12 +437,17 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public string MaxMz
+        public int MaxMz
         {
-            get { return textMaxMz.Text; }
-            set { textMaxMz.Text = value; }
+            get { return Convert.ToInt32(textMaxMz.Text); }
+            set { textMaxMz.Text = value.ToString(); }
         }
 
+        public int IonCount
+        {
+            get { return Convert.ToInt32(textIonCount.Text); }
+            set { textIonCount.Text = value.ToString(); }
+        }
 
         #endregion
     }

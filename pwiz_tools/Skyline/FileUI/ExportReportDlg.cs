@@ -311,8 +311,8 @@ namespace pwiz.Skyline.FileUI
             if (match.Success)
             {
                 string columnName = match.Groups[1].ToString();
-                if (AnnotationPropertyAccessor.IsAnnotationProperty(columnName))
-                    columnName = AnnotationPropertyAccessor.GetDisplayName(columnName);
+                if (AnnotationDef.IsAnnotationProperty(columnName))
+                    columnName = AnnotationDef.GetColumnDisplayName(columnName);
                 else if (RatioPropertyAccessor.IsRatioProperty(columnName))
                     columnName = RatioPropertyAccessor.GetDisplayName(columnName);
                 return string.Format("The field {0} does not exist in this document.", columnName);
