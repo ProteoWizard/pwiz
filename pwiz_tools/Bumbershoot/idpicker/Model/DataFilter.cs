@@ -542,35 +542,6 @@ namespace IDPicker.DataModel
         public static readonly string PeptideSpectrumMatchToSpectrumSourceGroup = PeptideSpectrumMatchToSpectrumSourceGroupLink + ";ssgl.Group";
         #endregion
 
-        public System.Linq.IQueryable<PeptideSpectrumMatch> GetFilteredPeptideSpectrumMatches (NHibernate.ISession session)
-        {
-            /*
-            public DistinctPeptideFormat DistinctPeptideKey { get; set; }
-            public SpectrumSourceGroup SpectrumSourceGroup { get; set; }
-            public SpectrumSource SpectrumSource { get; set; }*/
-
-            var predicate = System.Linq.PredicateBuilder.True<PeptideSpectrumMatch>();
-
-            if (Cluster != null)
-                predicate.And(psm => psm.Peptide.Instances.Count(pi => pi.Protein.Cluster == Cluster) > 0);
-            if (Peptide != null)
-                predicate.And(psm => psm.Peptide == Peptide);
-            if (Protein != null)
-                predicate.And(psm => psm.Peptide.Instances.Count(pi => pi.Protein == Protein) > 0);
-            if (Modifications.Count > 0)
-            {
-                var modsPredicate = System.Linq.PredicateBuilder.False<PeptideSpectrumMatch>();
-                foreach (var mod in Modifications)
-                    modsPredicate.Or(psm => psm.Modifications.Count(pm => pm.Modification == mod) > 0);
-                predicate.And(modsPredicate);
-            }
-            if (ModifiedSite != null)
-                predicate.And(psm => psm.Modifications.Count(pm => pm.Site == ModifiedSite) > 0);
-            if (Spectrum != null)
-                predicate.And(psm => psm.Spectrum == Spectrum);
-            return from psm in session.Query<PeptideSpectrumMatch>().Where(predicate) select psm;
-        }
-
         public string GetFilteredQueryString (string fromTable, params string[] joinTables)
         {
             var joins = new List<string>();
