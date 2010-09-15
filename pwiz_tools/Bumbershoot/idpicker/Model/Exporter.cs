@@ -35,6 +35,8 @@ using NHibernate;
 using NHibernate.Linq;
 
 using pwiz.CLI.msdata;
+using pwiz.CLI.proteome;
+using proteome = pwiz.CLI.proteome;
 
 namespace IDPicker.DataModel
 {
@@ -51,6 +53,16 @@ namespace IDPicker.DataModel
         public Exporter (ISession session)
         {
             this.session = session;
+        }
+
+        public void WriteProteins (string outputFilepath)
+        {
+            var pd = new ProteomeData();
+            var pl = new ProteinListSimple();
+            foreach (var pro in session.Query<Protein>())
+                pl.proteins.Add(new proteome.Protein(pro.Accession, pl.proteins.Count, pro.Description, pro.Sequence));
+            pd.proteinList = pl;
+            ProteomeDataFile.write(pd, outputFilepath);
         }
 
         public IList<string> WriteSpectra()
@@ -87,7 +99,7 @@ namespace IDPicker.DataModel
             return outputPaths;
         }
 
-        public IList<string> WriteIdpXml (bool includeProteinSequences, bool includeScores, bool writeModFormula)
+        public IList<string> WriteIdpXml (bool includeScores, bool writeModFormula)
         {
             // get the set of distinct analysis/source pairs
             var analysisSourcePairs = session.CreateQuery("SELECT psm.Analysis, psm.Spectrum.Source " +
@@ -143,7 +155,6 @@ namespace IDPicker.DataModel
                     writer.WriteAttribute("decoy", 0);
                     writer.WriteAttribute("length", pro.Length);
                     writer.WriteAttribute("description", pro.Description);
-                    if (includeProteinSequences) writer.WriteAttribute("sequence", pro.Sequence);
                     writer.WriteEndElement();
                 }
                 writer.WriteEndElement(); // proteinIndex
@@ -295,7 +306,7 @@ namespace IDPicker.DataModel
                                                 {
                                                     case int.MinValue: offset = "n"; break;
                                                     case int.MaxValue: offset = "c"; break;
-                                                    default: offset = pm.Offset.ToString(); break;
+                                                    default: offset = (pm.Offset + 1).ToString(); break;
                                                 }
                                                 mods.Add(String.Format("{0}:{1}", offset, writeModFormula ? pm.Modification.Formula : pm.Modification.MonoMassDelta.ToString()));
                                             }

@@ -22,10 +22,10 @@
 
 
 #include "Qonverter.hpp"
-#include "../Lib/SQLite/sqlite3.h"
 #include "../freicore/pwiz_src/pwiz/utility/misc/Std.hpp"
 #include "boost/tuple/tuple.hpp"
 
+#pragma unmanaged
 
 #define CHECK_SQLITE_RESULT(x) \
     { /* anonymous scope to prevent name conflicts */ \
@@ -74,7 +74,7 @@ struct sqlite3_wrapper
     sqlite3* db;
 };
 
-typedef boost::tuple<string, string, string> AnalysisSourceChargeTuple;
+typedef boost::tuple<string, string, string, string> AnalysisSourceChargeTuple;
 
 struct PsmRow
 {
@@ -82,6 +82,7 @@ struct PsmRow
     sqlite_int64 spectrum;
     DecoyState::Type decoyState;
     vector<double> scores;
+    double totalScore;
 };
 
 struct SpectrumTopRank
@@ -113,11 +114,11 @@ int getStringVector(void* data, int columnCount, char** columnValues, char** col
 
 int getAnalysisSourceChargeTuples(void* data, int columnCount, char** columnValues, char** columnNames)
 {
-    if (columnCount != 3)
-        throw runtime_error("[StaticWeightQonverter::getAnalysisSourceChargeTuples] result must have 3 columns");
+    if (columnCount != 5)
+        throw runtime_error("[StaticWeightQonverter::getAnalysisSourceChargeTuples] result must have 5 columns");
 
     vector<AnalysisSourceChargeTuple>* tuples = static_cast<vector<AnalysisSourceChargeTuple>*>(data);
-    tuples->push_back(boost::make_tuple(columnValues[0], columnValues[1], columnValues[2]));
+    tuples->push_back(boost::make_tuple(columnValues[0], columnValues[1], columnValues[2], columnValues[3]));
 
     return 0;
 }
@@ -159,17 +160,17 @@ int addPsmRow(void* data, int columnCount, char** columnValues, char** columnNam
     return 0;
 }
 
-void qonvertPsmSubset(sqlite3* db, const vector<PsmRow>& psmRows, const vector<double>& scoreWeights)
+void qonvertPsmSubset(sqlite3* db, vector<PsmRow>& psmRows, const vector<double>& scoreWeights, bool logQonversionDetails)
 {
     // calculate total scores for each PSM and keep track of the top ranked PSM(s) for each spectrum
     vector<SpectrumTopRank> spectrumTopRanks;
     for (size_t i=0; i < psmRows.size(); ++i)
     {
-        const PsmRow& row = psmRows[i];
+        PsmRow& row = psmRows[i];
 
-        double totalScore = 0;
+        row.totalScore = 0;
         for (size_t j=0; j < scoreWeights.size(); ++j)
-            totalScore += scoreWeights[j] * row.scores[j];
+            row.totalScore += scoreWeights[j] * row.scores[j];
 
         // add a new SpectrumTopRank if this PSM comes from a different spectrum
         if (spectrumTopRanks.empty() || row.spectrum > spectrumTopRanks.back().spectrum)
@@ -178,20 +179,20 @@ void qonvertPsmSubset(sqlite3* db, const vector<PsmRow>& psmRows, const vector<d
             SpectrumTopRank& topRank = spectrumTopRanks.back();
             topRank.spectrum = row.spectrum;
             topRank.decoyState = row.decoyState;
-            topRank.totalScore = totalScore;
+            topRank.totalScore = row.totalScore;
             topRank.psmIndexes.assign(1, i);
         }
         else
         {
             SpectrumTopRank& topRank = spectrumTopRanks.back();
-            if (totalScore > topRank.totalScore)
+            if (row.totalScore > topRank.totalScore)
             {
                 // replace the top rank with this PSM
-                topRank.totalScore = totalScore;
+                topRank.totalScore = row.totalScore;
                 topRank.decoyState = row.decoyState;
                 topRank.psmIndexes.assign(1, i);
             }
-            else if (totalScore == topRank.totalScore)
+            else if (row.totalScore == topRank.totalScore)
             {
                 // add this PSM to the top rank
                 if (topRank.decoyState != row.decoyState)
@@ -227,10 +228,29 @@ void qonvertPsmSubset(sqlite3* db, const vector<PsmRow>& psmRows, const vector<d
             topRank.qValue = 0;
     }
 
-    // update QValue column for each top-ranked PSM (non-top-ranked PSMs keep the default of 1)
-    string sql = "UPDATE PeptideSpectrumMatches SET QValue = ? WHERE Id = ?";
-
     CHECK_SQLITE_RESULT(sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &errorBuf));
+
+    if (logQonversionDetails)
+    {
+        CHECK_SQLITE_RESULT(sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS TotalScores (PsmId, Spectrum, TotalScore, DecoyState)", NULL, NULL, &errorBuf));
+        BOOST_FOREACH(const PsmRow& row, psmRows)
+            CHECK_SQLITE_RESULT(sqlite3_exec(db, ("INSERT INTO TotalScores VALUES (" + \
+                                                 lexical_cast<string>(row.id) + "," + \
+                                                 lexical_cast<string>(row.spectrum) + "," + \
+                                                 lexical_cast<string>(row.totalScore) + ",'" + \
+                                                 lexical_cast<string>(row.decoyState) + "')").c_str(), NULL, NULL, &errorBuf));
+
+        CHECK_SQLITE_RESULT(sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS QonversionDetails (Spectrum, TotalScore, DecoyState, QValue)", NULL, NULL, &errorBuf));
+        BOOST_FOREACH(SpectrumTopRank& topRank, spectrumTopRanks)
+            CHECK_SQLITE_RESULT(sqlite3_exec(db, ("INSERT INTO QonversionDetails VALUES (" + \
+                                                 lexical_cast<string>(topRank.spectrum) + "," + \
+                                                 lexical_cast<string>(topRank.totalScore) + ",'" + \
+                                                 lexical_cast<string>(topRank.decoyState) + "'," + \
+                                                 lexical_cast<string>(topRank.qValue) + ")").c_str(), NULL, NULL, &errorBuf));
+    }
+
+    // update QValue column for each top-ranked PSM (non-top-ranked PSMs keep the default QValue)
+    string sql = "UPDATE PeptideSpectrumMatch SET QValue = ? WHERE Id = ?";
 
     sqlite3_stmt* updateStmt;
     CHECK_SQLITE_RESULT(sqlite3_prepare_v2(db, sql.c_str(), -1, &updateStmt, NULL));
@@ -265,6 +285,8 @@ StaticWeightQonverter::StaticWeightQonverter()
     decoyPrefix = defaultDecoyPrefix;
     nTerminusIsSpecificWeight = 1;
     cTerminusIsSpecificWeight = 1;
+    rerankMatches = false;
+    logQonversionDetails = false;
 }
 
 
@@ -275,14 +297,25 @@ void StaticWeightQonverter::Qonvert(const string& idpDbFilepath, const ProgressM
 
     sqlite3_wrapper db(idpDbFilepath);
 
+    sqlite3_exec(db, "PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF", NULL, NULL, NULL);
+
+    Qonvert(db, progressMonitor);
+}
+
+void StaticWeightQonverter::Qonvert(sqlite3* db, const ProgressMonitor& progressMonitor)
+{
     string sql;
 
-    // get the set of distinct analysis/source/charge tuples
-    sql = string("SELECT DISTINCT psm.Analysis, s.Source, psm.Charge ") +
-                 "FROM PeptideSpectrumMatches psm " +
-                 "JOIN Spectra s ON psm.Spectrum=s.Id " +
+    // get the set of distinct analysis/source/charge/specificity tuples
+    sql = string("CREATE TEMP TABLE MostSpecificInstance (Peptide INTEGER PRIMARY KEY, Specificity INT);") +
+                 "INSERT INTO MostSpecificInstance SELECT Peptide, MAX(NTerminusIsSpecific+CTerminusIsSpecific) FROM PeptideInstance GROUP BY Peptide;" +
+                 "SELECT psm.Analysis, s.Source, psm.Charge, mostSpecificInstance.Specificity, COUNT(DISTINCT psm.Id) " +
+                 "FROM PeptideSpectrumMatch psm " +
+                 "JOIN MostSpecificInstance mostSpecificInstance ON psm.Peptide=mostSpecificInstance.Peptide " +
+                 "JOIN Spectrum s ON psm.Spectrum=s.Id " +
                  "WHERE psm.QValue > 1 " +
-                 "  AND psm.Rank = 1";
+                 (rerankMatches ? "" : "AND Rank = 1 ") +
+                 "GROUP BY psm.Analysis, s.Source, psm.Charge, mostSpecificInstance.Specificity";
 
     vector<AnalysisSourceChargeTuple> analysisSourceChargeTuples;
     CHECK_SQLITE_RESULT(sqlite3_exec(db, sql.c_str(), getAnalysisSourceChargeTuples, &analysisSourceChargeTuples, &errorBuf));
@@ -308,19 +341,33 @@ void StaticWeightQonverter::Qonvert(const string& idpDbFilepath, const ProgressM
         const string& analysisId = analysisSourceChargeTuple.get<0>();
         const string& spectrumSourceId = analysisSourceChargeTuple.get<1>();
         const string& psmChargeState = analysisSourceChargeTuple.get<2>();
+        const string& specificity = analysisSourceChargeTuple.get<3>();
 
-        // get the set of actual score names
-        sql = string("SELECT GROUP_CONCAT(DISTINCT psmScore.Name) ") +
+        // get the set of actual score ids and names
+        sql = string("SELECT GROUP_CONCAT(scoreNames.Name || ' ' || scoreNames.Id) ") +
                      "FROM PeptideSpectrumMatchScores psmScore " +
+                     "JOIN PeptideSpectrumMatchScoreNames scoreNames ON ScoreNameId=scoreNames.Id " +
                      "JOIN (SELECT psm.Id " +
-                     "      FROM PeptideSpectrumMatches psm " +
-                     "      JOIN Spectra s ON psm.Spectrum=s.Id " +
+                     "      FROM PeptideSpectrumMatch psm " +
+                     "      JOIN Spectrum s ON Spectrum=s.Id " +
                      "      WHERE s.Source=" + spectrumSourceId +
                      "        AND psm.Analysis=" + analysisId +
-                     "      LIMIT 1) AS psm ON psmScore.Id=psm.Id";
+                     (rerankMatches ? "" : " AND Rank = 1 ") +
+                     "      LIMIT 1) AS psm ON psmScore.PsmId=psm.Id";
 
-        vector<string> actualScoreNames; // the order of score names is important!
-        CHECK_SQLITE_RESULT(sqlite3_exec(db, sql.c_str(), getScoreNames, &actualScoreNames, &errorBuf));
+        vector<string> actualScoreIdNamePairs; // the order of scores is important!
+        vector<string> actualScoreNames;
+        map<string, string> actualScoreIdByName;
+
+        CHECK_SQLITE_RESULT(sqlite3_exec(db, sql.c_str(), getScoreNames, &actualScoreIdNamePairs, &errorBuf));
+
+        BOOST_FOREACH(const string& idName, actualScoreIdNamePairs)
+        {
+            vector<string> idNamePair;
+            bal::split(idNamePair, idName, bal::is_space());
+            actualScoreNames.push_back(idNamePair[0]);
+            actualScoreIdByName[idNamePair[0]] = idNamePair[1];
+        }
 
         if (actualScoreNames.empty())
         {
@@ -332,45 +379,51 @@ void StaticWeightQonverter::Qonvert(const string& idpDbFilepath, const ProgressM
         }
 
         // the intersection between the sets is used as a SQL condition
-        vector<string> scoreSet;
+        vector<string> scoreNameIntersection;
         set_intersection(actualScoreNames.begin(), actualScoreNames.end(),
                          expectedScoreNames.begin(), expectedScoreNames.end(),
-                         std::back_inserter(scoreSet));
+                         std::back_inserter(scoreNameIntersection));
 
-        if (scoreSet.empty())
+        if (scoreNameIntersection.empty())
             throw runtime_error("[StaticWeightQonverter::Qonvert] expected scores do not exist in the PSM set");
 
         // get the set of weights to use for calculating each PSM's total score;
         // if an actual score is not mapped in scoreWeights, it gets the default value of 0
         vector<double> scoreWeightsVector;
-        BOOST_FOREACH(const string& name, scoreSet)
+        vector<string> scoreIdSet;
+        BOOST_FOREACH(const string& name, scoreNameIntersection)
+        {
             scoreWeightsVector.push_back(scoreWeights[name]);
+            scoreIdSet.push_back(actualScoreIdByName[name]);
+        }
 
-        // e.g. ('foo','bar')
-        string scoreSetString = "('" + bal::join(scoreSet, "','") + "')";
+        // e.g. (1,2)
+        string scoreIdSetString = "(" + bal::join(scoreIdSet, ",") + ")";
 
         // retrieve triplets of psm id, decoy state, and score list (with the same order retrieved above)
         sql = string("SELECT psm.Id, psm.Spectrum, ") +
                      "      CASE WHEN SUM(DISTINCT CASE WHEN pro.Accession LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) + SUM(DISTINCT CASE WHEN pro.Accession NOT LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) = 2 THEN 2 " +
                      "           ELSE SUM(DISTINCT CASE WHEN pro.Accession LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) " +
                      "           END AS DecoyState, " +
-                     "      GROUP_CONCAT(psmScore.Value) " +
-                     "FROM Spectra s " +
-                     "JOIN PeptideInstances pi ON psm.Peptide=pi.Peptide " +
-                     "JOIN PeptideSpectrumMatches psm ON s.Id=psm.Spectrum " +
-                     "JOIN PeptideSpectrumMatchScores psmScore ON psm.Id=psmScore.Id " +
-                     "JOIN Proteins pro ON pi.Protein=pro.Id " +
+                     "      GROUP_CONCAT(psmScore.Value) " + // scores are ordered by ascending ScoreNameId
+                     "FROM Spectrum s " +
+                     "JOIN PeptideInstance pi ON psm.Peptide=pi.Peptide " +
+                     "JOIN PeptideSpectrumMatch psm ON s.Id=psm.Spectrum " +
+                     "JOIN PeptideSpectrumMatchScores psmScore ON psm.Id=psmScore.PsmId " +
+                     "JOIN Protein pro ON pi.Protein=pro.Id " +
                      "WHERE s.Source=" + spectrumSourceId +
                      "  AND psm.Analysis=" + analysisId +
                      "  AND psm.Charge=" + psmChargeState +
-                     "  AND psmScore.Name IN " + scoreSetString + " " +
-                     "GROUP BY psm.Id " +
+                     "  AND NTerminusIsSpecific+CTerminusIsSpecific=" + specificity +
+                     (rerankMatches ? "" : " AND Rank = 1 ") +
+                     "  AND psmScore.ScoreNameId IN " + scoreIdSetString + " " +
+                     "GROUP BY psm.Id "
                      "ORDER BY psm.Spectrum";
 
         vector<PsmRow> psmRows;
         CHECK_SQLITE_RESULT(sqlite3_exec(db, sql.c_str(), addPsmRow, &psmRows, &errorBuf));
 
-        qonvertPsmSubset(db, psmRows, scoreWeightsVector);
+        qonvertPsmSubset(db, psmRows, scoreWeightsVector, logQonversionDetails);
 
         ++updateMessage.QonvertedAnalyses;
         progressMonitor(updateMessage);
@@ -445,6 +498,8 @@ StaticWeightQonverter::StaticWeightQonverter()
     DecoyPrefix = ToSystemString(swq.decoyPrefix);
     NTerminusIsSpecificWeight = swq.nTerminusIsSpecificWeight;
     CTerminusIsSpecificWeight = swq.cTerminusIsSpecificWeight;
+    RerankMatches = swq.rerankMatches;
+    LogQonversionDetails = swq.logQonversionDetails;
 }
 
 void StaticWeightQonverter::Qonvert(String^ idpDbFilepath)
@@ -453,6 +508,8 @@ void StaticWeightQonverter::Qonvert(String^ idpDbFilepath)
     swq.decoyPrefix = ToStdString(DecoyPrefix);
     swq.nTerminusIsSpecificWeight = NTerminusIsSpecificWeight;
     swq.cTerminusIsSpecificWeight = CTerminusIsSpecificWeight;
+    swq.rerankMatches = RerankMatches;
+    swq.logQonversionDetails = LogQonversionDetails;
 
     for each (KeyValuePair<String^, double> itr in ScoreWeights)
         swq.scoreWeights[ToStdString(itr.Key)] = itr.Value;
@@ -465,6 +522,36 @@ void StaticWeightQonverter::Qonvert(String^ idpDbFilepath)
             Marshal::GetFunctionPointerForDelegate(handler).ToPointer());
 
         try {swq.Qonvert(ToStdString(idpDbFilepath), *progressMonitor);} CATCH_AND_FORWARD
+        delete progressMonitor;
+
+        GC::KeepAlive(handler);
+    }
+    //else
+    //    try {swq.Qonvert(ToStdString(idpDbFilepath));} CATCH_AND_FORWARD
+}
+
+void StaticWeightQonverter::Qonvert(System::IntPtr idpDb)
+{
+    IDPicker::native::StaticWeightQonverter swq;
+    swq.decoyPrefix = ToStdString(DecoyPrefix);
+    swq.nTerminusIsSpecificWeight = NTerminusIsSpecificWeight;
+    swq.cTerminusIsSpecificWeight = CTerminusIsSpecificWeight;
+    swq.rerankMatches = RerankMatches;
+    swq.logQonversionDetails = LogQonversionDetails;
+
+    for each (KeyValuePair<String^, double> itr in ScoreWeights)
+        swq.scoreWeights[ToStdString(itr.Key)] = itr.Value;
+
+    //if (!ReferenceEquals(%*QonversionProgress, nullptr))
+    {
+        QonversionProgressEventWrapper^ handler = gcnew QonversionProgressEventWrapper(this,
+                                                    &StaticWeightQonverter::marshal);
+        ProgressMonitorForwarder* progressMonitor = new ProgressMonitorForwarder(
+            Marshal::GetFunctionPointerForDelegate(handler).ToPointer());
+
+        sqlite3* foo = (sqlite3*) idpDb.ToPointer();
+        pin_ptr<sqlite3> idpDbPtr = foo;
+        try {swq.Qonvert(idpDbPtr, *progressMonitor);} CATCH_AND_FORWARD
         delete progressMonitor;
 
         GC::KeepAlive(handler);

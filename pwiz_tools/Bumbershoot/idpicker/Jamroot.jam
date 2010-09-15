@@ -69,6 +69,10 @@ project bumbershoot
       # any module which links with .NET (either dynamically or statically) must use the shared runtime
       <toolset>msvc:<runtime-link>shared
 
+      # SEH exceptions crossing native/managed boundaries are problematic with this set to off;
+      # also, catch(...) will catch SEH exceptions with this on
+      <toolset>msvc:<asynch-exceptions>on
+        
       # special msvc hacks
       <toolset>msvc:<define>WIN32                     # windows
       <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
@@ -85,6 +89,13 @@ project bumbershoot
       <toolset>msvc:<cxxflags>/wd4244                 # warning: conversion from 'int' to 'unsigned short', possible loss of data (boost/date_time/microsec_time_clock.hpp)
       <toolset>msvc:<cxxflags>/wd4275                 # warning: non dll-interface class 'base' used as base for dll-interface class 'derived'
 
+      # warning: _SECURE_SCL_THROWS is deprecated
+      <toolset>msvc:<define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
+
+      # TODO: change this from a <define> to a feature in msvc.jam
+      # disable checked iterators (on by default in VC8/9)
+      <toolset>msvc,<variant>release:<define>_SECURE_SCL=0
+        
       # special gcc hack - Cygwin gcc 3.4.4, Ubuntu gcc 4.1.2 
       # warning: '__cur' might be used uninitialized in this function 
       <toolset>gcc:<cxxflags>-Wno-uninitialized   

@@ -31,7 +31,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>build-nt-x86\msvc-debug\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
@@ -51,7 +51,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Lib\NHibernate\Antlr3.Runtime.dll</HintPath>
     </Reference>
-    <Reference Include="Castle.Core, Version=1.2.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
+    <Reference Include="Castle.Core, Version=2.5.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Lib\NHibernate\Castle.Core.dll</HintPath>
     </Reference>
@@ -66,10 +66,6 @@
     <Reference Include="Iesi.Collections, Version=1.0.1.0, Culture=neutral, PublicKeyToken=aa95f207798dfdb4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Lib\NHibernate\Iesi.Collections.dll</HintPath>
-    </Reference>
-    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>Lib\NHibernate\log4net.dll</HintPath>
     </Reference>
     <Reference Include="NHibernate, Version=3.0.0.1001, Culture=neutral, PublicKeyToken=aa95f207798dfdb4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -96,6 +92,7 @@
       <HintPath>Lib\NHibernate\Remotion.Data.Linq.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.configuration" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -126,6 +123,12 @@
     <Compile Include="Controls\BreadCrumbControl.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Forms\LogForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\LogForm.Designer.cs">
+      <DependentUpon>LogForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Model\BulkInserter.cs" />
     <Compile Include="Model\DataFilter.cs" />
     <Compile Include="Forms\ModificationTableForm.cs">
@@ -154,6 +157,7 @@
     </Compile>
     <Compile Include="Model\DataModel.cs" />
     <Compile Include="Model\Exporter.cs" />
+    <Compile Include="Model\Merger.cs" />
     <Compile Include="Model\Parser.cs" />
     <Compile Include="Model\SessionFactoryFactory.cs" />
     <Compile Include="Program.cs" />
@@ -199,6 +203,7 @@
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="Util\ExtensionMethods.cs" />
     <Compile Include="Util\Path.cs" />
     <Compile Include="Util\String.cs" />
     <Compile Include="Util\Version.cs" />
@@ -218,6 +223,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Forms\LogForm.resx">
+      <DependentUpon>LogForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Model\DataModel.hbm.xml" />
   </ItemGroup>
   <ItemGroup>

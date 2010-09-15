@@ -28,9 +28,11 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Threading;
 using DigitalRune.Windows.Docking;
 using NHibernate.Linq;
 using BrightIdeasSoftware;
+using IDPicker.DataModel;
 
 namespace IDPicker.Forms
 {
@@ -100,6 +102,8 @@ namespace IDPicker.Forms
             InitializeComponent();
 
             HideOnClose = true;
+
+            Text = TabText = "Protein View";
 
             #region Column aspect getters
             clusterColumn.AspectGetter += delegate(object x)
@@ -216,131 +220,170 @@ namespace IDPicker.Forms
         private IList<ProteinGroupRow> rowsByProteinGroup, basicRowsByProteinGroup;
 
         private List<OLVColumn> pivotColumns = new List<OLVColumn>();
-        private Map<long, Map<long, ProteinStats>> statsPerProteinGroupBySpectrumSource;
-        private Map<long, Map<long, ProteinStats>> statsPerProteinGroupBySpectrumSourceGroup;
+        //private Map<long, Map<long, ProteinStats>> statsPerProteinGroupBySpectrumSource;
+        //private Map<long, Map<long, ProteinStats>> statsPerProteinGroupBySpectrumSourceGroup;
+
+        // TODO: support multiple selected objects
+        string[] oldSelectionPath = new string[] { };
 
         public void SetData (NHibernate.ISession session, DataFilter dataFilter)
         {
             this.session = session;
-            this.dataFilter = new DataFilter(dataFilter) { Protein = null };
+            this.dataFilter = new DataFilter(dataFilter) {Protein = null};
 
-            var proteinGroupQuery = session.CreateQuery(
-                "SELECT DISTINCT_GROUP_CONCAT(pro.Accession), " +
-                "       COUNT(DISTINCT psm.Peptide.id), " +
-                "       COUNT(DISTINCT psm.id), " +
-                "       COUNT(DISTINCT psm.Spectrum.id), " +
-                "       pro.ProteinGroup, " +
-                "       MIN(pro.Id), " +
-                "       MIN(pro.Description), " +
-                "       COUNT(DISTINCT pro.Id), " +
-                "       pro.Cluster " +
-                this.dataFilter.GetFilteredQueryString(DataFilter.FromProtein,
-                                                       DataFilter.ProteinToPeptideSpectrumMatch) +
-                "GROUP BY pro.ProteinGroup " +
-                "ORDER BY COUNT(DISTINCT psm.Peptide.id) DESC, COUNT(DISTINCT psm.id) DESC, COUNT(DISTINCT psm.Spectrum.id) DESC");
-
-            var statsPerProteinGroupBySpectrumSourceQuery = session.CreateQuery(
-                "SELECT DISTINCT_GROUP_CONCAT(pro.Accession), " +
-                "       s.Source.id, " +
-                "       COUNT(DISTINCT psm.Peptide), " +
-                "       COUNT(DISTINCT psm.Spectrum), " +
-                "       MIN(pro.id) " +
-                this.dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
-                                                       DataFilter.PeptideSpectrumMatchToSpectrumSource,
-                                                       DataFilter.PeptideSpectrumMatchToProtein) +
-                "GROUP BY pro.ProteinGroup, s.Source.id");
-
-            var statsPerProteinGroupBySpectrumSourceGroupQuery = session.CreateQuery(
-                "SELECT DISTINCT_GROUP_CONCAT(pro.Accession), " +
-                "       ssgl.Group.id, " +
-                "       COUNT(DISTINCT psm.Peptide.id), " +
-                "       COUNT(DISTINCT psm.Spectrum.id), " +
-                "       MIN(pro.id) " +
-                this.dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
-                                                       DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink,
-                                                       DataFilter.PeptideSpectrumMatchToProtein) +
-                "GROUP BY pro.ProteinGroup, ssgl.Group");
-
-            var stats = statsPerProteinGroupBySpectrumSource = new Map<long, Map<long,ProteinStats>>();
-            foreach (var queryRow in statsPerProteinGroupBySpectrumSourceQuery.List<object[]>())
-                stats[(long) queryRow[1]][(long) queryRow[4]] = new ProteinStats(queryRow);
-
-            var stats2 = statsPerProteinGroupBySpectrumSourceGroup = new Map<long, Map<long, ProteinStats>>();
-            foreach (var queryRow in statsPerProteinGroupBySpectrumSourceGroupQuery.List<object[]>())
-                stats2[(long) queryRow[1]][(long) queryRow[4]] = new ProteinStats(queryRow);
-
-            treeListView.Freeze();
-            foreach (var pivotColumn in pivotColumns)
-                treeListView.Columns.Remove(pivotColumn);
-
-            IList<string> sourceNames = session.QueryOver<DataModel.SpectrumSource>().Select(o => o.Name).List<string>();
-            pivotColumns = new List<OLVColumn>();
-
-            foreach (long sourceId in stats.Keys)
-            {
-                string uniqueSubstring;
-                Util.UniqueSubstring(session.Get<DataModel.SpectrumSource>(sourceId).Name, sourceNames, out uniqueSubstring);
-                var column = new OLVColumn() { Text = uniqueSubstring, Tag = sourceId };
-                column.AspectGetter += delegate(object x)
-                                       {
-                                           if (x is ProteinGroupRow &&
-                                               stats[(long) column.Tag].Contains((x as ProteinGroupRow).FirstProteinId))
-                                                return stats[(long) column.Tag][(x as ProteinGroupRow).FirstProteinId].DistinctPeptides;
-                                           return null;
-                                       };
-                pivotColumns.Add(column);
-                treeListView.Columns.Insert(descriptionColumn.Index, column);
-            }
-
-            foreach (long groupId in stats2.Keys)
-            {
-                var column = new OLVColumn() { Text = session.Get<DataModel.SpectrumSourceGroup>(groupId).Name, Tag = groupId };
-                column.AspectGetter += delegate(object x)
-                {
-                    if (x is ProteinGroupRow &&
-                        stats2[(long) column.Tag].Contains((x as ProteinGroupRow).FirstProteinId))
-                        return stats2[(long) column.Tag][(x as ProteinGroupRow).FirstProteinId].DistinctPeptides;
-                    return null;
-                };
-                pivotColumns.Add(column);
-                treeListView.Columns.Insert(descriptionColumn.Index, column);
-            }
-            treeListView.Unfreeze();
-
-            if (dataFilter.IsBasicFilter || dataFilter.Protein != null)
-            {
-                if (basicDataFilter == null || (dataFilter.IsBasicFilter && dataFilter != basicDataFilter))
-                {
-                    basicDataFilter = new DataFilter(this.dataFilter);
-                    basicRowsByProteinGroup = proteinGroupQuery.List<object[]>().Select(o => new ProteinGroupRow(o)).ToList();
-                }
-
-                rowsByProteinGroup = basicRowsByProteinGroup;
-            }
-            else
-            {
-                rowsByProteinGroup = proteinGroupQuery.List<object[]>().Select(o => new ProteinGroupRow(o)).ToList();
-            }
-
-            long totalProteins = rowsByProteinGroup.Sum(o => o.ProteinCount);
-
-            // show total counts in the form title
-            Text = TabText = String.Format("Protein View: {0} protein groups, {1} proteins", rowsByProteinGroup.Count, totalProteins);
-
-            // TODO: support multiple selected objects
-            string[] oldSelectionPath = new string[] { };
-
-            if(treeListView.SelectedObject is ProteinGroupRow)
+            if (treeListView.SelectedObject is ProteinGroupRow)
             {
                 oldSelectionPath = new string[] { treeListView.SelectedItem.Text };
             }
-            else if(treeListView.SelectedObject is ProteinRow)
+            else if (treeListView.SelectedObject is ProteinRow)
             {
                 var proteinGroup = (treeListView.GetParent(treeListView.SelectedObject) as ProteinGroupRow).Proteins;
                 oldSelectionPath = new string[] { proteinGroup, treeListView.SelectedItem.Text };
             }
 
+            ClearData();
+
+            Text = TabText = "Loading protein view...";
+
+            var workerThread = new BackgroundWorker()
+                                   {
+                                       WorkerReportsProgress = true,
+                                       WorkerSupportsCancellation = true
+                                   };
+
+            workerThread.DoWork += new DoWorkEventHandler(setData);
+            workerThread.RunWorkerCompleted += new RunWorkerCompletedEventHandler(renderData);
+            workerThread.RunWorkerAsync();
+        }
+
+        public void ClearData ()
+        {
+            Text = TabText = "Protein View";
+
             treeListView.DiscardAllState();
+            treeListView.Roots = null;
+            treeListView.Refresh();
+            Refresh();
+        }
+
+        void setData(object sender, DoWorkEventArgs e)
+        {
+            lock (session)
+            try
+            {
+                var proteinGroupQuery = session.CreateQuery(
+                    "SELECT DISTINCT_GROUP_CONCAT(pro.Accession), " +
+                    "       COUNT(DISTINCT psm.Peptide.id), " +
+                    "       COUNT(DISTINCT psm.id), " +
+                    "       COUNT(DISTINCT psm.Spectrum.id), " +
+                    "       pro.ProteinGroup, " +
+                    "       MIN(pro.Id), " +
+                    "       MIN(pro.Description), " +
+                    "       COUNT(DISTINCT pro.Id), " +
+                    "       pro.Cluster " +
+                    this.dataFilter.GetFilteredQueryString(DataFilter.FromProtein,
+                                                           DataFilter.ProteinToPeptideSpectrumMatch) +
+                    "GROUP BY pro.ProteinGroup " +
+                    "ORDER BY COUNT(DISTINCT psm.Peptide.id) DESC, COUNT(DISTINCT psm.id) DESC, COUNT(DISTINCT psm.Spectrum.id) DESC");
+
+                proteinGroupQuery.SetReadOnly(true);
+
+                /*var statsPerProteinGroupBySpectrumSourceQuery = session.CreateQuery(
+                    "SELECT DISTINCT_GROUP_CONCAT(pro.Accession), " +
+                    "       s.Source.id, " +
+                    "       COUNT(DISTINCT psm.Peptide), " +
+                    "       COUNT(DISTINCT psm.Spectrum), " +
+                    "       MIN(pro.id) " +
+                    this.dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
+                                                           DataFilter.PeptideSpectrumMatchToSpectrumSource,
+                                                           DataFilter.PeptideSpectrumMatchToProtein) +
+                    "GROUP BY pro.ProteinGroup, s.Source.id");
+
+                var statsPerProteinGroupBySpectrumSourceGroupQuery = session.CreateQuery(
+                    "SELECT DISTINCT_GROUP_CONCAT(pro.Accession), " +
+                    "       ssgl.Group.id, " +
+                    "       COUNT(DISTINCT psm.Peptide.id), " +
+                    "       COUNT(DISTINCT psm.Spectrum.id), " +
+                    "       MIN(pro.id) " +
+                    this.dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
+                                                           DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink,
+                                                           DataFilter.PeptideSpectrumMatchToProtein) +
+                    "GROUP BY pro.ProteinGroup, ssgl.Group");
+
+                var stats = statsPerProteinGroupBySpectrumSource = new Map<long, Map<long,ProteinStats>>();
+                foreach (var queryRow in statsPerProteinGroupBySpectrumSourceQuery.List<object[]>())
+                    stats[(long) queryRow[1]][(long) queryRow[4]] = new ProteinStats(queryRow);
+
+                var stats2 = statsPerProteinGroupBySpectrumSourceGroup = new Map<long, Map<long, ProteinStats>>();
+                foreach (var queryRow in statsPerProteinGroupBySpectrumSourceGroupQuery.List<object[]>())
+                    stats2[(long) queryRow[1]][(long) queryRow[4]] = new ProteinStats(queryRow);
+
+                treeListView.Freeze();
+                foreach (var pivotColumn in pivotColumns)
+                    treeListView.Columns.Remove(pivotColumn);
+
+                IList<string> sourceNames = session.QueryOver<DataModel.SpectrumSource>().Select(o => o.Name).List<string>();
+                pivotColumns = new List<OLVColumn>();
+
+                foreach (long sourceId in stats.Keys)
+                {
+                    string uniqueSubstring;
+                    Util.UniqueSubstring(session.Get<DataModel.SpectrumSource>(sourceId).Name, sourceNames, out uniqueSubstring);
+                    var column = new OLVColumn() { Text = uniqueSubstring, Tag = sourceId };
+                    column.AspectGetter += delegate(object x)
+                                           {
+                                               if (x is ProteinGroupRow &&
+                                                   stats[(long) column.Tag].Contains((x as ProteinGroupRow).FirstProteinId))
+                                                    return stats[(long) column.Tag][(x as ProteinGroupRow).FirstProteinId].DistinctPeptides;
+                                               return null;
+                                           };
+                    pivotColumns.Add(column);
+                    treeListView.Columns.Insert(descriptionColumn.Index, column);
+                }
+
+                foreach (long groupId in stats2.Keys)
+                {
+                    var column = new OLVColumn() { Text = session.Get<DataModel.SpectrumSourceGroup>(groupId).Name, Tag = groupId };
+                    column.AspectGetter += delegate(object x)
+                    {
+                        if (x is ProteinGroupRow &&
+                            stats2[(long) column.Tag].Contains((x as ProteinGroupRow).FirstProteinId))
+                            return stats2[(long) column.Tag][(x as ProteinGroupRow).FirstProteinId].DistinctPeptides;
+                        return null;
+                    };
+                    pivotColumns.Add(column);
+                    treeListView.Columns.Insert(descriptionColumn.Index, column);
+                }
+                treeListView.Unfreeze();*/
+
+                if (dataFilter.IsBasicFilter || dataFilter.Protein != null)
+                {
+                    if (basicDataFilter == null || (dataFilter.IsBasicFilter && dataFilter != basicDataFilter))
+                    {
+                        basicDataFilter = new DataFilter(this.dataFilter);
+                        basicRowsByProteinGroup = proteinGroupQuery.List<object[]>().Select(o => new ProteinGroupRow(o)).ToList();
+                    }
+
+                    rowsByProteinGroup = basicRowsByProteinGroup;
+                }
+                else
+                {
+                    rowsByProteinGroup = proteinGroupQuery.List<object[]>().Select(o => new ProteinGroupRow(o)).ToList();
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        void renderData (object sender, RunWorkerCompletedEventArgs e)
+        {
+            long totalProteins = rowsByProteinGroup.Sum(o => o.ProteinCount);
+
+            // show total counts in the form title
+            Text = TabText = String.Format("Protein View: {0} protein groups, {1} proteins", rowsByProteinGroup.Count, totalProteins);
+
             treeListView.Roots = rowsByProteinGroup;
 
             // try to (re)set selected item

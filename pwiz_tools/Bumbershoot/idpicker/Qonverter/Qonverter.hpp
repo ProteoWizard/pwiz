@@ -29,6 +29,7 @@
 #include <map>
 #include <utility>
 #include <string>
+#include "../Lib/SQLite/sqlite3.h"
 
 using std::vector;
 using std::map;
@@ -50,6 +51,8 @@ struct StaticWeightQonverter
     map<string, double> scoreWeights;
     double nTerminusIsSpecificWeight;
     double cTerminusIsSpecificWeight;
+    bool rerankMatches;
+    bool logQonversionDetails;
 
     StaticWeightQonverter();
 
@@ -66,6 +69,7 @@ struct StaticWeightQonverter
     };
 
     void Qonvert(const string& idpDbFilepath, const ProgressMonitor& progressMonitor = ProgressMonitor());
+    void Qonvert(sqlite3* idpDb, const ProgressMonitor& progressMonitor = ProgressMonitor());
 };
 
 
@@ -79,12 +83,23 @@ struct StaticWeightQonverter
 
 #ifdef __cplusplus_cli
 
+#pragma managed( push, on )
 #pragma warning( push )
 #pragma warning( disable : 4634 4635 )
 #include "../freicore/pwiz_src/pwiz/utility/bindings/CLI/common/SharedCLI.hpp"
 #using <system.dll>
 #pragma warning( pop )
-
+#undef CATCH_AND_FORWARD
+#define CATCH_AND_FORWARD \
+    catch (std::bad_cast& e) { throw gcnew System::InvalidCastException("[" + __FUNCTION__ + "] " + ToSystemString(e.what())); } \
+    catch (std::bad_alloc& e) { throw gcnew System::OutOfMemoryException("[" + __FUNCTION__ + "] " + ToSystemString(e.what())); } \
+    catch (std::out_of_range& e) { throw gcnew System::IndexOutOfRangeException("[" + __FUNCTION__ + "] " + ToSystemString(e.what())); } \
+    catch (std::invalid_argument& e) { throw gcnew System::ArgumentException(ToSystemString(e.what())); } \
+    catch (std::runtime_error& e) { throw gcnew System::Exception(ToSystemString(e.what())); } \
+    catch (std::exception& e) { throw gcnew System::Exception("[" + __FUNCTION__ + "] Unhandled exception: " + ToSystemString(e.what())); } \
+    catch (_com_error& e) { throw gcnew System::Exception("[" + __FUNCTION__ + "] Unhandled COM error: " + gcnew System::String(e.ErrorMessage())); } \
+    catch (System::Exception^) { throw; } \
+    catch (...) { throw gcnew System::Exception("[" + __FUNCTION__ + "] Unknown exception"); }
 
 using namespace System;
 using namespace System::ComponentModel;
@@ -100,6 +115,8 @@ public ref struct StaticWeightQonverter
     property IDictionary<String^, double>^ ScoreWeights;
     property double NTerminusIsSpecificWeight;
     property double CTerminusIsSpecificWeight;
+    property bool RerankMatches;
+    property bool LogQonversionDetails;
 
     ref struct QonversionProgressEventArgs : CancelEventArgs
     {
@@ -114,6 +131,7 @@ public ref struct StaticWeightQonverter
     StaticWeightQonverter();
 
     void Qonvert(String^ idpDbFilepath);
+    void Qonvert(System::IntPtr idpDb);
 
     internal: void marshal(int qonvertedAnalyses, int totalAnalyses, bool& cancel);
 };
@@ -121,7 +139,10 @@ public ref struct StaticWeightQonverter
 
 } // namespace IDPicker
 
-#endif // __CLR__
+
+#pragma managed( pop )
+
+#endif // __cplusplus_cli
 
 
 #endif // _QONVERTER_HPP_

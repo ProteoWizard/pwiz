@@ -28,6 +28,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Threading;
 using DigitalRune.Windows.Docking;
 using NHibernate.Linq;
 using IDPicker.DataModel;
@@ -90,6 +91,8 @@ namespace IDPicker.Forms
             InitializeComponent();
 
             HideOnClose = true;
+
+            Text = TabText = "Peptide View";
 
             #region Column aspect getters
             sequenceColumn.AspectGetter += delegate(object x)
@@ -234,48 +237,85 @@ namespace IDPicker.Forms
         private DataFilter dataFilter, basicDataFilter;
         private IList<PeptideRow> rowsByPeptide, basicRowsByPeptide;
 
+        // TODO: support multiple selected objects
+        string[] oldSelectionPath = new string[] { };
+
         public void SetData (NHibernate.ISession session, DataFilter dataFilter)
         {
             this.session = session;
-            this.dataFilter = new DataFilter(dataFilter) { Peptide = null };
+            this.dataFilter = new DataFilter(dataFilter) {Peptide = null};
 
-            var peptideQuery = session.CreateQuery("SELECT psm.Peptide, " +
-                                                   "       COUNT(DISTINCT psm.SequenceAndMassDistinctKey), " +
-                                                   "       COUNT(DISTINCT psm.Spectrum) " +
-                                                   this.dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
-                                                   "GROUP BY psm.Peptide " +
-                                                   "ORDER BY COUNT(DISTINCT psm.SequenceAndMassDistinctKey) DESC, COUNT(DISTINCT psm.Spectrum) DESC");
+            if (treeListView.SelectedObject is PeptideRow)
+                oldSelectionPath = new string[] { treeListView.SelectedItem.Text };
+            else if (treeListView.SelectedObject is PeptideSpectrumMatchRow)
+                oldSelectionPath = new string[] { (treeListView.SelectedObject as PeptideSpectrumMatchRow).PeptideSpectrumMatch.Peptide.Sequence, treeListView.SelectedItem.Text };
 
-            if (dataFilter.IsBasicFilter || dataFilter.Peptide != null || dataFilter.DistinctPeptideKey != null)
+            ClearData();
+
+            Text = TabText = "Loading peptide view...";
+
+            var workerThread = new BackgroundWorker()
             {
-                if (basicDataFilter == null || (dataFilter.IsBasicFilter && dataFilter != basicDataFilter))
+                WorkerReportsProgress = true,
+                WorkerSupportsCancellation = true
+            };
+
+            workerThread.DoWork += new DoWorkEventHandler(setData);
+            workerThread.RunWorkerCompleted += new RunWorkerCompletedEventHandler(renderData);
+            workerThread.RunWorkerAsync();
+        }
+
+        public void ClearData ()
+        {
+            Text = TabText = "Peptide View";
+
+            treeListView.DiscardAllState();
+            treeListView.Roots = null;
+            treeListView.Refresh();
+            Refresh();
+        }
+
+        void setData(object sender, DoWorkEventArgs e)
+        {
+            lock (session)
+            try
+            {
+                var peptideQuery = session.CreateQuery("SELECT psm.Peptide, " +
+                                                       "       COUNT(DISTINCT psm.SequenceAndMassDistinctKey), " +
+                                                       "       COUNT(DISTINCT psm.Spectrum) " +
+                                                       this.dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
+                                                       "GROUP BY psm.Peptide " +
+                                                       "ORDER BY COUNT(DISTINCT psm.SequenceAndMassDistinctKey) DESC, COUNT(DISTINCT psm.Spectrum) DESC");
+
+                peptideQuery.SetReadOnly(true);
+
+                if (dataFilter.IsBasicFilter || dataFilter.Peptide != null || dataFilter.DistinctPeptideKey != null)
                 {
-                    basicDataFilter = new DataFilter(this.dataFilter);
-                    basicRowsByPeptide = peptideQuery.List<object[]>().Select(o => new PeptideRow(o)).ToList();
+                    if (basicDataFilter == null || (dataFilter.IsBasicFilter && dataFilter != basicDataFilter))
+                    {
+                        basicDataFilter = new DataFilter(this.dataFilter);
+                        basicRowsByPeptide = peptideQuery.List<object[]>().Select(o => new PeptideRow(o)).ToList();
+                    }
+
+                    rowsByPeptide = basicRowsByPeptide;
                 }
-
-                rowsByPeptide = basicRowsByPeptide;
+                else
+                    rowsByPeptide = peptideQuery.List<object[]>().Select(o => new PeptideRow(o)).ToList();
             }
-            else
-                rowsByPeptide = peptideQuery.List<object[]>().Select(o => new PeptideRow(o)).ToList();
+            catch (Exception)
+            {
+                throw;
+            }
+        }
 
+        void renderData (object sender, RunWorkerCompletedEventArgs e)
+        {
             long totalDistinctMatches = rowsByPeptide.Sum(o => o.DistinctMatchesWithRoundedMass);
             long totalSpectra = rowsByPeptide.Sum(o => o.Spectra);
 
             // show total counts in the form title
             Text = TabText = String.Format("Peptide View: {0} peptides, {1} distinct matches, {2} spectra", rowsByPeptide.Count, totalDistinctMatches, totalSpectra);
 
-            // TODO: support multiple selected objects
-            string[] oldSelectionPath = new string[] { };
-            if (treeListView.SelectedObject is object[])
-            {
-                if (treeListView.SelectedObject is PeptideRow)
-                    oldSelectionPath = new string[] { treeListView.SelectedItem.Text };
-                else if (treeListView.SelectedObject is PeptideSpectrumMatchRow)
-                    oldSelectionPath = new string[] { (treeListView.SelectedObject as PeptideSpectrumMatchRow).PeptideSpectrumMatch.Peptide.Sequence, treeListView.SelectedItem.Text };
-            }
-
-            treeListView.DiscardAllState();
             treeListView.Roots = rowsByPeptide;
 
             // try to (re)set selected item

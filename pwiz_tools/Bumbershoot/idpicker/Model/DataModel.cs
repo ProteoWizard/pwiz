@@ -142,8 +142,8 @@ namespace IDPicker.DataModel
     public class Protein : Entity<Protein>
     {
         public virtual string Accession { get; set; }
-        public virtual string Description { get; set; }
-        public virtual string Sequence { get; set; }
+        public virtual string Description { get { return Metadata.Description; } set { Metadata.Description = value; } }
+        public virtual string Sequence { get { return Data.Sequence; } set { Data.Sequence = value; } }
         public virtual IList<PeptideInstance> Peptides { get; set; }
 
         public virtual long Cluster { get { return cluster; } }
@@ -151,11 +151,30 @@ namespace IDPicker.DataModel
         public virtual long Length { get { return length; } }
 
         #region Transient instance members
+        public Protein ()
+        {
+            Metadata = new ProteinMetadata();
+            Data = new ProteinData();
+        }
+
+        public Protein (string description, string sequence) : this()
+        {
+            Description = description;
+            Sequence = sequence;
+            this.length = sequence.Length;
+        }
+
         long cluster = 0;
         string proteinGroup = "";
         long length = 0;
+
+        protected internal virtual ProteinMetadata Metadata { get; set; }
+        protected internal virtual ProteinData Data { get; set; }
         #endregion
     }
+
+    public class ProteinMetadata : Entity<ProteinMetadata> { public virtual string Description { get; set; } }
+    public class ProteinData : Entity<ProteinData> { public virtual string Sequence { get; set; } }
 
     public class Peptide : Entity<Peptide>
     {
@@ -169,7 +188,11 @@ namespace IDPicker.DataModel
 
         #region Transient instance members
         public Peptide () { }
-        internal Peptide (string sequence) { this.sequence = sequence; }
+        internal Peptide (string sequence)
+        {
+            this.sequence = sequence;
+        }
+
         private string sequence = null;
         #endregion
     }
@@ -250,6 +273,9 @@ namespace IDPicker.DataModel
         public virtual PeptideSpectrumMatch PeptideSpectrumMatch { get; set; }
         public virtual Modification Modification { get; set; }
 
+        /// <summary>
+        /// The zero-based location of the modification in the peptide.
+        /// </summary>
         public virtual int Offset
         {
             get { return offset; }
@@ -264,7 +290,7 @@ namespace IDPicker.DataModel
                 else
                 {
                     var firstInstance = PeptideSpectrumMatch.Peptide.Instances.First();
-                    site = firstInstance.Protein.Sequence[firstInstance.Offset + offset - 1];
+                    site = firstInstance.Protein.Sequence[firstInstance.Offset + offset];
                 }
             }
         }
@@ -277,8 +303,23 @@ namespace IDPicker.DataModel
         /// </summary>
         public virtual char Site { get { return site; } }
 
+        #region Transient instance members
+        public PeptideModification () { }
+        internal PeptideModification (string sequence, int offset)
+        {
+            this.offset = offset;
+
+            if (offset == int.MinValue)
+                site = '(';
+            else if (offset == int.MaxValue)
+                site = ')';
+            else
+                site = sequence[offset];
+        }
+
         private int offset;
         private char site;
+        #endregion
     }
 
     public class Entity<T> : IEquatable<T> where T : Entity<T>, new()
@@ -313,7 +354,57 @@ namespace IDPicker.DataModel
     }
 
     #region Implementation for custom types
-    
+
+    public class AminoAcidSequence
+    {
+        private ushort[] _encodedSequence;
+        private int _sequenceLength;
+
+        public AminoAcidSequence (string sequence)
+        {
+            _encodedSequence = new ushort[(int) Math.Ceiling(sequence.Length / 3.0)];
+            _sequenceLength = sequence.Length;
+
+            for (int i = 0; i + 2 < sequence.Length; i += 3)
+            {
+                ushort encodedTrimer = (ushort) (((sequence[i] - 'A') << 10) +
+                                                ((sequence[i+1] - 'A') << 5) +
+                                                (sequence[i+2] - 'A'));
+                _encodedSequence[i/3] = encodedTrimer;
+            }
+
+            int mod = sequence.Length % 3;
+            if (mod == 2)
+                _encodedSequence[_encodedSequence.Length-1] = (ushort) (((sequence[sequence.Length - 2] - 'A') << 5) +
+                                                        (sequence[sequence.Length - 1] - 'A'));
+            else if (mod == 1)
+                _encodedSequence[_encodedSequence.Length-1] = (ushort) (sequence[sequence.Length - 1] - 'A');
+        }
+
+        public override string ToString ()
+        {
+            var sequence = new StringBuilder(_sequenceLength);
+            for (int i = 0; i + 2 < _sequenceLength; i += 3)
+            {
+                int offset = i * 3;
+                sequence.Append((char) ((_encodedSequence[i / 3] >> 10) + 'A'));
+                sequence.Append((char) (((_encodedSequence[i / 3] >> 5) & 0x1F) + 'A'));
+                sequence.Append((char) ((_encodedSequence[i / 3] & 0x1F) + 'A'));
+            }
+
+            int mod = _sequenceLength % 3;
+            if (mod == 2)
+            {
+                sequence.Append((char) (((_encodedSequence.Last() >> 5) & 0x1F) + 'A'));
+                sequence.Append((char) ((_encodedSequence.Last() & 0x1F) + 'A'));
+            }
+            else if (mod == 1)
+                sequence.Append((char) (_encodedSequence.Last() + 'A'));
+
+            return sequence.ToString();
+        }
+    }
+
     public class SpectrumSourceMetadataUserType : NHibernate.UserTypes.IUserType
     {
         #region IUserType Members
@@ -613,7 +704,7 @@ namespace IDPicker.DataModel
                 else if (mod.Offset == int.MaxValue)
                     sb.AppendFormat(format, mod.Modification.MonoMassDelta);
                 else
-                    sb.Insert(mod.Offset, String.Format(format, mod.Modification.MonoMassDelta));
+                    sb.Insert(mod.Offset + 1, String.Format(format, mod.Modification.MonoMassDelta));
             return sb.ToString();
         }
 

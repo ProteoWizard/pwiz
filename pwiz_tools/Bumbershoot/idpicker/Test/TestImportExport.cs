@@ -24,8 +24,10 @@ using System;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using IDPicker.DataModel;
+using NHibernate.Linq;
 
 namespace Test
 {
@@ -35,11 +37,8 @@ namespace Test
     [TestClass]
     public class TestImportExport
     {
-        TestModel testModel;
-
         public TestImportExport ()
         {
-            testModel = new TestModel();
         }
 
         /// <summary>
@@ -48,59 +47,68 @@ namespace Test
         ///</summary>
         public TestContext TestContext { get; set; }
 
-        #region Additional test attributes
-        //
-        // You can use the following additional attributes as you write your tests:
-        //
         // Use ClassInitialize to run code before running the first test in the class
-        // [ClassInitialize()]
-        // public static void MyClassInitialize(TestContext testContext) { }
-        //
-        // Use ClassCleanup to run code after all tests in a class have run
-        // [ClassCleanup()]
-        // public static void MyClassCleanup() { }
-        //
-        // Use TestInitialize to run code before running each test 
-        // [TestInitialize()]
-        // public void MyTestInitialize() { }
-        //
-        // Use TestCleanup to run code after each test has run
-        // [TestCleanup()]
-        // public void MyTestCleanup() { }
-        //
-        #endregion
+        [ClassInitialize()]
+        public static void ClassInitialize (TestContext testContext)
+        {
+            TestModel.ClassInitialize(testContext);
+        }
 
         [TestMethod]
         public void TestImportExportIdpXml ()
         {
-            IList<string> idpXmlPaths;
-            using (var exporter = new Exporter(testModel.session))
+            var testModel = new TestModel();
+
+            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testModel.idpDB", false, false))
+            using (var session = testModel.session = sessionFactory.OpenSession())
             {
-                idpXmlPaths = exporter.WriteIdpXml(true, true, true);
-                exporter.WriteSpectra();
-            }
-            testModel.session.Close();
+                foreach (var analysis in testModel.session.Query<Analysis>())
+                    session.Save(new AnalysisParameter()
+                                     {
+                                         Analysis = analysis,
+                                         Name = "ProteinDatabase",
+                                         Value = "testImportExport.fasta"
+                                     });
 
-            using (var parser = new Parser("testImportExport.idpDB"))
+                IList<string> idpXmlPaths;
+                using (var exporter = new Exporter(session))
+                {
+                    idpXmlPaths = exporter.WriteIdpXml(true, true);
+                    exporter.WriteSpectra();
+                    exporter.WriteProteins("testImportExport.fasta");
+                }
+                session.Close();
+
+                using (var parser = new Parser("testImportExport.idpDB", ".", idpXmlPaths.ToArray()))
+                {
+                    // ReadXml should pick up mzML files in the same directory as the idpXMLs
+                    parser.Start();
+                }
+
+                var merger = new Merger("testImportExport.idpDB", idpXmlPaths.Select(o => Path.ChangeExtension(o, ".idpDB")));
+                merger.Start();
+            }
+
+            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testImportExport.idpDB", false, false))
+            using (var session = testModel.session = sessionFactory.OpenSession())
             {
-                // ReadXml should pick up mzML files in the same directory as the idpXMLs
-                parser.ReadXml(".", idpXmlPaths.ToArray());
+                foreach (var analysis in session.Query<Analysis>())
+                    session.Delete(session.UniqueResult<AnalysisParameter>(o => o.Analysis.Id == analysis.Id &&
+                                                                                o.Name == "ProteinDatabase"));
+                session.Flush();
+
+                testModel.TestOverallCounts();
+                testModel.TestSanity();
+                testModel.TestProteins();
+                testModel.TestPeptides();
+                testModel.TestPeptideInstances();
+                testModel.TestSpectrumSourceGroups();
+                testModel.TestSpectrumSources();
+                testModel.TestSpectra();
+                testModel.TestAnalyses();
+                testModel.TestPeptideSpectrumMatches();
+                testModel.TestModifications();
             }
-
-            var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testImportExport.idpDB", false, false);
-            testModel.session = sessionFactory.OpenSession();
-
-            testModel.TestOverallCounts();
-            testModel.TestSanity();
-            testModel.TestProteins();
-            testModel.TestPeptides();
-            testModel.TestPeptideInstances();
-            testModel.TestSpectrumSourceGroups();
-            testModel.TestSpectrumSources();
-            testModel.TestSpectra();
-            testModel.TestAnalyses();
-            testModel.TestPeptideSpectrumMatches();
-            testModel.TestModifications();
         }
     }
 }

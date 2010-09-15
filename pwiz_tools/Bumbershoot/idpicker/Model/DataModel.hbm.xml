@@ -24,7 +24,7 @@
 -->
 <hibernate-mapping xmlns="urn:nhibernate-mapping-2.2" namespace="IDPicker.DataModel" assembly="IDPicker" auto-import="true">
 
-	<class name="SpectrumSourceGroup" table="SpectrumSourceGroups">
+	<class name="SpectrumSourceGroup">
 		<id name="Id"><generator class="native"/></id>
 		<property name="Name"/>
 		<set name="Sources" inverse="true" batch-size="500" lazy="true">
@@ -33,7 +33,7 @@
 		</set>
 	</class>
 
-	<class name="SpectrumSource" table="SpectrumSources">
+	<class name="SpectrumSource">
 		<id name="Id"><generator class="native"/></id>
 		<property name="Name"/>
 		<property name="URL"/>
@@ -49,17 +49,17 @@
 		<property name="Metadata" column="MsDataBytes" lazy="true" type="SpectrumSourceMetadataUserType"/>
 	</class>
 
-	<class name="SpectrumSourceGroupLink" table="SpectrumSourceGroupLinks">
+	<class name="SpectrumSourceGroupLink">
 		<id name="Id"><generator class="native"/></id>
-		<many-to-one name="Source" unique-key="SpectrumSourceGroupLink_GroupSource" fetch="join"/>
-		<many-to-one name="Group" unique-key="SpectrumSourceGroupLink_GroupSource" column="Group_" fetch="join"/>
+		<many-to-one name="Source" fetch="join"/>
+		<many-to-one name="Group" column="Group_" fetch="join"/>
 	</class>
 		   
-	<class name="Spectrum" table="Spectra">
+	<class name="Spectrum">
 		<id name="Id"><generator class="native"/></id>
-		<many-to-one name="Source" fetch="join" unique-key="Spectrum_SourceNativeID"/>
+		<many-to-one name="Source" fetch="join"/>
 		<property name="Index" column="Index_"/>
-		<property name="NativeID" unique-key="Spectrum_SourceNativeID"/>
+		<property name="NativeID"/>
 		<property name="PrecursorMZ"/>
 		<bag name="Matches" inverse="true" batch-size="500" lazy="true">
 			<key column="Spectrum"/>
@@ -68,14 +68,14 @@
 		<!--<property name="Peaks" lazy="true" type="SpectrumPeakListUserType"/>-->
 	</class>
 
-	<class name="AnalysisParameter" table="AnalysisParameters">
+	<class name="AnalysisParameter">
 		<id name="Id"><generator class="native"/></id>
-		<many-to-one name="Analysis" index="AnalysisParameter_AnalysisIndex" fetch="join"/>
+		<many-to-one name="Analysis" fetch="join"/>
 		<property name="Name"/>
 		<property name="Value"/>
 	</class>
 
-	<class name="Analysis" table="Analyses">
+	<class name="Analysis">
 		<id name="Id"><generator class="native"/></id>
 		<property name="Name"/>
 		<component name="Software">
@@ -93,30 +93,39 @@
 			<one-to-many class="PeptideSpectrumMatch"/>
 		</bag>
 	</class>
-	
-	<class name="Protein" table="Proteins">
+
+	<class name="Protein">
 		<id name="Id"><generator class="native"/></id>
-		<property name="Accession" unique="true"/>
-		<property name="Description"/>
-		<property name="Sequence" lazy="true"/>
+		<property name="Accession" />
+
+		<!-- We store these long text fields in separate tables so that joins against the Proteins table are faster -->
+		<property name="Description" formula="(SELECT pmd.Description FROM ProteinMetadata pmd WHERE Id=pmd.Id)"/>
+		<property name="Sequence" formula="(SELECT pd.Sequence FROM ProteinData pd WHERE Id=pd.Id)"/>
+
+		<one-to-one name="Metadata"/>
+		<one-to-one name="Data" />
+
 		<bag name="Peptides" inverse="true" batch-size="500" lazy="true">
 			<key column="Protein"/>
 			<one-to-many class="PeptideInstance"/>
 		</bag>
 		<property name="Cluster" access="nosetter.camelcase"/>
 		<property name="ProteinGroup" access="nosetter.camelcase"/>
-		<property name="Length" access="nosetter.camelcase" formula="(SELECT LENGTH(Sequence))"/>
+		<property name="Length" access="nosetter.camelcase" formula="(SELECT LENGTH(pd.Sequence) FROM ProteinData pd WHERE Id=pd.Id)"/>
 	</class>
 
-	<class name="Peptide" table="Peptides">
+	<class name="ProteinMetadata"><id name="Id"><generator class="native"/></id><property name="Description"/></class>
+	<class name="ProteinData"><id name="Id"><generator class="native"/></id><property name="Sequence"/></class>
+
+	<class name="Peptide">
 		<id name="Id"><generator class="native"/></id>
 		<property name="Sequence" access="nosetter.camelcase" 
 				  formula="(SELECT SUBSTR(pro.Sequence, pi.Offset+1, pi.Length)
-							FROM PeptideInstances pi
-							JOIN Proteins pro ON pi.Protein=pro.Id
+							FROM PeptideInstance pi
+							JOIN ProteinData pro ON pi.Protein=pro.Id
 							WHERE pi.Protein=pro.Id AND
 							  pi.Id=(SELECT MIN(pi2.Id)
-									 FROM PeptideInstances pi2
+									 FROM PeptideInstance pi2
 									 WHERE Id=pi2.Peptide))"/>
 		<property name="MonoisotopicMass"/>
 		<property name="MolecularWeight"/>
@@ -130,11 +139,11 @@
 		</bag>
 	</class>
 
-	<class name="PeptideInstance" table="PeptideInstances">
+	<class name="PeptideInstance">
 		<id name="Id"><generator class="native"/></id>
-		<many-to-one name="Protein" index="PeptideInstance_ProteinIndex" unique-key="PeptideInstance_ProteinPeptideOffset" fetch="join"/>
-		<many-to-one name="Peptide" index="PeptideInstance_PeptideIndex" unique-key="PeptideInstance_ProteinPeptideOffset" fetch="join"/>
-		<property name="Offset" unique-key="PeptideInstance_ProteinPeptideOffset"/>
+		<many-to-one name="Protein" fetch="join"/>
+		<many-to-one name="Peptide" fetch="join"/>
+		<property name="Offset"/>
 		<property name="Length"/>
 		<property name="NTerminusIsSpecific"/>
 		<property name="CTerminusIsSpecific"/>
@@ -142,7 +151,7 @@
 		<property name="SpecificTermini" access="nosetter.camelcase" formula="(SELECT NTerminusIsSpecific + CTerminusIsSpecific)"/>
 	</class>
 
-	<class name="Modification" table="Modifications">
+	<class name="Modification">
 		<id name="Id"><generator class="native"/></id>
 		<property name="MonoMassDelta"/>
 		<property name="AvgMassDelta"/>
@@ -150,16 +159,16 @@
 		<property name="Name"/>
 	</class>
 
-	<class name="PeptideSpectrumMatch" table="PeptideSpectrumMatches">
+	<class name="PeptideSpectrumMatch">
 		<id name="Id"><generator class="native"/></id>
-		<many-to-one name="Spectrum" index="PeptideSpectrumMatch_SpectrumIndex" fetch="join"/>
-		<many-to-one name="Analysis" index="PeptideSpectrumMatch_AnalysisIndex" fetch="join"/>
-		<many-to-one name="Peptide" index="PeptideSpectrumMatch_PeptideIndex" fetch="join"/>
+		<many-to-one name="Spectrum" fetch="join"/>
+		<many-to-one name="Analysis" fetch="join"/>
+		<many-to-one name="Peptide" fetch="join"/>
 		<bag name="Modifications" inverse="true" batch-size="500" lazy="true">
 			<key column="PeptideSpectrumMatch"/>
 			<one-to-many class="PeptideModification"/>
 		</bag>
-		<property name="QValue" index="PeptideSpectrumMatch_QValueIndex">
+		<property name="QValue">
 			<column name="QValue" sql-type="DOUBLE"/>
 		</property>
 		<property name="MonoisotopicMass"/>
@@ -169,21 +178,49 @@
 		<property name="Rank"/>
 		<property name="Charge"/>
 		<map name="Scores" table="PeptideSpectrumMatchScores">
-			<key column="Id"/>
-			<index column="Name" type="String"/>
+			<key column="Id">
+				<column name="PsmId"/>
+			</key>
+			<index column="Name" type="String">
+				<column name="ScoreNameId" sql-type="integer"/>
+			</index>
 			<element column="Value" type="Double"/>
+			<loader query-ref="PeptideSpectrumMatchScores_LoaderQuery"/>
+			<!--<sql-insert check="none">
+				CREATE TEMP TABLE PsmScore AS SELECT ? AS PsmId, ? AS Name, ? AS Value;
+
+				INSERT OR IGNORE INTO PeptideSpectrumMatchScoreNames (Id, Name)
+				VALUES ((SELECT IFNULL(MAX(Id)+1, 1) FROM PeptideSpectrumMatchScoreNames),
+						(SELECT Name FROM PsmScore LIMIT 1));
+
+				INSERT INTO PeptideSpectrumMatchScores (PsmId, ScoreNameId, Value)
+				VALUES ((SELECT PsmId FROM PsmScore LIMIT 1),
+						(SELECT Id FROM PeptideSpectrumMatchScoreNames WHERE Name=(SELECT Name FROM PsmScore LIMIT 1)),
+						(SELECT Value FROM PsmScore LIMIT 1));
+				DROP TABLE PsmScore
+			</sql-insert>-->
 		</map>
 		<property name="FullDistinctKey" access="nosetter.camelcase" formula="(Peptide || ' ' || MonoisotopicMass || ' ' || Charge)"/>
-		<property name="SequenceAndMassDistinctKey" access="nosetter.camelcase" formula="(Peptide || ' ' || MonoisotopicMass)"/>
+		<property name="SequenceAndMassDistinctKey" access="nosetter.camelcase" formula="(Peptide || ' ' || IFNULL((SELECT GROUP_CONCAT(pm.Modification || '@' || pm.Offset) FROM PeptideModification pm WHERE Id=pm.PeptideSpectrumMatch), ''))"/>
 	</class>
 
-	<class name="PeptideModification" table="PeptideModifications">
+	<class name="PeptideModification">
 		<id name="Id"><generator class="native"/></id>
-		<many-to-one name="PeptideSpectrumMatch" index="PeptideModification_PeptideSpectrumMatch" fetch="join"/>
-		<many-to-one name="Modification" index="PeptideModification_Modification" fetch="join"/>
+		<many-to-one name="PeptideSpectrumMatch" fetch="join"/>
+		<many-to-one name="Modification" fetch="join"/>
 		<property name="Offset" access="nosetter.camelcase"/>
 		<property name="Site" access="nosetter.camelcase"/>
 		<!--An index on the Site property seems to override the PSM index :( index="PeptideModification_Site"-->
 	</class>
+	
+	<sql-query read-only="true" name="PeptideSpectrumMatchScores_LoaderQuery">
+		<load-collection alias="scores" role="PeptideSpectrumMatch.Scores"/>
+		SELECT {scores.*}
+		FROM (	SELECT PsmId, Name AS ScoreNameId, Value
+				FROM PeptideSpectrumMatchScores
+				JOIN PeptideSpectrumMatchScoreNames ON ScoreNameId = Id
+				WHERE PsmId = ?
+			 ) scores
+	</sql-query>
 
 </hibernate-mapping>

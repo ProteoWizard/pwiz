@@ -29,6 +29,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Windows.Forms;
+using System.Threading;
 using DigitalRune.Windows.Docking;
 using NHibernate.Linq;
 using BrightIdeasSoftware;
@@ -106,6 +107,8 @@ namespace IDPicker.Forms
             InitializeComponent();
 
             HideOnClose = true;
+
+            Text = TabText = "Spectrum View";
 
             #region Column aspect getters
             sourceOrScanColumn.AspectGetter += delegate(object x)
@@ -331,54 +334,13 @@ namespace IDPicker.Forms
         private IList<SpectrumSourceGroupRow> rowsByGroup, basicRowsByGroup;
         private IList<SpectrumSourceRow> rowsBySource, basicRowsBySource;
 
+        // TODO: support multiple selected objects
+        List<string> oldSelectionPath = new List<string>();
+
         public void SetData (NHibernate.ISession session, DataFilter dataFilter)
         {
             this.session = session;
-            this.dataFilter = new DataFilter(dataFilter) { Spectrum = null, SpectrumSource = null, SpectrumSourceGroup = null };
-
-            var groupQuery = session.CreateQuery("SELECT ssgl, COUNT(DISTINCT psm.Spectrum.id), COUNT(DISTINCT psm.Peptide.id), COUNT(DISTINCT psm.FullDistinctKey) " +
-                                                 this.dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
-                                                                                        DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink) +
-                                                 "GROUP BY ssgl.Group.id");
-
-            var sourceQuery = session.CreateQuery("SELECT psm.Spectrum.Source, COUNT(DISTINCT psm.Spectrum.id), COUNT(DISTINCT psm.Peptide.id), COUNT(DISTINCT psm.FullDistinctKey) " +
-                                                  this.dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
-                                                  "GROUP BY psm.Spectrum.Source.id");
-
-            if (dataFilter.IsBasicFilter ||
-                dataFilter.SpectrumSourceGroup != null ||
-                dataFilter.SpectrumSource != null ||
-                dataFilter.Spectrum != null)
-            {
-                if (basicDataFilter == null || (dataFilter.IsBasicFilter && dataFilter != basicDataFilter))
-                {
-                    basicDataFilter = new DataFilter(this.dataFilter);
-                    basicRowsByGroup = groupQuery.List<object[]>().Select(o => new SpectrumSourceGroupRow(o)).ToList();
-                    basicRowsBySource = sourceQuery.List<object[]>().Select(o => new SpectrumSourceRow(o)).ToList();
-                }
-
-                rowsByGroup = basicRowsByGroup;
-                rowsBySource = basicRowsBySource;
-            }
-            else
-            {
-                rowsByGroup = groupQuery.List<object[]>().Select(o => new SpectrumSourceGroupRow(o)).ToList();
-                rowsBySource = sourceQuery.List<object[]>().Select(o => new SpectrumSourceRow(o)).ToList();
-            }
-
-            var rootGroup = (from g in session.QueryOver<DataModel.SpectrumSourceGroup>() where g.Name == "/" select g).SingleOrDefault();
-            var rootGroupRow = (from row in rowsByGroup
-                                where row.SpectrumSourceGroup.Id == rootGroup.Id
-                                select row).Single();
-
-            long totalSpectrumCount = rootGroupRow.Spectra;
-            long totalPeptideCount = rootGroupRow.DistinctPeptides;
-
-            // show total counts in the form title
-            Text = TabText = String.Format("Spectrum View: {0} groups, {1} sources, {2} spectra, {3} peptides", rowsByGroup.Count, rowsBySource.Count, totalSpectrumCount, totalPeptideCount);
-
-            // TODO: support multiple selected objects
-            var oldSelectionPath = new List<string>();
+            this.dataFilter = new DataFilter(dataFilter) {Spectrum = null, SpectrumSource = null, SpectrumSourceGroup = null};
 
             if (treeListView.SelectedObject is SpectrumSourceGroupRow)
             {
@@ -398,17 +360,98 @@ namespace IDPicker.Forms
                 oldSelectionPath.Add(treeListView.SelectedItem.Text);
             }
 
+            ClearData();
+
+            Text = TabText = "Loading spectrum view...";
+
+            var workerThread = new BackgroundWorker()
+            {
+                WorkerReportsProgress = true,
+                WorkerSupportsCancellation = true
+            };
+
+            workerThread.DoWork += new DoWorkEventHandler(setData);
+            workerThread.RunWorkerCompleted += new RunWorkerCompletedEventHandler(renderData);
+            workerThread.RunWorkerAsync();
+        }
+
+        public void ClearData ()
+        {
+            Text = TabText = "Spectrum View";
+
             treeListView.DiscardAllState();
-            treeListView.Roots = new object[] { rootGroupRow };
+            treeListView.Roots = null;
+            treeListView.Refresh();
+            Refresh();
+        }
+
+        void setData(object sender, DoWorkEventArgs e)
+        {
+            lock(session)
+            try
+            {
+                var groupQuery = session.CreateQuery("SELECT ssgl, COUNT(DISTINCT psm.Spectrum.id), COUNT(DISTINCT psm.Peptide.id), COUNT(DISTINCT psm.FullDistinctKey) " +
+                                                     this.dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
+                                                                                            DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink) +
+                                                     "GROUP BY ssgl.Group.id");
+
+                var sourceQuery = session.CreateQuery("SELECT psm.Spectrum.Source, COUNT(DISTINCT psm.Spectrum.id), COUNT(DISTINCT psm.Peptide.id), COUNT(DISTINCT psm.FullDistinctKey) " +
+                                                      this.dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
+                                                      "GROUP BY psm.Spectrum.Source.id");
+
+                groupQuery.SetReadOnly(true);
+                sourceQuery.SetReadOnly(true);
+
+                if (dataFilter.IsBasicFilter ||
+                    dataFilter.SpectrumSourceGroup != null ||
+                    dataFilter.SpectrumSource != null ||
+                    dataFilter.Spectrum != null)
+                {
+                    if (basicDataFilter == null || (dataFilter.IsBasicFilter && dataFilter != basicDataFilter))
+                    {
+                        basicDataFilter = new DataFilter(this.dataFilter);
+                        basicRowsByGroup = groupQuery.List<object[]>().Select(o => new SpectrumSourceGroupRow(o)).ToList();
+                        basicRowsBySource = sourceQuery.List<object[]>().Select(o => new SpectrumSourceRow(o)).ToList();
+                    }
+
+                    rowsByGroup = basicRowsByGroup;
+                    rowsBySource = basicRowsBySource;
+                }
+                else
+                {
+                    rowsByGroup = groupQuery.List<object[]>().Select(o => new SpectrumSourceGroupRow(o)).ToList();
+                    rowsBySource = sourceQuery.List<object[]>().Select(o => new SpectrumSourceRow(o)).ToList();
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        void renderData (object sender, RunWorkerCompletedEventArgs e)
+        {
+            SpectrumSourceGroup rootGroup;
+            lock (session) rootGroup = session.Query<SpectrumSourceGroup>().Where(o => o.Name == "/").Single();
+            var rootGroupRow = rowsByGroup.Where(o => o.SpectrumSourceGroup.Id == rootGroup.Id).Single();
+
+            long totalSpectrumCount = rootGroupRow.Spectra;
+            long totalPeptideCount = rootGroupRow.DistinctPeptides;
+
+            // show total counts in the form title
+            Text = TabText = String.Format("Spectrum View: {0} groups, {1} sources, {2} spectra, {3} peptides", rowsByGroup.Count, rowsBySource.Count, totalSpectrumCount, totalPeptideCount);
+
+            treeListView.Roots = new object[] {rootGroupRow};
 
             // by default, expand all groups
             foreach (var row in rowsByGroup)
                 treeListView.Expand(row);
 
             // if the view is filtered, expand all sources
-            if (!ReferenceEquals(rowsByGroup, basicRowsByGroup))
+            // TODO: this isn't a good idea when the filter has hundreds/thousands of spectra!
+            /*if (!ReferenceEquals(rowsByGroup, basicRowsByGroup))
                 foreach (var row in rowsBySource)
-                    treeListView.Expand(row);
+                    treeListView.Expand(row);*/
 
             // try to (re)set selected item
             expandSelectionPath(oldSelectionPath);

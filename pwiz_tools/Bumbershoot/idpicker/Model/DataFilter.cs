@@ -26,6 +26,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using IDPicker.DataModel;
+using NHibernate.Linq;
 
 namespace IDPicker.DataModel
 {
@@ -58,11 +59,41 @@ namespace IDPicker.DataModel
 
     public class DataFilter : EventArgs
     {
+        #region Events
+        public event EventHandler<FilteringProgressEventArgs> FilteringProgress;
+        #endregion
+
+        #region Event arguments
+        public class FilteringProgressEventArgs : System.ComponentModel.CancelEventArgs
+        {
+            public FilteringProgressEventArgs(string stage, int completed, int total, Exception ex)
+            {
+                CompletedFilters = completed;
+                TotalFilters = total;
+                FilteringStage = stage;
+                FilteringException = ex;
+            }
+
+            public int CompletedFilters { get; protected set; }
+            public int TotalFilters { get; protected set; }
+
+            public string FilteringStage { get; protected set; }
+            public Exception FilteringException { get; protected set; }
+        }
+        #endregion
+
+        protected bool OnFilteringProgress (FilteringProgressEventArgs e)
+        {
+            if (FilteringProgress != null)
+                FilteringProgress(this, e);
+            return e.Cancel;
+        }
+
         public DataFilter ()
         {
-            MaximumQValue = 0.1M;
-            MinimumDistinctPeptidesPerProtein = 1;
-            MinimumSpectraPerProtein = 1;
+            MaximumQValue = 0.02M;
+            MinimumDistinctPeptidesPerProtein = 2;
+            MinimumSpectraPerProtein = 2;
             MinimumAdditionalPeptidesPerProtein = 1;
             Modifications = new List<Modification>();
         }
@@ -193,8 +224,8 @@ namespace IDPicker.DataModel
 
         public string GetBasicQueryStringSQL ()
         {
-            return String.Format("FROM PeptideSpectrumMatches psm " +
-                                 "JOIN PeptideInstances pi ON psm.Peptide = pi.Peptide " +
+            return String.Format("FROM PeptideSpectrumMatch psm " +
+                                 "JOIN PeptideInstance pi ON psm.Peptide = pi.Peptide " +
                                  "WHERE psm.QValue <= {0} " +
                                  "GROUP BY pi.Protein " +
                                  "HAVING {1} <= COUNT(DISTINCT (psm.Peptide || ' ' || psm.MonoisotopicMass || ' ' || psm.Charge)) AND " +
@@ -206,32 +237,41 @@ namespace IDPicker.DataModel
 
         public void ApplyBasicFilters (NHibernate.ISession session)
         {
+            bool useScopedTransaction = !session.Transaction.IsActive;
+            if (useScopedTransaction)
+                session.Transaction.Begin();
+
             // ignore errors if main tables haven't been created yet
 
             #region Drop Filtered* tables
-            try { session.CreateSQLQuery("DROP TABLE FilteredProteins").ExecuteUpdate(); } catch { }
-            try { session.CreateSQLQuery("DROP TABLE FilteredPeptideInstances").ExecuteUpdate(); } catch { }
-            try { session.CreateSQLQuery("DROP TABLE FilteredPeptides").ExecuteUpdate(); } catch { }
-            try { session.CreateSQLQuery("DROP TABLE FilteredPeptideSpectrumMatches").ExecuteUpdate(); } catch { }
+            if(OnFilteringProgress(new FilteringProgressEventArgs("Dropping current filters...", 1, 11, null)))
+                return;
+            try { session.CreateSQLQuery("DROP TABLE FilteredProtein").ExecuteUpdate(); } catch { }
+            try { session.CreateSQLQuery("DROP TABLE FilteredPeptideInstance").ExecuteUpdate(); } catch { }
+            try { session.CreateSQLQuery("DROP TABLE FilteredPeptide").ExecuteUpdate(); } catch { }
+            try { session.CreateSQLQuery("DROP TABLE FilteredPeptideSpectrumMatch").ExecuteUpdate(); } catch { }
             #endregion
 
             #region Restore Unfiltered* tables as the main tables
             try
             {
+                if (OnFilteringProgress(new FilteringProgressEventArgs("Restoring unfiltered data...", 2, 11, null)))
+                    return;
+
                 // if unfiltered tables have not been created, this will throw and skip the rest of the block
-                session.CreateSQLQuery("SELECT Id FROM UnfilteredProteins LIMIT 1").ExecuteUpdate();
+                session.CreateSQLQuery("SELECT Id FROM UnfilteredProtein LIMIT 1").ExecuteUpdate();
 
                 // drop filtered tables
-                try { session.CreateSQLQuery("DROP TABLE Proteins").ExecuteUpdate(); } catch { }
-                try { session.CreateSQLQuery("DROP TABLE PeptideInstances").ExecuteUpdate(); } catch { }
-                try { session.CreateSQLQuery("DROP TABLE Peptides").ExecuteUpdate(); } catch { }
-                try { session.CreateSQLQuery("DROP TABLE PeptideSpectrumMatches").ExecuteUpdate(); } catch { }
+                try { session.CreateSQLQuery("DROP TABLE Protein").ExecuteUpdate(); } catch { }
+                try { session.CreateSQLQuery("DROP TABLE PeptideInstance").ExecuteUpdate(); } catch { }
+                try { session.CreateSQLQuery("DROP TABLE Peptide").ExecuteUpdate(); } catch { }
+                try { session.CreateSQLQuery("DROP TABLE PeptideSpectrumMatch").ExecuteUpdate(); } catch { }
 
                 // rename unfiltered tables 
-                session.CreateSQLQuery("ALTER TABLE UnfilteredProteins RENAME TO Proteins;" +
-                                       "ALTER TABLE UnfilteredPeptideInstances RENAME TO PeptideInstances;" +
-                                       "ALTER TABLE UnfilteredPeptides RENAME TO Peptides;" +
-                                       "ALTER TABLE UnfilteredPeptideSpectrumMatches RENAME TO PeptideSpectrumMatches"
+                session.CreateSQLQuery("ALTER TABLE UnfilteredProtein RENAME TO Protein;" +
+                                       "ALTER TABLE UnfilteredPeptideInstance RENAME TO PeptideInstance;" +
+                                       "ALTER TABLE UnfilteredPeptide RENAME TO Peptide;" +
+                                       "ALTER TABLE UnfilteredPeptideSpectrumMatch RENAME TO PeptideSpectrumMatch"
                                       ).ExecuteUpdate();
             }
             catch
@@ -240,65 +280,81 @@ namespace IDPicker.DataModel
             #endregion
 
             #region Create Filtered* tables by applying the basic filters to the main tables
-            session.CreateSQLQuery("CREATE TABLE FilteredProteins (Id INTEGER PRIMARY KEY, Accession TEXT, Description TEXT, Sequence TEXT, Cluster INT, ProteinGroup TEXT);" +
-                String.Format("INSERT INTO FilteredProteins SELECT pro.* " +
-                              "FROM PeptideSpectrumMatches psm " +
-                              "JOIN PeptideInstances pi ON psm.Peptide = pi.Peptide " +
-                              "JOIN Proteins pro ON pi.Protein = pro.Id " +
-                              "WHERE {0} >= psm.QValue AND psm.Rank = 1 " +
-                              "GROUP BY pi.Protein " +
-                              "HAVING {1} <= COUNT(DISTINCT psm.Peptide) AND " +
-                              "       {2} <= COUNT(DISTINCT psm.Spectrum)",
-                              MaximumQValue,
-                              MinimumDistinctPeptidesPerProtein,
-                              MinimumSpectraPerProtein)).ExecuteUpdate();
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering proteins...", 3, 11, null)))
+                return;
+            string filterProteinsSql =
+                @"CREATE TABLE FilteredProtein (Id INTEGER PRIMARY KEY, Accession TEXT, Cluster INT, ProteinGroup TEXT);
+                  INSERT INTO FilteredProtein SELECT pro.*
+                  FROM PeptideSpectrumMatch psm
+                  JOIN PeptideInstance pi ON psm.Peptide = pi.Peptide
+                  JOIN Protein pro ON pi.Protein = pro.Id
+                  WHERE {0} >= psm.QValue AND psm.Rank = 1
+                  GROUP BY pi.Protein
+                  HAVING {1} <= COUNT(DISTINCT psm.Peptide) AND
+                         {2} <= COUNT(DISTINCT psm.Spectrum);
+                  CREATE UNIQUE INDEX FilteredProtein_Accession ON FilteredProtein (Accession);";
+            session.CreateSQLQuery(String.Format(filterProteinsSql,
+                                                 MaximumQValue,
+                                                 MinimumDistinctPeptidesPerProtein,
+                                                 MinimumSpectraPerProtein)).ExecuteUpdate();
 
-            session.CreateSQLQuery("CREATE TABLE FilteredPeptideSpectrumMatches (Id INTEGER PRIMARY KEY, Spectrum INT, Analysis INT, Peptide INT, QValue NUMERIC, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC, MonoisotopicMassError NUMERIC, MolecularWeightError NUMERIC, Rank INT, Charge INT);" +
-                                   "INSERT INTO FilteredPeptideSpectrumMatches SELECT psm.* " +
-                                   "FROM FilteredProteins pro " +
-                                   "JOIN PeptideInstances pi ON pro.Id = pi.Protein " +
-                                   "JOIN PeptideSpectrumMatches psm ON pi.Peptide = psm.Peptide " +
-                                   "WHERE " + MaximumQValue.ToString() + " >= psm.QValue AND psm.Rank = 1 " +
-                                   "GROUP BY psm.Id;" +
-                                   "CREATE INDEX FilteredPeptideSpectrumMatch_SpectrumIndex ON FilteredPeptideSpectrumMatches (Spectrum);" +
-                                   "CREATE INDEX FilteredPeptideSpectrumMatch_PeptideIndex ON FilteredPeptideSpectrumMatches (Peptide);" +
-                                   "CREATE INDEX FilteredPeptideSpectrumMatch_QValueIndex ON FilteredPeptideSpectrumMatches (QValue)"
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering peptide spectrum matches...", 4, 11, null)))
+                return;
+            session.CreateSQLQuery(@"CREATE TABLE FilteredPeptideSpectrumMatch (Id INTEGER PRIMARY KEY, Spectrum INT, Analysis INT, Peptide INT, QValue NUMERIC, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC, MonoisotopicMassError NUMERIC, MolecularWeightError NUMERIC, Rank INT, Charge INT);
+                                     INSERT INTO FilteredPeptideSpectrumMatch SELECT psm.*
+                                     FROM FilteredProtein pro
+                                     JOIN PeptideInstance pi ON pro.Id = pi.Protein
+                                     JOIN PeptideSpectrumMatch psm ON pi.Peptide = psm.Peptide
+                                     WHERE " + MaximumQValue.ToString() + @" >= psm.QValue AND psm.Rank = 1
+                                     GROUP BY psm.Id;
+                                     CREATE INDEX FilteredPeptideSpectrumMatch_Spectrum ON FilteredPeptideSpectrumMatch (Spectrum);
+                                     CREATE INDEX FilteredPeptideSpectrumMatch_Peptide ON FilteredPeptideSpectrumMatch (Peptide);
+                                     CREATE INDEX FilteredPeptideSpectrumMatch_QValue ON FilteredPeptideSpectrumMatch (QValue);
+                                     CREATE INDEX FilteredPeptideSpectrumMatch_Analysis ON FilteredPeptideSpectrumMatch (Analysis);
+                                     CREATE INDEX FilteredPeptideSpectrumMatch_Rank ON FilteredPeptideSpectrumMatch (Rank);
+                                    "
                                   ).ExecuteUpdate();
 
-            session.CreateSQLQuery("CREATE TABLE FilteredPeptides (Id INTEGER PRIMARY KEY, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC);" +
-                                   "INSERT INTO FilteredPeptides SELECT pep.* " +
-                                   "FROM FilteredPeptideSpectrumMatches psm " +
-                                   "JOIN Peptides pep ON psm.Peptide = pep.Id " +
-                                   "GROUP BY pep.Id"
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering peptides...", 5, 11, null)))
+                return;
+            session.CreateSQLQuery(@"CREATE TABLE FilteredPeptide (Id INTEGER PRIMARY KEY, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC);
+                                     INSERT INTO FilteredPeptide SELECT pep.*
+                                     FROM FilteredPeptideSpectrumMatch psm
+                                     JOIN Peptide pep ON psm.Peptide = pep.Id
+                                     GROUP BY pep.Id"
                                   ).ExecuteUpdate();
 
-            session.CreateSQLQuery("CREATE TABLE FilteredPeptideInstances (Id INTEGER PRIMARY KEY, Protein INT, Peptide INT, Offset INT, Length INT, NTerminusIsSpecific INT, CTerminusIsSpecific INT, MissedCleavages INT);" +
-                                   "INSERT INTO FilteredPeptideInstances SELECT pi.* " +
-                                   "FROM FilteredProteins pro " +
-                                   "JOIN PeptideInstances pi ON pro.Id = pi.Protein " +
-                                   "JOIN FilteredPeptides pep ON pi.Peptide = pep.Id;" +
-                                   "CREATE INDEX FilteredPeptideInstance_ProteinIndex ON FilteredPeptideInstances (Protein);" +
-                                   "CREATE INDEX FilteredPeptideInstance_PeptideIndex ON FilteredPeptideInstances (Peptide)"
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering peptide instances...", 6, 11, null)))
+                return;
+            session.CreateSQLQuery(@"CREATE TABLE FilteredPeptideInstance (Id INTEGER PRIMARY KEY, Protein INT, Peptide INT, Offset INT, Length INT, NTerminusIsSpecific INT, CTerminusIsSpecific INT, MissedCleavages INT);
+                                     INSERT INTO FilteredPeptideInstance SELECT pi.*
+                                     FROM FilteredPeptide pep
+                                     JOIN PeptideInstance pi ON pep.Id = pi.Peptide
+                                     JOIN FilteredProtein pro ON pi.Protein = pro.Id;
+                                     CREATE INDEX FilteredPeptideInstance_Protein ON FilteredPeptideInstance (Protein);
+                                     CREATE INDEX FilteredPeptideInstance_Peptide ON FilteredPeptideInstance (Peptide);
+                                     CREATE INDEX FilteredPeptideInstance_PeptideProtein ON FilteredPeptideInstance (Peptide, Protein);
+                                     CREATE UNIQUE INDEX FilteredPeptideInstance_ProteinOffsetLength ON FilteredPeptideInstance (Protein, Offset, Length);"
                                   ).ExecuteUpdate();
             #endregion
 
             #region Rename main tables to Unfiltered*
-            session.CreateSQLQuery("ALTER TABLE Proteins RENAME TO UnfilteredProteins").ExecuteUpdate();
-            session.CreateSQLQuery("ALTER TABLE PeptideInstances RENAME TO UnfilteredPeptideInstances").ExecuteUpdate();
-            session.CreateSQLQuery("ALTER TABLE Peptides RENAME TO UnfilteredPeptides").ExecuteUpdate();
-            session.CreateSQLQuery("ALTER TABLE PeptideSpectrumMatches RENAME TO UnfilteredPeptideSpectrumMatches").ExecuteUpdate();
+            session.CreateSQLQuery("ALTER TABLE Protein RENAME TO UnfilteredProtein").ExecuteUpdate();
+            session.CreateSQLQuery("ALTER TABLE PeptideInstance RENAME TO UnfilteredPeptideInstance").ExecuteUpdate();
+            session.CreateSQLQuery("ALTER TABLE Peptide RENAME TO UnfilteredPeptide").ExecuteUpdate();
+            session.CreateSQLQuery("ALTER TABLE PeptideSpectrumMatch RENAME TO UnfilteredPeptideSpectrumMatch").ExecuteUpdate();
             #endregion
 
             #region Rename Filtered* tables to main tables
-            session.CreateSQLQuery("ALTER TABLE FilteredProteins RENAME TO Proteins").ExecuteUpdate();
-            session.CreateSQLQuery("ALTER TABLE FilteredPeptideInstances RENAME TO PeptideInstances").ExecuteUpdate();
-            session.CreateSQLQuery("ALTER TABLE FilteredPeptides RENAME TO Peptides").ExecuteUpdate();
-            session.CreateSQLQuery("ALTER TABLE FilteredPeptideSpectrumMatches RENAME TO PeptideSpectrumMatches").ExecuteUpdate();
+            session.CreateSQLQuery("ALTER TABLE FilteredProtein RENAME TO Protein").ExecuteUpdate();
+            session.CreateSQLQuery("ALTER TABLE FilteredPeptideInstance RENAME TO PeptideInstance").ExecuteUpdate();
+            session.CreateSQLQuery("ALTER TABLE FilteredPeptide RENAME TO Peptide").ExecuteUpdate();
+            session.CreateSQLQuery("ALTER TABLE FilteredPeptideSpectrumMatch RENAME TO PeptideSpectrumMatch").ExecuteUpdate();
             #endregion
 
-            AssembleProteinGroups(session);
-            ApplyAdditionalPeptidesFilter(session);
-            AssembleClusters(session);
+            if (AssembleProteinGroups(session)) return;
+            if (ApplyAdditionalPeptidesFilter(session)) return;
+            if (AssembleClusters(session)) return;
 
             #region Create FilteringCriteria table to store the basic filter parameters
             try { session.CreateSQLQuery("DROP TABLE FilteringCriteria").ExecuteUpdate(); }
@@ -311,52 +367,61 @@ namespace IDPicker.DataModel
                               MinimumSpectraPerProtein,
                               MinimumAdditionalPeptidesPerProtein)).ExecuteUpdate();
             #endregion
+
+            if (useScopedTransaction)
+                session.Transaction.Commit();
         }
 
         /// <summary>
         /// Set ProteinGroups column (the groups change depending on the basic filters applied)
         /// </summary>
-        void AssembleProteinGroups(NHibernate.ISession session)
+        bool AssembleProteinGroups(NHibernate.ISession session)
         {
-            var proteinGroupQuery = session.CreateSQLQuery("SELECT GROUP_CONCAT(DISTINCT pi.Peptide), pi.Protein " +
-                                                           "FROM PeptideInstances pi " +
-                                                           "GROUP BY pi.Protein " +
-                                                           "ORDER BY pi.Protein");
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Assembling protein groups...", 7, 11, null)))
+                return true;
 
-            var cmd = session.Connection.CreateCommand();
-            cmd.CommandText = "UPDATE Proteins SET ProteinGroup = ? WHERE Id = ?";
-            var parameters = new List<System.Data.IDbDataParameter>();
-            for (int i = 0; i < 2; ++i)
-            {
-                parameters.Add(cmd.CreateParameter());
-                cmd.Parameters.Add(parameters[i]);
-            }
-            cmd.Prepare();
-            foreach (object[] itr in proteinGroupQuery.List<object[]>())
-            {
-                parameters[0].Value = (string) itr[0];
-                parameters[1].Value = (int) itr[1];
-                cmd.ExecuteNonQuery();
-            }
+            session.CreateSQLQuery(@"CREATE TEMP TABLE ProteinGroups AS
+                                     SELECT pro.Id AS ProteinId, GROUP_CONCAT(DISTINCT pi.Peptide) AS ProteinGroup
+                                     FROM PeptideInstance pi
+                                     JOIN Protein pro ON pi.Protein = pro.Id
+                                     GROUP BY pi.Protein;
+
+                                     CREATE TEMP TABLE TempProtein AS
+                                     SELECT pg.ProteinId, pro.Accession, pro.Cluster, pg2.ProteinGroupId
+                                     FROM ProteinGroups pg
+                                     JOIN ( 
+                                           SELECT pg.ProteinGroup, MIN(ProteinId) AS ProteinGroupId
+                                           FROM ProteinGroups pg
+                                           GROUP BY pg.ProteinGroup
+                                          ) pg2 ON pg.ProteinGroup = pg2.ProteinGroup
+                                     JOIN Protein pro ON pg.ProteinId = pro.Id;
+
+                                     DELETE FROM Protein;
+                                     INSERT INTO Protein SELECT * FROM TempProtein;
+                                     CREATE INDEX Protein_ProteinGroup ON Protein (ProteinGroup);
+                                     DROP TABLE ProteinGroups;
+                                     DROP TABLE TempProtein;
+                                    ").ExecuteUpdate();
+            session.Clear();
+
+            return false;
         }
 
         /// <summary>
         /// Calculate additional peptides per protein and filter out proteins that don't meet the minimum
         /// </summary>
-        void ApplyAdditionalPeptidesFilter(NHibernate.ISession session)
+        bool ApplyAdditionalPeptidesFilter(NHibernate.ISession session)
         {
             if (MinimumAdditionalPeptidesPerProtein == 0)
-                return;
+                return false;
+
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Calculating additional peptide counts...", 8, 11, null)))
+                return true;
 
             Map<long, long> additionalPeptidesByProteinId = CalculateAdditionalPeptides(session);
 
             try { session.CreateSQLQuery("DROP TABLE AdditionalMatches").ExecuteUpdate(); } catch { }
             session.CreateSQLQuery("CREATE TABLE AdditionalMatches (ProteinId INTEGER PRIMARY KEY, AdditionalMatches INT)").ExecuteUpdate();
-
-            // temporarily disable stdout SQL logging
-            var backup = System.Console.Out;
-            var nullOut = new System.IO.StringWriter();
-            System.Console.SetOut(nullOut);
 
             var cmd = session.Connection.CreateCommand();
             cmd.CommandText = "INSERT INTO AdditionalMatches VALUES (?, ?)";
@@ -374,15 +439,15 @@ namespace IDPicker.DataModel
                 cmd.ExecuteNonQuery();
             }
 
-            // restore stdout
-            System.Console.SetOut(backup);
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering by additional peptide count...", 9, 11, null)))
+                return true;
 
             var additionalPeptidesDeleteCommand = new StringBuilder();
 
             // delete proteins that don't meet the additional matches filter
-            additionalPeptidesDeleteCommand.AppendFormat("DELETE FROM Proteins " +
+            additionalPeptidesDeleteCommand.AppendFormat("DELETE FROM Protein " +
                                                          "WHERE Id IN (SELECT pro.Id " +
-                                                         "             FROM Proteins pro " +
+                                                         "             FROM Protein pro " +
                                                          "             JOIN AdditionalMatches am ON pro.Id = am.ProteinId " +
                                                          "             WHERE am.AdditionalMatches < {0});",
                                                          MinimumAdditionalPeptidesPerProtein);
@@ -391,25 +456,31 @@ namespace IDPicker.DataModel
             // delete peptide instances whose protein is gone
             // delete peptides that no longer have any peptide instances
             // delete PSMs whose peptide is gone
-            // delete spectra that no longer have any PSMs
-            additionalPeptidesDeleteCommand.Append("DELETE FROM PeptideInstances WHERE Protein NOT IN (SELECT Id FROM Proteins);");
-            additionalPeptidesDeleteCommand.Append("DELETE FROM Peptides WHERE Id NOT IN (SELECT Peptide FROM PeptideInstances);");
-            additionalPeptidesDeleteCommand.Append("DELETE FROM PeptideSpectrumMatches WHERE Peptide NOT IN (SELECT Id FROM Peptides);");
-            //additionalPeptidesDeleteCommand.Append("DELETE FROM Spectra WHERE Id NOT IN (SELECT Spectrum FROM PeptideSpectrumMatches);");
+            additionalPeptidesDeleteCommand.Append("DELETE FROM PeptideInstance WHERE Protein NOT IN (SELECT Id FROM Protein);");
+            additionalPeptidesDeleteCommand.Append("DELETE FROM Peptide WHERE Id NOT IN (SELECT Peptide FROM PeptideInstance);");
+            additionalPeptidesDeleteCommand.Append("DELETE FROM PeptideSpectrumMatch WHERE Peptide NOT IN (SELECT Id FROM Peptide);");
             #endregion
 
             session.CreateSQLQuery(additionalPeptidesDeleteCommand.ToString()).ExecuteUpdate();
+
+            return false;
         }
 
         /// <summary>
         /// Calculate clusters (connected components) for proteins
         /// </summary>
-        void AssembleClusters (NHibernate.ISession session)
+        bool AssembleClusters (NHibernate.ISession session)
         {
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Calculating protein clusters...", 10, 11, null)))
+                return true;
+
             Map<long, long> clusterByProteinId = calculateProteinClusters(session);
 
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Assigning proteins to clusters...", 11, 11, null)))
+                return true;
+
             var cmd = session.Connection.CreateCommand();
-            cmd.CommandText = "UPDATE Proteins SET Cluster = ? WHERE Id = ?";
+            cmd.CommandText = "UPDATE Protein SET Cluster = ? WHERE Id = ?";
             var parameters = new List<System.Data.IDbDataParameter>();
             for (int i = 0; i < 2; ++i)
             {
@@ -423,6 +494,9 @@ namespace IDPicker.DataModel
                 parameters[1].Value = itr.Key;
                 cmd.ExecuteNonQuery();
             }
+            cmd.ExecuteNonQuery("CREATE INDEX Protein_Cluster ON Protein (Cluster)");
+
+            return false;
         }
 
         #region Definitions for common HQL strings
@@ -467,6 +541,35 @@ namespace IDPicker.DataModel
         public static readonly string PeptideSpectrumMatchToSpectrumSourceGroupLink = PeptideSpectrumMatchToSpectrumSource + ";ss.Groups ssgl";
         public static readonly string PeptideSpectrumMatchToSpectrumSourceGroup = PeptideSpectrumMatchToSpectrumSourceGroupLink + ";ssgl.Group";
         #endregion
+
+        public System.Linq.IQueryable<PeptideSpectrumMatch> GetFilteredPeptideSpectrumMatches (NHibernate.ISession session)
+        {
+            /*
+            public DistinctPeptideFormat DistinctPeptideKey { get; set; }
+            public SpectrumSourceGroup SpectrumSourceGroup { get; set; }
+            public SpectrumSource SpectrumSource { get; set; }*/
+
+            var predicate = System.Linq.PredicateBuilder.True<PeptideSpectrumMatch>();
+
+            if (Cluster != null)
+                predicate.And(psm => psm.Peptide.Instances.Count(pi => pi.Protein.Cluster == Cluster) > 0);
+            if (Peptide != null)
+                predicate.And(psm => psm.Peptide == Peptide);
+            if (Protein != null)
+                predicate.And(psm => psm.Peptide.Instances.Count(pi => pi.Protein == Protein) > 0);
+            if (Modifications.Count > 0)
+            {
+                var modsPredicate = System.Linq.PredicateBuilder.False<PeptideSpectrumMatch>();
+                foreach (var mod in Modifications)
+                    modsPredicate.Or(psm => psm.Modifications.Count(pm => pm.Modification == mod) > 0);
+                predicate.And(modsPredicate);
+            }
+            if (ModifiedSite != null)
+                predicate.And(psm => psm.Modifications.Count(pm => pm.Site == ModifiedSite) > 0);
+            if (Spectrum != null)
+                predicate.And(psm => psm.Spectrum == Spectrum);
+            return from psm in session.Query<PeptideSpectrumMatch>().Where(predicate) select psm;
+        }
 
         public string GetFilteredQueryString (string fromTable, params string[] joinTables)
         {
@@ -670,27 +773,31 @@ namespace IDPicker.DataModel
             var sharedResultsByProteinId = new Map<long, long>();
 
             try { session.CreateSQLQuery("DROP TABLE SpectrumResults").ExecuteUpdate(); } catch { }
-            session.CreateSQLQuery("CREATE TEMP TABLE SpectrumResults AS " +
+            session.CreateSQLQuery("CREATE TABLE SpectrumResults AS " +
                                    "SELECT psm.Spectrum AS Spectrum, GROUP_CONCAT(DISTINCT psm.Peptide) AS Peptides, COUNT(DISTINCT pi.Protein) AS SharedResultCount " +
-                                   "FROM PeptideSpectrumMatches psm " +
-                                   "JOIN PeptideInstances pi ON psm.Peptide = pi.Peptide " +
+                                   "FROM PeptideSpectrumMatch psm " +
+                                   "JOIN PeptideInstance pi ON psm.Peptide = pi.Peptide " +
                                    "GROUP BY psm.Spectrum").ExecuteUpdate();
 
             var queryByProtein = session.CreateSQLQuery("SELECT pro.Id, pro.ProteinGroup, SUM(sr.SharedResultCount) " +
-                                               "FROM Proteins pro " +
-                                               "JOIN (SELECT DISTINCT Peptide, Protein FROM PeptideInstances) pi ON pro.Id=pi.Protein " +
-                                               "JOIN (SELECT * FROM PeptideSpectrumMatches GROUP BY Peptide) psm ON pi.Peptide=psm.Peptide " +
-                                               "JOIN SpectrumResults sr ON psm.Spectrum = sr.Spectrum " +
-                                               "GROUP BY pro.Id");
+                                                        "FROM Protein pro " +
+                                                        "JOIN PeptideInstance pi ON pro.Id = pi.Protein " +
+                                                        "JOIN PeptideSpectrumMatch psm ON pi.Peptide = psm.Peptide " +
+                                                        "JOIN SpectrumResults sr ON psm.Spectrum = sr.Spectrum " +
+                                                        "WHERE pi.Id = (SELECT Id FROM PeptideInstance WHERE Peptide = pi.Peptide AND Protein = pi.Protein LIMIT 1) " +
+                                                        "  AND psm.Id = (SELECT Id FROM PeptideSpectrumMatch WHERE Peptide = pi.Peptide LIMIT 1) " +
+                                                        "GROUP BY pro.Id");
 
             // For each protein, get the list of peptides evidencing it;
             // an ambiguous spectrum will show up as a nested list of peptides
             var queryByResult = session.CreateSQLQuery("SELECT pro.Id, GROUP_CONCAT(sr.Peptides) " +
-                                               "FROM Proteins pro " +
-                                               "JOIN (SELECT DISTINCT Peptide, Protein FROM PeptideInstances) pi ON pro.Id=pi.Protein " +
-                                               "JOIN (SELECT * FROM PeptideSpectrumMatches GROUP BY Peptide) psm ON pi.Peptide=psm.Peptide " +
-                                               "JOIN SpectrumResults sr ON psm.Spectrum = sr.Spectrum " +
-                                               "GROUP BY pro.Id, sr.Peptides");
+                                                       "FROM Protein pro " +
+                                                       "JOIN PeptideInstance pi ON pro.Id = pi.Protein " +
+                                                       "JOIN PeptideSpectrumMatch psm ON pi.Peptide = psm.Peptide " +
+                                                       "JOIN SpectrumResults sr ON psm.Spectrum = sr.Spectrum " +
+                                                       "WHERE pi.Id = (SELECT Id FROM PeptideInstance WHERE Peptide = pi.Peptide AND Protein = pi.Protein LIMIT 1) " +
+                                                       "  AND psm.Id = (SELECT Id FROM PeptideSpectrumMatch WHERE Peptide = pi.Peptide LIMIT 1) " +
+                                                       "GROUP BY pro.Id, sr.Peptides");
 
             // keep track of the proteins that explain the most results
             Set<long> maxProteinIds = new Set<long>();

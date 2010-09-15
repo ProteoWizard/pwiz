@@ -28,7 +28,9 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using System.Threading;
 using DigitalRune.Windows.Docking;
+using IDPicker.DataModel;
 
 namespace IDPicker.Forms
 {
@@ -43,6 +45,8 @@ namespace IDPicker.Forms
             InitializeComponent();
 
             HideOnClose = true;
+
+            Text = TabText = "Modification View";
 
             dataGridView.CellDoubleClick += new DataGridViewCellEventHandler(dataGridView_CellDoubleClick);
         }
@@ -95,8 +99,11 @@ namespace IDPicker.Forms
         private NHibernate.ISession session;
         private DataFilter dataFilter, basicDataFilter;
         private Map<string, char> siteColumnNameToSite;
-        private DataTable basicDeltaMassTable;
-        private int basicTotalModifications;
+        private DataTable deltaMassTable, basicDeltaMassTable;
+        private int totalModifications, basicTotalModifications;
+
+        // TODO: support multiple selected cells
+        Pair<int, string> oldSelectedAddress = null;
 
         public string GetSiteColumnName (char site)
         {
@@ -159,45 +166,76 @@ namespace IDPicker.Forms
             this.session = session;
             this.dataFilter = new DataFilter(dataFilter) { Modifications = new List<DataModel.Modification>(), ModifiedSite = null };
 
-            var query = session.CreateQuery("SELECT pm.Site, pm.Modification, COUNT(DISTINCT psm.Spectrum) " +
-                                            this.dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
-                                                                                   DataFilter.PeptideSpectrumMatchToPeptideModification) +
-                                            "GROUP BY pm.Site, ROUND(pm.Modification.MonoMassDelta) " +
-                                            "ORDER BY ROUND(pm.Modification.MonoMassDelta)");
-
-            DataTable deltaMassTable;
-            int totalModifications = 0;
-
-            if (dataFilter.IsBasicFilter || dataFilter.Modifications.Count > 0 || dataFilter.ModifiedSite != null)
-            {
-                if (basicDataFilter == null || (dataFilter.IsBasicFilter && dataFilter != basicDataFilter))
-                {
-                    basicDataFilter = new DataFilter(this.dataFilter);
-                    basicDeltaMassTable = createDeltaMassTableFromQuery(query, out basicTotalModifications, out siteColumnNameToSite);
-                }
-
-                deltaMassTable = basicDeltaMassTable;
-                totalModifications = basicTotalModifications;
-            }
-            else
-            {
-                Map<string, char> dummy;
-                deltaMassTable = createDeltaMassTableFromQuery(query, out totalModifications, out dummy);
-            }
-
-            Text = TabText = String.Format("Modification View: {0} modifications", totalModifications);
-
-            // TODO: support multiple selected cells
-            Pair<int, string> oldSelectedAddress = null;
             if (dataGridView.SelectedCells.Count > 0)
                 oldSelectedAddress = new Pair<int, string>()
-                                    {
-                                        first = (int) dataGridView.SelectedCells[0].OwningRow.Cells[0].Value,
-                                        second = dataGridView.SelectedCells[0].OwningColumn.Name
-                                    };
+                {
+                    first = (int) dataGridView.SelectedCells[0].OwningRow.Cells[0].Value,
+                    second = dataGridView.SelectedCells[0].OwningColumn.Name
+                };
+
+            ClearData();
+
+            Text = TabText = "Loading modification view...";
+
+            var workerThread = new BackgroundWorker()
+            {
+                WorkerReportsProgress = true,
+                WorkerSupportsCancellation = true
+            };
+
+            workerThread.DoWork += new DoWorkEventHandler(setData);
+            workerThread.RunWorkerCompleted += new RunWorkerCompletedEventHandler(renderData);
+            workerThread.RunWorkerAsync();
+        }
+
+        public void ClearData ()
+        {
+            Text = TabText = "Modification View";
 
             dataGridView.DataSource = null;
             dataGridView.Columns.Clear();
+            dataGridView.Refresh();
+            Refresh();
+        }
+
+        void setData (object sender, DoWorkEventArgs e)
+        {
+            lock (session)
+            try
+            {
+                var query = session.CreateQuery("SELECT pm.Site, pm.Modification, COUNT(DISTINCT psm.Spectrum) " +
+                                                this.dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
+                                                                                       DataFilter.PeptideSpectrumMatchToPeptideModification) +
+                                                "GROUP BY pm.Site, ROUND(pm.Modification.MonoMassDelta) " +
+                                                "ORDER BY ROUND(pm.Modification.MonoMassDelta)");
+                query.SetReadOnly(true);
+                if (dataFilter.IsBasicFilter || dataFilter.Modifications.Count > 0 || dataFilter.ModifiedSite != null)
+                {
+                    if (basicDataFilter == null || (dataFilter.IsBasicFilter && dataFilter != basicDataFilter))
+                    {
+                        basicDataFilter = new DataFilter(this.dataFilter);
+                        basicDeltaMassTable = createDeltaMassTableFromQuery(query, out basicTotalModifications, out siteColumnNameToSite);
+                    }
+
+                    deltaMassTable = basicDeltaMassTable;
+                    totalModifications = basicTotalModifications;
+                }
+                else
+                {
+                    Map<string, char> dummy;
+                    deltaMassTable = createDeltaMassTableFromQuery(query, out totalModifications, out dummy);
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        void renderData (object sender, RunWorkerCompletedEventArgs e)
+        {
+            Text = TabText = String.Format("Modification View: {0} modifications", totalModifications);           
+
             dataGridView.DataSource = deltaMassTable;
 
             if (deltaMassTable.Rows.Count > 0)
@@ -217,7 +255,7 @@ namespace IDPicker.Forms
 
             dataGridView.Refresh();
         }
-        
+
         /// <summary>
         /// Highlights cells with different colors based on their values. 
         /// TODO: User-configurable.

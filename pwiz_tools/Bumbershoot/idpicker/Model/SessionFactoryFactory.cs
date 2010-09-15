@@ -24,6 +24,8 @@ using System.Data.SQLite;
 using System.Reflection;
 using System.Collections;
 using System.Text;
+using System.Linq;
+using System.Data.Linq;
 using NHibernate;
 using NHibernate.SqlCommand;
 using NHibernate.Cfg;
@@ -79,6 +81,7 @@ namespace IDPicker.DataModel
         }
         #endregion
 
+        static object mutex = new object();
         public static ISessionFactory CreateSessionFactory(string path, bool createSchema, bool showSQL)
         {
             bool pooling = path == ":memory:";
@@ -95,19 +98,137 @@ namespace IDPicker.DataModel
                 .SetProperty("connection.release_mode", "on_close")
                 ;
 
-            if (createSchema)
-            {
-                configuration.SetProperty("hbm2ddl.auto", "create");
-            }
-
             ConfigureMappings(configuration);
-            ISessionFactory sessionFactory = configuration.BuildSessionFactory();
+
+            ISessionFactory sessionFactory = null;
+            lock(mutex)
+                sessionFactory = configuration.BuildSessionFactory();
+
+            sessionFactory.OpenStatelessSession().CreateSQLQuery(@"PRAGMA default_cache_size=500000;
+                                                                   PRAGMA temp_store=MEMORY").ExecuteUpdate();
+
+            if(createSchema)
+                CreateFile(path);
+
             return sessionFactory;
         }
 
         public static Configuration ConfigureMappings(Configuration configuration)
         {
             return configuration.AddAssembly(typeof(SessionFactoryFactory).Assembly);
+        }
+
+        static IStatelessSession newSession;
+        static string[] createSql;
+        public static System.Data.IDbConnection CreateFile (string path)
+        {
+            lock (mutex)
+                if (newSession == null)
+                {
+                    Configuration configuration = new Configuration()
+                        .SetProperty("dialect", typeof(CustomSQLiteDialect).AssemblyQualifiedName)
+                        .SetProperty("proxyfactory.factory_class", typeof(NHibernate.ByteCode.Castle.ProxyFactoryFactory).AssemblyQualifiedName)
+                        .SetProperty("connection.connection_string", "Data Source=:memory:;Version=3;")
+                        .SetProperty("connection.driver_class", typeof(NHibernate.Driver.SQLite20Driver).AssemblyQualifiedName)
+                        .SetProperty("connection.provider", typeof(NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName)
+                        .SetProperty("connection.release_mode", "on_close")
+                        ;
+
+                    ConfigureMappings(configuration);
+
+                    var sessionFactory = configuration.BuildSessionFactory();
+                    newSession = sessionFactory.OpenStatelessSession();
+                    createSql = configuration.GenerateSchemaCreationScript(Dialect.GetDialect(configuration.Properties));
+                }
+
+            bool pooling = false;// path == ":memory:";
+            var conn = new SQLiteConnection(String.Format("Data Source={0};Version=3;{1}", path, (pooling ? "Pooling=True;Max Pool Size=1;" : "")));
+            conn.Open();
+
+            var journal_mode = conn.ExecuteQuery("PRAGMA journal_mode").Single()[0];
+            var synchronous = conn.ExecuteQuery("PRAGMA synchronous").Single()[0];
+            conn.ExecuteNonQuery(@"PRAGMA journal_mode=OFF;
+                                   PRAGMA synchronous=OFF;
+                                   PRAGMA automatic_indexing=OFF;
+                                   PRAGMA default_cache_size=500000;
+                                   PRAGMA temp_store=MEMORY");
+
+            var transaction = conn.BeginTransaction();
+            var cmd = conn.CreateCommand();
+            foreach (string sql in createSql)
+                cmd.ExecuteNonQuery(sql);
+
+            cmd.ExecuteNonQuery(@"CREATE TABLE PeptideSpectrumMatchScoreNames (Id INTEGER PRIMARY KEY, Name TEXT UNIQUE NOT NULL);
+                                  CREATE TABLE IntegerSet (Value INTEGER PRIMARY KEY);");
+            CreateIndexes(conn);
+            transaction.Commit();
+
+            conn.ExecuteNonQuery("PRAGMA journal_mode=" + journal_mode + ";" +
+                                 "PRAGMA synchronous=" + synchronous);
+
+            return conn;
+        }
+
+        public static bool IsValidFile (string path)
+        {
+            try
+            {
+                using (var conn = new SQLiteConnection(String.Format("Data Source={0};Version=3", path)))
+                {
+                    conn.Open();
+
+                    // in a valid file, this will throw "already exists"
+                    conn.ExecuteNonQuery("CREATE TABLE IntegerSet (Value INTEGER PRIMARY KEY)");
+                }
+            }
+            catch (Exception e)
+            {
+                if (e.Message.Contains("already exists"))
+                    return true;
+            }
+
+            // creating the table or any other exception indicates an invalid file
+            return false;
+        }
+
+        public static void CreateIndexes(System.Data.IDbConnection conn)
+        {
+            conn.ExecuteNonQuery(@"CREATE UNIQUE INDEX Protein_Accession ON Protein (Accession);
+                                   CREATE INDEX PeptideInstance_Peptide ON PeptideInstance (Peptide);
+                                   CREATE INDEX PeptideInstance_Protein ON PeptideInstance (Protein);
+                                   CREATE INDEX PeptideInstance_PeptideProtein ON PeptideInstance (Peptide, Protein);
+                                   CREATE UNIQUE INDEX PeptideInstance_ProteinOffsetLength ON PeptideInstance (Protein, Offset, Length);
+                                   CREATE UNIQUE INDEX SpectrumSourceGroupLink_SourceGroup ON SpectrumSourceGroupLink (Source, Group_);
+                                   CREATE UNIQUE INDEX Spectrum_SourceIndex ON Spectrum (Source, Index_);
+                                   CREATE UNIQUE INDEX Spectrum_SourceNativeID ON Spectrum (Source, NativeID);
+                                   CREATE INDEX PeptideSpectrumMatch_Analysis ON PeptideSpectrumMatch (Analysis);
+                                   CREATE INDEX PeptideSpectrumMatch_Peptide ON PeptideSpectrumMatch (Peptide);
+                                   CREATE INDEX PeptideSpectrumMatch_Spectrum ON PeptideSpectrumMatch (Spectrum);
+                                   CREATE INDEX PeptideSpectrumMatch_QValue ON PeptideSpectrumMatch (QValue);
+                                   CREATE INDEX PeptideSpectrumMatch_Rank ON PeptideSpectrumMatch (Rank);
+                                   CREATE INDEX PeptideModification_PeptideSpectrumMatch ON PeptideModification (PeptideSpectrumMatch);
+                                   CREATE INDEX PeptideModification_Modification ON PeptideModification (Modification);
+                                  ");
+        }
+
+        public static void DropIndexes (System.Data.IDbConnection conn)
+        {
+            conn.ExecuteNonQuery(@"DROP INDEX Protein_Accession;
+                                   DROP INDEX PeptideInstance_Peptide;
+                                   DROP INDEX PeptideInstance_Protein;
+                                   DROP INDEX PeptideInstance_PeptideProtein;
+                                   DROP INDEX PeptideInstance_ProteinOffsetLength;
+                                   DROP INDEX SpectrumSourceGroupLink_SourceGroup;
+                                   DROP INDEX Spectrum_SourceIndex;
+                                   DROP INDEX Spectrum_SourceNativeID;
+                                   DROP INDEX PeptideSpectrumMatch_Analysis;
+                                   DROP INDEX PeptideSpectrumMatch_Peptide;
+                                   DROP INDEX PeptideSpectrumMatch_Spectrum;
+                                   DROP INDEX PeptideSpectrumMatch_QValue;
+                                   DROP INDEX PeptideSpectrumMatch_Rank;
+                                   DROP INDEX PeptideModification_PeptideSpectrumMatch;
+                                   DROP INDEX PeptideModification_Modification;
+                                  ");
         }
     }
 }

@@ -26,6 +26,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using IDPicker.DataModel;
+using NHibernate;
+using NHibernate.Linq;
 
 namespace Test
 {
@@ -93,8 +95,9 @@ namespace Test
             var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testStaticQonversion.idpDB", true, false);
             var session = sessionFactory.OpenSession();
 
-            session.Transaction.Begin();
             TestModel.CreateTestProteins(session, testProteinSequences);
+
+            session.Clear();
 
             // add decoy prefix to the second half of the proteins
             for (long i = testProteinSequences.LongLength / 2; i < testProteinSequences.LongLength; ++i)
@@ -168,7 +171,14 @@ namespace Test
 
             TestModel.CreateTestData(session, testPsmSummaryWithoutScores);
 
-            session.Transaction.Commit();
+            // force all peptide instances to fully specific
+            foreach (PeptideInstance pi in session.Query<PeptideInstance>())
+            {
+                pi.NTerminusIsSpecific = pi.CTerminusIsSpecific = true;
+                session.Update(pi);
+            }
+
+            session.Flush();
             session.Close(); // close the connection
             #endregion
 

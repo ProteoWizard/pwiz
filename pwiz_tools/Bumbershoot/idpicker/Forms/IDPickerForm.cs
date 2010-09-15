@@ -29,6 +29,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.IO;
+using System.Threading;
 
 using IDPicker.Forms;
 using IDPicker.Controls;
@@ -52,6 +53,8 @@ namespace IDPicker
         SpectrumTableForm spectrumTableForm;
         ModificationTableForm modificationTableForm;
 
+        LogForm logForm;
+
         NHibernate.ISession session;
 
         Manager manager;
@@ -63,6 +66,10 @@ namespace IDPicker
             InitializeComponent();
 
             manager = new Manager(dockPanel);
+
+            logForm = new LogForm();
+            Console.SetOut(logForm.LogWriter);
+            logForm.Show(dockPanel, DockState.DockBottomAutoHide);
 
             Shown += new EventHandler(Form1_Load);
 
@@ -101,10 +108,10 @@ namespace IDPicker
         {
             var openFileDialog = new OpenFileDialog()
             {
-                Filter = "IDPickerForm Files|*.idpDB;*.idpXML;*.pepXML;*.pep.xml|" + 
+                Filter = "IDPicker Files|*.idpDB;*.idpXML;*.pepXML;*.pep.xml|" + 
                          "PepXML Files|*.pepXML;*.pep.xml|" +
-                         "IDPickerForm XML|*.idpXML|" +
-                         "IDPickerForm DB|*.idpDB|" +
+                         "IDPicker XML|*.idpXML|" +
+                         "IDPicker DB|*.idpDB|" +
                          "Any File|*.*",
                 SupportMultiDottedExtensions = true,
                 AddExtension = true,
@@ -118,7 +125,6 @@ namespace IDPicker
             }
         }
 
-        string lastSourcePathLocation;
         void spectrumTableForm_SpectrumViewVisualize (object sender, SpectrumViewVisualizeEventArgs e)
         {
             var psm = e.PeptideSpectrumMatch;
@@ -133,9 +139,10 @@ namespace IDPicker
             string sourcePath;
             if (spectrum.Source.Metadata != null)
             {
-                sourcePath = Path.GetTempFileName() + ".mzML.gz";
-                pwiz.CLI.msdata.MSDataFile.write(spectrum.Source.Metadata, sourcePath,
-                                                 new pwiz.CLI.msdata.MSDataFile.WriteConfig() { gzipped = true });
+                // accessing the Metadata property creates a temporary mzML file;
+                // here we access the path to that file
+                var tmpSourceFile = spectrum.Source.Metadata.fileDescription.sourceFiles.Last();
+                sourcePath = Path.Combine(new Uri(tmpSourceFile.location).LocalPath, tmpSourceFile.name);
             }
             else
             {
@@ -148,7 +155,7 @@ namespace IDPicker
                     try
                     {
                         // try the last looked-in path
-                        sourcePath = Util.FindSourceInSearchPath(spectrum.Source.Name, lastSourcePathLocation);
+                        sourcePath = Util.FindSourceInSearchPath(spectrum.Source.Name, Properties.Settings.Default.LastSpectrumSourceDirectory);
                     }
                     catch
                     {
@@ -161,7 +168,8 @@ namespace IDPicker
 
                         if (File.Exists(eventArgs.SourcePath) || Directory.Exists(eventArgs.SourcePath))
                         {
-                            lastSourcePathLocation = Path.GetDirectoryName(eventArgs.SourcePath);
+                            Properties.Settings.Default.LastSpectrumSourceDirectory = Path.GetDirectoryName(eventArgs.SourcePath);
+                            Properties.Settings.Default.Save();
                             sourcePath = eventArgs.SourcePath;
                         }
                         else
@@ -185,7 +193,7 @@ namespace IDPicker
                 if (value != dataFilter.MaximumQValue)
                 {
                     dataFilter.MaximumQValue = value;
-                    basicFilterChanged();
+                    applyBasicFilter();
                 }
         }
 
@@ -196,7 +204,7 @@ namespace IDPicker
                 if (value != dataFilter.MinimumDistinctPeptidesPerProtein)
                 {
                     dataFilter.MinimumDistinctPeptidesPerProtein = value;
-                    basicFilterChanged();
+                    applyBasicFilter();
                 }
         }
 
@@ -207,7 +215,7 @@ namespace IDPicker
                 if (value != dataFilter.MinimumSpectraPerProtein)
                 {
                     dataFilter.MinimumSpectraPerProtein = value;
-                    basicFilterChanged();
+                    applyBasicFilter();
                 }
         }
 
@@ -218,13 +226,49 @@ namespace IDPicker
                 if (value != dataFilter.MinimumAdditionalPeptidesPerProtein)
                 {
                     dataFilter.MinimumAdditionalPeptidesPerProtein = value;
-                    basicFilterChanged();
+                    applyBasicFilter();
                 }
         }
 
-        void basicFilterChanged ()
+        SimpleProgressForm applyBasicFilterProgressForm;
+        void applyBasicFilter ()
         {
-            dataFilter.ApplyBasicFilters(session);
+            clearData();
+
+            applyBasicFilterProgressForm = new SimpleProgressForm(this);
+            applyBasicFilterProgressForm.Text = "Applying basic filters...";
+            applyBasicFilterProgressForm.Show();
+            dataFilter.FilteringProgress += new EventHandler<DataFilter.FilteringProgressEventArgs>(applyBasicFilterProgressForm.UpdateProgress);
+
+            var workerThread = new BackgroundWorker()
+                                   {
+                                       WorkerReportsProgress = true,
+                                       WorkerSupportsCancellation = true
+                                   };
+
+            workerThread.DoWork += new DoWorkEventHandler(applyBasicFilterAsync);
+            workerThread.RunWorkerCompleted += new RunWorkerCompletedEventHandler(setData);
+            workerThread.RunWorkerAsync();
+        }
+
+        void applyBasicFilterAsync (object sender, DoWorkEventArgs e)
+        {
+            lock (session)
+                dataFilter.ApplyBasicFilters(session);
+        }
+
+        void clearData ()
+        {
+            proteinTableForm.ClearData();
+            peptideTableForm.ClearData();
+            spectrumTableForm.ClearData();
+            modificationTableForm.ClearData();
+        }
+
+        void setData (object sender, RunWorkerCompletedEventArgs e)
+        {
+            dataFilter.FilteringProgress -= new EventHandler<DataFilter.FilteringProgressEventArgs>(applyBasicFilterProgressForm.UpdateProgress);
+            applyBasicFilterProgressForm.Dispose();
 
             proteinTableForm.SetData(session, dataFilter);
             peptideTableForm.SetData(session, dataFilter);
@@ -339,24 +383,9 @@ namespace IDPicker
 
         void Form1_Load (object sender, EventArgs e)
         {
+            //var filepaths = Directory.GetFiles(@"c:\test\Goldenring_gastric", "*.pepXML", SearchOption.AllDirectories);
+            //OpenFiles(filepaths.Shuffle().ToList());//.Take(10).Union(filepaths.Skip(200).Take(10)).Union(filepaths.Skip(400).Take(10)).ToList());
             openToolStripButton_Click(this, EventArgs.Empty);
-
-            //Text = timer.Restart().TotalSeconds.ToString();
-
-            // get all ambiguous interpretations of a peptide:
-            // sequence is the same
-            // spectrum is the same
-            // rank is the same
-            // total mass of modifications is the same
-            // position of modifications is different
-
-
-            // PEPTIDE/PROTEIN FILTERING
-
-            // filter for QValue < 0.05
-            // filter for spectra with only one top-ranked PSM
-            // filter for peptides of at least 10 residues
-            // filter for proteins with at least 2 distinct peptides (different sequences or the same sequence with different modifications)
         }
 
         void databaseNotFoundHandler (object sender, Parser.DatabaseNotFoundEventArgs e)
@@ -364,9 +393,15 @@ namespace IDPicker
             if (String.IsNullOrEmpty(e.DatabasePath))
                 return;
 
+            if (InvokeRequired)
+            {
+                Invoke((MethodInvoker) delegate() { databaseNotFoundHandler(sender, e); });
+                return;
+            }
+
             var findDirectoryDialog = new FolderBrowserDialog()
             {
-                SelectedPath = @"h:\fasta",
+                SelectedPath = Properties.Settings.Default.LastProteinDatabaseDirectory,
                 ShowNewFolderButton = false,
                 Description = "Locate the directory containing the database \"" + e.DatabasePath + "\""
             };
@@ -376,6 +411,8 @@ namespace IDPicker
                 try
                 {
                     e.DatabasePath = Util.FindDatabaseInSearchPath(e.DatabasePath, findDirectoryDialog.SelectedPath);
+                    Properties.Settings.Default.LastProteinDatabaseDirectory = findDirectoryDialog.SelectedPath;
+                    Properties.Settings.Default.Save();
                     break;
                 }
                 catch
@@ -386,14 +423,37 @@ namespace IDPicker
         }
 
         bool promptForSourceNotFound = true;
+        bool promptToSkipSourceImport = false;
         void sourceNotFoundOnImportHandler (object sender, Parser.SourceNotFoundEventArgs e)
         {
             if (String.IsNullOrEmpty(e.SourcePath) || !promptForSourceNotFound)
                 return;
 
+            if (InvokeRequired)
+            {
+                Invoke(new MethodInvoker(() => sourceNotFoundOnImportHandler(sender, e)));
+                return;
+            }
+
+            if (promptToSkipSourceImport)
+            {
+                // for the second source not found, give user option to suppress this event
+                if (MessageBox.Show("Source \"" + e.SourcePath + "\" not found.\r\n\r\n" +
+                                    "Do you want to skip importing of missing sources for this session?",
+                                    "Skip missing sources",
+                                    MessageBoxButtons.YesNo,
+                                    MessageBoxIcon.Question) == DialogResult.Yes)
+                {
+                    promptForSourceNotFound = false;
+                    return;
+                }
+            }
+
+            promptToSkipSourceImport = true;
+
             var findDirectoryDialog = new FolderBrowserDialog()
             {
-                SelectedPath = @"C:\test\rpal-orbi-orbi\raw",
+                SelectedPath = Properties.Settings.Default.LastSpectrumSourceDirectory,
                 ShowNewFolderButton = false,
                 Description = "Locate the directory containing the source \"" + e.SourcePath + "\""
             };
@@ -403,6 +463,9 @@ namespace IDPicker
                 try
                 {
                     e.SourcePath = Util.FindSourceInSearchPath(e.SourcePath, findDirectoryDialog.SelectedPath);
+                    Properties.Settings.Default.LastSpectrumSourceDirectory = findDirectoryDialog.SelectedPath;
+                    Properties.Settings.Default.Save();
+                    promptToSkipSourceImport = false;
                     return;
                 }
                 catch
@@ -410,14 +473,6 @@ namespace IDPicker
                     // couldn't find the source in that directory; prompt user again
                 }
             }
-
-            // user cancelled; prompt them about whether to suppress this event
-            if (MessageBox.Show("Source \"" + e.SourcePath + "\" not found: skipping subset mzML import to database.\r\n\r\n" +
-                                "Do you want to skip all mzML imports for this session?",
-                                "Skipping subset mzML import",
-                                MessageBoxButtons.YesNo,
-                                MessageBoxIcon.Question) == DialogResult.Yes)
-                promptForSourceNotFound = false;
         }
 
         void sourceNotFoundOnVisualizeHandler (object sender, Parser.SourceNotFoundEventArgs e)
@@ -425,9 +480,15 @@ namespace IDPicker
             if (String.IsNullOrEmpty(e.SourcePath))
                 return;
 
+            if (InvokeRequired)
+            {
+                Invoke(new MethodInvoker(() => sourceNotFoundOnVisualizeHandler(sender, e)));
+                return;
+            }
+
             var findDirectoryDialog = new FolderBrowserDialog()
             {
-                SelectedPath = @"C:\test\rpal-orbi-orbi\raw",
+                SelectedPath = Properties.Settings.Default.LastSpectrumSourceDirectory,
                 ShowNewFolderButton = false,
                 Description = "Locate the directory containing the source \"" + e.SourcePath + "\""
             };
@@ -437,6 +498,8 @@ namespace IDPicker
                 try
                 {
                     e.SourcePath = Util.FindSourceInSearchPath(e.SourcePath, findDirectoryDialog.SelectedPath);
+                    Properties.Settings.Default.LastSpectrumSourceDirectory = findDirectoryDialog.SelectedPath;
+                    Properties.Settings.Default.Save();
                     return;
                 }
                 catch
@@ -451,8 +514,11 @@ namespace IDPicker
             private ProgressBar progressBar;
             public ProgressBar ProgressBar { get { return progressBar; } }
 
-            public SimpleProgressForm ()
+            private System.Diagnostics.Stopwatch timer;
+
+            public SimpleProgressForm (Form parent)
             {
+                Owner = parent;
                 SizeGripStyle = SizeGripStyle.Show;
                 ShowInTaskbar = true;
                 TopLevel = true;
@@ -460,7 +526,7 @@ namespace IDPicker
                 AutoSize = true;
                 AutoSizeMode = AutoSizeMode.GrowOnly;
                 FormBorderStyle = FormBorderStyle.SizableToolWindow;
-                StartPosition = FormStartPosition.CenterScreen;
+                StartPosition = FormStartPosition.CenterParent;
                 MaximizeBox = false;
                 MinimizeBox = true;
                 Size = new System.Drawing.Size(450, 50);
@@ -469,70 +535,181 @@ namespace IDPicker
                 progressBar.Dock = DockStyle.Fill;
                 progressBar.Style = ProgressBarStyle.Continuous;
                 progressBar.Minimum = 0;
-                progressBar.Maximum = 1;
+                progressBar.Maximum = 1000;
                 progressBar.Value = 0;
                 Controls.Add(progressBar);
+
+                timer = System.Diagnostics.Stopwatch.StartNew();
             }
 
             public void UpdateProgress (object sender, Parser.ParsingProgressEventArgs e)
             {
-                progressBar.Maximum = (int) e.TotalBytes;
-                progressBar.Value = (int) e.ParsedBytes;
-                e.Cancel = !Visible || IsDisposed;
+                if(InvokeRequired)
+                {
+                    BeginInvoke((MethodInvoker) (() => UpdateProgress(sender, e)));
+                    return;
+                }
+
+                if (e.ParsingException != null)
+                    throw new InvalidOperationException("parsing error", e.ParsingException);
+
+                if (e.ParsedBytes == 0)
+                    timer = System.Diagnostics.Stopwatch.StartNew();
+
+                progressBar.Maximum = 1000;
+                progressBar.Value = (int) Math.Round((double) e.ParsedBytes / e.TotalBytes * 1000.0);
+                double progressRate = timer.Elapsed.TotalSeconds > 0 ? e.ParsedBytes / timer.Elapsed.TotalSeconds : 0;
+                long bytesRemaining = e.TotalBytes - e.ParsedBytes;
+                TimeSpan timeRemaining = progressRate == 0 ? TimeSpan.Zero
+                                                           : TimeSpan.FromSeconds(bytesRemaining / progressRate);
+                Text = String.Format("{0} ({1}/{2}) - {3} per second, {4}h{5}m{6}s remaining",
+                                     e.ParsingStage,
+                                     Util.GetFileSizeByteString(e.ParsedBytes),
+                                     Util.GetFileSizeByteString(e.TotalBytes),
+                                     Util.GetFileSizeByteString((long) progressRate),
+                                     timeRemaining.Hours,
+                                     timeRemaining.Minutes,
+                                     timeRemaining.Seconds);
+
                 Application.DoEvents();
+
+                e.Cancel = !Visible || IsDisposed;
+            }
+
+            public void UpdateProgress (object sender, Merger.MergingProgressEventArgs e)
+            {
+                if (InvokeRequired)
+                {
+                    Invoke((MethodInvoker) (() => UpdateProgress(sender, e)));
+                    return;
+                }
+
+                progressBar.Maximum = 1000;
+                progressBar.Value = (int) Math.Round((double) e.MergedFiles / e.TotalFiles * 1000.0);
+                double progressRate = timer.Elapsed.TotalSeconds > 0 ? e.MergedFiles / timer.Elapsed.TotalSeconds : 0;
+                long bytesRemaining = e.TotalFiles - e.MergedFiles;
+                TimeSpan timeRemaining = progressRate == 0 ? TimeSpan.Zero
+                                                           : TimeSpan.FromSeconds(bytesRemaining / progressRate);
+                Text = String.Format("Merging results... ({0}/{1}) - {2} per second, {3}h{4}m{5}s remaining",
+                                     e.MergedFiles,
+                                     e.TotalFiles,
+                                     Math.Round(progressRate),
+                                     timeRemaining.Hours,
+                                     timeRemaining.Minutes,
+                                     timeRemaining.Seconds);
+
+                Application.DoEvents();
+
+                e.Cancel = !Visible || IsDisposed;
             }
 
             public void UpdateProgress (object sender, StaticWeightQonverter.QonversionProgressEventArgs e)
             {
+                if (InvokeRequired)
+                {
+                    Invoke((MethodInvoker) (() => UpdateProgress(sender, e)));
+                    return;
+                }
+
                 progressBar.Maximum = e.TotalAnalyses;
                 progressBar.Value = e.QonvertedAnalyses;
-                e.Cancel = !Visible || IsDisposed;
+
                 Application.DoEvents();
+
+                e.Cancel = !Visible || IsDisposed;
+            }
+
+            public void UpdateProgress (object sender, DataFilter.FilteringProgressEventArgs e)
+            {
+                if (InvokeRequired)
+                {
+                    Invoke((MethodInvoker) (() => UpdateProgress(sender, e)));
+                    return;
+                }
+
+                progressBar.Maximum = e.TotalFilters;
+                progressBar.Value = e.CompletedFilters;
+
+                Text = String.Format("{0} ({1}/{2})",
+                                     e.FilteringStage,
+                                     e.CompletedFilters,
+                                     e.TotalFilters);
+
+                e.Cancel = !Visible || IsDisposed;
             }
         }
 
         void OpenFiles (IList<string> filepaths)
         {
-            //try
+            try
             {
                 var xml_filepaths = filepaths.Where(filepath => filepath.EndsWith(".idpXML") ||
                                                                 filepath.EndsWith(".pepXML") ||
                                                                 filepath.EndsWith(".pep.xml"));
                 var idpDB_filepaths = filepaths.Where(filepath => filepath.EndsWith(".idpDB"));
 
-                string commonFilename = "";
-                Util.LongestCommonSubstring(filepaths, out commonFilename);
-                if (String.IsNullOrEmpty(commonFilename))
-                    commonFilename = Path.Combine(commonFilename, "idpicker-analysis-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmssZ") + ".idpDB");
-                else
-                    commonFilename = Path.ChangeExtension(commonFilename.TrimEnd(' ', '_', '-'), ".idpDB");
+                if (xml_filepaths.Count() + idpDB_filepaths.Count() == 0)
+                {
+                    MessageBox.Show("Select one or more idpXML, pepXML, or idpDB files to create an IDPicker report.", "No IDPicker files selected");
+                    return;
+                }
 
-                if (!idpDB_filepaths.Contains(commonFilename))
-                    try { File.Delete(commonFilename); } catch { }
+                string commonFilename = Util.GetCommonFilename(filepaths);
+                
+                if (!idpDB_filepaths.Contains(commonFilename) &&
+                    File.Exists(commonFilename) &&
+                    SessionFactoryFactory.IsValidFile(commonFilename))
+                {
+                    if (MessageBox.Show("The merged result \"" + commonFilename + "\" already exists. Do you want to overwrite it?",
+                                        "Merged result already exists",
+                                        MessageBoxButtons.YesNo,
+                                        MessageBoxIcon.Exclamation,
+                                        MessageBoxDefaultButton.Button2) != DialogResult.Yes)
+                        return;
+                    File.Delete(commonFilename);
+                }
+
+                // set main window title
+                Text = commonFilename;
 
                 if (xml_filepaths.Count() > 0)
                 {
-                    using (SimpleProgressForm pf = new SimpleProgressForm())
-                    using (Parser parser = new Parser(commonFilename))
+                    using (SimpleProgressForm pf = new SimpleProgressForm(this))
+                    using (Parser parser = new Parser(commonFilename, ".", xml_filepaths.ToArray()))
                     {
-                        pf.Text = "Parsing...";
+                        pf.Text = "Initializing parser...";
                         pf.Show();
                         parser.DatabaseNotFound += new EventHandler<Parser.DatabaseNotFoundEventArgs>(databaseNotFoundHandler);
-                        if (xml_filepaths.Count() > 1)
-                            parser.SourceNotFound += new EventHandler<Parser.SourceNotFoundEventArgs>(sourceNotFoundOnImportHandler);
-                        else // if only importing one source, don't ask about skipping mzML import
-                            parser.SourceNotFound += new EventHandler<Parser.SourceNotFoundEventArgs>(sourceNotFoundOnVisualizeHandler);
+                        parser.SourceNotFound += new EventHandler<Parser.SourceNotFoundEventArgs>(sourceNotFoundOnImportHandler);
                         parser.ParsingProgress += new EventHandler<Parser.ParsingProgressEventArgs>(pf.UpdateProgress);
-                        parser.ReadXml(".", xml_filepaths.ToArray());
+                        parser.Start();
 
                         if (!pf.Visible || pf.IsDisposed)
                             return;
                     }
+                    idpDB_filepaths = idpDB_filepaths.Union(xml_filepaths.Select(o => Path.ChangeExtension(o, ".idpDB")));
                 }
 
-                using (SimpleProgressForm pf = new SimpleProgressForm())
+                if (idpDB_filepaths.Count() > 1)
                 {
-                    pf.Text = "Qonverting...";
+                    using (SimpleProgressForm pf = new SimpleProgressForm(this))
+                    {
+                        var merger = new Merger(commonFilename, idpDB_filepaths);
+                        pf.Text = "Merging results...";
+                        pf.Show();
+                        merger.MergingProgress += new EventHandler<Merger.MergingProgressEventArgs>(pf.UpdateProgress);
+                        merger.Start();
+
+                        if (!pf.Visible || pf.IsDisposed)
+                            return;
+
+                        idpDB_filepaths = new List<string>() {commonFilename};
+                    }
+                }
+
+                using (SimpleProgressForm pf = new SimpleProgressForm(this))
+                {
+                    pf.Text = "Initializing Qonverter...";
                     pf.Show();
                     var qonverter = new IDPicker.StaticWeightQonverter();
                     qonverter.ScoreWeights["mvh"] = 1;
@@ -554,9 +731,7 @@ namespace IDPicker
 
                 var sessionFactory = DataModel.SessionFactoryFactory.CreateSessionFactory(commonFilename, false, true);
                 session = sessionFactory.OpenSession();
-
-                // read from file to memory database
-                //http://www.sqlite.org/backup.html
+                session.CreateSQLQuery("PRAGMA temp_store=MEMORY").ExecuteUpdate();
 
                 bool hasFilterView = false;
                 try
@@ -577,18 +752,20 @@ namespace IDPicker
                     { }
                 }
 
-                if (!hasFilterView)
-                    dataFilter.ApplyBasicFilters(session);
-
                 breadCrumbControl.BreadCrumbs.Clear();
                 breadCrumbControl.BreadCrumbs.Add(dataFilter.GetBasicFilterControls(this));
 
-                proteinTableForm.SetData(session, dataFilter);
-                spectrumTableForm.SetData(session, dataFilter);
-                peptideTableForm.SetData(session, dataFilter);
-                modificationTableForm.SetData(session, dataFilter);
+                if (!hasFilterView)
+                    applyBasicFilter();
+                else
+                {
+                    proteinTableForm.SetData(session, dataFilter);
+                    peptideTableForm.SetData(session, dataFilter);
+                    spectrumTableForm.SetData(session, dataFilter);
+                    modificationTableForm.SetData(session, dataFilter);
+                }
             }
-            /*catch (Exception ex)
+            catch (Exception ex)
             {
                 string message = ex.ToString();
                 if (ex.InnerException != null)
@@ -598,7 +775,7 @@ namespace IDPicker
                                 MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1,
                                 0, false);
                 Application.Exit();
-            }*/
+            }
         }
     }
 
