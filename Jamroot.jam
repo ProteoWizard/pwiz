@@ -130,7 +130,8 @@ project pwiz
         # warning: _SECURE_SCL_THROWS is deprecated
         <toolset>msvc:<define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
 
-        # compiling native C++ code with /clr turns this on by default
+        # TODO: change this from a <define> to a feature in msvc.jam
+        # disable checked iterators (on by default in VC8/9)
         <toolset>msvc,<variant>release:<define>_SECURE_SCL=0
 
         # special gcc hack - Cygwin gcc 3.4.4, Ubuntu gcc 4.1.2 
