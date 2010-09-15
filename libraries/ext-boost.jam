@@ -108,6 +108,13 @@ rule init ( version : location : options * )
             <link>static:<define>BOOST_ALL_STATIC_LINK=1
             <define>BOOST_ALL_NO_LIB=1
             <warnings>off
+            
+            # TODO: change this from a <define> to a feature in msvc.jam
+            # disable checked iterators (on by default in VC8/9)
+            <toolset>msvc,<variant>release:<define>_SECURE_SCL=0
+
+            # checked iterators throw instead of crash  
+            <toolset>msvc:<define>_SECURE_SCL_THROWS=1
             ;
 
         lib pthread : : <name>pthread <link>shared : 
