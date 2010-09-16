@@ -132,7 +132,7 @@ project pwiz
 
         # TODO: change this from a <define> to a feature in msvc.jam
         # disable checked iterators (on by default in VC8/9)
-        <toolset>msvc,<variant>release:<define>_SECURE_SCL=0
+        # <toolset>msvc,<variant>release:<define>_SECURE_SCL=0
 
         # special gcc hack - Cygwin gcc 3.4.4, Ubuntu gcc 4.1.2 
         # warning: '__cur' might be used uninitialized in this function 

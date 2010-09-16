@@ -111,7 +111,7 @@ rule init ( version : location : options * )
             
             # TODO: change this from a <define> to a feature in msvc.jam
             # disable checked iterators (on by default in VC8/9)
-            <toolset>msvc,<variant>release:<define>_SECURE_SCL=0
+            # <toolset>msvc,<variant>release:<define>_SECURE_SCL=0
 
             # checked iterators throw instead of crash  
             <toolset>msvc:<define>_SECURE_SCL_THROWS=1
