@@ -121,7 +121,7 @@ namespace pwiz.Skyline.SettingsUI
             if(multipleProteinsPerPeptideCount > 0 || unmatchedPeptidesCount > 0 || filteredPeptidesCount > 0)
             {
                 var peptideProteinsDlg = 
-                    new FilterMatchedPeptidesDlg(multipleProteinsPerPeptideCount);
+                    new FilterMatchedPeptidesDlg(multipleProteinsPerPeptideCount, unmatchedPeptidesCount, filteredPeptidesCount, single);
                 result = peptideProteinsDlg.ShowDialog(parent);
             }
             return result;
