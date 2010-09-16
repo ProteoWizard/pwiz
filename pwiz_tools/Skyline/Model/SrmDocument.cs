@@ -26,6 +26,7 @@ using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
@@ -281,6 +282,22 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
+        public IdentityPath LastNodePath
+        {
+            get
+            {
+                DocNodeParent parent = this;
+                IdentityPath path = IdentityPath.ROOT;
+                while (parent != null && parent.Children.Count > 0)
+                {
+                    path = new IdentityPath(path, parent.Children[parent.Children.Count - 1].Id);
+
+                    parent = parent.Children[parent.Children.Count - 1] as DocNodeParent;
+                }
+                return path;
+            }
+        }
+        
         /// <summary>
         /// Make sure every new copy of a document gets an incremented value
         /// for <see cref="RevisionIndex"/>.
@@ -744,6 +761,25 @@ namespace pwiz.Skyline.Model
             // Make sure any newly included modifications are added to the settings
             var settings = docResult.Settings.ChangePeptideModifications(m => pepModsNew);
             return docResult.ChangeSettings(settings);
+        }
+
+        public IdentityPath SearchForString(IdentityPath startPath, string searchString, DisplaySettings settings, 
+            bool reverse, bool caseSensitive)
+        {
+            if (Children.Count != 0)
+            {
+                var foundPath = SearchForString(new IdentityPathTraversal(startPath), searchString, settings, reverse, caseSensitive, false);
+                if (foundPath != null)
+                    // Trim the document ID from the path;
+                    return foundPath.GetRelativePath(1);
+                // If the node was not found, wrap to the start or end of the document, depending on
+                // the direction of search.
+                startPath = reverse ? LastNodePath : GetPathTo(0, 0);
+                foundPath = SearchForString(new IdentityPathTraversal(startPath), searchString, settings, reverse, caseSensitive, true);
+                if (foundPath != null)
+                    return foundPath.GetRelativePath(1);
+            }
+            return null;
         }
 
         #region Implementation of IXmlSerializable

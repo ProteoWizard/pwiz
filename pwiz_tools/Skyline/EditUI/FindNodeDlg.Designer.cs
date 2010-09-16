@@ -1,6 +1,6 @@
 ﻿namespace pwiz.Skyline.EditUI
 {
-    partial class FindPeptideDlg
+    partial class FindNodeDlg
     {
         /// <summary>
         /// Required designer variable.
@@ -29,12 +29,13 @@
         private void InitializeComponent()
         {
             this.btnCancel = new System.Windows.Forms.Button();
-            this.btnOk = new System.Windows.Forms.Button();
+            this.btnFindNext = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.textSequence = new System.Windows.Forms.TextBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.radioDown = new System.Windows.Forms.RadioButton();
             this.radioUp = new System.Windows.Forms.RadioButton();
+            this.cbCaseSensitive = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -48,27 +49,29 @@
             this.btnCancel.TabIndex = 4;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
+            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
-            // btnOk
+            // btnFindNext
             // 
-            this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOk.Enabled = false;
-            this.btnOk.Location = new System.Drawing.Point(293, 12);
-            this.btnOk.Name = "btnOk";
-            this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 3;
-            this.btnOk.Text = "&Find Next";
-            this.btnOk.UseVisualStyleBackColor = true;
+            this.btnFindNext.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnFindNext.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.btnFindNext.Enabled = false;
+            this.btnFindNext.Location = new System.Drawing.Point(293, 12);
+            this.btnFindNext.Name = "btnFindNext";
+            this.btnFindNext.Size = new System.Drawing.Size(75, 23);
+            this.btnFindNext.TabIndex = 3;
+            this.btnFindNext.Text = "&Find Next";
+            this.btnFindNext.UseVisualStyleBackColor = true;
+            this.btnFindNext.Click += new System.EventHandler(this.btnFindNext_Click);
             // 
             // label1
             // 
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(13, 12);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(103, 13);
+            this.label1.Size = new System.Drawing.Size(56, 13);
             this.label1.TabIndex = 0;
-            this.label1.Text = "&Sequence fragment:";
+            this.label1.Text = "&Find what:";
             // 
             // textSequence
             // 
@@ -77,7 +80,6 @@
             this.textSequence.Size = new System.Drawing.Size(249, 20);
             this.textSequence.TabIndex = 1;
             this.textSequence.TextChanged += new System.EventHandler(this.textSequence_TextChanged);
-            this.textSequence.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textSequence_KeyPress);
             // 
             // groupBox1
             // 
@@ -113,25 +115,36 @@
             this.radioUp.Text = "&Up";
             this.radioUp.UseVisualStyleBackColor = true;
             // 
-            // FindPeptideDlg
+            // cbCaseSensitive
             // 
-            this.AcceptButton = this.btnOk;
+            this.cbCaseSensitive.AutoSize = true;
+            this.cbCaseSensitive.Location = new System.Drawing.Point(153, 84);
+            this.cbCaseSensitive.Name = "cbCaseSensitive";
+            this.cbCaseSensitive.Size = new System.Drawing.Size(83, 17);
+            this.cbCaseSensitive.TabIndex = 5;
+            this.cbCaseSensitive.Text = "Match Case";
+            this.cbCaseSensitive.UseVisualStyleBackColor = true;
+            // 
+            // FindNodeDlg
+            // 
+            this.AcceptButton = this.btnFindNext;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(380, 122);
+            this.Controls.Add(this.cbCaseSensitive);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.textSequence);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.btnCancel);
-            this.Controls.Add(this.btnOk);
+            this.Controls.Add(this.btnFindNext);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "FindPeptideDlg";
+            this.Name = "FindNodeDlg";
             this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Find Peptide";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
+            this.Text = "Find";
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.ResumeLayout(false);
@@ -142,11 +155,12 @@
         #endregion
 
         private System.Windows.Forms.Button btnCancel;
-        private System.Windows.Forms.Button btnOk;
+        private System.Windows.Forms.Button btnFindNext;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox textSequence;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.RadioButton radioDown;
         private System.Windows.Forms.RadioButton radioUp;
+        private System.Windows.Forms.CheckBox cbCaseSensitive;
     }
 }

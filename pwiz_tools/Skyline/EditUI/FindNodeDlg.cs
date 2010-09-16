@@ -18,18 +18,18 @@
  */
 using System;
 using System.Windows.Forms;
-using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class FindPeptideDlg : Form
+    public partial class FindNodeDlg : Form
     {
-        public FindPeptideDlg()
+        public FindNodeDlg()
         {
             InitializeComponent();
         }
 
-        public string Sequence
+        public string SearchString
         {
             get { return textSequence.Text; }
             set { textSequence.Text = value; }
@@ -41,23 +41,32 @@ namespace pwiz.Skyline.EditUI
             set { radioUp.Checked = value; }
         }
 
+        public bool CaseSensitive
+        {
+            get { return cbCaseSensitive.Checked; }
+            set { cbCaseSensitive.Checked = value; }
+        }
+
         private void textSequence_TextChanged(object sender, EventArgs e)
         {
-            btnOk.Enabled = !string.IsNullOrEmpty(Sequence);
+            btnFindNext.Enabled = !string.IsNullOrEmpty(SearchString);
         }
 
-        private void textSequence_KeyPress(object sender, KeyPressEventArgs e)
+        private void btnFindNext_Click(object sender, EventArgs e)
         {
-            // Force uppercase
-            e.KeyChar = char.ToUpper(e.KeyChar);
-            // Ignore if not an amino acid
-            if (!AminoAcid.IsExAA(e.KeyChar) && !char.IsControl(e.KeyChar))
-                e.Handled = true;
+            FindNext();
         }
 
-        public void OkDialog()
+        public void FindNext()
         {
-            btnOk.PerformClick();
+            Settings.Default.EditFindText = SearchString;
+            Settings.Default.EditFindCase = CaseSensitive;
+            ((SkylineWindow)Owner).FindNext(SearchUp);
+        }
+
+        private void btnCancel_Click(object sender, EventArgs e)
+        {
+            Close();
         }
     }
 }

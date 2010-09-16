@@ -78,7 +78,8 @@ namespace pwiz.Skyline.Controls.SeqNode
             int peakImageIndex = PeakImageIndex;
             if (peakImageIndex != StateImageIndex)
                 StateImageIndex = peakImageIndex;
-            string label = GetLabel(DocNode, ResultsText);
+            var nodePep = (PeptideDocNode) Model;
+            string label = DisplayText(nodePep, SequenceTree.GetDisplaySettings(nodePep));
             if (!string.Equals(label, Text))
                 Text = label;
             // Hard to tell what might cause label formatting to change
@@ -456,13 +457,13 @@ namespace pwiz.Skyline.Controls.SeqNode
                     foreColor, backColor, FORMAT_TEXT_SEQUENCE);
             }
         }
-         
-
+        
         #region IChildPicker Members
 
         public override string GetPickLabel(DocNode child)
         {
-            return TransitionGroupTreeNode.GetDisplayText((TransitionGroupDocNode)child, DocNode, SequenceTree);
+            return TransitionGroupTreeNode.DisplayText((TransitionGroupDocNode)child, 
+                SequenceTree.GetDisplaySettings((PeptideDocNode) Model));
         }
 
         public override Image GetPickTypeImage(DocNode child)
@@ -541,6 +542,11 @@ namespace pwiz.Skyline.Controls.SeqNode
         public override bool ShowAutoManageChildren
         {
             get { return true; }
+        }
+
+        public static string DisplayText(PeptideDocNode node, DisplaySettings settings)
+        {
+            return GetLabel(node, "");
         }
 
         #endregion
@@ -683,5 +689,6 @@ namespace pwiz.Skyline.Controls.SeqNode
         }
 
         #endregion
+
     }
 }

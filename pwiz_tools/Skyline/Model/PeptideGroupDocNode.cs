@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
@@ -287,6 +288,11 @@ namespace pwiz.Skyline.Model
         private Dictionary<int, DocNode> CreateGlobalIndexToChildMap()
         {
             return Children.ToDictionary(child => child.Id.GlobalIndex);
+        }
+
+        public override string DisplayText(DisplaySettings settings)
+        {
+            return PeptideGroupTreeNode.DisplayText(this, settings);
         }
 
         #region object overrides

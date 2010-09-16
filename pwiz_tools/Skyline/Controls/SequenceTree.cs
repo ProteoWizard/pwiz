@@ -1051,6 +1051,11 @@ namespace pwiz.Skyline.Controls
             get { return Focused; }
         }
 
+        public DisplaySettings GetDisplaySettings(PeptideDocNode nodePep)
+        {
+            return new DisplaySettings(nodePep, ShowReplicate == ReplicateDisplay.best, ResultsIndex, RatioIndex); 
+        }
+
         public Rectangle RectToScreen(Rectangle r)
         {
             return RectangleToScreen(r);

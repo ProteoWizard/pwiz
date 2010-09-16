@@ -198,9 +198,13 @@ namespace pwiz.SkylineTestTutorial
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 35, 70, 70, 338);
 
             // Simple Refinement, p. 13
-            var findPeptideDlg = ShowDialog<FindPeptideDlg>(SkylineWindow.ShowFindPeptideDlg);
-            RunUI(() => findPeptideDlg.Sequence = "IPEE");
-            OkDialog(findPeptideDlg, findPeptideDlg.OkDialog);
+            var findPeptideDlg = ShowDialog<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg);
+            RunUI(() => findPeptideDlg.SearchString = "IPEE");
+            OkDialog(findPeptideDlg, () =>
+                                         {
+                                             findPeptideDlg.FindNext();
+                                             findPeptideDlg.Close();
+                                         });
             RefineDlg refineDlg = ShowDialog<RefineDlg>(SkylineWindow.ShowRefineDlg);
             RunUI(() => refineDlg.MinTransitions = 5);
             OkDialog(refineDlg, refineDlg.OkDialog);

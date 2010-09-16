@@ -122,10 +122,10 @@ namespace pwiz.SkylineTestTutorial
 
             });
             WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
-            RunDlg<FindPeptideDlg>(SkylineWindow.ShowFindPeptideDlg, findPeptideDlg =>
+            RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
             {
-                findPeptideDlg.Sequence = "IDALNENK";
-                findPeptideDlg.OkDialog();
+                findPeptideDlg.SearchString = "IDALNENK";
+                findPeptideDlg.FindNext();
             });
             RunUI(() => SkylineWindow.NormalizeAreaGraphToTotal(true));
 

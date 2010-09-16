@@ -188,6 +188,9 @@
     <Setting Name="EditFindText" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="EditFindCase" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
     <Setting Name="ShowHeavyFormula" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>

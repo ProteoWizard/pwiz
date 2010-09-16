@@ -1080,4 +1080,38 @@ namespace pwiz.Skyline.Controls.SeqNode
             set { _sizeF.Height = value; }
         }
     }
+
+    public class DisplaySettings
+    {
+        internal readonly bool _showBestReplicate;
+        internal readonly int _resultsIndex;
+
+        public DisplaySettings(PeptideDocNode nodePep, bool showBestReplicate, int resultsIndex, int ratioIndex)
+        {
+            _showBestReplicate = showBestReplicate;
+            _resultsIndex = resultsIndex;
+            RatioIndex = ratioIndex;
+            NodePep = nodePep;
+        }
+         
+        public DisplaySettings(DisplaySettings settings, PeptideDocNode nodePep) 
+        {
+            _showBestReplicate = settings._showBestReplicate;
+            _resultsIndex = settings._resultsIndex;
+            RatioIndex = settings.RatioIndex;
+            NodePep = nodePep;
+        }
+
+        public PeptideDocNode NodePep { get; private set; }
+
+        public int Index
+        {
+            get
+            {
+                return _showBestReplicate && NodePep.BestResult != -1 ? NodePep.BestResult : _resultsIndex;
+            }
+        }
+
+        public int RatioIndex { get; private set; }
+    }
 }

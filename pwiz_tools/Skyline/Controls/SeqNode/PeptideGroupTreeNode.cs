@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             int typeImageIndex = TypeImageIndex;
             if (typeImageIndex != ImageIndex)
                 ImageIndex = SelectedImageIndex = typeImageIndex;
-            string label = DocNode.Name;
+            string label = DisplayText((PeptideGroupDocNode) Model, SequenceTree.GetDisplaySettings(null));
             if (!string.Equals(label, Text))
                 Text = label;
 
@@ -94,6 +94,11 @@ namespace pwiz.Skyline.Controls.SeqNode
         protected override void UpdateChildren(bool materialize)
         {
             UpdateNodes<PeptideTreeNode>(SequenceTree, Nodes, DocNode.Children, materialize, PeptideTreeNode.CreateInstance);
+        }
+
+        public static string DisplayText(PeptideGroupDocNode node, DisplaySettings settings)
+        {
+            return node.Name;
         }
 
         #region IChildPicker Members

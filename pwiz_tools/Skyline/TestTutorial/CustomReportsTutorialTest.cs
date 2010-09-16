@@ -52,10 +52,11 @@ namespace pwiz.SkylineTestTutorial
 
             // Data Overview, p. 2
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath(@"CustomReports\Study7_example.sky")));
-            RunDlg<FindPeptideDlg>(SkylineWindow.ShowFindPeptideDlg, findPeptideDlg =>
+            RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
             {
-                findPeptideDlg.Sequence = "HGFLPR";
-                findPeptideDlg.OkDialog();
+                findPeptideDlg.SearchString = "HGFLPR";
+                findPeptideDlg.FindNext();
+                findPeptideDlg.Close();
             });
             RunUI(() =>
             {
@@ -242,10 +243,11 @@ namespace pwiz.SkylineTestTutorial
                 editReportListDlg2.OkDialog();
                 exportReportDlg2.CancelClick();
             });
-            RunDlg<FindPeptideDlg>(SkylineWindow.ShowFindPeptideDlg, findPeptideDlg =>
+            RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
             {
-                findPeptideDlg.Sequence = "INDISHTQSVSAK";
-                findPeptideDlg.OkDialog();
+                findPeptideDlg.SearchString = "INDISHTQSVSAK";
+                findPeptideDlg.FindNext();
+                findPeptideDlg.Close();
             });
             RunUI(SkylineWindow.ShowPeakAreaReplicateComparison);
             WaitForGraphs();

@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             int peakImageIndex = PeakImageIndex;
             if (peakImageIndex != StateImageIndex)
                 StateImageIndex = peakImageIndex;
-            string label = GetDisplayText(DocNode, PepNode, SequenceTree);
+            string label = DisplayText(DocNode, SequenceTree.GetDisplaySettings(PepNode));
             if (!Equals(label, Text))
                 Text = label;
         }
@@ -121,17 +121,13 @@ namespace pwiz.Skyline.Controls.SeqNode
             return (int)SequenceTree.StateImageId.peak;
         }
 
-        public static string GetDisplayText(TransitionDocNode nodeTran,
-            PeptideDocNode nodePep, SequenceTree sequenceTree)
+        public static string DisplayText(TransitionDocNode nodeTran, DisplaySettings settings)
         {
-            return GetLabel(nodeTran, GetResultsText(nodeTran, nodePep, sequenceTree));
+            return GetLabel(nodeTran, GetResultsText(nodeTran, settings.Index, settings.RatioIndex));
         }
 
-        private static string GetResultsText(TransitionDocNode nodeTran,
-            PeptideDocNode nodePep, SequenceTree sequenceTree)
+        private static string GetResultsText(TransitionDocNode nodeTran, int index, int indexRatio)
         {
-            int index = sequenceTree.GetDisplayResultsIndex(nodePep);
-            int indexRatio = sequenceTree.RatioIndex;
             int? rank = nodeTran.GetPeakRank(index);
             string label = (rank.HasValue && rank > 0 ? string.Format("[{0}]", rank) : "");
             float? ratio = nodeTran.GetPeakAreaRatio(index, indexRatio);
@@ -222,5 +218,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         }
 
         #endregion
+
+
     }
 }

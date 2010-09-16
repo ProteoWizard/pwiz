@@ -867,8 +867,8 @@ namespace pwiz.Skyline
             this.findPeptideMenuItem.Name = "findPeptideMenuItem";
             this.findPeptideMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.F)));
             this.findPeptideMenuItem.Size = new System.Drawing.Size(207, 22);
-            this.findPeptideMenuItem.Text = "&Find Peptide...";
-            this.findPeptideMenuItem.Click += new System.EventHandler(this.findPeptideMenuItem_Click);
+            this.findPeptideMenuItem.Text = "&Find...";
+            this.findPeptideMenuItem.Click += new System.EventHandler(this.findMenuItem_Click);
             // 
             // modifyPeptideMenuItem
             // 
@@ -1738,6 +1738,7 @@ namespace pwiz.Skyline
             this.sequenceTree.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.sequenceTree.Cursor = System.Windows.Forms.Cursors.Arrow;
             this.sequenceTree.HideSelection = false;
+            this.sequenceTree.UseKeysOverride = false;
             this.sequenceTree.ItemHeight = 16;
             this.sequenceTree.LabelEdit = true;
             this.sequenceTree.Location = new System.Drawing.Point(-1, 0);

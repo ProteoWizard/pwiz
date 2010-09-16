@@ -82,7 +82,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             int peakImageIndex = PeakImageIndex;
             if (peakImageIndex != StateImageIndex)
                 StateImageIndex = peakImageIndex;
-            string label = GetDisplayText(DocNode, PepNode, SequenceTree);
+            string label = DisplayText(DocNode, SequenceTree.GetDisplaySettings(PepNode));
             if (!Equals(label, Text))
                 Text = label;
 
@@ -143,23 +143,19 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             return (int)SequenceTree.StateImageId.peak;
         }
-
-        public static string GetDisplayText(TransitionGroupDocNode nodeGroup,
-            PeptideDocNode nodePep, SequenceTree sequenceTree)
+        
+        public static string DisplayText(TransitionGroupDocNode nodeGroup, DisplaySettings settings)
         {
             return GetLabel(nodeGroup.TransitionGroup, nodeGroup.PrecursorMz,
-                GetResultsText(nodeGroup, nodePep, sequenceTree));
+                GetResultsText(nodeGroup, settings.NodePep, settings.Index, settings.RatioIndex));
         }
-
-        private static string GetResultsText(TransitionGroupDocNode nodeTran,
-            PeptideDocNode nodePep, SequenceTree sequenceTree)
+        
+        public static string GetResultsText(TransitionGroupDocNode nodeTran,
+            PeptideDocNode nodePep, int indexResult, int indexRatio)
         {
-            int index = sequenceTree.GetDisplayResultsIndex(nodePep);
-            int indexRatio = sequenceTree.RatioIndex;
-
-            float? libraryProduct = nodeTran.GetLibraryDotProduct(index);
+            float? libraryProduct = nodeTran.GetLibraryDotProduct(indexResult);
             float? stdev;
-            float? ratio = nodeTran.GetPeakAreaRatio(index, indexRatio, out stdev);
+            float? ratio = nodeTran.GetPeakAreaRatio(indexResult, indexRatio, out stdev);
             if (!ratio.HasValue && !libraryProduct.HasValue)
                 return "";
             StringBuilder sb = new StringBuilder(" (");
@@ -202,8 +198,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public override string GetPickLabel(DocNode child)
         {
-            return TransitionTreeNode.GetDisplayText((TransitionDocNode) child,
-                PepNode, SequenceTree);
+            return TransitionTreeNode.DisplayText((TransitionDocNode) child, SequenceTree.GetDisplaySettings(PepNode));
         }
 
         public override Image GetPickTypeImage(DocNode child)
@@ -538,6 +533,5 @@ namespace pwiz.Skyline.Controls.SeqNode
         }
 
         #endregion
-
     }
 }

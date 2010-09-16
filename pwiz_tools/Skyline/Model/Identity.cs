@@ -199,6 +199,19 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
+        /// Constructs the path from an existing relative instance with one added 
+        /// <see cref="Identity"/>.
+        /// </summary>
+        /// <param name="parent">An <see cref="Identity"/> to add to the beginning</param>
+        /// <param name="child">An existing partial path</param>
+        public IdentityPath(Identity parent, IdentityPath child)
+        {
+            List<Identity> path = new List<Identity> {parent};
+            path.AddRange(child._identities);
+            _identities = path.ToArray();
+        }
+
+        /// <summary>
         /// The path to the parent node of the node specified by this path
         /// </summary>
         public IdentityPath Parent
@@ -233,6 +246,13 @@ namespace pwiz.Skyline.Model
         public Identity GetIdentity(int depth)
         {
             return _identities[depth];
+        }
+
+        public IdentityPath GetRelativePath(int depthFrom)
+        {
+            if (-1 > depthFrom || depthFrom > Depth)
+                throw new IndexOutOfRangeException(string.Format("Index {0} out of range -1 to {1}", depthFrom, Depth));
+            return new IdentityPath(_identities.Skip(depthFrom));
         }
 
         public IdentityPath GetPathTo(int depth)

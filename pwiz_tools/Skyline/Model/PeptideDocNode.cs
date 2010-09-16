@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -596,6 +597,11 @@ namespace pwiz.Skyline.Model
             return false;
         }
 
+        public override string DisplayText(DisplaySettings settings)
+        {
+            return PeptideTreeNode.DisplayText(this, settings);
+        }
+
         private sealed class PeptideResultsCalculator
         {
             private readonly List<PeptideChromInfoListCalculator> _listResultCalcs =
@@ -1083,5 +1089,6 @@ namespace pwiz.Skyline.Model
         }
 
         #endregion
+
     }
 }

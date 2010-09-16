@@ -568,7 +568,10 @@ namespace pwiz.Skyline
                     FindNext(false);
                     return true;
                 case Keys.F3 | Keys.Shift:
+                    sequenceTree.UseKeysOverride = true;
+                    sequenceTree.KeysOverride = Keys.None;
                     FindNext(true);
+                    sequenceTree.UseKeysOverride = false;
                     return true;
             }
             return base.ProcessCmdKey(ref msg, keyData);
@@ -1223,99 +1226,40 @@ namespace pwiz.Skyline
                 sequenceTree.TopNode = nodeTop;
         }
 
-        private void findPeptideMenuItem_Click(object sender, EventArgs e)
+        private void findMenuItem_Click(object sender, EventArgs e)
         {
-            ShowFindPeptideDlg();
-        }
-
-        public void ShowFindPeptideDlg()
-        {
-            var dlg = new FindPeptideDlg
-            {
-                Sequence = Settings.Default.EditFindText,
-                SearchUp = Settings.Default.EditFindUp
-            };
-
-            if (dlg.ShowDialog(this) == DialogResult.OK)
-            {
-                Settings.Default.EditFindText = dlg.Sequence;
-                Settings.Default.EditFindUp = dlg.SearchUp;
-
-                FindNext(false);
-            }
-        }
-
-        private void FindNext(bool reverse)
-        {
-            SrmDocument document = DocumentUI;
-            bool searchUp = Settings.Default.EditFindUp != reverse;
-            string searchString = Settings.Default.EditFindText;
-
-            // If no search string, show the dialog for the user to provide it.
-            if (string.IsNullOrEmpty(searchString))
-            {
-                findPeptideMenuItem_Click(this, new EventArgs());
-                return;
-            }
-
-            var nodeStart = sequenceTree.SelectedNode;
-            PeptideTreeNode nodePepTree = nodeStart as PeptideTreeNode;
-            PeptideDocNode nodePep = null;
-            bool excludeCurrent = false;
-            // If a peptide is selected
-            if (nodePepTree != null)
-            {
-                nodePep = nodePepTree.DocNode;
-                // Look for a new match
-                excludeCurrent = true;
-            }
+            var index = OwnedForms.IndexOf(form => form is FindNodeDlg);
+            if (index != -1)
+                OwnedForms[index].Activate();
             else
+                ShowFindNodeDlg();
+        }
+
+        public void ShowFindNodeDlg()
+        {
+            var dlg = new FindNodeDlg
             {
-                nodePepTree = sequenceTree.GetNodeOfType<PeptideTreeNode>();
-                // If a peptide child is selected
-                if (nodePepTree != null)
-                {
-                    nodePep = nodePepTree.DocNode;
-                    // Exclude the peptide parent from a forward search
-                    excludeCurrent = !searchUp;
-                }
-                else
-                {
-                    while (nodeStart is PeptideGroupTreeNode)
-                    {
-                        var nodeGroup = (PeptideGroupTreeNode)nodeStart;
-                        if (nodeGroup.ChildDocNodes.Count > 0)
-                        {
-                            nodePep = (PeptideDocNode)nodeGroup.ChildDocNodes[0];
-                            break;
-                        }
-                        nodeStart = nodeStart.NextNode;
-                    }
+                SearchString = Settings.Default.EditFindText,
+                SearchUp = Settings.Default.EditFindUp,
+                CaseSensitive = Settings.Default.EditFindCase
+            };
+            dlg.Show(this);
+        }
 
-                    if (nodePep == null && document.PeptideCount > 0)
-                    {
-                        var pathPep = document.GetPathTo((int)SrmDocument.Level.Peptides, 0);
-                        nodePep = (PeptideDocNode)document.FindNode(pathPep);
-                    }
-                }
-            }
-
-            var listPeptides = new List<PeptideDocNode>(document.Peptides);
-            int len = listPeptides.Count;
-            int iPep = Math.Max(0, listPeptides.IndexOf(nodePep));
-            int inc = (searchUp ? -1 : 1);
-            int iStart = (excludeCurrent ? iPep + inc : iPep);
-            for (int i = 0; i < len; i++)
-            {
-                int iCheck = (i * inc + iStart + len) % len;
-                if (listPeptides[iCheck].Peptide.Sequence.IndexOf(searchString) != -1)
-                {
-                    sequenceTree.SelectedPath = document.GetPathTo((int)SrmDocument.Level.Peptides, iCheck);
-                    return;
-                }
-            }
-
-            MessageBox.Show(this, string.Format("The specified sequence fragment '{0}' was not found.", searchString), Program.Name);
+        public void FindNext(bool reverse)
+        {
+            bool caseSensitive = Settings.Default.EditFindCase;
+            var searchString = caseSensitive ? Settings.Default.EditFindText : Settings.Default.EditFindText.ToLower();
+            Settings.Default.EditFindUp = reverse;
+            var startPath = sequenceTree.SelectedPath;
+            // If the insert node is selected, select the very first (search up) or very last node (search down) in the tree.
+            if (sequenceTree.IsInsertPath(startPath))
+                startPath = reverse ? DocumentUI.LastNodePath : DocumentUI.LastNodePath;
+            var pathFound = DocumentUI.SearchForString(startPath, searchString, sequenceTree.GetDisplaySettings(null), reverse, caseSensitive);
+            if (pathFound != null)
+                sequenceTree.SelectedPath = pathFound;
+            else
+                MessageBox.Show(this, "Text could not be found.");
         }
 
         private void modifyPeptideMenuItem_Click(object sender, EventArgs e)

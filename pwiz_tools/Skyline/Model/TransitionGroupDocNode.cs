@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -707,6 +708,11 @@ namespace pwiz.Skyline.Model
                 iChild++;
             }
             return false;
+        }
+
+        public override string DisplayText(DisplaySettings settings)
+        {
+            return TransitionGroupTreeNode.DisplayText(this, settings);
         }
 
         private sealed class TransitionGroupResultsCalculator

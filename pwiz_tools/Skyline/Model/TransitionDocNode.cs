@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -231,6 +232,11 @@ namespace pwiz.Skyline.Model
             return ReferenceEquals(parent.TransitionGroup, Transition.Group) ? this
                        : new TransitionDocNode(new Transition(parent.TransitionGroup, Transition.IonType, Transition.CleavageOffset, Transition.Charge), Annotations,
                                                Losses, 0.0, LibInfo, null) { Mz = Mz };
+        }
+
+        public override string DisplayText(DisplaySettings settings)
+        {
+            return TransitionTreeNode.DisplayText(this, settings);    
         }
 
         #region Property change methods

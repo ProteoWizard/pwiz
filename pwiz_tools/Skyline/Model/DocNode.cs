@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
@@ -88,6 +89,67 @@ namespace pwiz.Skyline.Model
         public bool EqualsId(DocNode node)
         {
             return ReferenceEquals(Id, node.Id);
+        }
+
+        /// <summary>
+        /// Given a selected path traversal, searches the tree for the closest node with the given display text in the given direction.
+        /// If selected path is null, we know that all nodes are fair game..
+        /// otherwise we know this node falls along the selected path, thus we need to only search the appropriate children.
+        /// </summary>
+        public IdentityPath SearchForString(IdentityPathTraversal traversal, string searchString, DisplaySettings settings, 
+            bool searchUp, bool caseSensitive, bool includeSelectedNode)
+        {
+            var displayText = caseSensitive ? DisplayText(settings) : DisplayText(settings).ToLower();
+            bool containsSearchString = displayText.Contains(searchString);
+            
+            // If we are searching down, have found a matching string, and we are not worried about the selected path, we can return this path.
+            // It is our first match.
+            // If we are searching up, we do not want to check this node yet. When searching up, children should be checked before their parents 
+            // as they are lower on the tree.
+            if (!searchUp && (traversal == null || includeSelectedNode) && containsSearchString)
+                return new IdentityPath(new[] { Id });
+
+            // If this is a leaf node containing the search string, and this is not on the selected path, we have found a match.
+            var nodeDocParent = this as DocNodeParent;
+            if(nodeDocParent == null)
+                return containsSearchString && (traversal == null || includeSelectedNode) ? new IdentityPath(new[] { Id }) : null;
+
+            // Searching the children...
+            IList<DocNode> children = nodeDocParent.Children;
+            // Find the index to start from -- If we are searching down, children should be searched top to bottom, else bottom to top.
+            var index = searchUp ? children.Count - 1 : 0;
+            // If this is the selected node and we are searching up, we want to ignore this node and all of its children.
+            if (searchUp && traversal != null && !traversal.HasNext)
+                return null;
+            // If we are along the selected path, we need to accomodate this by only searching the children above (searching up)
+            // or below (searching down) the selected path.
+            if(traversal != null && traversal.HasNext)
+            {
+                // Otherwise, we need to first search the child that is on the selected path, because these nodes will be closest
+                // to the selected path, no matter what direction we are searching in.
+                index = nodeDocParent.FindNodeIndex(traversal.Next);
+                var pathFound = children[index].SearchForString(traversal, searchString, settings, searchUp, caseSensitive, includeSelectedNode);
+                if (pathFound != null)
+                    return new IdentityPath(Id, pathFound);
+                index += searchUp ? -1 : 1;
+            }
+            // Search all the children (except those that are on the wrong side of the selected path.)
+            while(index >= 0 && index < children.Count)
+            {
+                var pathFound = children[index].SearchForString(null, searchString, settings, searchUp, caseSensitive, includeSelectedNode);
+                if(pathFound != null)
+                   return new IdentityPath(Id, pathFound);
+                index += searchUp ? -1 : 1;
+            }
+            // If we are searching up, and have not found a match within the children, now we check this node.
+            if (searchUp && containsSearchString)
+                return new IdentityPath(new[] { Id });
+            return null;
+        }
+
+        public virtual string DisplayText(DisplaySettings settings)
+        {
+            return "";
         }
 
         #region object overrides

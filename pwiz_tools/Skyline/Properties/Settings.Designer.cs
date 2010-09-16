@@ -767,6 +767,18 @@ namespace pwiz.Skyline.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool EditFindCase {
+            get {
+                return ((bool)(this["EditFindCase"]));
+            }
+            set {
+                this["EditFindCase"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
         public bool ShowHeavyFormula {
             get {
                 return ((bool)(this["ShowHeavyFormula"]));
