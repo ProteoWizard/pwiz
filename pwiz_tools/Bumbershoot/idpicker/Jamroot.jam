@@ -57,6 +57,14 @@ import errors : error ;
 import feature ;
 import mpi ;
 
+local msvc-secure-scl = ;
+if --without-secure-scl in [ modules.peek : ARGV ]
+{
+    # TODO: change this from a <define> to a feature in msvc.jam
+    # disable checked iterators (on by default in VC8/9)
+    msvc-secure-scl = <toolset>msvc,<variant>release:<define>_SECURE_SCL=0 ;
+}
+
 
 project bumbershoot
 	: requirements
@@ -92,9 +100,7 @@ project bumbershoot
       # warning: _SECURE_SCL_THROWS is deprecated
       <toolset>msvc:<define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
 
-      # TODO: change this from a <define> to a feature in msvc.jam
-      # disable checked iterators (on by default in VC8/9)
-      <toolset>msvc,<variant>release:<define>_SECURE_SCL=0
+      $(msvc-secure-scl)
         
       # special gcc hack - Cygwin gcc 3.4.4, Ubuntu gcc 4.1.2 
       # warning: '__cur' might be used uninitialized in this function 
