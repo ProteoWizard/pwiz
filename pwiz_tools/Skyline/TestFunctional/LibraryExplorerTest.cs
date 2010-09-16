@@ -71,7 +71,7 @@ namespace pwiz.SkylineTestFunctional
         public void TestLibraryExplorer()
         {
             TestFilesZip = @"TestFunctional\LibraryExplorerTest.zip";
-       //     RunFunctionalTest();
+            RunFunctionalTest();
         }
 
         protected override void DoTest()
