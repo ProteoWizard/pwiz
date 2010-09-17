@@ -142,19 +142,23 @@ namespace IDPicker.DataModel
     public class Protein : Entity<Protein>
     {
         public virtual string Accession { get; set; }
-        public virtual string Description { get { return Metadata.Description; } set { Metadata.Description = value; } }
-        public virtual string Sequence { get { return Data.Sequence; } set { Data.Sequence = value; } }
+        public virtual string Description { get { return pmd.Description; } set { pmd.Description = value; } }
+        public virtual string Sequence { get { return pd.Sequence; } set { pd.Sequence = value; } }
         public virtual IList<PeptideInstance> Peptides { get; set; }
 
         public virtual long Cluster { get { return cluster; } }
         public virtual string ProteinGroup { get { return proteinGroup; } }
         public virtual long Length { get { return length; } }
 
+        public virtual double Coverage { get { return pc == null ? 0 : pc.Coverage; } private set { } }
+        public virtual IList<ushort> CoverageMask { get { return pc == null ? null : pc.CoverageMask; } private set { } }
+
         #region Transient instance members
         public Protein ()
         {
-            Metadata = new ProteinMetadata();
-            Data = new ProteinData();
+            pmd = new ProteinMetadata();
+            pd = new ProteinData();
+            pc = new ProteinCoverage();
         }
 
         public Protein (string description, string sequence) : this()
@@ -168,13 +172,15 @@ namespace IDPicker.DataModel
         string proteinGroup = "";
         long length = 0;
 
-        protected internal virtual ProteinMetadata Metadata { get; set; }
-        protected internal virtual ProteinData Data { get; set; }
+        protected internal virtual ProteinMetadata pmd { get; set; }
+        protected internal virtual ProteinData pd { get; set; }
+        protected internal virtual ProteinCoverage pc { get; set; }
         #endregion
     }
 
     public class ProteinMetadata : Entity<ProteinMetadata> { public virtual string Description { get; set; } }
     public class ProteinData : Entity<ProteinData> { public virtual string Sequence { get; set; } }
+    public class ProteinCoverage : Entity<ProteinCoverage> { public virtual double Coverage { get; set; } public virtual IList<ushort> CoverageMask { get; set; } }
 
     public class Peptide : Entity<Peptide>
     {
@@ -503,51 +509,64 @@ namespace IDPicker.DataModel
         #endregion
     }
 
-    /*public class SpectrumPeakListUserType : NHibernate.UserTypes.IUserType
+    public class ProteinCoverageMaskUserType : NHibernate.UserTypes.IUserType
     {
         #region IUserType Members
 
         public object Assemble (object cached, object owner)
         {
+            if (cached == null)
+                return null;
+
+            if (cached == DBNull.Value)
+                return null;
+
             if (!(cached is byte[]))
                 throw new ArgumentException();
-            var peakListBytes = cached as byte[];
-            var stream = new System.IO.MemoryStream(peakListBytes, false);
-            var reader = new System.IO.BinaryReader(stream);
-            long peakCount = stream.Length / (sizeof(double) + sizeof(double));
-            var peakList = new Spectrum.Peak[peakCount];
-            for (long i = 0; i < peakCount; ++i)
+
+            var bytes = cached as byte[];
+
+            if(bytes.Length < sizeof(int) + sizeof(ushort))
+                return null;
+
+            var mask = new List<ushort>();
+            using (var stream = new BinaryReader(new MemoryStream(bytes)))
             {
-                peakList[i].MZ = reader.ReadDouble();
-                peakList[i].Intensity = reader.ReadDouble();
+                int length = stream.ReadInt32();
+                for (int i = 0; i < length; ++i)
+                    mask.Add(stream.ReadUInt16());
             }
-            return peakList;
+            return mask;
         }
 
         public object DeepCopy (object value)
         {
-            if ( value == null )
-            return null;
-            var peakList = value as Spectrum.Peak[];
-            var peakListCopy = new Spectrum.Peak[peakList.LongLength];
-            peakList.CopyTo(peakListCopy, 0);
-            return peakListCopy;
+            if (value == null)
+                return null;
+            return value as IList<ushort>;
         }
 
         public object Disassemble (object value)
         {
-            if (!(value is Spectrum.Peak[]))
+            if (value == null)
+                return DBNull.Value;
+
+            if (value == DBNull.Value)
+                return DBNull.Value;
+
+            if (!(value is IList<ushort>))
                 throw new ArgumentException();
-            var peakList = value as Spectrum.Peak[];
-            var stream = new System.IO.MemoryStream();
-            var writer = new System.IO.BinaryWriter(stream);
-            for (long i = 0; i < peakList.LongLength; ++i)
+
+            var mask = value as IList<ushort>;
+
+            var bytes = new byte[sizeof(int) + sizeof(ushort) * mask.Count];
+            using (var stream = new BinaryWriter(new MemoryStream(bytes, true)))
             {
-                writer.Write(peakList[i].MZ);
-                writer.Write(peakList[i].Intensity);
+                stream.Write(mask.Count);
+                foreach (ushort i in mask)
+                    stream.Write(i);
             }
-            writer.Close();
-            return stream.ToArray();
+            return bytes;
         }
 
         public int GetHashCode (object x)
@@ -555,14 +574,14 @@ namespace IDPicker.DataModel
             return x.GetHashCode();
         }
 
-        public object NullSafeGet (System.Data.IDataReader rs, string[] names, object owner)
+        public object NullSafeGet (IDataReader rs, string[] names, object owner)
         {
-            return Assemble(rs.GetValue(5), owner);
+            return Assemble(rs.GetValue(rs.GetOrdinal(names[0])), owner);
         }
 
-        public void NullSafeSet (System.Data.IDbCommand cmd, object value, int index)
+        public void NullSafeSet (IDbCommand cmd, object value, int index)
         {
-            throw new NotImplementedException();
+            (cmd.Parameters[index] as IDataParameter).Value = Disassemble(value);
         }
 
         public object Replace (object original, object target, object owner)
@@ -572,106 +591,34 @@ namespace IDPicker.DataModel
 
         public Type ReturnedType
         {
-            get { return typeof(Spectrum.Peak[]); }
+            get { return typeof(IList<ushort>); }
         }
 
         public NHibernate.SqlTypes.SqlType[] SqlTypes
         {
-            get { return new NHibernate.SqlTypes.SqlType[] { NHibernate.SqlTypes.SqlTypeFactory.GetBinaryBlob(50 * 2 * sizeof(double)) }; }
+            get { return new NHibernate.SqlTypes.SqlType[] { NHibernate.SqlTypes.SqlTypeFactory.GetBinaryBlob(1) }; }
         }
 
         public bool IsMutable
         {
-            get { return true; }
+            get { return false; }
         }
 
         bool NHibernate.UserTypes.IUserType.Equals (object x, object y)
         {
-            throw new NotImplementedException();
+            if (x == null && y == null)
+                return true;
+            else if (x == null || y == null)
+                return false;
+            var mask1 = x as IList<ushort>;
+            var mask2 = y as IList<ushort>;
+            if(mask1.Count != mask2.Count)
+                return false;
+            return mask1.SequenceEqual(mask2);
         }
 
         #endregion
     }
-
-    public class Reader_IDPickerDB : pwiz.CLI.msdata.Reader
-    {
-        public override string identify (string filename, string head)
-        {
-            if (filename.ToLower().EndsWith(".idpdb"))
-                return "IDPicker DB";
-            return String.Empty;
-        }
-
-        public override void read (string filename, string head, pwiz.CLI.msdata.MSData result)
-        {
-            read(filename, head, result, 0);
-        }
-
-        public override void read (string filename, string head, pwiz.CLI.msdata.MSData result, int runIndex)
-        {
-            var session = SessionFactoryFactory.CreateSessionFactory(filename, false, false).OpenSession();
-            result = session.QueryOver<SpectrumSource>().List()[runIndex].Metadata;
-        }
-
-        public override void read (string filename, string head, pwiz.CLI.msdata.MSDataList results)
-        {
-            var session = SessionFactoryFactory.CreateSessionFactory(filename, false, false).OpenSession();
-            foreach (SpectrumSource ss in session.QueryOver<SpectrumSource>().List())
-                results.Add(ss.Metadata);
-        }
-
-        public override string[] readIds (string filename, string head)
-        {
-            var session = SessionFactoryFactory.CreateSessionFactory(filename, false, false).OpenSession();
-            return session.QueryOver<SpectrumSource>().Select(ss => ss.Name).List<string>().ToArray();
-        }
-    }
-
-    public class SpectrumList_IDPickerDB : pwiz.CLI.msdata.SpectrumList
-    {
-        public SpectrumList_IDPickerDB (NHibernate.ISession session, SpectrumSource spectrumSource)
-        {
-            this.session = session;
-            this.spectrumSource = spectrumSource;
-        }
-
-        public override int size ()
-        {
-            return spectrumSource.Spectra.Count;
-        }
-
-        public override pwiz.CLI.msdata.Spectrum spectrum (int index, bool getBinaryData)
-        {
-            var result = new pwiz.CLI.msdata.Spectrum();
-            var spectrum = spectrumSource.Spectra[index];
-            result.index = spectrum.Index;
-            result.id = spectrum.NativeID;
-
-            if (getBinaryData)
-            {
-                List<double> mzArray = spectrum.Peaks.Select(p => p.MZ).ToList();
-                List<double> intensityArray = spectrum.Peaks.Select(p => p.Intensity).ToList();
-                result.setMZIntensityArrays(mzArray, intensityArray);
-            }
-            else
-                result.defaultArrayLength = (ulong) spectrum.Peaks.Count();
-
-            return result;
-        }
-
-        public override pwiz.CLI.msdata.SpectrumIdentity spectrumIdentity (int index)
-        {
-            return base.spectrumIdentity(index);
-        }
-
-        public override int find (string id)
-        {
-            return base.find(id);
-        }
-
-        private NHibernate.ISession session;
-        private SpectrumSource spectrumSource;
-    }*/
     #endregion
 
     public static class ExtensionMethods

@@ -1166,6 +1166,143 @@ namespace Test
             session.Close();
         }
 
+        private ushort[] createProteinCoverageMask (string mask)
+        {
+            return new List<ushort>(mask.Select(o => Convert.ToUInt16(o - '0'))).ToArray();
+        }
+
+        [TestMethod]
+        public void TestCoverage ()
+        {
+            string[] testProteinSequences = new string[]
+            {
+                "PEPTIDERPEPTIDEKELVISPEPTIDE",
+                "DERPEPTIDEKELVISPEPTIDE",
+                "TIDERELVISPEPTIDEKPEP",
+
+                "ELVISKLIVESRTHANKYAVERYMUCH",
+                "ELVISISRCKNRLLKING",
+            };
+
+            string idpDbName = System.Reflection.MethodInfo.GetCurrentMethod().Name + ".idpDB";
+            File.Delete(idpDbName);
+            sessionFactory = SessionFactoryFactory.CreateSessionFactory(idpDbName, true, false);
+            var session = sessionFactory.OpenSession();
+
+            TestModel.CreateTestProteins(session, testProteinSequences);
+
+            int numSources = 2;
+            int numAnalyses = 2;
+
+            for (int source = 1; source <= numSources; ++source)
+            for (int analysis = 1; analysis <= numAnalyses; ++analysis)
+            {
+                int scan = 0;
+
+                List<SpectrumTuple> testPsmSummary = new List<SpectrumTuple>()
+                {
+                    //               Group                        Score  Q   List of Peptide@Charge/ScoreDivider
+
+                    // PEPTIDERPEPTIDEKELVISPEPTIDE
+                    // ------- -------      ------- (PEPTIDE)
+                    // --------                     (PEPTIDER)
+                    //    -----                     (TIDER)
+                    //         --------             (PEPTIDEK)
+                    //      -----------             (DERPEPTIDEK)
+                    // ----------------             (PEPTIDERPEPTIDEK)
+                    // 3334455444444443000001111111 (23/28 covered)
+
+                    // DERPEPTIDEKELVISPEPTIDE
+                    //    -------      ------- (PEPTIDE)
+                    //    --------             (PEPTIDEK)
+                    // -----------             (DERPEPTIDEK)
+                    // 11133333332000001111111 (18/23 covered)
+
+                    // TIDERELVISPEPTIDEKPEP
+                    //           -------     (PEPTIDE)
+                    //           --------    (PEPTIDEK)
+                    // -----                 (TIDER)
+                    // 111110000022222221000 (13/21 covered)
+
+                    new SpectrumTuple("/", source, ++scan, analysis, 42, 0, "PEPTIDE@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, 42, 0, "PEPTIDER@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, 42, 0, "PEPTIDERPEPTIDEK@1/1 PEPTIDEK@1/2"),
+                    new SpectrumTuple("/", source, ++scan, analysis, 42, 0, "PEPTIDEK@1/1 TIDEK@1/2"),
+                    new SpectrumTuple("/", source, ++scan, analysis, 42, 0, "DERPEPTIDEK@1/1 PEPTIDEKPEP@1/2"),
+                    new SpectrumTuple("/", source, ++scan, analysis, 42, 0, "TIDER@1/1"),
+
+
+                    // ELVISKLIVESRTHANKYAVERYMUCH
+                    // ------------                (ELVISLIVESR)
+                    // ------------                (E[N-1H-3]LVISLIVESR)
+                    // 222222222222000000000000000 (12/27 covered)
+
+                    new SpectrumTuple("/", source, ++scan, analysis, 42, 0, "ELVISKLIVESR@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, 42, 0, "E[N-1H-3]LVISKLIVESR@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, 42, 0, "ELVISKLIVESR@1/1"),
+
+
+                    // ELVISISRCKNRLLKING
+                    // --------           (ELVISISR)
+                    // ------------       (ELVISISRCKNR)
+                    //         ---------- (CKNRLLKING)
+                    // 222222222222111111 (18/18 covered)
+
+                    new SpectrumTuple("/", source, ++scan, analysis, 42, 0, "ELVISISR@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, 42, 0, "ELVISISRCKNR@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, 42, 0, "CKNRLLKING@1/1"),
+                };
+
+                TestModel.CreateTestData(session, testPsmSummary);
+            }
+
+            var dataFilter = new DataFilter()
+            {
+                MaximumQValue = 1,
+                MinimumDistinctPeptidesPerProtein = 1,
+                MinimumSpectraPerProtein = 1,
+                MinimumAdditionalPeptidesPerProtein = 0
+            };
+            dataFilter.ApplyBasicFilters(session);
+
+            // clear session so objects are loaded from database
+            session.Clear();
+
+            Protein pro;
+            const double epsilon = 1e-9;
+
+            // PEPTIDERPEPTIDEKELVISPEPTIDE
+            // 3334455444444443000001111111 (23/28 covered)
+            pro = session.UniqueResult<Protein>(o => o.Sequence == "PEPTIDERPEPTIDEKELVISPEPTIDE");
+            Assert.AreEqual(100 * 23.0 / 28, pro.Coverage, epsilon);
+            CollectionAssert.AreEqual(createProteinCoverageMask("3334455444444443000001111111"), pro.CoverageMask.ToArray());
+
+            // DERPEPTIDEKELVISPEPTIDE
+            // 11133333332000001111111 (18/23 covered)
+            pro = session.UniqueResult<Protein>(o => o.Sequence == "DERPEPTIDEKELVISPEPTIDE");
+            Assert.AreEqual(100 * 18.0 / 23, pro.Coverage, epsilon);
+            CollectionAssert.AreEqual(createProteinCoverageMask("11133333332000001111111"), pro.CoverageMask.ToArray());
+
+            // TIDERELVISPEPTIDEKPEP
+            // 111110000011111111000 (13/21 covered)
+            pro = session.UniqueResult<Protein>(o => o.Sequence == "TIDERELVISPEPTIDEKPEP");
+            Assert.AreEqual(100 * 13.0 / 21, pro.Coverage, epsilon);
+            CollectionAssert.AreEqual(createProteinCoverageMask("111110000022222221000"), pro.CoverageMask.ToArray());
+
+            // ELVISKLIVESRTHANKYAVERYMUCH
+            // 222222222222000000000000000 (12/27 covered)
+            pro = session.UniqueResult<Protein>(o => o.Sequence == "ELVISKLIVESRTHANKYAVERYMUCH");
+            Assert.AreEqual(100 * 12.0 / 27, pro.Coverage, epsilon);
+            // TODO: make modifications add depth to sequence coverage?
+            //CollectionAssert.AreEqual(createProteinCoverageMask("222222222222000000000000000"), pro.CoverageMask.ToArray());
+
+            // ELVISISRCKNRLLKING
+            // 222222222222111111 (18/18 covered)
+            pro = session.UniqueResult<Protein>(o => o.Sequence == "ELVISISRCKNRLLKING");
+            Assert.AreEqual(100 * 18 / 18, pro.Coverage, epsilon);
+            CollectionAssert.AreEqual(createProteinCoverageMask("222222222222111111"), pro.CoverageMask.ToArray());
+        }
+
         [TestMethod]
         public void TestFilteredQueries ()
         {

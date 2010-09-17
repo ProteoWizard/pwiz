@@ -229,52 +229,6 @@ namespace IDPicker
                     applyBasicFilter();
                 }
         }
-
-        SimpleProgressForm applyBasicFilterProgressForm;
-        void applyBasicFilter ()
-        {
-            clearData();
-
-            applyBasicFilterProgressForm = new SimpleProgressForm(this);
-            applyBasicFilterProgressForm.Text = "Applying basic filters...";
-            applyBasicFilterProgressForm.Show();
-            dataFilter.FilteringProgress += new EventHandler<DataFilter.FilteringProgressEventArgs>(applyBasicFilterProgressForm.UpdateProgress);
-
-            var workerThread = new BackgroundWorker()
-                                   {
-                                       WorkerReportsProgress = true,
-                                       WorkerSupportsCancellation = true
-                                   };
-
-            workerThread.DoWork += new DoWorkEventHandler(applyBasicFilterAsync);
-            workerThread.RunWorkerCompleted += new RunWorkerCompletedEventHandler(setData);
-            workerThread.RunWorkerAsync();
-        }
-
-        void applyBasicFilterAsync (object sender, DoWorkEventArgs e)
-        {
-            lock (session)
-                dataFilter.ApplyBasicFilters(session);
-        }
-
-        void clearData ()
-        {
-            proteinTableForm.ClearData();
-            peptideTableForm.ClearData();
-            spectrumTableForm.ClearData();
-            modificationTableForm.ClearData();
-        }
-
-        void setData (object sender, RunWorkerCompletedEventArgs e)
-        {
-            dataFilter.FilteringProgress -= new EventHandler<DataFilter.FilteringProgressEventArgs>(applyBasicFilterProgressForm.UpdateProgress);
-            applyBasicFilterProgressForm.Dispose();
-
-            proteinTableForm.SetData(session, dataFilter);
-            peptideTableForm.SetData(session, dataFilter);
-            spectrumTableForm.SetData(session, dataFilter);
-            modificationTableForm.SetData(session, dataFilter);
-        }
         #endregion
 
         #region Handling of filter events from each view
@@ -379,6 +333,59 @@ namespace IDPicker
 
             if (oldFilter.Modifications.Count == 0 && oldFilter.ModifiedSite == null)
                 modificationTableForm.SetData(session, dataFilter);
+        }
+
+        SimpleProgressForm applyBasicFilterProgressForm;
+        void applyBasicFilter ()
+        {
+            clearData();
+
+            applyBasicFilterProgressForm = new SimpleProgressForm(this);
+            applyBasicFilterProgressForm.Text = "Applying basic filters...";
+            applyBasicFilterProgressForm.Show();
+            dataFilter.FilteringProgress += new EventHandler<DataFilter.FilteringProgressEventArgs>(applyBasicFilterProgressForm.UpdateProgress);
+
+            var workerThread = new BackgroundWorker()
+            {
+                WorkerReportsProgress = true,
+                WorkerSupportsCancellation = true
+            };
+
+            workerThread.DoWork += new DoWorkEventHandler(applyBasicFilterAsync);
+            workerThread.RunWorkerCompleted += new RunWorkerCompletedEventHandler(setData);
+            workerThread.RunWorkerAsync();
+        }
+
+        void applyBasicFilterAsync (object sender, DoWorkEventArgs e)
+        {
+            try
+            {
+                lock (session)
+                    dataFilter.ApplyBasicFilters(session);
+            }
+            catch (Exception ex)
+            {
+                HandleException(Thread.CurrentThread, ex);
+            }
+        }
+
+        void clearData ()
+        {
+            proteinTableForm.ClearData();
+            peptideTableForm.ClearData();
+            spectrumTableForm.ClearData();
+            modificationTableForm.ClearData();
+        }
+
+        void setData (object sender, RunWorkerCompletedEventArgs e)
+        {
+            dataFilter.FilteringProgress -= new EventHandler<DataFilter.FilteringProgressEventArgs>(applyBasicFilterProgressForm.UpdateProgress);
+            applyBasicFilterProgressForm.Dispose();
+
+            proteinTableForm.SetData(session, dataFilter);
+            peptideTableForm.SetData(session, dataFilter);
+            spectrumTableForm.SetData(session, dataFilter);
+            modificationTableForm.SetData(session, dataFilter);
         }
 
         void Form1_Load (object sender, EventArgs e)
@@ -770,15 +777,26 @@ namespace IDPicker
             }
             catch (Exception ex)
             {
-                string message = ex.ToString();
-                if (ex.InnerException != null)
-                    message += "\n\nAdditional information: " + ex.InnerException.ToString();
-                MessageBox.Show(message,
-                                "Unhandled Exception",
-                                MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1,
-                                0, false);
-                Application.Exit();
+                HandleException(this, ex);
             }
+        }
+
+        public void HandleException (object sender, Exception ex)
+        {
+            if (InvokeRequired)
+            {
+                Invoke((MethodInvoker) (() => HandleException(sender, ex)));
+                return;
+            }
+
+            string message = ex.ToString();
+            if (ex.InnerException != null)
+                message += "\n\nAdditional information: " + ex.InnerException.ToString();
+            MessageBox.Show(message,
+                            "Unhandled Exception",
+                            MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1,
+                            0, false);
+            Application.Exit();
         }
 
         public void ReloadSession(NHibernate.ISession ses)

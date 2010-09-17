@@ -45,7 +45,7 @@ namespace IDPicker.DataModel
 
         List<KeyValuePair<IDbCommand, List<object[]>>> insertCommandByTable;
         Dictionary<string, long> scoreIdByName;
-        long currentMaxSequenceLength;
+        long currentMaxSequenceLength = -1;
 
         string diskFilepath;
         IDbConnection memConn;
@@ -83,7 +83,7 @@ namespace IDPicker.DataModel
                 insertCommandByTable.Add(new KeyValuePair<IDbCommand, List<object[]>>());
 
             insertCommandByTable[(int) Table.Protein] = new KeyValuePair<IDbCommand, List<object[]>>(conn.CreateCommand(), new List<object[]>());
-            insertCommandByTable[(int) Table.Protein].Key.CommandText = createInsertSql("Protein", "Id, Accession");
+            insertCommandByTable[(int) Table.Protein].Key.CommandText = createInsertSql("Protein", "Id, Accession, Length");
 
             insertCommandByTable[(int) Table.ProteinMetadata] = new KeyValuePair<IDbCommand, List<object[]>>(conn.CreateCommand(), new List<object[]>());
             insertCommandByTable[(int) Table.ProteinMetadata].Key.CommandText = createInsertSql("ProteinMetadata", "Id, Description");
@@ -253,7 +253,7 @@ namespace IDPicker.DataModel
 
         public void Add (Protein pro)
         {
-            insertRow(Table.Protein, new object[] {pro.Id, pro.Accession});
+            insertRow(Table.Protein, new object[] {pro.Id, pro.Accession, pro.Length});
             insertRow(Table.ProteinMetadata, new object[] {pro.Id, pro.Description});
             insertRow(Table.ProteinData, new object[] {pro.Id, pro.Sequence});
 

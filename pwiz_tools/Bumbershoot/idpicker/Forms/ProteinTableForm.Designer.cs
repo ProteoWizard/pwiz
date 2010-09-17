@@ -52,13 +52,14 @@ namespace IDPicker.Forms
         {
             this.components = new System.ComponentModel.Container();
             this.treeListView = new BrightIdeasSoftware.TreeListView();
-            this.clusterColumn = new BrightIdeasSoftware.OLVColumn();
             this.accessionColumn = new BrightIdeasSoftware.OLVColumn();
+            this.clusterColumn = new BrightIdeasSoftware.OLVColumn();
             this.proteinCountColumn = new BrightIdeasSoftware.OLVColumn();
             this.filteredPeptidesColumn = new BrightIdeasSoftware.OLVColumn();
             this.filteredVariantsColumn = new BrightIdeasSoftware.OLVColumn();
             this.filteredSpectraColumn = new BrightIdeasSoftware.OLVColumn();
             this.descriptionColumn = new BrightIdeasSoftware.OLVColumn();
+            this.coverageColumn = new BrightIdeasSoftware.OLVColumn();
             ((System.ComponentModel.ISupportInitialize) (this.treeListView)).BeginInit();
             this.SuspendLayout();
             // 
@@ -67,6 +68,7 @@ namespace IDPicker.Forms
             this.treeListView.AllColumns.Add(this.accessionColumn);
             this.treeListView.AllColumns.Add(this.clusterColumn);
             this.treeListView.AllColumns.Add(this.proteinCountColumn);
+            this.treeListView.AllColumns.Add(this.coverageColumn);
             this.treeListView.AllColumns.Add(this.filteredPeptidesColumn);
             this.treeListView.AllColumns.Add(this.filteredVariantsColumn);
             this.treeListView.AllColumns.Add(this.filteredSpectraColumn);
@@ -75,6 +77,7 @@ namespace IDPicker.Forms
             this.accessionColumn,
             this.clusterColumn,
             this.proteinCountColumn,
+            this.coverageColumn,
             this.filteredPeptidesColumn,
             this.filteredVariantsColumn,
             this.filteredSpectraColumn,
@@ -87,7 +90,7 @@ namespace IDPicker.Forms
             this.treeListView.Name = "treeListView";
             this.treeListView.OwnerDraw = true;
             this.treeListView.ShowGroups = false;
-            this.treeListView.Size = new System.Drawing.Size(548, 353);
+            this.treeListView.Size = new System.Drawing.Size(1152, 353);
             this.treeListView.TabIndex = 0;
             this.treeListView.UnfocusedHighlightBackgroundColor = System.Drawing.SystemColors.Highlight;
             this.treeListView.UnfocusedHighlightForegroundColor = System.Drawing.SystemColors.HighlightText;
@@ -96,16 +99,16 @@ namespace IDPicker.Forms
             this.treeListView.View = System.Windows.Forms.View.Details;
             this.treeListView.VirtualMode = true;
             // 
+            // accessionColumn
+            // 
+            this.accessionColumn.Text = "Accession";
+            this.accessionColumn.Width = 100;
+            // 
             // clusterColumn
             // 
             this.clusterColumn.Hyperlink = true;
             this.clusterColumn.Text = "Cluster";
             this.clusterColumn.Width = 55;
-            // 
-            // accessionColumn
-            // 
-            this.accessionColumn.Text = "Accession";
-            this.accessionColumn.Width = 100;
             // 
             // proteinCountColumn
             // 
@@ -131,11 +134,16 @@ namespace IDPicker.Forms
             this.descriptionColumn.Text = "Description";
             this.descriptionColumn.Width = 1000;
             // 
+            // coverageColumn
+            // 
+            this.coverageColumn.Hyperlink = true;
+            this.coverageColumn.Text = "Coverage";
+            // 
             // ProteinTableForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(548, 353);
+            this.ClientSize = new System.Drawing.Size(1152, 353);
             this.Controls.Add(this.treeListView);
             this.Name = "ProteinTableForm";
             this.TabText = "ProteinTableForm";
@@ -155,6 +163,7 @@ namespace IDPicker.Forms
         private BrightIdeasSoftware.OLVColumn proteinCountColumn;
         private BrightIdeasSoftware.OLVColumn filteredVariantsColumn;
         private BrightIdeasSoftware.OLVColumn clusterColumn;
+        private BrightIdeasSoftware.OLVColumn coverageColumn;
 
     }
 }

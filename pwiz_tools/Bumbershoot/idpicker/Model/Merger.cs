@@ -111,6 +111,8 @@ namespace IDPicker.DataModel
                 MaxSpectrumId = (long) maxIds[10];
                 MaxAnalysisId = (long) maxIds[11];
 
+                IDbTransaction transaction;
+
                 int mergedFiles = 0;
                 foreach (string mergeSourceFilepath in mergeSourceFilepaths)
                 {
@@ -127,7 +129,7 @@ namespace IDPicker.DataModel
                     conn.ExecuteNonQuery("ATTACH DATABASE '" + mergeSourceFilepath + "' AS new");
                     conn.ExecuteNonQuery("PRAGMA new.cache_size=" + newCacheSize);
 
-                    var transaction = conn.BeginTransaction();
+                    transaction = conn.BeginTransaction();
 
                     try
                     {
@@ -169,7 +171,19 @@ namespace IDPicker.DataModel
                         conn.ExecuteNonQuery("DETACH DATABASE new");
                     }
                 }
-            }
+
+                transaction = conn.BeginTransaction();
+
+                try
+                {
+                    addIntegerSet(conn);
+                }
+                finally
+                {
+                    transaction.Commit();
+                }
+
+            } // conn.Dispose()
         }
 
         static string mergeProteinsSql =
@@ -298,8 +312,8 @@ namespace IDPicker.DataModel
 
 
         static string addNewProteinsSql =
-              @"INSERT INTO merged.Protein (Id, Accession)
-                SELECT AfterMergeId, Accession
+              @"INSERT INTO merged.Protein (Id, Accession, Length)
+                SELECT AfterMergeId, Accession, Length
                 FROM NewProteins
                 JOIN new.Protein newPro ON BeforeMergeId = newPro.Id;
 
@@ -484,6 +498,21 @@ namespace IDPicker.DataModel
             MaxSpectrumSourceGroupLinkId += (long) maxIds[9];
             MaxSpectrumId += (long) maxIds[10];
             MaxAnalysisId += (long) maxIds[11];
+        }
+
+        static void addIntegerSet (IDbConnection conn)
+        {
+            long maxInteger = (long) conn.ExecuteQuery("SELECT IFNULL(MAX(Value),0) FROM IntegerSet").First()[0];
+            long maxProteinLength = (long) conn.ExecuteQuery("SELECT MAX(LENGTH(Sequence)) FROM ProteinData").First()[0];
+
+            var cmd = conn.CreateCommand(); cmd.CommandText = "INSERT INTO IntegerSet VALUES (?)";
+            var iParam = cmd.CreateParameter(); cmd.Parameters.Add(iParam);
+
+            for (long i = maxInteger + 1; i <= maxProteinLength; ++i)
+            {
+                iParam.Value = i;
+                cmd.ExecuteNonQuery();
+            }
         }
 
         bool OnMergingProgress (Exception ex, int mergedFiles)

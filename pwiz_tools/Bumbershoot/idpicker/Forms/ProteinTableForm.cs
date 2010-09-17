@@ -52,7 +52,8 @@ namespace IDPicker.Forms
             public long FirstProteinId { get; private set; }
             public string FirstProteinDescription { get; set; }
             public long ProteinCount { get; private set; }
-            public long Cluster { get; private set; }
+            public long? Cluster { get; private set; }
+            public double MeanProteinCoverage { get; private set; }
 
             #region Constructor
             public ProteinGroupRow (object[] queryRow)
@@ -65,7 +66,8 @@ namespace IDPicker.Forms
                 FirstProteinId = (long) queryRow[5];
                 FirstProteinDescription = (string) queryRow[6];
                 ProteinCount = (long) queryRow[7];
-                Cluster = (long) queryRow[8];
+                Cluster = (long?) queryRow[8];
+                MeanProteinCoverage = (double) queryRow[9];
             }
             #endregion
         }
@@ -126,6 +128,13 @@ namespace IDPicker.Forms
             {
                 if (x is ProteinGroupRow)
                     return (x as ProteinGroupRow).ProteinCount;
+                return null;
+            };
+
+            coverageColumn.AspectGetter += delegate(object x)
+            {
+                if (x is ProteinGroupRow)
+                    return (x as ProteinGroupRow).MeanProteinCoverage;
                 return null;
             };
 
@@ -280,7 +289,8 @@ namespace IDPicker.Forms
                     "       MIN(pro.Id), " +
                     "       MIN(pro.Description), " +
                     "       COUNT(DISTINCT pro.Id), " +
-                    "       pro.Cluster " +
+                    "       pro.Cluster, " +
+                    "       AVG(pro.Coverage) " +
                     this.dataFilter.GetFilteredQueryString(DataFilter.FromProtein,
                                                            DataFilter.ProteinToPeptideSpectrumMatch) +
                     "GROUP BY pro.ProteinGroup " +

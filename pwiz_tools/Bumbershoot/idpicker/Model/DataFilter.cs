@@ -66,10 +66,10 @@ namespace IDPicker.DataModel
         #region Event arguments
         public class FilteringProgressEventArgs : System.ComponentModel.CancelEventArgs
         {
-            public FilteringProgressEventArgs(string stage, int completed, int total, Exception ex)
+            public FilteringProgressEventArgs(string stage, int completed, Exception ex)
             {
                 CompletedFilters = completed;
-                TotalFilters = total;
+                TotalFilters = 14;
                 FilteringStage = stage;
                 FilteringException = ex;
             }
@@ -244,7 +244,7 @@ namespace IDPicker.DataModel
             // ignore errors if main tables haven't been created yet
 
             #region Drop Filtered* tables
-            if(OnFilteringProgress(new FilteringProgressEventArgs("Dropping current filters...", 1, 11, null)))
+            if(OnFilteringProgress(new FilteringProgressEventArgs("Dropping current filters...", 1, null)))
                 return;
             try { session.CreateSQLQuery("DROP TABLE FilteredProtein").ExecuteUpdate(); } catch { }
             try { session.CreateSQLQuery("DROP TABLE FilteredPeptideInstance").ExecuteUpdate(); } catch { }
@@ -255,7 +255,7 @@ namespace IDPicker.DataModel
             #region Restore Unfiltered* tables as the main tables
             try
             {
-                if (OnFilteringProgress(new FilteringProgressEventArgs("Restoring unfiltered data...", 2, 11, null)))
+                if (OnFilteringProgress(new FilteringProgressEventArgs("Restoring unfiltered data...", 2, null)))
                     return;
 
                 // if unfiltered tables have not been created, this will throw and skip the rest of the block
@@ -280,10 +280,10 @@ namespace IDPicker.DataModel
             #endregion
 
             #region Create Filtered* tables by applying the basic filters to the main tables
-            if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering proteins...", 3, 11, null)))
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering proteins...", 3, null)))
                 return;
             string filterProteinsSql =
-                @"CREATE TABLE FilteredProtein (Id INTEGER PRIMARY KEY, Accession TEXT, Cluster INT, ProteinGroup TEXT);
+                @"CREATE TABLE FilteredProtein (Id INTEGER PRIMARY KEY, Accession TEXT, Cluster INT, ProteinGroup TEXT, Length INT);
                   INSERT INTO FilteredProtein SELECT pro.*
                   FROM PeptideSpectrumMatch psm
                   JOIN PeptideInstance pi ON psm.Peptide = pi.Peptide
@@ -298,7 +298,7 @@ namespace IDPicker.DataModel
                                                  MinimumDistinctPeptidesPerProtein,
                                                  MinimumSpectraPerProtein)).ExecuteUpdate();
 
-            if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering peptide spectrum matches...", 4, 11, null)))
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering peptide spectrum matches...", 4, null)))
                 return;
             session.CreateSQLQuery(@"CREATE TABLE FilteredPeptideSpectrumMatch (Id INTEGER PRIMARY KEY, Spectrum INT, Analysis INT, Peptide INT, QValue NUMERIC, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC, MonoisotopicMassError NUMERIC, MolecularWeightError NUMERIC, Rank INT, Charge INT);
                                      INSERT INTO FilteredPeptideSpectrumMatch SELECT psm.*
@@ -315,7 +315,7 @@ namespace IDPicker.DataModel
                                     "
                                   ).ExecuteUpdate();
 
-            if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering peptides...", 5, 11, null)))
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering peptides...", 5, null)))
                 return;
             session.CreateSQLQuery(@"CREATE TABLE FilteredPeptide (Id INTEGER PRIMARY KEY, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC);
                                      INSERT INTO FilteredPeptide SELECT pep.*
@@ -324,7 +324,7 @@ namespace IDPicker.DataModel
                                      GROUP BY pep.Id"
                                   ).ExecuteUpdate();
 
-            if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering peptide instances...", 6, 11, null)))
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering peptide instances...", 6, null)))
                 return;
             session.CreateSQLQuery(@"CREATE TABLE FilteredPeptideInstance (Id INTEGER PRIMARY KEY, Protein INT, Peptide INT, Offset INT, Length INT, NTerminusIsSpecific INT, CTerminusIsSpecific INT, MissedCleavages INT);
                                      INSERT INTO FilteredPeptideInstance SELECT pi.*
@@ -355,6 +355,7 @@ namespace IDPicker.DataModel
             if (AssembleProteinGroups(session)) return;
             if (ApplyAdditionalPeptidesFilter(session)) return;
             if (AssembleClusters(session)) return;
+            if (AssembleProteinCoverage(session)) return;
 
             #region Create FilteringCriteria table to store the basic filter parameters
             try { session.CreateSQLQuery("DROP TABLE FilteringCriteria").ExecuteUpdate(); }
@@ -381,7 +382,7 @@ namespace IDPicker.DataModel
         /// </summary>
         bool AssembleProteinGroups(NHibernate.ISession session)
         {
-            if (OnFilteringProgress(new FilteringProgressEventArgs("Assembling protein groups...", 7, 11, null)))
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Assembling protein groups...", 7, null)))
                 return true;
 
             session.CreateSQLQuery(@"CREATE TEMP TABLE ProteinGroups AS
@@ -391,7 +392,7 @@ namespace IDPicker.DataModel
                                      GROUP BY pi.Protein;
 
                                      CREATE TEMP TABLE TempProtein AS
-                                     SELECT pg.ProteinId, pro.Accession, pro.Cluster, pg2.ProteinGroupId
+                                     SELECT pg.ProteinId, pro.Accession, pro.Cluster, pg2.ProteinGroupId, pro.Length
                                      FROM ProteinGroups pg
                                      JOIN ( 
                                            SELECT pg.ProteinGroup, MIN(ProteinId) AS ProteinGroupId
@@ -419,7 +420,7 @@ namespace IDPicker.DataModel
             if (MinimumAdditionalPeptidesPerProtein == 0)
                 return false;
 
-            if (OnFilteringProgress(new FilteringProgressEventArgs("Calculating additional peptide counts...", 8, 11, null)))
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Calculating additional peptide counts...", 8, null)))
                 return true;
 
             Map<long, long> additionalPeptidesByProteinId = CalculateAdditionalPeptides(session);
@@ -443,7 +444,7 @@ namespace IDPicker.DataModel
                 cmd.ExecuteNonQuery();
             }
 
-            if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering by additional peptide count...", 9, 11, null)))
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering by additional peptide count...", 9, null)))
                 return true;
 
             var additionalPeptidesDeleteCommand = new StringBuilder();
@@ -475,12 +476,12 @@ namespace IDPicker.DataModel
         /// </summary>
         bool AssembleClusters (NHibernate.ISession session)
         {
-            if (OnFilteringProgress(new FilteringProgressEventArgs("Calculating protein clusters...", 10, 11, null)))
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Calculating protein clusters...", 10, null)))
                 return true;
 
             Map<long, long> clusterByProteinId = calculateProteinClusters(session);
 
-            if (OnFilteringProgress(new FilteringProgressEventArgs("Assigning proteins to clusters...", 11, 11, null)))
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Assigning proteins to clusters...", 11, null)))
                 return true;
 
             var cmd = session.Connection.CreateCommand();
@@ -499,6 +500,94 @@ namespace IDPicker.DataModel
                 cmd.ExecuteNonQuery();
             }
             cmd.ExecuteNonQuery("CREATE INDEX Protein_Cluster ON Protein (Cluster)");
+
+            return false;
+        }
+
+        /// <summary>
+        /// Calculate coverage and coverage masks for proteins
+        /// </summary>
+        bool AssembleProteinCoverage (NHibernate.ISession session)
+        {
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Calculating protein coverage...", 12, null)))
+                return true;
+            
+            session.CreateSQLQuery(@"DELETE FROM ProteinCoverage;
+                                     INSERT INTO ProteinCoverage (Id, Coverage)
+                                     SELECT pi.Protein, CAST(COUNT(DISTINCT i.Value) AS REAL) * 100 / pro.Length
+                                     FROM PeptideInstance pi
+                                     JOIN Protein pro ON pi.Protein=pro.Id
+                                     JOIN ProteinData pd ON pi.Protein=pd.Id
+                                     JOIN IntegerSet i
+                                     WHERE i.Value BETWEEN pi.Offset AND pi.Offset+pi.Length-1
+                                     GROUP BY pi.Protein;
+                                    ").ExecuteUpdate();
+
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Calculating protein coverage masks...", 13, null)))
+                return true;
+
+            // get non-zero coverage depths at each protein offset
+            var coverageMaskRows = session.CreateSQLQuery(
+                                   @"SELECT pi.Protein, pro.Length, i.Value, COUNT(i.Value)
+                                     FROM PeptideInstance pi
+                                     JOIN Protein pro ON pi.Protein=pro.Id
+                                     JOIN ProteinData pd ON pi.Protein=pd.Id
+                                     JOIN IntegerSet i 
+                                     WHERE i.Value BETWEEN pi.Offset AND pi.Offset+pi.Length-1
+                                     GROUP BY pi.Protein, i.Value
+                                     ORDER BY pi.Protein, i.Value;
+                                    ").List().OfType<object[]>();
+
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Updating protein coverage masks...", 14, null)))
+                return true;
+
+            var cmd = session.Connection.CreateCommand();
+            cmd.CommandText = "UPDATE ProteinCoverage SET CoverageMask = ? WHERE Id = ?";
+            var parameters = new List<System.Data.IDbDataParameter>();
+            for (int i = 0; i < 2; ++i)
+            {
+                parameters.Add(cmd.CreateParameter());
+                cmd.Parameters.Add(parameters[i]);
+            }
+            cmd.Prepare();
+
+            var proteinCoverageMaskUserType = new ProteinCoverageMaskUserType();
+            long currentProteinId = 0;
+            ushort[] currentProteinMask = null;
+
+            foreach (object[] row in coverageMaskRows)
+            {
+                long proteinId = Convert.ToInt64(row[0]);
+                int proteinLength = Convert.ToInt32(row[1]);
+
+                // before moving on to the next protein, update the current one
+                if (proteinId > currentProteinId)
+                {
+                    if (currentProteinMask != null)
+                    {
+                        parameters[0].Value = proteinCoverageMaskUserType.Disassemble(currentProteinMask);
+                        parameters[1].Value = currentProteinId;
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    currentProteinId = proteinId;
+                    currentProteinMask = new ushort[proteinLength];
+
+                    // initialize all offsets to 0 (no coverage)
+                    currentProteinMask.Initialize();
+                }
+
+                // set a covered offset to its coverage depth
+                currentProteinMask[Convert.ToInt32(row[2])] = Convert.ToUInt16(row[3]);
+            }
+
+            // set the last protein's mask
+            if (currentProteinMask != null)
+            {
+                parameters[0].Value = proteinCoverageMaskUserType.Disassemble(currentProteinMask);
+                parameters[1].Value = currentProteinId;
+                cmd.ExecuteNonQuery();
+            }
 
             return false;
         }
