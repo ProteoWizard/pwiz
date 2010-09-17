@@ -752,6 +752,9 @@ namespace IDPicker
                     { }
                 }
 
+                //make sure to ignore "Abandoned" group
+                dataFilter.SpectrumSourceGroup = session.QueryOver<DataModel.SpectrumSourceGroup>().Where(g => g.Name == "/").SingleOrDefault();
+
                 breadCrumbControl.BreadCrumbs.Clear();
                 breadCrumbControl.BreadCrumbs.Add(dataFilter.GetBasicFilterControls(this));
 
@@ -776,6 +779,16 @@ namespace IDPicker
                                 0, false);
                 Application.Exit();
             }
+        }
+
+        public void ReloadSession(NHibernate.ISession ses)
+        {
+            IList<string> database = new List<string>();
+            database.Add((from System.Text.RegularExpressions.Match m 
+                              in (new System.Text.RegularExpressions.Regex(@"\w:(?:\\(?:\w| |_|-)+)+.idpDB"))
+                              .Matches(ses.Connection.ConnectionString) select m.Value).SingleOrDefault<string>());
+            if (File.Exists(database[0]))
+                OpenFiles(database);
         }
     }
 
