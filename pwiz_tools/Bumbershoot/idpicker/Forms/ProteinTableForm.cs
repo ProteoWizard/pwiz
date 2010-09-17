@@ -131,10 +131,14 @@ namespace IDPicker.Forms
                 return null;
             };
 
+            coverageColumn.AspectToStringFormat = "{0:0%}";
             coverageColumn.AspectGetter += delegate(object x)
             {
+                // the AspectToStringFormat formatter multiplies by 100
                 if (x is ProteinGroupRow)
-                    return (x as ProteinGroupRow).MeanProteinCoverage;
+                    return (x as ProteinGroupRow).MeanProteinCoverage / 100.0;
+                else if (x is ProteinRow)
+                    return (x as ProteinRow).Protein.Coverage / 100.0;
                 return null;
             };
 
