@@ -63,7 +63,8 @@ namespace IDPicker.Forms
             this.massErrorColumn = new BrightIdeasSoftware.OLVColumn();
             this.qvalueColumn = new BrightIdeasSoftware.OLVColumn();
             this.sequenceColumn = new BrightIdeasSoftware.OLVColumn();
-            ((System.ComponentModel.ISupportInitialize) (this.treeListView)).BeginInit();
+            this.editGroupsButton = new System.Windows.Forms.Button();
+            ((System.ComponentModel.ISupportInitialize)(this.treeListView)).BeginInit();
             this.SuspendLayout();
             // 
             // treeListView
@@ -79,20 +80,22 @@ namespace IDPicker.Forms
             this.treeListView.AllColumns.Add(this.massErrorColumn);
             this.treeListView.AllColumns.Add(this.qvalueColumn);
             this.treeListView.AllColumns.Add(this.sequenceColumn);
+            this.treeListView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.treeListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.sourceOrScanColumn,
             this.totalSpectraColumn,
             this.confidentSpectraColumn,
             this.confidentPeptidesColumn});
             this.treeListView.Cursor = System.Windows.Forms.Cursors.Default;
-            this.treeListView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.treeListView.FullRowSelect = true;
             this.treeListView.HideSelection = false;
-            this.treeListView.Location = new System.Drawing.Point(0, 0);
+            this.treeListView.Location = new System.Drawing.Point(0, 31);
             this.treeListView.Name = "treeListView";
             this.treeListView.OwnerDraw = true;
             this.treeListView.ShowGroups = false;
-            this.treeListView.Size = new System.Drawing.Size(817, 353);
+            this.treeListView.Size = new System.Drawing.Size(817, 322);
             this.treeListView.TabIndex = 0;
             this.treeListView.UnfocusedHighlightBackgroundColor = System.Drawing.SystemColors.Highlight;
             this.treeListView.UnfocusedHighlightForegroundColor = System.Drawing.SystemColors.HighlightText;
@@ -103,7 +106,9 @@ namespace IDPicker.Forms
             // sourceOrScanColumn
             // 
             this.sourceOrScanColumn.FillsFreeSpace = true;
+            this.sourceOrScanColumn.MinimumWidth = 100;
             this.sourceOrScanColumn.Text = "Source";
+            this.sourceOrScanColumn.Width = 100;
             // 
             // totalSpectraColumn
             // 
@@ -171,16 +176,28 @@ namespace IDPicker.Forms
             this.sequenceColumn.Text = "Sequence";
             this.sequenceColumn.Width = 70;
             // 
+            // editGroupsButton
+            // 
+            this.editGroupsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.editGroupsButton.Location = new System.Drawing.Point(732, 4);
+            this.editGroupsButton.Name = "editGroupsButton";
+            this.editGroupsButton.Size = new System.Drawing.Size(81, 23);
+            this.editGroupsButton.TabIndex = 1;
+            this.editGroupsButton.Text = "Edit Grouping";
+            this.editGroupsButton.UseVisualStyleBackColor = true;
+            this.editGroupsButton.Click += new System.EventHandler(this.editGroupsButton_Click);
+            // 
             // SpectrumTableForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(817, 353);
             this.Controls.Add(this.treeListView);
+            this.Controls.Add(this.editGroupsButton);
             this.Name = "SpectrumTableForm";
             this.TabText = "SpectrumTableForm";
             this.Text = "SpectrumTableForm";
-            ((System.ComponentModel.ISupportInitialize) (this.treeListView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.treeListView)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -199,6 +216,7 @@ namespace IDPicker.Forms
         private BrightIdeasSoftware.OLVColumn qvalueColumn;
         private BrightIdeasSoftware.OLVColumn exactMassColumn;
         private BrightIdeasSoftware.OLVColumn sequenceColumn;
+        private System.Windows.Forms.Button editGroupsButton;
 
     }
 }

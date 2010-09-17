@@ -384,6 +384,7 @@ namespace IDPicker.Forms
             treeListView.Refresh();
             Refresh();
         }
+            
 
         void setData(object sender, DoWorkEventArgs e)
         {
@@ -499,6 +500,19 @@ namespace IDPicker.Forms
                 selectedItem.EnsureVisible();
             }
         }
+
+        private void editGroupsButton_Click(object sender, EventArgs e)
+        {
+            var gcf = new GroupingControlForm(session);
+
+            if (gcf.ShowDialog().Equals(DialogResult.OK))
+            {
+                basicDataFilter = null;
+                (this.ParentForm as IDPickerForm).ReloadSession(session);
+            }
+
+        }
+
     }
 
     public class SpectrumViewVisualizeEventArgs : EventArgs
