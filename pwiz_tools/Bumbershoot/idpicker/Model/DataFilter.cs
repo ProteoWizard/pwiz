@@ -138,7 +138,7 @@ namespace IDPicker.DataModel
             {
                 return Cluster == null && Protein == null && Peptide == null && DistinctPeptideKey == null &&
                        Modifications.Count == 0 && ModifiedSite == null &&
-                       SpectrumSourceGroup == null && SpectrumSource == null && Spectrum == null;
+                       SpectrumSource == null && Spectrum == null;
             }
         }
 
@@ -370,6 +370,10 @@ namespace IDPicker.DataModel
 
             if (useScopedTransaction)
                 session.Transaction.Commit();
+
+            //make sure to ignore "Abandoned" group
+            if (SpectrumSourceGroup == null)
+                SpectrumSourceGroup = session.QueryOver<DataModel.SpectrumSourceGroup>().Where(g => g.Name == "/").SingleOrDefault();
         }
 
         /// <summary>
