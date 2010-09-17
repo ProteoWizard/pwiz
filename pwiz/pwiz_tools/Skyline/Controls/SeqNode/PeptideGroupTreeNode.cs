@@ -160,18 +160,17 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             SrmSettings settings = DocSettings;
 
-            IList<DocNode> listPeptides = new List<DocNode>();
+            List<DocNode> listPeptides = new List<DocNode>();
             foreach (var nodePep in DocNode.GetPeptideNodes(settings, useFilter))
                 listPeptides.Add(nodePep.ChangeSettings(settings, SrmSettingsDiff.ALL));
 
             PeptideRankId rankId = DocSettings.PeptideSettings.Libraries.RankId;
             if (rankId != null)
-                listPeptides = PeptideGroup.RankPeptides(listPeptides, settings, useFilter);
+                listPeptides = PeptideGroup.RankPeptides(listPeptides, settings, useFilter).ToList();
 
             MergeChosen(listPeptides, useFilter, node => ((PeptideDocNode)node).Key);
 
-            foreach (var node in listPeptides)
-                yield return node;
+            return listPeptides;
         }
 
         protected override int GetPickInsertIndex(DocNode node, IList<DocNode> choices, int iFirst, int iLast)
@@ -441,7 +440,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             IEnumerator<DocNode> peptides = GetChoices(true).GetEnumerator();
             HashSet<DocNode> peptidesChosen = new HashSet<DocNode>(Chosen);
             PeptideDocNode nodePep = (PeptideDocNode)(peptides.MoveNext() ? peptides.Current : null);
-            bool chosen = peptidesChosen.Contains(nodePep);
+            bool chosen = (nodePep != null ? peptidesChosen.Contains(nodePep) : false);
 
             bool inPeptide = false;
             for (int i = 0; i < aa.Length; i++)
@@ -451,7 +450,8 @@ namespace pwiz.Skyline.Controls.SeqNode
                     while (nodePep != null && i >= nodePep.Peptide.End)
                     {
                         nodePep = (PeptideDocNode)(peptides.MoveNext() ? peptides.Current : null);
-                        chosen = peptidesChosen.Contains(nodePep);
+                        if (nodePep != null)
+                            chosen = peptidesChosen.Contains(nodePep);
                     }
                     if (nodePep != null && i >= nodePep.Peptide.Begin)
                     {

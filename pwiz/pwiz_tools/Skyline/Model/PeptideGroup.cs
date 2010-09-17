@@ -61,9 +61,14 @@ namespace pwiz.Skyline.Model
                 var peptideRank = listRanks[i];
                 var peptide = peptideRank.Key;
                 if(peptideRank.Value == float.MinValue)
-                    break;
-                if (!peptide.Rank.HasValue || peptide.Rank.Value != rank)
+                {
+                    if (peptide.Rank.HasValue)
+                        peptide = peptide.ChangeRank(null);
+                }
+                else if (!peptide.Rank.HasValue || peptide.Rank.Value != rank)
+                {
                     peptide = peptide.ChangeRank(rank);
+                }
                 listRanks[i] = new KeyValuePair<PeptideDocNode, float>(peptide, peptideRank.Value);
 
                 rank++;
@@ -78,6 +83,8 @@ namespace pwiz.Skyline.Model
             for (int i = 0; i < peptidesNew.Length; i++)
             {
                 // TODO: Remove any peptide groups without the correct rank value
+                if (useLimit && listRanks[i].Value == float.MinValue)
+                    break;
                 peptidesNew[i] = listRanks[i].Key;
             }
             

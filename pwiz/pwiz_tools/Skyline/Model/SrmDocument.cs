@@ -713,7 +713,7 @@ namespace pwiz.Skyline.Model
                 //           changes would have any impact on this operation, though.
                 if (createCopy)
                 {
-                    nodePeptide = new PeptideDocNode((Peptide) nodePeptide.Peptide.Copy(),
+                    nodePeptide = new PeptideDocNode((Peptide)nodePeptide.Peptide.Copy(),
                                                         nodePeptide.Rank,
                                                         Annotations.EMPTY,
                                                         nodePeptide.ExplicitMods,
@@ -727,19 +727,26 @@ namespace pwiz.Skyline.Model
                 else
                 {
                     nodePeptide = nodePeptide.ChangeExplicitMods(mods).ChangeSettings(Settings, SrmSettingsDiff.ALL);
-                    docResult = (SrmDocument) docResult.ReplaceChild(peptidePath.Parent, nodePeptide);
+                    docResult = (SrmDocument)docResult.ReplaceChild(peptidePath.Parent, nodePeptide);
+                }
+
+                // Turn off auto-manage children for the peptide group if it is a FASTA sequence,
+                // because the child lists the FASTA sequence will create will not contain this manually
+                // altered peptide.
+                var nodePepGroup = (PeptideGroupDocNode)docResult.FindNode(peptidePath.Parent);
+                if (!nodePepGroup.IsPeptideList)
+                {
+                    // Make sure peptides are ranked correctly
+                    var childrenNew = PeptideGroup.RankPeptides(nodePepGroup.Children, docResult.Settings, false);
+                    docResult = (SrmDocument)docResult.ReplaceChild(nodePepGroup
+                        .ChangeAutoManageChildren(false)
+                        .ChangeChildrenChecked(childrenNew));
                 }
             }
+
             var pepModsNew = pepMods.DeclareExplicitMods(docResult, listGlobalStaticMods, listGlobalHeavyMods);
             if (ReferenceEquals(pepModsNew, pepMods))
                 return docResult;
-
-            // Turn off auto-manage children for the peptide group if it is a FASTA sequence,
-            // because the child lists the FASTA sequence will create will not contain this manually
-            // altered peptide.
-            var nodePepGroup = (PeptideGroupDocNode) docResult.FindNode(peptidePath.Parent);
-            if (!nodePepGroup.IsPeptideList)
-                docResult = (SrmDocument) docResult.ReplaceChild(nodePepGroup.ChangeAutoManageChildren(false));
 
             // Make sure any newly included modifications are added to the settings
             var settings = docResult.Settings.ChangePeptideModifications(m => pepModsNew);
