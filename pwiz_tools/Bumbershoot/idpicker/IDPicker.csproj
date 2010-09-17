@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
+    <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{5C5FC1C6-F9FF-4E2A-A53B-0865FBB9F9D9}</ProjectGuid>
     <OutputType>WinExe</OutputType>
@@ -134,6 +134,12 @@
     <Compile Include="Forms\LogForm.Designer.cs">
       <DependentUpon>LogForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\GroupingControlForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\GroupingControlForm.Designer.cs">
+      <DependentUpon>GroupingControlForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Model\BulkInserter.cs" />
     <Compile Include="Model\DataFilter.cs" />
     <Compile Include="Forms\ModificationTableForm.cs">
@@ -169,15 +175,19 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Forms\ModificationTableForm.resx">
       <DependentUpon>ModificationTableForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\SpectrumTableForm.resx">
       <DependentUpon>SpectrumTableForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\PeptideTableForm.resx">
       <DependentUpon>PeptideTableForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\IDPickerForm.resx">
       <DependentUpon>IDPickerForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -186,6 +196,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\ProteinTableForm.resx">
       <DependentUpon>ProteinTableForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -230,6 +241,11 @@
   <ItemGroup>
     <EmbeddedResource Include="Forms\LogForm.resx">
       <DependentUpon>LogForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\GroupingControlForm.resx">
+      <DependentUpon>GroupingControlForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Model\DataModel.hbm.xml" />
   </ItemGroup>
@@ -274,6 +290,24 @@
       <ProductName>Windows Installer 3.1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\filllefths.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\fillrighths.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Collapse_large.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Expand_large.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\XPfolder_closed.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\file.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
