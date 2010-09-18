@@ -110,6 +110,10 @@
       <Project>{09FC3CB3-FCCD-4906-A370-160B28725936}</Project>
       <Name>ProteomeDb</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj">
+      <Project>{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}</Project>
+      <Name>ProteowizardWrapper</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Skyline.csproj">
       <Project>{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}</Project>
       <Name>Skyline</Name>

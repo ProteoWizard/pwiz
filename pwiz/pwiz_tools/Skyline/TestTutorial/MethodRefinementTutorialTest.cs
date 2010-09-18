@@ -93,7 +93,7 @@ namespace pwiz.SkylineTestTutorial
                  importResultsDlg.OptimizationName = ExportOptimize.CE;
                  importResultsDlg.OkDialog();
            });
-           WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+           WaitForCondition(300*1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);  // 5 minutes
            RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg =>
            {
                 importResultsDlg.RadioAddExistingChecked = true;
@@ -101,7 +101,7 @@ namespace pwiz.SkylineTestTutorial
                 importResultsDlg.OptimizationName = ExportOptimize.CE;
                 importResultsDlg.OkDialog();
            });
-           WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+           WaitForCondition(300*1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);  // 5 minutes
            
            // Simple Manual Refinement, p. 6 
            RunUI(() =>
@@ -248,7 +248,7 @@ namespace pwiz.SkylineTestTutorial
            });
            var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg0.OkDialog);
            RunUI(importResultsNameDlg.NoDialog);
-           WaitForCondition(() => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+           WaitForCondition(240*1000, () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
            var docCurrent = SkylineWindow.Document;
            RunUI(SkylineWindow.RemoveMissingResults);
            WaitForDocumentChange(docCurrent);
@@ -303,7 +303,7 @@ namespace pwiz.SkylineTestTutorial
                 importResultsNameDlg0.Prefix = "Scheduled_";
                 importResultsNameDlg0.YesDialog();
            });
-           WaitForCondition(() => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+           WaitForCondition(180*1000, () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
            Assert.AreEqual(5, SkylineWindow.GraphChromatograms.Count(graphChrom => !graphChrom.IsHidden));
            RunUI(() =>
            {
