@@ -103,6 +103,8 @@ namespace pwiz.Skyline.SettingsUI
 
         private bool _activated;
 
+        private int _listPeptidePrevSelIndex;
+
         private readonly NodeTip _nodeTip;
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
         private ViewLibraryPepInfo? _lastTipNode;
@@ -166,6 +168,8 @@ namespace pwiz.Skyline.SettingsUI
             }
             if (!size.IsEmpty)
                 Size = size;
+
+            _listPeptidePrevSelIndex = -1;
         }
 
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip,
@@ -325,11 +329,11 @@ namespace pwiz.Skyline.SettingsUI
                             Close();
                             return;
                         }
+                        _libraryListThis = _libraryListDoc;
+                        InitializeLibrariesComboBox();
+                        comboLibrary.SelectedIndex = 0;
+                        Activate();
                     }
-                    _libraryListThis = _libraryListDoc;
-                    InitializeLibrariesComboBox();
-                    comboLibrary.SelectedIndex = 0;
-                    Activate();
                 }
                 else
                 {
@@ -882,7 +886,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     rectDraw.X = textSequence.Position + bounds.X + PADDING + imgWidth;
                     rectDraw.Width = textSequence.Width;
-                    var textColor = selected ? e.ForeColor : textSequence.Color;
+                    var textColor = selected && !Equals(e.Index, _listPeptidePrevSelIndex)? e.ForeColor : textSequence.Color;
                     TextRenderer.DrawText(e.Graphics, textSequence.Text,
                                           textSequence.Font, rectDraw, textColor, backColor,
                                           FORMAT_CUSTOM);
@@ -905,6 +909,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void listPeptide_SelectedIndexChanged(object sender, EventArgs e)
         {
+            _listPeptidePrevSelIndex = listPeptide.SelectedIndex;
             // We need to update the spectrum graph when the peptide
             // selected in the listbox changes.
             UpdateUI();
@@ -1407,7 +1412,12 @@ namespace pwiz.Skyline.SettingsUI
             if (tipProvider == null || !tipProvider.HasTip)
                 _nodeTip.HideTip();
             else
-                _nodeTip.SetTipProvider(tipProvider, listPeptide.GetItemRectangle(i), pt);
+            {
+                var itemRect = listPeptide.GetItemRectangle(i);
+                _nodeTip.SetTipProvider(tipProvider, 
+                    new Rectangle(itemRect.X + _peptideImg.Width, itemRect.Y, itemRect.Width - _peptideImg.Width, itemRect.Height), 
+                    pt);
+            }
         }
 
         private void listPeptide_MouseLeave(object sender, EventArgs e)
