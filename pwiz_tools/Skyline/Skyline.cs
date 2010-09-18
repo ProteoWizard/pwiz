@@ -1254,7 +1254,7 @@ namespace pwiz.Skyline
             var startPath = sequenceTree.SelectedPath;
             // If the insert node is selected, select the very first (search up) or very last node (search down) in the tree.
             if (sequenceTree.IsInsertPath(startPath))
-                startPath = reverse ? DocumentUI.LastNodePath : DocumentUI.LastNodePath;
+                startPath = reverse ? DocumentUI.GetPathTo(0, 0) : DocumentUI.LastNodePath;
             var pathFound = DocumentUI.SearchForString(startPath, searchString, sequenceTree.GetDisplaySettings(null), reverse, caseSensitive);
             if (pathFound != null)
                 sequenceTree.SelectedPath = pathFound;
