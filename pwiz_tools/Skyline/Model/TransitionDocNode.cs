@@ -234,7 +234,7 @@ namespace pwiz.Skyline.Model
                                                Losses, 0.0, LibInfo, null) { Mz = Mz };
         }
 
-        public override string DisplayText(DisplaySettings settings)
+        public override string GetDisplayText(DisplaySettings settings)
         {
             return TransitionTreeNode.DisplayText(this, settings);    
         }

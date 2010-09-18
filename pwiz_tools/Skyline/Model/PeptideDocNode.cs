@@ -597,7 +597,7 @@ namespace pwiz.Skyline.Model
             return false;
         }
 
-        public override string DisplayText(DisplaySettings settings)
+        public override string GetDisplayText(DisplaySettings settings)
         {
             return PeptideTreeNode.DisplayText(this, settings);
         }

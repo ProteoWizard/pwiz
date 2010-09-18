@@ -290,7 +290,7 @@ namespace pwiz.Skyline.Model
             return Children.ToDictionary(child => child.Id.GlobalIndex);
         }
 
-        public override string DisplayText(DisplaySettings settings)
+        public override string GetDisplayText(DisplaySettings settings)
         {
             return PeptideGroupTreeNode.DisplayText(this, settings);
         }

@@ -464,7 +464,7 @@ namespace pwiz.Skyline.Controls
             // Identity paths are not allowed to be empty, so we can get the
             // first value, and then check to make sure we never descend further when
             // no next value is available.
-            Identity id = traversal.Next;
+            Identity id = traversal.Next();
 
             // Check of the insert node, which is a special value
             if (ReferenceEquals(id, NODE_INSERT_ID))

@@ -1248,18 +1248,24 @@ namespace pwiz.Skyline
 
         public void FindNext(bool reverse)
         {
-            bool caseSensitive = Settings.Default.EditFindCase;
-            var searchString = caseSensitive ? Settings.Default.EditFindText : Settings.Default.EditFindText.ToLower();
             Settings.Default.EditFindUp = reverse;
+
             var startPath = sequenceTree.SelectedPath;
-            // If the insert node is selected, select the very first (search up) or very last node (search down) in the tree.
+            // If the insert node is selected, start from the root.
             if (sequenceTree.IsInsertPath(startPath))
-                startPath = reverse ? DocumentUI.GetPathTo(0, 0) : DocumentUI.LastNodePath;
-            var pathFound = DocumentUI.SearchForString(startPath, searchString, sequenceTree.GetDisplaySettings(null), reverse, caseSensitive);
-            if (pathFound != null)
-                sequenceTree.SelectedPath = pathFound;
+                startPath = IdentityPath.ROOT;
+            var displaySettings = sequenceTree.GetDisplaySettings(null);
+
+            var searchString = Settings.Default.EditFindText;
+            bool caseSensitive = Settings.Default.EditFindCase;
+
+            var pathFound = DocumentUI.SearchDocumentForString(startPath,
+                searchString, displaySettings, reverse, caseSensitive);
+
+            if (pathFound == null)
+                MessageBox.Show(this, string.Format("The text '{0}' could not be found.", searchString));
             else
-                MessageBox.Show(this, "Text could not be found.");
+                sequenceTree.SelectedPath = pathFound;
         }
 
         private void modifyPeptideMenuItem_Click(object sender, EventArgs e)

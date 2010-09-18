@@ -91,65 +91,26 @@ namespace pwiz.Skyline.Model
             return ReferenceEquals(Id, node.Id);
         }
 
-        /// <summary>
-        /// Given a selected path traversal, searches the tree for the closest node with the given display text in the given direction.
-        /// If selected path is null, we know that all nodes are fair game..
-        /// otherwise we know this node falls along the selected path, thus we need to only search the appropriate children.
-        /// </summary>
-        public IdentityPath SearchForString(IdentityPathTraversal traversal, string searchString, DisplaySettings settings, 
-            bool searchUp, bool caseSensitive, bool includeSelectedNode)
-        {
-            var displayText = caseSensitive ? DisplayText(settings) : DisplayText(settings).ToLower();
-            bool containsSearchString = displayText.Contains(searchString);
-            
-            // If we are searching down, have found a matching string, and we are not worried about the selected path, we can return this path.
-            // It is our first match.
-            // If we are searching up, we do not want to check this node yet. When searching up, children should be checked before their parents 
-            // as they are lower on the tree.
-            if (!searchUp && (traversal == null || includeSelectedNode) && containsSearchString)
-                return new IdentityPath(new[] { Id });
-
-            // If this is a leaf node containing the search string, and this is not on the selected path, we have found a match.
-            var nodeDocParent = this as DocNodeParent;
-            if(nodeDocParent == null)
-                return containsSearchString && (traversal == null || includeSelectedNode) ? new IdentityPath(new[] { Id }) : null;
-
-            // Searching the children...
-            IList<DocNode> children = nodeDocParent.Children;
-            // Find the index to start from -- If we are searching down, children should be searched top to bottom, else bottom to top.
-            var index = searchUp ? children.Count - 1 : 0;
-            // If this is the selected node and we are searching up, we want to ignore this node and all of its children.
-            if (searchUp && traversal != null && !traversal.HasNext)
-                return null;
-            // If we are along the selected path, we need to accomodate this by only searching the children above (searching up)
-            // or below (searching down) the selected path.
-            if(traversal != null && traversal.HasNext)
-            {
-                // Otherwise, we need to first search the child that is on the selected path, because these nodes will be closest
-                // to the selected path, no matter what direction we are searching in.
-                index = nodeDocParent.FindNodeIndex(traversal.Next);
-                var pathFound = children[index].SearchForString(traversal, searchString, settings, searchUp, caseSensitive, includeSelectedNode);
-                if (pathFound != null)
-                    return new IdentityPath(Id, pathFound);
-                index += searchUp ? -1 : 1;
-            }
-            // Search all the children (except those that are on the wrong side of the selected path.)
-            while(index >= 0 && index < children.Count)
-            {
-                var pathFound = children[index].SearchForString(null, searchString, settings, searchUp, caseSensitive, includeSelectedNode);
-                if(pathFound != null)
-                   return new IdentityPath(Id, pathFound);
-                index += searchUp ? -1 : 1;
-            }
-            // If we are searching up, and have not found a match within the children, now we check this node.
-            if (searchUp && containsSearchString)
-                return new IdentityPath(new[] { Id });
-            return null;
-        }
-
-        public virtual string DisplayText(DisplaySettings settings)
+        public virtual string GetDisplayText(DisplaySettings settings)
         {
             return "";
+        }
+
+        /// <summary>
+        /// Returns true, if the display string for this node contains a
+        /// search string.
+        /// </summary>
+        /// <param name="searchString">The text to search for</param>
+        /// <param name="settings">Settings to use in rendering the display string</param>
+        /// <param name="caseSensitive">If true, matches against lower-case display string and
+        /// the search string is assumed to be lower-case.</param>
+        /// <returns></returns>
+        public bool Matches(string searchString, DisplaySettings settings, bool caseSensitive)
+        {
+            if (caseSensitive)
+                return GetDisplayText(settings).Contains(searchString);
+            else
+                return GetDisplayText(settings).ToLower().Contains(searchString);
         }
 
         #region object overrides
@@ -320,7 +281,7 @@ namespace pwiz.Skyline.Model
         {
             if (traversal.HasNext)
             {
-                DocNode nodeNext = FindNode(traversal.Next);
+                DocNode nodeNext = FindNode(traversal.Next());
                 if (!traversal.HasNext)
                     return nodeNext;
                 else if (nodeNext is DocNodeParent)
@@ -361,7 +322,7 @@ namespace pwiz.Skyline.Model
         {
             if (traversal.HasNext)
             {
-                int index = FindNodeIndex(traversal.Next);
+                int index = FindNodeIndex(traversal.Next());
                 if (!traversal.HasNext)
                     return index;
                 else if (Children[index] is DocNodeParent)
@@ -385,16 +346,13 @@ namespace pwiz.Skyline.Model
         public int[] GetNodePositions(Identity id)
         {
             int[] positions = new int[Depth];
-            for (int i = 0; i < Children.Count; i++)
+            foreach (DocNode child in Children.TakeWhile(node => !ReferenceEquals(id, node.Id)))
             {
-                if (ReferenceEquals(id, Children[i].Id))
-                    break;
-
                 // Add one for the child level
                 positions[0]++;
                 // If the child is a parent itself, then add all of it node
                 // counts to the lower levels.
-                var childParent = Children[i] as DocNodeParent;
+                var childParent = child as DocNodeParent;
                 if (childParent != null)
                 {
                     for (int j = 0; j < childParent.Depth; j++)
@@ -421,7 +379,7 @@ namespace pwiz.Skyline.Model
         {
             if (traversal.HasNext)
             {
-                int[] positions = GetNodePositions(traversal.Next);
+                int[] positions = GetNodePositions(traversal.Next());
                 if (!traversal.HasNext)
                     return positions;
                 else if (Children[positions[0]] is DocNodeParent)
@@ -876,6 +834,62 @@ namespace pwiz.Skyline.Model
         private static DocNodeParent RemoveAll(DocNodeParent parent, IdentityPathTraversal traversal, ICollection<DocNode> descendentsRemove)
         {
             return traversal.Traverse(parent, descendentsRemove, AddAll, parent.AddAll);
+        }
+
+
+        public IdentityPath SearchForString(IdentityPath path, string searchString,
+            DisplaySettings settings, bool searchUp, bool caseSensitive)
+        {
+            return SearchForString(new IdentityPathTraversal(path), searchString, settings,
+                                   searchUp, caseSensitive);
+        }
+
+        private IdentityPath SearchForString(IdentityPathTraversal traversal, string searchString,
+            DisplaySettings settings, bool searchUp, bool caseSensitive)
+        {
+            // Initialize default looping variables
+            int increment = searchUp ? -1 : 1;
+            int start = searchUp ? Children.Count - 1 : 0;
+
+            // If still looking for the selected node, start from the index of the
+            // current node in the path.
+            bool findingSelection = traversal.HasNext;
+            bool isSelection = false;
+            if (findingSelection)
+            {
+                Identity id = traversal.Next();
+                start = FindNodeIndex(id);
+                if (start == -1)
+                    throw new IdentityNotFoundException(id);
+                isSelection = !traversal.HasNext;
+            }
+
+            // Enumerate children, looking for one that matches the search string
+            for (int i = start; i >= 0 && i < Children.Count; i += increment)
+            {
+                var child = Children[i];
+                
+                // If not searching up and not descending to the selected node, check
+                // to see if the current child matches the string.
+                if (!searchUp && (!findingSelection || i != start)  && child.Matches(searchString, settings, caseSensitive))
+                    return new IdentityPath(child.Id);
+
+                // If the child is a parent, search its children
+                if (child is DocNodeParent)
+                {
+                    var foundPath = ((DocNodeParent) child).SearchForString(traversal,
+                        searchString, settings, searchUp, caseSensitive);
+                    if (foundPath != null)
+                        return new IdentityPath(child.Id, foundPath);
+                }
+                
+                // If the string was not found in the children, and searching up, check
+                // to see if the current child matches the string.
+                if (searchUp && !isSelection && child.Matches(searchString, settings, caseSensitive))
+                    return new IdentityPath(child.Id);
+            }
+
+            return null;
         }
 
         /// <summary>

@@ -763,23 +763,19 @@ namespace pwiz.Skyline.Model
             return docResult.ChangeSettings(settings);
         }
 
-        public IdentityPath SearchForString(IdentityPath startPath, string searchString, DisplaySettings settings, 
-            bool reverse, bool caseSensitive)
+        public IdentityPath SearchDocumentForString(IdentityPath startPath,
+            string searchString, DisplaySettings settings, bool reverse, bool caseSensitive)
         {
-            if (Children.Count != 0)
-            {
-                var foundPath = SearchForString(new IdentityPathTraversal(startPath), searchString, settings, reverse, caseSensitive, false);
-                if (foundPath != null)
-                    // Trim the document ID from the path;
-                    return foundPath.GetRelativePath(1);
-                // If the node was not found, wrap to the start or end of the document, depending on
-                // the direction of search.
-                startPath = reverse ? LastNodePath : GetPathTo(0, 0);
-                foundPath = SearchForString(new IdentityPathTraversal(startPath), searchString, settings, reverse, caseSensitive, true);
-                if (foundPath != null)
-                    return foundPath.GetRelativePath(1);
-            }
-            return null;
+            if (!caseSensitive)
+                searchString = searchString.ToLower();
+
+            var foundPath = SearchForString(startPath, searchString, settings, reverse, caseSensitive);
+            // If the node was not found and the entire document was not searched,
+            // start over from the root.
+            if (foundPath == null && !startPath.IsRoot)
+                foundPath = SearchForString(IdentityPath.ROOT, searchString, settings, reverse, caseSensitive);
+
+            return foundPath;
         }
 
         #region Implementation of IXmlSerializable

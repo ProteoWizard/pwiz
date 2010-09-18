@@ -238,6 +238,11 @@ namespace pwiz.Skyline.Model
         public int Length { get { return _identities.Length; } }
 
         /// <summary>
+        /// Returns true if this path is the root path
+        /// </summary>
+        public bool IsRoot { get { return Length == 0; } }
+
+        /// <summary>
         /// Access to identities in the path in order with the root at
         /// 0 and the final node at <see cref="Length"/> - 1
         /// </summary>
@@ -246,13 +251,6 @@ namespace pwiz.Skyline.Model
         public Identity GetIdentity(int depth)
         {
             return _identities[depth];
-        }
-
-        public IdentityPath GetRelativePath(int depthFrom)
-        {
-            if (-1 > depthFrom || depthFrom > Depth)
-                throw new IndexOutOfRangeException(string.Format("Index {0} out of range -1 to {1}", depthFrom, Depth));
-            return new IdentityPath(_identities.Skip(depthFrom));
         }
 
         public IdentityPath GetPathTo(int depth)
@@ -337,7 +335,7 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Gets the next <see cref="Identity"/> in the traveral
         /// </summary>
-        public Identity Next { get { return _path.GetIdentity(_index++); } }
+        public Identity Next() { return _path.GetIdentity(_index++); }
 
         /// <summary>
         /// The number of path levels remaining untraversed
@@ -377,7 +375,7 @@ namespace pwiz.Skyline.Model
         {
             if (HasNext)
             {
-                Identity nextId = Next;
+                Identity nextId = Next();
 
                 // Look for the right child
                 foreach (DocNode nodeNext in parent.Children)
