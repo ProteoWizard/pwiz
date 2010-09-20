@@ -140,7 +140,7 @@ PWIZ_API_DECL string LegacyAdapter_Instrument::manufacturer() const
     // look first for cvParam
 
     CVParam model = impl_->instrumentConfiguration.cvParamChild(MS_instrument_model);
-    if (model.cvid != CVID_Unknown)
+    if (model.cvid != CVID_Unknown && model != MS_instrument_model)
     {
         // get the parent term
         const CVTermInfo& modelInfo = cvTermInfo(model.cvid);
