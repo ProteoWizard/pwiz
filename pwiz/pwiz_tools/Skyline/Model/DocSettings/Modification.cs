@@ -753,18 +753,29 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im._modifications = MakeReadOnly(modifications));
         }
 
+        /// <summary>
+        /// Replaces the <see cref="StaticMod"/> objects in a list of <see cref="ExplicitMod"/>
+        /// objects.
+        /// </summary>
+        /// <param name="staticMods">The new <see cref="StaticMod"/> objects</param>
+        /// <param name="explicitMods">The original <see cref="ExplicitMod"/> objects</param>
+        /// <returns>A new list of <see cref="ExplicitMod"/> objects with <see cref="StaticMod"/> objects updated</returns>
         public static IList<ExplicitMod> ChangeGlobalMods(IList<StaticMod> staticMods, IList<ExplicitMod> explicitMods)
         {
-            IList<ExplicitMod> modsNew = explicitMods.ToArray();
-            for (int i = 0; i < modsNew.Count; i++)
+            var modsNew = new List<ExplicitMod>();
+            foreach (var mod in explicitMods)
             {
-                var mod = modsNew[i];
-                int iStaticMod = staticMods.IndexOf(mg => Equals(mg.Name, mod.Modification.Name));
+                string name = mod.Modification.Name;
+                int iStaticMod = staticMods.IndexOf(mg => Equals(name, mg.Name));
+                // If the modification by this name has been removed, then remove
+                // it from the modification list.
                 if (iStaticMod == -1)
-                    throw new InvalidDataException(string.Format("The explicit modification {0} is not present in the document settings.", mod.Modification.Name));
+                    continue;
                 var staticMod = staticMods[iStaticMod];
-                if (!mod.Modification.Equivalent(staticMod))
-                    modsNew[i] = mod.ChangeModification(staticMod);
+                if (mod.Modification.Equivalent(staticMod))
+                    modsNew.Add(mod);
+                else
+                    modsNew.Add(mod.ChangeModification(staticMod));
             }
             ArrayUtil.AssignIfEqualsDeep(modsNew, explicitMods);
             if (ArrayUtil.ReferencesEqual(modsNew, explicitMods))

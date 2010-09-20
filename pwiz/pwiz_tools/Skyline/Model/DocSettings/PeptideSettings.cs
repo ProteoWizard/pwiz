@@ -1027,16 +1027,18 @@ namespace pwiz.Skyline.Model.DocSettings
             IDictionary<string, StaticMod> explicitStaticMods,
             IEnumerable<ExplicitMod> explicitMods)
         {
+            // Enumerate all modifications user has made explicitly
             foreach (ExplicitMod mod in explicitMods)
             {
                 string modName = mod.Modification.Name;
+                // If the current modification cannot be found in the document static mods
                 if (mods.IndexOf(modStatic => Equals(modName, modStatic.Name)) == -1)
                 {
                     StaticMod modStatic;
-                    // Try to get the desired modification from existing explicit mods first
+                    // Try to get the desired modification from available global modifications
                     if (!explicitStaticMods.TryGetValue(modName, out modStatic))
-                        // Otherwise, use the one attached to the explicit mod
-                        modStatic = mod.Modification;
+                        // Otherwise, remove this modification if it is no longer available
+                        continue;
                     // Make sure it is marked explicit
                     if (!modStatic.IsUserSet)
                         modStatic = modStatic.ChangeExplicit(true);

@@ -340,6 +340,20 @@ namespace pwiz.SkylineTest
             var docClear = docStudy7.ChangePeptideMods(path, peptideMod.ExplicitMods,
                 new StaticMod[0], new[] {listHeavyMods[3]});
             Assert.AreSame(docClear, docStudy7);
+
+            // Remove explicit modifications from the global lists
+            listHeavyMods.RemoveRange(2, 2);
+            // Mimic the way PeptideSettingsUI would change the settings
+            var docRemoveExplicit = docStudy7.ChangeSettings(docStudy7.Settings.ChangePeptideModifications(
+                mods => mods.ChangeHeavyModifications(listHeavyMods)
+                    .DeclareExplicitMods(docStudy7, listStaticMods, listHeavyMods)));
+            // Test expected changes
+            modSettings = docRemoveExplicit.Settings.PeptideSettings.Modifications;
+            Assert.AreEqual(2, modSettings.HeavyModifications.Count);
+            Assert.AreEqual(3, docRemoveExplicit.Peptides.Count(peptide => peptide.HasExplicitMods));
+            // Should leave no heavy modifications on the explicitly modified peptides
+            Assert.AreEqual(0, docRemoveExplicit.Peptides.Count(peptide => peptide.HasExplicitMods &&
+                peptide.ExplicitMods.HeavyModifications.Count > 0));
         }
 
         private static SrmDocument CreateStudy7Doc()
