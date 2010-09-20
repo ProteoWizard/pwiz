@@ -266,6 +266,10 @@ namespace pwiz.Skyline.Model.Results
                     int tranMatch = chromInfo.MatchTransitions(nodeGroup, tolerance);
                     if (tranMatch >= maxTranMatch)
                     {
+                        // If new maximum, clear anything collected at the previous maximum
+                        if (tranMatch > maxTranMatch)
+                            listChrom.Clear();
+
                         maxTranMatch = tranMatch;
                         // Read the points now, if requested.
                         if (loadPoints)
@@ -274,17 +278,13 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
             }
-            // If more than one value was found, make a final pass to remove
-            // any entries that match fewer than the maximum number of matched
-            // transitions.
-            if (listChrom.Count > 1)
+            // If more than one value was found, make a final pass to ensure that there
+            // is only one precursor match per file.
+            for (int i = listChrom.Count - 1; i > 0; i--)
             {
-                for (int i = listChrom.Count - 1; i >= 0; i--)
-                {
-                    var chromInfo = listChrom[i];
-                    if (chromInfo.MatchTransitions(nodeGroup, tolerance) < maxTranMatch)
-                        listChrom.RemoveAt(i);
-                }
+                var chromInfo = listChrom[i];
+                if (listChrom.IndexOf(info => ReferenceEquals(info.FilePath, chromInfo.FilePath)) < i)
+                    listChrom.RemoveAt(i);
             }
             infoSet = listChrom.ToArray();
             return infoSet.Length > 0;

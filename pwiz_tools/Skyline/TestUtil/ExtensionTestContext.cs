@@ -21,6 +21,7 @@ using System.Globalization;
 using System.IO;
 using Ionic.Zip;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -35,8 +36,8 @@ namespace pwiz.SkylineTestUtil
         {
             for (String directory = testContext.TestDir; directory.Length > 10; directory = Path.GetDirectoryName(directory))
             {
-                if (Equals(Path.GetFileName(directory), "TestResults"))
-                    return Path.Combine(Path.GetDirectoryName(directory), relativePath);
+                if (File.Exists(Path.Combine(directory, Program.Name + ".sln")))
+                    return Path.Combine(directory, relativePath);
             }
             return null;
         }

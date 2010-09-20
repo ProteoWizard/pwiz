@@ -2104,7 +2104,8 @@ namespace pwiz.Skyline
                     i++;
                 name += i;
             }
-            regression = (RetentionTimeRegression) regression.ChangeName(name);
+            if (regression != null)
+                regression = (RetentionTimeRegression) regression.ChangeName(name);
 
             var dlg = new EditRTDlg(listRegression) { Regression = regression };
             dlg.ShowPeptides(true);

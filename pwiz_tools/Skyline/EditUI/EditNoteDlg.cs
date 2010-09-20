@@ -16,9 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -31,6 +29,8 @@ namespace pwiz.Skyline.EditUI
         public EditNoteDlg()
         {
             InitializeComponent();
+
+            Icon = Resources.Skyline;
         }
         
         public void Init(SrmDocument document, AnnotationDef.AnnotationTarget annotationTarget, Annotations annotations)
