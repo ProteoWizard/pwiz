@@ -288,7 +288,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
 
         if (scanInfo->FAIMSOn())
 		{
-            result->set(MS_FAIMS, true);
+            result->set(MS_FAIMS);
             result->set(MS_FAIMS_compensation_voltage, scanInfo->CompensationVoltage());
         }
 

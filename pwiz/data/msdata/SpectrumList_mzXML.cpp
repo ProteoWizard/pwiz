@@ -319,7 +319,6 @@ class HandlerScan : public SAXParser::Handler
             //TODO: use this: getAttribute(attributes, "cidGasPressure", cidGasPressure);
             getAttribute(attributes, "startMz", startMz);
             getAttribute(attributes, "endMz", endMz);
-            getAttribute(attributes, "activationMethod", activationMethod_);
 
             spectrum_.id = id::translateScanNumberToNativeID(nativeIdFormat_, scanNumber_);
             if (spectrum_.id.empty())
@@ -327,6 +326,7 @@ class HandlerScan : public SAXParser::Handler
 
             spectrum_.sourceFilePosition = position;
 
+            boost::trim(msLevel);
             if (msLevel.empty())
                 msLevel = "1";
             spectrum_.set(MS_ms_level, msLevel);
@@ -348,7 +348,7 @@ class HandlerScan : public SAXParser::Handler
             boost::to_lower(scanType);
             if (scanType.empty() || scanType == "full")
             {
-                spectrum_.set(MS_MSn_spectrum);
+                spectrum_.set(msLevel == "1" ? MS_MS1_spectrum : MS_MSn_spectrum);
                 scan.set(MS_full_scan);
             } else if (scanType == "zoom")
             {
@@ -359,10 +359,8 @@ class HandlerScan : public SAXParser::Handler
                 spectrum_.set(MS_SIM_spectrum);
                 scan.set(MS_SIM);
             } else if (scanType == "srm" ||
-                // hack: mzWiff (ABI) and wolf-mrm (Waters) use this value
-                scanType == "mrm" ||
-                // hack: Trapper (Agilent) uses this value
-                scanType == "multiplereaction")
+                       scanType == "mrm" || // hack: mzWiff (ABI) and wolf-mrm (Waters) use this value
+                       scanType == "multiplereaction") // hack: Trapper (Agilent) uses this value
             {
                 spectrum_.set(MS_SRM_spectrum);
                 scan.set(MS_SRM);
@@ -380,15 +378,14 @@ class HandlerScan : public SAXParser::Handler
                 scan.set(MS_product_ion_scan);
             }
 
-            // ignore centroided attribute if it was set by the dataProcessing element
-            if (!spectrum_.hasCVParam(MS_centroid_spectrum))
-            {
-                // assume profile if not specified
-                if (centroided == "1")
-                    spectrum_.set(MS_centroid_spectrum);
-                else
-                    spectrum_.set(MS_profile_spectrum);
-            }
+            // TODO: make this more robust
+            bool hasCentroidDataProcessing = msd_.dataProcessingPtrs[0]->processingMethods[0].hasCVParam(MS_peak_picking);
+            if (centroided.empty())
+                spectrum_.set(hasCentroidDataProcessing ? MS_centroid_spectrum : MS_profile_spectrum);
+            else if (centroided == "1")
+                spectrum_.set(MS_centroid_spectrum);
+            else
+                spectrum_.set(MS_profile_spectrum);
 
             if (msInstrumentID.empty() && !msd_.instrumentConfigurationPtrs.empty())
                 msInstrumentID = msd_.instrumentConfigurationPtrs[0]->id;
@@ -426,6 +423,8 @@ class HandlerScan : public SAXParser::Handler
         }
         else if (name == "precursorMz")
         {
+            getAttribute(attributes, "activationMethod", activationMethod_);
+
             spectrum_.precursors.push_back(Precursor());
             Precursor& precursor = spectrum_.precursors.back();
 
@@ -520,10 +519,6 @@ SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, bool getBinaryData) c
     is_->seekg(offset_to_position(index_[index].sourceFilePosition));
     if (!*is_)
         throw runtime_error("[SpectrumList_mzXML::spectrum()] Error seeking to <scan>.");
-
-    // if file-level dataProcessing says the file is centroid, ignore the centroided attribute
-    if (msd_.fileDescription.fileContent.hasCVParam(MS_centroid_spectrum))
-        result->set(MS_centroid_spectrum);
 
     HandlerScan handler(msd_, *result, getBinaryData);
     SAXParser::parse(*is_, handler);

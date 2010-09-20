@@ -189,9 +189,10 @@ void testSoftware()
     if (os_) *os_ << "software version: " << adapter.version() << endl;
     unit_assert(adapter.version() == "4.20");
 
-    adapter.type("acquisition");
-    if (os_) *os_ << "software type: " << adapter.type() << endl;
-    unit_assert(adapter.type() == "acquisition");
+    //adapter.type("acquisition");
+    //if (os_) *os_ << "software type: " << adapter.type() << endl;
+    //unit_assert(adapter.type() == "acquisition");
+
     adapter.type("analysis");
     if (os_) *os_ << "software type: " << adapter.type() << endl;
     unit_assert(adapter.type() == "analysis");

@@ -390,6 +390,10 @@ PWIZ_API_DECL string LegacyAdapter_Software::type() const
 
 PWIZ_API_DECL void LegacyAdapter_Software::type(const string& value)
 {
+    // this type does not get a dataProcessingPtr/processingMethod
+    if (value == "acquisition")
+        return;
+
     ProcessingMethod& pm = getProcessingMethod(impl_->software, impl_->msd);
     removeUserParams(pm.userParams, "type");
     pm.userParams.push_back(UserParam("type", value));

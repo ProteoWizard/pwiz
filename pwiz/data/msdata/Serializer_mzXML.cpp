@@ -274,12 +274,13 @@ void writeCategoryValue(XMLWriter& xmlWriter, const string& category, const stri
 
 
 void writeSoftware(XMLWriter& xmlWriter, SoftwarePtr software, 
-                   const MSData& msd, const CVTranslator& cvTranslator)
+                   const MSData& msd, const CVTranslator& cvTranslator,
+                   const string& type = "")
 {
     LegacyAdapter_Software adapter(software, const_cast<MSData&>(msd), cvTranslator);
     XMLWriter::Attributes attributes; 
 
-    attributes.push_back(make_pair("type", adapter.type()));
+    attributes.push_back(make_pair("type", type.empty() ? adapter.type() : type));
     attributes.push_back(make_pair("name", adapter.name()));
     attributes.push_back(make_pair("version", adapter.version()));
 
@@ -301,9 +302,9 @@ void write_msInstrument(XMLWriter& xmlWriter, const InstrumentConfiguration& ins
         try { writeCategoryValue(xmlWriter, "msIonisation", adapter.ionisation()); } catch (std::out_of_range&) {}
         try { writeCategoryValue(xmlWriter, "msMassAnalyzer", adapter.analyzer()); } catch (std::out_of_range&) {}
         try { writeCategoryValue(xmlWriter, "msDetector", adapter.detector()); } catch (std::out_of_range&) {}
-    if (instrumentConfiguration.softwarePtr.get()) writeSoftware(xmlWriter, 
-                                                    instrumentConfiguration.softwarePtr,
-                                                    msd, cvTranslator);
+    if (instrumentConfiguration.softwarePtr.get())
+        writeSoftware(xmlWriter, instrumentConfiguration.softwarePtr,
+                      msd, cvTranslator, "acquisition");
     xmlWriter.endElement(); // msInstrument
 }
 
@@ -311,29 +312,72 @@ void write_msInstrument(XMLWriter& xmlWriter, const InstrumentConfiguration& ins
 void write_msInstruments(XMLWriter& xmlWriter, const MSData& msd,
                         const CVTranslator& cvTranslator)
 {
-    for (vector<InstrumentConfigurationPtr>::const_iterator it=msd.instrumentConfigurationPtrs.begin();
-         it!=msd.instrumentConfigurationPtrs.end(); ++it)
-        if (it->get()) write_msInstrument(xmlWriter, **it, msd, cvTranslator);
+    BOOST_FOREACH(const InstrumentConfigurationPtr& icPtr, msd.instrumentConfigurationPtrs)
+        if (icPtr.get()) write_msInstrument(xmlWriter, *icPtr, msd, cvTranslator);
+}
+
+
+void write_processingOperation(XMLWriter& xmlWriter, const ProcessingMethod& pm, CVID action)
+{
+    CVParam actionParam = pm.cvParamChild(action);
+    if (!actionParam.empty() && actionParam != action)
+    {
+        XMLWriter::Attributes attributes;
+        attributes.push_back(make_pair("name", actionParam.name()));
+        xmlWriter.startElement("processingOperation", attributes, XMLWriter::EmptyElement);
+    }
 }
 
 
 void write_dataProcessing(XMLWriter& xmlWriter, const MSData& msd, const CVTranslator& cvTranslator)
 {
-    xmlWriter.startElement("dataProcessing");
-
-    for (vector<DataProcessingPtr>::const_iterator it=msd.dataProcessingPtrs.begin();
-         it!=msd.dataProcessingPtrs.end(); ++it)
+    BOOST_FOREACH(const DataProcessingPtr& dpPtr, msd.allDataProcessingPtrs())
     {
-        if (!it->get()) continue;
+        if (!dpPtr.get() || dpPtr->processingMethods.empty()) continue;
 
-        for (vector<ProcessingMethod>::const_iterator jt=(*it)->processingMethods.begin();
-             jt!=(*it)->processingMethods.end(); ++jt)
+        XMLWriter::Attributes attributes;
+        BOOST_FOREACH(const ProcessingMethod& pm, dpPtr->processingMethods)
+        {
+            if (pm.hasCVParamChild(MS_peak_picking)) attributes.push_back(make_pair("centroided", "1"));
+            if (pm.hasCVParamChild(MS_deisotoping)) attributes.push_back(make_pair("deisotoped", "1"));
+            if (pm.hasCVParamChild(MS_charge_deconvolution)) attributes.push_back(make_pair("chargeDeconvoluted", "1"));
+            if (pm.hasCVParamChild(MS_thresholding))
+            {
+                CVParam threshold = pm.cvParam(MS_low_intensity_threshold);
+                if (!threshold.empty())
+                    attributes.push_back(make_pair("intensityCutoff", threshold.value));
+            }
+        }
 
-        if (jt->softwarePtr.get()) 
-            writeSoftware(xmlWriter, jt->softwarePtr, msd, cvTranslator);
+        xmlWriter.startElement("dataProcessing", attributes);
+
+        BOOST_FOREACH(const ProcessingMethod& pm, dpPtr->processingMethods)
+        {
+            CVParam fileFormatConversion = pm.cvParamChild(MS_file_format_conversion);
+
+            string softwareType = fileFormatConversion.empty() ? "processing" : "conversion";
+
+            if (pm.softwarePtr.get())
+                writeSoftware(xmlWriter, pm.softwarePtr, msd, cvTranslator, softwareType);
+
+            write_processingOperation(xmlWriter, pm, MS_file_format_conversion);
+            write_processingOperation(xmlWriter, pm, MS_peak_picking);
+            write_processingOperation(xmlWriter, pm, MS_deisotoping);
+            write_processingOperation(xmlWriter, pm, MS_charge_deconvolution);
+            write_processingOperation(xmlWriter, pm, MS_thresholding);
+
+            xmlWriter.pushStyle(XMLWriter::StyleFlag_InlineInner);
+            BOOST_FOREACH(const UserParam& param, pm.userParams)
+            {
+                xmlWriter.startElement("comment");
+                xmlWriter.characters(param.name + (param.value.empty() ? string() : ": " + param.value));
+                xmlWriter.endElement(); // comment
+            }
+            xmlWriter.popStyle();
+        }
+
+        xmlWriter.endElement(); // dataProcessing
     }
-
-    xmlWriter.endElement(); // dataProcessing
 }
 
 
@@ -438,6 +482,8 @@ void write_precursors(XMLWriter& xmlWriter, const vector<PrecursorInfo>& precurs
             attributes.push_back(make_pair("precursorIntensity", it->intensity));
         if (!it->charge.empty())
             attributes.push_back(make_pair("precursorCharge", it->charge));
+        if(!it->activation.empty())
+            attributes.push_back(make_pair("activationMethod", it->activation));
         xmlWriter.startElement("precursorMz", attributes);
         xmlWriter.characters(it->mz);
         xmlWriter.endElement();
@@ -532,7 +578,7 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
     string basePeakIntensity = spectrum.cvParam(MS_base_peak_intensity).value;
     string totIonCurrent = spectrum.cvParam(MS_total_ion_current).value;
 	string compensationVoltage;
-	if (spectrum.hasCVParam(MS_FAIMS) && spectrum.cvParam(MS_FAIMS).value == "true")
+	if (spectrum.hasCVParam(MS_FAIMS))
         compensationVoltage = spectrum.cvParam(MS_FAIMS_compensation_voltage).value;
     bool isCentroided = spectrum.hasCVParam(MS_centroid_spectrum);
 
@@ -549,8 +595,10 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
         attributes.push_back(make_pair("scanEvent", scanEvent));
     if (!scanType.empty())
         attributes.push_back(make_pair("scanType", scanType));
-    if (isCentroided)
-        attributes.push_back(make_pair("centroided", "1"));
+
+    // TODO: write this attribute only when SpectrumList_PeakPicker has processed the spectrum
+    attributes.push_back(make_pair("centroided", isCentroided ? "1" : "0"));
+
     attributes.push_back(make_pair("msLevel", msLevel));
     attributes.push_back(make_pair("peaksCount", lexical_cast<string>(mzIntensityPairs.size())));
     if (!polarity.empty())
@@ -560,8 +608,6 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
     {
         if(!precursorInfo[0].collisionEnergy.empty())
             attributes.push_back(make_pair("collisionEnergy", precursorInfo[0].collisionEnergy));
-        if(!precursorInfo[0].activation.empty())
-            attributes.push_back(make_pair("activationMethod", precursorInfo[0].activation));
     }
     if (!lowMz.empty())
         attributes.push_back(make_pair("lowMz", lowMz));
@@ -574,7 +620,7 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
     if (!totIonCurrent.empty())
         attributes.push_back(make_pair("totIonCurrent", totIonCurrent));
     if (!compensationVoltage.empty())
-        attributes.push_back(make_pair("CompensationVoltage", compensationVoltage));
+        attributes.push_back(make_pair("compensationVoltage", compensationVoltage));
 
     if (scan.instrumentConfigurationPtr.get())
         attributes.push_back(make_pair("msInstrumentID", scan.instrumentConfigurationPtr->id));
@@ -864,6 +910,89 @@ SoftwarePtr registerSoftware(MSData& msd,
 }
 
 
+class HandlerScanFileContent : public SAXParser::Handler
+{
+    MSData& msd_;
+    bool hasCentroidDataProcessing;
+    bool hasCentroidScan;
+    bool hasProfileScan;
+
+    public:
+
+    HandlerScanFileContent(MSData& msd, bool hasCentroidDataProcessing)
+    :   msd_(msd), hasCentroidDataProcessing(hasCentroidDataProcessing), hasCentroidScan(false), hasProfileScan(false)
+    {
+    }
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (name == "scan")
+        {
+            string msLevel, centroided, scanType;
+
+            getAttribute(attributes, "msLevel", msLevel);
+            getAttribute(attributes, "scanType", scanType);
+            getAttribute(attributes, "centroided", centroided);
+            //TODO: use this: getAttribute(attributes, "deisotoped", deisotoped);
+            //TODO: use this: getAttribute(attributes, "chargeDeconvoluted", chargeDeconvoluted);
+
+            // set spectrum type by scanType attribute (assume MSn/Full if absent)
+            boost::to_lower(scanType);
+            boost::trim(msLevel);
+            if (scanType.empty() || scanType == "full" || scanType == "zoom")
+                msd_.fileDescription.fileContent.set(msLevel == "1" ? MS_MS1_spectrum : MS_MSn_spectrum);
+            else if (scanType == "q1")
+                msd_.fileDescription.fileContent.set(MS_precursor_ion_spectrum);
+            else if (scanType == "q3")
+                msd_.fileDescription.fileContent.set(MS_product_ion_spectrum);
+            else if (scanType == "sim" ||
+                     scanType == "srm" ||
+                     scanType == "mrm" || // HACK: mzWiff (ABI) and wolf-mrm (Waters) use this value
+                     scanType == "multiplereaction" || // HACK: Trapper (Agilent) uses this value
+                     scanType == "crm")
+            {
+                // SIM/SRM spectra are accessed as chromatograms
+            }
+
+            if (!hasCentroidScan || !hasProfileScan)
+            {
+                // if the global data processing says spectra were centroided, the default
+                // spectrum representation is centroid, otherwise profile
+                if (centroided.empty())
+                {
+                    if (!hasCentroidScan && hasCentroidDataProcessing)
+                    {
+                        hasCentroidScan = true;
+                        msd_.fileDescription.fileContent.set(MS_centroid_spectrum);
+                    }
+                    else if (!hasProfileScan && !hasCentroidDataProcessing)
+                    {
+                        hasProfileScan = true;
+                        msd_.fileDescription.fileContent.set(MS_profile_spectrum);
+                    }
+                }
+                // non-empty centroided attribute overrides the default spectrum representation
+                else if (!hasCentroidScan && centroided == "1")
+                {
+                    hasCentroidScan = true;
+                    msd_.fileDescription.fileContent.set(MS_centroid_spectrum);
+                }
+                else if (!hasProfileScan && centroided == "0")
+                {
+                    hasProfileScan = true;
+                    msd_.fileDescription.fileContent.set(MS_profile_spectrum);
+                }
+            }
+        }
+        else if (name == "index")
+            return Status::Done;
+
+        return Status::Ok;
+    }
+};
+
 void fillInMetadata(MSData& msd)
 {
     // check for (Mass)Wolf-MRM metadata: multiple parentFiles with the same .raw URI
@@ -974,6 +1103,11 @@ struct Handler_msInstrument : public SAXParser::Handler
             detector_ = value;
             return Status::Ok;
         }
+        else if (name == "msResolution")
+        {
+            // TODO: use this to set instrument resolution?
+            return Status::Ok;
+        }
         else if (name == "software")
         {
             string type, name, version;
@@ -983,8 +1117,23 @@ struct Handler_msInstrument : public SAXParser::Handler
             instrumentConfiguration->softwarePtr = registerSoftware(msd_, type, name, version, cvTranslator_);
             return Status::Ok;
         }
+        else if (name == "operator")
+        {
+            // TODO: use this to make a Contact
+            return Status::Ok;
+        }
+        else if (name == "nameValue")
+        {
+            // TODO: use this?
+            return Status::Ok;
+        }
+        else if (name == "comment")
+        {
+            // TODO: use this?
+            return Status::Ok;
+        }
 
-        throw runtime_error(("[SpectrumList_mzML::Handler_msInstrument] Unexpected element name: " + name).c_str());
+        throw runtime_error(("[SpectrumList_mzXML::Handler_msInstrument] Unexpected element name: " + name).c_str());
     }
 
     virtual Status endElement(const string& name, 
@@ -1001,14 +1150,10 @@ struct Handler_msInstrument : public SAXParser::Handler
 
             LegacyAdapter_Instrument adapter(*instrumentConfiguration, cvTranslator_);
             adapter.manufacturerAndModel(manufacturer_, model_); 
-            
-	    
+
             if(adapter.model() == "LTQ Orbitrap XL" && analyzer_ == "FTMS") 
-                {
-  		    analyzer_ = "orbitrap"; // hack to set analyzer_ correctly for LTQ ORBI
-                 
-                }
-            
+                analyzer_ = "orbitrap"; // hack to set analyzer_ correctly for LTQ ORBI
+
             adapter.ionisation(ionisation_);
             adapter.analyzer(analyzer_);
             adapter.detector(detector_);
@@ -1032,8 +1177,10 @@ struct Handler_msInstrument : public SAXParser::Handler
 
 struct Handler_dataProcessing : public SAXParser::Handler
 {
+    bool hasCentroidDataProcessing;
+
     Handler_dataProcessing(MSData& msd, const CVTranslator& cvTranslator)
-    :   msd_(msd), cvTranslator_(cvTranslator)
+    :   hasCentroidDataProcessing(false), msd_(msd), cvTranslator_(cvTranslator)
     {}
 
     virtual Status startElement(const string& name, 
@@ -1045,12 +1192,22 @@ struct Handler_dataProcessing : public SAXParser::Handler
             string centroided, deisotoped;
             getAttribute(attributes, "centroided", centroided);
             getAttribute(attributes, "deisotoped", deisotoped);
-            if (centroided == "1")
-                msd_.fileDescription.fileContent.set(MS_centroid_spectrum);
-            else // if 0 or absent, assume profile
-                msd_.fileDescription.fileContent.set(MS_profile_spectrum);
 
-            // TODO: terms for deisotoped and charge-deconvoluted spectra?
+            hasCentroidDataProcessing = centroided == "1";
+
+            // TODO: term for charge-deconvolution?
+
+            if (hasCentroidDataProcessing || deisotoped == "1")
+            {
+                DataProcessingPtr dpPtr(new DataProcessing("dataProcessing"));
+                msd_.dataProcessingPtrs.push_back(dpPtr);
+
+                ProcessingMethod method;
+                method.order = 0;
+                if (hasCentroidDataProcessing) method.set(MS_peak_picking);
+                if (deisotoped == "1") method.set(MS_deisotoping);
+                dpPtr->processingMethods.push_back(method);
+            }
 
             return Status::Ok;
         }
@@ -1085,6 +1242,8 @@ struct Handler_dataProcessing : public SAXParser::Handler
 class Handler_mzXML : public SAXParser::Handler
 {
     public:
+
+    bool hasCentroidDataProcessing;
 
     Handler_mzXML(MSData& msd, const CVTranslator& cvTranslator)
     :   msd_(msd), 
@@ -1128,7 +1287,7 @@ class Handler_mzXML : public SAXParser::Handler
         {
             // all file-level metadata has been parsed, but there are some gaps to fill
             fillInMetadata(msd_);
-
+            hasCentroidDataProcessing = handler_dataProcessing_.hasCentroidDataProcessing;
             return Status::Done;
         }
 
@@ -1150,9 +1309,13 @@ void Serializer_mzXML::Impl::read(shared_ptr<istream> is, MSData& msd) const
         throw runtime_error("[Serializer_mzXML::read()] Bad istream.");
 
     is->seekg(0);
-
     Handler_mzXML handler(msd, cvTranslator_);
-    SAXParser::parse(*is, handler); 
+    SAXParser::parse(*is, handler);
+
+    is->seekg(0);
+    HandlerScanFileContent handlerScanFileContent(msd, handler.hasCentroidDataProcessing);
+    SAXParser::parse(*is, handlerScanFileContent);
+
     msd.run.spectrumListPtr = SpectrumList_mzXML::create(is, msd, config_.indexed);
 }
 

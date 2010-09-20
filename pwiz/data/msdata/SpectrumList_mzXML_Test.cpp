@@ -62,9 +62,15 @@ void test(bool indexed)
     dummy.fileDescription.sourceFilePtrs.push_back(SourceFilePtr(new SourceFile("tiny1.yep")));
     dummy.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_Agilent_YEP_file);
     dummy.fileDescription.sourceFilePtrs.back()->set(MS_Bruker_Agilent_YEP_nativeID_format);
+    dummy.softwarePtrs.push_back(SoftwarePtr(new Software("pwiz")));
+    dummy.softwarePtrs.back()->set(MS_ProteoWizard);
     dummy.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("LCQ Deca")));
-    dummy.instrumentConfigurationPtrs.back()->cvParams.push_back(MS_LCQ_Deca);
+    dummy.instrumentConfigurationPtrs.back()->set(MS_LCQ_Deca);
     dummy.instrumentConfigurationPtrs.back()->userParams.push_back(UserParam("doobie", "420"));
+    dummy.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("DP1")));
+    dummy.dataProcessingPtrs.back()->processingMethods.push_back(ProcessingMethod());
+    dummy.dataProcessingPtrs.back()->processingMethods.back().set(MS_Conversion_to_mzML);
+    dummy.dataProcessingPtrs.back()->processingMethods.back().softwarePtr = dummy.softwarePtrs.back();
 
     // note: used to have a test here to check that an exception would be thrown on 
 	// on an unindexed input file, but index is an optional element so the right thing to
