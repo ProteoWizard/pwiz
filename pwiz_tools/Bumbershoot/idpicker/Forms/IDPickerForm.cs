@@ -98,6 +98,7 @@ namespace IDPicker
             modificationTableForm.Show(dockPanel, DockState.Document);
 
             proteinTableForm.ProteinViewFilter += new ProteinViewFilterEventHandler(proteinTableForm_ProteinViewFilter);
+            proteinTableForm.ProteinViewVisualize += new EventHandler<ProteinViewVisualizeEventArgs>(proteinTableForm_ProteinViewVisualize);
             peptideTableForm.PeptideViewFilter += new PeptideViewFilterEventHandler(peptideTableForm_PeptideViewFilter); 
             spectrumTableForm.SpectrumViewFilter += new EventHandler<DataFilter>(spectrumTableForm_SpectrumViewFilter);
             spectrumTableForm.SpectrumViewVisualize += new EventHandler<SpectrumViewVisualizeEventArgs>(spectrumTableForm_SpectrumViewVisualize);
@@ -183,6 +184,12 @@ namespace IDPicker
             var source = manager.DataSourceMap[sourcePath];
             source.ChromatogramListForm.Hide();
             source.SpectrumListForm.Hide();
+        }
+
+        void proteinTableForm_ProteinViewVisualize (object sender, ProteinViewVisualizeEventArgs e)
+        {
+            var form = new SequenceCoverageForm(e.Protein);
+            form.Show(peptideTableForm.Pane, peptideTableForm);
         }
 
         #region Handling of events for basic filter toolstrip items

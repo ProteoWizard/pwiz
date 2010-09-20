@@ -146,9 +146,9 @@ namespace IDPicker.DataModel
         public virtual string Sequence { get { return pd.Sequence; } set { pd.Sequence = value; } }
         public virtual IList<PeptideInstance> Peptides { get; set; }
 
-        public virtual long Cluster { get { return cluster; } }
+        public virtual int Cluster { get { return cluster; } }
         public virtual string ProteinGroup { get { return proteinGroup; } }
-        public virtual long Length { get { return length; } }
+        public virtual int Length { get { return length; } }
 
         public virtual double Coverage { get { return pc == null ? 0 : pc.Coverage; } private set { } }
         public virtual IList<ushort> CoverageMask { get { return pc == null ? null : pc.CoverageMask; } private set { } }
@@ -168,9 +168,9 @@ namespace IDPicker.DataModel
             this.length = sequence.Length;
         }
 
-        long cluster = 0;
+        int cluster = 0;
         string proteinGroup = "";
-        long length = 0;
+        int length = 0;
 
         protected internal virtual ProteinMetadata pmd { get; set; }
         protected internal virtual ProteinData pd { get; set; }

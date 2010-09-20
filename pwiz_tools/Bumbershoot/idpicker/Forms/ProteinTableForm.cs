@@ -52,7 +52,7 @@ namespace IDPicker.Forms
             public long FirstProteinId { get; private set; }
             public string FirstProteinDescription { get; set; }
             public long ProteinCount { get; private set; }
-            public long? Cluster { get; private set; }
+            public int? Cluster { get; private set; }
             public double MeanProteinCoverage { get; private set; }
 
             #region Constructor
@@ -66,7 +66,7 @@ namespace IDPicker.Forms
                 FirstProteinId = (long) queryRow[5];
                 FirstProteinDescription = (string) queryRow[6];
                 ProteinCount = (long) queryRow[7];
-                Cluster = (long?) queryRow[8];
+                Cluster = (int?) queryRow[8];
                 MeanProteinCoverage = (double) queryRow[9];
             }
             #endregion
@@ -204,6 +204,19 @@ namespace IDPicker.Forms
                 if (ProteinViewFilter != null)
                     ProteinViewFilter(this, newDataFilter);
             }
+            else if (ReferenceEquals(e.Column, coverageColumn))
+            {
+                e.Handled = true; // do not treat as a URL
+
+                Protein pro;
+                if (e.Item.RowObject is ProteinGroupRow)
+                    pro = session.Get<Protein>((e.Item.RowObject as ProteinGroupRow).FirstProteinId);
+                else
+                    pro = (e.Item.RowObject as ProteinRow).Protein;
+
+                if (ProteinViewVisualize != null)
+                    ProteinViewVisualize(this, new ProteinViewVisualizeEventArgs() {Protein = pro});
+            }
         }
 
         void treeListView_CellClick (object sender, CellClickEventArgs e)
@@ -227,6 +240,7 @@ namespace IDPicker.Forms
         }
 
         public event ProteinViewFilterEventHandler ProteinViewFilter;
+        public event EventHandler<ProteinViewVisualizeEventArgs> ProteinViewVisualize;
 
         private NHibernate.ISession session;
         private DataFilter dataFilter, basicDataFilter;
@@ -428,4 +442,9 @@ namespace IDPicker.Forms
     }
 
     public delegate void ProteinViewFilterEventHandler (ProteinTableForm sender, DataFilter proteinViewFilter);
+
+    public class ProteinViewVisualizeEventArgs : EventArgs
+    {
+        public DataModel.Protein Protein { get; internal set; }
+    }
 }
