@@ -121,7 +121,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ArrangeGraphsTiled();
 
             });
-            WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+            WaitForCondition(120*1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
             RunDlg<FindPeptideDlg>(SkylineWindow.ShowFindPeptideDlg, findPeptideDlg =>
             {
                 findPeptideDlg.Sequence = "IDALNENK";
