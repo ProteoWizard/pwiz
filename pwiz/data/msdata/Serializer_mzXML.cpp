@@ -928,68 +928,66 @@ class HandlerScanFileContent : public SAXParser::Handler
                                 const Attributes& attributes,
                                 stream_offset position)
     {
-        if (name == "scan")
+        if (name != "scan")
+            throw runtime_error("[Serializer_mzXML::HandlerScanFileContent] Index offset does not point at <scan> element.");
+
+        string msLevel, centroided, scanType;
+
+        getAttribute(attributes, "msLevel", msLevel);
+        getAttribute(attributes, "scanType", scanType);
+        getAttribute(attributes, "centroided", centroided);
+        //TODO: use this: getAttribute(attributes, "deisotoped", deisotoped);
+        //TODO: use this: getAttribute(attributes, "chargeDeconvoluted", chargeDeconvoluted);
+
+        // set spectrum type by scanType attribute (assume MSn/Full if absent)
+        boost::to_lower(scanType);
+        boost::trim(msLevel);
+        if (scanType.empty() || scanType == "full" || scanType == "zoom")
+            msd_.fileDescription.fileContent.set(msLevel == "1" ? MS_MS1_spectrum : MS_MSn_spectrum);
+        else if (scanType == "q1")
+            msd_.fileDescription.fileContent.set(MS_precursor_ion_spectrum);
+        else if (scanType == "q3")
+            msd_.fileDescription.fileContent.set(MS_product_ion_spectrum);
+        else if (scanType == "sim" ||
+                 scanType == "srm" ||
+                 scanType == "mrm" || // HACK: mzWiff (ABI) and wolf-mrm (Waters) use this value
+                 scanType == "multiplereaction" || // HACK: Trapper (Agilent) uses this value
+                 scanType == "crm")
         {
-            string msLevel, centroided, scanType;
+            // SIM/SRM spectra are accessed as chromatograms
+        }
 
-            getAttribute(attributes, "msLevel", msLevel);
-            getAttribute(attributes, "scanType", scanType);
-            getAttribute(attributes, "centroided", centroided);
-            //TODO: use this: getAttribute(attributes, "deisotoped", deisotoped);
-            //TODO: use this: getAttribute(attributes, "chargeDeconvoluted", chargeDeconvoluted);
-
-            // set spectrum type by scanType attribute (assume MSn/Full if absent)
-            boost::to_lower(scanType);
-            boost::trim(msLevel);
-            if (scanType.empty() || scanType == "full" || scanType == "zoom")
-                msd_.fileDescription.fileContent.set(msLevel == "1" ? MS_MS1_spectrum : MS_MSn_spectrum);
-            else if (scanType == "q1")
-                msd_.fileDescription.fileContent.set(MS_precursor_ion_spectrum);
-            else if (scanType == "q3")
-                msd_.fileDescription.fileContent.set(MS_product_ion_spectrum);
-            else if (scanType == "sim" ||
-                     scanType == "srm" ||
-                     scanType == "mrm" || // HACK: mzWiff (ABI) and wolf-mrm (Waters) use this value
-                     scanType == "multiplereaction" || // HACK: Trapper (Agilent) uses this value
-                     scanType == "crm")
+        if (!hasCentroidScan || !hasProfileScan)
+        {
+            // if the global data processing says spectra were centroided, the default
+            // spectrum representation is centroid, otherwise profile
+            if (centroided.empty())
             {
-                // SIM/SRM spectra are accessed as chromatograms
-            }
-
-            if (!hasCentroidScan || !hasProfileScan)
-            {
-                // if the global data processing says spectra were centroided, the default
-                // spectrum representation is centroid, otherwise profile
-                if (centroided.empty())
-                {
-                    if (!hasCentroidScan && hasCentroidDataProcessing)
-                    {
-                        hasCentroidScan = true;
-                        msd_.fileDescription.fileContent.set(MS_centroid_spectrum);
-                    }
-                    else if (!hasProfileScan && !hasCentroidDataProcessing)
-                    {
-                        hasProfileScan = true;
-                        msd_.fileDescription.fileContent.set(MS_profile_spectrum);
-                    }
-                }
-                // non-empty centroided attribute overrides the default spectrum representation
-                else if (!hasCentroidScan && centroided == "1")
+                if (!hasCentroidScan && hasCentroidDataProcessing)
                 {
                     hasCentroidScan = true;
                     msd_.fileDescription.fileContent.set(MS_centroid_spectrum);
                 }
-                else if (!hasProfileScan && centroided == "0")
+                else if (!hasProfileScan && !hasCentroidDataProcessing)
                 {
                     hasProfileScan = true;
                     msd_.fileDescription.fileContent.set(MS_profile_spectrum);
                 }
             }
+            // non-empty centroided attribute overrides the default spectrum representation
+            else if (!hasCentroidScan && centroided == "1")
+            {
+                hasCentroidScan = true;
+                msd_.fileDescription.fileContent.set(MS_centroid_spectrum);
+            }
+            else if (!hasProfileScan && centroided == "0")
+            {
+                hasProfileScan = true;
+                msd_.fileDescription.fileContent.set(MS_profile_spectrum);
+            }
         }
-        else if (name == "index")
-            return Status::Done;
 
-        return Status::Ok;
+        return Status::Done;
     }
 };
 
@@ -1312,11 +1310,16 @@ void Serializer_mzXML::Impl::read(shared_ptr<istream> is, MSData& msd) const
     Handler_mzXML handler(msd, cvTranslator_);
     SAXParser::parse(*is, handler);
 
-    is->seekg(0);
-    HandlerScanFileContent handlerScanFileContent(msd, handler.hasCentroidDataProcessing);
-    SAXParser::parse(*is, handlerScanFileContent);
-
     msd.run.spectrumListPtr = SpectrumList_mzXML::create(is, msd, config_.indexed);
+
+    HandlerScanFileContent handlerScanFileContent(msd, handler.hasCentroidDataProcessing);
+    for (size_t i=0; i < msd.run.spectrumListPtr->size(); ++i)
+    {
+        bio::stream_offset offset = msd.run.spectrumListPtr->spectrumIdentity(i).sourceFilePosition;
+        is->seekg(bio::offset_to_position(offset));
+
+        SAXParser::parse(*is, handlerScanFileContent);
+    }
 }
 
 
