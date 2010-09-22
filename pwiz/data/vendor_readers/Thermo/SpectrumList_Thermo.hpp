@@ -34,7 +34,7 @@
 
 
 #ifdef PWIZ_READER_THERMO
-#include "pwiz/utility/vendor_api/thermo/RawFile.h"
+#include "pwiz_aux/msrc/utility/vendor_api/thermo/RawFile.h"
 #include "pwiz/utility/misc/Once.hpp"
 using namespace pwiz::vendor_api::Thermo;
 #endif // PWIZ_READER_THERMO

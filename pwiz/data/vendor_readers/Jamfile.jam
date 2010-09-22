@@ -31,9 +31,13 @@ project
 rule vendor-reader-libraries ( properties * )
 {
     local libraries ;
-    local core_vendor_reader_path = $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers ;
-    if [ project-exists $(core_vendor_reader_path)/Thermo ] { libraries += <library>$(core_vendor_reader_path)/Thermo//pwiz_reader_thermo ; }
-    if [ project-exists $(core_vendor_reader_path)/Agilent ] { libraries += <library>$(core_vendor_reader_path)/Agilent//pwiz_reader_agilent ; }
+    local vendor_reader_path = $(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers ;
+    libraries += <library>$(vendor_reader_path)/ABI//pwiz_reader_abi ;
+    libraries += <library>$(vendor_reader_path)/ABI/T2D//pwiz_reader_abi_t2d ;
+    libraries += <library>$(vendor_reader_path)/Agilent//pwiz_reader_agilent ;
+    libraries += <library>$(vendor_reader_path)/Bruker//pwiz_reader_bruker ;
+    libraries += <library>$(vendor_reader_path)/Thermo//pwiz_reader_thermo ;
+    libraries += <library>$(vendor_reader_path)/Waters//pwiz_reader_waters ;
     return $(libraries) ;
 }
 
@@ -48,5 +52,8 @@ lib pwiz_data_vendor_readers
         <conditional>@vendor-reader-libraries
     ;
 
+build-project-if-exists ABI ;
 build-project-if-exists Agilent ;
+build-project-if-exists Bruker ;
 build-project-if-exists Thermo ;
+build-project-if-exists Waters ;

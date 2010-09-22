@@ -38,8 +38,6 @@ rule vendor-api-requirements ( properties * )
     local result ;
     if <toolset>msvc in $(properties)
     {
-        # Even though the vendor API is forced to <link>static and <asynch-exceptions>on,
-        # its pwiz and boost dependencies should not follow suit.
         # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
         if <link>shared in $(properties) || link=shared in [ modules.peek : ARGV ]
         {

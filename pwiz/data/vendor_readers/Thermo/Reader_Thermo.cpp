@@ -48,7 +48,7 @@ bool _hasRAWHeader(const std::string& head)
 
 
 #ifdef PWIZ_READER_THERMO
-#include "pwiz/utility/vendor_api/thermo/RawFile.h"
+#include "pwiz_aux/msrc/utility/vendor_api/thermo/RawFile.h"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"

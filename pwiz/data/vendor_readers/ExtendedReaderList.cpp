@@ -24,8 +24,12 @@
 #define PWIZ_SOURCE
 
 #include "ExtendedReaderList.hpp"
-#include "Thermo/Reader_Thermo.hpp"
+#include "ABI/Reader_ABI.hpp"
+#include "ABI/T2D/Reader_ABI_T2D.hpp"
 #include "Agilent/Reader_Agilent.hpp"
+#include "Bruker/Reader_Bruker.hpp"
+#include "Thermo/Reader_Thermo.hpp"
+#include "Waters/Reader_Waters.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 
 
@@ -33,17 +37,16 @@ namespace pwiz {
 namespace msdata {
 
 
-using boost::shared_ptr;
-
-
 PWIZ_API_DECL ExtendedReaderList::ExtendedReaderList()
 {
-    push_back(ReaderPtr(new Reader_Thermo));
+    push_back(ReaderPtr(new Reader_ABI));
+    push_back(ReaderPtr(new Reader_ABI_T2D));
     push_back(ReaderPtr(new Reader_Agilent));
+    push_back(ReaderPtr(new Reader_Bruker));
+    push_back(ReaderPtr(new Reader_Thermo));
+    push_back(ReaderPtr(new Reader_Waters));
 }
 
 
 } // namespace msdata
 } // namespace pwiz
-
-

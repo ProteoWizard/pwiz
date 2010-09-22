@@ -7,7 +7,7 @@
         <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
       </dsig:Transforms>
       <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
-      <dsig:DigestValue>Y37FoH88ONodtcTyqV93fQHBQes=</dsig:DigestValue>
+      <dsig:DigestValue>oianbkLUnYD3ag8kXrgZ93rwAcQ=</dsig:DigestValue>
     </hash>
     <typelib tlbid="{f0c5f3e3-4f2a-443e-a74d-0aabe3237494}" version="1.0" helpdir="" resourceid="0" flags="HASDISKIMAGE" />
     <comClass clsid="{1d23188d-53fe-4c25-b032-dc70acdbdc02}" threadingModel="Apartment" tlbid="{f0c5f3e3-4f2a-443e-a74d-0aabe3237494}" progid="MSFileReader.XRawfile.1" description="MSFileReader XRawfile Class" />

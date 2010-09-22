@@ -41,7 +41,7 @@ project
     ;
 
 
-path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/thermo ;
+path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/thermo ;
 path-constant TEST_DATA_PATH : ./Reader_Thermo_Test.data ;
 constant READER_PATH : "pwiz/data/vendor_readers/Thermo" ;
 constant READER_NAME : "Reader_Thermo" ;

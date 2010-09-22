@@ -26,11 +26,11 @@
 #include "SpectrumList_PeakPicker.hpp"
 #include "pwiz/utility/misc/Container.hpp"
 
-#include "pwiz/data/vendor_readers/Thermo/SpectrumList_Thermo.hpp"
+#include "pwiz/data/vendor_readers/ABI/SpectrumList_ABI.hpp"
+#include "pwiz/data/vendor_readers/ABI/T2D/SpectrumList_ABI_T2D.hpp"
 #include "pwiz/data/vendor_readers/Agilent/SpectrumList_Agilent.hpp"
-#include "pwiz_aux/msrc/data/vendor_readers/Bruker/SpectrumList_Bruker.hpp"
-#include "pwiz_aux/msrc/data/vendor_readers/ABI/SpectrumList_ABI.hpp"
-#include "pwiz_aux/msrc/data/vendor_readers/ABI/T2D/SpectrumList_ABI_T2D.hpp"
+#include "pwiz/data/vendor_readers/Bruker/SpectrumList_Bruker.hpp"
+#include "pwiz/data/vendor_readers/Thermo/SpectrumList_Thermo.hpp"
 
 
 namespace pwiz {

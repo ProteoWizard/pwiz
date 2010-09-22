@@ -25,7 +25,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/MSData.hpp"
-#include "pwiz/utility/vendor_api/Agilent/MassHunterData.hpp"
+#include "pwiz_aux/msrc/utility/vendor_api/Agilent/MassHunterData.hpp"
 #include <vector>
 
 namespace pwiz {

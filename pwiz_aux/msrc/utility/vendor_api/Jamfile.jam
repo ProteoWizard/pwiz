@@ -22,4 +22,7 @@
 
 
 build-project-if-exists ABI ;
+build-project-if-exists Agilent ;
+build-project-if-exists Bruker ;
+build-project-if-exists thermo ;
 build-project-if-exists Waters ;

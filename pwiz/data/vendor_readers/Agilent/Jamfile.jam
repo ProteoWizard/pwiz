@@ -32,7 +32,7 @@ project
     ;
 
 
-path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz/utility/vendor_api/Agilent ;
+path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Agilent ;
 path-constant TEST_DATA_PATH : ./Reader_Agilent_Test.data ;
 constant READER_PATH : "pwiz/data/vendor_readers/Agilent" ;
 constant READER_NAME : "Reader_Agilent" ;

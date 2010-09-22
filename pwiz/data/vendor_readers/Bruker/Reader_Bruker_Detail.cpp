@@ -1,17 +1,16 @@
 //
 // $Id$
 //
-// 
+//
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
 //
-// Copyright 2008 Vanderbilt University - Nashville, TN 37232
+// Copyright 2009 Vanderbilt University - Nashville, TN 37232
 //
-// Licensed under Creative Commons 3.0 United States License, which requires:
-//  - Attribution
-//  - Noncommercial
-//  - No Derivative Works
+// Licensed under the Apache License, Version 2.0 (the "License"); 
+// you may not use this file except in compliance with the License. 
+// You may obtain a copy of the License at 
 //
-// http://creativecommons.org/licenses/by-nc-nd/3.0/us/
+// http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing, software 
 // distributed under the License is distributed on an "AS IS" BASIS, 

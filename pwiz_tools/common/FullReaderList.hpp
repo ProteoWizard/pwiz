@@ -33,17 +33,13 @@ namespace pwiz {
 namespace msdata {
 
 
-/// extension of ExtendedReaderList to include pwiz_aux Readers  
-class PWIZ_API_DECL FullReaderList : public ExtendedReaderList
-{
-    public:
-    FullReaderList();
-};
+/// alias for ExtendedReaderList  
+typedef ExtendedReaderList FullReaderList;
 
 
 } // namespace msdata
 } // namespace pwiz
 
 
-#endif// _FULLREADERLIST_HPP_
+#endif // _FULLREADERLIST_HPP_
 

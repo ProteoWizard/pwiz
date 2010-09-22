@@ -26,7 +26,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/MSData.hpp"
-#include "pwiz/utility/vendor_api/thermo/RawFile.h"
+#include "pwiz_aux/msrc/utility/vendor_api/thermo/RawFile.h"
 #include <vector>
 
 using namespace pwiz::vendor_api::Thermo;

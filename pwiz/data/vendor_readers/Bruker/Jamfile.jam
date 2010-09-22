@@ -35,7 +35,7 @@ project
 
 path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Bruker ;
 path-constant TEST_DATA_PATH : ./Reader_Bruker_Test.data ;
-constant READER_PATH : "pwiz_aux/msrc/data/vendor_readers/Bruker" ;
+constant READER_PATH : "pwiz/data/vendor_readers/Bruker" ;
 constant READER_NAME : "Reader_Bruker" ;
 
 
@@ -80,7 +80,7 @@ rule vendor-api-requirements ( properties * )
 }
 
 
-lib pwiz_aux_msrc_reader_bruker
+lib pwiz_reader_bruker
     : # sources
         Reader_Bruker.cpp
         Reader_Bruker_Detail.cpp
@@ -146,11 +146,9 @@ run Reader_Bruker_Test.cpp $(PWIZ_ROOT_PATH)/pwiz/utility/misc/VendorReaderTestH
         \"$(TEST_DATA_PATH)\" $(generate-mzML)
     : # input-files
     : # requirements
-        <library>pwiz_aux_msrc_reader_bruker
+        <library>pwiz_reader_bruker
         <conditional>@test-requirements
     : # target name
         Reader_Bruker_Test 
     : # default-build
     ;
-
-

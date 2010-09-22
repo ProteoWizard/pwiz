@@ -30,7 +30,7 @@
 
 
 #ifdef PWIZ_READER_AGILENT
-#include "pwiz/utility/vendor_api/Agilent/MassHunterData.hpp"
+#include "pwiz_aux/msrc/utility/vendor_api/Agilent/MassHunterData.hpp"
 #include "pwiz/utility/misc/Once.hpp"
 using namespace pwiz::vendor_api::Agilent;
 #endif // PWIZ_READER_AGILENT
