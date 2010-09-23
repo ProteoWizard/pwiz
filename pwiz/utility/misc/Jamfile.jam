@@ -33,6 +33,10 @@ lib ole32 : : <name>ole32 ; # for CoInitialize/CoUninitialize
 lib oleaut32 : : <name>oleaut32 ; # for Variant/SafeArray functions
 
 
+lib pwiz_utility_clickwrap_prompter : ClickwrapPrompter.cpp : <link>static <using-clr>true ;
+explicit pwiz_utility_clickwrap_prompter ;
+
+
 lib pwiz_utility_misc
     : # sources
         Base64.cpp 
@@ -50,6 +54,7 @@ lib pwiz_utility_misc
         <toolset>msvc:<source>COMInitializer.cpp
         <toolset>msvc:<library>ole32
         <toolset>msvc:<library>oleaut32
+        <toolset>msvc:<library>pwiz_utility_clickwrap_prompter
         <toolset>msvc:<library>/ext/boost//thread
         <library>/ext/boost//filesystem
         <library>/ext/zlib//z
@@ -84,6 +89,8 @@ lib pwiz_utility_vendor_reader_test_harness
     : # requirements
         <library>pwiz_utility_misc
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+        #<testing.semaphore>io_semaphore
+        #<testing.semaphore>mt_semaphore
     : # default-build
     : # usage-requirements
         <library>pwiz_utility_misc
@@ -121,7 +128,9 @@ import modules ;
 if [ modules.peek : NT ]
 {
     unit-test automation_vector_test : automation_vector_test.cpp pwiz_utility_misc : <conditional>@msvc-requirement ;
-    unit-test COMInitializerTest : COMInitializerTest.cpp pwiz_utility_misc : <conditional>@msvc-requirement  ;
+    unit-test COMInitializerTest : COMInitializerTest.cpp pwiz_utility_misc : <conditional>@msvc-requirement ;
+    unit-test ClickwrapPrompterTest : ClickwrapPrompterTest.cpp pwiz_utility_misc : <conditional>@msvc-requirement ;
+    explicit ClickwrapPrompterTest ; # because it requires user input
 }
 
 exe sha1calc : sha1calc.cpp pwiz_utility_misc ;
