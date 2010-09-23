@@ -24,9 +24,10 @@
 
 #pragma unmanaged
 #include "MassHunterData.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include "pwiz/utility/misc/Container.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/ClickwrapPrompter.hpp"
 
 
 #pragma managed
@@ -188,6 +189,25 @@ bool Transition::operator< (const Transition& rhs) const
 PWIZ_API_DECL
 MassHunterDataPtr MassHunterData::create(const string& path)
 {
+    // get the filepath of the calling .exe using WinAPI
+    TCHAR tmpFilepath[1024];
+    // check for pwiz_bindings_cli.dll first, so that unit tests run from
+    // vstesthost.exe run correctly.  if pwiz_bindings_cli.dll is not running,
+    // GetModuleHandle will return NULL, and the exe path will be returned.
+    DWORD tmpFilepathLength = ::GetModuleFileName(::GetModuleHandle("pwiz_bindings_cli.dll"), (LPCH) tmpFilepath, 1024);
+    bfs::path callingExecutablePath = bfs::path(string(tmpFilepath, tmpFilepath + tmpFilepathLength)).parent_path();
+
+    ifstream eulaStream((callingExecutablePath / "EULA.MHDAC").string().c_str());
+    if (!eulaStream)
+        throw runtime_error("[MassHunterData::create] Unable to find or open EULA.MHDAC.");
+
+    string eula, line;
+    while (std::getline(eulaStream, line))
+        eula += line + "\r\n";
+
+    if (!ClickwrapPrompter::prompt("Agilent MHDAC End User License Agreement", eula, "Agilent MHDAC"))
+        throw runtime_error("[MassHunterData::create] User did not agree to the EULA.");
+                              
     MassHunterDataImplPtr dataReader(new MassHunterDataImpl(path));
     return boost::static_pointer_cast<MassHunterData>(dataReader);
 }

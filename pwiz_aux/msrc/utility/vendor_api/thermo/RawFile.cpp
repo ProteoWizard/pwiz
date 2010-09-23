@@ -40,6 +40,7 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Once.hpp"
+#include "pwiz/utility/misc/ClickwrapPrompter.hpp"
 #include <boost/bind.hpp>
 #include <windows.h> // GetModuleFileName
 
@@ -164,6 +165,25 @@ class RawFileImpl : public RawFile
 
 PWIZ_API_DECL RawFilePtr RawFile::create(const string& filename)
 {
+    // get the filepath of the calling .exe using WinAPI
+    TCHAR tmpFilepath[1024];
+    // check for pwiz_bindings_cli.dll first, so that unit tests run from
+    // vstesthost.exe run correctly.  if pwiz_bindings_cli.dll is not running,
+    // GetModuleHandle will return NULL, and the exe path will be returned.
+    DWORD tmpFilepathLength = ::GetModuleFileName(::GetModuleHandle("pwiz_bindings_cli.dll"), (LPCH) tmpFilepath, 1024);
+    bfs::path callingExecutablePath = bfs::path(string(tmpFilepath, tmpFilepath + tmpFilepathLength)).parent_path();
+
+    ifstream eulaStream((callingExecutablePath / "EULA.MSFileReader").string().c_str());
+    if (!eulaStream)
+        throw runtime_error("[RawFile::create] Unable to find or open EULA.MSFileReader.");
+
+    string eula, line;
+    while (std::getline(eulaStream, line))
+        eula += line + "\r\n";
+
+    if (!ClickwrapPrompter::prompt("Thermo MSFileReader End User License Agreement", eula, "Thermo MSFileReader"))
+        throw runtime_error("[RawFile::create] User did not agree to the EULA.");
+
     return RawFilePtr(new RawFileImpl(filename));
 }
 

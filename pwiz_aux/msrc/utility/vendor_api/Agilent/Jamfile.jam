@@ -57,6 +57,8 @@ rule vendor-api-usage-requirements ( properties * )
         result += <assembly>$(API_PATH)/BaseError.dll ;
         result += <assembly>$(API_PATH)/BaseTof.dll ;
         result += <assembly-dependency>$(API_PATH)/agtsampleinforw.dll ;
+        result += <assembly-dependency>$(API_PATH)/EULA.MHDAC ;
+        result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc ;
     }
     return $(result) ;
 }
@@ -94,7 +96,7 @@ explicit MassHunterDataTest ;
 
 
 install install_pwiz_vendor_api_agilent
-    : [ path.glob $(API_PATH) : *.dll *.manifest ]
+    : [ path.glob $(API_PATH) : *.dll *.manifest EULA.* ]
     ;
 
 explicit install_pwiz_vendor_api_agilent ;

@@ -76,6 +76,7 @@ rule vendor-api-usage-requirements ( properties * )
             result += <assembly-dependency>$(API_PATH)/MSFileReader.XRawfile2.SxS.manifest ;
             result += <assembly-dependency>$(API_PATH)/fregistry.dll ;
             result += <assembly-dependency>$(API_PATH)/fileio.dll ;
+            result += <assembly-dependency>$(API_PATH)/EULA.MSFileReader ;
         }
     }
     return $(result) ;
@@ -115,7 +116,7 @@ explicit RawFileTest ;
 
 
 install install_pwiz_vendor_api_thermo
-    : [ path.glob $(API_PATH) : *.dll *.manifest ]
+    : [ path.glob $(API_PATH) : *.dll *.manifest EULA.* ]
     ;
 
 explicit install_pwiz_vendor_api_thermo ;
