@@ -64,7 +64,13 @@ namespace IDPicker.Forms
             this.qvalueColumn = new BrightIdeasSoftware.OLVColumn();
             this.sequenceColumn = new BrightIdeasSoftware.OLVColumn();
             this.editGroupsButton = new System.Windows.Forms.Button();
+            this.exportButton = new System.Windows.Forms.Button();
+            this.exportMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.clipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showInExcelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.treeListView)).BeginInit();
+            this.exportMenu.SuspendLayout();
             this.SuspendLayout();
             // 
             // treeListView
@@ -91,11 +97,11 @@ namespace IDPicker.Forms
             this.treeListView.Cursor = System.Windows.Forms.Cursors.Default;
             this.treeListView.FullRowSelect = true;
             this.treeListView.HideSelection = false;
-            this.treeListView.Location = new System.Drawing.Point(0, 31);
+            this.treeListView.Location = new System.Drawing.Point(0, 27);
             this.treeListView.Name = "treeListView";
             this.treeListView.OwnerDraw = true;
             this.treeListView.ShowGroups = false;
-            this.treeListView.Size = new System.Drawing.Size(817, 322);
+            this.treeListView.Size = new System.Drawing.Size(817, 326);
             this.treeListView.TabIndex = 0;
             this.treeListView.UnfocusedHighlightBackgroundColor = System.Drawing.SystemColors.Highlight;
             this.treeListView.UnfocusedHighlightForegroundColor = System.Drawing.SystemColors.HighlightText;
@@ -179,7 +185,7 @@ namespace IDPicker.Forms
             // editGroupsButton
             // 
             this.editGroupsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.editGroupsButton.Location = new System.Drawing.Point(732, 4);
+            this.editGroupsButton.Location = new System.Drawing.Point(688, 2);
             this.editGroupsButton.Name = "editGroupsButton";
             this.editGroupsButton.Size = new System.Drawing.Size(81, 23);
             this.editGroupsButton.TabIndex = 1;
@@ -187,17 +193,60 @@ namespace IDPicker.Forms
             this.editGroupsButton.UseVisualStyleBackColor = true;
             this.editGroupsButton.Click += new System.EventHandler(this.editGroupsButton_Click);
             // 
+            // exportButton
+            // 
+            this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.exportButton.Image = global::IDPicker.Properties.Resources.Export;
+            this.exportButton.Location = new System.Drawing.Point(775, 2);
+            this.exportButton.Name = "exportButton";
+            this.exportButton.Size = new System.Drawing.Size(30, 23);
+            this.exportButton.TabIndex = 2;
+            this.exportButton.UseVisualStyleBackColor = true;
+            this.exportButton.Click += new System.EventHandler(this.exportButton_Click);
+            // 
+            // exportMenu
+            // 
+            this.exportMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.clipboardToolStripMenuItem,
+            this.fileToolStripMenuItem,
+            this.showInExcelToolStripMenuItem});
+            this.exportMenu.Name = "contextMenuStrip1";
+            this.exportMenu.Size = new System.Drawing.Size(172, 92);
+            // 
+            // clipboardToolStripMenuItem
+            // 
+            this.clipboardToolStripMenuItem.Name = "clipboardToolStripMenuItem";
+            this.clipboardToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
+            this.clipboardToolStripMenuItem.Text = "Copy to Clipboard";
+            this.clipboardToolStripMenuItem.Click += new System.EventHandler(this.clipboardToolStripMenuItem_Click);
+            // 
+            // fileToolStripMenuItem
+            // 
+            this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
+            this.fileToolStripMenuItem.Text = "Export to File";
+            this.fileToolStripMenuItem.Click += new System.EventHandler(this.fileToolStripMenuItem_Click);
+            // 
+            // showInExcelToolStripMenuItem
+            // 
+            this.showInExcelToolStripMenuItem.Name = "showInExcelToolStripMenuItem";
+            this.showInExcelToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
+            this.showInExcelToolStripMenuItem.Text = "Show in Excel";
+            this.showInExcelToolStripMenuItem.Click += new System.EventHandler(this.showInExcelToolStripMenuItem_Click);
+            // 
             // SpectrumTableForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(817, 353);
             this.Controls.Add(this.treeListView);
+            this.Controls.Add(this.exportButton);
             this.Controls.Add(this.editGroupsButton);
             this.Name = "SpectrumTableForm";
             this.TabText = "SpectrumTableForm";
             this.Text = "SpectrumTableForm";
             ((System.ComponentModel.ISupportInitialize)(this.treeListView)).EndInit();
+            this.exportMenu.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -217,6 +266,11 @@ namespace IDPicker.Forms
         private BrightIdeasSoftware.OLVColumn exactMassColumn;
         private BrightIdeasSoftware.OLVColumn sequenceColumn;
         private System.Windows.Forms.Button editGroupsButton;
+        private System.Windows.Forms.Button exportButton;
+        private System.Windows.Forms.ContextMenuStrip exportMenu;
+        private System.Windows.Forms.ToolStripMenuItem clipboardToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showInExcelToolStripMenuItem;
 
     }
 }

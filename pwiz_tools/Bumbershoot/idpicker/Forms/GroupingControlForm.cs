@@ -48,7 +48,7 @@ namespace IDPicker.Forms
 
             var groupsDone = new List<SpectrumSourceGroup>();
             var spectra = session.QueryOver<SpectrumSource>().List<SpectrumSource>();
-            Dictionary<int,List<SpectrumSource>> spectraDictionary = new Dictionary<int,List<SpectrumSource>>();
+            var spectraDictionary = new Dictionary<int,List<SpectrumSource>>();
 
             foreach (SpectrumSource ss in spectra)
             {
@@ -66,7 +66,7 @@ namespace IDPicker.Forms
 
             //add all normal groups
             var groups = session.QueryOver<SpectrumSourceGroup>().Where(g => g.Name != "Abandoned").List<SpectrumSourceGroup>();
-            TreeNode groupNode = new TreeNode();
+            var groupNode = new TreeNode();
 
             groupNode.Tag = (from g in groups where g.Name == "/" select g).Single();
             groups.Remove(groupNode.Tag as SpectrumSourceGroup);
@@ -87,7 +87,7 @@ namespace IDPicker.Forms
             {
                 foreach (SpectrumSource ss in abandonedGroup)
                 {
-                    ListViewItem lvi = new ListViewItem();
+                    var lvi = new ListViewItem();
                     lvi.Text = ss.Name;
                     lvi.Tag = ss;
                     lvNonGroupedFiles.Items.Add(lvi);
@@ -105,7 +105,7 @@ namespace IDPicker.Forms
                 {
                     foreach (SpectrumSource ss in spectraDictionary[groupID])
                     {
-                        TreeNode newNode = new TreeNode();
+                        var newNode = new TreeNode();
 
                         newNode.Text = ss.Name;
                         newNode.Tag = ss;
@@ -140,7 +140,7 @@ namespace IDPicker.Forms
 
             foreach (SpectrumSourceGroup ssg in potentialChildren)
             {
-                TreeNode newNode = new TreeNode();
+                var newNode = new TreeNode();
                 newNode.Text = ssg.Name.Substring(ssg.Name.LastIndexOf("/")+1);
                 newNode.Tag = ssg;
                 newNode.ImageIndex = 0;
@@ -158,11 +158,11 @@ namespace IDPicker.Forms
 
         private void saveButton_Click(object sender, EventArgs e)
         {
-            List<TreeNode> spectraLocations= new List<TreeNode>();
-            List<TreeNode> groupsToSave = new List<TreeNode>();
+            var spectraLocations= new List<TreeNode>();
+            var groupsToSave = new List<TreeNode>();
             TreeNode tempNode;
 
-            NHibernate.ITransaction transaction = session.BeginTransaction();
+            var transaction = session.BeginTransaction();
 
             //find all groups still present
             getSprectrumSourceGroupsRecursively(tvGroups.Nodes[0], groupsToSave);
@@ -208,7 +208,7 @@ namespace IDPicker.Forms
             //save abandoned spectrum sources
             if (lvNonGroupedFiles.Items.Count > 0)
             {
-                SpectrumSourceGroup abandonedGroup = session.QueryOver<SpectrumSourceGroup>()
+                var abandonedGroup = session.QueryOver<SpectrumSourceGroup>()
                     .Where(g => g.Name == "Abandoned").SingleOrDefault();
                 if (abandonedGroup == null)
                 {
@@ -333,16 +333,14 @@ namespace IDPicker.Forms
 
                 if (e.Data.GetDataPresent("System.Windows.Forms.TreeNode", true))
                 {
-                    Point pt = tvGroups.PointToClient(new Point(e.X, e.Y));
-
-                    TreeNode destNode = tvGroups.GetNodeAt(pt);
-
-                    TreeNode dragNode = e.Data.GetData("System.Windows.Forms.TreeNode", true) as TreeNode;
+                    var pt = tvGroups.PointToClient(new Point(e.X, e.Y));
+                    var destNode = tvGroups.GetNodeAt(pt);
+                    var dragNode = e.Data.GetData("System.Windows.Forms.TreeNode", true) as TreeNode;
 
                     //InputFileTag destNodeTag = (destNode.Tag as InputFileTag);
                     //InputFileTag dragNodeTag = (dragNode.Tag as InputFileTag);
 
-                    TreeNode newNode = dragNode.Clone() as TreeNode;
+                    var newNode = dragNode.Clone() as TreeNode;
 
                     if (destNode != null && dragNode != null)
                     {
@@ -363,9 +361,9 @@ namespace IDPicker.Forms
 
                 else if (e.Data.GetDataPresent("System.Windows.Forms.ListViewItem", true))
                 {
-                    Point pt = tvGroups.PointToClient(new Point(e.X, e.Y));
+                    var pt = tvGroups.PointToClient(new Point(e.X, e.Y));
 
-                    TreeNode destNode = tvGroups.GetNodeAt(pt);
+                    var destNode = tvGroups.GetNodeAt(pt);
 
                     if (destNode != null)
                     {
@@ -373,7 +371,7 @@ namespace IDPicker.Forms
                         {
                             foreach (ListViewItem lvi in lvNonGroupedFiles.SelectedItems)
                             {
-                                TreeNode newNode = new TreeNode(lvi.Text);
+                                var newNode = new TreeNode(lvi.Text);
 
                                 newNode.Tag = lvi.Tag;
                                 newNode.ImageIndex = 1;
@@ -408,13 +406,10 @@ namespace IDPicker.Forms
             {
                 if (e.Data.GetDataPresent("System.Windows.Forms.TreeNode", true))
                 {
-                    Point pt = tvGroups.PointToClient(new Point(e.X, e.Y));
-
-                    TreeNode destNode = tvGroups.GetNodeAt(pt);
-
-                    TreeNode dragNode = e.Data.GetData("System.Windows.Forms.TreeNode", true) as TreeNode;
-
-                    TreeNode newNode = dragNode.Clone() as TreeNode;
+                    var pt = tvGroups.PointToClient(new Point(e.X, e.Y));
+                    var destNode = tvGroups.GetNodeAt(pt);
+                    var dragNode = e.Data.GetData("System.Windows.Forms.TreeNode", true) as TreeNode;
+                    var newNode = dragNode.Clone() as TreeNode;
 
                     if (destNode != null && dragNode != null && destNode != dragNode)
                     {
@@ -445,9 +440,8 @@ namespace IDPicker.Forms
 
                 else if (e.Data.GetDataPresent("System.Windows.Forms.ListViewItem", true))
                 {
-                    Point pt = tvGroups.PointToClient(new Point(e.X, e.Y));
-
-                    TreeNode destNode = tvGroups.GetNodeAt(pt);
+                    var pt = tvGroups.PointToClient(new Point(e.X, e.Y));
+                    var destNode = tvGroups.GetNodeAt(pt);
 
                     if (destNode != null)
                     {
@@ -483,15 +477,15 @@ namespace IDPicker.Forms
         /// <param name="e"></param>
         private void tvGroups_KeyDown(object sender, KeyEventArgs e)
         {
-            TreeNode selNode = tvGroups.SelectedNode;
+            var selNode = tvGroups.SelectedNode;
 
             try
             {
-                if (e.KeyCode.Equals(Keys.Delete))
+                if (e.KeyCode == Keys.Delete)
                 {
                     RemoveGroupNode(selNode);
                 }
-                else if (e.KeyCode.Equals(Keys.F2) && (selNode.Tag is SpectrumSourceGroup))
+                else if (e.KeyCode == Keys.F2 && (selNode.Tag is SpectrumSourceGroup))
                 {
                     selNode.BeginEdit();
                 }
@@ -539,11 +533,11 @@ namespace IDPicker.Forms
             {
                 if (destNode.Tag is SpectrumSourceGroup && dragNode.Tag is SpectrumSourceGroup && destNode.Level > dragNode.Level)
                 {
-                    TreeNode currNode = destNode;
+                    var currNode = destNode;
 
                     while (currNode.Parent != null)
                     {
-                        if (currNode.Parent.Equals(dragNode))
+                        if (currNode.Parent == dragNode)
                         {
                             return true;
                         }
@@ -615,13 +609,14 @@ namespace IDPicker.Forms
 
         private void addGroupToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            TreeNode selNode = tvGroups.GetNodeAt(groupsTreeViewRightClickPointToClient);
+            var selNode = tvGroups.GetNodeAt(groupsTreeViewRightClickPointToClient);
 
             _numberNewNodes++;
 
-            SpectrumSourceGroup ssg = new SpectrumSourceGroup();
+            var ssg = new SpectrumSourceGroup();
             ssg.Name = string.Format("New Group({0})", _numberNewNodes);
-            TreeNode newNode = new TreeNode(string.Format("New Group({0})", _numberNewNodes));
+
+            var newNode = new TreeNode(string.Format("New Group({0})", _numberNewNodes));
             newNode.ImageIndex = 0;
             newNode.SelectedImageIndex = 0;
             newNode.ContextMenuStrip = cmRightClickGroupNode;
@@ -633,7 +628,7 @@ namespace IDPicker.Forms
 
         private void GroupingControlForm_Load(object sender, EventArgs e)
         {
-            ImageList imageList = new ImageList();
+            var imageList = new ImageList();
 
             imageList.Images.Add(Properties.Resources.XPfolder_closed);
             imageList.Images.Add(Properties.Resources.file);
@@ -643,7 +638,7 @@ namespace IDPicker.Forms
 
         private void renameGroupToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            TreeNode selNode = tvGroups.GetNodeAt(groupsTreeViewRightClickPointToClient);
+            var selNode = tvGroups.GetNodeAt(groupsTreeViewRightClickPointToClient);
             selNode.BeginEdit();
         }
 
@@ -654,7 +649,7 @@ namespace IDPicker.Forms
 
         private void RemoveGroupNode(TreeNode selNode)
         {
-            List<TreeNode> abandonedSpectraSources = new List<TreeNode>();
+            var abandonedSpectraSources = new List<TreeNode>();
             getListOfSprectrumSourcesRecursively(selNode, ref abandonedSpectraSources);
 
             if (selNode.Parent != null)
@@ -664,7 +659,7 @@ namespace IDPicker.Forms
 
             foreach (TreeNode tn in abandonedSpectraSources)
             {
-                ListViewItem lvi = new ListViewItem();
+                var lvi = new ListViewItem();
                 lvi.Text = tn.Text;
                 lvi.Tag = tn.Tag;
                 lvNonGroupedFiles.Items.Add(lvi);
@@ -675,7 +670,7 @@ namespace IDPicker.Forms
         {
             selNode.Parent.Nodes.Remove(selNode);
 
-            ListViewItem lvi = new ListViewItem();
+            var lvi = new ListViewItem();
             lvi.Text = selNode.Text;
             lvi.Tag = selNode.Tag;
             lvNonGroupedFiles.Items.Add(lvi);
@@ -695,7 +690,7 @@ namespace IDPicker.Forms
         {
             if (e.Data.GetDataPresent("System.Windows.Forms.TreeNode", true))
             {
-                TreeNode dragNode = (TreeNode)e.Data.GetData("System.Windows.Forms.TreeNode");
+                var dragNode = (TreeNode)e.Data.GetData("System.Windows.Forms.TreeNode");
 
                 RemoveGroupNode(dragNode);
 
@@ -742,7 +737,7 @@ namespace IDPicker.Forms
 
         private void miResetFiles_Click(object sender, EventArgs e)
         {
-            if (MessageBox.Show("Are you sure you want to remove all groups?","Remove All",MessageBoxButtons.YesNo).Equals(DialogResult.Yes))
+            if (MessageBox.Show("Are you sure you want to remove all groups?","Remove All",MessageBoxButtons.YesNo) == DialogResult.Yes)
                 RemoveGroupNode(tvGroups.Nodes[0]);
         }
 

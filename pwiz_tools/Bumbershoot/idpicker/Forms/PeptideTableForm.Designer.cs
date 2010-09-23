@@ -57,12 +57,18 @@ namespace IDPicker.Forms
             this.filteredSpectraColumn = new BrightIdeasSoftware.OLVColumn();
             this.monoisotopicMassColumn = new BrightIdeasSoftware.OLVColumn();
             this.molecularWeightColumn = new BrightIdeasSoftware.OLVColumn();
+            this.offsetColumn = new BrightIdeasSoftware.OLVColumn();
             this.terminalSpecificityColumn = new BrightIdeasSoftware.OLVColumn();
             this.missedCleavagesColumn = new BrightIdeasSoftware.OLVColumn();
             this.radioButton1 = new System.Windows.Forms.RadioButton();
             this.radioButton2 = new System.Windows.Forms.RadioButton();
-            this.offsetColumn = new BrightIdeasSoftware.OLVColumn();
-            ((System.ComponentModel.ISupportInitialize) (this.treeListView)).BeginInit();
+            this.exportButton = new System.Windows.Forms.Button();
+            this.exportMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.clipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showInExcelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            ((System.ComponentModel.ISupportInitialize)(this.treeListView)).BeginInit();
+            this.exportMenu.SuspendLayout();
             this.SuspendLayout();
             // 
             // treeListView
@@ -75,7 +81,7 @@ namespace IDPicker.Forms
             this.treeListView.AllColumns.Add(this.offsetColumn);
             this.treeListView.AllColumns.Add(this.terminalSpecificityColumn);
             this.treeListView.AllColumns.Add(this.missedCleavagesColumn);
-            this.treeListView.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.treeListView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.treeListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
@@ -87,7 +93,7 @@ namespace IDPicker.Forms
             this.treeListView.Cursor = System.Windows.Forms.Cursors.Default;
             this.treeListView.FullRowSelect = true;
             this.treeListView.HideSelection = false;
-            this.treeListView.Location = new System.Drawing.Point(0, 28);
+            this.treeListView.Location = new System.Drawing.Point(0, 27);
             this.treeListView.Name = "treeListView";
             this.treeListView.OwnerDraw = true;
             this.treeListView.ShowGroups = false;
@@ -102,37 +108,36 @@ namespace IDPicker.Forms
             // sequenceColumn
             // 
             this.sequenceColumn.FillsFreeSpace = true;
-            this.sequenceColumn.HeaderFont = null;
             this.sequenceColumn.Text = "Sequence";
             // 
             // filteredVariantsColumn
             // 
-            this.filteredVariantsColumn.HeaderFont = null;
             this.filteredVariantsColumn.Text = "Filtered Variants";
             this.filteredVariantsColumn.Width = 90;
             // 
             // filteredSpectraColumn
             // 
-            this.filteredSpectraColumn.HeaderFont = null;
             this.filteredSpectraColumn.Text = "Filtered Spectra";
             this.filteredSpectraColumn.Width = 90;
             // 
             // monoisotopicMassColumn
             // 
-            this.monoisotopicMassColumn.HeaderFont = null;
             this.monoisotopicMassColumn.Text = "Monoisotopic Mass";
             this.monoisotopicMassColumn.Width = 110;
             // 
             // molecularWeightColumn
             // 
-            this.molecularWeightColumn.HeaderFont = null;
             this.molecularWeightColumn.Text = "Molecular Weight";
             this.molecularWeightColumn.Width = 100;
+            // 
+            // offsetColumn
+            // 
+            this.offsetColumn.IsVisible = false;
+            this.offsetColumn.Text = "Offset";
             // 
             // terminalSpecificityColumn
             // 
             this.terminalSpecificityColumn.DisplayIndex = 4;
-            this.terminalSpecificityColumn.HeaderFont = null;
             this.terminalSpecificityColumn.IsVisible = false;
             this.terminalSpecificityColumn.Text = "Terminal Specificity";
             this.terminalSpecificityColumn.Width = 110;
@@ -140,7 +145,6 @@ namespace IDPicker.Forms
             // missedCleavagesColumn
             // 
             this.missedCleavagesColumn.DisplayIndex = 5;
-            this.missedCleavagesColumn.HeaderFont = null;
             this.missedCleavagesColumn.IsVisible = false;
             this.missedCleavagesColumn.Text = "Missed Cleavages";
             this.missedCleavagesColumn.Width = 100;
@@ -167,17 +171,53 @@ namespace IDPicker.Forms
             this.radioButton2.Text = "Expand to peptide instances";
             this.radioButton2.UseVisualStyleBackColor = true;
             // 
-            // offsetColumn
+            // exportButton
             // 
-            this.offsetColumn.HeaderFont = null;
-            this.offsetColumn.IsVisible = false;
-            this.offsetColumn.Text = "Offset";
+            this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.exportButton.Image = global::IDPicker.Properties.Resources.Export;
+            this.exportButton.Location = new System.Drawing.Point(680, 2);
+            this.exportButton.Name = "exportButton";
+            this.exportButton.Size = new System.Drawing.Size(30, 23);
+            this.exportButton.TabIndex = 4;
+            this.exportButton.UseVisualStyleBackColor = true;
+            this.exportButton.Click += new System.EventHandler(this.exportButton_Click);
+            // 
+            // exportMenu
+            // 
+            this.exportMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.clipboardToolStripMenuItem,
+            this.fileToolStripMenuItem,
+            this.showInExcelToolStripMenuItem});
+            this.exportMenu.Name = "contextMenuStrip1";
+            this.exportMenu.Size = new System.Drawing.Size(172, 92);
+            // 
+            // clipboardToolStripMenuItem
+            // 
+            this.clipboardToolStripMenuItem.Name = "clipboardToolStripMenuItem";
+            this.clipboardToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
+            this.clipboardToolStripMenuItem.Text = "Copy to Clipboard";
+            this.clipboardToolStripMenuItem.Click += new System.EventHandler(this.clipboardToolStripMenuItem_Click);
+            // 
+            // fileToolStripMenuItem
+            // 
+            this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
+            this.fileToolStripMenuItem.Text = "Export to File";
+            this.fileToolStripMenuItem.Click += new System.EventHandler(this.fileToolStripMenuItem_Click);
+            // 
+            // showInExcelToolStripMenuItem
+            // 
+            this.showInExcelToolStripMenuItem.Name = "showInExcelToolStripMenuItem";
+            this.showInExcelToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
+            this.showInExcelToolStripMenuItem.Text = "Show in Excel";
+            this.showInExcelToolStripMenuItem.Click += new System.EventHandler(this.showInExcelToolStripMenuItem_Click);
             // 
             // PeptideTableForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(722, 353);
+            this.Controls.Add(this.exportButton);
             this.Controls.Add(this.radioButton2);
             this.Controls.Add(this.radioButton1);
             this.Controls.Add(this.treeListView);
@@ -185,7 +225,8 @@ namespace IDPicker.Forms
             this.Opacity = 0.25;
             this.TabText = "PeptideTableForm";
             this.Text = "PeptideTableForm";
-            ((System.ComponentModel.ISupportInitialize) (this.treeListView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.treeListView)).EndInit();
+            this.exportMenu.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -204,6 +245,11 @@ namespace IDPicker.Forms
         private System.Windows.Forms.RadioButton radioButton1;
         private System.Windows.Forms.RadioButton radioButton2;
         private BrightIdeasSoftware.OLVColumn offsetColumn;
+        private System.Windows.Forms.Button exportButton;
+        private System.Windows.Forms.ContextMenuStrip exportMenu;
+        private System.Windows.Forms.ToolStripMenuItem clipboardToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showInExcelToolStripMenuItem;
 
     }
 }

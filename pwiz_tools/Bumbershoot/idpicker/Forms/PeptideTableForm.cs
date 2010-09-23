@@ -348,6 +348,100 @@ namespace IDPicker.Forms
                 selectedItem.EnsureVisible();
             }
         }
+
+        private void clipboardToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var table = getFormTable();
+
+            TableExporter.CopyToClipboard(table);
+        }
+
+        private void fileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var table = getFormTable();
+
+            TableExporter.ExportToFile(table);
+        }
+
+        private void exportButton_Click(object sender, EventArgs e)
+        {
+            if (treeListView.SelectedIndices.Count > 1)
+            {
+                exportMenu.Items[0].Text = "Copy Selected to Clipboard";
+                exportMenu.Items[1].Text = "Export Selected to File";
+                exportMenu.Items[2].Text = "Show Selected in Excel";
+            }
+            else
+            {
+                exportMenu.Items[0].Text = "Copy to Clipboard";
+                exportMenu.Items[1].Text = "Export to File";
+                exportMenu.Items[2].Text = "Show in Excel";
+            }
+
+            exportMenu.Show(Cursor.Position);
+        }
+
+        private List<List<string>> getFormTable()
+        {
+            var table = new List<List<string>>();
+            var row = new List<string>();
+            int numColumns;
+
+            //get column names
+            foreach (var column in treeListView.ColumnsInDisplayOrder)
+                row.Add(column.Text);
+
+            table.Add(row);
+            numColumns = row.Count;
+            row = new List<string>();
+
+            //Retrieve all items
+            if (treeListView.SelectedIndices.Count > 1)
+            {
+                foreach (int tableRow in treeListView.SelectedIndices)
+                {
+                    string indention = string.Empty;
+                    for (int tabs = 0; tabs < treeListView.Items[tableRow].IndentCount; tabs++)
+                        indention += "     ";
+
+                    row.Add(indention + treeListView.Items[tableRow].SubItems[0].Text);
+
+                    for (int x = 1; x < numColumns; x++)
+                    {
+                        row.Add(treeListView.Items[tableRow].SubItems[x].Text);
+                    }
+                    table.Add(row);
+                    row = new List<string>();
+                }
+            }
+            else
+            {
+                for (int tableRow = 0; tableRow < treeListView.Items.Count; tableRow++)
+                {
+                    string indention = string.Empty;
+                    for (int tabs = 0; tabs < treeListView.Items[tableRow].IndentCount; tabs++)
+                        indention += "     ";
+
+                    row.Add(indention + treeListView.Items[tableRow].SubItems[0].Text);
+
+                    for (int x = 1; x < numColumns; x++)
+                    {
+                        row.Add(treeListView.Items[tableRow].SubItems[x].Text);
+                    }
+                    table.Add(row);
+                    row = new List<string>();
+                }
+            }
+
+            return table;
+        }
+
+        private void showInExcelToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var table = getFormTable();
+
+            TableExporter.ShowInExcel(table);
+        }
     }
 
     public delegate void PeptideViewFilterEventHandler (PeptideTableForm sender, DataFilter peptideViewFilter);

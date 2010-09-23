@@ -273,6 +273,107 @@ namespace IDPicker.Forms
                     e.CellStyle.BackColor = Color.OrangeRed;
             }
         }
+
+        private void clipboardToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var table = getFormTable();
+
+            TableExporter.CopyToClipboard(table);
+        }
+
+        private void fileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var table = getFormTable();
+
+            TableExporter.ExportToFile(table);
+        }
+
+        private void exportButton_Click(object sender, EventArgs e)
+        {
+            if (dataGridView.SelectedCells.Count > 1)
+            {
+                exportMenu.Items[0].Text = "Copy Selected to Clipboard";
+                exportMenu.Items[1].Text = "Export Selected to File";
+                exportMenu.Items[2].Text = "Show Selected in Excel";
+            }
+            else
+            {
+                exportMenu.Items[0].Text = "Copy to Clipboard";
+                exportMenu.Items[1].Text = "Export to File";
+                exportMenu.Items[2].Text = "Show in Excel";
+            }
+
+            exportMenu.Show(Cursor.Position);
+        }
+
+        private List<List<string>> getFormTable()
+        {
+            var table = new List<List<string>>();
+            var row = new List<string>();
+
+            if (dataGridView.SelectedCells.Count > 1)
+            {
+                var rowList = new List<int>();
+                var columnList = new List<int>();
+
+                foreach (DataGridViewCell cell in dataGridView.SelectedCells)
+                {
+                    if (!rowList.Contains(cell.RowIndex))
+                        rowList.Add(cell.RowIndex);
+                    if (!columnList.Contains(cell.ColumnIndex))
+                        columnList.Add(cell.ColumnIndex);
+                }
+                rowList.Sort();
+                columnList.Sort();
+
+                //get column names
+                for (int x = 0; x < columnList.Count; x++)
+                    row.Add(dataGridView.Columns[columnList[x]].HeaderText);
+
+                table.Add(row);
+                row = new List<string>();
+
+                //Retrieve all items
+                for (int tableRow = 0; tableRow < rowList.Count; tableRow++)
+                {
+                    //row.Add(dataGridView.Rows[tableRow].HeaderCell.Value.ToString());
+                    for (int x = 0; x < columnList.Count; x++)
+                        row.Add(dataGridView[columnList[x], rowList[tableRow]].Value.ToString());
+
+                    table.Add(row);
+                    row = new List<string>();
+                }
+            }
+            else
+            {
+                //get column names
+                for (int x = 0; x < dataGridView.Columns.Count; x++)
+                    row.Add(dataGridView.Columns[x].HeaderText);
+
+                table.Add(row);
+                row = new List<string>();
+
+                //Retrieve all items
+                for (int tableRow = 0; tableRow < dataGridView.Rows.Count; tableRow++)
+                {
+                    //row.Add(dataGridView.Rows[tableRow].HeaderCell.Value.ToString());
+                    for (int x = 0; x < dataGridView.Columns.Count; x++)
+                        row.Add(dataGridView[x, tableRow].Value.ToString());
+
+                    table.Add(row);
+                    row = new List<string>();
+                }
+            }
+
+            return table;
+        }
+
+        private void showInExcelToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var table = getFormTable();
+
+            TableExporter.ShowInExcel(table);
+        }
     }
 
     public delegate void ModificationViewFilterEventHandler (ModificationTableForm sender, DataFilter modificationViewFilter);
