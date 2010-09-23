@@ -253,7 +253,7 @@ namespace IDPicker.Forms
 
         void treeListView_AfterExpanding (object sender, AfterExpandingEventArgs e)
         {
-
+            treeListView_setColumnVisibility();
         }
 
         void treeListView_AfterCollapsing (object sender, AfterCollapsingEventArgs e)
