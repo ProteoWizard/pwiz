@@ -93,5 +93,8 @@
     <Setting Name="LastProteinDatabaseDirectory" Type="System.String" Scope="User">
       <Value Profile="(Default)">c:\</Value>
     </Setting>
+    <Setting Name="TopRankOnly" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

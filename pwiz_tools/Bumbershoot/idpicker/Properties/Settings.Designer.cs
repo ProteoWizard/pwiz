@@ -321,5 +321,17 @@ namespace IDPicker.Properties {
                 this["LastProteinDatabaseDirectory"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool TopRankOnly {
+            get {
+                return ((bool)(this["TopRankOnly"]));
+            }
+            set {
+                this["TopRankOnly"] = value;
+            }
+        }
     }
 }

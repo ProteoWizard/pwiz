@@ -69,7 +69,8 @@ namespace IDPicker.Forms
             this.clipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showInExcelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            ((System.ComponentModel.ISupportInitialize)(this.treeListView)).BeginInit();
+            this.topRankOnlyCheckBox = new System.Windows.Forms.CheckBox();
+            ((System.ComponentModel.ISupportInitialize) (this.treeListView)).BeginInit();
             this.exportMenu.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -86,7 +87,7 @@ namespace IDPicker.Forms
             this.treeListView.AllColumns.Add(this.massErrorColumn);
             this.treeListView.AllColumns.Add(this.qvalueColumn);
             this.treeListView.AllColumns.Add(this.sequenceColumn);
-            this.treeListView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.treeListView.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.treeListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
@@ -184,7 +185,7 @@ namespace IDPicker.Forms
             // 
             // editGroupsButton
             // 
-            this.editGroupsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.editGroupsButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.editGroupsButton.Location = new System.Drawing.Point(688, 2);
             this.editGroupsButton.Name = "editGroupsButton";
             this.editGroupsButton.Size = new System.Drawing.Size(81, 23);
@@ -234,20 +235,36 @@ namespace IDPicker.Forms
             this.showInExcelToolStripMenuItem.Text = "Show in Excel";
             this.showInExcelToolStripMenuItem.Click += new System.EventHandler(this.showInExcelToolStripMenuItem_Click);
             // 
+            // topRankOnlyCheckBox
+            // 
+            this.topRankOnlyCheckBox.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.topRankOnlyCheckBox.AutoSize = true;
+            this.topRankOnlyCheckBox.Checked = true;
+            this.topRankOnlyCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.topRankOnlyCheckBox.Location = new System.Drawing.Point(584, 6);
+            this.topRankOnlyCheckBox.Name = "topRankOnlyCheckBox";
+            this.topRankOnlyCheckBox.Size = new System.Drawing.Size(98, 17);
+            this.topRankOnlyCheckBox.TabIndex = 3;
+            this.topRankOnlyCheckBox.Text = "Top Rank Only";
+            this.topRankOnlyCheckBox.UseVisualStyleBackColor = true;
+            this.topRankOnlyCheckBox.CheckedChanged += new System.EventHandler(this.topRankOnlyCheckBox_CheckedChanged);
+            // 
             // SpectrumTableForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(817, 353);
             this.Controls.Add(this.treeListView);
+            this.Controls.Add(this.topRankOnlyCheckBox);
             this.Controls.Add(this.exportButton);
             this.Controls.Add(this.editGroupsButton);
             this.Name = "SpectrumTableForm";
             this.TabText = "SpectrumTableForm";
             this.Text = "SpectrumTableForm";
-            ((System.ComponentModel.ISupportInitialize)(this.treeListView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize) (this.treeListView)).EndInit();
             this.exportMenu.ResumeLayout(false);
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -271,6 +288,7 @@ namespace IDPicker.Forms
         private System.Windows.Forms.ToolStripMenuItem clipboardToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showInExcelToolStripMenuItem;
+        private System.Windows.Forms.CheckBox topRankOnlyCheckBox;
 
     }
 }

@@ -21,6 +21,7 @@
 //
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -42,6 +43,7 @@ namespace IDPicker.Forms
     {
         public TreeListView TreeListView { get { return treeListView; } }
 
+        #region Wrapper classes for encapsulating query results
         public class SpectrumSourceGroupRow
         {
             public DataModel.SpectrumSourceGroup SpectrumSourceGroup { get; private set; }
@@ -101,14 +103,20 @@ namespace IDPicker.Forms
             }
             #endregion
         }
+        #endregion
 
         public SpectrumTableForm ()
         {
             InitializeComponent();
 
             HideOnClose = true;
+        }
 
+        protected override void OnLoad (EventArgs e)
+        {
             Text = TabText = "Spectrum View";
+
+            topRankOnlyCheckBox.Checked = Properties.Settings.Default.TopRankOnly;
 
             #region Column aspect getters
             sourceOrScanColumn.AspectGetter += delegate(object x)
@@ -120,6 +128,9 @@ namespace IDPicker.Forms
                 else if (x is SpectrumRow)
                     try { return pwiz.CLI.msdata.id.abbreviate((x as SpectrumRow).Spectrum.NativeID); }
                     catch { return (x as SpectrumRow).Spectrum.NativeID; }
+                else if (x is PeptideSpectrumMatchRow && topRankOnlyCheckBox.Checked)
+                    try { return pwiz.CLI.msdata.id.abbreviate((x as PeptideSpectrumMatchRow).PeptideSpectrumMatch.Spectrum.NativeID); }
+                    catch { return (x as PeptideSpectrumMatchRow).PeptideSpectrumMatch.Spectrum.NativeID; }
                 else if (x is PeptideSpectrumMatchRow)
                     return (x as PeptideSpectrumMatchRow).PeptideSpectrumMatch.Rank;
                 return null;
@@ -152,6 +163,8 @@ namespace IDPicker.Forms
             {
                 if (x is SpectrumRow)
                     return (x as SpectrumRow).Spectrum.PrecursorMZ;
+                else if (x is PeptideSpectrumMatchRow)
+                    return (x as PeptideSpectrumMatchRow).PeptideSpectrumMatch.Spectrum.PrecursorMZ;
                 return null;
             };
 
@@ -222,23 +235,24 @@ namespace IDPicker.Forms
 
                     return childGroups.Concat(childSources);
                 }
-                else if (x is SpectrumSourceRow)
+                else if (x is SpectrumSourceRow && !topRankOnlyCheckBox.Checked)
                 {
                     string whereClause = dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch);
                     whereClause += (whereClause.Contains("WHERE") ? "AND" : "WHERE") + " psm.Spectrum.Source.id = ";
                     return session.CreateQuery("SELECT DISTINCT psm.Spectrum " +
                                                whereClause +
                                                (x as SpectrumSourceRow).SpectrumSource.Id.ToString())
-                                  .List<DataModel.Spectrum>()
-                                  .Select(o => new SpectrumRow(o));
+                        .List<DataModel.Spectrum>()
+                        .Select(o => new SpectrumRow(o));
                 }
-                else if (x is SpectrumRow)
+                else if (x is SpectrumRow || (x is SpectrumSourceRow && topRankOnlyCheckBox.Checked))
                 {
                     string whereClause = dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch);
-                    whereClause += (whereClause.Contains("WHERE") ? "AND" : "WHERE") + " psm.Spectrum.id = ";
-                    return session.CreateQuery("SELECT psm " +
-                                               whereClause +
-                                               (x as SpectrumRow).Spectrum.Id.ToString())
+                    if (x is SpectrumRow)
+                        whereClause += (whereClause.Contains("WHERE") ? "AND" : "WHERE") +
+                                       " psm.Spectrum.id = " + (x as SpectrumRow).Spectrum.Id;
+
+                    return session.CreateQuery("SELECT psm " + whereClause)
                                   .List<DataModel.PeptideSpectrumMatch>()
                                   .Select(o => new PeptideSpectrumMatchRow(o));
                 }
@@ -274,13 +288,15 @@ namespace IDPicker.Forms
                     deepestExpandedItem = item.RowObject;
 
                 // break iteration once maximum depth is reached
-                if (deepestExpandedItem is SpectrumRow)
+                if (deepestExpandedItem is SpectrumRow ||
+                    (deepestExpandedItem is SpectrumSourceRow && topRankOnlyCheckBox.Checked))
                     break;
             }
 
             bool showAggregateColumns = deepestExpandedItem == null || deepestExpandedItem is SpectrumSourceGroupRow;
             bool showSpectrumColumns = deepestExpandedItem is SpectrumSourceRow;
-            bool showPsmColumns = deepestExpandedItem is SpectrumRow;
+            bool showPsmColumns = deepestExpandedItem is SpectrumRow ||
+                                  (deepestExpandedItem is SpectrumSourceRow && topRankOnlyCheckBox.Checked);
 
             totalSpectraColumn.IsVisible = false;// showAggregateColumns;
             confidentPeptidesColumn.IsVisible = showAggregateColumns;
@@ -331,7 +347,7 @@ namespace IDPicker.Forms
         public event EventHandler<DataFilter> SpectrumViewFilter;
         public event EventHandler<SpectrumViewVisualizeEventArgs> SpectrumViewVisualize;
 
-        private NHibernate.ISession session;
+        private NHibernate.ISession session = null;
         private DataFilter dataFilter, basicDataFilter;
         private IList<SpectrumSourceGroupRow> rowsByGroup, basicRowsByGroup;
         private IList<SpectrumSourceRow> rowsBySource, basicRowsBySource;
@@ -341,6 +357,9 @@ namespace IDPicker.Forms
 
         public void SetData (NHibernate.ISession session, DataFilter dataFilter)
         {
+            if (session == null)
+                return;
+
             this.session = session;
             this.dataFilter = new DataFilter(dataFilter) {Spectrum = null, SpectrumSource = null, SpectrumSourceGroup = null};
 
@@ -545,44 +564,33 @@ namespace IDPicker.Forms
 
             table.Add(row);
             numColumns = row.Count;
-            row = new List<string>();
 
-            //Retrieve all items
+            IList exportedRows;
             if (treeListView.SelectedIndices.Count > 1)
-            {
-                foreach (int tableRow in treeListView.SelectedIndices)
-                {
-                    string indention = string.Empty;
-                    for (int tabs = 0; tabs < treeListView.Items[tableRow].IndentCount; tabs++)
-                        indention += "     ";
-
-                    row.Add(indention + treeListView.Items[tableRow].SubItems[0].Text);
-
-                    for (int x = 1; x < numColumns; x++)
-                    {
-                        row.Add(treeListView.Items[tableRow].SubItems[x].Text);
-                    }
-                    table.Add(row);
-                    row = new List<string>();
-                }
-            }
+                exportedRows = treeListView.SelectedIndices;
             else
             {
-                for (int tableRow = 0; tableRow < treeListView.Items.Count; tableRow++)
-                {
-                    string indention = string.Empty;
-                    for (int tabs = 0; tabs < treeListView.Items[tableRow].IndentCount; tabs++)
-                        indention += "     ";
+                exportedRows = new List<int>();
+                for (int i = 0; i < treeListView.Items.Count; ++i)
+                    exportedRows.Add(i);
+            }
 
-                    row.Add(indention + treeListView.Items[tableRow].SubItems[0].Text);
+            // ObjectListView's virtual mode doesn't support GetEnumerator()
+            for(int i=0; i < exportedRows.Count; ++i)
+            {
+                var tableRow = treeListView.Items[(int) exportedRows[i]];
 
-                    for (int x = 1; x < numColumns; x++)
-                    {
-                        row.Add(treeListView.Items[tableRow].SubItems[x].Text);
-                    }
-                    table.Add(row);
-                    row = new List<string>();
-                }
+                row = new List<string>();
+
+                string indention = string.Empty;
+                for (int tabs = 0; tabs < tableRow.IndentCount; tabs++)
+                    indention += "     ";
+
+                row.Add(indention + tableRow.SubItems[0].Text);
+
+                for (int x = 1; x < numColumns; ++x)
+                    row.Add(tableRow.SubItems[x].Text);
+                table.Add(row);
             }
 
             return table;
@@ -607,6 +615,13 @@ namespace IDPicker.Forms
             var table = getFormTable();
 
             TableExporter.ShowInExcel(table);
+        }
+
+        private void topRankOnlyCheckBox_CheckedChanged (object sender, EventArgs e)
+        {
+            SetData(session, dataFilter);
+            Properties.Settings.Default.TopRankOnly = topRankOnlyCheckBox.Checked;
+            Properties.Settings.Default.Save();
         }
 
     }
