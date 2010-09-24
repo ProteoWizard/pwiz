@@ -609,31 +609,6 @@ namespace IDPicker.Forms
             TableExporter.ShowInExcel(table);
         }
 
-        private void displayButton_Click(object sender, EventArgs e)
-        {
-        //private BrightIdeasSoftware.OLVColumn sourceOrScanColumn;
-        //private BrightIdeasSoftware.OLVColumn totalSpectraColumn;
-        //private BrightIdeasSoftware.OLVColumn confidentSpectraColumn;
-        //private BrightIdeasSoftware.OLVColumn confidentPeptidesColumn;
-        //private BrightIdeasSoftware.OLVColumn precursorMzColumn;
-        //private BrightIdeasSoftware.OLVColumn observedMassColumn;
-        //private BrightIdeasSoftware.OLVColumn chargeColumn;
-        //private BrightIdeasSoftware.OLVColumn massErrorColumn;
-        //private BrightIdeasSoftware.OLVColumn qvalueColumn;
-        //private BrightIdeasSoftware.OLVColumn exactMassColumn;
-        //private BrightIdeasSoftware.OLVColumn sequenceColumn;
-
-            exactMassColumn.AspectGetter = null;
-            exactMassColumn.AspectGetter += delegate(object x)
-            {
-                if (x is PeptideSpectrumMatchRow)
-                    return Math.Round((x as PeptideSpectrumMatchRow).PeptideSpectrumMatch.MonoisotopicMass,2);
-                return null;
-            };
-
-            treeListView.Refresh();
-        }
-
     }
 
     public class SpectrumViewVisualizeEventArgs : EventArgs
