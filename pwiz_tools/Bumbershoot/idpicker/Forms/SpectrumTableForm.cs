@@ -268,7 +268,9 @@ namespace IDPicker.Forms
             {
                 var item = treeListView.Items[i] as OLVListItem;
 
-                if (treeListView.IsExpanded(item.RowObject))
+                if (treeListView.IsExpanded(item.RowObject) &&
+                    !(item.RowObject is SpectrumSourceGroupRow &&
+                    deepestExpandedItem is SpectrumSourceRow))
                     deepestExpandedItem = item.RowObject;
 
                 // break iteration once maximum depth is reached
@@ -605,6 +607,31 @@ namespace IDPicker.Forms
             var table = getFormTable();
 
             TableExporter.ShowInExcel(table);
+        }
+
+        private void displayButton_Click(object sender, EventArgs e)
+        {
+        //private BrightIdeasSoftware.OLVColumn sourceOrScanColumn;
+        //private BrightIdeasSoftware.OLVColumn totalSpectraColumn;
+        //private BrightIdeasSoftware.OLVColumn confidentSpectraColumn;
+        //private BrightIdeasSoftware.OLVColumn confidentPeptidesColumn;
+        //private BrightIdeasSoftware.OLVColumn precursorMzColumn;
+        //private BrightIdeasSoftware.OLVColumn observedMassColumn;
+        //private BrightIdeasSoftware.OLVColumn chargeColumn;
+        //private BrightIdeasSoftware.OLVColumn massErrorColumn;
+        //private BrightIdeasSoftware.OLVColumn qvalueColumn;
+        //private BrightIdeasSoftware.OLVColumn exactMassColumn;
+        //private BrightIdeasSoftware.OLVColumn sequenceColumn;
+
+            exactMassColumn.AspectGetter = null;
+            exactMassColumn.AspectGetter += delegate(object x)
+            {
+                if (x is PeptideSpectrumMatchRow)
+                    return Math.Round((x as PeptideSpectrumMatchRow).PeptideSpectrumMatch.MonoisotopicMass,2);
+                return null;
+            };
+
+            treeListView.Refresh();
         }
 
     }

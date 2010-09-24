@@ -69,6 +69,7 @@ namespace IDPicker.Forms
             this.clipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showInExcelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.displayButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.treeListView)).BeginInit();
             this.exportMenu.SuspendLayout();
             this.SuspendLayout();
@@ -211,7 +212,7 @@ namespace IDPicker.Forms
             this.fileToolStripMenuItem,
             this.showInExcelToolStripMenuItem});
             this.exportMenu.Name = "contextMenuStrip1";
-            this.exportMenu.Size = new System.Drawing.Size(172, 92);
+            this.exportMenu.Size = new System.Drawing.Size(172, 70);
             // 
             // clipboardToolStripMenuItem
             // 
@@ -234,11 +235,23 @@ namespace IDPicker.Forms
             this.showInExcelToolStripMenuItem.Text = "Show in Excel";
             this.showInExcelToolStripMenuItem.Click += new System.EventHandler(this.showInExcelToolStripMenuItem_Click);
             // 
+            // displayButton
+            // 
+            this.displayButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.displayButton.Location = new System.Drawing.Point(593, 2);
+            this.displayButton.Name = "displayButton";
+            this.displayButton.Size = new System.Drawing.Size(89, 23);
+            this.displayButton.TabIndex = 3;
+            this.displayButton.Text = "Display Options";
+            this.displayButton.UseVisualStyleBackColor = true;
+            this.displayButton.Click += new System.EventHandler(this.displayButton_Click);
+            // 
             // SpectrumTableForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(817, 353);
+            this.Controls.Add(this.displayButton);
             this.Controls.Add(this.treeListView);
             this.Controls.Add(this.exportButton);
             this.Controls.Add(this.editGroupsButton);
@@ -271,6 +284,7 @@ namespace IDPicker.Forms
         private System.Windows.Forms.ToolStripMenuItem clipboardToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showInExcelToolStripMenuItem;
+        private System.Windows.Forms.Button displayButton;
 
     }
 }
