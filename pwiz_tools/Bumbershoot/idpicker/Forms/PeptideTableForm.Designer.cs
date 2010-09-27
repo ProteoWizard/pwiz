@@ -67,7 +67,8 @@ namespace IDPicker.Forms
             this.clipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showInExcelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            ((System.ComponentModel.ISupportInitialize)(this.treeListView)).BeginInit();
+            this.proteinsColumn = new BrightIdeasSoftware.OLVColumn();
+            ((System.ComponentModel.ISupportInitialize) (this.treeListView)).BeginInit();
             this.exportMenu.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -81,7 +82,8 @@ namespace IDPicker.Forms
             this.treeListView.AllColumns.Add(this.offsetColumn);
             this.treeListView.AllColumns.Add(this.terminalSpecificityColumn);
             this.treeListView.AllColumns.Add(this.missedCleavagesColumn);
-            this.treeListView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.treeListView.AllColumns.Add(this.proteinsColumn);
+            this.treeListView.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.treeListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
@@ -173,8 +175,8 @@ namespace IDPicker.Forms
             // 
             // exportButton
             // 
-            this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.exportButton.Image = global::IDPicker.Properties.Resources.Export;
+            this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.exportButton.Image = global::IDPicker.Properties.Resources.Expand_large;
             this.exportButton.Location = new System.Drawing.Point(680, 2);
             this.exportButton.Name = "exportButton";
             this.exportButton.Size = new System.Drawing.Size(30, 23);
@@ -189,7 +191,7 @@ namespace IDPicker.Forms
             this.fileToolStripMenuItem,
             this.showInExcelToolStripMenuItem});
             this.exportMenu.Name = "contextMenuStrip1";
-            this.exportMenu.Size = new System.Drawing.Size(172, 92);
+            this.exportMenu.Size = new System.Drawing.Size(172, 70);
             // 
             // clipboardToolStripMenuItem
             // 
@@ -212,6 +214,14 @@ namespace IDPicker.Forms
             this.showInExcelToolStripMenuItem.Text = "Show in Excel";
             this.showInExcelToolStripMenuItem.Click += new System.EventHandler(this.showInExcelToolStripMenuItem_Click);
             // 
+            // proteinsColumn
+            // 
+            this.proteinsColumn.DisplayIndex = 6;
+            this.proteinsColumn.FillsFreeSpace = true;
+            this.proteinsColumn.IsVisible = false;
+            this.proteinsColumn.Text = "Proteins";
+            this.proteinsColumn.Width = 80;
+            // 
             // PeptideTableForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -225,7 +235,7 @@ namespace IDPicker.Forms
             this.Opacity = 0.25;
             this.TabText = "PeptideTableForm";
             this.Text = "PeptideTableForm";
-            ((System.ComponentModel.ISupportInitialize)(this.treeListView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize) (this.treeListView)).EndInit();
             this.exportMenu.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -250,6 +260,7 @@ namespace IDPicker.Forms
         private System.Windows.Forms.ToolStripMenuItem clipboardToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showInExcelToolStripMenuItem;
+        private BrightIdeasSoftware.OLVColumn proteinsColumn;
 
     }
 }

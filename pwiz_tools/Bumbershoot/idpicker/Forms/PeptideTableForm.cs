@@ -170,6 +170,12 @@ namespace IDPicker.Forms
                 return null;
             };
 
+            proteinsColumn.AspectGetter += delegate(object x)
+            {
+                if (x is PeptideRow)
+                    return String.Join(";", (x as PeptideRow).Peptide.Instances.Select(o => o.Protein.Accession).Distinct().ToArray());
+                return null;
+            };
             #endregion
 
             treeListView.CanExpandGetter += delegate(object x) { return x is PeptideRow; };
