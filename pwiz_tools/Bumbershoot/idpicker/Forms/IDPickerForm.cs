@@ -36,11 +36,13 @@ using IDPicker.Controls;
 using IDPicker.DataModel;
 
 using DigitalRune.Windows.Docking;
+using pwiz.CLI.cv;
 using seems;
 using NHibernate;
 using NHibernate.Linq;
 using NHibernate.Criterion;
 using BrightIdeasSoftware;
+//using SpyTools;
 
 namespace IDPicker
 {
@@ -54,6 +56,7 @@ namespace IDPicker
         ModificationTableForm modificationTableForm;
 
         LogForm logForm;
+        //SpyEventLogForm spyEventLogForm;
 
         NHibernate.ISession session;
 
@@ -66,10 +69,6 @@ namespace IDPicker
             InitializeComponent();
 
             manager = new Manager(dockPanel);
-
-            logForm = new LogForm();
-            Console.SetOut(logForm.LogWriter);
-            logForm.Show(dockPanel, DockState.DockBottomAutoHide);
 
             Shown += new EventHandler(Form1_Load);
 
@@ -103,6 +102,17 @@ namespace IDPicker
             spectrumTableForm.SpectrumViewFilter += new EventHandler<DataFilter>(spectrumTableForm_SpectrumViewFilter);
             spectrumTableForm.SpectrumViewVisualize += new EventHandler<SpectrumViewVisualizeEventArgs>(spectrumTableForm_SpectrumViewVisualize);
             modificationTableForm.ModificationViewFilter += new ModificationViewFilterEventHandler(modificationTableForm_ModificationViewFilter);
+
+            logForm = new LogForm();
+            Console.SetOut(logForm.LogWriter);
+            logForm.Show(dockPanel, DockState.DockBottomAutoHide);
+
+            /*spyEventLogForm = new SpyEventLogForm();
+            spyEventLogForm.AddEventSpy(new EventSpy("proteinTableForm", proteinTableForm));
+            spyEventLogForm.AddEventSpy(new EventSpy("peptideTableForm", peptideTableForm));
+            spyEventLogForm.AddEventSpy(new EventSpy("spectrumTableForm", spectrumTableForm));
+            spyEventLogForm.AddEventSpy(new EventSpy("modificationTableForm", modificationTableForm));
+            spyEventLogForm.Show(dockPanel, DockState.DockBottomAutoHide);*/
         }
 
         void openToolStripButton_Click (object sender, EventArgs e)
@@ -129,12 +139,6 @@ namespace IDPicker
         void spectrumTableForm_SpectrumViewVisualize (object sender, SpectrumViewVisualizeEventArgs e)
         {
             var psm = e.PeptideSpectrumMatch;
-
-            string psmString = DataModel.ExtensionMethods.ToModifiedString(psm);
-            var annotation = new PeptideFragmentationAnnotation(psmString, 1, Math.Max(0, psm.Charge - 1),
-                                                                false, true, false, false, true, false, false,
-                                                                true, false, true);
-
             var spectrum = psm.Spectrum;
 
             string sourcePath;
@@ -179,6 +183,14 @@ namespace IDPicker
                 }
             }
 
+            var pwizSpectrum = spectrum.Metadata;
+            bool byIons = pwizSpectrum.precursors[0].activation.hasCVParam(CVID.MS_CID);
+            bool czRadicalIons = pwizSpectrum.precursors[0].activation.hasCVParam(CVID.MS_ETD);
+            string psmString = DataModel.ExtensionMethods.ToModifiedString(psm);
+            var annotation = new PeptideFragmentationAnnotation(psmString, 1, Math.Max(0, psm.Charge - 1),
+                                                                false, byIons, czRadicalIons, false, byIons, false, czRadicalIons,
+                                                                true, false, true);
+
             manager.OpenFile(sourcePath, spectrum.NativeID, annotation);
 
             var source = manager.DataSourceMap[sourcePath];
@@ -189,7 +201,10 @@ namespace IDPicker
         void proteinTableForm_ProteinViewVisualize (object sender, ProteinViewVisualizeEventArgs e)
         {
             var form = new SequenceCoverageForm(e.Protein);
-            form.Show(peptideTableForm.Pane, peptideTableForm);
+            form.Show(modificationTableForm.Pane, null);
+            //spyEventLogForm.AddEventSpy(new EventSpy(e.Protein.Accession.Replace(":","_"), form));
+            //foreach(Control control in form.Controls)
+            //    spyEventLogForm.AddEventSpy(new EventSpy(e.Protein.Accession.Replace(":", "_") + control.GetType().Name, control));
         }
 
         #region Handling of events for basic filter toolstrip items
