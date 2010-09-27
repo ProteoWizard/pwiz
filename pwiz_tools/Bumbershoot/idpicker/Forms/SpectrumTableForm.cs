@@ -95,11 +95,13 @@ namespace IDPicker.Forms
         public class PeptideSpectrumMatchRow
         {
             public DataModel.PeptideSpectrumMatch PeptideSpectrumMatch { get; private set; }
-            
+            public DataModel.Spectrum Spectrum { get; private set; }
+
             #region Constructor
-            public PeptideSpectrumMatchRow (object queryRow)
+            public PeptideSpectrumMatchRow (object[] queryRow)
             {
-                PeptideSpectrumMatch = (DataModel.PeptideSpectrumMatch) queryRow;
+                PeptideSpectrumMatch = (DataModel.PeptideSpectrumMatch) queryRow[0];
+                Spectrum = (DataModel.Spectrum) queryRow[1];
             }
             #endregion
         }
@@ -129,8 +131,8 @@ namespace IDPicker.Forms
                     try { return pwiz.CLI.msdata.id.abbreviate((x as SpectrumRow).Spectrum.NativeID); }
                     catch { return (x as SpectrumRow).Spectrum.NativeID; }
                 else if (x is PeptideSpectrumMatchRow && topRankOnlyCheckBox.Checked)
-                    try { return pwiz.CLI.msdata.id.abbreviate((x as PeptideSpectrumMatchRow).PeptideSpectrumMatch.Spectrum.NativeID); }
-                    catch { return (x as PeptideSpectrumMatchRow).PeptideSpectrumMatch.Spectrum.NativeID; }
+                    try { return pwiz.CLI.msdata.id.abbreviate((x as PeptideSpectrumMatchRow).Spectrum.NativeID); }
+                    catch { return (x as PeptideSpectrumMatchRow).Spectrum.NativeID; }
                 else if (x is PeptideSpectrumMatchRow)
                     return (x as PeptideSpectrumMatchRow).PeptideSpectrumMatch.Rank;
                 return null;
@@ -164,7 +166,7 @@ namespace IDPicker.Forms
                 if (x is SpectrumRow)
                     return (x as SpectrumRow).Spectrum.PrecursorMZ;
                 else if (x is PeptideSpectrumMatchRow)
-                    return (x as PeptideSpectrumMatchRow).PeptideSpectrumMatch.Spectrum.PrecursorMZ;
+                    return (x as PeptideSpectrumMatchRow).Spectrum.PrecursorMZ;
                 return null;
             };
 
@@ -247,13 +249,15 @@ namespace IDPicker.Forms
                 }
                 else if (x is SpectrumRow || (x is SpectrumSourceRow && topRankOnlyCheckBox.Checked))
                 {
-                    string whereClause = dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch);
+                    string whereClause = dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch, DataFilter.PeptideSpectrumMatchToModification);
+                    whereClause += whereClause.Contains("WHERE") ? "AND" : "WHERE";
                     if (x is SpectrumRow)
-                        whereClause += (whereClause.Contains("WHERE") ? "AND" : "WHERE") +
-                                       " psm.Spectrum.id = " + (x as SpectrumRow).Spectrum.Id;
+                        whereClause += " psm.Spectrum.id = " + (x as SpectrumRow).Spectrum.Id;
+                    else
+                        whereClause += " psm.Spectrum.Source.id = " + (x as SpectrumSourceRow).SpectrumSource.Id;
 
-                    return session.CreateQuery("SELECT psm " + whereClause)
-                                  .List<DataModel.PeptideSpectrumMatch>()
+                    return session.CreateQuery("SELECT DISTINCT psm, psm.Spectrum " + whereClause)
+                                  .List<object[]>()
                                   .Select(o => new PeptideSpectrumMatchRow(o));
                 }
                 return null;

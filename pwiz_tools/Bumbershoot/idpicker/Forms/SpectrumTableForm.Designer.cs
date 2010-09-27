@@ -172,12 +172,12 @@ namespace IDPicker.Forms
             // 
             this.qvalueColumn.DisplayIndex = 9;
             this.qvalueColumn.IsVisible = false;
-            this.qvalueColumn.Text = "Q Key";
+            this.qvalueColumn.Text = "Q Value";
             this.qvalueColumn.Width = 55;
             // 
             // sequenceColumn
             // 
-            this.sequenceColumn.DisplayIndex = 4;
+            this.sequenceColumn.DisplayIndex = 10;
             this.sequenceColumn.FillsFreeSpace = true;
             this.sequenceColumn.IsVisible = false;
             this.sequenceColumn.Text = "Sequence";
@@ -196,7 +196,7 @@ namespace IDPicker.Forms
             // 
             // exportButton
             // 
-            this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.exportButton.Image = global::IDPicker.Properties.Resources.Export;
             this.exportButton.Location = new System.Drawing.Point(775, 2);
             this.exportButton.Name = "exportButton";
