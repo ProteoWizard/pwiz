@@ -45,44 +45,15 @@ namespace IDPicker
             WindowState = FormWindowState.Maximized;
             Text = pro.Accession;
 
-            BackColor = SystemColors.Window;
-
             ResizeRedraw = true;
             DoubleBuffered = true;
-            AutoScroll = true;
 
-            SetProtein(pro);
-
-            SizeChanged += new EventHandler(resize);
-            Scroll += new ScrollEventHandler(scroll);
-        }
-
-        void resize (object sender, EventArgs e)
-        {
-            control.MinimumSize = new Size(0, ClientSize.Height);
-        }
-
-        void scroll (object sender, ScrollEventArgs e)
-        {
-            control.Refresh();
-        }
-
-        void SetProtein (DataModel.Protein pro)
-        {
-            Controls.Clear();
+            BackColor = SystemColors.Window;
 
             control = new SequenceCoverageControl(pro)
             {
-                BackColor = this.BackColor,
-                Bounds = this.Bounds,
-
-                // the SequenceCoverageControl is anchored everywhere but the bottom: when its height becomes
-                // larger than the form's height, the form automatically adds a scroll bar to allow the user
-                // to pan the control
-                Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top,
-
-                // the control's height must be at least the form's height
-                MinimumSize = new Size(0, ClientSize.Height)
+                Dock = DockStyle.Fill,
+                BackColor = this.BackColor
             };
 
             Controls.Add(control);
@@ -202,46 +173,107 @@ namespace IDPicker
         Font sequenceFont = new Font(new FontFamily(GenericFontFamilies.Monospace), 12);
 
         DataModel.Protein protein;
+        public DataModel.Protein Protein
+        {
+            get { return protein; }
+            set
+            {
+                protein = value;
+
+                Controls.Clear();
+
+                var rect = ClientRectangle;
+                rect.Offset(1, 1);
+                rect.Height -= 2;
+                rect.Width -= 2;
+                surface = new SequenceCoverageSurface(this)
+                {
+                    Bounds = rect,
+
+                    // the SequenceCoverageSurface is anchored everywhere but the bottom: when its height becomes
+                    // larger than the form's height, the form automatically adds a scroll bar to allow the user
+                    // to pan the surface
+                    Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top,
+
+                    // the surface's height must be at least the form's height
+                    MinimumSize = new Size(0, ClientSize.Height)
+                };
+
+                Controls.Add(surface);
+                Refresh();
+            }
+        }
+
+        int scrollY;
+        SequenceCoverageSurface surface;
+
+        public SequenceCoverageControl (DataModel.Protein pro)
+        {
+            ResizeRedraw = true;
+            DoubleBuffered = true;
+            AutoScroll = true;
+
+            Protein = pro;
+        }
+
+        protected override void OnMouseWheel (MouseEventArgs e)
+        {
+            scrollY = Math.Max(0, Math.Min(surface.Height, scrollY - e.Delta));
+            base.OnMouseWheel(e);
+            Refresh();
+        }
+
+        protected override void OnResize (EventArgs e)
+        {
+            surface.MinimumSize = ClientSize;
+            base.OnResize(e);
+            Refresh();
+        }
+
+        protected override void OnScroll (ScrollEventArgs e)
+        {
+            scrollY = e.NewValue;
+            base.OnScroll(e);
+            Refresh();
+        }
+
+        void leave (object sender, EventArgs e) { scrollY = -AutoScrollOffset.Y; }
+
+        protected override void OnPaint (PaintEventArgs e)
+        {
+            this.SetRedraw(false);
+            AutoScrollPosition = new Point(0, scrollY);
+            this.SetRedraw(true);
+
+            base.OnPaint(e);
+
+            surface.Refresh();
+        }
+    }
+
+    class SequenceCoverageSurface : UserControl
+    {
+        SequenceCoverageControl owner;
+        string header;
         //List<int> totalCoverageMask = null;
         //List<List<int>> groupCoverageMasks = null;
         SizeF residueBounds;
 
-        //ToolTip toolTip;
+        //ToolTip toolTip
 
-        public SequenceCoverageControl (DataModel.Protein pro)
+        public SequenceCoverageSurface (SequenceCoverageControl owner)
         {
-            protein = pro;
-
-            /*#region Calculate sequence coverage (masks and percentages)
-            if (coverageArrays != null && coverageArrays.Count > 0)
-            {
-                totalCoverageMask = new List<int>(protein.Length);
-                groupCoverageMasks = new List<List<int>>();
-
-                for (int i = 0; i < protein.Length; ++i)
-                    totalCoverageMask.Add(0);
-
-                foreach (CoverageArray coverageArray in coverageArrays)
-                {
-                    List<int> coverageMask = new List<int>(protein.Length);
-                    for (int i = 0; i < protein.Length; ++i)
-                        coverageMask.Add(0);
-                    foreach (CoveragePair coveragePair in coverageArray)
-                        for (int i = 0; i < coveragePair.Value; ++i)
-                        {
-                            ++coverageMask[coveragePair.Key + i];
-                            ++totalCoverageMask[coveragePair.Key + i];
-                        }
-                    groupCoverageMasks.Add(coverageMask);
-                }
-            }
-            #endregion*/
+            this.owner = owner;
+            header = String.Format("{0}\r\n{1} residues, {2} kDa (MW), {3}% coverage",
+                                   owner.Protein.Description,
+                                   owner.Protein.Length,
+                                   (new proteome.Peptide(owner.Protein.Sequence).molecularWeight() / 1000).ToString("f3"),
+                                   owner.Protein.Coverage.ToString("f1"));
 
             DoubleBuffered = true;
             ResizeRedraw = true;
-            Paint += new PaintEventHandler(paint);
-            Resize += new EventHandler(resize);
-            SizeChanged += new EventHandler(resize);
+            AutoSize = true;
+            AutoSizeMode = AutoSizeMode.GrowAndShrink;
 
             //toolTip = new ToolTip() { Active = true, ShowAlways = true, InitialDelay = 100, ReshowDelay = 100, AutoPopDelay = 0 };
             //MouseMove += new MouseEventHandler( hover );
@@ -250,18 +282,16 @@ namespace IDPicker
         }
 
         #region Implementation details
-        /*void hover( object sender, MouseEventArgs e )
-        {
-            Point pt = e.Location;
-            int lineNumber = (int) Math.Floor( ( pt.Y - sequenceLocation.Y ) / lineSpacing / residueBounds.Height );
-            float charOnLine = ( pt.X - sequenceLocation.X ) / residueBounds.Width;
-            int residueNumber = residuesPerLine * lineNumber + (int) Math.Floor( charOnLine - Math.Floor( charOnLine / residueGroupSize ) );
-            toolTip.Show( String.Format( "Row: {0}  Col: {1}", lineNumber, residueNumber ), this, 100 );
-        }*/
-
-        void resize (object sender, EventArgs e)
+        protected override void OnResize (EventArgs e)
         {
             calculateBoundingInfo();
+            base.OnResize(e);
+        }
+
+        protected override void OnSizeChanged (EventArgs e)
+        {
+            calculateBoundingInfo();
+            base.OnSizeChanged(e);
         }
 
         Map<int, PointF> residueIndexToLocation;
@@ -271,10 +301,10 @@ namespace IDPicker
 
         void calculateBoundingInfo ()
         {
-            SizeF averageBounds = CreateGraphics().MeasureString("ABCDEFGHIJKLMNOPQRSTUVWXYZ", sequenceFont, 0);
+            SizeF averageBounds = CreateGraphics().MeasureString("ABCDEFGHIJKLMNOPQRSTUVWXYZ", owner.SequenceFont, 0);
             residueBounds = new SizeF(averageBounds.Width / 26, averageBounds.Height);
 
-            sequenceLocation = new PointF(residueBounds.Width * 10, sequenceFont.Height * 4);
+            sequenceLocation = new PointF(residueBounds.Width * 10, owner.SequenceFont.Height * 4);
             residueIndexToLocation = new Map<int, PointF>();
 
             int charsOnLine = 0;
@@ -282,16 +312,16 @@ namespace IDPicker
             residuesPerLine = 0;
             int maxCharsPerLine = (int) Math.Floor(((float) ClientSize.Width) / residueBounds.Width);
 
-            for (int i = 0; i < protein.Length; ++i, ++charsOnLine, ++residuesPerLine)
+            for (int i = 0; i < owner.Protein.Length; ++i, ++charsOnLine, ++residuesPerLine)
             {
-                if (residueGroupSize == 0 && charsOnLine + 15 >= maxCharsPerLine)
+                if (owner.ResidueGroupSize == 0 && charsOnLine + 15 >= maxCharsPerLine)
                 {
                     realCharsPerLine = charsOnLine;
                     break;
                 }
-                else if (i > 0 && residueGroupSize > 0 && i % residueGroupSize == 0)
+                else if (i > 0 && owner.ResidueGroupSize > 0 && i % owner.ResidueGroupSize == 0)
                 {
-                    if (charsOnLine + residueGroupSize + 15 >= maxCharsPerLine)
+                    if (charsOnLine + owner.ResidueGroupSize + 15 >= maxCharsPerLine)
                     {
                         realCharsPerLine = charsOnLine;
                         break;
@@ -303,14 +333,14 @@ namespace IDPicker
 
             charsOnLine = 0;
             lineCount = 1;
-            for (int i = 0; i < protein.Length; ++i, ++charsOnLine)
+            for (int i = 0; i < owner.Protein.Length; ++i, ++charsOnLine)
             {
-                if (residueGroupSize == 0 && charsOnLine + 15 >= maxCharsPerLine)
+                if (owner.ResidueGroupSize == 0 && charsOnLine + 15 >= maxCharsPerLine)
                 {
                     charsOnLine = 0;
                     ++lineCount;
                 }
-                else if (i > 0 && residueGroupSize > 0 && i % residueGroupSize == 0)
+                else if (i > 0 && owner.ResidueGroupSize > 0 && i % owner.ResidueGroupSize == 0)
                 {
                     if (charsOnLine == realCharsPerLine)
                     {
@@ -322,56 +352,48 @@ namespace IDPicker
                 }
 
                 PointF location = new PointF(sequenceLocation.X + charsOnLine * residueBounds.Width,
-                                             sequenceLocation.Y + (lineCount - 1) * lineSpacing * residueBounds.Height);
+                                             sequenceLocation.Y + (lineCount - 1) * owner.LineSpacing * residueBounds.Height);
                 residueIndexToLocation.Add(i, location);
                 //residueLocationToIndex.Add( location, i );
             }
 
-            Height = Math.Max(MinimumSize.Height, (int) (sequenceLocation.Y + (lineCount + 1) * lineSpacing * residueBounds.Height));
+            Height = Math.Max(MinimumSize.Height, (int) (sequenceLocation.Y + (lineCount + 1) * owner.LineSpacing * residueBounds.Height));
         }
         #endregion
 
-        void paint (object sender, PaintEventArgs e)
+        protected override void OnPaint (PaintEventArgs e)
         {
-            e.Graphics.FillRectangle(new SolidBrush(BackColor), e.ClipRectangle);
+            e.Graphics.FillRectangle(new SolidBrush(owner.BackColor), e.ClipRectangle);
+            e.Graphics.DrawString(header, owner.HeaderFont, new SolidBrush(owner.HeaderColor), PointF.Empty);
 
-            string header = String.Format("{0}\r\n{1} residues, {2} kDa (MW), {3}% coverage",
-                                          protein.Description,
-                                          protein.Length,
-                                          (new proteome.Peptide(protein.Sequence).molecularWeight() / 1000).ToString("f3"),
-                                          protein.Coverage.ToString("f1"));
-
-
-            e.Graphics.DrawString(header, headerFont, new SolidBrush(headerColor), PointF.Empty);
-
-            Brush coveredBrush = new SolidBrush(coveredSequenceColor);
-            Brush uncoveredBrush = new SolidBrush(uncoveredSequenceColor);
+            Brush coveredBrush = new SolidBrush(owner.CoveredSequenceColor);
+            Brush uncoveredBrush = new SolidBrush(owner.UncoveredSequenceColor);
             foreach (var pair in residueIndexToLocation)
-                if (protein.CoverageMask[pair.Key] > 0)
-                    e.Graphics.DrawString(protein.Sequence[pair.Key].ToString(), sequenceFont, coveredBrush, pair.Value);
+                if (owner.Protein.CoverageMask[pair.Key] > 0)
+                    e.Graphics.DrawString(owner.Protein.Sequence[pair.Key].ToString(), owner.SequenceFont, coveredBrush, pair.Value);
                 else
-                    e.Graphics.DrawString(protein.Sequence[pair.Key].ToString(), sequenceFont, uncoveredBrush, pair.Value);
+                    e.Graphics.DrawString(owner.Protein.Sequence[pair.Key].ToString(), owner.SequenceFont, uncoveredBrush, pair.Value);
 
             for (int i = 0; i < lineCount; ++i)
             {
-                int lastResidue = i + 1 == lineCount ? protein.Length : (i + 1) * residuesPerLine;
+                int lastResidue = i + 1 == lineCount ? owner.Protein.Length : (i + 1) * residuesPerLine;
                 string lineHeader = String.Format("{0}-{1}", i * residuesPerLine + 1, lastResidue);
                 e.Graphics.DrawString(lineHeader,
-                                      offsetFont,
-                                      new SolidBrush(offsetColor),
+                                      owner.OffsetFont,
+                                      new SolidBrush(owner.OffsetColor),
                                       0,
-                                      sequenceLocation.Y + (i * residueBounds.Height * lineSpacing));
+                                      sequenceLocation.Y + (i * residueBounds.Height * owner.LineSpacing));
             }
 
-            Font boldSequenceFont = new Font(sequenceFont, FontStyle.Underline);
+            Font boldSequenceFont = new Font(owner.SequenceFont, FontStyle.Underline);
             int coverageMaskOffset = 1;
             //foreach (List<int> coverageMask in groupCoverageMasks)
             {
                 foreach (var pair in residueIndexToLocation)
                 {
                     char c;
-                    Font f = sequenceFont;
-                    switch (protein.CoverageMask[pair.Key])
+                    Font f = owner.SequenceFont;
+                    switch (owner.Protein.CoverageMask[pair.Key])
                     {
                         case 0: c = ' '; break;
                         case 1: c = '-'; break;
@@ -389,7 +411,18 @@ namespace IDPicker
 
                 ++coverageMaskOffset;
             }
+
+            //base.OnPaint(e);
         }
+
+        /*void hover( object sender, MouseEventArgs e )
+        {
+            Point pt = e.Location;
+            int lineNumber = (int) Math.Floor( ( pt.Y - sequenceLocation.Y ) / lineSpacing / residueBounds.Height );
+            float charOnLine = ( pt.X - sequenceLocation.X ) / residueBounds.Width;
+            int residueNumber = residuesPerLine * lineNumber + (int) Math.Floor( charOnLine - Math.Floor( charOnLine / residueGroupSize ) );
+            toolTip.Show( String.Format( "Row: {0}  Col: {1}", lineNumber, residueNumber ), this, 100 );
+        }*/
     }
 }
 
@@ -401,5 +434,13 @@ namespace System.Drawing
         {
             return new RectangleF((float) r.X, (float) r.Y, (float) r.Width, (float) r.Height);
         }
+
+        public static void SetRedraw (this Control ctl, bool enable)
+        {
+            SendMessage(ctl.Handle, 0xb, enable ? (IntPtr) 1 : IntPtr.Zero, IntPtr.Zero);
+        }
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern IntPtr SendMessage (IntPtr hWnd, int msg, IntPtr wp, IntPtr lp);
     }
 }
