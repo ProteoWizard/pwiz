@@ -604,35 +604,35 @@ namespace IDPicker.DataModel
         public static readonly string FromSpectrumSourceGroupLink = "SpectrumSourceGroupLink ssgl";
         public static readonly string FromSpectrumSourceGroup = "SpectrumSourceGroup ssg";
 
-        public static readonly string ProteinToPeptideInstance = "pro.Peptides pi";
-        public static readonly string ProteinToPeptide = ProteinToPeptideInstance + ";pi.Peptide pep";
-        public static readonly string ProteinToPeptideSpectrumMatch = ProteinToPeptide + ";pep.Matches psm";
-        public static readonly string ProteinToPeptideModification = ProteinToPeptideSpectrumMatch + ";psm.Modifications pm";
-        public static readonly string ProteinToModification = ProteinToPeptideModification + ";pm.Modification mod";
-        public static readonly string ProteinToSpectrum = ProteinToPeptideSpectrumMatch + ";psm.Spectrum s";
-        public static readonly string ProteinToSpectrumSource = ProteinToSpectrum + ";s.Source ss";
-        public static readonly string ProteinToSpectrumSourceGroupLink = ProteinToSpectrumSource + ";ss.Groups ssgl";
-        public static readonly string ProteinToSpectrumSourceGroup = ProteinToSpectrumSourceGroupLink + ";ssgl.Group";
+        public static readonly string ProteinToPeptideInstance = "JOIN pro.Peptides pi";
+        public static readonly string ProteinToPeptide = ProteinToPeptideInstance + ";JOIN pi.Peptide pep";
+        public static readonly string ProteinToPeptideSpectrumMatch = ProteinToPeptide + ";JOIN pep.Matches psm";
+        public static readonly string ProteinToPeptideModification = ProteinToPeptideSpectrumMatch + ";LEFT JOIN psm.Modifications pm";
+        public static readonly string ProteinToModification = ProteinToPeptideModification + ";LEFT JOIN pm.Modification mod";
+        public static readonly string ProteinToSpectrum = ProteinToPeptideSpectrumMatch + ";JOIN psm.Spectrum s";
+        public static readonly string ProteinToSpectrumSource = ProteinToSpectrum + ";JOIN s.Source ss";
+        public static readonly string ProteinToSpectrumSourceGroupLink = ProteinToSpectrumSource + ";JOIN ss.Groups ssgl";
+        public static readonly string ProteinToSpectrumSourceGroup = ProteinToSpectrumSourceGroupLink + ";JOIN ssgl.Group";
 
-        public static readonly string PeptideToPeptideInstance = "pep.Instances pi";
-        public static readonly string PeptideToPeptideSpectrumMatch = "pep.Matches psm";
-        public static readonly string PeptideToProtein = PeptideToPeptideInstance + ";pi.Protein pro";
-        public static readonly string PeptideToPeptideModification = PeptideToPeptideSpectrumMatch + ";psm.Modifications pm";
-        public static readonly string PeptideToModification = PeptideToPeptideModification + ";pm.Modification mod";
-        public static readonly string PeptideToSpectrum = PeptideToPeptideSpectrumMatch + ";psm.Spectrum s";
-        public static readonly string PeptideToSpectrumSource = PeptideToSpectrum + ";s.Source ss";
-        public static readonly string PeptideToSpectrumSourceGroupLink = PeptideToSpectrumSource + ";ss.Groups ssgl";
-        public static readonly string PeptideToSpectrumSourceGroup = PeptideToSpectrumSourceGroupLink + ";ssgl.Group";
+        public static readonly string PeptideToPeptideInstance = "JOIN pep.Instances pi";
+        public static readonly string PeptideToPeptideSpectrumMatch = "JOIN pep.Matches psm";
+        public static readonly string PeptideToProtein = PeptideToPeptideInstance + ";JOIN pi.Protein pro";
+        public static readonly string PeptideToPeptideModification = PeptideToPeptideSpectrumMatch + ";LEFT JOIN psm.Modifications pm";
+        public static readonly string PeptideToModification = PeptideToPeptideModification + ";LEFT JOIN pm.Modification mod";
+        public static readonly string PeptideToSpectrum = PeptideToPeptideSpectrumMatch + ";JOIN psm.Spectrum s";
+        public static readonly string PeptideToSpectrumSource = PeptideToSpectrum + ";JOIN s.Source ss";
+        public static readonly string PeptideToSpectrumSourceGroupLink = PeptideToSpectrumSource + ";JOIN ss.Groups ssgl";
+        public static readonly string PeptideToSpectrumSourceGroup = PeptideToSpectrumSourceGroupLink + ";JOIN ssgl.Group";
 
-        public static readonly string PeptideSpectrumMatchToPeptide = "psm.Peptide pep";
-        public static readonly string PeptideSpectrumMatchToSpectrum = "psm.Spectrum s";
-        public static readonly string PeptideSpectrumMatchToPeptideModification = "psm.Modifications pm";
-        public static readonly string PeptideSpectrumMatchToPeptideInstance = PeptideSpectrumMatchToPeptide + ";pep.Instances pi";
-        public static readonly string PeptideSpectrumMatchToProtein = PeptideSpectrumMatchToPeptideInstance + ";pi.Protein pro";
-        public static readonly string PeptideSpectrumMatchToModification = PeptideSpectrumMatchToPeptideModification + ";pm.Modification mod";
-        public static readonly string PeptideSpectrumMatchToSpectrumSource = PeptideSpectrumMatchToSpectrum + ";s.Source ss";
-        public static readonly string PeptideSpectrumMatchToSpectrumSourceGroupLink = PeptideSpectrumMatchToSpectrumSource + ";ss.Groups ssgl";
-        public static readonly string PeptideSpectrumMatchToSpectrumSourceGroup = PeptideSpectrumMatchToSpectrumSourceGroupLink + ";ssgl.Group";
+        public static readonly string PeptideSpectrumMatchToPeptide = "JOIN psm.Peptide pep";
+        public static readonly string PeptideSpectrumMatchToSpectrum = "JOIN psm.Spectrum s";
+        public static readonly string PeptideSpectrumMatchToPeptideModification = "LEFT JOIN psm.Modifications pm";
+        public static readonly string PeptideSpectrumMatchToPeptideInstance = PeptideSpectrumMatchToPeptide + ";JOIN pep.Instances pi";
+        public static readonly string PeptideSpectrumMatchToProtein = PeptideSpectrumMatchToPeptideInstance + ";JOIN pi.Protein pro";
+        public static readonly string PeptideSpectrumMatchToModification = PeptideSpectrumMatchToPeptideModification + ";LEFT JOIN pm.Modification mod";
+        public static readonly string PeptideSpectrumMatchToSpectrumSource = PeptideSpectrumMatchToSpectrum + ";JOIN s.Source ss";
+        public static readonly string PeptideSpectrumMatchToSpectrumSourceGroupLink = PeptideSpectrumMatchToSpectrumSource + ";JOIN ss.Groups ssgl";
+        public static readonly string PeptideSpectrumMatchToSpectrumSourceGroup = PeptideSpectrumMatchToSpectrumSourceGroupLink + ";JOIN ssgl.Group";
         #endregion
 
         public string GetFilteredQueryString (string fromTable, params string[] joinTables)
@@ -757,7 +757,7 @@ namespace IDPicker.DataModel
 
             query.AppendFormat("FROM {0} ", fromTable);
             foreach (var join in joins)
-                query.AppendFormat("JOIN {0} ", join);
+                query.AppendFormat("{0} ", join);
             query.Append(" ");
 
             if (conditions.Count > 0)
