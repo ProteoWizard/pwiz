@@ -404,6 +404,14 @@ public ref class ParamContainer
     CVParam^ cvParamChild(CVID cvid);
 
     /// <summary>
+    /// Finds all children of cvid in the container
+    /// <para>- returns all CVParam results such that (result.cvid IS_A cvid)</para>
+    /// <para>- if not found, returns empty list</para>
+    /// <para>- recursive (looks into paramGroups)</para>
+    /// </summary>
+    CVParamList^ cvParamChildren(CVID cvid);
+
+    /// <summary>
     /// returns true iff cvParams contains exact cvid (recursive)
     /// </summary>
     bool hasCVParam(CVID cvid);

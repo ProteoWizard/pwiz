@@ -173,6 +173,15 @@ void testParamContainer()
     unit_assert((bool) pc.cvParam(CVID::MS_deisotoping)->value == true);
     pc.set(CVID::MS_deisotoping, false);
     unit_assert((bool) pc.cvParam(CVID::MS_deisotoping)->value == false);
+    
+    pc.set(CVID::MS_CID);
+    pc.set(CVID::MS_ETD);
+    pg->set(CVID::MS_PQD);
+    CVParamList^ dissociationMethods = pc.cvParamChildren(CVID::MS_dissociation_method);
+    unit_assert(dissociationMethods->Count == 3);
+    unit_assert(dissociationMethods[0] == CVID::MS_CID);
+    unit_assert(dissociationMethods[1] == CVID::MS_ETD);
+    unit_assert(dissociationMethods[2] == CVID::MS_PQD);
 }
 
 

@@ -272,6 +272,11 @@ CVParam^ ParamContainer::cvParamChild(CVID cvid)
     return gcnew CVParam(new b::CVParam(base_->cvParamChild((pwiz::cv::CVID) cvid)));
 }
 
+CVParamList^ ParamContainer::cvParamChildren(CVID cvid)
+{
+    return gcnew CVParamList(new std::vector<b::CVParam>(base_->cvParamChildren((pwiz::cv::CVID) cvid)));
+}
+
 bool ParamContainer::hasCVParam(CVID cvid)
 {
     return base_->hasCVParam((pwiz::cv::CVID) cvid);
