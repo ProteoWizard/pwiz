@@ -175,6 +175,32 @@ PWIZ_API_DECL CVParam ParamContainer::cvParamChild(CVID cvid) const
 }
 
 
+PWIZ_API_DECL vector<CVParam> ParamContainer::cvParamChildren(CVID cvid) const
+{
+    vector<CVParam> results;
+
+    // first look in our own cvParams
+
+    vector<CVParam>::const_iterator it;
+
+    BOOST_FOREACH(const CVParam& cvParam, cvParams)
+    {
+        if (cvIsA(cvParam.cvid, cvid))
+            results.push_back(cvParam);
+    }
+
+    // then recurse into paramGroupPtrs
+
+    BOOST_FOREACH(const ParamGroupPtr& paramGroupPtr, paramGroupPtrs)
+    {
+        vector<CVParam> pgResults = paramGroupPtr->cvParamChildren(cvid);
+        results.insert(results.end(), pgResults.begin(), pgResults.end());
+    }
+
+    return results;
+}
+
+
 PWIZ_API_DECL bool ParamContainer::hasCVParam(CVID cvid) const
 {
     CVParam param = cvParam(cvid);

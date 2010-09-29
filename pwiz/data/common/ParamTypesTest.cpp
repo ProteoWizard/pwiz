@@ -245,6 +245,15 @@ void testParamContainer()
     unit_assert(pc.cvParam(MS_deisotoping).valueAs<bool>() == true);
     pc.set(MS_deisotoping, false);
     unit_assert(pc.cvParam(MS_deisotoping).valueAs<bool>() == false);
+    
+    pc.set(MS_CID);
+    pc.set(MS_ETD);
+    pg->set(MS_PQD);
+    vector<CVParam> dissociationMethods = pc.cvParamChildren(MS_dissociation_method);
+    unit_assert(dissociationMethods.size() == 3);
+    unit_assert(dissociationMethods[0] == MS_CID);
+    unit_assert(dissociationMethods[1] == MS_ETD);
+    unit_assert(dissociationMethods[2] == MS_PQD);
 }
 
 

@@ -250,13 +250,19 @@ struct PWIZ_API_DECL ParamContainer
     /// - returns first CVParam result such that (result.cvid == cvid); 
     /// - if not found, returns CVParam(CVID_Unknown)
     /// - recursive: looks into paramGroupPtrs
-    CVParam cvParam(CVID cvid) const; 
+    CVParam cvParam(CVID cvid) const;
 
     /// finds child of cvid in the container:
     /// - returns first CVParam result such that (result.cvid is_a cvid); 
     /// - if not found, CVParam(CVID_Unknown)
     /// - recursive: looks into paramGroupPtrs
-    CVParam cvParamChild(CVID cvid) const; 
+    CVParam cvParamChild(CVID cvid) const;
+
+    /// finds all children of cvid in the container:
+    /// - returns all CVParam results such that (result.cvid is_a cvid); 
+    /// - if not found, empty vector
+    /// - recursive: looks into paramGroupPtrs
+    std::vector<CVParam> cvParamChildren(CVID cvid) const;
 
     /// returns true iff cvParams contains exact cvid (recursive)
     bool hasCVParam(CVID cvid) const;
