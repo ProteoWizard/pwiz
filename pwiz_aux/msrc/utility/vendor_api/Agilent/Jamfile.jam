@@ -101,4 +101,10 @@ install install_pwiz_vendor_api_agilent
 
 explicit install_pwiz_vendor_api_agilent ;
 
+install install_pwiz_vendor_api_agilent_eula
+    : [ path.glob $(API_PATH) : EULA.* ]
+    ;
+
+explicit install_pwiz_vendor_api_agilent_eula ;
+
 }
