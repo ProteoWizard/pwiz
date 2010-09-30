@@ -36,7 +36,7 @@ using boost::system::system_error;
 
 // platform-specific path elements
 #ifdef WIN32
-#   define ABS "c:/"         // test at c:\ because FindFile behaves a little tricky there
+#   define ABS "%SD%\\"       // test at %SystemDrive% because FindFile behaves a little tricky there
 #   define REL ".\\relative"
 #   define A "\\"             // both slash types should work
 #   define D ";"              // path separator
@@ -47,6 +47,11 @@ using boost::system::system_error;
 #   define D ":"
 #endif
 
+string systemDrive;
+string setSystemDrive(const string& path)
+{
+    return bal::replace_all_copy(path, "%SD%", systemDrive);
+}
 
 const char* testPathContentPairArray[] =
 {
@@ -119,12 +124,12 @@ void createTestPath()
     {
         // if content is empty, create a directory
         if (strlen(testPathContentPairArray[i+1]) == 0)
-            bfs::create_directory(testPathContentPairArray[i]);
+            bfs::create_directory(setSystemDrive(testPathContentPairArray[i]));
         else
-            create_file(testPathContentPairArray[i], testPathContentPairArray[i+1]);
+            create_file(setSystemDrive(testPathContentPairArray[i]), testPathContentPairArray[i+1]);
 
         // test that the directory/file was really created
-        unit_assert(bfs::exists(testPathContentPairArray[i]));
+        unit_assert(bfs::exists(setSystemDrive(testPathContentPairArray[i])));
     }
 }
 
@@ -132,8 +137,8 @@ void createTestPath()
 void deleteTestPath()
 {
     for (int i=0; i < testPathContentPairArraySize; i += 2)
-        if (bfs::exists(testPathContentPairArray[i]))
-            bfs::remove_all(testPathContentPairArray[i]);
+        if (bfs::exists(setSystemDrive(testPathContentPairArray[i])))
+            bfs::remove_all(setSystemDrive(testPathContentPairArray[i]));
 }
 
 
@@ -144,13 +149,17 @@ set<bfs::path> parsePathArray(const string& pathArray)
     bal::split(tokens, pathArray, bal::is_any_of(D));
     if (!tokens.empty() && !tokens[0].empty())
         for (size_t i=0; i < tokens.size(); ++i)
-            pathSet.insert(tokens[i]);
+            pathSet.insert(setSystemDrive(tokens[i]));
     return pathSet;
 }
 
 
 void testExpandPathmask()
 {
+    char* systemDriveEnv = ::getenv("SystemDrive"); // usually "C:" on Windows
+    if (systemDriveEnv)
+        systemDrive = systemDriveEnv;
+
     // create a filesystem tree for testing
     createTestPath();
 
@@ -159,7 +168,7 @@ void testExpandPathmask()
         try
         {
             vector<bfs::path> matchingPaths;
-            expand_pathmask(testPathmaskArray[i].pathmask, matchingPaths);
+            expand_pathmask(setSystemDrive(testPathmaskArray[i].pathmask), matchingPaths);
 
             set<bfs::path> targetPathSet = parsePathArray(testPathmaskArray[i].pathnameArray);
             unit_assert(matchingPaths.size() == targetPathSet.size());
@@ -173,17 +182,17 @@ void testExpandPathmask()
         }
         catch (exception& e)
         {
-            cout << "Unit test on pathmask \"" << testPathmaskArray[i].pathmask << "\" failed:\n"
+            cout << "Unit test on pathmask \"" << setSystemDrive(testPathmaskArray[i].pathmask) << "\" failed:\n"
                  << e.what() << endl;
         }
     }
 
     // special test of wildcard in the root (on Windows)
     vector<bfs::path> matchingPaths;
-    expand_pathmask(ABS"*", matchingPaths);
-    unit_assert(find(matchingPaths.begin(), matchingPaths.end(), ABS"pwiz_foofoo_test") != matchingPaths.end());
-    unit_assert(find(matchingPaths.begin(), matchingPaths.end(), ABS"pwiz_foo_test") != matchingPaths.end());
-    unit_assert(find(matchingPaths.begin(), matchingPaths.end(), ABS"pwiz_bar_test") != matchingPaths.end());
+    expand_pathmask(setSystemDrive(ABS"*"), matchingPaths);
+    unit_assert(find(matchingPaths.begin(), matchingPaths.end(), setSystemDrive(ABS"pwiz_foofoo_test")) != matchingPaths.end());
+    unit_assert(find(matchingPaths.begin(), matchingPaths.end(), setSystemDrive(ABS"pwiz_foo_test")) != matchingPaths.end());
+    unit_assert(find(matchingPaths.begin(), matchingPaths.end(), setSystemDrive(ABS"pwiz_bar_test")) != matchingPaths.end());
 
     // cleanup test tree
     deleteTestPath();

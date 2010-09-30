@@ -181,10 +181,7 @@ void copyProteinPilotDLLs()
                 throw runtime_error("[Reader_ABI::ctor] When trying to find Protein Pilot, the Program Files directory could not be found!");
         }
         else
-        {
             proteinPilotPath = bfs::path(programFilesPath) / "Applied Biosystems MDS Analytical Technologies/ProteinPilot";
-            delete programFilesPath;
-        }
 
         if (bfs::exists(proteinPilotPath / "ABSciex.DataAccess.WiffFileDataReader.dll"))
         {

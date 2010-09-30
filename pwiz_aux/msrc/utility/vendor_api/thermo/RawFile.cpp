@@ -175,7 +175,7 @@ PWIZ_API_DECL RawFilePtr RawFile::create(const string& filename)
 
     ifstream eulaStream((callingExecutablePath / "EULA.MSFileReader").string().c_str());
     if (!eulaStream)
-        throw runtime_error("[RawFile::create] Unable to find or open EULA.MSFileReader.");
+        throw runtime_error("[RawFile::create] Unable to find or open EULA.MSFileReader in \"" + callingExecutablePath.string() + "\"");
 
     string eula, line;
     while (std::getline(eulaStream, line))
@@ -228,10 +228,7 @@ RawFileImpl::RawFileImpl(const string& filename)
                 throw runtime_error("[RawFile::ctor] When trying to find MSFileReader, the Program Files directory could not be found!");
         }
         else
-        {
             msFileReaderPath = bfs::path(programFilesPath) / "Thermo/MSFileReader";
-            delete programFilesPath;
-        }
 
         if (bfs::exists(msFileReaderPath / "XRawfile2.dll"))
         {
