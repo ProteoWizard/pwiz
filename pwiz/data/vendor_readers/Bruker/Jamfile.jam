@@ -141,7 +141,7 @@ local generate-mzML = [ MATCH (--generate-mzML) : [ modules.peek : ARGV ] ] ;
 
 # special run target for Reader_Thermo_Test, which needs external data 
 # use --preserve-test-targets to prevent bjam from deleting the executable
-run Reader_Bruker_Test.cpp $(PWIZ_ROOT_PATH)/pwiz/utility/misc/VendorReaderTestHarness.cpp
+run Reader_Bruker_Test.cpp $(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_vendor_reader_test_harness
     : # args
         \"$(TEST_DATA_PATH)\" $(generate-mzML)
     : # input-files
