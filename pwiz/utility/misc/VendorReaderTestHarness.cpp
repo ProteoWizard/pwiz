@@ -36,6 +36,8 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
+#include "boost/thread/thread.hpp"
+#include "boost/thread/barrier.hpp"
 
 
 using namespace pwiz::util;
@@ -295,6 +297,20 @@ void testRead(const Reader& reader, const string& rawpath)
         if (diff_MGF && !os_) cerr << "MGF:\n" << headStream(*serializedStreamPtr, 5000) << endl;
         if (diff_MGF) cerr << headDiff(diff_MGF, 5000) << endl;
         unit_assert(!diff_MGF);
+
+        // test reverse iteration of metadata on a fresh document;
+        // this tests that caching optimization for forward iteration doesn't hide problems;
+        // i.e. SpectrumList_Thermo::findPrecursorSpectrumIndex()
+        MSData msd_reverse;
+        reader.read(rawpath, rawheader, msd_reverse, i);
+
+        if (msd_reverse.run.spectrumListPtr.get())
+            for (size_t j = 0, end = msd_reverse.run.spectrumListPtr->size(); j < end; ++j)
+                msd_reverse.run.spectrumListPtr->spectrum(end-j-1);
+
+        if (msd_reverse.run.chromatogramListPtr.get())
+            for (size_t j = 0, end = msd_reverse.run.chromatogramListPtr->size(); j < end; ++j)
+                msd_reverse.run.chromatogramListPtr->chromatogram(end-j-1);
     }
 }
 
@@ -338,6 +354,36 @@ void parseArgs(const vector<string>& args, bool& generateMzML, vector<string>& r
     }
 }
 
+void testThreadSafetyWorker(boost::barrier* testBarrier, const Reader* reader, bool* testAcceptOnly, const string* rawpath)
+{
+    testBarrier->wait(); // wait until all threads have started
+
+    try
+    {
+        testAccept(*reader, *rawpath);
+
+        if (!(*testAcceptOnly))
+            testRead(*reader, *rawpath);
+    }
+    catch (exception& e)
+    {
+        cerr << "Exception in worker thread: " << e.what() << endl;
+    }
+    catch (...)
+    {
+        cerr << "Unhandled exception in worker thread." << endl;
+    }
+}
+
+void testThreadSafety(const int& testThreadCount, const Reader& reader, bool testAcceptOnly, const string& rawpath)
+{
+    boost::barrier testBarrier(testThreadCount);
+    boost::thread_group testThreadGroup;
+    for (int i=0; i < testThreadCount; ++i)
+        testThreadGroup.add_thread(new boost::thread(&testThreadSafetyWorker, &testBarrier, &reader, &testAcceptOnly, &rawpath));
+    testThreadGroup.join_all();
+}
+
 } // namespace
 
 
@@ -357,12 +403,20 @@ int testReader(const Reader& reader, const vector<string>& args, bool testAccept
         for (size_t i=0; i < rawpaths.size(); ++i)
             for (bfs::directory_iterator itr(rawpaths[i]); itr != bfs::directory_iterator(); ++itr)
             {
-                if (!isPathTestable(itr->path().string()))
+                string rawpath = itr->path().string();
+                if (!isPathTestable(rawpath))
                     continue;
                 else if (generateMzML && !testAcceptOnly)
-                    generate(reader, itr->path().string());
+                    generate(reader, rawpath);
                 else
-                    test(reader, testAcceptOnly, itr->path().string());
+                {
+                    test(reader, testAcceptOnly, rawpath);
+
+                    /* TODO: there are issues to be resolved here but not just simple crashes
+                    testThreadSafety(1, reader, testAcceptOnly, rawpath);
+                    testThreadSafety(2, reader, testAcceptOnly, rawpath);
+                    testThreadSafety(4, reader, testAcceptOnly, rawpath);*/
+                }
             }
         return 0;
     }

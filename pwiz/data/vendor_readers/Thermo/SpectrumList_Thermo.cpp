@@ -587,8 +587,9 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::findPrecursorSpectrumIndex(int precurs
                 // populate the missing MS level
 	            cachedMsLevel = scanInfo->msLevel();
 
-                // MSn's immediate isolationMz is n-1
-                cachedIsolationMz = precursorMsLevel > 1 ? scanInfo->precursorMZ(precursorMsLevel - 1, false) : 0;
+                // MSn's immediate isolationMz is n-2;
+                // i.e. MS3 has two precursors: index 0 is the MS1 precursor, index 1 is the MS2 precursor
+                cachedIsolationMz = cachedMsLevel > 1 ? scanInfo->precursorMZ(cachedMsLevel - 2, false) : 0;
             }
             catch (RawEgg& e)
             {
