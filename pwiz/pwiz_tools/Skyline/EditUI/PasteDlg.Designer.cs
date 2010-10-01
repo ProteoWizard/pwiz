@@ -321,12 +321,12 @@ namespace pwiz.Skyline.EditUI
             // 
             // colTransitionPrecursorMz
             // 
-            this.colTransitionPrecursorMz.HeaderText = "Precursor M/Z";
+            this.colTransitionPrecursorMz.HeaderText = "Precursor m/z";
             this.colTransitionPrecursorMz.Name = "colTransitionPrecursorMz";
             // 
             // colTransitionProductMz
             // 
-            this.colTransitionProductMz.HeaderText = "Product M/Z";
+            this.colTransitionProductMz.HeaderText = "Product m/z";
             this.colTransitionProductMz.Name = "colTransitionProductMz";
             // 
             // colTransitionProteinName
@@ -425,13 +425,13 @@ namespace pwiz.Skyline.EditUI
         private System.Windows.Forms.DataGridViewTextBoxColumn colPeptideProteinDescription;
         private System.Windows.Forms.TabPage tabPageTransitionList;
         private DataGridViewEx gridViewTransitionList;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinName;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinDescription;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinSequence;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTransitionPeptide;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTransitionPrecursorMz;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTransitionProductMz;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTransitionProteinName;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTransitionProteinDescription;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinName;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinDescription;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinSequence;
     }
 }

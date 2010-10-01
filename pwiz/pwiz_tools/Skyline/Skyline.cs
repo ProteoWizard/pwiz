@@ -2270,6 +2270,19 @@ namespace pwiz.Skyline
                         sequenceTree.Top = toolBarResults.Top;
                         sequenceTree.Height += toolBarResults.Height;
                     }
+
+                    // Make sure the combo contains the results name, if one is
+                    // available, because graph handling depends on this.
+                    if (results != null)
+                    {
+                        string resultsName = results.Chromatograms[0].Name;
+                        if (comboResults.Items.Count != 1 || !Equals(comboResults.SelectedItem, resultsName))
+                        {
+                            comboResults.Items.Clear();
+                            comboResults.Items.Add(resultsName);
+                            comboResults.SelectedIndex = 0;
+                        }
+                    }
                 }
                 else
                 {
