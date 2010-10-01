@@ -5,6 +5,8 @@
     <DeploymentItem filename="BlibBuild.exe" />
     <DeploymentItem filename="BlibFilter.exe" />
     <DeploymentItem filename="msparser.dll" />
+    <DeploymentItem filename="EULA.MHDAC" />
+    <DeploymentItem filename="EULA.MSFileReader" />
     <DeploymentItem filename="..\Shared\Lib\System.Data.SQLite.DLL" />
     <DeploymentItem filename="..\Shared\ProteowizardWrapper\obj\x86\MassLynxRaw.dll" />
     <DeploymentItem filename="..\Shared\ProteowizardWrapper\obj\x86\rscoree.dll" />
