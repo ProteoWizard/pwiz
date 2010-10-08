@@ -94,6 +94,18 @@ namespace pwiz.Topograph.Model
             var result = new PeptideDistribution(this, PeptideQuantity.tracer_count) { Parent = this };
             PeptideFileAnalysis.TurnoverCalculator.GetTracerAmounts(
                 result, peaks.GetAverageIntensitiesExcludedAsNaN(), out predictedIntensities);
+            if (result.ChildCount > 2)
+            {
+                double turnover;
+                IDictionary<TracerFormula, double> bestMatch;
+                result.PrecursorEnrichmentFormula = PeptideFileAnalysis.TurnoverCalculator.ComputePrecursorEnrichmentAndTurnover(result.ToDictionary(), out turnover, out bestMatch);
+                if (result.PrecursorEnrichmentFormula != null)
+                {
+                    result.PrecursorEnrichment = result.PrecursorEnrichmentFormula.Values.Sum() / 100.0;
+                }
+                result.Turnover = turnover;
+            }
+
             return result;
         }
 
