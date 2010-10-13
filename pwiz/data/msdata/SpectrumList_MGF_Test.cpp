@@ -86,6 +86,16 @@ void test()
     unit_assert(sl->find("index=0") == 0);
     unit_assert(sl->find("index=1") == 1);
 
+    // find the second spectrum by TITLE field
+    IndexList list = sl->findSpotID("small.pwiz.0004.0004.2");
+    unit_assert(list.size() == 1);
+    unit_assert(list[0] == 1);
+
+    // look for a non-existent TITLE field
+    list.clear();
+    list = sl->findSpotID("fake title string");
+    unit_assert(list.size() == 0);
+
     // check scan 0
 
     unit_assert(sl->spectrumIdentity(0).index == 0);
