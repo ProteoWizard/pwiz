@@ -79,6 +79,14 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
             return size();
     }
 
+    // returns the IndexList for a given TITLE=string
+    IndexList findSpotID(const string& titleID) const
+    {
+        map<string,IndexList>::const_iterator it=titleIDToIndexList_.find(titleID);
+        return it!=titleIDToIndexList_.end() ? it->second : IndexList();
+    }
+
+
     SpectrumPtr spectrum(size_t index, bool getBinaryData) const
     {
         if (index > index_.size())
@@ -109,6 +117,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
     const MSData& msd_;
     vector<SpectrumIdentity> index_;
     map<string, size_t> idToIndex_;
+    map<string, IndexList> titleIDToIndexList_;
 
     void parseSpectrum(Spectrum& spectrum, bool getBinaryData) const
     {
@@ -292,16 +301,13 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                 curIdToIndexItr = idToIndex_.insert(pair<string, size_t>(curIdentityItr->id, index_.size()-1)).first;
 			    inBeginIons = true;
 		    }
-            /* TODO: put a spectrum title field in SpectrumIdentity?
             else if (lineStr.find("TITLE=") == 0)
-		    {
-                // if a title is found, use it as the id instead of the index
-			    curIdentityItr->id = lineStr.substr(6);
-                bal::trim(curIdentityItr->id);
-                idToIndex_.erase(curIdToIndexItr);
-                curIdToIndexItr = idToIndex_.insert(pair<string, size_t>(curIdentityItr->id, index_.size()-1)).first;
-			    
-		    }*/
+	    {
+                // if a title is found, use it as the id in the index used by findSpotID
+	        string title = lineStr.substr(6);
+                bal::trim(title);
+		titleIDToIndexList_[title].push_back(index_.size()-1);
+	    }
             else if (lineStr.find("END IONS") == 0)
 		    {
 			    if (!inBeginIons)
