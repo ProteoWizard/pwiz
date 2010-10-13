@@ -83,6 +83,30 @@ namespace analysis {
 
 
 /// <summary>
+/// Factory for instantiating and wrapping SpectrumLists
+/// </summary>
+public ref class SpectrumListFactory abstract
+{
+    public:
+
+    /// <summary>
+    /// instantiate the SpectrumListWrapper indicated by wrapper
+    /// </summary>
+    static void wrap(msdata::MSData^ msd, System::String^ wrapper);
+
+    /// <summary>
+    /// instantiate a list of SpectrumListWrappers
+    /// </summary>
+    static void wrap(msdata::MSData^ msd, System::Collections::Generic::IList<System::String^>^ wrappers);
+
+    /// <summary>
+    /// user-friendly documentation
+    /// </summary>
+    static System::String^ usage();
+};
+
+
+/// <summary>
 /// Delegate for filtering spectra in SpectrumList_Filter
 /// </summary>
 public delegate bool SpectrumList_FilterAcceptSpectrum(msdata::Spectrum^);

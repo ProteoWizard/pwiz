@@ -23,6 +23,7 @@
 #pragma warning( push )
 #pragma warning( disable : 4634 4635 )
 #include "spectrum_processing.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumListFactory.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/analysis/Version.hpp"
 #pragma warning( pop )
@@ -64,6 +65,25 @@ public ref class Version
     static System::String^ LastModified() {return gcnew System::String(b::Version::LastModified().c_str());}
     static System::String^ ToString() {return gcnew System::String(b::Version::str().c_str());}
 };
+
+
+void SpectrumListFactory::wrap(msdata::MSData^ msd, System::String^ wrapper)
+{
+    b::SpectrumListFactory::wrap(msd->base(), ToStdString(wrapper));
+}
+
+void SpectrumListFactory::wrap(msdata::MSData^ msd, System::Collections::Generic::IList<System::String^>^ wrappers)
+{
+    std::vector<std::string> nativeWrappers;
+    for each(System::String^ wrapper in wrappers)
+        nativeWrappers.push_back(ToStdString(wrapper));
+    b::SpectrumListFactory::wrap(msd->base(), nativeWrappers);
+}
+
+System::String^ SpectrumListFactory::usage()
+{
+    return ToSystemString(b::SpectrumListFactory::usage());
+}
 
 
 // delegates accept() to managed code
