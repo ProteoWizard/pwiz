@@ -136,12 +136,25 @@ namespace seems
 
     public class PeptideFragmentationAnnotation : AnnotationBase
     {
+        public enum IonSeries
+        {
+            Off = 0,
+            Auto = 1,
+            a = 2,
+            b = 4,
+            c = 8,
+            x = 16,
+            y = 32,
+            z = 64,
+            zRadical = 128
+        }
+
         Panel panel = annotationPanels.peptideFragmentationPanel;
         string sequence;
         int min, max;
         int precursorMassType; // 0=mono, 1=avg
         int fragmentMassType; // 0=mono, 1=avg
-        bool a, b, c, x, y, z, zRadical;
+        IonSeries ionSeries;
         bool showLadders;
         bool showMisses;
         bool showLabels;
@@ -183,12 +196,31 @@ namespace seems
                                                bool showFragmentationLadders,
                                                bool showMissedFragments,
                                                bool showLabels )
+            : this(sequence, minCharge, maxCharge,
+                   (a ? IonSeries.a : IonSeries.Off) |
+                   (b ? IonSeries.b : IonSeries.Off) |
+                   (c ? IonSeries.c : IonSeries.Off) |
+                   (x ? IonSeries.x : IonSeries.Off) |
+                   (y ? IonSeries.y : IonSeries.Off) |
+                   (z ? IonSeries.z : IonSeries.Off) |
+                   (zRadical ? IonSeries.zRadical : IonSeries.Off),
+                   showFragmentationLadders,
+                   showMissedFragments,
+                   showLabels)
+        {
+        }
+
+        public PeptideFragmentationAnnotation (string sequence,
+                                               int minCharge, int maxCharge,
+                                               IonSeries ionSeries,
+                                               bool showFragmentationLadders,
+                                               bool showMissedFragments,
+                                               bool showLabels)
         {
             this.sequence = sequence;
             this.min = minCharge;
             this.max = maxCharge;
-            this.a = a; this.b = b; this.c = c;
-            this.x = x; this.y = y; this.z = z; this.zRadical = zRadical;
+            this.ionSeries = ionSeries;
             this.showLadders = showFragmentationLadders;
             this.showMisses = showMissedFragments;
             this.showLabels = showLabels;
@@ -278,13 +310,14 @@ namespace seems
                     panel.Tag = this;
                 }
 
-                a = annotationPanels.aCheckBox.Checked;
-                b = annotationPanels.bCheckBox.Checked;
-                c = annotationPanels.cCheckBox.Checked;
-                x = annotationPanels.xCheckBox.Checked;
-                y = annotationPanels.yCheckBox.Checked;
-                z = annotationPanels.zCheckBox.Checked;
-                zRadical = annotationPanels.zRadicalCheckBox.Checked;
+                ionSeries = IonSeries.Off;
+                ionSeries |= annotationPanels.aCheckBox.Checked ? IonSeries.a : IonSeries.Off;
+                ionSeries |= annotationPanels.bCheckBox.Checked ? IonSeries.b : IonSeries.Off;
+                ionSeries |= annotationPanels.cCheckBox.Checked ? IonSeries.c : IonSeries.Off;
+                ionSeries |= annotationPanels.xCheckBox.Checked ? IonSeries.x : IonSeries.Off;
+                ionSeries |= annotationPanels.yCheckBox.Checked ? IonSeries.y : IonSeries.Off;
+                ionSeries |= annotationPanels.zCheckBox.Checked ? IonSeries.z : IonSeries.Off;
+                ionSeries |= annotationPanels.zRadicalCheckBox.Checked ? IonSeries.zRadical : IonSeries.Off;
                 showMisses = annotationPanels.showMissesCheckBox.Checked;
                 OnOptionsChanged( this, EventArgs.Empty );
             }
@@ -676,6 +709,8 @@ namespace seems
             }
         }
 
+        bool ionSeriesIsEnabled (IonSeries series) { return (ionSeries & series) == series; }
+
         public override void Update( GraphItem item, pwiz.MSGraph.MSPointList points, GraphObjList annotations )
         {
             if( !Enabled )
@@ -696,6 +731,16 @@ namespace seems
             {
                 return;
             }
+            
+            var spectrum = ( item as MassSpectrum ).Element;
+
+            if (spectrum.precursors.Count > 0 && ionSeriesIsEnabled(IonSeries.Auto))
+            {
+                bool cid = (item as MassSpectrum).Element.precursors[0].activation.hasCVParam(CVID.MS_CID);
+                bool etd = (item as MassSpectrum).Element.precursors[0].activation.hasCVParam(CVID.MS_ETD);
+                ionSeries |= cid ? IonSeries.b | IonSeries.y : IonSeries.Off;
+                ionSeries |= etd ? IonSeries.c | IonSeries.zRadical : IonSeries.Off;
+            }
 
             string unmodifiedSequence = peptide.sequence;
             int sequenceLength = unmodifiedSequence.Length;
@@ -705,31 +750,30 @@ namespace seems
             {
                 for( int i = 1; i <= sequenceLength; ++i )
                 {
-                    if( a ) addFragment( list, points, "a", i, charge, fragmentation.a( i, charge ) );
-                    if( b ) addFragment( list, points, "b", i, charge, fragmentation.b( i, charge ) );
-                    if( y ) addFragment( list, points, "y", i, charge, fragmentation.y( i, charge ) );
-                    if( z ) addFragment( list, points, "z", i, charge, fragmentation.z( i, charge ) );
-                    if( zRadical ) addFragment( list, points, "z*", i, charge, fragmentation.zRadical( i, charge ) );
+                    if (ionSeriesIsEnabled(IonSeries.a)) addFragment(list, points, "a", i, charge, fragmentation.a(i, charge));
+                    if (ionSeriesIsEnabled(IonSeries.b)) addFragment(list, points, "b", i, charge, fragmentation.b(i, charge));
+                    if (ionSeriesIsEnabled(IonSeries.y)) addFragment(list, points, "y", i, charge, fragmentation.y(i, charge));
+                    if (ionSeriesIsEnabled(IonSeries.z)) addFragment(list, points, "z", i, charge, fragmentation.z(i, charge));
+                    if (ionSeriesIsEnabled(IonSeries.zRadical)) addFragment(list, points, "z*", i, charge, fragmentation.zRadical(i, charge));
 
                     if( i < sequenceLength )
                     {
-                        if( c ) addFragment( list, points, "c", i, charge, fragmentation.c( i, charge ) );
-                        if( x ) addFragment( list, points, "x", i, charge, fragmentation.x( i, charge ) );
+                        if (ionSeriesIsEnabled(IonSeries.c)) addFragment(list, points, "c", i, charge, fragmentation.c(i, charge));
+                        if (ionSeriesIsEnabled(IonSeries.x)) addFragment(list, points, "x", i, charge, fragmentation.x(i, charge));
                     }
                 }
             }
 
             if( showLadders )
             {
-                string topSeries = a ? "a" : b ? "b" : c ? "c" : "";
-                string bottomSeries = x ? "x" : y ? "y" : z ? "z" : zRadical ? "z*" : "";
+                string topSeries = ionSeriesIsEnabled(IonSeries.a) ? "a" : ionSeriesIsEnabled(IonSeries.b) ? "b" : ionSeriesIsEnabled(IonSeries.c) ? "c" : "";
+                string bottomSeries = ionSeriesIsEnabled(IonSeries.x) ? "x" : ionSeriesIsEnabled(IonSeries.y) ? "y" : ionSeriesIsEnabled(IonSeries.z) ? "z" : ionSeriesIsEnabled(IonSeries.zRadical) ? "z*" : "";
                 addIonSeries( list, points, peptide, fragmentation, topSeries, bottomSeries );
             }
 
             // fill peptide info table
             annotationPanels.peptideInfoGridView.Rows.Clear();
 
-            var spectrum = ( item as MassSpectrum ).Element;
             if( spectrum.precursors.Count > 0 &&
                 spectrum.precursors[0].selectedIons.Count > 0 &&
                 spectrum.precursors[0].selectedIons[0].hasCVParam( CVID.MS_selected_ion_m_z ) &&
@@ -749,22 +793,23 @@ namespace seems
                 row.Height = row.InheritedStyle.Font.Height + 2;
 
             annotationPanels.fragmentInfoGridView.SuspendLayout();
-            if( a || b || c || x || y || z || zRadical )
+
+            if( ionSeries > IonSeries.Auto )
             {
                 if( annotationPanels.fragmentInfoGridView.Columns.Count == 0 )
                 {
                     #region Add columns for fragment types
-                    if( a )
+                    if( ionSeriesIsEnabled(IonSeries.a) )
                         for( int charge = min; charge <= max; ++charge )
                             annotationPanels.fragmentInfoGridView.Columns.Add(
                                 "a" + charge.ToString(),
                                 "a" + ( charge > 1 ? "(+" + charge.ToString() + ")" : "" ) );
-                    if( b )
+                    if( ionSeriesIsEnabled(IonSeries.b) )
                         for( int charge = min; charge <= max; ++charge )
                             annotationPanels.fragmentInfoGridView.Columns.Add(
                                 "b" + charge.ToString(),
                                 "b" + ( charge > 1 ? "(+" + charge.ToString() + ")" : "" ) );
-                    if( c )
+                    if( ionSeriesIsEnabled(IonSeries.c) )
                         for( int charge = min; charge <= max; ++charge )
                             annotationPanels.fragmentInfoGridView.Columns.Add(
                                 "c" + charge.ToString(),
@@ -774,22 +819,22 @@ namespace seems
                     annotationPanels.fragmentInfoGridView.Columns.Add( "Sequence", "" );
                     annotationPanels.fragmentInfoGridView.Columns.Add( "C", "" );
 
-                    if( x )
+                    if( ionSeriesIsEnabled(IonSeries.x) )
                         for( int charge = min; charge <= max; ++charge )
                             annotationPanels.fragmentInfoGridView.Columns.Add(
                                 "x" + charge.ToString(),
                                 "x" + ( charge > 1 ? "(+" + charge.ToString() + ")" : "" ) );
-                    if( y )
+                    if( ionSeriesIsEnabled(IonSeries.y) )
                         for( int charge = min; charge <= max; ++charge )
                             annotationPanels.fragmentInfoGridView.Columns.Add(
                                 "y" + charge.ToString(),
                                 "y" + ( charge > 1 ? "(+" + charge.ToString() + ")" : "" ) );
-                    if( z )
+                    if( ionSeriesIsEnabled(IonSeries.z) )
                         for( int charge = min; charge <= max; ++charge )
                             annotationPanels.fragmentInfoGridView.Columns.Add(
                                 "z" + charge.ToString(),
                                 "z" + ( charge > 1 ? "(+" + charge.ToString() + ")" : "" ) );
-                    if( zRadical )
+                    if( ionSeriesIsEnabled(IonSeries.zRadical) )
                         for( int charge = min; charge <= max; ++charge )
                             annotationPanels.fragmentInfoGridView.Columns.Add(
                                 "z*" + charge.ToString(),
@@ -815,13 +860,13 @@ namespace seems
                     var values = new List<object>( 10 );
                     //var row = annotationPanels.fragmentInfoGridView.Rows.Add()];
 
-                    if( a )
+                    if( ionSeriesIsEnabled(IonSeries.a) )
                         for( int charge = min; charge <= max; ++charge )
                             values.Add( fragmentation.a( i, charge ) );
-                    if( b )
+                    if( ionSeriesIsEnabled(IonSeries.b) )
                         for( int charge = min; charge <= max; ++charge )
                             values.Add( fragmentation.b( i, charge ) );
-                    if( c )
+                    if( ionSeriesIsEnabled(IonSeries.c) )
                         for( int charge = min; charge <= max; ++charge )
                             if( i < sequenceLength )
                                 values.Add( fragmentation.c( i, charge ) );
@@ -832,19 +877,19 @@ namespace seems
                     values.Add( unmodifiedSequence[i - 1] );
                     values.Add( cTerminalLength );
 
-                    if( x )
+                    if( ionSeriesIsEnabled(IonSeries.x) )
                         for( int charge = min; charge <= max; ++charge )
                             if( i > 1 )
                                 values.Add( fragmentation.x( cTerminalLength, charge ) );
                             else
                                 values.Add( "" );
-                    if( y )
+                    if( ionSeriesIsEnabled(IonSeries.y) )
                         for( int charge = min; charge <= max; ++charge )
                             values.Add( fragmentation.y( cTerminalLength, charge ) );
-                    if( z )
+                    if( ionSeriesIsEnabled(IonSeries.z) )
                         for( int charge = min; charge <= max; ++charge )
                             values.Add( fragmentation.z( cTerminalLength, charge ) );
-                    if( zRadical )
+                    if( ionSeriesIsEnabled(IonSeries.zRadical) )
                         for( int charge = min; charge <= max; ++charge )
                             values.Add( fragmentation.zRadical( cTerminalLength, charge ) );
                     row.SetValues( values.ToArray() );
@@ -894,13 +939,13 @@ namespace seems
                 annotationPanels.maxChargeUpDown.Value = max;
                 annotationPanels.precursorMassTypeComboBox.SelectedIndex = precursorMassType;
                 annotationPanels.fragmentMassTypeComboBox.SelectedIndex = fragmentMassType;
-                annotationPanels.aCheckBox.Checked = a;
-                annotationPanels.bCheckBox.Checked = b;
-                annotationPanels.cCheckBox.Checked = c;
-                annotationPanels.xCheckBox.Checked = x;
-                annotationPanels.yCheckBox.Checked = y;
-                annotationPanels.zCheckBox.Checked = z;
-                annotationPanels.zRadicalCheckBox.Checked = zRadical;
+                annotationPanels.aCheckBox.Checked = ionSeriesIsEnabled(IonSeries.a);
+                annotationPanels.bCheckBox.Checked = ionSeriesIsEnabled(IonSeries.b);
+                annotationPanels.cCheckBox.Checked = ionSeriesIsEnabled(IonSeries.c);
+                annotationPanels.xCheckBox.Checked = ionSeriesIsEnabled(IonSeries.x);
+                annotationPanels.yCheckBox.Checked = ionSeriesIsEnabled(IonSeries.y);
+                annotationPanels.zCheckBox.Checked = ionSeriesIsEnabled(IonSeries.z);
+                annotationPanels.zRadicalCheckBox.Checked = ionSeriesIsEnabled(IonSeries.zRadical);
                 annotationPanels.showFragmentationLaddersCheckBox.Checked = showLadders;
                 annotationPanels.showMissesCheckBox.Checked = showMisses;
 

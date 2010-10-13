@@ -121,6 +121,20 @@ namespace seems
             //realMetaSpectrum.Element.defaultArrayLength = spectrum.Element.defaultArrayLength;
             return spectrum;
         }
+
+        public MassSpectrum GetMassSpectrum( MassSpectrum metaSpectrum, string[] spectrumListFilters )
+        {
+            var tmp = source.MSDataFile.run.spectrumList;
+            try
+            {
+                SpectrumListFactory.wrap(source.MSDataFile, spectrumListFilters);
+                return GetMassSpectrum(metaSpectrum, source.MSDataFile.run.spectrumList);
+            }
+            finally
+            {
+                source.MSDataFile.run.spectrumList = tmp;
+            }
+        }
 	}
 
 	/// <summary>
@@ -233,17 +247,28 @@ namespace seems
             OpenFile( filepath, id, null );
         }
 
-        public void OpenFile( string filepath, object idOrIndex, IAnnotation annotation )
+        public void OpenFile (string filepath, object idOrIndex, IAnnotation annotation)
+        {
+            OpenFile(filepath, idOrIndex, annotation, "");
+        }
+
+        public void OpenFile( string filepath, object idOrIndex, IAnnotation annotation, string spectrumListFilters )
         {
 			try
 			{
                 OnLoadDataSourceProgress("Opening data source: " + Path.GetFileNameWithoutExtension(filepath), 0);
 
+                string[] spectrumListFilterList = spectrumListFilters.Split(';');
+
                 if (!dataSourceMap.ContainsKey(filepath))
                 {
                     var newSource = new ManagedDataSource(new SpectrumSource(filepath));
                     dataSourceMap.Add(filepath, newSource);
-                    initializeManagedDataSource( newSource, idOrIndex, annotation );
+
+                    if (spectrumListFilters.Length > 0)
+                        SpectrumListFactory.wrap(newSource.Source.MSDataFile, spectrumListFilterList);
+
+                    initializeManagedDataSource( newSource, idOrIndex, annotation, spectrumListFilterList );
 				} else
 				{
 					GraphForm newGraph = OpenGraph( true );
@@ -264,6 +289,9 @@ namespace seems
                     if( index > -1 )
                     {
                         MassSpectrum spectrum = source.GetMassSpectrum( index );
+
+                        if (spectrumListFilters.Length > 0)
+                            SpectrumListFactory.wrap(source.Source.MSDataFile, spectrumListFilterList);
 
                         spectrum.AnnotationSettings = defaultScanAnnotationSettings;
 
@@ -350,7 +378,7 @@ namespace seems
             return spectrum.OwningListForm.GetSpectrum( spectrum.OwningListForm.IndexOf( spectrum ) );
         }
 
-		private void initializeManagedDataSource( ManagedDataSource managedDataSource, object idOrIndex, IAnnotation annotation )
+		private void initializeManagedDataSource( ManagedDataSource managedDataSource, object idOrIndex, IAnnotation annotation, string[] spectrumListFilters )
         {
 			try
 			{
@@ -393,6 +421,8 @@ namespace seems
                 if( index > -1 )
                 {
                     MassSpectrum spectrum = managedDataSource.GetMassSpectrum( index );
+                    if (spectrumListFilters.Length > 0)
+                        spectrum = managedDataSource.GetMassSpectrum(spectrum, spectrumListFilters);
 
                     spectrum.AnnotationSettings = defaultScanAnnotationSettings;
                     spectrumListForm.Add( spectrum );
