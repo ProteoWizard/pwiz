@@ -1147,9 +1147,14 @@ namespace pwiz.Skyline.SettingsUI
             if (cbAssociateProteins.Checked)
             {
                 var backgroundProteome = document.Settings.PeptideSettings.BackgroundProteome;
-                if (backgroundProteome.BackgroundProteomeSpec.IsNone)
+                if (backgroundProteome.BackgroundProteomeSpec.IsNone) 
                 {
                     MessageDlg.Show(this, "A background proteome is required to associate proteins.");
+                    return false;
+                }
+                if(backgroundProteome.GetDigestion(document.Settings.PeptideSettings) == null)
+                {
+                    MessageDlg.Show(this, "The background proteome must be digested in order to associate proteins.");
                     return false;
                 }
                 pepMatcher.SetBackgroundProteome(backgroundProteome);

@@ -259,7 +259,8 @@ namespace pwiz.Skyline.SettingsUI
             var diff = settingsDiff ?? SrmSettingsDiff.ALL;
             var sequence = pepInfo.GetAASequence(_lookupPool);
             var key = pepInfo.Key;
-            Peptide peptide = new Peptide(null, sequence, null, null, 0);
+            int missedCleavages = _document.Settings.PeptideSettings.Enzyme.CountCleavagePoints(sequence);
+            Peptide peptide = new Peptide(null, sequence, null, null, missedCleavages);
             // Create all variations of this peptide matching the settings.
             foreach (var nodePep in peptide.CreateDocNodes(settings, settings))
             {
@@ -315,7 +316,7 @@ namespace pwiz.Skyline.SettingsUI
                 dictValues.RemoveAll(match => !match.Value.MatchesFilterSettings);
                 dictCopy = dictValues.ToDictionary(match => match.Key, match => match.Value);
             }
-            SrmDocument newDocument = UpdateExistingPeptides(document, ref dictCopy, toPath, out selectedPath);
+            SrmDocument newDocument = UpdateExistingPeptides(document, dictCopy, toPath, out selectedPath);
             toPath = selectedPath;
 
             // If there is an associated background proteome, add peptides that can be
@@ -354,7 +355,7 @@ namespace pwiz.Skyline.SettingsUI
         /// <param name="selectedPath">Selected path after the nodes have been added</param>
         /// <returns>A new document with precursors for existing petides added</returns>
         private SrmDocument UpdateExistingPeptides(SrmDocument document,
-            ref Dictionary<PeptideSequenceModKey, PeptideMatch> dictCopy,
+            Dictionary<PeptideSequenceModKey, PeptideMatch> dictCopy,
             IdentityPath toPath, out IdentityPath selectedPath)
         {
             selectedPath = toPath;
