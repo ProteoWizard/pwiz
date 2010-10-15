@@ -69,6 +69,7 @@
     <Compile Include="LossesTest.cs" />
     <Compile Include="PasteTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Results\FullScanTest.cs" />
     <Compile Include="TransitionSettings07Test.cs" />
     <Compile Include="VariableModTest.cs" />
   </ItemGroup>
@@ -84,6 +85,9 @@
       <Project>{1A76F2B4-353A-4BCF-9D15-70D4B387E480}</Project>
       <Name>TestUtil</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Results\FullScan.zip" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

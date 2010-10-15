@@ -1153,6 +1153,16 @@ namespace pwiz.Skyline.Model.DocSettings
         #endregion
     }
 
+// ReSharper disable InconsistentNaming
+    public enum FullScanPrecursorFilterType { None, Single, Multiple }
+// ReSharper restore InconsistentNaming
+
+    public sealed class FullScanProductFilterType
+    {
+        public const string LOW_ACCURACY = "Low Accuracy";
+        public const string HIGH_ACCURACY = "High Accuracy";
+    }
+
     [XmlRoot("transition_instrument")]
     public sealed class TransitionInstrument : Immutable, IValidating, IXmlSerializable
     {
@@ -1164,6 +1174,23 @@ namespace pwiz.Skyline.Model.DocSettings
         public const double DEFAULT_MZ_MATCH_TOLERANCE = 0.055;
         public const int MIN_TRANSITION_MAX = 50;
         public const int MAX_TRANSITION_MAX = 10000;
+        // Calculate precursor single filter window values by doubling match tolerance values
+        public const double MIN_PRECURSOR_SINGLE_FILTER = MIN_MZ_MATCH_TOLERANCE*2;
+        public const double MAX_PRECURSOR_SINGLE_FILTER = MAX_MZ_MATCH_TOLERANCE*2;
+        public const double DEFAULT_PRECURSOR_SINGLE_FILTER = DEFAULT_MZ_MATCH_TOLERANCE*2;
+        public const double MIN_PRECURSOR_MULTI_FILTER = 1.0;
+        public const double MAX_PRECURSOR_MULTI_FILTER = 10000;
+        public const double DEFAULT_PRECURSOR_MULTI_FILTER = 2.0;
+        // Calculate product low accuracy filter window values by doubling ion match tolerance values
+        public const double MIN_PRODUCT_LO_FILTER = TransitionLibraries.MIN_MATCH_TOLERANCE*2;
+        public const double MAX_PRODUCT_LO_FILTER = TransitionLibraries.MAX_MATCH_TOLERANCE*2;
+        public const double DEFAULT_PRODUCT_LO_FILTER = 1.0;
+        public const double MIN_PRODUCT_HI_FILTER = 0.01;
+        public const double MAX_PRODUCT_HI_FILTER = 100.0;
+        public const double DEFAULT_PRODUCT_HI_FILTER = 5;
+        public const string UNITS_LOW_ACCURACY = "Th";
+        public const string UNITS_HIGH_ACCURACY = "ppm";
+
 
         public static double GetThermoDynamicMin(double precursorMz)
         {
@@ -1172,12 +1199,30 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public TransitionInstrument(int minMz, int maxMz, bool isDynamicMin, double mzMatchTolerance, int? maxTransitions)
+            : this(minMz, maxMz, isDynamicMin, mzMatchTolerance, maxTransitions,
+                FullScanPrecursorFilterType.None, null, null, null)
+        {
+        }
+
+        public TransitionInstrument(int minMz,
+                                    int maxMz,
+                                    bool isDynamicMin,
+                                    double mzMatchTolerance,
+                                    int? maxTransitions,
+                                    FullScanPrecursorFilterType precursorFilterType,
+                                    double? precursorFilter,
+                                    string productFilterType,
+                                    double? productFilter)
         {
             MinMz = minMz;
             MaxMz = maxMz;
             IsDynamicMin = isDynamicMin;
             MzMatchTolerance = mzMatchTolerance;
             MaxTransitions = maxTransitions;
+            PrecursorFilterType = precursorFilterType;
+            PrecursorFilter = precursorFilter;
+            ProductFilterType = productFilterType;
+            ProductFilter = productFilter;
 
             DoValidate();
         }
@@ -1215,6 +1260,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public int? MaxTransitions { get; private set; }
 
+        public FullScanPrecursorFilterType PrecursorFilterType { get; private set; }
+
+        public double? PrecursorFilter { get; private set; }
+
+        public string ProductFilterType { get; private set; }
+
+        public double? ProductFilter { get; private set; }
+
         #region Property change methods
 
         public TransitionInstrument ChangeMinMz(int prop)
@@ -1242,6 +1295,24 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.MaxTransitions = prop);
         }
 
+        public TransitionInstrument ChangePrecursorFilter(FullScanPrecursorFilterType typeProp, double prop)
+        {
+            return ChangeProp(ImClone(this), im =>
+                                                 {
+                                                     im.PrecursorFilterType = typeProp;
+                                                     im.PrecursorFilter = prop;
+                                                 });
+        }
+
+        public TransitionInstrument ChangeProductFilter(string typeProp, double prop)
+        {
+            return ChangeProp(ImClone(this), im =>
+                                                 {
+                                                     im.ProductFilterType = typeProp;
+                                                     im.ProductFilter = prop;
+                                                 });
+        }
+
         #endregion
 
         #region Implementation of IXmlSerializable
@@ -1259,7 +1330,11 @@ namespace pwiz.Skyline.Model.DocSettings
             max_mz,
             dynamic_min,
             mz_match_tolerance,
-            max_transitions
+            max_transitions,
+            precursor_filter_type,
+            precursor_filter,
+            product_filter_type,
+            product_filter
         }
 
         void IValidating.Validate()
@@ -1294,6 +1369,51 @@ namespace pwiz.Skyline.Model.DocSettings
                 throw new InvalidDataException(string.Format("The maximum number of transitions {0} must be between {1} and {2}.",
                     MaxTransitions, MIN_TRANSITION_MAX, MAX_TRANSITION_MAX));
             }
+            if (PrecursorFilterType == FullScanPrecursorFilterType.None)
+            {
+                if (ProductFilterType != null || PrecursorFilter.HasValue || ProductFilter.HasValue)
+                    throw new InvalidDataException(string.Format("No other full-scan MS/MS filter settings are allowed when precursor filter is none."));
+            }
+            else
+            {
+                double minFilter, maxFilter;
+                if (PrecursorFilterType == FullScanPrecursorFilterType.Single)
+                {
+                    minFilter = MIN_PRECURSOR_SINGLE_FILTER;
+                    maxFilter = MAX_PRECURSOR_SINGLE_FILTER;
+                }
+                else
+                {
+                    minFilter = MIN_PRECURSOR_MULTI_FILTER;
+                    maxFilter = MAX_PRECURSOR_MULTI_FILTER;
+                }
+                if (!PrecursorFilter.HasValue || minFilter > PrecursorFilter || PrecursorFilter > maxFilter)
+                    throw new InvalidDataException(string.Format("The precursor m/z filter must be between {0} and {1}",
+                        minFilter, maxFilter));
+
+                string unitAbrev;
+                if (Equals(ProductFilterType, FullScanProductFilterType.LOW_ACCURACY))
+                {
+                    minFilter = MIN_PRODUCT_LO_FILTER;
+                    maxFilter = MAX_PRODUCT_LO_FILTER;
+                    unitAbrev = UNITS_LOW_ACCURACY;
+                }
+                else if (Equals(ProductFilterType, FullScanProductFilterType.HIGH_ACCURACY))
+                {
+                    minFilter = MIN_PRODUCT_HI_FILTER;
+                    maxFilter = MAX_PRODUCT_HI_FILTER;
+                    unitAbrev = UNITS_HIGH_ACCURACY;
+                }
+                else
+                {
+                    throw new InvalidDataException(string.Format("The product filter type must be either '{0}' or '{1}'.",
+                        FullScanProductFilterType.LOW_ACCURACY,
+                        FullScanProductFilterType.HIGH_ACCURACY));
+                }
+                if (!ProductFilter.HasValue || minFilter > ProductFilter || ProductFilter > maxFilter)
+                    throw new InvalidDataException(string.Format("The product m/z filter must be between {0} and {1} {2}",
+                        minFilter, maxFilter, unitAbrev));
+            }
         }
 
         public static TransitionInstrument Deserialize(XmlReader reader)
@@ -1315,6 +1435,23 @@ namespace pwiz.Skyline.Model.DocSettings
             MzMatchTolerance = reader.GetDoubleAttribute(ATTR.mz_match_tolerance, DEFAULT_MZ_MATCH_TOLERANCE);
             MaxTransitions = reader.GetNullableIntAttribute(ATTR.max_transitions);
 
+            // Full-scan filter parameters
+            PrecursorFilterType = reader.GetEnumAttribute(ATTR.precursor_filter_type,
+                                                          FullScanPrecursorFilterType.None);
+            if (PrecursorFilterType != FullScanPrecursorFilterType.None)
+            {
+                PrecursorFilter = reader.GetDoubleAttribute(ATTR.precursor_filter,
+                    PrecursorFilterType == FullScanPrecursorFilterType.Single ?
+                    DEFAULT_PRECURSOR_SINGLE_FILTER : DEFAULT_PRECURSOR_MULTI_FILTER);
+
+                ProductFilterType = reader.GetAttribute(ATTR.product_filter_type);
+                if (ProductFilterType == null)
+                    ProductFilterType = FullScanProductFilterType.LOW_ACCURACY;
+                ProductFilter = reader.GetDoubleAttribute(ATTR.product_filter,
+                    Equals(ProductFilterType, FullScanProductFilterType.LOW_ACCURACY) ?
+                        DEFAULT_PRODUCT_LO_FILTER : DEFAULT_PRODUCT_HI_FILTER);
+            }
+
             // Consume tag
             reader.Read();
 
@@ -1329,6 +1466,13 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttribute(ATTR.max_mz, MaxMz);
             writer.WriteAttribute(ATTR.mz_match_tolerance, MzMatchTolerance);
             writer.WriteAttributeNullable(ATTR.max_transitions, MaxTransitions);
+            if (PrecursorFilterType != FullScanPrecursorFilterType.None)
+            {
+                writer.WriteAttribute(ATTR.precursor_filter_type, PrecursorFilterType);
+                writer.WriteAttribute(ATTR.precursor_filter, PrecursorFilter);
+                writer.WriteAttribute(ATTR.product_filter_type, ProductFilterType);
+                writer.WriteAttribute(ATTR.product_filter, ProductFilter);
+            }
         }
 
         #endregion
@@ -1341,9 +1485,13 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(this, other)) return true;
             return other.MinMz == MinMz &&
                 other.MaxMz == MaxMz &&
-                other.IsDynamicMin == IsDynamicMin &&
-                other.MzMatchTolerance == MzMatchTolerance &&
-                other.MaxTransitions.Equals(MaxTransitions);
+                other.IsDynamicMin.Equals(IsDynamicMin) &&
+                other.MzMatchTolerance.Equals(MzMatchTolerance) &&
+                other.MaxTransitions.Equals(MaxTransitions) &&
+                Equals(other.PrecursorFilterType, PrecursorFilterType) &&
+                other.PrecursorFilter.Equals(PrecursorFilter) &&
+                Equals(other.ProductFilterType, ProductFilterType) &&
+                other.ProductFilter.Equals(ProductFilter);
         }
 
         public override bool Equals(object obj)
@@ -1363,6 +1511,10 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ IsDynamicMin.GetHashCode();
                 result = (result*397) ^ MzMatchTolerance.GetHashCode();
                 result = (result*397) ^ (MaxTransitions.HasValue ? MaxTransitions.Value : 0);
+                result = (result*397) ^ PrecursorFilterType.GetHashCode();
+                result = (result*397) ^ (PrecursorFilter.HasValue ? PrecursorFilter.Value.GetHashCode() : 0);
+                result = (result*397) ^ (ProductFilterType != null ? ProductFilterType.GetHashCode() : 0);
+                result = (result*397) ^ (ProductFilter.HasValue ? ProductFilter.Value.GetHashCode() : 0);
                 return result;
             }
         }

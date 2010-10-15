@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
@@ -104,12 +103,35 @@ namespace pwiz.Skyline.SettingsUI
             textMzMatchTolerance.Text = Instrument.MzMatchTolerance.ToString();
             if (Instrument.MaxTransitions.HasValue)
                 textMaxTrans.Text = Instrument.MaxTransitions.Value.ToString();
+            comboPrecursorFilterType.Items.AddRange(
+                new[]
+                    {
+                        FullScanPrecursorFilterType.None.ToString(),
+                        FullScanPrecursorFilterType.Single.ToString(),
+                        FullScanPrecursorFilterType.Multiple.ToString()
+                    });
+            comboProductFilterType.Items.AddRange(
+                new[]
+                    {
+                        FullScanProductFilterType.LOW_ACCURACY,
+                        FullScanProductFilterType.HIGH_ACCURACY
+                    });
+            comboPrecursorFilterType.SelectedItem = Instrument.PrecursorFilterType.ToString();
         }
 
         public TransitionPrediction Prediction { get { return _transitionSettings.Prediction; } }
         public TransitionFilter Filter { get { return _transitionSettings.Filter; } }
         public TransitionLibraries Libraries { get { return _transitionSettings.Libraries; } }
         public TransitionInstrument Instrument { get { return _transitionSettings.Instrument; } }
+
+        public FullScanPrecursorFilterType PrecursorFilterTypeCurrent
+        {
+            get
+            {
+                return Helpers.ParseEnum((string)comboPrecursorFilterType.SelectedItem,
+                    FullScanPrecursorFilterType.None);
+            }
+        }
 
         protected override void OnShown(EventArgs e)
         {
@@ -261,7 +283,47 @@ namespace pwiz.Skyline.SettingsUI
                 maxTrans = maxTransTemp;
             }
 
-            TransitionInstrument instrument = new TransitionInstrument(minMz, maxMz, isDynamicMin, mzMatchTolerance, maxTrans);
+            var precursorFilterType = PrecursorFilterTypeCurrent;
+            TransitionInstrument instrument;
+            if (precursorFilterType == FullScanPrecursorFilterType.None)
+                instrument = new TransitionInstrument(minMz, maxMz, isDynamicMin, mzMatchTolerance, maxTrans);
+            else
+            {
+                double precursorFilter, minFilt, maxFilt;
+                if (precursorFilterType == FullScanPrecursorFilterType.Single)
+                {
+                    minFilt = TransitionInstrument.MIN_PRECURSOR_SINGLE_FILTER;
+                    maxFilt = TransitionInstrument.MAX_PRECURSOR_SINGLE_FILTER;                    
+                }
+                else
+                {
+                    minFilt = TransitionInstrument.MIN_PRECURSOR_MULTI_FILTER;
+                    maxFilt = TransitionInstrument.MAX_PRECURSOR_MULTI_FILTER;
+                }
+                if (!helper.ValidateDecimalTextBox(e, tabControl1, (int)TABS.Instrument, textPrecursorFilterMz,
+                        minFilt, maxFilt, out precursorFilter))
+                    return;
+
+                double productFilter;
+                string productFilterType = (string) comboProductFilterType.SelectedItem;
+                if (Equals(productFilterType, FullScanProductFilterType.LOW_ACCURACY))
+                {
+                    minFilt = TransitionInstrument.MIN_PRODUCT_LO_FILTER;
+                    maxFilt = TransitionInstrument.MAX_PRODUCT_LO_FILTER;
+                }
+                else
+                {
+                    minFilt = TransitionInstrument.MIN_PRODUCT_HI_FILTER;
+                    maxFilt = TransitionInstrument.MAX_PRODUCT_HI_FILTER;
+                }
+                if (!helper.ValidateDecimalTextBox(e, tabControl1, (int)TABS.Instrument, textProductFilterMz,
+                        minFilt, maxFilt, out productFilter))
+                    return;
+
+                instrument = new TransitionInstrument(minMz, maxMz, isDynamicMin, mzMatchTolerance, maxTrans,
+                    precursorFilterType, precursorFilter, productFilterType, productFilter);
+            }            
+
             Helpers.AssignIfEquals(ref instrument, Instrument);
 
             TransitionSettings settings = new TransitionSettings(prediction,
@@ -340,6 +402,72 @@ namespace pwiz.Skyline.SettingsUI
         private void btnEditSpecialTransitions_Click(object sender, EventArgs e)
         {
             _driverIons.EditList();
+        }
+
+        private void comboPrecursorFilterType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var precursorFilterType = PrecursorFilterTypeCurrent;
+            if (precursorFilterType == FullScanPrecursorFilterType.None)
+            {
+                textPrecursorFilterMz.Text = "";
+                textPrecursorFilterMz.Enabled = false;
+                // Selection change should set filter m/z textbox correctly
+                comboProductFilterType.SelectedIndex = -1;
+                comboProductFilterType.Enabled = false;
+            }
+            else
+            {
+                if (precursorFilterType == Instrument.PrecursorFilterType)
+                {
+                    textPrecursorFilterMz.Text = Instrument.PrecursorFilter.ToString();
+                    if (!textPrecursorFilterMz.Enabled)
+                        comboProductFilterType.SelectedItem = Instrument.ProductFilterType;
+                }
+                else
+                {
+                    if (precursorFilterType == FullScanPrecursorFilterType.Multiple)
+                        textPrecursorFilterMz.Text = TransitionInstrument.DEFAULT_PRECURSOR_MULTI_FILTER.ToString();
+                    else
+                    {
+                        double precursorFilter;
+                        if (double.TryParse(textMzMatchTolerance.Text, out precursorFilter))
+                            precursorFilter *= 2;
+                        else
+                            precursorFilter = TransitionInstrument.DEFAULT_PRECURSOR_SINGLE_FILTER;
+                        textPrecursorFilterMz.Text = precursorFilter.ToString();
+                    }
+                    if (!textPrecursorFilterMz.Enabled)
+                        comboProductFilterType.SelectedItem = FullScanProductFilterType.LOW_ACCURACY;
+                }
+                textPrecursorFilterMz.Enabled = true;
+                comboProductFilterType.Enabled = true;
+            }
+            
+        }
+
+        private void comboProductFilterType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            string productFilterType = (string) comboProductFilterType.SelectedItem;
+            if (productFilterType == null)
+            {
+                textProductFilterMz.Enabled = false;
+                textProductFilterMz.Text = "";
+                labelProductFilter.Text = TransitionInstrument.UNITS_LOW_ACCURACY;
+            }
+            else
+            {
+                textProductFilterMz.Enabled = true;
+                if (Equals(productFilterType, Instrument.ProductFilterType))
+                    textProductFilterMz.Text = Instrument.ProductFilter.ToString();
+                else if (Equals(productFilterType, FullScanProductFilterType.LOW_ACCURACY))
+                    textProductFilterMz.Text = TransitionInstrument.DEFAULT_PRODUCT_LO_FILTER.ToString();
+                else
+                    textProductFilterMz.Text = TransitionInstrument.DEFAULT_PRODUCT_HI_FILTER.ToString();
+                if (Equals(productFilterType, FullScanProductFilterType.LOW_ACCURACY))
+                    labelProductFilter.Text = TransitionInstrument.UNITS_LOW_ACCURACY;
+                else
+                    labelProductFilter.Text = TransitionInstrument.UNITS_HIGH_ACCURACY;
+            }
         }
 
         private void btnOk_Click(object sender, EventArgs e)

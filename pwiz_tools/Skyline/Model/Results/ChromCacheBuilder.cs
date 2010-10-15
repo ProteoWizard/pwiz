@@ -174,10 +174,11 @@ namespace pwiz.Skyline.Model.Results
 
                             // Read and write the mass spec data
                             ChromDataProvider provider;
-                            if (inFile.ChromatogramCount > 0)
+                            // Many files have just one TIC chromatogram
+                            if (inFile.ChromatogramCount > 1)
                                 provider = CreateChromatogramProvider(inFile, _tempFileSubsitute == null);
                             else if (inFile.SpectrumCount > 0)
-                                provider = CreateSpectraChromProvider(inFile);
+                                provider = CreateSpectraChromProvider(inFile, _document);
                             else
                             {
                                 throw new InvalidDataException(String.Format("The sample {0} contains no usable data.",
@@ -465,13 +466,13 @@ namespace pwiz.Skyline.Model.Results
             return new ChromatogramDataProvider(dataFile, throwIfSlow, _status, StartPercent, EndPercent, _loader);
         }
 
-        private SpectraChromDataProvider CreateSpectraChromProvider(MsDataFileImpl dataFile)
+        private SpectraChromDataProvider CreateSpectraChromProvider(MsDataFileImpl dataFile, SrmDocument document)
         {
             // If this is a performance work-around, then make sure the progress indicator
             // does not jump backward perceptibly.
             int startPercent = (_tempFileSubsitute != null ? (StartPercent + EndPercent)/2 : StartPercent);
                 
-            return new SpectraChromDataProvider(dataFile, _status, startPercent, EndPercent, _loader);
+            return new SpectraChromDataProvider(dataFile, document, _status, startPercent, EndPercent, _loader);
         }
 
         private void PostChromDataSet(PeptideChromDataSets chromDataSet, bool complete)

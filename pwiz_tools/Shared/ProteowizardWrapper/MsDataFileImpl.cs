@@ -336,12 +336,13 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
-        public bool GetSrmSpectrum(int scanIndex, out double? time, out double? precursorMz,
-            out double[] mzArray, out double[] intensityArray)
+        public bool GetSrmSpectrum(int scanIndex, bool fullScanAllowed,
+            out double? time, out double? precursorMz, out double[] mzArray, out double[] intensityArray)
         {
             using (var spectrum = SpectrumList.spectrum(scanIndex, true))
             {
-                if (!spectrum.hasCVParam(CVID.MS_SRM_spectrum))
+                bool isSrm = spectrum.hasCVParam(CVID.MS_SRM_spectrum);
+                if (spectrum.cvParam(CVID.MS_ms_level).value != 2 || (!fullScanAllowed && !isSrm))
                 {
                     time = null;
                     precursorMz = null;
@@ -349,14 +350,12 @@ namespace pwiz.ProteowizardWrapper
                     intensityArray = null;
                     return false;
                 }
-                else
-                {
-                    time = GetStartTime(spectrum);
-                    precursorMz = GetPrecursorMz(spectrum);
-                    mzArray = ToArray(spectrum.getMZArray().data);
-                    intensityArray = ToArray(spectrum.getIntensityArray().data);
-                    return true;
-                }
+
+                time = GetStartTime(spectrum);
+                precursorMz = GetPrecursorMz(spectrum);
+                mzArray = ToArray(spectrum.getMZArray().data);
+                intensityArray = ToArray(spectrum.getIntensityArray().data);
+                return isSrm;
             }
         }
 

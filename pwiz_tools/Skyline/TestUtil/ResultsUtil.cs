@@ -21,9 +21,8 @@ using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
-using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest.Results
+namespace pwiz.SkylineTestUtil
 {
     public class ResultsTestDocumentContainer : TestDocumentContainer
     {
@@ -58,13 +57,17 @@ namespace pwiz.SkylineTest.Results
             document.Settings.MeasuredResults.TryGetChromatogramSet(replicateName, out chromatogramSet, out index);
             int peptidesActual = 0;
             foreach (var nodePep in document.Peptides)
-                peptidesActual += nodePep.Results[index][0].PeakCountRatio >= 0.5 ? 1 : 0;
+            {
+                if (nodePep.Results[index] != null)
+                    peptidesActual += nodePep.Results[index][0].PeakCountRatio >= 0.5 ? 1 : 0;
+            }
             Assert.AreEqual(peptides, peptidesActual);
             int tranGroupsActual = 0;
             int tranGroupsHeavyActual = 0;
             foreach (var nodeGroup in document.TransitionGroups)
             {
-                if (nodeGroup.Results[index][0].PeakCountRatio < 0.5)
+                if (nodeGroup.Results[index] == null ||
+                        nodeGroup.Results[index][0].PeakCountRatio < 0.5)
                     continue;
 
                 if (nodeGroup.TransitionGroup.LabelType.IsLight)
@@ -78,7 +81,8 @@ namespace pwiz.SkylineTest.Results
             int transitionsHeavyActual = 0;
             foreach (var nodeTran in document.Transitions)
             {
-                if (nodeTran.Results[index][0].Area == 0)
+                if (nodeTran.Results[index] == null ||
+                        nodeTran.Results[index][0].Area == 0)
                     continue;
 
                 if (nodeTran.Transition.Group.LabelType.IsLight)

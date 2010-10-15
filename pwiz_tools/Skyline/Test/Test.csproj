@@ -83,7 +83,6 @@
     <Compile Include="Reporting\PivotTypeTest.cs" />
     <Compile Include="Reporting\ReportTest.cs" />
     <Compile Include="Results\AgilentMixTest.cs" />
-    <Compile Include="Results\ResultsUtil.cs" />
     <Compile Include="Results\SmallWiffTest.cs" />
     <Compile Include="Results\ThermoQuantTest.cs" />
     <Compile Include="Results\WatersCalcurveTest.cs" />

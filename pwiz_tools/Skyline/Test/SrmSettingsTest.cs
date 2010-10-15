@@ -739,7 +739,21 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"10\" max_mz=\"5000\" mz_match_tolerance=\"0.4\"/>");
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"10\" max_mz=\"5000\" mz_match_tolerance=\"0.001\"/>");
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"10\" max_mz=\"5000\" dynamic_min=\"true\"/>");
-
+            AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"None\"/>");
+            AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Single + "\"/>");  // Use defaults
+            AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Multiple + "\"/>");  // Use defaults
+            AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\" product_filter_type=\""+
+                FullScanProductFilterType.LOW_ACCURACY + "\" product_filter=\"1\"/>");
+            AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"2\" product_filter_type=\"" +
+                FullScanProductFilterType.HIGH_ACCURACY + "\" product_filter=\"10\"/>");
+            // Ignore extra filter values when None specified for precursor filter type
+            AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.None + "\" precursor_filter=\"0.11\" product_filter_type=\"" +
+                FullScanProductFilterType.LOW_ACCURACY + "\" product_filter=\"1\"/>");
 
             // Empty element
             AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument />");
@@ -749,6 +763,36 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"10\" max_mz=\"5000\" mz_match_tolerance=\"0\"/>");
             AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"10\" max_mz=\"5000\" mz_match_tolerance=\"0.65\"/>");
             AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"10\" max_mz=\"5000\" dynamic_min=\"maybe\"/>");
+            // Full-scan MS/MS filtering
+            AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\" product_filter_type=\"Unknown\" product_filter=\"1\"/>");
+            AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
+                "Unknown" + "\" precursor_filter=\"0.11\" product_filter_type=\"" +
+                FullScanProductFilterType.LOW_ACCURACY + "\" product_filter=\"1\"/>");
+            AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"" + TransitionInstrument.MAX_PRECURSOR_SINGLE_FILTER*2 + "\" product_filter_type=\"" +
+                FullScanProductFilterType.LOW_ACCURACY + "\" product_filter=\"1\"/>");
+            AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"" + TransitionInstrument.MIN_PRECURSOR_SINGLE_FILTER/2 + "\" product_filter_type=\"" +
+                FullScanProductFilterType.LOW_ACCURACY + "\" product_filter=\"1\"/>");
+            AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"" + TransitionInstrument.MAX_PRECURSOR_MULTI_FILTER*2 + "\" product_filter_type=\"" +
+                FullScanProductFilterType.LOW_ACCURACY + "\" product_filter=\"1\"/>");
+            AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"" + TransitionInstrument.MIN_PRECURSOR_MULTI_FILTER/2 + "\" product_filter_type=\"" +
+                FullScanProductFilterType.LOW_ACCURACY + "\" product_filter=\"1\"/>");
+            AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\" product_filter_type=\"" +
+                FullScanProductFilterType.LOW_ACCURACY + "\" product_filter=\"" + TransitionInstrument.MAX_PRODUCT_LO_FILTER*2 + "\"/>");
+            AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\" product_filter_type=\"" +
+                FullScanProductFilterType.LOW_ACCURACY + "\" product_filter=\"" + TransitionInstrument.MIN_PRODUCT_LO_FILTER/2 + "\"/>");
+            AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\" product_filter_type=\"" +
+                FullScanProductFilterType.HIGH_ACCURACY + "\" product_filter=\"" + TransitionInstrument.MAX_PRODUCT_HI_FILTER*2 + "\"/>");
+            AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\" product_filter_type=\"" +
+                FullScanProductFilterType.HIGH_ACCURACY + "\" product_filter=\"" + TransitionInstrument.MIN_PRODUCT_HI_FILTER/2 + "\"/>");
         }
 
         private static void CheckSettingsList<TItem>(SettingsList<TItem> target, SettingsList<TItem> copy)
