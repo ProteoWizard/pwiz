@@ -336,11 +336,7 @@ bool unbalancedQuote(const string& buffer)
         pos = find_if(pos+1, buffer.end(), stop_cond);
         
         if (pos != buffer.end())
-        {
-            if (*(pos-1) != '\\')
-                quoteCount++;
-        }
-            
+            quoteCount++;            
     }
     
     return ((quoteCount%2)!=0); // need explicit bool operation to quiet some compilers
