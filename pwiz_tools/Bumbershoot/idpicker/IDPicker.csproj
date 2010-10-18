@@ -228,7 +228,6 @@
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <Compile Include="Settings.cs" />
     <Compile Include="Util\ExtensionMethods.cs" />
     <Compile Include="Util\Path.cs" />
     <Compile Include="Util\String.cs" />
