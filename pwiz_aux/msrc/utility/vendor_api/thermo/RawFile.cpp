@@ -42,6 +42,9 @@
 #include "pwiz/utility/misc/Once.hpp"
 #include "pwiz/utility/misc/ClickwrapPrompter.hpp"
 #include <boost/bind.hpp>
+#include <boost/spirit/include/qi.hpp>
+#include <boost/spirit/include/phoenix.hpp>
+
 #include <windows.h> // GetModuleFileName
 
 using namespace pwiz::vendor_api::Thermo;
@@ -125,6 +128,8 @@ class RawFileImpl : public RawFile
     virtual ScanType getScanType(long scanNumber);
     virtual ScanFilterMassAnalyzerType getMassAnalyzerType(long scanNumber);
     virtual ActivationType getActivationType(long scanNumber);
+    virtual double getIsolationWidth(int scanSegment, int scanEvent);
+    virtual double getDefaultIsolationWidth(int scanSegment, int msLevel);
 
     virtual ErrorLogItem getErrorLogItem(long itemNumber);
     virtual auto_ptr<LabelValueArray> getTuneData(long segmentNumber);
@@ -160,6 +165,12 @@ class RawFileImpl : public RawFile
     vector<IonizationType> ionSources_;
     vector<MassAnalyzerType> massAnalyzers_;
     vector<DetectorType> detectors_;
+
+    map<int, map<int, double> > defaultIsolationWidthBySegmentAndMsLevel;
+    map<int, map<int, double> > isolationWidthBySegmentAndScanEvent;
+
+    once_flag_proxy instrumentMethodParsed_;
+    void parseInstrumentMethod();
 };
 
 
@@ -191,7 +202,8 @@ PWIZ_API_DECL RawFilePtr RawFile::create(const string& filename)
 RawFileImpl::RawFileImpl(const string& filename)
 :   raw_(NULL),
     filename_(filename),
-    instrumentModel_(InstrumentModelType_Unknown)
+    instrumentModel_(InstrumentModelType_Unknown),
+    instrumentMethodParsed_(init_once_flag_proxy)
 {
     // XRawfile requires '.' as a decimal separator
     int decimalSeparatorLength = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, 0, 0);
@@ -1254,6 +1266,122 @@ ActivationType RawFileImpl::getActivationType(long scanNumber)
 }
 
 
+void RawFileImpl::parseInstrumentMethod()
+{
+    using boost::spirit::qi::phrase_parse;
+    using boost::spirit::qi::double_;
+    using boost::spirit::qi::int_;
+    using boost::spirit::qi::_1;
+    using boost::spirit::qi::_2;
+    using boost::phoenix::ref;
+    using boost::spirit::ascii::space;
+
+    string instrumentMethods;
+
+    auto_ptr<LabelValueArray> labelValueArray = getInstrumentMethods();
+    for (int i=0; i < labelValueArray->size(); ++i)
+        instrumentMethods += labelValueArray->value(i) + "\n";
+
+    int scanSegment = 1, scanEvent;
+    double isolationWidth;
+    bool scanEventDetails = false;
+    bool dataDependentSettings = false;
+
+    string line;
+    istringstream instrumentMethodStream(instrumentMethods);
+    while (std::getline(instrumentMethodStream, line))
+    {
+        string::const_iterator start = line.begin(), end = line.end();
+
+        if (phrase_parse(start, end, "Segment " >> int_[ref(scanSegment) = _1] >> " Information", space))
+            continue;
+
+        // Scan Event Details:
+        if (bal::icontains(line, "Scan Event Details"))
+        {
+            scanEventDetails = true;
+            continue;
+        }
+
+        if (scanEventDetails)
+        {
+            // 2:  ITMS + c norm Dep MS/MS Most intense ion from (1)
+            //       ...
+            //       Isolation Width:         2.5
+            //       ...
+            if (phrase_parse(start, end, int_[ref(scanEvent) = _1] >> ':', space))
+                continue;
+
+            if (phrase_parse(start, end, "Isolation Width:" >> double_[ref(isolationWidth) = _1], space))
+            {
+                isolationWidthBySegmentAndScanEvent[scanSegment][scanEvent] = isolationWidth;
+                continue;
+            }
+
+            // Scan Event M repeated for top N peaks
+            int repeatedEvent, repeatCount;
+            if (phrase_parse(start, end,
+                             "Scan Event " >> int_[ref(repeatedEvent) = _1] >>
+                             " repeated for top " >> int_[ref(repeatCount) = _1], space))
+            {
+                double repeatedIsolationWidth = isolationWidthBySegmentAndScanEvent[scanSegment][repeatedEvent];
+                for (int i = repeatedEvent + 1; i < repeatedEvent + repeatCount; ++i)
+                    isolationWidthBySegmentAndScanEvent[scanSegment][i] = repeatedIsolationWidth;
+                continue;
+            }
+
+            if (bal::all(line, bal::is_space()))
+                scanEventDetails = false;
+        }
+
+        // Data Dependent Settings:
+        if (bal::icontains(line, "Data Dependent Settings"))
+        {
+            dataDependentSettings = true;
+            continue;
+        }
+
+        if (dataDependentSettings)
+        {
+            // MSn Isolation Width:       2.5
+            double isolationWidth;
+            if (phrase_parse(start, end,
+                             "MS" >> int_[ref(scanEvent) = _1] >>
+                             "Isolation Width:" >> double_[ref(isolationWidth) = _1], space))
+            {
+                defaultIsolationWidthBySegmentAndMsLevel[scanSegment][scanEvent] = isolationWidth;
+                continue;
+            }
+
+            if (bal::all(line, bal::is_space()))
+                dataDependentSettings = false;
+        }
+    }
+}
+
+
+double RawFileImpl::getIsolationWidth(int scanSegment, int scanEvent)
+{
+    boost::call_once(instrumentMethodParsed_.flag, boost::bind(&RawFileImpl::parseInstrumentMethod, this));
+
+    if (isolationWidthBySegmentAndScanEvent.count(scanSegment) > 0 &&
+        isolationWidthBySegmentAndScanEvent[scanSegment].count(scanEvent) > 0)
+        return isolationWidthBySegmentAndScanEvent[scanSegment][scanEvent];
+    return 0.0;
+}
+
+
+double RawFileImpl::getDefaultIsolationWidth(int scanSegment, int msLevel)
+{
+    boost::call_once(instrumentMethodParsed_.flag, boost::bind(&RawFileImpl::parseInstrumentMethod, this));
+
+    if (defaultIsolationWidthBySegmentAndMsLevel.count(scanSegment) > 0 &&
+        defaultIsolationWidthBySegmentAndMsLevel[scanSegment].count(msLevel) > 0)
+        return defaultIsolationWidthBySegmentAndMsLevel[scanSegment][msLevel];
+    return 0.0;
+}
+
+
 ErrorLogItem RawFileImpl::getErrorLogItem(long itemNumber)
 {
     ErrorLogItem result;
@@ -1364,7 +1492,7 @@ class InstrumentMethodLabelValueArray : public LabelValueArray
         _bstr_t bstr;
         HRESULT hr = raw_->GetInstMethod(index, bstr.GetAddress());
         if (hr)
-            throw RawEgg("InstrumentMethodLabelValueArray: error");
+            return string(); // empty value
         return (const char*)(bstr);
     }
 

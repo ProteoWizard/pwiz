@@ -132,6 +132,24 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
 
     msd.id = bfs::basename(p);
 
+    /*SamplePtr samplePtr(new Sample("sample"));
+    for (int i=0; i < (int) ValueID_Double_Count; ++i)
+        if (rawfile.value((ValueID_Double) i) > 0)
+            samplePtr->userParams.push_back(UserParam(rawfile.name((ValueID_Double) i),
+                                                      lexical_cast<string>(rawfile.value((ValueID_Double) i)),
+                                                      "xsd:double"));
+    for (int i=0; i < (int) ValueID_Long_Count; ++i)
+        if (rawfile.value((ValueID_Long) i) > 0)
+            samplePtr->userParams.push_back(UserParam(rawfile.name((ValueID_Long) i),
+                                                      lexical_cast<string>(rawfile.value((ValueID_Long) i)),
+                                                      "xsd:long"));
+    for (int i=0; i < (int) ValueID_String_Count; ++i)
+        if (!rawfile.value((ValueID_String) i).empty())
+            samplePtr->userParams.push_back(UserParam(rawfile.name((ValueID_String) i),
+                                                      rawfile.value((ValueID_String) i),
+                                                      "xsd:string"));
+    msd.samplePtrs.push_back(samplePtr);*/
+
     SoftwarePtr softwareXcalibur(new Software);
     softwareXcalibur->id = "Xcalibur";
     softwareXcalibur->set(MS_Xcalibur);

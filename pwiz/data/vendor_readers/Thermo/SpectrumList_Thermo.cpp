@@ -68,10 +68,23 @@ SpectrumList_Thermo::SpectrumList_Thermo(const MSData& msd, RawFilePtr rawfile)
             {
                 rawfile_->setCurrentController((ControllerType) controllerType, n);
                 long numSpectra = rawfile_->value(NumSpectra);
-                for (long scan=1; scan <= numSpectra; ++scan)
+                switch (controllerType)
                 {
-                    ++spectraByScanType[rawfile_->getScanType(scan)];
-                    ++spectraByMSOrder[rawfile_->getMSOrder(scan)+3];
+                    case Controller_MS:
+                    {
+                        for (long scan=1; scan <= numSpectra; ++scan)
+                        {
+                            ++spectraByScanType[rawfile_->getScanType(scan)];
+                            ++spectraByMSOrder[rawfile_->getMSOrder(scan)+3];
+                        }
+                    }
+                    break;
+
+                    case Controller_PDA:
+                        size_ += numSpectra;
+                        break;
+
+                    default: break;
                 }
             }
         }
@@ -81,10 +94,10 @@ SpectrumList_Thermo::SpectrumList_Thermo(const MSData& msd, RawFilePtr rawfile)
         throw std::runtime_error(string("[SpectrumList_Thermo::ctor] ") + e.what());
     }
 
-    size_ = spectraByScanType[ScanType_Full] +
-            spectraByScanType[ScanType_Zoom] +
-            spectraByScanType[ScanType_Q1MS] +
-            spectraByScanType[ScanType_Q3MS];
+    size_ += spectraByScanType[ScanType_Full] +
+             spectraByScanType[ScanType_Zoom] +
+             spectraByScanType[ScanType_Q1MS] +
+             spectraByScanType[ScanType_Q3MS];
 }
 
 
@@ -247,9 +260,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         string filterString = scanInfo->filter();
         scan.set(MS_filter_string, filterString);
 
-        string scanEvent = scanInfo->trailerExtraValue("Scan Event:");
-        if (!scanEvent.empty())
-            scan.set(MS_preset_scan_configuration, scanEvent);
+        string scanEventStr = scanInfo->trailerExtraValue("Scan Event:");
+        int scanEvent = 1;
+        if (!scanEventStr.empty())
+        {
+            scan.set(MS_preset_scan_configuration, scanEventStr);
+            scanEvent = lexical_cast<int>(scanEventStr);
+        }
 
         long msLevel = scanInfo->msLevel();
         ScanType scanType = scanInfo->scanType();
@@ -361,6 +378,14 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
             }
             catch (RawEgg&)
             {}
+
+            // if scan trailer did not have isolation width, try the instrument method
+            if (isolationWidth == 0)
+            {
+                isolationWidth = rawfile_->getIsolationWidth(1, scanEvent) / 2;
+                if (isolationWidth == 0)
+                    isolationWidth = rawfile_->getDefaultIsolationWidth(1, msLevel) / 2;
+            }
 
             double isolationMz = scanInfo->precursorMZ(i, false);
             isolationMzCache_[index] = isolationMz;

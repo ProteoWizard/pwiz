@@ -469,6 +469,8 @@ class PWIZ_API_DECL RawFile
     virtual ScanFilterMassAnalyzerType getMassAnalyzerType(long scanNumber) = 0;
     virtual ActivationType getActivationType(long scanNumber) = 0;
     // getDetectorType is obsolete?
+    virtual double getIsolationWidth(int scanSegment, int scanEvent) = 0;
+    virtual double getDefaultIsolationWidth(int scanSegment, int msLevel) = 0;
 
     virtual ErrorLogItem getErrorLogItem(long itemNumber) = 0;
     virtual std::auto_ptr<LabelValueArray> getTuneData(long segmentNumber) = 0;
