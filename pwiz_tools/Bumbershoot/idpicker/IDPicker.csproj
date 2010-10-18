@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
+    <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{5C5FC1C6-F9FF-4E2A-A53B-0865FBB9F9D9}</ProjectGuid>
     <OutputType>WinExe</OutputType>
@@ -128,6 +128,12 @@
     <Compile Include="Controls\BreadCrumbControl.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Forms\ColumnControlForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\ColumnControlForm.Designer.cs">
+      <DependentUpon>ColumnControlForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\LogForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -222,6 +228,7 @@
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="Settings.cs" />
     <Compile Include="Util\ExtensionMethods.cs" />
     <Compile Include="Util\Path.cs" />
     <Compile Include="Util\String.cs" />
@@ -243,6 +250,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Forms\ColumnControlForm.resx">
+      <DependentUpon>ColumnControlForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\LogForm.resx">
       <DependentUpon>LogForm.cs</DependentUpon>
       <SubType>Designer</SubType>

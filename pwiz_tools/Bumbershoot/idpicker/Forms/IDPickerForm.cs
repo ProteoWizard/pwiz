@@ -830,6 +830,13 @@ namespace IDPicker
             if (File.Exists(database[0]))
                 OpenFiles(database);
         }
+
+        private void IDPickerForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            spectrumTableForm.SaveSettings();
+            peptideTableForm.SaveSettings();
+            proteinTableForm.SaveSettings();
+        }
     }
 
     public static class StopwatchExtensions

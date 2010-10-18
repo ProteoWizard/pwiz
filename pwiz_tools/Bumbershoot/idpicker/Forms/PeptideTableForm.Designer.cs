@@ -60,6 +60,7 @@ namespace IDPicker.Forms
             this.offsetColumn = new BrightIdeasSoftware.OLVColumn();
             this.terminalSpecificityColumn = new BrightIdeasSoftware.OLVColumn();
             this.missedCleavagesColumn = new BrightIdeasSoftware.OLVColumn();
+            this.proteinsColumn = new BrightIdeasSoftware.OLVColumn();
             this.radioButton1 = new System.Windows.Forms.RadioButton();
             this.radioButton2 = new System.Windows.Forms.RadioButton();
             this.exportButton = new System.Windows.Forms.Button();
@@ -67,8 +68,8 @@ namespace IDPicker.Forms
             this.clipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showInExcelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.proteinsColumn = new BrightIdeasSoftware.OLVColumn();
-            ((System.ComponentModel.ISupportInitialize) (this.treeListView)).BeginInit();
+            this.displayOptionsButton = new System.Windows.Forms.Button();
+            ((System.ComponentModel.ISupportInitialize)(this.treeListView)).BeginInit();
             this.exportMenu.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -83,7 +84,7 @@ namespace IDPicker.Forms
             this.treeListView.AllColumns.Add(this.terminalSpecificityColumn);
             this.treeListView.AllColumns.Add(this.missedCleavagesColumn);
             this.treeListView.AllColumns.Add(this.proteinsColumn);
-            this.treeListView.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.treeListView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.treeListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
@@ -151,6 +152,14 @@ namespace IDPicker.Forms
             this.missedCleavagesColumn.Text = "Missed Cleavages";
             this.missedCleavagesColumn.Width = 100;
             // 
+            // proteinsColumn
+            // 
+            this.proteinsColumn.DisplayIndex = 6;
+            this.proteinsColumn.FillsFreeSpace = true;
+            this.proteinsColumn.IsVisible = false;
+            this.proteinsColumn.Text = "Proteins";
+            this.proteinsColumn.Width = 80;
+            // 
             // radioButton1
             // 
             this.radioButton1.AutoSize = true;
@@ -175,8 +184,8 @@ namespace IDPicker.Forms
             // 
             // exportButton
             // 
-            this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.exportButton.Image = global::IDPicker.Properties.Resources.Expand_large;
+            this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.exportButton.Image = global::IDPicker.Properties.Resources.Export;
             this.exportButton.Location = new System.Drawing.Point(680, 2);
             this.exportButton.Name = "exportButton";
             this.exportButton.Size = new System.Drawing.Size(30, 23);
@@ -214,19 +223,23 @@ namespace IDPicker.Forms
             this.showInExcelToolStripMenuItem.Text = "Show in Excel";
             this.showInExcelToolStripMenuItem.Click += new System.EventHandler(this.showInExcelToolStripMenuItem_Click);
             // 
-            // proteinsColumn
+            // displayOptionsButton
             // 
-            this.proteinsColumn.DisplayIndex = 6;
-            this.proteinsColumn.FillsFreeSpace = true;
-            this.proteinsColumn.IsVisible = false;
-            this.proteinsColumn.Text = "Proteins";
-            this.proteinsColumn.Width = 80;
+            this.displayOptionsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.displayOptionsButton.Location = new System.Drawing.Point(578, 2);
+            this.displayOptionsButton.Name = "displayOptionsButton";
+            this.displayOptionsButton.Size = new System.Drawing.Size(96, 23);
+            this.displayOptionsButton.TabIndex = 5;
+            this.displayOptionsButton.Text = "Display Options";
+            this.displayOptionsButton.UseVisualStyleBackColor = true;
+            this.displayOptionsButton.Click += new System.EventHandler(this.displayOptionsButton_Click);
             // 
             // PeptideTableForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(722, 353);
+            this.Controls.Add(this.displayOptionsButton);
             this.Controls.Add(this.exportButton);
             this.Controls.Add(this.radioButton2);
             this.Controls.Add(this.radioButton1);
@@ -235,7 +248,7 @@ namespace IDPicker.Forms
             this.Opacity = 0.25;
             this.TabText = "PeptideTableForm";
             this.Text = "PeptideTableForm";
-            ((System.ComponentModel.ISupportInitialize) (this.treeListView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.treeListView)).EndInit();
             this.exportMenu.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -261,6 +274,7 @@ namespace IDPicker.Forms
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showInExcelToolStripMenuItem;
         private BrightIdeasSoftware.OLVColumn proteinsColumn;
+        private System.Windows.Forms.Button displayOptionsButton;
 
     }
 }

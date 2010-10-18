@@ -328,6 +328,17 @@ namespace IDPicker.DataModel
         #endregion
     }
 
+    public class idpDBSettings : Entity<idpDBSettings>
+    {
+        public virtual string FormName { get; set; }
+        public virtual string ColumnName { get; set; }
+        public virtual string Type { get; set; }
+        public virtual int DecimalPlaces { get; set; }
+        public virtual int ColorCode { get; set; }
+        public virtual bool Visible { get; set; }
+        public virtual bool? Locked { get; set; }
+    }
+
     public class Entity<T> : IEquatable<T> where T : Entity<T>, new()
     {
         public virtual long? Id { get; set; }

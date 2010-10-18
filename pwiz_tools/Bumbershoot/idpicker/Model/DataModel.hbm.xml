@@ -218,8 +218,22 @@
 		<property name="Site" access="nosetter.camelcase"/>
 		<!--An index on the Site property seems to override the PSM index :( index="PeptideModification_Site"-->
 	</class>
-	
-	<sql-query read-only="true" name="PeptideSpectrumMatchScores_LoaderQuery">
+
+  <class name="idpDBSettings">
+    <id name="Id">
+      <generator class="native"/>
+    </id>
+    <property name="FormName"/>
+    <property name="ColumnName"/>
+    <property name="Type"/>
+    <property name="DecimalPlaces"/>
+    <property name="ColorCode"/>
+    <property name="Visible"/>
+    <property name="Locked"/>
+  </class>
+
+
+  <sql-query read-only="true" name="PeptideSpectrumMatchScores_LoaderQuery">
 		<load-collection alias="scores" role="PeptideSpectrumMatch.Scores"/>
 		SELECT {scores.*}
 		FROM (	SELECT PsmId, Name AS ScoreNameId, Value

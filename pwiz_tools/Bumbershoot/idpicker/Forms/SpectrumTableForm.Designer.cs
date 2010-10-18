@@ -64,13 +64,14 @@ namespace IDPicker.Forms
             this.qvalueColumn = new BrightIdeasSoftware.OLVColumn();
             this.sequenceColumn = new BrightIdeasSoftware.OLVColumn();
             this.editGroupsButton = new System.Windows.Forms.Button();
-            this.exportButton = new System.Windows.Forms.Button();
             this.exportMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.clipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showInExcelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.topRankOnlyCheckBox = new System.Windows.Forms.CheckBox();
-            ((System.ComponentModel.ISupportInitialize) (this.treeListView)).BeginInit();
+            this.exportButton = new System.Windows.Forms.Button();
+            this.displayOptionsButton = new System.Windows.Forms.Button();
+            ((System.ComponentModel.ISupportInitialize)(this.treeListView)).BeginInit();
             this.exportMenu.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -87,12 +88,11 @@ namespace IDPicker.Forms
             this.treeListView.AllColumns.Add(this.massErrorColumn);
             this.treeListView.AllColumns.Add(this.qvalueColumn);
             this.treeListView.AllColumns.Add(this.sequenceColumn);
-            this.treeListView.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.treeListView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.treeListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.sourceOrScanColumn,
-            this.totalSpectraColumn,
             this.confidentSpectraColumn,
             this.confidentPeptidesColumn});
             this.treeListView.Cursor = System.Windows.Forms.Cursors.Default;
@@ -120,6 +120,8 @@ namespace IDPicker.Forms
             // totalSpectraColumn
             // 
             this.totalSpectraColumn.AspectName = "";
+            this.totalSpectraColumn.DisplayIndex = 1;
+            this.totalSpectraColumn.IsVisible = false;
             this.totalSpectraColumn.Text = "Total Spectra";
             this.totalSpectraColumn.Width = 80;
             // 
@@ -185,8 +187,8 @@ namespace IDPicker.Forms
             // 
             // editGroupsButton
             // 
-            this.editGroupsButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.editGroupsButton.Location = new System.Drawing.Point(688, 2);
+            this.editGroupsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.editGroupsButton.Location = new System.Drawing.Point(586, 2);
             this.editGroupsButton.Name = "editGroupsButton";
             this.editGroupsButton.Size = new System.Drawing.Size(81, 23);
             this.editGroupsButton.TabIndex = 1;
@@ -237,11 +239,10 @@ namespace IDPicker.Forms
             // 
             // topRankOnlyCheckBox
             // 
-            this.topRankOnlyCheckBox.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.topRankOnlyCheckBox.AutoSize = true;
             this.topRankOnlyCheckBox.Checked = true;
             this.topRankOnlyCheckBox.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.topRankOnlyCheckBox.Location = new System.Drawing.Point(584, 6);
+            this.topRankOnlyCheckBox.Location = new System.Drawing.Point(12, 6);
             this.topRankOnlyCheckBox.Name = "topRankOnlyCheckBox";
             this.topRankOnlyCheckBox.Size = new System.Drawing.Size(98, 17);
             this.topRankOnlyCheckBox.TabIndex = 3;
@@ -249,19 +250,42 @@ namespace IDPicker.Forms
             this.topRankOnlyCheckBox.UseVisualStyleBackColor = true;
             this.topRankOnlyCheckBox.CheckedChanged += new System.EventHandler(this.topRankOnlyCheckBox_CheckedChanged);
             // 
+            // exportButton
+            // 
+            this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.exportButton.Image = global::IDPicker.Properties.Resources.Export;
+            this.exportButton.Location = new System.Drawing.Point(775, 2);
+            this.exportButton.Name = "exportButton";
+            this.exportButton.Size = new System.Drawing.Size(30, 23);
+            this.exportButton.TabIndex = 2;
+            this.exportButton.UseVisualStyleBackColor = true;
+            this.exportButton.Click += new System.EventHandler(this.exportButton_Click);
+            // 
+            // displayOptionsButton
+            // 
+            this.displayOptionsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.displayOptionsButton.Location = new System.Drawing.Point(673, 2);
+            this.displayOptionsButton.Name = "displayOptionsButton";
+            this.displayOptionsButton.Size = new System.Drawing.Size(96, 23);
+            this.displayOptionsButton.TabIndex = 3;
+            this.displayOptionsButton.Text = "Display Options";
+            this.displayOptionsButton.UseVisualStyleBackColor = true;
+            this.displayOptionsButton.Click += new System.EventHandler(this.displayOptionsButton_Click);
+            // 
             // SpectrumTableForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(817, 353);
             this.Controls.Add(this.treeListView);
-            this.Controls.Add(this.topRankOnlyCheckBox);
             this.Controls.Add(this.exportButton);
+            this.Controls.Add(this.topRankOnlyCheckBox);
+            this.Controls.Add(this.displayOptionsButton);
             this.Controls.Add(this.editGroupsButton);
             this.Name = "SpectrumTableForm";
             this.TabText = "SpectrumTableForm";
             this.Text = "SpectrumTableForm";
-            ((System.ComponentModel.ISupportInitialize) (this.treeListView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.treeListView)).EndInit();
             this.exportMenu.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -289,6 +313,7 @@ namespace IDPicker.Forms
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showInExcelToolStripMenuItem;
         private System.Windows.Forms.CheckBox topRankOnlyCheckBox;
+        private System.Windows.Forms.Button displayOptionsButton;
 
     }
 }

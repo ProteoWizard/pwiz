@@ -64,8 +64,9 @@ namespace IDPicker.Forms
             this.exportMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.clipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.panel1 = new System.Windows.Forms.Panel();
             this.showInExcelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.displayOptionsButton = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.treeListView)).BeginInit();
             this.exportMenu.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -165,7 +166,7 @@ namespace IDPicker.Forms
             this.fileToolStripMenuItem,
             this.showInExcelToolStripMenuItem});
             this.exportMenu.Name = "contextMenuStrip1";
-            this.exportMenu.Size = new System.Drawing.Size(172, 92);
+            this.exportMenu.Size = new System.Drawing.Size(172, 70);
             // 
             // clipboardToolStripMenuItem
             // 
@@ -181,6 +182,13 @@ namespace IDPicker.Forms
             this.fileToolStripMenuItem.Text = "Export to File";
             this.fileToolStripMenuItem.Click += new System.EventHandler(this.fileToolStripMenuItem_Click);
             // 
+            // showInExcelToolStripMenuItem
+            // 
+            this.showInExcelToolStripMenuItem.Name = "showInExcelToolStripMenuItem";
+            this.showInExcelToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
+            this.showInExcelToolStripMenuItem.Text = "Show in Excel";
+            this.showInExcelToolStripMenuItem.Click += new System.EventHandler(this.showInExcelToolStripMenuItem_Click);
+            // 
             // panel1
             // 
             this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
@@ -192,18 +200,23 @@ namespace IDPicker.Forms
             this.panel1.Size = new System.Drawing.Size(1029, 325);
             this.panel1.TabIndex = 5;
             // 
-            // showInExcelToolStripMenuItem
+            // displayOptionsButton
             // 
-            this.showInExcelToolStripMenuItem.Name = "showInExcelToolStripMenuItem";
-            this.showInExcelToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
-            this.showInExcelToolStripMenuItem.Text = "Show in Excel";
-            this.showInExcelToolStripMenuItem.Click += new System.EventHandler(this.showInExcelToolStripMenuItem_Click);
+            this.displayOptionsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.displayOptionsButton.Location = new System.Drawing.Point(884, 2);
+            this.displayOptionsButton.Name = "displayOptionsButton";
+            this.displayOptionsButton.Size = new System.Drawing.Size(96, 23);
+            this.displayOptionsButton.TabIndex = 6;
+            this.displayOptionsButton.Text = "Display Options";
+            this.displayOptionsButton.UseVisualStyleBackColor = true;
+            this.displayOptionsButton.Click += new System.EventHandler(this.displayOptionsButton_Click);
             // 
             // ProteinTableForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1028, 353);
+            this.Controls.Add(this.displayOptionsButton);
             this.Controls.Add(this.exportButton);
             this.Controls.Add(this.panel1);
             this.Name = "ProteinTableForm";
@@ -233,6 +246,7 @@ namespace IDPicker.Forms
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.ToolStripMenuItem showInExcelToolStripMenuItem;
+        private System.Windows.Forms.Button displayOptionsButton;
 
     }
 }
