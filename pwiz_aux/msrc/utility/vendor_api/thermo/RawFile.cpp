@@ -42,8 +42,8 @@
 #include "pwiz/utility/misc/Once.hpp"
 #include "pwiz/utility/misc/ClickwrapPrompter.hpp"
 #include <boost/bind.hpp>
-#include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/phoenix.hpp>
+#include <boost/xpressive/xpressive.hpp>
+
 
 #include <windows.h> // GetModuleFileName
 
@@ -1268,13 +1268,7 @@ ActivationType RawFileImpl::getActivationType(long scanNumber)
 
 void RawFileImpl::parseInstrumentMethod()
 {
-    using boost::spirit::qi::phrase_parse;
-    using boost::spirit::qi::double_;
-    using boost::spirit::qi::int_;
-    using boost::spirit::qi::_1;
-    using boost::spirit::qi::_2;
-    using boost::phoenix::ref;
-    using boost::spirit::ascii::space;
+    using namespace boost::xpressive;
 
     string instrumentMethods;
 
@@ -1283,18 +1277,28 @@ void RawFileImpl::parseInstrumentMethod()
         instrumentMethods += labelValueArray->value(i) + "\n";
 
     int scanSegment = 1, scanEvent;
-    double isolationWidth;
     bool scanEventDetails = false;
     bool dataDependentSettings = false;
 
+    sregex scanSegmentRegex = sregex::compile("\\s*Segment (\\d+) Information\\s*");
+    sregex scanEventRegex = sregex::compile("\\s*(\\d+):.*");
+    sregex scanEventIsolationWidthRegex = sregex::compile("\\s*Isolation Width:\\s*(\\S+)\\s*");
+    sregex repeatedEventRegex = sregex::compile("\\s*Scan Event (\\d+) repeated for top (\\d+)\\s*");
+    sregex defaultIsolationWidthRegex = sregex::compile("\\s*MS(\\d+) Isolation Width:\\s*(\\S+)\\s*");
+
+    smatch what;
     string line;
     istringstream instrumentMethodStream(instrumentMethods);
     while (std::getline(instrumentMethodStream, line))
     {
         string::const_iterator start = line.begin(), end = line.end();
 
-        if (phrase_parse(start, end, "Segment " >> int_[ref(scanSegment) = _1] >> " Information", space))
+        // Segment 1 Information
+        if (regex_match(line, what, scanSegmentRegex))
+        {
+            scanSegment = lexical_cast<int>(what[1]);
             continue;
+        }
 
         // Scan Event Details:
         if (bal::icontains(line, "Scan Event Details"))
@@ -1309,21 +1313,23 @@ void RawFileImpl::parseInstrumentMethod()
             //       ...
             //       Isolation Width:         2.5
             //       ...
-            if (phrase_parse(start, end, int_[ref(scanEvent) = _1] >> ':', space))
-                continue;
-
-            if (phrase_parse(start, end, "Isolation Width:" >> double_[ref(isolationWidth) = _1], space))
+            if (regex_match(line, what, scanEventRegex))
             {
-                isolationWidthBySegmentAndScanEvent[scanSegment][scanEvent] = isolationWidth;
+                scanEvent = lexical_cast<int>(what[1]);
+                continue;
+            }
+
+            if (regex_match(line, what, scanEventIsolationWidthRegex))
+            {
+                isolationWidthBySegmentAndScanEvent[scanSegment][scanEvent] = lexical_cast<double>(what[1]);
                 continue;
             }
 
             // Scan Event M repeated for top N peaks
-            int repeatedEvent, repeatCount;
-            if (phrase_parse(start, end,
-                             "Scan Event " >> int_[ref(repeatedEvent) = _1] >>
-                             " repeated for top " >> int_[ref(repeatCount) = _1], space))
+            if (regex_match(line, what, repeatedEventRegex))
             {
+                int repeatedEvent = lexical_cast<int>(what[1]);
+                int repeatCount = lexical_cast<int>(what[2]);
                 double repeatedIsolationWidth = isolationWidthBySegmentAndScanEvent[scanSegment][repeatedEvent];
                 for (int i = repeatedEvent + 1; i < repeatedEvent + repeatCount; ++i)
                     isolationWidthBySegmentAndScanEvent[scanSegment][i] = repeatedIsolationWidth;
@@ -1344,12 +1350,11 @@ void RawFileImpl::parseInstrumentMethod()
         if (dataDependentSettings)
         {
             // MSn Isolation Width:       2.5
-            double isolationWidth;
-            if (phrase_parse(start, end,
-                             "MS" >> int_[ref(scanEvent) = _1] >>
-                             "Isolation Width:" >> double_[ref(isolationWidth) = _1], space))
+            if (regex_match(line, what, defaultIsolationWidthRegex))
             {
-                defaultIsolationWidthBySegmentAndMsLevel[scanSegment][scanEvent] = isolationWidth;
+                int msLevel = lexical_cast<int>(what[1]);
+                int isolationWidth = lexical_cast<int>(what[2]);
+                defaultIsolationWidthBySegmentAndMsLevel[scanSegment][msLevel] = isolationWidth;
                 continue;
             }
 
