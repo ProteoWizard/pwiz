@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Text;
+using DataMapping;
 using System.Windows.Forms;
 
 namespace BumberDash
@@ -17,18 +18,21 @@ namespace BumberDash
         #region Globals
         delegate void DirectOutputCallback(string text);
         List<string> OutputFiles = new List<string>();
+        internal Dictionary<int, ConfigFile> _myriDropDownItems = new Dictionary<int, ConfigFile>();
+        internal Dictionary<int, ConfigFile> _dtDropDownItems = new Dictionary<int, ConfigFile>();
+        internal Dictionary<int, ConfigFile> _trDropDownItems = new Dictionary<int, ConfigFile>();
         //string MyriMatchLocation = @"C:\Dev\myrimatch\myrimatch.exe";
         //string DirecTagLocation = @"C:\Dev\directag\directag.exe";
         //string TagReconLocation = @"C:\Dev\tagrecon\tagrecon.exe";
         //string IDPickerLocation = @"C:\Program Files\Bumbershoot\IDPicker 2.6.126.0\IdPickerGui.exe";
         #endregion
 
-        private QueueForm MainList;
+        private QueueForm _mainForm;
 
         public AddJobForm(QueueForm ParentForm)
         {
             InitializeComponent();
-            MainList = ParentForm;
+            _mainForm = ParentForm;
         }
   
         #region Click Events
@@ -114,20 +118,19 @@ namespace BumberDash
 
             private void AddJobRunButton_Click(object sender, EventArgs e)
             {
-                MainList.QueueJobFromForm();
+                _mainForm.QueueJobFromForm();
             }
 
             private void MyriEditButton_Click(object sender, EventArgs e)
             {
                 ConfigForm testConfigForm;
 
-                if (!string.IsNullOrEmpty(MyriConfigBox.Text) && File.Exists(MyriConfigBox.Text))
-                    testConfigForm = new ConfigForm(MyriConfigBox.Text, OutputDirectoryBox.Text, "MyriMatch");
-                else
-                    testConfigForm = new ConfigForm(string.Empty, OutputDirectoryBox.Text, "MyriMatch");
-                if (testConfigForm.ShowDialog().Equals(DialogResult.OK))
+                testConfigForm = new ConfigForm(MyriConfigBox.Text ?? string.Empty, OutputDirectoryBox.Text, "MyriMatch", this);
+
+                if (testConfigForm.ShowDialog(this) == (DialogResult.OK))
                 {
                     MyriConfigBox.Text = testConfigForm._configName;
+                    MyriMatchInfoBox.Text = testConfigForm._allProperties;
                 }
             }
 
@@ -135,13 +138,12 @@ namespace BumberDash
             {
                 ConfigForm testConfigForm;
 
-                if (!string.IsNullOrEmpty(DTConfigBox.Text) && File.Exists(DTConfigBox.Text))
-                    testConfigForm = new ConfigForm(DTConfigBox.Text, OutputDirectoryBox.Text, "DirecTag");
-                else
-                    testConfigForm = new ConfigForm(string.Empty, OutputDirectoryBox.Text, "DirecTag");
-                if (testConfigForm.ShowDialog().Equals(DialogResult.OK))
+                testConfigForm = new ConfigForm(DTConfigBox.Text ?? string.Empty, OutputDirectoryBox.Text, "DirecTag", this);
+
+                if (testConfigForm.ShowDialog(this) == (DialogResult.OK))
                 {
                     DTConfigBox.Text = testConfigForm._configName;
+                    DirecTagInfoBox.Text = testConfigForm._allProperties;
                 }
             }
 
@@ -149,13 +151,12 @@ namespace BumberDash
             {
                 ConfigForm testConfigForm;
 
-                if (!string.IsNullOrEmpty(TRConfigBox.Text) && File.Exists(TRConfigBox.Text))
-                    testConfigForm = new ConfigForm(TRConfigBox.Text, OutputDirectoryBox.Text, "TagRecon");
-                else
-                    testConfigForm = new ConfigForm(string.Empty, OutputDirectoryBox.Text, "TagRecon");
-                if (testConfigForm.ShowDialog().Equals(DialogResult.OK))
+                testConfigForm = new ConfigForm(TRConfigBox.Text ?? string.Empty, OutputDirectoryBox.Text, "TagRecon", this);
+
+                if (testConfigForm.ShowDialog(this) == (DialogResult.OK))
                 {
                     TRConfigBox.Text = testConfigForm._configName;
+                    TagReconInfoBox.Text = testConfigForm._allProperties;
                 }
             }
 
@@ -183,13 +184,17 @@ namespace BumberDash
             {
                 ConfigGB.Visible = true;
                 ConfigDatabasePanel.Visible = true;
+                DatabasePanel.Visible = true;
                 ConfigTagPanel.Visible = false;
+                TagPanel.Visible = false;
             }
             else if (TagRadio.Checked == true)
             {
                 ConfigGB.Visible = true;
                 ConfigDatabasePanel.Visible = false;
+                DatabasePanel.Visible = false;
                 ConfigTagPanel.Visible = true;
+                TagPanel.Visible = true;
             }
             else
             {
@@ -199,7 +204,7 @@ namespace BumberDash
 
         private void AddJobForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-            MainList.CancelEdit();
+            _mainForm.CancelEdit();
         }
 
         private void CPUsBox_ValueChanged(object sender, EventArgs e)
@@ -212,41 +217,161 @@ namespace BumberDash
 
         private void MyriConfigBox_TextChanged(object sender, EventArgs e)
         {
+            var customRx = new System.Text.RegularExpressions.Regex(@"^--\w+--$");
+
             if (File.Exists(MyriConfigBox.Text))
             {
                 if ((new FileInfo(MyriConfigBox.Text)).Extension.Equals(".cfg"))
+                {
                     MyriEditButton.Text = "Edit";
+
+                    //preview file
+                    var fileIn = new StreamReader(MyriConfigBox.Text);
+                    MyriMatchInfoBox.Text = fileIn.ReadToEnd();
+                    fileIn.Close();
+                    fileIn.Dispose();
+                }
                 else if ((new FileInfo(MyriConfigBox.Text)).Extension.Equals(".pepXML"))
+                {
                     MyriEditButton.Text = "Convert";
+                    var tempCE = new ConfigForm(MyriConfigBox.Text, (Directory.Exists(OutputDirectoryBox.Text) ? OutputDirectoryBox.Text : Application.StartupPath), "MyriMatch", this);
+                    
+                    tempCE.SaveAsTemporaryButton_Click(null, e);
+                    MyriMatchInfoBox.Text = tempCE._allProperties;
+                    tempCE.Close();
+                }
+                else
+                    MyriMatchInfoBox.Text = "Invalid File";
             }
+            else if (customRx.IsMatch(MyriConfigBox.Text))
+                MyriEditButton.Text = "Change";
             else
+            {
+                MyriMatchInfoBox.Text = string.Empty;
                 MyriEditButton.Text = "New";
+            }
         }
 
         private void DTConfigBox_TextChanged(object sender, EventArgs e)
         {
+            var customRx = new System.Text.RegularExpressions.Regex(@"^--\w+--$");
+
             if (File.Exists(DTConfigBox.Text))
             {
                 if ((new FileInfo(DTConfigBox.Text)).Extension.Equals(".cfg"))
+                {
                     DTEditButton.Text = "Edit";
+
+                    //preview file
+                    var fileIn = new StreamReader(DTConfigBox.Text);
+                    DirecTagInfoBox.Text = fileIn.ReadToEnd();
+                    fileIn.Close();
+                    fileIn.Dispose();
+                }
                 else if ((new FileInfo(DTConfigBox.Text)).Extension.Equals(".tags"))
+                {
                     DTEditButton.Text = "Convert";
+
+                    var tempCE = new ConfigForm(DTConfigBox.Text, (Directory.Exists(OutputDirectoryBox.Text) ? OutputDirectoryBox.Text : Application.StartupPath), "DirecTag", this);
+
+                    tempCE.SaveAsTemporaryButton_Click(null, e);
+                    DirecTagInfoBox.Text = tempCE._allProperties;
+                    tempCE.Close();
+                }
+                else
+                    DirecTagInfoBox.Text = "Invalid File";
             }
+            else if (customRx.IsMatch(DTConfigBox.Text))
+                DTEditButton.Text = "Change";
             else
+            {
+                DirecTagInfoBox.Text = string.Empty;
                 DTEditButton.Text = "New";
+            }
+
         }
 
         private void TRConfigBox_TextChanged(object sender, EventArgs e)
         {
+            var customRx = new System.Text.RegularExpressions.Regex(@"^--\w+--$");
+
             if (File.Exists(TRConfigBox.Text))
             {
                 if ((new FileInfo(TRConfigBox.Text)).Extension.Equals(".cfg"))
+                {
                     TREditButton.Text = "Edit";
+
+                    //preview file
+                    var fileIn = new StreamReader(DTConfigBox.Text);
+                    TagReconInfoBox.Text = fileIn.ReadToEnd();
+                    fileIn.Close();
+                    fileIn.Dispose();
+                }
                 else if ((new FileInfo(TRConfigBox.Text)).Extension.Equals(".pepXML"))
+                {
                     TREditButton.Text = "Convert";
+                    var tempCE = new ConfigForm(TRConfigBox.Text, (Directory.Exists(OutputDirectoryBox.Text) ? OutputDirectoryBox.Text : Application.StartupPath), "TagRecon", this);
+
+                    tempCE.SaveAsTemporaryButton_Click(null, e);
+                    TagReconInfoBox.Text = tempCE._allProperties;
+                    tempCE.Close();
+                }
+                else
+                    TagReconInfoBox.Text = "Invalid File";
+            }
+            else if (customRx.IsMatch(TRConfigBox.Text))
+                TREditButton.Text = "Change";
+            else
+            {
+                TagReconInfoBox.Text = string.Empty;
+                TREditButton.Text = "New";
+            }
+        }
+
+        private void InfoExpandButton_Click(object sender, EventArgs e)
+        {
+            if (this.Width > 442)
+            {
+                InfoExpandButton.Text = string.Format(">{0}>{0}>", System.Environment.NewLine);
+                this.Width = 442;
+                this.Location = new Point(this.Location.X + 110, this.Location.Y);
             }
             else
-                TREditButton.Text = "New";
+            {
+                InfoExpandButton.Text = string.Format("<{0}<{0}<", System.Environment.NewLine);
+                this.Width = 660;
+                this.Location = new Point(this.Location.X - 110, this.Location.Y);
+            }
+        }
+
+        private void MyriConfigBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (!File.Exists(MyriConfigBox.Text) || (Path.GetExtension(MyriConfigBox.Text) != ".cfg" && Path.GetExtension(MyriConfigBox.Text) != ".pepXML"))
+            {
+                MyriMatchInfoBox.Text = string.Empty;
+                foreach (var item in _myriDropDownItems[MyriConfigBox.SelectedIndex].PropertyList)
+                    MyriMatchInfoBox.Text += String.Format("{0} = {1}{2}", item.Name, item.Value, System.Environment.NewLine);
+            }
+        }
+
+        private void DTConfigBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (!File.Exists(DTConfigBox.Text) || (Path.GetExtension(DTConfigBox.Text) != ".cfg" && Path.GetExtension(DTConfigBox.Text) != ".tags"))
+            {
+                DirecTagInfoBox.Text = string.Empty;
+                foreach (var item in _dtDropDownItems[DTConfigBox.SelectedIndex].PropertyList)
+                    DirecTagInfoBox.Text += String.Format("{0} = {1}{2}", item.Name, item.Value, System.Environment.NewLine);
+            }
+        }
+
+        private void TRConfigBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (!File.Exists(TRConfigBox.Text) || (Path.GetExtension(TRConfigBox.Text) != ".cfg" && Path.GetExtension(TRConfigBox.Text) != ".pepXML"))
+            {
+                TagReconInfoBox.Text = string.Empty;
+                foreach (var item in _trDropDownItems[TRConfigBox.SelectedIndex].PropertyList)
+                    TagReconInfoBox.Text += String.Format("{0} = {1}{2}", item.Name, item.Value, System.Environment.NewLine);
+            }
         }
     }
 }

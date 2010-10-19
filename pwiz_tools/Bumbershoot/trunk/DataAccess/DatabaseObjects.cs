@@ -36,21 +36,12 @@ namespace DataAccess
             return _session.Get<HistoryItem>(jobIndex);
         }
 
-        public ConfigFile retrieveLatestConfigFileByFilePath(string filePath)
+        public IList<ConfigFile> retrieveConfigFilesByFilePath(string filePath)
         {
-            int configID = -1;
-            IList<ConfigFile> possibleConfigs = _session.CreateCriteria(typeof(ConfigFile))
+            return _session.CreateCriteria(typeof(ConfigFile))
                 .Add(Expression.Eq("FilePath",filePath))
                 .AddOrder(Order.Desc("FirstUsedDate"))
                 .List<ConfigFile>();
-
-            foreach (ConfigFile c in possibleConfigs)
-            {
-                configID = c.ConfigID;
-                break;
-            }
-
-            return _session.Get<ConfigFile>(configID);
         }
 
         public void SaveItem(object obj)

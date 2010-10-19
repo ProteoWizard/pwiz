@@ -173,8 +173,8 @@
             this.MinPrecursorAdjustmentLabel = new System.Windows.Forms.Label();
             this.AdjustPanel = new System.Windows.Forms.Panel();
             this.AdjustPrecursorMassBox = new System.Windows.Forms.CheckBox();
-            this.AdjustPrecursorMassLabel = new System.Windows.Forms.Label();
             this.AdjustPrecursorMassInfo = new System.Windows.Forms.Label();
+            this.AdjustPrecursorMassLabel = new System.Windows.Forms.Label();
             this.TagReconGB = new System.Windows.Forms.GroupBox();
             this.MassReconModeBox = new System.Windows.Forms.CheckBox();
             this.MassReconModeInfo = new System.Windows.Forms.Label();
@@ -203,9 +203,10 @@
             this.TagLengthLabel = new System.Windows.Forms.Label();
             this.IsotopeMzToleranceLabel = new System.Windows.Forms.Label();
             this.TRModOptionsGB = new System.Windows.Forms.GroupBox();
+            this.BlosumThresholdBox = new System.Windows.Forms.NumericUpDown();
+            this.BlosumThresholdInfo = new System.Windows.Forms.Label();
             this.ExplainUnknownMassShiftsAsBox = new System.Windows.Forms.ComboBox();
             this.MaxModificationMassPlusBox = new System.Windows.Forms.NumericUpDown();
-            this.BlosumThresholdBox = new System.Windows.Forms.NumericUpDown();
             this.BlosumBox = new System.Windows.Forms.TextBox();
             this.MaxModificationMassMinusBox = new System.Windows.Forms.NumericUpDown();
             this.UnimodXMLBox = new System.Windows.Forms.TextBox();
@@ -214,7 +215,6 @@
             this.BlosumInfo = new System.Windows.Forms.Label();
             this.UnimodXMLInfo = new System.Windows.Forms.Label();
             this.BlosumLabel = new System.Windows.Forms.Label();
-            this.BlosumThresholdInfo = new System.Windows.Forms.Label();
             this.UnimodXMLBrowse = new System.Windows.Forms.Button();
             this.MaxModificationMassMinusLabel = new System.Windows.Forms.Label();
             this.MaxModificationMassPlusInfo = new System.Windows.Forms.Label();
@@ -258,6 +258,7 @@
             this.CancelEditButton = new System.Windows.Forms.Button();
             this.SaveAsNewButton = new System.Windows.Forms.Button();
             this.SaveOverOldButton = new System.Windows.Forms.Button();
+            this.SaveAsTemporaryButton = new System.Windows.Forms.Button();
             this.tabControl1.SuspendLayout();
             this.Gentab.SuspendLayout();
             this.panel1.SuspendLayout();
@@ -304,8 +305,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.MaxTagCountBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.TagLengthBox)).BeginInit();
             this.TRModOptionsGB.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.MaxModificationMassPlusBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.BlosumThresholdBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.MaxModificationMassPlusBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.MaxModificationMassMinusBox)).BeginInit();
             this.ScoringGB.SuspendLayout();
             this.DTScorePanel.SuspendLayout();
@@ -771,6 +772,11 @@
             // 
             this.NumMaxMissedCleavagesBox.Enabled = false;
             this.NumMaxMissedCleavagesBox.Location = new System.Drawing.Point(182, 84);
+            this.NumMaxMissedCleavagesBox.Maximum = new decimal(new int[] {
+            100000,
+            0,
+            0,
+            0});
             this.NumMaxMissedCleavagesBox.Minimum = new decimal(new int[] {
             1,
             0,
@@ -2018,16 +2024,6 @@
             this.AdjustPrecursorMassBox.Click += new System.EventHandler(this.AdjustPrecursorMassBox_Click);
             this.AdjustPrecursorMassBox.CheckedChanged += new System.EventHandler(this.ValueBox_Leave);
             // 
-            // AdjustPrecursorMassLabel
-            // 
-            this.AdjustPrecursorMassLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.AdjustPrecursorMassLabel.AutoSize = true;
-            this.AdjustPrecursorMassLabel.Location = new System.Drawing.Point(11, 6);
-            this.AdjustPrecursorMassLabel.Name = "AdjustPrecursorMassLabel";
-            this.AdjustPrecursorMassLabel.Size = new System.Drawing.Size(115, 13);
-            this.AdjustPrecursorMassLabel.TabIndex = 18;
-            this.AdjustPrecursorMassLabel.Text = "Adjust Precursor Mass:";
-            // 
             // AdjustPrecursorMassInfo
             // 
             this.AdjustPrecursorMassInfo.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
@@ -2043,6 +2039,16 @@
             this.AdjustPrecursorMassInfo.MouseLeave += new System.EventHandler(this.Info_MouseLeave);
             this.AdjustPrecursorMassInfo.Click += new System.EventHandler(this.Info_Click);
             this.AdjustPrecursorMassInfo.MouseEnter += new System.EventHandler(this.Info_MouseEnter);
+            // 
+            // AdjustPrecursorMassLabel
+            // 
+            this.AdjustPrecursorMassLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.AdjustPrecursorMassLabel.AutoSize = true;
+            this.AdjustPrecursorMassLabel.Location = new System.Drawing.Point(11, 6);
+            this.AdjustPrecursorMassLabel.Name = "AdjustPrecursorMassLabel";
+            this.AdjustPrecursorMassLabel.Size = new System.Drawing.Size(115, 13);
+            this.AdjustPrecursorMassLabel.TabIndex = 18;
+            this.AdjustPrecursorMassLabel.Text = "Adjust Precursor Mass:";
             // 
             // TagReconGB
             // 
@@ -2403,6 +2409,40 @@
             this.TRModOptionsGB.TabStop = false;
             this.TRModOptionsGB.Text = "Modification Options";
             // 
+            // BlosumThresholdBox
+            // 
+            this.BlosumThresholdBox.Location = new System.Drawing.Point(159, 111);
+            this.BlosumThresholdBox.Maximum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            this.BlosumThresholdBox.Minimum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            -2147483648});
+            this.BlosumThresholdBox.Name = "BlosumThresholdBox";
+            this.BlosumThresholdBox.Size = new System.Drawing.Size(77, 20);
+            this.BlosumThresholdBox.TabIndex = 2;
+            this.BlosumThresholdBox.ValueChanged += new System.EventHandler(this.ValueBox_Leave);
+            this.BlosumThresholdBox.Leave += new System.EventHandler(this.NumUpDownBox_Leave);
+            // 
+            // BlosumThresholdInfo
+            // 
+            this.BlosumThresholdInfo.AutoSize = true;
+            this.BlosumThresholdInfo.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.BlosumThresholdInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.BlosumThresholdInfo.ForeColor = System.Drawing.Color.MediumBlue;
+            this.BlosumThresholdInfo.Location = new System.Drawing.Point(148, 105);
+            this.BlosumThresholdInfo.Name = "BlosumThresholdInfo";
+            this.BlosumThresholdInfo.Size = new System.Drawing.Size(13, 13);
+            this.BlosumThresholdInfo.TabIndex = 84;
+            this.BlosumThresholdInfo.Text = "?";
+            this.BlosumThresholdInfo.MouseLeave += new System.EventHandler(this.Info_MouseLeave);
+            this.BlosumThresholdInfo.Click += new System.EventHandler(this.Info_Click);
+            this.BlosumThresholdInfo.MouseEnter += new System.EventHandler(this.Info_MouseEnter);
+            // 
             // ExplainUnknownMassShiftsAsBox
             // 
             this.ExplainUnknownMassShiftsAsBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -2436,25 +2476,6 @@
             0});
             this.MaxModificationMassPlusBox.ValueChanged += new System.EventHandler(this.ValueBox_Leave);
             this.MaxModificationMassPlusBox.Leave += new System.EventHandler(this.NumUpDownBox_Leave);
-            // 
-            // BlosumThresholdBox
-            // 
-            this.BlosumThresholdBox.Location = new System.Drawing.Point(159, 111);
-            this.BlosumThresholdBox.Maximum = new decimal(new int[] {
-            10000,
-            0,
-            0,
-            0});
-            this.BlosumThresholdBox.Minimum = new decimal(new int[] {
-            10000,
-            0,
-            0,
-            -2147483648});
-            this.BlosumThresholdBox.Name = "BlosumThresholdBox";
-            this.BlosumThresholdBox.Size = new System.Drawing.Size(77, 20);
-            this.BlosumThresholdBox.TabIndex = 2;
-            this.BlosumThresholdBox.ValueChanged += new System.EventHandler(this.ValueBox_Leave);
-            this.BlosumThresholdBox.Leave += new System.EventHandler(this.NumUpDownBox_Leave);
             // 
             // BlosumBox
             // 
@@ -2551,21 +2572,6 @@
             this.BlosumLabel.Size = new System.Drawing.Size(44, 13);
             this.BlosumLabel.TabIndex = 40;
             this.BlosumLabel.Text = "Blosum:";
-            // 
-            // BlosumThresholdInfo
-            // 
-            this.BlosumThresholdInfo.AutoSize = true;
-            this.BlosumThresholdInfo.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.BlosumThresholdInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.BlosumThresholdInfo.ForeColor = System.Drawing.Color.MediumBlue;
-            this.BlosumThresholdInfo.Location = new System.Drawing.Point(148, 105);
-            this.BlosumThresholdInfo.Name = "BlosumThresholdInfo";
-            this.BlosumThresholdInfo.Size = new System.Drawing.Size(13, 13);
-            this.BlosumThresholdInfo.TabIndex = 84;
-            this.BlosumThresholdInfo.Text = "?";
-            this.BlosumThresholdInfo.MouseLeave += new System.EventHandler(this.Info_MouseLeave);
-            this.BlosumThresholdInfo.Click += new System.EventHandler(this.Info_Click);
-            this.BlosumThresholdInfo.MouseEnter += new System.EventHandler(this.Info_MouseEnter);
             // 
             // UnimodXMLBrowse
             // 
@@ -3056,7 +3062,7 @@
             // 
             this.SaveOverOldButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.SaveOverOldButton.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.SaveOverOldButton.Location = new System.Drawing.Point(249, 571);
+            this.SaveOverOldButton.Location = new System.Drawing.Point(172, 571);
             this.SaveOverOldButton.Name = "SaveOverOldButton";
             this.SaveOverOldButton.Size = new System.Drawing.Size(93, 23);
             this.SaveOverOldButton.TabIndex = 19;
@@ -3064,12 +3070,25 @@
             this.SaveOverOldButton.UseVisualStyleBackColor = true;
             this.SaveOverOldButton.Click += new System.EventHandler(this.SaveOverOldButton_Click);
             // 
+            // SaveAsTemporaryButton
+            // 
+            this.SaveAsTemporaryButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.SaveAsTemporaryButton.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.SaveAsTemporaryButton.Location = new System.Drawing.Point(271, 571);
+            this.SaveAsTemporaryButton.Name = "SaveAsTemporaryButton";
+            this.SaveAsTemporaryButton.Size = new System.Drawing.Size(71, 23);
+            this.SaveAsTemporaryButton.TabIndex = 20;
+            this.SaveAsTemporaryButton.Text = "Use Once";
+            this.SaveAsTemporaryButton.UseVisualStyleBackColor = true;
+            this.SaveAsTemporaryButton.Click += new System.EventHandler(this.SaveAsTemporaryButton_Click);
+            // 
             // ConfigForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlLight;
             this.ClientSize = new System.Drawing.Size(534, 603);
+            this.Controls.Add(this.SaveAsTemporaryButton);
             this.Controls.Add(this.SaveOverOldButton);
             this.Controls.Add(this.SaveAsNewButton);
             this.Controls.Add(this.CancelEditButton);
@@ -3085,7 +3104,6 @@
             this.Name = "ConfigForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "MyriMatch Config Editor";
-            this.Load += new System.EventHandler(this.ConfigForm_Load);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ConfigForm_FormClosing);
             this.tabControl1.ResumeLayout(false);
             this.Gentab.ResumeLayout(false);
@@ -3155,8 +3173,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.TagLengthBox)).EndInit();
             this.TRModOptionsGB.ResumeLayout(false);
             this.TRModOptionsGB.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.MaxModificationMassPlusBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.BlosumThresholdBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.MaxModificationMassPlusBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.MaxModificationMassMinusBox)).EndInit();
             this.ScoringGB.ResumeLayout(false);
             this.ScoringGB.PerformLayout();
@@ -3386,6 +3404,7 @@
         private System.Windows.Forms.NumericUpDown MaxPeakCountBox;
         private System.Windows.Forms.Label MaxPeakCountLabel;
         private System.Windows.Forms.Label MaxPeakCountInfo;
+        internal System.Windows.Forms.Button SaveAsTemporaryButton;
     }
 }
 

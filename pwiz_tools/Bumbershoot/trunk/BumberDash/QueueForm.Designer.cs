@@ -31,13 +31,6 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(QueueForm));
             this.JobQueueDGV = new System.Windows.Forms.DataGridView();
-            this.JQName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.JQOutputDirectory = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.JQDatabaseFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.JQConfigFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.JQScanType = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.JQProgress = new MSDNSample.DataGridViewProgressColumn();
-            this.Kill = new System.Windows.Forms.DataGridViewButtonColumn();
             this.JQRowMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.lockToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -59,14 +52,23 @@
             this.documentationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.dataGridViewProgressColumn1 = new MSDNSample.DataGridViewProgressColumn();
-            this.dataGridViewImageColumn1 = new System.Windows.Forms.DataGridViewImageColumn();
             this.rowStatusLabel = new System.Windows.Forms.Label();
             this.pauseButton = new System.Windows.Forms.Button();
             this.LogButton = new System.Windows.Forms.Button();
             this.TrayIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.TrayMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.showToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.dataGridViewProgressColumn1 = new MSDNSample.DataGridViewProgressColumn();
+            this.dataGridViewProgressColumn2 = new MSDNSample.DataGridViewProgressColumn();
+            this.dataGridViewProgressColumn3 = new MSDNSample.DataGridViewProgressColumn();
+            this.dataGridViewImageColumn1 = new System.Windows.Forms.DataGridViewImageColumn();
+            this.JQName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.JQOutputDirectory = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.JQDatabaseFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.JQConfigFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.JQScanType = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.JQProgress = new MSDNSample.DataGridViewProgressColumn();
+            this.Kill = new System.Windows.Forms.DataGridViewButtonColumn();
             ((System.ComponentModel.ISupportInitialize)(this.JobQueueDGV)).BeginInit();
             this.JQRowMenu.SuspendLayout();
             this.menuStrip1.SuspendLayout();
@@ -110,65 +112,6 @@
             this.JobQueueDGV.Click += new System.EventHandler(this.JobQueueDGV_Click);
             this.JobQueueDGV.DragDrop += new System.Windows.Forms.DragEventHandler(this.JobQueueDGV_DragDrop);
             this.JobQueueDGV.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.JobQueueDGV_CellContentClick);
-            // 
-            // JQName
-            // 
-            this.JQName.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.JQName.HeaderText = "Name";
-            this.JQName.MinimumWidth = 45;
-            this.JQName.Name = "JQName";
-            this.JQName.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
-            // 
-            // JQOutputDirectory
-            // 
-            this.JQOutputDirectory.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.JQOutputDirectory.HeaderText = "Output Directory";
-            this.JQOutputDirectory.MinimumWidth = 110;
-            this.JQOutputDirectory.Name = "JQOutputDirectory";
-            this.JQOutputDirectory.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
-            // 
-            // JQDatabaseFile
-            // 
-            this.JQDatabaseFile.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.JQDatabaseFile.HeaderText = "Database File";
-            this.JQDatabaseFile.MinimumWidth = 95;
-            this.JQDatabaseFile.Name = "JQDatabaseFile";
-            this.JQDatabaseFile.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
-            // 
-            // JQConfigFile
-            // 
-            this.JQConfigFile.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.JQConfigFile.HeaderText = "Config File";
-            this.JQConfigFile.MinimumWidth = 80;
-            this.JQConfigFile.Name = "JQConfigFile";
-            this.JQConfigFile.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
-            // 
-            // JQScanType
-            // 
-            this.JQScanType.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.JQScanType.HeaderText = "Search Type";
-            this.JQScanType.Items.AddRange(new object[] {
-            "Database Search",
-            "Sequence Tagging"});
-            this.JQScanType.MinimumWidth = 75;
-            this.JQScanType.Name = "JQScanType";
-            // 
-            // JQProgress
-            // 
-            this.JQProgress.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.JQProgress.HeaderText = "Progress";
-            this.JQProgress.MinimumWidth = 50;
-            this.JQProgress.Name = "JQProgress";
-            this.JQProgress.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            // 
-            // Kill
-            // 
-            this.Kill.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.Kill.HeaderText = "";
-            this.Kill.MinimumWidth = 15;
-            this.Kill.Name = "Kill";
-            this.Kill.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-            this.Kill.Width = 25;
             // 
             // JQRowMenu
             // 
@@ -331,20 +274,6 @@
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
-            // dataGridViewProgressColumn1
-            // 
-            this.dataGridViewProgressColumn1.HeaderText = "Progress";
-            this.dataGridViewProgressColumn1.Name = "dataGridViewProgressColumn1";
-            this.dataGridViewProgressColumn1.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridViewProgressColumn1.Width = 110;
-            // 
-            // dataGridViewImageColumn1
-            // 
-            this.dataGridViewImageColumn1.HeaderText = "Progress";
-            this.dataGridViewImageColumn1.Name = "dataGridViewImageColumn1";
-            this.dataGridViewImageColumn1.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridViewImageColumn1.Width = 110;
-            // 
             // rowStatusLabel
             // 
             this.rowStatusLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -404,6 +333,96 @@
             this.showToolStripMenuItem.Text = "Show";
             this.showToolStripMenuItem.Click += new System.EventHandler(this.showToolStripMenuItem_Click);
             // 
+            // dataGridViewProgressColumn1
+            // 
+            this.dataGridViewProgressColumn1.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.dataGridViewProgressColumn1.HeaderText = "Progress";
+            this.dataGridViewProgressColumn1.MinimumWidth = 50;
+            this.dataGridViewProgressColumn1.Name = "dataGridViewProgressColumn1";
+            this.dataGridViewProgressColumn1.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            // 
+            // dataGridViewProgressColumn2
+            // 
+            this.dataGridViewProgressColumn2.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.dataGridViewProgressColumn2.HeaderText = "Progress";
+            this.dataGridViewProgressColumn2.MinimumWidth = 50;
+            this.dataGridViewProgressColumn2.Name = "dataGridViewProgressColumn2";
+            this.dataGridViewProgressColumn2.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            // 
+            // dataGridViewProgressColumn3
+            // 
+            this.dataGridViewProgressColumn3.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.dataGridViewProgressColumn3.HeaderText = "Progress";
+            this.dataGridViewProgressColumn3.MinimumWidth = 50;
+            this.dataGridViewProgressColumn3.Name = "dataGridViewProgressColumn3";
+            this.dataGridViewProgressColumn3.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            // 
+            // dataGridViewImageColumn1
+            // 
+            this.dataGridViewImageColumn1.HeaderText = "Progress";
+            this.dataGridViewImageColumn1.Name = "dataGridViewImageColumn1";
+            this.dataGridViewImageColumn1.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewImageColumn1.Width = 110;
+            // 
+            // JQName
+            // 
+            this.JQName.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.JQName.HeaderText = "Name";
+            this.JQName.MinimumWidth = 45;
+            this.JQName.Name = "JQName";
+            this.JQName.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
+            // 
+            // JQOutputDirectory
+            // 
+            this.JQOutputDirectory.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.JQOutputDirectory.HeaderText = "Output Directory";
+            this.JQOutputDirectory.MinimumWidth = 110;
+            this.JQOutputDirectory.Name = "JQOutputDirectory";
+            this.JQOutputDirectory.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
+            // 
+            // JQDatabaseFile
+            // 
+            this.JQDatabaseFile.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.JQDatabaseFile.HeaderText = "Database File";
+            this.JQDatabaseFile.MinimumWidth = 95;
+            this.JQDatabaseFile.Name = "JQDatabaseFile";
+            this.JQDatabaseFile.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
+            // 
+            // JQConfigFile
+            // 
+            this.JQConfigFile.HeaderText = "Config File";
+            this.JQConfigFile.MinimumWidth = 80;
+            this.JQConfigFile.Name = "JQConfigFile";
+            this.JQConfigFile.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
+            this.JQConfigFile.Width = 115;
+            // 
+            // JQScanType
+            // 
+            this.JQScanType.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.JQScanType.HeaderText = "Search Type";
+            this.JQScanType.Items.AddRange(new object[] {
+            "Database Search",
+            "Sequence Tagging"});
+            this.JQScanType.MinimumWidth = 75;
+            this.JQScanType.Name = "JQScanType";
+            // 
+            // JQProgress
+            // 
+            this.JQProgress.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.JQProgress.HeaderText = "Progress";
+            this.JQProgress.MinimumWidth = 50;
+            this.JQProgress.Name = "JQProgress";
+            this.JQProgress.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            // 
+            // Kill
+            // 
+            this.Kill.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.Kill.HeaderText = "";
+            this.Kill.MinimumWidth = 15;
+            this.Kill.Name = "Kill";
+            this.Kill.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            this.Kill.Width = 25;
+            // 
             // QueueForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -452,13 +471,6 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         internal System.Windows.Forms.DataGridView JobQueueDGV;
         private System.Windows.Forms.Button pauseButton;
-        private System.Windows.Forms.DataGridViewTextBoxColumn JQName;
-        private System.Windows.Forms.DataGridViewTextBoxColumn JQOutputDirectory;
-        private System.Windows.Forms.DataGridViewTextBoxColumn JQDatabaseFile;
-        private System.Windows.Forms.DataGridViewTextBoxColumn JQConfigFile;
-        private System.Windows.Forms.DataGridViewComboBoxColumn JQScanType;
-        private MSDNSample.DataGridViewProgressColumn JQProgress;
-        private System.Windows.Forms.DataGridViewButtonColumn Kill;
         private System.Windows.Forms.ToolStripMenuItem runToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem confiToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem iDPickerToolStripMenuItem;
@@ -472,5 +484,14 @@
         private System.Windows.Forms.ToolStripMenuItem documentationToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
+        private MSDNSample.DataGridViewProgressColumn dataGridViewProgressColumn2;
+        private MSDNSample.DataGridViewProgressColumn dataGridViewProgressColumn3;
+        private System.Windows.Forms.DataGridViewTextBoxColumn JQName;
+        private System.Windows.Forms.DataGridViewTextBoxColumn JQOutputDirectory;
+        private System.Windows.Forms.DataGridViewTextBoxColumn JQDatabaseFile;
+        private System.Windows.Forms.DataGridViewTextBoxColumn JQConfigFile;
+        private System.Windows.Forms.DataGridViewComboBoxColumn JQScanType;
+        private MSDNSample.DataGridViewProgressColumn JQProgress;
+        private System.Windows.Forms.DataGridViewButtonColumn Kill;
     }
 }

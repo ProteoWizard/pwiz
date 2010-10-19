@@ -104,6 +104,22 @@ namespace BumberDash
                 tempString = tempString.Trim();
                 JobQueueDGV.Rows[JobQueueDGV.Rows.Count - 1].Cells[0].ToolTipText = tempString;
                 JobQueueDGV.Rows[JobQueueDGV.Rows.Count - 1].Cells[0].Tag = hi.HistoryItemID;
+
+                bool databaseCustom = IsCustomConfig(hi.InitialConfigFile.FilePath);
+
+                if (hi is TagHistoryItem)
+                {
+                    bool tagCustom = IsCustomConfig(((TagHistoryItem)hi).TagConfigFile.FilePath);
+
+                    JobQueueDGV.Rows[JobQueueDGV.Rows.Count - 1].Cells[3].ToolTipText = string.Format("{0}{1}{2}{1}{3}",
+                        tagCustom ? CreatePropertyStringFromConfig(hi.InitialConfigFile) : hi.InitialConfigFile.FilePath,
+                        System.Environment.NewLine,
+                        new string('-', 20),
+                        databaseCustom ? CreatePropertyStringFromConfig(((TagHistoryItem)hi).TagConfigFile) : ((TagHistoryItem)hi).TagConfigFile.FilePath);
+                }
+                else if (databaseCustom)
+                    JobQueueDGV.Rows[JobQueueDGV.Rows.Count - 1].Cells[3].ToolTipText = CreatePropertyStringFromConfig(hi.InitialConfigFile);
+                
                 SimplifyAppearance(JobQueueDGV.Rows.Count - 1);
                 JobQueueDGV.Rows[JobQueueDGV.Rows.Count - 1].Cells[6].Value = "X";
                 JobQueueDGV.Rows[JobQueueDGV.Rows.Count - 1].Cells[6].Tag = hi.CPUs;
@@ -437,15 +453,43 @@ namespace BumberDash
                        _addJob.DatabaseLocBox.Text = JobQueueDGV.Rows[row].Cells[2].ToolTipText;
                        if (JobQueueDGV.Rows[row].Cells[4].Value.ToString() == "Database Search")
                        {
-                           _addJob.MyriConfigBox.Text = JobQueueDGV.Rows[row].Cells[3].ToolTipText;
+                           if (IsCustomConfig(JobQueueDGV.Rows[row].Cells[3].ToolTipText))
+                           {
+                               _addJob.MyriConfigBox.Text = JobQueueDGV.Rows[row].Cells[3].Value as string;
+                               _addJob.MyriMatchInfoBox.Text = JobQueueDGV.Rows[row].Cells[3].ToolTipText;
+                           }
+                           else
+                               _addJob.MyriConfigBox.Text = JobQueueDGV.Rows[row].Cells[3].ToolTipText;
                            _addJob.DatabaseRadio.Checked = true;
                        }
                        else
                        {
-                           string[] configFiles = JobQueueDGV.Rows[row].Cells[3].ToolTipText.Split(System.Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                           string[] shortConfignames = ((string)JobQueueDGV.Rows[row].Cells[3].Value).Split(new string[1] { " / " }, StringSplitOptions.RemoveEmptyEntries);
+                           string[] configFiles = JobQueueDGV.Rows[row].Cells[3].ToolTipText.Split(new string[1]{new string('-',20)}, StringSplitOptions.RemoveEmptyEntries);
 
-                           _addJob.DTConfigBox.Text = configFiles[0];
-                           _addJob.TRConfigBox.Text = configFiles[1];
+                           shortConfignames[0] = shortConfignames[0].Trim();
+                           shortConfignames[1] = shortConfignames[1].Trim();
+                           configFiles[0] = configFiles[0].Trim();
+                           configFiles[1] = configFiles[1].Trim();
+
+                           if (IsCustomConfig(configFiles[0]))
+                           {
+                               _addJob.DTConfigBox.Text = shortConfignames[0];
+                               _addJob.DirecTagInfoBox.Text = configFiles[0];
+                           }
+                           else
+                               _addJob.DTConfigBox.Text = configFiles[0];
+
+
+
+                           if (IsCustomConfig(configFiles[1]))
+                           {
+                               _addJob.TRConfigBox.Text = shortConfignames[1];
+                               _addJob.TagReconInfoBox.Text = configFiles[1];
+                           }
+                           else
+                               _addJob.TRConfigBox.Text = configFiles[1];
+
                            _addJob.TagRadio.Checked = true;
                        }
                        _addJob.AddJobRunButton.Text = "Save";
@@ -500,12 +544,14 @@ namespace BumberDash
                        if (!usedDTList.ContainsKey(hi.InitialConfigFile.FilePath))
                        {
                            usedDTList.Add(hi.InitialConfigFile.FilePath, null);
+                           _addJob._dtDropDownItems.Add(_addJob.DTConfigBox.Items.Count, hi.InitialConfigFile);
                            _addJob.DTConfigBox.Items.Add(hi.InitialConfigFile.FilePath);
                        }
 
                        if (!usedTRList.ContainsKey(((TagHistoryItem)hi).TagConfigFile.FilePath))
                        {
                            usedTRList.Add(((TagHistoryItem)hi).TagConfigFile.FilePath, null);
+                           _addJob._trDropDownItems.Add(_addJob.TRConfigBox.Items.Count, ((TagHistoryItem)hi).TagConfigFile);
                            _addJob.TRConfigBox.Items.Add(((TagHistoryItem)hi).TagConfigFile.FilePath);
                        }
                    }
@@ -514,6 +560,7 @@ namespace BumberDash
                        if (!usedMyriList.ContainsKey(hi.InitialConfigFile.FilePath))
                        {
                            usedMyriList.Add(hi.InitialConfigFile.FilePath, null);
+                           _addJob._myriDropDownItems.Add(_addJob.MyriConfigBox.Items.Count, hi.InitialConfigFile);
                            _addJob.MyriConfigBox.Items.Add(hi.InitialConfigFile.FilePath);
                        }
                    }
@@ -591,6 +638,9 @@ namespace BumberDash
                            if (_addJob.DatabaseRadio.Checked)
                            {
                                JobQueueDGV.Rows[editIndex].Cells[3].Value = _addJob.MyriConfigBox.Text;
+                               if (Path.GetExtension(_addJob.MyriConfigBox.Text) != ".cfg")
+                                   JobQueueDGV.Rows[editIndex].Cells[3].ToolTipText = _addJob.MyriMatchInfoBox.Text;
+
                                JobQueueDGV.Rows[editIndex].Cells[4].Value = "Database Search";
 
                                //database edit for Myrimatch job
@@ -603,6 +653,11 @@ namespace BumberDash
                            else
                            {
                                JobQueueDGV.Rows[editIndex].Cells[3].Value = String.Format("{0}{1}{2}", _addJob.DTConfigBox.Text, System.Environment.NewLine, _addJob.TRConfigBox.Text);
+                               JobQueueDGV.Rows[editIndex].Cells[3].ToolTipText = String.Format("{0}{1}{2}{1}{3}",
+                                   (Path.GetExtension(_addJob.DTConfigBox.Text) != ".cfg") ? _addJob.DirecTagInfoBox.Text : _addJob.DTConfigBox.Text,
+                                   System.Environment.NewLine,
+                                   new String('-',20),
+                                   (Path.GetExtension(_addJob.TRConfigBox.Text) != ".cfg") ? _addJob.TagReconInfoBox.Text : _addJob.TRConfigBox.Text);
                                JobQueueDGV.Rows[editIndex].Cells[4].Value = "Sequence Tagging";
 
                                //database edit for tag search
@@ -633,7 +688,7 @@ namespace BumberDash
                        else
                        {
                            _editMode = false;
-                           if (MessageBox.Show("Could not find original job. Save as new job?", "Edit error", MessageBoxButtons.YesNo).Equals(DialogResult.Yes))
+                           if (MessageBox.Show("Could not find original job. Save as new job?", "Edit error", MessageBoxButtons.YesNo) == DialogResult.Yes)
                                QueueJobFromForm();
                        }
 
@@ -682,6 +737,18 @@ namespace BumberDash
                        JobQueueDGV.Rows[JobQueueDGV.Rows.Count - 2].Tag = string.Empty;
                        JobQueueDGV.Rows[JobQueueDGV.Rows.Count - 2].Cells[0].ToolTipText = _addJob.InputFilesBox.Text;
                        JobQueueDGV.Rows[JobQueueDGV.Rows.Count - 2].Cells[0].Tag = jobIndex;
+                       if (_addJob.DatabaseRadio.Checked && Path.GetExtension(_addJob.MyriConfigBox.Text) != ".cfg")
+                       {
+                           JobQueueDGV.Rows[JobQueueDGV.Rows.Count - 2].Cells[3].ToolTipText = _addJob.MyriMatchInfoBox.Text;
+                       }
+                       else if (_addJob.TagRadio.Checked)
+                       {
+                           JobQueueDGV.Rows[JobQueueDGV.Rows.Count - 2].Cells[3].ToolTipText = String.Format("{0}{1}{2}{1}{3}",
+                               (Path.GetExtension(_addJob.DTConfigBox.Text) != ".cfg") ? _addJob.DirecTagInfoBox.Text : _addJob.DTConfigBox.Text,
+                               System.Environment.NewLine,
+                               new String('-', 20),
+                               (Path.GetExtension(_addJob.TRConfigBox.Text) != ".cfg") ? _addJob.TagReconInfoBox.Text : _addJob.TRConfigBox.Text);
+                       }
                        SimplifyAppearance(JobQueueDGV.Rows.Count - 2);
                        JobQueueDGV.Rows[JobQueueDGV.Rows.Count - 2].Cells[6].Value = "X";
                        JobQueueDGV.Rows[JobQueueDGV.Rows.Count - 2].Cells[6].Tag = _addJob.CPUsBox.Value.ToString();
@@ -709,15 +776,21 @@ namespace BumberDash
 
                if (JobQueueDGV.Rows[editIndex].Cells[4].Value.ToString() == "Database Search")
                {
-                   JobQueueDGV.Rows[editIndex].Cells[3].ToolTipText = JobQueueDGV.Rows[editIndex].Cells[3].Value.ToString();
-                   JobQueueDGV.Rows[editIndex].Cells[3].Value = (new DirectoryInfo(JobQueueDGV.Rows[editIndex].Cells[3].Value.ToString())).Name;
+                   if (Path.GetExtension(JobQueueDGV.Rows[editIndex].Cells[3].Value.ToString()) == ".cfg")
+                       JobQueueDGV.Rows[editIndex].Cells[3].ToolTipText = JobQueueDGV.Rows[editIndex].Cells[3].Value.ToString();
+
+                   JobQueueDGV.Rows[editIndex].Cells[3].Value = (IsCustomConfig(JobQueueDGV.Rows[editIndex].Cells[3].Value.ToString())) ?
+                       JobQueueDGV.Rows[editIndex].Cells[3].Value.ToString() :
+                       Path.GetFileName(JobQueueDGV.Rows[editIndex].Cells[3].Value.ToString());
+  
                }
                else
                {
-                   JobQueueDGV.Rows[editIndex].Cells[3].ToolTipText = JobQueueDGV.Rows[editIndex].Cells[3].Value.ToString();
                    string[] configFiles = JobQueueDGV.Rows[editIndex].Cells[3].Value.ToString().Split(System.Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
 
-                   JobQueueDGV.Rows[editIndex].Cells[3].Value = String.Format("\"{0}\" -> \"{1}\"", (new DirectoryInfo(configFiles[0])).Name, (new DirectoryInfo(configFiles[1])).Name);
+                   JobQueueDGV.Rows[editIndex].Cells[3].Value = String.Format("{0} / {1}",
+                       (IsCustomConfig(configFiles[0])) ? configFiles[0] : Path.GetFileName(configFiles[0]),
+                       (IsCustomConfig(configFiles[1])) ? configFiles[1] : Path.GetFileName(configFiles[1]));
                }
            }
 
@@ -778,15 +851,45 @@ namespace BumberDash
                     _addJob.CPUsBox.Value = int.Parse(jobQueueDGVRow.Cells[6].Tag.ToString());
                     if (jobQueueDGVRow.Cells[4].Value.ToString() == "Database Search")
                     {
-                        _addJob.MyriConfigBox.Text = jobQueueDGVRow.Cells[3].ToolTipText;
-                        _addJob.DatabaseRadio.Checked = true;
+                        if (IsCustomConfig(jobQueueDGVRow.Cells[3].ToolTipText))
+                        {
+                            _addJob.MyriConfigBox.Text = jobQueueDGVRow.Cells[3].Value as string;
+                            _addJob.MyriMatchInfoBox.Text = jobQueueDGVRow.Cells[3].ToolTipText;
+                            _addJob.DatabaseRadio.Checked = true;
+                        }
+                        else
+                        {
+                            _addJob.MyriConfigBox.Text = jobQueueDGVRow.Cells[3].ToolTipText;
+                            _addJob.DatabaseRadio.Checked = true;
+                        }
                     }
                     else
                     {
-                        string[] configFiles = jobQueueDGVRow.Cells[3].ToolTipText.Split(System.Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                        string[] shortConfignames = ((string)jobQueueDGVRow.Cells[3].Value).Split(new string[1] { " / " }, StringSplitOptions.RemoveEmptyEntries);
+                        string[] configFiles = jobQueueDGVRow.Cells[3].ToolTipText.Split(new string[1] { new string('-', 20) }, StringSplitOptions.RemoveEmptyEntries);
 
-                        _addJob.DTConfigBox.Text = configFiles[0];
-                        _addJob.TRConfigBox.Text = configFiles[1];
+                        shortConfignames[0] = shortConfignames[0].Trim();
+                        shortConfignames[1] = shortConfignames[1].Trim();
+                        configFiles[0] = configFiles[0].Trim();
+                        configFiles[1] = configFiles[1].Trim();
+
+                        if (IsCustomConfig(configFiles[0]))
+                        {
+                            _addJob.DTConfigBox.Text = shortConfignames[0];
+                            _addJob.DirecTagInfoBox.Text = configFiles[0];
+                        }
+                        else
+                            _addJob.DTConfigBox.Text = configFiles[0];
+
+
+                        if (IsCustomConfig(configFiles[1]))
+                        {
+                            _addJob.TRConfigBox.Text = shortConfignames[1];
+                            _addJob.TagReconInfoBox.Text = configFiles[1];
+                        }
+                        else
+                            _addJob.TRConfigBox.Text = configFiles[1];
+
                         _addJob.TagRadio.Checked = true;
                     }
                 }
@@ -1008,42 +1111,31 @@ namespace BumberDash
                //If Database Search
                if (_addJob.DatabaseRadio.Checked == true)
                {
-                   if (File.Exists(_addJob.MyriConfigBox.Text) && Path.GetExtension(_addJob.MyriConfigBox.Text).Equals(".cfg"))
+                   if (_addJob.MyriConfigBox.Text.Length > 0 && !_addJob.MyriConfigBox.Text.Contains(" / "))
                        _addJob.MyriConfigBox.BackColor = Color.White;
                    else
                    {
                        AllValid = false;
                        _addJob.MyriConfigBox.BackColor = Color.LightPink;
-                       if (Path.GetExtension(_addJob.MyriConfigBox.Text).Equals(".pepXML"))
-                       {
-                           MessageBox.Show("Please use the edit button to convert the .pepXML file to a new .cfg file");
-                       }
                    }
                }
                //If Tag Sequencing
                else
                {
-                   if (File.Exists(_addJob.DTConfigBox.Text) && Path.GetExtension(_addJob.DTConfigBox.Text).Equals(".cfg"))
+                   if (_addJob.DTConfigBox.Text.Length > 0 && !_addJob.DTConfigBox.Text.Contains(" / "))
                        _addJob.DTConfigBox.BackColor = Color.White;
                    else
                    {
                        AllValid = false;
                        _addJob.DTConfigBox.BackColor = Color.LightPink;
-                       if (Path.GetExtension(_addJob.MyriConfigBox.Text).Equals(".tags"))
-                       {
-                           MessageBox.Show("Please use the edit button to convert the .tags file to a new .cfg file");
-                       }
                    }
-                   if (File.Exists(_addJob.TRConfigBox.Text) && Path.GetExtension(_addJob.DTConfigBox.Text).Equals(".cfg"))
+
+                   if (_addJob.TRConfigBox.Text.Length > 0 && !_addJob.TRConfigBox.Text.Contains(" / "))
                        _addJob.TRConfigBox.BackColor = Color.White;
                    else
                    {
                        AllValid = false;
                        _addJob.TRConfigBox.BackColor = Color.LightPink;
-                       if (Path.GetExtension(_addJob.MyriConfigBox.Text).Equals(".pepXML"))
-                       {
-                           MessageBox.Show("Please use the edit button to convert the .pepXML file to a new .cfg file");
-                       }
                    }
 
                }
@@ -1105,7 +1197,7 @@ namespace BumberDash
                    //If Database Search
                    if (JobQueueDGV.Rows[row].Cells[4].Value.ToString() == "Database Search")
                    {
-                       if (File.Exists((string)JobQueueDGV.Rows[row].Cells[3].ToolTipText))
+                       if (((string)JobQueueDGV.Rows[row].Cells[3].Value).Length > 0 && !((string)JobQueueDGV.Rows[row].Cells[3].Value).Contains(" / "))
                            JobQueueDGV.Rows[row].Cells[3].Style.BackColor = Color.White;
                        else
                        {
@@ -1117,14 +1209,17 @@ namespace BumberDash
                    //If Tag Sequencing
                    else
                    {
-                       if (File.Exists(JobQueueDGV.Rows[row].Cells[3].ToolTipText.Split(System.Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries)[0]))
+                       var shortItems = ((string)JobQueueDGV.Rows[row].Cells[3].Value).Split(new string[1] { " / " }, StringSplitOptions.RemoveEmptyEntries);
+                       var toolTipItems = JobQueueDGV.Rows[row].Cells[3].ToolTipText.Split(new string[1]{new string('-',20)}, StringSplitOptions.RemoveEmptyEntries);
+
+                       if (shortItems[0].Length > 0 && !shortItems[0].Contains(" / "))
                            JobQueueDGV.Rows[row].Cells[3].Style.BackColor = Color.White;
                        else
                        {
                            AllValid = false;
                            JobQueueDGV.Rows[row].Cells[3].Style.BackColor = Color.LightPink;
                        }
-                       if (File.Exists(JobQueueDGV.Rows[row].Cells[3].ToolTipText.Split(System.Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries)[1]))
+                       if (shortItems[1].Length > 0 && !shortItems[1].Contains(" / "))
                            JobQueueDGV.Rows[row].Cells[3].Style.BackColor = Color.White;
                        else
                        {
@@ -1139,6 +1234,34 @@ namespace BumberDash
                        JobQueueDGV.Rows[row].Tag = "Invalid";
                }
                return AllValid;
+           }
+
+        /// <summary>
+        /// Takes a string and returns whether it should be treated as a custom config or not
+        /// </summary>
+        /// <param name="unknownItem"></param>
+        /// <returns></returns>
+           internal bool IsCustomConfig(string unknownItem)
+           {
+               var customRx = new System.Text.RegularExpressions.Regex(@"^--\w+--$");
+               
+               if (customRx.IsMatch(unknownItem))
+                   return true;
+
+               try
+               {
+                   if (Path.GetExtension(unknownItem) != ".cfg")
+                       return true;
+               }
+               catch
+               {
+                   return true;
+               }
+
+               if (!File.Exists(unknownItem))
+                   return true;                   
+
+               return false;
            }
 
        #endregion
@@ -1249,19 +1372,21 @@ namespace BumberDash
                 HistoryItem hi = new HistoryItem();
                 TagHistoryItem thi = new TagHistoryItem();
                 InputFile jobFile;
-                ConfigFile firstConfig;
+                ConfigFile firstConfig = null;
                 ConfigFile secondConfig = null;
                 string tempString;
                 string[] explode;
 
                 if (isDatabaseScan)
                 {
-                    
-                    firstConfig = ProcessConfigFileString(recievedFirstConfig, "MyriMatch");
+                    if (File.Exists(recievedFirstConfig) && Path.GetExtension(recievedFirstConfig) == ".cfg")
+                        firstConfig = ProcessConfigFileString(recievedFirstConfig, "MyriMatch");
                 }
                 else
                 {
-                    firstConfig = ProcessConfigFileString(recievedFirstConfig, "DirecTag");
+                    if (File.Exists(recievedFirstConfig) && Path.GetExtension(recievedFirstConfig) == ".cfg")
+                        firstConfig = ProcessConfigFileString(recievedFirstConfig, "DirecTag");
+                    if (File.Exists(recievedSecondConfig) && Path.GetExtension(recievedSecondConfig) == ".cfg")
                     secondConfig = ProcessConfigFileString(recievedSecondConfig, "TagRecon");
                 }
 
@@ -1277,7 +1402,8 @@ namespace BumberDash
                     hi.OutputDirectory = recievedOutput;
                     hi.ProteinDatabase = recievedDatabase;
                     hi.CPUs = numberOfCpus;
-                    hi.InitialConfigFile = firstConfig;
+                    if (firstConfig != null)
+                        hi.InitialConfigFile = firstConfig;
                     foreach (InputFile i in hi.FileList)
                     {
                         dbo.DeleteItem(i);
@@ -1293,8 +1419,10 @@ namespace BumberDash
                     thi.OutputDirectory = recievedOutput;
                     thi.ProteinDatabase = recievedDatabase;
                     thi.CPUs = numberOfCpus;
-                    thi.InitialConfigFile = firstConfig;
-                    thi.TagConfigFile = secondConfig;
+                    if (firstConfig != null)
+                        thi.InitialConfigFile = firstConfig;
+                    if (secondConfig != null)
+                        thi.TagConfigFile = secondConfig;
                     dbo.SaveItem(thi);
                     DeleteJobByID(jobID);
                 }
@@ -1308,8 +1436,10 @@ namespace BumberDash
                     thi.OutputDirectory = recievedOutput;
                     thi.ProteinDatabase = recievedDatabase;
                     thi.CPUs = numberOfCpus;
-                    thi.InitialConfigFile = firstConfig;
-                    thi.TagConfigFile = secondConfig;
+                    if (firstConfig != null)
+                        thi.InitialConfigFile = firstConfig;
+                    if (secondConfig != null)
+                        thi.TagConfigFile = secondConfig;
                     foreach (InputFile i in thi.FileList)
                     {
                         dbo.DeleteItem(i);
@@ -1344,10 +1474,10 @@ namespace BumberDash
         /// <param name="configFileLocation">Absolute location of the config file</param>
         /// <param name="destinationProgram">Program that will be using this config file</param>
         /// <returns></returns>
-            public ConfigFile ProcessConfigFileString(string configFileLocation, string destinationProgram)
-               {
-                   #region Lists of valid paramaters
-                   string[] boolList =
+            public ConfigFile ProcessConfigFileString(string configFileName, string destinationProgram)
+            {
+                #region Lists of valid paramaters
+                string[] boolList =
                     {
                         "UseChargeStateFromMS",
                         "AdjustPrecursorMass",
@@ -1358,7 +1488,7 @@ namespace BumberDash
                         "ComputeXCorr",
                         "UseAvgMassOfSequences"
                     };
-                   string[] intList =
+                string[] intList =
                 {
                     "DeisotopingMode",
                     "NumMinTerminiCleavages",
@@ -1380,7 +1510,7 @@ namespace BumberDash
                     "MinCandidateLength",
                     "MaxTagCount"
                 };
-                   string[] doubleList =
+                string[] doubleList =
                 {
                     "MinSequenceMass",
                     "IsotopeMzTolerance",
@@ -1404,7 +1534,7 @@ namespace BumberDash
                     "ComplementScoreWeight",
                     "MaxTagScore"
                 };
-                   string[] stringList =
+                string[] stringList =
                 {
                     "CleavageRules",
                     "PrecursorMzToleranceUnits",
@@ -1416,132 +1546,182 @@ namespace BumberDash
                     "DynamicMods",
                     "PreferredDeltaMasses"
                 };
-                   #endregion
+                #endregion
 
-                   bool allValid = true;
-                   ConfigFile config;
-                   ConfigProperty configParameter;
-                   DatabaseObjects dbo = new DatabaseObjects(_manager.GetSession());
-                   StreamReader fileIn;
-                   List<string[]> recievedParameters = new List<string[]>();
-                   List<string[]> databaseParameters = new List<string[]>();
-                   string tempString;
-                   string[] lineList;
-                   string[] lineContents;
+                bool isFileName = (File.Exists(configFileName) && Path.GetExtension(configFileName) == ".cfg");
+                bool allValid = true;
+                IList<ConfigFile> configList;
+                ConfigFile matchingConfig = new ConfigFile();
+                ConfigProperty configParameter;
+                DatabaseObjects dbo = new DatabaseObjects(_manager.GetSession());
+                StreamReader fileIn;
+                List<string[]> recievedParameters = new List<string[]>();
+                List<string[]> databaseParameters;
+                string tempString;
+                string[] lineList;
+                string[] lineContents;
 
-                   //First open the file and get the information
-                   try
-                   {
-                       fileIn = new StreamReader(configFileLocation);
-                       tempString = fileIn.ReadToEnd();
-                       fileIn.Close();
-                       fileIn.Dispose();
-                   }
-                   catch
-                   {
-                       return null;
-                   }
+                //First open the file and get the information if it is a file
+                if (isFileName)
+                {
+                    try
+                    {
+                        fileIn = new StreamReader(configFileName);
+                        tempString = fileIn.ReadToEnd();
+                        fileIn.Close();
+                        fileIn.Dispose();
+                    }
+                    catch
+                    {
+                        return null;
+                    }
+                }
+                else
+                {
+                    switch (destinationProgram)
+                    {
+                        case "MyriMatch":
+                            tempString = _addJob.MyriMatchInfoBox.Text;
+                            break;
+                        case "DirecTag":
+                            tempString = _addJob.DirecTagInfoBox.Text;
+                            break;
+                        case "TagRecon":
+                            tempString = _addJob.TagReconInfoBox.Text;
+                            break;
+                        default:
+                            tempString = string.Empty;
+                            break;
+                    }
+                }
 
-                   //split up the file and find out what it contains
-                   lineList = tempString.Split(System.Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-                   foreach (string str in lineList)
-                   {
-                       lineContents = str.Split("=".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-                       for (int x = 0; x < lineContents.Length; x++)
-                           lineContents[x] = lineContents[x].Trim();
-                       recievedParameters.Add(lineContents);
-                   }
+                //split up the file and find out what it contains
+                lineList = tempString.Split(System.Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                foreach (string str in lineList)
+                {
+                    lineContents = str.Split("=".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                    for (int x = 0; x < lineContents.Length; x++)
+                        lineContents[x] = lineContents[x].Trim();
+                    recievedParameters.Add(lineContents);
+                }
 
-                   //Now see if the config file path is already recored
-                   config = dbo.retrieveLatestConfigFileByFilePath(configFileLocation);
+                //Now see if the config file path is already recored
+                configList = dbo.retrieveConfigFilesByFilePath(configFileName);
 
-                   //Do a check on whether it has been changed
-                   if (config == null)
-                   {
-                       //dont have to check for changes, just perform initial setup
-                       allValid = false;
-                       config = new ConfigFile();
-                       config.DestinationProgram = destinationProgram;
-                       config.FilePath = configFileLocation;
-                       config.FirstUsedDate = DateTime.Now;
-                   }
-                   else
-                   {
-                       //make sure new parameters perfectly match old parameters
-                       tempString = string.Empty;
-                       foreach (ConfigProperty cp in config.PropertyList)
-                           tempString += String.Format("{0} = {1}{2}", cp.Name, cp.Value, System.Environment.NewLine);
-                       lineList = tempString.Split(System.Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-                       foreach (string str in lineList)
-                       {
-                           lineContents = str.Split("=".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-                           for (int x = 0; x < lineContents.Length; x++)
-                               lineContents[x] = lineContents[x].Trim();
-                           databaseParameters.Add(lineContents);
-                       }
+                //Do a check on whether it has been changed
+                if (configList.Count == 0)
+                {
+                    //dont have to check for changes, just perform initial setup
+                    allValid = false;
+                    matchingConfig.DestinationProgram = destinationProgram;
+                    matchingConfig.FilePath = configFileName;
+                    matchingConfig.FirstUsedDate = DateTime.Now;
+                }
+                else
+                {
+                    //check every configuration that matches the name
+                    foreach (var config in configList)
+                    {
+                        //clean test area for current config
+                        databaseParameters = new List<string[]>();
+                        allValid = true;
 
-                       if (recievedParameters.Count == databaseParameters.Count)
-                       {
-                           recievedParameters.Sort((x, y) => string.Compare(x[0], y[0]));
-                           databaseParameters.Sort((x, y) => string.Compare(x[0], y[0]));
-                           for (int x = 0; x < recievedParameters.Count; x++)
-                           {
-                               for (int y = 0; y < recievedParameters[x].Length; y++)
-                               {
-                                   if (recievedParameters[x][y] != databaseParameters[x][y])
-                                   {
-                                       allValid = false;
-                                       break;
-                                   }
-                               }
-                               if (!allValid)
-                                   break;
-                           }
-                           if (!allValid)
-                           {
-                               config = new ConfigFile();
-                               config.DestinationProgram = destinationProgram;
-                               config.FilePath = configFileLocation;
-                               config.FirstUsedDate = DateTime.Now;
-                           }
-                       }
-                       else
-                       {
-                           allValid = false;
-                           config = new ConfigFile();
-                           config.DestinationProgram = destinationProgram;
-                           config.FilePath = configFileLocation;
-                           config.FirstUsedDate = DateTime.Now;
-                       }
-                   }
+                        //populate comparison list with config's parameters
+                        tempString = string.Empty;
+                        foreach (ConfigProperty cp in config.PropertyList)
+                            tempString += String.Format("{0} = {1}{2}", cp.Name, cp.Value, System.Environment.NewLine);
+                        lineList = tempString.Split(System.Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                        foreach (string str in lineList)
+                        {
+                            lineContents = str.Split("=".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                            for (int x = 0; x < lineContents.Length; x++)
+                                lineContents[x] = lineContents[x].Trim();
+                            databaseParameters.Add(lineContents);
+                        }
 
-                   //if a new one had to be made then record new properties
-                   if (!allValid)
-                   {
-                       dbo.SaveItem(config);
+                        //compare two lists side by side
+                        if (recievedParameters.Count == databaseParameters.Count)
+                        {
+                            recievedParameters.Sort((x, y) => string.Compare(x[0], y[0]));
+                            databaseParameters.Sort((x, y) => string.Compare(x[0], y[0]));
+                            for (int x = 0; x < recievedParameters.Count; x++)
+                            {
+                                for (int y = 0; y < recievedParameters[x].Length; y++)
+                                {
+                                    if (recievedParameters[x][y] != databaseParameters[x][y])
+                                    {
+                                        allValid = false;
+                                        break;
+                                    }
+                                }
+                                if (!allValid)
+                                    break;
+                            }
+                            if (!allValid)
+                                continue;
+                        }
+                        else
+                        {
+                            allValid = false;
+                            continue;
+                        }
 
-                       for (int x = 0; x < recievedParameters.Count; x++)
-                       {
-                           configParameter = new ConfigProperty();
-                           configParameter.Name = recievedParameters[x][0];
-                           configParameter.Value = recievedParameters[x][1];
-                           configParameter.ConfigAssociation = config;
-                           if (stringList.Contains(recievedParameters[x][0]))
-                               configParameter.Type = "string";
-                           else if (doubleList.Contains(recievedParameters[x][0]))
-                               configParameter.Type = "double";
-                           else if (intList.Contains(recievedParameters[x][0]))
-                               configParameter.Type = "int";
-                           else if (boolList.Contains(recievedParameters[x][0]))
-                               configParameter.Type = "bool";
-                           else
-                               configParameter.Type = "unknown";
-                           dbo.SaveItem(configParameter);
-                       }
-                   }
+                        //if it passes all tests this is the correct one
+                        matchingConfig = config;
+                        break;
+                    }
 
-                   return config;
-               }
+                    //if it iterates all the way through with no matches create new one
+                    if (!allValid)
+                    {
+                        matchingConfig.DestinationProgram = destinationProgram;
+                        matchingConfig.FilePath = configFileName;
+                        matchingConfig.FirstUsedDate = DateTime.Now;
+                    }
+                }
+
+                //if a new one had to be made then record new properties
+                if (!allValid)
+                {
+                    dbo.SaveItem(matchingConfig);
+
+                    for (int x = 0; x < recievedParameters.Count; x++)
+                    {
+                        configParameter = new ConfigProperty()
+                        {
+                            Name = recievedParameters[x][0],
+                            Value = recievedParameters[x][1],
+                            ConfigAssociation = matchingConfig
+                        };
+                        if (stringList.Contains(recievedParameters[x][0]))
+                            configParameter.Type = "string";
+                        else if (doubleList.Contains(recievedParameters[x][0]))
+                            configParameter.Type = "double";
+                        else if (intList.Contains(recievedParameters[x][0]))
+                            configParameter.Type = "int";
+                        else if (boolList.Contains(recievedParameters[x][0]))
+                            configParameter.Type = "bool";
+                        else
+                            configParameter.Type = "unknown";
+                        dbo.SaveItem(configParameter);
+                    }
+                }
+
+                return matchingConfig;
+            }
+
+        /// <summary>
+        /// Returns properties from the given config file (newline seperated, in format "Property = Value")
+        /// </summary>
+        /// <param name="config"></param>
+        /// <returns></returns>
+            private string CreatePropertyStringFromConfig(ConfigFile config)
+            {
+                var tempString = new StringBuilder();
+                foreach (var param in config.PropertyList)
+                    tempString.AppendLine(string.Format("{0} = {1}", param.Name, param.Value));
+                return tempString.ToString().Trim();
+            }
 
         /// <summary>
         /// Removes job from history in database
@@ -1882,33 +2062,39 @@ namespace BumberDash
        internal void CheckForRunableJob()
        {
            DatabaseObjects dbo = new DatabaseObjects(_manager.GetSession());
-           string[] configFiles;
 
            if (!programmaticallyPaused && !manuallyPaused && _jobProcess != null &&
                !_jobProcess.JobIsRunning() && _lastCompleted < JobQueueDGV.Rows.Count - 2 &&
                CanArrangeToNextJob())
            {
-               configFiles = JobQueueDGV.Rows[_lastCompleted+1].Cells[3].ToolTipText.Split(System.Environment.NewLine.ToCharArray(),StringSplitOptions.RemoveEmptyEntries);
-
                //run edit job to guarntee actual config file and database config file match
                if (JobQueueDGV.Rows[_lastCompleted + 1].Cells[4].Value.ToString() == "Database Search")
+               {
+                   var configFile = (string)JobQueueDGV.Rows[_lastCompleted + 1].Cells[3].Value;
+
                    EditOldJob(JobQueueDGV.Rows[_lastCompleted + 1].Cells[0].Value.ToString(),
                        JobQueueDGV.Rows[_lastCompleted + 1].Cells[0].ToolTipText,
                        JobQueueDGV.Rows[_lastCompleted + 1].Cells[1].ToolTipText,
                        JobQueueDGV.Rows[_lastCompleted + 1].Cells[2].ToolTipText,
-                       configFiles[0],
+                       (IsCustomConfig(configFile)) ? configFile : JobQueueDGV.Rows[_lastCompleted + 1].Cells[3].ToolTipText,
                        null,
                        int.Parse(JobQueueDGV.Rows[_lastCompleted + 1].Cells[0].Tag.ToString()),
                        int.Parse(JobQueueDGV.Rows[_lastCompleted + 1].Cells[6].Tag.ToString()));
+               }
                else
+               {
+                   var shortItems = ((string)JobQueueDGV.Rows[_lastCompleted + 1].Cells[3].Value).Split(new string[1] { " / " }, StringSplitOptions.RemoveEmptyEntries);
+                   var toolTipItems = JobQueueDGV.Rows[_lastCompleted + 1].Cells[3].ToolTipText.Split(new string[1] { new string('-', 20) }, StringSplitOptions.RemoveEmptyEntries);
+
                    EditOldJob(JobQueueDGV.Rows[_lastCompleted + 1].Cells[0].Value.ToString(),
                        JobQueueDGV.Rows[_lastCompleted + 1].Cells[0].ToolTipText,
                        JobQueueDGV.Rows[_lastCompleted + 1].Cells[1].ToolTipText,
                        JobQueueDGV.Rows[_lastCompleted + 1].Cells[2].ToolTipText,
-                       configFiles[0],
-                       configFiles[1],
+                       (IsCustomConfig(shortItems[0])) ? shortItems[0] : toolTipItems[0].Trim(),
+                       (IsCustomConfig(shortItems[1])) ? shortItems[1] : toolTipItems[1].Trim(),
                        int.Parse(JobQueueDGV.Rows[_lastCompleted + 1].Cells[0].Tag.ToString()),
                        int.Parse(JobQueueDGV.Rows[_lastCompleted + 1].Cells[6].Tag.ToString()));
+               }
 
                dbo.IndicateJobBegin(int.Parse(JobQueueDGV.Rows[_lastCompleted + 1].Cells[0].Tag.ToString()));
                JobQueueDGV.Rows[_lastCompleted + 1].Tag = "Running";

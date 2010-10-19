@@ -15,6 +15,7 @@ namespace BumberDash
 
     #region Globals
         internal string _configName = string.Empty;
+        internal string _allProperties;
         private string _saveDestinationPath;
         private string _outputDirectory;
         private string _destinationProgram = "MyriMatch";
@@ -35,44 +36,58 @@ namespace BumberDash
         private Template _fileContents = new Template();       
     #endregion
 
-        public ConfigForm(string newFilePath, string newOutputDirectory, string configProgram)
+        public ConfigForm(string newFilePath, string newOutputDirectory, string configProgram, AddJobForm parent)
         {
+            bool customizedConfig = false;
+
             InitializeComponent();
             _saveDestinationPath = newFilePath;
             _outputDirectory = newOutputDirectory;
-            _destinationProgram = configProgram;            
-        }
+            _destinationProgram = configProgram;
 
-        protected override void ScaleControl(SizeF factor, BoundsSpecified specified)
-        {
-            base.ScaleControl(factor, specified);
 
-            _factorX = factor.Width;
-            _factorY = factor.Height;
-        }
-
-        private void ConfigForm_Load(object sender, EventArgs e)
-        {
             UpdateTemplateMenuItems();
             _fileContents.SetAsDefaultTemplate();
-            LoadTemplate(0, e);
+            LoadTemplate(0, null);
             tabControl1.TabPages.RemoveAt(1);
 
             if (!string.IsNullOrEmpty(_saveDestinationPath) && File.Exists(_saveDestinationPath))
             {
-                if (Path.GetExtension(_saveDestinationPath).Equals(".cfg"))
+                var extension = Path.GetExtension(_saveDestinationPath);
+                if (extension == ".cfg" ||
+                    extension == ".pepXML" ||
+                    extension == ".tags")
                 {
                     OpenFromFile(_saveDestinationPath);
                     SaveOverOldButton.Visible = true;
                 }
                 else
-                {
-                    _saveDestinationPath = string.Empty;
-                    SaveOverOldButton.Visible = false;
-                }
+                    customizedConfig = true;
             }
             else
+                customizedConfig = true;
+
+            if (customizedConfig)
+            {
+                if (IsCustomConfig(_saveDestinationPath) && parent != null)
+                {
+                    switch (_destinationProgram)
+                    {
+                        case "MyriMatch":
+                            OpenFromFileContents(parent.MyriMatchInfoBox.Text);
+                            break;
+                        case "TagRecon":
+                            OpenFromFileContents(parent.TagReconInfoBox.Text);
+                            break;
+                        case "DirecTag":
+                            OpenFromFileContents(parent.DirecTagInfoBox.Text);
+                            break;
+                    }
+                }
+
+                _saveDestinationPath = string.Empty;
                 SaveOverOldButton.Visible = false;
+            }
 
             switch (_destinationProgram)
             {
@@ -88,8 +103,14 @@ namespace BumberDash
             }
 
             NumMaxMissedCleavagesAuto.Height = (int)((double)NumMaxMissedCleavagesAuto.Height / _factorY);
+        }
 
-            
+        protected override void ScaleControl(SizeF factor, BoundsSpecified specified)
+        {
+            base.ScaleControl(factor, specified);
+
+            _factorX = factor.Width;
+            _factorY = factor.Height;
         }
 
         
@@ -1505,6 +1526,8 @@ namespace BumberDash
                 StartProteinIndexBox.Value = _formTemplate[TempNum].StartProteinIndex;
 
                 //NumMaxMissedCleavages
+                if (_formTemplate[TempNum].NumMaxMissedCleavages >= 100000)
+                    _formTemplate[TempNum].NumMaxMissedCleavages = -1;
                 NumMaxMissedCleavagesBox.Value = _formTemplate[TempNum].NumMaxMissedCleavages;
 
                 //EndSpectraScanNum
@@ -1897,6 +1920,18 @@ namespace BumberDash
             }
             else
                 return true;
+        }
+
+        private bool IsCustomConfig(string unknownItem)
+        {
+            var customRx = new System.Text.RegularExpressions.Regex(@"^--\w+--$");
+
+            if (customRx.IsMatch(unknownItem) ||
+                Path.GetExtension(unknownItem) != ".cfg" ||
+                !File.Exists(unknownItem))
+                return true;
+
+            return false;
         }
 
         #endregion
@@ -2920,8 +2955,7 @@ namespace BumberDash
         private void SaveToFile(string filepath)
         {
             StreamWriter cout;
-            string CommandGroup = string.Empty;
-            string EntireFile = string.Empty;
+            string entireFile;
 
             try
             {
@@ -2943,664 +2977,676 @@ namespace BumberDash
                 _fileContents.SetDirecTag();
 
 
-            #region Search through form and find items that need to be written
-            
-                #region 1. Tolerance group
+            entireFile = CreatePropertyString(true);
+            _allProperties = entireFile;
 
-                //    if (Changed[0])
-                //    {
-                        CommandGroup += "PrecursorMzTolerance = " +
-                            PrecursorMzToleranceBox.Text +
-                            System.Environment.NewLine;
-                        _fileContents.PrecursorMzTolerance = double.Parse(PrecursorMzToleranceBox.Text);
-                //    }
-
-                //    if (Changed[1])
-                //    {
-                        CommandGroup += "FragmentMzTolerance = " +
-                            FragmentMzToleranceBox.Text +
-                            System.Environment.NewLine;
-                        _fileContents.FragmentMzTolerance = double.Parse(FragmentMzToleranceBox.Text);
-                //    }
-
-                    if (_destinationProgram == "MyriMatch")
-                    {
-                //        if (Changed[2])
-                    //    {
-                            CommandGroup += "PrecursorMzToleranceUnits = \"" +
-                                PrecursorMzToleranceUnitsBox.Text.ToString() +
-                                "\"" + System.Environment.NewLine;
-                            _fileContents.PrecursorMzToleranceUnits = PrecursorMzToleranceUnitsBox.Text;
-                    //    }
-
-                //        if (Changed[3])
-                    //    {
-                            CommandGroup += "FragmentMzToleranceUnits = \"" +
-                                FragmentMzToleranceUnitsBox.Text.ToString() +
-                                "\"" + System.Environment.NewLine;
-                            _fileContents.FragmentMzToleranceUnits = FragmentMzToleranceUnitsBox.Text;
-                    //    }
-                    }
-
-                    if (_destinationProgram == "DirecTag")
-                    {
-                        //        if (Changed[4])
-                        //    {
-                        CommandGroup += "NTerminusMassTolerance = " +
-                            NTerminusMzToleranceBox.Text +
-                            System.Environment.NewLine;
-                        _fileContents.NTerminusMzTolerance = double.Parse(NTerminusMzToleranceBox.Text);
-                        //    }
-
-                        //        if (Changed[5])
-                        //    {
-                        CommandGroup += "CTerminusMassTolerance = " +
-                            CTerminusMzToleranceBox.Text +
-                            System.Environment.NewLine;
-                        _fileContents.CTerminusMzTolerance = double.Parse(CTerminusMzToleranceBox.Text);
-                        //    }
-                    }
-
-                    if (_destinationProgram == "TagRecon")
-                    {
-                //        if (Changed[4])
-                    //    {
-                            CommandGroup += "NTerminusMzTolerance = " +
-                                NTerminusMzToleranceBox.Text +
-                                System.Environment.NewLine;
-                            _fileContents.NTerminusMzTolerance = double.Parse(NTerminusMzToleranceBox.Text);
-                    //    }
-
-                //        if (Changed[5])
-                    //    {
-                            CommandGroup += "CTerminusMzTolerance = " +
-                                CTerminusMzToleranceBox.Text +
-                                System.Environment.NewLine;
-                            _fileContents.CTerminusMzTolerance = double.Parse(CTerminusMzToleranceBox.Text);
-                    //    }
-                    }
-
-                    if (!string.IsNullOrEmpty(CommandGroup))
-                        EntireFile += CommandGroup + System.Environment.NewLine;
-
-                #endregion
-
-                #region 2. Precursor group
-                    CommandGroup = string.Empty;
-
-                    if (_changed[6])
-                    {
-                        CommandGroup += "AdjustPrecursorMass = true" +
-                            System.Environment.NewLine;
-                        _fileContents.AdjustPrecursorMass = AdjustPrecursorMassBox.Checked;
-
-                        CommandGroup += "MaxPrecursorAdjustment = " +
-                            ((double)MaxPrecursorAdjustmentBox.Value * 1.008665).ToString() +
-                            System.Environment.NewLine;
-                        _fileContents.MaxPrecursorAdjustment = ((double)MaxPrecursorAdjustmentBox.Value * 1.008665);
-
-                        CommandGroup += "MinPrecursorAdjustment = " +
-                            ((double)MinPrecursorAdjustmentBox.Value * 1.008665).ToString() +
-                            System.Environment.NewLine;
-                        _fileContents.MinPrecursorAdjustment = ((double)MinPrecursorAdjustmentBox.Value * 1.008665);
-
-                        CommandGroup += "NumSearchBestAdjustments = " +
-                            (Math.Round(((double)MaxPrecursorAdjustmentBox.Value) - ((double)MinPrecursorAdjustmentBox.Value)) +1).ToString() +
-                            System.Environment.NewLine;
-                        _fileContents.MinPrecursorAdjustment = ((double)MinPrecursorAdjustmentBox.Value * 1.008665);
-                    }
-            
-                    if (!string.IsNullOrEmpty(CommandGroup))
-                        EntireFile += CommandGroup + System.Environment.NewLine;
-
-                #endregion
-
-                #region 3. Instrument group
-                    CommandGroup = string.Empty;
-
-                    if (_changed[9])
-                    {
-                        CommandGroup += "DuplicateSpectra = " +
-                            DuplicateSpectraBox.Checked.ToString().ToLower() +
-                            System.Environment.NewLine;
-                        _fileContents.DuplicateSpectra = DuplicateSpectraBox.Checked;
-                    }
-
-                    //if (Changed[10])
-                    //{
-                        CommandGroup += "UseChargeStateFromMS = " +
-                            UseChargeStateFromMSBox.Checked.ToString().ToLower() +
-                            System.Environment.NewLine;
-                        _fileContents.UseChargeStateFromMS = UseChargeStateFromMSBox.Checked;
-                    //}
-
-                    //if (Changed[11])
-                    //{
-                        CommandGroup += "NumChargeStates = " +
-                            NumChargeStatesBox.Value.ToString() +
-                            System.Environment.NewLine;
-                        _fileContents.NumChargeStates = ((int)NumChargeStatesBox.Value);
-                    //}
-
-                    //if (Changed[12])
-                    //{
-                        CommandGroup += "TicCutoffPercentage = " +
-                            TicCutoffPercentageBox.Value.ToString() +
-                            System.Environment.NewLine;
-                        _fileContents.TicCutoffPercentage = ((double)TicCutoffPercentageBox.Value);
-                    //}
-
-                    if (_destinationProgram == "MyriMatch" || _destinationProgram == "TagRecon")
-                    {
-                        if (_changed[13])
-                        {
-                            CommandGroup += "UseSmartPlusThreeModel = " +
-                                UseSmartPlusThreeModelBox.Checked.ToString().ToLower() +
-                                System.Environment.NewLine;
-                            _fileContents.UseSmartPlusThreeModel = UseSmartPlusThreeModelBox.Checked;
-                        }
-                    }
-
-                    if (!string.IsNullOrEmpty(CommandGroup))
-                        EntireFile += CommandGroup + System.Environment.NewLine;
-
-                #endregion
-
-                #region 4. Digestion group
-                    CommandGroup = string.Empty;
-
-                    if (_destinationProgram == "MyriMatch" || _destinationProgram == "TagRecon")
-                    {
-                    //    if (Changed[14])
-                    //    {
-                            CommandGroup += "CleavageRules = \"" +
-                                    CleavageRulesBox.SelectedItem.ToString() + "\"" +
-                                    System.Environment.NewLine;
-                            _fileContents.CleavageRules = CleavageRulesBox.Text;
-                    //    }
-
-                    //    if (Changed[15])
-                    //    {
-                            CommandGroup += "NumMinTerminiCleavages = " +
-                                    NumMinTerminiCleavagesBox.SelectedIndex.ToString() +
-                                    System.Environment.NewLine;
-                            _fileContents.NumMinTerminiCleavages = NumMinTerminiCleavagesBox.SelectedIndex;
-                    //    }
-
-                    //    if (Changed[16])
-                    //    {
-                            CommandGroup += "NumMaxMissedCleavages = " +
-                                    NumMaxMissedCleavagesBox.Value.ToString() +
-                                    System.Environment.NewLine;
-                            _fileContents.NumMaxMissedCleavages = ((int)NumMaxMissedCleavagesBox.Value);
-                    //    }
-
-                        if (_changed[17])
-                        {
-                            CommandGroup += "UseAvgMassOfSequences = " +
-                                    Convert.ToBoolean(UseAvgMassOfSequencesBox.SelectedIndex).ToString().ToLower() +
-                                    System.Environment.NewLine;
-                            _fileContents.UseAvgMassOfSequences = Convert.ToBoolean(UseAvgMassOfSequencesBox.SelectedIndex);
-                        }
-
-                        if (_changed[18])
-                        {
-                            CommandGroup += "MinCandidateLength = " +
-                                    MinCandidateLengthBox.Value.ToString() +
-                                    System.Environment.NewLine;
-                            _fileContents.MinCandidateLength = ((int)MinCandidateLengthBox.Value);
-                        }
-
-                        if (!string.IsNullOrEmpty(CommandGroup))
-                            EntireFile += CommandGroup + System.Environment.NewLine;
-
-                    }
-
-                #endregion
-
-                #region 5. Modifications group
-                    CommandGroup = string.Empty;
-                    string TempString = string.Empty;
-
-                 //   if (Changed[19] && DynamicModsList.Items.Count > 0)
-                 //   {
-                        CommandGroup += "DynamicMods = \"";
-                        for (int x = 0; x < AppliedModDGV.Rows.Count; x++)
-                        {
-                            if (AppliedModDGV.Rows[x].Cells[2].Value.ToString() == "Dynamic")
-                            {
-                                TempString += " " + AppliedModDGV.Rows[x].Cells[0].Value.ToString() + " * " + AppliedModDGV.Rows[x].Cells[1].Value.ToString();
-                                _fileContents.Modifications.Add(AppliedModDGV.Rows[x].Cells[0].Value.ToString() + " " + AppliedModDGV.Rows[x].Cells[1].Value.ToString() + " Dynamic");
-                            }
-                        }
-                        CommandGroup += TempString.Trim() + "\"" + System.Environment.NewLine;
-                        
-                 //   }
-
-                 //   if (Changed[20])
-                 //   {
-                        CommandGroup += "MaxDynamicMods = " +
-                                    MaxDynamicModsBox.Value.ToString() +
-                                    System.Environment.NewLine;
-                        _fileContents.MaxDynamicMods = ((int)MaxDynamicModsBox.Value);
-                 //   }
-
-                    TempString = string.Empty;
-
-                 //   if (Changed[21] && StaticModsList.Items.Count > 0)
-                 //   {
-                        CommandGroup += "StaticMods = \"";
-                        for (int x = 0; x < AppliedModDGV.Rows.Count; x++)
-                        {
-                            if (AppliedModDGV.Rows[x].Cells[2].Value.ToString() == "Static")
-                            {
-                                TempString += " " + AppliedModDGV.Rows[x].Cells[0].Value.ToString() + " " + AppliedModDGV.Rows[x].Cells[1].Value.ToString();
-                                _fileContents.Modifications.Add(AppliedModDGV.Rows[x].Cells[0].Value.ToString() + " " + AppliedModDGV.Rows[x].Cells[1].Value.ToString() + " Static");
-                            }
-                        }
-                        CommandGroup += TempString.Trim() + "\"" + System.Environment.NewLine;
-
-                     TempString = string.Empty;
-
-                 //   }
-
-                        if (_destinationProgram == "TagRecon" && ExplainUnknownMassShiftsAsBox.Text == "PreferredPTMs")
-                        {
-                            CommandGroup += "PreferredDeltaMasses = \"";
-                            for (int x = 0; x < AppliedModDGV.Rows.Count; x++)
-                            {
-                                if (AppliedModDGV.Rows[x].Cells[2].Value.ToString() == "PreferredPTM")
-                                {
-                                    TempString += String.Format(" {0} {1}", AppliedModDGV.Rows[x].Cells[0].Value, AppliedModDGV.Rows[x].Cells[1].Value);
-                                    _fileContents.Modifications.Add(AppliedModDGV.Rows[x].Cells[0].Value.ToString() + " " + AppliedModDGV.Rows[x].Cells[1].Value.ToString() + " PreferredPTM");
-                                }
-                            }
-                            CommandGroup += TempString.Trim() + "\"" + System.Environment.NewLine;
-
-                            CommandGroup += "MaxNumPreferredDeltaMasses = " +
-                                    MaxNumPreferredDeltaMassesBox.Value.ToString() +
-                                    System.Environment.NewLine;
-                            _fileContents.MaxDynamicMods = ((int)MaxNumPreferredDeltaMassesBox.Value);
-                        }
-
-                    if (!string.IsNullOrEmpty(CommandGroup))
-                        EntireFile += CommandGroup + System.Environment.NewLine;
-
-
-                #endregion
-
-                #region 6. Main TagRecon group
-                    CommandGroup = string.Empty;
-
-                    if (_destinationProgram == "TagRecon")
-                    {
-                        if (_changed[22])
-                        {
-                            CommandGroup += "ExplainUnknownMassShiftsAs = \"" +
-                                        ExplainUnknownMassShiftsAsBox.Text.ToString().ToLower() +
-                                         "\"" + System.Environment.NewLine;
-                            _fileContents.ExplainUnknownMassShiftsAs = ExplainUnknownMassShiftsAsBox.Text;
-
-                            if (ExplainUnknownMassShiftsAsBox.Text.ToString().ToLower() == "blindptms")
-                            {
-                                _changed[23] = true;
-                                _changed[24] = true;
-
-                            }
-                            else if (ExplainUnknownMassShiftsAsBox.Text.ToString().ToLower() == "mutations")
-                            {
-                                _changed[27] = true;
-
-                            }
-                        }
-
-                        if (_changed[23])
-                        {
-                            CommandGroup += "MaxModificationMassPlus = " +
-                                        MaxModificationMassPlusBox.Value.ToString() +
-                                        System.Environment.NewLine;
-                            _fileContents.MaxModificationMassPlus = ((Double)MaxModificationMassPlusBox.Value);
-                        }
-
-                        if (_changed[24])
-                        {
-                            CommandGroup += "MaxModificationMassMinus = " +
-                                        MaxModificationMassMinusBox.Value.ToString() +
-                                        System.Environment.NewLine;
-                            _fileContents.MaxModificationMassMinus = ((Double)MaxModificationMassMinusBox.Value);
-                        }
-
-                        //if (Changed[25])
-                        //{
-                        if (UnimodXMLBox.Text == "Default" || UnimodXMLBox.BackColor == Color.LightCoral)
-                            UnimodXMLBox.Text = Application.StartupPath + @"\tagrecon\unimod.xml";
-                        CommandGroup += "UnimodXML = \"" +
-                            UnimodXMLBox.Text.ToString() +
-                            "\"" + System.Environment.NewLine;
-                        _fileContents.UnimodXML = UnimodXMLBox.Text;
-                        //}
-                        // Application.StartupPath + @"\tagrecon\blosum62.fas"
-                        //if (Changed[26])
-                        //{
-                        if (BlosumBox.Text == "Default" || BlosumBox.BackColor == Color.LightCoral)
-                            BlosumBox.Text = Application.StartupPath + @"\tagrecon\blosum62.fas";
-                            CommandGroup += "Blosum = \"" +
-                                        BlosumBox.Text.ToString() +
-                                        "\"" + System.Environment.NewLine;
-                            _fileContents.Blosum = BlosumBox.Text;
-                        //}
-
-                        if (_changed[27])
-                        {
-                            CommandGroup += "BlosumThreshold = " +
-                                        BlosumThresholdBox.Value.ToString() +
-                                        System.Environment.NewLine;
-                            _fileContents.BlosumThreshold = ((Double)BlosumThresholdBox.Value);
-                        }
-
-                        if (!string.IsNullOrEmpty(CommandGroup))
-                            EntireFile += CommandGroup + System.Environment.NewLine;
-
-                    }
-
-                #endregion
-
-                #region 7. MaxResults group
-                    CommandGroup = string.Empty;
-
-                    //if (Changed[28])
-                    //{
-                        CommandGroup += "MaxResults = " +
-                                    MaxResultsBox.Value.ToString() +
-                                    System.Environment.NewLine;
-                        _fileContents.MaxResults = ((int)MaxResultsBox.Value);
-                        if (!string.IsNullOrEmpty(CommandGroup))
-                            EntireFile += CommandGroup + System.Environment.NewLine;
-                    //}
-                #endregion
-
-                #region 8. Misc group
-                    CommandGroup = string.Empty;
-
-                    if (_destinationProgram == "MyriMatch" || _destinationProgram == "TagRecon")
-                    {
-                        if (_changed[29])
-                        {
-                            CommandGroup += "ProteinSampleSize = " +
-                                        ProteinSampleSizeBox.Value.ToString() +
-                                        System.Environment.NewLine;
-                            _fileContents.ProteinSampleSize = ((int)ProteinSampleSizeBox.Value);
-                        }
-                    }
-
-
-                    if (!string.IsNullOrEmpty(CommandGroup))
-                        EntireFile += CommandGroup + System.Environment.NewLine;
-
-                #endregion
-
-                #region 9. Classes group
-                    CommandGroup = string.Empty;
-
-                    if (_changed[30])
-                    {
-                        CommandGroup += "NumIntensityClasses = " +
-                                    NumIntensityClassesBox.Value.ToString() +
-                                    System.Environment.NewLine;
-                        _fileContents.NumIntensityClasses = ((int)NumIntensityClassesBox.Value);
-                    }
-
-                    if (_changed[31])
-                    {
-                        CommandGroup += "ClassSizeMultiplier = " +
-                                    ClassSizeMultiplierBox.Value.ToString() +
-                                    System.Environment.NewLine;
-                        _fileContents.ClassSizeMultiplier = ((int)ClassSizeMultiplierBox.Value);
-                    }
-
-                    if (!string.IsNullOrEmpty(CommandGroup))
-                        EntireFile += CommandGroup + System.Environment.NewLine;
-
-                #endregion
-
-                #region 10. Deisotoping group
-                    CommandGroup = string.Empty;
-
-                    if (_changed[32])
-                    {
-                        CommandGroup += "DeisotopingMode = " +
-                                    DeisotopingModeBox.SelectedIndex.ToString() +
-                                    System.Environment.NewLine;
-                        _fileContents.DeisotopingMode = DeisotopingModeBox.SelectedIndex;
-                    }
-
-                    if (_changed[33])
-                    {
-                        CommandGroup += "IsotopeMzTolerance = " +
-                                    IsotopeMzToleranceBox.Text +
-                                    System.Environment.NewLine;
-                        _fileContents.IsotopeMzTolerance = double.Parse(IsotopeMzToleranceBox.Text);
-                    }
-
-                    if (_changed[34])
-                    {
-                        CommandGroup += "ComplementMzTolerance = " +
-                                    ComplementMzToleranceBox.Text +
-                                    System.Environment.NewLine;
-                        _fileContents.ComplementMzTolerance = double.Parse(ComplementMzToleranceBox.Text);
-                    }
-
-                    if (!string.IsNullOrEmpty(CommandGroup))
-                        EntireFile += CommandGroup + System.Environment.NewLine;
-
-                #endregion
-
-                #region 11. System group
-                    //CommandGroup = string.Empty;
-
-                    //if (_changed[35])
-                    //{
-                    //    CommandGroup += "CPUs = " +
-                    //                CPUsBox.Value.ToString() +
-                    //                System.Environment.NewLine;
-                    //    _fileContents.CPUs = ((int)CPUsBox.Value);
-                    //}
-
-                    //if (!string.IsNullOrEmpty(CommandGroup))
-                    //    EntireFile += CommandGroup + System.Environment.NewLine;
-
-                #endregion
-
-                #region 12. Sequence Mass group
-                    CommandGroup = string.Empty;
-
-                    if (_destinationProgram == "MyriMatch" || _destinationProgram == "TagRecon")
-                    {
-                        if (_changed[36])
-                        {
-                            CommandGroup += "MinSequenceMass = " +
-                                        MinSequenceMassBox.Value.ToString() +
-                                        System.Environment.NewLine;
-                            _fileContents.MinSequenceMass = ((double)MinSequenceMassBox.Value);
-                        }
-
-                        if (_changed[37])
-                        {
-                            CommandGroup += "MaxSequenceMass = " +
-                                        MaxSequenceMassBox.Value.ToString() +
-                                        System.Environment.NewLine;
-                            _fileContents.MaxSequenceMass = ((double)MaxSequenceMassBox.Value);
-                        }
-                    }
-
-                    if (!string.IsNullOrEmpty(CommandGroup))
-                        EntireFile += CommandGroup + System.Environment.NewLine;
-
-                #endregion
-
-                #region 13. Subsetting group
-                    CommandGroup = string.Empty;
-
-                    if (_changed[38])
-                    {
-                        CommandGroup += "StartSpectraScanNum = " +
-                                    StartSpectraScanNumBox.Value.ToString() +
-                                    System.Environment.NewLine;
-                        _fileContents.StartSpectraScanNum = ((int)StartSpectraScanNumBox.Value);
-                    }
-
-                    if (_changed[39])
-                    {
-                        CommandGroup += "EndSpectraScanNum = " +
-                                    EndSpectraScanNumBox.Value.ToString() +
-                                    System.Environment.NewLine;
-                        _fileContents.EndSpectraScanNum = ((int)EndSpectraScanNumBox.Value);
-                    }
-
-                    if (_destinationProgram == "MyriMatch" || _destinationProgram == "TagRecon")
-                    {
-                        if (_changed[40])
-                        {
-                            CommandGroup += "StartProteinIndex = " +
-                                        StartProteinIndexBox.Value.ToString() +
-                                        System.Environment.NewLine;
-                            _fileContents.StartProteinIndex = ((int)StartProteinIndexBox.Value);
-                        }
-
-                        if (_changed[41])
-                        {
-                            CommandGroup += "EndProteinIndex = " +
-                                        EndProteinIndexBox.Value.ToString() +
-                                        System.Environment.NewLine;
-                            _fileContents.EndProteinIndex = ((int)EndProteinIndexBox.Value);
-                        }
-                    }
-
-                    if (!string.IsNullOrEmpty(CommandGroup))
-                        EntireFile += CommandGroup + System.Environment.NewLine;
-
-                #endregion
-
-                #region 14. Secondary TagRecon group
-                    CommandGroup = string.Empty;
-
-                    if (_destinationProgram == "TagRecon" || _destinationProgram == "Myrimatch")
-                    {
-                        if (_changed[43])
-                        {
-                            CommandGroup += "ComputeXCorr = " +
-                                        ComputeXCorrBox.Checked.ToString().ToLower() +
-                                        System.Environment.NewLine;
-                            _fileContents.ComputeXCorr = ComputeXCorrBox.Checked;
-                        }
-                    }
-
-                    if (_destinationProgram == "TagRecon")
-                    {
-                        if (_changed[42])
-                        {
-                            CommandGroup += "UseNETAdjustment = " +
-                                        UseNETAdjustmentBox.Checked.ToString().ToLower() +
-                                        System.Environment.NewLine;
-                            _fileContents.UseNETAdjustment = UseNETAdjustmentBox.Checked;
-                        }
-
-                        if (_changed[44])
-                        {
-                            CommandGroup += "MassReconMode = " +
-                                        MassReconModeBox.Checked.ToString().ToLower() +
-                                        System.Environment.NewLine;
-                            _fileContents.MassReconMode = MassReconModeBox.Checked;
-                        }
-                    }
-
-                    if (!string.IsNullOrEmpty(CommandGroup))
-                        EntireFile += CommandGroup + System.Environment.NewLine;
-
-                #endregion
-
-                #region 15. DirecTag group
-                    CommandGroup = string.Empty;
-
-                    if (_destinationProgram == "DirecTag" || _destinationProgram == "Myrimatch")
-                    {
-                        if (_changed[45])
-                        {
-                            CommandGroup += "MaxPeakCount = " +
-                                        MaxPeakCountBox.Value.ToString() +
-                                        System.Environment.NewLine;
-                            _fileContents.MaxPeakCount = ((int)MaxPeakCountBox.Value);
-                        }
-                    }
-
-                    if (_destinationProgram == "DirecTag")
-                    {
-
-                        if (_changed[46])
-                        {
-                            CommandGroup += "TagLength = " +
-                                        TagLengthBox.Value.ToString() +
-                                        System.Environment.NewLine;
-                            _fileContents.TagLength = ((int)TagLengthBox.Value);
-                        }
-
-                        if (_changed[47])
-                        {
-                            CommandGroup += "IntensityScoreWeight = " +
-                                        IntensityScoreWeightBox.Value.ToString() +
-                                        System.Environment.NewLine;
-                            _fileContents.IntensityScoreWeight = ((double)IntensityScoreWeightBox.Value);
-                        }
-
-                        if (_changed[48])
-                        {
-                            CommandGroup += "MzFidelityScoreWeight = " +
-                                        MzFidelityScoreWeightBox.Value.ToString() +
-                                        System.Environment.NewLine;
-                            _fileContents.MzFidelityScoreWeight = ((double)MzFidelityScoreWeightBox.Value);
-                        }
-
-                        if (_changed[49])
-                        {
-                            CommandGroup += "ComplementScoreWeight = " +
-                                        ComplementScoreWeightBox.Value.ToString() +
-                                        System.Environment.NewLine;
-                            _fileContents.ComplementScoreWeight = ((double)ComplementScoreWeightBox.Value);
-                        }
-
-                        if (_changed[50])
-                        {
-                            CommandGroup += "MaxTagCount = " +
-                                        MaxTagCountBox.Value.ToString() +
-                                        System.Environment.NewLine;
-                            _fileContents.MaxTagCount = ((int)MaxTagCountBox.Value);
-                        }
-
-                        if (_changed[51])
-                        {
-                            CommandGroup += "MaxTagScore = " +
-                                MaxTagScoreBox.Text +
-                                System.Environment.NewLine;
-                            _fileContents.MaxTagScore = double.Parse(MaxTagScoreBox.Text);
-                        }
-                    }
-
-                    if (!string.IsNullOrEmpty(CommandGroup))
-                        EntireFile += CommandGroup + System.Environment.NewLine;
-
-                #endregion
-
-            #endregion
-
-
-            EntireFile = EntireFile.Trim();
-
-            cout.Write(EntireFile);
+            cout.Write(entireFile);
             cout.Close();
             cout.Dispose();
 
             ChangeCheck(_formTemplate[_currentTemplate]);
 
+        }
+
+        private string CreatePropertyString(bool redundantPrinting)
+        {
+            string CommandGroup = string.Empty;
+            string EntireFile = string.Empty;
+
+            #region 1. Tolerance group
+
+                if (_changed[0] || redundantPrinting)
+                {
+                    CommandGroup += "PrecursorMzTolerance = " +
+                        PrecursorMzToleranceBox.Text +
+                        System.Environment.NewLine;
+                    _fileContents.PrecursorMzTolerance = double.Parse(PrecursorMzToleranceBox.Text);
+                }
+
+                if (_changed[1] || redundantPrinting)
+                {
+                    CommandGroup += "FragmentMzTolerance = " +
+                        FragmentMzToleranceBox.Text +
+                        System.Environment.NewLine;
+                    _fileContents.FragmentMzTolerance = double.Parse(FragmentMzToleranceBox.Text);
+                }
+
+            if (_destinationProgram == "MyriMatch")
+            {
+                if (_changed[2] || redundantPrinting)
+                {
+                    CommandGroup += "PrecursorMzToleranceUnits = \"" +
+                        PrecursorMzToleranceUnitsBox.Text.ToString() +
+                        "\"" + System.Environment.NewLine;
+                    _fileContents.PrecursorMzToleranceUnits = PrecursorMzToleranceUnitsBox.Text;
+                }
+
+                if (_changed[3] || redundantPrinting)
+                {
+                    CommandGroup += "FragmentMzToleranceUnits = \"" +
+                        FragmentMzToleranceUnitsBox.Text.ToString() +
+                        "\"" + System.Environment.NewLine;
+                    _fileContents.FragmentMzToleranceUnits = FragmentMzToleranceUnitsBox.Text;
+                }
+            }
+
+            if (_destinationProgram == "DirecTag")
+            {
+                if (_changed[4] || redundantPrinting)
+                {
+                    CommandGroup += "NTerminusMassTolerance = " +
+                        NTerminusMzToleranceBox.Text +
+                        System.Environment.NewLine;
+                    _fileContents.NTerminusMzTolerance = double.Parse(NTerminusMzToleranceBox.Text);
+                }
+
+                if (_changed[5] || redundantPrinting)
+                {
+                    CommandGroup += "CTerminusMassTolerance = " +
+                        CTerminusMzToleranceBox.Text +
+                        System.Environment.NewLine;
+                    _fileContents.CTerminusMzTolerance = double.Parse(CTerminusMzToleranceBox.Text);
+                }
+            }
+
+            if (_destinationProgram == "TagRecon")
+            {
+                if (_changed[4] || redundantPrinting)
+                {
+                    CommandGroup += "NTerminusMzTolerance = " +
+                        NTerminusMzToleranceBox.Text +
+                        System.Environment.NewLine;
+                    _fileContents.NTerminusMzTolerance = double.Parse(NTerminusMzToleranceBox.Text);
+                }
+
+                if (_changed[5] || redundantPrinting)
+                {
+                    CommandGroup += "CTerminusMzTolerance = " +
+                        CTerminusMzToleranceBox.Text +
+                        System.Environment.NewLine;
+                    _fileContents.CTerminusMzTolerance = double.Parse(CTerminusMzToleranceBox.Text);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(CommandGroup))
+                EntireFile += CommandGroup + System.Environment.NewLine;
+
+            #endregion
+
+            #region 2. Precursor group
+            CommandGroup = string.Empty;
+
+            if (_changed[6])
+            {
+                CommandGroup += "AdjustPrecursorMass = true" +
+                    System.Environment.NewLine;
+                _fileContents.AdjustPrecursorMass = AdjustPrecursorMassBox.Checked;
+
+                CommandGroup += "MaxPrecursorAdjustment = " +
+                    ((double)MaxPrecursorAdjustmentBox.Value * 1.008665).ToString() +
+                    System.Environment.NewLine;
+                _fileContents.MaxPrecursorAdjustment = ((double)MaxPrecursorAdjustmentBox.Value * 1.008665);
+
+                CommandGroup += "MinPrecursorAdjustment = " +
+                    ((double)MinPrecursorAdjustmentBox.Value * 1.008665).ToString() +
+                    System.Environment.NewLine;
+                _fileContents.MinPrecursorAdjustment = ((double)MinPrecursorAdjustmentBox.Value * 1.008665);
+
+                CommandGroup += "NumSearchBestAdjustments = " +
+                    (Math.Round(((double)MaxPrecursorAdjustmentBox.Value) - ((double)MinPrecursorAdjustmentBox.Value)) + 1).ToString() +
+                    System.Environment.NewLine;
+                _fileContents.MinPrecursorAdjustment = ((double)MinPrecursorAdjustmentBox.Value * 1.008665);
+            }
+
+            if (!string.IsNullOrEmpty(CommandGroup))
+                EntireFile += CommandGroup + System.Environment.NewLine;
+
+            #endregion
+
+            #region 3. Instrument group
+            CommandGroup = string.Empty;
+
+            if (_changed[9])
+            {
+                CommandGroup += "DuplicateSpectra = " +
+                    DuplicateSpectraBox.Checked.ToString().ToLower() +
+                    System.Environment.NewLine;
+                _fileContents.DuplicateSpectra = DuplicateSpectraBox.Checked;
+            }
+
+            if (_changed[10] || redundantPrinting)
+            {
+                CommandGroup += "UseChargeStateFromMS = " +
+                    UseChargeStateFromMSBox.Checked.ToString().ToLower() +
+                    System.Environment.NewLine;
+                _fileContents.UseChargeStateFromMS = UseChargeStateFromMSBox.Checked;
+            }
+
+            if (_changed[11] || redundantPrinting)
+            {
+                CommandGroup += "NumChargeStates = " +
+                    NumChargeStatesBox.Value.ToString() +
+                    System.Environment.NewLine;
+                _fileContents.NumChargeStates = ((int)NumChargeStatesBox.Value);
+            }
+
+            if (_changed[12] || redundantPrinting)
+            {
+                CommandGroup += "TicCutoffPercentage = " +
+                    TicCutoffPercentageBox.Value.ToString() +
+                    System.Environment.NewLine;
+                _fileContents.TicCutoffPercentage = ((double)TicCutoffPercentageBox.Value);
+            }
+
+            if (_destinationProgram == "MyriMatch" || _destinationProgram == "TagRecon")
+            {
+                if (_changed[13])
+                {
+                    CommandGroup += "UseSmartPlusThreeModel = " +
+                        UseSmartPlusThreeModelBox.Checked.ToString().ToLower() +
+                        System.Environment.NewLine;
+                    _fileContents.UseSmartPlusThreeModel = UseSmartPlusThreeModelBox.Checked;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(CommandGroup))
+                EntireFile += CommandGroup + System.Environment.NewLine;
+
+            #endregion
+
+            #region 4. Digestion group
+            CommandGroup = string.Empty;
+
+            if (_destinationProgram == "MyriMatch" || _destinationProgram == "TagRecon")
+            {
+                if (_changed[14] || redundantPrinting)
+                {
+                    CommandGroup += "CleavageRules = \"" +
+                        CleavageRulesBox.SelectedItem.ToString() + "\"" +
+                        System.Environment.NewLine;
+                    _fileContents.CleavageRules = CleavageRulesBox.Text;
+                }
+
+                if (_changed[15] || redundantPrinting)
+                {
+                    CommandGroup += "NumMinTerminiCleavages = " +
+                        NumMinTerminiCleavagesBox.SelectedIndex.ToString() +
+                        System.Environment.NewLine;
+                    _fileContents.NumMinTerminiCleavages = NumMinTerminiCleavagesBox.SelectedIndex;
+                }
+
+                if (_changed[16] || redundantPrinting)
+                {
+                    CommandGroup += "NumMaxMissedCleavages = " +
+                        NumMaxMissedCleavagesBox.Value.ToString() +
+                        System.Environment.NewLine;
+                    _fileContents.NumMaxMissedCleavages = ((int)NumMaxMissedCleavagesBox.Value);
+                }
+
+                if (_changed[17])
+                {
+                    CommandGroup += "UseAvgMassOfSequences = " +
+                            Convert.ToBoolean(UseAvgMassOfSequencesBox.SelectedIndex).ToString().ToLower() +
+                            System.Environment.NewLine;
+                    _fileContents.UseAvgMassOfSequences = Convert.ToBoolean(UseAvgMassOfSequencesBox.SelectedIndex);
+                }
+
+                if (_changed[18])
+                {
+                    CommandGroup += "MinCandidateLength = " +
+                            MinCandidateLengthBox.Value.ToString() +
+                            System.Environment.NewLine;
+                    _fileContents.MinCandidateLength = ((int)MinCandidateLengthBox.Value);
+                }
+
+                if (!string.IsNullOrEmpty(CommandGroup))
+                    EntireFile += CommandGroup + System.Environment.NewLine;
+
+            }
+
+            #endregion
+
+            #region 5. Modifications group
+            CommandGroup = string.Empty;
+            
+            if (AppliedModDGV.Rows.Count > 0 || redundantPrinting)
+            {
+                var dynamicString = "DynamicMods = \"";
+                string tempString = string.Empty;
+
+                for (int x = 0; x < AppliedModDGV.Rows.Count; x++)
+                {
+                    if (AppliedModDGV.Rows[x].Cells[2].Value.ToString() == "Dynamic")
+                    {
+                        tempString += " " + AppliedModDGV.Rows[x].Cells[0].Value.ToString() + " * " + AppliedModDGV.Rows[x].Cells[1].Value.ToString();
+                        _fileContents.Modifications.Add(AppliedModDGV.Rows[x].Cells[0].Value.ToString() + " " + AppliedModDGV.Rows[x].Cells[1].Value.ToString() + " Dynamic");
+                    }
+                }
+                if (tempString.Length > 0)
+                    CommandGroup += String.Format("{0}{1}\"{2}", dynamicString, tempString.Trim(), System.Environment.NewLine);
+                
+            }
+
+            if (_changed[20] || redundantPrinting)
+            {
+                CommandGroup += "MaxDynamicMods = " +
+                    MaxDynamicModsBox.Value.ToString() +
+                    System.Environment.NewLine;
+                _fileContents.MaxDynamicMods = ((int)MaxDynamicModsBox.Value);
+            }
+
+            if (AppliedModDGV.Rows.Count > 0 || redundantPrinting)
+            {
+                var tempString = string.Empty;
+                var staticString = "StaticMods = \"";
+
+                for (int x = 0; x < AppliedModDGV.Rows.Count; x++)
+                {
+                    if (AppliedModDGV.Rows[x].Cells[2].Value.ToString() == "Static")
+                    {
+                        tempString += " " + AppliedModDGV.Rows[x].Cells[0].Value.ToString() + " " + AppliedModDGV.Rows[x].Cells[1].Value.ToString();
+                        _fileContents.Modifications.Add(AppliedModDGV.Rows[x].Cells[0].Value.ToString() + " " + AppliedModDGV.Rows[x].Cells[1].Value.ToString() + " Static");
+                    }
+                }
+                if (tempString.Length > 0)
+                    CommandGroup += String.Format("{0}{1}\"{2}", staticString, tempString.Trim(), System.Environment.NewLine);
+            }
+
+            if (_destinationProgram == "TagRecon" && ExplainUnknownMassShiftsAsBox.Text == "PreferredPTMs" && AppliedModDGV.Rows.Count > 0)
+            {
+                var tempString = string.Empty;
+                var PtmString= "PreferredDeltaMasses = \"";
+
+                for (int x = 0; x < AppliedModDGV.Rows.Count; x++)
+                {
+                    if (AppliedModDGV.Rows[x].Cells[2].Value.ToString() == "PreferredPTM")
+                    {
+                        tempString += String.Format(" {0} {1}", AppliedModDGV.Rows[x].Cells[0].Value, AppliedModDGV.Rows[x].Cells[1].Value);
+                        _fileContents.Modifications.Add(AppliedModDGV.Rows[x].Cells[0].Value.ToString() + " " + AppliedModDGV.Rows[x].Cells[1].Value.ToString() + " PreferredPTM");
+                    }
+                }
+
+                if (tempString.Length > 0)
+                {
+                    CommandGroup += String.Format("{0}{1}\"{2}", PtmString, tempString.Trim(), System.Environment.NewLine);
+
+                    CommandGroup += "MaxNumPreferredDeltaMasses = " +
+                            MaxNumPreferredDeltaMassesBox.Value.ToString() +
+                            System.Environment.NewLine;
+                    _fileContents.MaxDynamicMods = ((int)MaxNumPreferredDeltaMassesBox.Value);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(CommandGroup))
+                EntireFile += CommandGroup + System.Environment.NewLine;
+
+
+            #endregion
+
+            #region 6. Main TagRecon group
+            CommandGroup = string.Empty;
+
+            if (_destinationProgram == "TagRecon")
+            {
+                if (_changed[22])
+                {
+                    CommandGroup += "ExplainUnknownMassShiftsAs = \"" +
+                                ExplainUnknownMassShiftsAsBox.Text.ToString().ToLower() +
+                                 "\"" + System.Environment.NewLine;
+                    _fileContents.ExplainUnknownMassShiftsAs = ExplainUnknownMassShiftsAsBox.Text;
+
+                    if (ExplainUnknownMassShiftsAsBox.Text.ToString().ToLower() == "blindptms")
+                    {
+                        _changed[23] = true;
+                        _changed[24] = true;
+
+                    }
+                    else if (ExplainUnknownMassShiftsAsBox.Text.ToString().ToLower() == "mutations")
+                    {
+                        _changed[27] = true;
+
+                    }
+                }
+
+                if (_changed[23])
+                {
+                    CommandGroup += "MaxModificationMassPlus = " +
+                                MaxModificationMassPlusBox.Value.ToString() +
+                                System.Environment.NewLine;
+                    _fileContents.MaxModificationMassPlus = ((Double)MaxModificationMassPlusBox.Value);
+                }
+
+                if (_changed[24])
+                {
+                    CommandGroup += "MaxModificationMassMinus = " +
+                                MaxModificationMassMinusBox.Value.ToString() +
+                                System.Environment.NewLine;
+                    _fileContents.MaxModificationMassMinus = ((Double)MaxModificationMassMinusBox.Value);
+                }
+
+                //if (_changed[25] || redundantPrinting)
+                //{
+                    if (UnimodXMLBox.Text == "Default" || UnimodXMLBox.BackColor == Color.LightCoral)
+                        UnimodXMLBox.Text = Application.StartupPath + @"\tagrecon\unimod.xml";
+                    CommandGroup += "UnimodXML = \"" +
+                        UnimodXMLBox.Text.ToString() +
+                        "\"" + System.Environment.NewLine;
+                    _fileContents.UnimodXML = UnimodXMLBox.Text;
+                //}
+
+                // Application.StartupPath + @"\tagrecon\blosum62.fas"
+
+                //if (_changed[26] || redundantPrinting)
+                //{
+                    if (BlosumBox.Text == "Default" || BlosumBox.BackColor == Color.LightCoral)
+                        BlosumBox.Text = Application.StartupPath + @"\tagrecon\blosum62.fas";
+                    CommandGroup += "Blosum = \"" +
+                        BlosumBox.Text.ToString() +
+                        "\"" + System.Environment.NewLine;
+                    _fileContents.Blosum = BlosumBox.Text;
+                //}
+
+                if (_changed[27])
+                {
+                    CommandGroup += "BlosumThreshold = " +
+                                BlosumThresholdBox.Value.ToString() +
+                                System.Environment.NewLine;
+                    _fileContents.BlosumThreshold = ((Double)BlosumThresholdBox.Value);
+                }
+
+                if (!string.IsNullOrEmpty(CommandGroup))
+                    EntireFile += CommandGroup + System.Environment.NewLine;
+
+            }
+
+            #endregion
+
+            #region 7. MaxResults group
+            CommandGroup = string.Empty;
+
+            if (_changed[28] || redundantPrinting)
+            {
+                CommandGroup += "MaxResults = " +
+                    MaxResultsBox.Value.ToString() +
+                    System.Environment.NewLine;
+                _fileContents.MaxResults = ((int)MaxResultsBox.Value);
+                if (!string.IsNullOrEmpty(CommandGroup))
+                    EntireFile += CommandGroup + System.Environment.NewLine;
+            }
+            #endregion
+
+            #region 8. Misc group
+            CommandGroup = string.Empty;
+
+            if (_destinationProgram == "MyriMatch" || _destinationProgram == "TagRecon")
+            {
+                if (_changed[29])
+                {
+                    CommandGroup += "ProteinSampleSize = " +
+                                ProteinSampleSizeBox.Value.ToString() +
+                                System.Environment.NewLine;
+                    _fileContents.ProteinSampleSize = ((int)ProteinSampleSizeBox.Value);
+                }
+            }
+
+
+            if (!string.IsNullOrEmpty(CommandGroup))
+                EntireFile += CommandGroup + System.Environment.NewLine;
+
+            #endregion
+
+            #region 9. Classes group
+            CommandGroup = string.Empty;
+
+            if (_changed[30])
+            {
+                CommandGroup += "NumIntensityClasses = " +
+                            NumIntensityClassesBox.Value.ToString() +
+                            System.Environment.NewLine;
+                _fileContents.NumIntensityClasses = ((int)NumIntensityClassesBox.Value);
+            }
+
+            if (_changed[31])
+            {
+                CommandGroup += "ClassSizeMultiplier = " +
+                            ClassSizeMultiplierBox.Value.ToString() +
+                            System.Environment.NewLine;
+                _fileContents.ClassSizeMultiplier = ((int)ClassSizeMultiplierBox.Value);
+            }
+
+            if (!string.IsNullOrEmpty(CommandGroup))
+                EntireFile += CommandGroup + System.Environment.NewLine;
+
+            #endregion
+
+            #region 10. Deisotoping group
+            CommandGroup = string.Empty;
+
+            if (_changed[32])
+            {
+                CommandGroup += "DeisotopingMode = " +
+                            DeisotopingModeBox.SelectedIndex.ToString() +
+                            System.Environment.NewLine;
+                _fileContents.DeisotopingMode = DeisotopingModeBox.SelectedIndex;
+            }
+
+            if (_changed[33])
+            {
+                CommandGroup += "IsotopeMzTolerance = " +
+                            IsotopeMzToleranceBox.Text +
+                            System.Environment.NewLine;
+                _fileContents.IsotopeMzTolerance = double.Parse(IsotopeMzToleranceBox.Text);
+            }
+
+            if (_changed[34])
+            {
+                CommandGroup += "ComplementMzTolerance = " +
+                            ComplementMzToleranceBox.Text +
+                            System.Environment.NewLine;
+                _fileContents.ComplementMzTolerance = double.Parse(ComplementMzToleranceBox.Text);
+            }
+
+            if (!string.IsNullOrEmpty(CommandGroup))
+                EntireFile += CommandGroup + System.Environment.NewLine;
+
+            #endregion
+
+            #region 11. System group
+            //CommandGroup = string.Empty;
+
+            //if (_changed[35])
+            //{
+            //    CommandGroup += "CPUs = " +
+            //                CPUsBox.Value.ToString() +
+            //                System.Environment.NewLine;
+            //    _fileContents.CPUs = ((int)CPUsBox.Value);
+            //}
+
+            //if (!string.IsNullOrEmpty(CommandGroup))
+            //    EntireFile += CommandGroup + System.Environment.NewLine;
+
+            #endregion
+
+            #region 12. Sequence Mass group
+            CommandGroup = string.Empty;
+
+            if (_destinationProgram == "MyriMatch" || _destinationProgram == "TagRecon")
+            {
+                if (_changed[36])
+                {
+                    CommandGroup += "MinSequenceMass = " +
+                                MinSequenceMassBox.Value.ToString() +
+                                System.Environment.NewLine;
+                    _fileContents.MinSequenceMass = ((double)MinSequenceMassBox.Value);
+                }
+
+                if (_changed[37])
+                {
+                    CommandGroup += "MaxSequenceMass = " +
+                                MaxSequenceMassBox.Value.ToString() +
+                                System.Environment.NewLine;
+                    _fileContents.MaxSequenceMass = ((double)MaxSequenceMassBox.Value);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(CommandGroup))
+                EntireFile += CommandGroup + System.Environment.NewLine;
+
+            #endregion
+
+            #region 13. Subsetting group
+            CommandGroup = string.Empty;
+
+            if (_changed[38])
+            {
+                CommandGroup += "StartSpectraScanNum = " +
+                            StartSpectraScanNumBox.Value.ToString() +
+                            System.Environment.NewLine;
+                _fileContents.StartSpectraScanNum = ((int)StartSpectraScanNumBox.Value);
+            }
+
+            if (_changed[39])
+            {
+                CommandGroup += "EndSpectraScanNum = " +
+                            EndSpectraScanNumBox.Value.ToString() +
+                            System.Environment.NewLine;
+                _fileContents.EndSpectraScanNum = ((int)EndSpectraScanNumBox.Value);
+            }
+
+            if (_destinationProgram == "MyriMatch" || _destinationProgram == "TagRecon")
+            {
+                if (_changed[40])
+                {
+                    CommandGroup += "StartProteinIndex = " +
+                                StartProteinIndexBox.Value.ToString() +
+                                System.Environment.NewLine;
+                    _fileContents.StartProteinIndex = ((int)StartProteinIndexBox.Value);
+                }
+
+                if (_changed[41])
+                {
+                    CommandGroup += "EndProteinIndex = " +
+                                EndProteinIndexBox.Value.ToString() +
+                                System.Environment.NewLine;
+                    _fileContents.EndProteinIndex = ((int)EndProteinIndexBox.Value);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(CommandGroup))
+                EntireFile += CommandGroup + System.Environment.NewLine;
+
+            #endregion
+
+            #region 14. Secondary TagRecon group
+            CommandGroup = string.Empty;
+
+            if (_destinationProgram == "TagRecon" || _destinationProgram == "Myrimatch")
+            {
+                if (_changed[43])
+                {
+                    CommandGroup += "ComputeXCorr = " +
+                                ComputeXCorrBox.Checked.ToString().ToLower() +
+                                System.Environment.NewLine;
+                    _fileContents.ComputeXCorr = ComputeXCorrBox.Checked;
+                }
+            }
+
+            if (_destinationProgram == "TagRecon")
+            {
+                if (_changed[42])
+                {
+                    CommandGroup += "UseNETAdjustment = " +
+                                UseNETAdjustmentBox.Checked.ToString().ToLower() +
+                                System.Environment.NewLine;
+                    _fileContents.UseNETAdjustment = UseNETAdjustmentBox.Checked;
+                }
+
+                if (_changed[44])
+                {
+                    CommandGroup += "MassReconMode = " +
+                                MassReconModeBox.Checked.ToString().ToLower() +
+                                System.Environment.NewLine;
+                    _fileContents.MassReconMode = MassReconModeBox.Checked;
+                }
+            }
+
+            if (!string.IsNullOrEmpty(CommandGroup))
+                EntireFile += CommandGroup + System.Environment.NewLine;
+
+            #endregion
+
+            #region 15. DirecTag group
+            CommandGroup = string.Empty;
+
+            if (_destinationProgram == "DirecTag" || _destinationProgram == "Myrimatch")
+            {
+                if (_changed[45])
+                {
+                    CommandGroup += "MaxPeakCount = " +
+                                MaxPeakCountBox.Value.ToString() +
+                                System.Environment.NewLine;
+                    _fileContents.MaxPeakCount = ((int)MaxPeakCountBox.Value);
+                }
+            }
+
+            if (_destinationProgram == "DirecTag")
+            {
+
+                if (_changed[46])
+                {
+                    CommandGroup += "TagLength = " +
+                                TagLengthBox.Value.ToString() +
+                                System.Environment.NewLine;
+                    _fileContents.TagLength = ((int)TagLengthBox.Value);
+                }
+
+                if (_changed[47])
+                {
+                    CommandGroup += "IntensityScoreWeight = " +
+                                IntensityScoreWeightBox.Value.ToString() +
+                                System.Environment.NewLine;
+                    _fileContents.IntensityScoreWeight = ((double)IntensityScoreWeightBox.Value);
+                }
+
+                if (_changed[48])
+                {
+                    CommandGroup += "MzFidelityScoreWeight = " +
+                                MzFidelityScoreWeightBox.Value.ToString() +
+                                System.Environment.NewLine;
+                    _fileContents.MzFidelityScoreWeight = ((double)MzFidelityScoreWeightBox.Value);
+                }
+
+                if (_changed[49])
+                {
+                    CommandGroup += "ComplementScoreWeight = " +
+                                ComplementScoreWeightBox.Value.ToString() +
+                                System.Environment.NewLine;
+                    _fileContents.ComplementScoreWeight = ((double)ComplementScoreWeightBox.Value);
+                }
+
+                if (_changed[50])
+                {
+                    CommandGroup += "MaxTagCount = " +
+                                MaxTagCountBox.Value.ToString() +
+                                System.Environment.NewLine;
+                    _fileContents.MaxTagCount = ((int)MaxTagCountBox.Value);
+                }
+
+                if (_changed[51])
+                {
+                    CommandGroup += "MaxTagScore = " +
+                        MaxTagScoreBox.Text +
+                        System.Environment.NewLine;
+                    _fileContents.MaxTagScore = double.Parse(MaxTagScoreBox.Text);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(CommandGroup))
+                EntireFile += CommandGroup + System.Environment.NewLine;
+
+            #endregion
+
+            return EntireFile.Trim();
         }
 
         private void OpenFromFile(string filePath)
@@ -4135,6 +4181,18 @@ namespace BumberDash
                 AdvModeBox.Checked = true;
         }
 
+        internal void SaveAsTemporaryButton_Click(object sender, EventArgs e)
+        {
+            _allProperties = CreatePropertyString(false);
+
+            //trim empty lines
+            while (_allProperties.Contains(System.Environment.NewLine + System.Environment.NewLine))
+                _allProperties = _allProperties.Replace(System.Environment.NewLine + System.Environment.NewLine, System.Environment.NewLine);
+
+            _configName = "--Custom--";
+            _skipDiscardCheck = true;
+        }
+
 
 
     }
@@ -4207,7 +4265,7 @@ namespace BumberDash
             DuplicateSpectra = true;
             UseSmartPlusThreeModel = true;
             CPUs = 0;
-            UseAvgMassOfSequences = true;
+            UseAvgMassOfSequences = false;
             DeisotopingMode = 0;
             NumMinTerminiCleavages = 2;
             StartSpectraScanNum = 0;
@@ -4226,7 +4284,7 @@ namespace BumberDash
             FragmentMzTolerance = 0.5;
             ComplementMzTolerance = 0.5;
             TicCutoffPercentage = 0.98;
-            PrecursorMzTolerance = 1.25;
+            PrecursorMzTolerance = 1.5;
             MaxSequenceMass = 10000;
             ClassSizeMultiplier = 2;
             MaxPrecursorAdjustment = 2.5;
@@ -4243,8 +4301,8 @@ namespace BumberDash
             BlosumThreshold = 0;
             MaxModificationMassPlus = 300;
             MaxModificationMassMinus = 150;
-            NTerminusMzTolerance = 0.75;
-            CTerminusMzTolerance = 0.5;
+            NTerminusMzTolerance = 1.5;
+            CTerminusMzTolerance = 1.25;
             MaxPeakCount = 300;
             TagLength = 3;
             IntensityScoreWeight = 1;
@@ -4252,7 +4310,7 @@ namespace BumberDash
             ComplementScoreWeight = 1;
             ExplainUnknownMassShiftsAs = "";
             UseNETAdjustment = false;
-            ComputeXCorr = false;
+            ComputeXCorr = true;
             MinCandidateLength = 5;
             MaxTagScore = 20;
             MaxTagCount = 50;

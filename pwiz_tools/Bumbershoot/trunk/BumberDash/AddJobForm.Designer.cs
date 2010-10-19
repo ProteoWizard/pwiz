@@ -30,6 +30,7 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AddJobForm));
             this.FolderPanel = new System.Windows.Forms.Panel();
+            this.InfoExpandButton = new System.Windows.Forms.Button();
             this.IntermediateBox = new System.Windows.Forms.CheckBox();
             this.CPUsAutoLabel = new System.Windows.Forms.Label();
             this.CPUsBox = new System.Windows.Forms.NumericUpDown();
@@ -51,11 +52,6 @@
             this.InitialDirectoryButton = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
             this.ConfigGB = new System.Windows.Forms.GroupBox();
-            this.ConfigDatabasePanel = new System.Windows.Forms.Panel();
-            this.MyriConfigBox = new System.Windows.Forms.ComboBox();
-            this.MyriEditButton = new System.Windows.Forms.Button();
-            this.MyriConfigButton = new System.Windows.Forms.Button();
-            this.label13 = new System.Windows.Forms.Label();
             this.ConfigTagPanel = new System.Windows.Forms.Panel();
             this.DTConfigBox = new System.Windows.Forms.ComboBox();
             this.TRConfigBox = new System.Windows.Forms.ComboBox();
@@ -65,15 +61,31 @@
             this.DTEditButton = new System.Windows.Forms.Button();
             this.DTConfigButton = new System.Windows.Forms.Button();
             this.label11 = new System.Windows.Forms.Label();
+            this.ConfigDatabasePanel = new System.Windows.Forms.Panel();
+            this.MyriConfigBox = new System.Windows.Forms.ComboBox();
+            this.MyriEditButton = new System.Windows.Forms.Button();
+            this.MyriConfigButton = new System.Windows.Forms.Button();
+            this.label13 = new System.Windows.Forms.Label();
+            this.TagReconInfoBox = new System.Windows.Forms.TextBox();
+            this.TagReconInfoLabel = new System.Windows.Forms.Label();
+            this.DirecTagInfoLabel = new System.Windows.Forms.Label();
+            this.DirecTagInfoBox = new System.Windows.Forms.TextBox();
+            this.TagPanel = new System.Windows.Forms.Panel();
+            this.DatabasePanel = new System.Windows.Forms.Panel();
+            this.MyriMatchInfoLabel = new System.Windows.Forms.Label();
+            this.MyriMatchInfoBox = new System.Windows.Forms.TextBox();
             this.FolderPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.CPUsBox)).BeginInit();
             this.ConfigGB.SuspendLayout();
-            this.ConfigDatabasePanel.SuspendLayout();
             this.ConfigTagPanel.SuspendLayout();
+            this.ConfigDatabasePanel.SuspendLayout();
+            this.TagPanel.SuspendLayout();
+            this.DatabasePanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // FolderPanel
             // 
+            this.FolderPanel.Controls.Add(this.InfoExpandButton);
             this.FolderPanel.Controls.Add(this.IntermediateBox);
             this.FolderPanel.Controls.Add(this.CPUsAutoLabel);
             this.FolderPanel.Controls.Add(this.CPUsBox);
@@ -97,8 +109,18 @@
             this.FolderPanel.Controls.Add(this.ConfigGB);
             this.FolderPanel.Location = new System.Drawing.Point(0, 0);
             this.FolderPanel.Name = "FolderPanel";
-            this.FolderPanel.Size = new System.Drawing.Size(425, 415);
+            this.FolderPanel.Size = new System.Drawing.Size(435, 415);
             this.FolderPanel.TabIndex = 3;
+            // 
+            // InfoExpandButton
+            // 
+            this.InfoExpandButton.Location = new System.Drawing.Point(413, 291);
+            this.InfoExpandButton.Name = "InfoExpandButton";
+            this.InfoExpandButton.Size = new System.Drawing.Size(19, 61);
+            this.InfoExpandButton.TabIndex = 33;
+            this.InfoExpandButton.Text = ">\r\n>\r\n>";
+            this.InfoExpandButton.UseVisualStyleBackColor = true;
+            this.InfoExpandButton.Click += new System.EventHandler(this.InfoExpandButton_Click);
             // 
             // IntermediateBox
             // 
@@ -308,57 +330,6 @@
             this.ConfigGB.Text = "Configuration";
             this.ConfigGB.Visible = false;
             // 
-            // ConfigDatabasePanel
-            // 
-            this.ConfigDatabasePanel.Controls.Add(this.MyriConfigBox);
-            this.ConfigDatabasePanel.Controls.Add(this.MyriEditButton);
-            this.ConfigDatabasePanel.Controls.Add(this.MyriConfigButton);
-            this.ConfigDatabasePanel.Controls.Add(this.label13);
-            this.ConfigDatabasePanel.Location = new System.Drawing.Point(10, 14);
-            this.ConfigDatabasePanel.Name = "ConfigDatabasePanel";
-            this.ConfigDatabasePanel.Size = new System.Drawing.Size(379, 61);
-            this.ConfigDatabasePanel.TabIndex = 17;
-            this.ConfigDatabasePanel.Visible = false;
-            // 
-            // MyriConfigBox
-            // 
-            this.MyriConfigBox.FormattingEnabled = true;
-            this.MyriConfigBox.Location = new System.Drawing.Point(6, 26);
-            this.MyriConfigBox.Name = "MyriConfigBox";
-            this.MyriConfigBox.Size = new System.Drawing.Size(245, 21);
-            this.MyriConfigBox.TabIndex = 26;
-            this.MyriConfigBox.TextChanged += new System.EventHandler(this.MyriConfigBox_TextChanged);
-            // 
-            // MyriEditButton
-            // 
-            this.MyriEditButton.Location = new System.Drawing.Point(318, 25);
-            this.MyriEditButton.Name = "MyriEditButton";
-            this.MyriEditButton.Size = new System.Drawing.Size(55, 21);
-            this.MyriEditButton.TabIndex = 16;
-            this.MyriEditButton.Text = "New";
-            this.MyriEditButton.UseVisualStyleBackColor = true;
-            this.MyriEditButton.Click += new System.EventHandler(this.MyriEditButton_Click);
-            // 
-            // MyriConfigButton
-            // 
-            this.MyriConfigButton.Location = new System.Drawing.Point(257, 25);
-            this.MyriConfigButton.Name = "MyriConfigButton";
-            this.MyriConfigButton.Size = new System.Drawing.Size(55, 21);
-            this.MyriConfigButton.TabIndex = 15;
-            this.MyriConfigButton.Text = "Browse";
-            this.MyriConfigButton.UseVisualStyleBackColor = true;
-            this.MyriConfigButton.Click += new System.EventHandler(this.MyriConfigButton_Click);
-            // 
-            // label13
-            // 
-            this.label13.AutoSize = true;
-            this.label13.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label13.Location = new System.Drawing.Point(3, 5);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(129, 18);
-            this.label13.TabIndex = 13;
-            this.label13.Text = "MyriMatch Config:";
-            // 
             // ConfigTagPanel
             // 
             this.ConfigTagPanel.Controls.Add(this.DTConfigBox);
@@ -382,6 +353,7 @@
             this.DTConfigBox.Name = "DTConfigBox";
             this.DTConfigBox.Size = new System.Drawing.Size(245, 21);
             this.DTConfigBox.TabIndex = 27;
+            this.DTConfigBox.SelectedIndexChanged += new System.EventHandler(this.DTConfigBox_SelectedIndexChanged);
             this.DTConfigBox.TextChanged += new System.EventHandler(this.DTConfigBox_TextChanged);
             // 
             // TRConfigBox
@@ -391,6 +363,7 @@
             this.TRConfigBox.Name = "TRConfigBox";
             this.TRConfigBox.Size = new System.Drawing.Size(245, 21);
             this.TRConfigBox.TabIndex = 28;
+            this.TRConfigBox.SelectedIndexChanged += new System.EventHandler(this.TRConfigBox_SelectedIndexChanged);
             this.TRConfigBox.TextChanged += new System.EventHandler(this.TRConfigBox_TextChanged);
             // 
             // TREditButton
@@ -453,12 +426,149 @@
             this.label11.TabIndex = 9;
             this.label11.Text = "DirecTag Config:";
             // 
+            // ConfigDatabasePanel
+            // 
+            this.ConfigDatabasePanel.Controls.Add(this.MyriConfigBox);
+            this.ConfigDatabasePanel.Controls.Add(this.MyriEditButton);
+            this.ConfigDatabasePanel.Controls.Add(this.MyriConfigButton);
+            this.ConfigDatabasePanel.Controls.Add(this.label13);
+            this.ConfigDatabasePanel.Location = new System.Drawing.Point(10, 14);
+            this.ConfigDatabasePanel.Name = "ConfigDatabasePanel";
+            this.ConfigDatabasePanel.Size = new System.Drawing.Size(379, 61);
+            this.ConfigDatabasePanel.TabIndex = 17;
+            this.ConfigDatabasePanel.Visible = false;
+            // 
+            // MyriConfigBox
+            // 
+            this.MyriConfigBox.FormattingEnabled = true;
+            this.MyriConfigBox.Location = new System.Drawing.Point(6, 26);
+            this.MyriConfigBox.Name = "MyriConfigBox";
+            this.MyriConfigBox.Size = new System.Drawing.Size(245, 21);
+            this.MyriConfigBox.TabIndex = 26;
+            this.MyriConfigBox.SelectedIndexChanged += new System.EventHandler(this.MyriConfigBox_SelectedIndexChanged);
+            this.MyriConfigBox.TextChanged += new System.EventHandler(this.MyriConfigBox_TextChanged);
+            // 
+            // MyriEditButton
+            // 
+            this.MyriEditButton.Location = new System.Drawing.Point(318, 25);
+            this.MyriEditButton.Name = "MyriEditButton";
+            this.MyriEditButton.Size = new System.Drawing.Size(55, 21);
+            this.MyriEditButton.TabIndex = 16;
+            this.MyriEditButton.Text = "New";
+            this.MyriEditButton.UseVisualStyleBackColor = true;
+            this.MyriEditButton.Click += new System.EventHandler(this.MyriEditButton_Click);
+            // 
+            // MyriConfigButton
+            // 
+            this.MyriConfigButton.Location = new System.Drawing.Point(257, 25);
+            this.MyriConfigButton.Name = "MyriConfigButton";
+            this.MyriConfigButton.Size = new System.Drawing.Size(55, 21);
+            this.MyriConfigButton.TabIndex = 15;
+            this.MyriConfigButton.Text = "Browse";
+            this.MyriConfigButton.UseVisualStyleBackColor = true;
+            this.MyriConfigButton.Click += new System.EventHandler(this.MyriConfigButton_Click);
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label13.Location = new System.Drawing.Point(3, 5);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(129, 18);
+            this.label13.TabIndex = 13;
+            this.label13.Text = "MyriMatch Config:";
+            // 
+            // TagReconInfoBox
+            // 
+            this.TagReconInfoBox.Location = new System.Drawing.Point(2, 221);
+            this.TagReconInfoBox.Multiline = true;
+            this.TagReconInfoBox.Name = "TagReconInfoBox";
+            this.TagReconInfoBox.ReadOnly = true;
+            this.TagReconInfoBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.TagReconInfoBox.Size = new System.Drawing.Size(199, 175);
+            this.TagReconInfoBox.TabIndex = 5;
+            this.TagReconInfoBox.WordWrap = false;
+            // 
+            // TagReconInfoLabel
+            // 
+            this.TagReconInfoLabel.AutoSize = true;
+            this.TagReconInfoLabel.Location = new System.Drawing.Point(2, 205);
+            this.TagReconInfoLabel.Name = "TagReconInfoLabel";
+            this.TagReconInfoLabel.Size = new System.Drawing.Size(123, 13);
+            this.TagReconInfoLabel.TabIndex = 6;
+            this.TagReconInfoLabel.Text = "TagRecon Configuration";
+            // 
+            // DirecTagInfoLabel
+            // 
+            this.DirecTagInfoLabel.AutoSize = true;
+            this.DirecTagInfoLabel.Location = new System.Drawing.Point(2, 6);
+            this.DirecTagInfoLabel.Name = "DirecTagInfoLabel";
+            this.DirecTagInfoLabel.Size = new System.Drawing.Size(116, 13);
+            this.DirecTagInfoLabel.TabIndex = 8;
+            this.DirecTagInfoLabel.Text = "DirecTag Configuration";
+            // 
+            // DirecTagInfoBox
+            // 
+            this.DirecTagInfoBox.Location = new System.Drawing.Point(2, 22);
+            this.DirecTagInfoBox.Multiline = true;
+            this.DirecTagInfoBox.Name = "DirecTagInfoBox";
+            this.DirecTagInfoBox.ReadOnly = true;
+            this.DirecTagInfoBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.DirecTagInfoBox.Size = new System.Drawing.Size(199, 175);
+            this.DirecTagInfoBox.TabIndex = 7;
+            this.DirecTagInfoBox.WordWrap = false;
+            // 
+            // TagPanel
+            // 
+            this.TagPanel.Controls.Add(this.DirecTagInfoLabel);
+            this.TagPanel.Controls.Add(this.DirecTagInfoBox);
+            this.TagPanel.Controls.Add(this.TagReconInfoBox);
+            this.TagPanel.Controls.Add(this.TagReconInfoLabel);
+            this.TagPanel.Location = new System.Drawing.Point(439, 3);
+            this.TagPanel.Name = "TagPanel";
+            this.TagPanel.Size = new System.Drawing.Size(209, 403);
+            this.TagPanel.TabIndex = 9;
+            this.TagPanel.Visible = false;
+            // 
+            // DatabasePanel
+            // 
+            this.DatabasePanel.Controls.Add(this.MyriMatchInfoLabel);
+            this.DatabasePanel.Controls.Add(this.MyriMatchInfoBox);
+            this.DatabasePanel.Location = new System.Drawing.Point(436, 1);
+            this.DatabasePanel.Name = "DatabasePanel";
+            this.DatabasePanel.Size = new System.Drawing.Size(215, 409);
+            this.DatabasePanel.TabIndex = 33;
+            this.DatabasePanel.Visible = false;
+            // 
+            // MyriMatchInfoLabel
+            // 
+            this.MyriMatchInfoLabel.AutoSize = true;
+            this.MyriMatchInfoLabel.Location = new System.Drawing.Point(6, 8);
+            this.MyriMatchInfoLabel.Name = "MyriMatchInfoLabel";
+            this.MyriMatchInfoLabel.Size = new System.Drawing.Size(121, 13);
+            this.MyriMatchInfoLabel.TabIndex = 10;
+            this.MyriMatchInfoLabel.Text = "MyriMatch Configuration";
+            // 
+            // MyriMatchInfoBox
+            // 
+            this.MyriMatchInfoBox.Location = new System.Drawing.Point(6, 24);
+            this.MyriMatchInfoBox.Multiline = true;
+            this.MyriMatchInfoBox.Name = "MyriMatchInfoBox";
+            this.MyriMatchInfoBox.ReadOnly = true;
+            this.MyriMatchInfoBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.MyriMatchInfoBox.Size = new System.Drawing.Size(199, 374);
+            this.MyriMatchInfoBox.TabIndex = 9;
+            this.MyriMatchInfoBox.WordWrap = false;
+            // 
             // AddJobForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(422, 411);
+            this.ClientSize = new System.Drawing.Size(432, 411);
             this.Controls.Add(this.FolderPanel);
+            this.Controls.Add(this.TagPanel);
+            this.Controls.Add(this.DatabasePanel);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "AddJobForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
@@ -468,10 +578,14 @@
             this.FolderPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.CPUsBox)).EndInit();
             this.ConfigGB.ResumeLayout(false);
-            this.ConfigDatabasePanel.ResumeLayout(false);
-            this.ConfigDatabasePanel.PerformLayout();
             this.ConfigTagPanel.ResumeLayout(false);
             this.ConfigTagPanel.PerformLayout();
+            this.ConfigDatabasePanel.ResumeLayout(false);
+            this.ConfigDatabasePanel.PerformLayout();
+            this.TagPanel.ResumeLayout(false);
+            this.TagPanel.PerformLayout();
+            this.DatabasePanel.ResumeLayout(false);
+            this.DatabasePanel.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -514,6 +628,15 @@
         private System.Windows.Forms.Label CPUsAutoLabel;
         internal System.Windows.Forms.NumericUpDown CPUsBox;
         private System.Windows.Forms.CheckBox IntermediateBox;
+        private System.Windows.Forms.Label TagReconInfoLabel;
+        private System.Windows.Forms.Label DirecTagInfoLabel;
+        private System.Windows.Forms.Panel TagPanel;
+        private System.Windows.Forms.Panel DatabasePanel;
+        private System.Windows.Forms.Label MyriMatchInfoLabel;
+        private System.Windows.Forms.Button InfoExpandButton;
+        internal System.Windows.Forms.TextBox MyriMatchInfoBox;
+        internal System.Windows.Forms.TextBox TagReconInfoBox;
+        internal System.Windows.Forms.TextBox DirecTagInfoBox;
 
     }
 }

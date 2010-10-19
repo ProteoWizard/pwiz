@@ -161,25 +161,33 @@ namespace BumberDash
         {
 
             //initialize argument string
-            string tempString;
+            string tempString = string.Empty;
+            string configString;
+            string[] shortItems;
+            string[] toolTipItems;
 
             _killed = false;
             ProcessStartInfo psi;
 
             if (int.Parse(_mainForm.JobQueueDGV[6, _currentRow].Tag.ToString()) > 0)
-                tempString = string.Format("-cpus {0} -cfg ", _mainForm.JobQueueDGV[6, _currentRow].Tag.ToString());
-            else
-                tempString = "-cfg ";
+                tempString = string.Format("-cpus {0} ", _mainForm.JobQueueDGV[6, _currentRow].Tag.ToString());
             
             switch (_destinationProgram)
             {
-                case "MyriMatch":
+                case "MyriMatch":                
+                    //determine configuration
+                    if (_mainForm.IsCustomConfig(_mainForm.JobQueueDGV[3, _currentRow].Value as string))
+                        configString = OverrideFromPropertyString(_mainForm.JobQueueDGV[3, _currentRow].ToolTipText);
+                    else
+                        configString = "-cfg \"" + _mainForm.JobQueueDGV[3, _currentRow].ToolTipText + "\" ";
+
+
                     //Set  location of the program
-                    psi = new ProcessStartInfo(String.Format(@"""{0}\myrimatch\myrimatch.exe""", _mainDirectory));
+                    psi = new ProcessStartInfo(String.Format(@" ""{0}\myrimatch\myrimatch.exe""", _mainDirectory));
 
                     //continue to set up argument string
-                    tempString += String.Format("\"{0}\" -ProteinDatabase \"{1}\"",
-                        _mainForm.JobQueueDGV[3, _currentRow].ToolTipText,
+                    tempString += String.Format("{0}-ProteinDatabase \"{1}\"",
+                        configString,
                         _mainForm.JobQueueDGV[2, _currentRow].ToolTipText);
 
                     //add files to scan to argument string
@@ -190,11 +198,20 @@ namespace BumberDash
                     }
                     break;
                 case "DirecTag":
+                    shortItems = ((string)_mainForm.JobQueueDGV.Rows[_currentRow].Cells[3].Value).Split(new string[1] { " / " }, StringSplitOptions.RemoveEmptyEntries);
+                    toolTipItems = _mainForm.JobQueueDGV.Rows[_currentRow].Cells[3].ToolTipText.Split(new string[1] { new string('-', 20) }, StringSplitOptions.RemoveEmptyEntries);
+
+                    if (_mainForm.IsCustomConfig(shortItems[0]))
+                        configString = OverrideFromPropertyString(toolTipItems[0].Trim()).Trim();
+                    else
+                        configString = "-cfg \"" + toolTipItems[0].Trim() + "\"";
+                    
+
                     //Set  location of the program
                     psi = new ProcessStartInfo(String.Format(@"""{0}\directag\directag.exe""", _mainDirectory));
 
                     //continue to set up argument string
-                    tempString += String.Format("\"{0}\"", (_mainForm.JobQueueDGV[3, _currentRow].ToolTipText.Split(System.Environment.NewLine.ToCharArray(),StringSplitOptions.RemoveEmptyEntries))[0]);
+                    tempString += configString;
 
                     //add files to scan to argument string
                     foreach (string str in _mainForm.JobQueueDGV[0, _currentRow].ToolTipText.Split(System.Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
@@ -204,12 +221,20 @@ namespace BumberDash
                     }
                     break;
                 case "TagRecon":
+                    shortItems = ((string)_mainForm.JobQueueDGV.Rows[_currentRow].Cells[3].Value).Split(new string[1] { " / " }, StringSplitOptions.RemoveEmptyEntries);
+                    toolTipItems = _mainForm.JobQueueDGV.Rows[_currentRow].Cells[3].ToolTipText.Split(new string[1] { new string('-', 20) }, StringSplitOptions.RemoveEmptyEntries);
+
+                    if (_mainForm.IsCustomConfig(shortItems[1]))
+                        configString = OverrideFromPropertyString(toolTipItems[1].Trim());
+                    else
+                        configString = "-cfg \"" + toolTipItems[1].Trim() + "\" ";
+
                     //Set  location of the program
                     psi = new ProcessStartInfo(String.Format(@"""{0}\tagrecon\tagrecon.exe""", _mainDirectory));
 
                     //continue to set up argument string
-                    tempString += String.Format(@"""{0}"" -ProteinDatabase ""{1}""",
-                        (_mainForm.JobQueueDGV[3, _currentRow].ToolTipText.Split(System.Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries))[1],
+                    tempString += String.Format(@"{0}-ProteinDatabase ""{1}""",
+                        configString,
                         _mainForm.JobQueueDGV[2, _currentRow].ToolTipText);
 
                     //add files to scan to argument string
@@ -241,6 +266,16 @@ namespace BumberDash
             RunningProgram.PriorityClass = ProcessPriorityClass.BelowNormal;
             RunningProgram.BeginOutputReadLine();
             RunningProgram.OutputDataReceived += new DataReceivedEventHandler(DataReceived);
+        }
+
+        private string OverrideFromPropertyString(string recievedList)
+        {
+            var tempstring = string.Empty;
+            var propertyLines = recievedList.Split(System.Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+            foreach (var item in propertyLines)
+                tempstring += '-' + item.Replace(" = ", " ") + " ";
+
+            return tempstring;
         } 
 
         private void DataReceived(object sender, DataReceivedEventArgs e)
