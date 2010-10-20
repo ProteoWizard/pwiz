@@ -22,6 +22,7 @@
 #define PWIZ_SOURCE
 
 #include "Pep2MzIdent.hpp"
+#include "MzidPredicates.hpp"
 #include "pwiz/utility/chemistry/Ion.hpp"
 #include "pwiz/data/common/cv.hpp"
 #include "boost/regex.hpp"
@@ -394,21 +395,6 @@ const char* supported_tags[]  =
 };
 */
 
-struct organization_p
-{
-    bool operator()(ContactPtr contact)
-    {
-        return typeid(contact.get()).name() == typeid(Organization*).name();
-    }
-};
-
-struct person_p
-{
-    bool operator()(ContactPtr contact)
-    {
-        return typeid(contact.get()).name() == typeid(Person*).name();
-    }
-};
 
 // DEBUG Begin
 
@@ -822,39 +808,6 @@ bool addCvByPath(CVParam param, const std::string& path, MzIdentML& mzid)
     return addToMzIdentMLLevel(param, parts, mzid);
 }
 
-struct sequence_p
-{
-    const string seq;
-    
-    sequence_p(const string& seq) : seq(seq) {}
-
-    bool operator()(const PeptidePtr& p) const
-    {
-        return (p->peptideSequence == seq);
-    }
-};
-
-struct seq_p
-{
-    const string seq;
-    
-    seq_p(const string& seq) : seq(seq) {}
-
-    bool operator()(const DBSequencePtr& dbs) const
-    {
-        return (dbs->seq == seq);
-    }
-};
-
-template<typename T>
-struct id_p
-{
-    const string id;
-
-    id_p(const string id) : id(id) {}
-
-    bool operator()(const shared_ptr<T>& t) const { return t->id == id; } 
-};
 
 struct parameter_p
 {
@@ -901,23 +854,6 @@ void resizeSoftware(vector<AnalysisSoftwarePtr>& v, size_t new_size)
         v.push_back(AnalysisSoftwarePtr(new AnalysisSoftware()));
     
 }
-
-struct software_p
-{
-    CVID id;
-    
-    software_p(const CVID id) : id(id) {}
-
-    bool operator()(const AnalysisSoftwarePtr p)
-    {
-        bool result = false;
-
-        if (p.get())
-            result = p->softwareName.hasCVParam(id);
-
-        return result;
-    }
-};
 
 AnalysisSoftwarePtr findSoftware(const vector<AnalysisSoftwarePtr>& software,
     CVID cvid)
