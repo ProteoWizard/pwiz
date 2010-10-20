@@ -99,10 +99,10 @@ explicit cv.hpp ;
 # unit tests (ordered by dependency)
 #
 
-unit-test BinaryIndexStreamTest : BinaryIndexStreamTest.cpp pwiz_data_common ;
-unit-test MemoryIndexTest : MemoryIndexTest.cpp pwiz_data_common ;
-unit-test obotest : obotest.cpp pwiz_data_obo /ext/boost//filesystem ;
-unit-test cvtest : cvtest.cpp pwiz_data_common ;
-unit-test diff_std_test : diff_std_test.cpp pwiz_data_common ;
-unit-test ParamTypesTest : ParamTypesTest.cpp pwiz_data_common ;
-unit-test CVTranslatorTest : CVTranslatorTest.cpp pwiz_data_common ;
+unit-test-if-exists BinaryIndexStreamTest : BinaryIndexStreamTest.cpp pwiz_data_common ;
+unit-test-if-exists MemoryIndexTest : MemoryIndexTest.cpp pwiz_data_common ;
+unit-test-if-exists obotest : obotest.cpp pwiz_data_obo /ext/boost//filesystem ;
+unit-test-if-exists cvtest : cvtest.cpp pwiz_data_common ;
+unit-test-if-exists diff_std_test : diff_std_test.cpp pwiz_data_common ;
+unit-test-if-exists ParamTypesTest : ParamTypesTest.cpp pwiz_data_common ;
+unit-test-if-exists CVTranslatorTest : CVTranslatorTest.cpp pwiz_data_common ;

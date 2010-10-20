@@ -45,7 +45,7 @@ lib pwiz_analysis_common
 # unit tests (ordered by dependency)
 #
 
-unit-test ZeroSampleFillerTest : ZeroSampleFillerTest.cpp pwiz_analysis_common ;
-unit-test SavitzkyGolaySmootherTest : SavitzkyGolaySmootherTest.cpp pwiz_analysis_common ;
-unit-test WhittakerSmootherTest : WhittakerSmootherTest.cpp pwiz_analysis_common ;
-unit-test LocalMaximumPeakDetectorTest : LocalMaximumPeakDetectorTest.cpp pwiz_analysis_common ;
+unit-test-if-exists ZeroSampleFillerTest : ZeroSampleFillerTest.cpp pwiz_analysis_common ;
+unit-test-if-exists SavitzkyGolaySmootherTest : SavitzkyGolaySmootherTest.cpp pwiz_analysis_common ;
+unit-test-if-exists WhittakerSmootherTest : WhittakerSmootherTest.cpp pwiz_analysis_common ;
+unit-test-if-exists LocalMaximumPeakDetectorTest : LocalMaximumPeakDetectorTest.cpp pwiz_analysis_common ;

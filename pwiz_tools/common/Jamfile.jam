@@ -47,5 +47,5 @@ lib pwiz_tools_common
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
     ;
 
-unit-test MSDataAnalyzerApplicationTest : MSDataAnalyzerApplicationTest.cpp pwiz_tools_common ;
+unit-test-if-exists MSDataAnalyzerApplicationTest : MSDataAnalyzerApplicationTest.cpp pwiz_tools_common ;
 

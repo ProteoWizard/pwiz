@@ -38,6 +38,6 @@ project
 	;
 
 
-unit-test chemistry_test : chemistry_test.cpp : <conditional>@unit-test-requirements ;
+unit-test-if-exists chemistry_test : chemistry_test.cpp : <conditional>@unit-test-requirements ;
 
 }

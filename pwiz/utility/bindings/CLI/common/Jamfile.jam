@@ -71,7 +71,7 @@ make cv.hpp : $(PWIZ_ROOT_PATH)/pwiz/data/common/psi-ms.obo $(PWIZ_ROOT_PATH)/pw
 explicit cv.hpp ;
 
 
-unit-test SharedCLITest : SharedCLITest.cpp : <conditional>@unit-test-requirements ;
-unit-test ParamTypesTest : ParamTypesTest.cpp : <conditional>@unit-test-requirements ;
+unit-test-if-exists SharedCLITest : SharedCLITest.cpp : <conditional>@unit-test-requirements ;
+unit-test-if-exists ParamTypesTest : ParamTypesTest.cpp : <conditional>@unit-test-requirements ;
 
 }

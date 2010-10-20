@@ -70,7 +70,7 @@ lib pwiz_analysis_passive
 #
 
 
-unit-test MSDataAnalyzerTest : MSDataAnalyzerTest.cpp pwiz_analysis_passive ;
-unit-test MSDataCacheTest : MSDataCacheTest.cpp ../../data/msdata//pwiz_data_msdata_examples pwiz_analysis_passive ;
-unit-test RegionAnalyzerTest : RegionAnalyzerTest.cpp pwiz_analysis_passive ;
+unit-test-if-exists MSDataAnalyzerTest : MSDataAnalyzerTest.cpp pwiz_analysis_passive ;
+unit-test-if-exists MSDataCacheTest : MSDataCacheTest.cpp ../../data/msdata//pwiz_data_msdata_examples pwiz_analysis_passive ;
+unit-test-if-exists RegionAnalyzerTest : RegionAnalyzerTest.cpp pwiz_analysis_passive ;
 

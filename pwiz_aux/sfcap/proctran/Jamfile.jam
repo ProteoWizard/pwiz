@@ -38,9 +38,9 @@ lib pwiz_aux_sfcap_proctran
     ;
 
 
-unit-test RecalibratorSimpleTest : RecalibratorSimpleTest.cpp pwiz_aux_sfcap_proctran ;
-unit-test KnownMassListTest : KnownMassListTest.cpp pwiz_aux_sfcap_proctran ;
-unit-test RecalibratorKnownMassListTest : RecalibratorKnownMassListTest.cpp pwiz_aux_sfcap_proctran ;
+unit-test-if-exists RecalibratorSimpleTest : RecalibratorSimpleTest.cpp pwiz_aux_sfcap_proctran ;
+unit-test-if-exists KnownMassListTest : KnownMassListTest.cpp pwiz_aux_sfcap_proctran ;
+unit-test-if-exists RecalibratorKnownMassListTest : RecalibratorKnownMassListTest.cpp pwiz_aux_sfcap_proctran ;
 
 
 exe proctran 

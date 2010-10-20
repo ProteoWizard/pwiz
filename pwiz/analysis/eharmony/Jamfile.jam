@@ -45,33 +45,33 @@ lib pwiz_analysis_eharmony
 
 ### UNIT TESTS ###
 
-unit-test AMTDatabase : AMTDatabaseTest.cpp pwiz_analysis_eharmony ;
+unit-test-if-exists AMTDatabase : AMTDatabaseTest.cpp pwiz_analysis_eharmony ;
 
-unit-test Bin : BinTest.cpp pwiz_analysis_eharmony ;
+unit-test-if-exists Bin : BinTest.cpp pwiz_analysis_eharmony ;
 
-unit-test Feature_dataFetcher : Feature_dataFetcherTest.cpp pwiz_analysis_eharmony ;
+unit-test-if-exists Feature_dataFetcher : Feature_dataFetcherTest.cpp pwiz_analysis_eharmony ;
 
-unit-test PeptideID_dataFetcher : PeptideID_dataFetcherTest.cpp pwiz_analysis_eharmony ;
+unit-test-if-exists PeptideID_dataFetcher : PeptideID_dataFetcherTest.cpp pwiz_analysis_eharmony ;
 
-unit-test DataFetcherContainer : DataFetcherContainerTest.cpp pwiz_analysis_eharmony ;
+unit-test-if-exists DataFetcherContainer : DataFetcherContainerTest.cpp pwiz_analysis_eharmony ;
 
-unit-test PeptideMatcher : PeptideMatcherTest.cpp pwiz_analysis_eharmony ;
+unit-test-if-exists PeptideMatcher : PeptideMatcherTest.cpp pwiz_analysis_eharmony ;
 
-unit-test SearchNeighborhoodCalculator : SearchNeighborhoodCalculatorTest.cpp pwiz_analysis_eharmony ;
+unit-test-if-exists SearchNeighborhoodCalculator : SearchNeighborhoodCalculatorTest.cpp pwiz_analysis_eharmony ;
 
-unit-test Feature2PeptideMatcher : Feature2PeptideMatcherTest.cpp pwiz_analysis_eharmony ;
+unit-test-if-exists Feature2PeptideMatcher : Feature2PeptideMatcherTest.cpp pwiz_analysis_eharmony ;
 
-unit-test WarpFunction : WarpFunctionTest.cpp pwiz_analysis_eharmony ;
+unit-test-if-exists WarpFunction : WarpFunctionTest.cpp pwiz_analysis_eharmony ;
 
-unit-test Matrix : MatrixTest.cpp pwiz_analysis_eharmony ;
+unit-test-if-exists Matrix : MatrixTest.cpp pwiz_analysis_eharmony ;
 
-unit-test NeighborJoiner : NeighborJoinerTest.cpp pwiz_analysis_eharmony ;
+unit-test-if-exists NeighborJoiner : NeighborJoinerTest.cpp pwiz_analysis_eharmony ;
 
-unit-test DistanceAttributes : DistanceAttributesTest.cpp pwiz_analysis_eharmony ;
+unit-test-if-exists DistanceAttributes : DistanceAttributesTest.cpp pwiz_analysis_eharmony ;
 
-unit-test MSIAMTData : MSIAMTDataTest.cpp pwiz_analysis_eharmony ;
+unit-test-if-exists MSIAMTData : MSIAMTDataTest.cpp pwiz_analysis_eharmony ;
 
-unit-test DatabaseQuery : DatabaseQueryTest.cpp pwiz_analysis_eharmony ;
+unit-test-if-exists DatabaseQuery : DatabaseQueryTest.cpp pwiz_analysis_eharmony ;
 
 exe eharmony
     : eharmony.cpp

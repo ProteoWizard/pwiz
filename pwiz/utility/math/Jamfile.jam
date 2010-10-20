@@ -39,13 +39,13 @@ lib pwiz_utility_math
     : Parabola.cpp Stats.cpp erf.cpp
     ;
     
-unit-test LinearLeastSquaresTest : LinearLeastSquaresTest.cpp ;
-unit-test LinearSolverTest : LinearSolverTest.cpp ;
-unit-test MatchedFilterTest : MatchedFilterTest.cpp ;
-unit-test ParabolaTest : Parabola.cpp ParabolaTest.cpp ;
-unit-test StatsTest : Stats.cpp StatsTest.cpp ;
-unit-test erfTest : erf.cpp erfTest.cpp ;
-unit-test qrTest : qrTest.cpp ;
-unit-test OrderedPairTest : OrderedPairTest.cpp ;
+unit-test-if-exists LinearLeastSquaresTest : LinearLeastSquaresTest.cpp ;
+unit-test-if-exists LinearSolverTest : LinearSolverTest.cpp ;
+unit-test-if-exists MatchedFilterTest : MatchedFilterTest.cpp ;
+unit-test-if-exists ParabolaTest : Parabola.cpp ParabolaTest.cpp ;
+unit-test-if-exists StatsTest : Stats.cpp StatsTest.cpp ;
+unit-test-if-exists erfTest : erf.cpp erfTest.cpp ;
+unit-test-if-exists qrTest : qrTest.cpp ;
+unit-test-if-exists OrderedPairTest : OrderedPairTest.cpp ;
 
 

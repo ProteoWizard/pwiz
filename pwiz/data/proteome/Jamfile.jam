@@ -84,13 +84,13 @@ lib pwiz_data_proteome_examples
     ;
 
 
-unit-test AminoAcidTest : AminoAcidTest.cpp pwiz_data_proteome ;
-unit-test PeptideTest : PeptideTest.cpp pwiz_data_proteome ;
-unit-test DigestionTest : DigestionTest.cpp pwiz_data_proteome ;
-unit-test ProteomeDataTest : ProteomeDataTest.cpp pwiz_data_proteome ;
-unit-test DiffTest : DiffTest.cpp pwiz_data_proteome ;
-unit-test ReaderTest : ReaderTest.cpp pwiz_data_proteome ;
-unit-test Serializer_FASTA_Test : Serializer_FASTA_Test.cpp pwiz_data_proteome pwiz_data_proteome_examples ;
-unit-test ProteomeDataFileTest : ProteomeDataFileTest.cpp pwiz_data_proteome pwiz_data_proteome_examples ;
-unit-test ProteinListWrapperTest : ProteinListWrapperTest.cpp pwiz_data_proteome ;
-unit-test ProteinListCacheTest : ProteinListCacheTest.cpp pwiz_data_proteome ;
+unit-test-if-exists AminoAcidTest : AminoAcidTest.cpp pwiz_data_proteome ;
+unit-test-if-exists PeptideTest : PeptideTest.cpp pwiz_data_proteome ;
+unit-test-if-exists DigestionTest : DigestionTest.cpp pwiz_data_proteome ;
+unit-test-if-exists ProteomeDataTest : ProteomeDataTest.cpp pwiz_data_proteome ;
+unit-test-if-exists DiffTest : DiffTest.cpp pwiz_data_proteome ;
+unit-test-if-exists ReaderTest : ReaderTest.cpp pwiz_data_proteome ;
+unit-test-if-exists Serializer_FASTA_Test : Serializer_FASTA_Test.cpp pwiz_data_proteome pwiz_data_proteome_examples ;
+unit-test-if-exists ProteomeDataFileTest : ProteomeDataFileTest.cpp pwiz_data_proteome pwiz_data_proteome_examples ;
+unit-test-if-exists ProteinListWrapperTest : ProteinListWrapperTest.cpp pwiz_data_proteome ;
+unit-test-if-exists ProteinListCacheTest : ProteinListCacheTest.cpp pwiz_data_proteome ;

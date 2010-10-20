@@ -53,8 +53,8 @@ lib pwiz_aux_sfcap_transient_generator
 ;
 
 
-unit-test TransientDataTest : TransientDataTest.cpp pwiz_aux_sfcap_transient /ext/boost//filesystem ;
-unit-test TransientGeneratorTest : TransientGeneratorTest.cpp pwiz_aux_sfcap_transient_generator ;
+unit-test-if-exists TransientDataTest : TransientDataTest.cpp pwiz_aux_sfcap_transient /ext/boost//filesystem ;
+unit-test-if-exists TransientGeneratorTest : TransientGeneratorTest.cpp pwiz_aux_sfcap_transient_generator ;
 
 
 #exe maketrans : maketrans.cpp ; # broken

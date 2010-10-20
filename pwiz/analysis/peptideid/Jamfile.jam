@@ -35,9 +35,9 @@ lib pwiz_analysis_peptideid
 #
 
 
-unit-test PeptideIDMapTest : PeptideIDMapTest.cpp pwiz_analysis_peptideid ;
+unit-test-if-exists PeptideIDMapTest : PeptideIDMapTest.cpp pwiz_analysis_peptideid ;
 
-unit-test PeptideID_pepXMLTest : PeptideID_pepXMLTest.cpp pwiz_analysis_peptideid ;
+unit-test-if-exists PeptideID_pepXMLTest : PeptideID_pepXMLTest.cpp pwiz_analysis_peptideid ;
 
-unit-test PeptideID_flatTest : PeptideID_flatTest.cpp pwiz_analysis_peptideid ;
+unit-test-if-exists PeptideID_flatTest : PeptideID_flatTest.cpp pwiz_analysis_peptideid ;
 

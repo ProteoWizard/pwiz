@@ -37,7 +37,7 @@ lib pwiz_utility_chemistry
     ;
 
 
-unit-test ChemistryTest : ChemistryTest.cpp pwiz_utility_chemistry ; 
-unit-test IsotopeCalculatorTest : IsotopeCalculatorTest.cpp pwiz_utility_chemistry ; 
-unit-test IsotopeEnvelopeEstimatorTest : IsotopeEnvelopeEstimatorTest.cpp pwiz_utility_chemistry ;
-unit-test IsotopeTableTest : IsotopeTableTest.cpp pwiz_utility_chemistry ;
+unit-test-if-exists ChemistryTest : ChemistryTest.cpp pwiz_utility_chemistry ; 
+unit-test-if-exists IsotopeCalculatorTest : IsotopeCalculatorTest.cpp pwiz_utility_chemistry ; 
+unit-test-if-exists IsotopeEnvelopeEstimatorTest : IsotopeEnvelopeEstimatorTest.cpp pwiz_utility_chemistry ;
+unit-test-if-exists IsotopeTableTest : IsotopeTableTest.cpp pwiz_utility_chemistry ;

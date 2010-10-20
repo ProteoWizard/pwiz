@@ -66,20 +66,20 @@ lib pwiz_analysis_spectrum_processing
 #
 
 
-unit-test SpectrumList_SorterTest : SpectrumList_SorterTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
-unit-test SpectrumList_FilterTest : SpectrumList_FilterTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
-unit-test SpectrumList_PeakFilterTest : SpectrumList_PeakFilterTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
-unit-test SpectrumList_ChargeStateCalculatorTest : SpectrumList_ChargeStateCalculatorTest.cpp pwiz_analysis_spectrum_processing ;
-unit-test SpectrumListFactoryTest : SpectrumListFactoryTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
-unit-test SpectrumList_MZWindowTest : SpectrumList_MZWindowTest.cpp pwiz_analysis_spectrum_processing ;
-unit-test SpectrumList_MetadataFixerTest : SpectrumList_MetadataFixerTest.cpp pwiz_analysis_spectrum_processing ;
+unit-test-if-exists SpectrumList_SorterTest : SpectrumList_SorterTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
+unit-test-if-exists SpectrumList_FilterTest : SpectrumList_FilterTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
+unit-test-if-exists SpectrumList_PeakFilterTest : SpectrumList_PeakFilterTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
+unit-test-if-exists SpectrumList_ChargeStateCalculatorTest : SpectrumList_ChargeStateCalculatorTest.cpp pwiz_analysis_spectrum_processing ;
+unit-test-if-exists SpectrumListFactoryTest : SpectrumListFactoryTest.cpp pwiz_analysis_spectrum_processing ../../data/msdata//pwiz_data_msdata_examples ;
+unit-test-if-exists SpectrumList_MZWindowTest : SpectrumList_MZWindowTest.cpp pwiz_analysis_spectrum_processing ;
+unit-test-if-exists SpectrumList_MetadataFixerTest : SpectrumList_MetadataFixerTest.cpp pwiz_analysis_spectrum_processing ;
 
 
 # Special run targets for tests with data files.
 # We pass in single input file, to which bjam prepends the full path from current
 # Jamfile directory.  The test program can then locate its data files.
 
-run PrecursorRecalculatorDefaultTest.cpp pwiz_analysis_spectrum_processing 
+run-if-exists PrecursorRecalculatorDefaultTest.cpp pwiz_analysis_spectrum_processing 
     : # args
     : PrecursorRecalculatorDefaultTest.data/5peptide.b64 # input-files
     : # requirements
@@ -87,7 +87,7 @@ run PrecursorRecalculatorDefaultTest.cpp pwiz_analysis_spectrum_processing
     : # default-build
     ;
 
-run SpectrumList_PrecursorRecalculatorTest.cpp pwiz_analysis_spectrum_processing 
+run-if-exists SpectrumList_PrecursorRecalculatorTest.cpp pwiz_analysis_spectrum_processing 
     : # args
     : SpectrumList_PrecursorRecalculatorTest.data/5peptideFT.mzML # input-files
     : # requirements
@@ -95,7 +95,7 @@ run SpectrumList_PrecursorRecalculatorTest.cpp pwiz_analysis_spectrum_processing
     : # default-build
     ;
 
-run SpectrumList_PrecursorRefineTest.cpp pwiz_analysis_spectrum_processing 
+run-if-exists SpectrumList_PrecursorRefineTest.cpp pwiz_analysis_spectrum_processing 
     : # args
     : SpectrumList_PrecursorRecalculatorTest.data/PrecursorRefineOrbi.mzML # input-files
     : # requirements

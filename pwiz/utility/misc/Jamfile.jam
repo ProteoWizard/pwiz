@@ -98,25 +98,25 @@ lib pwiz_utility_vendor_reader_test_harness
     ;
 
 
-unit-test almost_equal_test : almost_equal_test.cpp ;
-unit-test endian_test : endian_test.cpp ;
-unit-test Base64Test : Base64Test.cpp pwiz_utility_misc ;
-unit-test IntegerSetTest : IntegerSetTest.cpp pwiz_utility_misc ;
-unit-test IterationListenerTest : IterationListenerTest.cpp pwiz_utility_misc ;
-unit-test DateTimeTest : DateTimeTest.cpp pwiz_utility_misc ;
-unit-test FilesystemTest : FilesystemTest.cpp pwiz_utility_misc ;
-unit-test SHA1CalculatorTest : SHA1CalculatorTest.cpp pwiz_utility_misc ;
-unit-test SHA1_ostream_test : SHA1_ostream_test.cpp pwiz_utility_misc ;
-unit-test mru_list_test : mru_list_test.cpp ;
+unit-test-if-exists almost_equal_test : almost_equal_test.cpp ;
+unit-test-if-exists endian_test : endian_test.cpp ;
+unit-test-if-exists Base64Test : Base64Test.cpp pwiz_utility_misc ;
+unit-test-if-exists IntegerSetTest : IntegerSetTest.cpp pwiz_utility_misc ;
+unit-test-if-exists IterationListenerTest : IterationListenerTest.cpp pwiz_utility_misc ;
+unit-test-if-exists DateTimeTest : DateTimeTest.cpp pwiz_utility_misc ;
+unit-test-if-exists FilesystemTest : FilesystemTest.cpp pwiz_utility_misc ;
+unit-test-if-exists SHA1CalculatorTest : SHA1CalculatorTest.cpp pwiz_utility_misc ;
+unit-test-if-exists SHA1_ostream_test : SHA1_ostream_test.cpp pwiz_utility_misc ;
+unit-test-if-exists mru_list_test : mru_list_test.cpp ;
 
 
 # explicit tests to demonstrate how CI handles stdout and stderr
-unit-test FailUnitTest : FailTest.cpp ;
-run FailTest.cpp : : : : FailRunTest ;
+unit-test-if-exists FailUnitTest : FailTest.cpp ;
+run-if-exists FailTest.cpp : : : : FailRunTest ;
 explicit FailUnitTest FailRunTest ;
 
 
-run TabReaderTest.cpp pwiz_utility_misc
+run-if-exists TabReaderTest.cpp pwiz_utility_misc
     : # args
     : TabReaderTest.data/TabTest.tab # input-files
     : # requirements
@@ -127,9 +127,9 @@ run TabReaderTest.cpp pwiz_utility_misc
 import modules ;
 if [ modules.peek : NT ]
 {
-    unit-test automation_vector_test : automation_vector_test.cpp pwiz_utility_misc : <conditional>@msvc-requirement ;
-    unit-test COMInitializerTest : COMInitializerTest.cpp pwiz_utility_misc : <conditional>@msvc-requirement ;
-    unit-test ClickwrapPrompterTest : ClickwrapPrompterTest.cpp pwiz_utility_misc : <conditional>@msvc-requirement ;
+    unit-test-if-exists automation_vector_test : automation_vector_test.cpp pwiz_utility_misc : <conditional>@msvc-requirement ;
+    unit-test-if-exists COMInitializerTest : COMInitializerTest.cpp pwiz_utility_misc : <conditional>@msvc-requirement ;
+    unit-test-if-exists ClickwrapPrompterTest : ClickwrapPrompterTest.cpp pwiz_utility_misc : <conditional>@msvc-requirement ;
     explicit ClickwrapPrompterTest ; # because it requires user input
 }
 

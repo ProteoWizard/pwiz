@@ -63,24 +63,24 @@ lib pwiz_analysis_peakdetect
 # unit tests
 #
 
-unit-test PeakFamilyDetectorFTTest : 
+unit-test-if-exists PeakFamilyDetectorFTTest : 
     PeakFamilyDetectorFTTest.cpp
     PeakFamilyDetectorFTTestData.cpp
     pwiz_analysis_peakdetect
     ;
 
-unit-test MZRTFieldTest : MZRTFieldTest.cpp pwiz_analysis_peakdetect ;
-unit-test MZToleranceTest : MZToleranceTest.cpp pwiz_analysis_peakdetect ;
-unit-test NoiseTest : NoiseTest.cpp pwiz_analysis_peakdetect ;
-unit-test PeakFinderTest : PeakFinderTest.cpp pwiz_analysis_peakdetect ;
-unit-test PeakFitterTest : PeakFitterTest.cpp pwiz_analysis_peakdetect ;
-unit-test PeakExtractorTest : PeakExtractorTest.cpp pwiz_analysis_peakdetect ;
-unit-test PeakelGrowerTest : PeakelGrowerTest.cpp pwiz_analysis_peakdetect ;
-unit-test PeakelPickerTest : PeakelPickerTest.cpp pwiz_analysis_peakdetect ;
+unit-test-if-exists MZRTFieldTest : MZRTFieldTest.cpp pwiz_analysis_peakdetect ;
+unit-test-if-exists MZToleranceTest : MZToleranceTest.cpp pwiz_analysis_peakdetect ;
+unit-test-if-exists NoiseTest : NoiseTest.cpp pwiz_analysis_peakdetect ;
+unit-test-if-exists PeakFinderTest : PeakFinderTest.cpp pwiz_analysis_peakdetect ;
+unit-test-if-exists PeakFitterTest : PeakFitterTest.cpp pwiz_analysis_peakdetect ;
+unit-test-if-exists PeakExtractorTest : PeakExtractorTest.cpp pwiz_analysis_peakdetect ;
+unit-test-if-exists PeakelGrowerTest : PeakelGrowerTest.cpp pwiz_analysis_peakdetect ;
+unit-test-if-exists PeakelPickerTest : PeakelPickerTest.cpp pwiz_analysis_peakdetect ;
 
 # for run rule syntax see pwiz/analysis/spectrum_processing/Jamfile.jam
 
-run FeatureDetectorSimpleTest.cpp pwiz_analysis_peakdetect 
+run-if-exists FeatureDetectorSimpleTest.cpp pwiz_analysis_peakdetect 
     : # args
     : FeatureDetectorTest.data/FeatureDetectorTest_Bombesin.mzML # input-files
     : # requirements
@@ -88,7 +88,7 @@ run FeatureDetectorSimpleTest.cpp pwiz_analysis_peakdetect
     : # default-build
     ;
 
-run FeatureDetectorTuningTest.cpp pwiz_analysis_peakdetect 
+run-if-exists FeatureDetectorTuningTest.cpp pwiz_analysis_peakdetect 
     : # args
     : FeatureDetectorTest.data/FeatureDetectorTest_Bombesin.mzML # input-files
     : # requirements
@@ -96,7 +96,7 @@ run FeatureDetectorTuningTest.cpp pwiz_analysis_peakdetect
     : # default-build
     ;
 
-run FeatureDetectorPeakelTest.cpp pwiz_analysis_peakdetect 
+run-if-exists FeatureDetectorPeakelTest.cpp pwiz_analysis_peakdetect 
     : # args
     : FeatureDetectorTest.data/FeatureDetectorTest_Bombesin.mzML # input-files
     : # requirements
@@ -104,7 +104,7 @@ run FeatureDetectorPeakelTest.cpp pwiz_analysis_peakdetect
     : # default-build
     ;
 
-run FeatureModelerTest.cpp pwiz_analysis_peakdetect 
+run-if-exists FeatureModelerTest.cpp pwiz_analysis_peakdetect 
     : # args
     : FeatureDetectorTest.data/Bombesin2.feature # input-files
     : # requirements

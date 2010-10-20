@@ -29,7 +29,7 @@ lib pwiz_utility_minimxml
     :   <library>/ext/boost//regex
     ;
 
-unit-test SAXParserTest : SAXParserTest.cpp pwiz_utility_minimxml ;
-unit-test XMLWriterTest : XMLWriterTest.cpp pwiz_utility_minimxml ;
+unit-test-if-exists SAXParserTest : SAXParserTest.cpp pwiz_utility_minimxml ;
+unit-test-if-exists XMLWriterTest : XMLWriterTest.cpp pwiz_utility_minimxml ;
 
 

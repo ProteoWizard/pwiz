@@ -47,7 +47,7 @@ lib pwiz_analysis_chromatogram_processing
 #
 
 
-unit-test ChromatogramListWrapperTest : ChromatogramListWrapperTest.cpp pwiz_analysis_chromatogram_processing ;
-unit-test SavitzkyGolaySmootherTest : SavitzkyGolaySmootherTest.cpp pwiz_analysis_chromatogram_processing ;
+unit-test-if-exists ChromatogramListWrapperTest : ChromatogramListWrapperTest.cpp pwiz_analysis_chromatogram_processing ;
+unit-test-if-exists SavitzkyGolaySmootherTest : SavitzkyGolaySmootherTest.cpp pwiz_analysis_chromatogram_processing ;
 
 

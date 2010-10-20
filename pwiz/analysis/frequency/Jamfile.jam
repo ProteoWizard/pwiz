@@ -65,13 +65,13 @@ lib pwiz_analysis_frequency
     ;
 
 
-unit-test FrequencyEstimatorPhysicalModelTest : FrequencyEstimatorPhysicalModelTest.cpp pwiz_analysis_frequency ;
-unit-test FrequencyEstimatorSimpleTest : FrequencyEstimatorSimpleTest.cpp pwiz_analysis_frequency ;
-unit-test MagnitudeLorentzianTest : MagnitudeLorentzianTest.cpp MagnitudeLorentzianTestData.cpp pwiz_analysis_frequency ;
-# TODO: Darren, please fix me! # unit-test ParametrizedFunctionTest : ParametrizedFunctionTest.cpp pwiz_analysis_frequency ;
-unit-test PeakDetectorMatchedFilterTest : PeakDetectorMatchedFilterTest.cpp PeakDetectorMatchedFilterTestData.cpp pwiz_analysis_frequency ;
-unit-test PeakDetectorNaiveTest : PeakDetectorNaiveTest.cpp pwiz_analysis_frequency ;
-unit-test TruncatedLorentzianParametersTest : TruncatedLorentzianParametersTest.cpp pwiz_analysis_frequency ;
-unit-test TruncatedLorentzianTest : TruncatedLorentzianTest.cpp pwiz_analysis_frequency ;
+unit-test-if-exists FrequencyEstimatorPhysicalModelTest : FrequencyEstimatorPhysicalModelTest.cpp pwiz_analysis_frequency ;
+unit-test-if-exists FrequencyEstimatorSimpleTest : FrequencyEstimatorSimpleTest.cpp pwiz_analysis_frequency ;
+unit-test-if-exists MagnitudeLorentzianTest : MagnitudeLorentzianTest.cpp MagnitudeLorentzianTestData.cpp pwiz_analysis_frequency ;
+# TODO: Darren, please fix me! # unit-test-if-exists ParametrizedFunctionTest : ParametrizedFunctionTest.cpp pwiz_analysis_frequency ;
+unit-test-if-exists PeakDetectorMatchedFilterTest : PeakDetectorMatchedFilterTest.cpp PeakDetectorMatchedFilterTestData.cpp pwiz_analysis_frequency ;
+unit-test-if-exists PeakDetectorNaiveTest : PeakDetectorNaiveTest.cpp pwiz_analysis_frequency ;
+unit-test-if-exists TruncatedLorentzianParametersTest : TruncatedLorentzianParametersTest.cpp pwiz_analysis_frequency ;
+unit-test-if-exists TruncatedLorentzianTest : TruncatedLorentzianTest.cpp pwiz_analysis_frequency ;
 
 

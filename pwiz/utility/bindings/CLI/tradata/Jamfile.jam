@@ -38,9 +38,9 @@ project
 	;
 
 
-unit-test TraDataTest : TraDataTest.cpp : <conditional>@unit-test-requirements ;
-unit-test DiffTest : DiffTest.cpp : <conditional>@unit-test-requirements ;
-unit-test TraDataFileTest : TraDataFileTest.cpp : <conditional>@unit-test-requirements ;
+unit-test-if-exists TraDataTest : TraDataTest.cpp : <conditional>@unit-test-requirements ;
+unit-test-if-exists DiffTest : DiffTest.cpp : <conditional>@unit-test-requirements ;
+unit-test-if-exists TraDataFileTest : TraDataFileTest.cpp : <conditional>@unit-test-requirements ;
 explicit TraDataFileTest ;
 
 }

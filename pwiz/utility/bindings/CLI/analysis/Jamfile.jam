@@ -38,6 +38,6 @@ project
 	;
 
 
-unit-test spectrum_processing_test : spectrum_processing_test.cpp : <conditional>@unit-test-requirements ;
+unit-test-if-exists spectrum_processing_test : spectrum_processing_test.cpp : <conditional>@unit-test-requirements ;
 
 }

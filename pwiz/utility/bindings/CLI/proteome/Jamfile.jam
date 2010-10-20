@@ -38,10 +38,10 @@ project
 	;
 
 
-unit-test proteome_test : proteome_test.cpp : <conditional>@unit-test-requirements ;
-unit-test ProteomeDataTest : ProteomeDataTest.cpp : <conditional>@unit-test-requirements ;
-unit-test DiffTest : DiffTest.cpp : <conditional>@unit-test-requirements ;
-unit-test ProteomeDataFileTest : ProteomeDataFileTest.cpp : <conditional>@unit-test-requirements ;
+unit-test-if-exists proteome_test : proteome_test.cpp : <conditional>@unit-test-requirements ;
+unit-test-if-exists ProteomeDataTest : ProteomeDataTest.cpp : <conditional>@unit-test-requirements ;
+unit-test-if-exists DiffTest : DiffTest.cpp : <conditional>@unit-test-requirements ;
+unit-test-if-exists ProteomeDataFileTest : ProteomeDataFileTest.cpp : <conditional>@unit-test-requirements ;
 explicit ProteomeDataFileTest ;
 
 }

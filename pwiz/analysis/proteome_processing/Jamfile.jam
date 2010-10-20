@@ -42,4 +42,4 @@ lib pwiz_analysis_proteome_processing
 #
 
 
-unit-test ProteinList_DecoyGeneratorTest : ProteinList_DecoyGeneratorTest.cpp pwiz_analysis_proteome_processing $(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome_examples ;
+unit-test-if-exists ProteinList_DecoyGeneratorTest : ProteinList_DecoyGeneratorTest.cpp pwiz_analysis_proteome_processing $(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome_examples ;

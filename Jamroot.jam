@@ -430,7 +430,7 @@ rule project-exists ( project-path )
 }
 
 # to make subsetting the source tree much easier,
-# use this rule to test that a sub-project path exists before building it
+# use these rules to test that a sub-project path exists before building it
 rule build-project-if-exists ( project-path )
 {
     local project = [ project.current ] ;
@@ -440,6 +440,22 @@ rule build-project-if-exists ( project-path )
         local attributes = [ project.attributes [ $(project).name ] ] ;
         local now = [ $(attributes).get projects-to-build ] ;
         $(attributes).set projects-to-build : $(now) $(project-path) ;
+    }
+}
+
+rule run-if-exists ( sources + : args * : input-files * : requirements * : target-name ? : default-build * )
+{
+    if [ path.exists $(sources[1]) ]
+    {
+        return [ run $(sources) : $(args) : $(input-files) : $(requirements) : $(target-name) : $(default-build) ] ;
+    }
+}
+
+rule unit-test-if-exists ( target : sources + : properties * )
+{
+    if [ path.exists $(sources[1]) ]
+    {
+        return [ unit-test $(target) : $(sources) : $(properties) ] ;
     }
 }
 

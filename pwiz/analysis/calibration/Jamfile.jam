@@ -44,11 +44,11 @@ lib pwiz_analysis_calibration_deprecated
     : Path.cpp Random.cpp mt19937ar.cpp ;
 
 
-unit-test CalibratorTrialTest : CalibratorTrialTest.cpp pwiz_analysis_calibration  ;
-unit-test LeastSquaresCalibratorTest : LeastSquaresCalibratorTest.cpp pwiz_analysis_calibration ;
-unit-test MassDatabaseTest : MassDatabaseTest.cpp pwiz_analysis_calibration ;
-unit-test MassSpreadTest :   MassSpreadTest.cpp pwiz_analysis_calibration ;
-unit-test PeptideDatabaseTest : PeptideDatabaseTest.cpp pwiz_analysis_calibration ;
+unit-test-if-exists CalibratorTrialTest : CalibratorTrialTest.cpp pwiz_analysis_calibration  ;
+unit-test-if-exists LeastSquaresCalibratorTest : LeastSquaresCalibratorTest.cpp pwiz_analysis_calibration ;
+unit-test-if-exists MassDatabaseTest : MassDatabaseTest.cpp pwiz_analysis_calibration ;
+unit-test-if-exists MassSpreadTest :   MassSpreadTest.cpp pwiz_analysis_calibration ;
+unit-test-if-exists PeptideDatabaseTest : PeptideDatabaseTest.cpp pwiz_analysis_calibration ;
 
 
 exe simerr : simerr.cpp pwiz_analysis_calibration pwiz_analysis_calibration_deprecated ;

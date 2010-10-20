@@ -95,14 +95,14 @@ explicit ExtendedReaderTest ;
 # unit tests (ordered by dependency)
 #
 
-unit-test MzIdentMLTest : MzIdentMLTest.cpp pwiz_data_mzid pwiz_data_mzid_examples ; 
-unit-test DiffTest : DiffTest.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
-unit-test ReferencesTest : ReferencesTest.cpp pwiz_data_mzid ;
-unit-test IOTest : IOTest.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
-unit-test Serializer_mzid : Serializer_mzid_Test.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
-unit-test KwCVMapTest : KwCVMapTest.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
-#unit-test Pep2MzIdent : Pep2MzIdentTest.cpp pwiz_data_mzid ;
-#unit-test TraDataFileTest : TraDataFileTest.cpp pwiz_data_tradata pwiz_data_tradata_examples /ext/boost//filesystem ;
-#unit-test ReaderTest : ReaderTest.cpp pwiz_data_tradata ;
+unit-test-if-exists MzIdentMLTest : MzIdentMLTest.cpp pwiz_data_mzid pwiz_data_mzid_examples ; 
+unit-test-if-exists DiffTest : DiffTest.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
+unit-test-if-exists ReferencesTest : ReferencesTest.cpp pwiz_data_mzid ;
+unit-test-if-exists IOTest : IOTest.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
+unit-test-if-exists Serializer_mzid : Serializer_mzid_Test.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
+unit-test-if-exists KwCVMapTest : KwCVMapTest.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
+#unit-test-if-exists Pep2MzIdent : Pep2MzIdentTest.cpp pwiz_data_mzid ;
+#unit-test-if-exists TraDataFileTest : TraDataFileTest.cpp pwiz_data_tradata pwiz_data_tradata_examples /ext/boost//filesystem ;
+#unit-test-if-exists ReaderTest : ReaderTest.cpp pwiz_data_tradata ;
 
 

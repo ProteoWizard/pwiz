@@ -99,7 +99,7 @@ lib pwiz_vendor_api_thermo
         <conditional>@vendor-api-usage-requirements
     ;
 
-unit-test ScanFilterTest
+unit-test-if-exists ScanFilterTest
     : ScanFilterTest.cpp
       pwiz_vendor_api_thermo
     : <conditional>@msvc-requirement
