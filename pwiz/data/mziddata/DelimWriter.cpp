@@ -44,7 +44,8 @@ using namespace boost::algorithm;
 
 PWIZ_API_DECL ostream* DelimWriter::writeHeaders()
 {
-    (*os_) << "#retention time\tscan\tm/z\tscore\tpeptide\tprotein\n";
+    if (os_)
+        (*os_) << "#retention time\tscan\tm/z\tscore\tpeptide\tprotein\n";
     
     return os_;
 }
@@ -168,7 +169,8 @@ PWIZ_API_DECL ostream* DelimWriter::write(const PeptideEvidence& pe)
     string separator(&delim_, 1);
     string line_str = join(line, separator);
 
-    (*os_) << line_str << "\n";
+    if (os_)
+        (*os_) << line_str << "\n";
 
     return os_;
 }
@@ -177,7 +179,8 @@ PWIZ_API_DECL ostream* DelimWriter::write(const line_type& line)
 {
     string separator(&delim_, 1);
     
-    (*os_) << join(line, separator) << "\n";
+    if (os_)
+        (*os_) << join(line, separator) << "\n";
     
     return os_;
 }
@@ -188,7 +191,8 @@ PWIZ_API_DECL ostream* DelimWriter::write<string>(
 {
     string separator("\n");
     
-    (*os_) << join(lines, separator);
+    if (os_)
+        (*os_) << join(lines, separator);
     
     return os_;
 }

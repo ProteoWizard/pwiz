@@ -27,6 +27,7 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/Version.hpp"
 
+#include <vector>
 #include <iostream>
 #include <stdexcept>
 #include <fstream>
@@ -41,11 +42,16 @@ using namespace pwiz::util;
 struct Config
 {
     Config()
-        : expmz(true), headers(false), verbose(false), useStdout(false)
+        : expmz(true), force(false),
+          headers(false), verbose(false), useStdout(false)
     {}
     
     string usageOptions;
+
+    // TODO useful?
+    vector<string> files;
     
+    // TODO keep or throw?
     string firstfile;
     string secondfile;
     string outputdir;
@@ -53,6 +59,7 @@ struct Config
     char delim;
 
     bool expmz;
+    bool force;
     bool headers;
     bool verbose;
     bool useStdout;
@@ -96,11 +103,19 @@ Config parseCommandLine(int argc, const char* argv[])
          ": Use calculated m/z")
         ("delim,d",
          po::value<char>(&config.delim)->default_value('\t'),
-         ": delimiter separating fields")
+         ": delimiter separating fields. Default is tab")
         ("expmz,e",
          ": Use experimental m/z (default)")
+        ("force,f",
+         ": Overwrites any existing files." )
         ("headers",
          ": Use/read a header in the file")
+        ("input",
+         po::value<string>(&config.firstfile),
+         ": input file")
+        ("output,o",
+         po::value<string>(&config.secondfile),
+         ": output file")
         ("stdout,s",
          ": Output to standard out instead of file.")
         ("verbose,v", ": prints extra information.")
@@ -114,28 +129,31 @@ Config parseCommandLine(int argc, const char* argv[])
 
     // handle positional arguments
 
+    /*
+    const char* label_inputfile = "input";
     po::options_description od_args1;
-
-    const char* label_inputfile = "inputfile";
     od_args1.add_options()(label_inputfile,
                            po::value<string>(&config.firstfile),
                            "");
 
-    po::options_description od_args2;
-    const char* label_outputfile = "outputfile";
-    od_args2.add_options()(label_outputfile,
-                           po::value<string>(&config.secondfile),
-                           "");
-
     po::positional_options_description pod_args;
     pod_args.add(label_inputfile, 1);
-    pod_args.add(label_outputfile, 1);
-
     
     po::options_description od_parse;
     od_parse.add(od_config).add(od_args1);
-    od_parse.add(od_config).add(od_args2);
+    */
+    const char* label_files = "files";
+    po::options_description od_args1;
+    od_args1.add_options()(label_files,
+                           po::value< vector<string> >(&config.files),
+                           "");
 
+    po::positional_options_description pod_args;
+    pod_args.add(label_files, -1);
+    
+    po::options_description od_parse;
+    od_parse.add(od_config).add(od_args1);
+    
     // parse command line
 
     po::variables_map vm;
@@ -149,9 +167,20 @@ Config parseCommandLine(int argc, const char* argv[])
     
     if (vm.count("expmz"))
         config.expmz = true;
+    else
+        config.expmz = false;
+    
+    if (vm.count("force"))
+        config.force = true;
     
     if (vm.count("headers"))
         config.headers = true;
+
+    if (config.files.size()>0)
+        config.firstfile = config.files.at(0);
+
+    if (config.files.size()>1)
+        config.secondfile = config.files.at(1);
     
     config.usageOptions = usageOptions;
     
@@ -160,17 +189,51 @@ Config parseCommandLine(int argc, const char* argv[])
 
 void translateToTxt(Config& config)
 {
+    namespace bfs=boost::filesystem;
+
     // Read in mzid file.
     MzIdentMLFile mzid(config.firstfile);
     
     // Open up output file.
-    ostream* os;
+    string secondfile;
+    ostream* os = NULL;
     if (config.useStdout)
         os = &cout;
+    else if (config.secondfile.empty())
+    {
+        // Select the most appropriate extension by delimiter.
+        string ext("txt");
+        switch(config.delim)
+        {
+        case '\t':
+            ext = "tab";
+            break;
+
+        case ',':
+            ext = "csv";
+            break;
+
+        default:
+            break;
+        }
+        
+        // Create a txt file w/ appropriate extension.
+        bfs::path secondpath(config.firstfile);
+        secondpath.replace_extension(ext);
+
+        secondfile = secondpath.string();
+    }
     else
+        secondfile = config.secondfile;
+    
+    // Check if the second file exists and we're not forcing.
+    if (!secondfile.empty() && bfs::exists(secondfile) && !config.force)
+        throw runtime_error(("File "+secondfile+" exists.\n"
+                             " Use -f to override.").c_str());
+    
+    if (!os)
         os = new ofstream(config.secondfile.c_str());
-    
-    
+
     // Create writer and dump the mzid file to os.
     DelimWriter writer(os, config.delim, config.headers);
     writer(mzid);
@@ -182,19 +245,35 @@ void translateToTxt(Config& config)
 
 void translateToMzid(Config& config, DelimReader dr)
 {
+    namespace bfs=boost::filesystem;
+
     MzIdentML mzid;
     
     dr.read(config.firstfile, read_file_header(config.firstfile), mzid);
 
     ostream* os = 0;
+    string secondfile;
     if (config.useStdout)
         os = &cout;
+    else if (config.secondfile.empty())
+    {
+        bfs::path secondpath(config.firstfile);
+        secondpath.replace_extension("mzid");
+
+        secondfile = secondpath.string();
+    }
     else
+        secondfile = config.secondfile;
+
+    if (!secondfile.empty() && bfs::exists(secondfile) && !config.force)
+        throw runtime_error(("File "+secondfile+" exists.\n"
+                             " Use -f to override.").c_str());
+    
+    if (!os)
         os = new ofstream(config.secondfile.c_str());
 
     Serializer_mzIdentML serializer;
     serializer.write(*os, mzid);
-
 }
 
 int main(int argc, const char* argv[])
@@ -205,7 +284,7 @@ int main(int argc, const char* argv[])
 
         // If there's no output file and no stdout flag, throw an
         // error.
-        if (config.secondfile.size()==0 && config.useStdout==false)
+        if (config.firstfile.size()==0)
             throw invalid_argument(usage(config).c_str());
 
         DelimReader dr;
