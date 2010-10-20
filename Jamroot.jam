@@ -800,6 +800,32 @@ tar.create pwiz-src.tar.bz2
     <dependency>SUBSET
   ;
 
+tar.create pwiz-src-without-tests.tar.bz2
+  : # sources
+
+    path-anchor:$(PWIZ_ROOT_PATH)
+
+    $(.exclusion-list)
+    exclude:*Test.data*
+    exclude:*Test.?pp
+    exclude:*TestData.?pp
+    exclude:*.pdf # pwiz posters in /doc
+    exclude:example_data*
+
+    $(PWIZ_ROOT_PATH)/pwiz
+    $(PWIZ_ROOT_PATH)/pwiz_aux
+    $(PWIZ_ROOT_PATH)/pwiz_tools
+    $(PWIZ_ROOT_PATH)/scripts
+
+    $(.common-sources)
+
+  : # requirements
+    <name>pwiz-src-without-tests-$(version-tag:J=_).tar.bz2
+    <location>$(.common-location)
+    <dependency>boost_1_43_0.tar.bz2
+    <dependency>SUBSET
+  ;
+
 tar.create pwiz-src-without-vendor-support.tar.bz2
   : # sources
 
