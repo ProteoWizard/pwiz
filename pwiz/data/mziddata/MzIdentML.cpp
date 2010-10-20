@@ -360,7 +360,9 @@ PWIZ_API_DECL bool ProteinDetectionList::empty() const
 // ProteinDetectionHypothesis
 //
 
-PWIZ_API_DECL ProteinDetectionHypothesis::ProteinDetectionHypothesis() : passThreshold(0) 
+PWIZ_API_DECL ProteinDetectionHypothesis::ProteinDetectionHypothesis(
+    const std::string& id_, const std::string& name_)
+    : IdentifiableType(id_, name_), passThreshold(0)
 {
 }
 
@@ -375,6 +377,13 @@ PWIZ_API_DECL bool ProteinDetectionHypothesis::empty() const
 //
 // ProteinAmbiguityGroup
 //
+
+PWIZ_API_DECL ProteinAmbiguityGroup::ProteinAmbiguityGroup(
+    const std::string& id_, const std::string& name_)
+    : IdentifiableType(id_, name_)
+    
+{
+}
 
 PWIZ_API_DECL bool ProteinAmbiguityGroup::empty() const
 {

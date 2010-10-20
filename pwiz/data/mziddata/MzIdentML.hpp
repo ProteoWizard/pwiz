@@ -701,7 +701,8 @@ typedef boost::shared_ptr<ProteinDetectionProtocol> ProteinDetectionProtocolPtr;
 
 struct PWIZ_API_DECL ProteinDetectionHypothesis : public IdentifiableType
 {
-    ProteinDetectionHypothesis();
+    ProteinDetectionHypothesis(const std::string& id_ = "",
+                               const std::string& name_ = "");
 
     //std::string DBSequence_ref;
     DBSequencePtr dbSequencePtr;
@@ -721,6 +722,8 @@ typedef boost::shared_ptr<ProteinDetectionHypothesis> ProteinDetectionHypothesis
 
 struct PWIZ_API_DECL ProteinAmbiguityGroup : public IdentifiableType
 {
+    ProteinAmbiguityGroup(const std::string& id_ = "",
+                          const std::string& name_ = "");
     std::vector<ProteinDetectionHypothesisPtr> proteinDetectionHypothesis;
     ParamContainer paramGroup;
 
