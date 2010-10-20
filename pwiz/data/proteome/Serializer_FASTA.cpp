@@ -63,9 +63,26 @@ class ProteinList_FASTA : public ProteinList
         fsPtr_->clear();
         fsPtr_->seekg(0);
 
+        string buf;
+
+        // count number of entries
+        size_ = 0;
+        while (getline(*fsPtr_, buf))
+        {
+            if (buf.empty())
+                continue;
+
+			if (buf[0] == '>') // signifies a new protein record in a FASTA file
+			    ++size_;
+        }
+
+        fsPtr_->clear();
+        fsPtr_->seekg(0);
+
         // find offsets for all entries in the FASTA stream
         vector<Index::Entry> index;
-        string buf;
+        index.reserve(size_);
+
         Index::stream_offset indexOffset = 0;
         while (getline(*fsPtr_, buf))
         {
