@@ -445,7 +445,9 @@ rule build-project-if-exists ( project-path )
 
 rule run-if-exists ( sources + : args * : input-files * : requirements * : target-name ? : default-build * )
 {
-    if [ path.exists $(sources[1]) ]
+    local project = [ project.current ] ;
+    local full-path = [ path.native [ path.join [ $(project).location ] $(project-path) $(sources[1]) ] ] ;
+    if [ path.exists $(full-path) ]
     {
         return [ run $(sources) : $(args) : $(input-files) : $(requirements) : $(target-name) : $(default-build) ] ;
     }
@@ -453,7 +455,9 @@ rule run-if-exists ( sources + : args * : input-files * : requirements * : targe
 
 rule unit-test-if-exists ( target : sources + : properties * )
 {
-    if [ path.exists $(sources[1]) ]
+    local project = [ project.current ] ;
+    local full-path = [ path.native [ path.join [ $(project).location ] $(project-path) $(sources[1]) ] ] ;
+    if [ path.exists $(full-path) ]
     {
         return [ unit-test $(target) : $(sources) : $(properties) ] ;
     }
