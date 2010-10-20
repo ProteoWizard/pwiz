@@ -27,7 +27,8 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "MzIdentML.hpp"
-#include "boost/lexical_cast.hpp"
+#include <boost/lexical_cast.hpp>
+#include <boost/foreach.hpp>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -157,7 +158,7 @@ class PWIZ_API_DECL TextWriter
     {
         if (sip.get())
             (*this)(*sip);
-
+        
         return *this;
     }
 
@@ -201,7 +202,7 @@ class PWIZ_API_DECL TextWriter
         (*this)("DBSequence: ");
         (*this)((const IdentifiableType&)ds);
         if (ds.length!=0)
-            child()("length"+boost::lexical_cast<std::string>(ds.length));
+            child()("length: "+boost::lexical_cast<std::string>(ds.length));
         if (!ds.accession.empty())
             child()("accession: "+ds.accession);
         if (ds.searchDatabasePtr.get() && !ds.searchDatabasePtr->empty())
@@ -241,7 +242,10 @@ class PWIZ_API_DECL TextWriter
             child()("index: ", it.index);
         if (it.charge != 0)
             child()("charge: "+boost::lexical_cast<std::string>(it.charge));
-        
+        if (!it.paramGroup.empty())
+            child()("paramGroup: ", it.paramGroup);
+        if (!it.fragmentArray.empty())
+            child()("fragmentArray: ", it.fragmentArray);
         return *this;
     }
 
@@ -256,16 +260,17 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    
+
     TextWriter& operator()(const ModParam& mp)
     {
         (*this)("ModParam: ");
         if (mp.massDelta != 0)
-            child()("massDelta: ", boost::lexical_cast<std::string>(mp.massDelta));
+            child()("massDelta: " +
+                    boost::lexical_cast<std::string>(mp.massDelta));
         if (!mp.residues.empty())
-            child()("residues: ", mp.residues);
+            child()("residues: " + mp.residues);
         if (!mp.cvParams.empty())
-            child()("cvParams: ", mp.cvParams);
+            child()(mp.cvParams);
         return *this;
     }
 
@@ -299,6 +304,57 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
+    TextWriter& operator()(const SpectrumIdentificationItem& sii)
+    {
+        (*this)("SpectrumIdentificationItem:");
+
+        if (!sii.empty())
+            child()("chargeState: "+boost::lexical_cast<std::string>(sii.chargeState));
+        if (!sii.empty())
+            child()("experimentalMassToCharge: "+boost::lexical_cast<std::string>(sii.experimentalMassToCharge));
+        if (!sii.empty())
+            child()("calculatedMassToCharge: "+boost::lexical_cast<std::string>(sii.calculatedMassToCharge));
+        if (!sii.empty())
+            child()("calculatedPI: "+boost::lexical_cast<std::string>(sii.calculatedPI));
+        if (sii.peptidePtr.get() && !sii.peptidePtr->empty())
+            child()("Peptide_ref: "+sii.peptidePtr->id);
+        if (!sii.empty())
+            child()("rank: "+boost::lexical_cast<std::string>(sii.rank));
+        if (!sii.empty())
+            child()("passThreshold: "+boost::lexical_cast<std::string>(sii.passThreshold));
+        if (sii.massTablePtr.get() && !sii.massTablePtr->empty())
+            child()("MassTable_ref: "+sii.massTablePtr->id);
+        if (sii.samplePtr.get() && !sii.samplePtr->empty())
+            child()("Sample_ref: "+sii.samplePtr->id);
+
+    
+        if (!sii.peptideEvidence.empty())
+            child()("peptideEvidence", sii.peptideEvidence);
+        if (!sii.fragmentation.empty())
+            child()("fragmentation", sii.fragmentation);
+        if (!sii.paramGroup.empty())
+            child()("paramGroup", sii.paramGroup);
+
+        return *this;
+    }
+    
+    TextWriter& operator()(const std::vector<SpectrumIdentificationResultPtr>& v)
+    {
+        for_each(v.begin(), v.end(), child());
+        return *this;
+    }
+
+    TextWriter& operator()(const std::vector<SpectrumIdentificationItemPtr>& v)
+    {
+        for_each(v.begin(), v.end(), child());
+        return *this;
+    }
+
+    TextWriter& operator()(const std::vector<SpectrumIdentificationListPtr>& v)
+    {
+        for_each(v.begin(), v.end(), child());
+        return *this;
+    }
 
     TextWriter& operator()(const SpectrumIdentificationResult& sir)
     {
@@ -309,7 +365,7 @@ class PWIZ_API_DECL TextWriter
         if (sir.spectraDataPtr.get() && !sir.spectraDataPtr->empty())
             child()("SpectraData_ref: "+sir.spectraDataPtr->id);
         if (!sir.spectrumIdentificationItem.empty())
-            child()("spectrumIdentificationItem", sir.spectrumIdentificationItem);
+            child()(sir.spectrumIdentificationItem);
         if (!sir.paramGroup.empty())
             child()("paramGroup", sir.paramGroup);
         
@@ -327,7 +383,7 @@ class PWIZ_API_DECL TextWriter
         if (!sil.fragmentationTable.empty())
             child()("fragmentationTable", sil.fragmentationTable);
         if (!sil.spectrumIdentificationResult.empty())
-            child()("spectrumIdentificationResult", sil.spectrumIdentificationResult);
+            child()(sil.spectrumIdentificationResult);
         return *this;
     }
 
@@ -335,7 +391,7 @@ class PWIZ_API_DECL TextWriter
     {
         (*this)("ProteinDetectionList: ");
         if (!pdl.proteinAmbiguityGroup.empty())
-            child()("proteinAmbiguityGroup: ", pdl.proteinAmbiguityGroup);
+            child()(pdl.proteinAmbiguityGroup);
         if (!pdl.paramGroup.empty())
             child()("paramGroup: ", pdl.paramGroup);
         return *this;
@@ -347,7 +403,7 @@ class PWIZ_API_DECL TextWriter
         (*this)("analysisData: ");
 
         if (!ad.spectrumIdentificationList.empty())
-            child()("spectrumIdentificationList: ", ad.spectrumIdentificationList);
+            child()(ad.spectrumIdentificationList);
         if (ad.proteinDetectionListPtr.get() &&
             !ad.proteinDetectionListPtr->empty())
             child()(*ad.proteinDetectionListPtr);
@@ -360,10 +416,10 @@ class PWIZ_API_DECL TextWriter
     {
         (*this)("FragmentArray: ");
 
-        if (!fa.values.empty())
-            child()("values: ", fa.values);
         if (fa.measurePtr.get() && !fa.measurePtr->empty())
             child()("Measure_ref: " + fa.measurePtr->id);
+        if (!fa.values.empty())
+            child()("values: ", fa.values);
         if (!fa.params.empty())
             child()("params", fa.params);
         
@@ -435,8 +491,8 @@ class PWIZ_API_DECL TextWriter
         (*this)("SearchModification: ");
         if (sm.fixedMod != 0)
             child()("fixedMod: ", boost::lexical_cast<std::string>(sm.fixedMod));
-        if (!sm.modParam.empty()){}
-            //TODO          child()("modParam: ", sm.modParam);
+        if (!sm.modParam.empty())
+            child()(sm.modParam);
         if (!sm.specificityRules.empty())
             child()("specificityRules: ", sm.specificityRules);       
         return *this;
@@ -456,7 +512,7 @@ class PWIZ_API_DECL TextWriter
     {
         (*this)("MassTable: ");
         if (!mt.id.empty())
-            child()("id: ", mt.id);
+            child()("id: " + mt.id);
         if (!mt.msLevel.empty())
             child()("msLevel: ", mt.msLevel);
         if (!mt.residues.empty())
@@ -471,12 +527,21 @@ class PWIZ_API_DECL TextWriter
     {
         (*this)("AnalysisProtocolCollection: ");
         if (!apc.spectrumIdentificationProtocol.empty())
-            child()("spectrumIdentificationProtocol: ", apc.spectrumIdentificationProtocol);
+            child()("spectrumIdentificationProtocol: ",
+                    apc.spectrumIdentificationProtocol);
         if (!apc.proteinDetectionProtocol.empty())
-            child()("proteinDetectionProtocol: ", apc.proteinDetectionProtocol);
+            child()("proteinDetectionProtocol: ",
+                    apc.proteinDetectionProtocol);
         return *this;
     }
 
+    TextWriter& operator()(const std::vector<ProteinDetectionHypothesisPtr>& pdh)
+    {
+        for_each(pdh.begin(), pdh.end(), child());
+
+        return *this;
+    }
+    
     TextWriter& operator()(const ProteinDetectionHypothesis& pdh)
     {
         (*this)("ProteinDetectionHypothesis: ");
@@ -485,17 +550,32 @@ class PWIZ_API_DECL TextWriter
         // TODO: Resolve        if (!pdh.passThreshold.empty())
         //  child()("passThreshold: " + boost::lexical_cast<std::string>(pdh.passThreshold));
         if (!pdh.peptideHypothesis.empty())
-            child()("peptideHypothesis: ", pdh.peptideHypothesis);
+        {
+            child()("peptideHypothesis: ");
+            BOOST_FOREACH(pwiz::mziddata::PeptideEvidencePtr pe, pdh.peptideHypothesis)
+            {
+                TextWriter(os_, depth_+2)(
+                    "peptideEvidence: "+boost::lexical_cast<std::string>(pe->id));
+            }
+        }
+ 
         if (!pdh.paramGroup.empty())
             child()("paramGroup: ", pdh.paramGroup);                    
         return *this;
     }
 
+    TextWriter& operator()(const std::vector<ProteinAmbiguityGroupPtr>& pag)
+    {
+        for_each(pag.begin(), pag.end(), child());
+        
+        return *this;
+    }
+    
     TextWriter& operator()(const ProteinAmbiguityGroup& pag)
     {
         (*this)("ProteinAmbiguityGroup: ");
         if (!pag.proteinDetectionHypothesis.empty())
-            child()("proteinDetectionHypothesis: ", pag.proteinDetectionHypothesis);
+            child()(pag.proteinDetectionHypothesis);
         if (!pag.paramGroup.empty())
             child()("paramGroup: ", pag.paramGroup);
 
@@ -737,15 +817,15 @@ class PWIZ_API_DECL TextWriter
     {
         (*this)("analysisSoftwareList:");
         (*this)((IdentifiableType)*asp);
-        if (asp->version.empty())
+        if (!asp->version.empty())
             child()("version: "+asp->version);
         if (asp->contactRolePtr.get() && asp->contactRolePtr->empty())
             child()(*asp->contactRolePtr);
-        if (asp->softwareName.empty())
+        if (!asp->softwareName.empty())
             child()("softwareName: ", asp->softwareName);
-        if (asp->URI.empty())
+        if (!asp->URI.empty())
             child()("URI: "+asp->URI);
-        if (asp->customizations.empty())
+        if (!asp->customizations.empty())
             child()("customizations: "+asp->customizations);
         //for_each(window.cvParams.begin(), window.cvParams.end(), child());
         return *this;
@@ -792,7 +872,7 @@ class PWIZ_API_DECL TextWriter
     {
         (*this)("Residue: ");
         if (!res.Code.empty())
-            child()("Code: ", res.Code);
+            child()("Code: " + res.Code);
         if (res.Mass != 0)
             child()("Mass: " + boost::lexical_cast<std::string>(res.Mass));
         return *this;
@@ -860,7 +940,7 @@ class PWIZ_API_DECL TextWriter
     {
         (*this)("PeptideEvidence: ");
         if (pe.dbSequencePtr.get() && !pe.dbSequencePtr->empty())
-            child()("DBSequence_ref: "+pe.dbSequencePtr->empty());
+            child()("DBSequence_ref: "+pe.dbSequencePtr->id);
         if (pe.start != 0)
             child()("start: " + boost::lexical_cast<std::string>(pe.start));
         if (pe.end != 0)
@@ -884,40 +964,6 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    TextWriter& operator()(const SpectrumIdentificationItem& sii)
-    {
-        (*this)("SpectrumIdentificationItem:");
-
-        if (!sii.empty())
-            child()("chargeState: "+boost::lexical_cast<std::string>(sii.chargeState));
-        if (!sii.empty())
-            child()("experimentalMassToCharge: "+boost::lexical_cast<std::string>(sii.experimentalMassToCharge));
-        if (!sii.empty())
-            child()("calculatedMassToCharge: "+boost::lexical_cast<std::string>(sii.calculatedMassToCharge));
-        if (!sii.empty())
-            child()("calculatedPI: "+boost::lexical_cast<std::string>(sii.calculatedPI));
-        if (sii.peptidePtr.get() && !sii.peptidePtr->empty())
-            child()("Peptide_ref: "+sii.peptidePtr->id);
-        if (!sii.empty())
-            child()("rank: "+boost::lexical_cast<std::string>(sii.rank));
-        if (!sii.empty())
-            child()("passThreshold: "+boost::lexical_cast<std::string>(sii.passThreshold));
-        if (sii.massTablePtr.get() && !sii.massTablePtr->empty())
-            child()("MassTable_ref: "+sii.massTablePtr->id);
-        if (sii.samplePtr.get() && !sii.samplePtr->empty())
-            child()("Sample_ref: "+sii.samplePtr->id);
-
-    
-        if (!sii.peptideEvidence.empty())
-            child()("peptideEvidence", sii.peptideEvidence);
-        if (!sii.fragmentation.empty())
-            child()("fragmentation", sii.fragmentation);
-        if (!sii.paramGroup.empty())
-            child()("paramGroup", sii.paramGroup);
-
-        return *this;
-    }
-    
     TextWriter& operator()(const MzIdentML& mzid)
     {
         (*this)("mzid:");
