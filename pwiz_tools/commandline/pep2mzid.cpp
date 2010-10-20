@@ -189,8 +189,6 @@ int main(int argc, const char* argv[])
             mapis >> cvmaps;
         }
 
-        cout << "openning ifstream: " << config.inputFilename << "\n";
-        
         ifstream in(config.inputFilename.c_str());
 
         MSMSPipelineAnalysis msmsPA;
