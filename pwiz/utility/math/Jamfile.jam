@@ -42,9 +42,9 @@ lib pwiz_utility_math
 unit-test-if-exists LinearLeastSquaresTest : LinearLeastSquaresTest.cpp ;
 unit-test-if-exists LinearSolverTest : LinearSolverTest.cpp ;
 unit-test-if-exists MatchedFilterTest : MatchedFilterTest.cpp ;
-unit-test-if-exists ParabolaTest : Parabola.cpp ParabolaTest.cpp ;
-unit-test-if-exists StatsTest : Stats.cpp StatsTest.cpp ;
-unit-test-if-exists erfTest : erf.cpp erfTest.cpp ;
+unit-test-if-exists ParabolaTest : ParabolaTest.cpp Parabola.cpp ;
+unit-test-if-exists StatsTest : StatsTest.cpp Stats.cpp ;
+unit-test-if-exists erfTest : erfTest.cpp erf.cpp ;
 unit-test-if-exists qrTest : qrTest.cpp ;
 unit-test-if-exists OrderedPairTest : OrderedPairTest.cpp ;
 
