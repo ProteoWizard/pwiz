@@ -112,10 +112,10 @@ namespace BumberDash
                     bool tagCustom = IsCustomConfig(((TagHistoryItem)hi).TagConfigFile.FilePath);
 
                     JobQueueDGV.Rows[JobQueueDGV.Rows.Count - 1].Cells[3].ToolTipText = string.Format("{0}{1}{2}{1}{3}",
-                        tagCustom ? CreatePropertyStringFromConfig(hi.InitialConfigFile) : hi.InitialConfigFile.FilePath,
+                        databaseCustom ? CreatePropertyStringFromConfig(hi.InitialConfigFile) : hi.InitialConfigFile.FilePath,
                         System.Environment.NewLine,
                         new string('-', 20),
-                        databaseCustom ? CreatePropertyStringFromConfig(((TagHistoryItem)hi).TagConfigFile) : ((TagHistoryItem)hi).TagConfigFile.FilePath);
+                        tagCustom ? CreatePropertyStringFromConfig(((TagHistoryItem)hi).TagConfigFile) : ((TagHistoryItem)hi).TagConfigFile.FilePath);
                 }
                 else if (databaseCustom)
                     JobQueueDGV.Rows[JobQueueDGV.Rows.Count - 1].Cells[3].ToolTipText = CreatePropertyStringFromConfig(hi.InitialConfigFile);
@@ -1245,16 +1245,20 @@ namespace BumberDash
            {
                var customRx = new System.Text.RegularExpressions.Regex(@"^--\w+--$");
                
+               //Case where proper custom name is used
                if (customRx.IsMatch(unknownItem))
                    return true;
 
                try
                {
+                   //Case where non-config file parameters are used and name is being held on to
                    if (Path.GetExtension(unknownItem) != ".cfg")
                        return true;
                }
                catch
                {
+                   //Case where nonsensical string was entered for configuration
+                   //By normal methods this will never have any parameters
                    return true;
                }
 
@@ -1744,7 +1748,7 @@ namespace BumberDash
         /// Called from ProgramHandler to indicate to form 
         /// and database that a job has been completed
         /// </summary>
-            public void InidcateJobDone()
+            internal void InidcateJobDone()
             {
                 DatabaseObjects dbo = new DatabaseObjects(_manager.GetSession());
                 bool unsuccessful = JobQueueDGV.Rows[_lastCompleted + 1].Tag.ToString() == "Unsuccessful";
@@ -1952,7 +1956,7 @@ namespace BumberDash
                }
                catch (Exception ex)
                {
-                   MessageBox.Show("Could not delete file due to exception: " + ex.ToString());
+                   MessageBox.Show("Could not delete file due to exception: " + ex.Message);
                }
            }
 
