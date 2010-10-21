@@ -134,12 +134,12 @@ exe pep2mzid
     ;
 
 
-exe mascot2mzid
-    : mascot2mzid.cpp
-      ../../pwiz/data/mziddata//pwiz_data_mzid
-      /ext/boost//program_options
-    : <include>../../..
-    ;
+#exe mascot2mzid
+#    : mascot2mzid.cpp
+#      ../../pwiz/data/mziddata//pwiz_data_mzid
+#      /ext/boost//program_options
+#    : <include>../../..
+#    ;
 
 
 alias mstools : msdiff msconvert msdir msaccess mspicture peakaboo chainsaw ;
