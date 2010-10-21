@@ -54,29 +54,32 @@ namespace seems
         public SpectrumAnnotationForm()
         {
             InitializeComponent();
+
+            // the ListView gets a handle even when Panel1Collapsed
+            IntPtr handle = annotationsListView.Handle;
         }
 
+        bool clearing = false;
         private void selectIndex( int index )
         {
+            clearing = true;
             annotationsListView.SelectedIndices.Clear();
-            if( index > 0)
-                annotationsListView.SelectedIndices.Add(index);
+            clearing = false;
+            annotationsListView.SelectedIndices.Add(index);
         }
 
         public void UpdateAnnotations( MassSpectrum spectrum )
         {
-            if( annotationsListView.VirtualListSize != spectrum.AnnotationList.Count )
-            {
-                annotationsListView.VirtualListSize = spectrum.AnnotationList.Count;
-                selectIndex( spectrum.AnnotationList.Count - 1 );
-            }
-
             if( currentSpectrum != spectrum )
             {
                 currentSpectrum = spectrum;
                 Text = TabText = "Annotations for spectrum " + spectrum.Id;
                 runOverrideToolStripButton.Text = "Override " + spectrum.Source.Source.Name + " Annotations";
-                annotationsListView_SelectedIndexChanged( this, EventArgs.Empty );
+
+                annotationsListView.VirtualListSize = spectrum.AnnotationList.Count;
+
+                if (spectrum.AnnotationList.Count > 0)
+                    selectIndex(spectrum.AnnotationList.Count - 1);
             }
 
             annotationsListView.Refresh();
@@ -136,17 +139,25 @@ namespace seems
             if( lastSelectedAnnotation != null )
                 lastSelectedAnnotation.OptionsChanged -= new EventHandler( OnAnnotationChanged );
 
-            splitContainer.Panel2.Controls.Clear();
+            if( clearing )
+                return;
+
             if( annotationsListView.SelectedIndices.Count > 0 &&
                 currentSpectrum.AnnotationList.Count > annotationsListView.SelectedIndices[0] )
             {
+                if (lastSelectedAnnotation == null ||
+                    lastSelectedAnnotation.OptionsPanel != currentSpectrum.AnnotationList[annotationsListView.SelectedIndices[0]].OptionsPanel)
+                {
+                    splitContainer.Panel2.Controls.Clear();
+                    splitContainer.Panel2.Controls.Add(currentSpectrum.AnnotationList[annotationsListView.SelectedIndices[0]].OptionsPanel);
+                }
                 lastSelectedAnnotation = currentSpectrum.AnnotationList[annotationsListView.SelectedIndices[0]];
-                splitContainer.Panel2.Controls.Add( lastSelectedAnnotation.OptionsPanel );
-                lastSelectedAnnotation.OptionsChanged += new EventHandler( OnAnnotationChanged );
+                lastSelectedAnnotation.OptionsChanged += new EventHandler(OnAnnotationChanged);
 
                 removeAnnotationButton.Enabled = true;
             } else
             {
+                splitContainer.Panel2.Controls.Clear();
                 lastSelectedAnnotation = null;
                 removeAnnotationButton.Enabled = false;
             }

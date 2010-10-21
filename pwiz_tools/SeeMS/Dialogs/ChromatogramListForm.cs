@@ -73,9 +73,11 @@ namespace seems
 
             initializeGridView();
 		}
-
+`
 		private void initializeGridView()
 		{
+            // force handle creation
+            IntPtr dummy = gridView.Handle;
             chromatogramList = new Dictionary<int, Chromatogram>();
 
             typeDataGridViewTextBoxColumn.ToolTipText = new CVTermInfo( CVID.MS_chromatogram_type ).def;

@@ -77,6 +77,7 @@ namespace seems
 
         MSGraphPane focusedPane = null;
         CurveItem focusedItem = null;
+        Manager manager = null;
 
         /// <summary>
         /// Occurs when the FocusedItem property changes;
@@ -136,10 +137,11 @@ namespace seems
             }
         }
 
-		public GraphForm()
+		public GraphForm(Manager manager)
 		{
 			InitializeComponent();
 
+            this.manager = manager;
             paneList = new PaneList();
             paneLayout = PaneLayout.SingleColumn;
 
@@ -235,6 +237,9 @@ namespace seems
                 syncMenuItem.Checked = msGraphControl.IsSynchronizeXAxes;
                 menuStrip.Items.Add( syncMenuItem );
             }
+
+            menuStrip.Items.Add(new ToolStripMenuItem("Show Data Processing", Properties.Resources.DataProcessing, GraphForm_ShowDataProcessing));
+            menuStrip.Items.Add(new ToolStripMenuItem("Show Annotation", Properties.Resources.Annotation, GraphForm_ShowAnnotation));
         }
 
         void GraphForm_StackLayoutSingleColumn( object sender, EventArgs e )
@@ -255,6 +260,16 @@ namespace seems
         void GraphForm_SyncZoomPan( object sender, EventArgs e )
         {
             msGraphControl.IsSynchronizeXAxes = !msGraphControl.IsSynchronizeXAxes;
+        }
+
+        void GraphForm_ShowDataProcessing (object sender, EventArgs e)
+        {
+            manager.ShowDataProcessing();
+        }
+
+        void GraphForm_ShowAnnotation (object sender, EventArgs e)
+        {
+            manager.ShowAnnotationForm();
         }
 
         public override void Refresh()

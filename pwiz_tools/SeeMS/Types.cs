@@ -214,7 +214,6 @@ namespace seems
 
         public virtual void CustomizeYAxis( ZedGraph.Axis axis )
         {
-
             axis.Title.FontSpec.Family = "Arial";
             axis.Title.FontSpec.Size = 14;
             axis.Color = axis.Title.FontSpec.FontColor = Color.Black;

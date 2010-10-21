@@ -25,6 +25,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using DigitalRune.Windows.Docking;
 using pwiz.CLI.cv;
 using pwiz.CLI.data;
@@ -145,13 +146,22 @@ namespace seems
 	public class Manager
 	{
 		private DataSourceMap dataSourceMap;
+        private DataProcessing spectrumGlobalDataProcessing;
 
         private SpectrumProcessingForm spectrumProcessingForm;
+        public SpectrumProcessingForm SpectrumProcessingForm { get { return spectrumProcessingForm; } }
+
         private SpectrumAnnotationForm spectrumAnnotationForm;
-        private DataProcessing spectrumGlobalDataProcessing;
+        public SpectrumAnnotationForm SpectrumAnnotationForm { get { return spectrumAnnotationForm; } }
 
         private DockPanel dockPanel;
         public DockPanel DockPanel { get { return dockPanel; } }
+
+        public bool ShowChromatogramListForNewSources { get; set; }
+        public bool ShowSpectrumListForNewSources { get; set; }
+
+        public bool OpenFileUsesCurrentGraphForm { get; set; }
+        public bool OpenFileGivesFocus { get; set; }
 
         public ImmutableDictionary<string, ManagedDataSource> DataSourceMap { get { return new ImmutableDictionary<string, ManagedDataSource>(dataSourceMap); } }
 
@@ -229,6 +239,12 @@ namespace seems
 
             spectrumGlobalDataProcessing = new DataProcessing();
 
+            ShowChromatogramListForNewSources = true;
+            ShowSpectrumListForNewSources = true;
+
+            OpenFileUsesCurrentGraphForm = false;
+            OpenFileGivesFocus = true;
+
             LoadDefaultAnnotationSettings();
         }
 
@@ -271,7 +287,8 @@ namespace seems
                     initializeManagedDataSource( newSource, idOrIndex, annotation, spectrumListFilterList );
 				} else
 				{
-					GraphForm newGraph = OpenGraph( true );
+                    GraphForm graph = OpenFileUsesCurrentGraphForm && CurrentGraphForm != null ? CurrentGraphForm
+                                                                                               : OpenGraph(OpenFileGivesFocus);
                     ManagedDataSource source = dataSourceMap[filepath];
 
                     int index = -1;
@@ -298,13 +315,20 @@ namespace seems
                         if( annotation != null )
                             spectrum.AnnotationList.Add( annotation );
 
-                        showData( newGraph, spectrum );
+                        if (source.Source.Spectra.Count < source.Source.MSDataFile.run.spectrumList.size() &&
+                            source.SpectrumListForm.IndexOf(spectrum) < 0)
+                        {
+                            source.SpectrumListForm.Add(spectrum);
+                            source.Source.Spectra.Add(spectrum);
+                        }
+
+                        showData(graph, spectrum);
                     } else
                     {
                         if( source.Source.Chromatograms.Count > 0 )
-                            showData( newGraph, source.Source.Chromatograms[0] );
+                            showData(graph, source.Source.Chromatograms[0]);
                         else
-                            showData( newGraph, source.Source.Spectra[0] );
+                            showData(graph, source.Source.Spectra[0]);
                     }
 				}
 
@@ -323,7 +347,7 @@ namespace seems
 
 		public GraphForm CreateGraph()
 		{
-			GraphForm graphForm = new GraphForm();
+			GraphForm graphForm = new GraphForm(this);
             graphForm.ZedGraphControl.PreviewKeyDown += new PreviewKeyDownEventHandler( graphForm_PreviewKeyDown );
             graphForm.ItemGotFocus += new EventHandler( form_GotFocus );
             return graphForm;
@@ -331,7 +355,7 @@ namespace seems
 
         public GraphForm OpenGraph( bool giveFocus )
         {
-            GraphForm graphForm = new GraphForm();
+            GraphForm graphForm = new GraphForm(this);
             graphForm.ZedGraphControl.PreviewKeyDown += new PreviewKeyDownEventHandler( graphForm_PreviewKeyDown );
             graphForm.ItemGotFocus += new EventHandler( form_GotFocus );
             graphForm.Show( DockPanel, DockState.Document );
@@ -429,13 +453,19 @@ namespace seems
                     source.Spectra.Add( spectrum );
 
                     firstSpectrumLoaded = true;
-                    spectrumListForm.Show( DockPanel, DockState.DockBottom );
-                    Application.DoEvents();
+
+                    if (ShowSpectrumListForNewSources)
+                    {
+                        spectrumListForm.Show(DockPanel, DockState.DockBottom);
+                        Application.DoEvents();
+                    }
 
                     if( annotation != null )
                         spectrum.AnnotationList.Add( annotation );
 
-                    firstGraph = OpenGraph( true );
+                    firstGraph = OpenFileUsesCurrentGraphForm && CurrentGraphForm != null ? CurrentGraphForm
+                                                                                          : OpenGraph(OpenFileGivesFocus);
+
                     showData( firstGraph, spectrum );
                     return;
                 }
@@ -456,8 +486,12 @@ namespace seems
                             firstGraph = OpenGraph( true );
                             showData( firstGraph, ticChromatogram );
                             firstChromatogramLoaded = true;
-                            chromatogramListForm.Show( DockPanel, DockState.DockBottom );
-                            Application.DoEvents();
+
+                            if (ShowChromatogramListForNewSources)
+                            {
+                                chromatogramListForm.Show(DockPanel, DockState.DockBottom);
+                                Application.DoEvents();
+                            }
                         }
 					}
 				}
@@ -488,9 +522,14 @@ namespace seems
 						if( !firstSpectrumLoaded && !firstChromatogramLoaded )
 						{
 							firstChromatogramLoaded = true;
-							chromatogramListForm.Show( DockPanel, DockState.DockBottom );
-                            Application.DoEvents();
-							firstGraph = OpenGraph( true );
+                            
+                            if (ShowChromatogramListForNewSources)
+                            {
+                                chromatogramListForm.Show(DockPanel, DockState.DockBottom);
+                                Application.DoEvents();
+                            }
+
+						    firstGraph = OpenGraph( true );
                             showData(firstGraph, chromatogram );
 						}
 						Application.DoEvents();
@@ -1056,16 +1095,22 @@ namespace seems
             if( source == null || graphItem == null )
                 return;
 
+            if (graphItem is Chromatogram && !(graphItem as Chromatogram).OwningListForm.Visible ||
+                graphItem is MassSpectrum && !(graphItem as MassSpectrum).OwningListForm.Visible)
+                return;
+
             DataGridView gridView = graphItem.IsChromatogram ? ( graphItem as Chromatogram ).OwningListForm.GridView
                                                              : ( graphItem as MassSpectrum ).OwningListForm.GridView;
             int rowIndex = graphItem.IsChromatogram ? ( graphItem as Chromatogram ).OwningListForm.IndexOf( graphItem as Chromatogram )
                                                     : ( graphItem as MassSpectrum ).OwningListForm.IndexOf( graphItem as MassSpectrum );
 
+            int columnIndex = gridView.CurrentCell == null ? 0 : gridView.CurrentCell.ColumnIndex;
+
             int key = (int) e.KeyCode;
             if( ( key == (int) Keys.Left || key == (int) Keys.Up ) && rowIndex > 0 )
-                gridView.CurrentCell = gridView[gridView.CurrentCell.ColumnIndex, rowIndex - 1];
+                gridView.CurrentCell = gridView[columnIndex, rowIndex - 1];
             else if( ( key == (int) Keys.Right || key == (int) Keys.Down ) && rowIndex < gridView.RowCount - 1 )
-                gridView.CurrentCell = gridView[gridView.CurrentCell.ColumnIndex, rowIndex + 1];
+                gridView.CurrentCell = gridView[columnIndex, rowIndex + 1];
             else
                 return;
 

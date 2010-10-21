@@ -792,6 +792,8 @@ namespace seems
             foreach( DataGridViewRow row in annotationPanels.peptideInfoGridView.Rows )
                 row.Height = row.InheritedStyle.Font.Height + 2;
 
+            // TODO: fragmentInfoGridView is slow: make it faster, optional, or both!
+
             annotationPanels.fragmentInfoGridView.SuspendLayout();
 
             if( ionSeries > IonSeries.Auto )

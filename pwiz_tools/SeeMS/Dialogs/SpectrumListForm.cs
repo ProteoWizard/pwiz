@@ -80,6 +80,8 @@ namespace seems
 
 		private void initializeGridView( CVID nativeIdFormat )
 		{
+            // force handle creation
+            IntPtr dummy = gridView.Handle;
             spectrumList = new Dictionary<int, MassSpectrum>();
 
             this.nativeIdFormat = nativeIdFormat;
@@ -235,7 +237,7 @@ namespace seems
 
         public int IndexOf( MassSpectrum spectrum )
         {
-            return spectraSource.Find( "Index", spectrum.Index );
+            return spectraSource.Find( "Id", spectrum.Id );
         }
 
         public MassSpectrum GetSpectrum( int index )
