@@ -540,6 +540,13 @@ namespace pwiz.Skyline.Model.DocSettings
             return enumDocNodes.GetEnumerator().MoveNext();
         }
 
+        public bool Accept(string peptideSequence)
+        {
+            int missedCleavages = PeptideSettings.Enzyme.CountCleavagePoints(peptideSequence);
+            return missedCleavages <= PeptideSettings.DigestSettings.MaxMissedCleavages
+                   && Accept(peptideSequence, missedCleavages);
+        }
+
         /// <summary>
         /// This version of Accept is used to select transition groups after the peptide
         /// itself has already been screened.  For this reason, it only applies library

@@ -26,6 +26,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -461,7 +462,7 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<FilterMatchedPeptidesDlg>(_viewLibUI.AddPeptide,
                       filterMatchedPeptideDlg =>
             {
-                filterMatchedPeptideDlg.SetFilter(ViewLibraryPepMatching.DuplicateProteinsFilter.NoDuplicates);
+                filterMatchedPeptideDlg.DuplicateProteinsFilter = BackgroundProteome.DuplicateProteinsFilter.NoDuplicates;
                 filterMatchedPeptideDlg.OkDialog();
             });
             Assert.AreEqual(docPrev, SkylineWindow.Document);
@@ -470,7 +471,7 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<FilterMatchedPeptidesDlg>(_viewLibUI.AddPeptide,
                       filterMatchedPeptideDlg =>
             {
-                filterMatchedPeptideDlg.SetFilter(ViewLibraryPepMatching.DuplicateProteinsFilter.FirstOccurence);
+                filterMatchedPeptideDlg.DuplicateProteinsFilter = BackgroundProteome.DuplicateProteinsFilter.FirstOccurence;
                 filterMatchedPeptideDlg.OkDialog();
             });
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 2, 2, 3, 9);
@@ -502,14 +503,14 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.Undo());
             RunUI(() => SkylineWindow.Undo());
             var filterMatchedPeptidesDlg1 = ShowDialog<FilterMatchedPeptidesDlg>(_viewLibUI.AddAllPeptides);
-            RunUI(() => filterMatchedPeptidesDlg1.SetFilter(ViewLibraryPepMatching.DuplicateProteinsFilter.NoDuplicates));
+            RunUI(() => filterMatchedPeptidesDlg1.DuplicateProteinsFilter = BackgroundProteome.DuplicateProteinsFilter.NoDuplicates);
             RunDlg<MultiButtonMsgDlg>(filterMatchedPeptidesDlg1.OkDialog, messageDlg => messageDlg.Btn1Click());
             TestForDuplicatePeptides();
 
             // Test selecting first occurence prevents any peptide from appearing twice in the document.
             RunUI(() => SkylineWindow.Undo());
             var filterMatchedPeptidesDlg2 = ShowDialog<FilterMatchedPeptidesDlg>(_viewLibUI.AddAllPeptides);
-            RunUI(() => filterMatchedPeptidesDlg2.SetFilter(ViewLibraryPepMatching.DuplicateProteinsFilter.FirstOccurence));
+            RunUI(() => filterMatchedPeptidesDlg2.DuplicateProteinsFilter = BackgroundProteome.DuplicateProteinsFilter.FirstOccurence);
             RunDlg<MultiButtonMsgDlg>(filterMatchedPeptidesDlg2.OkDialog, messageDlg => messageDlg.Btn1Click());
             TestForDuplicatePeptides();
             

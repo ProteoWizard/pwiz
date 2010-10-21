@@ -886,7 +886,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     rectDraw.X = textSequence.Position + bounds.X + PADDING + imgWidth;
                     rectDraw.Width = textSequence.Width;
-                    var textColor = selected && !Equals(e.Index, _listPeptidePrevSelIndex)? e.ForeColor : textSequence.Color;
+                    var textColor = Equals(e.ForeColor, SystemColors.HighlightText) ? e.ForeColor : textSequence.Color;
                     TextRenderer.DrawText(e.Graphics, textSequence.Text,
                                           textSequence.Font, rectDraw, textColor, backColor,
                                           FORMAT_CUSTOM);

@@ -874,8 +874,8 @@ namespace pwiz.Skyline.Model
                 if (!searchUp && (!findingSelection || i != start)  && child.Matches(searchString, settings, caseSensitive))
                     return new IdentityPath(child.Id);
 
-                // If the child is a parent, search its children
-                if (child is DocNodeParent)
+                // If the child is a parent, search its children, unless we are searching up and have found the selected node.
+                if ((child is DocNodeParent) && !(searchUp && isSelection && i == start))
                 {
                     var foundPath = ((DocNodeParent) child).SearchForString(traversal,
                         searchString, settings, searchUp, caseSensitive);
@@ -884,8 +884,9 @@ namespace pwiz.Skyline.Model
                 }
                 
                 // If the string was not found in the children, and searching up, check
-                // to see if the current child matches the string.
-                if (searchUp && !isSelection && child.Matches(searchString, settings, caseSensitive))
+                // to see if the current child matches the string, as long as we are either not on the search path
+                // or if we are on the search path, that the current child node is not the selected node.
+                if (searchUp && !(isSelection && i == start) && child.Matches(searchString, settings, caseSensitive))
                     return new IdentityPath(child.Id);
             }
 

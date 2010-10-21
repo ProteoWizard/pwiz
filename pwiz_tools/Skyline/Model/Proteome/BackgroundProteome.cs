@@ -143,5 +143,13 @@ namespace pwiz.Skyline.Model.Proteome
             }
             return true;
         }
+        // ReSharper disable InconsistentNaming
+        public enum DuplicateProteinsFilter
+        {
+            NoDuplicates,
+            FirstOccurence,
+            AddToAll
+        }
+        // ReSharper restore InconsistentNaming
     }
 }

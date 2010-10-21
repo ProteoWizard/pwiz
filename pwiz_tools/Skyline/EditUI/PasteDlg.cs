@@ -20,8 +20,10 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.ProteomeDatabase.API;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -151,14 +153,17 @@ namespace pwiz.Skyline.EditUI
 
         private void btnValidate_Click(object sender, EventArgs e)
         {
+            ValidateCells();
+        }
+
+        public void ValidateCells()
+        {
             var origPath = SelectedPath;
             try
             {
                 var document = GetNewDocument(DocumentUiContainer.Document);
                 if (document != null)
-                {
                     ShowNoErrors();
-                }
             }
             finally
             {
@@ -210,8 +215,6 @@ namespace pwiz.Skyline.EditUI
 
         private SrmDocument AddPeptides(SrmDocument document)
         {
-            bool missingProteinName = false;
-            bool anyProteinName = false;
             var backgroundProteome = GetBackgroundProteome(document);
             for (int i = gridViewPeptides.Rows.Count - 1; i >= 0; i--)
             {
@@ -235,15 +238,6 @@ namespace pwiz.Skyline.EditUI
                 PeptideGroupDocNode peptideGroupDocNode;
                 if (string.IsNullOrEmpty(proteinName))
                 {
-                    if (anyProteinName)
-                    {
-                        ShowPeptideError(new PasteError
-                                             {
-                                                 Column = colPeptideProtein.Index, Line = i, Message = "This protein name is missing"
-                                             });
-                        return null;
-                    }
-                    missingProteinName = true;
                     peptideGroupDocNode = GetSelectedPeptideGroupDocNode(document);
                     if (!IsPeptideListDocNode(peptideGroupDocNode))
                     {
@@ -252,17 +246,6 @@ namespace pwiz.Skyline.EditUI
                 }
                 else
                 {
-                    if (missingProteinName)
-                    {
-                        ShowPeptideError(new PasteError
-                                             {
-                                                 Column = colPeptideProtein.Index,
-                                                 Line = i,
-                                                 Message = "Earlier rows did not specify a protein name, but this row has a protein name."
-                                             });
-                        return null;
-                    }
-                    anyProteinName = true;
                     peptideGroupDocNode = FindPeptideGroupDocNode(document, proteinName);
                 }
                 if (peptideGroupDocNode == null)
@@ -273,7 +256,6 @@ namespace pwiz.Skyline.EditUI
                     }
                     else
                     {
-
                         PeptideGroup peptideGroup = backgroundProteome.IsNone ? new PeptideGroup() 
                             : (backgroundProteome.GetFastaSequence(proteinName) ??
                                                     new PeptideGroup());
@@ -503,12 +485,10 @@ namespace pwiz.Skyline.EditUI
 
         private SrmDocument AddTransitionList(SrmDocument document)
         {
-            bool missingProteinName = false;
-            bool anyProteinName = false;
             var modifications = document.Settings.PeptideSettings.Modifications;
             bool isHeavyAllowed = modifications.HasHeavyImplicitModifications;
             var backgroundProteome = GetBackgroundProteome(document);
-            for (int i = gridViewTransitionList.Rows.Count - 1; i >= 0; i--)
+            for (int i = 0; i < gridViewTransitionList.Rows.Count; i++)
             {
                 var row = gridViewTransitionList.Rows[i];
                 var peptideSequence = Convert.ToString(row.Cells[colTransitionPeptide.Index].Value);
@@ -560,17 +540,6 @@ namespace pwiz.Skyline.EditUI
                 PeptideGroupDocNode peptideGroupDocNode;
                 if (string.IsNullOrEmpty(proteinName))
                 {
-                    if (anyProteinName)
-                    {
-                        ShowTransitionError(new PasteError
-                        {
-                            Column = colTransitionProteinName.Index,
-                            Line = i,
-                            Message = "This protein name is missing"
-                        });
-                        return null;
-                    }
-                    missingProteinName = true;
                     peptideGroupDocNode = GetSelectedPeptideGroupDocNode(document);
                     if (!IsPeptideListDocNode(peptideGroupDocNode))
                     {
@@ -579,17 +548,6 @@ namespace pwiz.Skyline.EditUI
                 }
                 else
                 {
-                    if (missingProteinName)
-                    {
-                        ShowTransitionError(new PasteError
-                        {
-                            Column = colTransitionProteinName.Index,
-                            Line = i,
-                            Message = "Earlier rows did not specify a protein name, but this row has a protein name."
-                        });
-                        return null;
-                    }
-                    anyProteinName = true;
                     peptideGroupDocNode = FindPeptideGroupDocNode(document, proteinName);
                 }
                 PeptideGroupBuilder peptideGroupBuilder = new PeptideGroupBuilder(">>PasteDlg", true, document.Settings);
@@ -938,40 +896,118 @@ namespace pwiz.Skyline.EditUI
 
         private void gridViewPeptides_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
-            HideNoErrors();
             if (e.RowIndex < 0 || e.ColumnIndex < 0)
             {
                 return;
             }
             var row = gridViewPeptides.Rows[e.RowIndex];
-            var proteinName = Convert.ToString(row.Cells[colPeptideProtein.Index].Value);
-            var peptideSequence = Convert.ToString(row.Cells[colPeptideSequence.Index].Value);
-            if (string.IsNullOrEmpty(peptideSequence) && string.IsNullOrEmpty(proteinName))
-            {
-                gridViewPeptides.Rows.Remove(row);
-                return;
-            }
             var column = gridViewPeptides.Columns[e.ColumnIndex];
-            if (column == colPeptideSequence)
-            {
-                if (String.IsNullOrEmpty(proteinName) && !String.IsNullOrEmpty(peptideSequence))
-                {
-                    row.Cells[colPeptideProtein.Index].Value = GetProteinNameForPeptideSequence(peptideSequence);
-                }
-                return;
-            }
             if (column != colPeptideProtein)
             {
                 return;
             }
+            var proteinName = Convert.ToString(row.Cells[colPeptideProtein.Index].Value);
             FastaSequence fastaSequence = GetFastaSequence(row, proteinName);
-            if (fastaSequence == null)
+            row.Cells[colPeptideProteinDescription.Index].Value = fastaSequence == null ? null : fastaSequence.Description;
+        }
+
+        /// <summary>
+        /// Enumerates table entries for all proteins matching a pasted peptide.
+        /// This can't be done on gridViewPeptides_CellValueChanged because we are creating new cells.
+        /// </summary>
+        private void EnumerateProteins(DataGridView dataGridView, int rowIndex, bool keepAllPeptides, 
+            ref int numUnmatched, ref int numMultipleMatches, ref int numFiltered, HashSet<string> seenPepSeq)
+        {
+
+            HideNoErrors();      
+            var row = dataGridView.Rows[rowIndex];
+            int sequenceIndex = Equals(dataGridView, gridViewPeptides)
+                                ? colPeptideSequence.Index
+                                : (Equals(dataGridView, gridViewTransitionList) ? colTransitionPeptide.Index : -1);
+            int proteinIndex = Equals(dataGridView, gridViewPeptides)
+                                ? colPeptideProtein.Index
+                                : (Equals(dataGridView, gridViewTransitionList) ? colTransitionProteinName.Index : -1);
+            
+            var proteinName = Convert.ToString(row.Cells[proteinIndex].Value);
+            var peptideSequence = Convert.ToString(row.Cells[sequenceIndex].Value);
+
+            // Only enumerate the proteins if the user has not specified a protein.
+            if (!string.IsNullOrEmpty(proteinName))
+                return;
+            
+            // If there is no peptide sequence and no protein, remove this entry.
+            if (string.IsNullOrEmpty(peptideSequence))
             {
-                row.Cells[colPeptideProteinDescription.Index].Value = null;
+                dataGridView.Rows.Remove(row);
+                return;
             }
-            else
+            
+            // Check to see if this is a new sequence because we don't want to count peptides more than once for
+            // the FilterMatchedPeptidesDlg.
+            bool newSequence = !seenPepSeq.Contains(peptideSequence);
+            if(newSequence)
             {
-                row.Cells[colPeptideProteinDescription.Index].Value = fastaSequence.Description;
+                // If we are not keeping filtered peptides, and this peptide does not match current filter
+                // settings, remove this peptide.
+                if (!FastaSequence.IsExSequence(peptideSequence))
+                {
+                    dataGridView.CurrentCell = row.Cells[sequenceIndex];
+                    throw new InvalidDataException("This peptide sequence contains invalid characters.");
+                }
+                seenPepSeq.Add(peptideSequence);
+            }
+
+            var proteinNames = GetProteinNamesForPeptideSequence(peptideSequence);
+
+            bool isUnmatched = proteinNames == null || proteinNames.Count == 0;
+            bool hasMultipleMatches = proteinNames != null && proteinNames.Count > 1;
+            bool isFiltered = !DocumentUiContainer.Document.Settings.Accept(peptideSequence);
+
+            if(newSequence)
+            {
+                numUnmatched += isUnmatched ? 1 : 0;
+                numMultipleMatches += hasMultipleMatches ? 1 : 0;
+                numFiltered += isFiltered ? 1 : 0;
+            }
+          
+            // No protein matches found, so we do not need to enumerate this peptide. 
+            if (isUnmatched)
+            {
+                // If we are not keeping unmatched peptides, then remove this peptide.
+                if (!keepAllPeptides && !Settings.Default.LibraryPeptidesAddUnmatched)
+                    dataGridView.Rows.Remove(row);
+                // Even if we are keeping this peptide, it has no matches so we don't enumerate it.
+                return;
+            }
+
+            // If there are multiple protein matches, and we are filtering such peptides, remove this peptide.
+            if (!keepAllPeptides &&
+                (hasMultipleMatches && FilterMultipleProteinMatches == BackgroundProteome.DuplicateProteinsFilter.NoDuplicates)
+                || (isFiltered && !Settings.Default.LibraryPeptidesKeepFiltered))
+            {
+                dataGridView.Rows.Remove(row);
+                return;
+            }
+            
+            row.Cells[proteinIndex].Value = proteinNames[0];
+            // Only using the first occurence.
+            if(!keepAllPeptides && FilterMultipleProteinMatches == BackgroundProteome.DuplicateProteinsFilter.FirstOccurence)
+                return;
+            // Finally, enumerate all proteins for this peptide.
+            for (int i = 1; i < proteinNames.Count; i ++)
+            {
+                var newRow = dataGridView.Rows[dataGridView.Rows.Add()];
+                // Copy all cells, except for the protein name as well as any cells that are not null, 
+                // meaning that they have already been filled out by CellValueChanged.
+                for(int x = 0; x < row.Cells.Count; x++)
+                {
+                    if (newRow.Cells[proteinIndex].Value != null)
+                        continue;
+                    if (x == proteinIndex)
+                        newRow.Cells[proteinIndex].Value = proteinNames[i];
+                    else
+                        newRow.Cells[x].Value = row.Cells[x].Value;
+                }
             }
         }
 
@@ -984,21 +1020,11 @@ namespace pwiz.Skyline.EditUI
             }
             var row = gridViewTransitionList.Rows[e.RowIndex];
             var proteinName = Convert.ToString(row.Cells[colTransitionProteinName.Index].Value);
-            var peptideSequence = Convert.ToString(row.Cells[colTransitionPeptide.Index].Value);
             var column = gridViewTransitionList.Columns[e.ColumnIndex];
-            if (column == colTransitionPeptide)
-            {
-                if (String.IsNullOrEmpty(proteinName) && !String.IsNullOrEmpty(peptideSequence))
-                {
-                    row.Cells[colTransitionProteinName.Index].Value = GetProteinNameForPeptideSequence(peptideSequence);
-                }
-                return;
-            }
             if (column != colTransitionProteinName)
             {
                 return;
             }
-
             FastaSequence fastaSequence = GetFastaSequence(row, proteinName);
             if (fastaSequence != null)
             {
@@ -1040,6 +1066,7 @@ namespace pwiz.Skyline.EditUI
         public void OkDialog()
         {
             bool error = false;
+            var origPath = SelectedPath;
             Program.MainWindow.ModifyDocument(Description, 
                                               document =>
                                                   {
@@ -1053,6 +1080,7 @@ namespace pwiz.Skyline.EditUI
                                                   });
             if (error)
             {
+                SelectedPath = origPath;
                 return;
             }
             DialogResult = DialogResult.OK;
@@ -1113,12 +1141,14 @@ namespace pwiz.Skyline.EditUI
 
         public void PasteProteins()
         {
-            Paste(gridViewProteins);
+            Paste(gridViewProteins, false);
         }
 
-        private void PasteTransitions()
+        public void PasteTransitions()
         {
-            Paste(gridViewTransitionList);
+            var document = DocumentUiContainer.Document;
+            var backgroundProteome = document.Settings.PeptideSettings.BackgroundProteome;
+            Paste(gridViewTransitionList, !backgroundProteome.IsNone);
         }
 
         private void gridViewPeptides_KeyDown(object sender, KeyEventArgs e)
@@ -1134,8 +1164,75 @@ namespace pwiz.Skyline.EditUI
         }
 
         public void PastePeptides()
+        {       
+            var document = DocumentUiContainer.Document;
+            var backgroundProteome = document.Settings.PeptideSettings.BackgroundProteome;
+            Paste(gridViewPeptides, !backgroundProteome.IsNone);
+        }
+
+        /// <summary>
+        /// Removes the given number of last rows in the given DataGridView.
+        /// </summary>
+        private static void RemoveLastRows(DataGridView dataGridView, int numToRemove)
         {
-            Paste(gridViewPeptides);
+            int rowCount = dataGridView.Rows.Count;
+            for (int i = rowCount - numToRemove; i < rowCount; i++)
+            {
+                dataGridView.Rows.Remove(dataGridView.Rows[dataGridView.Rows.Count - 2]);
+            }
+        }    
+              
+        public static BackgroundProteome.DuplicateProteinsFilter FilterMultipleProteinMatches
+        {
+            get
+            {
+                return Helpers.ParseEnum(Settings.Default.LibraryPeptidesAddDuplicatesEnum,
+                                         BackgroundProteome.DuplicateProteinsFilter.AddToAll);
+            }
+        }
+
+        private void Paste(DataGridView dataGridView, bool enumerateProteins)
+        {
+            string text = Clipboard.GetText();
+
+            int numUnmatched;
+            int numMultipleMatches;
+            int numFiltered;
+            int prevRowCount = dataGridView.RowCount;
+            try
+            {
+                Paste(dataGridView, text, enumerateProteins, enumerateProteins, out numUnmatched, 
+                    out numMultipleMatches, out numFiltered);
+            }
+            // User pasted invalid text.
+            catch(InvalidDataException e)
+            {
+                dataGridView.Show();
+                // Show the invalid text, then remove all newly added rows.
+                MessageDlg.Show(this, e.Message);
+                RemoveLastRows(dataGridView, dataGridView.RowCount - prevRowCount);
+                return;
+            }
+            // If we have no unmatched, no multiple matches, and no filtered, we do not need to show 
+            // the FilterMatchedPeptidesDlg.
+            if (numUnmatched + numMultipleMatches + numFiltered == 0)
+                return;
+            var filterPeptidesDlg =
+                new FilterMatchedPeptidesDlg(numMultipleMatches, numUnmatched, numFiltered,
+                                             dataGridView.RowCount - prevRowCount == 1);
+            var result = filterPeptidesDlg.ShowDialog(this);
+            // If the user is keeping all peptide matches, we don't need to redo the paste.
+            bool keepAllPeptides = ((FilterMultipleProteinMatches ==
+                        BackgroundProteome.DuplicateProteinsFilter.AddToAll || numMultipleMatches == 0)
+                        && (Settings.Default.LibraryPeptidesAddUnmatched || numUnmatched == 0)
+                        && (Settings.Default.LibraryPeptidesKeepFiltered || numFiltered == 0));
+            // If the user is filtering some peptides, or if the user clicked cancel, remove all rows added as
+            // a result of the paste.
+            if (result == DialogResult.Cancel || !keepAllPeptides)
+                RemoveLastRows(dataGridView, dataGridView.RowCount - prevRowCount);
+            // Redo the paste with the new filter settings.
+            if(result != DialogResult.Cancel && !keepAllPeptides)
+                Paste(dataGridView, text, enumerateProteins, !enumerateProteins, out numUnmatched, out numMultipleMatches, out numFiltered);
         }
 
         /// <summary>
@@ -1143,12 +1240,16 @@ namespace pwiz.Skyline.EditUI
         /// The clipboard text is assumed to be tab separated values.
         /// The values are matched up to the columns in the order they are displayed.
         /// </summary>
-        private static void Paste(DataGridView dataGridView)
+        private void Paste(DataGridView dataGridView, string text, bool enumerateProteins, bool keepAllPeptides,
+            out int numUnmatched, out int numMulitpleMatches, out int numFiltered)
         {
+            numUnmatched = numMulitpleMatches = numFiltered = 0;
             var columns = new DataGridViewColumn[dataGridView.Columns.Count];
             dataGridView.Columns.CopyTo(columns, 0);
             Array.Sort(columns, (a,b)=>a.DisplayIndex - b.DisplayIndex);
-            foreach (var values in ParseColumnarData(Clipboard.GetText()))
+            HashSet<string> listPepSeqs = new HashSet<string>();
+
+            foreach (var values in ParseColumnarData(text))
             {
                 var row = dataGridView.Rows[dataGridView.Rows.Add()];
                 var valueEnumerator = values.GetEnumerator();
@@ -1163,6 +1264,11 @@ namespace pwiz.Skyline.EditUI
                         break;
                     }
                     row.Cells[column.Index].Value = valueEnumerator.Current;
+                }
+                if (enumerateProteins)
+                {
+                    EnumerateProteins(dataGridView, row.Index, keepAllPeptides, ref numUnmatched, ref numMulitpleMatches, 
+                        ref numFiltered, listPepSeqs);
                 }
             }
         }
@@ -1204,7 +1310,7 @@ namespace pwiz.Skyline.EditUI
         }
 
 
-        private String GetProteinNameForPeptideSequence(String peptideSequence)
+        private List<String> GetProteinNamesForPeptideSequence(String peptideSequence)
         {
             var document = DocumentUiContainer.Document;
             var backgroundProteome = document.Settings.PeptideSettings.BackgroundProteome;
@@ -1218,11 +1324,7 @@ namespace pwiz.Skyline.EditUI
                 return null;
             }
             var proteins = digestion.GetProteinsWithSequence(peptideSequence);
-            if (proteins.Count != 1)
-            {
-                return null;
-            }
-            return proteins[0].Name;
+            return proteins.ConvertAll(protein => protein.Name);
         }
 
         private void OnCellEndEdit(object sender, DataGridViewCellEventArgs e)
@@ -1241,6 +1343,62 @@ namespace pwiz.Skyline.EditUI
                 }
             }
         }
+
+        #region Testing
+
+        public int PeptideRowCount
+        {
+            get { return gridViewPeptides.RowCount; }
+        }
+
+        public int TransitionRowCount
+        {
+            get { return gridViewTransitionList.RowCount; }
+        }
+
+        public bool PeptideRowsContainProtein(Predicate<string> found)
+        {
+            var peptideRows = new DataGridViewRow[gridViewPeptides.RowCount];
+            gridViewPeptides.Rows.CopyTo(peptideRows, 0);
+            return peptideRows.Take(gridViewPeptides.RowCount-1).Contains(row =>
+            {
+                var protein = row.Cells[colPeptideProtein.Index].Value;
+                return found(protein != null ? protein.ToString() : null);
+            });
+        }
+
+        public bool PeptideRowsContainPeptide(Predicate<string> found)
+        {
+            var peptideRows = new DataGridViewRow[gridViewPeptides.RowCount];
+            gridViewPeptides.Rows.CopyTo(peptideRows, 0);
+            return peptideRows.Take(gridViewPeptides.RowCount-1).Contains(row =>
+            {
+                var peptide = row.Cells[colPeptideSequence.Index].Value;
+                return found(peptide != null ? peptide.ToString() : null);
+            });
+        }
+
+        public bool TransitionListRowsContainProtein(Predicate<string> found)
+        {
+            var transitionListRows = new DataGridViewRow[gridViewTransitionList.RowCount];
+            gridViewPeptides.Rows.CopyTo(transitionListRows, 0);
+            return transitionListRows.Take(gridViewTransitionList.RowCount-1).Contains(row =>
+            {
+                var protein = row.Cells[colTransitionProteinName.Index].Value;
+                return found(protein != null ? protein.ToString() : null);
+            });
+        }
+
+        public void ClearRows()
+        {
+           if(PasteFormat == PasteFormat.peptide_list)
+               gridViewPeptides.Rows.Clear();
+            if(PasteFormat == PasteFormat.transition_list)
+                gridViewTransitionList.Rows.Clear();
+        }
+
+        #endregion
+
     }
 
     public enum PasteFormat

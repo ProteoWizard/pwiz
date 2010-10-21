@@ -94,6 +94,10 @@ namespace pwiz.Skyline.Controls
                 StatementCompletionForm.Show();
                 StatementCompletionForm.ResizeToIdealSize(ScreenRect);
             }
+            else
+            {
+                DoStatementCompletion();   
+            }
         }
 
         void TextBox_LostFocus(Object sender, EventArgs e)
@@ -291,11 +295,11 @@ namespace pwiz.Skyline.Controls
             }
             if (_proteinMatcherLast != null)
             {
-                if (_proteinMatcherLast.Settings.SearchText == searchText)
-                {
-                    // Query is already executing for the text that the user typed: no work to do now.
-                    return;
-                }
+                //if (_proteinMatcherLast.Settings.SearchText == searchText)
+                //{
+                //    // Query is already executing for the text that the user typed: no work to do now.
+                //    return;
+                //}
                 if (searchText.StartsWith(_proteinMatcherLast.Settings.SearchText))
                 {
                     // If the new text is just longer than the previous text, see if we can just refine the results

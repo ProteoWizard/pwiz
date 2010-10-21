@@ -29,16 +29,21 @@ namespace pwiz.Skyline.Alerts
         }
 
         public MultiButtonMsgDlg(string message, string btn0Text, string btn1Text)
+            : this(Program.Name, message, btn0Text, btn1Text)
+        {
+        }
+
+        public MultiButtonMsgDlg(string labelText, string message, string btn0Text, string btn1Text)
         {
             InitializeComponent();
 
-            Text = Program.Name;
+            Text = labelText;
 
             if (btn0Text != null)
             {
                 btn0.Text = btn0Text;
             }
-            else 
+            else
             {
                 btn0.Visible = false;
                 AcceptButton = btn1;

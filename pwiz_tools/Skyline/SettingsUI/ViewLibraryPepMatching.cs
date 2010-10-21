@@ -180,7 +180,8 @@ namespace pwiz.Skyline.SettingsUI
                             
                         }
                         dictNewNodePeps.Add(nodePepMatched.SequenceKey, 
-                            new PeptideMatch(nodePepMatched, matchedProteins, FilterPeptide(sequence, charge)));
+                            new PeptideMatch(nodePepMatched, matchedProteins, 
+                                MatchesFilter(sequence, charge)));
                     }
                     else
                     {
@@ -206,11 +207,9 @@ namespace pwiz.Skyline.SettingsUI
             PeptideMatches = dictNewNodePeps;
         }
 
-        public bool FilterPeptide(string seq, int charge)
+        public bool MatchesFilter(string sequence, int charge)
         {
-            int missedCleavages = Settings.PeptideSettings.Enzyme.CountCleavagePoints(seq);
-            int maxMissedCleavages = Settings.PeptideSettings.DigestSettings.MaxMissedCleavages;
-            return missedCleavages <= maxMissedCleavages && Settings.Accept(seq, missedCleavages)
+            return Settings.Accept(sequence)
                 && Settings.TransitionSettings.Filter.PrecursorCharges.Contains(charge);
         }
 
@@ -230,7 +229,7 @@ namespace pwiz.Skyline.SettingsUI
             
             PeptideMatches = new Dictionary<PeptideSequenceModKey, PeptideMatch>
                                  {{nodePep.SequenceKey, new PeptideMatch(nodePep, matchedProteins, 
-                                     FilterPeptide(sequence, pepInfo.Key.Charge))}};
+                                     MatchesFilter(sequence, pepInfo.Key.Charge))}};
             return nodePep;
         }
 
@@ -383,7 +382,7 @@ namespace pwiz.Skyline.SettingsUI
                                 peptideMatch.Proteins.IndexOf(protein => Equals(protein.Name, proteinName));
                             // If the user has opted to filter duplicate peptides, remove this peptide from the list to
                             // add and continue.
-                            if(FilterMultipleProteinMatches == DuplicateProteinsFilter.NoDuplicates && peptideMatch.Proteins.Count > 1)
+                            if(FilterMultipleProteinMatches == BackgroundProteome.DuplicateProteinsFilter.NoDuplicates && peptideMatch.Proteins.Count > 1)
                             {
                                 dictCopy.Remove(key);
                                 nodePeps.Add(nodePep);
@@ -392,7 +391,7 @@ namespace pwiz.Skyline.SettingsUI
                             // [1] If this protein is not the first match, and the user has opted to add only the first occurence,  
                             // [2] or if this protein is not one of the matches, and [2a] we are either not in a peptide list
                             // [2b] or the user has opted to filter unmatched peptides, ignore this particular node.
-                            if((indexProtein > 0 && FilterMultipleProteinMatches == DuplicateProteinsFilter.FirstOccurence) || 
+                            if((indexProtein > 0 && FilterMultipleProteinMatches == BackgroundProteome.DuplicateProteinsFilter.FirstOccurence) || 
                                (indexProtein == -1 && 
                                (!nodePepGroup.IsPeptideList || !Properties.Settings.Default.LibraryPeptidesAddUnmatched)))
                             {
@@ -447,7 +446,7 @@ namespace pwiz.Skyline.SettingsUI
                                 peptideMatch.Proteins.RemoveAt(indexProtein);
                             // If this peptide has not yet been added to all matched proteins,
                             // put it back in the list of peptides to add.
-                            if (peptideMatch.Proteins.Count != 0 && FilterMultipleProteinMatches != DuplicateProteinsFilter.FirstOccurence)
+                            if (peptideMatch.Proteins.Count != 0 && FilterMultipleProteinMatches != BackgroundProteome.DuplicateProteinsFilter.FirstOccurence)
                                 dictCopy.Add(key, peptideMatch);
                         }
                     }
@@ -512,7 +511,7 @@ namespace pwiz.Skyline.SettingsUI
                 // Peptide should be added to the document,
                 // unless the NoDuplicates radio was selected and the peptide has more than 1 protein associated with it.
                 if (pepMatch.Proteins == null ||
-                    (FilterMultipleProteinMatches == DuplicateProteinsFilter.NoDuplicates && pepMatch.Proteins.Count > 1))
+                    (FilterMultipleProteinMatches == BackgroundProteome.DuplicateProteinsFilter.NoDuplicates && pepMatch.Proteins.Count > 1))
                     continue;                    
                 
 
@@ -583,7 +582,6 @@ namespace pwiz.Skyline.SettingsUI
                     // Store modified proteins by global index in a HashSet for second pass.
                     var newPeptideGroupDocNode = peptideGroupDocNode.ChangeChildren(newChildren)
                         .ChangeAutoManageChildren(false);
-                    selectedPath = new IdentityPath(peptideGroupDocNode.Id);
                     // If the protein was already in the document, replace with the new PeptideGroupDocNode.
                     if (foundInDoc)
                         document = (SrmDocument)document.ReplaceChild(newPeptideGroupDocNode);
@@ -596,10 +594,10 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     // If we are only adding a single node, select it.
                     if (PeptideMatches.Count == 1)
-                        selectedPath = new IdentityPath(selectedPath, newNodePep.Peptide);
+                        selectedPath = new IdentityPath(new[] {peptideGroupDocNode.Id, newNodePep.Peptide});
                     // If the user only wants to add the first protein found, 
-                    // we break the foreach loop after peptide has been added to its first protein.
-                    if (FilterMultipleProteinMatches == DuplicateProteinsFilter.FirstOccurence)
+                    // we break the foreach loop after peptide has been added to its first protein.)
+                    if (FilterMultipleProteinMatches == BackgroundProteome.DuplicateProteinsFilter.FirstOccurence)
                         break;
                 }
             }
@@ -624,7 +622,7 @@ namespace pwiz.Skyline.SettingsUI
             nodePepGroupsSortedChildren.Sort((node1, node2) => Comparer<string>.Default.Compare(node1.Name, node2.Name));
             var selPathTemp = selectedPath;
             document = document.AddPeptideGroups(nodePepGroupsSortedChildren, false, toPath, out selectedPath);
-            selectedPath = selPathTemp;
+            selectedPath = PeptideMatches.Count == 1 ? selPathTemp : selectedPath;
             return document;
         }
 
@@ -707,21 +705,14 @@ namespace pwiz.Skyline.SettingsUI
             public bool MatchesFilterSettings { get; private set; }
         }
 
-        // ReSharper disable InconsistentNaming
-        public enum DuplicateProteinsFilter
-        {
-            NoDuplicates,
-            FirstOccurence,
-            AddToAll
-        }
-        // ReSharper restore InconsistentNaming
 
-        public static DuplicateProteinsFilter FilterMultipleProteinMatches
+
+        public static BackgroundProteome.DuplicateProteinsFilter FilterMultipleProteinMatches
         {
             get
             {
                 return Helpers.ParseEnum(Properties.Settings.Default.LibraryPeptidesAddDuplicatesEnum,
-                                         DuplicateProteinsFilter.AddToAll);
+                                         BackgroundProteome.DuplicateProteinsFilter.AddToAll);
             }
         }
     }    

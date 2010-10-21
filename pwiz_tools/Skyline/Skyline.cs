@@ -1013,10 +1013,7 @@ namespace pwiz.Skyline
                 setAdded.Add(pepSeqClean);
                 listAllPeptides.Add(pepSeqClean);
 
-                // CONSIDER: Should SrmSettings.Accept check missed cleavages?
-                int missedCleavages = enzyme.CountCleavagePoints(pepSeqClean);
-                int maxMissedCleavages = settings.PeptideSettings.DigestSettings.MaxMissedCleavages;
-                if (missedCleavages <= maxMissedCleavages && settings.Accept(pepSeqClean, missedCleavages))
+                if (settings.Accept(pepSeqClean))
                     listAcceptPeptides.Add(pepSeqClean);
                 else
                     listFilterPeptides.Add(pepSeqClean);
@@ -1366,6 +1363,11 @@ namespace pwiz.Skyline
         }
 
         private void insertTransitionListMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowPasteTransitionListDlg();
+        }
+       
+        public void ShowPasteTransitionListDlg()
         {
             var pasteDlg = new PasteDlg(this)
             {

@@ -237,6 +237,7 @@ namespace pwiz.Skyline.Alerts
             this.Name = "FilterMatchedPeptidesDlg";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+            this.Text = "Filter Peptides";
             this.panelMultiple.ResumeLayout(false);
             this.panelMultiple.PerformLayout();
             this.panelUnmatched.ResumeLayout(false);

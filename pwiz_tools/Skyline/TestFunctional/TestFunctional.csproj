@@ -89,6 +89,7 @@
     <Compile Include="CopyPasteTest.cs" />
     <Compile Include="ExplicitMultiTypeTest.cs" />
     <Compile Include="ExplicitVariableTest.cs" />
+    <Compile Include="InsertTest.cs" />
     <Compile Include="LibraryExplorerTest.cs" />
     <Compile Include="ManageResultsTest.cs" />
     <Compile Include="MultiSelectTest.cs" />
@@ -129,6 +130,7 @@
     <None Include="AnnotationTest.zip" />
     <None Include="BackgroundProteomeTest.zip" />
     <None Include="CopyPasteTest.zip" />
+    <None Include="InsertTest.zip" />
     <None Include="LibraryBuildTest.zip" />
     <None Include="LibraryExplorerTest.zip" />
     <None Include="ManageResultsTest.zip" />

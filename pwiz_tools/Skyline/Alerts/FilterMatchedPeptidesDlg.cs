@@ -19,6 +19,7 @@
 
 using System;
 using System.Windows.Forms;
+using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 
@@ -26,15 +27,18 @@ namespace pwiz.Skyline.Alerts
 {
     public sealed partial class FilterMatchedPeptidesDlg : Form
     {
+
         public FilterMatchedPeptidesDlg(int numWithDuplicates, int numUnmatched, int numFiltered, bool single)
         {
             InitializeComponent();
 
-            Text = Program.Name;
+            UnmatchedCount = numUnmatched;
+            DuplicateMatchesCount = numWithDuplicates;
+            FilteredCount = numWithDuplicates;
 
-            if(ViewLibraryPepMatching.FilterMultipleProteinMatches == ViewLibraryPepMatching.DuplicateProteinsFilter.AddToAll)
+            if(ViewLibraryPepMatching.FilterMultipleProteinMatches == BackgroundProteome.DuplicateProteinsFilter.AddToAll)
                 radioAddToAll.Checked = true;
-            else if (ViewLibraryPepMatching.FilterMultipleProteinMatches == ViewLibraryPepMatching.DuplicateProteinsFilter.FirstOccurence)
+            else if (ViewLibraryPepMatching.FilterMultipleProteinMatches == BackgroundProteome.DuplicateProteinsFilter.FirstOccurence)
                 radioFirstOccurence.Checked = true;
             else
                 radioNoDuplicates.Checked = true;
@@ -87,11 +91,11 @@ namespace pwiz.Skyline.Alerts
 
         public void OkDialog()
         {
-            var duplicateProteinsFilter = ViewLibraryPepMatching.DuplicateProteinsFilter.AddToAll;
+            var duplicateProteinsFilter = BackgroundProteome.DuplicateProteinsFilter.AddToAll;
             if (radioNoDuplicates.Checked)
-                duplicateProteinsFilter = ViewLibraryPepMatching.DuplicateProteinsFilter.NoDuplicates;
+                duplicateProteinsFilter = BackgroundProteome.DuplicateProteinsFilter.NoDuplicates;
             else if (radioFirstOccurence.Checked)
-                duplicateProteinsFilter = ViewLibraryPepMatching.DuplicateProteinsFilter.FirstOccurence;
+                duplicateProteinsFilter = BackgroundProteome.DuplicateProteinsFilter.FirstOccurence;
 
             Settings.Default.LibraryPeptidesAddDuplicatesEnum = duplicateProteinsFilter.ToString();
 
@@ -102,14 +106,25 @@ namespace pwiz.Skyline.Alerts
         }
 
         // For testing.
-        public void SetFilter(ViewLibraryPepMatching.DuplicateProteinsFilter filter)
+        public BackgroundProteome.DuplicateProteinsFilter DuplicateProteinsFilter
         {
-            if(Equals(filter, ViewLibraryPepMatching.DuplicateProteinsFilter.NoDuplicates))
-                radioNoDuplicates.Checked = true;
-            else if(Equals(filter, ViewLibraryPepMatching.DuplicateProteinsFilter.FirstOccurence))
-                radioFirstOccurence.Checked = true;
-            else
-                radioAddToAll.Checked = true;
+            get
+            {
+                if (radioNoDuplicates.Checked)
+                    return BackgroundProteome.DuplicateProteinsFilter.NoDuplicates;
+                if (radioFirstOccurence.Checked)
+                    return BackgroundProteome.DuplicateProteinsFilter.FirstOccurence;
+                return BackgroundProteome.DuplicateProteinsFilter.AddToAll;
+            }
+            set
+            {
+                if (Equals(value, BackgroundProteome.DuplicateProteinsFilter.NoDuplicates))
+                    radioNoDuplicates.Checked = true;
+                else if (Equals(value, BackgroundProteome.DuplicateProteinsFilter.FirstOccurence))
+                    radioFirstOccurence.Checked = true;
+                else
+                    radioAddToAll.Checked = true;
+            }
         }
 
         public bool AddUnmatched
@@ -124,5 +139,21 @@ namespace pwiz.Skyline.Alerts
                 radioFilterUnmatched.Checked = !radioAddUnmatched.Checked;
             }
         }
+
+        public bool AddFiltered
+        {
+            get { return radioKeepFiltered.Checked = true; }
+            set 
+            { 
+                radioKeepFiltered.Checked = value;
+                radioDoNotAddFiltered.Checked = !radioKeepFiltered.Checked;
+            }
+        }
+
+        public int DuplicateMatchesCount { get; set; }
+
+        public int UnmatchedCount { get; set; }
+        
+        public int FilteredCount { get; set; }
     }
 }
