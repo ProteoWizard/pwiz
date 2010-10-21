@@ -26,6 +26,7 @@
 
 
 #include "Chemistry.hpp"
+#include <stdexcept>
 
 
 namespace pwiz {

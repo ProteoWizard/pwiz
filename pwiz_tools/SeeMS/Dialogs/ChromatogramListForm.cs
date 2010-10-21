@@ -73,7 +73,7 @@ namespace seems
 
             initializeGridView();
 		}
-`
+
 		private void initializeGridView()
 		{
             // force handle creation
