@@ -71,6 +71,7 @@ struct TestETDMassFilter
 
     double matchingTolerance;
     bool usePPM;
+    bool hasCharge;
     bool removePrecursor;
     bool removeReducedChargePrecursors;
     bool removeNeutralLossPrecursors;
@@ -87,7 +88,7 @@ TestETDMassFilter testETDMassFilterData[] =
         "10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200 210 220 230 240 250 260 270 280", 
         "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 445.34 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 1000.0", 
         "10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200 210 220 230 240 250 260 270 280", 
-        0.1234, false, false, false, false, false
+        0.1234, false, false, false, false, false, false
     }, // do nothing
 
     {    
@@ -95,15 +96,23 @@ TestETDMassFilter testETDMassFilterData[] =
         "10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200 210 220 230 240 250 260 270 280 290", 
         "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 1000.0", 
         "10 20 30 40 50 60 70 80 90 100 110 120 130 140 170 180 190 200 210 220 230 240 250 260 270 280 290", 
-        0.1234, false, true, false, false, false
+        0.1234, false, true, true, false, false, false
     }, // remove precursor only
+
+    {    
+        "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 445.34 445.35 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 1000.0", 
+        "10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200 210 220 230 240 250 260 270 280 290", 
+        "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 1000.0", 
+        "10 20 30 40 50 60 70 80 90 100 110 120 130 140 170 180 190 200 210 220 230 240 250 260 270 280 290", 
+        0.1234, false, false, true, false, false, false
+    }, // remove precursor without charge state
 
     {    
         "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 445.34 668.01 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 1000.0", 
         "10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 155 160 170 180 190 200 210 220 230 240 250 260 270 280", 
         "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 445.34 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 1000.0", 
         "10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200 210 220 230 240 250 260 270 280", 
-        0.1234, false, false, true, false, false
+        0.1234, false, true, false, true, false, false
     }, // remove charge reduced precursors only
 
     {    
@@ -111,7 +120,7 @@ TestETDMassFilter testETDMassFilterData[] =
         "10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 155 160 170 180 190 200 210 220 230 240 250 260 270 280", 
         "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 1000.0", 
         "10 20 30 40 50 60 70 80 90 100 110 120 130 140 160 170 180 190 200 210 220 230 240 250 260 270 280", 
-        0.1234, false, true, true, false, false
+        0.1234, false, true, true, true, false, false
     }, // remove precursor and charge reduced precursors
 
     {    
@@ -119,7 +128,7 @@ TestETDMassFilter testETDMassFilterData[] =
         "10 20 30 40 50 60 70 80", 
         "100 120", 
         "10 20", 
-        0.01, false, true, true, true, false
+        0.01, false, true, true, true, true, false
     }, // remove precursor charge reduced precursors, and neutral losses
 
     {    
@@ -127,7 +136,7 @@ TestETDMassFilter testETDMassFilterData[] =
         "10 20 30 40 50 60 70 80", 
         "100 120", 
         "10 20", 
-        0.01, false, true, true, true, true
+        0.01, false, true, true, true, true, true
     }, // remove precursor charge reduced precursors, and neutral losses -- blanket removal of neutral losses (60 Da window)
 
 };
@@ -155,7 +164,9 @@ void testPrecursorMassRemoval()
         s->precursors[0].activation.set(MS_electron_transfer_dissociation);
         s->precursors[0].selectedIons.resize(1);
         s->precursors[0].selectedIons[0].set(MS_selected_ion_m_z, PRECURSOR_MZ, MS_m_z);
-        s->precursors[0].selectedIons[0].set(MS_charge_state, PRECURSOR_CHARGE);
+
+        if (t.hasCharge)
+            s->precursors[0].selectedIons[0].set(MS_charge_state, PRECURSOR_CHARGE);
 
         MZTolerance tol(t.matchingTolerance, t.usePPM ? MZTolerance::PPM : MZTolerance::MZ);
         SpectrumDataFilterPtr filter;
@@ -176,12 +187,15 @@ void testPrecursorMassRemoval()
         vector<double> outputMZArray = parseDoubleArray(t.outputMZArray);
         vector<double> outputIntensityArray = parseDoubleArray(t.outputIntensityArray);
 
-        unit_assert(pFiltered->getMZArray()->data.size() == outputMZArray.size());
-        unit_assert(pFiltered->getIntensityArray()->data.size() == outputIntensityArray.size());
+        vector<double>& resultMZArray = pFiltered->getMZArray()->data;
+        vector<double>& resultIntensityArray = pFiltered->getIntensityArray()->data;
+
+        unit_assert(resultMZArray.size() == outputMZArray.size());
+        unit_assert(resultIntensityArray.size() == outputIntensityArray.size());
         for (size_t ii=0; ii < outputMZArray.size(); ++ii)
         {
-            unit_assert_equal(pFiltered->getMZArray()->data[ii], outputMZArray[ii], 0.001);
-            unit_assert_equal(pFiltered->getIntensityArray()->data[ii], outputIntensityArray[ii], 0.001);
+            unit_assert_equal(resultMZArray[ii], outputMZArray[ii], 0.001);
+            unit_assert_equal(resultIntensityArray[ii], outputIntensityArray[ii], 0.001);
         }
     }
 }
