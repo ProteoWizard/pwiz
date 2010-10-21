@@ -760,31 +760,31 @@ tar.create boost_1_43_0.tar.bz2
   ;
 
 .exclusion-list =
-  exclude:.svn
-  exclude:*.bak
-  exclude:cvgen*.exe
-  exclude:svnrev.hpp
-  exclude:Version.cpp
-  exclude:Reader_*_Test.data
-  exclude:example_data/small* # large files in example_data
-  exclude:bootstrap exclude:bin.* # boost-build intermediate directories
-  exclude:bin exclude:obj exclude:TestResults # C#.NET intermediate directories
-  exclude:_ReSharper.* # ReSharper directory for C# projects
-  exclude:*.ncb exclude:*.suo exclude:*.user exclude:*.p12 # More visual studio files
-  exclude:*.xdc # .NET XML documentation sources
-  exclude:tar.excluded # a place to put any files in these directories that shouldn't be tarballed
-  exclude:pwiz_tools/Skyline
-  exclude:pwiz_tools/Topograph
-  exclude:pwiz_tools/Shared/Crawdad
-  exclude:pwiz_tools/Shared/ProteomeDb
-  exclude:pwiz_tools/Shared/ProteowizardWrapper
-  exclude:pwiz_tools/Shared/Lib/DotNetZip-v1.8
-  exclude:pwiz_tools/Shared/Lib/NHibernate
-  exclude:pwiz_tools/Shared/Lib/npgsql
-  exclude:pwiz_tools/Shared/Lib/System.Data.*
-  exclude:pwiz_tools/Shared/Lib/MathNet.*
-  exclude:pwiz_tools/Shared/Lib/mysql.*
-  exclude:pwiz_tools/Shared/Lib/zlib.*
+    exclude:.svn
+    exclude:*.bak
+    exclude:cvgen*.exe
+    exclude:svnrev.hpp
+    exclude:Version.cpp
+    exclude:Reader_*_Test.data
+    exclude:example_data/small* # large files in example_data
+    exclude:bootstrap exclude:bin.* # boost-build intermediate directories
+    exclude:bin exclude:obj exclude:TestResults # C#.NET intermediate directories
+    exclude:_ReSharper.* # ReSharper directory for C# projects
+    exclude:*.ncb exclude:*.suo exclude:*.user exclude:*.p12 # More visual studio files
+    exclude:*.xdc # .NET XML documentation sources
+    exclude:tar.excluded # a place to put any files in these directories that shouldn't be tarballed
+    exclude:pwiz_tools/Skyline
+    exclude:pwiz_tools/Topograph
+    exclude:pwiz_tools/Shared/Crawdad
+    exclude:pwiz_tools/Shared/ProteomeDb
+    exclude:pwiz_tools/Shared/ProteowizardWrapper
+    exclude:pwiz_tools/Shared/Lib/DotNetZip-v1.8
+    exclude:pwiz_tools/Shared/Lib/NHibernate
+    exclude:pwiz_tools/Shared/Lib/npgsql
+    exclude:pwiz_tools/Shared/Lib/System.Data.*
+    exclude:pwiz_tools/Shared/Lib/MathNet.*
+    exclude:pwiz_tools/Shared/Lib/mysql.*
+    exclude:pwiz_tools/Shared/Lib/zlib.*
 ;
 
 # the SUBSET file acts as flag so that building a subset tarball doesn't build a source tarball
@@ -797,96 +797,66 @@ This source tree is a subset of the full pwiz source tree.
 }
 
 .common-sources =
-  $(PWIZ_ROOT_PATH)/Jamroot.jam
-  $(PWIZ_ROOT_PATH)/NOTICE
-  $(PWIZ_ROOT_PATH)/LICENSE
-  $(PWIZ_ROOT_PATH)/quickbuild.bat
-  $(PWIZ_ROOT_PATH)/quickbuild.sh
-  $(PWIZ_ROOT_PATH)/clean.bat
-  $(PWIZ_ROOT_PATH)/clean.sh
-
-  $(PWIZ_ROOT_PATH)/doc
-  $(PWIZ_ROOT_PATH)/example_data
-  $(PWIZ_LIBRARIES_PATH)/boost-build
-  $(PWIZ_LIBRARIES_PATH)/boost_aux
-  [ path.glob $(PWIZ_LIBRARIES_PATH) : *.bat *.sh *.jam *.dll *.lib *.exe *.cpp gd*.tar.bz2 zlib*.tar.bz2 ]
-
-  path-anchor:$(PWIZ_BUILD_PATH)
-  $(PWIZ_BUILD_PATH)/SUBSET
-
-  # include the bcp'd boost tarball as if it was really located at "libraries/boost_*.tar.bz2"
-  path-anchor:$(BOOST_SUBSET_PATH)
-  $(BOOST_SUBSET_PATH)/libraries
-;
-
-tar.create pwiz-src.tar.bz2
-  : # sources
-
     path-anchor:$(PWIZ_ROOT_PATH)
-
     $(.exclusion-list)
+    
+    $(PWIZ_ROOT_PATH)/Jamroot.jam
+    $(PWIZ_ROOT_PATH)/NOTICE
+    $(PWIZ_ROOT_PATH)/LICENSE
+    $(PWIZ_ROOT_PATH)/quickbuild.bat
+    $(PWIZ_ROOT_PATH)/quickbuild.sh
+    $(PWIZ_ROOT_PATH)/clean.bat
+    $(PWIZ_ROOT_PATH)/clean.sh
+
+    $(PWIZ_ROOT_PATH)/doc
+    $(PWIZ_ROOT_PATH)/example_data
 
     $(PWIZ_ROOT_PATH)/pwiz
     $(PWIZ_ROOT_PATH)/pwiz_aux
     $(PWIZ_ROOT_PATH)/pwiz_tools
     $(PWIZ_ROOT_PATH)/scripts
 
-    $(.common-sources)
-
-  : # requirements
-    <name>pwiz-src-$(version-tag:J=_).tar.bz2
-    <location>$(.common-location)
-    <dependency>boost_1_43_0.tar.bz2
-    <dependency>SUBSET
-  ;
-
-tar.create pwiz-src-without-tests.tar.bz2
-  : # sources
+    path-anchor:$(PWIZ_BUILD_PATH)
+    $(PWIZ_BUILD_PATH)/SUBSET
 
     path-anchor:$(PWIZ_ROOT_PATH)
+;
 
-    $(.exclusion-list)
-    exclude:*Test.data*
+.l = 
+    $(PWIZ_LIBRARIES_PATH)/boost-build
+    $(PWIZ_LIBRARIES_PATH)/boost_aux
+    [ path.glob $(PWIZ_LIBRARIES_PATH) : *.bat *.sh *.jam *.dll *.lib *.exe *.cpp gd*.tar.bz2 zlib*.tar.bz2 ]
+
+    # include the bcp'd boost tarball as if it was really located at "libraries/boost_*.tar.bz2"
+    path-anchor:$(BOOST_SUBSET_PATH)
+    $(BOOST_SUBSET_PATH)/libraries
+
+    path-anchor:$(PWIZ_ROOT_PATH)
+;
+
+.no-t = 
+    exclude:*Test*.data*
     exclude:*Test.?pp
     exclude:*TestData.?pp
     exclude:*.pdf # pwiz posters in /doc
     exclude:example_data*
+;
 
-    $(PWIZ_ROOT_PATH)/pwiz
-    $(PWIZ_ROOT_PATH)/pwiz_aux
-    $(PWIZ_ROOT_PATH)/pwiz_tools
-    $(PWIZ_ROOT_PATH)/scripts
-
-    $(.common-sources)
-
-  : # requirements
-    <name>pwiz-src-without-tests-$(version-tag:J=_).tar.bz2
-    <location>$(.common-location)
-    <dependency>boost_1_43_0.tar.bz2
-    <dependency>SUBSET
-  ;
-
-tar.create pwiz-src-without-vendor-support.tar.bz2
-  : # sources
-
-    path-anchor:$(PWIZ_ROOT_PATH)
-
-    $(.exclusion-list)
-    exclude:vendor_readers/*/*.data.tar.bz2
+.no-v =
     exclude:vendor_readers/*/*.bat
     exclude:vendor_api
+;
 
-    $(PWIZ_ROOT_PATH)/pwiz
-    $(PWIZ_ROOT_PATH)/pwiz_aux
-    $(PWIZ_ROOT_PATH)/pwiz_tools
-    $(PWIZ_ROOT_PATH)/scripts
+.common-requirements = <location>$(.common-location) <dependency>boost_1_43_0.tar.bz2 <dependency>SUBSET ;
 
-    $(.common-sources)
-
-  : # requirements
-    <name>pwiz-src-without-vendor-support-$(version-tag:J=_).tar.bz2
-    <location>$(.common-location)
-    <dependency>boost_1_43_0.tar.bz2
-  ;
+# l = without libraries, t = without tests, v = without vendor APIs
+tar.create pwiz-src.tar.bz2             : $(.common-sources) $(.l) : $(.common-requirements) <name>pwiz-src-$(version-tag:J=_).tar.bz2 ;
+tar.create pwiz-src-without-l.tar.bz2   : $(.common-sources) : $(.common-requirements) <name>pwiz-src-without-l-$(version-tag:J=_).tar.bz2 ;
+tar.create pwiz-src-without-lt.tar.bz2  : $(.no-t) $(.common-sources)  : $(.common-requirements) <name>pwiz-src-without-lt-$(version-tag:J=_).tar.bz2 ;
+tar.create pwiz-src-without-ltv.tar.bz2 : $(.no-t) $(.no-v) $(.common-sources) : $(.common-requirements) <name>pwiz-src-without-ltv-$(version-tag:J=_).tar.bz2 ;
+tar.create pwiz-src-without-lv.tar.bz2  : $(.no-v) $(.common-sources) : $(.common-requirements) <name>pwiz-src-without-lv-$(version-tag:J=_).tar.bz2 ;
+tar.create pwiz-src-without-t.tar.bz2   : $(.no-t) $(.common-sources) $(.l) : $(.common-requirements) <name>pwiz-src-without-t-$(version-tag:J=_).tar.bz2 ;
+tar.create pwiz-src-without-tv.tar.bz2  : $(.no-t) $(.no-v) $(.common-sources) $(.l) : $(.common-requirements) <name>pwiz-src-without-tv-$(version-tag:J=_).tar.bz2 ;
+tar.create pwiz-src-without-v.tar.bz2   : $(.no-v) $(.common-sources) $(.l) : $(.common-requirements) <name>pwiz-src-without-v-$(version-tag:J=_).tar.bz2 ;
 
 } # if SUBSET
