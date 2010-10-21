@@ -52,8 +52,8 @@ local acceptable_platform = "X86" "X86_64" ;
 
 if $(.os) in $(acceptable_os) && $(.platform) in $(acceptable_platform)
 {
-    mzid_sources += MascotReader.cpp ;
-    mzid_aux_libs += <library>../../..//mascot ;
+#    mzid_sources += MascotReader.cpp ;
+#    mzid_aux_libs += <library>../../..//mascot ;
 }
 
 lib pwiz_data_mzid 
