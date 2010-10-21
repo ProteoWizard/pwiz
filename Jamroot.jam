@@ -396,6 +396,26 @@ else
 
 tar.extract $(PWIZ_LIBRARIES_PATH)/gd-2.0.33.tar.bz2 : *.h : <location>$(PWIZ_LIBRARIES_PATH) ;
 
+# Conditional mascot library creation
+constant MASCOT_VERSION : "2_3_01" ;
+local MASCOT_ROOT = "msparser_$(MASCOT_VERSION)_$(.os)_$(.platform)" ;
+local mascot_archive_ext = zip ;
+
+if $(.os) in "LINUX"
+{
+    mascot_archive_ext = tar.bz2 ;
+}
+
+local mascot_archive_path = $(PWIZ_LIBRARIES_PATH)/$(MASCOT_ROOT).$(mascot_archive_ext) ;
+local mascot_library_path = $(PWIZ_LIBRARIES_PATH)/$(MASCOT_ROOT) ;
+
+if [ path.exists $(mascot_archive_path) ] && ! [ path.exists $(mascot_library_path) ]
+{
+    tar.extract $(PWIZ_LIBRARIES_PATH)/$(MASCOT_ROOT).$(mascot_archive_ext) : : <location>$(PWIZ_LIBRARIES_PATH) ;
+}
+
+lib mascot : : <name>msparser <search>$(PWIZ_LIBRARIES_PATH)/$(MASCOT_ROOT)/lib <include>$(PWIZ_LIBRARIES_PATH)/$(MASCOT_ROOT)/include : : <include>$(PWIZ_LIBRARIES_PATH)/$(MASCOT_ROOT)/include   ;
+
 path-constant BOOST_SOURCE : $(boost_src) ;
 path-constant ZLIB_SOURCE : $(zlib_src) ;
 
