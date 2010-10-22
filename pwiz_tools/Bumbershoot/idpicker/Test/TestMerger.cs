@@ -143,12 +143,45 @@ namespace Test
                 TestModel.AddSubsetPeakData(session);
             }
 
+            // create a new merged idpDB from two idpDB files
             var merger = new Merger("testMerger.idpDB", new string[] { "testMergeSource1.idpDB", "testMergeSource2.idpDB" });
             merger.Start();
 
             var testModel = new TestModel();
 
+            // test that testMerger.idpDB passes the TestModel tests
             using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testModel.idpDB", false, false))
+            using (var session = testModel.session = sessionFactory.OpenSession())
+            {
+                testModel.TestOverallCounts();
+                testModel.TestSanity();
+                testModel.TestProteins();
+                testModel.TestPeptides();
+                testModel.TestPeptideInstances();
+                testModel.TestSpectrumSourceGroups();
+                testModel.TestSpectrumSources();
+                testModel.TestSpectra();
+                testModel.TestAnalyses();
+                testModel.TestPeptideSpectrumMatches();
+                testModel.TestModifications();
+            }
+
+            // create an in-memory representation of testMergeSource2
+            var memoryFactory = SessionFactoryFactory.CreateSessionFactory(":memory:", true, false);
+            var memoryConnection = SessionFactoryFactory.CreateFile(":memory:");
+            var memorySession = memoryFactory.OpenSession(memoryConnection);
+            {
+                TestModel.CreateTestProteins(memorySession, testProteinSequences);
+                TestModel.CreateTestData(memorySession, mergeSourcePsmSummary2);
+                TestModel.AddSubsetPeakData(memorySession);
+            }
+
+            // merge the in-memory connection into the testMergeSource1 file
+            merger = new Merger("testMergeSource1.idpDB", memoryConnection as System.Data.SQLite.SQLiteConnection);
+            merger.Start();
+
+            // testMergeSource1.idpDB should pass just like testMerger.idpDB
+            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testMergeSource1.idpDB", false, false))
             using (var session = testModel.session = sessionFactory.OpenSession())
             {
                 testModel.TestOverallCounts();

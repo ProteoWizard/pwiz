@@ -199,7 +199,7 @@ namespace IDPicker.DataModel
                                    CREATE INDEX PeptideInstance_PeptideProtein ON PeptideInstance (Peptide, Protein);
                                    CREATE UNIQUE INDEX PeptideInstance_ProteinOffsetLength ON PeptideInstance (Protein, Offset, Length);
                                    CREATE UNIQUE INDEX SpectrumSourceGroupLink_SourceGroup ON SpectrumSourceGroupLink (Source, Group_);
-                                   CREATE UNIQUE INDEX Spectrum_SourceIndex ON Spectrum (Source, Index_);
+                                   CREATE INDEX Spectrum_SourceIndex ON Spectrum (Source, Index_);
                                    CREATE UNIQUE INDEX Spectrum_SourceNativeID ON Spectrum (Source, NativeID);
                                    CREATE INDEX PeptideSpectrumMatch_Analysis ON PeptideSpectrumMatch (Analysis);
                                    CREATE INDEX PeptideSpectrumMatch_Peptide ON PeptideSpectrumMatch (Peptide);

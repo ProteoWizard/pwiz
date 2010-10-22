@@ -9,8 +9,8 @@ namespace IDPicker
     {
         public static int ExecuteNonQuery (this IDbConnection conn, string sql)
         {
-            var cmd = conn.CreateCommand();
-            return cmd.ExecuteNonQuery(sql);
+            using (var cmd = conn.CreateCommand())
+                return cmd.ExecuteNonQuery(sql);
         }
 
         public static int ExecuteNonQuery (this IDbCommand cmd, string sql)
@@ -21,8 +21,8 @@ namespace IDPicker
 
         public static IEnumerable<IDataRecord> ExecuteQuery (this IDbConnection conn, string sql)
         {
-            var cmd = conn.CreateCommand();
-            return cmd.ExecuteQuery(sql);
+            using (var cmd = conn.CreateCommand())
+                return cmd.ExecuteQuery(sql);
         }
 
         public static IEnumerable<IDataRecord> ExecuteQuery (this IDbCommand cmd, string sql)
