@@ -56,8 +56,8 @@ namespace IDPicker.Forms
             this.clusterColumn = new BrightIdeasSoftware.OLVColumn();
             this.proteinCountColumn = new BrightIdeasSoftware.OLVColumn();
             this.coverageColumn = new BrightIdeasSoftware.OLVColumn();
-            this.filteredPeptidesColumn = new BrightIdeasSoftware.OLVColumn();
-            this.filteredVariantsColumn = new BrightIdeasSoftware.OLVColumn();
+            this.distinctPeptidesColumn = new BrightIdeasSoftware.OLVColumn();
+            this.distinctMatchesColumn = new BrightIdeasSoftware.OLVColumn();
             this.filteredSpectraColumn = new BrightIdeasSoftware.OLVColumn();
             this.descriptionColumn = new BrightIdeasSoftware.OLVColumn();
             this.exportButton = new System.Windows.Forms.Button();
@@ -78,8 +78,8 @@ namespace IDPicker.Forms
             this.treeListView.AllColumns.Add(this.clusterColumn);
             this.treeListView.AllColumns.Add(this.proteinCountColumn);
             this.treeListView.AllColumns.Add(this.coverageColumn);
-            this.treeListView.AllColumns.Add(this.filteredPeptidesColumn);
-            this.treeListView.AllColumns.Add(this.filteredVariantsColumn);
+            this.treeListView.AllColumns.Add(this.distinctPeptidesColumn);
+            this.treeListView.AllColumns.Add(this.distinctMatchesColumn);
             this.treeListView.AllColumns.Add(this.filteredSpectraColumn);
             this.treeListView.AllColumns.Add(this.descriptionColumn);
             this.treeListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
@@ -87,8 +87,8 @@ namespace IDPicker.Forms
             this.clusterColumn,
             this.proteinCountColumn,
             this.coverageColumn,
-            this.filteredPeptidesColumn,
-            this.filteredVariantsColumn,
+            this.distinctPeptidesColumn,
+            this.distinctMatchesColumn,
             this.filteredSpectraColumn,
             this.descriptionColumn});
             this.treeListView.Cursor = System.Windows.Forms.Cursors.Default;
@@ -128,15 +128,15 @@ namespace IDPicker.Forms
             this.coverageColumn.Hyperlink = true;
             this.coverageColumn.Text = "Coverage";
             // 
-            // filteredPeptidesColumn
+            // distinctPeptidesColumn
             // 
-            this.filteredPeptidesColumn.Text = "Distinct Peptides";
-            this.filteredPeptidesColumn.Width = 95;
+            this.distinctPeptidesColumn.Text = "Distinct Peptides";
+            this.distinctPeptidesColumn.Width = 95;
             // 
-            // filteredVariantsColumn
+            // distinctMatchesColumn
             // 
-            this.filteredVariantsColumn.Text = "Distinct Matches";
-            this.filteredVariantsColumn.Width = 95;
+            this.distinctMatchesColumn.Text = "Distinct Matches";
+            this.distinctMatchesColumn.Width = 95;
             // 
             // filteredSpectraColumn
             // 
@@ -233,11 +233,11 @@ namespace IDPicker.Forms
 
         private BrightIdeasSoftware.TreeListView treeListView;
         private BrightIdeasSoftware.OLVColumn accessionColumn;
-        private BrightIdeasSoftware.OLVColumn filteredPeptidesColumn;
+        private BrightIdeasSoftware.OLVColumn distinctPeptidesColumn;
         private BrightIdeasSoftware.OLVColumn filteredSpectraColumn;
         private BrightIdeasSoftware.OLVColumn descriptionColumn;
         private BrightIdeasSoftware.OLVColumn proteinCountColumn;
-        private BrightIdeasSoftware.OLVColumn filteredVariantsColumn;
+        private BrightIdeasSoftware.OLVColumn distinctMatchesColumn;
         private BrightIdeasSoftware.OLVColumn clusterColumn;
         private BrightIdeasSoftware.OLVColumn coverageColumn;
         private System.Windows.Forms.Button exportButton;

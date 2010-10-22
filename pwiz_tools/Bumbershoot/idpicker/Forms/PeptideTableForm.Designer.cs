@@ -53,7 +53,7 @@ namespace IDPicker.Forms
             this.components = new System.ComponentModel.Container();
             this.treeListView = new BrightIdeasSoftware.TreeListView();
             this.sequenceColumn = new BrightIdeasSoftware.OLVColumn();
-            this.filteredVariantsColumn = new BrightIdeasSoftware.OLVColumn();
+            this.distinctMatchesColumn = new BrightIdeasSoftware.OLVColumn();
             this.filteredSpectraColumn = new BrightIdeasSoftware.OLVColumn();
             this.monoisotopicMassColumn = new BrightIdeasSoftware.OLVColumn();
             this.molecularWeightColumn = new BrightIdeasSoftware.OLVColumn();
@@ -76,7 +76,7 @@ namespace IDPicker.Forms
             // treeListView
             // 
             this.treeListView.AllColumns.Add(this.sequenceColumn);
-            this.treeListView.AllColumns.Add(this.filteredVariantsColumn);
+            this.treeListView.AllColumns.Add(this.distinctMatchesColumn);
             this.treeListView.AllColumns.Add(this.filteredSpectraColumn);
             this.treeListView.AllColumns.Add(this.monoisotopicMassColumn);
             this.treeListView.AllColumns.Add(this.molecularWeightColumn);
@@ -89,7 +89,7 @@ namespace IDPicker.Forms
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.treeListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.sequenceColumn,
-            this.filteredVariantsColumn,
+            this.distinctMatchesColumn,
             this.filteredSpectraColumn,
             this.monoisotopicMassColumn,
             this.molecularWeightColumn});
@@ -113,10 +113,10 @@ namespace IDPicker.Forms
             this.sequenceColumn.FillsFreeSpace = true;
             this.sequenceColumn.Text = "Sequence";
             // 
-            // filteredVariantsColumn
+            // distinctMatchesColumn
             // 
-            this.filteredVariantsColumn.Text = "Distinct Matches";
-            this.filteredVariantsColumn.Width = 95;
+            this.distinctMatchesColumn.Text = "Distinct Matches";
+            this.distinctMatchesColumn.Width = 95;
             // 
             // filteredSpectraColumn
             // 
@@ -259,7 +259,7 @@ namespace IDPicker.Forms
 
         private BrightIdeasSoftware.TreeListView treeListView;
         private BrightIdeasSoftware.OLVColumn sequenceColumn;
-        private BrightIdeasSoftware.OLVColumn filteredVariantsColumn;
+        private BrightIdeasSoftware.OLVColumn distinctMatchesColumn;
         private BrightIdeasSoftware.OLVColumn filteredSpectraColumn;
         private BrightIdeasSoftware.OLVColumn monoisotopicMassColumn;
         private BrightIdeasSoftware.OLVColumn molecularWeightColumn;
