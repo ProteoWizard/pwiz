@@ -76,7 +76,8 @@ using namespace pwiz::math;
 	RTCONFIG_VARIABLE( int,				MaxFragmentChargeState,		0				) \
     RTCONFIG_VARIABLE( int,				ResultsPerBatch, 		    200000		    ) \
     RTCONFIG_VARIABLE( bool,			ComputeXCorr,		        true			) \
-    RTCONFIG_VARIABLE( int,			    MaxPeakCount,               300   		    ) 
+    RTCONFIG_VARIABLE( int,			    MaxPeakCount,               300   		    ) \
+    RTCONFIG_VARIABLE( string,          SpectrumListFilters,  "peakPicking true 2-" )
 	//RTCONFIG_VARIABLE( int,				DeisotopingTestMode,		0				)
 
 

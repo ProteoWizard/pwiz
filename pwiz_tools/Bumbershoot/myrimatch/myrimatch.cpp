@@ -1230,7 +1230,10 @@ namespace myrimatch
                 // Read the spectra
 				try
 				{
-					spectra.readPeaks( *fItr, g_rtConfig->StartSpectraScanNum, g_rtConfig->EndSpectraScanNum );
+					spectra.readPeaks( *fItr,
+                                       g_rtConfig->StartSpectraScanNum, g_rtConfig->EndSpectraScanNum,
+                                       2, // minMsLevel
+                                       g_rtConfig->SpectrumListFilters );
 				} catch( std::exception& e )
 				{
 					cerr << g_hostString << " had an error: " << e.what() << endl;

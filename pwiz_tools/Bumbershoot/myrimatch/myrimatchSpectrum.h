@@ -320,9 +320,10 @@ namespace myrimatch
 		{
 			PeakData::iterator peakItr;
 			MvIntKey mzFidelityKey;
+            MvIntKey& mvhKey = result.key;
 
-			result.key.clear();
-			result.key.resize( g_rtConfig->NumIntensityClasses+1, 0 );
+			mvhKey.clear();
+			mvhKey.resize( g_rtConfig->NumIntensityClasses+1, 0 );
 			mzFidelityKey.resize( g_rtConfig->NumMzFidelityClasses+1, 0 );
 			result.mvh = 0.0;
 			result.mzSSE = 0.0;
@@ -335,66 +336,104 @@ namespace myrimatch
 			START_PROFILER(6);
 			int totalPeaks = (int) seqIons.size();
 
-			for( size_t j=0; j < seqIons.size(); ++j )
-			{
-				// skip theoretical ions outside the scan range of the spectrum
-				if( seqIons[j] < mzLowerBound ||
-					seqIons[j] > mzUpperBound )
-				{
-					--totalPeaks; // one less ion to consider because it's out of the scan range
-					continue;
-				}
+            if(g_rtConfig->fragmentMzToleranceUnits == PPM)
+            {
+			    for( size_t j=0; j < seqIons.size(); ++j )
+			    {
+				    // skip theoretical ions outside the scan range of the spectrum
+				    if( seqIons[j] < mzLowerBound ||
+					    seqIons[j] > mzUpperBound )
+				    {
+					    --totalPeaks; // one less ion to consider because it's out of the scan range
+					    continue;
+				    }
 
 
-				START_PROFILER(7);
-				// Find the fragment ion peak. Consider the fragment ion charge state while setting the
-				// mass window for the fragment ion lookup.
-				double massError = g_rtConfig->fragmentMzToleranceUnits == PPM ? (seqIons[j] * g_rtConfig->FragmentMzTolerance * pow(10.0,-6)) : g_rtConfig->FragmentMzTolerance;
-				peakItr = peakData.findNear( seqIons[j], massError );
-				STOP_PROFILER(7);
+				    START_PROFILER(7);
+				    // Find the fragment ion peak. Consider the fragment ion charge state while setting the
+				    // mass window for the fragment ion lookup.
+				    peakItr = peakData.findNear( seqIons[j], seqIons[j] * g_rtConfig->FragmentMzTolerance * 1e-6 );
+				    STOP_PROFILER(7);
 
-				// If a peak was found, increment the sequenceInstance's ion correlation triplet
-				if( peakItr != peakData.end() )
-				{
-					double mzError = peakItr->first - seqIons[j];
-					// Convert the mass error appropriately
-					if(g_rtConfig->fragmentMzToleranceUnits == PPM)
-						mzError = (mzError/seqIons[j])*pow(10.0,6);
-					result.key.incrementClass( peakItr->second.intenClass-1 );
-					result.mzSSE += pow( mzError, 2.0 );
-					result.mzMAE += fabs(mzError);
-					mzFidelityKey.incrementClass( ClassifyError( fabs( mzError ), mzFidelityThresholds ) );
-					int mzFidelityClass = ClassifyError( fabs( mzError ), g_rtConfig->massErrors );
-					result.newMZFidelity += g_rtConfig->mzFidelityLods[mzFidelityClass];
-					//result.matchedIons.push_back(peakItr->first);
-				} else
-				{
-					result.key.incrementClass( g_rtConfig->NumIntensityClasses );
-					result.mzSSE += pow( 2.0 * g_rtConfig->FragmentMzTolerance, 2.0 );
-					result.mzMAE += 2.0 * g_rtConfig->FragmentMzTolerance;
-					mzFidelityKey.incrementClass( g_rtConfig->NumMzFidelityClasses );
-				}
+				    // If a peak was found, increment the sequenceInstance's ion correlation triplet
+				    if( peakItr != peakData.end() )
+				    {
+					    double mzError = (fabs( peakItr->first - seqIons[j] ) / seqIons[j]) * 1e6;
+					    ++mvhKey[ peakItr->second.intenClass-1 ];
+					    //result.mzSSE += pow( mzError, 2.0 );
+					    //result.mzMAE += mzError;
+					    ++mzFidelityKey[ ClassifyError( mzError, mzFidelityThresholds ) ];
+					    //int mzFidelityClass = ClassifyError( mzError, g_rtConfig->massErrors );
+					    //result.newMZFidelity += g_rtConfig->mzFidelityLods[mzFidelityClass];
+					    //result.matchedIons.push_back(peakItr->first);
+				    } else
+				    {
+					    ++mvhKey[ g_rtConfig->NumIntensityClasses ];
+					    //result.mzSSE += pow( 2.0 * g_rtConfig->FragmentMzTolerance, 2.0 );
+					    //result.mzMAE += 2.0 * g_rtConfig->FragmentMzTolerance;
+					    ++mzFidelityKey[ g_rtConfig->NumMzFidelityClasses ];
+				    }
 
-			}
+			    }
+            } else // fragmentMzToleranceUnits == DALTONS
+            {
+                for( size_t j=0; j < seqIons.size(); ++j )
+			    {
+				    // skip theoretical ions outside the scan range of the spectrum
+				    if( seqIons[j] < mzLowerBound ||
+					    seqIons[j] > mzUpperBound )
+				    {
+					    --totalPeaks; // one less ion to consider because it's out of the scan range
+					    continue;
+				    }
+
+
+				    START_PROFILER(7);
+				    // Find the fragment ion peak. Consider the fragment ion charge state while setting the
+				    // mass window for the fragment ion lookup.
+				    peakItr = peakData.findNear( seqIons[j], g_rtConfig->FragmentMzTolerance );
+				    STOP_PROFILER(7);
+
+				    // If a peak was found, increment the sequenceInstance's ion correlation triplet
+				    if( peakItr != peakData.end() )
+				    {
+					    double mzError = fabs( peakItr->first - seqIons[j] );
+					    ++mvhKey[ peakItr->second.intenClass-1 ];
+					    //result.mzSSE += pow( mzError, 2.0 );
+					    //result.mzMAE += mzError;
+					    ++mzFidelityKey[ ClassifyError( mzError, mzFidelityThresholds ) ];
+					    //int mzFidelityClass = ClassifyError( mzError, g_rtConfig->massErrors );
+					    //result.newMZFidelity += g_rtConfig->mzFidelityLods[mzFidelityClass];
+					    //result.matchedIons.push_back(peakItr->first);
+				    } else
+				    {
+					    ++mvhKey[ g_rtConfig->NumIntensityClasses ];
+					    //result.mzSSE += pow( 2.0 * g_rtConfig->FragmentMzTolerance, 2.0 );
+					    //result.mzMAE += 2.0 * g_rtConfig->FragmentMzTolerance;
+					    ++mzFidelityKey[ g_rtConfig->NumMzFidelityClasses ];
+				    }
+
+			    }
+            }
 			STOP_PROFILER(6);
 
 			result.mzSSE /= totalPeaks;
 			result.mzMAE /= totalPeaks;
 			// Convert the new mzFidelity score into normal domain.
-			result.newMZFidelity = exp(result.newMZFidelity);
+			//result.newMZFidelity = exp(result.newMZFidelity);
 
 			double mvh = 0.0;
 
 			START_PROFILER(8);
-			if( result.key.back() != totalPeaks )
+			if( mvhKey.back() != totalPeaks )
 			{
-				int keySum = accumulate( result.key.begin(), result.key.end(), 0 );
+				int keySum = accumulate( mvhKey.begin(), mvhKey.end(), 0 );
 				//int numHits = accumulate( intenClassCounts.begin(), intenClassCounts.end()-1, 0 );
 				int numVoids = intenClassCounts.back();
 				int totalPeakBins = numVoids + peakCount;
 
 				for( size_t i=0; i < intenClassCounts.size(); ++i ) {
-					mvh += lnCombin( intenClassCounts[i], result.key[i] );
+					mvh += lnCombin( intenClassCounts[i], mvhKey[i] );
                     /*if(result.sequence().compare("HVGDLGNVTADK")==0) {
                         cout << "IC["<< i << "]:"<< intenClassCounts[i] << "," << result.key[i] << endl;
                     }*/
@@ -409,7 +448,7 @@ namespace myrimatch
 
 				int N;
 				double sum1 = 0, sum2 = 0;
-				int numHits = accumulate( result.key.begin(), result.key.end(), 0 );
+				int numHits = accumulate( mvhKey.begin(), mvhKey.end(), 0 );
 				int totalPeakSpace = numVoids + numHits;
 				double pHits = (double) numHits / (double) totalPeakSpace;
 				double pMisses = 1.0 - pHits;

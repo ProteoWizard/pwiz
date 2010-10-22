@@ -70,7 +70,7 @@ namespace myrimatch
             peakPreData.erase( precursorDoubleWaterLossItr );
 
         // Get the number of bins and bin width for the processed peak array
-        float binWidth = 1.0005079;
+        double binWidth = 1.0005079;
         int maxBins;
         float massCutOff = mOfPrecursor + 50;
         if (massCutOff > 512)
@@ -289,22 +289,21 @@ namespace myrimatch
 		// If graphs will be drawn, the predata must be retained, otherwise it's unnecessary
 		if( !g_rtConfig->MakeSpectrumGraphs /*&& g_rtConfig->DeisotopingTestMode == 0*/ )
 			peakPreData.clear();
+
         // set fragment types
         fragmentTypes.reset();
         if( g_rtConfig->FragmentationAutoRule )
         {
-            switch( dissociationType )
+            if( dissociationTypes.count(pwiz::cv::MS_CID) > 0 )
             {
-                case pwiz::cv::MS_CID:
-                    fragmentTypes[FragmentType_B] = true;
-                    fragmentTypes[FragmentType_Y] = true;
-                    break;
-                case pwiz::cv::MS_ETD:
-                    fragmentTypes[FragmentType_C] = true;
-                    fragmentTypes[FragmentType_Z_Radical] = true;
-                    break;
-                default:
-                    break;
+                fragmentTypes[FragmentType_B] = true;
+                fragmentTypes[FragmentType_Y] = true;
+            }
+
+            if( dissociationTypes.count(pwiz::cv::MS_ETD) > 0 )
+            {
+                fragmentTypes[FragmentType_C] = true;
+                fragmentTypes[FragmentType_Z_Radical] = true;
             }
         }
 
