@@ -116,9 +116,9 @@ namespace IDPicker.Forms
                 treeListView.BackColor = Color.FromArgb(int.Parse(retrievedList[0].ToString()));
                 treeListView.ForeColor = Color.FromArgb(int.Parse(retrievedList[1].ToString()));
 
-                foreach (var kvp in _columnSettings)
-                    kvp.Key.IsVisible = (bool)kvp.Value[3];
-                treeListView.RebuildColumns();
+                //foreach (var kvp in _columnSettings)
+                //    kvp.Key.IsVisible = (bool)kvp.Value[3];
+                //treeListView.RebuildColumns();
             }
             else
             {
