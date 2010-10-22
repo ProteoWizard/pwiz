@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Data.SQLite;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -54,6 +55,7 @@ namespace IDPicker
         PeptideTableForm peptideTableForm;
         SpectrumTableForm spectrumTableForm;
         ModificationTableForm modificationTableForm;
+        AnalysisTableForm analysisTableForm;
 
         LogForm logForm;
         //SpyEventLogForm spyEventLogForm;
@@ -64,11 +66,19 @@ namespace IDPicker
 
         private DataFilter dataFilter = new DataFilter();
 
-        public IDPickerForm ()
+        string[] args;
+        public IDPickerForm (string[] args)
         {
             InitializeComponent();
 
-            manager = new Manager(dockPanel);
+            this.args = args;
+
+            manager = new Manager(dockPanel)
+            {
+                ShowChromatogramListForNewSources = false,
+                ShowSpectrumListForNewSources = false,
+                OpenFileUsesCurrentGraphForm = true,
+            };
 
             Shown += new EventHandler(Form1_Load);
 
@@ -96,6 +106,9 @@ namespace IDPicker
             modificationTableForm = new ModificationTableForm();
             modificationTableForm.Show(dockPanel, DockState.Document);
 
+            analysisTableForm = new AnalysisTableForm();
+            analysisTableForm.Show(dockPanel, DockState.Document);
+
             proteinTableForm.ProteinViewFilter += new ProteinViewFilterEventHandler(proteinTableForm_ProteinViewFilter);
             proteinTableForm.ProteinViewVisualize += new EventHandler<ProteinViewVisualizeEventArgs>(proteinTableForm_ProteinViewVisualize);
             peptideTableForm.PeptideViewFilter += new PeptideViewFilterEventHandler(peptideTableForm_PeptideViewFilter); 
@@ -103,9 +116,9 @@ namespace IDPicker
             spectrumTableForm.SpectrumViewVisualize += new EventHandler<SpectrumViewVisualizeEventArgs>(spectrumTableForm_SpectrumViewVisualize);
             modificationTableForm.ModificationViewFilter += new ModificationViewFilterEventHandler(modificationTableForm_ModificationViewFilter);
 
-            logForm = new LogForm();
-            Console.SetOut(logForm.LogWriter);
-            logForm.Show(dockPanel, DockState.DockBottomAutoHide);
+            //logForm = new LogForm();
+            //Console.SetOut(logForm.LogWriter);
+            //logForm.Show(dockPanel, DockState.DockBottomAutoHide);
 
             /*spyEventLogForm = new SpyEventLogForm();
             spyEventLogForm.AddEventSpy(new EventSpy("proteinTableForm", proteinTableForm));
@@ -136,6 +149,7 @@ namespace IDPicker
             }
         }
 
+        Dictionary<GraphForm, bool> handlerIsAttached = new Dictionary<GraphForm, bool>();
         void spectrumTableForm_SpectrumViewVisualize (object sender, SpectrumViewVisualizeEventArgs e)
         {
             var psm = e.PeptideSpectrumMatch;
@@ -183,19 +197,54 @@ namespace IDPicker
                 }
             }
 
-            var pwizSpectrum = spectrum.Metadata;
-            bool byIons = pwizSpectrum.precursors[0].activation.hasCVParam(CVID.MS_CID);
-            bool czRadicalIons = pwizSpectrum.precursors[0].activation.hasCVParam(CVID.MS_ETD);
+            var param = psm.Analysis.Parameters.Where(o => o.Name == "SpectrumListFilters").SingleOrDefault();
+            string spectrumListFilters = param == null ? String.Empty : param.Value;
+            spectrumListFilters = spectrumListFilters.Replace("0 ", "false ");
+
             string psmString = DataModel.ExtensionMethods.ToModifiedString(psm);
-            var annotation = new PeptideFragmentationAnnotation(psmString, 1, Math.Max(0, psm.Charge - 1),
-                                                                false, byIons, czRadicalIons, false, byIons, false, czRadicalIons,
+            var annotation = new PeptideFragmentationAnnotation(psmString, 1, Math.Max(1, psm.Charge - 1),
+                                                                PeptideFragmentationAnnotation.IonSeries.Auto,
                                                                 true, false, true);
 
-            manager.OpenFile(sourcePath, spectrum.NativeID, annotation);
+            (manager.SpectrumAnnotationForm.Controls[0] as ToolStrip).Hide();
+            (manager.SpectrumAnnotationForm.Controls[1] as SplitContainer).Panel1Collapsed = true;
+            (manager.SpectrumAnnotationForm.Controls[1] as SplitContainer).Dock = DockStyle.Fill;
 
-            var source = manager.DataSourceMap[sourcePath];
-            source.ChromatogramListForm.Hide();
-            source.SpectrumListForm.Hide();
+            manager.OpenFile(sourcePath, spectrum.NativeID, annotation, spectrumListFilters);
+            manager.CurrentGraphForm.Focus();
+
+            if (!handlerIsAttached.ContainsKey(manager.CurrentGraphForm))
+            {
+                handlerIsAttached[manager.CurrentGraphForm] = true;
+                manager.CurrentGraphForm.ZedGraphControl.PreviewKeyDown += new PreviewKeyDownEventHandler(CurrentGraphForm_PreviewKeyDown);
+            }
+        }
+
+        void CurrentGraphForm_PreviewKeyDown (object sender, PreviewKeyDownEventArgs e)
+        {
+            var tlv = spectrumTableForm.TreeListView;
+
+            if (tlv.SelectedItem == null)
+                return;
+
+            int rowIndex = tlv.SelectedIndex;
+            bool previousRowIsPSM = rowIndex > 0 && tlv.GetModelObject(rowIndex - 1) is SpectrumTableForm.PeptideSpectrumMatchRow;
+            bool nextRowIsPSM = rowIndex + 1 < tlv.GetItemCount() && tlv.GetModelObject(rowIndex + 1) is SpectrumTableForm.PeptideSpectrumMatchRow;
+
+            int key = (int) e.KeyCode;
+            if ((key == (int) Keys.Left || key == (int) Keys.Up) && previousRowIsPSM)
+                --tlv.SelectedIndex;
+            else if ((key == (int) Keys.Right || key == (int) Keys.Down) && nextRowIsPSM)
+                ++tlv.SelectedIndex;
+            else
+                return;
+
+            //tlv.EnsureVisible(tlv.SelectedIndex);
+
+            spectrumTableForm_SpectrumViewVisualize(this, new SpectrumViewVisualizeEventArgs()
+            {
+                PeptideSpectrumMatch = (tlv.GetSelectedObject() as SpectrumTableForm.PeptideSpectrumMatchRow).PeptideSpectrumMatch
+            });
         }
 
         void proteinTableForm_ProteinViewVisualize (object sender, ProteinViewVisualizeEventArgs e)
@@ -265,12 +314,14 @@ namespace IDPicker
 
             if (oldFilter.FilterSource == peptideTableForm ||
                 oldFilter.FilterSource == spectrumTableForm ||
-                oldFilter.FilterSource == modificationTableForm)
+                oldFilter.FilterSource == modificationTableForm ||
+                oldFilter.FilterSource == analysisTableForm)
                 proteinTableForm.SetData(session, dataFilter);
 
             peptideTableForm.SetData(session, dataFilter);
             spectrumTableForm.SetData(session, dataFilter);
             modificationTableForm.SetData(session, dataFilter);
+            analysisTableForm.SetData(session, dataFilter);
         }
 
         void peptideTableForm_PeptideViewFilter (PeptideTableForm sender, DataFilter peptideViewFilter)
@@ -286,11 +337,13 @@ namespace IDPicker
 
             if (oldFilter.FilterSource == proteinTableForm ||
                 oldFilter.FilterSource == spectrumTableForm ||
-                oldFilter.FilterSource == modificationTableForm)
+                oldFilter.FilterSource == modificationTableForm ||
+                oldFilter.FilterSource == analysisTableForm)
                 peptideTableForm.SetData(session, dataFilter);
 
             spectrumTableForm.SetData(session, dataFilter);
             modificationTableForm.SetData(session, dataFilter);
+            analysisTableForm.SetData(session, dataFilter);
         }
 
         void spectrumTableForm_SpectrumViewFilter (object sender, DataFilter spectrumViewFilter)
@@ -307,10 +360,12 @@ namespace IDPicker
 
             if (oldFilter.FilterSource == proteinTableForm ||
                 oldFilter.FilterSource == peptideTableForm ||
-                oldFilter.FilterSource == modificationTableForm)
+                oldFilter.FilterSource == modificationTableForm ||
+                oldFilter.FilterSource == analysisTableForm)
                 spectrumTableForm.SetData(session, dataFilter);
 
             modificationTableForm.SetData(session, dataFilter);
+            analysisTableForm.SetData(session, dataFilter);
         }
 
         void modificationTableForm_ModificationViewFilter (ModificationTableForm sender, DataFilter modificationViewFilter)
@@ -328,8 +383,11 @@ namespace IDPicker
 
             if (oldFilter.FilterSource == proteinTableForm ||
                 oldFilter.FilterSource == peptideTableForm ||
-                oldFilter.FilterSource == spectrumTableForm)
+                oldFilter.FilterSource == spectrumTableForm ||
+                oldFilter.FilterSource == analysisTableForm)
                 modificationTableForm.SetData(session, dataFilter);
+
+            analysisTableForm.SetData(session, dataFilter);
         }
         #endregion
 
@@ -355,6 +413,9 @@ namespace IDPicker
 
             if (oldFilter.Modifications.Count == 0 && oldFilter.ModifiedSite == null)
                 modificationTableForm.SetData(session, dataFilter);
+
+            if (oldFilter.Analysis == null)
+                analysisTableForm.SetData(session, dataFilter);
         }
 
         SimpleProgressForm applyBasicFilterProgressForm;
@@ -397,6 +458,7 @@ namespace IDPicker
             peptideTableForm.ClearData();
             spectrumTableForm.ClearData();
             modificationTableForm.ClearData();
+            analysisTableForm.ClearData();
         }
 
         void setData (object sender, RunWorkerCompletedEventArgs e)
@@ -408,13 +470,20 @@ namespace IDPicker
             peptideTableForm.SetData(session, dataFilter);
             spectrumTableForm.SetData(session, dataFilter);
             modificationTableForm.SetData(session, dataFilter);
+            analysisTableForm.SetData(session, dataFilter);
         }
 
         void Form1_Load (object sender, EventArgs e)
         {
-            //var filepaths = Directory.GetFiles(@"c:\test\Goldenring_gastric", "*.pepXML", SearchOption.AllDirectories);
-            //OpenFiles(filepaths.Shuffle().ToList());//.Take(10).Union(filepaths.Skip(200).Take(10)).Union(filepaths.Skip(400).Take(10)).ToList());
-            openToolStripButton_Click(this, EventArgs.Empty);
+            //System.Data.SQLite.SQLiteConnection.SetConfigOption(SQLiteConnection.SQLITE_CONFIG.MULTITHREAD);
+            //var filepaths = Directory.GetFiles(@"c:\test\Goldenring_gastric\Metaplasia", "klc*FFPE*.pepXML", SearchOption.AllDirectories);
+            //OpenFiles(filepaths);//.Take(10).Union(filepaths.Skip(200).Take(10)).Union(filepaths.Skip(400).Take(10)).ToList());
+            //return;
+
+            if (args != null && args.Length > 0 && args.All(o => File.Exists(o)))
+                OpenFiles(args);
+            else
+                openToolStripButton_Click(this, EventArgs.Empty);
         }
 
         void databaseNotFoundHandler (object sender, Parser.DatabaseNotFoundEventArgs e)
@@ -586,7 +655,7 @@ namespace IDPicker
                     timer = System.Diagnostics.Stopwatch.StartNew();
 
                 progressBar.Maximum = 1000;
-                progressBar.Value = (int) Math.Round((double) e.ParsedBytes / e.TotalBytes * 1000.0);
+                progressBar.Value = e.TotalBytes == 0 ? 0 : Math.Min(progressBar.Maximum, (int) Math.Round((double) e.ParsedBytes / e.TotalBytes * 1000.0));
                 double progressRate = timer.Elapsed.TotalSeconds > 0 ? e.ParsedBytes / timer.Elapsed.TotalSeconds : 0;
                 long bytesRemaining = e.TotalBytes - e.ParsedBytes;
                 TimeSpan timeRemaining = progressRate == 0 ? TimeSpan.Zero
@@ -614,7 +683,7 @@ namespace IDPicker
                 }
 
                 progressBar.Maximum = 1000;
-                progressBar.Value = (int) Math.Round((double) e.MergedFiles / e.TotalFiles * 1000.0);
+                progressBar.Value = Math.Min(progressBar.Maximum, (int) Math.Round((double) e.MergedFiles / e.TotalFiles * 1000.0));
                 double progressRate = timer.Elapsed.TotalSeconds > 0 ? e.MergedFiles / timer.Elapsed.TotalSeconds : 0;
                 long bytesRemaining = e.TotalFiles - e.MergedFiles;
                 TimeSpan timeRemaining = progressRate == 0 ? TimeSpan.Zero
@@ -795,6 +864,7 @@ namespace IDPicker
                     peptideTableForm.SetData(session, dataFilter);
                     spectrumTableForm.SetData(session, dataFilter);
                     modificationTableForm.SetData(session, dataFilter);
+                    analysisTableForm.SetData(session, dataFilter);
                 }
             }
             catch (Exception ex)
@@ -833,7 +903,7 @@ namespace IDPicker
 
         private void IDPickerForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            spectrumTableForm.SaveSettings();
+            //spectrumTableForm.SaveSettings();
             peptideTableForm.SaveSettings();
             proteinTableForm.SaveSettings();
         }
