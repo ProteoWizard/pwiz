@@ -104,7 +104,7 @@ namespace IDPicker.Forms
             if (retrievedList.Count == 56)
             {
                 SetPropertyFromUserSettings(ref _columnSettings, sequenceColumn, ref  retrievedList);
-                SetPropertyFromUserSettings(ref _columnSettings, filteredVariantsColumn, ref  retrievedList);
+                SetPropertyFromUserSettings(ref _columnSettings, distinctMatchesColumn, ref  retrievedList);
                 SetPropertyFromUserSettings(ref _columnSettings, filteredSpectraColumn, ref  retrievedList);
                 SetPropertyFromUserSettings(ref _columnSettings, monoisotopicMassColumn, ref  retrievedList);
                 SetPropertyFromUserSettings(ref _columnSettings, molecularWeightColumn, ref  retrievedList);
@@ -123,7 +123,7 @@ namespace IDPicker.Forms
             else
             {
                 _columnSettings.Add(sequenceColumn, new object[4] { "Key", -99, treeListView.BackColor, false });
-                _columnSettings.Add(filteredVariantsColumn, new object[4] { "Integer", -99, treeListView.BackColor, false });
+                _columnSettings.Add(distinctMatchesColumn, new object[4] { "Integer", -99, treeListView.BackColor, false });
                 _columnSettings.Add(filteredSpectraColumn, new object[4] { "Integer", -99, treeListView.BackColor, false });
                 _columnSettings.Add(monoisotopicMassColumn, new object[4] { "Float", -1, treeListView.BackColor, false });
                 _columnSettings.Add(molecularWeightColumn, new object[4] { "Float", -1, treeListView.BackColor, false });
@@ -172,7 +172,7 @@ namespace IDPicker.Forms
         private void SetColumnAspectGetters()
         {
             sequenceColumn.AspectGetter = null;
-            filteredVariantsColumn.AspectGetter = null;
+            distinctMatchesColumn.AspectGetter = null;
             filteredSpectraColumn.AspectGetter = null;
             monoisotopicMassColumn.AspectGetter = null;
             molecularWeightColumn.AspectGetter = null;
@@ -191,7 +191,7 @@ namespace IDPicker.Forms
                 return null;
             };
 
-            filteredVariantsColumn.AspectGetter += delegate(object x)
+            distinctMatchesColumn.AspectGetter += delegate(object x)
             {
                 if (x is PeptideRow)
                     return (x as PeptideRow).DistinctMatchesWithRoundedMass;
@@ -321,8 +321,8 @@ namespace IDPicker.Forms
         {
             if (!(bool)_columnSettings[filteredSpectraColumn][4])
                 filteredSpectraColumn.IsVisible = radioButton1.Checked;
-            if (!(bool)_columnSettings[filteredVariantsColumn][4])
-                filteredVariantsColumn.IsVisible = radioButton1.Checked;
+            if (!(bool)_columnSettings[distinctMatchesColumn][4])
+                distinctMatchesColumn.IsVisible = radioButton1.Checked;
             if (!(bool)_columnSettings[monoisotopicMassColumn][4])
                 monoisotopicMassColumn.IsVisible = radioButton1.Checked;
             if (!(bool)_columnSettings[molecularWeightColumn][4])
@@ -401,7 +401,7 @@ namespace IDPicker.Forms
                 _columnSettings = new Dictionary<OLVColumn, object[]>();
 
                 SetPropertyFromDatabase(ref _columnSettings, sequenceColumn, listOfSettings);
-                SetPropertyFromDatabase(ref _columnSettings, filteredVariantsColumn, listOfSettings);
+                SetPropertyFromDatabase(ref _columnSettings, distinctMatchesColumn, listOfSettings);
                 SetPropertyFromDatabase(ref _columnSettings, filteredSpectraColumn, listOfSettings);
                 SetPropertyFromDatabase(ref _columnSettings, monoisotopicMassColumn, listOfSettings);
                 SetPropertyFromDatabase(ref _columnSettings, molecularWeightColumn, listOfSettings);
@@ -476,10 +476,9 @@ namespace IDPicker.Forms
         void renderData (object sender, RunWorkerCompletedEventArgs e)
         {
             long totalDistinctMatches = rowsByPeptide.Sum(o => o.DistinctMatchesWithRoundedMass);
-            long totalSpectra = rowsByPeptide.Sum(o => o.Spectra);
 
             // show total counts in the form title
-            Text = TabText = String.Format("Peptide View: {0} peptides, {1} distinct matches, {2} spectra", rowsByPeptide.Count, totalDistinctMatches, totalSpectra);
+            Text = TabText = String.Format("Peptide View: {0} distinct peptides, {1} distinct matches", rowsByPeptide.Count, totalDistinctMatches);
 
             treeListView.Roots = rowsByPeptide;
 

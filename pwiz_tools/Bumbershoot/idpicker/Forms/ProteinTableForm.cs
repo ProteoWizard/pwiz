@@ -119,8 +119,8 @@ namespace IDPicker.Forms
                 SetPropertyFromUserSettings(ref _columnSettings, clusterColumn, ref  retrievedList);
                 SetPropertyFromUserSettings(ref _columnSettings, proteinCountColumn, ref  retrievedList);
                 SetPropertyFromUserSettings(ref _columnSettings, coverageColumn, ref  retrievedList);
-                SetPropertyFromUserSettings(ref _columnSettings, filteredPeptidesColumn, ref  retrievedList);
-                SetPropertyFromUserSettings(ref _columnSettings, filteredVariantsColumn, ref  retrievedList);
+                SetPropertyFromUserSettings(ref _columnSettings, distinctPeptidesColumn, ref  retrievedList);
+                SetPropertyFromUserSettings(ref _columnSettings, distinctMatchesColumn, ref  retrievedList);
                 SetPropertyFromUserSettings(ref _columnSettings, filteredSpectraColumn, ref  retrievedList);
                 SetPropertyFromUserSettings(ref _columnSettings, descriptionColumn, ref  retrievedList);
 
@@ -137,8 +137,8 @@ namespace IDPicker.Forms
                 _columnSettings.Add(clusterColumn, new object[4] { "Integer", -99, treeListView.BackColor, false });
                 _columnSettings.Add(proteinCountColumn, new object[4] { "Integer", -99, treeListView.BackColor, false });
                 _columnSettings.Add(coverageColumn, new object[4] { "Float", -1, treeListView.BackColor, false });
-                _columnSettings.Add(filteredPeptidesColumn, new object[4] { "Integer", -99, treeListView.BackColor, false });
-                _columnSettings.Add(filteredVariantsColumn, new object[4] { "Integer", -99, treeListView.BackColor, false });
+                _columnSettings.Add(distinctPeptidesColumn, new object[4] { "Integer", -99, treeListView.BackColor, false });
+                _columnSettings.Add(distinctMatchesColumn, new object[4] { "Integer", -99, treeListView.BackColor, false });
                 _columnSettings.Add(filteredSpectraColumn, new object[4] { "Integer", -99, treeListView.BackColor, false });
                 _columnSettings.Add(descriptionColumn, new object[4] { "String", -99, treeListView.BackColor, false });
             }
@@ -173,8 +173,8 @@ namespace IDPicker.Forms
             accessionColumn.AspectGetter = null;
             proteinCountColumn.AspectGetter = null;
             coverageColumn.AspectGetter = null;
-            filteredPeptidesColumn.AspectGetter = null;
-            filteredVariantsColumn.AspectGetter = null;
+            distinctPeptidesColumn.AspectGetter = null;
+            distinctMatchesColumn.AspectGetter = null;
             filteredSpectraColumn.AspectGetter = null;
             descriptionColumn.AspectGetter = null;
 
@@ -215,14 +215,14 @@ namespace IDPicker.Forms
                 return null;
             };
 
-            filteredPeptidesColumn.AspectGetter += delegate(object x)
+            distinctPeptidesColumn.AspectGetter += delegate(object x)
             {
                 if (x is ProteinGroupRow)
                     return (x as ProteinGroupRow).DistinctPeptides;
                 return null;
             };
 
-            filteredVariantsColumn.AspectGetter += delegate(object x)
+            distinctMatchesColumn.AspectGetter += delegate(object x)
             {
                 if (x is ProteinGroupRow)
                     return (x as ProteinGroupRow).DistinctMatches;
@@ -350,8 +350,8 @@ namespace IDPicker.Forms
                 SetPropertyFromDatabase(ref _columnSettings, clusterColumn, listOfSettings);
                 SetPropertyFromDatabase(ref _columnSettings, proteinCountColumn, listOfSettings);
                 SetPropertyFromDatabase(ref _columnSettings, coverageColumn, listOfSettings);
-                SetPropertyFromDatabase(ref _columnSettings, filteredPeptidesColumn, listOfSettings);
-                SetPropertyFromDatabase(ref _columnSettings, filteredVariantsColumn, listOfSettings);
+                SetPropertyFromDatabase(ref _columnSettings, distinctPeptidesColumn, listOfSettings);
+                SetPropertyFromDatabase(ref _columnSettings, distinctMatchesColumn, listOfSettings);
                 SetPropertyFromDatabase(ref _columnSettings, filteredSpectraColumn, listOfSettings);
                 SetPropertyFromDatabase(ref _columnSettings, descriptionColumn, listOfSettings);
 

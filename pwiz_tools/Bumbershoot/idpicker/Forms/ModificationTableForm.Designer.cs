@@ -67,11 +67,11 @@ namespace IDPicker.Forms
             this.dataGridView.AllowUserToDeleteRows = false;
             this.dataGridView.AllowUserToResizeColumns = false;
             this.dataGridView.AllowUserToResizeRows = false;
-            this.dataGridView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.dataGridView.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.dataGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
-            this.dataGridView.BackgroundColor = System.Drawing.SystemColors.Control;
+            this.dataGridView.BackgroundColor = System.Drawing.SystemColors.Window;
             this.dataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView.Location = new System.Drawing.Point(0, 27);
             this.dataGridView.Name = "dataGridView";
@@ -99,7 +99,7 @@ namespace IDPicker.Forms
             this.fileToolStripMenuItem,
             this.showInExcelToolStripMenuItem});
             this.exportMenu.Name = "contextMenuStrip1";
-            this.exportMenu.Size = new System.Drawing.Size(172, 92);
+            this.exportMenu.Size = new System.Drawing.Size(172, 70);
             // 
             // clipboardToolStripMenuItem
             // 
@@ -132,7 +132,7 @@ namespace IDPicker.Forms
             this.Name = "ModificationTableForm";
             this.TabText = "ModificationTableForm";
             this.Text = "ModificationTableForm";
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize) (this.dataGridView)).EndInit();
             this.exportMenu.ResumeLayout(false);
             this.ResumeLayout(false);
 

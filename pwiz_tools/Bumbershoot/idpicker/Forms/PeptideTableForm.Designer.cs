@@ -115,8 +115,8 @@ namespace IDPicker.Forms
             // 
             // filteredVariantsColumn
             // 
-            this.filteredVariantsColumn.Text = "Filtered Variants";
-            this.filteredVariantsColumn.Width = 90;
+            this.filteredVariantsColumn.Text = "Distinct Matches";
+            this.filteredVariantsColumn.Width = 95;
             // 
             // filteredSpectraColumn
             // 

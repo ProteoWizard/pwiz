@@ -130,13 +130,13 @@ namespace IDPicker.Forms
             // 
             // filteredPeptidesColumn
             // 
-            this.filteredPeptidesColumn.Text = "Filtered Peptides";
-            this.filteredPeptidesColumn.Width = 90;
+            this.filteredPeptidesColumn.Text = "Distinct Peptides";
+            this.filteredPeptidesColumn.Width = 95;
             // 
             // filteredVariantsColumn
             // 
-            this.filteredVariantsColumn.Text = "Filtered Variants";
-            this.filteredVariantsColumn.Width = 90;
+            this.filteredVariantsColumn.Text = "Distinct Matches";
+            this.filteredVariantsColumn.Width = 95;
             // 
             // filteredSpectraColumn
             // 
@@ -150,7 +150,7 @@ namespace IDPicker.Forms
             // 
             // exportButton
             // 
-            this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.exportButton.Image = global::IDPicker.Properties.Resources.Export;
             this.exportButton.Location = new System.Drawing.Point(986, 2);
             this.exportButton.Name = "exportButton";
@@ -191,7 +191,7 @@ namespace IDPicker.Forms
             // 
             // panel1
             // 
-            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.Controls.Add(this.treeListView);
@@ -222,7 +222,7 @@ namespace IDPicker.Forms
             this.Name = "ProteinTableForm";
             this.TabText = "ProteinTableForm";
             this.Text = "ProteinTableForm";
-            ((System.ComponentModel.ISupportInitialize)(this.treeListView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize) (this.treeListView)).EndInit();
             this.exportMenu.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
             this.ResumeLayout(false);
