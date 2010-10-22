@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{5C5FC1C6-F9FF-4E2A-A53B-0865FBB9F9D9}</ProjectGuid>
     <OutputType>WinExe</OutputType>
@@ -84,6 +84,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Lib\ObjectListView\ObjectListView.dll</HintPath>
     </Reference>
+    <Reference Include="PopupControl, Version=1.5.0.37175, Culture=neutral, PublicKeyToken=04c10344d6495b18, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Lib\SimplePopup\PopupControl.dll</HintPath>
+    </Reference>
     <Reference Include="pwiz_bindings_cli, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>build-nt-x86\obj\$(Configuration)\pwiz_bindings_cli.dll</HintPath>
@@ -139,6 +143,12 @@
     </Compile>
     <Compile Include="Forms\ColumnControlForm.Designer.cs">
       <DependentUpon>ColumnControlForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\GroupingSetupControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\GroupingSetupControl.Designer.cs">
+      <DependentUpon>GroupingSetupControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\LogForm.cs">
       <SubType>Form</SubType>
@@ -267,6 +277,9 @@
     <EmbeddedResource Include="Forms\ColumnControlForm.resx">
       <DependentUpon>ColumnControlForm.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\GroupingSetupControl.resx">
+      <DependentUpon>GroupingSetupControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\LogForm.resx">
       <DependentUpon>LogForm.cs</DependentUpon>
