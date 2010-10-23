@@ -322,6 +322,8 @@ namespace pwiz.Skyline.EditUI
                 if (!peptides.Contains(nodePep => Equals(nodePep.Peptide, nodePepNew.Peptide)))
                 {
                     peptides.Add(nodePepNew);
+                    if (nodePepNew.Peptide.FastaSequence != null)
+                        peptides.Sort(FastaSequence.ComparePeptides);
                     var newPeptideGroupDocNode = new PeptideGroupDocNode(peptideGroupDocNode.PeptideGroup, peptideGroupDocNode.Annotations, peptideGroupDocNode.Name, peptideGroupDocNode.Description, peptides.ToArray(), false);
                     document = (SrmDocument)document.ReplaceChild(newPeptideGroupDocNode);
                 }
