@@ -56,6 +56,9 @@ namespace pwiz.Skyline.Controls
 
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
 
+        private float _defaultFontSize;
+        private int _defaultItemHeight;
+
         /// <summary>
         /// Identity type used to select the last "dummy" node in the tree.
         /// </summary>
@@ -130,7 +133,10 @@ namespace pwiz.Skyline.Controls
 
             _nodeTip = new NodeTip(this);
 
-            ModFonts = new ModFontHolder(this);
+            _defaultFontSize = Font.Size;
+            _defaultItemHeight = ItemHeight;
+
+            TextZoomChanged();
         }
 
         [Browsable(true)]
@@ -762,7 +768,7 @@ namespace pwiz.Skyline.Controls
             if (e.Button == MouseButtons.Left)
             {
                 TreeNode node = SelectedNode;
-                if (node == GetNodeAt(e.X, e.Y))
+                if (node == GetNodeAt(0, e.Y))
                 {
                     if (_sawDoubleClick)
                         _sawDoubleClick = false;
@@ -911,9 +917,11 @@ namespace pwiz.Skyline.Controls
         private void BeginEditNode(TreeNode node, bool commitOnLoseFocus)
         {
             var textBox = new TextBox
-                              {
-                                  Text = node.Text
-                              };
+            {
+                Text = node.Text,
+                Bounds = node is TreeNodeMS ? (node as TreeNodeMS).BoundsMS : node.Bounds,
+                Font = Font
+            };
 
             // Only allow statement completion on the new node. Statement
             // completion for an existing peptide list gets a bit strange. If this is
@@ -1059,6 +1067,13 @@ namespace pwiz.Skyline.Controls
         public Rectangle RectToScreen(Rectangle r)
         {
             return RectangleToScreen(r);
+        }
+
+        public void TextZoomChanged()
+        {
+            Font = new Font(Font.FontFamily, (float)(_defaultFontSize * Settings.Default.TextZoom));
+            ModFonts = new ModFontHolder(this);          
+            ItemHeight = (int)(_defaultItemHeight * Settings.Default.TextZoom);
         }
     }
 

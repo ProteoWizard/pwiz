@@ -162,7 +162,8 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         private bool IsMeasured
         {
-            get { return _textSequences != null && ReferenceEquals(_widthText, Text); }
+            get { return _textSequences != null && ReferenceEquals(_widthText, Text) 
+                && _textZoomFactor == Settings.Default.TextZoom; }
         }
 
         private TextSequence[] GetTextSequences(IDeviceContext g)
@@ -171,6 +172,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             {
                 _textSequences = CreateTextSequences(DocNode, DocSettings, Text, g, SequenceTree.ModFonts);
                 _widthText = Text;
+                _textZoomFactor = Settings.Default.TextZoom;
             }
             return _textSequences;
         }

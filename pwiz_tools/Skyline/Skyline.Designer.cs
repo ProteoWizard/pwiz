@@ -153,6 +153,11 @@ namespace pwiz.Skyline
             this.toolStripSeparator36 = new System.Windows.Forms.ToolStripSeparator();
             this.toolBarToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator41 = new System.Windows.Forms.ToolStripSeparator();
+            this.textZoomToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.defaultTextToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.largeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.extraLargeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparatorSettings = new System.Windows.Forms.ToolStripSeparator();
             this.saveCurrentMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -911,6 +916,8 @@ namespace pwiz.Skyline
             this.peakAreasMenuItem,
             this.resultsGridMenuItem,
             this.toolStripSeparator36,
+            this.textZoomToolStripMenuItem,
+            this.toolStripSeparator41,
             this.toolBarToolStripMenuItem,
             this.statusToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
@@ -1372,6 +1379,42 @@ namespace pwiz.Skyline
             this.statusToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
             this.statusToolStripMenuItem.Text = "&Status Bar";
             this.statusToolStripMenuItem.Click += new System.EventHandler(this.statusToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator41
+            // 
+            this.toolStripSeparator41.Name = "toolStripSeparator41";
+            this.toolStripSeparator41.Size = new System.Drawing.Size(188, 6);
+            // 
+            // textZoomToolStripMenuItem
+            // 
+            this.textZoomToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.defaultTextToolStripMenuItem,
+            this.largeToolStripMenuItem,
+            this.extraLargeToolStripMenuItem});
+            this.textZoomToolStripMenuItem.Name = "textZoomToolStripMenuItem";
+            this.textZoomToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.textZoomToolStripMenuItem.Text = "Text &Zoom";
+            // 
+            // defaultTextToolStripMenuItem
+            // 
+            this.defaultTextToolStripMenuItem.Name = "defaultTextToolStripMenuItem";
+            this.defaultTextToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.defaultTextToolStripMenuItem.Text = "Default";
+            this.defaultTextToolStripMenuItem.Click += new System.EventHandler(this.defaultToolStripMenuItem_Click);
+            // 
+            // largeToolStripMenuItem
+            // 
+            this.largeToolStripMenuItem.Name = "largeToolStripMenuItem";
+            this.largeToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.largeToolStripMenuItem.Text = "Large";
+            this.largeToolStripMenuItem.Click += new System.EventHandler(this.largeToolStripMenuItem_Click);
+            // 
+            // extraLargeToolStripMenuItem
+            // 
+            this.extraLargeToolStripMenuItem.Name = "extraLargeToolStripMenuItem";
+            this.extraLargeToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.extraLargeToolStripMenuItem.Text = "Extra Large";
+            this.extraLargeToolStripMenuItem.Click += new System.EventHandler(this.extraLargeToolStripMenuItem_Click);
             // 
             // settingsToolStripMenuItem
             // 
@@ -3029,6 +3072,11 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem observedMzValuesContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem spectralLibrariesToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator39;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator41;
+        private System.Windows.Forms.ToolStripMenuItem textZoomToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem defaultTextToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem largeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem extraLargeToolStripMenuItem;
     }
 }
 

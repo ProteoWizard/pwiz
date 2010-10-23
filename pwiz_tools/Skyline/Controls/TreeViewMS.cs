@@ -154,7 +154,7 @@ namespace pwiz.Skyline.Controls
         {
             if (e.Button == MouseButtons.Right)
             {
-                TreeNodeMS node = (TreeNodeMS)GetNodeAt(e.X, e.Y);
+                TreeNodeMS node = (TreeNodeMS)GetNodeAt(0, e.Y);
                 if (node != null && !node.IsInSelection &&
                         node.BoundsMS.Contains(e.Location))
                     SelectedNode = node;
@@ -163,17 +163,22 @@ namespace pwiz.Skyline.Controls
             {
                 // Handle cases where clicking on the selected node should change
                 // the selection.
-                TreeNodeMS node = (TreeNodeMS)GetNodeAt(e.X, e.Y);
-                if (node != null && ReferenceEquals(node, SelectedNode) &&
-                        node.BoundsMS.Contains(e.Location))
+                TreeNodeMS node = (TreeNodeMS)GetNodeAt(0, e.Y);
+                if (node != null && node.BoundsMS.Contains(e.Location))
                 {
-                    // Disjoint selection or the SelectedNode is not in the selection
-                    if (IsDisjointSelect || !IsNodeSelected(node))
-                        SelectedNode = null;
-                    // More than a single node currently selected, and not performing
-                    // range selection on an existing range selection.
-                    else if (SelectedNodes.Count > 1 && (!IsRangeSelect || ReferenceEquals(_anchorNode, SelectedNode)))
-                        SelectedNode = null;
+                    if (!ReferenceEquals(node, SelectedNode))
+                        SelectedNode = node;
+                    else
+                    {
+                        // Disjoint selection or the SelectedNode is not in the selection
+                        if (IsDisjointSelect || !IsNodeSelected(node))
+                            SelectedNode = null;
+                            // More than a single node currently selected, and not performing
+                            // range selection on an existing range selection.
+                        else if (SelectedNodes.Count > 1 &&
+                                 (!IsRangeSelect || ReferenceEquals(_anchorNode, SelectedNode)))
+                            SelectedNode = null;
+                    }
                 }
             }
             base.OnMouseDown(e);
@@ -409,6 +414,7 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+        protected double _textZoomFactor;
         protected string _widthText;
         protected int _widthCustom;
 
@@ -421,7 +427,7 @@ namespace pwiz.Skyline.Controls
         {
             // Measured only once, because the default Bounds width appears to be too
             // large when the tree view is not allowed to draw itself.
-            if (_widthCustom == 0 || !ReferenceEquals(_widthText, Text))
+            if (_widthCustom == 0 || !ReferenceEquals(_widthText, Text) || _textZoomFactor != Settings.Default.TextZoom)
             {
                 _widthCustom = TextRenderer.MeasureText(g, Text, TreeView.Font, Bounds.Size, FORMAT_TEXT).Width;
                 _widthText = Text;
@@ -531,13 +537,13 @@ namespace pwiz.Skyline.Controls
             if (StateImageIndex != -1)
             {
                 Image stateImg = TreeView.StateImageList.Images[StateImageIndex];
-                g.DrawImageUnscaled(stateImg, imgLocX, bounds.Top, imgWidth, imgHeight);
+                g.DrawImageUnscaled(stateImg, imgLocX, bounds.Top + (bounds.Height - imgHeight) / 2, imgWidth, imgHeight);
                 imgLocX += imgWidth;
             }
             if (ImageIndex != -1)
             {
                 Image nodeImg = TreeView.ImageList.Images[ImageIndex];
-                g.DrawImageUnscaled(nodeImg, imgLocX, bounds.Top, imgWidth, imgHeight);
+                g.DrawImageUnscaled(nodeImg, imgLocX, bounds.Top + (bounds.Height - imgHeight) / 2, imgWidth, imgHeight);
             }
 
             DrawTextMS(g);

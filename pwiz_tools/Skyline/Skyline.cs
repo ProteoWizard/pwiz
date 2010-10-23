@@ -139,6 +139,11 @@ namespace pwiz.Skyline
             splitMain.Panel2Collapsed = true;
             splitMain.SplitterDistance = Settings.Default.SplitMainX;
 
+            largeToolStripMenuItem.Checked = Settings.Default.TextZoom == LRG_TEXT_FACTOR;
+            extraLargeToolStripMenuItem.Checked = Settings.Default.TextZoom == XLRG_TEXT_FACTOR;
+            defaultTextToolStripMenuItem.Checked = 
+                !(largeToolStripMenuItem.Checked || extraLargeToolStripMenuItem.Checked);
+
             // Initialize sequence tree control
             sequenceTree.InitializeTree(this);
 
@@ -179,6 +184,7 @@ namespace pwiz.Skyline
                 // CONSIDER: Reload last document?
                 NewDocument();
             }
+
         }
 
         void IDocumentContainer.Listen(EventHandler<DocumentChangedEventArgs> listener)
@@ -2543,6 +2549,45 @@ namespace pwiz.Skyline
             }
 
         }
+
+        private void defaultToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            defaultTextToolStripMenuItem.Checked = true;
+            largeToolStripMenuItem.Checked = extraLargeToolStripMenuItem.Checked = false;
+            ChangeTextSize();
+        }
+
+        private void largeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            largeToolStripMenuItem.Checked = true;
+            defaultTextToolStripMenuItem.Checked = extraLargeToolStripMenuItem.Checked = false;
+            ChangeTextSize();
+        }
+
+        private void extraLargeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            extraLargeToolStripMenuItem.Checked = true;
+            defaultTextToolStripMenuItem.Checked = largeToolStripMenuItem.Checked = false;
+            ChangeTextSize();
+        }
+
+        private void ChangeTextSize()
+        {
+            if (largeToolStripMenuItem.Checked)
+                Settings.Default.TextZoom = LRG_TEXT_FACTOR;
+            else if (extraLargeToolStripMenuItem.Checked)
+                Settings.Default.TextZoom = XLRG_TEXT_FACTOR;
+            else
+            {
+                defaultTextToolStripMenuItem.Checked = true;
+                Settings.Default.TextZoom = DEFAULT_TEXT_FACTOR; 
+            }
+            SequenceTree.TextZoomChanged();
+        }
+
+        private const double DEFAULT_TEXT_FACTOR = 1;
+        private const double LRG_TEXT_FACTOR = 1.5;
+        private const double XLRG_TEXT_FACTOR = 2;
     }
 }
 

@@ -329,5 +329,8 @@
     <Setting Name="LibraryPeptidesAddDuplicatesEnum" Type="System.String" Scope="User">
       <Value Profile="(Default)">AddToAll</Value>
     </Setting>
+    <Setting Name="TextZoom" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">1.0</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
