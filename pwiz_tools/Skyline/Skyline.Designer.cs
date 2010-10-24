@@ -664,7 +664,7 @@ namespace pwiz.Skyline
             this.selectAllMenuItem.Name = "selectAllMenuItem";
             this.selectAllMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.A)));
             this.selectAllMenuItem.Size = new System.Drawing.Size(207, 22);
-            this.selectAllMenuItem.Text = "&Select All";
+            this.selectAllMenuItem.Text = "Select &All";
             this.selectAllMenuItem.Click += new System.EventHandler(this.selectAllMenuItem_Click);
             // 
             // toolStripSeparator4
@@ -722,7 +722,7 @@ namespace pwiz.Skyline
             this.refineAdvancedMenuItem});
             this.refineToolStripMenuItem.Name = "refineToolStripMenuItem";
             this.refineToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
-            this.refineToolStripMenuItem.Text = "&Refine";
+            this.refineToolStripMenuItem.Text = "R&efine";
             // 
             // removeEmptyProteinsMenuItem
             // 
@@ -768,7 +768,7 @@ namespace pwiz.Skyline
             // 
             this.manageUniquePeptidesMenuItem.Name = "manageUniquePeptidesMenuItem";
             this.manageUniquePeptidesMenuItem.Size = new System.Drawing.Size(207, 22);
-            this.manageUniquePeptidesMenuItem.Text = "&Unique Peptides...";
+            this.manageUniquePeptidesMenuItem.Text = "Uni&que Peptides...";
             this.manageUniquePeptidesMenuItem.Click += new System.EventHandler(this.manageUniquePeptidesMenuItem_Click);
             // 
             // toolStripSeparator8
@@ -799,7 +799,7 @@ namespace pwiz.Skyline
             this.expandPrecursorsMenuItem});
             this.expandAllToolStripMenuItem.Name = "expandAllToolStripMenuItem";
             this.expandAllToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
-            this.expandAllToolStripMenuItem.Text = "&Expand All";
+            this.expandAllToolStripMenuItem.Text = "E&xpand All";
             // 
             // expandProteinsMenuItem
             // 

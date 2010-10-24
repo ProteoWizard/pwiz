@@ -435,9 +435,14 @@ namespace pwiz.Skyline.Model.Lib
 
         #region Property change methods
 
+        public LibrarySpec ChangeFilePath(string prop)
+        {
+            return ChangeProp(ImClone(this), im => im.FilePath = prop);
+        }
+
         public LibrarySpec ChangeDocumentLocal(bool prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.IsDocumentLocal = v, prop);
+            return ChangeProp(ImClone(this), im => im.IsDocumentLocal = prop);
         }        
 
         #endregion
