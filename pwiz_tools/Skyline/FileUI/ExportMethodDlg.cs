@@ -47,6 +47,7 @@ namespace pwiz.Skyline.FileUI
         private double _runLength;
         private int? _maxTransitions;
         private bool _ignoreProteins;
+        private bool _fullScans;
         private bool _addEnergyRamp;    // Thermo scheduled only
 
         private static readonly string[] METHOD_TYPES =
@@ -231,6 +232,26 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        private static bool IsFullScanInstrumentType(string type)
+        {
+            return Equals(type, ExportInstrumentType.Thermo_LTQ);
+        }
+
+        public bool IsFullScanInstrument
+        {
+            get { return IsFullScanInstrumentType(InstrumentType);  }
+        }
+
+        private static bool IsPrecursorOnlyInstrumentType(string type)
+        {
+            return Equals(type, ExportInstrumentType.Thermo_LTQ);
+        }
+
+        public bool IsPrecursorOnlyInstrument
+        {
+            get { return IsPrecursorOnlyInstrumentType(InstrumentType); }
+        }
+
         public ExportStrategy ExportStrategy
         {
             get { return _exportStrategy; }
@@ -282,6 +303,15 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        public bool FullScans
+        {
+            get { return _fullScans; }
+            set
+            {
+                _fullScans = cbFullScan.Checked = value;
+            }
+        }
+
         public bool AddEnergyRamp
         {
             get { return _addEnergyRamp; }
@@ -295,6 +325,11 @@ namespace pwiz.Skyline.FileUI
         {
             cbEnergyRamp.Visible = !standard &&
                 InstrumentType == ExportInstrumentType.Thermo;            
+        }
+
+        private void UpdateFullScan()
+        {
+            cbFullScan.Visible = IsFullScanInstrument;
         }
 
         public ExportMethodType MethodType
@@ -427,6 +462,7 @@ namespace pwiz.Skyline.FileUI
             // ReSharper restore ConvertIfStatementToConditionalTernaryExpression
 
             _ignoreProteins = cbIgnoreProteins.Checked;
+            _fullScans = cbFullScan.Checked;
             _addEnergyRamp = cbEnergyRamp.Visible && cbEnergyRamp.Checked;
 
             _optimizeType = comboOptimizing.SelectedItem.ToString();
@@ -690,6 +726,7 @@ namespace pwiz.Skyline.FileUI
         private void ExportThermoLtqMethod(SrmDocument document, string fileName, string templateName)
         {
             var exporter = InitExporter(new ThermoLtqMethodExporter(document));
+            exporter.FullScans = FullScans;
 
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
         }
@@ -787,6 +824,8 @@ namespace pwiz.Skyline.FileUI
 
             UpdateDwellControls(standard);
             UpdateEnergyRamp(standard);
+            UpdateMaxLabel(standard);
+            UpdateFullScan();
 
             MethodTemplateFile templateFile;
             if (Settings.Default.ExportMethodTemplateList.TryGetValue(_instrumentType, out templateFile))
@@ -822,10 +861,25 @@ namespace pwiz.Skyline.FileUI
 
             UpdateDwellControls(standard);
             UpdateEnergyRamp(standard);
+            UpdateMaxLabel(standard);
+        }
+
+        private void UpdateMaxLabel(bool standard)
+        {
             if (standard)
-                labelMaxTransitions.Text = "Ma&x transitions per sample injection:";
+            {
+                if (IsPrecursorOnlyInstrument)
+                    labelMaxTransitions.Text = "Ma&x precursors per sample injection:";
+                else
+                    labelMaxTransitions.Text = "Ma&x transitions per sample injection:";
+            }
             else
-                labelMaxTransitions.Text = "Ma&x concurrent transitions:";
+            {
+                if (IsPrecursorOnlyInstrument)
+                    labelMaxTransitions.Text = "Ma&x concurrent precursors:";
+                else
+                    labelMaxTransitions.Text = "Ma&x concurrent transitions:";
+            }
         }
 
         private void UpdateDwellControls(bool standard)

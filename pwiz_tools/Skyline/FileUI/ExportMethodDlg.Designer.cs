@@ -52,6 +52,7 @@
             this.cbEnergyRamp = new System.Windows.Forms.CheckBox();
             this.comboOptimizing = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
+            this.cbFullScan = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // radioSingle
@@ -281,6 +282,17 @@
             this.label1.TabIndex = 8;
             this.label1.Text = "Optimi&zing:";
             // 
+            // cbFullScan
+            // 
+            this.cbFullScan.AutoSize = true;
+            this.cbFullScan.Location = new System.Drawing.Point(167, 176);
+            this.cbFullScan.Name = "cbFullScan";
+            this.cbFullScan.Size = new System.Drawing.Size(108, 17);
+            this.cbFullScan.TabIndex = 20;
+            this.cbFullScan.Text = "&Full-scan MS/MS";
+            this.cbFullScan.UseVisualStyleBackColor = true;
+            this.cbFullScan.Visible = false;
+            // 
             // ExportMethodDlg
             // 
             this.AcceptButton = this.btnOk;
@@ -288,6 +300,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(287, 409);
+            this.Controls.Add(this.cbFullScan);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.comboOptimizing);
             this.Controls.Add(this.cbEnergyRamp);
@@ -346,5 +359,6 @@
         private System.Windows.Forms.CheckBox cbEnergyRamp;
         private System.Windows.Forms.ComboBox comboOptimizing;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.CheckBox cbFullScan;
     }
 }

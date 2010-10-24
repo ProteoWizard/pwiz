@@ -77,14 +77,17 @@ public:
             "Usage: BuildLTQMethod [options] <template file> [list file]*\n"
             "   Takes template LTQ SRM method file and a Skyline generated Thermo\n"
             "   scheduled transition list as inputs, to generate a new LTQ SRM method\n"
-            "   file as output.\n";
+            "   file as output.\n"
+			"   -f               Collect full scan MS/MS, ignoring product m/z values\n";
 
         cerr << usage;
 
         MethodBuilder::usage();
     }
 
-    virtual void createMethod(string templateMethod, string outputMethod,
+    virtual void parseCommandArgs(int argc, char* argv[]);
+
+	virtual void createMethod(string templateMethod, string outputMethod,
         const vector<vector<string>>& tableTranList);
 
 private:
@@ -92,6 +95,7 @@ private:
     void printMethod();
 
 private:
+	bool _fullScans;
     ILCQMethodPtr _methodPtr;
 };
 
@@ -106,6 +110,7 @@ int main(int argc, char* argv[])
 
 BuildLTQMethod::BuildLTQMethod()
 {
+	_fullScans = false;
     if (FAILED(CoInitialize(NULL)))
         Verbosity::error("Failure during initialization.");
 
@@ -118,6 +123,27 @@ BuildLTQMethod::BuildLTQMethod()
     {
         Verbosity::error("Failure during initialization, LTQ method support may not be installed");
     }
+}
+
+void BuildLTQMethod::parseCommandArgs(int argc, char* argv[])
+{
+	// Check for full scan flag
+    int i = 1;
+    while (i < argc && *argv[i] == '-')
+    {
+        switch (*(argv[i++]+1))
+        {
+        case 'f':
+			_fullScans = true;
+			// Remove this flag and end the loop
+			if (i < argc)
+				memmove(&argv[i-1], &argv[i], sizeof(char*)*(argc-i));
+			i = --argc;
+            break;
+        }
+    }
+
+	MethodBuilder::parseCommandArgs(argc, argv);
 }
 
 void BuildLTQMethod::createMethod(string templateMethod, string outputMethod, const vector<vector<string>>& tableTranList)
@@ -167,6 +193,7 @@ void BuildLTQMethod::replaceTransitionList(const vector<vector<string>>& tableTr
     double activationTime = 30.0;
     double productWindow = 2.0;
 
+	// Initialize some variables from the template, if possible
     if (numScans > 0 && scanType == 1 && analyzerType == 0)
     {
         if (_methodPtr->NumReactions > 0)
@@ -184,6 +211,9 @@ void BuildLTQMethod::replaceTransitionList(const vector<vector<string>>& tableTr
                 productWindow = deltaMass;
         }
     }
+
+	// Always start with zero precursor mass, or the first precursor won't get written
+    precursorMass = 0.0;
 
     // TODO: Handle scheduling with segments
     short scanCount = 0;
@@ -204,7 +234,8 @@ void BuildLTQMethod::replaceTransitionList(const vector<vector<string>>& tableTr
             _methodPtr->NumScanEvents = scanCount;
             _methodPtr->CurrentScanEvent = scanCount - 1;
             _methodPtr->ScanMode = 1;    // 0 = MS, ..., 9 = MS10
-            _methodPtr->ScanType = 1;    // 0 = Full, 1 = SIM/SRM
+			_methodPtr->ScanType = (_fullScans ? 0 : 1);    // 0 = Full, 1 = SIM/SRM
+			_methodPtr->DataType = 0;    // 0 = Centroid, 1 = Profile
             _methodPtr->NumReactions = 1;
 
             precursorMass = precursorMassList;
@@ -212,8 +243,18 @@ void BuildLTQMethod::replaceTransitionList(const vector<vector<string>>& tableTr
             _methodPtr->SetReaction2(0, precursorMass, activationType, isolationWindow,
                 normalizedCE, activationQ, activationTime);
 
+			if (_fullScans)
+			{
+		        _methodPtr->NumMassRanges = 1;
+	            _methodPtr->SetMassRange(0, FirstMass(precursorMass, activationQ), 2000);
+			}
+
             rangeCount = 0;
         }
+
+		// Ignore product ion values, if using full scans.
+		if (_fullScans)
+			continue;
 
         value = it->at(product_mz);
         double productMass = atof(value.c_str());

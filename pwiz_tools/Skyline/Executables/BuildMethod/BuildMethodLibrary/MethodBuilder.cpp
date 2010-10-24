@@ -236,7 +236,9 @@ void MethodBuilder::build()
     vector<MethodTransitions>::iterator it = _vMethodTrans.begin();
     for (; it != _vMethodTrans.end(); it++)
     {
-        cerr << "MESSAGE: Exporting method " << it->finalMethod.substr(it->finalMethod.find_last_of("\\")) << endl;
+		size_t slash = it->finalMethod.find_last_of("\\/");
+		string methodName = (slash == string::npos ? it->finalMethod : it->finalMethod.substr(slash));
+        cerr << "MESSAGE: Exporting method " << methodName << endl;
 
         // Copy the template into place, because ILCQMethod::SaveAs() strips
         // auto-sampler and LC pump settings.

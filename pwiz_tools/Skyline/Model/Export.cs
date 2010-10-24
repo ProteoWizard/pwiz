@@ -1047,12 +1047,17 @@ namespace pwiz.Skyline.Model
             RunLength = 0;
         }
 
+        public bool FullScans { get; set; }
+
         public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
             // First export transition lists to map in memory
             Export(null);
 
-            MethodExporter.ExportMethod(EXE_BUILD_LTQ_METHOD, new List<string>(),
+            var argv = new List<string>();
+            if (FullScans)
+                argv.Add("-f");
+            MethodExporter.ExportMethod(EXE_BUILD_LTQ_METHOD, argv,
                 fileName, templateName, MemoryOutput, progressMonitor);
         }
     }

@@ -204,16 +204,18 @@ namespace BuildWatersMethod
                     string inputFile = Path.GetFullPath(args[i]);
                     string filter = null;
                     if (inputFile.Contains('*'))
-                        filter = inputFile;
+                        filter = Path.GetFileName(inputFile);
                     else if (Directory.Exists(inputFile))
-                        filter = Path.Combine(inputFile, "*.csv");
+                        filter = "*.csv";
 
                     if (string.IsNullOrEmpty(filter))
                         readFile(inputFile, outputMethod, multiFile);
                     else
                     {
                         string dirName = Path.GetDirectoryName(filter);
-                        foreach (var fileName in Directory.GetFiles(dirName, Path.GetFileName(filter)))
+                        if (dirName == null)
+                            dirName = ".";
+                        foreach (var fileName in Directory.GetFiles(dirName, filter))
                         {
                             readFile(Path.Combine(dirName, fileName), null, multiFile);
                         }
@@ -239,7 +241,8 @@ namespace BuildWatersMethod
             if (!multiFile && string.IsNullOrEmpty(outputMethod))
             {
                 string methodFileName = Path.GetFileNameWithoutExtension(inputFile) + WATERS_METHOD_EXT;
-                outputMethod = Path.Combine(Path.GetDirectoryName(inputFile), methodFileName);
+                string dirName = Path.GetDirectoryName(inputFile);
+                outputMethod = (dirName != null ? Path.Combine(dirName, methodFileName) : inputFile);
             }
 
             using (var infile = new StreamReader(inputFile))
