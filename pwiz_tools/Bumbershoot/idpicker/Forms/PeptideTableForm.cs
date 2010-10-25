@@ -101,6 +101,8 @@ namespace IDPicker.Forms
             var retrievedList = new List<string>(Util.StringCollectionToStringArray(Properties.Settings.Default.PeptideTableFormSettings));
             _columnSettings = new Dictionary<OLVColumn, object[]>();
 
+            // count should be 6 x columns + 2
+            // each column has 5 editable settings and a name, and the table has two global settings
             if (retrievedList.Count == 56)
             {
                 SetPropertyFromUserSettings(ref _columnSettings, sequenceColumn, ref  retrievedList);
@@ -122,15 +124,16 @@ namespace IDPicker.Forms
             }
             else
             {
-                _columnSettings.Add(sequenceColumn, new object[4] { "Key", -99, treeListView.BackColor, false });
-                _columnSettings.Add(distinctMatchesColumn, new object[4] { "Integer", -99, treeListView.BackColor, false });
-                _columnSettings.Add(filteredSpectraColumn, new object[4] { "Integer", -99, treeListView.BackColor, false });
-                _columnSettings.Add(monoisotopicMassColumn, new object[4] { "Float", -1, treeListView.BackColor, false });
-                _columnSettings.Add(molecularWeightColumn, new object[4] { "Float", -1, treeListView.BackColor, false });
-                _columnSettings.Add(offsetColumn, new object[4] { "Integer", -99, treeListView.BackColor, false });
-                _columnSettings.Add(terminalSpecificityColumn, new object[4] { "String", -99, treeListView.BackColor, false });
-                _columnSettings.Add(missedCleavagesColumn, new object[4] { "Integer", -99, treeListView.BackColor, false });
-                _columnSettings.Add(proteinsColumn, new object[4] { "String", -99, treeListView.BackColor, false });
+                _columnSettings.Add(sequenceColumn, new object[5] { "Key", -99, treeListView.BackColor, false, false });
+                _columnSettings.Add(distinctMatchesColumn, new object[5] { "Integer", -99, treeListView.BackColor, false, false });
+                _columnSettings.Add(filteredSpectraColumn, new object[5] { "Integer", -99, treeListView.BackColor, false, false });
+                _columnSettings.Add(monoisotopicMassColumn, new object[5] { "Float", -1, treeListView.BackColor, false, false });
+                _columnSettings.Add(molecularWeightColumn, new object[5] { "Float", -1, treeListView.BackColor, false, false });
+                _columnSettings.Add(offsetColumn, new object[5] { "Integer", -99, treeListView.BackColor, false, false });
+                _columnSettings.Add(terminalSpecificityColumn, new object[5] { "String", -99, treeListView.BackColor, false, false });
+                _columnSettings.Add(missedCleavagesColumn, new object[5] { "Integer", -99, treeListView.BackColor, false, false });
+                _columnSettings.Add(proteinsColumn, new object[5] { "String", -99, treeListView.BackColor, false, false });
+                SaveSettings();
             }
 
             SetColumnAspectGetters();
@@ -682,7 +685,7 @@ namespace IDPicker.Forms
                     storedList.Add(kvp.Value[1].ToString());
                     storedList.Add(((Color)kvp.Value[2]).ToArgb().ToString());
                     storedList.Add(kvp.Value[3].ToString());
-                    storedList.Add("false");
+                    storedList.Add(kvp.Value[4].ToString());
                 }
 
                 storedList.Add(treeListView.BackColor.ToArgb().ToString());
@@ -706,7 +709,7 @@ namespace IDPicker.Forms
                         settingRow.DecimalPlaces = (int)kvp.Value[1];
                         settingRow.ColorCode = ((Color)kvp.Value[2]).ToArgb();
                         settingRow.Visible = (bool)kvp.Value[3];
-                        settingRow.Locked = false;
+                        settingRow.Locked = (bool)kvp.Value[4];
                         session.Save(settingRow);
                     }
 

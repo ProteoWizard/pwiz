@@ -113,6 +113,8 @@ namespace IDPicker.Forms
             var retrievedList = new List<string>(Util.StringCollectionToStringArray(Properties.Settings.Default.ProteinTableFormSettings));
             _columnSettings = new Dictionary<OLVColumn, object[]>();
 
+            // count should be 5 x columns + 2
+            // each column has 4 editable settings and a name, and the table has two global settings
             if (retrievedList.Count == 42)
             {
                 SetPropertyFromUserSettings(ref _columnSettings, accessionColumn, ref  retrievedList);
@@ -141,6 +143,7 @@ namespace IDPicker.Forms
                 _columnSettings.Add(distinctMatchesColumn, new object[4] { "Integer", -99, treeListView.BackColor, false });
                 _columnSettings.Add(filteredSpectraColumn, new object[4] { "Integer", -99, treeListView.BackColor, false });
                 _columnSettings.Add(descriptionColumn, new object[4] { "String", -99, treeListView.BackColor, false });
+                SaveSettings();
             }
 
             SetColumnAspectGetters();
