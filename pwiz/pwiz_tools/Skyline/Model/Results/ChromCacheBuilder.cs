@@ -250,10 +250,18 @@ namespace pwiz.Skyline.Model.Results
             listChromData.Sort((p1, p2) =>
                 Comparer.Default.Compare(p1.DataSets[0].PrecursorMz, p2.DataSets[0].PrecursorMz));
 
-            foreach (var pepChromData in listChromData)
+            // Avoid holding onto chromatogram data sets for entire read
+            dictPeptideChromData.Clear();
+
+            for (int i = 0; i < listChromData.Count; i++)
             {
+                var pepChromData = listChromData[i];
                 pepChromData.Load(provider);
                 PostChromDataSet(pepChromData, false);
+
+                // Release the reference to the chromatogram data set so that
+                // it can be garbage collected after it has been written
+                listChromData[i] = null;
             }
             PostChromDataSet(null, true);
         }
