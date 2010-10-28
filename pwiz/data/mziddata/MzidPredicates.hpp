@@ -13,6 +13,7 @@
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
+
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,6 +28,7 @@
 #include "MzIdentML.hpp"
 #include <string>
 #include <boost/shared_ptr.hpp>
+#include <boost/algorithm/string/predicate.hpp>
 
 namespace pwiz {
 namespace mziddata {
@@ -96,7 +98,8 @@ struct dbsequence_p
 
     bool operator()(const DBSequencePtr& p) const
     {
-        return (p->seq == seq && p->accession == accession);
+        return boost::iequals(p->seq, seq) &&
+            boost::iequals(p->accession, accession);
     }
 };
 
