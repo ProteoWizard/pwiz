@@ -86,7 +86,7 @@ namespace pwiz.SkylineTestTutorial
                 importResultsDlg.NamedPathSets = path;
                 importResultsDlg.OkDialog();
             });
-            WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+            WaitForCondition(120 * 1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 7, 27, 30, 120);
 
             // Creating Optimization Methods, p. 5
