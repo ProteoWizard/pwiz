@@ -24,6 +24,7 @@
 
 #include "MascotReader.hpp"
 #include <iostream>
+#include <stdexcept>
 
 namespace pwiz {
 namespace mziddata {
