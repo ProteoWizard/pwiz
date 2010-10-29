@@ -29,6 +29,8 @@
 namespace pwiz {
 namespace mziddata {
 
+using namespace std;
+
 MascotReader::MascotReader()
 {
 }
