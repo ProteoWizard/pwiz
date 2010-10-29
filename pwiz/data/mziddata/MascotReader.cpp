@@ -375,15 +375,17 @@ public:
         // TODO add taxonomy search mod
         if (p.getTAXONOMY().size()>0)
         {
-            cout << "taxonomy: " << p.getTAXONOMY() << endl;
             string scientific, common;
             parseTaxonomy(p.getTAXONOMY(), scientific, common);
 
-            cout << "parser: " << scientific << ", " << common << endl;
             FilterPtr taxFilter(new Filter());
             taxFilter->filterType.set(MS_DB_filter_taxonomy);
-            taxFilter->include.set(MS_taxonomy__scientific_name, scientific);
-            taxFilter->include.set(MS_taxonomy__common_name, common);
+            if (!scientific.empty())
+                taxFilter->include.set(MS_taxonomy__scientific_name,
+                                       scientific);
+            if (!common.empty())
+                taxFilter->include.set(MS_taxonomy__common_name,
+                                       common);
 
             sip->databaseFilters.push_back(taxFilter);
         }
@@ -485,7 +487,8 @@ public:
      */
     void searchParameters(ms_mascotresfile & file, MzIdentML& mzid)
     {
-        ms_searchparams& p = file.params();
+        // TODO What was this here for?
+        //ms_searchparams& p = file.params();
 
         addUser(file.params(), mzid);
         addMassTable(file.params(), mzid);
@@ -646,8 +649,9 @@ public:
                 {
                     // Add the peptide to both the sequence collection and the
                     // searchIdentificationItem's Peptide_ref
-                    peptide = PeptidePtr(new Peptide(indices.makeIndex("PEPTIDE_",
-                                                                       indices.peptide)));
+                    peptide = PeptidePtr(
+                        new Peptide(indices.makeIndex("PEPTIDE_",
+                                                      indices.peptide)));
                     peptide->peptideSequence = pep->getPeptideStr();
                     getModifications(peptide, searchparam, pep);
                     mzid.sequenceCollection.peptides.push_back(peptide);
@@ -675,10 +679,12 @@ public:
                     dbseq->paramGroup.set(
                         MS_protein_description,
                         r.getProteinDescription(dbseq->accession.c_str()));
+                    mzid.sequenceCollection.dbSequences.push_back(dbseq);
                 }
                 else
+                {
                     dbseq = *dbseqFound;
-                mzid.sequenceCollection.dbSequences.push_back(dbseq);
+                }
 
                 // Create a PeptideEvidence object.
                 PeptideEvidencePtr pe(new PeptideEvidence(
