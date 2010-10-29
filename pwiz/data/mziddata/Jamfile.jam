@@ -36,37 +36,79 @@ project
 # gcc 4.1.2 regression bug: 
 # -O2 without -fno-strict-aliasing causes miscompilation in MSRunPeaksEncoder.cpp 
 
+# Add MascotReader if we're in a supported OS & platform
+import os ;
+import modules ;
+import path ;
+
+local ProgramFiles = [ os.environ ProgramFiles ] ;
+ProgramFiles ?= "C:\\Program Files" ;
+
+# Assign the most likely msparser library path
+local msparser_lib_path = [ MATCH --msparser-path=(.*) : [ modules.peek : ARGV ] ] ;
+
+if ! $(msparser_path)
+{
+    if "NT" in [ modules.peek : OS ]
+    {
+        msparser_path = $(ProgramFiles)/msparser ;
+    }
+    else if "LINUX" in [ modules.peek : OS ]
+    {
+        msparser_path = "/usr/local/msparser" ;
+    }
+}
+
+local mascot_sources ;
+local mascot_libs ;
+
+# Check for libmsparser existence.
+if "NT" in [ modules.peek : OS ] && [ path.exists $(msparser_path)/lib/libmsparser.lib ]
+{
+   lib mascot : : <name>msparser <search>$(msparser_path)/lib : : <include>$(msparser_path)/include ;
+
+   mascot_sources += MascotReader.cpp ;
+   mascot_libs +=  <library>mascot ;
+}
+else if "LINUX" in [ modules.peek : OS ] && [ path.exists $(msparser_path)/lib/libmsparser.a ]
+{
+   lib mascot : : <name>msparser <search>$(msparser_path)/lib : : <include>$(msparser_path)/include ;
+
+   mascot_sources += MascotReader.cpp ;
+   mascot_libs += <library>mascot ;
+}
+else
+{
+   echo "Warning: No mascot support found for the mzIdentML library. " ;
+   mascot_sources += MascotReader_dummy.cpp ;
+}
+
 lib pwiz_data_mzid_version : Version.cpp : <link>static <conditional>@static-with-fpic ;
 
 
-mzid_sources = Diff.cpp MzIdentML.cpp MzIdentMLFile.cpp Reader.cpp DefaultReaderList.cpp IO.cpp Serializer_mzid.cpp Pep2MzIdent.cpp DelimWriter.cpp DelimReader.cpp References.cpp KwCVMap.cpp ;
-
-mzid_aux_libs = ;
-
-# Add MascotReader if we're in a supported OS & platform
-local .os = [ modules.peek : OS ] ;
-local .platform = [ modules.peek : OSPLAT ] ;
-
-local acceptable_os = "NT" "LINUX" ;
-local acceptable_platform = "X86" "X86_64" ;
-
-if $(.os) in $(acceptable_os) && $(.platform) in $(acceptable_platform)
-{
-#    mzid_sources += MascotReader.cpp ;
-#    mzid_aux_libs += <library>../../..//mascot ;
-}
-
 lib pwiz_data_mzid 
-    :   # sources
-        $(mzid_sources)
+    : # sources
+      Diff.cpp
+      MzIdentML.cpp
+      MzIdentMLFile.cpp
+      Reader.cpp
+      DefaultReaderList.cpp
+      IO.cpp
+      Serializer_mzid.cpp
+      Pep2MzIdent.cpp
+      DelimWriter.cpp
+      DelimReader.cpp
+      References.cpp
+      KwCVMap.cpp
+      $(mascot_sources)
     : # requirements
-        <library>pwiz_data_mzid_version
-        <library>../common//pwiz_data_common
-        <library>../misc//pwiz_data_misc
-        <library>../../utility/chemistry//pwiz_utility_chemistry
-        <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
-        <library>/ext/boost//regex
-        $(mzid_aux_libs)
+      <library>pwiz_data_mzid_version
+      <library>../common//pwiz_data_common
+      <library>../misc//pwiz_data_misc
+      <library>../../utility/chemistry//pwiz_utility_chemistry
+      <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
+      <library>/ext/boost//regex
+      $(mascot_libs)
     : # default-build
     : # usage-requirements
         <library>pwiz_data_mzid_version
