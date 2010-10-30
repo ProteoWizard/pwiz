@@ -198,7 +198,7 @@ namespace pwiz.Skyline.Model.Results
                     {
                         _status = x.Status;
                         _tempFileSubsitute = VendorIssueHelper.CreateTempFileSubstitute(dataFilePathPart,
-                            sampleIndex, x.WorkAround, _loader, ref _status);
+                            sampleIndex, x, _loader, ref _status);
                         // Trigger next call to BuildNextFile from the write thread
                         PostChromDataSet(null, true);
                     }
