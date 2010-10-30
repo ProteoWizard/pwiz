@@ -52,6 +52,7 @@ namespace pwiz.Skyline.FileUI
 
         private static readonly string[] METHOD_TYPES =
             {
+                ExportInstrumentType.ABI_QTRAP,
                 ExportInstrumentType.Thermo_TSQ,
                 ExportInstrumentType.Thermo_LTQ,
                 ExportInstrumentType.Waters_Xevo,
@@ -539,7 +540,11 @@ namespace pwiz.Skyline.FileUI
                 {
                     dlg.Title = string.Format("Export {0} Method", _instrumentType);
 
-                    if (Equals(_instrumentType, ExportInstrumentType.Thermo_TSQ) ||
+                    if (Equals(_instrumentType, ExportInstrumentType.ABI_QTRAP))
+                    {
+                        dlg.DefaultExt = "dam";
+                    }
+                    else if (Equals(_instrumentType, ExportInstrumentType.Thermo_TSQ) ||
                         Equals(_instrumentType, ExportInstrumentType.Thermo_LTQ))
                     {
                         dlg.DefaultExt = "meth";
@@ -570,7 +575,11 @@ namespace pwiz.Skyline.FileUI
                 switch (_instrumentType)
                 {
                     case ExportInstrumentType.ABI:
-                        ExportAbiCsv(documentExport, outputPath);
+                    case ExportInstrumentType.ABI_QTRAP:
+                        if (_fileType == ExportFileType.List)
+                            ExportAbiCsv(documentExport, outputPath);
+                        else
+                            ExportAbiQtrapMethod(documentExport, outputPath, templateName);
                         break;
                     case ExportInstrumentType.Agilent:
                         ExportAgilentCsv(documentExport, outputPath);
@@ -697,6 +706,14 @@ namespace pwiz.Skyline.FileUI
             if (MethodType == ExportMethodType.Standard)
                 exporter.DwellTime = DwellTime;
             exporter.Export(fileName);
+        }
+
+        private void ExportAbiQtrapMethod(SrmDocument document, string fileName, string templateName)
+        {
+            var exporter = InitExporter(new AbiQtrapMethodExporter(document));
+            if (MethodType == ExportMethodType.Standard)
+                exporter.DwellTime = DwellTime;
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
         }
 
         private void ExportAgilentCsv(SrmDocument document, string fileName)

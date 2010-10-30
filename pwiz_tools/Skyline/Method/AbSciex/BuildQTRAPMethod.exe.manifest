@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<assembly xsi:schemaLocation="urn:schemas-microsoft-com:asm.v1 assembly.adaptive.xsd" manifestVersion="1.0" xmlns:asmv1="urn:schemas-microsoft-com:asm.v1" xmlns:asmv2="urn:schemas-microsoft-com:asm.v2" xmlns:asmv3="urn:schemas-microsoft-com:asm.v3" xmlns:dsig="http://www.w3.org/2000/09/xmldsig#" xmlns:co.v1="urn:schemas-microsoft-com:clickonce.v1" xmlns="urn:schemas-microsoft-com:asm.v1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <assemblyIdentity name="BuildQTRAPMethod.exe" version="1.0.0.0" processorArchitecture="x86" type="win32" />
+  <file name="IAcqMethodDir.dll" asmv2:size="24576">
+    <hash xmlns="urn:schemas-microsoft-com:asm.v2">
+      <dsig:Transforms>
+        <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
+      </dsig:Transforms>
+      <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+      <dsig:DigestValue>+uti1Ozi2TUiuHIxZI1u/5jGk74=</dsig:DigestValue>
+    </hash>
+    <typelib tlbid="{07abc510-9207-41df-9370-41c4cf3d97d8}" version="1.0" helpdir="" resourceid="0" flags="HASDISKIMAGE" />
+    <comClass clsid="{bb85e8cf-aa88-46d5-ace8-ea1597cf9f36}" tlbid="{07abc510-9207-41df-9370-41c4cf3d97d8}" progid="CreateNewAcqMethod.IAcqMethodDir" />
+  </file>
+</assembly>

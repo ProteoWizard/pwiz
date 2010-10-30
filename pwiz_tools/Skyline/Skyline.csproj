@@ -37,8 +37,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>2225</ApplicationRevision>
-    <ApplicationVersion>0.6.9.2225</ApplicationVersion>
+    <ApplicationRevision>2299</ApplicationRevision>
+    <ApplicationVersion>0.7.1.2299</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -885,6 +885,27 @@
     <Content Include="MassLynxRaw.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Method\AbSciex\BuildQTRAPMethod.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\IAcqMethodDir.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\Interop.AcqMethodSvrLib.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\Interop.CreateMRMTransitions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\Interop.CreateNewAcqMethod.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\Interop.MSMethodSvrLib.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\Interop.ParameterSvrLib.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Method\Thermo\BuildLTQMethod.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -1187,6 +1208,9 @@
     <EmbeddedResource Include="Resources\Ions_Z.bmp" />
     <EmbeddedResource Include="Resources\Print.bmp" />
     <EmbeddedResource Include="Resources\ProteoWizard.bmp" />
+    <Content Include="Method\AbSciex\BuildQTRAPMethod.exe.manifest">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Resources\add-pro32.bmp" />
     <Content Include="mzWiff.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

@@ -41,7 +41,8 @@ namespace pwiz.Skyline.Model
     public enum ExportFileType { List, Method }
     public static class ExportInstrumentType
     {
-        public const string ABI = "ABI";
+        public const string ABI = "AB SCIEX";
+        public const string ABI_QTRAP = "AB SCIEX QTRAP";
         public const string Agilent = "Agilent";
         public const string Thermo = "Thermo";
         public const string Thermo_TSQ = "Thermo TSQ";
@@ -1075,6 +1076,7 @@ namespace pwiz.Skyline.Model
         }
 
         public double DwellTime { get; set; }
+        protected double? RTWindow { get; private set; }
 
         private bool HasResults { get { return Document.Settings.HasResults; } }
 
@@ -1103,7 +1105,10 @@ namespace pwiz.Skyline.Model
                 double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
                     HasResults, out windowRT);
                 if (predictedRT.HasValue)
+                {
+                    RTWindow = windowRT; // Store for later use
                     writer.Write(RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT).Value.ToString(CultureInfo));
+                }
             }
             writer.Write(FieldSeparator);
 
@@ -1121,6 +1126,41 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));
             writer.WriteLine();
+        }
+    }
+
+    public class AbiQtrapMethodExporter : AbiMassListExporter
+    {
+        public const string EXE_BUILD_QTRAP_METHOD = @"Method\AbSciex\BuildQTRAPMethod";
+
+        public AbiQtrapMethodExporter(SrmDocument document)
+            : base(document)
+        {
+        }
+
+        public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
+        {
+            EnsureLibraries();
+
+            // First export transition lists to map in memory
+            Export(null);
+
+            var argv = new List<string>();
+            if (RTWindow.HasValue)
+            {
+                argv.Add("-w");
+                argv.Add(RTWindow.ToString());
+            }
+            MethodExporter.ExportMethod(EXE_BUILD_QTRAP_METHOD,
+                argv, fileName, templateName, MemoryOutput, progressMonitor);
+        }
+
+        private static void EnsureLibraries()
+        {
+            string analystPath = AdvApi.GetPathFromProgId("Analyst.MassSpecMethod.1");
+            string analystDir = (analystPath != null ? Path.GetDirectoryName(analystPath) : null);
+            if (analystDir == null)
+                throw new IOException("Failed to find a valid Analyst 1.5.1 installation.");
         }
     }
 
