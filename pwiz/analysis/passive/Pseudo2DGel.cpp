@@ -259,7 +259,7 @@ class Pseudo2DGel::Impl
     void drawTMZ(Image& image, const ScanList& scans, 
                  const Image::Point& begin, const Image::Point& end);
 
-    friend class prob_comp;
+    friend struct prob_comp;
 };
 
 struct prob_comp
