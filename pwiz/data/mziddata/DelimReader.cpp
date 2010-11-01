@@ -56,8 +56,6 @@ struct DBSequenceMatch
 
 struct ExtType
 {
-    ExtType() {}
-    
     const char* extension;
     const char* type;
     const char  field_sep;
