@@ -30,7 +30,7 @@
 namespace pwiz {
 namespace mziddata {
 
-class MascotReader : public Reader
+class PWIZ_API_DECL  MascotReader : public Reader
 {
 public:
     MascotReader();

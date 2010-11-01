@@ -67,7 +67,7 @@ PWIZ_API_DECL const char *MascotReader::getType() const
     return "mzIdentML";
 }
 
-PWIZ_API_DECL class MascotReader::Impl
+class MascotReader::Impl
 {
     Impl() {}
     ~Impl() {}
