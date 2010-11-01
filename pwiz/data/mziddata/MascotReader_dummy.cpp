@@ -31,43 +31,43 @@ namespace mziddata {
 
 using namespace std;
 
-MascotReader::MascotReader()
+PWIZ_API_DECL MascotReader::MascotReader()
 {
 }
 
-std::string MascotReader::identify(const std::string& filename,
+PWIZ_API_DECL std::string MascotReader::identify(const std::string& filename,
                                    const std::string& head) const
 {
     return "";
 }
 
-void MascotReader::read(const std::string& filename,
+PWIZ_API_DECL void MascotReader::read(const std::string& filename,
                         const std::string& head,
                         MzIdentML& result) const
 {
     throw runtime_error("[MascotReader::identify] no mascot support enabled.");
 }
 
-void MascotReader::read(const std::string& filename,
+PWIZ_API_DECL void MascotReader::read(const std::string& filename,
                         const std::string& head,
                         MzIdentMLPtr& result) const
 {
     throw runtime_error("[MascotReader::read] no mascot support enabled.");
 }
 
-void MascotReader::read(const std::string& filename,
+PWIZ_API_DECL void MascotReader::read(const std::string& filename,
                         const std::string& head,
                         std::vector<MzIdentMLPtr>& results) const
 {
     throw runtime_error("[MascotReader::read] no mascot support enabled.");
 }
 
-const char *MascotReader::getType() const
+PWIZ_API_DECL const char *MascotReader::getType() const
 {
     return "mzIdentML";
 }
 
-class MascotReader::Impl
+PWIZ_API_DECL class MascotReader::Impl
 {
     Impl() {}
     ~Impl() {}
