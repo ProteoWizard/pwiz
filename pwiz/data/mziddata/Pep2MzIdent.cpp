@@ -100,8 +100,9 @@ struct pending_insert
 };
 
 
-struct Pep2MzIdent::Impl
+class Pep2MzIdent::Impl
 {
+public:
     Impl(const MSMSPipelineAnalysis& mspa, MzIdentMLPtr mzid)
         :_mspa(&mspa), mzid(mzid), debug(false),
          precursorMonoisotopic(false), fragmentMonoisotopic(false),
