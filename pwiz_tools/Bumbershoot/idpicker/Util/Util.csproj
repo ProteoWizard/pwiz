@@ -70,6 +70,7 @@
       <AutoGen>True</AutoGen>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="String.cs" />
     <Compile Include="TableExporter.cs" />
     <Compile Include="UserDialog.cs">
