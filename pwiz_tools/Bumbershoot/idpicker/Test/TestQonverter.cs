@@ -24,6 +24,7 @@ using System;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
+using IDPicker;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using IDPicker.DataModel;
 using NHibernate;
@@ -164,9 +165,9 @@ namespace Test
 
             List<SpectrumTuple> testPsmSummaryWithoutScores = new List<SpectrumTuple>()
             {
-                new SpectrumTuple("/", 1, 1, 3, null, 0.01, "TIDERPEPTIDEK@1/1 PEPTIDER@3/8"),
-                new SpectrumTuple("/", 1, 2, 3, null, 0.02, "PEPTIDEKPEP@2/1 PEPTIDEK@2/8"),
-                new SpectrumTuple("/", 1, 3, 3, null, 0.03, "THEQUICKBR@3/1 THELZYDG@1/8"),
+                new SpectrumTuple("/", 1, 1, analysisCount+1, null, 0.01, "TIDERPEPTIDEK@1/1 PEPTIDER@3/8"),
+                new SpectrumTuple("/", 1, 2, analysisCount+1, null, 0.02, "KEDITPEPR@2/1 PEPTIDEK@2/8"),
+                new SpectrumTuple("/", 1, 3, analysisCount+1, null, 0.03, "THEQUICKBR@3/1 THELZYDG@1/8"),
             };
 
             TestModel.CreateTestData(session, testPsmSummaryWithoutScores);
@@ -182,11 +183,22 @@ namespace Test
             session.Close(); // close the connection
             #endregion
 
-            var qonverter = new IDPicker.StaticWeightQonverter()
+            var qonverter = new IDPicker.Qonverter()
             {
-                DecoyPrefix = decoyPrefix,
-                ScoreWeights = new Dictionary<string, double>() { { "score1", 1 }, { "score2", 0 } }
+                SettingsByAnalysis = new Dictionary<int, Qonverter.Settings>()
             };
+
+            for (int i = 1; i <= analysisCount + 1; ++i)
+                qonverter.SettingsByAnalysis[i] = new Qonverter.Settings()
+                {
+                    QonverterMethod = Qonverter.QonverterMethod.StaticWeighted,
+                    DecoyPrefix = decoyPrefix,
+                    ScoreInfoByName = new Dictionary<string, Qonverter.Settings.ScoreInfo>()
+                    {
+                        { "score1", new Qonverter.Settings.ScoreInfo() { Weight = 1 } },
+                        { "score2", new Qonverter.Settings.ScoreInfo() { Weight = 0 } }
+                    }
+                };
 
             var progressTester = new QonversionProgressTest()
             {
@@ -199,7 +211,7 @@ namespace Test
             // test without progress monitor
             qonverter.Qonvert("testStaticQonversion.idpDB");
 
-            qonverter.QonversionProgress += new IDPicker.StaticWeightQonverter.QonversionProgressEventHandler(progressTester.qonverter_QonversionProgress);
+            qonverter.QonversionProgress += new IDPicker.Qonverter.QonversionProgressEventHandler(progressTester.qonverter_QonversionProgress);
 
             System.IO.File.Delete("testStaticQonversion.idpDB");
             System.IO.File.Copy("testStaticQonversion.idpDB-copy", "testStaticQonversion.idpDB");
@@ -282,12 +294,12 @@ namespace Test
 
         public class QonversionProgressTest
         {
-            public IDPicker.StaticWeightQonverter Qonverter { get; set; }
+            public IDPicker.Qonverter Qonverter { get; set; }
             public int CancelAtCount { get; set; }
             public int ExpectedQonvertedAnalyses { get; set; }
             public int ExpectedTotalAnalyses { get; set; }
 
-            public void qonverter_QonversionProgress (object sender, IDPicker.StaticWeightQonverter.QonversionProgressEventArgs eventArgs)
+            public void qonverter_QonversionProgress (object sender, IDPicker.Qonverter.QonversionProgressEventArgs eventArgs)
             {
                 Assert.AreEqual(Qonverter, sender);
                 Assert.AreEqual(ExpectedQonvertedAnalyses, eventArgs.QonvertedAnalyses);

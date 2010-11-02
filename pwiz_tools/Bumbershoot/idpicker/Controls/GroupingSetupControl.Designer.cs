@@ -20,7 +20,7 @@
 // Contributor(s):
 //
 
-namespace IDPicker.Forms
+namespace IDPicker.Controls
 {
     partial class GroupingSetupControl<T>
     {
@@ -61,7 +61,7 @@ namespace IDPicker.Forms
             this.objectListView.AutoArrange = false;
             this.objectListView.CheckBoxes = true;
             this.objectListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.fieldNameColumn});
+                this.fieldNameColumn});
             this.objectListView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.objectListView.HasCollapsibleGroups = false;
             this.objectListView.IsSimpleDragSource = true;

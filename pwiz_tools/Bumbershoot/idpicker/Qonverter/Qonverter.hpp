@@ -31,30 +31,67 @@
 #include <string>
 #include "../Lib/SQLite/sqlite3.h"
 
+
+#ifndef IDPICKER_NAMESPACE
+#define IDPICKER_NAMESPACE IDPicker
+#endif
+
+#ifndef BEGIN_IDPICKER_NAMESPACE
+#define BEGIN_IDPICKER_NAMESPACE namespace IDPICKER_NAMESPACE {
+#define END_IDPICKER_NAMESPACE } // IDPicker
+#endif
+
+
+BEGIN_IDPICKER_NAMESPACE
+
+
 using std::vector;
 using std::map;
 using std::pair;
 using std::string;
 
 
-namespace IDPicker {
-
-
-#ifdef __cplusplus_cli
-namespace native {
-#endif
-
-
-struct StaticWeightQonverter
+struct Qonverter
 {
-    string decoyPrefix;
-    map<string, double> scoreWeights;
-    double nTerminusIsSpecificWeight;
-    double cTerminusIsSpecificWeight;
-    bool rerankMatches;
+    enum QonverterMethod
+    {
+        QonverterMethod_StaticWeighted,
+        QonverterMethod_OptimizedMonteCarlo,
+        QonverterMethod_OptimizedPercolator
+    };
+
+    struct Settings
+    {
+        enum NormalizationMethod
+        {
+            NormalizationMethod_Off,
+            NormalizationMethod_Quantile,
+            NormalizationMethod_Linear
+        };
+
+        enum Order
+        {
+            Order_Ascending,
+            Order_Descending
+        };
+
+        struct ScoreInfo
+        {
+            double weight;
+            NormalizationMethod normalizationMethod;
+            Order order;
+        };
+
+        QonverterMethod qonverterMethod;
+        string decoyPrefix;
+        bool rerankMatches;
+        map<string, ScoreInfo> scoreInfoByName;
+    };
+
+    map<int, Settings> settingsByAnalysis;
     bool logQonversionDetails;
 
-    StaticWeightQonverter();
+    Qonverter();
 
     struct ProgressMonitor
     {
@@ -73,76 +110,7 @@ struct StaticWeightQonverter
 };
 
 
-#ifdef __cplusplus_cli
-} // namespace native
-#endif
-
-
-} // namespace IDPicker
-
-
-#ifdef __cplusplus_cli
-
-#pragma managed( push, on )
-#pragma warning( push )
-#pragma warning( disable : 4634 4635 )
-#include "../freicore/pwiz_src/pwiz/utility/bindings/CLI/common/SharedCLI.hpp"
-#using <system.dll>
-#pragma warning( pop )
-#undef CATCH_AND_FORWARD
-#define CATCH_AND_FORWARD \
-    catch (std::bad_cast& e) { throw gcnew System::InvalidCastException("[" + __FUNCTION__ + "] " + ToSystemString(e.what())); } \
-    catch (std::bad_alloc& e) { throw gcnew System::OutOfMemoryException("[" + __FUNCTION__ + "] " + ToSystemString(e.what())); } \
-    catch (std::out_of_range& e) { throw gcnew System::IndexOutOfRangeException("[" + __FUNCTION__ + "] " + ToSystemString(e.what())); } \
-    catch (std::invalid_argument& e) { throw gcnew System::ArgumentException(ToSystemString(e.what())); } \
-    catch (std::runtime_error& e) { throw gcnew System::Exception(ToSystemString(e.what())); } \
-    catch (std::exception& e) { throw gcnew System::Exception("[" + __FUNCTION__ + "] Unhandled exception: " + ToSystemString(e.what())); } \
-    catch (_com_error& e) { throw gcnew System::Exception("[" + __FUNCTION__ + "] Unhandled COM error: " + gcnew System::String(e.ErrorMessage())); } \
-    catch (System::Exception^) { throw; } \
-    catch (...) { throw gcnew System::Exception("[" + __FUNCTION__ + "] Unknown exception"); }
-
-using namespace System;
-using namespace System::ComponentModel;
-using namespace System::Collections::Generic;
-
-
-namespace IDPicker {
-
-
-public ref struct StaticWeightQonverter
-{
-    property String^ DecoyPrefix;
-    property IDictionary<String^, double>^ ScoreWeights;
-    property double NTerminusIsSpecificWeight;
-    property double CTerminusIsSpecificWeight;
-    property bool RerankMatches;
-    property bool LogQonversionDetails;
-
-    ref struct QonversionProgressEventArgs : CancelEventArgs
-    {
-        property int QonvertedAnalyses;
-        property int TotalAnalyses;
-    };
-
-    delegate void QonversionProgressEventHandler(Object^ sender, QonversionProgressEventArgs^ e);
-
-    event QonversionProgressEventHandler^ QonversionProgress;
-
-    StaticWeightQonverter();
-
-    void Qonvert(String^ idpDbFilepath);
-    void Qonvert(System::IntPtr idpDb);
-
-    internal: void marshal(int qonvertedAnalyses, int totalAnalyses, bool& cancel);
-};
-
-
-} // namespace IDPicker
-
-
-#pragma managed( pop )
-
-#endif // __cplusplus_cli
+END_IDPICKER_NAMESPACE
 
 
 #endif // _QONVERTER_HPP_

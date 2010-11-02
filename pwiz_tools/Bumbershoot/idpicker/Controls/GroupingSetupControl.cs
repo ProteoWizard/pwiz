@@ -30,10 +30,13 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using BrightIdeasSoftware;
-using PopupControl;
 
-namespace IDPicker.Forms
+namespace IDPicker.Controls
 {
+    /// <summary>
+    /// Allows viewing and manipulation of a TreeListView's tree structure.
+    /// </summary>
+    /// <typeparam name="T">A client-supplied type to facilitate distinguishing Grouping instances.</typeparam>
     public partial class GroupingSetupControl<T> : UserControl
     {
         public GroupingSetupControl (IEnumerable<Grouping<T>> groupings)
@@ -51,7 +54,7 @@ namespace IDPicker.Forms
 
             objectListView.ItemChecked += new ItemCheckedEventHandler(objectListView_ItemChecked);
             rearrangingDropSink.Dropped += new EventHandler<OlvDropEventArgs>(rearrangingDropSink_Dropped);
-            rearrangingDropSink.CanDrop +=new EventHandler<OlvDropEventArgs>(rearrangingDropSink_CanDrop);
+            rearrangingDropSink.CanDrop += new EventHandler<OlvDropEventArgs>(rearrangingDropSink_CanDrop);
 
             fieldNameColumn.AspectGetter += delegate(object x) { return (x as Grouping<T>).Text; };
             objectListView.CheckedAspectName = "Checked";
@@ -81,10 +84,8 @@ namespace IDPicker.Forms
 
         protected override void WndProc (ref Message m)
         {
-            if ((Parent as Popup).ProcessResizing(ref m))
-            {
+            if (Parent is PopupControl.Popup && (Parent as PopupControl.Popup).ProcessResizing(ref m))
                 return;
-            }
             base.WndProc(ref m);
         }
 
@@ -176,13 +177,28 @@ namespace IDPicker.Forms
         }
     }
 
+    /// <summary>
+    /// Represents one row in a GroupingSetupControl.
+    /// </summary>
+    /// <typeparam name="T">A client-supplied type to facilitate distinguishing Grouping instances.</typeparam>
     public class Grouping<T>
     {
         public Grouping () { Checked = false; }
         public Grouping (bool checked_) { Checked = checked_; }
 
+        /// <summary>
+        /// An instance of the client-supplied type (useful for distinguishing this Grouping instance).
+        /// </summary>
         public T Mode { get; set; }
+
+        /// <summary>
+        /// If true, this Grouping row should be part of the tree structure of the respective TreeListView.
+        /// </summary>
         public bool Checked { get; private set; }
+
+        /// <summary>
+        /// A string describing this Grouping.
+        /// </summary>
         public string Text { get; set; }
     }
 

@@ -408,8 +408,8 @@ rule qonverter-dependency ( properties * )
 {
     local variants = [ feature.get-values <variant> : $(properties) ] ;
     local location = <location>$(BUILD_PATH)/obj/$(variants[1]) ;
-    return <assembly>Qonverter//Qonverter
-           <dependency>Qonverter//Qonverter/$(location) ;
+    return <assembly>Qonverter/CLI//InteropQonverter
+           <dependency>Qonverter/CLI//InteropQonverter/$(location) ;
            #<dependency>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli.xml/$(location) ;
 }
 

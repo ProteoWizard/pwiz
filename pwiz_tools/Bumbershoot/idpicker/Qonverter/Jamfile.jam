@@ -20,32 +20,4 @@
 # Contributor(s): Surendra Dasaris
 #
 
-# Usage:
-#
-#   bjam [options]
-#
-#   Builds Qonverter library and utility, a program to calculate
-#   Q values peptide identifications in target-decoy database searches.
-#
-# Targets and Related Options:
-#
-#   build                   Build Qonverter library and utility
-#   =====
-#
-
-
-import modules path svnrev ;
-
-path-constant THIS_PATH : . ;
-
-generate-AssemblyInfo.cpp $(THIS_PATH)\\AssemblyInfo.cpp :
-    [ path.glob $(THIS_PATH) : Qonverter.?pp Jamfile.jam ]
-    : : : "IDPicker" "Calculates Q values for peptide identifications in target-decoy database searches." $(COMPANY_AND_PRODUCT) ;
-RESCAN ;
-
-lib Qonverter
- : Qonverter.cpp ../Lib/SQLite
- : <toolset>msvc:<using-clr>true
-   <toolset>msvc:<link>shared
-   <toolset>msvc:<source>AssemblyInfo.cpp
- ;
+lib Qonverter : Qonverter.cpp ../Lib/SQLite ;

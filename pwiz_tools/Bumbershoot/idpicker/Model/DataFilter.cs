@@ -24,7 +24,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Windows.Forms;
 using IDPicker.DataModel;
 using NHibernate.Linq;
 
@@ -232,6 +231,48 @@ namespace IDPicker.DataModel
             }
         }
 
+        public static DataFilter LoadFilter (NHibernate.ISession session)
+        {
+            try
+            {
+                var filteringCriteria = session.CreateSQLQuery(@"SELECT MaximumQValue,
+                                                                        MinimumDistinctPeptidesPerProtein,
+                                                                        MinimumSpectraPerProtein,
+                                                                        MinimumAdditionalPeptides
+                                                                 FROM FilteringCriteria
+                                                                ").List<object[]>()[0];
+                var dataFilter = new DataFilter();
+                dataFilter.MaximumQValue = Convert.ToDecimal(filteringCriteria[0]);
+                dataFilter.MinimumDistinctPeptidesPerProtein = Convert.ToInt32(filteringCriteria[1]);
+                dataFilter.MinimumSpectraPerProtein = Convert.ToInt32(filteringCriteria[2]);
+                dataFilter.MinimumAdditionalPeptidesPerProtein = Convert.ToInt32(filteringCriteria[3]);
+                return dataFilter;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        static string saveFilterSql = @"DROP TABLE IF EXISTS FilteringCriteria;
+                                        CREATE TABLE IF NOT EXISTS FilteringCriteria
+                                        (
+                                         MaximumQValue NUMERIC,
+                                         MinimumDistinctPeptidesPerProtein INT,
+                                         MinimumSpectraPerProtein INT,
+                                         MinimumAdditionalPeptidesPerProtein INT
+                                        );
+                                        INSERT INTO FilteringCriteria SELECT {0}, {1}, {2}, {3}
+                                       ";
+        private void SaveFilter(NHibernate.ISession session)
+        {
+            session.CreateSQLQuery(String.Format(saveFilterSql,
+                                                 MaximumQValue,
+                                                 MinimumDistinctPeptidesPerProtein,
+                                                 MinimumSpectraPerProtein,
+                                                 MinimumAdditionalPeptidesPerProtein)).ExecuteUpdate();
+        }
+
         public string GetBasicQueryStringSQL ()
         {
             return String.Format("FROM PeptideSpectrumMatch psm " +
@@ -372,17 +413,7 @@ namespace IDPicker.DataModel
             if (AssembleClusters(session)) return;
             if (AssembleProteinCoverage(session)) return;
 
-            #region Create FilteringCriteria table to store the basic filter parameters
-            session.CreateSQLQuery(
-                String.Format(@"DROP TABLE IF EXISTS FilteringCriteria;
-                                CREATE TABLE FilteringCriteria (MaximumQValue NUMERIC, MinimumDistinctPeptidesPerProtein INT, MinimumSpectraPerProtein INT, MinimumAdditionalPeptidesPerProtein INT);
-                                INSERT INTO FilteringCriteria SELECT {0}, {1}, {2}, {3}
-                               ",
-                              MaximumQValue,
-                              MinimumDistinctPeptidesPerProtein,
-                              MinimumSpectraPerProtein,
-                              MinimumAdditionalPeptidesPerProtein)).ExecuteUpdate();
-            #endregion
+            SaveFilter(session);
 
             if (useScopedTransaction)
                 session.Transaction.Commit();
@@ -392,6 +423,7 @@ namespace IDPicker.DataModel
                 SpectrumSourceGroup = session.QueryOver<DataModel.SpectrumSourceGroup>().Where(g => g.Name == "/").SingleOrDefault();
         }
 
+        #region Implementation of basic filters
         /// <summary>
         /// Set ProteinGroups column (the groups change depending on the basic filters applied)
         /// </summary>
@@ -602,6 +634,7 @@ namespace IDPicker.DataModel
 
             return false;
         }
+        #endregion
 
         #region Definitions for common HQL strings
         public static readonly string FromProtein = "Protein pro";
@@ -774,62 +807,6 @@ namespace IDPicker.DataModel
             }
 
             return query.ToString();
-        }
-
-        public IList<ToolStripItem> GetBasicFilterControls (IDPickerForm form)
-        {
-            var result = new List<ToolStripItem>();
-
-            result.Add(new ToolStripLabel() { Text = "Q-value ≤ ", RightToLeft = RightToLeft.No });
-            var qvalueTextBox = new ToolStripTextBox() { Width = 40, RightToLeft = RightToLeft.No, BorderStyle = BorderStyle.FixedSingle, Text = MaximumQValue.ToString() };
-            qvalueTextBox.KeyDown += new KeyEventHandler(doubleTextBox_KeyDown);
-            qvalueTextBox.Leave += new EventHandler(form.qvalueTextBox_Leave);
-            result.Add(qvalueTextBox);
-
-            result.Add(new ToolStripLabel() { Text = "  Distinct Peptides ≥ ", RightToLeft = RightToLeft.No });
-            var peptidesTextBox = new ToolStripTextBox() { Width = 20, RightToLeft = RightToLeft.No, BorderStyle = BorderStyle.FixedSingle, Text = MinimumDistinctPeptidesPerProtein.ToString() };
-            peptidesTextBox.KeyDown += new KeyEventHandler(integerTextBox_KeyDown);
-            peptidesTextBox.Leave += new EventHandler(form.peptidesTextBox_Leave);
-            result.Add(peptidesTextBox);
-
-            result.Add(new ToolStripLabel() { Text = "  Spectra ≥ ", RightToLeft = RightToLeft.No });
-            var spectraTextBox = new ToolStripTextBox() { Width = 20, RightToLeft = RightToLeft.No, BorderStyle = BorderStyle.FixedSingle, Text = MinimumSpectraPerProtein.ToString() };
-            spectraTextBox.KeyDown += new KeyEventHandler(integerTextBox_KeyDown);
-            spectraTextBox.Leave += new EventHandler(form.spectraTextBox_Leave);
-            result.Add(spectraTextBox);
-
-            result.Add(new ToolStripLabel() { Text = "  Additional Peptides ≥ ", RightToLeft = RightToLeft.No });
-            var additionalPeptidesTextBox = new ToolStripTextBox() { Width = 20, RightToLeft = RightToLeft.No, BorderStyle = BorderStyle.FixedSingle, Text = MinimumAdditionalPeptidesPerProtein.ToString() };
-            additionalPeptidesTextBox.KeyDown += new KeyEventHandler(integerTextBox_KeyDown);
-            additionalPeptidesTextBox.Leave += new EventHandler(form.additionalPeptidesTextBox_Leave);
-            result.Add(additionalPeptidesTextBox);
-
-            result[0].Tag = this;
-
-            return result;
-        }
-
-        static void doubleTextBox_KeyDown (object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Decimal || e.KeyCode == Keys.OemPeriod)
-            {
-                if ((sender as ToolStripTextBox).Text.Contains('.'))
-                    e.SuppressKeyPress = true;
-            }
-            else if (!(e.KeyCode >= Keys.D0 && e.KeyCode <= Keys.D9 ||
-                    e.KeyCode >= Keys.NumPad0 && e.KeyCode <= Keys.NumPad9 ||
-                    e.KeyCode == Keys.Delete || e.KeyCode == Keys.Back ||
-                    e.KeyCode == Keys.Left || e.KeyCode == Keys.Right))
-                e.SuppressKeyPress = true;
-        }
-
-        static void integerTextBox_KeyDown (object sender, KeyEventArgs e)
-        {
-            if (!(e.KeyCode >= Keys.D0 && e.KeyCode <= Keys.D9 ||
-                e.KeyCode >= Keys.NumPad0 && e.KeyCode <= Keys.NumPad9 ||
-                e.KeyCode == Keys.Delete || e.KeyCode == Keys.Back ||
-                e.KeyCode == Keys.Left || e.KeyCode == Keys.Right))
-                e.SuppressKeyPress = true;
         }
 
         /// <summary>

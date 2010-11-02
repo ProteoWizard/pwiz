@@ -22,7 +22,7 @@
 // Contributor(s): Surendra Dasari
 //
 -->
-<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2" namespace="IDPicker.DataModel" assembly="IDPicker" auto-import="true">
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2" namespace="IDPicker.DataModel" assembly="IDPicker.DataModel" auto-import="true">
 
 	<class name="SpectrumSourceGroup">
 		<id name="Id"><generator class="native"/></id>

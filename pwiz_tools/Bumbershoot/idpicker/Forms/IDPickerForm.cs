@@ -57,7 +57,7 @@ namespace IDPicker
         ModificationTableForm modificationTableForm;
         AnalysisTableForm analysisTableForm;
 
-        LogForm logForm;
+        //LogForm logForm;
         //SpyEventLogForm spyEventLogForm;
 
         NHibernate.ISession session;
@@ -65,6 +65,7 @@ namespace IDPicker
         Manager manager;
 
         private DataFilter dataFilter = new DataFilter();
+        private IDictionary<Analysis, QonverterSettings> qonverterSettingsByAnalysis;
 
         string[] args;
         public IDPickerForm (string[] args)
@@ -149,6 +150,7 @@ namespace IDPicker
             }
         }
 
+        #region Handling of events for spectrum/protein visualization
         Dictionary<GraphForm, bool> handlerIsAttached = new Dictionary<GraphForm, bool>();
         void spectrumTableForm_SpectrumViewVisualize (object sender, SpectrumViewVisualizeEventArgs e)
         {
@@ -255,9 +257,67 @@ namespace IDPicker
             //foreach(Control control in form.Controls)
             //    spyEventLogForm.AddEventSpy(new EventSpy(e.Protein.Accession.Replace(":", "_") + control.GetType().Name, control));
         }
+        #endregion
 
         #region Handling of events for basic filter toolstrip items
-        public void qvalueTextBox_Leave (object sender, EventArgs e)
+
+        IList<ToolStripItem> GetBasicFilterControls ()
+        {
+            var result = new List<ToolStripItem>();
+
+            result.Add(new ToolStripLabel() { Text = "Q-value ≤ ", RightToLeft = RightToLeft.No });
+            var qvalueTextBox = new ToolStripTextBox() { Width = 40, RightToLeft = RightToLeft.No, BorderStyle = BorderStyle.FixedSingle, Text = dataFilter.MaximumQValue.ToString() };
+            qvalueTextBox.KeyDown += new KeyEventHandler(doubleTextBox_KeyDown);
+            qvalueTextBox.Leave += new EventHandler(qvalueTextBox_Leave);
+            result.Add(qvalueTextBox);
+
+            result.Add(new ToolStripLabel() { Text = "  Distinct Peptides ≥ ", RightToLeft = RightToLeft.No });
+            var peptidesTextBox = new ToolStripTextBox() { Width = 20, RightToLeft = RightToLeft.No, BorderStyle = BorderStyle.FixedSingle, Text = dataFilter.MinimumDistinctPeptidesPerProtein.ToString() };
+            peptidesTextBox.KeyDown += new KeyEventHandler(integerTextBox_KeyDown);
+            peptidesTextBox.Leave += new EventHandler(peptidesTextBox_Leave);
+            result.Add(peptidesTextBox);
+
+            result.Add(new ToolStripLabel() { Text = "  Spectra ≥ ", RightToLeft = RightToLeft.No });
+            var spectraTextBox = new ToolStripTextBox() { Width = 20, RightToLeft = RightToLeft.No, BorderStyle = BorderStyle.FixedSingle, Text = dataFilter.MinimumSpectraPerProtein.ToString() };
+            spectraTextBox.KeyDown += new KeyEventHandler(integerTextBox_KeyDown);
+            spectraTextBox.Leave += new EventHandler(spectraTextBox_Leave);
+            result.Add(spectraTextBox);
+
+            result.Add(new ToolStripLabel() { Text = "  Additional Peptides ≥ ", RightToLeft = RightToLeft.No });
+            var additionalPeptidesTextBox = new ToolStripTextBox() { Width = 20, RightToLeft = RightToLeft.No, BorderStyle = BorderStyle.FixedSingle, Text = dataFilter.MinimumAdditionalPeptidesPerProtein.ToString() };
+            additionalPeptidesTextBox.KeyDown += new KeyEventHandler(integerTextBox_KeyDown);
+            additionalPeptidesTextBox.Leave += new EventHandler(additionalPeptidesTextBox_Leave);
+            result.Add(additionalPeptidesTextBox);
+
+            result[0].Tag = this;
+
+            return result;
+        }
+
+        static void doubleTextBox_KeyDown (object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Decimal || e.KeyCode == Keys.OemPeriod)
+            {
+                if ((sender as ToolStripTextBox).Text.Contains('.'))
+                    e.SuppressKeyPress = true;
+            }
+            else if (!(e.KeyCode >= Keys.D0 && e.KeyCode <= Keys.D9 ||
+                    e.KeyCode >= Keys.NumPad0 && e.KeyCode <= Keys.NumPad9 ||
+                    e.KeyCode == Keys.Delete || e.KeyCode == Keys.Back ||
+                    e.KeyCode == Keys.Left || e.KeyCode == Keys.Right))
+                e.SuppressKeyPress = true;
+        }
+
+        static void integerTextBox_KeyDown (object sender, KeyEventArgs e)
+        {
+            if (!(e.KeyCode >= Keys.D0 && e.KeyCode <= Keys.D9 ||
+                e.KeyCode >= Keys.NumPad0 && e.KeyCode <= Keys.NumPad9 ||
+                e.KeyCode == Keys.Delete || e.KeyCode == Keys.Back ||
+                e.KeyCode == Keys.Left || e.KeyCode == Keys.Right))
+                e.SuppressKeyPress = true;
+        }
+
+        void qvalueTextBox_Leave (object sender, EventArgs e)
         {
             decimal value;
             if (decimal.TryParse((sender as ToolStripTextBox).Text, out value))
@@ -268,7 +328,7 @@ namespace IDPicker
                 }
         }
 
-        public void peptidesTextBox_Leave (object sender, EventArgs e)
+        void peptidesTextBox_Leave (object sender, EventArgs e)
         {
             int value;
             if (int.TryParse((sender as ToolStripTextBox).Text, out value))
@@ -279,7 +339,7 @@ namespace IDPicker
                 }
         }
 
-        public void spectraTextBox_Leave (object sender, EventArgs e)
+        void spectraTextBox_Leave (object sender, EventArgs e)
         {
             int value;
             if (int.TryParse((sender as ToolStripTextBox).Text, out value))
@@ -290,7 +350,7 @@ namespace IDPicker
                 }
         }
 
-        public void additionalPeptidesTextBox_Leave (object sender, EventArgs e)
+        void additionalPeptidesTextBox_Leave (object sender, EventArgs e)
         {
             int value;
             if (int.TryParse((sender as ToolStripTextBox).Text, out value))
@@ -701,7 +761,7 @@ namespace IDPicker
                 e.Cancel = !Visible || IsDisposed;
             }
 
-            public void UpdateProgress (object sender, StaticWeightQonverter.QonversionProgressEventArgs e)
+            public void UpdateProgress (object sender, Qonverter.QonversionProgressEventArgs e)
             {
                 if (InvokeRequired)
                 {
@@ -773,16 +833,15 @@ namespace IDPicker
                 if (xml_filepaths.Count() > 0)
                 {
                     using (SimpleProgressForm pf = new SimpleProgressForm(this))
-                    using (Parser parser = new Parser(commonFilename, ".", xml_filepaths.ToArray()))
+                    using (Parser parser = new Parser(".", qonverterSettingsHandler, false, xml_filepaths.ToArray()))
                     {
                         pf.Text = "Initializing parser...";
                         pf.Show();
                         parser.DatabaseNotFound += new EventHandler<Parser.DatabaseNotFoundEventArgs>(databaseNotFoundHandler);
                         parser.SourceNotFound += new EventHandler<Parser.SourceNotFoundEventArgs>(sourceNotFoundOnImportHandler);
                         parser.ParsingProgress += new EventHandler<Parser.ParsingProgressEventArgs>(pf.UpdateProgress);
-                        parser.Start();
 
-                        if (!pf.Visible || pf.IsDisposed)
+                        if (parser.Start() || !pf.Visible || pf.IsDisposed)
                             return;
                     }
                     idpDB_filepaths = idpDB_filepaths.Union(xml_filepaths.Select(o => Path.ChangeExtension(o, ".idpDB")));
@@ -805,14 +864,22 @@ namespace IDPicker
                     }
                 }
 
+                var sessionFactory = DataModel.SessionFactoryFactory.CreateSessionFactory(commonFilename, false, true);
+
                 using (SimpleProgressForm pf = new SimpleProgressForm(this))
                 {
                     pf.Text = "Initializing Qonverter...";
                     pf.Show();
-                    var qonverter = new IDPicker.StaticWeightQonverter();
-                    qonverter.ScoreWeights["mvh"] = 1;
-                    //qonverter.ScoreWeights["mzFidelity"] = 1;
-                    qonverter.QonversionProgress += new StaticWeightQonverter.QonversionProgressEventHandler(pf.UpdateProgress);
+
+                    var qonverter = new Qonverter();
+
+                    // reload qonverter settings because the ids may change after merging
+                    session = sessionFactory.OpenSession();
+                    qonverterSettingsByAnalysis = session.Query<QonverterSettings>().ToDictionary(o => session.Get<Analysis>(o.Id));
+                    session.Close();
+
+                    qonverterSettingsByAnalysis.ForEach(o => qonverter.SettingsByAnalysis[(int) o.Key.Id] = o.Value.ToQonverterSettings());
+                    qonverter.QonversionProgress += new Qonverter.QonversionProgressEventHandler(pf.UpdateProgress);
 
                     try
                     {
@@ -827,39 +894,26 @@ namespace IDPicker
                         return;
                 }
 
-                var sessionFactory = DataModel.SessionFactoryFactory.CreateSessionFactory(commonFilename, false, true);
                 session = sessionFactory.OpenSession();
                 session.CreateSQLQuery("PRAGMA temp_store=MEMORY").ExecuteUpdate();
-
-                bool hasFilterView = false;
-                try
-                {
-                    session.CreateSQLQuery("CREATE TABLE FilteringCriteria ( MaximumQValue NUMERIC, MinimumDistinctPeptidesPerProtein INT, MinimumSpectraPerProtein INT, MinimumAdditionalPeptidesPerProtein INT )").ExecuteUpdate();
-                }
-                catch
-                {
-                    try
-                    {
-                        dataFilter.MaximumQValue = session.CreateSQLQuery("SELECT MaximumQValue FROM FilteringCriteria").List<decimal>()[0];
-                        dataFilter.MinimumDistinctPeptidesPerProtein = session.CreateSQLQuery("SELECT MinimumDistinctPeptidesPerProtein FROM FilteringCriteria").List<int>()[0];
-                        dataFilter.MinimumSpectraPerProtein = session.CreateSQLQuery("SELECT MinimumSpectraPerProtein FROM FilteringCriteria").List<int>()[0];
-                        dataFilter.MinimumAdditionalPeptidesPerProtein = session.CreateSQLQuery("SELECT MinimumAdditionalPeptidesPerProtein FROM FilteringCriteria").List<int>()[0];
-                        hasFilterView = true;
-                    }
-                    catch
-                    { }
-                }
 
                 //make sure to ignore "Abandoned" group
                 dataFilter.SpectrumSourceGroup = session.QueryOver<DataModel.SpectrumSourceGroup>().Where(g => g.Name == "/").SingleOrDefault();
 
                 breadCrumbControl.BreadCrumbs.Clear();
-                breadCrumbControl.BreadCrumbs.Add(dataFilter.GetBasicFilterControls(this));
+                breadCrumbControl.BreadCrumbs.Add(GetBasicFilterControls());
 
-                if (!hasFilterView)
+                var savedFilter = DataFilter.LoadFilter(session);
+
+                if (savedFilter == null)
                     applyBasicFilter();
                 else
                 {
+                    dataFilter.MaximumQValue = savedFilter.MaximumQValue;
+                    dataFilter.MinimumDistinctPeptidesPerProtein = savedFilter.MinimumDistinctPeptidesPerProtein;
+                    dataFilter.MinimumSpectraPerProtein = savedFilter.MinimumSpectraPerProtein;
+                    dataFilter.MinimumAdditionalPeptidesPerProtein = savedFilter.MinimumAdditionalPeptidesPerProtein;
+
                     proteinTableForm.SetData(session, dataFilter);
                     peptideTableForm.SetData(session, dataFilter);
                     spectrumTableForm.SetData(session, dataFilter);
@@ -871,6 +925,20 @@ namespace IDPicker
             {
                 HandleException(this, ex);
             }
+        }
+
+        IDictionary<Analysis, QonverterSettings> qonverterSettingsHandler (IList<Analysis> analyses, out bool cancel)
+        {
+            qonverterSettingsByAnalysis = new Dictionary<Analysis, QonverterSettings>();
+            analyses.ForEach(o => qonverterSettingsByAnalysis.Add(o, null));
+            var result = UserDialog.Show(this, "Qonverter Settings", new QonverterSettingsByAnalysisControl(qonverterSettingsByAnalysis, showQonverterSettingsManager));
+            cancel = result == DialogResult.Cancel;
+            return qonverterSettingsByAnalysis;
+        }
+
+        void showQonverterSettingsManager ()
+        {
+            new QonverterSettingsManagerForm().ShowDialog(this);
         }
 
         public void HandleException (object sender, Exception ex)

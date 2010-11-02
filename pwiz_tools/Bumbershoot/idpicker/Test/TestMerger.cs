@@ -26,6 +26,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using IDPicker;
 using IDPicker.DataModel;
 
 namespace Test
@@ -125,6 +126,50 @@ namespace Test
                  new SpectrumTuple("/B/2", 5, 3, 2, 240, 0, "PETPDETK@3/1 EDIT@1/4 TIDER@2/6"),
              };
 
+             var qonverterSettings1 = new QonverterSettings()
+             {
+                 QonverterMethod = Qonverter.QonverterMethod.StaticWeighted,
+                 DecoyPrefix = "quiRKy",
+                 RerankMatches = true,
+                 ScoreInfoByName = new Dictionary<string, Qonverter.Settings.ScoreInfo>()
+                    {
+                        {"score1", new Qonverter.Settings.ScoreInfo()
+                                    {
+                                        Weight = 1,
+                                        Order = Qonverter.Settings.Order.Ascending,
+                                        NormalizationMethod = Qonverter.Settings.NormalizationMethod.Linear
+                                    }},
+                        {"score2", new Qonverter.Settings.ScoreInfo()
+                                    {
+                                        Weight = 42,
+                                        Order = Qonverter.Settings.Order.Descending,
+                                        NormalizationMethod = Qonverter.Settings.NormalizationMethod.Quantile
+                                    }}
+                    }
+             };
+
+             var qonverterSettings2 = new QonverterSettings()
+             {
+                 QonverterMethod = Qonverter.QonverterMethod.OptimizedMonteCarlo,
+                 DecoyPrefix = "___---",
+                 RerankMatches = false,
+                 ScoreInfoByName = new Dictionary<string, Qonverter.Settings.ScoreInfo>()
+                    {
+                        {"foo", new Qonverter.Settings.ScoreInfo()
+                                {
+                                    Weight = 7,
+                                    Order = Qonverter.Settings.Order.Ascending,
+                                    NormalizationMethod = Qonverter.Settings.NormalizationMethod.Off
+                                }},
+                        {"bar", new Qonverter.Settings.ScoreInfo()
+                                {
+                                    Weight = 11,
+                                    Order = Qonverter.Settings.Order.Descending,
+                                    NormalizationMethod = Qonverter.Settings.NormalizationMethod.Off
+                                }}
+                    }
+             };
+
             #endregion
             
             using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testMergeSource1.idpDB", true, false))
@@ -133,6 +178,10 @@ namespace Test
                 TestModel.CreateTestProteins(session, testProteinSequences);
                 TestModel.CreateTestData(session, mergeSourcePsmSummary1);
                 TestModel.AddSubsetPeakData(session);
+
+                qonverterSettings1.Analysis = session.UniqueResult<Analysis>(o => o.Software.Name == "Engine 1");
+                session.Save(qonverterSettings1);
+                session.Flush();
             }
 
             using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testMergeSource2.idpDB", true, false))
@@ -141,6 +190,18 @@ namespace Test
                 TestModel.CreateTestProteins(session, testProteinSequences);
                 TestModel.CreateTestData(session, mergeSourcePsmSummary2);
                 TestModel.AddSubsetPeakData(session);
+
+                // copy is required because session.Save() takes ownership of the instance
+                var qonverterSettings2Copy = new QonverterSettings()
+                {
+                    Analysis = session.UniqueResult<Analysis>(o => o.Software.Name == "Engine 2"),
+                    QonverterMethod = qonverterSettings2.QonverterMethod,
+                    DecoyPrefix = qonverterSettings2.DecoyPrefix,
+                    RerankMatches = qonverterSettings2.RerankMatches,
+                    ScoreInfoByName = qonverterSettings2.ScoreInfoByName
+                };
+                session.Save(qonverterSettings2Copy);
+                session.Flush();
             }
 
             // create a new merged idpDB from two idpDB files
@@ -164,6 +225,7 @@ namespace Test
                 testModel.TestAnalyses();
                 testModel.TestPeptideSpectrumMatches();
                 testModel.TestModifications();
+                testModel.TestQonverterSettings();
             }
 
             // create an in-memory representation of testMergeSource2
@@ -174,6 +236,10 @@ namespace Test
                 TestModel.CreateTestProteins(memorySession, testProteinSequences);
                 TestModel.CreateTestData(memorySession, mergeSourcePsmSummary2);
                 TestModel.AddSubsetPeakData(memorySession);
+
+                qonverterSettings2.Analysis = memorySession.UniqueResult<Analysis>(o => o.Software.Name == "Engine 2");
+                memorySession.Save(qonverterSettings2);
+                memorySession.Flush();
             }
 
             // merge the in-memory connection into the testMergeSource1 file
@@ -195,6 +261,7 @@ namespace Test
                 testModel.TestAnalyses();
                 testModel.TestPeptideSpectrumMatches();
                 testModel.TestModifications();
+                testModel.TestQonverterSettings();
             }
         }
     }

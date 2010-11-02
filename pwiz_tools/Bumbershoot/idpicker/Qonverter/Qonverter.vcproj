@@ -174,6 +174,16 @@
 			AssemblyName="System.Xml, Version=2.0.0.0, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL"
 			MinFrameworkVersion="131072"
 		/>
+		<AssemblyReference
+			RelativePath="System.Drawing.dll"
+			AssemblyName="System.Drawing, Version=2.0.0.0, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL"
+			MinFrameworkVersion="131072"
+		/>
+		<AssemblyReference
+			RelativePath="System.Windows.Forms.dll"
+			AssemblyName="System.Windows.Forms, Version=2.0.0.0, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL"
+			MinFrameworkVersion="131072"
+		/>
 	</References>
 	<Files>
 		<File
@@ -190,6 +200,15 @@
 		</File>
 		<File
 			RelativePath=".\Qonverter.hpp"
+			>
+		</File>
+		<File
+			RelativePath=".\StaticWeightQonverter.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\StaticWeightQonverter.h"
+			FileType="3"
 			>
 		</File>
 	</Files>

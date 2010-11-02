@@ -67,6 +67,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Lib\NHibernate\Iesi.Collections.dll</HintPath>
     </Reference>
+    <Reference Include="InteropQonverter, Version=3.0.178.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>build-nt-x86\obj\$(Configuration)\InteropQonverter.dll</HintPath>
+    </Reference>
     <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Lib\NHibernate\log4net.dll</HintPath>
@@ -91,10 +95,6 @@
     <Reference Include="pwiz_bindings_cli, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>build-nt-x86\obj\$(Configuration)\pwiz_bindings_cli.dll</HintPath>
-    </Reference>
-    <Reference Include="Qonverter, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>build-nt-x86\obj\$(Configuration)\Qonverter.dll</HintPath>
     </Reference>
     <Reference Include="Remotion.Data.Linq, Version=1.13.42.1, Culture=neutral, PublicKeyToken=fee00910d6e5f53b, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -129,9 +129,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Controls\BreadCrumbControl.cs">
-      <SubType>Component</SubType>
-    </Compile>
     <Compile Include="Forms\AnalysisTableForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -143,12 +140,6 @@
     </Compile>
     <Compile Include="Forms\ColumnControlForm.Designer.cs">
       <DependentUpon>ColumnControlForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Forms\GroupingSetupControl.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Forms\GroupingSetupControl.Designer.cs">
-      <DependentUpon>GroupingSetupControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\LogForm.cs">
       <SubType>Form</SubType>
@@ -162,11 +153,15 @@
     <Compile Include="Forms\GroupingControlForm.Designer.cs">
       <DependentUpon>GroupingControlForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\QonverterSettingsManagerForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\QonverterSettingsManagerForm.Designer.cs">
+      <DependentUpon>QonverterSettingsManagerForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\SequenceCoverageForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Model\BulkInserter.cs" />
-    <Compile Include="Model\DataFilter.cs" />
     <Compile Include="Forms\ModificationTableForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -191,11 +186,6 @@
     <Compile Include="Forms\IDPickerForm.Designer.cs">
       <DependentUpon>IDPickerForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Model\DataModel.cs" />
-    <Compile Include="Model\Exporter.cs" />
-    <Compile Include="Model\Merger.cs" />
-    <Compile Include="Model\Parser.cs" />
-    <Compile Include="Model\SessionFactoryFactory.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Forms\ModificationTableForm.resx">
@@ -229,28 +219,18 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <None Include="App.config" />
-    <None Include="Properties\Settings.settings">
-      <Generator>PublicSettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
     <Compile Include="Forms\ProteinTableForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\ProteinTableForm.Designer.cs">
       <DependentUpon>ProteinTableForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Properties\Settings.Designer.cs">
-      <DependentUpon>Settings.settings</DependentUpon>
-      <AutoGen>True</AutoGen>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
-    <Compile Include="Util\ExtensionMethods.cs" />
-    <Compile Include="Util\Path.cs" />
-    <Compile Include="Util\String.cs" />
-    <Compile Include="Util\TableExporter.cs" />
-    <Compile Include="Util\Version.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="Controls\Controls.csproj">
+      <Project>{8EFCC46A-7415-4BB5-AF34-5E71EF4BEEB0}</Project>
+      <Name>Controls</Name>
+    </ProjectReference>
     <ProjectReference Include="freicore\pwiz_src\pwiz_tools\SeeMS\seems.csproj">
       <Project>{2399F68B-D886-4D94-AB4B-700FE3E46849}</Project>
       <Name>seems</Name>
@@ -263,9 +243,17 @@
       <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
       <Name>MSGraph</Name>
     </ProjectReference>
+    <ProjectReference Include="Model\Model.csproj">
+      <Project>{723405E1-1EE4-4978-9470-0B1F28B1A215}</Project>
+      <Name>Model</Name>
+    </ProjectReference>
     <ProjectReference Include="Util\STL_Containers\STL_Containers.csproj">
       <Project>{D6BD694C-FF6E-4962-A05D-59ACD6CBD6A3}</Project>
       <Name>STL_Containers</Name>
+    </ProjectReference>
+    <ProjectReference Include="Util\Util.csproj">
+      <Project>{C6502908-9F08-4A89-897D-5DF9125BBBF4}</Project>
+      <Name>Util</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -278,9 +266,6 @@
       <DependentUpon>ColumnControlForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\GroupingSetupControl.resx">
-      <DependentUpon>GroupingSetupControl.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="Forms\LogForm.resx">
       <DependentUpon>LogForm.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -289,7 +274,9 @@
       <DependentUpon>GroupingControlForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Model\DataModel.hbm.xml" />
+    <EmbeddedResource Include="Forms\QonverterSettingsManagerForm.resx">
+      <DependentUpon>QonverterSettingsManagerForm.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <NativeReference Include="Interop.EDAL.SxS, Version=1.0.0.0, Type=win32">

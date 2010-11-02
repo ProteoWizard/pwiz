@@ -36,6 +36,7 @@ using NHibernate.Linq;
 using BrightIdeasSoftware;
 using PopupControl;
 using IDPicker.DataModel;
+using IDPicker.Controls;
 
 namespace IDPicker.Forms
 {

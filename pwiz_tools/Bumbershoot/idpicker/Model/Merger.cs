@@ -92,7 +92,7 @@ namespace IDPicker.DataModel
             conn.ExecuteNonQuery("CREATE TABLE IF NOT EXISTS merged.MergedFiles (Filepath TEXT PRIMARY KEY)");
 
             string getMaxIdsSql =
-                @"SELECT (SELECT IFNULL(MAX(Id),0) FROM merged.Protein),
+                      @"SELECT (SELECT IFNULL(MAX(Id),0) FROM merged.Protein),
                                (SELECT IFNULL(MAX(Id),0) FROM merged.PeptideInstance),
                                (SELECT IFNULL(MAX(Id),0) FROM merged.Peptide),
                                (SELECT IFNULL(MAX(Id),0) FROM merged.PeptideSpectrumMatch),
@@ -182,6 +182,7 @@ namespace IDPicker.DataModel
                         addNewPeptideModifications(conn);
                         addNewAnalyses(conn);
                         addNewAnalysisParameters(conn);
+                        addNewQonverterSettings(conn);
                         getNewMaxIds(conn);
 
                         conn.ExecuteNonQuery("INSERT INTO merged.MergedFiles VALUES ('" + mergeSourceFilepath + "')");
@@ -245,6 +246,7 @@ namespace IDPicker.DataModel
                 addNewPeptideModifications(conn);
                 addNewAnalyses(conn);
                 addNewAnalysisParameters(conn);
+                addNewQonverterSettings(conn);
                 addIntegerSet(conn);
 
                 transaction.Commit();
@@ -293,7 +295,7 @@ namespace IDPicker.DataModel
 
         static string mergeAnalysesSql =
               @"DROP TABLE IF EXISTS AnalysisMergeMap;
-                CREATE TABLE AnalysisMergeMap (BeforeMergeId INTEGER PRIMARY KEY, AfterMergeId INT);
+                CREATE TABLE merged.AnalysisMergeMap (BeforeMergeId INTEGER PRIMARY KEY, AfterMergeId INT);
                 INSERT INTO AnalysisMergeMap
                 SELECT newAnalysis.Id, IFNULL(oldAnalysis.Id, newAnalysis.Id+{1})
                 FROM (SELECT a.Id, SoftwareName || ' ' || SoftwareVersion || ' ' || GROUP_CONCAT(ap.Name || ' ' || ap.Value) AS DistinctKey
@@ -549,6 +551,16 @@ namespace IDPicker.DataModel
                 WHERE AfterMergeId > {1}
                ";
         void addNewAnalysisParameters (IDbConnection conn) { conn.ExecuteNonQuery(String.Format(addNewAnalysisParametersSql, mergeSourceDatabase, MaxAnalysisId)); }
+
+
+        static string addNewQonverterSettingsSql =
+              @"INSERT INTO merged.QonverterSettings
+                SELECT AfterMergeId, QonverterMethod, DecoyPrefix, RerankMatches, ScoreInfoByName
+                FROM {0}.QonverterSettings newQS
+                JOIN AnalysisMergeMap aMerge ON Id = BeforeMergeId
+                WHERE AfterMergeId > {1}
+               ";
+        void addNewQonverterSettings (IDbConnection conn) { conn.ExecuteNonQuery(String.Format(addNewQonverterSettingsSql, mergeSourceDatabase, MaxAnalysisId)); }
 
 
         static string getNewMaxIdsSql =

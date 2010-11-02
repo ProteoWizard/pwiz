@@ -27,6 +27,7 @@ using System.Data;
 using System.Linq;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using IDPicker;
 using IDPicker.DataModel;
 using NHibernate;
 using NHibernate.Linq;
@@ -482,6 +483,56 @@ namespace Test
             CreateTestData(session, testPsmSummary);
             AddSubsetPeakData(session);
 
+            var qonverterSettings1 = new QonverterSettings()
+            {
+                Analysis = session.UniqueResult<Analysis>(o => o.Software.Name == "Engine 1"),
+                QonverterMethod = Qonverter.QonverterMethod.StaticWeighted,
+                DecoyPrefix = "quiRKy",
+                RerankMatches = true,
+                ScoreInfoByName = new Dictionary<string, Qonverter.Settings.ScoreInfo>()
+                {
+                    {"score1", new Qonverter.Settings.ScoreInfo()
+                                {
+                                    Weight = 1,
+                                    Order = Qonverter.Settings.Order.Ascending,
+                                    NormalizationMethod = Qonverter.Settings.NormalizationMethod.Linear
+                                }},
+                    {"score2", new Qonverter.Settings.ScoreInfo()
+                                {
+                                    Weight = 42,
+                                    Order = Qonverter.Settings.Order.Descending,
+                                    NormalizationMethod = Qonverter.Settings.NormalizationMethod.Quantile
+                                }}
+                }
+            };
+
+            var qonverterSettings2 = new QonverterSettings()
+            {
+                Analysis = session.UniqueResult<Analysis>(o => o.Software.Name == "Engine 2"),
+                QonverterMethod = Qonverter.QonverterMethod.OptimizedMonteCarlo,
+                DecoyPrefix = "___---",
+                RerankMatches = false,
+                ScoreInfoByName = new Dictionary<string, Qonverter.Settings.ScoreInfo>()
+                {
+                    {"foo", new Qonverter.Settings.ScoreInfo()
+                            {
+                                Weight = 7,
+                                Order = Qonverter.Settings.Order.Ascending,
+                                NormalizationMethod = Qonverter.Settings.NormalizationMethod.Off
+                            }},
+                    {"bar", new Qonverter.Settings.ScoreInfo()
+                            {
+                                Weight = 11,
+                                Order = Qonverter.Settings.Order.Descending,
+                                NormalizationMethod = Qonverter.Settings.NormalizationMethod.Off
+                            }}
+                }
+            };
+
+            session.Save(qonverterSettings1);
+            session.Save(qonverterSettings2);
+            session.Flush();
+                
             session.Close();
             sessionFactory.Close();
         }
@@ -907,6 +958,36 @@ namespace Test
                 Assert.IsTrue(pm4.PeptideSpectrumMatch.Modifications.Contains(pm4));
                 Assert.AreEqual('T', pm4.Site);
             }
+        }
+
+        [TestMethod]
+        public void TestQonverterSettings ()
+        {
+            Assert.AreEqual(2, session.Query<QonverterSettings>().Count());
+
+            var qonverterSettings1 = session.UniqueResult<QonverterSettings>(o => o.Analysis.Software.Name == "Engine 1");
+            Assert.AreEqual(Qonverter.QonverterMethod.StaticWeighted, qonverterSettings1.QonverterMethod);
+            Assert.AreEqual("quiRKy", qonverterSettings1.DecoyPrefix);
+            Assert.AreEqual(true, qonverterSettings1.RerankMatches);
+            Assert.AreEqual(2, qonverterSettings1.ScoreInfoByName.Count);
+            Assert.AreEqual(1, qonverterSettings1.ScoreInfoByName["score1"].Weight);
+            Assert.AreEqual(Qonverter.Settings.Order.Ascending, qonverterSettings1.ScoreInfoByName["score1"].Order);
+            Assert.AreEqual(Qonverter.Settings.NormalizationMethod.Linear, qonverterSettings1.ScoreInfoByName["score1"].NormalizationMethod);
+            Assert.AreEqual(42, qonverterSettings1.ScoreInfoByName["score2"].Weight);
+            Assert.AreEqual(Qonverter.Settings.Order.Descending, qonverterSettings1.ScoreInfoByName["score2"].Order);
+            Assert.AreEqual(Qonverter.Settings.NormalizationMethod.Quantile, qonverterSettings1.ScoreInfoByName["score2"].NormalizationMethod);
+
+            var qonverterSettings2 = session.UniqueResult<QonverterSettings>(o => o.Analysis.Software.Name == "Engine 2");
+            Assert.AreEqual(Qonverter.QonverterMethod.OptimizedMonteCarlo, qonverterSettings2.QonverterMethod);
+            Assert.AreEqual("___---", qonverterSettings2.DecoyPrefix);
+            Assert.AreEqual(false, qonverterSettings2.RerankMatches);
+            Assert.AreEqual(2, qonverterSettings2.ScoreInfoByName.Count);
+            Assert.AreEqual(7, qonverterSettings2.ScoreInfoByName["foo"].Weight);
+            Assert.AreEqual(Qonverter.Settings.Order.Ascending, qonverterSettings2.ScoreInfoByName["foo"].Order);
+            Assert.AreEqual(Qonverter.Settings.NormalizationMethod.Off, qonverterSettings2.ScoreInfoByName["foo"].NormalizationMethod);
+            Assert.AreEqual(11, qonverterSettings2.ScoreInfoByName["bar"].Weight);
+            Assert.AreEqual(Qonverter.Settings.Order.Descending, qonverterSettings2.ScoreInfoByName["bar"].Order);
+            Assert.AreEqual(Qonverter.Settings.NormalizationMethod.Off, qonverterSettings2.ScoreInfoByName["bar"].NormalizationMethod);
         }
     }
 }

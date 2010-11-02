@@ -31,7 +31,7 @@ using Microsoft.Office.Interop;
 
 namespace IDPicker
 {
-    static class TableExporter
+    public static class TableExporter
     {
         /// <summary>
         /// Converts a 2D list of strings to a single TSV string

@@ -1,5 +1,5 @@
 ﻿//
-// $Id: GroupingControlForm.cs 192 2010-09-23 19:53:08Z holmanjd $
+// $Id$
 //
 // The contents of this file are subject to the Mozilla Public License
 // Version 1.1 (the "License"); you may not use this file except in

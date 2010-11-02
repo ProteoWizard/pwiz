@@ -74,6 +74,10 @@
       <Project>{5C5FC1C6-F9FF-4E2A-A53B-0865FBB9F9D9}</Project>
       <Name>IDPicker</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Util\Util.csproj">
+      <Project>{C6502908-9F08-4A89-897D-5DF9125BBBF4}</Project>
+      <Name>Util</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />

@@ -1,5 +1,5 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="IDPicker.Properties" GeneratedClassName="Settings">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="IDPicker.Util.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
     <Setting Name="MinDistinctPeptides" Type="System.Int32" Scope="User">
@@ -112,6 +112,21 @@
       <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
 &lt;ArrayOfString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
   &lt;string&gt;&amp;lt;RootInputDirectory&amp;gt;&lt;/string&gt;
+&lt;/ArrayOfString&gt;</Value>
+    </Setting>
+    <Setting Name="QonverterSettings" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="DefaultQonverterSettings" Type="System.Collections.Specialized.StringCollection" Scope="Application">
+      <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
+&lt;ArrayOfString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
+  &lt;string&gt;MyriMatch MVH;StaticWeighted;False;1 Ascending Off mvh&lt;/string&gt;
+  &lt;string&gt;MyriMatch XCorr;StaticWeighted;False;1 Ascending Off xcorr&lt;/string&gt;
+  &lt;string&gt;Sequest XCorr;StaticWeighted;False;1 Ascending Off xcorr&lt;/string&gt;
+  &lt;string&gt;Mascot ionscore;StaticWeighted;False;1 Ascending Off ionscore&lt;/string&gt;
+  &lt;string&gt;Mascot ionscore-identityscore;StaticWeighted;False;1 Ascending Off ionscore;1 Descending Off identityscore&lt;/string&gt;
+  &lt;string&gt;X! Tandem hyperscore;StaticWeighted;False;1 Ascending Off hyperscore&lt;/string&gt;
+  &lt;string&gt;X! Tandem expect;StaticWeighted;False;1 Descending Off expect&lt;/string&gt;
 &lt;/ArrayOfString&gt;</Value>
     </Setting>
   </Settings>

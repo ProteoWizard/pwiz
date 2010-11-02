@@ -25,6 +25,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
+using IDPicker;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using IDPicker.DataModel;
 using NHibernate.Linq;
@@ -62,7 +63,8 @@ namespace Test
             using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testModel.idpDB", false, false))
             using (var session = testModel.session = sessionFactory.OpenSession())
             {
-                foreach (var analysis in testModel.session.Query<Analysis>())
+                var distinctAnalyses = testModel.session.Query<Analysis>();
+                foreach (var analysis in distinctAnalyses)
                     session.Save(new AnalysisParameter()
                                      {
                                          Analysis = analysis,
@@ -79,7 +81,7 @@ namespace Test
                 }
                 session.Close();
 
-                using (var parser = new Parser("testImportExport.idpDB", ".", idpXmlPaths.ToArray()))
+                using (var parser = new Parser(".", qonverterSettingsHandler, false, idpXmlPaths.ToArray()))
                 {
                     // ReadXml should pick up mzML files in the same directory as the idpXMLs
                     parser.Start();
@@ -108,7 +110,24 @@ namespace Test
                 testModel.TestAnalyses();
                 testModel.TestPeptideSpectrumMatches();
                 testModel.TestModifications();
+                // TODO: enable QonverterSettings round trip for idpXML?
+                //testModel.TestQonverterSettings();
             }
+        }
+
+        private IDictionary<Analysis, QonverterSettings> qonverterSettingsHandler (IList<Analysis> distinctAnalyses, out bool cancel)
+        {
+            var result = new Dictionary<Analysis, QonverterSettings>();
+            foreach (var analysis in distinctAnalyses)
+                result[analysis] = new QonverterSettings()
+                {
+                    DecoyPrefix = "r-",
+                    QonverterMethod = Qonverter.QonverterMethod.StaticWeighted,
+                    RerankMatches = false,
+                    ScoreInfoByName = null
+                };
+            cancel = false;
+            return result;
         }
     }
 }

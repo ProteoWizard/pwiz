@@ -40,7 +40,8 @@ namespace IDPicker.DataModel
             Analysis, AnalysisParameter,
             PeptideSpectrumMatch, PeptideSpectrumMatchScoreNames, PeptideSpectrumMatchScores,
             Modification, PeptideModification,
-            IntegerSet
+            IntegerSet,
+            QonverterSettings
         }
 
         List<KeyValuePair<IDbCommand, List<object[]>>> insertCommandByTable;
@@ -79,7 +80,7 @@ namespace IDPicker.DataModel
             SessionFactoryFactory.DropIndexes(memConn);
 
             insertCommandByTable = new List<KeyValuePair<IDbCommand, List<object[]>>>();
-            for (int i = 0; i <= (int) Table.IntegerSet; ++i)
+            for (int i = 0; i <= (int) Table.QonverterSettings; ++i)
                 insertCommandByTable.Add(new KeyValuePair<IDbCommand, List<object[]>>());
 
             insertCommandByTable[(int) Table.Protein] = new KeyValuePair<IDbCommand, List<object[]>>(conn.CreateCommand(), new List<object[]>());
@@ -141,6 +142,9 @@ namespace IDPicker.DataModel
             insertCommandByTable[(int) Table.IntegerSet] = new KeyValuePair<IDbCommand, List<object[]>>(conn.CreateCommand(), new List<object[]>());
             insertCommandByTable[(int) Table.IntegerSet].Key.CommandText = "INSERT INTO IntegerSet VALUES (?)";
 
+            insertCommandByTable[(int) Table.QonverterSettings] = new KeyValuePair<IDbCommand, List<object[]>>(conn.CreateCommand(), new List<object[]>());
+            insertCommandByTable[(int) Table.QonverterSettings].Key.CommandText = createInsertSql("QonverterSettings", "Id, QonverterMethod, DecoyPrefix, RerankMatches, ScoreInfoByName");
+
             foreach (var itr in insertCommandByTable)
             {
                 createParameters(itr.Key);
@@ -198,6 +202,7 @@ namespace IDPicker.DataModel
                     memConn.ExecuteNonQuery("INSERT INTO disk.Modification SELECT * FROM Modification");
                     memConn.ExecuteNonQuery("INSERT INTO disk.PeptideModification SELECT * FROM PeptideModification");
                     memConn.ExecuteNonQuery("INSERT OR IGNORE INTO disk.IntegerSet SELECT * FROM IntegerSet");
+                    memConn.ExecuteNonQuery("INSERT INTO disk.QonverterSettings SELECT * FROM QonverterSettings");
 
                     /*foreach (var itr in insertCommandByTable)
                     {
@@ -354,6 +359,11 @@ namespace IDPicker.DataModel
         public void Add (PeptideModification pm)
         {
             insertRow(Table.PeptideModification, new object[] {pm.Id, pm.Modification.Id, pm.PeptideSpectrumMatch.Id, pm.Offset, pm.Site.ToString()});
+        }
+
+        public void Add (QonverterSettings qs)
+        {
+            insertRow(Table.QonverterSettings, new object[] {qs.Analysis.Id, qs.QonverterMethod, qs.DecoyPrefix, qs.RerankMatches, QonverterSettings.assembleScoreInfo(qs.ScoreInfoByName)});
         }
     }
 }
