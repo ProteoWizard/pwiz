@@ -30,13 +30,13 @@ namespace pwiz.Skyline.Model.Results
         private const string EXT_WIFF_SCAN = ".scan";
 
         public static string CreateTempFileSubstitute(string filePath, int sampleIndex,
-            LoadingTooSlowlyException.Solution workAround, ILoadMonitor loader, ref ProgressStatus status)
+            LoadingTooSlowlyException slowlyException, ILoadMonitor loader, ref ProgressStatus status)
         {
             string tempFileSubsitute = Path.GetTempFileName();
 
             try
             {
-                switch (workAround)
+                switch (slowlyException.WorkAround)
                 {
                     case LoadingTooSlowlyException.Solution.local_file:
                         loader.UpdateProgress(status = status.ChangeMessage(string.Format("Local copy work-around for {0}", Path.GetFileName(filePath))));
@@ -44,7 +44,7 @@ namespace pwiz.Skyline.Model.Results
                         break;
                     case LoadingTooSlowlyException.Solution.mzwiff_conversion:
                         loader.UpdateProgress(status = status.ChangeMessage(string.Format("Convert to mzXML work-around for {0}", Path.GetFileName(filePath))));
-                        ConvertWiffToMzxml(filePath, sampleIndex, tempFileSubsitute, loader);
+                        ConvertWiffToMzxml(filePath, sampleIndex, tempFileSubsitute, slowlyException, loader);
                         break;
                 }
 
@@ -58,8 +58,16 @@ namespace pwiz.Skyline.Model.Results
         }
 
         private static void ConvertWiffToMzxml(string filePathWiff, int sampleIndex,
-            string outputPath, IProgressMonitor monitor)
+            string outputPath, LoadingTooSlowlyException slowlyException, IProgressMonitor monitor)
         {
+            if (AdvApi.GetPathFromProgId("Analyst.ChromData") == null)
+            {
+                throw new IOException(string.Format("The file {0} cannot be imported by the AB SCIEX WiffFileDataReader library in a reasonable time frame ({1:F02} min).\n" +
+                    "To work around this issue requires Analyst to be installed on the computer running {2}.\n" +
+                    "Please install Analyst, or run this import on a computure with Analyst installed",
+                    filePathWiff, slowlyException.PredictedMinutes, Program.Name));
+            }
+
             // The WIFF file needs to be on the local file system for the conversion
             // to work.  So, just in case it is on a network share, copy it to the
             // temp directory.
@@ -87,13 +95,6 @@ namespace pwiz.Skyline.Model.Results
         private static void ConvertLocalWiffToMzxml(string filePathWiff, int sampleIndex,
             string outputPath, IProgressMonitor monitor)
         {
-            if (AdvApi.GetPathFromProgId("Analyst.ChromData") == null)
-            {
-                throw new IOException(string.Format("The file {0} cannot be imported by the AB Sciex WiffFileDataReader library in a reasonable time frame. " +
-                    "To work around this issue requires Analyst to be installed on the computer running {1}.\n" +
-                    "Please install Analyst, or run this import on a computure with Analyst installed", filePathWiff, Program.Name));
-            }
-
             var argv = new[]
                            {
                                "--mzXML",
@@ -151,9 +152,13 @@ namespace pwiz.Skyline.Model.Results
         {
             WorkAround = solution;
             Status = status;
+            PredictedMinutes = predictedMinutes;
+            MaximumMinutes = maximumMinutes;
         }
 
         public Solution WorkAround { get; private set; }
         public ProgressStatus Status { get; private set; }
+        public double PredictedMinutes { get; private set; }
+        public double MaximumMinutes { get; private set; }
     }
 }
