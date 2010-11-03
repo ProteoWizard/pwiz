@@ -289,7 +289,7 @@ namespace IDPicker
             additionalPeptidesTextBox.Leave += new EventHandler(additionalPeptidesTextBox_Leave);
             result.Add(additionalPeptidesTextBox);
 
-            result[0].Tag = this;
+            result[0].Tag = dataFilter;
 
             return result;
         }
