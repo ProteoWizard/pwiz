@@ -378,6 +378,11 @@ if $(revision-info[5]) > 0
 echo ProteoWizard $(version-tag:J=.) $(PWIZ_SVNREVDATE:J=) ;
 
 
+# create a VERSION file which can be used by TC to parse the canonical pwiz version
+make VERSION : : @make_VERSION : <location>$(PWIZ_BUILD_PATH) ;
+actions make_VERSION { @($(STDOUT):E=$(version-tag:J=.)) > "$(<)" }
+
+
 import tar os ;
 
 if [ os.on-windows ]
@@ -539,6 +544,7 @@ install executables
       <conditional>@install-vendor-api-dependencies
       <conditional>@seems-dependency
       <conditional>@gcc-install-dll-path
+      <dependency>VERSION
     ;
 
 
@@ -651,7 +657,7 @@ rule binary-tarball-requirements ( properties * )
     if <link>shared in $(properties) { linkage = "-shared" ; }
     local name = [ common.format-name <base> <property:target-os> <property:architecture> <toolset> <property:variant> $(linkage) -$(version-tag:J=_)
                                       : pwiz-bin : TBZ2 : [ property-set.create $(properties) ] ] ;
-    result += <name>$(name) <dependency>executables <location>$(.common-location) ;
+    result += <name>$(name) <dependency>executables <location>$(.common-location) <dependency>VERSION ;
     return $(result) ;
 }
 
@@ -689,7 +695,7 @@ rule library-tarball-requirements ( properties * )
     if <link>shared in $(properties) { linkage = "-shared" ; }
     local name = [ common.format-name <base> <property:target-os> <property:architecture> <toolset> <property:variant> $(linkage) -$(version-tag:J=_)
                                       : pwiz-lib : TBZ2 : [ property-set.create $(properties) ] ] ;
-    result += <name>$(name) <dependency>libraries <location>$(.common-location) ;
+    result += <name>$(name) <dependency>libraries <location>$(.common-location) <dependency>VERSION ;
     return $(result) ;
 }
 
@@ -827,7 +833,7 @@ This source tree is a subset of the full pwiz source tree.
     exclude:vendor_api
 ;
 
-.common-requirements = <location>$(.common-location) <dependency>boost_1_43_0.tar.bz2 <dependency>SUBSET ;
+.common-requirements = <location>$(.common-location) <dependency>boost_1_43_0.tar.bz2 <dependency>SUBSET <dependency>VERSION ;
 
 # l = without libraries, t = without tests, v = without vendor APIs
 tar.create pwiz-src.tar.bz2             : $(.common-sources) $(.l) : $(.common-requirements) <name>pwiz-src-$(version-tag:J=_).tar.bz2 ;
