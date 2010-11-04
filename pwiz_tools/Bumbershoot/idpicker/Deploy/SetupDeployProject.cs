@@ -35,6 +35,8 @@ namespace SetupDeployProject
     {
         static void Main(string[] args)
         {
+            new IDPicker.Forms.NotifyingStringWriter(); // don't optimize away the IDPicker reference
+
             string version = Util.GetAssemblyVersion(Util.GetAssemblyByName("IDPicker"));
             string guid = Guid.NewGuid().ToString("B").ToUpper();
 

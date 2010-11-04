@@ -39,7 +39,7 @@ namespace IDPicker
 
             foreach (AssemblyName a in Assembly.GetCallingAssembly().GetReferencedAssemblies())
             {
-                if (a.FullName.Contains(assemblyName))
+                if (a.FullName.Contains(assemblyName + ','))
                     return a;
             }
             return null;
