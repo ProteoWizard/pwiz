@@ -71,6 +71,7 @@ exe msbenchmark
     : msbenchmark.cpp
       ../common
     : <include>../..
+      <include>../../pwiz/data/msdata/ramp
     ;
 
 

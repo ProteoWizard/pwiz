@@ -21,6 +21,7 @@
 
 
 #include "pwiz/data/msdata/MSDataFile.hpp"
+#include "pwiz/data/msdata/RAMPAdapter.hpp"
 #include "pwiz_tools/common/FullReaderList.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/misc/Std.hpp"
@@ -68,6 +69,40 @@ bpt::time_duration enumerateSpectra(const string& filename, bool getBinaryData)
 }
 
 
+bpt::time_duration enumerateRAMPAdapterSpectra(const string& filename, bool getBinaryData)
+{
+    RAMPAdapter ra(filename);
+
+    if (ra.scanCount() == 0)
+        throw runtime_error("[msbenchmark] No spectra or chromatograms found.");
+
+    bpt::ptime start = bpt::microsec_clock::local_time();
+
+    size_t totalArrayLength = 0;
+    for (size_t i=0, size=ra.scanCount(); i != size; ++i)
+    {
+        ScanHeaderStruct scanHeader;
+        ra.getScanHeader(i, scanHeader);
+
+        if (getBinaryData)
+        {
+            vector<double> scanPeaks;
+            ra.getScanPeaks(i, scanPeaks);
+            totalArrayLength += scanPeaks.size() / 2;
+        }
+        else
+            totalArrayLength += scanHeader.peaksCount;
+
+        if (i+1 == size || ((i+1) % 100) == 0)
+            cout << "Enumerating spectra: " << (i+1) << '/' << size << " (" << totalArrayLength << " data points)\r" << flush;
+    }
+    cout << endl;
+
+    bpt::ptime stop = bpt::microsec_clock::local_time();
+    return stop - start;
+}
+
+
 bpt::time_duration enumerateChromatograms(const string& filename, bool getBinaryData)
 {
     FullReaderList readers; // for vendor Reader support
@@ -99,22 +134,17 @@ bpt::time_duration enumerateChromatograms(const string& filename, bool getBinary
 }
 
 
-void benchmark(const char* filename, bool iterateSpectra, bool getBinaryData)
+void benchmark(const char* filename, bool iterateSpectra, bool getBinaryData, bool useRAMPAdapter)
 {
     if (iterateSpectra)
     {
-        if (getBinaryData)
-            cout << "Time elapsed: " << bpt::to_simple_string(enumerateSpectra(filename, true)) << endl;
+        if (useRAMPAdapter)
+            cout << "Time elapsed: " << bpt::to_simple_string(enumerateRAMPAdapterSpectra(filename, getBinaryData)) << endl;
         else
-            cout << "Time elapsed: " << bpt::to_simple_string(enumerateSpectra(filename, false)) << endl;
+            cout << "Time elapsed: " << bpt::to_simple_string(enumerateSpectra(filename, getBinaryData)) << endl;
     }
     else
-    {
-        if (getBinaryData)
-            cout << "Time elapsed: " << bpt::to_simple_string(enumerateChromatograms(filename, true)) << endl;
-        else
-            cout << "Time elapsed: " << bpt::to_simple_string(enumerateChromatograms(filename, false)) << endl;
-    }
+        cout << "Time elapsed: " << bpt::to_simple_string(enumerateChromatograms(filename, getBinaryData)) << endl;
 }
 
 
@@ -124,7 +154,7 @@ int main(int argc, char* argv[])
     {
         if (argc != 4)
         {
-            cout << "Usage: msbenchmark <spectra|chromatograms> <binary|no-binary> <filename>\n"
+            cout << "Usage: msbenchmark <spectra|chromatograms|rampadapter> <binary|no-binary> <filename>\n"
                  << "Iterates over a file's spectra or chromatograms to test reader speed.\n\n"
                  << "http://proteowizard.sourceforge.net\n"
                  << "support@proteowizard.org\n";
@@ -133,13 +163,18 @@ int main(int argc, char* argv[])
 
         const char* filename = argv[3];
 
-        bool iterateSpectra;
+        bool iterateSpectra, useRAMPAdapter;
         if (argv[1] == string("spectra"))
             iterateSpectra = true;
         else if (argv[1] == string("chromatograms"))
             iterateSpectra = false;
+        else if (argv[1] == string("rampadapter"))
+        {
+            iterateSpectra = true;
+            useRAMPAdapter = true;
+        }
         else
-            throw runtime_error("[msbenchmark] First argument must be \"spectra\" or \"chromatograms\"");
+            throw runtime_error("[msbenchmark] First argument must be \"spectra\", \"chromatograms\", or \"rampadapter\"");
 
         bool getBinaryData;
         if (argv[2] == string("binary"))
@@ -149,7 +184,7 @@ int main(int argc, char* argv[])
         else
             throw runtime_error("[msbenchmark] Second argument must be \"binary\" or \"no-binary\"");
 
-        benchmark(filename, iterateSpectra, getBinaryData);
+        benchmark(filename, iterateSpectra, getBinaryData, useRAMPAdapter);
 
         return 0;
     }
