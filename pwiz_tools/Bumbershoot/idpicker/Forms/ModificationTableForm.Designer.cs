@@ -67,7 +67,7 @@ namespace IDPicker.Forms
             this.dataGridView.AllowUserToDeleteRows = false;
             this.dataGridView.AllowUserToResizeColumns = false;
             this.dataGridView.AllowUserToResizeRows = false;
-            this.dataGridView.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.dataGridView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.dataGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
@@ -129,10 +129,14 @@ namespace IDPicker.Forms
             this.ClientSize = new System.Drawing.Size(284, 262);
             this.Controls.Add(this.exportButton);
             this.Controls.Add(this.dataGridView);
+            this.DockAreas = ((DigitalRune.Windows.Docking.DockAreas)(((((DigitalRune.Windows.Docking.DockAreas.Left | DigitalRune.Windows.Docking.DockAreas.Right)
+                        | DigitalRune.Windows.Docking.DockAreas.Top)
+                        | DigitalRune.Windows.Docking.DockAreas.Bottom)
+                        | DigitalRune.Windows.Docking.DockAreas.Document)));
             this.Name = "ModificationTableForm";
             this.TabText = "ModificationTableForm";
             this.Text = "ModificationTableForm";
-            ((System.ComponentModel.ISupportInitialize) (this.dataGridView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
             this.exportMenu.ResumeLayout(false);
             this.ResumeLayout(false);
 

@@ -75,7 +75,7 @@ namespace IDPicker.Forms
             this.groupingSetupButton = new System.Windows.Forms.Button();
             this.displayOptionsButton = new System.Windows.Forms.Button();
             this.exportButton = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize) (this.treeListView)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.treeListView)).BeginInit();
             this.exportMenu.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -97,7 +97,7 @@ namespace IDPicker.Forms
             this.treeListView.AllColumns.Add(this.qvalueColumn);
             this.treeListView.AllColumns.Add(this.sequenceColumn);
             this.treeListView.AllowColumnReorder = true;
-            this.treeListView.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.treeListView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.treeListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
@@ -123,7 +123,7 @@ namespace IDPicker.Forms
             this.treeListView.OwnerDraw = true;
             this.treeListView.ShowCommandMenuOnRightClick = true;
             this.treeListView.ShowGroups = false;
-            this.treeListView.Size = new System.Drawing.Size(1119, 326);
+            this.treeListView.Size = new System.Drawing.Size(1029, 326);
             this.treeListView.TabIndex = 0;
             this.treeListView.UnfocusedHighlightBackgroundColor = System.Drawing.SystemColors.Highlight;
             this.treeListView.UnfocusedHighlightForegroundColor = System.Drawing.SystemColors.HighlightText;
@@ -212,8 +212,8 @@ namespace IDPicker.Forms
             // 
             // editGroupsButton
             // 
-            this.editGroupsButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.editGroupsButton.Location = new System.Drawing.Point(869, 2);
+            this.editGroupsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.editGroupsButton.Location = new System.Drawing.Point(779, 2);
             this.editGroupsButton.Name = "editGroupsButton";
             this.editGroupsButton.Size = new System.Drawing.Size(100, 23);
             this.editGroupsButton.TabIndex = 1;
@@ -253,8 +253,8 @@ namespace IDPicker.Forms
             // 
             // groupingSetupButton
             // 
-            this.groupingSetupButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupingSetupButton.Location = new System.Drawing.Point(763, 2);
+            this.groupingSetupButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupingSetupButton.Location = new System.Drawing.Point(673, 2);
             this.groupingSetupButton.Name = "groupingSetupButton";
             this.groupingSetupButton.Size = new System.Drawing.Size(100, 23);
             this.groupingSetupButton.TabIndex = 8;
@@ -264,20 +264,20 @@ namespace IDPicker.Forms
             // 
             // displayOptionsButton
             // 
-            this.displayOptionsButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.displayOptionsButton.Enabled = false;
-            this.displayOptionsButton.Location = new System.Drawing.Point(975, 2);
+            this.displayOptionsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.displayOptionsButton.Location = new System.Drawing.Point(885, 2);
             this.displayOptionsButton.Name = "displayOptionsButton";
             this.displayOptionsButton.Size = new System.Drawing.Size(96, 23);
             this.displayOptionsButton.TabIndex = 3;
             this.displayOptionsButton.Text = "Display Options";
             this.displayOptionsButton.UseVisualStyleBackColor = true;
+            this.displayOptionsButton.Click += new System.EventHandler(this.displayOptionsButton_Click);
             // 
             // exportButton
             // 
-            this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.exportButton.Image = global::IDPicker.Properties.Resources.Export;
-            this.exportButton.Location = new System.Drawing.Point(1077, 2);
+            this.exportButton.Location = new System.Drawing.Point(987, 2);
             this.exportButton.Name = "exportButton";
             this.exportButton.Size = new System.Drawing.Size(30, 23);
             this.exportButton.TabIndex = 2;
@@ -288,16 +288,20 @@ namespace IDPicker.Forms
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1118, 353);
+            this.ClientSize = new System.Drawing.Size(1028, 353);
             this.Controls.Add(this.treeListView);
             this.Controls.Add(this.exportButton);
             this.Controls.Add(this.editGroupsButton);
             this.Controls.Add(this.groupingSetupButton);
             this.Controls.Add(this.displayOptionsButton);
+            this.DockAreas = ((DigitalRune.Windows.Docking.DockAreas)(((((DigitalRune.Windows.Docking.DockAreas.Left | DigitalRune.Windows.Docking.DockAreas.Right)
+                        | DigitalRune.Windows.Docking.DockAreas.Top)
+                        | DigitalRune.Windows.Docking.DockAreas.Bottom)
+                        | DigitalRune.Windows.Docking.DockAreas.Document)));
             this.Name = "SpectrumTableForm";
             this.TabText = "SpectrumTableForm";
             this.Text = "SpectrumTableForm";
-            ((System.ComponentModel.ISupportInitialize) (this.treeListView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.treeListView)).EndInit();
             this.exportMenu.ResumeLayout(false);
             this.ResumeLayout(false);
 

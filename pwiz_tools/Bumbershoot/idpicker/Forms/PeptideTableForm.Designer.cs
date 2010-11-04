@@ -244,6 +244,10 @@ namespace IDPicker.Forms
             this.Controls.Add(this.radioButton2);
             this.Controls.Add(this.radioButton1);
             this.Controls.Add(this.treeListView);
+            this.DockAreas = ((DigitalRune.Windows.Docking.DockAreas)(((((DigitalRune.Windows.Docking.DockAreas.Left | DigitalRune.Windows.Docking.DockAreas.Right)
+                        | DigitalRune.Windows.Docking.DockAreas.Top)
+                        | DigitalRune.Windows.Docking.DockAreas.Bottom)
+                        | DigitalRune.Windows.Docking.DockAreas.Document)));
             this.Name = "PeptideTableForm";
             this.Opacity = 0.25;
             this.TabText = "PeptideTableForm";

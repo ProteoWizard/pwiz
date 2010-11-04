@@ -110,41 +110,34 @@ namespace IDPicker.Forms
             Text = TabText = "Protein View";
 
             #region Column aspect getters
-            var retrievedList = new List<string>(Util.StringCollectionToStringArray(Properties.Settings.Default.ProteinTableFormSettings));
+            var allLayouts = new List<string>(Util.StringCollectionToStringArray(Properties.Settings.Default.ProteinTableFormSettings));
             _columnSettings = new Dictionary<OLVColumn, object[]>();
-
-            // count should be 5 x columns + 2
-            // each column has 4 editable settings and a name, and the table has two global settings
-            if (retrievedList.Count == 42)
+            if (allLayouts.Count > 1)
             {
-                SetPropertyFromUserSettings(ref _columnSettings, accessionColumn, ref  retrievedList);
-                SetPropertyFromUserSettings(ref _columnSettings, clusterColumn, ref  retrievedList);
-                SetPropertyFromUserSettings(ref _columnSettings, proteinCountColumn, ref  retrievedList);
-                SetPropertyFromUserSettings(ref _columnSettings, coverageColumn, ref  retrievedList);
-                SetPropertyFromUserSettings(ref _columnSettings, distinctPeptidesColumn, ref  retrievedList);
-                SetPropertyFromUserSettings(ref _columnSettings, distinctMatchesColumn, ref  retrievedList);
-                SetPropertyFromUserSettings(ref _columnSettings, filteredSpectraColumn, ref  retrievedList);
-                SetPropertyFromUserSettings(ref _columnSettings, descriptionColumn, ref  retrievedList);
+                var retrievedList = allLayouts[1].Split(System.Environment.NewLine.ToCharArray()).ToList();
+                if (retrievedList.Count == 10)
+                {
+                    SetPropertyFromUserSettings(ref _columnSettings, accessionColumn, retrievedList);
+                    SetPropertyFromUserSettings(ref _columnSettings, clusterColumn, retrievedList);
+                    SetPropertyFromUserSettings(ref _columnSettings, proteinCountColumn, retrievedList);
+                    SetPropertyFromUserSettings(ref _columnSettings, coverageColumn, retrievedList);
+                    SetPropertyFromUserSettings(ref _columnSettings, distinctPeptidesColumn, retrievedList);
+                    SetPropertyFromUserSettings(ref _columnSettings, distinctMatchesColumn, retrievedList);
+                    SetPropertyFromUserSettings(ref _columnSettings, filteredSpectraColumn, retrievedList);
+                    SetPropertyFromUserSettings(ref _columnSettings, descriptionColumn, retrievedList);
 
-                treeListView.BackColor = Color.FromArgb(int.Parse(retrievedList[0].ToString()));
-                treeListView.ForeColor = Color.FromArgb(int.Parse(retrievedList[1].ToString()));
+                    treeListView.BackColor = Color.FromArgb(int.Parse(retrievedList[8]));
+                    treeListView.ForeColor = Color.FromArgb(int.Parse(retrievedList[9]));
 
-                //foreach (var kvp in _columnSettings)
-                //    kvp.Key.IsVisible = (bool)kvp.Value[3];
-                //treeListView.RebuildColumns();
+                    //foreach (var kvp in _columnSettings)
+                    //    kvp.Key.IsVisible = (bool)kvp.Value[3];
+                    //treeListView.RebuildColumns();
+                }
+                else
+                    SetDefaults();
             }
             else
-            {
-                _columnSettings.Add(accessionColumn, new object[4] { "Key", -99, treeListView.BackColor, false });
-                _columnSettings.Add(clusterColumn, new object[4] { "Integer", -99, treeListView.BackColor, false });
-                _columnSettings.Add(proteinCountColumn, new object[4] { "Integer", -99, treeListView.BackColor, false });
-                _columnSettings.Add(coverageColumn, new object[4] { "Float", -1, treeListView.BackColor, false });
-                _columnSettings.Add(distinctPeptidesColumn, new object[4] { "Integer", -99, treeListView.BackColor, false });
-                _columnSettings.Add(distinctMatchesColumn, new object[4] { "Integer", -99, treeListView.BackColor, false });
-                _columnSettings.Add(filteredSpectraColumn, new object[4] { "Integer", -99, treeListView.BackColor, false });
-                _columnSettings.Add(descriptionColumn, new object[4] { "String", -99, treeListView.BackColor, false });
-                SaveSettings();
-            }
+                SetDefaults();
 
             SetColumnAspectGetters();
             #endregion
@@ -168,6 +161,18 @@ namespace IDPicker.Forms
             treeListView.HyperlinkClicked += new EventHandler<HyperlinkClickedEventArgs>(treeListView_HyperlinkClicked);
             treeListView.HyperlinkStyle.Normal.ForeColor = treeListView.ForeColor;
             treeListView.HyperlinkStyle.Visited.ForeColor = treeListView.ForeColor;
+        }
+
+        private void SetDefaults()
+        {
+            _columnSettings.Add(accessionColumn, new object[] { "Key", -99, treeListView.BackColor, false });
+            _columnSettings.Add(clusterColumn, new object[] { "Integer", -99, treeListView.BackColor, false });
+            _columnSettings.Add(proteinCountColumn, new object[] { "Integer", -99, treeListView.BackColor, false });
+            _columnSettings.Add(coverageColumn, new object[] { "Float", -1, treeListView.BackColor, false });
+            _columnSettings.Add(distinctPeptidesColumn, new object[] { "Integer", -99, treeListView.BackColor, false });
+            _columnSettings.Add(distinctMatchesColumn, new object[] { "Integer", -99, treeListView.BackColor, false });
+            _columnSettings.Add(filteredSpectraColumn, new object[] { "Integer", -99, treeListView.BackColor, false });
+            _columnSettings.Add(descriptionColumn, new object[] { "String", -99, treeListView.BackColor, false });
         }
 
         private void SetColumnAspectGetters()
@@ -333,18 +338,20 @@ namespace IDPicker.Forms
 
             Text = TabText = "Loading protein view...";
 
-            //set column settings if they are set for the database
-            IList<idpDBSettings> listOfSettings = new List<idpDBSettings>();
-            try
+            var workerThread = new BackgroundWorker()
             {
-                listOfSettings = session.QueryOver<idpDBSettings>().Where(x => x.FormName == "ProteinTableForm").List<idpDBSettings>();
-            }
-            catch
-            {
-                //sometimes throws "There was a problem converting an IDataReader to NDataReader" on filter attempt
-                //does not appear to have any effect. Swallow error for now unless it turns out to be part of bigger problem;
-            }
+                WorkerReportsProgress = true,
+                WorkerSupportsCancellation = true
+            };
 
+            workerThread.DoWork += new DoWorkEventHandler(setData);
+            workerThread.RunWorkerCompleted += new RunWorkerCompletedEventHandler(renderData);
+            workerThread.RunWorkerAsync();
+
+        }
+
+        internal void LoadLayout(IList<ColumnProperty> listOfSettings)
+        {
             if (listOfSettings.Count > 0)
             {
                 _columnSettings = new Dictionary<OLVColumn, object[]>();
@@ -358,8 +365,10 @@ namespace IDPicker.Forms
                 SetPropertyFromDatabase(ref _columnSettings, filteredSpectraColumn, listOfSettings);
                 SetPropertyFromDatabase(ref _columnSettings, descriptionColumn, listOfSettings);
 
-                var backColor = listOfSettings.Where<idpDBSettings>(x => x.ColumnName == "__BackColor").SingleOrDefault();
-                var textColor = listOfSettings.Where<idpDBSettings>(x => x.ColumnName == "__TextColor").SingleOrDefault();
+                SetColumnAspectGetters();
+                var backColor = listOfSettings.Where(x => x.Name == "BackColor").SingleOrDefault();
+                var textColor = listOfSettings.Where(x => x.Name == "TextColor").SingleOrDefault();
+
                 treeListView.BackColor = Color.FromArgb(backColor.ColorCode);
                 treeListView.ForeColor = Color.FromArgb(textColor.ColorCode);
                 treeListView.HyperlinkStyle.Normal.ForeColor = Color.FromArgb(textColor.ColorCode);
@@ -369,17 +378,6 @@ namespace IDPicker.Forms
                     kvp.Key.IsVisible = (bool)kvp.Value[3];
                 treeListView.RebuildColumns();
             }
-
-            var workerThread = new BackgroundWorker()
-                                   {
-                                       WorkerReportsProgress = true,
-                                       WorkerSupportsCancellation = true
-                                   };
-
-            workerThread.DoWork += new DoWorkEventHandler(setData);
-            workerThread.RunWorkerCompleted += new RunWorkerCompletedEventHandler(renderData);
-            workerThread.RunWorkerAsync();
-
         }
 
         public void ClearData ()
@@ -659,25 +657,26 @@ namespace IDPicker.Forms
             }
         }
 
-        private void SetPropertyFromUserSettings(ref Dictionary<OLVColumn, object[]> testDictionary, OLVColumn targetColumn, ref List<string> columnProperties)
+        private void SetPropertyFromUserSettings(ref Dictionary<OLVColumn, object[]> testDictionary, OLVColumn targetColumn, List<string> columnProperties)
         {
-            for (int x = 0; x < columnProperties.Count - 5; x += 5)
+            for (int x = 0; x < columnProperties.Count - 1; x++)
             {
-                if (columnProperties[x] == targetColumn.Text)
+                var splitSetting = columnProperties[x].Split('|');
+
+                if (splitSetting[0] == targetColumn.Text)
                 {
                     testDictionary.Add(targetColumn,
-                        new object[4]{columnProperties[x+1],int.Parse(columnProperties[x+2]),
-                            Color.FromArgb(int.Parse(columnProperties[x+3])),bool.Parse(columnProperties[x+4])});
-
-                    columnProperties.RemoveRange(x, 5);
+                        new object[4]{splitSetting[1], int.Parse(splitSetting[2]),
+                            Color.FromArgb(int.Parse(splitSetting[3])),
+                            bool.Parse(splitSetting[4])});
                     break;
                 }
             }
         }
 
-        private void SetPropertyFromDatabase(ref Dictionary<OLVColumn, object[]> testDictionary, OLVColumn targetColumn, IList<idpDBSettings> FormSettings)
+        private static void SetPropertyFromDatabase(ref Dictionary<OLVColumn, object[]> testDictionary, OLVColumn targetColumn, IList<ColumnProperty> FormSettings)
         {
-            idpDBSettings rowSettings = FormSettings.Where<idpDBSettings>(x => x.ColumnName == targetColumn.Text).SingleOrDefault();
+            ColumnProperty rowSettings = FormSettings.Where(x => x.Name == targetColumn.Text).SingleOrDefault();
 
             testDictionary.Add(targetColumn,
                 new object[4]{rowSettings.Type, rowSettings.DecimalPlaces,
@@ -687,105 +686,89 @@ namespace IDPicker.Forms
         }
 
 
-        public void SaveSettings()
+        internal void SaveUserSettings(List<ColumnProperty> columnList, int layoutIndex)
         {
-            //save current column settings (In case user has changed columns using right-click menu
+            //User properties will be in format:
+            //"(int)LayoutIndex
+            //(string)Column1Name|(string)Type|(int)DecimalPlaces|(int)CellColorCode|(bool)Visible|(bool)Locked
+            //(string)Column2Name|(string)Type|(int)DecimalPlaces|(int)CellColorCode|(bool)Visible|(bool)Locked
+            //(string)Column3Name|(string)Type|(int)DecimalPlaces|(int)CellColorCode|(bool)Visible|(bool)Locked
+            //(string)Column4Name|(string)Type|(int)DecimalPlaces|(int)CellColorCode|(bool)Visible|(bool)Locked
+            //(int)BackColorCode
+            //(int)TextColorCode"
+
+            var setting = new StringBuilder(layoutIndex + Environment.NewLine);
+            foreach (var item in columnList)
+            {
+                if (item.Name == "BackColor" || item.Name == "TextColor")
+                    continue;
+                setting.AppendFormat("{0}|", item.Name);
+                setting.AppendFormat("{0}|", item.Type);
+                setting.AppendFormat("{0}|", item.DecimalPlaces);
+                setting.AppendFormat("{0}|", item.ColorCode);
+                setting.AppendFormat("{0}|", item.Visible);
+                if (item.Locked == null)
+                    setting.AppendFormat("{0}{1}", "null", Environment.NewLine);
+                else
+                    setting.AppendFormat("{0}{1}", item.Locked, Environment.NewLine);
+            }
+
+            var backColor = columnList.Where(x => x.Name == "BackColor").SingleOrDefault();
+            var textColor = columnList.Where(x => x.Name == "TextColor").SingleOrDefault();
+
+            setting.AppendFormat("{0}{1}", backColor.ColorCode, Environment.NewLine);
+            setting.AppendFormat("{0}{1}", textColor.ColorCode, Environment.NewLine);
+
+            Properties.Settings.Default.ProteinTableFormSettings.Add(setting.ToString());
+            Properties.Settings.Default.Save();
+        }
+
+        internal List<ColumnProperty> GetCurrentProperties()
+        {
             foreach (var kvp in _columnSettings)
                 kvp.Value[3] = false;
-            foreach (OLVColumn column in treeListView.ColumnsInDisplayOrder)
+            foreach (var column in treeListView.ColumnsInDisplayOrder)
                 _columnSettings[column][3] = true;
+            var currentList = new List<ColumnProperty>();
 
-            if (session == null)
+            foreach (var kvp in _columnSettings)
             {
-                //Store settings dictionary as string list
-                //{Text of key, (string)Value[0], (string?)Value[1], Name of Color Value[2], (string)Value[3]}
-                //Therefore the list will be translated back in sets of 5
-
-                var storedList = new System.Collections.Specialized.StringCollection();
-
-                foreach (var kvp in _columnSettings)
+                currentList.Add(new ColumnProperty
                 {
-                    storedList.Add(kvp.Key.Text);
-                    storedList.Add(kvp.Value[0].ToString());
-                    storedList.Add(kvp.Value[1].ToString());
-                    storedList.Add(((Color)kvp.Value[2]).ToArgb().ToString());
-                    storedList.Add(kvp.Value[3].ToString());
-                }
-
-                storedList.Add(treeListView.BackColor.ToArgb().ToString());
-                storedList.Add(treeListView.ForeColor.ToArgb().ToString());
-
-                Properties.Settings.Default.ProteinTableFormSettings = storedList;
-                Properties.Settings.Default.Save();
-
-
+                    Scope = "ProteinTableForm",
+                    Name = kvp.Key.Text,
+                    Type = kvp.Value[0].ToString(),
+                    DecimalPlaces = (int)kvp.Value[1],
+                    ColorCode = ((Color)kvp.Value[2]).ToArgb(),
+                    Visible = (bool)kvp.Value[3],
+                    Locked = null
+                });
             }
-            else
+
+            currentList.Add(new ColumnProperty
             {
-                var listOfSettings = session.QueryOver<idpDBSettings>().Where(x => x.FormName == "ProteinTableForm").List();
+                Scope = "ProteinTableForm",
+                Name = "BackColor",
+                Type = "GlobalSetting",
+                DecimalPlaces = -1,
+                ColorCode = treeListView.BackColor.ToArgb(),
+                Visible = false,
+                Locked = null
+            });
+            currentList.Add(new ColumnProperty
+            {
+                Scope = "ProteinTableForm",
+                Name = "TextColor",
+                Type = "GlobalSetting",
+                DecimalPlaces = -1,
+                ColorCode = treeListView.ForeColor.ToArgb(),
+                Visible = false,
+                Locked = null
+            });
 
-                if (listOfSettings.Count > 0)
-                {
-                    foreach (var kvp in _columnSettings)
-                    {
-                        var settingRow = listOfSettings.Where<idpDBSettings>(x => x.ColumnName == kvp.Key.Text).SingleOrDefault<idpDBSettings>();
-
-                        settingRow.DecimalPlaces = (int)kvp.Value[1];
-                        settingRow.ColorCode = ((Color)kvp.Value[2]).ToArgb();
-                        settingRow.Visible = (bool)kvp.Value[3];
-                        settingRow.Locked = null;
-                        session.Save(settingRow);
-                    }
-
-                    var formBackColorRow = listOfSettings.Where<idpDBSettings>(x => x.ColumnName == "__BackColor").SingleOrDefault<idpDBSettings>();
-                    var formTextColorRow = listOfSettings.Where<idpDBSettings>(x => x.ColumnName == "__TextColor").SingleOrDefault<idpDBSettings>();
-
-                    formBackColorRow.ColorCode = treeListView.BackColor.ToArgb();
-                    formTextColorRow.ColorCode = treeListView.ForeColor.ToArgb();
-                    session.Save(formBackColorRow);
-                    session.Save(formTextColorRow);
-                }
-                else
-                {
-                    foreach (var kvp in _columnSettings)
-                    {
-                        session.Save(new idpDBSettings()
-                        {
-                            FormName = "ProteinTableForm",
-                            ColumnName = kvp.Key.Text,
-                            Type = kvp.Value[0].ToString(),
-                            DecimalPlaces = (int)kvp.Value[1],
-                            ColorCode = ((Color)kvp.Value[2]).ToArgb(),
-                            Visible = (bool)kvp.Value[3],
-                            Locked = null
-                        });
-                    }
-
-                    session.Save(new idpDBSettings()
-                    {
-                        FormName = "ProteinTableForm",
-                        ColumnName = "__BackColor",
-                        Type = "GlobalSetting",
-                        DecimalPlaces = -1,
-                        ColorCode = treeListView.BackColor.ToArgb(),
-                        Visible = false,
-                        Locked = null
-                    });
-                    session.Save(new idpDBSettings()
-                    {
-                        FormName = "ProteinTableForm",
-                        ColumnName = "__TextColor",
-                        Type = "GlobalSetting",
-                        DecimalPlaces = -1,
-                        ColorCode = treeListView.ForeColor.ToArgb(),
-                        Visible = false,
-                        Locked = null
-                    });
-                }
-
-                session.Flush();
-            }
+            return currentList;
         }
+        
     }
 
     public delegate void ProteinViewFilterEventHandler (ProteinTableForm sender, DataFilter proteinViewFilter);

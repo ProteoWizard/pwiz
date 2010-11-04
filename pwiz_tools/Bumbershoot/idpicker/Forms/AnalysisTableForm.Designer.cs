@@ -56,7 +56,7 @@ namespace IDPicker.Forms
             this.softwareColumn = new BrightIdeasSoftware.OLVColumn();
             this.parameterCountColumn = new BrightIdeasSoftware.OLVColumn();
             this.parameterValue = new BrightIdeasSoftware.OLVColumn();
-            ((System.ComponentModel.ISupportInitialize) (this.treeListView)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.treeListView)).BeginInit();
             this.SuspendLayout();
             // 
             // treeListView
@@ -113,10 +113,14 @@ namespace IDPicker.Forms
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(634, 466);
             this.Controls.Add(this.treeListView);
+            this.DockAreas = ((DigitalRune.Windows.Docking.DockAreas)(((((DigitalRune.Windows.Docking.DockAreas.Left | DigitalRune.Windows.Docking.DockAreas.Right)
+                        | DigitalRune.Windows.Docking.DockAreas.Top)
+                        | DigitalRune.Windows.Docking.DockAreas.Bottom)
+                        | DigitalRune.Windows.Docking.DockAreas.Document)));
             this.Name = "AnalysisTableForm";
             this.TabText = "AnalysisTableForm";
             this.Text = "AnalysisTableForm";
-            ((System.ComponentModel.ISupportInitialize) (this.treeListView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.treeListView)).EndInit();
             this.ResumeLayout(false);
 
         }

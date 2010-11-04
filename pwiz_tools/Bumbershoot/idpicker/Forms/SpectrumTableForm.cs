@@ -285,6 +285,8 @@ namespace IDPicker.Forms
             basicAggregateRowsByType = new Dictionary<GroupBy, IEnumerable<AggregateRow>>();
         }
 
+        Dictionary<OLVColumn, object[]> _columnSettings;
+
         protected override void OnLoad (EventArgs e)
         {
             Text = TabText = "Spectrum View";
@@ -301,13 +303,96 @@ namespace IDPicker.Forms
 
             groupingSetupControl = new GroupingSetupControl<GroupBy>(groupings);
             groupingSetupControl.GroupingChanged += new EventHandler(groupingSetupControl_GroupingChanged);
-            groupingSetupControl.GroupingChanging += new EventHandler<GroupingChangingEventArgs<GroupBy>>(groupingSetupControl_GroupingChanging);
+            groupingSetupControl.GroupingChanging +=
+                new EventHandler<GroupingChangingEventArgs<GroupBy>>(groupingSetupControl_GroupingChanging);
             groupingSetupPopup = new Popup(groupingSetupControl) { FocusOnOpen = true };
             groupingSetupPopup.Closed += new ToolStripDropDownClosedEventHandler(groupingSetupPopup_Closed);
 
             #region Column aspect getters
+
+            var allLayouts =
+                new List<string>(
+                    Util.StringCollectionToStringArray(Properties.Settings.Default.SpectrumTableFormSettings));
+            _columnSettings = new Dictionary<OLVColumn, object[]>();
+            if (allLayouts.Count > 1)
+            {
+                var retrievedList = allLayouts[1].Split(System.Environment.NewLine.ToCharArray()).ToList();
+                if (retrievedList.Count == 17)
+                {
+                    SetPropertyFromUserSettings(ref _columnSettings, keyColumn, retrievedList);
+                    SetPropertyFromUserSettings(ref _columnSettings, totalSpectraColumn, retrievedList);
+                    SetPropertyFromUserSettings(ref _columnSettings, spectraColumn, retrievedList);
+                    SetPropertyFromUserSettings(ref _columnSettings, distinctPeptidesColumn, retrievedList);
+                    SetPropertyFromUserSettings(ref _columnSettings, distinctMatchesColumn, retrievedList);
+                    SetPropertyFromUserSettings(ref _columnSettings, distinctAnalysesColumn, retrievedList);
+                    SetPropertyFromUserSettings(ref _columnSettings, distinctChargesColumn, retrievedList);
+                    SetPropertyFromUserSettings(ref _columnSettings, analysisColumn, retrievedList);
+                    SetPropertyFromUserSettings(ref _columnSettings, precursorMzColumn, retrievedList);
+                    SetPropertyFromUserSettings(ref _columnSettings, chargeColumn, retrievedList);
+                    SetPropertyFromUserSettings(ref _columnSettings, observedMassColumn, retrievedList);
+                    SetPropertyFromUserSettings(ref _columnSettings, exactMassColumn, retrievedList);
+                    SetPropertyFromUserSettings(ref _columnSettings, massErrorColumn, retrievedList);
+                    SetPropertyFromUserSettings(ref _columnSettings, qvalueColumn, retrievedList);
+                    SetPropertyFromUserSettings(ref _columnSettings, sequenceColumn, retrievedList);
+
+                    treeListView.BackColor = Color.FromArgb(int.Parse(retrievedList[15]));
+                    treeListView.ForeColor = Color.FromArgb(int.Parse(retrievedList[16]));
+
+                    //foreach (var kvp in _columnSettings)
+                    //    kvp.Key.IsVisible = (bool)kvp.Value[3];
+                    //treeListView.RebuildColumns();
+                }
+                else
+                    SetDefaults();
+            }
+            else
+                SetDefaults();
+
+
+            SetColumnAspectGetters();
+
+            #endregion
+
+            treeListView.UseCellFormatEvents = true;
+            treeListView.FormatCell +=
+                delegate(object sender, FormatCellEventArgs currentCell) { currentCell.SubItem.BackColor = (Color)_columnSettings[currentCell.Column][2]; };
+
+            treeListView.CanExpandGetter += delegate(object x) { return !(x is PeptideSpectrumMatchScoreRow); };
+            treeListView.ChildrenGetter += new TreeListView.ChildrenGetterDelegate(getChildren);
+            treeListView.CellClick += new EventHandler<CellClickEventArgs>(treeListView_CellClick);
+            treeListView.AfterExpanding += new EventHandler<AfterExpandingEventArgs>(treeListView_AfterExpanding);
+            treeListView.AfterCollapsing += new EventHandler<AfterCollapsingEventArgs>(treeListView_AfterCollapsing);
+        }
+
+        private void SetDefaults()
+        {
+            _columnSettings.Add(keyColumn, new object[] { "Key", -1, treeListView.BackColor, false, false });
+            _columnSettings.Add(totalSpectraColumn,
+                                new object[] { "Integer", -1, treeListView.BackColor, false, false });
+            _columnSettings.Add(spectraColumn, new object[] { "Integer", -1, treeListView.BackColor, false, false });
+            _columnSettings.Add(distinctPeptidesColumn,
+                                new object[] { "Integer", -1, treeListView.BackColor, false, false });
+            _columnSettings.Add(distinctMatchesColumn,
+                                new object[] { "Integer", -1, treeListView.BackColor, false, false });
+            _columnSettings.Add(distinctAnalysesColumn,
+                                new object[] { "Integer", -1, treeListView.BackColor, false, false });
+            _columnSettings.Add(distinctChargesColumn,
+                                new object[] { "Integer", -1, treeListView.BackColor, false, false });
+            _columnSettings.Add(analysisColumn, new object[] { "String", -1, treeListView.BackColor, false, false });
+            _columnSettings.Add(precursorMzColumn, new object[] { "Float", -1, treeListView.BackColor, false, false });
+            _columnSettings.Add(chargeColumn, new object[] { "Integer", -1, treeListView.BackColor, false, false });
+            _columnSettings.Add(observedMassColumn, new object[] { "Float", -1, treeListView.BackColor, false, false });
+            _columnSettings.Add(exactMassColumn, new object[] { "Float", -1, treeListView.BackColor, false, false });
+            _columnSettings.Add(massErrorColumn, new object[] { "Float", -1, treeListView.BackColor, false, false });
+            _columnSettings.Add(qvalueColumn, new object[] { "Float", -1, treeListView.BackColor, false, false });
+            _columnSettings.Add(sequenceColumn, new object[] { "String", -1, treeListView.BackColor, false, false });
+        }
+
+        private void SetColumnAspectGetters()
+        {
             keyColumn.AspectGetter += delegate(object x)
             {
+
                 if (x is SpectrumSourceGroupRow)
                     return Path.GetFileName((x as SpectrumSourceGroupRow).SpectrumSourceGroup.Name) + '/';
                 else if (x is SpectrumSourceRow)
@@ -339,17 +424,17 @@ namespace IDPicker.Forms
                 return null;
             };
 
-            distinctMatchesColumn.AspectGetter += delegate(object x)
-            {
-                if (x is AggregateRow)
-                    return (x as AggregateRow).DistinctMatches;
-                return null;
-            };
-
             distinctPeptidesColumn.AspectGetter += delegate(object x)
             {
                 if (x is AggregateRow)
                     return (x as AggregateRow).DistinctPeptides;
+                return null;
+            };
+
+            distinctMatchesColumn.AspectGetter += delegate(object x)
+            {
+                if (x is AggregateRow)
+                    return (x as AggregateRow).DistinctMatches;
                 return null;
             };
 
@@ -379,10 +464,16 @@ namespace IDPicker.Forms
 
             precursorMzColumn.AspectGetter += delegate(object x)
             {
+                var decimalPlaces = (int)_columnSettings[precursorMzColumn][1];
+
                 if (x is SpectrumRow)
-                    return (x as SpectrumRow).Spectrum.PrecursorMZ;
+                    return (decimalPlaces >= 0) ?
+                        Math.Round((x as SpectrumRow).Spectrum.PrecursorMZ, decimalPlaces) :
+                        (x as SpectrumRow).Spectrum.PrecursorMZ;
                 else if (x is PeptideSpectrumMatchRow)
-                    return (x as PeptideSpectrumMatchRow).Spectrum.PrecursorMZ;
+                    return (decimalPlaces >= 0) ?
+                        Math.Round((x as PeptideSpectrumMatchRow).Spectrum.PrecursorMZ, decimalPlaces) :
+                        (x as PeptideSpectrumMatchRow).Spectrum.PrecursorMZ;
                 return null;
             };
 
@@ -398,22 +489,33 @@ namespace IDPicker.Forms
                 if (x is PeptideSpectrumMatchRow)
                 {
                     var psm = (x as PeptideSpectrumMatchRow).PeptideSpectrumMatch;
-                    return psm.Spectrum.PrecursorMZ * psm.Charge - psm.Charge * pwiz.CLI.chemistry.Proton.Mass;
+                    double returnValue = psm.Spectrum.PrecursorMZ * psm.Charge - psm.Charge * pwiz.CLI.chemistry.Proton.Mass;
+                    if ((int)_columnSettings[observedMassColumn][1] >= 0)
+                        returnValue = Math.Round(returnValue, (int)_columnSettings[observedMassColumn][1]);
+                    return returnValue;
                 }
                 return null;
             };
 
             exactMassColumn.AspectGetter += delegate(object x)
             {
+                var decimalPlaces = (int)_columnSettings[exactMassColumn][1];
+
                 if (x is PeptideSpectrumMatchRow)
-                    return (x as PeptideSpectrumMatchRow).PeptideSpectrumMatch.MonoisotopicMass;
+                    return (decimalPlaces >= 0) ?
+                        Math.Round((x as PeptideSpectrumMatchRow).PeptideSpectrumMatch.MonoisotopicMass, decimalPlaces) :
+                        (x as PeptideSpectrumMatchRow).PeptideSpectrumMatch.MonoisotopicMass;
                 return null;
             };
 
             massErrorColumn.AspectGetter += delegate(object x)
             {
+                var decimalPlaces = (int)_columnSettings[massErrorColumn][1];
+
                 if (x is PeptideSpectrumMatchRow)
-                    return (x as PeptideSpectrumMatchRow).PeptideSpectrumMatch.MonoisotopicMassError;
+                    return (decimalPlaces >= 0) ?
+                        Math.Round((x as PeptideSpectrumMatchRow).PeptideSpectrumMatch.MonoisotopicMassError, decimalPlaces) :
+                        (x as PeptideSpectrumMatchRow).PeptideSpectrumMatch.MonoisotopicMassError;
                 return null;
             };
 
@@ -421,8 +523,12 @@ namespace IDPicker.Forms
             {
                 if (x is PeptideSpectrumMatchRow)
                 {
+                    var decimalPlaces = (int)_columnSettings[massErrorColumn][1];
                     var psm = (x as PeptideSpectrumMatchRow).PeptideSpectrumMatch;
-                    return psm.Rank > 1 ? "n/a" : psm.QValue.ToString();
+                    if (decimalPlaces >= 0)
+                        return psm.Rank > 1 ? "n/a" : Math.Round(psm.QValue, decimalPlaces).ToString();
+                    else
+                        return psm.Rank > 1 ? "n/a" : psm.QValue.ToString();
                 }
                 return null;
             };
@@ -433,13 +539,107 @@ namespace IDPicker.Forms
                     return (x as PeptideSpectrumMatchRow).PeptideSpectrumMatch.ToModifiedString();
                 return null;
             };
-            #endregion
+        }
 
-            treeListView.CanExpandGetter += delegate(object x) { return !(x is PeptideSpectrumMatchScoreRow); };
-            treeListView.ChildrenGetter += new TreeListView.ChildrenGetterDelegate(getChildren);
-            treeListView.CellClick += new EventHandler<CellClickEventArgs>(treeListView_CellClick);
-            treeListView.AfterExpanding += new EventHandler<AfterExpandingEventArgs>(treeListView_AfterExpanding);
-            treeListView.AfterCollapsing += new EventHandler<AfterCollapsingEventArgs>(treeListView_AfterCollapsing);
+        private static void SetPropertyFromUserSettings(ref Dictionary<OLVColumn, object[]> testDictionary, OLVColumn targetColumn, List<string> columnProperties)
+        {
+            for (int x = 0; x < columnProperties.Count - 1; x++)
+            {
+                var splitSetting = columnProperties[x].Split('|');
+
+                if (splitSetting[0] == targetColumn.Text)
+                {
+                    testDictionary.Add(targetColumn,
+                        new object[5]{splitSetting[1], int.Parse(splitSetting[2]),
+                            Color.FromArgb(int.Parse(splitSetting[3])),
+                            bool.Parse(splitSetting[4]), bool.Parse(splitSetting[5])});
+                    break;
+                }
+            }
+        }
+
+        internal void SaveUserSettings(List<ColumnProperty> columnList, int layoutIndex)
+        {
+            //User properties will be in format:
+            //"(int)LayoutIndex
+            //(string)Column1Name|(string)Type|(int)DecimalPlaces|(int)CellColorCode|(bool)Visible|(bool)Locked
+            //(string)Column2Name|(string)Type|(int)DecimalPlaces|(int)CellColorCode|(bool)Visible|(bool)Locked
+            //(string)Column3Name|(string)Type|(int)DecimalPlaces|(int)CellColorCode|(bool)Visible|(bool)Locked
+            //(string)Column4Name|(string)Type|(int)DecimalPlaces|(int)CellColorCode|(bool)Visible|(bool)Locked
+            //(int)BackColorCode
+            //(int)TextColorCode"
+
+            var setting = new StringBuilder(layoutIndex + Environment.NewLine);
+            foreach (var item in columnList)
+            {
+                if (item.Name == "BackColor" || item.Name == "TextColor")
+                    continue;
+                setting.AppendFormat("{0}|", item.Name);
+                setting.AppendFormat("{0}|", item.Type);
+                setting.AppendFormat("{0}|", item.DecimalPlaces);
+                setting.AppendFormat("{0}|", item.ColorCode);
+                setting.AppendFormat("{0}|", item.Visible);
+                if (item.Locked == null)
+                    setting.AppendFormat("{0}{1}", "null", Environment.NewLine);
+                else
+                    setting.AppendFormat("{0}{1}", item.Locked, Environment.NewLine);
+            }
+
+            var backColor = columnList.Where(x => x.Name == "BackColor").SingleOrDefault();
+            var textColor = columnList.Where(x => x.Name == "TextColor").SingleOrDefault();
+
+            setting.AppendFormat("{0}{1}", backColor.ColorCode, Environment.NewLine);
+            setting.AppendFormat("{0}{1}", textColor.ColorCode, Environment.NewLine);
+
+            Properties.Settings.Default.SpectrumTableFormSettings.Add(setting.ToString());
+            Properties.Settings.Default.Save();
+        }
+
+        internal List<ColumnProperty> GetCurrentProperties()
+        {
+            foreach (var kvp in _columnSettings)
+                kvp.Value[3] = false;
+            foreach (var column in treeListView.ColumnsInDisplayOrder)
+                _columnSettings[column][3] = true;
+
+            var currentList = new List<ColumnProperty>();
+
+            foreach (var kvp in _columnSettings)
+            {
+                currentList.Add(new ColumnProperty
+                {
+                    Scope = "SpectrumTableForm",
+                    Name = kvp.Key.Text,
+                    Type = kvp.Value[0].ToString(),
+                    DecimalPlaces = (int)kvp.Value[1],
+                    ColorCode = ((Color)kvp.Value[2]).ToArgb(),
+                    Visible = (bool)kvp.Value[3],
+                    Locked = (bool)kvp.Value[4]
+                });
+            }
+
+            currentList.Add(new ColumnProperty
+            {
+                Scope = "SpectrumTableForm",
+                Name = "BackColor",
+                Type = "GlobalSetting",
+                DecimalPlaces = -1,
+                ColorCode = treeListView.BackColor.ToArgb(),
+                Visible = false,
+                Locked = false
+            });
+            currentList.Add(new ColumnProperty
+            {
+                Scope = "SpectrumTableForm",
+                Name = "TextColor",
+                Type = "GlobalSetting",
+                DecimalPlaces = -1,
+                ColorCode = treeListView.ForeColor.ToArgb(),
+                Visible = false,
+                Locked = false
+            });
+
+            return currentList;
         }
 
         #region Set column visibility
@@ -506,8 +706,8 @@ namespace IDPicker.Forms
 
             totalSpectraColumn.IsVisible = false;// showAggregateColumns;
             spectraColumn.IsVisible = showAggregateColumns && deepestGroupingMode != GroupBy.Off && !GroupingSetupControl<GroupBy>.HasParentGrouping(checkedGroupings, deepestGroupingMode, GroupBy.Spectrum);
-            distinctMatchesColumn.IsVisible = showAggregateColumns && deepestGroupingMode != GroupBy.Off && !GroupingSetupControl<GroupBy>.HasParentGrouping(checkedGroupings, deepestGroupingMode, GroupBy.Spectrum);
             distinctPeptidesColumn.IsVisible = showAggregateColumns && deepestGroupingMode != GroupBy.Off && !GroupingSetupControl<GroupBy>.HasParentGrouping(checkedGroupings, deepestGroupingMode, GroupBy.Peptide);
+            distinctMatchesColumn.IsVisible = showAggregateColumns && deepestGroupingMode != GroupBy.Off && !GroupingSetupControl<GroupBy>.HasParentGrouping(checkedGroupings, deepestGroupingMode, GroupBy.Spectrum);
             distinctAnalysesColumn.IsVisible = showAggregateColumns && deepestGroupingMode != GroupBy.Off && !GroupingSetupControl<GroupBy>.HasParentGrouping(checkedGroupings, deepestGroupingMode, GroupBy.Analysis);
             distinctChargesColumn.IsVisible = showAggregateColumns && deepestGroupingMode != GroupBy.Off && !GroupingSetupControl<GroupBy>.HasParentGrouping(checkedGroupings, deepestGroupingMode, GroupBy.Charge);
 
@@ -805,6 +1005,51 @@ namespace IDPicker.Forms
             workerThread.RunWorkerAsync();
         }
 
+        internal void LoadLayout(IList<ColumnProperty> listOfSettings)
+        {
+            if (listOfSettings.Count > 0)
+            {
+                _columnSettings = new Dictionary<OLVColumn, object[]>();
+
+                SetPropertyFromDatabase(ref _columnSettings, keyColumn, listOfSettings);
+                SetPropertyFromDatabase(ref _columnSettings, totalSpectraColumn, listOfSettings);
+                SetPropertyFromDatabase(ref _columnSettings, spectraColumn, listOfSettings);
+                SetPropertyFromDatabase(ref _columnSettings, distinctPeptidesColumn, listOfSettings);
+                SetPropertyFromDatabase(ref _columnSettings, distinctMatchesColumn, listOfSettings);
+                SetPropertyFromDatabase(ref _columnSettings, distinctAnalysesColumn, listOfSettings);
+                SetPropertyFromDatabase(ref _columnSettings, distinctChargesColumn, listOfSettings);
+                SetPropertyFromDatabase(ref _columnSettings, analysisColumn, listOfSettings);
+                SetPropertyFromDatabase(ref _columnSettings, precursorMzColumn, listOfSettings);
+                SetPropertyFromDatabase(ref _columnSettings, chargeColumn, listOfSettings);
+                SetPropertyFromDatabase(ref _columnSettings, observedMassColumn, listOfSettings);
+                SetPropertyFromDatabase(ref _columnSettings, exactMassColumn, listOfSettings);
+                SetPropertyFromDatabase(ref _columnSettings, massErrorColumn, listOfSettings);
+                SetPropertyFromDatabase(ref _columnSettings, qvalueColumn, listOfSettings);
+                SetPropertyFromDatabase(ref _columnSettings, sequenceColumn, listOfSettings);
+
+                SetColumnAspectGetters();
+                var backColor = listOfSettings.Where(x => x.Name == "BackColor").SingleOrDefault();
+                var textColor = listOfSettings.Where(x => x.Name == "TextColor").SingleOrDefault();
+                treeListView.BackColor = Color.FromArgb(backColor.ColorCode);
+                treeListView.ForeColor = Color.FromArgb(textColor.ColorCode);
+
+                foreach (var kvp in _columnSettings)
+                    kvp.Key.IsVisible = (bool)kvp.Value[3];
+                treeListView.RebuildColumns();
+            }
+        }
+
+        private static void SetPropertyFromDatabase(ref Dictionary<OLVColumn, object[]> testDictionary, OLVColumn targetColumn, IList<ColumnProperty> formSettings)
+        {
+            var rowSettings = formSettings.Where(x => x.Name == targetColumn.Text).SingleOrDefault() ??
+                              formSettings.Where(x => x.Type == "Key").SingleOrDefault();
+
+            testDictionary.Add(targetColumn,
+                new object[]{rowSettings.Type, rowSettings.DecimalPlaces,
+                    Color.FromArgb(rowSettings.ColorCode),
+                    rowSettings.Visible, rowSettings.Locked});
+        }
+
         void setData (object sender, DoWorkEventArgs e)
         {
             var rootGrouping = checkedGroupings.Count > 0 ? checkedGroupings.First() : null;
@@ -1066,6 +1311,30 @@ namespace IDPicker.Forms
                     basicDataFilter = null; // force refresh of basic rows
 
                 SetData(session, userFilter);
+            }
+        }
+
+        private void displayOptionsButton_Click(object sender, EventArgs e)
+        {
+            Color[] currentColors = { treeListView.BackColor, treeListView.ForeColor };
+
+            foreach (var kvp in _columnSettings)
+                kvp.Value[3] = kvp.Key.IsVisible;
+
+            var ccf = new ColumnControlForm(_columnSettings, currentColors);
+
+            if (ccf.ShowDialog() == DialogResult.OK)
+            {
+                _columnSettings = ccf._savedSettings;
+
+                foreach (var kvp in _columnSettings)
+                    kvp.Key.IsVisible = (bool)kvp.Value[3];
+
+                treeListView.BackColor = ccf.WindowBackColorBox.BackColor;
+                treeListView.ForeColor = ccf.WindowTextColorBox.BackColor;
+
+                SetColumnAspectGetters();
+                treeListView.RebuildColumns();
             }
         }
     }

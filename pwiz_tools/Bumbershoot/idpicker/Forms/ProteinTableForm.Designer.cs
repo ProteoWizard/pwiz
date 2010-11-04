@@ -150,7 +150,7 @@ namespace IDPicker.Forms
             // 
             // exportButton
             // 
-            this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.exportButton.Image = global::IDPicker.Properties.Resources.Export;
             this.exportButton.Location = new System.Drawing.Point(986, 2);
             this.exportButton.Name = "exportButton";
@@ -191,7 +191,7 @@ namespace IDPicker.Forms
             // 
             // panel1
             // 
-            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.Controls.Add(this.treeListView);
@@ -219,10 +219,14 @@ namespace IDPicker.Forms
             this.Controls.Add(this.displayOptionsButton);
             this.Controls.Add(this.exportButton);
             this.Controls.Add(this.panel1);
+            this.DockAreas = ((DigitalRune.Windows.Docking.DockAreas)(((((DigitalRune.Windows.Docking.DockAreas.Left | DigitalRune.Windows.Docking.DockAreas.Right)
+                        | DigitalRune.Windows.Docking.DockAreas.Top)
+                        | DigitalRune.Windows.Docking.DockAreas.Bottom)
+                        | DigitalRune.Windows.Docking.DockAreas.Document)));
             this.Name = "ProteinTableForm";
             this.TabText = "ProteinTableForm";
             this.Text = "ProteinTableForm";
-            ((System.ComponentModel.ISupportInitialize) (this.treeListView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.treeListView)).EndInit();
             this.exportMenu.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
             this.ResumeLayout(false);

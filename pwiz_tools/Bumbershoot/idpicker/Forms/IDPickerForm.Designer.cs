@@ -50,7 +50,10 @@ namespace IDPicker
         /// </summary>
         private void InitializeComponent ()
         {
+            this.components = new System.ComponentModel.Container();
             this.dockPanel = new DigitalRune.Windows.Docking.DockPanel();
+            this.layoutMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.layoutButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // dockPanel
@@ -68,12 +71,28 @@ namespace IDPicker
             this.dockPanel.Size = new System.Drawing.Size(584, 448);
             this.dockPanel.TabIndex = 0;
             // 
+            // layoutMenuStrip
+            // 
+            this.layoutMenuStrip.Name = "layoutMenuStrip";
+            this.layoutMenuStrip.Size = new System.Drawing.Size(61, 4);
+            // 
+            // layoutButton
+            // 
+            this.layoutButton.Location = new System.Drawing.Point(1, 2);
+            this.layoutButton.Name = "layoutButton";
+            this.layoutButton.Size = new System.Drawing.Size(48, 23);
+            this.layoutButton.TabIndex = 2;
+            this.layoutButton.Text = "Layout";
+            this.layoutButton.UseVisualStyleBackColor = true;
+            this.layoutButton.Click += new System.EventHandler(this.layoutButton_Click);
+            // 
             // IDPickerForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(584, 474);
             this.Controls.Add(this.dockPanel);
+            this.Controls.Add(this.layoutButton);
             this.Name = "IDPickerForm";
             this.Text = "IDPickerForm";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
@@ -85,6 +104,8 @@ namespace IDPicker
         #endregion
 
         private DigitalRune.Windows.Docking.DockPanel dockPanel;
+        private System.Windows.Forms.ContextMenuStrip layoutMenuStrip;
+        private System.Windows.Forms.Button layoutButton;
 
     }
 }

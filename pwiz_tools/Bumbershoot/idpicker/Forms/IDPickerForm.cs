@@ -68,6 +68,8 @@ namespace IDPicker
         private IDictionary<Analysis, QonverterSettings> qonverterSettingsByAnalysis;
 
         string[] args;
+        private List<LayoutProperty> _userLayoutList;
+
         public IDPickerForm (string[] args)
         {
             InitializeComponent();
@@ -540,10 +542,312 @@ namespace IDPicker
             //OpenFiles(filepaths);//.Take(10).Union(filepaths.Skip(200).Take(10)).Union(filepaths.Skip(400).Take(10)).ToList());
             //return;
 
+            //Get user layout profiles
+            RefreshUserLayoutList();
+            if (_userLayoutList.Count < 2 || _userLayoutList[1].Name != "User Default")
+                ResetUserLayoutSettings();
+            LoadLayout(_userLayoutList[1]);
+            var temp = Properties.Settings.Default.UserLayouts;
+
             if (args != null && args.Length > 0 && args.All(o => File.Exists(o)))
                 OpenFiles(args);
             else
                 openToolStripButton_Click(this, EventArgs.Empty);
+        }
+
+        private void LoadLayout(LayoutProperty userLayout)
+        {
+            try
+            {
+                var tempFile = new StreamWriter(Path.Combine(Application.StartupPath, "TemporaryDockLocationFile.xml"), false, Encoding.Unicode);
+                tempFile.Write(userLayout.PaneLocations);
+                tempFile.Close();
+                tempFile.Dispose();
+                dockPanel.SuspendLayout();
+                dockPanel.LoadFromXml(Path.Combine(Application.StartupPath, "TemporaryDockLocationFile.xml"), DeserializeForm);
+                dockPanel.ResumeLayout(true, true);
+                File.Delete(Path.Combine(Application.StartupPath, "TemporaryDockLocationFile.xml"));
+
+                if (userLayout.HasCustomColumnSettings && proteinTableForm != null &&
+                    peptideTableForm != null && spectrumTableForm != null)
+                {
+                    var columnList = from ColumnProperty i in userLayout.SettingsList
+                                     where i.Scope == "ProteinTableForm"
+                                     select i;
+                    proteinTableForm.LoadLayout(columnList.ToList());
+
+                    columnList = from ColumnProperty i in userLayout.SettingsList
+                                 where i.Scope == "PeptideTableForm"
+                                 select i;
+                    peptideTableForm.LoadLayout(columnList.ToList());
+
+                    columnList = from ColumnProperty i in userLayout.SettingsList
+                                 where i.Scope == "SpectrumTableForm"
+                                 select i;
+                    spectrumTableForm.LoadLayout(columnList.ToList());
+                }
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Error encountered while trying to load saved layout.");
+            }
+
+        }
+
+        private IDockableForm DeserializeForm(string persistantString)
+        {
+            return null;
+        }
+
+        private void ResetUserLayoutSettings()
+        {
+            _userLayoutList = new List<LayoutProperty>();
+
+            SaveNewLayout("System Default", true, false);
+            SaveNewLayout("User Default", true, false);
+
+            SaveUserLayoutList();
+        }
+
+        private void RefreshUserLayoutList()
+        {
+            var retrievedList = new List<string>(Util.StringCollectionToStringArray(Properties.Settings.Default.UserLayouts));
+            _userLayoutList = new List<LayoutProperty>();
+
+            //stick with an empty list if not in the correct format
+            if (retrievedList.Count == 0 || !retrievedList[0].StartsWith("System Default"))
+                return;
+
+            for (var x = 0; x < retrievedList.Count; x++)
+            {
+                var items = retrievedList[x].Split('|');
+                var customColumnList = new List<ColumnProperty>();
+                if (bool.Parse(items[2]))
+                {
+                    int tempint;
+                    //ProteinForm
+                    customColumnList.AddRange(
+                        ColumnSettingStringToIdpColumnPropertyList(
+                        Util.StringCollectionToStringArray(Properties.Settings.Default.ProteinTableFormSettings),
+                        "ProteinTableForm", x)
+                        );
+
+                    //PeptideForm
+                    customColumnList.AddRange(
+                        ColumnSettingStringToIdpColumnPropertyList(
+                        Util.StringCollectionToStringArray(Properties.Settings.Default.PeptideTableFormSettings),
+                        "PeptideTableForm", x)
+                        );
+
+                    //SpectrumForm
+                    customColumnList.AddRange(
+                        ColumnSettingStringToIdpColumnPropertyList(
+                        Util.StringCollectionToStringArray(Properties.Settings.Default.SpectrumTableFormSettings),
+                        "SpectrumTableForm", x)
+                        );
+                }
+
+                var newLayout = new LayoutProperty
+                {
+                    Name = items[0],
+                    PaneLocations = items[1],
+                    HasCustomColumnSettings = bool.Parse(items[2]),
+                    SettingsList = customColumnList
+                };
+                foreach (var item in newLayout.SettingsList)
+                    item.Layout = newLayout;
+
+                _userLayoutList.Add(newLayout);
+            }
+        }
+
+        private List<ColumnProperty> ColumnSettingStringToIdpColumnPropertyList(string[] settings, string associatedForm, int associatedLayout)
+        {
+            //User properties will be in format:
+            //"(int)LayoutIndex
+            //(string)Column1Name|(string)Type|(int)DecimalPlaces|(int)CellColorCode|(bool)Visible|(bool)Locked
+            //(string)Column2Name|(string)Type|(int)DecimalPlaces|(int)CellColorCode|(bool)Visible|(bool)Locked
+            //(string)Column3Name|(string)Type|(int)DecimalPlaces|(int)CellColorCode|(bool)Visible|(bool)Locked
+            //(string)Column4Name|(string)Type|(int)DecimalPlaces|(int)CellColorCode|(bool)Visible|(bool)Locked
+            //(int)BackColorCode
+            //(int)TextColorCode"
+
+            var columnList = new List<ColumnProperty>();
+
+            foreach (var setting in settings)
+            {
+                var lines = setting.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                if (int.Parse(lines[0]) == associatedLayout)
+                {
+                    for (var x = 1; x < lines.Count() - 2; x++)
+                    {
+                        var items = lines[x].Split('|');
+                        bool tempbool;
+                        var canParse = bool.TryParse(items[5], out tempbool);
+
+                        columnList.Add(new ColumnProperty
+                        {
+                            Name = items[0],
+                            Type = items[1],
+                            DecimalPlaces = int.Parse(items[2]),
+                            ColorCode = int.Parse(items[3]),
+                            Visible = bool.Parse(items[4]),
+                            Locked = canParse ? bool.Parse(items[5]) : (bool?)null,
+                            Scope = associatedForm
+                        });
+                    }
+
+                    columnList.Add(new ColumnProperty
+                    {
+                        Name = "BackColor",
+                        Type = "GlobalSetting",
+                        DecimalPlaces = -1,
+                        ColorCode = int.Parse(lines[lines.Count() - 2]),
+                        Visible = false,
+                        Locked = null,
+                        Scope = associatedForm
+                    });
+
+                    columnList.Add(new ColumnProperty
+                    {
+                        Name = "TextColor",
+                        Type = "GlobalSetting",
+                        DecimalPlaces = -1,
+                        ColorCode = int.Parse(lines[lines.Count() - 1]),
+                        Visible = false,
+                        Locked = null,
+                        Scope = associatedForm
+                    });
+
+                    break;
+                }
+            }
+            return columnList;
+        }
+
+        private void SaveNewLayout(string layoutName, bool saveColumns, bool isDatabase)
+        {
+            var customColumnList = new List<ColumnProperty>();
+            if (saveColumns)
+            {
+                customColumnList.AddRange(proteinTableForm.GetCurrentProperties());
+                customColumnList.AddRange(peptideTableForm.GetCurrentProperties());
+                customColumnList.AddRange(spectrumTableForm.GetCurrentProperties());
+            }
+
+            var tempLayout = new LayoutProperty()
+            {
+                Name = layoutName,
+                PaneLocations = GetPanelLocations(),
+                HasCustomColumnSettings = saveColumns,
+            };
+            foreach (var item in customColumnList)
+                item.Layout = tempLayout;
+
+            tempLayout.SettingsList = customColumnList;
+
+            if (isDatabase)
+            {
+                lock (session)
+                {
+                    session.Save(tempLayout);
+                    session.Flush();
+                }
+            }
+            else
+            {
+                tempLayout.SettingsList = customColumnList;
+                _userLayoutList.Add(tempLayout);
+                SaveUserLayoutList();
+            }
+        }
+
+
+        private void UpdateLayout(LayoutProperty layoutProperty, bool saveColumns, bool isDatabase)
+        {
+            var customColumnList = new List<ColumnProperty>();
+            if (saveColumns)
+            {
+                customColumnList.AddRange(proteinTableForm.GetCurrentProperties());
+                customColumnList.AddRange(peptideTableForm.GetCurrentProperties());
+                customColumnList.AddRange(spectrumTableForm.GetCurrentProperties());
+            }
+
+            layoutProperty.PaneLocations = GetPanelLocations();
+            layoutProperty.HasCustomColumnSettings = saveColumns;
+            foreach (var item in customColumnList)
+                item.Layout = layoutProperty;
+
+            if (isDatabase)
+            {
+                lock (session)
+                {
+                    if (layoutProperty.SettingsList.Count > 0)
+                        foreach (var item in layoutProperty.SettingsList)
+                            session.Delete(item);
+
+                    layoutProperty.SettingsList = customColumnList;
+                    session.Save(layoutProperty);
+                    session.Flush();
+                }
+            }
+            else
+            {
+                layoutProperty.SettingsList = customColumnList;
+                SaveUserLayoutList();
+            }
+        }
+
+        private void SaveUserLayoutList()
+        {
+            Properties.Settings.Default.UserLayouts.Clear();
+            Properties.Settings.Default.ProteinTableFormSettings.Clear();
+            Properties.Settings.Default.PeptideTableFormSettings.Clear();
+            Properties.Settings.Default.SpectrumTableFormSettings.Clear();
+
+            //Layout properties will be in format:
+            //"(string)Name|(string)XML|(bool)CustomColumns"
+            for (var x = 0; x < _userLayoutList.Count; x++)
+            {
+                //Save Layout
+                Properties.Settings.Default.UserLayouts.Add(string.Format("{0}|{1}|{2}{3}",
+                    _userLayoutList[x].Name, _userLayoutList[x].PaneLocations,
+                    _userLayoutList[x].HasCustomColumnSettings, Environment.NewLine));
+                Properties.Settings.Default.Save();
+
+                //Save column settings
+                if (_userLayoutList[x].HasCustomColumnSettings)
+                {
+                    //Protein Form
+                    var columnSettings = from ColumnProperty i in _userLayoutList[x].SettingsList
+                                         where i.Scope == "ProteinTableForm"
+                                         select i;
+                    proteinTableForm.SaveUserSettings(columnSettings.ToList(), x);
+
+                    //Peptide Form
+                    columnSettings = from ColumnProperty i in _userLayoutList[x].SettingsList
+                                     where i.Scope == "PeptideTableForm"
+                                     select i;
+                    peptideTableForm.SaveUserSettings(columnSettings.ToList(), x);
+
+                    //Spectrum Form
+                    columnSettings = from ColumnProperty i in _userLayoutList[x].SettingsList
+                                     where i.Scope == "SpectrumTableForm"
+                                     select i;
+                    spectrumTableForm.SaveUserSettings(columnSettings.ToList(), x);
+                }
+            }
+        }
+
+        private string GetPanelLocations()
+        {
+            dockPanel.SaveAsXml(Path.Combine(Application.StartupPath, "TemporaryDockLocationFile.xml"));
+            var tempIn = new StreamReader(Path.Combine(Application.StartupPath, "TemporaryDockLocationFile.xml"));
+            var locationXml = tempIn.ReadToEnd();
+            tempIn.Close();
+            tempIn.Dispose();
+            File.Delete(Path.Combine(Application.StartupPath, "TemporaryDockLocationFile.xml"));
+            return locationXml;
         }
 
         void databaseNotFoundHandler (object sender, Parser.DatabaseNotFoundEventArgs e)
@@ -900,6 +1204,13 @@ namespace IDPicker
                 //make sure to ignore "Abandoned" group
                 dataFilter.SpectrumSourceGroup = session.QueryOver<DataModel.SpectrumSourceGroup>().Where(g => g.Name == "/").SingleOrDefault();
 
+                //set or save default layout
+                var defaultLayout = session.QueryOver<LayoutProperty>().Where(x => x.Name == "Database Default").SingleOrDefault();
+                if (defaultLayout == null)
+                    SaveNewLayout("Database Default", true, true);
+                else
+                    LoadLayout(defaultLayout);
+
                 breadCrumbControl.BreadCrumbs.Clear();
                 breadCrumbControl.BreadCrumbs.Add(GetBasicFilterControls());
 
@@ -971,9 +1282,209 @@ namespace IDPicker
 
         private void IDPickerForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            //spectrumTableForm.SaveSettings();
-            peptideTableForm.SaveSettings();
-            proteinTableForm.SaveSettings();
+            SaveUserLayoutList();
+        }
+
+        private void LoadLayoutMenu()
+        {
+            var noDatabase = session == null;
+            var currentUserMenuLevel = new List<ToolStripMenuItem>();
+            ToolStripMenuItem saveMenu;
+            ToolStripMenuItem loadMenu;
+            ToolStripMenuItem deleteMenu;
+
+            #region Load Options
+            //set up user load options
+            foreach (var item in _userLayoutList)
+            {
+                var tempItem = item;
+                var newOption = new ToolStripMenuItem { Text = item.Name };
+                newOption.Click += (s, e) => LoadLayout(tempItem);
+                currentUserMenuLevel.Add(newOption);
+            }
+
+            //check if more needs to be done
+            if (noDatabase)
+                loadMenu = new ToolStripMenuItem("Load", null, currentUserMenuLevel.ToArray());
+            else
+            {
+                var currentDatabaseMenuLevel = new List<ToolStripMenuItem>();
+                var userMenu = new ToolStripMenuItem("User", null, currentUserMenuLevel.ToArray());
+
+                IList<LayoutProperty> databaseLayouts;
+                lock (session)
+                    databaseLayouts = session.QueryOver<LayoutProperty>().List();
+
+                foreach (var item in databaseLayouts)
+                {
+                    var tempItem = item;
+                    var newOption = new ToolStripMenuItem { Text = item.Name };
+                    newOption.Click += (s, e) => LoadLayout(tempItem);
+                    currentDatabaseMenuLevel.Add(newOption);
+                }
+                var databaseMenu = new ToolStripMenuItem("Database", null, currentDatabaseMenuLevel.ToArray());
+
+                loadMenu = new ToolStripMenuItem("Load", null, userMenu, databaseMenu);
+            }
+            #endregion
+
+            #region Save Options
+
+            //create user save list
+            currentUserMenuLevel = new List<ToolStripMenuItem>();
+            foreach (var item in _userLayoutList)
+            {
+                var tempItem = item;
+                var newOption = new ToolStripMenuItem { Text = item.Name };
+                newOption.Click += (s, e) =>
+                {
+                    var saveColumns = false;
+                    if (MessageBox.Show("Save column settings as well?", "Save", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                        saveColumns = true;
+                    UpdateLayout(tempItem, saveColumns, false);
+                };
+                currentUserMenuLevel.Add(newOption);
+            }
+
+            //replace system default (not editable) with new layout option
+            {
+                var newLayout = new ToolStripMenuItem("New Layout");
+                newLayout.Click +=
+                    (s, e) =>
+                    {
+                        var textInput = new TextInputBox();
+                        if (textInput.ShowDialog() == DialogResult.OK)
+                            SaveNewLayout(textInput.inputTextBox.Text, textInput.inputCheckBox.Checked, false);
+                    };
+                currentUserMenuLevel.RemoveAt(0);
+                currentUserMenuLevel.Insert(0, newLayout);
+            }
+
+            //check if more needs to be done
+            if (noDatabase)
+                saveMenu = new ToolStripMenuItem("Save", null, currentUserMenuLevel.ToArray());
+            else
+            {
+                var currentDatabaseMenuLevel = new List<ToolStripMenuItem>();
+                var userMenu = new ToolStripMenuItem("User", null, currentUserMenuLevel.ToArray());
+
+                IList<LayoutProperty> databaseLayouts;
+                lock (session)
+                    databaseLayouts = session.QueryOver<LayoutProperty>().List();
+
+                foreach (var item in databaseLayouts)
+                {
+                    var newOption = new ToolStripMenuItem { Text = item.Name };
+                    LayoutProperty tempItem = item;
+                    newOption.Click += (s, e) =>
+                    {
+                        var saveColumns = false;
+                        if (MessageBox.Show("Save column settings as well?", "Save", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                            saveColumns = true;
+                        UpdateLayout(tempItem, saveColumns, true);
+                    };
+                    currentDatabaseMenuLevel.Add(newOption);
+                }
+
+                //Add new layout option
+                {
+                    var newLayout = new ToolStripMenuItem("New Layout");
+                    newLayout.Click +=
+                        (s, e) =>
+                        {
+                            var textInput = new TextInputBox();
+                            if (textInput.ShowDialog() == DialogResult.OK)
+                                SaveNewLayout(textInput.inputTextBox.Text, textInput.inputCheckBox.Checked, true);
+                        };
+                    currentDatabaseMenuLevel.Insert(0, newLayout);
+                }
+                var databaseMenu = new ToolStripMenuItem("Database", null, currentDatabaseMenuLevel.ToArray());
+
+                saveMenu = new ToolStripMenuItem("Save", null, userMenu, databaseMenu);
+            }
+
+            #endregion
+
+            #region Delete Options
+            //set up user delete options
+            currentUserMenuLevel = new List<ToolStripMenuItem>();
+            foreach (var item in _userLayoutList)
+            {
+                var tempItem = item;
+                var newOption = new ToolStripMenuItem { Text = item.Name };
+                newOption.Click += (s, e) =>
+                {
+                    if (MessageBox.Show(string.Format("Are you sure you want to delete '{0}'?", tempItem.Name), "Delete", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    {
+                        _userLayoutList.Remove(tempItem);
+                        SaveUserLayoutList();
+                    }
+                };
+                currentUserMenuLevel.Add(newOption);
+            }
+            //Dont allow user to delete defaults
+            currentUserMenuLevel.RemoveRange(0, 2);
+            //dont delete if nothing to delete, but check for database first
+            if (noDatabase)
+                deleteMenu = currentUserMenuLevel.Count > 0 ?
+                    new ToolStripMenuItem("Delete", null, currentUserMenuLevel.ToArray()) :
+                    null;
+            else
+            {
+                var currentDatabaseMenuLevel = new List<ToolStripMenuItem>();
+                var userMenu = currentUserMenuLevel.Count > 0 ?
+                    new ToolStripMenuItem("User", null, currentUserMenuLevel.ToArray()) :
+                    null;
+
+                IList<LayoutProperty> databaseLayouts;
+                lock (session)
+                    databaseLayouts = session.QueryOver<LayoutProperty>().List();
+
+                foreach (var item in databaseLayouts)
+                {
+                    var tempItem = item;
+                    var newOption = new ToolStripMenuItem { Text = item.Name };
+                    newOption.Click += (s, e) =>
+                    {
+                        if (MessageBox.Show(string.Format("Are you sure you want to delete '{0}'?", tempItem.Name), "Delete", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                        {
+                            session.Delete(tempItem);
+                            session.Flush();
+                        }
+                    };
+                    currentDatabaseMenuLevel.Add(newOption);
+                }
+                currentDatabaseMenuLevel.RemoveAt(0);
+                var databaseMenu = currentDatabaseMenuLevel.Count > 0 ?
+                    new ToolStripMenuItem("Database", null, currentDatabaseMenuLevel.ToArray()) :
+                    null;
+
+                if (userMenu == null)
+                    if (databaseMenu == null)
+                        deleteMenu = null;
+                    else
+                        deleteMenu = new ToolStripMenuItem("Delete", null, databaseMenu);
+                else if (databaseMenu == null)
+                    deleteMenu = new ToolStripMenuItem("Delete", null, userMenu);
+                else
+                    deleteMenu = new ToolStripMenuItem("Delete", null, userMenu, databaseMenu);
+
+
+            }
+
+            #endregion
+
+            layoutMenuStrip.Items.Clear();
+            layoutMenuStrip.Items.Add(saveMenu);
+            layoutMenuStrip.Items.Add(loadMenu);
+            if (deleteMenu != null)
+                layoutMenuStrip.Items.Add(deleteMenu);
+        }
+
+        private void layoutButton_Click(object sender, EventArgs e)
+        {
+            LoadLayoutMenu();
+            layoutMenuStrip.Show(Cursor.Position);
         }
     }
 

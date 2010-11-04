@@ -58,6 +58,22 @@ namespace IDPicker
 
             Controls.Add(control);
         }
+
+        private void InitializeComponent()
+        {
+            this.SuspendLayout();
+            // 
+            // SequenceCoverageForm
+            // 
+            this.ClientSize = new System.Drawing.Size(292, 266);
+            this.DockAreas = ((DigitalRune.Windows.Docking.DockAreas)(((((DigitalRune.Windows.Docking.DockAreas.Left | DigitalRune.Windows.Docking.DockAreas.Right)
+                        | DigitalRune.Windows.Docking.DockAreas.Top)
+                        | DigitalRune.Windows.Docking.DockAreas.Bottom)
+                        | DigitalRune.Windows.Docking.DockAreas.Document)));
+            this.Name = "SequenceCoverageForm";
+            this.ResumeLayout(false);
+
+        }
     }
 
     /// <summary>
