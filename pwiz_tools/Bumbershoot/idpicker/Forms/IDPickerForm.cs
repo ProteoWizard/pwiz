@@ -560,7 +560,7 @@ namespace IDPicker
             try
             {
                 var tempFilepath = Path.GetTempFileName();
-                using(var tempFile = new StreamWriter(tempFilepath))
+                using(var tempFile = new StreamWriter(tempFilepath, false, Encoding.Unicode))
                     tempFile.Write(userLayout.PaneLocations);
 
                 dockPanel.SuspendLayout();
