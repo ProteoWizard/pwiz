@@ -559,31 +559,25 @@ namespace IDPicker
         {
             try
             {
-                var tempFile = new StreamWriter(Path.Combine(Application.StartupPath, "TemporaryDockLocationFile.xml"), false, Encoding.Unicode);
-                tempFile.Write(userLayout.PaneLocations);
-                tempFile.Close();
-                tempFile.Dispose();
+                var tempFilepath = Path.GetTempFileName();
+                using(var tempFile = new StreamWriter(tempFilepath))
+                    tempFile.Write(userLayout.PaneLocations);
+
                 dockPanel.SuspendLayout();
-                dockPanel.LoadFromXml(Path.Combine(Application.StartupPath, "TemporaryDockLocationFile.xml"), DeserializeForm);
+                dockPanel.LoadFromXml(tempFilepath, DeserializeForm);
                 dockPanel.ResumeLayout(true, true);
-                File.Delete(Path.Combine(Application.StartupPath, "TemporaryDockLocationFile.xml"));
+                File.Delete(tempFilepath);
 
                 if (userLayout.HasCustomColumnSettings && proteinTableForm != null &&
                     peptideTableForm != null && spectrumTableForm != null)
                 {
-                    var columnList = from ColumnProperty i in userLayout.SettingsList
-                                     where i.Scope == "ProteinTableForm"
-                                     select i;
+                    var columnList = userLayout.SettingsList.Where(o => o.Scope == "ProteinTableForm");
                     proteinTableForm.LoadLayout(columnList.ToList());
 
-                    columnList = from ColumnProperty i in userLayout.SettingsList
-                                 where i.Scope == "PeptideTableForm"
-                                 select i;
+                    columnList = userLayout.SettingsList.Where(o => o.Scope == "PeptideTableForm");
                     peptideTableForm.LoadLayout(columnList.ToList());
 
-                    columnList = from ColumnProperty i in userLayout.SettingsList
-                                 where i.Scope == "SpectrumTableForm"
-                                 select i;
+                    columnList = userLayout.SettingsList.Where(o => o.Scope == "SpectrumTableForm");
                     spectrumTableForm.LoadLayout(columnList.ToList());
                 }
             }
@@ -624,7 +618,6 @@ namespace IDPicker
                 var customColumnList = new List<ColumnProperty>();
                 if (bool.Parse(items[2]))
                 {
-                    int tempint;
                     //ProteinForm
                     customColumnList.AddRange(
                         ColumnSettingStringToIdpColumnPropertyList(
@@ -819,21 +812,15 @@ namespace IDPicker
                 if (_userLayoutList[x].HasCustomColumnSettings)
                 {
                     //Protein Form
-                    var columnSettings = from ColumnProperty i in _userLayoutList[x].SettingsList
-                                         where i.Scope == "ProteinTableForm"
-                                         select i;
+                    var columnSettings = _userLayoutList[x].SettingsList.Where(o => o.Scope == "ProteinTableForm");
                     proteinTableForm.SaveUserSettings(columnSettings.ToList(), x);
 
                     //Peptide Form
-                    columnSettings = from ColumnProperty i in _userLayoutList[x].SettingsList
-                                     where i.Scope == "PeptideTableForm"
-                                     select i;
+                    columnSettings = _userLayoutList[x].SettingsList.Where(o => o.Scope == "PeptideTableForm");
                     peptideTableForm.SaveUserSettings(columnSettings.ToList(), x);
 
                     //Spectrum Form
-                    columnSettings = from ColumnProperty i in _userLayoutList[x].SettingsList
-                                     where i.Scope == "SpectrumTableForm"
-                                     select i;
+                    columnSettings = _userLayoutList[x].SettingsList.Where(o => o.Scope == "SpectrumTableForm");
                     spectrumTableForm.SaveUserSettings(columnSettings.ToList(), x);
                 }
             }
@@ -841,12 +828,10 @@ namespace IDPicker
 
         private string GetPanelLocations()
         {
-            dockPanel.SaveAsXml(Path.Combine(Application.StartupPath, "TemporaryDockLocationFile.xml"));
-            var tempIn = new StreamReader(Path.Combine(Application.StartupPath, "TemporaryDockLocationFile.xml"));
-            var locationXml = tempIn.ReadToEnd();
-            tempIn.Close();
-            tempIn.Dispose();
-            File.Delete(Path.Combine(Application.StartupPath, "TemporaryDockLocationFile.xml"));
+            var tempFilepath = Path.GetTempFileName();
+            dockPanel.SaveAsXml(tempFilepath);
+            string locationXml = File.ReadAllText(tempFilepath);
+            File.Delete(tempFilepath);
             return locationXml;
         }
 

@@ -181,6 +181,25 @@ namespace IDPicker.DataModel
         #endregion
     }
 
+    public class ColumnProperty : Entity<ColumnProperty>
+    {
+        public virtual string Scope { get; set; }
+        public virtual string Name { get; set; }
+        public virtual string Type { get; set; }
+        public virtual int DecimalPlaces { get; set; }
+        public virtual int ColorCode { get; set; }
+        public virtual bool Visible { get; set; }
+        public virtual bool? Locked { get; set; }
+        public virtual LayoutProperty Layout { get; set; }
+    }
+
+    public class LayoutProperty : Entity<LayoutProperty>
+    {
+        public virtual string Name { get; set; }
+        public virtual string PaneLocations { get; set; }
+        public virtual bool HasCustomColumnSettings { get; set; }
+        public virtual IList<ColumnProperty> SettingsList { get; set; }
+    }
 
     #region Implementation for custom types
 

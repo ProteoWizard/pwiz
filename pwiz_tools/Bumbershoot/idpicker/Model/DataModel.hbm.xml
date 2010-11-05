@@ -219,36 +219,6 @@
 		<!--An index on the Site property seems to override the PSM index :( index="PeptideModification_Site"-->
 	</class>
 
-  <class name="ColumnProperty">
-    <id name="Id">
-      <generator class="native"/>
-    </id>
-    <property name="Scope"/>
-    <property name="Name"/>
-    <property name="Type"/>
-    <property name="DecimalPlaces"/>
-    <property name="ColorCode"/>
-    <property name="Visible"/>
-    <property name="Locked"/>
-    <many-to-one name="Layout" fetch="join"/>
-  </class>
-
-  <class name="LayoutProperty">
-    <id name="Id">
-      <generator class="native"/>
-    </id>
-    <property name="Name"/>
-    <property name="PaneLocations"/>
-    <property name="HasCustomColumnSettings"/>
-    <bag name="SettingsList" inverse="true" batch-size="500" lazy="true" cascade ="all">
-      <key column="Layout"/>
-      <one-to-many class="ColumnProperty"/>
-    </bag>
-
-  </class>
-
-
-
   <sql-query read-only="true" name="PeptideSpectrumMatchScores_LoaderQuery">
 		<load-collection alias="scores" role="PeptideSpectrumMatch.Scores"/>
 		SELECT {scores.*}
