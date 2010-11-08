@@ -43,6 +43,7 @@ using NHibernate;
 using NHibernate.Linq;
 using NHibernate.Criterion;
 using BrightIdeasSoftware;
+using PopupControl;
 //using SpyTools;
 
 namespace IDPicker
@@ -63,12 +64,18 @@ namespace IDPicker
         NHibernate.ISession session;
 
         Manager manager;
+        LayoutManager _layoutManager;
+        ProgressMonitor progressMonitor;
 
-        private DataFilter dataFilter = new DataFilter();
+        private BasicFilterControl basicFilterControl;
+        private Popup dataFilterPopup;
+        private bool dirtyFilterControls = false;
+
+        private DataFilter basicFilter, viewFilter;
         private IDictionary<Analysis, QonverterSettings> qonverterSettingsByAnalysis;
 
         string[] args;
-        private LayoutManager _layoutManager;
+
         public IDPickerForm (string[] args)
         {
             InitializeComponent();
@@ -82,19 +89,19 @@ namespace IDPicker
                 OpenFileUsesCurrentGraphForm = true,
             };
 
+            progressMonitor = new ProgressMonitor();
+            progressMonitor.ProgressUpdate += progressMonitor_ProgressUpdate;
+
             Shown += new EventHandler(Form1_Load);
 
-            breadCrumbControl = new BreadCrumbControl()
-            {
-                Top = 0,
-                Left = 0,
-                Width = this.ClientRectangle.Width,
-                Height = dockPanel.Top + ClientRectangle.Top,
-                Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right
-            };
-            Controls.Add(breadCrumbControl);
+            basicFilterControl = new BasicFilterControl();
+            basicFilterControl.BasicFilterChanged += basicFilterControl_BasicFilterChanged;
+            dataFilterPopup = new Popup(basicFilterControl) { FocusOnOpen = true };
+            dataFilterPopup.Closed += dataFilterPopup_Closed;
 
-            breadCrumbControl.BreadCrumbClicked += new EventHandler(breadCrumbControl_BreadCrumbClicked);
+            breadCrumbControl = new BreadCrumbControl() { Dock = DockStyle.Fill };
+            breadCrumbControl.BreadCrumbClicked += breadCrumbControl_BreadCrumbClicked;
+            breadCrumbPanel.Controls.Add(breadCrumbControl);
 
             proteinTableForm = new ProteinTableForm();
             proteinTableForm.Show(dockPanel, DockState.DockTop);
@@ -111,12 +118,12 @@ namespace IDPicker
             analysisTableForm = new AnalysisTableForm();
             analysisTableForm.Show(dockPanel, DockState.Document);
 
-            proteinTableForm.ProteinViewFilter += new ProteinViewFilterEventHandler(proteinTableForm_ProteinViewFilter);
-            proteinTableForm.ProteinViewVisualize += new EventHandler<ProteinViewVisualizeEventArgs>(proteinTableForm_ProteinViewVisualize);
-            peptideTableForm.PeptideViewFilter += new PeptideViewFilterEventHandler(peptideTableForm_PeptideViewFilter); 
-            spectrumTableForm.SpectrumViewFilter += new EventHandler<DataFilter>(spectrumTableForm_SpectrumViewFilter);
-            spectrumTableForm.SpectrumViewVisualize += new EventHandler<SpectrumViewVisualizeEventArgs>(spectrumTableForm_SpectrumViewVisualize);
-            modificationTableForm.ModificationViewFilter += new ModificationViewFilterEventHandler(modificationTableForm_ModificationViewFilter);
+            proteinTableForm.ProteinViewFilter += proteinTableForm_ProteinViewFilter;
+            proteinTableForm.ProteinViewVisualize += proteinTableForm_ProteinViewVisualize;
+            peptideTableForm.PeptideViewFilter += peptideTableForm_PeptideViewFilter; 
+            spectrumTableForm.SpectrumViewFilter += spectrumTableForm_SpectrumViewFilter;
+            spectrumTableForm.SpectrumViewVisualize += spectrumTableForm_SpectrumViewVisualize;
+            modificationTableForm.ModificationViewFilter += modificationTableForm_ModificationViewFilter;
 
             _layoutManager = new LayoutManager(this, peptideTableForm, proteinTableForm, spectrumTableForm, dockPanel);
 
@@ -130,6 +137,51 @@ namespace IDPicker
             spyEventLogForm.AddEventSpy(new EventSpy("spectrumTableForm", spectrumTableForm));
             spyEventLogForm.AddEventSpy(new EventSpy("modificationTableForm", modificationTableForm));
             spyEventLogForm.Show(dockPanel, DockState.DockBottomAutoHide);*/
+        }
+
+        void progressMonitor_ProgressUpdate (object sender, ProgressUpdateEventArgs e)
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke((MethodInvoker) (() => progressMonitor_ProgressUpdate(sender, e)));
+                return;
+            }
+
+            toolStripStatusLabel.Text = e.Message;
+            toolStripProgressBar.Visible = true;
+            toolStripProgressBar.Maximum = e.Total;
+            toolStripProgressBar.Value = e.Current;
+
+            Application.DoEvents();
+
+            // TODO: add a cancel option: e.Cancel
+
+            // if the work is done, schedule a delayed return to the "Ready" state
+            if (e.Total == e.Current)
+            {
+                var clearProgressInvoker = new BackgroundWorker();
+                clearProgressInvoker.DoWork += delegate
+                {
+                    Thread.Sleep(2000);
+                    clearProgress(e.Message);
+                };
+                clearProgressInvoker.RunWorkerAsync();
+            }
+        }
+
+        void clearProgress (string messageToClear)
+        {
+            if (InvokeRequired)
+            {
+                Invoke((MethodInvoker) (() => clearProgress(messageToClear)));
+                return;
+            }
+
+            if (toolStripStatusLabel.Text != messageToClear)
+                return;
+
+            toolStripStatusLabel.Text = "Ready";
+            toolStripProgressBar.Visible = false;
         }
 
         void openToolStripButton_Click (object sender, EventArgs e)
@@ -262,234 +314,83 @@ namespace IDPicker
         }
         #endregion
 
-        #region Handling of events for basic filter toolstrip items
-
-        IList<ToolStripItem> GetBasicFilterControls ()
-        {
-            var result = new List<ToolStripItem>();
-
-            result.Add(new ToolStripLabel() { Text = "Q-value ≤ ", RightToLeft = RightToLeft.No });
-            var qvalueTextBox = new ToolStripTextBox() { Width = 40, RightToLeft = RightToLeft.No, BorderStyle = BorderStyle.FixedSingle, Text = dataFilter.MaximumQValue.ToString() };
-            qvalueTextBox.KeyDown += new KeyEventHandler(doubleTextBox_KeyDown);
-            qvalueTextBox.Leave += new EventHandler(qvalueTextBox_Leave);
-            result.Add(qvalueTextBox);
-
-            result.Add(new ToolStripLabel() { Text = "  Distinct Peptides ≥ ", RightToLeft = RightToLeft.No });
-            var peptidesTextBox = new ToolStripTextBox() { Width = 20, RightToLeft = RightToLeft.No, BorderStyle = BorderStyle.FixedSingle, Text = dataFilter.MinimumDistinctPeptidesPerProtein.ToString() };
-            peptidesTextBox.KeyDown += new KeyEventHandler(integerTextBox_KeyDown);
-            peptidesTextBox.Leave += new EventHandler(peptidesTextBox_Leave);
-            result.Add(peptidesTextBox);
-
-            result.Add(new ToolStripLabel() { Text = "  Spectra ≥ ", RightToLeft = RightToLeft.No });
-            var spectraTextBox = new ToolStripTextBox() { Width = 20, RightToLeft = RightToLeft.No, BorderStyle = BorderStyle.FixedSingle, Text = dataFilter.MinimumSpectraPerProtein.ToString() };
-            spectraTextBox.KeyDown += new KeyEventHandler(integerTextBox_KeyDown);
-            spectraTextBox.Leave += new EventHandler(spectraTextBox_Leave);
-            result.Add(spectraTextBox);
-
-            result.Add(new ToolStripLabel() { Text = "  Additional Peptides ≥ ", RightToLeft = RightToLeft.No });
-            var additionalPeptidesTextBox = new ToolStripTextBox() { Width = 20, RightToLeft = RightToLeft.No, BorderStyle = BorderStyle.FixedSingle, Text = dataFilter.MinimumAdditionalPeptidesPerProtein.ToString() };
-            additionalPeptidesTextBox.KeyDown += new KeyEventHandler(integerTextBox_KeyDown);
-            additionalPeptidesTextBox.Leave += new EventHandler(additionalPeptidesTextBox_Leave);
-            result.Add(additionalPeptidesTextBox);
-
-            result[0].Tag = dataFilter;
-
-            return result;
-        }
-
-        static void doubleTextBox_KeyDown (object sender, KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Decimal || e.KeyCode == Keys.OemPeriod)
-            {
-                if ((sender as ToolStripTextBox).Text.Contains('.'))
-                    e.SuppressKeyPress = true;
-            }
-            else if (!(e.KeyCode >= Keys.D0 && e.KeyCode <= Keys.D9 ||
-                    e.KeyCode >= Keys.NumPad0 && e.KeyCode <= Keys.NumPad9 ||
-                    e.KeyCode == Keys.Delete || e.KeyCode == Keys.Back ||
-                    e.KeyCode == Keys.Left || e.KeyCode == Keys.Right))
-                e.SuppressKeyPress = true;
-        }
-
-        static void integerTextBox_KeyDown (object sender, KeyEventArgs e)
-        {
-            if (!(e.KeyCode >= Keys.D0 && e.KeyCode <= Keys.D9 ||
-                e.KeyCode >= Keys.NumPad0 && e.KeyCode <= Keys.NumPad9 ||
-                e.KeyCode == Keys.Delete || e.KeyCode == Keys.Back ||
-                e.KeyCode == Keys.Left || e.KeyCode == Keys.Right))
-                e.SuppressKeyPress = true;
-        }
-
-        void qvalueTextBox_Leave (object sender, EventArgs e)
-        {
-            decimal value;
-            if (decimal.TryParse((sender as ToolStripTextBox).Text, out value))
-                if (value != dataFilter.MaximumQValue)
-                {
-                    dataFilter.MaximumQValue = value;
-                    applyBasicFilter();
-                }
-        }
-
-        void peptidesTextBox_Leave (object sender, EventArgs e)
-        {
-            int value;
-            if (int.TryParse((sender as ToolStripTextBox).Text, out value))
-                if (value != dataFilter.MinimumDistinctPeptidesPerProtein)
-                {
-                    dataFilter.MinimumDistinctPeptidesPerProtein = value;
-                    applyBasicFilter();
-                }
-        }
-
-        void spectraTextBox_Leave (object sender, EventArgs e)
-        {
-            int value;
-            if (int.TryParse((sender as ToolStripTextBox).Text, out value))
-                if (value != dataFilter.MinimumSpectraPerProtein)
-                {
-                    dataFilter.MinimumSpectraPerProtein = value;
-                    applyBasicFilter();
-                }
-        }
-
-        void additionalPeptidesTextBox_Leave (object sender, EventArgs e)
-        {
-            int value;
-            if (int.TryParse((sender as ToolStripTextBox).Text, out value))
-                if (value != dataFilter.MinimumAdditionalPeptidesPerProtein)
-                {
-                    dataFilter.MinimumAdditionalPeptidesPerProtein = value;
-                    applyBasicFilter();
-                }
-        }
-        #endregion
-
         #region Handling of filter events from each view
         void proteinTableForm_ProteinViewFilter (ProteinTableForm sender, DataFilter proteinViewFilter)
         {
-            var oldFilter = dataFilter;
-            dataFilter = proteinViewFilter;
+            var newFilter = proteinViewFilter;
 
-            if (breadCrumbControl.BreadCrumbs.Count > 1)
-                breadCrumbControl.BreadCrumbs.RemoveAt(breadCrumbControl.BreadCrumbs.Count - 1);
-            breadCrumbControl.BreadCrumbs.Add(dataFilter);
+            if (breadCrumbControl.BreadCrumbs.Count(o => (DataFilter) o.Tag == newFilter) > 0)
+                return;
 
-            if (oldFilter.FilterSource == peptideTableForm ||
-                oldFilter.FilterSource == spectrumTableForm ||
-                oldFilter.FilterSource == modificationTableForm ||
-                oldFilter.FilterSource == analysisTableForm)
-                proteinTableForm.SetData(session, dataFilter);
+            breadCrumbControl.BreadCrumbs.Add(new BreadCrumb(newFilter.ToString(), newFilter));
 
-            peptideTableForm.SetData(session, dataFilter);
-            spectrumTableForm.SetData(session, dataFilter);
-            modificationTableForm.SetData(session, dataFilter);
-            analysisTableForm.SetData(session, dataFilter);
+            // build a new DataFilter from the BreadCrumb list
+            viewFilter = basicFilter + breadCrumbControl.BreadCrumbs.Select(o => o.Tag as DataFilter).Aggregate((x, y) => x + y);
+            setData();
         }
 
         void peptideTableForm_PeptideViewFilter (PeptideTableForm sender, DataFilter peptideViewFilter)
         {
-            var oldFilter = dataFilter;
-            dataFilter = peptideViewFilter;
+            var newFilter = peptideViewFilter;
 
-            if (breadCrumbControl.BreadCrumbs.Count > 1)
-                breadCrumbControl.BreadCrumbs.RemoveAt(breadCrumbControl.BreadCrumbs.Count - 1);
-            breadCrumbControl.BreadCrumbs.Add(dataFilter);
+            if (breadCrumbControl.BreadCrumbs.Count(o => (DataFilter) o.Tag == newFilter) > 0)
+                return;
 
-            proteinTableForm.SetData(session, dataFilter);
+            breadCrumbControl.BreadCrumbs.Add(new BreadCrumb(newFilter.ToString(), newFilter));
 
-            if (oldFilter.FilterSource == proteinTableForm ||
-                oldFilter.FilterSource == spectrumTableForm ||
-                oldFilter.FilterSource == modificationTableForm ||
-                oldFilter.FilterSource == analysisTableForm)
-                peptideTableForm.SetData(session, dataFilter);
-
-            spectrumTableForm.SetData(session, dataFilter);
-            modificationTableForm.SetData(session, dataFilter);
-            analysisTableForm.SetData(session, dataFilter);
+            // build a new DataFilter from the BreadCrumb list
+            viewFilter = basicFilter + breadCrumbControl.BreadCrumbs.Select(o => o.Tag as DataFilter).Aggregate((x, y) => x + y);
+            setData();
         }
 
         void spectrumTableForm_SpectrumViewFilter (object sender, DataFilter spectrumViewFilter)
         {
-            var oldFilter = dataFilter;
-            dataFilter = spectrumViewFilter;
+            var newFilter = spectrumViewFilter;
 
-            if (breadCrumbControl.BreadCrumbs.Count > 1)
-                breadCrumbControl.BreadCrumbs.RemoveAt(breadCrumbControl.BreadCrumbs.Count - 1);
-            breadCrumbControl.BreadCrumbs.Add(dataFilter);
+            if (breadCrumbControl.BreadCrumbs.Count(o => (DataFilter) o.Tag == newFilter) > 0)
+                return;
 
-            proteinTableForm.SetData(session, dataFilter);
-            peptideTableForm.SetData(session, dataFilter);
+            breadCrumbControl.BreadCrumbs.Add(new BreadCrumb(newFilter.ToString(), newFilter));
 
-            if (oldFilter.FilterSource == proteinTableForm ||
-                oldFilter.FilterSource == peptideTableForm ||
-                oldFilter.FilterSource == modificationTableForm ||
-                oldFilter.FilterSource == analysisTableForm)
-                spectrumTableForm.SetData(session, dataFilter);
-
-            modificationTableForm.SetData(session, dataFilter);
-            analysisTableForm.SetData(session, dataFilter);
+            // build a new DataFilter from the BreadCrumb list
+            viewFilter = basicFilter + breadCrumbControl.BreadCrumbs.Select(o => o.Tag as DataFilter).Aggregate((x, y) => x + y);
+            setData();
         }
 
         void modificationTableForm_ModificationViewFilter (ModificationTableForm sender, DataFilter modificationViewFilter)
         {
-            var oldFilter = dataFilter;
-            dataFilter = modificationViewFilter;
+            var newFilter = modificationViewFilter;
 
-            if (breadCrumbControl.BreadCrumbs.Count > 1)
-                breadCrumbControl.BreadCrumbs.RemoveAt(breadCrumbControl.BreadCrumbs.Count - 1);
-            breadCrumbControl.BreadCrumbs.Add(dataFilter);
+            if (breadCrumbControl.BreadCrumbs.Count(o => (DataFilter) o.Tag == newFilter) > 0)
+                return;
 
-            proteinTableForm.SetData(session, dataFilter);
-            peptideTableForm.SetData(session, dataFilter);
-            spectrumTableForm.SetData(session, dataFilter);
+            breadCrumbControl.BreadCrumbs.Add(new BreadCrumb(newFilter.ToString(), newFilter));
 
-            if (oldFilter.FilterSource == proteinTableForm ||
-                oldFilter.FilterSource == peptideTableForm ||
-                oldFilter.FilterSource == spectrumTableForm ||
-                oldFilter.FilterSource == analysisTableForm)
-                modificationTableForm.SetData(session, dataFilter);
-
-            analysisTableForm.SetData(session, dataFilter);
+            // build a new DataFilter from the BreadCrumb list
+            viewFilter = basicFilter + breadCrumbControl.BreadCrumbs.Select(o => o.Tag as DataFilter).Aggregate((x, y) => x + y);
+            setData();
         }
         #endregion
 
-        void breadCrumbControl_BreadCrumbClicked (object sender, EventArgs e)
+        void breadCrumbControl_BreadCrumbClicked (object sender, BreadCrumbClickedEventArgs e)
         {
-            var oldFilter = dataFilter;
-            if (sender is DataFilter)
-                dataFilter = sender as DataFilter;
-            else
-                dataFilter = (sender as IList<ToolStripItem>)[0].Tag as DataFilter;
+            breadCrumbControl.BreadCrumbs.Remove(e.BreadCrumb);
 
-            if (breadCrumbControl.BreadCrumbs.Count > 1)
-                breadCrumbControl.BreadCrumbs.RemoveAt(breadCrumbControl.BreadCrumbs.Count - 1);
+            // start with the basic filter
+            viewFilter = basicFilter;
 
-            if (oldFilter.Protein == null)
-                proteinTableForm.SetData(session, dataFilter);
-
-            if (oldFilter.Peptide == null && oldFilter.DistinctPeptideKey == null)
-                peptideTableForm.SetData(session, dataFilter);
-
-            if (oldFilter.Spectrum == null && oldFilter.SpectrumSource == null)
-                spectrumTableForm.SetData(session, dataFilter);
-
-            if (oldFilter.Modifications.Count == 0 && oldFilter.ModifiedSite == null)
-                modificationTableForm.SetData(session, dataFilter);
-
-            if (oldFilter.Analysis == null)
-                analysisTableForm.SetData(session, dataFilter);
+            // create the view filter from the BreadCrumb list
+            if (breadCrumbControl.BreadCrumbs.Count > 0)
+                viewFilter += breadCrumbControl.BreadCrumbs.Select(o => o.Tag as DataFilter).Aggregate((x, y) => x + y);
+            setData();
         }
 
-        SimpleProgressForm applyBasicFilterProgressForm;
         void applyBasicFilter ()
         {
             clearData();
 
-            applyBasicFilterProgressForm = new SimpleProgressForm(this);
-            applyBasicFilterProgressForm.Text = "Applying basic filters...";
-            applyBasicFilterProgressForm.Show();
-            dataFilter.FilteringProgress += new EventHandler<DataFilter.FilteringProgressEventArgs>(applyBasicFilterProgressForm.UpdateProgress);
+            toolStripStatusLabel.Text = "Applying basic filters...";
+            basicFilter.FilteringProgress += progressMonitor.UpdateProgress;
 
             var workerThread = new BackgroundWorker()
             {
@@ -497,8 +398,21 @@ namespace IDPicker
                 WorkerSupportsCancellation = true
             };
 
-            workerThread.DoWork += new DoWorkEventHandler(applyBasicFilterAsync);
-            workerThread.RunWorkerCompleted += new RunWorkerCompletedEventHandler(setData);
+            workerThread.DoWork += applyBasicFilterAsync;
+
+            workerThread.RunWorkerCompleted += delegate
+            {
+                basicFilter.FilteringProgress -= progressMonitor.UpdateProgress;
+
+                // start with the basic filter
+                viewFilter = basicFilter;
+
+                // create the view filter from the BreadCrumb list
+                if (breadCrumbControl.BreadCrumbs.Count > 0)
+                    viewFilter += breadCrumbControl.BreadCrumbs.Select(o => o.Tag as DataFilter).Aggregate((x, y) => x + y);
+                setData();
+            };
+
             workerThread.RunWorkerAsync();
         }
 
@@ -507,7 +421,7 @@ namespace IDPicker
             try
             {
                 lock (session)
-                    dataFilter.ApplyBasicFilters(session);
+                    basicFilter.ApplyBasicFilters(session);
             }
             catch (Exception ex)
             {
@@ -524,16 +438,13 @@ namespace IDPicker
             analysisTableForm.ClearData();
         }
 
-        void setData (object sender, RunWorkerCompletedEventArgs e)
+        void setData ()
         {
-            dataFilter.FilteringProgress -= new EventHandler<DataFilter.FilteringProgressEventArgs>(applyBasicFilterProgressForm.UpdateProgress);
-            applyBasicFilterProgressForm.Dispose();
-
-            proteinTableForm.SetData(session, dataFilter);
-            peptideTableForm.SetData(session, dataFilter);
-            spectrumTableForm.SetData(session, dataFilter);
-            modificationTableForm.SetData(session, dataFilter);
-            analysisTableForm.SetData(session, dataFilter);
+            proteinTableForm.SetData(session, viewFilter);
+            peptideTableForm.SetData(session, viewFilter);
+            spectrumTableForm.SetData(session, viewFilter);
+            modificationTableForm.SetData(session, viewFilter);
+            analysisTableForm.SetData(session, viewFilter);
         }
 
         void Form1_Load (object sender, EventArgs e)
@@ -673,136 +584,6 @@ namespace IDPicker
             }
         }
 
-        public class SimpleProgressForm : Form
-        {
-            private ProgressBar progressBar;
-            public ProgressBar ProgressBar { get { return progressBar; } }
-
-            private System.Diagnostics.Stopwatch timer;
-
-            public SimpleProgressForm (Form parent)
-            {
-                Owner = parent;
-                SizeGripStyle = SizeGripStyle.Show;
-                ShowInTaskbar = true;
-                TopLevel = true;
-                TopMost = true;
-                AutoSize = true;
-                AutoSizeMode = AutoSizeMode.GrowOnly;
-                FormBorderStyle = FormBorderStyle.SizableToolWindow;
-                StartPosition = FormStartPosition.CenterParent;
-                MaximizeBox = false;
-                MinimizeBox = true;
-                Size = new System.Drawing.Size(450, 50);
-
-                progressBar = new ProgressBar();
-                progressBar.Dock = DockStyle.Fill;
-                progressBar.Style = ProgressBarStyle.Continuous;
-                progressBar.Minimum = 0;
-                progressBar.Maximum = 1000;
-                progressBar.Value = 0;
-                Controls.Add(progressBar);
-
-                timer = System.Diagnostics.Stopwatch.StartNew();
-            }
-
-            public void UpdateProgress (object sender, Parser.ParsingProgressEventArgs e)
-            {
-                if(InvokeRequired)
-                {
-                    BeginInvoke((MethodInvoker) (() => UpdateProgress(sender, e)));
-                    return;
-                }
-
-                if (e.ParsingException != null)
-                    throw new InvalidOperationException("parsing error", e.ParsingException);
-
-                if (e.ParsedBytes == 0)
-                    timer = System.Diagnostics.Stopwatch.StartNew();
-
-                progressBar.Maximum = 1000;
-                progressBar.Value = e.TotalBytes == 0 ? 0 : Math.Min(progressBar.Maximum, (int) Math.Round((double) e.ParsedBytes / e.TotalBytes * 1000.0));
-                double progressRate = timer.Elapsed.TotalSeconds > 0 ? e.ParsedBytes / timer.Elapsed.TotalSeconds : 0;
-                long bytesRemaining = e.TotalBytes - e.ParsedBytes;
-                TimeSpan timeRemaining = progressRate == 0 ? TimeSpan.Zero
-                                                           : TimeSpan.FromSeconds(bytesRemaining / progressRate);
-                Text = String.Format("{0} ({1}/{2}) - {3} per second, {4}h{5}m{6}s remaining",
-                                     e.ParsingStage,
-                                     Util.GetFileSizeByteString(e.ParsedBytes),
-                                     Util.GetFileSizeByteString(e.TotalBytes),
-                                     Util.GetFileSizeByteString((long) progressRate),
-                                     timeRemaining.Hours,
-                                     timeRemaining.Minutes,
-                                     timeRemaining.Seconds);
-
-                Application.DoEvents();
-
-                e.Cancel = !Visible || IsDisposed;
-            }
-
-            public void UpdateProgress (object sender, Merger.MergingProgressEventArgs e)
-            {
-                if (InvokeRequired)
-                {
-                    Invoke((MethodInvoker) (() => UpdateProgress(sender, e)));
-                    return;
-                }
-
-                progressBar.Maximum = 1000;
-                progressBar.Value = Math.Min(progressBar.Maximum, (int) Math.Round((double) e.MergedFiles / e.TotalFiles * 1000.0));
-                double progressRate = timer.Elapsed.TotalSeconds > 0 ? e.MergedFiles / timer.Elapsed.TotalSeconds : 0;
-                long bytesRemaining = e.TotalFiles - e.MergedFiles;
-                TimeSpan timeRemaining = progressRate == 0 ? TimeSpan.Zero
-                                                           : TimeSpan.FromSeconds(bytesRemaining / progressRate);
-                Text = String.Format("Merging results... ({0}/{1}) - {2} per second, {3}h{4}m{5}s remaining",
-                                     e.MergedFiles,
-                                     e.TotalFiles,
-                                     Math.Round(progressRate),
-                                     timeRemaining.Hours,
-                                     timeRemaining.Minutes,
-                                     timeRemaining.Seconds);
-
-                Application.DoEvents();
-
-                e.Cancel = !Visible || IsDisposed;
-            }
-
-            public void UpdateProgress (object sender, Qonverter.QonversionProgressEventArgs e)
-            {
-                if (InvokeRequired)
-                {
-                    Invoke((MethodInvoker) (() => UpdateProgress(sender, e)));
-                    return;
-                }
-
-                progressBar.Maximum = e.TotalAnalyses;
-                progressBar.Value = e.QonvertedAnalyses;
-
-                Application.DoEvents();
-
-                e.Cancel = !Visible || IsDisposed;
-            }
-
-            public void UpdateProgress (object sender, DataFilter.FilteringProgressEventArgs e)
-            {
-                if (InvokeRequired)
-                {
-                    Invoke((MethodInvoker) (() => UpdateProgress(sender, e)));
-                    return;
-                }
-
-                progressBar.Maximum = e.TotalFilters;
-                progressBar.Value = e.CompletedFilters;
-
-                Text = String.Format("{0} ({1}/{2})",
-                                     e.FilteringStage,
-                                     e.CompletedFilters,
-                                     e.TotalFilters);
-
-                e.Cancel = !Visible || IsDisposed;
-            }
-        }
-
         void OpenFiles (IList<string> filepaths)
         {
             try
@@ -838,16 +619,14 @@ namespace IDPicker
 
                 if (xml_filepaths.Count() > 0)
                 {
-                    using (SimpleProgressForm pf = new SimpleProgressForm(this))
                     using (Parser parser = new Parser(".", qonverterSettingsHandler, false, xml_filepaths.ToArray()))
                     {
-                        pf.Text = "Initializing parser...";
-                        pf.Show();
-                        parser.DatabaseNotFound += new EventHandler<Parser.DatabaseNotFoundEventArgs>(databaseNotFoundHandler);
-                        parser.SourceNotFound += new EventHandler<Parser.SourceNotFoundEventArgs>(sourceNotFoundOnImportHandler);
-                        parser.ParsingProgress += new EventHandler<Parser.ParsingProgressEventArgs>(pf.UpdateProgress);
+                        toolStripStatusLabel.Text = "Initializing parser...";
+                        parser.DatabaseNotFound += databaseNotFoundHandler;
+                        parser.SourceNotFound += sourceNotFoundOnImportHandler;
+                        parser.ParsingProgress += progressMonitor.UpdateProgress;
 
-                        if (parser.Start() || !pf.Visible || pf.IsDisposed)
+                        if (parser.Start())
                             return;
                     }
                     idpDB_filepaths = idpDB_filepaths.Union(xml_filepaths.Select(o => Path.ChangeExtension(o, ".idpDB")));
@@ -855,49 +634,35 @@ namespace IDPicker
 
                 if (idpDB_filepaths.Count() > 1)
                 {
-                    using (SimpleProgressForm pf = new SimpleProgressForm(this))
-                    {
-                        var merger = new Merger(commonFilename, idpDB_filepaths);
-                        pf.Text = "Merging results...";
-                        pf.Show();
-                        merger.MergingProgress += new EventHandler<Merger.MergingProgressEventArgs>(pf.UpdateProgress);
-                        merger.Start();
+                    var merger = new Merger(commonFilename, idpDB_filepaths);
+                    toolStripStatusLabel.Text = "Merging results...";
+                    merger.MergingProgress += progressMonitor.UpdateProgress;
+                    merger.Start();
 
-                        if (!pf.Visible || pf.IsDisposed)
-                            return;
-
-                        idpDB_filepaths = new List<string>() {commonFilename};
-                    }
+                    idpDB_filepaths = new List<string>() {commonFilename};
                 }
 
                 var sessionFactory = DataModel.SessionFactoryFactory.CreateSessionFactory(commonFilename, false, true);
 
-                using (SimpleProgressForm pf = new SimpleProgressForm(this))
+                toolStripStatusLabel.Text = "Initializing Qonverter...";
+
+                var qonverter = new Qonverter();
+
+                // reload qonverter settings because the ids may change after merging
+                session = sessionFactory.OpenSession();
+                qonverterSettingsByAnalysis = session.Query<QonverterSettings>().ToDictionary(o => session.Get<Analysis>(o.Id));
+                session.Close();
+
+                qonverterSettingsByAnalysis.ForEach(o => qonverter.SettingsByAnalysis[(int) o.Key.Id] = o.Value.ToQonverterSettings());
+                qonverter.QonversionProgress += progressMonitor.UpdateProgress;
+
+                try
                 {
-                    pf.Text = "Initializing Qonverter...";
-                    pf.Show();
-
-                    var qonverter = new Qonverter();
-
-                    // reload qonverter settings because the ids may change after merging
-                    session = sessionFactory.OpenSession();
-                    qonverterSettingsByAnalysis = session.Query<QonverterSettings>().ToDictionary(o => session.Get<Analysis>(o.Id));
-                    session.Close();
-
-                    qonverterSettingsByAnalysis.ForEach(o => qonverter.SettingsByAnalysis[(int) o.Key.Id] = o.Value.ToQonverterSettings());
-                    qonverter.QonversionProgress += new Qonverter.QonversionProgressEventHandler(pf.UpdateProgress);
-
-                    try
-                    {
-                        qonverter.Qonvert(commonFilename);
-                    }
-                    catch (Exception e)
-                    {
-                        MessageBox.Show("Error: " + e.Message, "Qonversion failed");
-                    }
-
-                    if (!pf.Visible || pf.IsDisposed)
-                        return;
+                    qonverter.Qonvert(commonFilename);
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show("Error: " + e.Message, "Qonversion failed");
                 }
 
                 session = sessionFactory.OpenSession();
@@ -905,31 +670,42 @@ namespace IDPicker
 
                 _layoutManager.SetSession(session);
 
-                //make sure to ignore "Abandoned" group
-                dataFilter.SpectrumSourceGroup = session.QueryOver<SpectrumSourceGroup>().Where(g => g.Name == "/").SingleOrDefault();
-
                 //set or save default layout
                 LoadLayout(_layoutManager.GetCurrentDefault());
 
-                breadCrumbControl.BreadCrumbs.Clear();
-                breadCrumbControl.BreadCrumbs.Add(GetBasicFilterControls());
+                //breadCrumbControl.BreadCrumbs.Clear();
 
-                var savedFilter = DataFilter.LoadFilter(session);
+                basicFilter = DataFilter.LoadFilter(session);
 
-                if (savedFilter == null)
+                if (basicFilter == null)
+                {
+                    basicFilter = new DataFilter()
+                    {
+                        MaximumQValue = 0.02M,
+                        MinimumDistinctPeptidesPerProtein = 2,
+                        MinimumSpectraPerProtein = 2,
+                        MinimumAdditionalPeptidesPerProtein = 1
+                    };
+
+                    // ignore "Abandoned" group
+                    basicFilter.SpectrumSourceGroup = session.QueryOver<DataModel.SpectrumSourceGroup>().Where(g => g.Name == "/").SingleOrDefault();
+
+                    basicFilterControl.DataFilter = basicFilter;
+
+                    viewFilter = basicFilter;
+
                     applyBasicFilter();
+                }
                 else
                 {
-                    dataFilter.MaximumQValue = savedFilter.MaximumQValue;
-                    dataFilter.MinimumDistinctPeptidesPerProtein = savedFilter.MinimumDistinctPeptidesPerProtein;
-                    dataFilter.MinimumSpectraPerProtein = savedFilter.MinimumSpectraPerProtein;
-                    dataFilter.MinimumAdditionalPeptidesPerProtein = savedFilter.MinimumAdditionalPeptidesPerProtein;
+                    // ignore "Abandoned" group
+                    basicFilter.SpectrumSourceGroup = session.QueryOver<DataModel.SpectrumSourceGroup>().Where(g => g.Name == "/").SingleOrDefault();
 
-                    proteinTableForm.SetData(session, dataFilter);
-                    peptideTableForm.SetData(session, dataFilter);
-                    spectrumTableForm.SetData(session, dataFilter);
-                    modificationTableForm.SetData(session, dataFilter);
-                    analysisTableForm.SetData(session, dataFilter);
+                    basicFilterControl.DataFilter = basicFilter;
+
+                    viewFilter = basicFilter;
+
+                    setData();
                 }
             }
             catch (Exception ex)
@@ -1031,6 +807,26 @@ namespace IDPicker
             foreach (var item in items)
                 layoutMenuStrip.Items.Add(item);
             layoutMenuStrip.Show(Cursor.Position);
+        }
+
+        private void dataFilterButton_Click (object sender, EventArgs e)
+        {
+            dataFilterPopup.Show(sender as Button);
+        }
+
+        private void basicFilterControl_BasicFilterChanged (object sender, EventArgs e)
+        {
+            dirtyFilterControls = basicFilter != basicFilterControl.DataFilter;
+        }
+
+        void dataFilterPopup_Closed (object sender, ToolStripDropDownClosedEventArgs e)
+        {
+            if (dirtyFilterControls)
+            {
+                dirtyFilterControls = false;
+                basicFilter = basicFilterControl.DataFilter;
+                applyBasicFilter();
+            }
         }
     }
 

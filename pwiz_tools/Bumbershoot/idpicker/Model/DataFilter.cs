@@ -167,13 +167,30 @@ namespace IDPicker.DataModel
                    Protein == other.Protein &&
                    Peptide == other.Peptide &&
                    DistinctPeptideKey == other.DistinctPeptideKey &&
-                   //Modifications == other.Modifications &&
+                   Modifications.SequenceEqual(other.Modifications) &&
                    ModifiedSite == other.ModifiedSite &&
                    Charge == other.Charge &&
                    Analysis == other.Analysis &&
                    Spectrum == other.Spectrum &&
                    SpectrumSource == other.SpectrumSource &&
                    SpectrumSourceGroup == other.SpectrumSourceGroup;
+        }
+
+        public static DataFilter operator + (DataFilter lhs, DataFilter rhs)
+        {
+            var newFilter = new DataFilter(lhs);
+            if (rhs.Cluster != null) newFilter.Cluster = rhs.Cluster;
+            if (rhs.Protein != null) newFilter.Protein = rhs.Protein;
+            if (rhs.Peptide != null) newFilter.Peptide = rhs.Peptide;
+            if (rhs.DistinctPeptideKey != null) newFilter.DistinctPeptideKey = rhs.DistinctPeptideKey;
+            if (rhs.Modifications != null) newFilter.Modifications = newFilter.Modifications.Union(rhs.Modifications).ToList();
+            if (rhs.ModifiedSite != null) newFilter.ModifiedSite = rhs.ModifiedSite;
+            if (rhs.Charge != null) newFilter.Charge = rhs.Charge;
+            if (rhs.Analysis != null) newFilter.Analysis = rhs.Analysis;
+            if (rhs.Spectrum != null) newFilter.Spectrum = rhs.Spectrum;
+            if (rhs.SpectrumSource != null) newFilter.SpectrumSource = rhs.SpectrumSource;
+            if (rhs.SpectrumSourceGroup != null) newFilter.SpectrumSourceGroup = rhs.SpectrumSourceGroup;
+            return newFilter;
         }
 
         public static bool operator == (DataFilter lhs, DataFilter rhs) { return object.ReferenceEquals(lhs, null) ? object.ReferenceEquals(rhs, null) : lhs.Equals(rhs); }
@@ -238,7 +255,7 @@ namespace IDPicker.DataModel
                 var filteringCriteria = session.CreateSQLQuery(@"SELECT MaximumQValue,
                                                                         MinimumDistinctPeptidesPerProtein,
                                                                         MinimumSpectraPerProtein,
-                                                                        MinimumAdditionalPeptides
+                                                                        MinimumAdditionalPeptidesPerProtein
                                                                  FROM FilteringCriteria
                                                                 ").List<object[]>()[0];
                 var dataFilter = new DataFilter();

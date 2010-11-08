@@ -74,6 +74,21 @@ namespace Test
         #endregion
 
         [TestMethod]
+        public void TestAggregation ()
+        {
+            var lhs = new DataFilter() { MaximumQValue = 1M };
+            var rhs = new DataFilter() { Protein = new Protein("foo", "bar") };
+            var result = lhs + rhs;
+
+            var rhs2 = new DataFilter() { Peptide = (Peptide) new Peptide_Accessor("FOO").Target };
+            var result2 = result + rhs2;
+
+            Assert.AreEqual("foo", result.Protein.Description);
+            Assert.AreEqual("foo", result2.Protein.Description);
+            Assert.AreEqual("FOO", result2.Peptide.Sequence);
+        }
+
+        [TestMethod]
         public void TestBasicFilters ()
         {
             string[] testProteinSequences = new string[]

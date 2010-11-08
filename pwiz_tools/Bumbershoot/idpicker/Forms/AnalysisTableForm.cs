@@ -68,7 +68,11 @@ namespace IDPicker.Forms
         {
             InitializeComponent();
 
-            HideOnClose = true;
+            FormClosing += delegate(object sender, FormClosingEventArgs e)
+            {
+                e.Cancel = true;
+                DockState = DockState.DockBottomAutoHide;
+            };
 
             Text = TabText = "Analysis View";
 

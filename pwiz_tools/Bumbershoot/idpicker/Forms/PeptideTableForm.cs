@@ -93,7 +93,11 @@ namespace IDPicker.Forms
         {
             InitializeComponent();
 
-            HideOnClose = true;
+            FormClosing += delegate(object sender, FormClosingEventArgs e)
+            {
+                e.Cancel = true;
+                DockState = DockState.DockBottomAutoHide;
+            };
 
             Text = TabText = "Peptide View";
 
@@ -132,28 +136,15 @@ namespace IDPicker.Forms
             treeListView.UseCellFormatEvents = true;
             treeListView.FormatCell += delegate(object sender, FormatCellEventArgs currentCell)
             {
+                if (currentCell.Item.RowObject is PeptideRow &&
+                    (viewFilter.Peptide != null && viewFilter.Peptide.Id != (currentCell.Item.RowObject as PeptideRow).Peptide.Id ||
+                     viewFilter.DistinctPeptideKey != null))
+                    currentCell.SubItem.ForeColor = SystemColors.GrayText;
+                else if (currentCell.Item.RowObject is PeptideSpectrumMatchRow &&
+                         viewFilter.DistinctPeptideKey != null && viewFilter.DistinctPeptideKey.Sequence != (currentCell.Item.RowObject as PeptideSpectrumMatchRow).DistinctPeptide.Sequence)
+                    currentCell.SubItem.ForeColor = SystemColors.GrayText;
+
                 currentCell.SubItem.BackColor = (Color)_columnSettings[currentCell.Column][2];
-            };
-
-            treeListView.CanExpandGetter += delegate(object x) { return x is PeptideRow; };
-            treeListView.ChildrenGetter += delegate(object x)
-            {
-                dataFilter.Peptide = (x as PeptideRow).Peptide;
-                object result;
-                if (radioButton1.Checked)
-                    result = session.CreateQuery("SELECT psm, (psm.Peptide || ' ' || ROUND(psm.MonoisotopicMass)), COUNT(DISTINCT psm.Spectrum) " +
-                                                 dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
-                                                 "GROUP BY (psm.Peptide || ' ' || ROUND(psm.MonoisotopicMass))")
-                                    .List<object[]>().Select(o => new PeptideSpectrumMatchRow(o));
-                else
-                    return session.CreateQuery("SELECT DISTINCT psm.Peptide.Instances " +
-                                               dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch)/* +
-                                               " GROUP BY psm.Peptide"*/
-                                                                        )
-                                  .List<object>().Select(o => new PeptideInstanceRow(o));
-
-                dataFilter.Peptide = null;
-                return result as System.Collections.IEnumerable;
             };
 
             treeListView.CellClick += new EventHandler<CellClickEventArgs>(treeListView_CellClick);
@@ -299,21 +290,21 @@ namespace IDPicker.Forms
             treeListView.CanExpandGetter += delegate(object x) { return x is PeptideRow; };
             treeListView.ChildrenGetter += delegate(object x)
             {
-                dataFilter.Peptide = (x as PeptideRow).Peptide;
+                var childFilter = new DataFilter(dataFilter) { Peptide = (x as PeptideRow).Peptide };
+
                 object result;
                 if (radioButton1.Checked)
                     result = session.CreateQuery("SELECT psm, (psm.Peptide || ' ' || ROUND(psm.MonoisotopicMass)), COUNT(DISTINCT psm.Spectrum) " +
-                                                 dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
+                                                 childFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
                                                  "GROUP BY (psm.Peptide || ' ' || ROUND(psm.MonoisotopicMass))")
                                     .List<object[]>().Select(o => new PeptideSpectrumMatchRow(o));
                 else
                     return session.CreateQuery("SELECT DISTINCT psm.Peptide.Instances " +
-                                               dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch)/* +
+                                               childFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch)/* +
                                                " GROUP BY psm.Peptide"*/
                                                                         )
                                   .List<object>().Select(o => new PeptideInstanceRow(o));
 
-                dataFilter.Peptide = null;
                 return result as System.Collections.IEnumerable;
             };
 
@@ -351,11 +342,7 @@ namespace IDPicker.Forms
             if (e.ClickCount < 2 || e.Item == null || e.Item.RowObject == null)
                 return;
 
-            var newDataFilter = new DataFilter()
-            {
-                MaximumQValue = dataFilter.MaximumQValue,
-                FilterSource = this
-            };
+            var newDataFilter = new DataFilter() { FilterSource = this };
 
             if (e.Item.RowObject is PeptideRow)
                 newDataFilter.Peptide = (e.Item.RowObject as PeptideRow).Peptide;
@@ -369,7 +356,11 @@ namespace IDPicker.Forms
         public event PeptideViewFilterEventHandler PeptideViewFilter;
 
         private NHibernate.ISession session;
-        private DataFilter dataFilter, basicDataFilter;
+
+        private DataFilter viewFilter; // what the user has filtered on
+        private DataFilter dataFilter; // how this view is filtered (i.e. never on its own rows)
+        private DataFilter basicDataFilter; // the basic filter without the user filtering on rows
+
         private IList<PeptideRow> rowsByPeptide, basicRowsByPeptide;
 
         // TODO: support multiple selected objects
@@ -378,7 +369,8 @@ namespace IDPicker.Forms
         public void SetData (NHibernate.ISession session, DataFilter dataFilter)
         {
             this.session = session;
-            this.dataFilter = new DataFilter(dataFilter) {Peptide = null};
+            viewFilter = dataFilter;
+            this.dataFilter = new DataFilter(dataFilter) {Peptide = null, DistinctPeptideKey = null};
 
             if (treeListView.SelectedObject is PeptideRow)
                 oldSelectionPath = new string[] { treeListView.SelectedItem.Text };
@@ -445,17 +437,18 @@ namespace IDPicker.Forms
                 var peptideQuery = session.CreateQuery("SELECT psm.Peptide, " +
                                                        "       COUNT(DISTINCT psm.SequenceAndMassDistinctKey), " +
                                                        "       COUNT(DISTINCT psm.Spectrum) " +
-                                                       this.dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
+                                                       dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
                                                        "GROUP BY psm.Peptide " +
                                                        "ORDER BY COUNT(DISTINCT psm.SequenceAndMassDistinctKey) DESC, COUNT(DISTINCT psm.Spectrum) DESC");
 
                 peptideQuery.SetReadOnly(true);
 
-                if (dataFilter.IsBasicFilter || dataFilter.Peptide != null || dataFilter.DistinctPeptideKey != null)
+                if (dataFilter.IsBasicFilter || viewFilter.Peptide != null || viewFilter.DistinctPeptideKey != null)
                 {
+                    // refresh basic data when basicDataFilter is unset or when the basic filter values have changed
                     if (basicDataFilter == null || (dataFilter.IsBasicFilter && dataFilter != basicDataFilter))
                     {
-                        basicDataFilter = new DataFilter(this.dataFilter);
+                        basicDataFilter = new DataFilter(dataFilter);
                         basicRowsByPeptide = peptideQuery.List<object[]>().Select(o => new PeptideRow(o)).ToList();
                     }
 

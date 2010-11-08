@@ -68,7 +68,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Lib\NHibernate\Iesi.Collections.dll</HintPath>
     </Reference>
-    <Reference Include="InteropQonverter, Version=3.0.178.0, Culture=neutral, processorArchitecture=x86">
+    <Reference Include="InteropQonverter, Version=3.0.214.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>build-nt-x86\obj\$(Configuration)\InteropQonverter.dll</HintPath>
     </Reference>
@@ -195,6 +195,7 @@
     </Compile>
     <Compile Include="LayoutManager.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="ProgressMonitor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Forms\ModificationTableForm.resx">
       <DependentUpon>ModificationTableForm.cs</DependentUpon>

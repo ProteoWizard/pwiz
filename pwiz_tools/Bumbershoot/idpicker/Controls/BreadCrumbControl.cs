@@ -64,28 +64,45 @@ namespace IDPicker.Controls
         }*/
     }
 
+    public class BreadCrumb
+    {
+        public BreadCrumb (string text, object tag)
+        {
+            Text = text;
+            Tag = tag;
+        }
+
+        public string Text { get; private set; }
+        public object Tag { get; private set; }
+    }
+
+    public class BreadCrumbClickedEventArgs : EventArgs
+    {
+        internal BreadCrumbClickedEventArgs (BreadCrumb breadCrumb) { BreadCrumb = breadCrumb; }
+        public BreadCrumb BreadCrumb { get; private set; }
+    }
+
     public class BreadCrumbControl : UserControl
     {
         private BreadCrumbToolStrip breadCrumbToolStrip;
-        private BindingList<object> breadCrumbs;
+        private BindingList<BreadCrumb> breadCrumbs;
 
-        public IList<object> BreadCrumbs { get { return breadCrumbs; } }
+        public IList<BreadCrumb> BreadCrumbs { get { return breadCrumbs; } }
 
-        public event EventHandler BreadCrumbClicked;
+        public event EventHandler<BreadCrumbClickedEventArgs> BreadCrumbClicked;
 
         public BreadCrumbControl ()
         {
             breadCrumbToolStrip = new BreadCrumbToolStrip()
             {
-                RightToLeft = RightToLeft.Yes,
                 Dock = DockStyle.Fill,
                 GripStyle = ToolStripGripStyle.Hidden
             };
-            //breadCrumbToolStrip.OverflowButton.Alignment = ToolStripItemAlignment.Right;
+            breadCrumbToolStrip.OverflowButton.Alignment = ToolStripItemAlignment.Left;
 
             Controls.Add(breadCrumbToolStrip);
 
-            breadCrumbs = new BindingList<object>()
+            breadCrumbs = new BindingList<BreadCrumb>()
             {
                 RaiseListChangedEvents = true
             };
@@ -100,69 +117,41 @@ namespace IDPicker.Controls
 
             if (breadCrumbs.Count > 0)
             {
-                var reversedSequence = breadCrumbs.Reverse();
-
-
-                object lastBreadCrumb = reversedSequence.First();
-                if (lastBreadCrumb is ToolStripItem)
+                foreach (var breadCrumb in breadCrumbs)
                 {
-                    breadCrumbToolStrip.Items.Add(lastBreadCrumb as ToolStripItem);
-                }
-                else if (lastBreadCrumb is IList<ToolStripItem>)
-                {
-                    breadCrumbToolStrip.Items.AddRange((lastBreadCrumb as IList<ToolStripItem>).Reverse().ToArray());
-                }
-                else
-                {
-                    var lastBreadCrumbLabel = new ToolStripLabel()
-                    {
-                        Text = lastBreadCrumb.ToString(),
-                        TextAlign = ContentAlignment.MiddleLeft,
-                        AutoSize = true,
-                        Tag = lastBreadCrumb
-                    };
-
-                    breadCrumbToolStrip.Items.Add(lastBreadCrumbLabel);
-                }
-
-                foreach(var breadCrumb in reversedSequence.Skip(1))
-                {
+                    ToolStripItemOverflow overflow = breadCrumb == breadCrumbs.Last() ? ToolStripItemOverflow.Never
+                                                                                      : ToolStripItemOverflow.AsNeeded;
                     var breadCrumbSeparator = new ToolStripLabel()
                     {
                         Text = ">",
                         TextAlign = ContentAlignment.MiddleLeft,
-                        AutoSize = true
+                        AutoSize = true,
+                        Overflow = overflow,
                     };
                     breadCrumbToolStrip.Items.Add(breadCrumbSeparator);
 
+                    var breadCrumbLabel = new ToolStripStatusLabel()
+                    {
+                        Text = breadCrumb.Text,
+                        TextAlign = ContentAlignment.MiddleRight,
+                        Overflow = overflow,
+                        Tag = breadCrumb.Tag
+                    };
+                    breadCrumbToolStrip.Items.Add(breadCrumbLabel);
+
                     var breadCrumbLinkLabel = new ToolStripLabel()
                     {
-                        Text = breadCrumb.ToString(),
+                        Text = "(x)",
                         TextAlign = ContentAlignment.MiddleLeft,
                         IsLink = true,
                         LinkBehavior = LinkBehavior.AlwaysUnderline,
                         AutoSize = true,
                         BackColor = Color.Red,
+                        Overflow = overflow,
                         Tag = breadCrumb
                     };
                     breadCrumbLinkLabel.Click += new EventHandler(itemLinkLabel_LinkClicked);
-
                     breadCrumbToolStrip.Items.Add(breadCrumbLinkLabel);
-
-                    if (breadCrumb is ToolStripItem)
-                    {
-                        breadCrumbLinkLabel.Text = "(x)";
-                        breadCrumbToolStrip.Items.Add(breadCrumb as ToolStripItem);
-                    }
-                    else if (breadCrumb is IList<ToolStripItem>)
-                    {
-                        breadCrumbLinkLabel.Text = "(x)";
-                        breadCrumbToolStrip.Items.AddRange((breadCrumb as IList<ToolStripItem>).Reverse().ToArray());
-                    }
-                    else
-                    {
-                        breadCrumbLinkLabel.Text = breadCrumb.ToString();
-                    }
                 }
             }
 
@@ -170,15 +159,15 @@ namespace IDPicker.Controls
             Refresh();
         }
 
-        protected void OnLinkClicked (object sender)
+        protected void OnLinkClicked (BreadCrumb sender)
         {
             if (BreadCrumbClicked != null)
-                BreadCrumbClicked(sender, EventArgs.Empty);
+                BreadCrumbClicked(sender, new BreadCrumbClickedEventArgs(sender));
         }
 
         void itemLinkLabel_LinkClicked (object sender, EventArgs e)
         {
-            OnLinkClicked((sender as ToolStripItem).Tag);
+            OnLinkClicked((sender as ToolStripItem).Tag as BreadCrumb);
         }
     }
 }

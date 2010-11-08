@@ -44,20 +44,36 @@ namespace IDPicker.Forms
             InitializeComponent();
 
             HideOnClose = true;
+            buffer = new StringBuilder(2000);
 
             log = new NotifyingStringWriter();
             log.Wrote += new EventHandler<NotifyingStringWriter.WroteEventArgs>(log_Wrote);
         }
 
+        StringBuilder buffer;
         void log_Wrote (object sender, NotifyingStringWriter.WroteEventArgs e)
         {
+            int size;
+            lock (buffer)
+            {
+                buffer.Append(e.Text);
+                size = buffer.Length;
+            }
+
+            if(size < 1000)
+                return;
+
             if (InvokeRequired)
             {
                 BeginInvoke((MethodInvoker) (() => log_Wrote(sender, e)));
                 return;
             }
 
-            textBox1.AppendText(e.Text);
+            lock (buffer)
+            {
+                textBox1.AppendText(buffer.ToString());
+                buffer = new StringBuilder(2000);
+            }
         }
     }
 

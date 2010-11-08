@@ -44,7 +44,11 @@ namespace IDPicker.Forms
         {
             InitializeComponent();
 
-            HideOnClose = true;
+            FormClosing += delegate(object sender, FormClosingEventArgs e)
+            {
+                e.Cancel = true;
+                DockState = DockState.DockBottomAutoHide;
+            };
 
             Text = TabText = "Modification View";
 
@@ -70,19 +74,15 @@ namespace IDPicker.Forms
             if (cell.Value == DBNull.Value)
                 return;
 
-            var modificationViewFilter = new DataFilter()
-            {
-                MaximumQValue = dataFilter.MaximumQValue,
-                FilterSource = this
-            };
+            var newDataFilter = new DataFilter() { FilterSource = this };
 
             char? site = null;
             if (e.ColumnIndex > 0 && this.siteColumnNameToSite.Contains(cell.OwningColumn.HeaderText))
                 site = this.siteColumnNameToSite[cell.OwningColumn.HeaderText];
 
-            modificationViewFilter.ModifiedSite = site;
+            newDataFilter.ModifiedSite = site;
 
-            modificationViewFilter.Modifications = session.CreateQuery(
+            newDataFilter.Modifications = session.CreateQuery(
                                                 "SELECT pm.Modification " +
                                                 "FROM PeptideSpectrumMatch psm JOIN psm.Modifications pm " +
                                                 " WHERE ROUND(pm.Modification.MonoMassDelta)=" + cell.OwningRow.Cells[0].Value.ToString() +
@@ -91,13 +91,17 @@ namespace IDPicker.Forms
                                                .List<DataModel.Modification>();
 
             // send filter event
-            ModificationViewFilter(this, modificationViewFilter);
+            ModificationViewFilter(this, newDataFilter);
         }
 
         public event ModificationViewFilterEventHandler ModificationViewFilter;
 
         private NHibernate.ISession session;
-        private DataFilter dataFilter, basicDataFilter;
+
+        private DataFilter viewFilter; // what the user has filtered on
+        private DataFilter dataFilter; // how this view is filtered (i.e. never on its own rows)
+        private DataFilter basicDataFilter; // the basic filter without the user filtering on rows
+
         private Map<string, char> siteColumnNameToSite;
         private DataTable deltaMassTable, basicDeltaMassTable;
         private int totalModifications, basicTotalModifications;
@@ -164,6 +168,7 @@ namespace IDPicker.Forms
         public void SetData (NHibernate.ISession session, DataFilter dataFilter)
         {
             this.session = session;
+            viewFilter = dataFilter;
             this.dataFilter = new DataFilter(dataFilter) { Modifications = new List<DataModel.Modification>(), ModifiedSite = null };
 
             if (dataGridView.SelectedCells.Count > 0)
@@ -204,16 +209,17 @@ namespace IDPicker.Forms
             try
             {
                 var query = session.CreateQuery("SELECT pm.Site, pm.Modification, COUNT(DISTINCT psm.Spectrum) " +
-                                                this.dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
-                                                                                       DataFilter.PeptideSpectrumMatchToPeptideModification) +
+                                                dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
+                                                                                  DataFilter.PeptideSpectrumMatchToPeptideModification) +
                                                 "GROUP BY pm.Site, ROUND(pm.Modification.MonoMassDelta) " +
                                                 "ORDER BY ROUND(pm.Modification.MonoMassDelta)");
                 query.SetReadOnly(true);
-                if (dataFilter.IsBasicFilter || dataFilter.Modifications.Count > 0 || dataFilter.ModifiedSite != null)
+                if (dataFilter.IsBasicFilter || viewFilter.Modifications.Count > 0 || viewFilter.ModifiedSite != null)
                 {
+                    // refresh basic data when basicDataFilter is unset or when the basic filter values have changed
                     if (basicDataFilter == null || (dataFilter.IsBasicFilter && dataFilter != basicDataFilter))
                     {
-                        basicDataFilter = new DataFilter(this.dataFilter);
+                        basicDataFilter = new DataFilter(dataFilter);
                         basicDeltaMassTable = createDeltaMassTableFromQuery(query, out basicTotalModifications, out siteColumnNameToSite);
                     }
 
@@ -238,19 +244,25 @@ namespace IDPicker.Forms
 
             dataGridView.DataSource = deltaMassTable;
 
-            if (deltaMassTable.Rows.Count > 0)
+            try
             {
-                dataGridView[0, 0].Selected = false;
-                if (oldSelectedAddress != null)
+                if (deltaMassTable.Rows.Count > 0)
                 {
-                    string columnName = oldSelectedAddress.second;
-                    int rowIndex = deltaMassTable.DefaultView.Find(oldSelectedAddress.first);
-                    if (dataGridView.Columns.Contains(columnName) && rowIndex != -1)
+                    dataGridView[0, 0].Selected = false;
+                    if (oldSelectedAddress != null)
                     {
-                        dataGridView.FirstDisplayedCell = dataGridView[columnName, rowIndex];
-                        dataGridView.FirstDisplayedCell.Selected = true;
+                        string columnName = oldSelectedAddress.second;
+                        int rowIndex = deltaMassTable.DefaultView.Find(oldSelectedAddress.first);
+                        if (dataGridView.Columns.Contains(columnName) && rowIndex != -1)
+                        {
+                            dataGridView.FirstDisplayedCell = dataGridView[columnName, rowIndex];
+                            dataGridView.FirstDisplayedCell.Selected = true;
+                        }
                     }
                 }
+            }
+            catch
+            {
             }
 
             dataGridView.Refresh();

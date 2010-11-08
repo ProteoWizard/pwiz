@@ -46,9 +46,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\NHibernate\Iesi.Collections.dll</HintPath>
     </Reference>
-    <Reference Include="InteropQonverter, Version=3.0.178.0, Culture=neutral, processorArchitecture=x86">
+    <Reference Include="InteropQonverter, Version=3.0.214.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\build-nt-x86\obj\release\InteropQonverter.dll</HintPath>
+      <HintPath>..\build-nt-x86\obj\$(Configuration)\InteropQonverter.dll</HintPath>
     </Reference>
     <Reference Include="NHibernate, Version=3.0.0.1001, Culture=neutral, PublicKeyToken=aa95f207798dfdb4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -60,11 +60,11 @@
     </Reference>
     <Reference Include="pwiz_bindings_cli, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\build-nt-x86\obj\release\pwiz_bindings_cli.dll</HintPath>
+      <HintPath>..\build-nt-x86\obj\$(Configuration)\pwiz_bindings_cli.dll</HintPath>
     </Reference>
     <Reference Include="Remotion.Data.Linq, Version=1.13.41.2, Culture=neutral, PublicKeyToken=cab60358ab4081ea, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>C:\bumbershoot\src\idpicker\branches\IDPicker-3\Lib\NHibernate\Remotion.Data.Linq.dll</HintPath>
+      <HintPath>..\Lib\NHibernate\Remotion.Data.Linq.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
@@ -113,6 +113,16 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Settings.hbm.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <NativeReference Include="Interop.EDAL.SxS, Version=1.0.0.0, Type=win32">
+      <Name>Interop.EDAL.SxS.manifest</Name>
+      <HintPath>..\build-nt-x86\obj\$(Configuration)\Interop.EDAL.SxS.manifest</HintPath>
+    </NativeReference>
+    <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=2.1.0.20, Type=win32">
+      <Name>MSFileReader.XRawfile2.SxS.manifest</Name>
+      <HintPath>..\build-nt-x86\obj\$(Configuration)\MSFileReader.XRawfile2.SxS.manifest</HintPath>
+    </NativeReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

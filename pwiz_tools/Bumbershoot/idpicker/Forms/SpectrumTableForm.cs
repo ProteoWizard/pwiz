@@ -280,7 +280,11 @@ namespace IDPicker.Forms
         {
             InitializeComponent();
 
-            HideOnClose = true;
+            FormClosing += delegate(object sender, FormClosingEventArgs e)
+            {
+                e.Cancel = true;
+                DockState = DockState.DockBottomAutoHide;
+            };
 
             basicAggregateRowsByType = new Dictionary<GroupBy, IEnumerable<AggregateRow>>();
         }
@@ -760,11 +764,7 @@ namespace IDPicker.Forms
                 e.HitTest.HitTestLocation == HitTestLocation.ExpandButton)
                 return;
 
-            var newDataFilter = new DataFilter()
-            {
-                MaximumQValue = dataFilter.MaximumQValue,
-                FilterSource = this
-            };
+            var newDataFilter = new DataFilter() { FilterSource = this };
 
             if (e.Item.RowObject is SpectrumSourceGroupRow)
                 newDataFilter.SpectrumSourceGroup = (e.Item.RowObject as SpectrumSourceGroupRow).SpectrumSourceGroup;

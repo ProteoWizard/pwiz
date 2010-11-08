@@ -105,7 +105,11 @@ namespace IDPicker.Forms
         {
             InitializeComponent();
 
-            HideOnClose = true;
+            FormClosing += delegate(object sender, FormClosingEventArgs e)
+            {
+                e.Cancel = true;
+                DockState = DockState.DockBottomAutoHide;
+            };
 
             Text = TabText = "Protein View";
 
@@ -145,6 +149,15 @@ namespace IDPicker.Forms
             treeListView.UseCellFormatEvents = true;
             treeListView.FormatCell += delegate(object sender, FormatCellEventArgs currentCell)
             {
+                if (currentCell.Item.RowObject is ProteinGroupRow &&
+                    (viewFilter.Protein != null && viewFilter.Protein.Id != (currentCell.Item.RowObject as ProteinGroupRow).FirstProteinId ||
+                     viewFilter.Cluster != null && viewFilter.Cluster != ((currentCell.Item.RowObject as ProteinGroupRow)).Cluster))
+                    currentCell.SubItem.ForeColor = SystemColors.GrayText;
+                else if (currentCell.Item.RowObject is ProteinRow &&
+                         (viewFilter.Protein != null && viewFilter.Protein.Id != (currentCell.Item.RowObject as ProteinRow).Protein.Id ||
+                          viewFilter.Cluster != null && viewFilter.Cluster != ((currentCell.Item.RowObject as ProteinRow)).Protein.Cluster))
+                    currentCell.SubItem.ForeColor = SystemColors.GrayText;
+
                 currentCell.SubItem.BackColor = (Color)_columnSettings[currentCell.Column][2];
             };
 
@@ -290,11 +303,7 @@ namespace IDPicker.Forms
             if (e.ClickCount < 2 || e.Item == null || e.Item.RowObject == null)
                 return;
 
-            var newDataFilter = new DataFilter()
-            {
-                MaximumQValue = dataFilter.MaximumQValue,
-                FilterSource = this
-            };
+            var newDataFilter = new DataFilter() { FilterSource = this };
 
             if (e.Item.RowObject is ProteinGroupRow)
                 newDataFilter.Protein = session.Get<DataModel.Protein>((e.Item.RowObject as ProteinGroupRow).FirstProteinId);
@@ -309,7 +318,11 @@ namespace IDPicker.Forms
         public event EventHandler<ProteinViewVisualizeEventArgs> ProteinViewVisualize;
 
         private NHibernate.ISession session;
-        private DataFilter dataFilter, basicDataFilter;
+
+        private DataFilter viewFilter; // what the user has filtered on
+        private DataFilter dataFilter; // how this view is filtered (i.e. never on its own rows)
+        private DataFilter basicDataFilter; // the basic filter without the user filtering on rows
+
         private IList<ProteinGroupRow> rowsByProteinGroup, basicRowsByProteinGroup;
 
         private List<OLVColumn> pivotColumns = new List<OLVColumn>();
@@ -319,10 +332,11 @@ namespace IDPicker.Forms
         // TODO: support multiple selected objects
         string[] oldSelectionPath = new string[] { };
 
-        public void SetData (NHibernate.ISession session, DataFilter dataFilter)
+        public void SetData (NHibernate.ISession session, DataFilter viewFilter)
         {
             this.session = session;
-            this.dataFilter = new DataFilter(dataFilter) {Protein = null};
+            this.viewFilter = viewFilter;
+            this.dataFilter = new DataFilter(viewFilter) { Protein = null, Cluster = null };
 
             if (treeListView.SelectedObject is ProteinGroupRow)
             {
@@ -347,7 +361,6 @@ namespace IDPicker.Forms
             workerThread.DoWork += new DoWorkEventHandler(setData);
             workerThread.RunWorkerCompleted += new RunWorkerCompletedEventHandler(renderData);
             workerThread.RunWorkerAsync();
-
         }
 
         internal void LoadLayout(IList<ColumnProperty> listOfSettings)
@@ -406,8 +419,8 @@ namespace IDPicker.Forms
                     "       COUNT(DISTINCT pro.Id), " +
                     "       pro.Cluster, " +
                     "       AVG(pro.Coverage) " +
-                    this.dataFilter.GetFilteredQueryString(DataFilter.FromProtein,
-                                                           DataFilter.ProteinToPeptideSpectrumMatch) +
+                    dataFilter.GetFilteredQueryString(DataFilter.FromProtein,
+                                                      DataFilter.ProteinToPeptideSpectrumMatch) +
                     "GROUP BY pro.ProteinGroup " +
                     "ORDER BY COUNT(DISTINCT psm.Peptide.id) DESC, COUNT(DISTINCT psm.id) DESC, COUNT(DISTINCT psm.Spectrum.id) DESC");
 
@@ -481,11 +494,12 @@ namespace IDPicker.Forms
                 }
                 treeListView.Unfreeze();*/
 
-                if (dataFilter.IsBasicFilter || dataFilter.Protein != null)
+                if (dataFilter.IsBasicFilter || viewFilter.Protein != null)
                 {
+                    // refresh basic data when basicDataFilter is unset or when the basic filter values have changed
                     if (basicDataFilter == null || (dataFilter.IsBasicFilter && dataFilter != basicDataFilter))
                     {
-                        basicDataFilter = new DataFilter(this.dataFilter);
+                        basicDataFilter = new DataFilter(dataFilter);
                         basicRowsByProteinGroup = proteinGroupQuery.List<object[]>().Select(o => new ProteinGroupRow(o)).ToList();
                     }
 
