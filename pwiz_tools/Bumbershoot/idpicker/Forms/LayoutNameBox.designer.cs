@@ -1,6 +1,6 @@
 ﻿namespace IDPicker.Forms
 {
-    partial class TextInputBox
+    partial class LayoutNameBox
     {
         /// <summary>
         /// Required designer variable.
@@ -84,7 +84,7 @@
             this.inputCheckBox.Text = "Save Column Options";
             this.inputCheckBox.UseVisualStyleBackColor = true;
             // 
-            // TextInputBox
+            // LayoutNameBox
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -94,8 +94,8 @@
             this.Controls.Add(this.inputTextBox);
             this.Controls.Add(this.okButton);
             this.Controls.Add(this.cancelButton);
-            this.Name = "TextInputBox";
-            this.Text = "TextInputBox";
+            this.Name = "LayoutNameBox";
+            this.Text = "Layout Name";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.TextInputBox_FormClosing);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -107,7 +107,7 @@
         private System.Windows.Forms.Button cancelButton;
         private System.Windows.Forms.Button okButton;
         internal System.Windows.Forms.TextBox inputTextBox;
-        internal System.Windows.Forms.Label inputLabel;
         internal System.Windows.Forms.CheckBox inputCheckBox;
+        private System.Windows.Forms.Label inputLabel;
     }
 }

@@ -9,17 +9,17 @@ using System.Windows.Forms;
 
 namespace IDPicker.Forms
 {
-    public partial class TextInputBox : Form
+    public partial class LayoutNameBox : Form
     {
         private readonly Regex _inputFormat;
 
-        public TextInputBox()
+        public LayoutNameBox()
         {
             InitializeComponent();
             _inputFormat = new Regex(@"\w| ");
         }
 
-        public TextInputBox(string regEx)
+        public LayoutNameBox(string regEx)
         {
             InitializeComponent();
             try

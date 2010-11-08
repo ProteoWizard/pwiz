@@ -558,43 +558,6 @@ namespace IDPicker.Forms
             }
         }
 
-        internal void SaveUserSettings(List<ColumnProperty> columnList, int layoutIndex)
-        {
-            //User properties will be in format:
-            //"(int)LayoutIndex
-            //(string)Column1Name|(string)Type|(int)DecimalPlaces|(int)CellColorCode|(bool)Visible|(bool)Locked
-            //(string)Column2Name|(string)Type|(int)DecimalPlaces|(int)CellColorCode|(bool)Visible|(bool)Locked
-            //(string)Column3Name|(string)Type|(int)DecimalPlaces|(int)CellColorCode|(bool)Visible|(bool)Locked
-            //(string)Column4Name|(string)Type|(int)DecimalPlaces|(int)CellColorCode|(bool)Visible|(bool)Locked
-            //(int)BackColorCode
-            //(int)TextColorCode"
-
-            var setting = new StringBuilder(layoutIndex + Environment.NewLine);
-            foreach (var item in columnList)
-            {
-                if (item.Name == "BackColor" || item.Name == "TextColor")
-                    continue;
-                setting.AppendFormat("{0}|", item.Name);
-                setting.AppendFormat("{0}|", item.Type);
-                setting.AppendFormat("{0}|", item.DecimalPlaces);
-                setting.AppendFormat("{0}|", item.ColorCode);
-                setting.AppendFormat("{0}|", item.Visible);
-                if (item.Locked == null)
-                    setting.AppendFormat("{0}{1}", "null", Environment.NewLine);
-                else
-                    setting.AppendFormat("{0}{1}", item.Locked, Environment.NewLine);
-            }
-
-            var backColor = columnList.Where(x => x.Name == "BackColor").SingleOrDefault();
-            var textColor = columnList.Where(x => x.Name == "TextColor").SingleOrDefault();
-
-            setting.AppendFormat("{0}{1}", backColor.ColorCode, Environment.NewLine);
-            setting.AppendFormat("{0}{1}", textColor.ColorCode, Environment.NewLine);
-
-            Properties.Settings.Default.SpectrumTableFormSettings.Add(setting.ToString());
-            Properties.Settings.Default.Save();
-        }
-
         internal List<ColumnProperty> GetCurrentProperties()
         {
             foreach (var kvp in _columnSettings)
