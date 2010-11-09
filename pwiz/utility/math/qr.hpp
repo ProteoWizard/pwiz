@@ -38,8 +38,7 @@ namespace math {
 template<class matrix_type, class vector_type>
 void Reflector(const vector_type& x, matrix_type& F)
 {
-    namespace ublas = boost::numeric::ublas;
-    using namespace ublas;
+    using namespace boost::numeric::ublas;
 
     typedef typename matrix_type::value_type value_type;
 
@@ -47,7 +46,8 @@ void Reflector(const vector_type& x, matrix_type& F)
 
     //v_k = -sgn( x(1) ) * inner_prod(x) * e1 + x;
     double x_2 = norm_2(x);
-    ublas::vector<value_type> v_k((x(0) >= 0 ? x_2 : -1 * x_2) * e1 + x);
+    boost::numeric::ublas::vector<value_type>
+        v_k((x(0) >= 0 ? x_2 : -1 * x_2) * e1 + x);
 
     //v_k = v_k / norm_2(v_k);
     double norm_vk = norm_2(v_k);
