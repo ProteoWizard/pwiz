@@ -65,6 +65,32 @@ namespace IDPicker
         }
 
         /// <summary>
+        /// If IDPicker has been run before, sets the bounds of the main form to the last used bounds.
+        /// Otherwise, sets defaults appropriate for the current display settings.
+        /// </summary>
+        public void LoadMainFormSettings ()
+        {
+            var location = Properties.Settings.Default.IDPickerFormLocation;
+            var size = Properties.Settings.Default.IDPickerFormSize;
+
+            if (size.IsEmpty)
+                size = SystemInformation.PrimaryMonitorMaximizedWindowSize;
+
+            mainForm.Location = location;
+            mainForm.Size = size;
+        }
+
+        /// <summary>
+        /// Saves the current bounds of the main form to the user's persistent settings.
+        /// </summary>
+        public void SaveMainFormSettings ()
+        {
+            Properties.Settings.Default.IDPickerFormLocation = mainForm.Location;
+            Properties.Settings.Default.IDPickerFormSize = mainForm.Size;
+            Properties.Settings.Default.Save();
+        }
+
+        /// <summary>
         /// Populates local list of user layouts with internally stored values. 
         /// Default values are created if no values are stored.
         /// </summary>

@@ -150,8 +150,7 @@ namespace IDPicker
             this.Controls.Add(this.dockPanel);
             this.Controls.Add(this.layoutButton);
             this.Name = "IDPickerForm";
-            this.Text = "IDPickerForm";
-            this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
+            this.Text = "IDPicker";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.IDPickerForm_FormClosing);
             this.statusStrip.ResumeLayout(false);
             this.statusStrip.PerformLayout();

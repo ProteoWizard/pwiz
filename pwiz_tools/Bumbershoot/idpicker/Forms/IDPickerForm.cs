@@ -454,6 +454,9 @@ namespace IDPicker
             //OpenFiles(filepaths);//.Take(10).Union(filepaths.Skip(200).Take(10)).Union(filepaths.Skip(400).Take(10)).ToList());
             //return;
 
+            // load last or default location and size
+            _layoutManager.LoadMainFormSettings();
+
             //Get user layout profiles
             LoadLayout(_layoutManager.GetCurrentDefault());
 
@@ -727,8 +730,10 @@ namespace IDPicker
                 dockPanel.ResumeLayout(true, true);
                 File.Delete(tempFilepath);
 
-                if (userLayout.HasCustomColumnSettings && proteinTableForm != null &&
-                    peptideTableForm != null && spectrumTableForm != null)
+                if (userLayout.HasCustomColumnSettings &&
+                    proteinTableForm != null &&
+                    peptideTableForm != null &&
+                    spectrumTableForm != null)
                 {
                     var columnList = userLayout.SettingsList.Where(o => o.Scope == "ProteinTableForm");
                     proteinTableForm.LoadLayout(columnList.ToList());
@@ -796,6 +801,7 @@ namespace IDPicker
 
         private void IDPickerForm_FormClosing(object sender, FormClosingEventArgs e)
         {
+            _layoutManager.SaveMainFormSettings();
             _layoutManager.SaveUserLayoutList();
         }
 
