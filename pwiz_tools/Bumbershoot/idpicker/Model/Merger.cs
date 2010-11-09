@@ -85,7 +85,7 @@ namespace IDPicker.DataModel
                 SessionFactoryFactory.CreateFile(mergeTargetFilepath);
             }
 
-            conn.ExecuteNonQuery("ATTACH DATABASE '" + mergeTargetFilepath + "' AS merged");
+            conn.ExecuteNonQuery("ATTACH DATABASE '" + mergeTargetFilepath.Replace("'", "''") + "' AS merged");
             conn.ExecuteNonQuery("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF; PRAGMA cache_size=" + tempCacheSize);
             conn.ExecuteNonQuery("PRAGMA merged.journal_mode=OFF; PRAGMA merged.synchronous=OFF; PRAGMA merged.cache_size=" + mergedCacheSize);
 
@@ -148,10 +148,10 @@ namespace IDPicker.DataModel
                         continue;
 
                     // skip files that have already been merged
-                    if (conn.ExecuteQuery("SELECT * FROM merged.MergedFiles WHERE Filepath = '" + mergeSourceFilepath + "'").Count() > 0)
+                    if (conn.ExecuteQuery("SELECT * FROM merged.MergedFiles WHERE Filepath = '" + mergeSourceFilepath.Replace("'", "''") + "'").Count() > 0)
                         continue;
 
-                    conn.ExecuteNonQuery("ATTACH DATABASE '" + mergeSourceFilepath + "' AS new");
+                    conn.ExecuteNonQuery("ATTACH DATABASE '" + mergeSourceFilepath.Replace("'", "''") + "' AS new");
                     conn.ExecuteNonQuery("PRAGMA new.cache_size=" + newCacheSize);
 
                     transaction = conn.BeginTransaction();
@@ -185,7 +185,7 @@ namespace IDPicker.DataModel
                         addNewQonverterSettings(conn);
                         getNewMaxIds(conn);
 
-                        conn.ExecuteNonQuery("INSERT INTO merged.MergedFiles VALUES ('" + mergeSourceFilepath + "')");
+                        conn.ExecuteNonQuery("INSERT INTO merged.MergedFiles VALUES ('" + mergeSourceFilepath.Replace("'", "''") + "')");
                     }
                         /*catch(Exception ex)
                 {

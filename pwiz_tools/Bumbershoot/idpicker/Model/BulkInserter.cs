@@ -180,7 +180,7 @@ namespace IDPicker.DataModel
                 }
                 else
                 {
-                    memConn.ExecuteNonQuery("ATTACH DATABASE '" + diskFilepath + "' AS disk");
+                    memConn.ExecuteNonQuery("ATTACH DATABASE '" + diskFilepath.Replace("'", "''") + "' AS disk");
                     memConn.ExecuteNonQuery("PRAGMA disk.journal_mode=OFF; PRAGMA disk.synchronous=OFF;");
 
                     transaction = memConn.BeginTransaction();
