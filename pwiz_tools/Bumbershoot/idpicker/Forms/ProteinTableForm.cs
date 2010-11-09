@@ -32,7 +32,9 @@ using System.Threading;
 using DigitalRune.Windows.Docking;
 using NHibernate.Linq;
 using BrightIdeasSoftware;
+using PopupControl;
 using IDPicker.DataModel;
+using IDPicker.Controls;
 
 namespace IDPicker.Forms
 {
@@ -41,6 +43,14 @@ namespace IDPicker.Forms
     public partial class ProteinTableForm : DockableForm
     {
         public TreeListView TreeListView { get { return treeListView; } }
+
+        public enum PivotBy { Group, Source, Off }
+        public PivotSetupControl<PivotBy> PivotSetupControl { get { return pivotSetupControl; } }
+        private PivotSetupControl<PivotBy> pivotSetupControl;
+        private Popup pivotSetupPopup;
+        private bool dirtyPivots = false;
+
+        #region Wrapper classes for encapsulating query results
 
         public class ProteinGroupRow
         {
@@ -99,6 +109,8 @@ namespace IDPicker.Forms
             #endregion
         }
 
+        #endregion
+
         Dictionary<OLVColumn, object[]> _columnSettings;
 
         public ProteinTableForm ()
@@ -112,6 +124,15 @@ namespace IDPicker.Forms
             };
 
             Text = TabText = "Protein View";
+
+            var pivots = new List<Pivot<PivotBy>>();
+            pivots.Add(new Pivot<PivotBy>(true) { Mode = PivotBy.Group, Text = "Group" });
+            pivots.Add(new Pivot<PivotBy>() { Mode = PivotBy.Source, Text = "Source" });
+
+            pivotSetupControl = new PivotSetupControl<PivotBy>(pivots);
+            pivotSetupControl.PivotChanged += pivotSetupControl_PivotChanged;
+            pivotSetupPopup = new Popup(pivotSetupControl) { FocusOnOpen = true };
+            pivotSetupPopup.Closed += new ToolStripDropDownClosedEventHandler(pivotSetupPopup_Closed);
 
             #region Column aspect getters
             var allLayouts = new List<string>(Util.StringCollectionToStringArray(Properties.Settings.Default.ProteinTableFormSettings));
@@ -457,12 +478,14 @@ namespace IDPicker.Forms
                 groupById = session.Query<SpectrumSourceGroup>().ToDictionary(o => o.Id.Value);
 
                 var stats = statsPerProteinGroupBySpectrumSource = new Map<long, Map<long,ProteinStats>>();
-                foreach (var queryRow in statsPerProteinGroupBySpectrumSourceQuery.List<object[]>())
-                    stats[(long) queryRow[1]][(long) queryRow[4]] = new ProteinStats(queryRow);
+                if (PivotSetupControl.CheckedPivots.Count(o => o.Mode == PivotBy.Source) > 0)
+                    foreach (var queryRow in statsPerProteinGroupBySpectrumSourceQuery.List<object[]>())
+                        stats[(long) queryRow[1]][(long) queryRow[4]] = new ProteinStats(queryRow);
 
                 var stats2 = statsPerProteinGroupBySpectrumSourceGroup = new Map<long, Map<long, ProteinStats>>();
-                foreach (var queryRow in statsPerProteinGroupBySpectrumSourceGroupQuery.List<object[]>())
-                    stats2[(long) queryRow[1]][(long) queryRow[4]] = new ProteinStats(queryRow);
+                if (PivotSetupControl.CheckedPivots.Count(o => o.Mode == PivotBy.Group) > 0)
+                    foreach (var queryRow in statsPerProteinGroupBySpectrumSourceGroupQuery.List<object[]>())
+                        stats2[(long) queryRow[1]][(long) queryRow[4]] = new ProteinStats(queryRow);
 
                 if (dataFilter.IsBasicFilter || viewFilter.Protein != null)
                 {
@@ -755,7 +778,29 @@ namespace IDPicker.Forms
 
             return currentList;
         }
-        
+
+        private void pivotSetupButton_Click (object sender, EventArgs e)
+        {
+            pivotSetupPopup.Show(sender as Button);
+        }
+
+        private void pivotSetupControl_PivotChanged (object sender, EventArgs e)
+        {
+            dirtyPivots = true;
+        }
+
+        void pivotSetupPopup_Closed (object sender, ToolStripDropDownClosedEventArgs e)
+        {
+            if (dirtyPivots)
+            {
+                dirtyPivots = false;
+
+                if (dataFilter != null && dataFilter.IsBasicFilter)
+                    basicDataFilter = null; // force refresh of basic rows
+
+                SetData(session, viewFilter);
+            }
+        }
     }
 
     public delegate void ProteinViewFilterEventHandler (ProteinTableForm sender, DataFilter proteinViewFilter);

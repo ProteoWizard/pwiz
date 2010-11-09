@@ -75,6 +75,12 @@
     <Compile Include="BreadCrumbControl.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="PivotSetupControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="PivotSetupControl.Designer.cs">
+      <DependentUpon>PivotSetupControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="GroupingSetupControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -99,6 +105,9 @@
   <ItemGroup>
     <EmbeddedResource Include="BasicFilterControl.resx">
       <DependentUpon>BasicFilterControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="PivotSetupControl.resx">
+      <DependentUpon>PivotSetupControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="GroupingSetupControl.resx">
       <DependentUpon>GroupingSetupControl.cs</DependentUpon>

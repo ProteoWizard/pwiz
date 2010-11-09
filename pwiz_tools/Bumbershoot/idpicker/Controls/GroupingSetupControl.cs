@@ -46,6 +46,9 @@ namespace IDPicker.Controls
             DoubleBuffered = true;
             ResizeRedraw = true;
 
+            if (groupings == null || groupings.Count() == 0)
+                throw new ArgumentException("no groupings");
+
             var rearrangingDropSink = new RearrangingDropSink(false);
             objectListView.DropSink = rearrangingDropSink;
 
@@ -60,6 +63,7 @@ namespace IDPicker.Controls
             objectListView.CheckedAspectName = "Checked";
 
             objectListView.SetObjects(groupings);
+            Height = objectListView.RowHeightEffective * (objectListView.GetItemCount() + 3);
         }
 
         void rearrangingDropSink_CanDrop(object sender, OlvDropEventArgs e)
