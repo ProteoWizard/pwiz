@@ -31,14 +31,24 @@ using System.Windows.Forms;
 using System.Threading;
 using DigitalRune.Windows.Docking;
 using NHibernate.Linq;
-using IDPicker.DataModel;
 using BrightIdeasSoftware;
+using PopupControl;
+using IDPicker.DataModel;
+using IDPicker.Controls;
 
 namespace IDPicker.Forms
 {
     public partial class PeptideTableForm : DockableForm
     {
         public TreeListView TreeListView { get { return treeListView; } }
+
+        public enum PivotBy { Group, Source, Off }
+        public PivotSetupControl<PivotBy> PivotSetupControl { get { return pivotSetupControl; } }
+        private PivotSetupControl<PivotBy> pivotSetupControl;
+        private Popup pivotSetupPopup;
+        private bool dirtyPivots = false;
+
+        #region Wrapper classes for encapsulating query results
 
         public class PeptideRow
         {
@@ -52,6 +62,21 @@ namespace IDPicker.Forms
                 Peptide = (DataModel.Peptide) queryRow[0];
                 DistinctMatchesWithRoundedMass = (long) queryRow[1];
                 Spectra = (long) queryRow[2];
+            }
+            #endregion
+        }
+
+        public class PeptideStats
+        {
+            public long DistinctMatches { get; private set; }
+            public long Spectra { get; private set; }
+
+            #region Constructor
+            public PeptideStats () { }
+            public PeptideStats (object[] queryRow)
+            {
+                DistinctMatches = (long) queryRow[2];
+                Spectra = (long) queryRow[3];
             }
             #endregion
         }
@@ -86,6 +111,8 @@ namespace IDPicker.Forms
             #endregion
         }
 
+        #endregion
+
         Dictionary<OLVColumn, object[]> _columnSettings;
         bool _skipRebuild = false;
 
@@ -100,6 +127,15 @@ namespace IDPicker.Forms
             };
 
             Text = TabText = "Peptide View";
+
+            var pivots = new List<Pivot<PivotBy>>();
+            pivots.Add(new Pivot<PivotBy>(true) { Mode = PivotBy.Group, Text = "Group" });
+            pivots.Add(new Pivot<PivotBy>() { Mode = PivotBy.Source, Text = "Source" });
+
+            pivotSetupControl = new PivotSetupControl<PivotBy>(pivots);
+            pivotSetupControl.PivotChanged += pivotSetupControl_PivotChanged;
+            pivotSetupPopup = new Popup(pivotSetupControl) { FocusOnOpen = true };
+            pivotSetupPopup.Closed += new ToolStripDropDownClosedEventHandler(pivotSetupPopup_Closed);
 
             #region Column aspect getters
             var allLayouts = new List<string>(Util.StringCollectionToStringArray(Properties.Settings.Default.PeptideTableFormSettings));
@@ -144,7 +180,10 @@ namespace IDPicker.Forms
                          viewFilter.DistinctPeptideKey != null && viewFilter.DistinctPeptideKey.Sequence != (currentCell.Item.RowObject as PeptideSpectrumMatchRow).DistinctPeptide.Sequence)
                     currentCell.SubItem.ForeColor = SystemColors.GrayText;
 
-                currentCell.SubItem.BackColor = (Color)_columnSettings[currentCell.Column][2];
+                if (_columnSettings.ContainsKey(currentCell.Column))
+                    currentCell.SubItem.BackColor = (Color) _columnSettings[currentCell.Column][2];
+                else
+                    currentCell.SubItem.BackColor = treeListView.BackColor;
             };
 
             treeListView.CellClick += new EventHandler<CellClickEventArgs>(treeListView_CellClick);
@@ -363,6 +402,13 @@ namespace IDPicker.Forms
 
         private IList<PeptideRow> rowsByPeptide, basicRowsByPeptide;
 
+        private List<OLVColumn> pivotColumns = new List<OLVColumn>();
+        private Dictionary<long, SpectrumSource> sourceById;
+        private Dictionary<long, SpectrumSourceGroup> groupById;
+        private Map<long, Map<long, PeptideStats>> statsPerPeptideBySpectrumSource;
+        private Map<long, Map<long, PeptideStats>> statsPerPeptideBySpectrumSourceGroup;
+        private IList<Pivot<PivotBy>> checkedPivots;
+
         // TODO: support multiple selected objects
         string[] oldSelectionPath = new string[] { };
 
@@ -371,6 +417,9 @@ namespace IDPicker.Forms
             this.session = session;
             viewFilter = dataFilter;
             this.dataFilter = new DataFilter(dataFilter) {Peptide = null, DistinctPeptideKey = null};
+
+            // stored to avoid cross-thread calls on the control
+            checkedPivots = pivotSetupControl.CheckedPivots;
 
             if (treeListView.SelectedObject is PeptideRow)
                 oldSelectionPath = new string[] { treeListView.SelectedItem.Text };
@@ -443,6 +492,37 @@ namespace IDPicker.Forms
 
                 peptideQuery.SetReadOnly(true);
 
+                var statsPerPeptideBySpectrumSourceQuery = session.CreateQuery(
+                    "SELECT s.Source.id, " +
+                    "       psm.Peptide.id, " +
+                    "       COUNT(DISTINCT psm.SequenceAndMassDistinctKey), " +
+                    "       COUNT(DISTINCT psm.Spectrum.id) " +
+                    dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
+                                                      DataFilter.PeptideSpectrumMatchToSpectrumSource) +
+                    "GROUP BY psm.Peptide.id, s.Source.id");
+
+                var statsPerPeptideBySpectrumSourceGroupQuery = session.CreateQuery(
+                    "SELECT ssgl.Group.id, " +
+                    "       psm.Peptide.id, " +
+                    "       COUNT(DISTINCT psm.SequenceAndMassDistinctKey), " +
+                    "       COUNT(DISTINCT psm.Spectrum.id) " +
+                    dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
+                                                      DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink) +
+                    "GROUP BY psm.Peptide.id, ssgl.Group.id");
+
+                sourceById = session.Query<SpectrumSource>().ToDictionary(o => o.Id.Value);
+                groupById = session.Query<SpectrumSourceGroup>().ToDictionary(o => o.Id.Value);
+
+                var stats = statsPerPeptideBySpectrumSource = new Map<long, Map<long, PeptideStats>>();
+                if (checkedPivots.Count(o => o.Mode == PivotBy.Source) > 0)
+                    foreach (var queryRow in statsPerPeptideBySpectrumSourceQuery.List<object[]>())
+                        stats[(long) queryRow[0]][(long) queryRow[1]] = new PeptideStats(queryRow);
+
+                var stats2 = statsPerPeptideBySpectrumSourceGroup = new Map<long, Map<long, PeptideStats>>();
+                if (checkedPivots.Count(o => o.Mode == PivotBy.Group) > 0)
+                    foreach (var queryRow in statsPerPeptideBySpectrumSourceGroupQuery.List<object[]>())
+                        stats2[(long) queryRow[0]][(long) queryRow[1]] = new PeptideStats(queryRow);
+
                 if (dataFilter.IsBasicFilter || viewFilter.Peptide != null || viewFilter.DistinctPeptideKey != null)
                 {
                     // refresh basic data when basicDataFilter is unset or when the basic filter values have changed
@@ -471,6 +551,50 @@ namespace IDPicker.Forms
             Text = TabText = String.Format("Peptide View: {0} distinct peptides, {1} distinct matches", rowsByPeptide.Count, totalDistinctMatches);
 
             treeListView.Roots = rowsByPeptide;
+            treeListView.AutoResizeColumn(0, ColumnHeaderAutoResizeStyle.ColumnContent);
+
+            treeListView.Freeze();
+            foreach (var pivotColumn in pivotColumns)
+                treeListView.Columns.Remove(pivotColumn);
+
+            pivotColumns = new List<OLVColumn>();
+
+            var sourceNames = sourceById.Select(o => o.Value.Name);
+            var stats = statsPerPeptideBySpectrumSource;
+            var stats2 = statsPerPeptideBySpectrumSourceGroup;
+
+            int insertIndex = monoisotopicMassColumn.Index > 0 ? monoisotopicMassColumn.Index : treeListView.ColumnsInDisplayOrder.Count;
+
+            foreach (long sourceId in stats.Keys)
+            {
+                string uniqueSubstring;
+                Util.UniqueSubstring(sourceById[sourceId].Name, sourceNames, out uniqueSubstring);
+                var column = new OLVColumn() { Text = uniqueSubstring, Tag = sourceId };
+                column.AspectGetter += delegate(object x)
+                {
+                    if (x is PeptideRow &&
+                        stats[(long) column.Tag].Contains((x as PeptideRow).Peptide.Id.Value))
+                        return stats[(long) column.Tag][(x as PeptideRow).Peptide.Id.Value].Spectra;
+                    return null;
+                };
+                pivotColumns.Add(column);
+                treeListView.Columns.Insert(insertIndex++, column);
+            }
+
+            foreach (long groupId in stats2.Keys)
+            {
+                var column = new OLVColumn() { Text = groupById[groupId].Name, Tag = groupId };
+                column.AspectGetter += delegate(object x)
+                {
+                    if (x is PeptideRow &&
+                        stats2[(long) column.Tag].Contains((x as PeptideRow).Peptide.Id.Value))
+                        return stats2[(long) column.Tag][(x as PeptideRow).Peptide.Id.Value].Spectra;
+                    return null;
+                };
+                pivotColumns.Add(column);
+                treeListView.Columns.Insert(insertIndex++, column);
+            }
+            treeListView.Unfreeze();
 
             // try to (re)set selected item
             expandSelectionPath(oldSelectionPath);
@@ -693,6 +817,29 @@ namespace IDPicker.Forms
             });
 
             return currentList;
+        }
+
+        private void pivotSetupButton_Click (object sender, EventArgs e)
+        {
+            pivotSetupPopup.Show(sender as Button);
+        }
+
+        private void pivotSetupControl_PivotChanged (object sender, EventArgs e)
+        {
+            dirtyPivots = true;
+        }
+
+        void pivotSetupPopup_Closed (object sender, ToolStripDropDownClosedEventArgs e)
+        {
+            if (dirtyPivots)
+            {
+                dirtyPivots = false;
+
+                if (dataFilter != null && dataFilter.IsBasicFilter)
+                    basicDataFilter = null; // force refresh of basic rows
+
+                SetData(session, viewFilter);
+            }
         }
     }
 

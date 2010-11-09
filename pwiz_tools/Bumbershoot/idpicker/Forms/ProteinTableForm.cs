@@ -354,6 +354,7 @@ namespace IDPicker.Forms
         private Dictionary<long, SpectrumSourceGroup> groupById;
         private Map<long, Map<long, ProteinStats>> statsPerProteinGroupBySpectrumSource;
         private Map<long, Map<long, ProteinStats>> statsPerProteinGroupBySpectrumSourceGroup;
+        private IList<Pivot<PivotBy>> checkedPivots;
 
         // TODO: support multiple selected objects
         string[] oldSelectionPath = new string[] { };
@@ -363,6 +364,9 @@ namespace IDPicker.Forms
             this.session = session;
             this.viewFilter = viewFilter;
             this.dataFilter = new DataFilter(viewFilter) { Protein = null, Cluster = null };
+
+            // stored to avoid cross-thread calls on the control
+            checkedPivots = pivotSetupControl.CheckedPivots;
 
             if (treeListView.SelectedObject is ProteinGroupRow)
             {
@@ -478,12 +482,12 @@ namespace IDPicker.Forms
                 groupById = session.Query<SpectrumSourceGroup>().ToDictionary(o => o.Id.Value);
 
                 var stats = statsPerProteinGroupBySpectrumSource = new Map<long, Map<long,ProteinStats>>();
-                if (PivotSetupControl.CheckedPivots.Count(o => o.Mode == PivotBy.Source) > 0)
+                if (checkedPivots.Count(o => o.Mode == PivotBy.Source) > 0)
                     foreach (var queryRow in statsPerProteinGroupBySpectrumSourceQuery.List<object[]>())
                         stats[(long) queryRow[1]][(long) queryRow[4]] = new ProteinStats(queryRow);
 
                 var stats2 = statsPerProteinGroupBySpectrumSourceGroup = new Map<long, Map<long, ProteinStats>>();
-                if (PivotSetupControl.CheckedPivots.Count(o => o.Mode == PivotBy.Group) > 0)
+                if (checkedPivots.Count(o => o.Mode == PivotBy.Group) > 0)
                     foreach (var queryRow in statsPerProteinGroupBySpectrumSourceGroupQuery.List<object[]>())
                         stats2[(long) queryRow[1]][(long) queryRow[4]] = new ProteinStats(queryRow);
 
