@@ -158,7 +158,10 @@ namespace IDPicker.Forms
                           viewFilter.Cluster != null && viewFilter.Cluster != ((currentCell.Item.RowObject as ProteinRow)).Protein.Cluster))
                     currentCell.SubItem.ForeColor = SystemColors.GrayText;
 
-                currentCell.SubItem.BackColor = (Color)_columnSettings[currentCell.Column][2];
+                if (_columnSettings.ContainsKey(currentCell.Column))
+                    currentCell.SubItem.BackColor = (Color) _columnSettings[currentCell.Column][2];
+                else
+                    currentCell.SubItem.BackColor = treeListView.BackColor;
             };
 
             treeListView.CanExpandGetter += delegate(object x) { return x is ProteinGroupRow && (x as ProteinGroupRow).ProteinCount > 1; };
@@ -326,8 +329,10 @@ namespace IDPicker.Forms
         private IList<ProteinGroupRow> rowsByProteinGroup, basicRowsByProteinGroup;
 
         private List<OLVColumn> pivotColumns = new List<OLVColumn>();
-        //private Map<long, Map<long, ProteinStats>> statsPerProteinGroupBySpectrumSource;
-        //private Map<long, Map<long, ProteinStats>> statsPerProteinGroupBySpectrumSourceGroup;
+        private Dictionary<long, SpectrumSource> sourceById;
+        private Dictionary<long, SpectrumSourceGroup> groupById;
+        private Map<long, Map<long, ProteinStats>> statsPerProteinGroupBySpectrumSource;
+        private Map<long, Map<long, ProteinStats>> statsPerProteinGroupBySpectrumSourceGroup;
 
         // TODO: support multiple selected objects
         string[] oldSelectionPath = new string[] { };
@@ -426,15 +431,15 @@ namespace IDPicker.Forms
 
                 proteinGroupQuery.SetReadOnly(true);
 
-                /*var statsPerProteinGroupBySpectrumSourceQuery = session.CreateQuery(
+                var statsPerProteinGroupBySpectrumSourceQuery = session.CreateQuery(
                     "SELECT DISTINCT_GROUP_CONCAT(pro.Accession), " +
                     "       s.Source.id, " +
                     "       COUNT(DISTINCT psm.Peptide), " +
                     "       COUNT(DISTINCT psm.Spectrum), " +
                     "       MIN(pro.id) " +
-                    this.dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
-                                                           DataFilter.PeptideSpectrumMatchToSpectrumSource,
-                                                           DataFilter.PeptideSpectrumMatchToProtein) +
+                    dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
+                                                      DataFilter.PeptideSpectrumMatchToSpectrumSource,
+                                                      DataFilter.PeptideSpectrumMatchToProtein) +
                     "GROUP BY pro.ProteinGroup, s.Source.id");
 
                 var statsPerProteinGroupBySpectrumSourceGroupQuery = session.CreateQuery(
@@ -443,10 +448,13 @@ namespace IDPicker.Forms
                     "       COUNT(DISTINCT psm.Peptide.id), " +
                     "       COUNT(DISTINCT psm.Spectrum.id), " +
                     "       MIN(pro.id) " +
-                    this.dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
-                                                           DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink,
-                                                           DataFilter.PeptideSpectrumMatchToProtein) +
+                    dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
+                                                      DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink,
+                                                      DataFilter.PeptideSpectrumMatchToProtein) +
                     "GROUP BY pro.ProteinGroup, ssgl.Group");
+
+                sourceById = session.Query<SpectrumSource>().ToDictionary(o => o.Id.Value);
+                groupById = session.Query<SpectrumSourceGroup>().ToDictionary(o => o.Id.Value);
 
                 var stats = statsPerProteinGroupBySpectrumSource = new Map<long, Map<long,ProteinStats>>();
                 foreach (var queryRow in statsPerProteinGroupBySpectrumSourceQuery.List<object[]>())
@@ -455,44 +463,6 @@ namespace IDPicker.Forms
                 var stats2 = statsPerProteinGroupBySpectrumSourceGroup = new Map<long, Map<long, ProteinStats>>();
                 foreach (var queryRow in statsPerProteinGroupBySpectrumSourceGroupQuery.List<object[]>())
                     stats2[(long) queryRow[1]][(long) queryRow[4]] = new ProteinStats(queryRow);
-
-                treeListView.Freeze();
-                foreach (var pivotColumn in pivotColumns)
-                    treeListView.Columns.Remove(pivotColumn);
-
-                IList<string> sourceNames = session.QueryOver<DataModel.SpectrumSource>().Select(o => o.Name).List<string>();
-                pivotColumns = new List<OLVColumn>();
-
-                foreach (long sourceId in stats.Keys)
-                {
-                    string uniqueSubstring;
-                    Util.UniqueSubstring(session.Get<DataModel.SpectrumSource>(sourceId).Name, sourceNames, out uniqueSubstring);
-                    var column = new OLVColumn() { Text = uniqueSubstring, Tag = sourceId };
-                    column.AspectGetter += delegate(object x)
-                                           {
-                                               if (x is ProteinGroupRow &&
-                                                   stats[(long) column.Tag].Contains((x as ProteinGroupRow).FirstProteinId))
-                                                    return stats[(long) column.Tag][(x as ProteinGroupRow).FirstProteinId].DistinctPeptides;
-                                               return null;
-                                           };
-                    pivotColumns.Add(column);
-                    treeListView.Columns.Insert(descriptionColumn.Index, column);
-                }
-
-                foreach (long groupId in stats2.Keys)
-                {
-                    var column = new OLVColumn() { Text = session.Get<DataModel.SpectrumSourceGroup>(groupId).Name, Tag = groupId };
-                    column.AspectGetter += delegate(object x)
-                    {
-                        if (x is ProteinGroupRow &&
-                            stats2[(long) column.Tag].Contains((x as ProteinGroupRow).FirstProteinId))
-                            return stats2[(long) column.Tag][(x as ProteinGroupRow).FirstProteinId].DistinctPeptides;
-                        return null;
-                    };
-                    pivotColumns.Add(column);
-                    treeListView.Columns.Insert(descriptionColumn.Index, column);
-                }
-                treeListView.Unfreeze();*/
 
                 if (dataFilter.IsBasicFilter || viewFilter.Protein != null)
                 {
@@ -524,6 +494,47 @@ namespace IDPicker.Forms
             Text = TabText = String.Format("Protein View: {0} protein groups, {1} proteins", rowsByProteinGroup.Count, totalProteins);
 
             treeListView.Roots = rowsByProteinGroup;
+
+            treeListView.Freeze();
+            foreach (var pivotColumn in pivotColumns)
+                treeListView.Columns.Remove(pivotColumn);
+
+            pivotColumns = new List<OLVColumn>();
+
+            var sourceNames = sourceById.Select(o => o.Value.Name);
+            var stats = statsPerProteinGroupBySpectrumSource;
+            var stats2 = statsPerProteinGroupBySpectrumSourceGroup;
+
+            foreach (long sourceId in stats.Keys)
+            {
+                string uniqueSubstring;
+                Util.UniqueSubstring(sourceById[sourceId].Name, sourceNames, out uniqueSubstring);
+                var column = new OLVColumn() { Text = uniqueSubstring, Tag = sourceId };
+                column.AspectGetter += delegate(object x)
+                {
+                    if (x is ProteinGroupRow &&
+                        stats[(long) column.Tag].Contains((x as ProteinGroupRow).FirstProteinId))
+                        return stats[(long) column.Tag][(x as ProteinGroupRow).FirstProteinId].DistinctPeptides;
+                    return null;
+                };
+                pivotColumns.Add(column);
+                treeListView.Columns.Insert(descriptionColumn.Index, column);
+            }
+
+            foreach (long groupId in stats2.Keys)
+            {
+                var column = new OLVColumn() { Text = groupById[groupId].Name, Tag = groupId };
+                column.AspectGetter += delegate(object x)
+                {
+                    if (x is ProteinGroupRow &&
+                        stats2[(long) column.Tag].Contains((x as ProteinGroupRow).FirstProteinId))
+                        return stats2[(long) column.Tag][(x as ProteinGroupRow).FirstProteinId].DistinctPeptides;
+                    return null;
+                };
+                pivotColumns.Add(column);
+                treeListView.Columns.Insert(descriptionColumn.Index, column);
+            }
+            treeListView.Unfreeze();
 
             // try to (re)set selected item
             OLVListItem selectedItem = null;
