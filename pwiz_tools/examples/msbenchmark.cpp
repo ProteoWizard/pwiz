@@ -22,6 +22,7 @@
 
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/data/msdata/RAMPAdapter.hpp"
+#include "pwiz/data/msdata/ramp/ramp.h"
 #include "pwiz_tools/common/FullReaderList.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/misc/Std.hpp"
@@ -74,7 +75,7 @@ bpt::time_duration enumerateRAMPAdapterSpectra(const string& filename, bool getB
     RAMPAdapter ra(filename);
 
     if (ra.scanCount() == 0)
-        throw runtime_error("[msbenchmark] No spectra or chromatograms found.");
+        throw runtime_error("[msbenchmark] No spectra found.");
 
     bpt::ptime start = bpt::microsec_clock::local_time();
 
@@ -97,6 +98,53 @@ bpt::time_duration enumerateRAMPAdapterSpectra(const string& filename, bool getB
             cout << "Enumerating spectra: " << (i+1) << '/' << size << " (" << totalArrayLength << " data points)\r" << flush;
     }
     cout << endl;
+
+    bpt::ptime stop = bpt::microsec_clock::local_time();
+    return stop - start;
+}
+
+
+bpt::time_duration enumerateRAMPSpectra(const string& filename, bool getBinaryData)
+{
+    RAMPFILE* rf = rampOpenFile(filename.c_str());
+    if (!rf->fileHandle)
+        throw runtime_error("[msbenchmark] Error opening RAMPFILE.");
+
+    ramp_fileoffset_t* scanIndex;
+    int lastScan;
+    scanIndex = readIndex(rf, getIndexOffset(rf), &lastScan);
+
+    RunHeaderStruct runHeader;
+    readMSRun(rf, &runHeader);
+    //readRunHeader(rf, scanIndex, &runHeader, lastScan);
+
+    if (runHeader.scanCount == 0)
+        throw runtime_error("[msbenchmark] No spectra found.");
+
+    bpt::ptime start = bpt::microsec_clock::local_time();
+
+    size_t totalArrayLength = 0;
+    for (size_t i=0, size=runHeader.scanCount; i != size; ++i)
+    {
+        ScanHeaderStruct scanHeader;
+        readHeader(rf, scanIndex[i], &scanHeader);
+
+        if (getBinaryData && scanHeader.peaksCount > 0)
+        {
+            RAMPREAL* peaks = readPeaks(rf, scanIndex[i]);
+            totalArrayLength += scanHeader.peaksCount;
+            free(peaks);
+        }
+        else
+            totalArrayLength += scanHeader.peaksCount;
+
+        if (i+1 == size || ((i+1) % 100) == 0)
+            cout << "Enumerating spectra: " << (i+1) << '/' << size << " (" << totalArrayLength << " data points)\r" << flush;
+    }
+    cout << endl;
+
+    free(scanIndex);
+    rampCloseFile(rf);
 
     bpt::ptime stop = bpt::microsec_clock::local_time();
     return stop - start;
@@ -134,17 +182,33 @@ bpt::time_duration enumerateChromatograms(const string& filename, bool getBinary
 }
 
 
-void benchmark(const char* filename, bool iterateSpectra, bool getBinaryData, bool useRAMPAdapter)
+enum BenchmarkMode
 {
-    if (iterateSpectra)
+    BenchmarkMode_Spectra,
+    BenchmarkMode_Chromatograms,
+    BenchmarkMode_RAMPAdapter,
+    BenchmarkMode_RAMP
+};
+
+
+void benchmark(const char* filename, BenchmarkMode benchmarkMode, bool getBinaryData)
+{
+    switch (benchmarkMode)
     {
-        if (useRAMPAdapter)
-            cout << "Time elapsed: " << bpt::to_simple_string(enumerateRAMPAdapterSpectra(filename, getBinaryData)) << endl;
-        else
+        default:
+        case BenchmarkMode_Spectra:
             cout << "Time elapsed: " << bpt::to_simple_string(enumerateSpectra(filename, getBinaryData)) << endl;
+            break;
+        case BenchmarkMode_Chromatograms:
+            cout << "Time elapsed: " << bpt::to_simple_string(enumerateChromatograms(filename, getBinaryData)) << endl;
+            break;
+        case BenchmarkMode_RAMPAdapter:
+            cout << "Time elapsed: " << bpt::to_simple_string(enumerateRAMPAdapterSpectra(filename, getBinaryData)) << endl;
+            break;
+        case BenchmarkMode_RAMP:
+            cout << "Time elapsed: " << bpt::to_simple_string(enumerateRAMPSpectra(filename, getBinaryData)) << endl;
+            break;
     }
-    else
-        cout << "Time elapsed: " << bpt::to_simple_string(enumerateChromatograms(filename, getBinaryData)) << endl;
 }
 
 
@@ -154,7 +218,7 @@ int main(int argc, char* argv[])
     {
         if (argc != 4)
         {
-            cout << "Usage: msbenchmark <spectra|chromatograms|rampadapter> <binary|no-binary> <filename>\n"
+            cout << "Usage: msbenchmark <spectra|chromatograms|rampadapter|ramp> <binary|no-binary> <filename>\n"
                  << "Iterates over a file's spectra or chromatograms to test reader speed.\n\n"
                  << "http://proteowizard.sourceforge.net\n"
                  << "support@proteowizard.org\n";
@@ -163,18 +227,17 @@ int main(int argc, char* argv[])
 
         const char* filename = argv[3];
 
-        bool iterateSpectra, useRAMPAdapter;
+        BenchmarkMode benchmarkMode;
         if (argv[1] == string("spectra"))
-            iterateSpectra = true;
+            benchmarkMode = BenchmarkMode_Spectra;
         else if (argv[1] == string("chromatograms"))
-            iterateSpectra = false;
+            benchmarkMode = BenchmarkMode_Chromatograms;
         else if (argv[1] == string("rampadapter"))
-        {
-            iterateSpectra = true;
-            useRAMPAdapter = true;
-        }
+            benchmarkMode = BenchmarkMode_RAMPAdapter;
+        else if (argv[1] == string("ramp"))
+            benchmarkMode = BenchmarkMode_RAMP;
         else
-            throw runtime_error("[msbenchmark] First argument must be \"spectra\", \"chromatograms\", or \"rampadapter\"");
+            throw runtime_error("[msbenchmark] First argument must be \"spectra\", \"chromatograms\", \"rampadapter\", or \"ramp\"");
 
         bool getBinaryData;
         if (argv[2] == string("binary"))
@@ -184,7 +247,7 @@ int main(int argc, char* argv[])
         else
             throw runtime_error("[msbenchmark] Second argument must be \"binary\" or \"no-binary\"");
 
-        benchmark(filename, iterateSpectra, getBinaryData, useRAMPAdapter);
+        benchmark(filename, benchmarkMode, getBinaryData);
 
         return 0;
     }

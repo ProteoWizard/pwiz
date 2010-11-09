@@ -1,8 +1,11 @@
+// $Id$
 /***************************************************************************
                              RAMP
 
 
 Non sequential parser for mzXML files
+and mzData files, too!
+and mzML, if you have the PWIZ library from Spielberg Family Proteomics Center
 
                              -------------------
     begin                : Wed Oct 10
@@ -26,36 +29,54 @@ Non sequential parser for mzXML files
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef __cplusplus
-#define RAP_EXTERN_C extern "C"
-#else 
-#define RAP_EXTERN_C 
+#ifdef TPPLIB
+#include "common/sysdepend.h" // tpp lib system depencies handling
+#ifdef _MSC_VER
+#include <inttypes.h>
+#endif
+#else
+// copied this code from TPP's sysdepend.h to make RAMP stand alone for other uses
+#if defined(_MSC_VER) || defined(__MINGW32__)  // MSVC or MinGW
+#define WINDOWS_NATIVE
+#endif
+#ifdef _MSC_VER
+#define S_ISREG(mode) ((mode)&_S_IFREG)
+#endif
 #endif
 
-#if defined(_MSC_VER) || defined(_MINGW_) || defined(WIN32)
+#ifdef _MSC_VER
+#define atoll(a) _atoi64(a)
+#endif
+
+#ifdef TPPLIB
+#define HAVE_PWIZ_MZML_LIB 1 // define this to enable use of Spielberg Proteomics Center's pwiz mzML reader
+#endif
+#ifdef HAVE_PWIZ_MZML_LIB
+#define RAMP_HAVE_GZ_INPUT 1 // can read mzxml.gz, mzdata.gz - depends on pwiz lib
+#endif
+
+#ifdef WINDOWS_NATIVE // MSVC or MinGW
 #include <winsock2.h>
 #include <sys/types.h>
 #include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <io.h>
-#ifndef __INTTYPES_H_
-typedef unsigned int uint32_t;
-typedef unsigned __int64 uint64_t;
-#endif
-#ifndef strcasecmp
-#define strcasecmp stricmp
-#endif
 #else
 #include <stdint.h>
 #include <netinet/in.h>
 #endif
+#include <sys/stat.h>
 
-#ifndef _LARGEFILE_SOURCE 
+#ifdef RAMP_HAVE_GZ_INPUT
+#include "random_access_gzFile.h" // for reading .mzxml.gz
+typedef random_access_gzFile * ramp_filehandle_t;
+#else // no gzip support
+#ifdef _MSC_VER // use MSFT API for 64 bit file pointers
+#define RAMP_NONNATIVE_LONGFILE
 typedef int ramp_filehandle_t; // use MSFT API for 64 bit file pointers
-#else
-typedef FILE * ramp_filehandle_t; // a real OS with real file handling
-#endif
+#else // not MSVC
+typedef FILE * ramp_filehandle_t; // can use fopen, fseek etc
+#endif // end else not MSVC
+#endif // end else no gzip support
 
 // set mz and intensity precision
 #ifndef RAMPREAL_FLOAT
@@ -64,53 +85,64 @@ typedef double RAMPREAL;
 typedef float RAMPREAL; 
 #endif
 
-typedef enum { mzInt = 0 , mzRuler } e_contentType;
+#include "ramp_base64.h"
+typedef enum { mzInt = 0 , mzRuler, mzOnly, intensityOnly } e_contentType;
+#ifdef HAVE_PWIZ_MZML_LIB
+namespace pwiz {  // forward ref
+	namespace msdata {  // forward ref
+		class RAMPAdapter; // forward ref
+	}
+}
+#endif
 
-#ifdef SWIG
-%apply long long {ramp_fileoffset_t};
-#else
-#ifndef RAMP_STRUCT_DECL_ONLY  // useful for pwiz, which only wants to mimic ramp structs
 //
 // we use this struct instead of FILE* so we can track what kind of files we're parsing
 //
 typedef struct {
    ramp_filehandle_t fileHandle;
-   int bIsMzData; // mzXML or mzData?
-} RAMPFILE;
+#ifdef HAVE_PWIZ_MZML_LIB
+   pwiz::msdata::RAMPAdapter *mzML; // if nonNULL, then we're reading mzML 
 #endif
+   int bIsMzData; // if not mzML, then is it mzXML or mzData?
+} RAMPFILE;
 
-#ifndef _LARGEFILE_SOURCE // use MSFT API for 64 bit file pointers
+#ifdef RAMP_HAVE_GZ_INPUT
+#define ramp_fgets(buf,len,handle) random_access_gzgets((handle)->fileHandle, buf, len )
+#define ramp_feof(a) random_access_gzeof((a)->fileHandle)
+#define ramp_fseek(a,b,c) random_access_gzseek((a)->fileHandle,b,c)
+#define ramp_fread(buf,len,handle) random_access_gzread((handle)->fileHandle,buf,len)
+#define ramp_ftell(a) random_access_gztell((a)->fileHandle)
+typedef pwiz::util::random_access_compressed_ifstream_off_t ramp_fileoffset_t;
+#elif defined(RAMP_NONNATIVE_LONGFILE) // use MSFT API for 64 bit file pointers
 typedef __int64 ramp_fileoffset_t;
 #define ramp_fseek(a,b,c) _lseeki64((a)->fileHandle,b,c)
 #define ramp_ftell(a) _lseeki64((a)->fileHandle,0,SEEK_CUR)
 #define ramp_fread(buf,len,handle) read((handle)->fileHandle,buf,len)
-#ifndef RAMP_STRUCT_DECL_ONLY  // useful for pwiz, which only wants to mimic ramp structs
-RAP_EXTERN_C char *ramp_fgets(char *buf,int len,RAMPFILE *handle);
-#endif
+char *ramp_fgets(char *buf,int len,RAMPFILE *handle);
 #define ramp_feof(handle) eof((handle)->fileHandle)
-#define atoll(a) _atoi64(a)
-
+#else // can use fopen for long files
+#define ramp_fread(buf,len,handle) fread(buf,1,len,(handle)->fileHandle)
+#define ramp_fgets(buf,len,handle) fgets(buf, len, (handle)->fileHandle)
+#define ramp_feof(handle) feof((handle)->fileHandle)
+#ifdef __MINGW32__
+typedef off64_t ramp_fileoffset_t;
+#define ramp_fseek(a,b,c) fseeko64((a)->fileHandle,b,c)
+#define ramp_ftell(a) ftello64((a)->fileHandle)
 #else // a real OS with real file handling
 typedef off_t ramp_fileoffset_t;
 #define ramp_fseek(a,b,c) fseeko((a)->fileHandle,b,c)
 #define ramp_ftell(a) ftello((a)->fileHandle)
-#define ramp_fread(buf,len,handle) fread(buf,1,len,(handle)->fileHandle)
-#define ramp_fgets(buf,len,handle) fgets(buf, len, (handle)->fileHandle)
-#define ramp_feof(handle) feof((handle)->fileHandle)
 #endif
-#endif // not SWIG
+#endif 
+
 
 #include <string.h>
+#include <string>
 #include <ctype.h>
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #define INSTRUMENT_LENGTH 2000
 #define SCANTYPE_LENGTH 32
-
+#define CHARGEARRAY_LENGTH 128
 
 struct ScanHeaderStruct
 {
@@ -131,6 +163,10 @@ struct ScanHeaderStruct
    int precursorCharge;  /* only if MS level > 1 */
    double precursorIntensity;  /* only if MS level > 1 */
    char scanType[SCANTYPE_LENGTH];
+   char activationMethod[SCANTYPE_LENGTH];
+   char possibleCharges[SCANTYPE_LENGTH];
+   int numPossibleCharges;
+   bool possibleChargesArray[CHARGEARRAY_LENGTH]; /* NOTE: does NOT include "precursorCharge" information; only from "possibleCharges" */
    int mergedScan;  /* only if MS level > 1 */
    int mergedResultScanNum; /* scan number of the resultant merged scan */
    int mergedResultStartScanNum; /* smallest scan number of the scanOrigin for merged scan */
@@ -159,7 +195,6 @@ typedef struct InstrumentStruct
    //char msType[INSTRUMENT_LENGTH];
 } InstrumentStruct;
 
-#ifndef RAMP_STRUCT_DECL_ONLY  // useful for pwiz, which only wants to mimic ramp structs
 // file open/close
 RAMPFILE *rampOpenFile(const char *filename);
 void rampCloseFile(RAMPFILE *pFI);
@@ -167,8 +202,17 @@ void rampCloseFile(RAMPFILE *pFI);
 // construct a filename in buf from a basename, adding .mzXML or .mzData
 // as exists, or .mzXML if neither exists. returns buf, or NULL if buflen
 // is too short
+std::string rampConstructInputFileName(const std::string &basename);
 char *rampConstructInputFileName(char *buf,int buflen,const char *basename);
-char *rampConstructInputPath(char *buf,int buflen,const char *dir,const char *basename);
+char *rampConstructInputPath(char *buf, // put the result here
+							 int inbuflen, // max result length
+							 const char *dir_in, // use this as a directory hint if basename does not contain valid dir info
+							 const char *basename); // we'll try adding various filename extensions to this
+
+// construct a filename in inbuf from a basename and taking hints from a named
+// spectrum, adding .mzXML or .mzData as exists
+// return true on success
+int rampValidateOrDeriveInputFilename(char *inbuf, int inbuflen, char *spectrumName);
 
 // trim a filename of its .mzData or .mzXML extension
 // return trimmed buffer, or null if no proper .ext found
@@ -177,6 +221,9 @@ char *rampTrimBaseName(char *buf);
 // locate the .mzData or .mzXML extension in the buffer
 // return pointer to extension, or NULL if not found
 char *rampValidFileType(const char *buf);
+
+// returns a null-terminated array of const ptrs
+const char **rampListSupportedFileTypes();
 
 // exercise at least some of the ramp interface - return non-0 on failure
 int rampSelfTest(char *filename); // if filename is non-null we'll exercise reader with it
@@ -230,7 +277,7 @@ int isScanMergedResult(struct ScanHeaderStruct *scanHeader);
 // return the scan range for a "raw" scan or merged scan
 // return (<scan num>,<scan num>) in the case of "raw" (i.e. non-merged) scan
 // return (<smallest scan num>,<highest scan num>) in the case of merged scan
-void getScanSpanRange(struct ScanHeaderStruct *scanHeader, int *startScanNum, int *endScanNum);
+void getScanSpanRange(const struct ScanHeaderStruct *scanHeader, int *startScanNum, int *endScanNum);
 // END - for MS/MS averaged scan
 
 // Caching support
@@ -254,14 +301,10 @@ void freeScanCache(struct ScanCacheStruct* cache);
 void clearScanCache(struct ScanCacheStruct* cache);
 
 // cached versions of standard ramp functions
-struct ScanHeaderStruct* readHeaderCached(struct ScanCacheStruct* cache, int seqNum, RAMPFILE* pFI, ramp_fileoffset_t lScanIndex);
+const struct ScanHeaderStruct* readHeaderCached(struct ScanCacheStruct* cache, int seqNum, RAMPFILE* pFI, ramp_fileoffset_t lScanIndex);
 int readMsLevelCached(struct ScanCacheStruct* cache, int seqNum, RAMPFILE* pFI, ramp_fileoffset_t lScanIndex);
-RAMPREAL *readPeaksCached(struct ScanCacheStruct* cache, int seqNum, RAMPFILE* pFI, ramp_fileoffset_t lScanIndex);
+const RAMPREAL *readPeaksCached(struct ScanCacheStruct* cache, int seqNum, RAMPFILE* pFI, ramp_fileoffset_t lScanIndex);
 
-#endif // ifndef RAMP_STRUCT_DECL_ONLY  useful for pwiz, which only wants to mimic ramp structs
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif
+

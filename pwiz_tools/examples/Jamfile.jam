@@ -70,8 +70,8 @@ exe txt2mzml
 exe msbenchmark
     : msbenchmark.cpp
       ../common
+      ../../pwiz/data/msdata/ramp
     : <include>../..
-      <include>../../pwiz/data/msdata/ramp
     ;
 
 
