@@ -60,12 +60,15 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CEOptimizationTutorialTest.cs" />
     <Compile Include="CustomReportsTutorialTest.cs" />
+    <Compile Include="ExistingExperimentsTutorialTest.cs" />
     <Compile Include="MethodEditTutorialTest.cs" />
     <Compile Include="MethodRefinementTutorialTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

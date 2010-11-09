@@ -674,6 +674,13 @@ namespace pwiz.Skyline.SettingsUI
             set { _driverHeavyMod.CheckedNames = value; }
         }
 
+        public string SelectedBackgroundProteome
+        {
+            get { return _driverBackgroundProteome.Combo.SelectedItem.ToString(); }
+            set { _driverBackgroundProteome.Combo.SelectedItem = value;  }
+        }
+
+
         public string SelectedLabelTypeName
         {
             get { return _driverLabelType.SelectedName; }

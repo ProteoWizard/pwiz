@@ -178,6 +178,12 @@ namespace pwiz.Skyline.Controls.Graphs
         [Browsable(true)]
         public event EventHandler<ChangedMultiPeakBoundsEventArgs> ChangedPeakBounds;
 
+        public void SimulateChangedPeakBounds(List<ChangedPeakBoundsEventArgs> listChanges)
+        {
+            if(ChangedPeakBounds != null)
+                ChangedPeakBounds(this, new ChangedMultiPeakBoundsEventArgs(listChanges.ToArray()));
+        }
+
         /// <summary>
         /// Indicates a peak has been picked at a specified retention time
         /// for a specific replicate of a specific <see cref="TransitionGroupDocNode"/>.
@@ -304,7 +310,7 @@ namespace pwiz.Skyline.Controls.Graphs
 //            graphControl.Refresh();
         }
 
-        private ChromatogramGroupInfo[] ChromGroupInfos
+        public ChromatogramGroupInfo[] ChromGroupInfos
         {
             get
             {

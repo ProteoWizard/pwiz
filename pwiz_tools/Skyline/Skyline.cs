@@ -386,7 +386,7 @@ namespace pwiz.Skyline
                             return;
                     }
                     while (!SetDocument(docNew, docOriginal));
-
+                    
                     undo.Commit();
                 }
             }
@@ -396,7 +396,7 @@ namespace pwiz.Skyline
             }
             catch (InvalidDataException x)
             {
-                MessageBox.Show(this, string.Format("Failure attempting to modify the document.\n{0}", x.Message), Program.Name);
+                MessageDlg.Show(this, string.Format("Failure attempting to modify the document.\n{0}", x.Message));
             }
         }
 
@@ -903,6 +903,7 @@ namespace pwiz.Skyline
                     ImportFasta(new StringReader(textFasta), Helpers.CountLinesInString(textFasta),
                         false, "Paste proteins");
                 }
+                return;
             }
             // Otherwise, look for a list of peptides, or a bare sequence
             else

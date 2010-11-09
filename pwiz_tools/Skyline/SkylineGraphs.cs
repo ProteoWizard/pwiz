@@ -596,6 +596,10 @@ namespace pwiz.Skyline
 
         private void charge2MenuItem_Click(object sender, EventArgs e)
         {
+            ToggleCharge2();
+        }
+        public void ToggleCharge2()
+        {
             Settings.Default.ShowCharge2 = !Settings.Default.ShowCharge2;
             UpdateSpectrumGraph();
         }
@@ -749,6 +753,12 @@ namespace pwiz.Skyline
                 // Restore setting and menuitem from saved value
                 Settings.Default.ShowSpectra = show;
             }
+        }
+
+        // Testing
+        public bool GraphSpectrumVisible()
+        {
+            return _graphSpectrum != null && _graphSpectrum.Visible;
         }
 
         private GraphSpectrum CreateGraphSpectrum()
@@ -1263,7 +1273,7 @@ namespace pwiz.Skyline
             RemovePeak(SelectedPath.Parent, nodeGroup, nodeTran);
         }
 
-        private void RemovePeak(IdentityPath groupPath,
+        public void RemovePeak(IdentityPath groupPath,
             TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
         {
             string message;
@@ -2400,6 +2410,11 @@ namespace pwiz.Skyline
 
         private void peptideOrderDocumentContextMenuItem_Click(object sender, EventArgs e)
         {
+            ShowPeptideOrderDocument();
+        }
+        
+        public void ShowPeptideOrderDocument()
+        {
             Settings.Default.AreaPeptideOrderEnum = SummaryPeptideOrder.document.ToString();
             UpdateSummaryGraphs();
         }
@@ -2439,6 +2454,11 @@ namespace pwiz.Skyline
         }
 
         private void peptideCvsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowCVValues();
+        }
+
+        public void ShowCVValues()
         {
             Settings.Default.ShowPeptideCV = peptideCvsContextMenuItem.Checked;
             UpdateSummaryGraphs();
@@ -2500,7 +2520,7 @@ namespace pwiz.Skyline
             NormalizeAreaGraphToTotal(false);
         }
 
-        private void UpdatePeakAreaGraph()
+        public void UpdatePeakAreaGraph()
         {
             if (_graphPeakArea != null)
                 _graphPeakArea.UpdateUI();

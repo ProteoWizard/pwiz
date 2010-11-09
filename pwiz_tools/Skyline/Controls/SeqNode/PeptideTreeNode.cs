@@ -116,7 +116,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             return (imageIndex != -1 ? sequenceTree.StateImageList.Images[imageIndex] : null);
         }
 
-        private static int GetPeakImageIndex(PeptideDocNode nodePep, SequenceTree sequenceTree)
+        public static int GetPeakImageIndex(PeptideDocNode nodePep, SequenceTree sequenceTree)
         {
             var settings = sequenceTree.Document.Settings;
             if (!settings.HasResults)

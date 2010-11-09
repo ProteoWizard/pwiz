@@ -302,7 +302,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 transitionSettingsUI.RegressionCE = Settings.Default.GetCollisionEnergyByName("ABI 4000 QTrap");
                 transitionSettingsUI.RegressionDP = Settings.Default.GetDeclusterPotentialByName("ABI");
-                transitionSettingsUI.MaxMz = 1800;
+                transitionSettingsUI.InstrumentMaxMz = 1800;
                 transitionSettingsUI.OkDialog();
             });
             RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("MethodEdit Tutorial.sky")));

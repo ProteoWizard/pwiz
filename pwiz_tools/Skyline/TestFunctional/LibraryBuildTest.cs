@@ -214,7 +214,7 @@ namespace pwiz.SkylineTestFunctional
                 transitionSettingsCpas.PrecursorCharges =
                 transitionSettingsCpas.ProductCharges = "1,2,3";
                 transitionSettingsCpas.FragmentTypes = "y,b";
-                transitionSettingsCpas.InstrumentMaxMz = "2000";
+                transitionSettingsCpas.InstrumentMaxMz = 2000;
                 transitionSettingsCpas.OkDialog();
             });
 

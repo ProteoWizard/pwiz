@@ -35,8 +35,8 @@ namespace pwiz.Skyline.EditUI
     {
         private const int VSPACE = 3;
         private const int HSPACE = 10;
-        private const string ADD_ITEM = "<Add...>";
-        private const string EDIT_LIST_ITEM = "<Edit list...>";
+        public const string ADD_ITEM = "<Add...>";
+        public const string EDIT_LIST_ITEM = "<Edit list...>";
 
         private const string PREFIX_STATIC_NAME = "comboStatic";
         private const string PREFIX_HEAVY_NAME = "comboHeavy";
@@ -248,6 +248,18 @@ namespace pwiz.Skyline.EditUI
             combo.SelectedItem = modification;
         }
 
+        public void AddNewModification(int indexAA, IsotopeLabelType type)
+        {   ComboBox combo;
+            if (type.IsLight)
+                combo = _listComboStatic[indexAA];
+            else
+            {
+                int indexHeavyList = _listLabelTypeHeavy.IndexOf(type);
+                combo = _listListComboHeavy[indexHeavyList][indexAA];
+            }
+            combo.SelectedItem = ADD_ITEM;
+        }
+        
         private static StaticModList StaticList { get { return Settings.Default.StaticModList; } }
         private static HeavyModList HeavyList { get { return Settings.Default.HeavyModList; } }
 

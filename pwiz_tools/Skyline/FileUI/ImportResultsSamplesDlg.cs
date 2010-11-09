@@ -28,8 +28,6 @@ namespace pwiz.Skyline.FileUI
     {
         private readonly List<int> _sampleIndices = new List<int>();
 
-        private bool _clickedOk;
-
         public ImportResultsSamplesDlg(string filePath, IEnumerable<string> sampleNames)
         {
             InitializeComponent();
@@ -47,29 +45,33 @@ namespace pwiz.Skyline.FileUI
 
         public List<int> SampleIndices { get { return _sampleIndices; } }
 
-        protected override void  OnClosing(System.ComponentModel.CancelEventArgs e)
+        public void IncludeSample(int index)
         {
-            if (_clickedOk)
-            {
-                _clickedOk = false; // Reset in case of failure.
-
-                foreach (int index in listSamples.CheckedIndices)
-                    _sampleIndices.Add(index);
-            }
-
- 	        base.OnClosing(e);
+            listSamples.SetItemChecked(index, true);
         }
 
         private void cbSelectAll_CheckedChanged(object sender, EventArgs e)
         {
-            bool checkAll = cbSelectAll.Checked;
+            CheckAll(cbSelectAll.Checked);
+        }
+
+        public void CheckAll(bool checkAll)
+        {
+            
             for (int i = 0; i < listSamples.Items.Count; i++)
                 listSamples.SetItemChecked(i, checkAll);
         }
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            _clickedOk = true;
+            OkDialog();
+        }
+
+        public void OkDialog()
+        {
+            foreach (int index in listSamples.CheckedIndices)
+                _sampleIndices.Add(index);
+            DialogResult = DialogResult.OK;
         }
     }
 }

@@ -211,7 +211,7 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Button btnBrowse;
         private System.Windows.Forms.Label labelFile;
         private System.Windows.Forms.TextBox textPath;
-        public System.Windows.Forms.TextBox textName;
+        private System.Windows.Forms.TextBox textName;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOk;

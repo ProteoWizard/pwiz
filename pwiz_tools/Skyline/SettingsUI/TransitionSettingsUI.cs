@@ -507,10 +507,16 @@ namespace pwiz.Skyline.SettingsUI
             set { textIonTypes.Text = value; }
         }
 
-        public string InstrumentMaxMz
+        public int InstrumentMaxMz
         {
-            get { return textMaxMz.Text; }
-            set { textMaxMz.Text = value; }
+            get { return Int32.Parse(textMaxMz.Text); }
+            set { textMaxMz.Text = value.ToString(); }
+        }
+
+        public double MZMatchTolerance
+        {
+            get { return Double.Parse(textMzMatchTolerance.Text); }
+            set { textMzMatchTolerance.Text = value.ToString(); }
         }
 
         public CollisionEnergyRegression RegressionCE
@@ -563,12 +569,6 @@ namespace pwiz.Skyline.SettingsUI
             {
                 comboOptimizeType.SelectedItem = value;
             }
-        }
-
-        public int MaxMz
-        {
-            get { return Convert.ToInt32(textMaxMz.Text); }
-            set { textMaxMz.Text = value.ToString(); }
         }
 
         public int IonCount

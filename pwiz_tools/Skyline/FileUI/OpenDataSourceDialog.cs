@@ -111,7 +111,7 @@ namespace pwiz.Skyline.FileUI
         public string CurrentDirectory
         {
             get { return _currentDirectory; }
-            private set
+            set
             {
                 if (value != null && (value == "" || Directory.Exists(value)))
                 {
@@ -136,6 +136,15 @@ namespace pwiz.Skyline.FileUI
             foreach(ListViewItem item in listView.Items)
             {
                 if (item.Text.ToLower().EndsWith(extension.ToLower()))
+                    listView.SelectedIndices.Add(item.Index);
+            }
+        }
+
+        public void SelectFile(string fileName)
+        {
+            foreach (ListViewItem item in listView.Items)
+            {
+                if (Equals(item.Text, fileName))
                     listView.SelectedIndices.Add(item.Index);
             }
         }
@@ -871,6 +880,7 @@ namespace pwiz.Skyline.FileUI
 
             var selectedItem = (TreeNode) lookInComboBox.SelectedItem;
             string location = selectedItem.Tag as string;
+            var prevDirectory = CurrentDirectory;
             switch (location)
             {
                 case "My Recent Documents":
@@ -899,7 +909,6 @@ namespace pwiz.Skyline.FileUI
                                 if (drivePair.Value)
                                 {
                                     CurrentDirectory = location;
-                                    return;
                                 }
                                 break;
                             }
@@ -909,6 +918,8 @@ namespace pwiz.Skyline.FileUI
                     CurrentDirectory = _currentDirectory;
                     break;
             }
+            if(!Equals(prevDirectory, CurrentDirectory))
+                _previousDirectories.Push(prevDirectory);
         }
     }
 }
