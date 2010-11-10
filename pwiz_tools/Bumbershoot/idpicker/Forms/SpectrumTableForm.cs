@@ -924,6 +924,13 @@ namespace IDPicker.Forms
             Refresh();
         }
 
+        public void ClearData (bool clearBasicFilter)
+        {
+            if (clearBasicFilter)
+                basicDataFilter = null;
+            ClearData();
+        }
+
         public void SetData (NHibernate.ISession session, DataFilter userFilter)
         {
             if (session == null)
@@ -1147,10 +1154,7 @@ namespace IDPicker.Forms
                 var gcf = new GroupingControlForm(session);
 
                 if (gcf.ShowDialog() == DialogResult.OK)
-                {
-                    basicDataFilter = null;
-                    (this.ParentForm as IDPickerForm).ReloadSession(session);
-                }
+                    (this.ParentForm as IDPickerForm).ApplyBasicFilter();
             }
 
         }

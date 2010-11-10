@@ -359,7 +359,10 @@ namespace IDPicker.DataModel
                   FROM PeptideSpectrumMatch psm
                   JOIN PeptideInstance pi ON psm.Peptide = pi.Peptide
                   JOIN Protein pro ON pi.Protein = pro.Id
-                  WHERE {0} >= psm.QValue AND psm.Rank = 1
+                  JOIN Spectrum s ON psm.Spectrum = s.Id
+                  JOIN SpectrumSource ss ON s.Source = ss.Id
+                  -- filter out ungrouped spectrum sources
+                  WHERE ss.Group_ AND {0} >= psm.QValue AND psm.Rank = 1
                   GROUP BY pi.Protein
                   HAVING {1} <= COUNT(DISTINCT psm.Peptide) AND
                          {2} <= COUNT(DISTINCT psm.Spectrum);
@@ -376,7 +379,10 @@ namespace IDPicker.DataModel
                                      FROM FilteredProtein pro
                                      JOIN PeptideInstance pi ON pro.Id = pi.Protein
                                      JOIN PeptideSpectrumMatch psm ON pi.Peptide = psm.Peptide
-                                     WHERE " + MaximumQValue.ToString() + @" >= psm.QValue AND psm.Rank = 1
+                                     JOIN Spectrum s ON psm.Spectrum = s.Id
+                                     JOIN SpectrumSource ss ON s.Source = ss.Id
+                                     -- filter out ungrouped spectrum sources
+                                     WHERE ss.Group_ AND " + MaximumQValue.ToString() + @" >= psm.QValue AND psm.Rank = 1
                                      GROUP BY psm.Id;
                                      CREATE INDEX FilteredPeptideSpectrumMatch_Spectrum ON FilteredPeptideSpectrumMatch (Spectrum);
                                      CREATE INDEX FilteredPeptideSpectrumMatch_Peptide ON FilteredPeptideSpectrumMatch (Peptide);
@@ -434,10 +440,6 @@ namespace IDPicker.DataModel
 
             if (useScopedTransaction)
                 session.Transaction.Commit();
-
-            //make sure to ignore "Abandoned" group
-            if (SpectrumSourceGroup == null)
-                SpectrumSourceGroup = session.QueryOver<DataModel.SpectrumSourceGroup>().Where(g => g.Name == "/").SingleOrDefault();
         }
 
         #region Implementation of basic filters

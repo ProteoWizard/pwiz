@@ -385,7 +385,7 @@ namespace IDPicker
             setData();
         }
 
-        void applyBasicFilter ()
+        public void ApplyBasicFilter ()
         {
             clearData();
 
@@ -431,11 +431,11 @@ namespace IDPicker
 
         void clearData ()
         {
-            proteinTableForm.ClearData();
-            peptideTableForm.ClearData();
-            spectrumTableForm.ClearData();
-            modificationTableForm.ClearData();
-            analysisTableForm.ClearData();
+            proteinTableForm.ClearData(true);
+            peptideTableForm.ClearData(true);
+            spectrumTableForm.ClearData(true);
+            modificationTableForm.ClearData(true);
+            analysisTableForm.ClearData(true);
         }
 
         void setData ()
@@ -690,20 +690,14 @@ namespace IDPicker
                         MinimumAdditionalPeptidesPerProtein = 1
                     };
 
-                    // ignore "Abandoned" group
-                    basicFilter.SpectrumSourceGroup = session.QueryOver<DataModel.SpectrumSourceGroup>().Where(g => g.Name == "/").SingleOrDefault();
-
                     basicFilterControl.DataFilter = basicFilter;
 
                     viewFilter = basicFilter;
 
-                    applyBasicFilter();
+                    ApplyBasicFilter();
                 }
                 else
                 {
-                    // ignore "Abandoned" group
-                    basicFilter.SpectrumSourceGroup = session.QueryOver<DataModel.SpectrumSourceGroup>().Where(g => g.Name == "/").SingleOrDefault();
-
                     basicFilterControl.DataFilter = basicFilter;
 
                     viewFilter = basicFilter;
@@ -831,7 +825,7 @@ namespace IDPicker
             {
                 dirtyFilterControls = false;
                 basicFilter = basicFilterControl.DataFilter;
-                applyBasicFilter();
+                ApplyBasicFilter();
             }
         }
     }

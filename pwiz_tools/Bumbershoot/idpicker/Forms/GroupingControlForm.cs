@@ -28,6 +28,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using NHibernate.Linq;
 using IDPicker.DataModel;
 
 namespace IDPicker.Forms
@@ -47,25 +48,11 @@ namespace IDPicker.Forms
             this.session = session;
 
             var groupsDone = new List<SpectrumSourceGroup>();
-            var spectra = session.QueryOver<SpectrumSource>().List<SpectrumSource>();
-            var spectraDictionary = new Dictionary<int,List<SpectrumSource>>();
+            var sourcesByGroup = session.Query<SpectrumSource>().Where(o => o.Group != null)
+                                                                .ToLookup(o => (int) o.Group.Id.Value)
+                                                                .ToDictionary(o => o.Key, o => o.ToList());
 
-            foreach (SpectrumSource ss in spectra)
-            {
-                try
-                {
-                    if (!spectraDictionary.ContainsKey((int)ss.Group.Id))
-                        spectraDictionary.Add((int)ss.Group.Id, new List<SpectrumSource>());
-                    spectraDictionary[(int)ss.Group.Id].Add(ss);
-                }
-                catch
-                {
-                    MessageBox.Show("Groupless spectrum source detected");
-                }
-            }
-
-            //add all normal groups
-            var groups = session.QueryOver<SpectrumSourceGroup>().Where(g => g.Name != "Abandoned").List<SpectrumSourceGroup>();
+            var groups = session.Query<SpectrumSourceGroup>().ToList();
             var groupNode = new TreeNode();
 
             groupNode.Tag = (from g in groups where g.Name == "/" select g).Single();
@@ -73,25 +60,21 @@ namespace IDPicker.Forms
             groupNode.Text = (groupNode.Tag as SpectrumSourceGroup).Name;
             groupNode.ContextMenuStrip = cmRightClickGroupNode;
 
-            AddAssociatedSpectra(ref groupNode, spectraDictionary);
+            AddAssociatedSpectra(ref groupNode, sourcesByGroup);
 
-            groupNode = FillBranch(groupNode, groups, spectraDictionary);
+            groupNode = FillBranch(groupNode, groups, sourcesByGroup);
 
             tvGroups.Nodes.Add(groupNode);
 
             tvGroups.ExpandAll();
 
-            //add abandoned groups
-            var abandonedGroup = session.QueryOver<SpectrumSource>().JoinQueryOver(s => s.Group).Where(g => g.Name == "Abandoned").List<SpectrumSource>();
-            if (abandonedGroup != null)
+            // add ungrouped sources
+            foreach (SpectrumSource ss in session.Query<SpectrumSource>().Where(g => g.Group == null))
             {
-                foreach (SpectrumSource ss in abandonedGroup)
-                {
-                    var lvi = new ListViewItem();
-                    lvi.Text = ss.Name;
-                    lvi.Tag = ss;
-                    lvNonGroupedFiles.Items.Add(lvi);
-                }
+                var lvi = new ListViewItem();
+                lvi.Text = ss.Name;
+                lvi.Tag = ss;
+                lvNonGroupedFiles.Items.Add(lvi);
             }
         }
 
@@ -164,76 +147,55 @@ namespace IDPicker.Forms
 
             var transaction = session.BeginTransaction();
 
-            //find all groups still present
+            // find all groups still present
             getSprectrumSourceGroupsRecursively(tvGroups.Nodes[0], groupsToSave);
 
-            //remove old groups and links
-            session.CreateQuery("delete SpectrumSourceGroupLink s").ExecuteUpdate();
-            //(session.CreateSQLQuery("Delete from SpectrumSourceGroupLinks")).ExecuteUpdate();
-            IList<SpectrumSourceGroup> unusedGroups = session.QueryOver<SpectrumSourceGroup>().List<SpectrumSourceGroup>();
+            // remove old groups and links
+            session.CreateQuery("DELETE SpectrumSourceGroupLink").ExecuteUpdate();
+            var unusedGroups = session.Query<SpectrumSourceGroup>().ToList();
             
             foreach (TreeNode tn in groupsToSave)
                 unusedGroups.Remove((tn.Tag as SpectrumSourceGroup));
             foreach (SpectrumSourceGroup ssg in unusedGroups)
                 session.Delete(ssg);
-            
-            session.Flush();
 
-            //save group layout
+            // save group layout
             foreach (TreeNode treeNode in groupsToSave)
                 session.SaveOrUpdate(treeNode.Tag as SpectrumSourceGroup);
-            session.Flush();
 
-            //get new spectra locations
+            // get new spectra locations
             getListOfSprectrumSourcesRecursively(tvGroups.Nodes[0], ref spectraLocations);
 
-            //save locations
+            // save locations
             foreach (TreeNode tn in spectraLocations)
             {
                 tempNode = tn;
-                (session.CreateSQLQuery("Update spectrumsource set group_ = " +
-                    (tn.Parent.Tag as SpectrumSourceGroup).Id + " where ID = " +
-                    (tn.Tag as SpectrumSource).Id)).ExecuteUpdate();
+                session.CreateSQLQuery("UPDATE SpectrumSource SET Group_ = " +
+                                        (tn.Parent.Tag as SpectrumSourceGroup).Id + " WHERE Id = " +
+                                        (tn.Tag as SpectrumSource).Id).ExecuteUpdate();
 
                 while (tempNode.Parent != null)
                 {
                     SaveGroupLink((tempNode.Parent.Tag as SpectrumSourceGroup), (tn.Tag as SpectrumSource));
                     tempNode = tempNode.Parent;
                 }
-
-                
             }
-            session.Flush();
 
-            //save abandoned spectrum sources
-            if (lvNonGroupedFiles.Items.Count > 0)
+            // save ungrouped spectrum sources
+            foreach (ListViewItem lvi in lvNonGroupedFiles.Items)
             {
-                var abandonedGroup = session.QueryOver<SpectrumSourceGroup>()
-                    .Where(g => g.Name == "Abandoned").SingleOrDefault();
-                if (abandonedGroup == null)
-                {
-                    abandonedGroup = new SpectrumSourceGroup();
-                    abandonedGroup.Name = "Abandoned";
-                    session.SaveOrUpdate(abandonedGroup);
-                }
-                foreach (ListViewItem lvi in lvNonGroupedFiles.Items)
-                {
-                    (session.CreateSQLQuery("Update spectrumsource set group_ = " +
-                        abandonedGroup.Id + " where ID = " +
-                        (lvi.Tag as SpectrumSource).Id)).ExecuteUpdate();
-                }
-
-                session.Flush();
+                var ss = lvi.Tag as SpectrumSource;
+                ss.Group = null;
+                session.Update(ss);
             }
 
             transaction.Commit();
-
         }
 
         private void SaveGroupLink(SpectrumSourceGroup ssg, SpectrumSource ss)
         {
             //HACK: The commented out code produced "NonUniqueObjectException"
-            (session.CreateSQLQuery(String.Format("insert into spectrumsourcegrouplink (group_,source) values ({0} , {1})", ssg.Id, ss.Id))).ExecuteUpdate();
+            session.CreateSQLQuery(String.Format("INSERT INTO SpectrumSourceGroupLink (Group_, Source) VALUES ({0}, {1})", ssg.Id, ss.Id)).ExecuteUpdate();
 
             //SpectrumSourceGroupLink ssgl = new SpectrumSourceGroupLink();
             //ssgl.Group = ssg;
@@ -365,32 +327,29 @@ namespace IDPicker.Forms
 
                     var destNode = tvGroups.GetNodeAt(pt);
 
-                    if (destNode != null)
+                    if (destNode != null && destNode.Tag is SpectrumSourceGroup)
                     {
-                        if (destNode.Tag is SpectrumSourceGroup)
+                        foreach (ListViewItem lvi in lvNonGroupedFiles.SelectedItems)
                         {
-                            foreach (ListViewItem lvi in lvNonGroupedFiles.SelectedItems)
+                            var newNode = new TreeNode(lvi.Text);
+
+                            newNode.Tag = lvi.Tag;
+                            newNode.ImageIndex = 1;
+                            newNode.SelectedImageIndex = 1;
+                            newNode.ContextMenuStrip = cmRightClickFileNode;
+
+                            destNode.Nodes.Add(newNode);
+
+                            if (destNode.Nodes.Count == 1)
                             {
-                                var newNode = new TreeNode(lvi.Text);
+                                destNode.Expand();
+                            }
 
-                                newNode.Tag = lvi.Tag;
-                                newNode.ImageIndex = 1;
-                                newNode.SelectedImageIndex = 1;
-                                newNode.ContextMenuStrip = cmRightClickFileNode;
+                            lvNonGroupedFiles.Items.Remove(lvi);
+                        } //end foreach selected ListViewItem
 
-                                destNode.Nodes.Add(newNode);
-
-                                if (destNode.Nodes.Count == 1)
-                                {
-                                    destNode.Expand();
-                                }
-
-                                lvNonGroupedFiles.Items.Remove(lvi);
-                            } //end foreach selected ListViewItem
-
-                            tvGroups.Sort();
-                        } //end check for destination as group
-                    } // end check for destination exists
+                        tvGroups.Sort();
+                    }
                 } //end check for coming from list box
             } // end check for movement available
         }

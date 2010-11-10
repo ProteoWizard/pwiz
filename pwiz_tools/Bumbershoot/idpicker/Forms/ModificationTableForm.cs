@@ -203,6 +203,13 @@ namespace IDPicker.Forms
             Refresh();
         }
 
+        public void ClearData (bool clearBasicFilter)
+        {
+            if (clearBasicFilter)
+                basicDataFilter = null;
+            ClearData();
+        }
+
         void setData (object sender, DoWorkEventArgs e)
         {
             lock (session)
