@@ -403,7 +403,7 @@ SpectrumListPtr filterCreator_thresholdFilter(const MSData& msd, const string& a
     istringstream parser(arg);
     string byTypeArg, orientationArg;
     double threshold;
-    IntegerSet msLevels;
+    IntegerSet msLevels(1, INT_MAX);
 
     parser >> byTypeArg >> threshold >> orientationArg;
 
@@ -413,7 +413,10 @@ SpectrumListPtr filterCreator_thresholdFilter(const MSData& msd, const string& a
         getline(parser, msLevelSets);
 
         if (!msLevelSets.empty())
+        {
+            msLevels = IntegerSet();
             msLevels.parse(msLevelSets);
+        }
     }
 
     ThresholdFilter::ThresholdingBy_Type byType;
