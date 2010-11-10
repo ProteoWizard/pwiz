@@ -137,6 +137,7 @@ exe pep2mzid
 exe mascot2mzid
     : mascot2mzid.cpp
       ../../pwiz/data/mziddata//pwiz_data_mzid
+      ../../pwiz//pwiz_version
       /ext/boost//program_options
     : <include>../../..
     ;
