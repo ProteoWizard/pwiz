@@ -114,11 +114,13 @@ const char* ThresholdFilter::byTypeLeastIntenseName[] = {"least intense count (e
 PWIZ_API_DECL
 ThresholdFilter::ThresholdFilter(ThresholdingBy_Type byType_ /* = ThresholdingBy_Count */, 
                                  double threshold_ /* = 1.0 */, 
-                                 ThresholdingOrientation orientation_ /* = Orientation_MostIntense */)
+                                 ThresholdingOrientation orientation_, /* = Orientation_MostIntense */
+                                 const pwiz::util::IntegerSet& msLevelsToThreshold /* = [1-] */ )
     :
     byType(byType_),
     threshold(byType == ThresholdingBy_Count || byType == ThresholdingBy_CountAfterTies ? round(threshold_) : threshold_),
-    orientation(orientation_)
+    orientation(orientation_),
+    msLevelsToThreshold(msLevelsToThreshold)
 {
 }
 
@@ -131,6 +133,9 @@ PWIZ_API_DECL void ThresholdFilter::describe(ProcessingMethod& method) const
 
 PWIZ_API_DECL void ThresholdFilter::operator () (const SpectrumPtr s) const
 {
+    if (!msLevelsToThreshold.contains(s->cvParam(MS_ms_level).valueAs<int>()))
+        return;
+
     if (byType == ThresholdingBy_Count ||
         byType == ThresholdingBy_CountAfterTies)
     {

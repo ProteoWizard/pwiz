@@ -303,12 +303,13 @@ const size_t testThresholdersSize = sizeof(testThresholders) / sizeof(TestThresh
 
 void testIntensityThresholding()
 {
+    // default msLevelsToThreshold should include all levels
     for (size_t i=0; i < testThresholdersSize; ++i)
     {
-
         SpectrumListSimple* sl = new SpectrumListSimple;
         SpectrumListPtr originalList(sl);
         SpectrumPtr s(new Spectrum);
+        s->set(MS_ms_level, 2);
         sl->spectra.push_back(s);
 
         TestThresholder& t = testThresholders[i];
@@ -330,6 +331,34 @@ void testIntensityThresholding()
         {
             unit_assert(thresholdedSpectrum->getMZArray()->data[i] == outputMZArray[i]);
             unit_assert(thresholdedSpectrum->getIntensityArray()->data[i] == outputIntensityArray[i]);
+        }
+    }
+
+    // test that msLevelsToThreshold actually works
+    for (size_t i=0; i < testThresholdersSize; ++i)
+    {
+        SpectrumListSimple* sl = new SpectrumListSimple;
+        SpectrumListPtr originalList(sl);
+        SpectrumPtr s(new Spectrum);
+        s->set(MS_ms_level, 1);
+        sl->spectra.push_back(s);
+
+        TestThresholder& t = testThresholders[i];
+
+        vector<double> inputMZArray = parseDoubleArray(t.inputMZArray);
+        vector<double> inputIntensityArray = parseDoubleArray(t.inputIntensityArray);
+        s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_counts);
+
+        SpectrumDataFilterPtr pFilter = SpectrumDataFilterPtr(new ThresholdFilter(t.byType, t.threshold, t.orientation, IntegerSet(2)));
+        SpectrumListPtr thresholder(new SpectrumList_PeakFilter(originalList, pFilter));
+
+        SpectrumPtr unthresholdedSpectrum = thresholder->spectrum(0, true);
+        //if (os_) cout << s1->defaultArrayLength << ": " << s1->getMZArray()->data << " " << s1->getIntensityArray()->data << endl;
+        unit_assert(unthresholdedSpectrum->defaultArrayLength == inputMZArray.size());
+        for (size_t i=0; i < inputMZArray.size(); ++i)
+        {
+            unit_assert(unthresholdedSpectrum->getMZArray()->data[i] == inputMZArray[i]);
+            unit_assert(unthresholdedSpectrum->getIntensityArray()->data[i] == inputIntensityArray[i]);
         }
     }
 }

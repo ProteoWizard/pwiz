@@ -403,8 +403,18 @@ SpectrumListPtr filterCreator_thresholdFilter(const MSData& msd, const string& a
     istringstream parser(arg);
     string byTypeArg, orientationArg;
     double threshold;
+    IntegerSet msLevels;
 
     parser >> byTypeArg >> threshold >> orientationArg;
+
+    if (parser)
+    {
+        string msLevelSets;
+        getline(parser, msLevelSets);
+
+        if (!msLevelSets.empty())
+            msLevels.parse(msLevelSets);
+    }
 
     ThresholdFilter::ThresholdingBy_Type byType;
     if (byTypeArg == "count")
@@ -430,7 +440,7 @@ SpectrumListPtr filterCreator_thresholdFilter(const MSData& msd, const string& a
     else
         return SpectrumListPtr();
 
-    SpectrumDataFilterPtr filter(new ThresholdFilter(byType, threshold, orientation));
+    SpectrumDataFilterPtr filter(new ThresholdFilter(byType, threshold, orientation, msLevels));
     return SpectrumListPtr(new SpectrumList_PeakFilter(msd.run.spectrumListPtr, filter));
 }
 
@@ -455,7 +465,7 @@ JumpTableEntry jumpTable_[] =
     {"scanTime", "[scanTimeLow,scanTimeHigh]", filterCreator_scanTime},
     {"stripIT", " (strip ion trap ms1 scans)", filterCreator_stripIT},
     {"metadataFixer", " (add/replace TIC/BPI metadata)", filterCreator_metadataFixer},
-    {"threshold", "<count|count-after-ties|absolute|bpi-relative|tic-relative|tic-cutoff> <threshold> <most-intense|least-intense>", filterCreator_thresholdFilter},
+    {"threshold", "<count|count-after-ties|absolute|bpi-relative|tic-relative|tic-cutoff> <threshold> <most-intense|least-intense> [int_set(MS levels)]", filterCreator_thresholdFilter},
     {"mzWindow", "[mzLow,mzHigh]", filterCreator_mzWindow},
     {"defaultArrayLength", "int_set", filterCreator_defaultArrayLength},
 

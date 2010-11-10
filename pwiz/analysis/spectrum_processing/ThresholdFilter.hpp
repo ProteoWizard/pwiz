@@ -25,7 +25,9 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/analysis/common/DataFilter.hpp"
+#include <climits>
 
 
 namespace pwiz {
@@ -81,7 +83,8 @@ struct PWIZ_API_DECL ThresholdFilter : public SpectrumDataFilter
 
     ThresholdFilter(ThresholdingBy_Type byType_ = ThresholdingBy_Count, 
                     double threshold_ = 1.0, 
-                    ThresholdingOrientation orientation_ = Orientation_MostIntense);
+                    ThresholdingOrientation orientation_ = Orientation_MostIntense,
+                    const pwiz::util::IntegerSet& msLevelsToThreshold = pwiz::util::IntegerSet(1, INT_MAX));
 
     virtual void operator () (const pwiz::msdata::SpectrumPtr) const;
     virtual void describe(pwiz::msdata::ProcessingMethod&) const;
@@ -89,6 +92,7 @@ struct PWIZ_API_DECL ThresholdFilter : public SpectrumDataFilter
     const ThresholdingBy_Type byType;
     const double threshold;
     const ThresholdingOrientation orientation;
+    const pwiz::util::IntegerSet msLevelsToThreshold;
 
     private:
     static const char* byTypeMostIntenseName[];
