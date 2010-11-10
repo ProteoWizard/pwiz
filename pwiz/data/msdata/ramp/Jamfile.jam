@@ -27,7 +27,9 @@ lib pwiz_data_msdata_ramp
     : # requirements
         <toolset>gcc:<define>_LARGEFILE_SOURCE # ramp.h wants this
         <toolset>darwin:<define>_LARGEFILE_SOURCE # ramp.h wants this
+        <target-os>windows:<define>WINDOWS_NATIVE
         <target-os>windows:<source>wglob.cxx
+        <link>static
     : # default-build
     : # usage-requirements
         <include>.
