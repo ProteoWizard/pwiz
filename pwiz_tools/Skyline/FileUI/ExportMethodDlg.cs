@@ -53,6 +53,7 @@ namespace pwiz.Skyline.FileUI
         private static readonly string[] METHOD_TYPES =
             {
                 ExportInstrumentType.ABI_QTRAP,
+                ExportInstrumentType.Agilent6400,
                 ExportInstrumentType.Thermo_TSQ,
                 ExportInstrumentType.Thermo_LTQ,
                 ExportInstrumentType.Waters_Xevo,
@@ -397,7 +398,8 @@ namespace pwiz.Skyline.FileUI
                     MessageDlg.Show(this, "A template file is required to export a method.");
                     return;
                 }
-                else if (!File.Exists(templateName))
+                else if (Equals(InstrumentType, ExportInstrumentType.Agilent6400) ?
+                        !Directory.Exists(templateName) : !File.Exists(templateName))
                 {
                     MessageDlg.Show(this, string.Format("The template file {0} does not exist.", templateName));
                     return;
@@ -544,6 +546,10 @@ namespace pwiz.Skyline.FileUI
                     {
                         dlg.DefaultExt = "dam";
                     }
+                    else if (Equals(_instrumentType, ExportInstrumentType.Agilent6400))
+                    {
+                        dlg.DefaultExt = "m";
+                    }
                     else if (Equals(_instrumentType, ExportInstrumentType.Thermo_TSQ) ||
                         Equals(_instrumentType, ExportInstrumentType.Thermo_LTQ))
                     {
@@ -582,7 +588,11 @@ namespace pwiz.Skyline.FileUI
                             ExportAbiQtrapMethod(documentExport, outputPath, templateName);
                         break;
                     case ExportInstrumentType.Agilent:
-                        ExportAgilentCsv(documentExport, outputPath);
+                    case ExportInstrumentType.Agilent6400:
+                        if (_fileType == ExportFileType.List)
+                            ExportAgilentCsv(documentExport, outputPath);
+                        else
+                            ExportAgilentMethod(documentExport, outputPath, templateName);
                         break;
                     case ExportInstrumentType.Thermo:
                     case ExportInstrumentType.Thermo_TSQ:
@@ -722,6 +732,14 @@ namespace pwiz.Skyline.FileUI
             if (MethodType == ExportMethodType.Standard)
                 exporter.DwellTime = DwellTime;
             exporter.Export(fileName);
+        }
+
+        private void ExportAgilentMethod(SrmDocument document, string fileName, string templateName)
+        {
+            var exporter = InitExporter(new AgilentMethodExporter(document));
+            if (MethodType == ExportMethodType.Standard)
+                exporter.DwellTime = DwellTime;
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
         }
 
         private void ExportThermoCsv(SrmDocument document, string fileName)
@@ -923,14 +941,34 @@ namespace pwiz.Skyline.FileUI
 
         private void btnBrowseTemplate_Click(object sender, EventArgs e)
         {
-            var openFileDialog = new OpenFileDialog
-            {
-                Title = "Method Template",
-                // Extension based on currently selecte type
-                CheckPathExists = true
-            };
-            
             string templateName = textTemplateFile.Text;
+            if (Equals(InstrumentType, ExportInstrumentType.Agilent6400))
+            {
+                var chooseDirDialog = new FolderBrowserDialog
+                                          {
+                                              Description = "Method Template",
+                                          };
+
+                if (!string.IsNullOrEmpty(templateName))
+                {
+                    chooseDirDialog.SelectedPath = templateName;
+                } 
+                
+                if (chooseDirDialog.ShowDialog(this) == DialogResult.OK)
+                {
+                    textTemplateFile.Text = chooseDirDialog.SelectedPath;
+                }
+
+                return;
+            }
+
+            var openFileDialog = new OpenFileDialog
+                                     {
+                                         Title = "Method Template",
+                                         // Extension based on currently selecte type
+                                         CheckPathExists = true
+                                     };
+
             if (!string.IsNullOrEmpty(templateName))
             {
                 try
@@ -938,18 +976,26 @@ namespace pwiz.Skyline.FileUI
                     openFileDialog.InitialDirectory = Path.GetDirectoryName(templateName);
                     openFileDialog.FileName = Path.GetFileName(templateName);
                 }
-                catch (ArgumentException) {} // Invalid characters
-                catch (PathTooLongException) {}
+                catch (ArgumentException)
+                {
+                } // Invalid characters
+                catch (PathTooLongException)
+                {
+                }
             }
 
             var listFileTypes = new List<string>();
-            if (Equals(InstrumentType, ExportInstrumentType.Thermo_TSQ) ||
-                Equals(InstrumentType, ExportInstrumentType.Thermo_LTQ))
+            if (Equals(InstrumentType, ExportInstrumentType.ABI_QTRAP))
+            {
+                listFileTypes.Add(InstrumentType + " Method (*.dam)|*.dam");
+            }
+            else if (Equals(InstrumentType, ExportInstrumentType.Thermo_TSQ) ||
+                     Equals(InstrumentType, ExportInstrumentType.Thermo_LTQ))
             {
                 listFileTypes.Add(InstrumentType + " Method (*.meth)|*.meth");
             }
             else if (Equals(InstrumentType, ExportInstrumentType.Waters_Xevo) ||
-                Equals(InstrumentType, ExportInstrumentType.Waters_Quattro_Premier))
+                     Equals(InstrumentType, ExportInstrumentType.Waters_Quattro_Premier))
             {
                 listFileTypes.Add(InstrumentType + " Method (*.exp)|*.exp");
             }

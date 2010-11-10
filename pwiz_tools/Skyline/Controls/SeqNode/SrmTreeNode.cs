@@ -1108,7 +1108,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             get
             {
-                return _showBestReplicate && NodePep.BestResult != -1 ? NodePep.BestResult : _resultsIndex;
+                return _showBestReplicate && NodePep != null && NodePep.BestResult != -1 ? NodePep.BestResult : _resultsIndex;
             }
         }
 

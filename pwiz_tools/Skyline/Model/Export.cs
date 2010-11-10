@@ -44,6 +44,7 @@ namespace pwiz.Skyline.Model
         public const string ABI = "AB SCIEX";
         public const string ABI_QTRAP = "AB SCIEX QTRAP";
         public const string Agilent = "Agilent";
+        public const string Agilent6400 = "Agilent 6400 Series";
         public const string Thermo = "Thermo";
         public const string Thermo_TSQ = "Thermo TSQ";
         public const string Thermo_LTQ = "Thermo LTQ";
@@ -1159,6 +1160,12 @@ namespace pwiz.Skyline.Model
         {
             string analystPath = AdvApi.GetPathFromProgId("Analyst.MassSpecMethod.1");
             string analystDir = (analystPath != null ? Path.GetDirectoryName(analystPath) : null);
+            if (analystDir != null)
+            {
+                string ver = AdvApi.RegQueryKeyValue(AdvApi.HKEY_LOCAL_MACHINE, @"SOFTWARE\PE SCIEX\Products\Analyst3Q", "Version");
+                if (!Equals(ver, "1.5.1"))
+                    analystDir = null;                
+            }
             if (analystDir == null)
                 throw new IOException("Failed to find a valid Analyst 1.5.1 installation.");
         }
@@ -1288,6 +1295,25 @@ namespace pwiz.Skyline.Model
             if (nodeTran.HasLibInfo)
                 writer.Write(nodeTran.LibInfo.Rank);
             writer.WriteLine();
+        }
+    }
+
+    public class AgilentMethodExporter : AgilentMassListExporter
+    {
+        public const string EXE_BUILD_AGILENT_METHOD = @"Method\Agilent\BuildAgilentMethod";
+
+        public AgilentMethodExporter(SrmDocument document)
+            : base(document)
+        {
+        }
+
+        public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
+        {
+            // First export transition lists to map in memory
+            Export(null);
+
+            MethodExporter.ExportMethod(EXE_BUILD_AGILENT_METHOD,
+                new List<string>(), fileName, templateName, MemoryOutput, progressMonitor);
         }
     }
 
@@ -1530,8 +1556,13 @@ namespace pwiz.Skyline.Model
 
         public static string RegQueryKeyValue(UIntPtr hKey, string path)
         {
+            return RegQueryKeyValue(hKey, path, "");
+        }
+
+        public static string RegQueryKeyValue(UIntPtr hKey, string path, string valueName)
+        {
             UIntPtr hKeyQuery;
-            if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, path, 0, KEY_READ, out hKeyQuery) != 0)
+            if (RegOpenKeyEx(hKey, path, 0, KEY_READ, out hKeyQuery) != 0)
                 return null;
 
             uint size = 1024;
@@ -1540,7 +1571,7 @@ namespace pwiz.Skyline.Model
             try
             {
                 uint type;
-                if (RegQueryValueEx(hKeyQuery, "", 0, out type, sb, ref size) != 0)
+                if (RegQueryValueEx(hKeyQuery, valueName, 0, out type, sb, ref size) != 0)
                     return null;
             }
             finally

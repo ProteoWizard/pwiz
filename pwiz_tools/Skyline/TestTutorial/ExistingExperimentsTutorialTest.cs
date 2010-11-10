@@ -129,8 +129,12 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ExpandPrecursors();
             });
             FindNode("854.400");
-            WaitForCondition(() => SkylineWindow.GraphSpectrum.SelectedIonLabel != null);
-            Assert.IsTrue(SkylineWindow.GraphSpectrum.SelectedIonLabel.Contains("y7"));
+            WaitForGraphs();
+            // Unfornunately, label hiding may mean that the selected ion is not labeled
+            if (SkylineWindow.GraphSpectrum.SelectedIonLabel != null)
+                Assert.IsTrue(SkylineWindow.GraphSpectrum.SelectedIonLabel.Contains("y7"));
+            else
+                Assert.IsTrue(SkylineWindow.GraphSpectrum.IonLabels.Contains(ionLabel => ionLabel.Contains("y7")));
             RunUI(() =>
             {
                 if (!Settings.Default.ShowBIons)

@@ -464,12 +464,25 @@ namespace pwiz.Skyline.Util
 
         public bool Exists(string path)
         {
-            return File.Exists(path);
+            return File.Exists(path) || Directory.Exists(path);
         }
 
         public void Delete(string path)
         {
-            File.Delete(path);
+            try
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+                else if (Directory.Exists(path))
+                    DirectoryForceDelete(path);
+
+            }
+            catch (FileNotFoundException)
+            {
+            }
+            catch(DirectoryNotFoundException)
+            {                
+            }
         }
 
         public void Commit(string pathTemp, string pathDestination, IPooledStream streamDest)
@@ -484,16 +497,50 @@ namespace pwiz.Skyline.Util
 
         private static void Commit(string pathTemp, string pathDestination)
         {
-            try
+            if (Directory.Exists(pathTemp))
             {
-                // First try replacing the destination file, if it exists
-                File.Replace(pathTemp, pathDestination, null, true);
+                try
+                {
+                    if (Directory.Exists(pathDestination))
+                        DirectoryForceDelete(pathDestination);
+                }
+                catch (DirectoryNotFoundException)
+                {
+                }
+                Directory.Move(pathTemp, pathDestination);
             }
-            catch (FileNotFoundException)
+            else
             {
-                // Or just move, if it does not.
-                File.Move(pathTemp, pathDestination);
+                try
+                {
+                    // First try replacing the destination file, if it exists
+                    File.Replace(pathTemp, pathDestination, null, true);
+                }
+                catch (FileNotFoundException)
+                {
+                    // Or just move, if it does not.
+                    File.Move(pathTemp, pathDestination);
+                }
             }
+        }
+
+        /// <summary>
+        /// Recursive delete of a directory that removes the read-only flag
+        /// from all files before attempting to remove them.  Necessary for
+        /// deleting Analyst methods (*.m directories).
+        /// </summary>
+        private static void DirectoryForceDelete(string path)
+        {
+            foreach (var file in Directory.GetFiles(path))
+            {
+                var attr = File.GetAttributes(file);
+                if ((attr & FileAttributes.ReadOnly) != 0)
+                    File.SetAttributes(file,  attr & ~FileAttributes.ReadOnly);
+                File.Delete(file);
+            }
+            foreach (var directory in Directory.GetDirectories(path))
+                DirectoryForceDelete(directory);
+            Directory.Delete(path);
         }
 
         public void SetCache(string path, string pathCache)
@@ -721,8 +768,8 @@ namespace pwiz.Skyline.Util
 
             if (!string.IsNullOrEmpty(SafeName))
             {
-                if (File.Exists(SafeName))
-                    File.Delete(SafeName);
+                if (_streamManager.Exists(SafeName))
+                    _streamManager.Delete(SafeName);
                 // Make sure any further calls to Dispose() do nothing.
                 SafeName = null;
             }          

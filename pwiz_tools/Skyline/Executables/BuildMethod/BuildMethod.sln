@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildWatersMethod", "BuildW
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildQTRAPMethod", "BuildQTRAPMethod\BuildQTRAPMethod.csproj", "{93130EBE-6FEF-456C-BCDB-B12E9780C051}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildAgilentMethod", "BuildAgilentMethod\BuildAgilentMethod.csproj", "{CE0E2BFB-A9CD-47E5-89C3-D8CDCD62A96D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -70,6 +72,16 @@ Global
 		{93130EBE-6FEF-456C-BCDB-B12E9780C051}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{93130EBE-6FEF-456C-BCDB-B12E9780C051}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{93130EBE-6FEF-456C-BCDB-B12E9780C051}.Release|Win32.ActiveCfg = Release|Any CPU
+		{CE0E2BFB-A9CD-47E5-89C3-D8CDCD62A96D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE0E2BFB-A9CD-47E5-89C3-D8CDCD62A96D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE0E2BFB-A9CD-47E5-89C3-D8CDCD62A96D}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{CE0E2BFB-A9CD-47E5-89C3-D8CDCD62A96D}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{CE0E2BFB-A9CD-47E5-89C3-D8CDCD62A96D}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{CE0E2BFB-A9CD-47E5-89C3-D8CDCD62A96D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE0E2BFB-A9CD-47E5-89C3-D8CDCD62A96D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE0E2BFB-A9CD-47E5-89C3-D8CDCD62A96D}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{CE0E2BFB-A9CD-47E5-89C3-D8CDCD62A96D}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{CE0E2BFB-A9CD-47E5-89C3-D8CDCD62A96D}.Release|Win32.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
