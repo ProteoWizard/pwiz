@@ -78,6 +78,7 @@ void testPeakFilter()
     List<double>^ intensityList = gcnew List<double>(gcnew array<double> {1,5,2,4,2,6,7,4,1});
 
     Spectrum^ s = gcnew Spectrum();
+    s->set(CVID::MS_ms_level, 2);
     s->setMZIntensityArrays(mzList, intensityList);
 
     sl->spectra->Add(s);
