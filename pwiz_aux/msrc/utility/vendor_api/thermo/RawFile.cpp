@@ -1353,7 +1353,7 @@ void RawFileImpl::parseInstrumentMethod()
             if (regex_match(line, what, defaultIsolationWidthRegex))
             {
                 int msLevel = lexical_cast<int>(what[1]);
-                int isolationWidth = lexical_cast<int>(what[2]);
+                double isolationWidth = lexical_cast<double>(what[2]);
                 defaultIsolationWidthBySegmentAndMsLevel[scanSegment][msLevel] = isolationWidth;
                 continue;
             }
