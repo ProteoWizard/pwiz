@@ -287,6 +287,9 @@ namespace IDPicker.Forms
             };
 
             basicAggregateRowsByType = new Dictionary<GroupBy, IEnumerable<AggregateRow>>();
+
+            _columnSettings = new Dictionary<OLVColumn, object[]>();
+            SetDefaults();
         }
 
         Dictionary<OLVColumn, object[]> _columnSettings;
@@ -317,7 +320,6 @@ namespace IDPicker.Forms
             var allLayouts =
                 new List<string>(
                     Util.StringCollectionToStringArray(Properties.Settings.Default.SpectrumTableFormSettings));
-            _columnSettings = new Dictionary<OLVColumn, object[]>();
             if (allLayouts.Count > 1)
             {
                 var retrievedList = allLayouts[1].Split(System.Environment.NewLine.ToCharArray()).ToList();
@@ -346,11 +348,7 @@ namespace IDPicker.Forms
                     //    kvp.Key.IsVisible = (bool)kvp.Value[3];
                     //treeListView.RebuildColumns();
                 }
-                else
-                    SetDefaults();
             }
-            else
-                SetDefaults();
 
 
             SetColumnAspectGetters();
