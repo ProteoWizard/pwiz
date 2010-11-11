@@ -44,6 +44,7 @@ using NHibernate.Linq;
 using NHibernate.Criterion;
 using BrightIdeasSoftware;
 using PopupControl;
+using Microsoft.WindowsAPICodePack.Taskbar;
 //using SpyTools;
 
 namespace IDPicker
@@ -152,6 +153,12 @@ namespace IDPicker
             toolStripProgressBar.Maximum = e.Total;
             toolStripProgressBar.Value = e.Current;
 
+            if (TaskbarManager.IsPlatformSupported)
+            {
+                TaskbarManager.Instance.SetProgressState(TaskbarProgressBarState.Normal);
+                TaskbarManager.Instance.SetProgressValue(e.Current, e.Total);
+            }
+
             Application.DoEvents();
 
             // TODO: add a cancel option: e.Cancel
@@ -182,6 +189,9 @@ namespace IDPicker
 
             toolStripStatusLabel.Text = "Ready";
             toolStripProgressBar.Visible = false;
+
+            if (TaskbarManager.IsPlatformSupported)
+                TaskbarManager.Instance.SetProgressState(TaskbarProgressBarState.NoProgress);
         }
 
         void openToolStripButton_Click (object sender, EventArgs e)
