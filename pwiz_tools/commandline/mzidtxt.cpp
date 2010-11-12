@@ -176,6 +176,9 @@ Config parseCommandLine(int argc, const char* argv[])
     if (vm.count("headers"))
         config.headers = true;
 
+    if (vm.count("stdout"))
+        config.useStdout = true;
+
     if (config.files.size()>0)
         config.firstfile = config.files.at(0);
 
@@ -227,7 +230,8 @@ void translateToTxt(Config& config)
         secondfile = config.secondfile;
     
     // Check if the second file exists and we're not forcing.
-    if (!secondfile.empty() && bfs::exists(secondfile) && !config.force)
+    if (!config.useStdout && !secondfile.empty() &&
+        bfs::exists(secondfile) && !config.force)
         throw runtime_error(("File "+secondfile+" exists.\n"
                              " Use -f to override.").c_str());
     
@@ -265,7 +269,8 @@ void translateToMzid(Config& config, DelimReader dr)
     else
         secondfile = config.secondfile;
 
-    if (!secondfile.empty() && bfs::exists(secondfile) && !config.force)
+    if (!config.useStdout && !secondfile.empty() &&
+        bfs::exists(secondfile) && !config.force)
         throw runtime_error(("File "+secondfile+" exists.\n"
                              " Use -f to override.").c_str());
     
