@@ -797,6 +797,7 @@ namespace pwiz.Skyline.Model
             protein,
             note,
             annotation,
+            color,
             alternatives,
             alternative_protein,
             sequence,
@@ -1544,6 +1545,7 @@ namespace pwiz.Skyline.Model
         {
             string note = null;
             var annotations = new Dictionary<string, string>();
+            int color = 0;
 
             if (reader.IsStartElement(EL.note))
                 note = reader.ReadElementString();
@@ -1551,7 +1553,9 @@ namespace pwiz.Skyline.Model
             {
                 annotations[reader.GetAttribute(ATTR.name)] = reader.ReadElementString();
             }
-            return new Annotations(note, annotations);
+            if (reader.IsStartElement(EL.color))
+                color = reader.ReadElementContentAsInt();
+            return new Annotations(note, annotations, color);
         }
 
         /// <summary>
@@ -2125,6 +2129,8 @@ namespace pwiz.Skyline.Model
                 writer.WriteString(entry.Value);
                 writer.WriteEndElement();
             }
+            if(annotations.ColorIndex != 0)
+                writer.WriteElementString(EL.color, annotations.ColorIndex);
         }
 
         private static void WriteResults<T>(XmlWriter writer, SrmSettings settings,

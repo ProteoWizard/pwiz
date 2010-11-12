@@ -2596,7 +2596,7 @@ namespace pwiz.Skyline
                 defaultTextToolStripMenuItem.Checked = true;
                 Settings.Default.TextZoom = DEFAULT_TEXT_FACTOR; 
             }
-            SequenceTree.TextZoomChanged();
+            SequenceTree.OnTextZoomChanged();
         }
 
         private const double DEFAULT_TEXT_FACTOR = 1;

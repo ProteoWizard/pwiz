@@ -46,6 +46,9 @@ namespace pwiz.Skyline.Controls
 
         private TreeNodeMS _anchorNode;
 
+	    private const int DEFAULT_ITEM_HEIGHT = 16;
+	    private const float DEFAULT_FONT_SIZE = (float) 8.25;
+
         public TreeViewMS()
         {
             UseKeysOverride = false;
@@ -54,7 +57,7 @@ namespace pwiz.Skyline.Controls
 
             DashBrush = new TextureBrush(Resources.Dash) { WrapMode = WrapMode.Tile };
             SetStyle(ControlStyles.UserPaint, true);
-            ItemHeight = 16;
+            ItemHeight = DEFAULT_ITEM_HEIGHT;
         }
 
         [Browsable(false)]
@@ -239,6 +242,12 @@ namespace pwiz.Skyline.Controls
 
             // Make sure selection is updated before after select event is fired
             base.OnAfterSelect(e);
+        }
+
+        public virtual void OnTextZoomChanged()
+        {
+            ItemHeight = (int)(DEFAULT_ITEM_HEIGHT * Settings.Default.TextZoom);
+            Font = new Font(Font.FontFamily, (float)(DEFAULT_FONT_SIZE * Settings.Default.TextZoom));
         }
 
 	    private void InvalidateChangedNodes(IEnumerable<TreeNodeMS> nodes, ICollection<TreeNodeMS> unchangedNodes)

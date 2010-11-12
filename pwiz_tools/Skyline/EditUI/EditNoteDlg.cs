@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -32,7 +33,9 @@ namespace pwiz.Skyline.EditUI
 
             Icon = Resources.Skyline;
         }
-        
+
+        private int _colorIndex;       
+
         public void Init(SrmDocument document, AnnotationDef.AnnotationTarget annotationTarget, Annotations annotations)
         {
             textNote.Text = annotations.Note;
@@ -70,7 +73,11 @@ namespace pwiz.Skyline.EditUI
             {
                 splitContainer1.Panel2Collapsed = true;
             }
+
+            _colorIndex = annotations.ColorIndex;
+            ((ToolStripButton) toolStrip1.Items[_colorIndex]).Checked = true;
         }
+
 
         public Annotations GetAnnotations()
         {
@@ -99,12 +106,30 @@ namespace pwiz.Skyline.EditUI
                 }
                 annotations[name] = strValue;
             }
-            return new Annotations(textNote.Text, annotations);
+            var text = textNote.Text;
+            if (text == null && annotations.Count > 0 && _colorIndex != 0)
+                text = "";
+            return new Annotations(text, annotations, _colorIndex);
         }
         
         /// <summary>
         /// Returns the grid view on this form.  Used for testing.
         /// </summary>
         public DataGridView DataGridView { get { return dataGridView1; } }
+
+        private void btnColor_Click(object sender, System.EventArgs e)
+        {
+            btnOrangeRed.Checked = btnRed.Checked = btnOrange.Checked = btnYellow.Checked = btnLightGreen.Checked =
+                btnGreen.Checked = btnLightBlue.Checked = btnBlue.Checked = btnPurple.Checked = btnBlack.Checked = false;
+            ((ToolStripButton) sender).Checked = true;
+            _colorIndex = toolStrip1.Items.IndexOf((ToolStripButton) sender);
+        }
+
+        private void btnColor_Paint(object sender, PaintEventArgs e)
+        {
+            var rectangle = e.ClipRectangle;
+            var colorIndex = toolStrip1.Items.IndexOf((ToolStripButton) sender);
+            e.Graphics.FillRectangle(Annotations.COLOR_BRUSHES[colorIndex], rectangle.X + 5, rectangle.Y + 5, rectangle.Width - 10, rectangle.Height - 10);
+        }
     }
 }

@@ -56,9 +56,6 @@ namespace pwiz.Skyline.Controls
 
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
 
-        private float _defaultFontSize;
-        private int _defaultItemHeight;
-
         /// <summary>
         /// Identity type used to select the last "dummy" node in the tree.
         /// </summary>
@@ -133,10 +130,7 @@ namespace pwiz.Skyline.Controls
 
             _nodeTip = new NodeTip(this);
 
-            _defaultFontSize = Font.Size;
-            _defaultItemHeight = ItemHeight;
-
-            TextZoomChanged();
+            OnTextZoomChanged();
         }
 
         [Browsable(true)]
@@ -1069,11 +1063,10 @@ namespace pwiz.Skyline.Controls
             return RectangleToScreen(r);
         }
 
-        public void TextZoomChanged()
+        public override void OnTextZoomChanged()
         {
-            Font = new Font(Font.FontFamily, (float)(_defaultFontSize * Settings.Default.TextZoom));
-            ModFonts = new ModFontHolder(this);          
-            ItemHeight = (int)(_defaultItemHeight * Settings.Default.TextZoom);
+            base.OnTextZoomChanged();
+            ModFonts = new ModFontHolder(this);   
         }
     }
 

@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
 
@@ -29,10 +30,17 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public sealed class Annotations
     {
-        public static readonly Annotations EMPTY = new Annotations(null, null);
+        public static readonly List<Brush> COLOR_BRUSHES =
+                new List<Brush> { Brushes.OrangeRed, Brushes.Brown, /*Pink*/ new SolidBrush(Color.FromArgb(255, 0, 128)), 
+                    /*Dark Yellow*/ new SolidBrush(Color.FromArgb(206, 206, 0)), /*Bright Green*/ new SolidBrush(Color.FromArgb(0, 255, 0)), 
+                    Brushes.Green, /*Bright Blue*/ new SolidBrush(Color.FromArgb(3, 184, 252)), Brushes.Blue, Brushes.Black, 
+                    /*Purple*/ new SolidBrush(Color.FromArgb(128, 0, 255))};
+
+        public static readonly Annotations EMPTY = new Annotations(null, null, 0);
         private readonly IDictionary<string, string> _annotations;
-        public Annotations(String note, IEnumerable<KeyValuePair<string,string>> annotations)
+        public Annotations(String note, IEnumerable<KeyValuePair<string, string>> annotations, int colorIndex)
         {
+            ColorIndex = colorIndex;
             Note = note == "" ? null : note;
             if (annotations != null)
             {
@@ -51,6 +59,9 @@ namespace pwiz.Skyline.Model
             }
         }
         public String Note { get; private set; }
+
+        public int ColorIndex { get; private set; }
+
         public bool IsEmpty { 
             get
             {
@@ -89,7 +100,7 @@ namespace pwiz.Skyline.Model
             {
                 note = null;
             }
-            return new Annotations(note, _annotations);
+            return new Annotations(note, _annotations, ColorIndex);
         }
 
         public Annotations ChangeAnnotation(string name, string value)
@@ -107,7 +118,7 @@ namespace pwiz.Skyline.Model
                 }
             }
             newAnnotations[name] = value;
-            return new Annotations(Note, newAnnotations);
+            return new Annotations(Note, newAnnotations, ColorIndex);
         }
         public Annotations ChangeAnnotation(AnnotationDef annotationDef, object value)
         {

@@ -172,7 +172,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             if (!Model.Annotations.IsEmpty)
             {
                 var bounds = BoundsMS;
-                g.FillPolygon(Brushes.OrangeRed, new[] {new Point(bounds.Right, bounds.Top), 
+                g.FillPolygon(Annotations.COLOR_BRUSHES[Model.Annotations.ColorIndex], new[] {new Point(bounds.Right, bounds.Top), 
                                                         new Point(bounds.Right-ANNOTATION_WIDTH, bounds.Top),
                                                         new Point(bounds.Right, bounds.Top+ANNOTATION_WIDTH)});
             }
