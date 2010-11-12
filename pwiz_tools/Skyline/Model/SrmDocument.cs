@@ -797,7 +797,6 @@ namespace pwiz.Skyline.Model
             protein,
             note,
             annotation,
-            color,
             alternatives,
             alternative_protein,
             sequence,
@@ -832,6 +831,7 @@ namespace pwiz.Skyline.Model
         {
             format_version,
             name,
+            category,
             description,
             label_name,
             label_description,
@@ -1544,17 +1544,18 @@ namespace pwiz.Skyline.Model
         private static Annotations ReadAnnotations(XmlReader reader)
         {
             string note = null;
-            var annotations = new Dictionary<string, string>();
             int color = 0;
-
+            var annotations = new Dictionary<string, string>();
+            
             if (reader.IsStartElement(EL.note))
+            {
+                color = reader.GetIntAttribute(ATTR.category);
                 note = reader.ReadElementString();
+            }
             while (reader.IsStartElement(EL.annotation))
             {
                 annotations[reader.GetAttribute(ATTR.name)] = reader.ReadElementString();
             }
-            if (reader.IsStartElement(EL.color))
-                color = reader.ReadElementContentAsInt();
             return new Annotations(note, annotations, color);
         }
 
@@ -2120,8 +2121,21 @@ namespace pwiz.Skyline.Model
 
         private static void WriteAnnotations(XmlWriter writer, Annotations annotations)
         {
-            if (annotations.Note != null)
-                writer.WriteElementString(EL.note, annotations.Note);
+            if (annotations.Note != null || annotations.ColorIndex != 0)
+            {
+                if (annotations.ColorIndex == 0)
+                    writer.WriteElementString(EL.note, annotations.Note);
+                else
+                {
+                    writer.WriteStartElement(EL.note);
+                    writer.WriteAttribute(ATTR.category, annotations.ColorIndex);
+                    if (annotations.Note != null)
+                    {
+                        writer.WriteString(annotations.Note);
+                    }
+                    writer.WriteEndElement();
+                }
+            }
             foreach (var entry in annotations.ListAnnotations())
             {
                 writer.WriteStartElement(EL.annotation);
@@ -2129,8 +2143,6 @@ namespace pwiz.Skyline.Model
                 writer.WriteString(entry.Value);
                 writer.WriteEndElement();
             }
-            if(annotations.ColorIndex != 0)
-                writer.WriteElementString(EL.color, annotations.ColorIndex);
         }
 
         private static void WriteResults<T>(XmlWriter writer, SrmSettings settings,
