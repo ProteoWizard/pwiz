@@ -54,6 +54,10 @@ namespace BuildQTRAPMethod
             {
                 Console.Error.WriteLine("ERROR: {0}", x.Message);
             }
+            catch (Exception x)
+            {
+                Console.Error.WriteLine("ERROR: {0}", x.Message);
+            }
 
 //            Console.WriteLine("Press any key to continue...");
 //            Console.In.ReadLine();
@@ -224,9 +228,7 @@ namespace BuildQTRAPMethod
                         readFile(inputFile, outputMethod, multiFile);
                     else
                     {
-                        string dirName = Path.GetDirectoryName(filter);
-                        if (dirName == null)
-                            dirName = ".";
+                        string dirName = Path.GetDirectoryName(filter) ?? ".";
                         foreach (var fileName in Directory.GetFiles(dirName, filter))
                         {
                             readFile(Path.Combine(dirName, fileName), null, multiFile);

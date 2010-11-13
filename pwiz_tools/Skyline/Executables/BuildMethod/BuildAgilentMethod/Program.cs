@@ -167,9 +167,7 @@ namespace BuildAgilentMethod
                         readFile(inputFile, outputMethod, multiFile);
                     else
                     {
-                        string dirName = Path.GetDirectoryName(filter);
-                        if (dirName == null)
-                            dirName = ".";
+                        string dirName = Path.GetDirectoryName(filter) ?? ".";
                         foreach (var fileName in Directory.GetFiles(dirName, filter))
                         {
                             readFile(Path.Combine(dirName, fileName), null, multiFile);
