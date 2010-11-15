@@ -143,7 +143,6 @@ namespace IDPicker.Forms
         {
             var spectraLocations= new List<TreeNode>();
             var groupsToSave = new List<TreeNode>();
-            TreeNode tempNode;
 
             var transaction = session.BeginTransaction();
 
@@ -166,18 +165,38 @@ namespace IDPicker.Forms
             // get new spectra locations
             getListOfSprectrumSourcesRecursively(tvGroups.Nodes[0], ref spectraLocations);
 
-            // save locations
+            // update SpectrumSource.Group_ and insert new SpectrumSourceGroupLinks;
+            // using prepared SQL commands for speed
+
+            var cmd1 = session.Connection.CreateCommand();
+            var cmd2 = session.Connection.CreateCommand();
+            cmd1.CommandText = "UPDATE SpectrumSource SET Group_ = ? WHERE Id = ?";
+            cmd2.CommandText = "INSERT INTO SpectrumSourceGroupLink (Group_, Source) VALUES (?,?)";
+            var parameters1 = new List<IDbDataParameter>();
+            var parameters2 = new List<IDbDataParameter>();
+            for (int i = 0; i < 2; ++i)
+            {
+                parameters1.Add(cmd1.CreateParameter());
+                parameters2.Add(cmd2.CreateParameter());
+                cmd1.Parameters.Add(parameters1[i]);
+                cmd2.Parameters.Add(parameters2[i]);
+            }
+            cmd1.Prepare();
+            cmd2.Prepare();
+
             foreach (TreeNode tn in spectraLocations)
             {
-                tempNode = tn;
-                session.CreateSQLQuery("UPDATE SpectrumSource SET Group_ = " +
-                                        (tn.Parent.Tag as SpectrumSourceGroup).Id + " WHERE Id = " +
-                                        (tn.Tag as SpectrumSource).Id).ExecuteUpdate();
+                parameters1[0].Value = (tn.Parent.Tag as SpectrumSourceGroup).Id;
+                parameters1[1].Value = (tn.Tag as SpectrumSource).Id;
+                cmd1.ExecuteNonQuery();
 
+                var tempNode = tn;
                 while (tempNode.Parent != null)
                 {
-                    SaveGroupLink((tempNode.Parent.Tag as SpectrumSourceGroup), (tn.Tag as SpectrumSource));
+                    parameters2[0].Value = (tempNode.Parent.Tag as SpectrumSourceGroup).Id;
+                    parameters2[1].Value = (tn.Tag as SpectrumSource).Id;
                     tempNode = tempNode.Parent;
+                    cmd2.ExecuteNonQuery();
                 }
             }
 
@@ -190,19 +209,6 @@ namespace IDPicker.Forms
             }
 
             transaction.Commit();
-        }
-
-        private void SaveGroupLink(SpectrumSourceGroup ssg, SpectrumSource ss)
-        {
-            //HACK: The commented out code produced "NonUniqueObjectException"
-            session.CreateSQLQuery(String.Format("INSERT INTO SpectrumSourceGroupLink (Group_, Source) VALUES ({0}, {1})", ssg.Id, ss.Id)).ExecuteUpdate();
-
-            //SpectrumSourceGroupLink ssgl = new SpectrumSourceGroupLink();
-            //ssgl.Group = ssg;
-            //ssgl.Source = ss;
-
-            //session.SaveOrUpdate(ssgl);
-            //session.Flush();
         }
 
         /// <summary>

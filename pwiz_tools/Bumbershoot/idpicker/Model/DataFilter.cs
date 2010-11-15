@@ -305,6 +305,9 @@ namespace IDPicker.DataModel
 
         public void ApplyBasicFilters (NHibernate.ISession session)
         {
+            // free up memory
+            session.Clear();
+
             bool useScopedTransaction = !session.Transaction.IsActive;
             if (useScopedTransaction)
                 session.Transaction.Begin();

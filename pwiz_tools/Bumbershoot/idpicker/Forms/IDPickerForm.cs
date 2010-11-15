@@ -27,6 +27,7 @@ using System.Data;
 using System.Data.SQLite;
 using System.Drawing;
 using System.Linq;
+using System.Security.AccessControl;
 using System.Text;
 using System.Windows.Forms;
 using System.IO;
@@ -653,6 +654,17 @@ namespace IDPicker
                     merger.Start();
 
                     idpDB_filepaths = new List<string>() {commonFilename};
+                }
+
+                // if the database can fit in the available RAM, populate the disk cache
+                long ramBytesAvailable = (long) new System.Diagnostics.PerformanceCounter("Memory", "Available Bytes").NextValue();
+                if (ramBytesAvailable > new FileInfo(commonFilename).Length)
+                {
+                    using (var fs = new FileStream(commonFilename, FileMode.Open, FileSystemRights.ReadData, FileShare.Read, (1 << 15), FileOptions.SequentialScan))
+                    {
+                        var buffer = new byte[UInt16.MaxValue];
+                        while (fs.Read(buffer, 0, UInt16.MaxValue) > 0) { }
+                    }
                 }
 
                 var sessionFactory = DataModel.SessionFactoryFactory.CreateSessionFactory(commonFilename, false, true);
