@@ -129,7 +129,7 @@ namespace IDPicker.Forms
             Text = TabText = "Peptide View";
 
             var pivots = new List<Pivot<PivotBy>>();
-            pivots.Add(new Pivot<PivotBy>(true) { Mode = PivotBy.Group, Text = "Group" });
+            pivots.Add(new Pivot<PivotBy>() { Mode = PivotBy.Group, Text = "Group" });
             pivots.Add(new Pivot<PivotBy>() { Mode = PivotBy.Source, Text = "Source" });
 
             pivotSetupControl = new PivotSetupControl<PivotBy>(pivots);
@@ -517,7 +517,7 @@ namespace IDPicker.Forms
                                                       DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink) +
                     "GROUP BY psm.Peptide.id, ssgl.Group.id");
 
-                sourceById = session.Query<SpectrumSource>().ToDictionary(o => o.Id.Value);
+                sourceById = session.Query<SpectrumSource>().Where(o => o.Group != null).ToDictionary(o => o.Id.Value);
                 groupById = session.Query<SpectrumSourceGroup>().ToDictionary(o => o.Id.Value);
 
                 var stats = statsPerPeptideBySpectrumSource = new Map<long, Map<long, PeptideStats>>();
@@ -585,7 +585,6 @@ namespace IDPicker.Forms
                     return null;
                 };
                 pivotColumns.Add(column);
-                treeListView.Columns.Insert(insertIndex++, column);
             }
 
             foreach (long groupId in stats2.Keys)
@@ -599,8 +598,10 @@ namespace IDPicker.Forms
                     return null;
                 };
                 pivotColumns.Add(column);
-                treeListView.Columns.Insert(insertIndex++, column);
             }
+
+            foreach (var column in pivotColumns.OrderBy(o => o.Text))
+                treeListView.Columns.Insert(insertIndex++, column);
             treeListView.Unfreeze();
 
             // try to (re)set selected item

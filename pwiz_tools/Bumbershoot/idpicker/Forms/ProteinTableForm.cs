@@ -126,7 +126,7 @@ namespace IDPicker.Forms
             Text = TabText = "Protein View";
 
             var pivots = new List<Pivot<PivotBy>>();
-            pivots.Add(new Pivot<PivotBy>(true) { Mode = PivotBy.Group, Text = "Group" });
+            pivots.Add(new Pivot<PivotBy>() { Mode = PivotBy.Group, Text = "Group" });
             pivots.Add(new Pivot<PivotBy>() { Mode = PivotBy.Source, Text = "Source" });
 
             pivotSetupControl = new PivotSetupControl<PivotBy>(pivots);
@@ -459,7 +459,7 @@ namespace IDPicker.Forms
                     dataFilter.GetFilteredQueryString(DataFilter.FromProtein,
                                                       DataFilter.ProteinToPeptideSpectrumMatch) +
                     "GROUP BY pro.ProteinGroup " +
-                    "ORDER BY COUNT(DISTINCT psm.Peptide.id) DESC, COUNT(DISTINCT psm.id) DESC, COUNT(DISTINCT psm.Spectrum.id) DESC");
+                    "ORDER BY COUNT(DISTINCT psm.Peptide.id) DESC");//, COUNT(DISTINCT psm.id) DESC, COUNT(DISTINCT psm.Spectrum.id) DESC");
 
                 proteinGroupQuery.SetReadOnly(true);
 
@@ -485,7 +485,7 @@ namespace IDPicker.Forms
                                                       DataFilter.PeptideSpectrumMatchToProtein) +
                     "GROUP BY pro.ProteinGroup, ssgl.Group");
 
-                sourceById = session.Query<SpectrumSource>().ToDictionary(o => o.Id.Value);
+                sourceById = session.Query<SpectrumSource>().Where(o => o.Group != null).ToDictionary(o => o.Id.Value);
                 groupById = session.Query<SpectrumSourceGroup>().ToDictionary(o => o.Id.Value);
 
                 var stats = statsPerProteinGroupBySpectrumSource = new Map<long, Map<long,ProteinStats>>();
@@ -539,6 +539,8 @@ namespace IDPicker.Forms
             var stats = statsPerProteinGroupBySpectrumSource;
             var stats2 = statsPerProteinGroupBySpectrumSourceGroup;
 
+            int insertIndex = descriptionColumn.Index > 0 ? descriptionColumn.Index : treeListView.ColumnsInDisplayOrder.Count;
+
             foreach (long sourceId in stats.Keys)
             {
                 string uniqueSubstring;
@@ -552,7 +554,6 @@ namespace IDPicker.Forms
                     return null;
                 };
                 pivotColumns.Add(column);
-                treeListView.Columns.Insert(descriptionColumn.Index, column);
             }
 
             foreach (long groupId in stats2.Keys)
@@ -566,8 +567,10 @@ namespace IDPicker.Forms
                     return null;
                 };
                 pivotColumns.Add(column);
-                treeListView.Columns.Insert(descriptionColumn.Index, column);
             }
+
+            foreach (var column in pivotColumns.OrderBy(o => o.Text))
+                treeListView.Columns.Insert(insertIndex++, column);
             treeListView.Unfreeze();
 
             // try to (re)set selected item
