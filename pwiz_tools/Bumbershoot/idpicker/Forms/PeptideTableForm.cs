@@ -113,8 +113,7 @@ namespace IDPicker.Forms
 
         #endregion
 
-        Dictionary<OLVColumn, object[]> _columnSettings;
-        bool _skipRebuild = false;
+        Dictionary<OLVColumn, ColumnProperty> _columnSettings;
 
         public PeptideTableForm ()
         {
@@ -138,32 +137,47 @@ namespace IDPicker.Forms
             pivotSetupPopup.Closed += new ToolStripDropDownClosedEventHandler(pivotSetupPopup_Closed);
 
             #region Column aspect getters
+            SetDefaults();
             var allLayouts = new List<string>(Util.StringCollectionToStringArray(Properties.Settings.Default.PeptideTableFormSettings));
-            _columnSettings = new Dictionary<OLVColumn, object[]>();
 
             if (allLayouts.Count > 1)
             {
-                var retrievedList = allLayouts[1].Split(System.Environment.NewLine.ToCharArray()).ToList();
-                if (retrievedList.Count == 11)
-                {
-                    SetPropertyFromUserSettings(ref _columnSettings, sequenceColumn, retrievedList);
-                    SetPropertyFromUserSettings(ref _columnSettings, distinctMatchesColumn, retrievedList);
-                    SetPropertyFromUserSettings(ref _columnSettings, filteredSpectraColumn, retrievedList);
-                    SetPropertyFromUserSettings(ref _columnSettings, monoisotopicMassColumn, retrievedList);
-                    SetPropertyFromUserSettings(ref _columnSettings, molecularWeightColumn, retrievedList);
-                    SetPropertyFromUserSettings(ref _columnSettings, offsetColumn, retrievedList);
-                    SetPropertyFromUserSettings(ref _columnSettings, terminalSpecificityColumn, retrievedList);
-                    SetPropertyFromUserSettings(ref _columnSettings, missedCleavagesColumn, retrievedList);
-                    SetPropertyFromUserSettings(ref _columnSettings, proteinsColumn, retrievedList);
+                //get User Defualt Layout
+                var retrievedList = allLayouts[1].Split(System.Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries).ToList();
 
-                    treeListView.BackColor = Color.FromArgb(int.Parse(retrievedList[9].ToString()));
-                    treeListView.ForeColor = Color.FromArgb(int.Parse(retrievedList[10].ToString()));
+                //Make sure layout has same number of columns as ObjectListView
+                if (retrievedList.Count == _columnSettings.Count + 3)
+                {
+                    //Go through each column and assign properties
+                    foreach (OLVColumn column in treeListView.Columns)
+                    {
+                        //Go through lines and find the one that matches current column
+                        for (var x = 0; x < retrievedList.Count - 1; x++)
+                        {
+                            var splitSetting = retrievedList[x].Split('|');
+
+                            if (splitSetting[0] == column.Text)
+                            {
+                                _columnSettings[column] =
+                                    new ColumnProperty
+                                    {
+                                        Scope = "PeptideTableForm",
+                                        Name = column.Text,
+                                        Type = splitSetting[1],
+                                        DecimalPlaces = int.Parse(splitSetting[2]),
+                                        ColorCode = int.Parse(splitSetting[3]),
+                                        Visible = bool.Parse(splitSetting[4]),
+                                        Locked = bool.Parse(splitSetting[5])
+                                    };
+                                break;
+                            }
+                        }
+                    }
+
+                    treeListView.BackColor = Color.FromArgb(int.Parse(retrievedList[retrievedList.Count - 2]));
+                    treeListView.ForeColor = Color.FromArgb(int.Parse(retrievedList[retrievedList.Count - 1]));
                 }
-                else
-                    SetDefaults();
             }
-            else
-                SetDefaults();
 
             SetColumnAspectGetters();
 
@@ -181,7 +195,7 @@ namespace IDPicker.Forms
                     currentCell.SubItem.ForeColor = SystemColors.GrayText;
 
                 if (_columnSettings.ContainsKey(currentCell.Column))
-                    currentCell.SubItem.BackColor = (Color) _columnSettings[currentCell.Column][2];
+                    currentCell.SubItem.BackColor = Color.FromArgb(_columnSettings[currentCell.Column].ColorCode);
                 else
                     currentCell.SubItem.BackColor = treeListView.BackColor;
             };
@@ -193,15 +207,35 @@ namespace IDPicker.Forms
 
         private void SetDefaults()
         {
-            _columnSettings.Add(sequenceColumn, new object[5] { "Key", -99, treeListView.BackColor, false, false });
-            _columnSettings.Add(distinctMatchesColumn, new object[5] { "Integer", -99, treeListView.BackColor, false, false });
-            _columnSettings.Add(filteredSpectraColumn, new object[5] { "Integer", -99, treeListView.BackColor, false, false });
-            _columnSettings.Add(monoisotopicMassColumn, new object[5] { "Float", -1, treeListView.BackColor, false, false });
-            _columnSettings.Add(molecularWeightColumn, new object[5] { "Float", -1, treeListView.BackColor, false, false });
-            _columnSettings.Add(offsetColumn, new object[5] { "Integer", -99, treeListView.BackColor, false, false });
-            _columnSettings.Add(terminalSpecificityColumn, new object[5] { "String", -99, treeListView.BackColor, false, false });
-            _columnSettings.Add(missedCleavagesColumn, new object[5] { "Integer", -99, treeListView.BackColor, false, false });
-            _columnSettings.Add(proteinsColumn, new object[5] { "String", -99, treeListView.BackColor, false, false });
+            _columnSettings = new Dictionary<OLVColumn, ColumnProperty>();
+            var columnType = new Dictionary<OLVColumn, string>
+                                 {
+                                     {sequenceColumn, "Key"},
+                                     {distinctMatchesColumn, "Integer"},
+                                     {filteredSpectraColumn, "Integer"},
+                                     {monoisotopicMassColumn, "Float"},
+                                     {molecularWeightColumn, "Float"},
+                                     {offsetColumn, "Integer"},
+                                     {terminalSpecificityColumn, "String"},
+                                     {missedCleavagesColumn, "Integer"},
+                                     {proteinsColumn, "String"}
+                                 };
+
+            foreach (var kvp in columnType)
+            {
+                var tempColumnProperty = new ColumnProperty
+                                             {
+                    Scope = "PeptideTableForm",
+                    Type = columnType[kvp.Key],
+                    DecimalPlaces = -1,
+                    Visible = true,
+                    Locked = false,
+                    ColorCode = treeListView.BackColor.ToArgb(),
+                    Name = kvp.Key.Text
+                };
+
+                _columnSettings.Add(kvp.Key, tempColumnProperty);
+            }
         }
 
         private void SetColumnAspectGetters()
@@ -242,7 +276,7 @@ namespace IDPicker.Forms
                 return null;
             };
 
-            if ((int)_columnSettings[monoisotopicMassColumn][1] == -1)
+            if (_columnSettings[monoisotopicMassColumn].DecimalPlaces == -1)
             {
                 monoisotopicMassColumn.AspectGetter += delegate(object x)
                 {
@@ -258,14 +292,14 @@ namespace IDPicker.Forms
                 monoisotopicMassColumn.AspectGetter += delegate(object x)
                 {
                     if (x is PeptideRow)
-                        return Math.Round((x as PeptideRow).Peptide.MonoisotopicMass,(int)_columnSettings[monoisotopicMassColumn][1]);
+                        return Math.Round((x as PeptideRow).Peptide.MonoisotopicMass,_columnSettings[monoisotopicMassColumn].DecimalPlaces);
                     else if (x is PeptideSpectrumMatchRow)
-                        return Math.Round((x as PeptideSpectrumMatchRow).PeptideSpectrumMatch.MonoisotopicMass, (int)_columnSettings[monoisotopicMassColumn][1]);
+                        return Math.Round((x as PeptideSpectrumMatchRow).PeptideSpectrumMatch.MonoisotopicMass, _columnSettings[monoisotopicMassColumn].DecimalPlaces);
                     return null;
                 };
             }
 
-            if ((int)_columnSettings[molecularWeightColumn][1] == -1)
+            if (_columnSettings[molecularWeightColumn].DecimalPlaces == -1)
             {
                 molecularWeightColumn.AspectGetter += delegate(object x)
                 {
@@ -281,9 +315,9 @@ namespace IDPicker.Forms
                 molecularWeightColumn.AspectGetter += delegate(object x)
                 {
                     if (x is PeptideRow)
-                        return Math.Round((x as PeptideRow).Peptide.MolecularWeight,(int)_columnSettings[molecularWeightColumn][1]);
+                        return Math.Round((x as PeptideRow).Peptide.MolecularWeight,_columnSettings[molecularWeightColumn].DecimalPlaces);
                     else if (x is PeptideSpectrumMatchRow)
-                        return Math.Round((x as PeptideSpectrumMatchRow).PeptideSpectrumMatch.MolecularWeight,(int)_columnSettings[molecularWeightColumn][1]);
+                        return Math.Round((x as PeptideSpectrumMatchRow).PeptideSpectrumMatch.MolecularWeight,_columnSettings[molecularWeightColumn].DecimalPlaces);
                     return null;
                 };
             }
@@ -354,26 +388,24 @@ namespace IDPicker.Forms
 
         void radioButton1_CheckedChanged (object sender, EventArgs e)
         {
-            if (!(bool)_columnSettings[filteredSpectraColumn][4])
+            if (!(bool)_columnSettings[filteredSpectraColumn].Locked)
                 filteredSpectraColumn.IsVisible = radioButton1.Checked;
-            if (!(bool)_columnSettings[distinctMatchesColumn][4])
+            if (!(bool)_columnSettings[distinctMatchesColumn].Locked)
                 distinctMatchesColumn.IsVisible = radioButton1.Checked;
-            if (!(bool)_columnSettings[monoisotopicMassColumn][4])
+            if (!(bool)_columnSettings[monoisotopicMassColumn].Locked)
                 monoisotopicMassColumn.IsVisible = radioButton1.Checked;
-            if (!(bool)_columnSettings[molecularWeightColumn][4])
+            if (!(bool)_columnSettings[molecularWeightColumn].Locked)
                 molecularWeightColumn.IsVisible = radioButton1.Checked;
-            if (!(bool)_columnSettings[offsetColumn][4])
+            if (!(bool)_columnSettings[offsetColumn].Locked)
                 offsetColumn.IsVisible = radioButton2.Checked;
-            if (!(bool)_columnSettings[terminalSpecificityColumn][4])
+            if (!(bool)_columnSettings[terminalSpecificityColumn].Locked)
                 terminalSpecificityColumn.IsVisible = radioButton2.Checked;
-            if (!(bool)_columnSettings[missedCleavagesColumn][4])
+            if (!(bool)_columnSettings[missedCleavagesColumn].Locked)
                 missedCleavagesColumn.IsVisible = radioButton2.Checked;
 
             treeListView.RebuildColumns();
-            _skipRebuild = true;
             if (session != null)
                 SetData(session, dataFilter);
-            _skipRebuild = false;
         }
 
         void treeListView_CellClick (object sender, CellClickEventArgs e)
@@ -441,30 +473,62 @@ namespace IDPicker.Forms
             workerThread.RunWorkerAsync();
         }
 
+        List<ColumnProperty> _unusedPivotSettings = new List<ColumnProperty>();
+
         internal void LoadLayout(IList<ColumnProperty> listOfSettings)
         {
-            if (listOfSettings.Count > 0 && !_skipRebuild)
+            if (listOfSettings.Count > 0)
             {
-                _columnSettings = new Dictionary<OLVColumn, object[]>();
+                _unusedPivotSettings = listOfSettings.Where(x => x.Type == "PivotColumn").ToList();
 
-                SetPropertyFromDatabase(ref _columnSettings, sequenceColumn, listOfSettings);
-                SetPropertyFromDatabase(ref _columnSettings, distinctMatchesColumn, listOfSettings);
-                SetPropertyFromDatabase(ref _columnSettings, filteredSpectraColumn, listOfSettings);
-                SetPropertyFromDatabase(ref _columnSettings, monoisotopicMassColumn, listOfSettings);
-                SetPropertyFromDatabase(ref _columnSettings, molecularWeightColumn, listOfSettings);
-                SetPropertyFromDatabase(ref _columnSettings, offsetColumn, listOfSettings);
-                SetPropertyFromDatabase(ref _columnSettings, terminalSpecificityColumn, listOfSettings);
-                SetPropertyFromDatabase(ref _columnSettings, missedCleavagesColumn, listOfSettings);
+                var columnlist = _columnSettings.Select(kvp => kvp.Key).ToList();
+                var untouchedColumns = _columnSettings.Select(kvp => kvp.Key).ToList();
 
-                SetColumnAspectGetters();
                 var backColor = listOfSettings.Where(x => x.Name == "BackColor").SingleOrDefault();
                 var textColor = listOfSettings.Where(x => x.Name == "TextColor").SingleOrDefault();
+
+                foreach (var column in columnlist)
+                {
+                    var rowSettings = listOfSettings.Where(x => x.Name == column.Text).SingleOrDefault();
+
+                    //if rowSettings is null it is likely an unsaved pivotColumn, keep defualt
+                    if (rowSettings == null)
+                        continue;
+
+                    if (_unusedPivotSettings.Contains(rowSettings))
+                        _unusedPivotSettings.Remove(rowSettings);
+
+                    _columnSettings[column] = new ColumnProperty
+                    {
+                        Scope = "PeptideTableForm",
+                        Name = rowSettings.Name,
+                        Type = rowSettings.Type,
+                        DecimalPlaces = rowSettings.DecimalPlaces,
+                        ColorCode = rowSettings.ColorCode,
+                        Visible = rowSettings.Visible,
+                        Locked = rowSettings.Locked
+                    };
+
+                    untouchedColumns.Remove(column);
+                }
+
+                //Set unspecified columns (most likely pivotColumns) to blend in better
+                foreach (var column in untouchedColumns)
+                {
+                    _columnSettings[column].Visible = true;
+                    _columnSettings[column].ColorCode = backColor.ColorCode;
+                }
+
+                SetColumnAspectGetters();
                 treeListView.BackColor = Color.FromArgb(backColor.ColorCode);
                 treeListView.ForeColor = Color.FromArgb(textColor.ColorCode);
 
                 foreach (var kvp in _columnSettings)
-                    kvp.Key.IsVisible = (bool)kvp.Value[3];
+                    kvp.Key.IsVisible = kvp.Value.Visible;
                 treeListView.RebuildColumns();
+
+                if (session != null)
+                    SetData(session, dataFilter);
             }
         }
 
@@ -584,7 +648,47 @@ namespace IDPicker.Forms
                         return stats[(long) column.Tag][(x as PeptideRow).Peptide.Id.Value].Spectra;
                     return null;
                 };
-                pivotColumns.Add(column);
+                
+
+                var newProperties = new ColumnProperty()
+                {
+                    Scope = "PeptideTableForm",
+                    Type = "PivotColumn",
+                    Name = column.Text,
+                    DecimalPlaces = -1,
+                    ColorCode = treeListView.BackColor.ToArgb(),
+                    Visible = true,
+                    Locked = false
+                };
+
+                var previousForm =
+                    _columnSettings.Where(x => x.Value.Name == column.Text && x.Value.Type == "PivotColumn").ToList();
+
+                if (previousForm.Count == 1)
+                {
+                    _columnSettings.Remove(previousForm[0].Key);
+                    newProperties.ColorCode = previousForm[0].Value.ColorCode;
+                    newProperties.Visible = previousForm[0].Value.Visible;
+                    newProperties.Locked = previousForm[0].Value.Locked;
+                }
+                else
+                {
+                    var possibleSaved =
+                        _unusedPivotSettings.Where(x => x.Name == column.Text).SingleOrDefault();
+                    if (possibleSaved != null)
+                    {
+                        newProperties.ColorCode = possibleSaved.ColorCode;
+                        newProperties.Visible = possibleSaved.Visible;
+                        newProperties.Locked = possibleSaved.Locked;
+                    }
+                }
+
+                column.IsVisible = newProperties.Visible;
+                _columnSettings.Add(column, newProperties);
+                if (newProperties.Visible)
+                {
+                    pivotColumns.Add(column);
+                }
             }
 
             foreach (long groupId in stats2.Keys)
@@ -597,9 +701,47 @@ namespace IDPicker.Forms
                         return stats2[(long) column.Tag][(x as PeptideRow).Peptide.Id.Value].Spectra;
                     return null;
                 };
-                pivotColumns.Add(column);
-            }
 
+                var newProperties = new ColumnProperty()
+                {
+                    Scope = "PeptideTableForm",
+                    Type = "PivotColumn",
+                    Name = column.Text,
+                    DecimalPlaces = -1,
+                    ColorCode = treeListView.BackColor.ToArgb(),
+                    Visible = true,
+                    Locked = false
+                };
+
+                var previousForm =
+                    _columnSettings.Where(x => x.Value.Name == column.Text && x.Value.Type == "PivotColumn").ToList();
+
+                if (previousForm.Count == 1)
+                {
+                    _columnSettings.Remove(previousForm[0].Key);
+                    newProperties.ColorCode = previousForm[0].Value.ColorCode;
+                    newProperties.Visible = previousForm[0].Value.Visible;
+                    newProperties.Locked = previousForm[0].Value.Locked;
+                }
+                else
+                {
+                    var possibleSaved =
+                        _unusedPivotSettings.Where(x => x.Name == column.Text).SingleOrDefault();
+                    if (possibleSaved != null)
+                    {
+                        newProperties.ColorCode = possibleSaved.ColorCode;
+                        newProperties.Visible = possibleSaved.Visible;
+                        newProperties.Locked = possibleSaved.Locked;
+                    }
+                }
+
+                column.IsVisible = newProperties.Visible;
+                _columnSettings.Add(column, newProperties);
+                if (newProperties.Visible)
+                {
+                    pivotColumns.Add(column);
+                }
+            }
             foreach (var column in pivotColumns.OrderBy(o => o.Text))
                 treeListView.Columns.Insert(insertIndex++, column);
             treeListView.Unfreeze();
@@ -734,59 +876,37 @@ namespace IDPicker.Forms
             Color[] currentColors = { treeListView.BackColor, treeListView.ForeColor };
 
             foreach (var kvp in _columnSettings)
-                kvp.Value[3] = kvp.Key.IsVisible;
+                kvp.Value.Visible = kvp.Key.IsVisible;
 
             var ccf = new ColumnControlForm(_columnSettings, currentColors);
 
             if (ccf.ShowDialog() == DialogResult.OK)
             {
-                _columnSettings = ccf._savedSettings;
+                _columnSettings = ccf.SavedSettings;
 
                 foreach (var kvp in _columnSettings)
-                    kvp.Key.IsVisible = (bool)kvp.Value[3];
+                    kvp.Key.IsVisible = (bool)kvp.Value.Visible;
 
                 treeListView.BackColor = ccf.WindowBackColorBox.BackColor;
                 treeListView.ForeColor = ccf.WindowTextColorBox.BackColor;
 
                 SetColumnAspectGetters();
+                treeListView.Refresh();
                 treeListView.RebuildColumns();
+
+                if (session != null)
+                    SetData(session, dataFilter);
             }
         }
 
-        private void SetPropertyFromUserSettings(ref Dictionary<OLVColumn, object[]> testDictionary, OLVColumn targetColumn, List<string> columnProperties)
-        {
-            for (int x = 0; x < columnProperties.Count - 1; x++)
-            {
-                var splitSetting = columnProperties[x].Split('|');
 
-                if (splitSetting[0] == targetColumn.Text)
-                {
-                    testDictionary.Add(targetColumn,
-                        new object[5]{splitSetting[1], int.Parse(splitSetting[2]),
-                            Color.FromArgb(int.Parse(splitSetting[3])),
-                            bool.Parse(splitSetting[4]), bool.Parse(splitSetting[5])});
-                    break;
-                }
-            }
-        }
 
-        private void SetPropertyFromDatabase(ref Dictionary<OLVColumn, object[]> testDictionary, OLVColumn targetColumn, IList<ColumnProperty> FormSettings)
-        {
-            var rowSettings = FormSettings.Where(x => x.Name == targetColumn.Text).SingleOrDefault();
-
-            testDictionary.Add(targetColumn,
-                new object[5]{rowSettings.Type, rowSettings.DecimalPlaces,
-                    Color.FromArgb(rowSettings.ColorCode),
-                    rowSettings.Visible, rowSettings.Locked});
-
-        }
-
-        internal List<ColumnProperty> GetCurrentProperties()
+        internal List<ColumnProperty> GetCurrentProperties(bool pivotToo)
         {
             foreach (var kvp in _columnSettings)
-                kvp.Value[3] = false;
+                kvp.Value.Visible = false;
             foreach (var column in treeListView.ColumnsInDisplayOrder)
-                _columnSettings[column][3] = true;
+                _columnSettings[column].Visible = true;
             var currentList = new List<ColumnProperty>();
 
             foreach (var kvp in _columnSettings)
@@ -795,13 +915,16 @@ namespace IDPicker.Forms
                 {
                     Scope = "PeptideTableForm",
                     Name = kvp.Key.Text,
-                    Type = kvp.Value[0].ToString(),
-                    DecimalPlaces = (int)kvp.Value[1],
-                    ColorCode = ((Color)kvp.Value[2]).ToArgb(),
-                    Visible = (bool)kvp.Value[3],
-                    Locked = (bool)kvp.Value[4]
+                    Type = kvp.Value.Type,
+                    DecimalPlaces = kvp.Value.DecimalPlaces,
+                    ColorCode = kvp.Value.ColorCode,
+                    Visible = kvp.Value.Visible,
+                    Locked = false
                 });
             }
+
+            if (!pivotToo)
+                currentList.RemoveAll(x => x.Type == "PivotColumn");
 
             currentList.Add(new ColumnProperty
             {

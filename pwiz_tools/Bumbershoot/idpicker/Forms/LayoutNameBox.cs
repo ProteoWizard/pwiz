@@ -56,7 +56,7 @@ namespace IDPicker.Forms
 
         private void inputTextBox_KeyPress(object sender, KeyPressEventArgs e)
         {
-            if (!_inputFormat.IsMatch(e.KeyChar.ToString()))
+            if (!_inputFormat.IsMatch(e.KeyChar.ToString()) &&  !Char.IsControl(e.KeyChar))
                 e.Handled = true;
         }
 

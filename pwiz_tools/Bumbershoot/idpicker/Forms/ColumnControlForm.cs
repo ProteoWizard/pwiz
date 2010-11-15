@@ -29,69 +29,55 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using BrightIdeasSoftware;
+using IDPicker.DataModel;
 
 namespace IDPicker.Forms
 {
     public partial class ColumnControlForm : Form
     {
-        public Dictionary<OLVColumn, object[]> _savedSettings;
+        public Dictionary<OLVColumn, ColumnProperty> SavedSettings;
         ColorDialog ColorBox;
-        bool hasLockableColumns = false;
-        Dictionary<string, bool> visibilityValues;
+        readonly Dictionary<string, bool> _visibilityValues;
 
-        public ColumnControlForm(Dictionary<OLVColumn, object[]> columnList, Color[] windowColors)
+        public ColumnControlForm(Dictionary<OLVColumn, ColumnProperty> columnList, IList<Color> windowColors)
         {
             InitializeComponent();
-            _savedSettings = columnList;
+            SavedSettings = columnList;
             ColorBox = new ColorDialog();
 
-            visibilityValues = new Dictionary<string, bool>();
-            visibilityValues.Add("Yes", true);
-            visibilityValues.Add("No", false);
-            visibilityValues.Add("Always", true);
-            visibilityValues.Add("Never", false);
+            _visibilityValues = new Dictionary<string, bool>
+                                    {
+                                        {"Yes", true},
+                                        {"No", false},
+                                        {"Always", true},
+                                        {"Never", false}
+                                    };
 
             //check if values are of type object[4] or object[5]
             //For some reason this.ParentForm, this.Parent, and this.Owner all return null at this point
             foreach (var kvp in columnList)
             {
-                if (kvp.Value.Length == 5)
-                    hasLockableColumns = true;
+                if (kvp.Value.Locked == null)
+                {
+                    ((DataGridViewComboBoxColumn) columnOptionsDGV.Columns[4]).Items.Remove("Always");
+                    ((DataGridViewComboBoxColumn) columnOptionsDGV.Columns[4]).Items.Remove("Never");
+                }
                 break;
             }
-
-            if (hasLockableColumns)
+           
+            foreach (var column in columnList)
             {
-                foreach (var column in columnList)
-                {
-                    //Name column, type column (hidden form user), decimal places or "Auto" if automatic (null if not a float), null for color, Current visibility
-                    columnOptionsDGV.Rows.Add(new object[5] { column.Key.Text, column.Value[0],
-                    ((int)column.Value[1] >= 0) ? column.Value[1].ToString() : ((string)column.Value[0] == "Float") ? "Auto" : null,
-                    null,(bool)column.Value[4] ? ((bool)column.Value[3] ? "Always": "Never") : ((bool)column.Value[3] ? "Yes": "No")});
+                //Name column, type column (hidden form user), decimal places or "Auto" if automatic (null if not a float), null for color, Current visibility
+                columnOptionsDGV.Rows.Add(new object[] { column.Key.Text, column.Value.Type,
+                    column.Value.DecimalPlaces >= 0 ? column.Value.DecimalPlaces.ToString() : column.Value.Type == "Float" ? "Auto" : null,
+                    null,(column.Value.Locked != null && column.Value.Locked == true) ? (column.Value.Visible ? "Always": "Never") : (column.Value.Visible ? "Yes": "No")});
 
-                    columnOptionsDGV[0, columnOptionsDGV.RowCount - 1].Tag = column.Key;
-                    if (columnOptionsDGV[2, columnOptionsDGV.RowCount - 1].Value == null)
-                        columnOptionsDGV[2, columnOptionsDGV.RowCount - 1].Style.BackColor = Color.LightGray;
-                    columnOptionsDGV[3, columnOptionsDGV.RowCount - 1].Style.BackColor = (Color)column.Value[2];
-
-                }
+                columnOptionsDGV[0, columnOptionsDGV.RowCount - 1].Tag = column.Key;
+                if (columnOptionsDGV[2, columnOptionsDGV.RowCount - 1].Value == null)
+                    columnOptionsDGV[2, columnOptionsDGV.RowCount - 1].Style.BackColor = Color.LightGray;
+                columnOptionsDGV[3, columnOptionsDGV.RowCount - 1].Style.BackColor = Color.FromArgb(column.Value.ColorCode);
             }
-            else
-            {
-                ((DataGridViewComboBoxColumn)columnOptionsDGV.Columns[4]).Items.Remove("Always");
-                ((DataGridViewComboBoxColumn)columnOptionsDGV.Columns[4]).Items.Remove("Never");
-                foreach (var column in columnList)
-                {
-                    //Name column, type column (hidden form user), decimal places or "Auto" if automatic (null if not a float), null for color, Current visibility
-                    columnOptionsDGV.Rows.Add(new object[5] { column.Key.Text, column.Value[0],
-                    ((int)column.Value[1] >= 0) ? column.Value[1].ToString() : ((string)column.Value[0] == "Float") ? "Auto" : null,
-                    null,((bool)column.Value[3] ? "Yes" : "No") });
-                    columnOptionsDGV[0, columnOptionsDGV.RowCount - 1].Tag = column.Key;
-                    if (columnOptionsDGV[2, columnOptionsDGV.RowCount - 1].Value == null)
-                        columnOptionsDGV[2, columnOptionsDGV.RowCount - 1].Style.BackColor = Color.LightGray;
-                    columnOptionsDGV[3, columnOptionsDGV.RowCount - 1].Style.BackColor = (Color)column.Value[2];
-                }
-            }
+            
 
             WindowBackColorBox.BackColor = windowColors[0];
             PreviewBox.BackColor = windowColors[0];
@@ -102,25 +88,17 @@ namespace IDPicker.Forms
 
         private void ok_Button_Click(object sender, EventArgs e)
         {
-
-            if (hasLockableColumns)
+            foreach (DataGridViewRow row in columnOptionsDGV.Rows)
             {
-                foreach (DataGridViewRow row in columnOptionsDGV.Rows)
-                {
-                    _savedSettings[(OLVColumn)row.Cells[0].Tag][1] = (row.Cells[2].Value == null || row.Cells[2].Value.ToString() == "Auto") ? -1 : int.Parse(row.Cells[2].Value.ToString());
-                    _savedSettings[(OLVColumn)row.Cells[0].Tag][2] = row.Cells[3].Style.BackColor;
-                    _savedSettings[(OLVColumn)row.Cells[0].Tag][3] = visibilityValues[row.Cells[4].Value.ToString()];
-                    _savedSettings[(OLVColumn)row.Cells[0].Tag][4] = (row.Cells[4].Value.ToString() == "Always" || row.Cells[4].Value.ToString() == "Never");
-                }
-            }
-            else
-            {
-                foreach (DataGridViewRow row in columnOptionsDGV.Rows)
-                {
-                    _savedSettings[(OLVColumn)row.Cells[0].Tag][1] = (row.Cells[2].Value == null || row.Cells[2].Value.ToString() == "Auto") ? -1 : int.Parse(row.Cells[2].Value.ToString());
-                    _savedSettings[(OLVColumn)row.Cells[0].Tag][2] = row.Cells[3].Style.BackColor;
-                    _savedSettings[(OLVColumn)row.Cells[0].Tag][3] = visibilityValues[row.Cells[4].Value.ToString()];
-                }
+                SavedSettings[(OLVColumn) row.Cells[0].Tag].DecimalPlaces = (row.Cells[2].Value == null ||
+                                                                             row.Cells[2].Value.ToString() == "Auto")
+                                                                                ? -1
+                                                                                : int.Parse(row.Cells[2].Value.ToString());
+                SavedSettings[(OLVColumn) row.Cells[0].Tag].ColorCode = row.Cells[3].Style.BackColor.ToArgb();
+                SavedSettings[(OLVColumn) row.Cells[0].Tag].Visible = _visibilityValues[row.Cells[4].Value.ToString()];
+                if (((DataGridViewComboBoxColumn) columnOptionsDGV.Columns[4]).Items.Count > 2)
+                    SavedSettings[(OLVColumn) row.Cells[0].Tag].Locked = (row.Cells[4].Value.ToString() == "Always" ||
+                                                                          row.Cells[4].Value.ToString() == "Never");
             }
         }
 
