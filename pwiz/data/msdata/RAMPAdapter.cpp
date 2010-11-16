@@ -92,7 +92,7 @@ class RAMPAdapter::Impl
     }
 
     int getScanNumber(size_t index) const;
-    void getScanHeader(size_t index, ScanHeaderStruct& result) const;
+    void getScanHeader(size_t index, ScanHeaderStruct& result, bool reservePeaks) const;
     void getScanPeaks(size_t index, std::vector<double>& result) const;
     void getRunHeader(RunHeaderStruct& result) const;
     void getInstrument(InstrumentStruct& result) const;
@@ -104,6 +104,7 @@ class RAMPAdapter::Impl
     vector<bool> nonDefaultSpectra_;
     size_t firstIndex_, lastIndex_;
     size_t size_;
+    mutable SpectrumPtr lastSpectrum;
 };
 
 
@@ -137,10 +138,13 @@ int RAMPAdapter::Impl::getScanNumber(size_t index) const
 }
 
 
-void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result) const
+void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result, bool reservePeaks /*= true*/) const
 {
-    const SpectrumList& spectrumList = *msd_.run.spectrumListPtr;
-    SpectrumPtr spectrum = spectrumList.spectrum(index);
+    // use previous spectrum if possible
+    if (!lastSpectrum.get() || lastSpectrum->index != index)
+        lastSpectrum = msd_.run.spectrumListPtr->spectrum(index, reservePeaks);
+
+    SpectrumPtr spectrum = lastSpectrum;
 
     Scan dummy;
     Scan& scan = spectrum->scanList.scans.empty() ? dummy : spectrum->scanList.scans[0];
@@ -168,10 +172,10 @@ void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result) co
         result.collisionEnergy = precursor.activation.cvParam(MS_collision_energy).valueAs<double>();
         size_t precursorIndex = msd_.run.spectrumListPtr->find(precursor.spectrumID);
 
-        if (precursorIndex < spectrumList.size())
+        if (precursorIndex < msd_.run.spectrumListPtr->size())
         {
-            SpectrumPtr precursorSpectrum = spectrumList.spectrum(precursorIndex);
-            string precursorScanNumber = id::translateNativeIDToScanNumber(nativeIdFormat_, precursorSpectrum->id);
+            const SpectrumIdentity& precursorSpectrum = msd_.run.spectrumListPtr->spectrumIdentity(precursorIndex);
+            string precursorScanNumber = id::translateNativeIDToScanNumber(nativeIdFormat_, precursorSpectrum.id);
             
             if (precursorScanNumber.empty()) // unsupported nativeID type
             {
@@ -211,7 +215,11 @@ void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result) co
 
 void RAMPAdapter::Impl::getScanPeaks(size_t index, std::vector<double>& result) const
 {
-    SpectrumPtr spectrum = msd_.run.spectrumListPtr->spectrum(index, true);
+    // use previous spectrum if possible (it must have binary data)
+    if (!lastSpectrum.get() || lastSpectrum->index != index || lastSpectrum->binaryDataArrayPtrs.empty())
+        lastSpectrum = msd_.run.spectrumListPtr->spectrum(index, true);
+
+    SpectrumPtr spectrum = lastSpectrum;
 
     result.clear();
     result.resize(spectrum->defaultArrayLength * 2);
@@ -282,7 +290,7 @@ PWIZ_API_DECL RAMPAdapter::RAMPAdapter(const std::string& filename) : impl_(new 
 PWIZ_API_DECL size_t RAMPAdapter::scanCount() const {return impl_->scanCount();}
 PWIZ_API_DECL size_t RAMPAdapter::index(int scanNumber) const {return impl_->index(scanNumber);}
 PWIZ_API_DECL int RAMPAdapter::getScanNumber(size_t index) const {return impl_->getScanNumber(index);}
-PWIZ_API_DECL void RAMPAdapter::getScanHeader(size_t index, ScanHeaderStruct& result) const {impl_->getScanHeader(index, result);}
+PWIZ_API_DECL void RAMPAdapter::getScanHeader(size_t index, ScanHeaderStruct& result, bool reservePeaks) const {impl_->getScanHeader(index, result, reservePeaks);}
 PWIZ_API_DECL void RAMPAdapter::getScanPeaks(size_t index, std::vector<double>& result) const {impl_->getScanPeaks(index, result);}
 PWIZ_API_DECL void RAMPAdapter::getRunHeader(RunHeaderStruct& result) const {impl_->getRunHeader(result);}
 PWIZ_API_DECL void RAMPAdapter::getInstrument(InstrumentStruct& result) const {impl_->getInstrument(result);}

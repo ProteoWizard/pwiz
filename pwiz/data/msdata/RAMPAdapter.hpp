@@ -55,7 +55,7 @@ class PWIZ_API_DECL RAMPAdapter
     int getScanNumber(size_t index) const;
 
     /// fills in RAMP ScanHeaderStruct for a specified scan
-    void getScanHeader(size_t index, ScanHeaderStruct& result) const;
+    void getScanHeader(size_t index, ScanHeaderStruct& result, bool reservePeaks = true) const;
 
     /// fills in m/z-intensity pair array for a specified scan 
     void getScanPeaks(size_t index, std::vector<double>& result) const;
