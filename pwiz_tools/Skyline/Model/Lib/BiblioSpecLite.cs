@@ -493,8 +493,11 @@ namespace pwiz.Skyline.Model.Lib
             {
                 DbProviderFactory fact = new SQLiteFactory();
                 SQLiteConnection conn = (SQLiteConnection) fact.CreateConnection();
-                conn.ConnectionString = string.Format("Data Source={0};Version=3", FilePath);
-                conn.Open();
+                if (conn != null)
+                {
+                    conn.ConnectionString = string.Format("Data Source={0};Version=3", FilePath);
+                    conn.Open();
+                }
                 return conn;
             }
 

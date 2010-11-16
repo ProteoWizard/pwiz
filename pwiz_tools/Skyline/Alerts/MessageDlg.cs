@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Alerts
             Close();
         }
 
-        private void btnOk_Click(object sender, System.EventArgs e)
+        private void btnOk_Click(object sender, EventArgs e)
         {
             OkDialog();
         }

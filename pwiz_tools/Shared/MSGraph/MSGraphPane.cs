@@ -21,7 +21,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using ZedGraph;
@@ -43,17 +42,17 @@ namespace pwiz.MSGraph
             IsFontsScaled = false;
             YAxis.Scale.MaxGrace = 0.1;
 
-            currentItemType_ = MSGraphItemType.Unknown;
-            pointAnnotations_ = new GraphObjList();
+            _currentItemType = MSGraphItemType.unknown;
+            _pointAnnotations = new GraphObjList();
         }
 
         public bool AllowCurveOverlap { get; set; }
 
-        protected MSGraphItemType currentItemType_;
+        protected MSGraphItemType _currentItemType;
         public MSGraphItemType CurrentItemType
         {
-            get { return currentItemType_; }
-            set { currentItemType_ = value; }
+            get { return _currentItemType; }
+            set { _currentItemType = value; }
         }
 
         public void SetScale()
@@ -63,7 +62,7 @@ namespace pwiz.MSGraph
 
         public void SetScale( Graphics g )
         {
-            int bins = 0;
+            int bins;
             if( g == null )
                 bins = (int) Chart.Rect.Width;
             else
@@ -89,15 +88,15 @@ namespace pwiz.MSGraph
             base.Draw( g );
         }
 
-        protected GraphObjList pointAnnotations_;
+        protected GraphObjList _pointAnnotations;
         private void drawLabels( Graphics g )
         {
-            foreach( GraphObj pa in pointAnnotations_ )
-                this.GraphObjList.Remove( pa );
-            pointAnnotations_.Clear();
+            foreach( GraphObj pa in _pointAnnotations )
+                GraphObjList.Remove( pa );
+            _pointAnnotations.Clear();
 
-            Axis xAxis = this.XAxis;
-            Axis yAxis = this.YAxis;
+            Axis xAxis = XAxis;
+            Axis yAxis = YAxis;
 
             yAxis.Scale.MinAuto = false;
             yAxis.Scale.Min = 0;
@@ -106,14 +105,14 @@ namespace pwiz.MSGraph
             xAxis.Scale.SetupScaleData( this, xAxis );
             yAxis.Scale.SetupScaleData( this, yAxis );
 
-            if( this.Chart.Rect.Width < 1 || this.Chart.Rect.Height < 1 )
+            if( Chart.Rect.Width < 1 || Chart.Rect.Height < 1 )
                 return;
 
             Region textBoundsRegion;
-            Region chartRegion = new Region( this.Chart.Rect );
+            Region chartRegion = new Region( Chart.Rect );
             Region clipRegion = new Region();
             clipRegion.MakeEmpty();
-            g.SetClip( this.Rect, CombineMode.Replace );
+            g.SetClip( Rect, CombineMode.Replace );
             g.SetClip( chartRegion, CombineMode.Exclude );
 
             /*Bitmap clipBmp = new Bitmap(Convert.ToInt32(Chart.Rect.Width), Convert.ToInt32(Chart.Rect.Height));
@@ -125,7 +124,7 @@ namespace pwiz.MSGraph
 
             // some dummy labels for very fast clipping
             string baseLabel = "0";
-            foreach( CurveItem item in this.CurveList )
+            foreach( CurveItem item in CurveList )
             {
                 IMSGraphItemInfo info = item.Tag as IMSGraphItemInfo;
                 if( info != null )
@@ -143,11 +142,11 @@ namespace pwiz.MSGraph
             baseTextObj.FontSpec.Fill.IsVisible = false;
             PointF[] pts = baseTextObj.FontSpec.GetBox( g, baseLabel, 0, 0,
                                 AlignH.Center, AlignV.Bottom, 1.0f, new SizeF() );
-            float baseLabelWidth = (float) Math.Round( (double) ( pts[1].X - pts[0].X ) );
-            float baseLabelHeight = (float) Math.Round( (double) ( pts[2].Y - pts[0].Y ) );
+            float baseLabelWidth = (float) Math.Round( pts[1].X - pts[0].X );
+            float baseLabelHeight = (float) Math.Round( pts[2].Y - pts[0].Y );
             baseLabelWidth = (float) xAxis.Scale.ReverseTransform( xAxis.Scale.Transform( 0 ) + baseLabelWidth );
             baseLabelHeight = (float) yAxis.Scale.ReverseTransform( yAxis.Scale.Transform( 0 ) - baseLabelHeight );
-            float labelLengthToWidthRatio = baseLabelWidth / (float) baseLabel.Length;
+            float labelLengthToWidthRatio = baseLabelWidth / baseLabel.Length;
 
             float xAxisPixel = yAxis.Scale.Transform( 0 );
 
@@ -192,11 +191,11 @@ namespace pwiz.MSGraph
 
                     if( annotation.ExtraAnnotation != null )
                     {
-                        this.GraphObjList.Add( annotation.ExtraAnnotation );
-                        pointAnnotations_.Add( annotation.ExtraAnnotation );
+                        GraphObjList.Add( annotation.ExtraAnnotation );
+                        _pointAnnotations.Add( annotation.ExtraAnnotation );
                     }
 
-                    if( annotation.Label == null || annotation.Label == String.Empty )
+                    if( string.IsNullOrEmpty(annotation.Label) )
                         continue;
 
                     float pointLabelWidth = labelLengthToWidthRatio * annotation.Label.Length;
@@ -230,15 +229,17 @@ namespace pwiz.MSGraph
                     }
 
                     TextObj text = new TextObj( annotation.Label, pt.X, labelY,
-                                                CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom );
-                    text.ZOrder = ZOrder.A_InFront;
+                                                CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom )
+                                       {
+                                           ZOrder = ZOrder.A_InFront,
+                                           FontSpec = annotation.FontSpec
+                                       };
                     //text.IsClippedToChartRect = true;
-                    text.FontSpec = annotation.FontSpec;
 
                     if( !detectLabelOverlap( this, g, text, out textBoundsRegion, item.Points, maxIndexList[i], item is StickItem ) )
                     {
-                        this.GraphObjList.Add( text );
-                        pointAnnotations_.Add( text );
+                        GraphObjList.Add( text );
+                        _pointAnnotations.Add( text );
 
 
                         clipRegion.Union( textBoundsRegion );
@@ -255,8 +256,8 @@ namespace pwiz.MSGraph
                 if( info == null || points == null )
                     continue;
 
-                info.AddAnnotations( this, g,  points, pointAnnotations_ );
-                foreach (GraphObj obj in pointAnnotations_)
+                info.AddAnnotations( this, g,  points, _pointAnnotations );
+                foreach (GraphObj obj in _pointAnnotations)
                 {
                     if (!GraphObjList.Contains(obj))
                     {
@@ -346,14 +347,14 @@ namespace pwiz.MSGraph
             if( shape != "poly" ) throw new InvalidOperationException( "shape must be 'poly'" );
             string[] textBoundsPointStrings = coords.Split( ",".ToCharArray() );
             if( textBoundsPointStrings.Length != 9 ) throw new InvalidOperationException( "coords length must be 8" );
-            Point[] textBoundsPoints = new Point[]
+            Point[] textBoundsPoints = new[]
                         {
                             new Point( Convert.ToInt32(textBoundsPointStrings[0]), Convert.ToInt32(textBoundsPointStrings[1])),
                             new Point( Convert.ToInt32(textBoundsPointStrings[2]), Convert.ToInt32(textBoundsPointStrings[3])),
                             new Point( Convert.ToInt32(textBoundsPointStrings[4]), Convert.ToInt32(textBoundsPointStrings[5])),
                             new Point( Convert.ToInt32(textBoundsPointStrings[6]), Convert.ToInt32(textBoundsPointStrings[7]))
                         };
-            byte[] textBoundsPointTypes = new byte[]
+            byte[] textBoundsPointTypes = new[]
                         {
                             (byte) PathPointType.Start,
                             (byte) PathPointType.Line,

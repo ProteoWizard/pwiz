@@ -69,7 +69,8 @@ namespace pwiz.ProteomeDatabase.API
             {
                 foreach (DbProtein protein in session.CreateCriteria(typeof(DbProtein)).List())
                 {
-                    proteinIds.Add(protein.Sequence, protein.Id.Value);
+                    if (protein.Id.HasValue)
+                        proteinIds.Add(protein.Sequence, protein.Id.Value);
                 }
                 session.BeginTransaction();
                 FastaImporter fastaImporter = new FastaImporter();
@@ -136,7 +137,7 @@ namespace pwiz.ProteomeDatabase.API
         /// Executes the "analyze" command to update statistics about indexes in the database.
         /// This should be called after a large number of records have been inserted.
         /// </summary>
-        private void AnalyzeDb(ISession session)
+        private static void AnalyzeDb(ISession session)
         {
             var command = session.Connection.CreateCommand();
             command.CommandText = "Analyze;";

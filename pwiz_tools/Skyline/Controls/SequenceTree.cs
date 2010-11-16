@@ -517,16 +517,16 @@ namespace pwiz.Skyline.Controls
         /// <summary>
         /// Returns the start node, or an ancestor, if it is of a given type.
         /// </summary>
-        /// <typeparam name="T">The type to look for</typeparam>
+        /// <typeparam name="TNode">The type to look for</typeparam>
         /// <param name="nodeStart">The node to start from</param>
         /// <returns>The selected node or ancestor of the desired type</returns>
-        public T GetNodeOfType<T>(TreeNode nodeStart)
-            where T : TreeNode
+        public TNode GetNodeOfType<TNode>(TreeNode nodeStart)
+            where TNode : TreeNode
         {
             for (TreeNode node = nodeStart; node != null; node = node.Parent)
             {
-                if (node is T)
-                    return (T)node;
+                if (node is TNode)
+                    return (TNode)node;
             }
             return null;
         }
@@ -534,12 +534,12 @@ namespace pwiz.Skyline.Controls
         /// <summary>
         /// Gets the selected node, or an ancestor, if it is of a given type.
         /// </summary>
-        /// <typeparam name="T">The type to look for</typeparam>
+        /// <typeparam name="TNode">The type to look for</typeparam>
         /// <returns>The selected node or ancestor of the desired type</returns>
-        public T GetNodeOfType<T>()
-            where T : SrmTreeNode
+        public TNode GetNodeOfType<TNode>()
+            where TNode : SrmTreeNode
         {
-            return GetNodeOfType<T>(SelectedNode);
+            return GetNodeOfType<TNode>(SelectedNode);
         }
         
 

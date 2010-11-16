@@ -20,11 +20,8 @@
 //
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Data;
-using System.Text;
 using System.Windows.Forms;
 using ZedGraph;
 
@@ -47,16 +44,16 @@ namespace pwiz.MSGraph
             EditButtons = MouseButtons.Left;
             EditModifierKeys = Keys.None;
 
-            unzoomButtons_ = new MouseButtonClicks( MouseButtons.Middle );
-            unzoomButtons2_ = new MouseButtonClicks( MouseButtons.None );
-            unzoomAllButtons_ = new MouseButtonClicks( MouseButtons.Left, 2 );
-            unzoomAllButtons2_ = new MouseButtonClicks( MouseButtons.None );
+            _unzoomButtons = new MouseButtonClicks( MouseButtons.Middle );
+            _unzoomButtons2 = new MouseButtonClicks( MouseButtons.None );
+            _unzoomAllButtons = new MouseButtonClicks( MouseButtons.Left, 2 );
+            _unzoomAllButtons2 = new MouseButtonClicks( MouseButtons.None );
 
-            ZoomEvent += new ZoomEventHandler( MSGraphControl_ZoomEvent );
-            MouseMoveEvent += new ZedMouseEventHandler( MSGraphControl_MouseMoveEvent );
-            MouseClick += new MouseEventHandler( MSGraphControl_MouseClick );
-            MouseDoubleClick += new MouseEventHandler( MSGraphControl_MouseClick );
-            Resize += new EventHandler( MSGraphControl_Resize );
+            ZoomEvent += MSGraphControl_ZoomEvent;
+            MouseMoveEvent += MSGraphControl_MouseMoveEvent;
+            MouseClick += MSGraphControl_MouseClick;
+            MouseDoubleClick += MSGraphControl_MouseClick;
+            Resize += MSGraphControl_Resize;
         }
 
         #region On-the-fly rescaling of graph items when panning
@@ -67,16 +64,16 @@ namespace pwiz.MSGraph
 
             Point pos = MousePosition;
             pos = PointToClient( pos );
-            MSGraphPane pane = MasterPane.FindChartRect( new PointF( (float) pos.X, (float) pos.Y ) ) as MSGraphPane;
+            MSGraphPane pane = MasterPane.FindChartRect( new PointF( pos.X, pos.Y ) ) as MSGraphPane;
             if( pane == null )
                 pos = PointToClient( new Point( ContextMenuStrip.Left, ContextMenuStrip.Top ) );
-            pane = MasterPane.FindChartRect( new PointF( (float) pos.X, (float) pos.Y ) ) as MSGraphPane;
+            pane = MasterPane.FindChartRect( new PointF( pos.X, pos.Y ) ) as MSGraphPane;
             if( pane == null )
                 return false;
 
             if( ( IsEnableHPan ) &&
-                ( ( e.Button == PanButtons && Control.ModifierKeys == PanModifierKeys ) ||
-                ( e.Button == PanButtons2 && Control.ModifierKeys == PanModifierKeys2 ) ) )
+                ( ( e.Button == PanButtons && ModifierKeys == PanModifierKeys ) ||
+                ( e.Button == PanButtons2 && ModifierKeys == PanModifierKeys2 ) ) )
             {
                 Graphics g = CreateGraphics();
                 pane.SetScale(g);
@@ -88,13 +85,13 @@ namespace pwiz.MSGraph
         #region Additional mouse events (Unzoom and UnzoomAll)
         public class MouseButtonClicks
         {
-            private MouseButtons buttons;
-            private int clicks;
+            private readonly MouseButtons _buttons;
+            private readonly int _clicks;
 
             public MouseButtonClicks( MouseButtons buttons )
             {
-                this.buttons = buttons;
-                this.clicks = 1;
+                _buttons = buttons;
+                _clicks = 1;
             }
 
             public MouseButtonClicks( string value )
@@ -106,40 +103,40 @@ namespace pwiz.MSGraph
                 switch( tokens[0] )
                 {
                     case "None":
-                        buttons = MouseButtons.None;
+                        _buttons = MouseButtons.None;
                         break;
                     case "Left":
-                        buttons = MouseButtons.Left;
+                        _buttons = MouseButtons.Left;
                         break;
                     case "Middle":
-                        buttons = MouseButtons.Middle;
+                        _buttons = MouseButtons.Middle;
                         break;
                     case "Right":
-                        buttons = MouseButtons.Right;
+                        _buttons = MouseButtons.Right;
                         break;
                     case "XButton1":
-                        buttons = MouseButtons.XButton1;
+                        _buttons = MouseButtons.XButton1;
                         break;
                     case "XButton2":
-                        buttons = MouseButtons.XButton2;
+                        _buttons = MouseButtons.XButton2;
                         break;
                     default:
                         throw new FormatException( "first format string token must be one of (None,Left,Middle,Right,XButton1,XButton2)" );
                 }
 
-                if( !Int32.TryParse( tokens[1], out clicks ) )
+                if( !Int32.TryParse( tokens[1], out _clicks ) )
                     throw new FormatException( "second format string token must be an integer specifying the number of button clicks" );
             }
 
             public MouseButtonClicks( MouseButtons buttons, int clicks )
             {
-                this.buttons = buttons;
-                this.clicks = clicks;
+                _buttons = buttons;
+                _clicks = clicks;
             }
 
             public bool MatchesEvent( MouseEventArgs e )
             {
-                return ( buttons == e.Button && clicks == e.Clicks );
+                return ( _buttons == e.Button && _clicks == e.Clicks );
             }
 
         }
@@ -150,8 +147,8 @@ namespace pwiz.MSGraph
 
             if( pane != null && ( IsEnableHZoom || IsEnableVZoom ) )
             {
-                if( ( unzoomButtons_.MatchesEvent( e ) && Control.ModifierKeys == unzoomModifierKeys_ ) ||
-                    ( unzoomButtons2_.MatchesEvent( e ) && Control.ModifierKeys == unzoomModifierKeys2_ ) )
+                if( ( _unzoomButtons.MatchesEvent( e ) && ModifierKeys == _unzoomModifierKeys ) ||
+                    ( _unzoomButtons2.MatchesEvent( e ) && ModifierKeys == _unzoomModifierKeys2 ) )
                 {
                     if( IsSynchronizeXAxes )
                     {
@@ -160,8 +157,8 @@ namespace pwiz.MSGraph
                     } else
                         pane.ZoomStack.Pop( pane );
 
-                } else if( unzoomAllButtons_.MatchesEvent( e ) ||
-                           unzoomAllButtons2_.MatchesEvent( e ) )
+                } else if( _unzoomAllButtons.MatchesEvent( e ) ||
+                           _unzoomAllButtons2.MatchesEvent( e ) )
                 {
                     if( IsSynchronizeXAxes )
                     {
@@ -187,8 +184,8 @@ namespace pwiz.MSGraph
             }
         }
 
-        private MouseButtonClicks unzoomButtons_;
-        private MouseButtonClicks unzoomButtons2_;
+        private MouseButtonClicks _unzoomButtons;
+        private MouseButtonClicks _unzoomButtons2;
 
         [NotifyParentProperty( true ),
         Bindable( true ),
@@ -197,8 +194,8 @@ namespace pwiz.MSGraph
         Description( "Determines which mouse button is used as the primary for unzooming" )]
         public MouseButtonClicks UnzoomButtons
         {
-            get { return unzoomButtons_; }
-            set { unzoomButtons_ = value; }
+            get { return _unzoomButtons; }
+            set { _unzoomButtons = value; }
         }
 
         [Description( "Determines which mouse button is used as the secondary for unzooming" ),
@@ -208,12 +205,12 @@ namespace pwiz.MSGraph
         DefaultValue( "None,0" )]
         public MouseButtonClicks UnzoomButtons2
         {
-            get { return unzoomButtons2_; }
-            set { unzoomButtons2_ = value; }
+            get { return _unzoomButtons2; }
+            set { _unzoomButtons2 = value; }
         }
 
-        private MouseButtonClicks unzoomAllButtons_;
-        private MouseButtonClicks unzoomAllButtons2_;
+        private MouseButtonClicks _unzoomAllButtons;
+        private MouseButtonClicks _unzoomAllButtons2;
 
         [Description( "Determines which mouse button is used as the secondary for undoing all zoom/pan operations" ),
         NotifyParentProperty( true ),        Bindable( true ),
@@ -221,8 +218,8 @@ namespace pwiz.MSGraph
         DefaultValue( "Left,1" )]
         public MouseButtonClicks UnzoomAllButtons
         {
-            get { return unzoomAllButtons_; }
-            set { unzoomAllButtons_ = value; }
+            get { return _unzoomAllButtons; }
+            set { _unzoomAllButtons = value; }
         }
 
         [Description( "Determines which mouse button is used as the secondary for undoing all zoom/pan operations" ),
@@ -232,12 +229,12 @@ namespace pwiz.MSGraph
         DefaultValue( "None,0" )]
         public MouseButtonClicks UnzoomAllButtons2
         {
-            get { return unzoomAllButtons2_; }
-            set { unzoomAllButtons2_ = value; }
+            get { return _unzoomAllButtons2; }
+            set { _unzoomAllButtons2 = value; }
         }
 
-        Keys unzoomModifierKeys_;
-        Keys unzoomModifierKeys2_;
+        Keys _unzoomModifierKeys;
+        Keys _unzoomModifierKeys2;
 
         [NotifyParentProperty( true ),
         Bindable( true ),
@@ -246,8 +243,8 @@ namespace pwiz.MSGraph
         DefaultValue( Keys.None )]
         public Keys UnzoomModifierKeys
         {
-            get { return unzoomModifierKeys_; }
-            set { unzoomModifierKeys_ = value; }
+            get { return _unzoomModifierKeys; }
+            set { _unzoomModifierKeys = value; }
         }
 
         [Category( "Display" ),
@@ -257,8 +254,8 @@ namespace pwiz.MSGraph
         DefaultValue( Keys.None )]
         public Keys UnzoomModifierKeys2
         {
-            get { return unzoomModifierKeys2_; }
-            set { unzoomModifierKeys2_ = value; }
+            get { return _unzoomModifierKeys2; }
+            set { _unzoomModifierKeys2 = value; }
         }
         #endregion
 
@@ -267,10 +264,10 @@ namespace pwiz.MSGraph
         {
             Point pos = MousePosition;
             pos = PointToClient( pos );
-            MSGraphPane pane = MasterPane.FindChartRect( new PointF( (float) pos.X, (float) pos.Y ) ) as MSGraphPane;
+            MSGraphPane pane = MasterPane.FindChartRect( new PointF( pos.X, pos.Y ) ) as MSGraphPane;
             if( pane == null )
                 pos = PointToClient( new Point( ContextMenuStrip.Left, ContextMenuStrip.Top ) );
-            pane = MasterPane.FindChartRect( new PointF( (float) pos.X, (float) pos.Y ) ) as MSGraphPane;
+            pane = MasterPane.FindChartRect( new PointF( pos.X, pos.Y ) ) as MSGraphPane;
             if( pane == null )
                 return;
 
@@ -302,15 +299,15 @@ namespace pwiz.MSGraph
         #endregion
 
         #region MS graph management functions
-        private CurveItem makeMSGraphItem(IMSGraphItemInfo item)
+        private static CurveItem makeMSGraphItem(IMSGraphItemInfo item)
         {
-            CurveItem newCurve = item.GraphItemDrawMethod == MSGraphItemDrawMethod.Line ?
+            CurveItem newCurve = item.GraphItemDrawMethod == MSGraphItemDrawMethod.line ?
                 new LineItem( item.Title, new MSPointList( item.Points ), item.Color, SymbolType.None ) :
                 new StickItem( item.Title, new MSPointList( item.Points ), item.Color );
 
-            if( item.GraphItemDrawMethod == MSGraphItemDrawMethod.Line )
+            if( item.GraphItemDrawMethod == MSGraphItemDrawMethod.line )
             {
-                ( newCurve as LineItem ).Line.IsAntiAlias = true;
+                ((LineItem) newCurve).Line.IsAntiAlias = true;
             }
 
             IMSGraphItemExtended extended = item as IMSGraphItemExtended;
@@ -377,7 +374,7 @@ namespace pwiz.MSGraph
                     if( MasterPane != null )
                     {
                         MasterPane.PaneList.Clear();
-                        MasterPane.Add( value as GraphPane );
+                        MasterPane.Add( value );
                     }
                 }
             }

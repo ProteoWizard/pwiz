@@ -88,8 +88,8 @@ namespace pwiz.Skyline.Util
     /// Allows access to a default state for a collection that allows
     /// editing.
     /// </summary>
-    /// <typeparam name="T">The type of the items in the collection</typeparam>
-    public interface IListDefaults<T>
+    /// <typeparam name="TItem">The type of the items in the collection</typeparam>
+    public interface IListDefaults<TItem>
     {
         /// <summary>
         /// Gets the current revision index for this list
@@ -100,7 +100,7 @@ namespace pwiz.Skyline.Util
         /// Gets the default collection as an enumerable list.
         /// </summary>
         /// <returns>The default collection</returns>
-        IEnumerable<T> GetDefaults(int revisionIndex);
+        IEnumerable<TItem> GetDefaults(int revisionIndex);
     }
 
     /// <summary>
@@ -136,25 +136,25 @@ namespace pwiz.Skyline.Util
     /// <summary>
     /// Implement this interfact to support the <see cref="EditListDlg{T,TItem}"/>.
     /// </summary>
-    /// <typeparam name="T">Type of items in the list to be edited</typeparam>
-    public interface IListEditor<T>
+    /// <typeparam name="TItem">Type of items in the list to be edited</typeparam>
+    public interface IListEditor<TItem>
     {
         /// <summary>
         /// Exposes ability to edit a list of items.
         /// </summary>
         /// <returns>The new list after editing, or null if the user cancelled</returns>
-        IEnumerable<T> EditList(Control owner, object tag);
+        IEnumerable<TItem> EditList(Control owner, object tag);
     }
 
     /// <summary>
     /// Implement this interfact to support the <see cref="ShareListDlg{T,TItem}"/>.
     /// </summary>
-    /// <typeparam name="T">Type of items in the list to be edited</typeparam>
-    public interface IListSerializer<T>
+    /// <typeparam name="TItem">Type of items in the list to be edited</typeparam>
+    public interface IListSerializer<TItem>
     {
         Type SerialType { get; }
 
-        ICollection<T> CreateEmptyList();
+        ICollection<TItem> CreateEmptyList();
 
         bool ContainsKey(string key);
     }
@@ -163,8 +163,8 @@ namespace pwiz.Skyline.Util
     /// Implement this interface to support the "Add" and "Edit"
     /// buttons in the <see cref="EditListDlg{T,TItem}"/>.
     /// </summary>
-    /// <typeparam name="T">Type of items in the list to be edited</typeparam>
-    public interface IItemEditor<T>
+    /// <typeparam name="TItem">Type of items in the list to be edited</typeparam>
+    public interface IItemEditor<TItem>
     {
         /// <summary>
         /// Exposes the ability to create a new item for this list.
@@ -173,7 +173,7 @@ namespace pwiz.Skyline.Util
         /// <param name="existing">A list of existing items of this type</param>
         /// <param name="tag">Object passed to the list editor for use in item editors</param>
         /// <returns>The new item, or null if the user cancelled</returns>
-        T NewItem(Control owner, IEnumerable<T> existing, object tag);
+        TItem NewItem(Control owner, IEnumerable<TItem> existing, object tag);
 
         /// <summary>
         /// Exposes the ability to edit an individual item, return
@@ -185,7 +185,7 @@ namespace pwiz.Skyline.Util
         /// <param name="existing">A list of existing items of this type</param>
         /// <param name="tag">Object passed to the list editor for use in item editors</param>
         /// <returns>The new item, or null if the user cancelled</returns>
-        T EditItem(Control owner, T item, IEnumerable<T> existing, object tag);
+        TItem EditItem(Control owner, TItem item, IEnumerable<TItem> existing, object tag);
 
         /// <summary>
         /// Copies an item for this list, with the copied item's name reset
@@ -193,7 +193,7 @@ namespace pwiz.Skyline.Util
         /// </summary>
         /// <param name="item">The item to copy</param>
         /// <returns>The copied item with empty name</returns>
-        T CopyItem(T item);
+        TItem CopyItem(TItem item);
     }
 
     /// <summary>
@@ -394,15 +394,15 @@ namespace pwiz.Skyline.Util
     /// single entry, but must also support multiple entries.  This list may not
     /// be empty, thought it may contain a single null element.
     /// </summary>
-    /// <typeparam name="T">Type of the elements in the list</typeparam>
-    public class OneOrManyList<T> : IList<T>
+    /// <typeparam name="TItem">Type of the elements in the list</typeparam>
+    public class OneOrManyList<TItem> : IList<TItem>
 //        VS Issue: https://connect.microsoft.com/VisualStudio/feedback/ViewFeedback.aspx?FeedbackID=324473
 //        where T : class
     {
-        private T _one;
-        private T[] _many;
+        private TItem _one;
+        private TItem[] _many;
 
-        public OneOrManyList(params T[] elements)
+        public OneOrManyList(params TItem[] elements)
         {
             if (elements.Length > 1)
                 _many = elements;
@@ -410,7 +410,7 @@ namespace pwiz.Skyline.Util
                 _one = elements[0];            
         }
 
-        public OneOrManyList(IList<T> elements)
+        public OneOrManyList(IList<TItem> elements)
         {
             if (elements.Count > 1)
                 _many = elements.ToArray();
@@ -418,12 +418,12 @@ namespace pwiz.Skyline.Util
                 _one = elements[0];
         }
 
-        public IEnumerator<T> GetEnumerator()
+        public IEnumerator<TItem> GetEnumerator()
         {
             return GetEnumerable().GetEnumerator();
         }
 
-        private IEnumerable<T> GetEnumerable()
+        private IEnumerable<TItem> GetEnumerable()
         {
             if (Equals(_many, null))
             {
@@ -441,7 +441,7 @@ namespace pwiz.Skyline.Util
             return GetEnumerator();
         }
 
-        public void Add(T item)
+        public void Add(TItem item)
         {
             throw new ReadOnlyException("Attempted modification of a read-only collection.");
         }
@@ -451,14 +451,14 @@ namespace pwiz.Skyline.Util
             throw new ReadOnlyException("Attempted modification of a read-only collection.");
         }
 
-        public bool Contains(T item)
+        public bool Contains(TItem item)
         {
             if (Equals(_many, null))
                 return Equals(_one, item);
             return _many.Contains(item);
         }
 
-        public void CopyTo(T[] array, int arrayIndex)
+        public void CopyTo(TItem[] array, int arrayIndex)
         {
             if (Equals(_many, null))
                 array[arrayIndex] = _one;
@@ -466,7 +466,7 @@ namespace pwiz.Skyline.Util
                 _many.CopyTo(array, arrayIndex);            
         }
 
-        public bool Remove(T item)
+        public bool Remove(TItem item)
         {
             throw new ReadOnlyException("Attempted modification of a read-only collection.");
         }
@@ -486,14 +486,14 @@ namespace pwiz.Skyline.Util
             get { return true; }
         }
 
-        public int IndexOf(T item)
+        public int IndexOf(TItem item)
         {
             if (Equals(_many, null))
                 return Equals(_one, item) ? 0 : -1;
             return _many.IndexOf(v => Equals(v, item));
         }
 
-        public void Insert(int index, T item)
+        public void Insert(int index, TItem item)
         {
             throw new ReadOnlyException("Attempted modification of a read-only collection.");
         }
@@ -503,7 +503,7 @@ namespace pwiz.Skyline.Util
             throw new ReadOnlyException("Attempted modification of a read-only collection.");
         }
 
-        public T this[int index]
+        public TItem this[int index]
         {
             get
             {
@@ -519,15 +519,15 @@ namespace pwiz.Skyline.Util
             }
         }
 
-        public OneOrManyList<T> ChangeAt(int index, T item)
+        public OneOrManyList<TItem> ChangeAt(int index, TItem item)
         {
             ValidateIndex(index);
-            var cloneNew = (OneOrManyList<T>) MemberwiseClone();
+            var cloneNew = (OneOrManyList<TItem>) MemberwiseClone();
             if (Equals(_many, null))
                 cloneNew._one = item;
             else
             {
-                cloneNew._many = new T[_many.Length];
+                cloneNew._many = new TItem[_many.Length];
                 Array.Copy(_many, cloneNew._many, _many.Length);
                 cloneNew._many[index] = item;
             }
@@ -547,7 +547,7 @@ namespace pwiz.Skyline.Util
 
         #region object overrides
 
-        public bool Equals(OneOrManyList<T> obj)
+        public bool Equals(OneOrManyList<TItem> obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
@@ -560,14 +560,14 @@ namespace pwiz.Skyline.Util
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != GetType()) return false;
-            return Equals((OneOrManyList<T>) obj);
+            return Equals((OneOrManyList<TItem>) obj);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return ((!Equals(_one, default(T)) ? _one.GetHashCode() : 0)*397) ^
+                return ((!Equals(_one, default(TItem)) ? _one.GetHashCode() : 0)*397) ^
                     (_many != null ? _many.GetHashCodeDeep() : 0);
             }
         }
@@ -583,7 +583,7 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// Returns the length of an array or zero if it is null.
         /// </summary>
-        public static int SafeLength<T>(this IList<T> values)
+        public static int SafeLength<TItem>(this IList<TItem> values)
         {
             return values != null ? values.Count : 0;
         }
@@ -593,20 +593,20 @@ namespace pwiz.Skyline.Util
         /// a specific character (e.g. "1, 2, 3" or "3.5; 4.5; 5.5").  Whitespace
         /// is trimmed.
         /// </summary>
-        /// <typeparam name="T">Type of items in the array returned</typeparam>
+        /// <typeparam name="TItem">Type of items in the array returned</typeparam>
         /// <param name="values">The string to parse</param>
         /// <param name="conv">An instance of a string to T converter</param>
         /// <param name="separatorChar">The separator character</param>
         /// <param name="defaults">A default array to return, if the string is null or empty</param>
         /// <returns></returns>
-        public static T[] Parse<T>(string values, Converter<string, T> conv,
-            char separatorChar, params T[] defaults)
+        public static TItem[] Parse<TItem>(string values, Converter<string, TItem> conv,
+            char separatorChar, params TItem[] defaults)
         {
             if (!string.IsNullOrEmpty(values))
             {
                 try
                 {
-                    List<T> list = new List<T>();
+                    List<TItem> list = new List<TItem>();
                     string[] parts = values.Split(separatorChar);
                     foreach (string part in parts)
                         list.Add(conv(part.Trim()));
@@ -625,14 +625,14 @@ namespace pwiz.Skyline.Util
         /// Joins the ToString() value for an array of objects, with a specified
         /// separator character between each item.
         /// </summary>
-        /// <typeparam name="T">The type of the items in the array</typeparam>
+        /// <typeparam name="TItem">The type of the items in the array</typeparam>
         /// <param name="values">The array of items to join</param>
         /// <param name="separator">The separator character to place between strings</param>
         /// <returns>A joined string of items with intervening separators</returns>
-        public static string ToString<T>(this IList<T> values, string separator)
+        public static string ToString<TItem>(this IList<TItem> values, string separator)
         {
             StringBuilder sb = new StringBuilder();
-            foreach (T value in values)
+            foreach (TItem value in values)
             {
                 if (sb.Length > 0)
                     sb.Append(separator);
@@ -641,12 +641,12 @@ namespace pwiz.Skyline.Util
             return sb.ToString();
         }
 
-        public static T[] ToArrayStd<T>(this IList<T> list)
+        public static TItem[] ToArrayStd<TItem>(this IList<TItem> list)
         {
-            if (list is T[])
-                return (T[]) list;
+            if (list is TItem[])
+                return (TItem[]) list;
 
-            T[] a = new T[list.Count];
+            TItem[] a = new TItem[list.Count];
             for (int i = 0; i < a.Length; i++)
                 a[i] = list[i];
             return a;
@@ -655,15 +655,15 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// Gets a <see cref="IEnumerable{T}"/> for enumerating over an Array.
         /// </summary>
-        /// <typeparam name="T">Type of items in the array</typeparam>
+        /// <typeparam name="TItem">Type of items in the array</typeparam>
         /// <param name="values">Array instance</param>
         /// <param name="forward">True if the enumerator should be forward, False if reversed</param>
         /// <returns>The enumeration of the Array</returns>
-        public static IEnumerable<T> GetEnumerator<T>(this IList<T> values, bool forward)
+        public static IEnumerable<TItem> GetEnumerator<TItem>(this IList<TItem> values, bool forward)
         {
             if (forward)
             {
-                foreach (T value in values)
+                foreach (TItem value in values)
                     yield return value;
             }
             else
@@ -677,7 +677,7 @@ namespace pwiz.Skyline.Util
         /// Creates a random order of indexes into an array for a random linear walk
         /// through an array.
         /// </summary>
-        public static IEnumerable<T> RandomOrder<T>(this IList<T> list)
+        public static IEnumerable<TItem> RandomOrder<TItem>(this IList<TItem> list)
         {
             int count = list.Count;
             var indexOrder = new int[count];
@@ -696,11 +696,11 @@ namespace pwiz.Skyline.Util
         /// Searches an Array for an item that is reference equal with
         /// a specified item to find.
         /// </summary>
-        /// <typeparam name="T">Type of item in the array</typeparam>
+        /// <typeparam name="TItem">Type of item in the array</typeparam>
         /// <param name="values">The Array to search</param>
         /// <param name="find">The item to find</param>
         /// <returns>The index in the Array of the specified reference, or -1 if not found</returns>
-        public static int IndexOfReference<T>(this IList<T> values, T find)
+        public static int IndexOfReference<TItem>(this IList<TItem> values, TItem find)
         {
             return values.IndexOf(value => ReferenceEquals(value, find));
         }
@@ -709,11 +709,11 @@ namespace pwiz.Skyline.Util
         /// Searches an Array for an item that matches criteria specified
         /// through a delegate function.
         /// </summary>
-        /// <typeparam name="T">Type of item in the array</typeparam>
+        /// <typeparam name="TItem">Type of item in the array</typeparam>
         /// <param name="values">The Array to search</param>
         /// <param name="found">Delegate accepting an item, and returning true if it matches</param>
         /// <returns>The index in the Array of the specified reference, or -1 if not found</returns>
-        public static int IndexOf<T>(this IList<T> values, Predicate<T> found)
+        public static int IndexOf<TItem>(this IList<TItem> values, Predicate<TItem> found)
         {
             for (int i = 0; i < values.Count; i++)
             {
@@ -727,13 +727,13 @@ namespace pwiz.Skyline.Util
         /// Searches an Array for an item that matches criteria specified
         /// through a delegate function.
         /// </summary>
-        /// <typeparam name="T">Type of item in the array</typeparam>
+        /// <typeparam name="TItem">Type of item in the array</typeparam>
         /// <param name="values">The Array to search</param>
         /// <param name="found">Delegate accepting an item, and returning true if it matches</param>
         /// <returns>True if the accepting function returns true for an element</returns>
-        public static bool Contains<T>(this IEnumerable<T> values, Predicate<T> found)
+        public static bool Contains<TItem>(this IEnumerable<TItem> values, Predicate<TItem> found)
         {
-            foreach (T value in values)
+            foreach (TItem value in values)
             {
                 if (found(value))
                     return true;
@@ -744,11 +744,11 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// Checks for deep equality, or equality of all items in an Array.
         /// </summary>
-        /// <typeparam name="T">Type of items in the array</typeparam>
+        /// <typeparam name="TItem">Type of items in the array</typeparam>
         /// <param name="values1">First array in the comparison</param>
         /// <param name="values2">Second array in the comparison</param>
         /// <returns>True if all items in both arrays in identical positions are Equal</returns>
-        public static bool EqualsDeep<T>(IList<T> values1, IList<T> values2)
+        public static bool EqualsDeep<TItem>(IList<TItem> values1, IList<TItem> values2)
         {
             if (values1 == null && values2 == null)
                 return true;
@@ -768,16 +768,16 @@ namespace pwiz.Skyline.Util
         /// Constructs a hash-code for an Array from all of the items in
         /// the array.
         /// </summary>
-        /// <typeparam name="T">Type of the items in the array</typeparam>
+        /// <typeparam name="TItem">Type of the items in the array</typeparam>
         /// <param name="values">The Array instance</param>
         /// <returns>A hash-code value constructed from all items in the array</returns>
-        public static int GetHashCodeDeep<T>(this IList<T> values)
+        public static int GetHashCodeDeep<TItem>(this IList<TItem> values)
         {
             unchecked
             {
                 int result = 0;
-                foreach (T value in values)
-                    result = (result * 397) ^ (!Equals(value, default(T)) ? value.GetHashCode() : 0);
+                foreach (TItem value in values)
+                    result = (result * 397) ^ (!Equals(value, default(TItem)) ? value.GetHashCode() : 0);
                 return result;
             }            
         }
@@ -786,11 +786,11 @@ namespace pwiz.Skyline.Util
         /// Checks if all elements in one list are <see cref="object.ReferenceEquals"/>
         /// with the elements in another list.
         /// </summary>
-        /// <typeparam name="T">Type of the list elements</typeparam>
+        /// <typeparam name="TItem">Type of the list elements</typeparam>
         /// <param name="values1">The first list in the comparison</param>
         /// <param name="values2">The second list in the comparison</param>
         /// <returns>True if all references in the lists are equal to each other</returns>
-        public static bool ReferencesEqual<T>(IList<T> values1, IList<T> values2)
+        public static bool ReferencesEqual<TItem>(IList<TItem> values1, IList<TItem> values2)
         {
             if (values1 == null && values2 == null)
                 return true;
@@ -811,10 +811,10 @@ namespace pwiz.Skyline.Util
         /// entries in the first list, where they are equal.  Useful for maintaining
         /// reference equality when recalculating values. Similar to <see cref="Helpers.AssignIfEquals{T}"/>.
         /// </summary>
-        /// <typeparam name="T">Type of the list elements</typeparam>
+        /// <typeparam name="TItem">Type of the list elements</typeparam>
         /// <param name="values1">The first list in the comparison</param>
         /// <param name="values2">The second list in the comparison</param>
-        public static void AssignIfEqualsDeep<T>(IList<T> values1, IList<T> values2)
+        public static void AssignIfEqualsDeep<TItem>(IList<TItem> values1, IList<TItem> values2)
         {
             if (values1 == null || values2 == null)
                 return;
@@ -835,12 +835,12 @@ namespace pwiz.Skyline.Util
         /// Swaps two reference values in memory, making each contain
         /// the reference the other started with.
         /// </summary>
-        /// <typeparam name="T">Type of the two values</typeparam>
+        /// <typeparam name="TItem">Type of the two values</typeparam>
         /// <param name="val1">Left value</param>
         /// <param name="val2">Right value</param>
-        public static void Swap<T>(ref T val1, ref T val2)
+        public static void Swap<TItem>(ref TItem val1, ref TItem val2)
         {
-            T tmp = val1;
+            TItem tmp = val1;
             val1 = val2;
             val2 = tmp;
         }
@@ -854,10 +854,10 @@ namespace pwiz.Skyline.Util
         /// in a data structure over a newly created instance, if the two
         /// are identical in value.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="TItem"></typeparam>
         /// <param name="dest"></param>
         /// <param name="src"></param>
-        public static void AssignIfEquals<T>(ref T dest, T src)
+        public static void AssignIfEquals<TItem>(ref TItem dest, TItem src)
         {
             if (Equals(dest, src))
                 dest = src;
@@ -866,14 +866,14 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// Compare two IEnumerable instances for equality.
         /// </summary>
-        /// <typeparam name="T">The type of element being enumerated</typeparam>
+        /// <typeparam name="TItem">The type of element being enumerated</typeparam>
         /// <param name="e1">The first IEnumerable</param>
         /// <param name="e2">The second IEnumberable</param>
         /// <returns>True if the two IEnumerables enumerate over equal objects</returns>
-        public static bool Equals<T>(IEnumerable<T> e1, IEnumerable<T> e2)
+        public static bool Equals<TItem>(IEnumerable<TItem> e1, IEnumerable<TItem> e2)
         {
-            IEnumerator<T> enum1 = e1.GetEnumerator();
-            IEnumerator<T> enum2 = e2.GetEnumerator();
+            IEnumerator<TItem> enum1 = e1.GetEnumerator();
+            IEnumerator<TItem> enum2 = e2.GetEnumerator();
             bool b1, b2;
             while (MoveNext(enum1, out b1, enum2, out b2))
             {
@@ -894,7 +894,7 @@ namespace pwiz.Skyline.Util
         /// <param name="e1">First Enumerator to advance</param>
         /// <param name="b1">Return value of e1.MoveNext()</param>
         /// <param name="e2">Second Enumerator to advance</param>
-        /// <param name="e2">Return value of e2.MoveNext()</param>
+        /// <param name="b2">Return value of e2.MoveNext()</param>
         /// <returns>True if both calls to MoveNext() succeed</returns>
         private static bool MoveNext(IEnumerator e1, out bool b1,
             IEnumerator e2, out bool b2)
@@ -908,15 +908,15 @@ namespace pwiz.Skyline.Util
         /// Parses an enum value from a string, returning a default value,
         /// if the string fails to parse.
         /// </summary>
-        /// <typeparam name="T">The enum type</typeparam>
+        /// <typeparam name="TEnum">The enum type</typeparam>
         /// <param name="value">The string to parse</param>
         /// <param name="defaultValue">The value to return, if parsing fails</param>
         /// <returns>An enum value of type <see cref="T"/></returns>
-        public static T ParseEnum<T>(string value, T defaultValue)
+        public static TEnum ParseEnum<TEnum>(string value, TEnum defaultValue)
         {
             try
             {
-                return (T)Enum.Parse(typeof(T), value);
+                return (TEnum)Enum.Parse(typeof(TEnum), value);
             }
             catch (Exception)
             {

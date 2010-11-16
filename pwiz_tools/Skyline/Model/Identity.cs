@@ -345,33 +345,33 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Recursive descent function provided by the caller of <see cref="IdentityPathTraversal.Traverse{T}"/>
         /// </summary>
-        /// <typeparam name="T">Type of the tag object used at the final node to perform the action</typeparam>
+        /// <typeparam name="TTag">Type of the tag object used at the final node to perform the action</typeparam>
         /// <param name="parent">The parent node to use in the next recursive call</param>
         /// <param name="traversal">The active traversal object</param>
         /// <param name="tag">The tag instance that will be used to perform the action</param>
         /// <returns>An altered copy of the parent node</returns>
-        public delegate DocNodeParent Recurse<T>(DocNodeParent parent, IdentityPathTraversal traversal, T tag);
+        public delegate DocNodeParent Recurse<TTag>(DocNodeParent parent, IdentityPathTraversal traversal, TTag tag);
 
         /// <summary>
         /// Action function provided by the caller of <see cref="IdentityPathTraversal.Traverse{T}"/>
         /// </summary>
-        /// <typeparam name="T">Type of the tag object used at the final node to perform the action</typeparam>
+        /// <typeparam name="TTag">Type of the tag object used at the final node to perform the action</typeparam>
         /// <param name="tag">The tag instance that will be used to perform the action</param>
         /// <returns>An altered copy of the node on which the action was performed</returns>
-        public delegate DocNodeParent Act<T>(T tag);
+        public delegate DocNodeParent Act<TTag>(TTag tag);
 
         /// <summary>
         /// Traverses the <see cref="DocNode"/> tree, performing an action on the
         /// final node specified in the path.
         /// </summary>
-        /// <typeparam name="T">Type of the tag object used at the final node to perform the action</typeparam>
+        /// <typeparam name="TTag">Type of the tag object used at the final node to perform the action</typeparam>
         /// <param name="parent">The parent node to use in the next recursive call</param>
         /// <param name="tag">The tag instance that will be used to perform the action</param>
         /// <returns>An alterer parent node</returns>
         /// <param name="recurse">Recursive descent function</param>
         /// <param name="act">Action function</param>
         /// <returns>An altered copy of the <see cref="parent"/> node</returns>
-        public DocNodeParent Traverse<T>(DocNodeParent parent, T tag, Recurse<T> recurse, Act<T> act)
+        public DocNodeParent Traverse<TTag>(DocNodeParent parent, TTag tag, Recurse<TTag> recurse, Act<TTag> act)
         {
             if (HasNext)
             {

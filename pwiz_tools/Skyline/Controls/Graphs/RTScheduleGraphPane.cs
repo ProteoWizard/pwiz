@@ -81,7 +81,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var predict = document.Settings.PeptideSettings.Prediction;
 
             // TODO: Guess this value from the document
-            bool singleWindow = false;
+            const bool singleWindow = false;
 
             List<PrecursorScheduleBase> listSchedules = new List<PrecursorScheduleBase>();
             double xMax = double.MinValue, xMin = double.MaxValue;

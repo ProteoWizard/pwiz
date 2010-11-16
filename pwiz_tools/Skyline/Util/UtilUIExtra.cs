@@ -340,9 +340,9 @@ EndSelection:<<<<<<<3
 
             using (Graphics g = comboBox.CreateGraphics())
             {
-                for (int i = 0; i < comboBox.Items.Count; i++)
+                foreach (object item in comboBox.Items)
                 {
-                    string valueToMeasure = (string)comboBox.Items[i];
+                    string valueToMeasure = item.ToString();
 
                     int currentWidth = TextRenderer.MeasureText(g, valueToMeasure, comboBox.Font).Width;
                     if (currentWidth > widestWidth)

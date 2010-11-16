@@ -34,7 +34,9 @@ namespace pwiz.SkylineTestUtil
 
         public static String GetProjectDirectory(this TestContext testContext, string relativePath)
         {
-            for (String directory = testContext.TestDir; directory.Length > 10; directory = Path.GetDirectoryName(directory))
+            for (String directory = testContext.TestDir;
+                    directory != null && directory.Length > 10;
+                    directory = Path.GetDirectoryName(directory))
             {
                 if (File.Exists(Path.Combine(directory, Program.Name + ".sln")))
                     return Path.Combine(directory, relativePath);

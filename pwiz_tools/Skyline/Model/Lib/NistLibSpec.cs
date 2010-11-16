@@ -369,8 +369,8 @@ namespace pwiz.Skyline.Model.Lib
         {
             FilePath = spec.FilePath;
 
-            string baseName = Path.GetFileNameWithoutExtension(FilePath);
-            CachePath = Path.Combine(Path.GetDirectoryName(FilePath), baseName + extCache);
+            string baseName = Path.GetFileNameWithoutExtension(FilePath) ?? ""; // ReSharper
+            CachePath = Path.Combine(Path.GetDirectoryName(FilePath) ?? "", baseName + extCache);
 
             Match match = REGEX_BASENAME.Match(baseName);
             if (match.Success)

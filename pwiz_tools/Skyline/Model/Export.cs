@@ -203,6 +203,9 @@ namespace pwiz.Skyline.Model
 
         private void ExportScheduledBuckets(FileIterator fileIterator)
         {
+            if (!MaxTransitions.HasValue)
+                throw new InvalidOperationException("Maximum transitions per file required");
+
             bool singleWindow = IsSingleWindowInstrumentType(InstrumentType);
 
             var predict = Document.Settings.PeptideSettings.Prediction;
@@ -297,6 +300,9 @@ namespace pwiz.Skyline.Model
 
         private void BorrowTransitions(PeptideScheduleBucket bucketUnder, PeptideScheduleBucket bucketOver, int balanceCount)
         {
+            if (!MaxTransitions.HasValue)
+                throw new InvalidOperationException("Maximum transitions per file required");
+
             foreach (var schedule in bucketOver.ToArray().RandomOrder())
             {
                 int newOverCount = bucketOver.TransitionCount - schedule.TransitionCount;
@@ -560,16 +566,16 @@ namespace pwiz.Skyline.Model
             return regression.GetDeclustringPotential(mz) + regression.StepSize * step;
         }
 
-        private sealed class OptimizationStep<T>
-            where T : OptimizableRegression
+        private sealed class OptimizationStep<TReg>
+            where TReg : OptimizableRegression
         {
-            private OptimizationStep(T regression, int step)
+            private OptimizationStep(TReg regression, int step)
             {
                 Regression = regression;
                 Step = step;
             }
 
-            private T Regression { get; set; }
+            private TReg Regression { get; set; }
             private int Step { get; set; }
             private double TotalArea { get; set; }
 
@@ -579,31 +585,31 @@ namespace pwiz.Skyline.Model
             }
 
             public delegate double GetRegressionValue(SrmDocument document, PeptideDocNode nodePep,
-                                                      TransitionGroupDocNode nodeGroup, T regression, int step);
+                                                      TransitionGroupDocNode nodeGroup, TReg regression, int step);
 
             public static double FindOptimizedValue(SrmDocument document,
                                                  PeptideDocNode nodePep,
                                                  TransitionGroupDocNode nodeGroup,
                                                  TransitionDocNode nodeTran,
                                                  OptimizedMethodType methodType,
-                                                 T regressionDocument,
+                                                 TReg regressionDocument,
                                                  GetRegressionValue getRegressionValue)
             {
                 // Collect peak area for 
-                var dictOptTotals = new Dictionary<T, Dictionary<int, OptimizationStep<T>>>();
+                var dictOptTotals = new Dictionary<TReg, Dictionary<int, OptimizationStep<TReg>>>();
                 if (document.Settings.HasResults)
                 {
                     var chromatograms = document.Settings.MeasuredResults.Chromatograms;
                     for (int i = 0; i < chromatograms.Count; i++)
                     {
                         var chromSet = chromatograms[i];
-                        var regression = chromSet.OptimizationFunction as T;
+                        var regression = chromSet.OptimizationFunction as TReg;
                         if (regression == null)
                             continue;
 
-                        Dictionary<int, OptimizationStep<T>> stepAreas;
+                        Dictionary<int, OptimizationStep<TReg>> stepAreas;
                         if (!dictOptTotals.TryGetValue(regression, out stepAreas))
-                            dictOptTotals.Add(regression, stepAreas = new Dictionary<int, OptimizationStep<T>>());
+                            dictOptTotals.Add(regression, stepAreas = new Dictionary<int, OptimizationStep<TReg>>());
 
                         if (methodType == OptimizedMethodType.Precursor)
                         {
@@ -613,7 +619,7 @@ namespace pwiz.Skyline.Model
                         }
                         else if (methodType == OptimizedMethodType.Transition)
                         {
-                            TransitionDocNode[] listTransitions = FindCandidateTransitions(nodePep, nodeGroup, nodeTran);
+                            IEnumerable<TransitionDocNode> listTransitions = FindCandidateTransitions(nodePep, nodeGroup, nodeTran);
                             foreach (var nodeTranCandidate in listTransitions)
                                 AddOptimizationStepAreas(nodeTranCandidate, i, regression, stepAreas);
                         }
@@ -657,7 +663,7 @@ namespace pwiz.Skyline.Model
                 return listCandidates.ToArray();
             }
 
-            private static TransitionDocNode[] FindCandidateTransitions(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
+            private static IEnumerable<TransitionDocNode> FindCandidateTransitions(PeptideDocNode nodePep, TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran)
             {
                 var candidateGroups = FindCandidateGroups(nodePep, nodeGroup);
                 if (candidateGroups.Length < 2)
@@ -682,8 +688,8 @@ namespace pwiz.Skyline.Model
                 return listCandidates.ToArray();
             }
 
-            private static void AddOptimizationStepAreas(TransitionGroupDocNode nodeGroup, int iResult, T regression,
-                IDictionary<int, OptimizationStep<T>> optTotals)
+            private static void AddOptimizationStepAreas(TransitionGroupDocNode nodeGroup, int iResult, TReg regression,
+                IDictionary<int, OptimizationStep<TReg>> optTotals)
             {
                 var results = (nodeGroup.HasResults ? nodeGroup.Results[iResult] : null);
                 if (results == null)
@@ -693,15 +699,15 @@ namespace pwiz.Skyline.Model
                     if (!chromInfo.Area.HasValue)
                         continue;
                     int step = chromInfo.OptimizationStep;
-                    OptimizationStep<T> optStep;
+                    OptimizationStep<TReg> optStep;
                     if (!optTotals.TryGetValue(step, out optStep))
-                        optTotals.Add(step, optStep = new OptimizationStep<T>(regression, step));
+                        optTotals.Add(step, optStep = new OptimizationStep<TReg>(regression, step));
                     optStep.AddArea(chromInfo.Area.Value);
                 }
             }
 
-            private static void AddOptimizationStepAreas(TransitionDocNode nodeTran, int iResult, T regression,
-                IDictionary<int, OptimizationStep<T>> optTotals)
+            private static void AddOptimizationStepAreas(TransitionDocNode nodeTran, int iResult, TReg regression,
+                IDictionary<int, OptimizationStep<TReg>> optTotals)
             {
                 var results = (nodeTran.HasResults ? nodeTran.Results[iResult] : null);
                 if (results == null)
@@ -711,9 +717,9 @@ namespace pwiz.Skyline.Model
                     if (chromInfo.Area == 0)
                         continue;
                     int step = chromInfo.OptimizationStep;
-                    OptimizationStep<T> optStep;
+                    OptimizationStep<TReg> optStep;
                     if (!optTotals.TryGetValue(step, out optStep))
-                        optTotals.Add(step, optStep = new OptimizationStep<T>(regression, step));
+                        optTotals.Add(step, optStep = new OptimizationStep<TReg>(regression, step));
                     optStep.AddArea(chromInfo.Area);
                 }
             }
@@ -756,8 +762,8 @@ namespace pwiz.Skyline.Model
                 }
                 else
                 {
-                    BaseName = Path.Combine(Path.GetDirectoryName(fileName),
-                        Path.GetFileNameWithoutExtension(fileName));
+                    BaseName = Path.Combine(Path.GetDirectoryName(fileName) ?? "",
+                        Path.GetFileNameWithoutExtension(fileName) ?? "");
                 }
             }
 
@@ -895,8 +901,8 @@ namespace pwiz.Skyline.Model
             return StartTime <= time && time <= EndTime;
         }
 
-        public int GetOverlapCount<T>(IEnumerable<T> schedules)
-            where T : PrecursorScheduleBase
+        public int GetOverlapCount<TBase>(IEnumerable<TBase> schedules)
+            where TBase : PrecursorScheduleBase
         {
             // Check for maximum overlap count at start and end times of this
             // schedule window, and any other start or end time that falls within
@@ -919,8 +925,8 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Returns the number of transitions in a list of schedules that contain a given time.
         /// </summary>
-        public static int GetOverlapCount<T>(IEnumerable<T> schedules, double time)
-            where T : PrecursorScheduleBase
+        public static int GetOverlapCount<TBase>(IEnumerable<TBase> schedules, double time)
+            where TBase : PrecursorScheduleBase
         {
             int overlapping = 0;
             foreach (var schedule in schedules)
@@ -1108,7 +1114,7 @@ namespace pwiz.Skyline.Model
                 if (predictedRT.HasValue)
                 {
                     RTWindow = windowRT; // Store for later use
-                    writer.Write(RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT).Value.ToString(CultureInfo));
+                    writer.Write((RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo));
                 }
             }
             writer.Write(FieldSeparator);
@@ -1275,7 +1281,7 @@ namespace pwiz.Skyline.Model
                     false, out windowRT);
                 if (predictedRT.HasValue)
                 {
-                    writer.Write(RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT).Value.ToString(CultureInfo));
+                    writer.Write((RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo));
                     writer.Write(FieldSeparator);
                     writer.Write(Math.Round(windowRT, 1).ToString(CultureInfo));
                     writer.Write(FieldSeparator);
@@ -1413,7 +1419,7 @@ namespace pwiz.Skyline.Model
                 if (predictedRT.HasValue)
                 {
                     RTWindow = windowRT;    // Store for later use
-                    writer.Write(RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT).Value.ToString(CultureInfo));
+                    writer.Write((RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo));
                 }
             }
 
@@ -1491,8 +1497,8 @@ namespace pwiz.Skyline.Model
             string skylinePath = Assembly.GetExecutingAssembly().Location;
             if (string.IsNullOrEmpty(skylinePath))
                 throw new IOException("Waters method creation software may not be installed correctly.");
-            string buildSubdir = Path.GetDirectoryName(EXE_BUILD_WATERS_METHOD);
-            string exeDir = Path.Combine(Path.GetDirectoryName(skylinePath), buildSubdir);
+            string buildSubdir = Path.GetDirectoryName(EXE_BUILD_WATERS_METHOD) ?? "";
+            string exeDir = Path.Combine(Path.GetDirectoryName(skylinePath) ?? "", buildSubdir);
             string libraryPath = Path.Combine(exeDir, PRIMARY_DEPENDENCY_LIBRARY);
             if (File.Exists(libraryPath))
                 return;
@@ -1501,7 +1507,7 @@ namespace pwiz.Skyline.Model
             if (dacServerPath == null)
                 throw new IOException("Failed to find a valid MassLynx installation.");
 
-            string massLynxDir = Path.GetDirectoryName(dacServerPath);
+            string massLynxDir = Path.GetDirectoryName(dacServerPath) ?? "";
             foreach (var library in DEPENDENCY_LIBRARIES)
             {
                 string srcFile = Path.Combine(massLynxDir, library);
@@ -1591,8 +1597,8 @@ namespace pwiz.Skyline.Model
                                         Dictionary<string, StringBuilder> dictTranLists,
                                         IProgressMonitor progressMonitor)
         {
-            string baseName = Path.Combine(Path.GetDirectoryName(fileName),
-                                           Path.GetFileNameWithoutExtension(fileName));
+            string baseName = Path.Combine(Path.GetDirectoryName(fileName) ?? "",
+                                           Path.GetFileNameWithoutExtension(fileName) ?? "");
             string ext = Path.GetExtension(fileName);
 
             var listFileSavers = new List<FileSaver>();
@@ -1625,7 +1631,7 @@ namespace pwiz.Skyline.Model
                     CreateNoWindow = true,
                     UseShellExecute = false,
                     // Common directory includes the directory separator
-                    WorkingDirectory = dirWork,
+                    WorkingDirectory = dirWork ?? "",
                     Arguments = string.Join(" ", argv.ToArray()),
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,

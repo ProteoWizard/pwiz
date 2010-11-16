@@ -295,8 +295,8 @@ namespace pwiz.Skyline.Model.Results
                 // Check the most common case where the file is in the same directory
                 // where the cache is being written.
                 // CONSIDER: Store relative paths instead?
-                string localPath = Path.Combine(Path.GetDirectoryName(cachePath),
-                                                Path.GetFileName(dataFilePathPart));
+                string localPath = Path.Combine(Path.GetDirectoryName(cachePath) ?? "",
+                                                Path.GetFileName(dataFilePathPart) ?? "");  // Resharper
                 if (!File.Exists(localPath) && !Directory.Exists(localPath))
                     return null;
 

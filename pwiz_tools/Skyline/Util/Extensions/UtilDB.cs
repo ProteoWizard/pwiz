@@ -50,7 +50,9 @@ namespace pwiz.Skyline.Util.Extensions
             if (reader.IsDBNull(index))
                 return null;
 
+// ReSharper disable AssignNullToNotNullAttribute
             long bufferLength = reader.GetBytes(index, 0, null, 0, 0);
+// ReSharper restore AssignNullToNotNullAttribute
 
             byte[] res = new byte[bufferLength];
             reader.GetBytes(index, 0, res, 0, (int)bufferLength);
@@ -71,7 +73,9 @@ namespace pwiz.Skyline.Util.Extensions
             return uncompressed;
         }
 
+// ReSharper disable InconsistentNaming
         private enum Levels { Z_DEFAULT_COMPRESSION = -1 }
+// ReSharper restore InconsistentNaming
 
         public static byte[] Compress(this byte[] uncompressed)
         {

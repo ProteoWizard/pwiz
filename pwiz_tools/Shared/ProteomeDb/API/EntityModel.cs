@@ -24,19 +24,19 @@ namespace pwiz.ProteomeDatabase.API
 {
     public class EntityModel<T> where T : DbEntity<T>, new()
     {
-        private T entity;
+        private readonly T _entity;
         public EntityModel(ProteomeDb proteomeDb, T entity)
         {
-            this.entity = entity;
+            _entity = entity;
             ProteomeDb = proteomeDb;
         }
         public T GetEntity(ISession session)
         {
-            return session.Get<T>(entity.Id);
+            return session.Get<T>(_entity.Id);
         }
         public long Id
         {
-            get { return entity.Id.Value; }
+            get { return _entity.Id.HasValue ? _entity.Id.Value : 0; }
         }
         public ProteomeDb ProteomeDb { get; private set; }
         public override bool Equals(Object other)
@@ -50,11 +50,11 @@ namespace pwiz.ProteomeDatabase.API
             {
                 return false;
             }
-            return entity.Equals(that.entity);
+            return _entity.Equals(that._entity);
         }
         public override int GetHashCode()
         {
-            return entity.GetHashCode();
+            return _entity.GetHashCode();
         }
     }
 }

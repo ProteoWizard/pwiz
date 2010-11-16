@@ -174,9 +174,9 @@ namespace pwiz.Skyline.Model
             }
             return result;
         }
-        private static int GetHashCode<T>(T value)
+        private static int GetHashCode<TVal>(TVal value)
         {
-            return Equals(value, default(T)) ? 0 : value.GetHashCode();
+            return Equals(value, default(TVal)) ? 0 : value.GetHashCode();
         }
         private static bool EqualsDict<TK,TV>(ICollection<KeyValuePair<TK, TV>> dictionary1, IDictionary<TK,TV> dictionary2)
         {

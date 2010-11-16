@@ -1125,7 +1125,8 @@ namespace pwiz.Skyline.Model.DocSettings
                     break;
                 }
                 var newTypedMods = enumNewHeavyMods.Current;
-                if (!Equals(newTypedMods.LabelType, oldTypedMods.LabelType) ||
+                if (newTypedMods == null || // ReSharper
+                        !Equals(newTypedMods.LabelType, oldTypedMods.LabelType) ||
                         !StaticMod.EquivalentImplicitMods(newTypedMods.Modifications,
                                                           oldTypedMods.Modifications))
                 {

@@ -105,7 +105,7 @@ namespace pwiz.Skyline.Model.Lib
 
             string outputDir = Path.GetDirectoryName(OutputPath);
             string outputBaseName = Path.GetFileNameWithoutExtension(OutputPath);
-            string redundantLibrary = Path.Combine(outputDir, outputBaseName + BiblioSpecLiteSpec.EXT_REDUNDANT);
+            string redundantLibrary = Path.Combine(outputDir ?? "", outputBaseName + BiblioSpecLiteSpec.EXT_REDUNDANT);
 
             argv.Add("\"" + redundantLibrary + "\"");
 
@@ -163,7 +163,7 @@ namespace pwiz.Skyline.Model.Lib
                     CreateNoWindow = true,
                     UseShellExecute = false,
                     // Common directory includes the directory separator
-                    WorkingDirectory = outputDir,
+                    WorkingDirectory = outputDir ?? "", // ReSharper
                     Arguments = string.Join(" ", argv.ToArray()),
                     RedirectStandardOutput = true,
                     RedirectStandardError = true

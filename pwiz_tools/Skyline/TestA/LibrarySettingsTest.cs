@@ -213,7 +213,7 @@ namespace pwiz.SkylineTestA
             // Should now be 2 peptides with rank 1
             AssertEx.IsDocumentState(docLimited, ++startRev, 2, 2, 6);
             foreach (var nodePep in docLimited.Peptides)
-                Assert.AreEqual(1, nodePep.Rank.Value);
+                Assert.AreEqual(1, nodePep.Rank ?? 0);
             settings = settings.ChangePeptideLibraries(l => l.ChangePeptideCount(3));
             docLimited = docRank3_1.ChangeSettings(settings);
             Assert.IsTrue(ArrayUtil.ReferencesEqual(docRank3_1.Peptides.ToArray(), docLimited.Peptides.ToArray()));
@@ -286,7 +286,7 @@ namespace pwiz.SkylineTestA
 
                 if (it != null)
                 {
-                    if (!it.MoveNext())
+                    if (!it.MoveNext() || it.Current == null)
                         Assert.Fail("Unexpected end of peptides.");
                     if (!Equals(nodePeptide.Rank, it.Current.Rank))
                         equalRanks = false;

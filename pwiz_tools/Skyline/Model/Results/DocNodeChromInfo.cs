@@ -460,21 +460,21 @@ namespace pwiz.Skyline.Model.Results
     /// in <see cref="SrmSettings.MeasuredResults"/>.  This collection will have the same
     /// number of items as the chromatograms list.
     /// </summary>
-    public class Results<T> : OneOrManyList<ChromInfoList<T>>
+    public class Results<TItem> : OneOrManyList<ChromInfoList<TItem>>
 //        VS Issue: https://connect.microsoft.com/VisualStudio/feedback/ViewFeedback.aspx?FeedbackID=324473
 //        where T : ChromInfo
     {
-        public Results(params ChromInfoList<T>[] elements)
+        public Results(params ChromInfoList<TItem>[] elements)
             : base(elements)
         {
         }
 
-        public Results(IList<ChromInfoList<T>> elements)
+        public Results(IList<ChromInfoList<TItem>> elements)
             : base(elements)
         {
         }
 
-        public static Results<T> Merge(Results<T> resultsOld, List<IList<T>> chromInfoSet)
+        public static Results<TItem> Merge(Results<TItem> resultsOld, List<IList<TItem>> chromInfoSet)
         {
             // Check for equal results in the same positions, and swap in the old
             // values if found to maintain reference equality.
@@ -486,15 +486,15 @@ namespace pwiz.Skyline.Model.Results
                         chromInfoSet[i] = resultsOld[i];
                 }
             }
-            var listInfo = chromInfoSet.ConvertAll(l => l as ChromInfoList<T> ??
-                                                        (l != null ? new ChromInfoList<T>(l) : null));
+            var listInfo = chromInfoSet.ConvertAll(l => l as ChromInfoList<TItem> ??
+                                                        (l != null ? new ChromInfoList<TItem>(l) : null));
             if (ArrayUtil.ReferencesEqual(listInfo, resultsOld))
                 return resultsOld;
 
-            return new Results<T>(listInfo);
+            return new Results<TItem>(listInfo);
         }
 
-        public float? GetAverageValue(Func<T, float?> getVal)
+        public float? GetAverageValue(Func<TItem, float?> getVal)
         {
             int valCount = 0;
             double valTotal = 0;
@@ -505,7 +505,7 @@ namespace pwiz.Skyline.Model.Results
                     continue;
                 foreach (var chromInfo in result)
                 {
-                    if (Equals(chromInfo, default(T)))
+                    if (Equals(chromInfo, default(TItem)))
                         continue;
                     float? val = getVal(chromInfo);
                     if (!val.HasValue)
@@ -522,7 +522,7 @@ namespace pwiz.Skyline.Model.Results
             return (float)(valTotal / valCount);            
         }
 
-        public float? GetBestPeakValue(Func<T, RatedPeakValue> getVal)
+        public float? GetBestPeakValue(Func<TItem, RatedPeakValue> getVal)
         {
             double ratingBest = double.MinValue;
             float? valBest = null;
@@ -533,7 +533,7 @@ namespace pwiz.Skyline.Model.Results
                     continue;
                 foreach (var chromInfo in result)
                 {
-                    if (Equals(chromInfo, default(T)))
+                    if (Equals(chromInfo, default(TItem)))
                         continue;
                     RatedPeakValue rateVal = getVal(chromInfo);
                     if (rateVal.Rating > ratingBest)
@@ -567,16 +567,16 @@ namespace pwiz.Skyline.Model.Results
     /// with an unlabeled internal standard will have measurements for that standard
     /// in every file.
     /// </summary>
-    public class ChromInfoList<T> : OneOrManyList<T>
+    public class ChromInfoList<TItem> : OneOrManyList<TItem>
 //        VS Issue: https://connect.microsoft.com/VisualStudio/feedback/ViewFeedback.aspx?FeedbackID=324473
 //        where T : ChromInfo
     {
-        public ChromInfoList(params T[] elements)
+        public ChromInfoList(params TItem[] elements)
             : base(elements)
         {
         }
 
-        public ChromInfoList(IList<T> elements)
+        public ChromInfoList(IList<TItem> elements)
             : base(elements)
         {
         }

@@ -193,7 +193,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private List<PeptideGroupDocNode> ImportPeptideGroups(TextReader reader, string line, string textSeq, double tolerance)
+        private IEnumerable<PeptideGroupDocNode> ImportPeptideGroups(TextReader reader, string line, string textSeq, double tolerance)
         {
             // Get the lines used to guess the necessary columns.
             List<string> lines = new List<string> { line };
@@ -421,7 +421,7 @@ namespace pwiz.Skyline.Model
                     throw new InvalidDataException(string.Format("The product m/z value {0} is out of range for the instrument settings, line {1}.\nCheck the Instrument tab in the Transition Settings.", productMz, lineNum));
 
                 var calc = Settings.GetFragmentCalc(info.LabelType, null);
-                if (info.IonType.HasValue)
+                if (info.ProductCharge.HasValue && info.IonType.HasValue && info.FragmentOrdinal.HasValue)
                 {
                     double productMassHTry = calc.GetFragmentMass(seq, info.IonType.Value, info.FragmentOrdinal.Value);
                     double productMzTry = SequenceMassCalc.GetMZ(productMassHTry, info.ProductCharge.Value);
@@ -457,6 +457,9 @@ namespace pwiz.Skyline.Model
                     productMz = Math.Round(productMz, 4);
                     throw new MzMatchException(string.Format("Product m/z value {0} has no matching product ion, line {1}.", productMz, lineNum));
                 }
+
+                if (!info.IonType.HasValue || !info.FragmentOrdinal.HasValue)
+                    throw new InvalidOperationException("Fragment ion information required");
 
                 ProteinName = info.ProteinName;
                 PeptideSequence = info.PeptideSequence;

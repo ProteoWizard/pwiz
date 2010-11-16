@@ -177,7 +177,7 @@ namespace pwiz.Skyline.Model.Proteome
             {
                 var digestedPeptide = new DigestedPeptide
                 {
-                    Index = digest.Begin.Value,
+                    Index = digest.Begin ?? 0,
                     Sequence = digest.Sequence
                 };
                 yield return digestedPeptide;

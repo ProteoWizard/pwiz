@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -98,13 +97,13 @@ namespace pwiz.Skyline.EditUI
                 char aa = seq[i];
                 int row = i + 1;
 
-                if (comboStaticLast == null)
+                if (comboStaticLast == null || listComboHeavyLast == null)  // ReSharper
                 {
                     labelAALast = labelAA1;
                     comboStaticLast = comboStatic1;
                     foreach (var labelType in _listLabelTypeHeavy)
                     {
-                        if (listComboHeavyLast == null /*|| listLabelHeavyLast == null*/)
+                        if (listComboHeavyLast == null || listLabelHeavyLast == null)   // Resharper
                         {
                             listComboHeavyLast = new List<ComboBox> { comboHeavy1_1 };
                             listLabelHeavyLast = new List<Label> { labelHeavy1 };
@@ -137,7 +136,6 @@ namespace pwiz.Skyline.EditUI
                 }
                 else
                 {
-                    Debug.Assert(listComboHeavyLast != null);
                     int controlsPerRow = 2 + listComboHeavyLast.Count;
                     int top = Top = comboStaticLast.Bottom + VSPACE;
                     panelMain.Controls.Add(labelAALast = new Label
@@ -177,19 +175,21 @@ namespace pwiz.Skyline.EditUI
                 _listSelectedIndexStatic.Add(-1);
                 _listComboStatic.Add(InitModificationCombo(comboStaticLast, i, IsotopeLabelType.light));
                 // Store heavy moficiation combos and selected indexes
-                Debug.Assert(listComboHeavyLast != null);   // For ReSharper
-                for (int j = 0; j < _listLabelTypeHeavy.Count; j++)
+                if (listComboHeavyLast != null)   // ReSharper
                 {
-                    while (_listListComboHeavy.Count <= j)
+                    for (int j = 0; j < _listLabelTypeHeavy.Count; j++)
                     {
-                        _listListSelectedIndexHeavy.Add(new List<int>());
-                        _listListComboHeavy.Add(new List<ComboBox>());
-                    }
-                    var comboHeavyLast = listComboHeavyLast[j];
-                    var labelType = _listLabelTypeHeavy[j];
+                        while (_listListComboHeavy.Count <= j)
+                        {
+                            _listListSelectedIndexHeavy.Add(new List<int>());
+                            _listListComboHeavy.Add(new List<ComboBox>());
+                        }
+                        var comboHeavyLast = listComboHeavyLast[j];
+                        var labelType = _listLabelTypeHeavy[j];
 
-                    _listListSelectedIndexHeavy[j].Add(-1);
-                    _listListComboHeavy[j].Add(InitModificationCombo(comboHeavyLast, i, labelType));
+                        _listListSelectedIndexHeavy[j].Add(-1);
+                        _listListComboHeavy[j].Add(InitModificationCombo(comboHeavyLast, i, labelType));
+                    }
                 }
                 // Store amino acid labels
                 labelAALast.Text = aa.ToString();
@@ -208,10 +208,14 @@ namespace pwiz.Skyline.EditUI
                 Width += widthDiff;
                 // Increase height by the delta from the bottom edges of the first and last
                 // amino acid labels
-                int heightDiff = comboStaticLast.Bottom - comboStatic1.Bottom;
-                heightDiff += comboStatic1.Bottom - panelMain.Height;
-                Height += heightDiff;
-                btnOk.TabIndex = listComboHeavyLast[listComboHeavyLast.Count - 1].TabIndex + 1;
+                if (comboStatic1 != null)   // ReSharper
+                {
+                    int heightDiff = comboStaticLast.Bottom - comboStatic1.Bottom;
+                    heightDiff += comboStatic1.Bottom - panelMain.Height;
+                    Height += heightDiff;
+                }
+                if (listComboHeavyLast != null) // ReSharper
+                    btnOk.TabIndex = listComboHeavyLast[listComboHeavyLast.Count - 1].TabIndex + 1;
                 btnCancel.TabIndex = btnOk.TabIndex + 1;
             }
             ResumeLayout(true);

@@ -173,7 +173,7 @@ namespace pwiz.Skyline
                     if (fileName != null)
                     {
                         // First look for the file name in the document directory
-                        string pathLibrary = Path.Combine(Path.GetDirectoryName(path), fileName);
+                        string pathLibrary = Path.Combine(Path.GetDirectoryName(path) ?? "", fileName);
                         if (File.Exists(pathLibrary))
                             return library.CreateSpec(pathLibrary).ChangeDocumentLocal(true);
                         // In the user's default library directory
@@ -232,11 +232,11 @@ namespace pwiz.Skyline
 
             string fileName = Path.GetFileName(backgroundProteomeSpec.DatabasePath);
             // First look for the file name in the document directory
-            string pathBackgroundProteome = Path.Combine(Path.GetDirectoryName(documentPath), fileName);
+            string pathBackgroundProteome = Path.Combine(Path.GetDirectoryName(documentPath) ?? "", fileName ?? "");
             if (File.Exists(pathBackgroundProteome))
                 return new BackgroundProteomeSpec(backgroundProteomeSpec.Name, pathBackgroundProteome);
             // In the user's default library directory
-            pathBackgroundProteome = Path.Combine(Settings.Default.ProteomeDbDirectory, fileName);
+            pathBackgroundProteome = Path.Combine(Settings.Default.ProteomeDbDirectory, fileName ?? "");
             if (File.Exists(pathBackgroundProteome))
                 return new BackgroundProteomeSpec(backgroundProteomeSpec.Name, pathBackgroundProteome);
             var dlg = new MissingBackgroundProteomeDlg
@@ -286,7 +286,7 @@ namespace pwiz.Skyline
                         if (missingFiles.Contains(pathFile))
                             continue;
                         if (File.Exists(pathFile) ||
-                            File.Exists(Path.Combine(Path.GetDirectoryName(path), Path.GetFileName(pathFile))))
+                            File.Exists(Path.Combine(Path.GetDirectoryName(path) ?? "", Path.GetFileName(pathFile) ?? "")))
                         {
                             foundFiles.Add(pathFile);
                         }

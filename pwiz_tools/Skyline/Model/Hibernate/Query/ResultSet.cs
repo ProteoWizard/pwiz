@@ -80,7 +80,9 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             {
                 try
                 {
+// ReSharper disable PossibleNullReferenceException
                     double dblValue = (double)Convert.ChangeType(value, typeof(Double));
+// ReSharper restore PossibleNullReferenceException
                     return (columnInfo.Format != null ?
                         dblValue.ToString(columnInfo.Format, formatProvider) :
                         dblValue.ToString(formatProvider));

@@ -128,8 +128,8 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.ShareDocument(zipPath, completeSharing));
 
             bool extract = !completeSharing;
-            string extractDir = Path.Combine(Path.GetDirectoryName(zipPath),
-                Path.GetFileNameWithoutExtension(zipPath));
+            string extractDir = Path.Combine(Path.GetDirectoryName(zipPath) ?? "",
+                Path.GetFileNameWithoutExtension(zipPath) ?? "");
 
             if (extract)
                 Directory.CreateDirectory(extractDir);

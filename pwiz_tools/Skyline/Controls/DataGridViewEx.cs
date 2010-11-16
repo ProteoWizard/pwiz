@@ -17,10 +17,7 @@
  * limitations under the License.
  */
 using System;
-using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using DigitalRune.Windows.Docking;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
 {

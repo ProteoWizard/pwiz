@@ -40,13 +40,13 @@ namespace pwiz.Skyline.Model
 
             // Transfer input list to a typed array
             var listRanks = new List<KeyValuePair<PeptideDocNode, float>>();
-            for (int i = 0; i < listPeptides.Count; i++)
+            foreach (PeptideDocNode nodePep in listPeptides)
             {
-                var peptide = (PeptideDocNode) listPeptides[i];
+                var nodePepAdd = nodePep;
                 // Remove any old rank information, if peptides are no longer ranked.
-                if (rankId == null && peptide.Rank.HasValue)
-                    peptide = peptide.ChangeRank(null);
-                listRanks.Add(new KeyValuePair<PeptideDocNode, float>(peptide, peptide.GetRankValue(rankId)));
+                if (rankId == null && nodePepAdd.Rank.HasValue)
+                    nodePepAdd = nodePepAdd.ChangeRank(null);
+                listRanks.Add(new KeyValuePair<PeptideDocNode, float>(nodePepAdd, nodePepAdd.GetRankValue(rankId)));
             }
 
             if (rankId == null)
@@ -261,7 +261,7 @@ namespace pwiz.Skyline.Model
             if (pep1.FastaSequence != pep2.FastaSequence)
                 throw new InvalidOperationException("Peptides in different FASTA sequences may not be compared.");
 
-            return Comparer<int>.Default.Compare(pep1.Begin.Value, pep2.Begin.Value);
+            return Comparer<int>.Default.Compare(pep1.Order, pep2.Order);
         }
     }
 

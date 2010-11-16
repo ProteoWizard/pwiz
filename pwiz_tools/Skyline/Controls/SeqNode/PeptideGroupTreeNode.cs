@@ -265,7 +265,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 setChoices.UnionWith(peptidesChosen);
                 var arrayChoices = setChoices.ToArray();
                 Array.Sort(arrayChoices, (choice1, choice2) =>
-                                         PeptideFromChoice(choice1).Begin.Value - PeptideFromChoice(choice2).Begin.Value);
+                                         PeptideFromChoice(choice1).Order - PeptideFromChoice(choice2).Order);
                 peptidesChoices = arrayChoices;
 
                 // Get the selected peptide, if there is one

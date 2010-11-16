@@ -178,10 +178,10 @@ namespace pwiz.Skyline.SettingsUI
             return true;
         }
 
-        private bool ValidateCell<T>(CancelEventArgs e, DataGridViewCell cell,
-            Converter<string, T> conv, out T valueT)
+        private bool ValidateCell<TVal>(CancelEventArgs e, DataGridViewCell cell,
+            Converter<string, TVal> conv, out TVal valueT)
         {
-            valueT = default(T);
+            valueT = default(TVal);
             string value = cell.Value.ToString();
             try
             {
@@ -398,11 +398,11 @@ namespace pwiz.Skyline.SettingsUI
         }
     }
 
-    internal abstract class RegressionData<T>
-        where T : OptimizableRegression
+    internal abstract class RegressionData<TReg>
+        where TReg : OptimizableRegression
     {
-        private readonly Dictionary<TransitionGroupDocNode, Dictionary<T, Dictionary<int, double>>> _dictGroupToOptTotals =
-            new Dictionary<TransitionGroupDocNode, Dictionary<T, Dictionary<int, double>>>();
+        private readonly Dictionary<TransitionGroupDocNode, Dictionary<TReg, Dictionary<int, double>>> _dictGroupToOptTotals =
+            new Dictionary<TransitionGroupDocNode, Dictionary<TReg, Dictionary<int, double>>>();
 
         protected RegressionData(RegressionLine regressionLineSetting)
         {
@@ -442,14 +442,14 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        protected abstract double GetValue(T regression, TransitionGroupDocNode nodeGroup, int step);
+        protected abstract double GetValue(TReg regression, TransitionGroupDocNode nodeGroup, int step);
 
         /// <summary>
         /// Each <see cref="TransitionGroupDocNode"/> gets only one optimal value,
         /// which is taken by summing the areas for each different regression, for each step,
         /// and then choosing the step that produces the maximum area.
         /// </summary>
-        private double GetBestValue(KeyValuePair<TransitionGroupDocNode, Dictionary<T, Dictionary<int, double>>> dictOptTotalsPair)
+        private double GetBestValue(KeyValuePair<TransitionGroupDocNode, Dictionary<TReg, Dictionary<int, double>>> dictOptTotalsPair)
         {
             double maxArea = 0;
             double bestValue = 0;
@@ -468,17 +468,17 @@ namespace pwiz.Skyline.SettingsUI
             return bestValue;
         }
 
-        public void Add(T regression, TransitionGroupDocNode nodeGroup, int iResult)
+        public void Add(TReg regression, TransitionGroupDocNode nodeGroup, int iResult)
         {
             var result = nodeGroup.Results[iResult];
             if (result == null)
                 return;
 
-            Dictionary<T, Dictionary<int, double>> dictOptTotals;
+            Dictionary<TReg, Dictionary<int, double>> dictOptTotals;
             if (!_dictGroupToOptTotals.TryGetValue(nodeGroup, out dictOptTotals))
             {
                 _dictGroupToOptTotals.Add(nodeGroup,
-                    dictOptTotals = new Dictionary<T, Dictionary<int, double>>());
+                    dictOptTotals = new Dictionary<TReg, Dictionary<int, double>>());
             }
             Dictionary<int, double> optTotals;
             if (!dictOptTotals.TryGetValue(regression, out optTotals))

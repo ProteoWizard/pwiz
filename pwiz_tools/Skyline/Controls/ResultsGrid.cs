@@ -479,10 +479,10 @@ namespace pwiz.Skyline.Controls
         }
 
 // ReSharper disable SuggestBaseTypeForParameter
-        private static Results<T> ChangeChromInfo<T>(Results<T> results, RowIdentifier rowIdentifier, T chromInfoOld, T chromInfoNew) where T: ChromInfo
+        private static Results<TItem> ChangeChromInfo<TItem>(Results<TItem> results, RowIdentifier rowIdentifier, TItem chromInfoOld, TItem chromInfoNew) where TItem: ChromInfo
 // ReSharper restore SuggestBaseTypeForParameter
         {
-            var elements = new List<ChromInfoList<T>>();
+            var elements = new List<ChromInfoList<TItem>>();
             bool found = false;
             for (int iReplicate = 0; iReplicate < results.Count; iReplicate++)
             {
@@ -493,7 +493,7 @@ namespace pwiz.Skyline.Controls
                 }
                 else
                 {
-                    var chromInfoList = new List<T>();
+                    var chromInfoList = new List<TItem>();
                     foreach (var chromInfo in replicate)
                     {
                         if (chromInfo != chromInfoOld)
@@ -506,14 +506,14 @@ namespace pwiz.Skyline.Controls
                             chromInfoList.Add(chromInfoNew);
                         }
                     }
-                    elements.Add(new ChromInfoList<T>(chromInfoList));
+                    elements.Add(new ChromInfoList<TItem>(chromInfoList));
                 }
             }
             if (!found)
             {
                 throw new InvalidOperationException("Element not found");
             }
-            return new Results<T>(elements);
+            return new Results<TItem>(elements);
         }
 
         /// <summary>
@@ -536,6 +536,7 @@ namespace pwiz.Skyline.Controls
             Settings.Default.GridColumnsList = gridColumnsList;
         }
 
+// ReSharper disable ReturnTypeCanBeEnumerable.Local
         private IList<DataGridViewColumn> GetColumnsSortedByDisplayIndex()
         {
             var result = new DataGridViewColumn[Columns.Count];
@@ -612,6 +613,7 @@ namespace pwiz.Skyline.Controls
                            };
             }
         }
+        // ReSharper restore ReturnTypeCanBeEnumerable.Local
 
         DataGridViewRow EnsureRow(RowIdentifier rowIdentifier)
         {
@@ -1091,9 +1093,8 @@ namespace pwiz.Skyline.Controls
             {
                 var availableColumnSet = new HashSet<DataGridViewColumn>(GetAvailableColumns());
                 int displayIndex = 0;
-                for (int iColumn = 0; iColumn < gridColumns.Columns.Count; iColumn++)
+                foreach (var gridColumn in gridColumns.Columns)
                 {
-                    var gridColumn = gridColumns.Columns[iColumn];
                     var column = Columns[gridColumn.Name];
                     if (column == null) {
                         continue;

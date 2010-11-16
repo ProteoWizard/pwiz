@@ -143,13 +143,13 @@ namespace pwiz.Skyline.SettingsUI
             return docNode;
         }
 
-        private static bool StripAnnotationValues<T>(ICollection<string> annotationNamesToKeep, ref Results<T> results)
+        private static bool StripAnnotationValues<TItem>(ICollection<string> annotationNamesToKeep, ref Results<TItem> results)
         {
             if (results == null)
             {
                 return false;
             }
-            var newResults = new List<ChromInfoList<T>>();
+            var newResults = new List<ChromInfoList<TItem>>();
             bool fResult = false;
             foreach (var replicate in results)
             {
@@ -159,18 +159,18 @@ namespace pwiz.Skyline.SettingsUI
             }
             if (fResult)
             {
-                results = new Results<T>(newResults);
+                results = new Results<TItem>(newResults);
             }
             return fResult;
         }
 
-        private static bool StripAnnotationValues<T>(ICollection<string> annotationNamesToKeep, ref ChromInfoList<T> chromInfoList)
+        private static bool StripAnnotationValues<TItem>(ICollection<string> annotationNamesToKeep, ref ChromInfoList<TItem> chromInfoList)
         {
             if (chromInfoList == null)
                 return false;
 
             bool fResult = false;
-            var newList = new List<T>();
+            var newList = new List<TItem>();
             foreach (var chromInfo in chromInfoList)
             {
                 var transitionChromInfo = chromInfo as TransitionChromInfo;
@@ -179,7 +179,7 @@ namespace pwiz.Skyline.SettingsUI
                     var annotations = transitionChromInfo.Annotations;
                     if (StripAnnotationValues(annotationNamesToKeep, ref annotations))
                     {
-                        newList.Add((T)(object) transitionChromInfo.ChangeAnnotations(annotations));
+                        newList.Add((TItem)(object) transitionChromInfo.ChangeAnnotations(annotations));
                         fResult = true;
                         continue;
                     }
@@ -190,7 +190,7 @@ namespace pwiz.Skyline.SettingsUI
                     var annotations = transitionGroupChromInfo.Annotations;
                     if (StripAnnotationValues(annotationNamesToKeep, ref annotations))
                     {
-                        newList.Add((T) (object) transitionGroupChromInfo.ChangeAnnotations(annotations));
+                        newList.Add((TItem) (object) transitionGroupChromInfo.ChangeAnnotations(annotations));
                         fResult = true;
                         continue;
                     }
@@ -199,7 +199,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             if (fResult)
             {
-                chromInfoList = new ChromInfoList<T>(newList);
+                chromInfoList = new ChromInfoList<TItem>(newList);
             }
             return fResult;
         }

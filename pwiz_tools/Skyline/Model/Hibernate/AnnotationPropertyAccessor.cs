@@ -18,9 +18,7 @@
  */
 using System;
 using System.Collections;
-using System.Globalization;
 using System.Reflection;
-using System.Text;
 using NHibernate.Engine;
 using NHibernate.Properties;
 using pwiz.Skyline.Model.DocSettings;

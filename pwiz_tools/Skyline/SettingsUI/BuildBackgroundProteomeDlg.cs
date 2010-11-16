@@ -287,7 +287,7 @@ namespace pwiz.Skyline.SettingsUI
             AddFastaFile(fastaFilePath);
         }
 
-        public void AddFastaFile(String fastaFilePath)
+        public void AddFastaFile(string fastaFilePath)
         {
             String databasePath = textPath.Text;
             Settings.Default.FastaDirectory = Path.GetDirectoryName(fastaFilePath);
@@ -309,7 +309,9 @@ namespace pwiz.Skyline.SettingsUI
                         proteomeDb.AddFastaFile(reader, UpdateProgress);                        
                     }
                 });
-            listboxFasta.Items.Add(Path.GetFileName(fastaFilePath));
+            string path = Path.GetFileName(fastaFilePath);
+            if (path != null)
+                listboxFasta.Items.Add(path);
             RefreshStatus();
         }
 
@@ -348,10 +350,17 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (BuildNew)
             {
-                if (textPath.Text.Length == 0 ||
-                    textPath.Text != Path.GetFullPath(textPath.Text) ||
-                    Directory.Exists(textPath.Text) ||
-                    !Directory.Exists(Path.GetDirectoryName(textPath.Text)))
+                string path = textPath.Text;
+                bool browse = string.IsNullOrEmpty(path) ||
+                              path != Path.GetFullPath(path) ||
+                              Directory.Exists(path);
+                if (!browse)
+                {
+                    string dirName = Path.GetDirectoryName(textPath.Text);
+                    browse = dirName != null && !Directory.Exists(dirName);
+                }
+
+                if (browse)
                 {
                     tbxStatus.Text = "Click the 'Browse' button to choose a path for a new proteome file.";
                     btnAddFastaFile.Enabled = false;

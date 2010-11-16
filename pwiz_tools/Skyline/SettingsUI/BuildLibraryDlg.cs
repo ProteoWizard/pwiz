@@ -121,7 +121,7 @@ namespace pwiz.Skyline.SettingsUI
                 return false;                
             }
             string outputDir = Path.GetDirectoryName(outputPath);
-            if (!Directory.Exists(outputDir))
+            if (string.IsNullOrEmpty(outputDir) || !Directory.Exists(outputDir))
             {
                 _helper.ShowTextBoxError(textPath, "The directory {0} does not exist.", outputDir);
                 return false;
@@ -185,7 +185,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 try
                 {
-                    outputPath = Path.GetDirectoryName(outputPath);                
+                    outputPath = Path.GetDirectoryName(outputPath) ?? "";                
                 }
                 catch (Exception)
                 {
@@ -441,7 +441,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 string baseName = Path.GetFileNameWithoutExtension(textPath.Text);
                 string redundantName = baseName + BiblioSpecLiteSpec.EXT_REDUNDANT;
-                existsRedundant = File.Exists(Path.Combine(Path.GetDirectoryName(textPath.Text), redundantName));
+                existsRedundant = File.Exists(Path.Combine(Path.GetDirectoryName(textPath.Text) ?? "", redundantName));
             }
 
             if (existsRedundant)

@@ -594,7 +594,8 @@ namespace pwiz.Skyline.EditUI
                     productMasses, potentialLosses, productMz, mzMatchTolerance, calc.MassType,
                     out ionType, out ordinal, out losses);
 
-                if (productCharge < 1)
+                if (productCharge < 1 ||
+                        !ionType.HasValue || !ordinal.HasValue) // Resharper
                 {
                     ShowTransitionError(new PasteError
                                             {
@@ -817,9 +818,9 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        private void tabControl1_Selecting(object sender, TabControlCancelEventArgs e)
+        private static void tabControl1_Selecting(object sender, TabControlCancelEventArgs e)
         {
-            // TODO: prompt user if they will lose data on current tab
+            // Should no longer be possible to change tabs
         }
 
         private PasteFormat GetPasteFormat(TabPage tabPage)

@@ -235,7 +235,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0];
                 importResultsDlg0.RadioCreateMultipleMultiChecked = true;
-                importResultsDlg0.NamedPathSets = ImportResultsDlg.GetDataSourcePathsDir(Path.Combine(TestFilesDirs[1].FullPath, Path.GetFileName(TestFilesDirs[1].FullPath)));
+                importResultsDlg0.NamedPathSets = ImportResultsDlg.GetDataSourcePathsDir(Path.Combine(TestFilesDirs[1].FullPath, Path.GetFileName(TestFilesDirs[1].FullPath) ?? ""));
             });
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg0.OkDialog);
             RunUI(importResultsNameDlg.NoDialog);

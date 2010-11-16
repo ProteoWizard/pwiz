@@ -102,7 +102,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     if (chromInfo.OptimizationStep == 0)
                     {
-                        if (chromInfo.RetentionTime.HasValue)
+                        if (chromInfo.RetentionTime.HasValue &&
+                            chromInfo.StartRetentionTime.HasValue &&    // ReSharper
+                            chromInfo.EndRetentionTime.HasValue)    // ReSharper
                         {
                             listTimes.Add(chromInfo.RetentionTime.Value);
                             listStarts.Add(chromInfo.StartRetentionTime.Value);

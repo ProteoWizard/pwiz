@@ -103,7 +103,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private bool _activated;
 
-        private int _listPeptidePrevSelIndex;
+//        private int _listPeptidePrevSelIndex;
 
         private readonly NodeTip _nodeTip;
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
@@ -169,7 +169,7 @@ namespace pwiz.Skyline.SettingsUI
             if (!size.IsEmpty)
                 Size = size;
 
-            _listPeptidePrevSelIndex = -1;
+//            _listPeptidePrevSelIndex = -1;
         }
 
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip,
@@ -559,7 +559,7 @@ namespace pwiz.Skyline.SettingsUI
                             if (_peptides[index].IsModified)
                             {
                                 IList<ExplicitMod> staticModList = new List<ExplicitMod>();
-                                IList<ModificationInfo> modList = GetModifications(_peptides[index]);
+                                IEnumerable<ModificationInfo> modList = GetModifications(_peptides[index]);
                                 foreach (var modInfo in modList)
                                 {
                                     var smod = new StaticMod("temp",
@@ -909,7 +909,8 @@ namespace pwiz.Skyline.SettingsUI
 
         private void listPeptide_SelectedIndexChanged(object sender, EventArgs e)
         {
-            _listPeptidePrevSelIndex = listPeptide.SelectedIndex;
+//            _listPeptidePrevSelIndex = listPeptide.SelectedIndex;
+
             // We need to update the spectrum graph when the peptide
             // selected in the listbox changes.
             UpdateUI();
@@ -1372,7 +1373,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private void ViewLibraryDlg_KeyDown(object sender, KeyEventArgs e)
+        private static void ViewLibraryDlg_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Control)
             {
@@ -1472,7 +1473,7 @@ namespace pwiz.Skyline.SettingsUI
 
         // Computes each ModificationInfo for the given peptide and returns a 
         // list of all modifications.
-        private static IList<ModificationInfo> GetModifications(ViewLibraryPepInfo pep)
+        private static IEnumerable<ModificationInfo> GetModifications(ViewLibraryPepInfo pep)
         {
             IList<ModificationInfo> modList = new List<ModificationInfo>();
             string sequence = pep.Sequence;

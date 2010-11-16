@@ -52,7 +52,7 @@
             this.graphControl.ScrollMinY2 = 0;
             this.graphControl.Size = new System.Drawing.Size(501, 234);
             this.graphControl.TabIndex = 1;
-            this.graphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.graphControl_ContextMenuBuilder);
+            this.graphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(graphControl_ContextMenuBuilder);
             // 
             // btnClose
             // 

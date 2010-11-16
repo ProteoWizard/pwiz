@@ -1100,12 +1100,16 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     break;
                 case AutoZoomChrom.window:
-                    if (listChromGraphs[0].RetentionWindow > 0)
                     {
-                        // Put predicted RT in center with window occupying 2/3 of the graph
-                        double windowHalf = listChromGraphs[0].RetentionWindow*2/3;
-                        double predictedRT = listChromGraphs[0].RetentionPrediction.Value;
-                        ZoomXAxis(graphPane, predictedRT - windowHalf, predictedRT + windowHalf);
+                        var chromGraph = listChromGraphs[0];
+                        if (chromGraph.RetentionWindow > 0)
+                        {
+                            // Put predicted RT in center with window occupying 2/3 of the graph
+                            double windowHalf = chromGraph.RetentionWindow * 2 / 3;
+                            double predictedRT = chromGraph.RetentionPrediction.HasValue ? // ReSharper
+                                chromGraph.RetentionPrediction.Value : 0;
+                            ZoomXAxis(graphPane, predictedRT - windowHalf, predictedRT + windowHalf);
+                        }
                     }
                     break;
                 case AutoZoomChrom.both:
@@ -1117,11 +1121,13 @@ namespace pwiz.Skyline.Controls.Graphs
                             start = bestStartTime;
                             end = bestEndTime;
                         }
-                        if (listChromGraphs[0].RetentionWindow > 0)
+                        var chromGraph = listChromGraphs[0];
+                        if (chromGraph.RetentionWindow > 0)
                         {
                             // Put predicted RT in center with window occupying 2/3 of the graph
-                            double windowHalf = listChromGraphs[0].RetentionWindow * 2 / 3;
-                            double predictedRT = listChromGraphs[0].RetentionPrediction.Value;
+                            double windowHalf = chromGraph.RetentionWindow * 2 / 3;
+                            double predictedRT = chromGraph.RetentionPrediction.HasValue ?  // ReSharper
+                                chromGraph.RetentionPrediction.Value : 0;
                             // Make sure the peak has enough room to display, since it may be
                             // much narrower than the retention time window.
                             if (end != 0)
@@ -1811,7 +1817,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     var graphItemMax = findMaxPeakItem(StartTime, EndTime);
                     if (graphItemMax != null && graphItemMax != GraphItem)
                     {
-                        GraphItem.DragInfo = null;
+                        if (GraphItem != null)  // ReSharper
+                            GraphItem.DragInfo = null;
                         GraphItem = graphItemMax;
 
                     }

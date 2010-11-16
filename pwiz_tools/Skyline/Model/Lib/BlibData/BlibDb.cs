@@ -186,7 +186,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                             session.Save(refSpectra);
 
                             dictLibrary.Add(libKey,
-                                new BiblioLiteSpectrumInfo(copies, refSpectra.NumPeaks, (int) refSpectra.Id));
+                                new BiblioLiteSpectrumInfo(copies, refSpectra.NumPeaks, (int) (refSpectra.Id ?? 0)));
 
                             session.Flush();
                             session.Clear();

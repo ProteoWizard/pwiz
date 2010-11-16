@@ -48,6 +48,8 @@ namespace pwiz.Skyline.Model
 
         public int Length { get { return Sequence.Length; } }
 
+        public int Order { get { return Begin ?? 0; } }
+
         public char PrevAA
         {
             get
@@ -289,7 +291,7 @@ namespace pwiz.Skyline.Model
 
         public override string ToString()
         {
-            if (!Begin.HasValue)
+            if (!Begin.HasValue || !End.HasValue)
             {
                 if (MissedCleavages == 0)
                     return Sequence;
@@ -315,10 +317,10 @@ namespace pwiz.Skyline.Model
     /// modifications, and the set of possible modifications in a list by amino
     /// acid index.
     /// </summary>
-    internal abstract class ModificationStateMachine<T, TMod, TState>
+    internal abstract class ModificationStateMachine<TMod, TExMod, TState>
     {
         private readonly int _modCount;
-        private readonly IList<KeyValuePair<IList<T>, int>> _listListMods;
+        private readonly IList<KeyValuePair<IList<TMod>, int>> _listListMods;
 
         /// <summary>
         /// Contains indexes into _listListMods specifying amino acids currently
@@ -338,7 +340,7 @@ namespace pwiz.Skyline.Model
         /// </summary>
         private int _cursorIndex;
 
-        protected ModificationStateMachine(int modCount, IList<KeyValuePair<IList<T>, int>> listListMods)
+        protected ModificationStateMachine(int modCount, IList<KeyValuePair<IList<TMod>, int>> listListMods)
         {
             _modCount = modCount;
             _listListMods = listListMods;
@@ -409,7 +411,7 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                var mods = new TMod[_modCount];
+                var mods = new TExMod[_modCount];
                 for (int i = 0; i < _modCount; i++)
                 {
                     var pair = _listListMods[_arrayModIndexes1[i]];
@@ -421,9 +423,9 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        protected abstract TMod CreateMod(int indexAA, T mod);
+        protected abstract TExMod CreateMod(int indexAA, TMod mod);
 
-        protected abstract TState CreateState(TMod[] mods);
+        protected abstract TState CreateState(TExMod[] mods);
     }
 
     public sealed class PeptideModKey

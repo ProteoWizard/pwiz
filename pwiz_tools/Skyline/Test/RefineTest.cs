@@ -255,7 +255,9 @@ namespace pwiz.SkylineTest
             catch (Exception x)
             {
                 Assert.Fail("Exception thrown: " + x.Message);
-                throw;  // Will never happen
+// ReSharper disable HeuristicUnreachableCode
+                throw;  // Will never happen, but it is necessary to keep ReSharper happy
+// ReSharper restore HeuristicUnreachableCode
             }
 
             AssertEx.IsDocumentState(doc, 0, 4, 36, 38, 334);

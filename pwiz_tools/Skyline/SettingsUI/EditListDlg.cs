@@ -25,16 +25,16 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class EditListDlg<T, TItem> : Form
-        where T : ICollection<TItem>, IListDefaults<TItem>, IListEditorSupport
+    public partial class EditListDlg<TList, TItem> : Form
+        where TList : ICollection<TItem>, IListDefaults<TItem>, IListEditorSupport
         where TItem : IKeyContainer<string>
     {
-        private readonly T _model;
+        private readonly TList _model;
         private readonly IItemEditor<TItem> _editor;
 
         private readonly List<TItem> _list;
 
-        public EditListDlg(T model, object tag)
+        public EditListDlg(TList model, object tag)
         {
             _model = model;
             _list = model.ToList();

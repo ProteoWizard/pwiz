@@ -30,23 +30,23 @@ namespace pwiz.Skyline.SettingsUI
     /// Initially this class derived from <see cref="ComboBox"/>, but that
     /// proved very problematic for the form designer.
     /// </summary>
-    /// <typeparam name="T">Type of the items in the settings list</typeparam>
-    public class SettingsListComboDriver<T>
-        where T : IKeyContainer<string>, IXmlSerializable
+    /// <typeparam name="TItem">Type of the items in the settings list</typeparam>
+    public class SettingsListComboDriver<TItem>
+        where TItem : IKeyContainer<string>, IXmlSerializable
     {
         private const string ADD_ITEM = "<Add...>";
         private const string EDIT_LIST_ITEM = "<Edit list...>";
 
         private int _selectedIndexLast;
 
-        public SettingsListComboDriver(ComboBox combo, SettingsList<T> list)
+        public SettingsListComboDriver(ComboBox combo, SettingsList<TItem> list)
         {
             Combo = combo;
             List = list;
         }
 
         public ComboBox Combo { get; private set; }
-        public SettingsList<T> List { get; private set; }
+        public SettingsList<TItem> List { get; private set; }
 
         public void LoadList(string selectedItemLast)
         {
@@ -54,7 +54,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 Combo.BeginUpdate();
                 Combo.Items.Clear();
-                foreach (T item in List)
+                foreach (TItem item in List)
                 {
                     string name = List.GetKey(item);
                     int i = Combo.Items.Add(name);
@@ -100,8 +100,8 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddItem()
         {
-            T itemNew = List.NewItem(Combo.TopLevelControl, null, null);
-            if (!Equals(itemNew, default(T)))
+            TItem itemNew = List.NewItem(Combo.TopLevelControl, null, null);
+            if (!Equals(itemNew, default(TItem)))
             {
                 List.Add(itemNew);
                 LoadList(itemNew.GetKey());
@@ -115,7 +115,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void EditList()
         {
-            IEnumerable<T> listNew = List.EditList(Combo.TopLevelControl, null);
+            IEnumerable<TItem> listNew = List.EditList(Combo.TopLevelControl, null);
             if (listNew != null)
             {
                 string selectedItemLast = Combo.Items[_selectedIndexLast].ToString();
@@ -125,7 +125,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     // If the default item was excluded from editing,
                     // then make sure it is preserved as the first item.
-                    T itemDefault = List[0];
+                    TItem itemDefault = List[0];
                     List.Clear();
                     List.Add(itemDefault);
                 }

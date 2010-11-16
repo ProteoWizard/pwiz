@@ -242,9 +242,9 @@ namespace pwiz.Skyline.Util
     /// Abstract class for a specific long-lived connection.  Must be subclassed
     /// for each new connection type.
     /// </summary>
-    /// <typeparam name="T">Type of connection being managed</typeparam>
-    public abstract class ConnectionId<T> : Identity
-        where T : IDisposable
+    /// <typeparam name="TDisp">Type of connection being managed</typeparam>
+    public abstract class ConnectionId<TDisp> : Identity
+        where TDisp : IDisposable
     {
         private readonly ConnectionPool _connectionPool;
 
@@ -272,9 +272,9 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// The actual connection as stored in the pool, or newly created.
         /// </summary>
-        public T Connection
+        public TDisp Connection
         {
-            get { return (T) _connectionPool.GetConnection(this, Connect); }
+            get { return (TDisp) _connectionPool.GetConnection(this, Connect); }
         }
 
         /// <summary>

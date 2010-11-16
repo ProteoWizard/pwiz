@@ -689,9 +689,8 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert, toolStripSeparator15);
 
             // Remove some ZedGraph menu items not of interest
-            for (int i = 0; i < items.Length; i++)
+            foreach (var item in items)
             {
-                var item = items[i];
                 string tag = (string)item.Tag;
                 if (tag == "set_default" || tag == "show_val")
                     menuStrip.Items.Remove(item);
@@ -1066,9 +1065,8 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert, toolStripSeparator19);
 
             // Remove some ZedGraph menu items not of interest
-            for (int i = 0; i < items.Length; i++)
+            foreach (var item in items)
             {
-                var item = items[i];
                 string tag = (string)item.Tag;
                 if (tag == "set_default" || tag == "show_val")
                     menuStrip.Items.Remove(item);
@@ -1198,6 +1196,8 @@ namespace pwiz.Skyline
             {
                 var nodePepTree = SelectedNode as PeptideTreeNode;
                 Debug.Assert(nodePepTree != null && nodePepTree.Nodes.Count == 1);  // menu item incorrectly enabled
+                if (nodePepTree == null || nodePepTree.Nodes.Count != 1)
+                    return;
                 nodeGroup = (TransitionGroupDocNode) nodePepTree.DocNode.Children[0];
                 pathGroup = new IdentityPath(nodePepTree.Path, nodeGroup.Id);
             }
@@ -1974,9 +1974,8 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert, toolStripSeparator24);
 
             // Remove some ZedGraph menu items not of interest
-            for (int i = 0; i < items.Length; i++)
+            foreach (var item in items)
             {
-                var item = items[i];
                 string tag = (string)item.Tag;
                 if (tag == "set_default" || tag == "show_val")
                     menuStrip.Items.Remove(item);
@@ -2365,9 +2364,8 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert, toolStripSeparator28);
 
             // Remove some ZedGraph menu items not of interest
-            for (int i = 0; i < items.Length; i++)
+            foreach (var item in items)
             {
-                var item = items[i];
                 string tag = (string)item.Tag;
                 if (tag == "set_default" || tag == "show_val")
                     menuStrip.Items.Remove(item);

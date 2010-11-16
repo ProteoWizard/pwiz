@@ -72,7 +72,7 @@ namespace pwiz.ProteomeDatabase.Fasta
             return result;
         }
 
-        private DbProtein ParseProteinLine(String line)
+        private static DbProtein ParseProteinLine(String line)
         {
             String[] alternatives = line.Substring(1).Split((char) 1);
             String name, description;

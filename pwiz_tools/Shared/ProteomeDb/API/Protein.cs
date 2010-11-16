@@ -44,7 +44,7 @@ namespace pwiz.ProteomeDatabase.API
             }
         }
 
-        public Protein(ProteomeDb proteomeDb, DbProtein protein, List<DbProteinName> proteinNames)
+        public Protein(ProteomeDb proteomeDb, DbProtein protein, IEnumerable<DbProteinName> proteinNames)
             : this(proteomeDb, protein, (DbProteinName) null)
         {
             _alternativeNames = new List<AlternativeName>();

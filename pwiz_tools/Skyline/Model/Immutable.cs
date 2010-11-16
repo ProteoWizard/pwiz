@@ -46,12 +46,12 @@ namespace pwiz.Skyline.Model
         /// <see cref="IList{T}"/> properties, should use this to ensure the lists
         /// are also immutable.
         /// </summary>
-        /// <typeparam name="T">Type of the list elements</typeparam>
+        /// <typeparam name="TItem">Type of the list elements</typeparam>
         /// <param name="list">The original list</param>
         /// <returns>A read-only list</returns>
-        protected static ReadOnlyCollection<T> MakeReadOnly<T>(IList<T> list)
+        protected static ReadOnlyCollection<TItem> MakeReadOnly<TItem>(IList<TItem> list)
         {
-            return list as ReadOnlyCollection<T> ?? new ReadOnlyCollection<T>(list);
+            return list as ReadOnlyCollection<TItem> ?? new ReadOnlyCollection<TItem>(list);
         }
 
         /// <summary>
@@ -59,13 +59,13 @@ namespace pwiz.Skyline.Model
         /// <see cref="Immutable"/> and casts it to its original type.  For use in
         /// creating brief readable property setters for <see cref="Immutable"/> objects.
         /// </summary>
-        /// <typeparam name="T">Type of the original object</typeparam>
+        /// <typeparam name="TIm">Type of the original object</typeparam>
         /// <param name="immutable">Instance object to clone</param>
         /// <returns>A shallow copy of the <see cref="Immutable"/> correctly typed</returns>
-        protected static T ImClone<T>(T immutable)
-            where T : Immutable
+        protected static TIm ImClone<TIm>(TIm immutable)
+            where TIm : Immutable
         {
-            return (T)immutable.MemberwiseClone();
+            return (TIm)immutable.MemberwiseClone();
         }
 
         /// <summary>
@@ -79,11 +79,11 @@ namespace pwiz.Skyline.Model
         /// 
         /// (im, v) => im.Name = v
         /// </summary>
-        /// <typeparam name="T">Type of the node being changed</typeparam>
+        /// <typeparam name="TIm">Type of the node being changed</typeparam>
         /// <typeparam name="TProp">Type of the property to set</typeparam>
         /// <param name="immutable">The node instance to change</param>
         /// <param name="value">The value to assign to the property in the clone</param>
-        protected delegate void SetProperty<T, TProp>(T immutable, TProp value);
+        protected delegate void SetProperty<TIm, TProp>(TIm immutable, TProp value);
 
         /// <summary>
         /// Use to create concise single-property change methods for
@@ -101,14 +101,14 @@ namespace pwiz.Skyline.Model
         /// the clone, and not the this object on which the function is called.
         /// And getting rid of all type casting was tricky.
         /// </summary>
-        /// <typeparam name="T">Type of the node being changed</typeparam>
+        /// <typeparam name="TIm">Type of the node being changed</typeparam>
         /// <typeparam name="TProp">Type of the property to set</typeparam>
         /// <param name="immutable">A cloned node on which to set the property</param>
         /// <param name="set">The delegate used to set the property (usually a lambda experssion)</param>
         /// <param name="value">The value to set the property to</param>
         /// <returns>The modified clone instance</returns>
-        protected static T ChangeProp<T, TProp>(T immutable, SetProperty<T, TProp> set, TProp value)
-            where T : Immutable
+        protected static TIm ChangeProp<TIm, TProp>(TIm immutable, SetProperty<TIm, TProp> set, TProp value)
+            where TIm : Immutable
         {
             set(immutable, value);
             if (immutable is IValidating)
@@ -131,9 +131,9 @@ namespace pwiz.Skyline.Model
         /// 
         /// This simpler version suggested by Nick Shulman.
         /// </summary>
-        /// <typeparam name="T">Type of the node being changed</typeparam>
+        /// <typeparam name="TIm">Type of the node being changed</typeparam>
         /// <param name="immutable">The node instance to change</param>
-        protected delegate void SetLambda<T>(T immutable);
+        protected delegate void SetLambda<TIm>(TIm immutable);
 
         /// <summary>
         /// Use to create more concise single-property change methods for
@@ -151,12 +151,12 @@ namespace pwiz.Skyline.Model
         /// 
         /// This simpler version suggested by Nick Shulman.
         /// </summary>
-        /// <typeparam name="T">Type of the node being changed</typeparam>
+        /// <typeparam name="TIm">Type of the node being changed</typeparam>
         /// <param name="immutable">A cloned node on which to set the property</param>
         /// <param name="set">The delegate used to set the property (usually a lambda experssion)</param>
         /// <returns>The modified clone instance</returns>
-        protected static T ChangeProp<T>(T immutable, SetLambda<T> set)
-            where T : Immutable
+        protected static TIm ChangeProp<TIm>(TIm immutable, SetLambda<TIm> set)
+            where TIm : Immutable
         {
             set(immutable);
             if (immutable is IValidating)

@@ -474,7 +474,10 @@ namespace pwiz.Skyline.Model.Results
 
                 for (int i = 0; i < listEnumerators.Count; i++)
                 {
-                    double intensity = listEnumerators[i].Current.ProductArea;
+                    var dataPeakList = listEnumerators[i].Current;
+                    if (dataPeakList == null)
+                        throw new InvalidOperationException("Unexptected null peak list");
+                    double intensity = dataPeakList.ProductArea;
                     if (intensity > maxIntensity)
                     {
                         maxIntensity = intensity;

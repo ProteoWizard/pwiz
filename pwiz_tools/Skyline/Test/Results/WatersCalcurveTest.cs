@@ -93,7 +93,8 @@ namespace pwiz.SkylineTest.Results
                     listChromatograms.AddRange(doc.Settings.MeasuredResults.Chromatograms);
 
                 string name = Path.GetFileNameWithoutExtension(path);
-                name = name.Substring(name.Length - 12);
+                if (name != null)
+                    name = name.Substring(name.Length - 12);
                 listChromatograms.Add(new ChromatogramSet(name, new[] {path}));
                 int len = listChromatograms.Count;
 
@@ -576,7 +577,9 @@ namespace pwiz.SkylineTest.Results
             catch (Exception x)
             {
                 Assert.Fail("Exception thrown: " + x.Message);
-                throw;  // Will never happen
+// ReSharper disable HeuristicUnreachableCode
+                throw;  // Will never happen, but it is necessary to keep ReSharper happy
+// ReSharper restore HeuristicUnreachableCode
             }
 
             AssertEx.IsDocumentState(doc, 0, 1, 12, 12, 24);

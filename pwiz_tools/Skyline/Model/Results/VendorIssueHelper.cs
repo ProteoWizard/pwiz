@@ -108,7 +108,7 @@ namespace pwiz.Skyline.Model.Results
                 CreateNoWindow = true,
                 UseShellExecute = false,
                 // Common directory includes the directory separator
-                WorkingDirectory = Path.GetDirectoryName(filePathWiff),
+                WorkingDirectory = Path.GetDirectoryName(filePathWiff) ?? "",
                 Arguments = string.Join(" ", argv.ToArray()),
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,

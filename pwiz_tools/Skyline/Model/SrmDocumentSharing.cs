@@ -87,7 +87,7 @@ namespace pwiz.Skyline.Model
                     tempDir = new TemporaryDirectory();
                     Document = BlibDb.MinimizeLibraries(Document, tempDir.DirPath, Path.GetFileNameWithoutExtension(DocumentPath));
                     foreach (var librarySpec in Document.Settings.PeptideSettings.Libraries.LibrarySpecs)
-                        zip.AddFile(Path.Combine(tempDir.DirPath, Path.GetFileName(librarySpec.FilePath)), "");
+                        zip.AddFile(Path.Combine(tempDir.DirPath, Path.GetFileName(librarySpec.FilePath) ?? ""), "");
                 }
 
                 ShareDataAndView(zip);

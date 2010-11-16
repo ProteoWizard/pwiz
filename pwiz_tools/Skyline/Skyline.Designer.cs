@@ -507,35 +507,35 @@ namespace pwiz.Skyline
             this.homeMenuItem.Name = "homeMenuItem";
             this.homeMenuItem.Size = new System.Drawing.Size(120, 22);
             this.homeMenuItem.Text = "&Home";
-            this.homeMenuItem.Click += new System.EventHandler(this.homeMenuItem_Click);
+            this.homeMenuItem.Click += new System.EventHandler(homeMenuItem_Click);
             // 
             // videosMenuItem
             // 
             this.videosMenuItem.Name = "videosMenuItem";
             this.videosMenuItem.Size = new System.Drawing.Size(120, 22);
             this.videosMenuItem.Text = "&Videos";
-            this.videosMenuItem.Click += new System.EventHandler(this.videosMenuItem_Click);
+            this.videosMenuItem.Click += new System.EventHandler(videosMenuItem_Click);
             // 
             // tutorialsMenuItem
             // 
             this.tutorialsMenuItem.Name = "tutorialsMenuItem";
             this.tutorialsMenuItem.Size = new System.Drawing.Size(120, 22);
             this.tutorialsMenuItem.Text = "&Tutorials";
-            this.tutorialsMenuItem.Click += new System.EventHandler(this.tutorialsMenuItem_Click);
+            this.tutorialsMenuItem.Click += new System.EventHandler(tutorialsMenuItem_Click);
             // 
             // supportMenuItem
             // 
             this.supportMenuItem.Name = "supportMenuItem";
             this.supportMenuItem.Size = new System.Drawing.Size(120, 22);
             this.supportMenuItem.Text = "&Support";
-            this.supportMenuItem.Click += new System.EventHandler(this.supportMenuItem_Click);
+            this.supportMenuItem.Click += new System.EventHandler(supportMenuItem_Click);
             // 
             // issuesMenuItem
             // 
             this.issuesMenuItem.Name = "issuesMenuItem";
             this.issuesMenuItem.Size = new System.Drawing.Size(120, 22);
             this.issuesMenuItem.Text = "&Issues";
-            this.issuesMenuItem.Click += new System.EventHandler(this.issuesMenuItem_Click);
+            this.issuesMenuItem.Click += new System.EventHandler(issuesMenuItem_Click);
             // 
             // toolStripSeparator29
             // 
@@ -1737,7 +1737,7 @@ namespace pwiz.Skyline
             this.splitMain.SplitterDistance = 270;
             this.splitMain.TabIndex = 4;
             this.splitMain.TabStop = false;
-            this.splitMain.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitMain_SplitterMoved);
+            this.splitMain.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(splitMain_SplitterMoved);
             this.splitMain.MouseDown += new System.Windows.Forms.MouseEventHandler(this.splitMain_MouseDown);
             this.splitMain.MouseUp += new System.Windows.Forms.MouseEventHandler(this.splitMain_MouseUp);
             // 

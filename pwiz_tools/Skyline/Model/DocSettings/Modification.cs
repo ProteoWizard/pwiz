@@ -665,12 +665,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public IEnumerable<TypedExplicitModifications> GetHeavyModifications()
         {
-            for (int i = 0; i < _modifications.Count; i++)
-            {
-                var typedMods = _modifications[i];
-                if (!typedMods.LabelType.IsLight)
-                    yield return typedMods;
-            }
+            return _modifications.Where(typedMods => !typedMods.LabelType.IsLight);
         }
 
         public bool IsModified(IsotopeLabelType labelType)

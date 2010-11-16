@@ -152,7 +152,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             return new Identifier(str.Split('.'));
         }
 
-        private static IList<String> GetParts(Identifier identifier)
+        private static IEnumerable<string> GetParts(Identifier identifier)
         {
             if (identifier == null)
             {

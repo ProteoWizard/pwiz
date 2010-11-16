@@ -795,7 +795,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // Make sure the internal standard type is reference equal with
             // the first heavy type.
             var enumHeavy = heavyMods.GetEnumerator();
-            if (enumHeavy.MoveNext())
+            if (enumHeavy.MoveNext() && enumHeavy.Current != null)
                 InternalStandardTypes = new[] {enumHeavy.Current.LabelType};
         }
 

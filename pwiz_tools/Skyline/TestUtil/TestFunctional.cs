@@ -88,10 +88,10 @@ namespace pwiz.SkylineTestUtil
 
         public static SkylineWindow SkylineWindow { get { return Program.MainWindow; } }
 
-        protected static T ShowDialog<T>(Action act) where T : Form
+        protected static TDlg ShowDialog<TDlg>(Action act) where TDlg : Form
         {
             SkylineWindow.BeginInvoke(act);
-            T dlg = WaitForOpenForm<T>();
+            TDlg dlg = WaitForOpenForm<TDlg>();
             Assert.IsNotNull(dlg);
             return dlg;
         }
@@ -101,15 +101,15 @@ namespace pwiz.SkylineTestUtil
             SkylineWindow.Invoke(act);
         }
 
-        protected static void RunDlg<T>(Action show, Action<T> act) where T : Form
+        protected static void RunDlg<TDlg>(Action show, Action<TDlg> act) where TDlg : Form
         {
             RunDlg(show, false, act);
         }
 
-        protected static void RunDlg<T>(Action show, bool waitForDocument, Action<T> act) where T : Form
+        protected static void RunDlg<TDlg>(Action show, bool waitForDocument, Action<TDlg> act) where TDlg : Form
         {
             var doc = SkylineWindow.Document;
-            T dlg = ShowDialog<T>(show);
+            TDlg dlg = ShowDialog<TDlg>(show);
             RunUI(() => act(dlg));
             WaitForClosedForm(dlg);
             if (waitForDocument)
@@ -122,14 +122,14 @@ namespace pwiz.SkylineTestUtil
             RunUI(() => SkylineWindow.SequenceTree.SelectedPath = pathSelect);
         }
 
-        public static T FindOpenForm<T>() where T : Form
+        public static TDlg FindOpenForm<TDlg>() where TDlg : Form
         {
             while (true) {
                 try
                 {
                     foreach (var form in Application.OpenForms)
                     {
-                        var tForm = form as T;
+                        var tForm = form as TDlg;
                         if (tForm != null && tForm.Created)
                         {
                             return tForm;
@@ -145,11 +145,11 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public static T WaitForOpenForm<T>() where T : Form
+        public static TDlg WaitForOpenForm<TDlg>() where TDlg : Form
         {
             for (int i = 0; i < WAIT_CYCLES; i ++ )
             {
-                T tForm = FindOpenForm<T>();
+                TDlg tForm = FindOpenForm<TDlg>();
                 if (tForm != null)
                     return tForm;
 

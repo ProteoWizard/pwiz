@@ -59,7 +59,7 @@ namespace pwiz.Skyline.Alerts
             Close();
         }
 
-        private void btnComplete_Click(object sender, System.EventArgs e)
+        private void btnComplete_Click(object sender, EventArgs e)
         {
             IsCompleteSharing = true;
             OkDialog();

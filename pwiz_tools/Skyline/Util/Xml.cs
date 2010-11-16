@@ -139,8 +139,8 @@ namespace pwiz.Skyline.Util
     /// </summary>
     public static class XmlUtil
     {
-        public static string ToAttr<T>(T? value)
-            where T : struct
+        public static string ToAttr<TStruct>(TStruct? value)
+            where TStruct : struct
         {
             return value == null ? null : value.ToString();
         }
@@ -150,8 +150,8 @@ namespace pwiz.Skyline.Util
             writer.WriteAttributeString(name.ToString(), value);
         }
 
-        public static void WriteAttributeNullable<T>(this XmlWriter writer, Enum name, T? value)
-            where T : struct
+        public static void WriteAttributeNullable<TStruct>(this XmlWriter writer, Enum name, TStruct? value)
+            where TStruct : struct
         {
             if (value.HasValue)
                 writer.WriteAttributeString(name, value.ToString());
@@ -187,12 +187,12 @@ namespace pwiz.Skyline.Util
                 writer.WriteAttributeString(name, value);
         }
 
-        public static void WriteAttribute<T>(this XmlWriter writer, Enum name, T value)
+        public static void WriteAttribute<TAttr>(this XmlWriter writer, Enum name, TAttr value)
         {
             writer.WriteAttributeString(name, value.ToString());
         }
 
-        public static void WriteAttribute<T>(this XmlWriter writer, Enum name, T value, T defaultValue)
+        public static void WriteAttribute<TAttr>(this XmlWriter writer, Enum name, TAttr value, TAttr defaultValue)
         {
             if (!Equals(value, defaultValue))
                 writer.WriteAttributeString(name, value.ToString());
@@ -229,14 +229,14 @@ namespace pwiz.Skyline.Util
             writer.WriteStartElement(name.ToString());
         }
 
-        public static void WriteElement<T>(this XmlWriter writer, T child)
-            where T : IXmlSerializable
+        public static void WriteElement<TChild>(this XmlWriter writer, TChild child)
+            where TChild : IXmlSerializable
         {
-            var helper = new XmlElementHelper<T>();
+            var helper = new XmlElementHelper<TChild>();
             writer.WriteElement(helper.ElementNames[0], child);
         }
 
-        public static void WriteElementString<T>(this XmlWriter writer, Enum name, T child)
+        public static void WriteElementString<TChild>(this XmlWriter writer, Enum name, TChild child)
         {
             writer.WriteStartElement(name);
             writer.WriteString(child.ToString());
@@ -413,19 +413,19 @@ namespace pwiz.Skyline.Util
             return reader.GetNullableFloatAttribute(name) ?? defaultValue;
         }
 
-        public static T GetEnumAttribute<T>(this XmlReader reader, Enum name, T defaultValue)
+        public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, Enum name, TAttr defaultValue)
         {
             return reader.GetEnumAttribute(name, defaultValue, false);
         }
 
-        public static T GetEnumAttribute<T>(this XmlReader reader, Enum name, T defaultValue, bool lower)
+        public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, Enum name, TAttr defaultValue, bool lower)
         {
             string value = reader.GetAttribute(name);
             if (!string.IsNullOrEmpty(value))
             {
                 try
                 {
-                    return (T)Enum.Parse(typeof(T), (lower ? value.ToLower() : value));
+                    return (TAttr)Enum.Parse(typeof(TAttr), (lower ? value.ToLower() : value));
                 }
                 catch (ArgumentException x)
                 {
@@ -506,34 +506,34 @@ namespace pwiz.Skyline.Util
             return null;
         }
 
-        public static T Deserialize<T>(this XmlReader reader, T objNew)
-            where T : IXmlSerializable
+        public static TObj Deserialize<TObj>(this XmlReader reader, TObj objNew)
+            where TObj : IXmlSerializable
         {
             objNew.ReadXml(reader);
             return objNew;
         }
 
-        public static T DeserializeElement<T>(this XmlReader reader)
-            where T : class
+        public static TObj DeserializeElement<TObj>(this XmlReader reader)
+            where TObj : class
         {
-            return DeserializeElement<T>(reader, null);
+            return DeserializeElement<TObj>(reader, null);
         }
 
-        public static T DeserializeElement<T>(this XmlReader reader, Enum name)
-            where T : class
+        public static TObj DeserializeElement<TObj>(this XmlReader reader, Enum name)
+            where TObj : class
         {
-            var helper = new XmlElementHelper<T>(name == null ? null : name.ToString());
+            var helper = new XmlElementHelper<TObj>(name == null ? null : name.ToString());
             if (reader.IsStartElement(helper.ElementNames))
                 return helper.Deserialize(reader);
             return null;
         }
     }
 
-    public interface IXmlElementHelper<T>
+    public interface IXmlElementHelper<TElem>
     {
         string[] ElementNames { get; }
 
-        T Deserialize(XmlReader reader);
+        TElem Deserialize(XmlReader reader);
 
         bool IsType(object item);
     }
@@ -543,8 +543,8 @@ namespace pwiz.Skyline.Util
     /// implementations.  If the type supplied has the <see cref="XmlRootAttribute"/>
     /// then it is self-naming.  Otherwise a name for the element must be supplied.
     /// </summary>
-    /// <typeparam name="T">Type for which this helper is used</typeparam>
-    public sealed class XmlElementHelper<T> : IXmlElementHelper<T>
+    /// <typeparam name="TElem">Type for which this helper is used</typeparam>
+    public sealed class XmlElementHelper<TElem> : IXmlElementHelper<TElem>
     {
         /// <summary>
         /// Constructor for self-named types that have the
@@ -565,7 +565,7 @@ namespace pwiz.Skyline.Util
                 ElementNames = new[] {elementName};
             else
             {
-                Type type = typeof(T);
+                Type type = typeof(TElem);
                 XmlRootAttribute[] attrs = (XmlRootAttribute[])
                     type.GetCustomAttributes(typeof(XmlRootAttribute), false);
 
@@ -595,12 +595,12 @@ namespace pwiz.Skyline.Util
         /// </summary>
         /// <param name="reader">The reader from which to deserialize</param>
         /// <returns>An instance of the supported type</returns>
-        public T Deserialize(XmlReader reader)
+        public TElem Deserialize(XmlReader reader)
         {
             // Unit tests depend on exceptions being thrown.
 //            try
 //            {
-                return (T)typeof(T).InvokeMember("Deserialize",
+                return (TElem)typeof(TElem).InvokeMember("Deserialize",
                                                  BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod,
                                                  null, null, new[] { reader });
 //            }
@@ -619,18 +619,18 @@ namespace pwiz.Skyline.Util
         /// <returns>True if this helper can serialize it</returns>
         public bool IsType(object item)
         {
-            return typeof(T) == item.GetType();
+            return typeof(TElem) == item.GetType();
         }
     }
 
-    public sealed class XmlElementHelperSuper<T, TSup> : IXmlElementHelper<TSup>
-        where T : TSup
+    public sealed class XmlElementHelperSuper<TElem, TSup> : IXmlElementHelper<TSup>
+        where TElem : TSup
     {
-        private readonly XmlElementHelper<T> _helper;
+        private readonly XmlElementHelper<TElem> _helper;
 
         public XmlElementHelperSuper()
         {
-            _helper = new XmlElementHelper<T>();
+            _helper = new XmlElementHelper<TElem>();
         }
 
         public string[] ElementNames

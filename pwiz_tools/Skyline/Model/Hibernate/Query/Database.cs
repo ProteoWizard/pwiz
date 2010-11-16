@@ -350,13 +350,10 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             var standardTypes = mods.InternalStandardTypes;
             var labelTypes = mods.GetModificationTypes().ToArray();
             bool firstRatio = true;
-            for (int i = 0; i < standardTypes.Count; i++)
+            foreach (var standardType in standardTypes)
             {
-                var standardType = standardTypes[i];
-
-                for (int j = 0; j < labelTypes.Length; j++)
+                foreach (var labelType in labelTypes)
                 {
-                    var labelType = labelTypes[j];
                     if (ReferenceEquals(standardType, labelType))
                         continue;
                     if (firstRatio)
@@ -616,6 +613,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                         continue;
 
                     var resultFiles = enumReplicates.Current;
+                    if (resultFiles == null)    // ReSharper
+                        continue;
 
                     foreach (var chromInfo in results)
                     {
@@ -775,6 +774,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 _results.Add(result);
             }
 
+// ReSharper disable PossibleInvalidOperationException
             private Statistics BestRetentionTimeStats
             {
                 get
@@ -824,6 +824,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                           select result.TotalAreaNormalized.Value);
                 }
             }
+// ReSharper restore PossibleInvalidOperationException
 
             public void CalculateStatistics(DbPrecursorResultSummary precursorResultSummary)
             {
@@ -880,6 +881,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 _results.Add(result);
             }
 
+// ReSharper disable PossibleInvalidOperationException
             private Statistics RetentionTimeStats
             {
                 get
@@ -929,6 +931,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                           select result.AreaNormalized.Value);
                 }
             }
+// ReSharper restore PossibleInvalidOperationException
 
             public void CalculateStatistics(DbTransitionResultSummary transitionResultSummary)
             {

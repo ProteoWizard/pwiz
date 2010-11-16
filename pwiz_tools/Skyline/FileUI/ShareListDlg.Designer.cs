@@ -1,6 +1,6 @@
 ﻿namespace pwiz.Skyline.FileUI
 {
-    partial class ShareListDlg<T, TItem>
+    partial class ShareListDlg<TList, TItem>
     {
         /// <summary>
         /// Required designer variable.

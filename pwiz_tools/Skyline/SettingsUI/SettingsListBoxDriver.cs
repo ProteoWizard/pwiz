@@ -25,26 +25,26 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public class SettingsListBoxDriver<T>
-        where T : IKeyContainer<string>, IXmlSerializable
+    public class SettingsListBoxDriver<TItem>
+        where TItem : IKeyContainer<string>, IXmlSerializable
     {
-        public SettingsListBoxDriver(CheckedListBox listBox, SettingsList<T> list)
+        public SettingsListBoxDriver(CheckedListBox listBox, SettingsList<TItem> list)
         {
             ListBox = listBox;
             List = list;
         }
 
         public CheckedListBox ListBox { get; private set; }
-        public SettingsList<T> List { get; private set; }
+        public SettingsList<TItem> List { get; private set; }
 
-        public T[] Chosen { get { return GetChosen(null); } }
+        public TItem[] Chosen { get { return GetChosen(null); } }
 
-        public T[] GetChosen(ItemCheckEventArgs e)
+        public TItem[] GetChosen(ItemCheckEventArgs e)
         {
-            List<T> listChosen = new List<T>();
+            List<TItem> listChosen = new List<TItem>();
             for (int i = 0; i < ListBox.Items.Count; i++)
             {
-                T item;
+                TItem item;
                 bool checkItem = ListBox.GetItemChecked(i);
 
                 // If even refers to this item, then use the check state in the event.
@@ -62,7 +62,7 @@ namespace pwiz.Skyline.SettingsUI
             LoadList(Chosen);
         }
 
-        public void LoadList(IEnumerable<T> chosen)
+        public void LoadList(IEnumerable<TItem> chosen)
         {
             string selectedItemLast = null;
             if (ListBox.SelectedItem != null)
@@ -70,11 +70,11 @@ namespace pwiz.Skyline.SettingsUI
             LoadList(selectedItemLast, chosen);
         }
 
-        public void LoadList(string selectedItemLast, IEnumerable<T> chosen)
+        public void LoadList(string selectedItemLast, IEnumerable<TItem> chosen)
         {
             ListBox.BeginUpdate();
             ListBox.Items.Clear();
-            foreach (T item in List)
+            foreach (TItem item in List)
             {
                 string name = item.GetKey();
                 int i = ListBox.Items.Add(name);
@@ -91,7 +91,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void EditList()
         {
-            IEnumerable<T> listNew = List.EditList(ListBox.TopLevelControl, null);
+            IEnumerable<TItem> listNew = List.EditList(ListBox.TopLevelControl, null);
             if (listNew != null)
             {
                 List.Clear();

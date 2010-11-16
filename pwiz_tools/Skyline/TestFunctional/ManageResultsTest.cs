@@ -282,6 +282,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(enumTranOrig.MoveNext());
                 
                 var nodeTranOrig = enumTranOrig.Current;
+                Assert.IsNotNull(nodeTranOrig);
                 Assert.AreNotSame(nodeTran, nodeTranOrig);
                 Assert.AreSame(nodeTran.Id, nodeTranOrig.Id);
 
@@ -311,6 +312,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsTrue(enumTranGroupOrig.MoveNext());
 
                 var nodeGroupOrig = enumTranGroupOrig.Current;
+                Assert.IsNotNull(nodeGroupOrig);
                 Assert.AreNotSame(nodeGroup, nodeGroupOrig);
                 Assert.AreSame(nodeGroup.Id, nodeGroupOrig.Id);
 

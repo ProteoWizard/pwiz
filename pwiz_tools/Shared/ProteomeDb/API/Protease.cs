@@ -155,6 +155,7 @@ namespace pwiz.ProteomeDatabase.API
             return count;
         }
 
+/*
         /// <summary>
         /// Returns the next cleavage index that is more than one
         /// amino acid beyond the last.
@@ -187,5 +188,6 @@ namespace pwiz.ProteomeDatabase.API
             // Return the cleavage point, or the end of the string.
             return (mLast.Success ? mLast.Index + 1 : aa.Length);
         }
+*/
     }
 }

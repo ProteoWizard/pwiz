@@ -19,70 +19,51 @@
 // limitations under the License.
 //
 
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using ZedGraph;
 
 namespace pwiz.MSGraph
 {
     public enum MSGraphItemType
     {
-        Unknown,
-        Chromatogram,
-        Spectrum
+        unknown,
+        chromatogram,
+        spectrum
     }
 
     public enum MSGraphItemDrawMethod
     {
-        Line,
-        Stick
+        line,
+        stick
     }
 
     public class PointAnnotation
     {
-        private string label;
-        public string Label
-        {
-            get { return label; }
-            set { label = value; }
-        }
+        public string Label { get; set; }
 
-        private GraphObj extraAnnotation;
-        public GraphObj ExtraAnnotation
-        {
-            get { return extraAnnotation; }
-            set { extraAnnotation = value; }
-        }
+        public GraphObj ExtraAnnotation { get; set; }
 
-        private FontSpec fontSpec;
-        public FontSpec FontSpec
-        {
-            get { return fontSpec; }
-            set { fontSpec = value; }
-        }
+        public FontSpec FontSpec { get; set; }
 
         public PointAnnotation()
         {
-            label = string.Empty;
-            extraAnnotation = null;
-            fontSpec = new FontSpec();
+            Label = string.Empty;
+            ExtraAnnotation = null;
+            FontSpec = new FontSpec();
         }
 
         public PointAnnotation( string label )
         {
-            this.label = label;
-            extraAnnotation = null;
-            fontSpec = new FontSpec();
+            Label = label;
+            ExtraAnnotation = null;
+            FontSpec = new FontSpec();
         }
 
         public PointAnnotation( string label, FontSpec fontSpec )
         {
-            this.label = label;
-            extraAnnotation = null;
-            this.fontSpec = fontSpec;
+            Label = label;
+            ExtraAnnotation = null;
+            FontSpec = fontSpec;
         }
     }
 

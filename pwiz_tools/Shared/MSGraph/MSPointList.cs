@@ -21,29 +21,28 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using ZedGraph;
 
 namespace pwiz.MSGraph
 {
     public class MSPointList : IPointList, IEnumerable<PointPair>
     {
-        private PointPairList fullPointList;
-        private PointPairList scaledPointList;
-        private List<int> scaledMaxIndexList;
-        private int scaledWidth;
-        private double scaledMin;
-        private double scaledMax;
-        private double scaleRange;
-        private double scaleFactor;
-        private int scaledMinIndex;
-        private int scaledMaxIndex;
+        private readonly PointPairList _fullPointList;
+        private readonly PointPairList _scaledPointList;
+        private readonly List<int> _scaledMaxIndexList;
+        private int _scaledWidth;
+        private double _scaledMin;
+        private double _scaledMax;
+        private double _scaleRange;
+        private double _scaleFactor;
+        private int _scaledMinIndex;
+        private int _scaledMaxIndex;
 
         public MSPointList( IPointList sourcePointList )
         {
-            fullPointList = new ZedGraph.PointPairList( sourcePointList );
-            scaledPointList = new ZedGraph.PointPairList();
-            scaledMaxIndexList = new List<int>();
+            _fullPointList = new PointPairList( sourcePointList );
+            _scaledPointList = new PointPairList();
+            _scaledMaxIndexList = new List<int>();
         }
 
         // returns the entire point list downsampled for a given width (in pixels)
@@ -61,41 +60,41 @@ namespace pwiz.MSGraph
         // returns a range (subset) of the point list downsampled for a given width (in pixels)
         public void SetScale( int width, double min, double max )
         {
-            if( fullPointList.Count == 0 )
+            if( _fullPointList.Count == 0 )
                 return;
 
-            min = Math.Max( min, fullPointList[0].X );
-            max = Math.Min( max, fullPointList[fullPointList.Count - 1].X );
+            min = Math.Max( min, _fullPointList[0].X );
+            max = Math.Min( max, _fullPointList[_fullPointList.Count - 1].X );
 
-            if( scaledWidth == width && scaledMin == min && scaledMax == max )
+            if( _scaledWidth == width && _scaledMin == min && _scaledMax == max )
                 return;
 
-            scaledWidth = width;
-            scaledMin = min;
-            scaledMax = max;
-            scaleRange = max - min;
-            if( scaleRange == 0 )
+            _scaledWidth = width;
+            _scaledMin = min;
+            _scaledMax = max;
+            _scaleRange = max - min;
+            if( _scaleRange == 0 )
                 return;
-            scaleFactor = width / scaleRange;
+            _scaleFactor = width / _scaleRange;
 
             // store 4 points for each bin (entry, min, max, exit)
-            scaledPointList.Clear();
-            scaledPointList.Capacity = width * 4;
+            _scaledPointList.Clear();
+            _scaledPointList.Capacity = width * 4;
 
             // store just the index of the max point for each bin
-            scaledMaxIndexList.Clear();
-            scaledMaxIndexList.Capacity = width;
+            _scaledMaxIndexList.Clear();
+            _scaledMaxIndexList.Capacity = width;
             for( int i = 0; i < width; ++i )
-                scaledMaxIndexList.Add( -1 );
+                _scaledMaxIndexList.Add( -1 );
 
             int lastBin = -1;
             int curBinEntryIndex = -1;
             int curBinMinIndex = -1;
             int curBinMaxIndex = -1;
             int curBinExitIndex = -1;
-            for( int i = 0; i < fullPointList.Count; ++i )
+            for( int i = 0; i < _fullPointList.Count; ++i )
             {
-                PointPair point = fullPointList[i];
+                PointPair point = _fullPointList[i];
 
                 if( point.X < min )
                     continue;
@@ -103,24 +102,24 @@ namespace pwiz.MSGraph
                 if( point.X > max )
                     break;
 
-                int curBin = Math.Max( 1, (int) Math.Round( scaleFactor * ( point.X - min ) ) );
+                int curBin = Math.Max( 1, (int) Math.Round( _scaleFactor * ( point.X - min ) ) );
                 if( curBin > lastBin ) // new bin, insert points of last bin
                 {
                     if( lastBin > -1 )
                     {
-                        scaledMinIndex = curBinMinIndex;
-                        scaledPointList.Add( fullPointList[curBinEntryIndex] );
+                        _scaledMinIndex = curBinMinIndex;
+                        _scaledPointList.Add( _fullPointList[curBinEntryIndex] );
                         if( curBinEntryIndex != curBinMinIndex )
-                            scaledPointList.Add( fullPointList[curBinMinIndex] );
+                            _scaledPointList.Add( _fullPointList[curBinMinIndex] );
                         if( curBinEntryIndex != curBinMaxIndex &&
                             curBinMinIndex != curBinMaxIndex )
-                            scaledPointList.Add( fullPointList[curBinMaxIndex] );
+                            _scaledPointList.Add( _fullPointList[curBinMaxIndex] );
                         if( curBinEntryIndex != curBinMaxIndex &&
                             curBinMinIndex != curBinMaxIndex &&
                             curBinMaxIndex != curBinExitIndex )
-                            scaledPointList.Add( fullPointList[curBinExitIndex] );
-                        if( fullPointList[curBinMaxIndex].Y != 0 )
-                            scaledMaxIndexList[lastBin - 1] = curBinMaxIndex;
+                            _scaledPointList.Add( _fullPointList[curBinExitIndex] );
+                        if( _fullPointList[curBinMaxIndex].Y != 0 )
+                            _scaledMaxIndexList[lastBin - 1] = curBinMaxIndex;
                     }
                     lastBin = curBin;
                     curBinEntryIndex = i;
@@ -129,28 +128,28 @@ namespace pwiz.MSGraph
                 } else // same bin, set exit point
                 {
                     curBinExitIndex = i;
-                    if( point.Y > fullPointList[curBinMaxIndex].Y )
-                        scaledMaxIndex = curBinMaxIndex = i;
-                    else if( point.Y < fullPointList[curBinMinIndex].Y )
+                    if( point.Y > _fullPointList[curBinMaxIndex].Y )
+                        _scaledMaxIndex = curBinMaxIndex = i;
+                    else if( point.Y < _fullPointList[curBinMinIndex].Y )
                         curBinMinIndex = i;
                 }
             }
 
             if( lastBin > -1 )
             {
-                scaledMinIndex = curBinMinIndex;
-                scaledPointList.Add( fullPointList[curBinEntryIndex] );
+                _scaledMinIndex = curBinMinIndex;
+                _scaledPointList.Add( _fullPointList[curBinEntryIndex] );
                 if( curBinEntryIndex != curBinMinIndex )
-                    scaledPointList.Add( fullPointList[curBinMinIndex] );
+                    _scaledPointList.Add( _fullPointList[curBinMinIndex] );
                 if( curBinEntryIndex != curBinMaxIndex &&
                     curBinMinIndex != curBinMaxIndex )
-                    scaledPointList.Add( fullPointList[curBinMaxIndex] );
+                    _scaledPointList.Add( _fullPointList[curBinMaxIndex] );
                 if( curBinEntryIndex != curBinMaxIndex &&
                     curBinMinIndex != curBinMaxIndex &&
                     curBinMaxIndex != curBinExitIndex )
-                    scaledPointList.Add( fullPointList[curBinExitIndex] );
-                if( fullPointList[curBinMaxIndex].Y != 0 && lastBin > 0 )
-                    scaledMaxIndexList[lastBin-1] = curBinMaxIndex;
+                    _scaledPointList.Add( _fullPointList[curBinExitIndex] );
+                if( _fullPointList[curBinMaxIndex].Y != 0 && lastBin > 0 )
+                    _scaledMaxIndexList[lastBin-1] = curBinMaxIndex;
             }
         }
 
@@ -167,42 +166,42 @@ namespace pwiz.MSGraph
 
         public int FullCount
         {
-            get { return fullPointList.Count; }
+            get { return _fullPointList.Count; }
         }
 
         public int ScaledCount
         {
-            get { return scaledPointList.Count; }
+            get { return _scaledPointList.Count; }
         }
 
         public int MaxCount
         {
-            get { return scaledMaxIndexList.Count; }
+            get { return _scaledMaxIndexList.Count; }
         }
 
-        public PointPairList FullList { get { return fullPointList; } }
-        public PointPairList ScaledList { get { return scaledPointList; } }
-        public List<int> ScaledMaxIndexList { get { return scaledMaxIndexList; } }
+        public PointPairList FullList { get { return _fullPointList; } }
+        public PointPairList ScaledList { get { return _scaledPointList; } }
+        public List<int> ScaledMaxIndexList { get { return _scaledMaxIndexList; } }
 
         /// <summary>
         /// Returns the index of the point in the scaled list with the lowest X value greater than or equal to 'x'; returns -1 if no such value is in the list
         /// </summary>
         public int LowerBound( double x )
         {
-            if( scaledPointList.Count == 0 ||
-                scaledPointList[scaledPointList.Count - 1].X < x )
+            if( _scaledPointList.Count == 0 ||
+                _scaledPointList[_scaledPointList.Count - 1].X < x )
                 return -1;
 
             int min = 0;
-            int max = scaledPointList.Count;
+            int max = _scaledPointList.Count;
             int best = max - 1;
             while( true )
             {
                 int i = ( max + min ) / 2;
-                if( scaledPointList[i].X < x )
+                if( _scaledPointList[i].X < x )
                 {
                     if( min == i )
-                        return ( max == scaledPointList.Count ? -1 : max );
+                        return ( max == _scaledPointList.Count ? -1 : max );
                     min = i;
                 } else
                 {
@@ -217,16 +216,16 @@ namespace pwiz.MSGraph
 
         public int GetNearestMaxIndexToBin( int bin )
         {
-            if( scaledMaxIndexList[bin] >= 0 )
-                return scaledMaxIndexList[bin];
+            if( _scaledMaxIndexList[bin] >= 0 )
+                return _scaledMaxIndexList[bin];
 
             int i=1;
-            while( bin + i < scaledMaxIndexList.Count && bin - i >= 0 )
+            while( bin + i < _scaledMaxIndexList.Count && bin - i >= 0 )
             {
-                if( bin + i < scaledMaxIndexList.Count && scaledMaxIndexList[bin + i] >= 0 )
-                    return scaledMaxIndexList[bin + i];
-                if( bin - i >= 0 && scaledMaxIndexList[bin - i] >= 0 )
-                    return scaledMaxIndexList[bin - i];
+                if( bin + i < _scaledMaxIndexList.Count && _scaledMaxIndexList[bin + i] >= 0 )
+                    return _scaledMaxIndexList[bin + i];
+                if( bin - i >= 0 && _scaledMaxIndexList[bin - i] >= 0 )
+                    return _scaledMaxIndexList[bin - i];
                 ++i;
             }
             return -1;
@@ -237,9 +236,9 @@ namespace pwiz.MSGraph
             get
             {
                 if( ScaledCount > 0 )
-                    return scaledPointList[index];
+                    return _scaledPointList[index];
                 else
-                    return fullPointList[index];
+                    return _fullPointList[index];
             }
         }
 
@@ -251,17 +250,17 @@ namespace pwiz.MSGraph
         public IEnumerator<PointPair> GetEnumerator()
         {
             if( ScaledCount > 0 )
-                return scaledPointList.GetEnumerator();
+                return _scaledPointList.GetEnumerator();
             else
-                return fullPointList.GetEnumerator();
+                return _fullPointList.GetEnumerator();
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             if( ScaledCount > 0 )
-                return scaledPointList.GetEnumerator();
+                return _scaledPointList.GetEnumerator();
             else
-                return fullPointList.GetEnumerator();
+                return _fullPointList.GetEnumerator();
         }
     }
 }

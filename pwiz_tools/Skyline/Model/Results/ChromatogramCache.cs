@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Model.Results
         /// <returns>A path to the data cache</returns>
         public static string FinalPathForName(string documentPath, string name)
         {
-            string documentDir = Path.GetDirectoryName(documentPath);
+            string documentDir = Path.GetDirectoryName(documentPath) ?? "";
             string modifier = (name != null ? '_' + name : "");
             return Path.Combine(documentDir,
                 Path.GetFileNameWithoutExtension(documentPath) + modifier + EXT);
@@ -59,7 +59,7 @@ namespace pwiz.Skyline.Model.Results
         {
             string filePath = SampleHelp.GetPathFilePart(dataFilePath);
             string dirData = Path.GetDirectoryName(filePath);
-            string dirDocument = Path.GetDirectoryName(documentPath);
+            string dirDocument = Path.GetDirectoryName(documentPath) ?? "";
 
             // Start with the file basename
             StringBuilder sbName = new StringBuilder(Path.GetFileNameWithoutExtension(filePath));

@@ -810,8 +810,8 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private T InitExporter<T>(T exporter)
-            where T : MassListExporter
+        private TExp InitExporter<TExp>(TExp exporter)
+            where TExp : MassListExporter
         {
             exporter.Strategy = ExportStrategy;
             exporter.IgnoreProteins = IgnoreProteins;

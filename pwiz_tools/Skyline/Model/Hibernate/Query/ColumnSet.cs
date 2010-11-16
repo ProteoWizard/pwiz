@@ -163,7 +163,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             }
         }
 
-        private List<TreeNode> GetTreeNodes(Table table, Identifier identifier)
+        private IEnumerable<TreeNode> GetTreeNodes(Table table, Identifier identifier)
         {
             List<TreeNode> treeNodes = new List<TreeNode>();
             IClassMetadata classMetadata = Schema.GetClassMetadata(table.PersistentClass);

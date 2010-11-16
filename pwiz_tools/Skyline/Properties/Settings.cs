@@ -1218,20 +1218,20 @@ namespace pwiz.Skyline.Properties
         }
     }
 
-    public abstract class SettingsList<T>
-        : SettingsListBase<T>, IItemEditor<T>
-        where T : IKeyContainer<string>, IXmlSerializable
+    public abstract class SettingsList<TItem>
+        : SettingsListBase<TItem>, IItemEditor<TItem>
+        where TItem : IKeyContainer<string>, IXmlSerializable
     {
         #region IItemEditor<T> Members
 
-        public T NewItem(Control owner, IEnumerable<T> existing, object tag)
+        public TItem NewItem(Control owner, IEnumerable<TItem> existing, object tag)
         {
-            return EditItem(owner, default(T), existing, tag);
+            return EditItem(owner, default(TItem), existing, tag);
         }
 
-        public abstract T EditItem(Control owner, T item, IEnumerable<T> existing, object tag);
+        public abstract TItem EditItem(Control owner, TItem item, IEnumerable<TItem> existing, object tag);
 
-        public abstract T CopyItem(T item);
+        public abstract TItem CopyItem(TItem item);
 
         #endregion
 
@@ -1240,16 +1240,16 @@ namespace pwiz.Skyline.Properties
         public override bool ExcludeDefault { get { return false; } }
     }
 
-    public abstract class SettingsListBase<T>
-        : XmlMappedList<string, T>, IListDefaults<T>, IListEditor<T>, IListEditorSupport
-        where T : IKeyContainer<string>, IXmlSerializable
+    public abstract class SettingsListBase<TItem>
+        : XmlMappedList<string, TItem>, IListDefaults<TItem>, IListEditor<TItem>, IListEditorSupport
+        where TItem : IKeyContainer<string>, IXmlSerializable
     {
         public virtual void AddDefaults()
         {
             AddRange(GetDefaults());
         }
 
-        public IEnumerable<T> GetDefaults()
+        public IEnumerable<TItem> GetDefaults()
         {
             return GetDefaults(RevisionIndexCurrent);
         }
@@ -1258,15 +1258,15 @@ namespace pwiz.Skyline.Properties
 
         public virtual int RevisionIndexCurrent { get { return 0; } }
 
-        public abstract IEnumerable<T> GetDefaults(int revisionIndex);
+        public abstract IEnumerable<TItem> GetDefaults(int revisionIndex);
 
         #endregion
 
         #region IListEditor<T> Members
 
-        public IEnumerable<T> EditList(Control owner, object tag)
+        public IEnumerable<TItem> EditList(Control owner, object tag)
         {
-            var dlg = new EditListDlg<SettingsListBase<T>, T>(this, tag);
+            var dlg = new EditListDlg<SettingsListBase<TItem>, TItem>(this, tag);
             if (dlg.ShowDialog(owner) == DialogResult.OK)
                 return dlg.GetAll();
             return null;
@@ -1300,7 +1300,7 @@ namespace pwiz.Skyline.Properties
             }
         }
 
-        private void MergeDifferences(IEnumerable<T> itemsNew, IEnumerable<T> itemsOld)
+        private void MergeDifferences(IEnumerable<TItem> itemsNew, IEnumerable<TItem> itemsOld)
         {
             var itemsOldArray = itemsOld.ToArray();
             foreach (var item in itemsNew)

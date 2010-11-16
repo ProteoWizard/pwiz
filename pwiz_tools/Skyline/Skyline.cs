@@ -455,7 +455,8 @@ namespace pwiz.Skyline
             bool replaced = SetDocument(docUndo, Document);
 
             // If no background processing exists, this should succeed.
-            Debug.Assert(replaced);
+            if (!replaced)
+                throw new InvalidOperationException("Failed to restore document");
 
             return docReplaced;
         }
@@ -992,7 +993,7 @@ namespace pwiz.Skyline
         private string FilterPeptideList(string text)
         {
             SrmSettings settings = DocumentUI.Settings;
-            Enzyme enzyme = settings.PeptideSettings.Enzyme;
+//            Enzyme enzyme = settings.PeptideSettings.Enzyme;
 
             // Check to see if any of the peptides would be filtered
             // by the current settings.
@@ -1217,10 +1218,10 @@ namespace pwiz.Skyline
             Settings.Default.SequenceTreeExpandPrecursors = false;
         }
 
-        private void BulkUpdateTreeNodes<T>(Action update)
-            where T : TreeNode
+        private void BulkUpdateTreeNodes<TNode>(Action update)
+            where TNode : TreeNode
         {
-            TreeNode nodeTop = sequenceTree.GetNodeOfType<T>(sequenceTree.TopNode) ??
+            TreeNode nodeTop = sequenceTree.GetNodeOfType<TNode>(sequenceTree.TopNode) ??
                 sequenceTree.TopNode;
 
             using (sequenceTree.BeginLargeUpdate())
@@ -1743,27 +1744,27 @@ namespace pwiz.Skyline
 
         #region Help menu
 
-        private void homeMenuItem_Click(object sender, EventArgs e)
+        private static void homeMenuItem_Click(object sender, EventArgs e)
         {
             Process.Start("http://proteome.gs.washington.edu/software/skyline/");
         }
 
-        private void videosMenuItem_Click(object sender, EventArgs e)
+        private static void videosMenuItem_Click(object sender, EventArgs e)
         {
             Process.Start("http://proteome.gs.washington.edu/software/Skyline/videos.html");
         }
 
-        private void tutorialsMenuItem_Click(object sender, EventArgs e)
+        private static void tutorialsMenuItem_Click(object sender, EventArgs e)
         {
             Process.Start("http://proteome.gs.washington.edu/software/Skyline/tutorials.html");
         }
 
-        private void supportMenuItem_Click(object sender, EventArgs e)
+        private static void supportMenuItem_Click(object sender, EventArgs e)
         {
             Process.Start("http://proteome.gs.washington.edu/software/Skyline/support.html");
         }
 
-        private void issuesMenuItem_Click(object sender, EventArgs e)
+        private static void issuesMenuItem_Click(object sender, EventArgs e)
         {
             Process.Start("http://proteome.gs.washington.edu/software/Skyline/issues.html");
         }
@@ -1797,7 +1798,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private void splitMain_SplitterMoved(object sender, SplitterEventArgs e)
+        private static void splitMain_SplitterMoved(object sender, SplitterEventArgs e)
         {
             Settings.Default.SplitMainX = e.SplitX;
         }
@@ -2480,7 +2481,7 @@ namespace pwiz.Skyline
                 act();
         }
 
-        private void RunUIAction<T>(Action<T> act, T arg)
+        private void RunUIAction<TArg>(Action<TArg> act, TArg arg)
         {
             if (InvokeRequired)
                 BeginInvoke(act, arg);

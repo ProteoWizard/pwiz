@@ -735,11 +735,13 @@ namespace pwiz.Skyline.Util
             else
             // Suppress the unreachable code warning
 #pragma warning disable 162
+// ReSharper disable HeuristicUnreachableCode
             {
                 cc = cc.ReplaceAAs("LIWF", "5");
                 cc = cc.ReplaceAAs("MYV", "1");
                 cc = cc.ReplaceAAs("A-Z", "0");
             }
+// ReSharper restore HeuristicUnreachableCode
 #pragma warning restore 162
 
             double score = 0.0;
@@ -948,8 +950,10 @@ namespace pwiz.Skyline.Util
                     where = i;
                     // Suppress unreachable code warning
 #pragma warning disable 162
+// ReSharper disable HeuristicUnreachableCode
                     if (!DUPLICATE_ORIGINAL_CODE)
                         break;
+// ReSharper restore HeuristicUnreachableCode
 #pragma warning restore 162
                 }
             }

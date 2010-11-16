@@ -183,7 +183,8 @@ namespace pwiz.SkylineTest
             const int ntermStart = 50;
             docFasta2 = docFasta.ChangeSettings(settings.ChangePeptideFilter(
                 f => f.ChangeExcludeNTermAAs(ntermStart)));
-            CheckPeptides(docFasta, docFasta2, node => node.Peptide.Begin.Value >= ntermStart);
+            CheckPeptides(docFasta, docFasta2, node =>
+                node.Peptide.Begin.HasValue && node.Peptide.Begin.Value >= ntermStart);
             Assert.AreSame(docFasta.Children[posList], docFasta2.Children[posList]);
 
             // Use ragged end exclusion
@@ -249,7 +250,7 @@ namespace pwiz.SkylineTest
             if (fastaSeq == null)
                 return true;
 
-            int begin = peptide.Begin.Value;
+            int begin = peptide.Begin ?? 0;
             return ((begin < 2 || "KR".IndexOf(fastaSeq.Sequence[begin - 2]) == -1) &&
                     "KR".IndexOf(peptide.NextAA) == -1);
         }

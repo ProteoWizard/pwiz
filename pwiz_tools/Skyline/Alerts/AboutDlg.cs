@@ -35,12 +35,12 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
-        private void linkProteome_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private static void linkProteome_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             Process.Start("http://proteome.gs.washington.edu");
         }
 
-        private void linkProteoWizard_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private static void linkProteoWizard_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             Process.Start("http://proteowizard.sourceforge.net/");
         }

@@ -374,12 +374,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public MSGraphItemType GraphItemType
         {
-            get { return MSGraphItemType.Spectrum; }
+            get { return MSGraphItemType.spectrum; }
         }
 
         public MSGraphItemDrawMethod GraphItemDrawMethod
         {
-            get { return MSGraphItemDrawMethod.Stick; }
+            get { return MSGraphItemDrawMethod.stick; }
         }
 
         public void CustomizeYAxis(Axis axis)

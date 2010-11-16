@@ -1,6 +1,6 @@
 ﻿namespace pwiz.Skyline.SettingsUI
 {
-    sealed partial class EditListDlg<T, TItem>
+    sealed partial class EditListDlg<TList, TItem>
     {
         /// <summary>
         /// Required designer variable.

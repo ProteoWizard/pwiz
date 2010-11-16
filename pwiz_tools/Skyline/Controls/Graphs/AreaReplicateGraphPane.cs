@@ -359,12 +359,12 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
                     }
                     // And make the regression values 100 percent
-                    for (int j = 0; j < pointPairListRegression.Count; j++)
+                    foreach (PointPair regression in pointPairListRegression)
                     {
                         // If it is missing, leave it missing.
-                        double regressionValue = pointPairListRegression[j].Y;
+                        double regressionValue = regression.Y;
                         if (regressionValue != PointPairBase.Missing && regressionValue != 0)
-                            pointPairListRegression[j].Y = 100;
+                            regression.Y = 100;
                     }
                 }                
             }
@@ -393,7 +393,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
             protected override PointPair CreatePointPair(int iResult, TransitionGroupChromInfo chromInfo)
             {
-                return new PointPair(iResult, GetValue(chromInfo).Value);
+                float? value = GetValue(chromInfo);
+                return value.HasValue ? new PointPair(iResult, value.Value) : PointPairMissing(iResult);
             }
 
             private float? GetValue(TransitionGroupChromInfo chromInfo)

@@ -1704,9 +1704,9 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private static Results<T> ReadResults<T>(XmlReader reader, SrmSettings settings, Enum start,
-                Func<XmlReader, SrmSettings, int, T> readInfo)
-            where T : ChromInfo
+        private static Results<TItem> ReadResults<TItem>(XmlReader reader, SrmSettings settings, Enum start,
+                Func<XmlReader, SrmSettings, int, TItem> readInfo)
+            where TItem : ChromInfo
         {
             // If the results element is empty, then there are no results to read.
             if (reader.IsEmptyElement)
@@ -1720,7 +1720,7 @@ namespace pwiz.Skyline.Model
                 throw new InvalidDataException("No results information found in the document settings");
 
             reader.ReadStartElement();
-            var arrayListChromInfos = new List<T>[results.Chromatograms.Count];
+            var arrayListChromInfos = new List<TItem>[results.Chromatograms.Count];
             ChromatogramSet chromatogramSet = null;
             int index = -1;
             while (reader.IsStartElement(start))
@@ -1736,14 +1736,14 @@ namespace pwiz.Skyline.Model
                 if (indexFile == -1)
                     throw new InvalidDataException(string.Format("No file with id {0} found in the replicate {1}", fileId, name));
 
-                T chromInfo = readInfo(reader, settings, indexFile);
+                TItem chromInfo = readInfo(reader, settings, indexFile);
                 // Consume the tag
                 reader.Read();
 
-                if (chromInfo != default(T))
+                if (chromInfo != default(TItem))
                 {
                     if (arrayListChromInfos[index] == null)
-                        arrayListChromInfos[index] = new List<T>();
+                        arrayListChromInfos[index] = new List<TItem>();
                     // Deal with cache corruption issue where the same results info could
                     // get written multiple times for the same precursor.
                     var listChromInfos = arrayListChromInfos[index];
@@ -1753,13 +1753,13 @@ namespace pwiz.Skyline.Model
             }
             reader.ReadEndElement();
 
-            var arrayChromInfoLists = new ChromInfoList<T>[arrayListChromInfos.Length];
+            var arrayChromInfoLists = new ChromInfoList<TItem>[arrayListChromInfos.Length];
             for (int i = 0; i < arrayListChromInfos.Length; i++)
             {
                 if (arrayListChromInfos[i] != null)
-                    arrayChromInfoLists[i] = new ChromInfoList<T>(arrayListChromInfos[i]);
+                    arrayChromInfoLists[i] = new ChromInfoList<TItem>(arrayListChromInfos[i]);
             }
-            return new Results<T>(arrayChromInfoLists);
+            return new Results<TItem>(arrayChromInfoLists);
         }
 
         /// <summary>
@@ -2145,10 +2145,10 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private static void WriteResults<T>(XmlWriter writer, SrmSettings settings,
-                IEnumerable<ChromInfoList<T>> results, Enum start, Enum startChild,
-                Action<XmlWriter, T> writeChromInfo)
-            where T : ChromInfo
+        private static void WriteResults<TItem>(XmlWriter writer, SrmSettings settings,
+                IEnumerable<ChromInfoList<TItem>> results, Enum start, Enum startChild,
+                Action<XmlWriter, TItem> writeChromInfo)
+            where TItem : ChromInfo
         {
             bool started = false;
             var enumReplicates = settings.MeasuredResults.Chromatograms.GetEnumerator();
@@ -2159,6 +2159,8 @@ namespace pwiz.Skyline.Model
                 if (listChromInfo == null)
                     continue;
                 var chromatogramSet = enumReplicates.Current;
+                if (chromatogramSet == null)
+                    continue;
                 string name = chromatogramSet.Name;
                 foreach (var chromInfo in listChromInfo)
                 {

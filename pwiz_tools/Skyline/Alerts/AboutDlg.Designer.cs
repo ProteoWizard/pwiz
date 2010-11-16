@@ -54,7 +54,7 @@ namespace pwiz.Skyline.Alerts
             this.linkProteome.TabIndex = 0;
             this.linkProteome.TabStop = true;
             this.linkProteome.Text = "proteome.gs.washington.edu";
-            this.linkProteome.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkProteome_LinkClicked);
+            this.linkProteome.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(linkProteome_LinkClicked);
             // 
             // btnOk
             // 
@@ -133,7 +133,7 @@ namespace pwiz.Skyline.Alerts
             this.linkProteoWizard.TabIndex = 8;
             this.linkProteoWizard.TabStop = true;
             this.linkProteoWizard.Text = "proteowizard.sourceforge.net";
-            this.linkProteoWizard.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkProteoWizard_LinkClicked);
+            this.linkProteoWizard.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(linkProteoWizard_LinkClicked);
             // 
             // label3
             // 

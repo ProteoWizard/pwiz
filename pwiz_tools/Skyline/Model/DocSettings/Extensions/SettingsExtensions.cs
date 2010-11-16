@@ -25,7 +25,7 @@ namespace pwiz.Skyline.Model.DocSettings.Extensions
     /// </summary>
     public static class SettingsExtensions
     {
-        public delegate T ChangeFunc<T>(T value);
+        public delegate TObj ChangeFunc<TObj>(TObj value);
 
         public static SrmSettings ChangePeptideSettings(this SrmSettings settings,
             ChangeFunc<PeptideSettings> change)

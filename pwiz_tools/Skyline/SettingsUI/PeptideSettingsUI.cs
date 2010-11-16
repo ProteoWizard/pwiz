@@ -430,7 +430,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     // If not all libraries contain the most recently selected
                     // rank ID, then leave the default of no rank ID.
-                    if (!spec.PeptideRankIds.Contains(rankId))
+                    if (rankId != null && !spec.PeptideRankIds.Contains(rankId))
                         rankId = null;
 
                     rankIdSet.UnionWith(spec.PeptideRankIds);
@@ -650,8 +650,8 @@ namespace pwiz.Skyline.SettingsUI
             get
             {
                 var availableLibraries = new List<string>();
-                for (int i = 0; i < listLibraries.Items.Count; i++)
-                    availableLibraries.Add(listLibraries.Items[i].ToString());
+                foreach (object item in listLibraries.Items)
+                    availableLibraries.Add(item.ToString());
                 return availableLibraries.ToArray();
             }
         }

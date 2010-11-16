@@ -32,6 +32,8 @@ namespace pwiz.Skyline.Controls
 	/// </summary>
 	public class CustomTip : NativeWindow, IDisposable
 	{
+        private const int SHADOW_LENGTH = 4;
+
         private bool _isMouseIn;
         private bool _onMouseMove;
         private bool _onMouseDown;
@@ -39,7 +41,6 @@ namespace pwiz.Skyline.Controls
         private bool _captured;
 		private bool _disposed;
 		private bool _hasShadow = true;
-		private const int _shadowLength = 4;
 		private Point _location = new Point(0,0);
 		private Size _size = new Size(200, 100);
 		private byte _alpha = 0xff;
@@ -67,7 +68,7 @@ namespace pwiz.Skyline.Controls
 		/// Paints the shadow for the window.
 		/// </summary>
 		/// <param name="e">A <see cref="PaintEventArgs"/> containing the event data.</param>
-		protected void PaintShadow(NCPaintEventArgs e)
+		protected void PaintShadow(NcPaintEventArgs e)
 		{
 			if (_hasShadow)
 			{
@@ -103,7 +104,7 @@ namespace pwiz.Skyline.Controls
 			}
 		}
 
-        protected void PaintBorder(NCPaintEventArgs e)
+        protected void PaintBorder(NcPaintEventArgs e)
         {
             Rectangle rectBorder = GetBorderRectangle(e.Bounds);
 
@@ -190,7 +191,7 @@ namespace pwiz.Skyline.Controls
                     // Paint the window on the bitmap
                     Rectangle bounds = new Rectangle(0, 0, size.Width, size.Height);
                     // First non-client area
-                    OnNCPaint(new NCPaintEventArgs(g, bounds));
+                    OnNCPaint(new NcPaintEventArgs(g, bounds));
                     // Adjust graphics and paint client area
                     using (Region region = g.Clip)
                     {
@@ -436,6 +437,7 @@ namespace pwiz.Skyline.Controls
             return new Point(pnt.x, pnt.y);
         }
 
+/*
         private POINT MousePositionToClient(POINT point)
 		{
 			POINT point1;
@@ -444,7 +446,9 @@ namespace pwiz.Skyline.Controls
 			User32.ScreenToClient(Handle, ref point1);
 			return point1;
 		}
+*/
 
+/*
 		private POINT MousePositionToScreen(POINT point)
 		{
 			POINT point1;
@@ -453,7 +457,9 @@ namespace pwiz.Skyline.Controls
 			User32.ClientToScreen(Handle, ref point1);
 			return point1;
 		}
+*/
 
+/*
 		private POINT MousePositionToScreen(Message msg)
 		{
 			POINT point1;
@@ -465,8 +471,11 @@ namespace pwiz.Skyline.Controls
 			}
 			return point1;
 		}
+*/
 
-		private void PerformWmMouseDown(ref Message m)
+// ReSharper disable UnusedParameter.Local
+		private static void PerformWmMouseDown(ref Message m)
+// ReSharper restore UnusedParameter.Local
 		{
 		}
 
@@ -479,7 +488,9 @@ namespace pwiz.Skyline.Controls
             _onMouseDown = true;
         }
 
-        private void PerformWmMouseMove(ref Message m)
+// ReSharper disable UnusedParameter.Local
+        private static void PerformWmMouseMove(ref Message m)
+// ReSharper restore UnusedParameter.Local
 		{
 		}
 
@@ -493,7 +504,9 @@ namespace pwiz.Skyline.Controls
             _onMouseMove = true;
         }
 
-        private void PerformWmMouseUp(ref Message m)
+// ReSharper disable UnusedParameter.Local
+        private static void PerformWmMouseUp(ref Message m)
+// ReSharper restore UnusedParameter.Local
 		{
 		}
 
@@ -506,7 +519,7 @@ namespace pwiz.Skyline.Controls
             _onMouseUp = true;
         }
 
-        private void PerformWmMouseActivate(ref Message m)
+        private static void PerformWmMouseActivate(ref Message m)
 		{
 			m.Result = (IntPtr) 3;
 		}
@@ -530,13 +543,13 @@ namespace pwiz.Skyline.Controls
 
 		#region == Other messages ==
 
-		private bool PerformWmNcHitTest(ref Message m)
+		private static bool PerformWmNcHitTest(ref Message m)
 		{
-			POINT point1;
-			Point p = Control.MousePosition;
-			point1.x = p.X;
-			point1.y = p.Y;
-			point1 = MousePositionToClient(point1);
+//			POINT point1;
+//			Point p = Control.MousePosition;
+//			point1.x = p.X;
+//			point1.y = p.Y;
+//			point1 = MousePositionToClient(point1);
 
 			m.Result = (IntPtr) (-1);
 			return true;
@@ -562,11 +575,11 @@ namespace pwiz.Skyline.Controls
 
             using (Graphics g = Graphics.FromHdc(hDC))
             {
-                OnNCPaint(new NCPaintEventArgs(g, bounds));
+                OnNCPaint(new NcPaintEventArgs(g, bounds));
             }
         }
 
-        protected virtual void OnNCPaint(NCPaintEventArgs e)
+        protected virtual void OnNCPaint(NcPaintEventArgs e)
         {
             PaintShadow(e);
             PaintBorder(e);
@@ -601,7 +614,9 @@ namespace pwiz.Skyline.Controls
             rectProposed = GetClientRectangle(rectProposed);
         }
         
-        private void PerformWmSetCursor(ref Message m)
+// ReSharper disable UnusedParameter.Local
+        private static void PerformWmSetCursor(ref Message m)
+// ReSharper restore UnusedParameter.Local
 		{
 		}
 
@@ -790,6 +805,7 @@ namespace pwiz.Skyline.Controls
 			}
 		}
 
+/*
 		private void UpdateBounds()
 		{
 		    RECT rect1 = new RECT();
@@ -800,6 +816,7 @@ namespace pwiz.Skyline.Controls
 			}
 			UpdateBounds(rect1.left, rect1.top, rect1.right - rect1.left, rect1.bottom - rect1.top);
 		}
+*/
 
 		private void UpdateBounds(int x, int y, int width, int height)
 		{
@@ -991,8 +1008,8 @@ namespace pwiz.Skyline.Controls
             get { return ClientRectangle.Size; }
             set
             {
-                Size = new Size(value.Width + _shadowLength + 1,
-                    value.Height + _shadowLength + 1);
+                Size = new Size(value.Width + SHADOW_LENGTH + 1,
+                    value.Height + SHADOW_LENGTH + 1);
             }
         }
 
@@ -1006,7 +1023,7 @@ namespace pwiz.Skyline.Controls
         protected static Rectangle GetBorderRectangle(Rectangle bounds)
         {
             return new Rectangle(bounds.Left, bounds.Top,
-                bounds.Width - _shadowLength, bounds.Height - _shadowLength);
+                bounds.Width - SHADOW_LENGTH, bounds.Height - SHADOW_LENGTH);
         }
 
         protected Rectangle GetShadowRectangle(Rectangle bounds)
@@ -1015,7 +1032,7 @@ namespace pwiz.Skyline.Controls
                 return Rectangle.Empty;
 
             Rectangle rectShadow = GetBorderRectangle(bounds);
-            rectShadow.Offset(_shadowLength, _shadowLength);
+            rectShadow.Offset(SHADOW_LENGTH, SHADOW_LENGTH);
 			return rectShadow;
 		}
 
@@ -1119,9 +1136,9 @@ namespace pwiz.Skyline.Controls
 		#endregion
 	}
 
-    public class NCPaintEventArgs
+    public class NcPaintEventArgs
     {
-        public NCPaintEventArgs(Graphics g, Rectangle bounds)
+        public NcPaintEventArgs(Graphics g, Rectangle bounds)
         {
             Graphics = g;
             Bounds = bounds;

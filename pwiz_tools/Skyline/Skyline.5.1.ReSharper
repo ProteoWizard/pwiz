@@ -80,6 +80,7 @@
       <Abbreviation Text="DB" />
       <Abbreviation Text="POM" />
       <Abbreviation Text="IS" />
+      <Abbreviation Text="DC" />
     </Naming2>
   </CodeStyleSettings>
 </Configuration>

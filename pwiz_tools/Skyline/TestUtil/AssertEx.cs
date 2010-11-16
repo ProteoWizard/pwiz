@@ -32,21 +32,21 @@ namespace pwiz.SkylineTestUtil
 {
     public class AssertEx
     {
-        public static void ThrowsException<T>(Action throwEx)
-            where T : Exception
+        public static void ThrowsException<TEx>(Action throwEx)
+            where TEx : Exception
         {
-            ThrowsException<T>(() => { throwEx(); return null; });
+            ThrowsException<TEx>(() => { throwEx(); return null; });
         }
 
-        public static void ThrowsException<T>(Func<object> throwEx)
-            where T : Exception
+        public static void ThrowsException<TEx>(Func<object> throwEx)
+            where TEx : Exception
         {
             try
             {
                 throwEx();
                 Assert.Fail("Exception expected");
             }
-            catch (T)
+            catch (TEx)
             {
             }            
         }
@@ -63,45 +63,45 @@ namespace pwiz.SkylineTestUtil
 
         private const string XML_DIRECTIVE = "<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n";
 
-        public static T Deserialize<T>(string s)
+        public static TObj Deserialize<TObj>(string s)
         {
             s = XML_DIRECTIVE + s;
 
-            XmlSerializer ser = new XmlSerializer(typeof(T));
+            XmlSerializer ser = new XmlSerializer(typeof(TObj));
             using (TextReader reader = new StringReader(s))
             {
-                return (T)ser.Deserialize(reader);
+                return (TObj)ser.Deserialize(reader);
             }            
         }
 
-        public static void Serialization<T>(string s, Action<T, T> validate)
-            where T : class
+        public static void Serialization<TObj>(string s, Action<TObj, TObj> validate)
+            where TObj : class
         {
-            Serializable(Deserialize<T>(s), validate);
+            Serializable(Deserialize<TObj>(s), validate);
         }
 
-        public static void DeserializeNoError<T>(string s)
+        public static void DeserializeNoError<TObj>(string s)
         {
-            DeserializeError<T, Exception>(s, false);
+            DeserializeError<TObj, Exception>(s, false);
         }
 
-        public static void DeserializeError<T>(string s)
+        public static void DeserializeError<TObj>(string s)
         {
-            DeserializeError<T, InvalidDataException>(s);
+            DeserializeError<TObj, InvalidDataException>(s);
         }
 
-        public static void DeserializeError<T, TEx>(string s)
+        public static void DeserializeError<TObj, TEx>(string s)
             where TEx : Exception
         {
-            DeserializeError<T, TEx>(s, true);
+            DeserializeError<TObj, TEx>(s, true);
         }
 
-        public static void DeserializeError<T, TEx>(string s, bool expectError)
+        public static void DeserializeError<TObj, TEx>(string s, bool expectError)
             where TEx : Exception
         {
             s = XML_DIRECTIVE + s;
 
-            XmlSerializer ser = new XmlSerializer(typeof(T));
+            XmlSerializer ser = new XmlSerializer(typeof(TObj));
             using (TextReader reader = new StringReader(s))
             {
                 try
@@ -111,7 +111,7 @@ namespace pwiz.SkylineTestUtil
                     if (expectError)
                     {
                         // Fail if deserialization succeeds.
-                        Assert.Fail(String.Format("Expected error deserializing {0}:\r\n{1}", typeof(T).Name, s));
+                        Assert.Fail(String.Format("Expected error deserializing {0}:\r\n{1}", typeof(TObj).Name, s));
                     }
                 }
                 catch (InvalidOperationException x)
@@ -139,24 +139,24 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        public static void Serializable<T>(T target, Action<T, T> validate)
-            where T : class
+        public static void Serializable<TObj>(TObj target, Action<TObj, TObj> validate)
+            where TObj : class
         {
             Serializable(target, 1, validate);
         }
 
-        public static void Serializable<T>(T target, int roundTrips, Action<T, T> validate)
-            where T : class
+        public static void Serializable<TObj>(TObj target, int roundTrips, Action<TObj, TObj> validate)
+            where TObj : class
         {
             string expected = null;
             for (int i = 0; i < roundTrips; i++)
                 validate(target, RoundTrip(target, ref expected));
         }
 
-        public static T RoundTrip<T>(T target, ref string expected)
-            where T : class
+        public static TObj RoundTrip<TObj>(TObj target, ref string expected)
+            where TObj : class
         {
-            XmlSerializer ser = new XmlSerializer(typeof(T));
+            XmlSerializer ser = new XmlSerializer(typeof(TObj));
             StringBuilder sb = new StringBuilder();
             using (XmlTextWriter writer = new XmlTextWriter(new StringWriter(sb)))
             {
@@ -171,7 +171,7 @@ namespace pwiz.SkylineTestUtil
                         NoDiff(expected, sb.ToString());
                     using (TextReader reader = new StringReader(sb.ToString()))
                     {
-                        T copy = (T)ser.Deserialize(reader);
+                        TObj copy = (TObj)ser.Deserialize(reader);
                         return copy;
                     }
                 }

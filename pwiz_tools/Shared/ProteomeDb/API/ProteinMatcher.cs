@@ -82,7 +82,7 @@ namespace pwiz.ProteomeDatabase.API
         }
 
         public int MaxResults { get; private set; }
-        public Action<ProteinMatchQuery> Callback { get; private set; }
+//        public Action<ProteinMatchQuery> Callback { get; private set; }
         public void BeginExecute(Action<ProteinMatchQuery> callback)
         {
             _callback = callback;
@@ -112,7 +112,7 @@ namespace pwiz.ProteomeDatabase.API
             foreach (DbProtein dbProtein in query.Enumerable())
             {
                 ThrowIfCancelled();
-                if (newMatches.ContainsKey(dbProtein.Id.Value))
+                if (!dbProtein.Id.HasValue || newMatches.ContainsKey(dbProtein.Id.Value))
                 {
                     continue;
                 }
@@ -146,7 +146,8 @@ namespace pwiz.ProteomeDatabase.API
             foreach (var entry in proteinNames)
             {
                 var proteinMatch = new ProteinMatch(Settings, new Protein(Settings.ProteomeDb, entry.Key, entry.Value));
-                newMatches.Add(entry.Key.Id.Value, proteinMatch);
+                if (entry.Key.Id.HasValue)
+                    newMatches.Add(entry.Key.Id.Value, proteinMatch);
             }
             SetProteinMatches(newMatches);
         }
@@ -220,7 +221,7 @@ namespace pwiz.ProteomeDatabase.API
         /// <summary>
         /// Returns the string that sorts lexicographically after str.
         /// </summary>
-        private String NextString(String str)
+        private static String NextString(String str)
         {
             if (str.Length == 0)
             {

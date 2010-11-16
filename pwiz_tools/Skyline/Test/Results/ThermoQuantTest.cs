@@ -108,7 +108,7 @@ namespace pwiz.SkylineTest.Results
             var docContainer = new ResultsTestDocumentContainer(doc, docPath);
             string resultsPath = testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" +
                 ExtensionTestContext.ExtThermoRaw);
-            string dirPath = Path.GetDirectoryName(resultsPath);
+            string dirPath = Path.GetDirectoryName(resultsPath) ?? "";
             // Remove any existing temp and cache files
             foreach (var path in Directory.GetFiles(dirPath))
             {
@@ -195,17 +195,16 @@ namespace pwiz.SkylineTest.Results
                 else
                 {
                     bool missingRatio = false;
-                    for (int i = 0; i < nodeGroup.Results.Count; i++)
+                    foreach (ChromInfoList<TransitionGroupChromInfo> chromInfoList in nodeGroup.Results)
                     {
-                        var ratioHeavy = nodeGroup.Results[i][0].Ratio;
+                        var ratioHeavy = chromInfoList[0].Ratio;
                         if (!ratioHeavy.HasValue)
                             missingRatio = true;
                     }
                     int ratioCount1 = 0;
                     int ratioCount2 = 0;
-                    for (int i = 0; i < nodeGroup.Children.Count; i++)
+                    foreach (TransitionDocNode nodeTranHeavy in nodeGroup.Children)
                     {
-                        var nodeTranHeavy = (TransitionDocNode) nodeGroup.Children[i];
                         float? ratioHeavy = nodeTranHeavy.Results[0][0].Ratio;
                         if (ratioHeavy.HasValue)
                         {
@@ -261,7 +260,7 @@ namespace pwiz.SkylineTest.Results
                 {
                     float? ratioGroup = nodeGroupHeavy.Results[0][0].Ratio;
                     Assert.IsTrue(ratioGroup.HasValue, "Group ratio removed with transition ratios");
-                    Assert.AreEqual(ratioStart.Value, ratioGroup.Value, 0.1,
+                    Assert.AreEqual(ratioStart ?? 0.0, ratioGroup ?? 0.0, 0.1,
                                     "Unexpected group ratio change by more than 0.1");
                 }
                 else
@@ -310,7 +309,8 @@ namespace pwiz.SkylineTest.Results
 
         private static bool IsCacheOrTempFile(string path)
         {
-            if (Path.GetFileName(path).StartsWith(FileSaver.TEMP_PREFIX))
+            string fileName = Path.GetFileName(path);
+            if (fileName != null && fileName.StartsWith(FileSaver.TEMP_PREFIX))
                 return true;
             return path.EndsWith(ChromatogramCache.EXT);
         }
@@ -331,7 +331,9 @@ namespace pwiz.SkylineTest.Results
             catch (Exception x)
             {
                 Assert.Fail("Exception thrown: " + x.Message);
-                throw;  // Will never happen
+// ReSharper disable HeuristicUnreachableCode
+                throw;  // Will never happen, but it is necessary to keep ReSharper happy
+// ReSharper restore HeuristicUnreachableCode
             }
 
             AssertEx.IsDocumentState(doc, 0, 2, 10, 18, 54);

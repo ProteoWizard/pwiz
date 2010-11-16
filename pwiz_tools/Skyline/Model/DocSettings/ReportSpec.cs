@@ -240,7 +240,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// Returns true if the two lists contain equal elements in the same order.
         /// </summary>
-        private static bool ListEquals<T>(IList<T> list1, IList<T> list2)
+        private static bool ListEquals<TItem>(IList<TItem> list1, IList<TItem> list2)
         {
             if (list1 == list2)
             {
@@ -253,7 +253,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return ArrayUtil.EqualsDeep(list1, list2);
         }
 
-        private static int ListHashCode<T>(IList<T> list)
+        private static int ListHashCode<TItem>(IList<TItem> list)
         {
             if (list == null)
             {

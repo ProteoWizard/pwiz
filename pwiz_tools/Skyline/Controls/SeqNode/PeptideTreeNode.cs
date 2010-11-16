@@ -604,7 +604,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 {
                     table.AddDetailRow("Previous", peptide.PrevAA.ToString(), rt);
                     table.AddDetailRow("First", peptide.Begin.ToString(), rt);
-                    table.AddDetailRow("Last", (peptide.End.Value - 1).ToString(), rt);
+                    table.AddDetailRow("Last", ((peptide.End ?? 1) - 1).ToString(), rt);
                     table.AddDetailRow("Next", peptide.NextAA.ToString(), rt);
                 }
                 if (nodePep.Rank.HasValue)

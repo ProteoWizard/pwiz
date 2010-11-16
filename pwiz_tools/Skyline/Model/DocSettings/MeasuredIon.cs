@@ -256,8 +256,8 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 writer.WriteAttributeString(ATTR.cut, Fragment);
                 writer.WriteAttributeIfString(ATTR.no_cut, Restrict);
-                writer.WriteAttribute(ATTR.sense, Terminus.Value);
-                writer.WriteAttribute(ATTR.min_length, MinFragmentLength.Value);
+                writer.WriteAttributeNullable(ATTR.sense, Terminus);
+                writer.WriteAttributeNullable(ATTR.min_length, MinFragmentLength);
             }
             else
             {

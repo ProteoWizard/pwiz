@@ -469,7 +469,10 @@ namespace pwiz.Skyline.Model.Results
 
                 for (int i = 0; i < listEnumerators.Count; i++)
                 {
-                    float intensity = listEnumerators[i].Current.Area;
+                    var peak = listEnumerators[i].Current;
+                    if (peak == null)
+                        throw new InvalidOperationException("Unexpected null peak");
+                    float intensity = peak.Area;
                     if (intensity > maxIntensity)
                     {
                         maxIntensity = intensity;

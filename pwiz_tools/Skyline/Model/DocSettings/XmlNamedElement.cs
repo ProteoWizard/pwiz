@@ -153,15 +153,15 @@ namespace pwiz.Skyline.Model.DocSettings
         public Identity Id { get; private set; }
     }
 
-    public sealed class NameComparer<T> : IEqualityComparer<T>
-        where T : XmlNamedElement
+    public sealed class NameComparer<TElem> : IEqualityComparer<TElem>
+        where TElem : XmlNamedElement
     {
-        public bool Equals(T n1, T n2)
+        public bool Equals(TElem n1, TElem n2)
         {
             return Equals(n1.Name, n2.Name);
         }
 
-        public int GetHashCode(T n)
+        public int GetHashCode(TElem n)
         {
             return n.Name.GetHashCode();
         }

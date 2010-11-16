@@ -28,14 +28,14 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
-    public partial class ShareListDlg<T, TItem> : Form
-        where T : IList<TItem>, IListSerializer<TItem>, IListEditorSupport
+    public partial class ShareListDlg<TList, TItem> : Form
+        where TList : IList<TItem>, IListSerializer<TItem>, IListEditorSupport
         where TItem : IKeyContainer<string>, IXmlSerializable
     {
         private const string SETTINGS_DEFINITION_FILTER = "Skyline Settings (*.skys)|*.skys|All Files|*.*";
         private string _label;
 
-        public ShareListDlg(T list)
+        public ShareListDlg(TList list)
         {
             InitializeComponent();
 
@@ -47,7 +47,7 @@ namespace pwiz.Skyline.FileUI
 
         public string Filter { get; set; }
 
-        public T List { get; private set; }
+        public TList List { get; private set; }
 
         public string Label
         {
@@ -179,7 +179,7 @@ namespace pwiz.Skyline.FileUI
                 listboxListItems.SetItemChecked(i, checkAll);
         }
 
-        public static bool Import(IWin32Window parent, T listDest)
+        public static bool Import(IWin32Window parent, TList listDest)
         {
             return ImportFile(parent, listDest, GetImportFileName(parent, SETTINGS_DEFINITION_FILTER));
         }
@@ -197,18 +197,18 @@ namespace pwiz.Skyline.FileUI
             return dialog.FileName;
         }
 
-        public static bool ImportFile(IWin32Window parent, T listDest, string fileName)
+        public static bool ImportFile(IWin32Window parent, TList listDest, string fileName)
         {
             if (string.IsNullOrEmpty(fileName))
                 return false;
 
             XmlSerializer xmlSerializer = new XmlSerializer(listDest.SerialType);
-            T loadedItems;
+            TList loadedItems;
             try
             {
                 using (var stream = File.OpenRead(fileName))
                 {
-                    loadedItems = (T)xmlSerializer.Deserialize(stream);
+                    loadedItems = (TList)xmlSerializer.Deserialize(stream);
                 }
             }
             catch (Exception exception)

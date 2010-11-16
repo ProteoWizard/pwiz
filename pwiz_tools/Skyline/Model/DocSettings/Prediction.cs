@@ -92,7 +92,7 @@ namespace pwiz.Skyline.Model.DocSettings
         private double GetRetentionTime(double score)
         {
             // CONSIDER: Return the full value?
-            return GetRetentionTimeDisplay(Conversion.GetY(score)).Value;
+            return GetRetentionTimeDisplay(Conversion.GetY(score)) ?? 0;
         }
 
         /// <summary>

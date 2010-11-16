@@ -89,13 +89,10 @@ namespace pwiz.Skyline.Model.Hibernate
             var mappingPrec = configuration.GetClassMapping(typeof(DbPrecursorResult));
             var mappingTran = configuration.GetClassMapping(typeof(DbTransitionResult));
 
-            for (int i = 0; i < standardTypes.Count; i++)
+            foreach (var standardType in standardTypes)
             {
-                var standardType = standardTypes[i];
-
-                for (int j = 0; j < labelTypes.Length; j++)
+                foreach (var labelType in labelTypes)
                 {
-                    var labelType = labelTypes[j];
                     if (ReferenceEquals(labelType, standardType))
                         continue;
 
