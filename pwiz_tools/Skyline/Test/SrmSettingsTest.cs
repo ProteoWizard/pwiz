@@ -20,6 +20,7 @@ using System;
 using System.IO;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -642,9 +643,9 @@ namespace pwiz.SkylineTest
                 "fragment_range_first=\"y1\" fragment_range_last=\"last y-ion\" />");
             AssertEx.DeserializeError<TransitionFilter>("<transition_filter precursor_charges=\"2,2\" product_charges=\"1\" " +
                 "fragment_range_first=\"y1\" fragment_range_last=\"last y-ion\" />");
-            AssertEx.DeserializeError<TransitionFilter>("<transition_filter precursor_charges=\"3\" product_charges=\"4\" " +
+            AssertEx.DeserializeError<TransitionFilter>("<transition_filter precursor_charges=\"3\" product_charges=\"" + (Transition.MAX_PRODUCT_CHARGE + 1) + "\" " +
                 "fragment_range_first=\"y1\" fragment_range_last=\"last y-ion\" />");
-            AssertEx.DeserializeError<TransitionFilter>("<transition_filter precursor_charges=\"7\" product_charges=\"2\" " +
+            AssertEx.DeserializeError<TransitionFilter>("<transition_filter precursor_charges=\"" + (TransitionGroup.MAX_PRECURSOR_CHARGE + 1) + "\" product_charges=\"2\" " +
                 "fragment_range_first=\"y1\" fragment_range_last=\"last y-ion\" />");
             AssertEx.DeserializeError<TransitionFilter>("<transition_filter precursor_charges=\"\" product_charges=\"1\" " +
                 "fragment_range_first=\"y1\" fragment_range_last=\"last y-ion\" />");

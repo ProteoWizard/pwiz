@@ -181,8 +181,15 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 string colCap = columnInfo.Caption;
                 if (Equals(colCap, "TotalAreaRatio") || Equals(colCap, "AreaRatio"))
                 {
-                    hidden = !RowKeyContains(rowKey, "light");
+                    // HACK: Unfortunately, the default internal standard label type
+                    //       is needed in order to do this correctly.  The string "heavy"
+                    //       should be the default 99% of the time, and if someone used
+                    //       the string "heavy" for something else, and complained about
+                    //       losing this column in this case, we could always tell them
+                    //       change the name of the label type to something else.
+                    hidden = RowKeyContains(rowKey, IsotopeLabelType.heavy.ToString());
                 }
+                // Hide RatioTo columns for the label type for which they are a ratio
                 else if (colCap.StartsWith(nameTotalRatioTo))
                 {
                     hidden = RowKeyContains(rowKey, colCap.Substring(nameTotalRatioTo.Length));

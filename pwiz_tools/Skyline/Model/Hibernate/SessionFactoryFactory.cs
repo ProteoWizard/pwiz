@@ -103,10 +103,16 @@ namespace pwiz.Skyline.Model.Hibernate
                     AddColumn(mappingPeptide, namePep, typeof(RatioPropertyAccessor));
                 }
 
-                string namePrec = RatioPropertyAccessor.GetPrecursorColumnName(standardType);
-                AddColumn(mappingPrec, namePrec, typeof(RatioPropertyAccessor));
-                string nameTran = RatioPropertyAccessor.GetTransitionColumnName(standardType);
-                AddColumn(mappingTran, nameTran, typeof(RatioPropertyAccessor));
+                // Only add TotalAreaRatioTo<label type> and AreaRatioTo<label type> columns
+                // when there is more than one internal standard label type, because that
+                // is the only time that data is added to these columns in the database.
+                if (standardTypes.Count > 1)
+                {
+                    string namePrec = RatioPropertyAccessor.GetPrecursorColumnName(standardType);
+                    AddColumn(mappingPrec, namePrec, typeof(RatioPropertyAccessor));
+                    string nameTran = RatioPropertyAccessor.GetTransitionColumnName(standardType);
+                    AddColumn(mappingTran, nameTran, typeof(RatioPropertyAccessor));
+                }
             }
         }
 

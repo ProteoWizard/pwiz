@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Model
     public class Transition : Identity
     {
         public const int MIN_PRODUCT_CHARGE = 1;
-        public const int MAX_PRODUCT_CHARGE = 3;
+        public const int MAX_PRODUCT_CHARGE = 5;
 
         /// <summary>
         /// Prioritized list of all possible product ion charges

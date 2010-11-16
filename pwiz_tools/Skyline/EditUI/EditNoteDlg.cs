@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
-using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -50,8 +49,7 @@ namespace pwiz.Skyline.EditUI
                 var value = annotations.GetAnnotation(annotationDef.Name);
                 if (annotationDef.Type == AnnotationDef.AnnotationType.true_false)
                 {
-                    row.Cells[colValue.Index] = new DataGridViewCheckBoxCell();
-                    row.Cells[colValue.Index].Value = value != null;
+                    row.Cells[colValue.Index] = new DataGridViewCheckBoxCell {Value = value != null};
                 }
                 else if (annotationDef.Type == AnnotationDef.AnnotationType.value_list)
                 {
@@ -74,7 +72,7 @@ namespace pwiz.Skyline.EditUI
                 splitContainer1.Panel2Collapsed = true;
             }
 
-            _colorIndex = annotations.ColorIndex;
+            _colorIndex = annotations.IsEmpty ? Settings.Default.AnnotationColor : annotations.ColorIndex;
             ((ToolStripButton) toolStrip1.Items[_colorIndex]).Checked = true;
         }
 

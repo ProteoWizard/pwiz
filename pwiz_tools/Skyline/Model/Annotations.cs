@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Model
     public sealed class Annotations
     {
         public static readonly List<Brush> COLOR_BRUSHES =
-                new List<Brush> { Brushes.OrangeRed, Brushes.Brown, /*Pink*/ new SolidBrush(Color.FromArgb(255, 0, 128)), 
+                new List<Brush> { Brushes.OrangeRed, Brushes.Brown, /*Pink*/ new SolidBrush(Color.FromArgb(255, 128, 255)), 
                     /*Dark Yellow*/ new SolidBrush(Color.FromArgb(206, 206, 0)), /*Bright Green*/ new SolidBrush(Color.FromArgb(0, 255, 0)), 
                     Brushes.Green, /*Bright Blue*/ new SolidBrush(Color.FromArgb(3, 184, 252)), Brushes.Blue, Brushes.Black, 
                     /*Purple*/ new SolidBrush(Color.FromArgb(128, 0, 255))};

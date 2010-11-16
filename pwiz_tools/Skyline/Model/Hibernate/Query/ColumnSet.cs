@@ -323,11 +323,11 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         /// <summary>
         /// Finds a NodeData element searching the entire tree.
         /// </summary>
-        private static NodeData FindNodeData(TreeView root, Identifier reportColumn)
+        private static NodeData FindNodeData(TreeView root, TableType type, Identifier reportColumn)
         {
             foreach (TreeNode node in root.Nodes)
             {
-                NodeData nodeData = FindNodeData(node, reportColumn);
+                NodeData nodeData = FindNodeData(node, type, reportColumn);
                 if (nodeData != null)
                 {
                     return nodeData;
@@ -339,29 +339,29 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         /// <summary>
         /// Walks the tree to find the NodeData.
         /// </summary>
-        private static NodeData FindNodeData(TreeNode root, Identifier identifier)
+        private static NodeData FindNodeData(TreeNode root, TableType type, Identifier identifier)
         {
             NodeData nodeData = root.Tag as NodeData;
             if (nodeData != null)
             {
                 if (nodeData.Results)
                 {
-                    if (Equals(identifier, ToResultsIdentifier(nodeData.ReportColumn.Column)))
+                    if (type == TableType.result && Equals(identifier, ToResultsIdentifier(nodeData.ReportColumn.Column)))
                         return nodeData;
                 }
                 else if (nodeData.ResultsSummary)
                 {
-                    if (Equals(identifier, ToResultsSummaryIdentifier(nodeData.ReportColumn.Column)))
+                    if (type == TableType.summary && Equals(identifier, ToResultsSummaryIdentifier(nodeData.ReportColumn.Column)))
                         return nodeData;
                 }
-                else if (Equals(nodeData.ReportColumn.Column, identifier))
+                else if (type == TableType.node && Equals(nodeData.ReportColumn.Column, identifier))
                 {
                     return nodeData;
                 }
             }
             foreach (TreeNode child in root.Nodes)
             {
-                NodeData result = FindNodeData(child, identifier);
+                NodeData result = FindNodeData(child, type, identifier);
                 if (result != null)
                     return result;
             }
@@ -419,7 +419,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             foreach (var unqualifiedId in allColumns)
             {
                 Identifier identifier;
-                switch (ReportColumn.GetTableType(unqualifiedId.Table))
+                TableType type = ReportColumn.GetTableType(unqualifiedId.Table);
+                switch (type)
                 {
                     case TableType.result:
                         identifier = JoinIds(prefix, unqualifiedId.Column, ToResultsIdentifier);
@@ -432,7 +433,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                         break;
                 }
 
-                columnInfos.Add(FindNodeData(treeView, identifier));
+                columnInfos.Add(FindNodeData(treeView, type, identifier));
             }
         }
 

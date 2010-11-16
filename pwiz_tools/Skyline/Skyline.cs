@@ -1125,6 +1125,7 @@ namespace pwiz.Skyline
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     var annotations = dlg.GetAnnotations();
+                    Settings.Default.AnnotationColor = annotations.ColorIndex;
                     ModifyDocument("Edit note", doc =>
                     {
                         doc = (SrmDocument)
