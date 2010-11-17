@@ -385,12 +385,12 @@ namespace pwiz.Topograph.ui.Forms
 
         public MSGraphItemType GraphItemType
         {
-            get { return MSGraphItemType.Chromatogram; }
+            get { return MSGraphItemType.chromatogram; }
         }
 
         public MSGraphItemDrawMethod GraphItemDrawMethod
         {
-            get { return MSGraphItemDrawMethod.Line; }
+            get { return MSGraphItemDrawMethod.line; }
         }
 
         public void CustomizeXAxis(Axis axis)

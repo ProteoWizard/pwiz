@@ -118,7 +118,7 @@ namespace pwiz.Topograph.ui.Forms
                         Points =
                             new PointPairList(mzArray,
                                               intensityArray),
-                        GraphItemDrawMethod = MSGraphItemDrawMethod.Line,
+                        GraphItemDrawMethod = MSGraphItemDrawMethod.line,
 
                         Color = Color.Blue,
                     });
@@ -129,7 +129,7 @@ namespace pwiz.Topograph.ui.Forms
                 var spectrum = new SpectrumGraphItem
                                    {
                                        Points = new PointPairList(mzArray, intensityArray),
-                                       GraphItemDrawMethod = MSGraphItemDrawMethod.Stick,
+                                       GraphItemDrawMethod = MSGraphItemDrawMethod.stick,
                                        Color = Color.Black
                                    };
                 if (PeptideAnalysis != null)
@@ -211,7 +211,7 @@ namespace pwiz.Topograph.ui.Forms
 
         public PointAnnotation AnnotatePoint(PointPair point)
         {
-            if (GraphItemDrawMethod == MSGraphItemDrawMethod.Stick)
+            if (GraphItemDrawMethod == MSGraphItemDrawMethod.stick)
             {
                 var text = point.X.ToString("0.####");
                 if (MzRanges != null)
@@ -237,7 +237,7 @@ namespace pwiz.Topograph.ui.Forms
 
         public MSGraphItemType GraphItemType
         {
-            get { return MSGraphItemType.Chromatogram; }
+            get { return MSGraphItemType.chromatogram; }
         }
 
         public MSGraphItemDrawMethod GraphItemDrawMethod
