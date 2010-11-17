@@ -187,9 +187,9 @@ namespace seems
             get
             {
                 if( IsChromatogram )
-                    return pwiz.MSGraph.MSGraphItemType.Chromatogram;
+                    return pwiz.MSGraph.MSGraphItemType.chromatogram;
                 else
-                    return pwiz.MSGraph.MSGraphItemType.Spectrum;
+                    return pwiz.MSGraph.MSGraphItemType.spectrum;
             }
         }
 
@@ -230,7 +230,7 @@ namespace seems
 
         public virtual pwiz.MSGraph.MSGraphItemDrawMethod GraphItemDrawMethod
         {
-            get { return pwiz.MSGraph.MSGraphItemDrawMethod.Stick; }
+            get { return pwiz.MSGraph.MSGraphItemDrawMethod.stick; }
         }
 
         private AnnotationSettings annotationSettings;
@@ -336,7 +336,7 @@ namespace seems
 
         public override pwiz.MSGraph.MSGraphItemDrawMethod GraphItemDrawMethod
         {
-            get { return pwiz.MSGraph.MSGraphItemDrawMethod.Line; }
+            get { return pwiz.MSGraph.MSGraphItemDrawMethod.line; }
         }
 	}
 
@@ -461,9 +461,9 @@ namespace seems
             {
                 CVParam representation = Element.cvParamChild(CVID.MS_spectrum_representation);
                 if( !representation.empty() && representation.cvid == CVID.MS_profile_spectrum )
-                    return pwiz.MSGraph.MSGraphItemDrawMethod.Line;
+                    return pwiz.MSGraph.MSGraphItemDrawMethod.line;
                 else
-                    return pwiz.MSGraph.MSGraphItemDrawMethod.Stick;
+                    return pwiz.MSGraph.MSGraphItemDrawMethod.stick;
             }
         }
 

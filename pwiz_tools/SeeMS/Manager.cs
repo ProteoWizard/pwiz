@@ -863,7 +863,7 @@ namespace seems
             if( currentGraphForm == null )
                 throw new Exception( "current graph should not be null" );
 
-            if( currentGraphForm.FocusedPane.CurrentItemType == MSGraphItemType.Spectrum )
+            if( currentGraphForm.FocusedPane.CurrentItemType == MSGraphItemType.spectrum )
             {
                 spectrumProcessingForm.UpdateProcessing( currentGraphForm.FocusedItem.Tag as MassSpectrum );
                 DockPanel.DefaultFloatingWindowSize = spectrumProcessingForm.Size;
@@ -914,7 +914,7 @@ namespace seems
             if( currentGraphForm == null )
                 throw new Exception( "current graph should not be null" );
 
-            if( currentGraphForm.FocusedPane.CurrentItemType == MSGraphItemType.Spectrum )
+            if( currentGraphForm.FocusedPane.CurrentItemType == MSGraphItemType.spectrum )
             {
                 spectrumAnnotationForm.UpdateAnnotations( currentGraphForm.FocusedItem.Tag as MassSpectrum );
                 DockPanel.DefaultFloatingWindowSize = spectrumAnnotationForm.Size;
