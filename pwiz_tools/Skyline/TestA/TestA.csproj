@@ -62,6 +62,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ExplicitModTest.cs" />
     <Compile Include="FindNodeTest.cs" />
     <Compile Include="IsotypeModTest.cs" />
     <Compile Include="LibraryLoadTest.cs" />
@@ -69,6 +70,7 @@
     <Compile Include="LossesTest.cs" />
     <Compile Include="PasteTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RefineTest.cs" />
     <Compile Include="Results\FullScanTest.cs" />
     <Compile Include="TransitionSettings07Test.cs" />
     <Compile Include="VariableModTest.cs" />
@@ -77,6 +79,10 @@
     <EmbeddedResource Include="Study7_0-7.sky" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj">
+      <Project>{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}</Project>
+      <Name>ProteowizardWrapper</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Skyline.csproj">
       <Project>{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}</Project>
       <Name>Skyline</Name>
@@ -87,7 +93,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Refine.zip" />
     <None Include="Results\FullScan.zip" />
+    <EmbeddedResource Include="Study7.sky" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -27,7 +27,7 @@ using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest
+namespace pwiz.SkylineTestA
 {
     /// <summary>
     /// Summary description for RefineTest
@@ -68,7 +68,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void RefineDocumentTest()
         {
-            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"Test\Refine.zip");
+            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"TestA\Refine.zip");
 
             var document = InitRefineDocument(testFilesDir);
 
@@ -120,7 +120,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void RefineResultsTest()
         {
-            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"Test\Refine.zip");
+            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"TestA\Refine.zip");
 
             var document = InitRefineDocument(testFilesDir);
 
