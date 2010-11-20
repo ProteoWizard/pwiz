@@ -122,9 +122,6 @@
     <EmbeddedResource Include="Reporting\silac_1_to_4.sky" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Study7.sky" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Proteome\high_ipi.Human.20060111.zip" />
     <EmbeddedResource Include="Reporting\Study9p_template_0721_2009_v3.skyr" />
     <None Include="Results\AgilentMix.zip" />

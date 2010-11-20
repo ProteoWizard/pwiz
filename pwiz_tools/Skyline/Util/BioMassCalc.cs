@@ -45,18 +45,34 @@ namespace pwiz.Skyline.Util
         public static readonly BioMassCalc MONOISOTOPIC = new BioMassCalc(MassType.Monoisotopic);
         public static readonly BioMassCalc AVERAGE = new BioMassCalc(MassType.Average);
 
-        public const string H = "H";
-        public const string H2 = "H'";
-        public const string C = "C";
-        public const string C13 = "C'";
-        public const string N = "N";
-        public const string N15 = "N'";
-        public const string O = "O";
-        public const string O18 = "O'";
-        public const string P = "P";
-        public const string S = "S";
+        public const string H = "H";    // Hydrogen
+        public const string H2 = "H'";  // Deuterium
+        public const string C = "C";    // Carbon
+        public const string C13 = "C'"; // Carbon13
+        public const string N = "N";    // Nitrogen
+        public const string N15 = "N'"; // Nitrogen15
+        public const string O = "O";    // Oxygen
+        public const string O18 = "O'"; // Oxygen18
+        public const string P = "P";    // Phosphorus
+        public const string S = "S";    // Sulfur
 // ReSharper disable InconsistentNaming
-        public const string Se = "Se";
+        public const string Se = "Se";  // Selenium
+        public const string Li = "Li";  // Lithium
+        public const string F = "F";    // Fluorine
+        public const string Na = "Na";  // Sodium
+        public const string Cl = "Cl";  // Chlorine
+        public const string K = "K";    // Potassium
+        public const string Ca = "Ca";  // Calcium
+        public const string Fe = "Fe";  // Iron
+        public const string Ni = "Ni";  // Nickle
+        public const string Cu = "Cu";  // Copper
+        public const string Zn = "Zn";  // Zinc
+        public const string Br = "Br";  // Bromine
+        public const string Mo = "Mo";  // Molybdenum
+        public const string Ag = "Ag";  // Silver
+        public const string I = "I";    // Iodine
+        public const string Au = "Au";  // Gold
+        public const string Hg = "Hg";  // Mercury
 // ReSharper restore InconsistentNaming
 
         public static double MassProton
@@ -106,7 +122,26 @@ namespace pwiz.Skyline.Util
             addMass(C13, 13.0033548378, 13.0033548378);
             addMass(S, 31.9720707, 32.065);
             addMass(P, 30.97376151, 30.973761);
+
             addMass(Se, 73.9224766, 78.96);
+            addMass(Li, 7.016003, 6.941);
+            addMass(F, 18.99840322, 18.9984032);
+            addMass(Na, 22.9897677, 22.98977);
+            addMass(P, 30.973762, 30.973761);
+            addMass(S, 31.9720707, 32.065);
+            addMass(Cl, 34.96885272, 35.453);
+            addMass(K, 38.9637074, 39.0983);
+            addMass(Ca, 39.9625906, 40.078);
+            addMass(Fe, 55.9349393, 55.845);
+            addMass(Ni, 57.9353462, 58.6934);
+            addMass(Cu, 62.9295989, 63.546);
+            addMass(Zn, 63.9291448, 65.409);
+            addMass(Br, 78.9183361, 79.904);
+            addMass(Mo, 97.9054073, 95.94);
+            addMass(Ag, 106.905092, 107.8682);
+            addMass(I, 126.904473, 126.90447);
+            addMass(Au, 196.966543, 196.96655);
+            addMass(Hg, 201.970617, 200.59);
         }
 
         public MassType MassType { get; private set; }
@@ -131,7 +166,7 @@ namespace pwiz.Skyline.Util
 
         /// <summary>
         /// Parses a chemical formula expressed as "[{atom}[count][spaces]]*",
-        /// e.g. "C6H11ON", where supported atoms are H, O, N, C, S or P,
+        /// e.g. "C6H11ON", where supported atoms are H, O, N, C, S or P, etc.
         /// returning the total mass for the formula.
         /// 
         /// The parser removes atoms and counts until it encounters a character

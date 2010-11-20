@@ -1585,7 +1585,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             IList<LibrarySpec> librarySpecs = LibrarySpecs.ToList();
 
-            for (int i = 0; i < Libraries.Count; i++)
+            for (int i = 0; i < newPepLibraries.Libraries.Count; i++)
             {
                 LibrarySpec spec = newPepLibraries.LibrarySpecs[i];
                 Library library = newPepLibraries.Libraries[i];

@@ -459,7 +459,7 @@ namespace pwiz.SkylineTest
             // Bad terminus
             AssertEx.DeserializeError<StaticMod>("<static_modification name=\"Mod\" terminus=\"X\" formula=\"C23N\" />");
             // Bad formula
-            AssertEx.DeserializeError<StaticMod, ArgumentException>("<static_modification name=\"Mod\" aminoacid=\"K\" formula=\"C23NAu2\" />");
+            AssertEx.DeserializeError<StaticMod, ArgumentException>("<static_modification name=\"Mod\" aminoacid=\"K\" formula=\"C23NHe2\" />");
             // Terminal label without amino acid
             AssertEx.DeserializeError<StaticMod>("<static_modification name=\"15N\" terminus=\"C\" label_13C=\"true\"/>");
             // Formula and labeled atoms
@@ -497,7 +497,7 @@ namespace pwiz.SkylineTest
             // Too big formula
             AssertEx.DeserializeError<FragmentLoss>("<potential_loss formula=\"N333\"/>");
             // Bad formula
-            AssertEx.DeserializeError<FragmentLoss, ArgumentException>("<potential_loss formula=\"H3Na5Cl5\"/>");
+            AssertEx.DeserializeError<FragmentLoss, ArgumentException>("<potential_loss formula=\"H3Mg5Cl5\"/>");
             // Constant mass out of range
             AssertEx.DeserializeError<FragmentLoss>("<potential_loss massdiff_monoisotopic=\"" + FragmentLoss.MIN_LOSS_MASS / 2 + "\"\n" +
                     " massdiff_average=\"1\" />");
@@ -710,7 +710,7 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeError<MeasuredIon, ArgumentException>("<measured_ion name=\"Reporter formula\"" +
                 " formula=\"\"/>");
             AssertEx.DeserializeError<MeasuredIon, ArgumentException>("<measured_ion name=\"Reporter formula\"" +
-                " formula=\"Au3\"/>");
+                " formula=\"He3\"/>");
             // Reporter with formulas producing out of range masses
             AssertEx.DeserializeError<MeasuredIon>("<measured_ion name=\"Reporter formula\"" +
                 " formula=\"H2O\"/>");

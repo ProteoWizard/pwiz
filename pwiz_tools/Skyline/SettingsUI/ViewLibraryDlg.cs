@@ -1786,7 +1786,7 @@ namespace pwiz.Skyline.SettingsUI
                 SizeF size;
                 using (RenderTools rt = new RenderTools())
                 {
-                    table.AddDetailRow("", _pepInfo.DisplayString, rt);
+                    table.AddDetailRow("", _pepInfo.DisplayString.Replace(".0]", "]"), rt);
                     size = table.CalcDimensions(g);
                     if (draw)
                         table.Draw(g);
