@@ -187,6 +187,8 @@ void PrecursorMassFilter::Impl::filter(const SpectrumPtr spectrum) const
 
         } // for each reference mass
 
+        spectrum->defaultArrayLength = massList_.size();
+
         if (maxPrecursorMass == 0)
             return;
 

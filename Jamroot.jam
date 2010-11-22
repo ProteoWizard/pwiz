@@ -200,6 +200,8 @@ lib gd : : <toolset>msvc <name>bgd <search>$(PWIZ_LIBRARIES_PATH) : : <include>$
 lib fftw3 : : <threading>multi <search>$(PWIZ_LIBRARIES_PATH)/fftw-3.1.2/.libs : : <include>$(PWIZ_LIBRARIES_PATH)/fftw-3.1.2/api ;
 lib fftw3 : : <threading>multi <toolset>msvc <name>libfftw3-3 <search>$(PWIZ_LIBRARIES_PATH) : : <include>$(PWIZ_LIBRARIES_PATH)/fftw-3.1.2/api ;
 
+alias svm : $(PWIZ_LIBRARIES_PATH)/libsvm-3.0//svm ;
+
 modules.poke : BOOST_BUILD_PATH : [ modules.peek : BOOST_BUILD_PATH ] $(PWIZ_LIBRARIES_PATH) ;
 
 

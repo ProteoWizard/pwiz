@@ -145,16 +145,16 @@ SpectrumListPtr filterCreator_ETDFilter(const MSData& msd, const string& arg)
 
     string removePrecursor;
     parser >> removePrecursor;
-    bool bRemPrecursor = removePrecursor == "false" ? false : true;
+    bool bRemPrecursor = removePrecursor == "false" || removePrecursor == "0" ? false : true;
     string removeChargeReduced;
     parser >> removeChargeReduced;
-    bool bRemChgRed = removeChargeReduced == "false" ? false : true;
+    bool bRemChgRed = removeChargeReduced == "false" || removeChargeReduced == "0" ? false : true;
     string removeNeutralLoss;
     parser >> removeNeutralLoss;
-    bool bRemNeutralLoss = removeNeutralLoss == "false" ? false : true;
+    bool bRemNeutralLoss = removeNeutralLoss == "false" || removeNeutralLoss == "0" ? false : true;
 	string useBlanketFiltering;
 	parser >> useBlanketFiltering;
-	bool bUseBlanketFiltering = useBlanketFiltering == "false" ? false : true;
+	bool bUseBlanketFiltering = useBlanketFiltering == "false" || useBlanketFiltering == "0" ? false : true;
 
     MZTolerance mzt(3.1);
     if (parser.good())
@@ -302,6 +302,22 @@ SpectrumListPtr filterCreator_defaultArrayLength(const MSData& msd, const string
 SpectrumListPtr filterCreator_metadataFixer(const MSData& msd, const string& arg)
 {
     return SpectrumListPtr(new SpectrumList_MetadataFixer(msd.run.spectrumListPtr));
+}
+
+
+SpectrumListPtr filterCreator_chargeStatePredictor(const MSData& msd, const string& arg)
+{
+    istringstream parser(arg);
+
+    string overrideExistingCharge, maxMultipleCharge, minMultipleCharge, singleChargeFractionTIC;
+    parser >> overrideExistingCharge >> maxMultipleCharge >> minMultipleCharge >> singleChargeFractionTIC;
+
+    return SpectrumListPtr(new
+        SpectrumList_ChargeStateCalculator(msd.run.spectrumListPtr,
+                                           overrideExistingCharge == "false" || overrideExistingCharge == "0" ? false : true,
+                                           lexical_cast<int>(maxMultipleCharge),
+                                           lexical_cast<int>(minMultipleCharge),
+                                           lexical_cast<double>(singleChargeFractionTIC)));
 }
 
 
@@ -476,6 +492,7 @@ JumpTableEntry jumpTable_[] =
     {"MS2Denoise", "moving window filter for MS2: num peaks to select in window:int_val(default 6) window width (Da):val (default 30) multicharge fragment relaxation: <true|false> (default true)", filterCreator_MS2Denoise},
     {"MS2Deisotope", "deisotope ms2 spectra using Markey method", filterCreator_MS2Deisotope},
     {"ETDFilter", "removePrecursor:<default:true|false>  removeChargeReduced:<default:true|false>  removeNeutralLoss:<default:true|false>  blanketRemoval:<default:true|false>  MatchingTolerance:(val <PPM|MZ>) (default:3.1 MZ)", filterCreator_ETDFilter},
+    {"chargeStatePredictor", "overrideExistingCharge:<default:true|false>  maxMultipleCharge:<int>(3)  minMultipleCharge:<int>(2)  singleChargeFractionTIC:<real>(0.9)", filterCreator_chargeStatePredictor},
     {"activation", "<ETD|CID|SA|HCD> (filter by precursor activation type)", filterCreator_ActivationType},
     {"analyzerType", "<FTMS|ITMS> (filter by mass analyzer type)", filterCreator_AnalyzerType}
 };
