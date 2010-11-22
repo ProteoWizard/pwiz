@@ -1,4 +1,4 @@
-$Id$
+// $Id$
 #ifndef _LIBSVM_H
 #define _LIBSVM_H
 
