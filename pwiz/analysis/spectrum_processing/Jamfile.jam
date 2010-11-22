@@ -51,6 +51,7 @@ lib pwiz_analysis_spectrum_processing
         <library>../passive//pwiz_analysis_passive_core
         <library>../common//pwiz_analysis_common
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
+        <library>$(PWIZ_ROOT_PATH)//svm
     : # default-build
     : # usage-requirements
         <library>../../data/msdata//pwiz_data_msdata
@@ -58,6 +59,7 @@ lib pwiz_analysis_spectrum_processing
         <library>../passive//pwiz_analysis_passive_core
         <library>../common//pwiz_analysis_common
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers//pwiz_data_vendor_readers
+        <library>$(PWIZ_ROOT_PATH)//svm
     ;
 
 
