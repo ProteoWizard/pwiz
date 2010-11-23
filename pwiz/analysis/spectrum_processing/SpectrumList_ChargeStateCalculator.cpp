@@ -100,6 +100,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ChargeStateCalculator::spectrum(size_t in
     if (msLevel.valueAs<int>() < 2)
         return s;
 
+    // return peakless spectrum as-is
+    if (s->defaultArrayLength == 0)
+        return s;
+
     // return precursorless MS/MS as-is
     if (s->precursors.empty() ||
         s->precursors[0].selectedIons.empty())
@@ -151,7 +155,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ChargeStateCalculator::spectrum(size_t in
     vector<MZIntensityPair>::iterator mzItr = lower_bound(mzIntensityPairs.begin(), mzIntensityPairs.end(), MZIntensityPair(precursorMZ, 0), &mzIntensityPairLessThan);
     double fractionTIC = 0, inverseFractionCutoff = 1 - fraction_;
     for (vector<MZIntensityPair>::reverse_iterator itr = mzIntensityPairs.rbegin();
-         &*itr != &*mzItr && fractionTIC < inverseFractionCutoff;
+         itr != mzIntensityPairs.rend() && &*itr != &*mzItr && fractionTIC < inverseFractionCutoff;
          ++itr)
          fractionTIC += itr->intensity / tic;
     fractionTIC = 1 - fractionTIC; // invert
