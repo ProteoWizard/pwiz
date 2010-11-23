@@ -180,6 +180,25 @@ namespace pwiz.Skyline.Model.Results
         {
             get { return false; }
         }
+
+        public static bool HasChromatogramData(MsDataFileImpl dataFile)
+        {
+            int len = dataFile.ChromatogramCount;
+
+            // Many files have just one TIC chromatogram
+            if (len < 2)
+                return false;
+
+            for (int i = 0; i < len; i++)
+            {
+                int index;
+                string id = dataFile.GetChromatogramId(i, out index);
+
+                if (ChromKey.IsKeyId(id))
+                    return true;
+            }
+            return false;
+        }
     }
 
     internal sealed class SpectraChromDataProvider : ChromDataProvider
@@ -345,6 +364,11 @@ namespace pwiz.Skyline.Model.Results
         public override bool IsProcessedScans
         {
             get { return _isProcessedScans; }
+        }
+
+        public static bool HasSpectrumData(MsDataFileImpl dataFile)
+        {
+            return dataFile.SpectrumCount > 0;
         }
     }
 

@@ -174,10 +174,9 @@ namespace pwiz.Skyline.Model.Results
 
                             // Read and write the mass spec data
                             ChromDataProvider provider;
-                            // Many files have just one TIC chromatogram
-                            if (inFile.ChromatogramCount > 1)
+                            if (ChromatogramDataProvider.HasChromatogramData(inFile))
                                 provider = CreateChromatogramProvider(inFile, _tempFileSubsitute == null);
-                            else if (inFile.SpectrumCount > 0)
+                            else if (SpectraChromDataProvider.HasSpectrumData(inFile))
                                 provider = CreateSpectraChromProvider(inFile, _document);
                             else
                             {
