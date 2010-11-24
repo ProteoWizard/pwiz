@@ -17,7 +17,7 @@
 //
 // Copyright 2009 Vanderbilt University
 //
-// Contributor(s): Surendra Dasaris
+// Contributor(s): Surendra Dasaris, Zeqiang Ma
 //
 
 #ifndef _DIRECTAG_H
@@ -123,6 +123,14 @@ namespace directag
 	// code for ScanRanker
 	extern vector<int>				mergedSpectraIndices;
 	extern vector<int>				highQualSpectraIndices;
+	extern float					bestTagScoreMean;
+	extern float					bestTagTICMean;
+	extern float					tagMzRangeMean;
+	extern float					bestTagScoreIQR;
+	extern float					bestTagTICIQR;
+	extern float					tagMzRangeIQR;
+	extern size_t						numTaggedSpectra;
+
 
 	struct spectraSortByQualScore
 	{

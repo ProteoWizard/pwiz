@@ -218,19 +218,26 @@ rule with-mpi ( properties * )
 
 exe $(application-name:L)
   : # sources
-    [ glob *.cpp ] [ glob *.h ]
+    directag.cpp  directagMPI.cpp  directagSpectrum.cpp  writeHighQualSpectra.cpp
   : # requirements
       <conditional>@with-mpi
       <library>freicore
   ;
+  
+exe adjustScanRankerScoreByGroup
+   : # sources
+     adjustScanRankerScoreByGroup.cpp
+   : # requirements
+		<use>freicore
+   ;
 
 install install
-    : $(application-name:L)
+    : $(application-name:L) adjustScanRankerScoreByGroup
     : <install-type>EXE
       <conditional>@install-location
       <conditional>@install-vendor-api-dependencies
     ;
-
+    
 # any source tree can build binary tarballs
 
 import modules os ;

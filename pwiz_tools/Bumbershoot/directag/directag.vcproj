@@ -78,10 +78,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ranker.h"
-				>
-			</File>
-			<File
 				RelativePath=".\writeHighQualSpectra.h"
 				>
 			</File>

@@ -17,7 +17,7 @@
 //
 // Copyright 2009 Vanderbilt University
 //
-// Contributor(s): Surendra Dasaris
+// Contributor(s): Surendra Dasaris, Zeqiang Ma
 //
 
 #include "stdafx.h"
@@ -27,7 +27,7 @@
 #include "pwiz/data/proteome/Version.hpp"
 #include "svnrev.hpp"
 
-#include "ranker.h"
+//#include "ranker.h"
 #include "writeHighQualSpectra.h"
 
 using namespace freicore;
@@ -46,6 +46,14 @@ namespace directag
 	// Code for ScanRanker
 	vector<int>				mergedSpectraIndices;
 	vector<int>				highQualSpectraIndices;
+	float					bestTagScoreMean;
+	float					bestTagTICMean;
+	float					tagMzRangeMean;
+	float					bestTagScoreIQR;
+	float					bestTagTICIQR;
+	float					tagMzRangeIQR;
+	size_t					numTaggedSpectra;
+
 
     int Version::Major()                {return 1;}
     int Version::Minor()                {return 3;}
@@ -190,21 +198,38 @@ namespace directag
 		
 		ofstream fileStream( outputFilename.c_str() );
 
-		fileStream << "NativeID\tIndex\tCharge\tBestTagScore\tBestTagTIC\tTagMzRange\tBestTagScoreNorm\tBestTagTICNorm\tTagMzRangeNorm\tScanRankerScore\n" ;
+		fileStream << "H\tBestTagScoreMean\tBestTagTICMean\tTagMzRangeMean\tBestTagScoreIQR\tBestTagTICIQR\tTagMzRangeIQR\tnumTaggedSpectra\n";
+		fileStream 	<< "H"<< '\t'
+					<< bestTagScoreMean << '\t'
+					<< bestTagTICMean << '\t'
+					<< tagMzRangeMean << '\t'
+					<< bestTagScoreIQR << '\t'
+					<< bestTagTICIQR << '\t'
+					<< tagMzRangeIQR << '\t'
+					<< numTaggedSpectra << '\n';
+		fileStream << "H\tNativeID\tBestTagScore\tBestTagTIC\tTagMzRange\tScanRankerScore\n" ;
+		vector<int> seen;
 		Spectrum* s;
 		for( SpectraList::iterator sItr = instance.begin(); sItr != instance.end(); ++sItr )
 		{
 			s = *sItr;
-			fileStream	<< s->nativeID << '\t'
-						<< s->id.index << '\t'
-						<< s->id.charge << '\t'
-						<< s->bestTagScore << '\t'
-						<< s->bestTagTIC << '\t'
-						<< s->tagMzRange << '\t'
-						<< s->bestTagScoreNorm << '\t'
-						<< s->bestTagTICNorm << '\t'
-						<< s->tagMzRangeNorm << '\t'
-						<< s->qualScore << '\n';
+			float logBestTagTIC = (s->bestTagTIC == 0) ? 0 : (log( s->bestTagTIC ));
+			vector<int>::iterator found = find(seen.begin(),seen.end(), s->id.index );
+			if( found == seen.end() )    // only write out metrics of best scored spectrum if existing multiple charge states
+			{
+				seen.push_back( s->id.index );
+				fileStream	<< "S" << '\t'
+							<< s->nativeID << '\t'
+							//<< s->id.index << '\t'
+							//<< s->id.charge << '\t'
+							<< s->bestTagScore << '\t'
+							<< logBestTagTIC << '\t'
+							<< s->tagMzRange << '\t'
+							//<< s->bestTagScoreNorm << '\t'
+							//<< s->bestTagTICNorm << '\t'
+							//<< s->tagMzRangeNorm << '\t'
+							<< s->qualScore << '\n';
+			}
 		}
 	}
 
@@ -214,35 +239,59 @@ namespace directag
 		vector<float> bestTagScoreList;
 		vector<float> bestTagTICList;
 		vector<float> tagMzRangeList;
-		vector<float> rankedBestTagScoreList;
-		vector<float> rankedBestTagTICList;
-		vector<float> rankedTagMzRangeList;
-		Spectrum* s;
-		string rankMethod = "average"; //Can also be "min" or "max" or "default"
+		//vector<float> rankedBestTagScoreList;
+		//vector<float> rankedBestTagTICList;
+		//vector<float> rankedTagMzRangeList;
 
+		Spectrum* s;
+		// string rankMethod = "average"; //Can also be "min" or "max" or "default"
+	
+		// use log transformed mean and IQR of spectra with at least 1 tag for normalization
 		for( SpectraList::iterator sItr = instance.begin(); sItr != instance.end(); ++sItr )
 		{
 			s = *sItr;
-			bestTagScoreList.push_back( s->bestTagScore );
-			bestTagTICList.push_back( s->bestTagTIC );
-			tagMzRangeList.push_back( s->tagMzRange );
+			if ( s->bestTagScore != 0 )    // at least 1 tag generated and <= MaxTagScore
+			{  
+				bestTagScoreList.push_back( s->bestTagScore );  // bestTagScore is the chisqured value
+				bestTagTICList.push_back( log( s->bestTagTIC ));
+				tagMzRangeList.push_back( s->tagMzRange );
+			}
 		}
 
-		rankhigh( bestTagScoreList, rankedBestTagScoreList, rankMethod );
-		rank( bestTagTICList, rankedBestTagTICList, rankMethod );
-		rank( tagMzRangeList, rankedTagMzRangeList, rankMethod );
+		//rankhigh( bestTagScoreList, rankedBestTagScoreList, rankMethod );
+		//rank( bestTagTICList, rankedBestTagTICList, rankMethod );
+		//rank( tagMzRangeList, rankedTagMzRangeList, rankMethod );
 
-		int i = 0;
-		size_t numTotalSpectra = instance.size();
+		float bestTagScoreSum = accumulate( bestTagScoreList.begin(), bestTagScoreList.end(), 0.0 );
+		float bestTagTICSum = accumulate( bestTagTICList.begin(), bestTagTICList.end(), 0.0 );
+		float tagMzRangeSum = accumulate( tagMzRangeList.begin(), tagMzRangeList.end(), 0.0 );
+
+		std::sort( bestTagScoreList.begin(), bestTagScoreList.end() );
+		bestTagScoreIQR = bestTagScoreList[(int)(bestTagScoreList.size() * 0.75)] - bestTagScoreList[(int)(bestTagScoreList.size() * 0.25)];
+		std::sort( bestTagTICList.begin(), bestTagTICList.end() );
+		bestTagTICIQR = bestTagTICList[(int)(bestTagTICList.size() * 0.75)] - bestTagTICList[(int)(bestTagTICList.size() * 0.25)];
+		std::sort( tagMzRangeList.begin(), tagMzRangeList.end() );
+		tagMzRangeIQR = tagMzRangeList[(int)(tagMzRangeList.size() * 0.75)] - tagMzRangeList[(int)(tagMzRangeList.size() * 0.25)];
+		//int i = 0;
+		//size_t numSpectra = instance.size();
+		numTaggedSpectra = bestTagScoreList.size();
+		bestTagScoreMean = bestTagScoreSum / (float) numTaggedSpectra;
+		bestTagTICMean = bestTagTICSum / (float) numTaggedSpectra;
+		tagMzRangeMean = tagMzRangeSum / (float) numTaggedSpectra;
+		
 		for( SpectraList::iterator sItr = instance.begin(); sItr != instance.end(); ++sItr )
 		{
 			s = *sItr;
-			s->bestTagScoreNorm = (rankedBestTagScoreList[i]-1) / (float) numTotalSpectra;
-			s->bestTagTICNorm = (rankedBestTagTICList[i]-1) / (float) numTotalSpectra;
-			s->tagMzRangeNorm = (rankedTagMzRangeList[i]-1) / (float) numTotalSpectra;
+			s->bestTagScoreNorm = (s->bestTagScore - bestTagScoreMean) / bestTagScoreIQR;
+			s->bestTagTICNorm = ( s->bestTagScore == 0 ) ? ( 0 - bestTagTICMean) / bestTagTICIQR : (log( s->bestTagTIC ) - bestTagTICMean) / bestTagTICIQR;
+			s->tagMzRangeNorm = ( s->bestTagScore == 0 ) ? ( 0 - tagMzRangeMean) / tagMzRangeIQR : ( s->tagMzRange - tagMzRangeMean) /tagMzRangeIQR;
+
+//			s->bestTagScoreNorm = (rankedBestTagScoreList[i]-1) / (float) numTotalSpectra;
+//			s->bestTagTICNorm = (rankedBestTagTICList[i]-1) / (float) numTotalSpectra;
+//			s->tagMzRangeNorm = (rankedTagMzRangeList[i]-1) / (float) numTotalSpectra;
 //          s->qualScore = ( rankedBestTagScoreList[i] + rankedBestTagTICList[i] + rankedTagMzRangeList[i] ) / (3 * (float) numTotalSpectra);
 			s->qualScore = (s->bestTagScoreNorm + s->bestTagTICNorm + s->tagMzRangeNorm ) / 3;
-			++i;
+			//++i;
 		}
 	}
 
@@ -999,7 +1048,7 @@ namespace directag {
 						for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
 						{
 							s = *sItr;
-							// merge duplicate spectra
+							// merge duplicate spectra with differen charge state
 							vector<int>::iterator found = find(mergedSpectraIndices.begin(),mergedSpectraIndices.end(), s->id.index );
 							if( found == mergedSpectraIndices.end() )
 							{

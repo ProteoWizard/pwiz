@@ -17,7 +17,7 @@
 //
 // Copyright 2009 Vanderbilt University
 //
-// Contributor(s): Surendra Dasaris
+// Contributor(s): Surendra Dasaris, Zeqiang Ma
 //
 
 #include "stdafx.h"
@@ -473,7 +473,7 @@ namespace directag
 		}
 
 		// Code for ScanRanker
-		bestTagScore = (tagList.empty()) ? g_rtConfig->MaxTagScore : tagList.rbegin()->totalScore;
+		bestTagScore = (tagList.empty()) ? 0 : tagList.rbegin()->chisquared;
 		bestTagTIC = (tagList.empty()) ? 0 : tagList.rbegin()->tagTIC;
 
 		START_PROFILER(6)

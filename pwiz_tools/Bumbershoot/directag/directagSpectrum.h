@@ -17,7 +17,7 @@
 //
 // Copyright 2009 Vanderbilt University
 //
-// Contributor(s): Surendra Dasaris
+// Contributor(s): Surendra Dasaris, Zeqiang Ma
 //
 
 #ifndef _DIRECTAGSPECTRUM_H
