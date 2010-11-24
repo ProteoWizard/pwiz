@@ -388,7 +388,7 @@ namespace pwiz.SkylineTestTutorial
                 RunDlg<EditStaticModDlg>(() => editPepModsDlg.AddNewModification(sequence.IndexOf(aa13C), IsotopeLabelType.heavy),
                     editStaticModDlg =>
                 {
-                    editStaticModDlg.Modification = new StaticMod("13C", null, LabelAtoms.C13);
+                    editStaticModDlg.Modification = new StaticMod("13C", null, null, LabelAtoms.C13);
                     editStaticModDlg.OkDialog();
                 });
             }

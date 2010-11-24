@@ -677,7 +677,7 @@ namespace pwiz.Skyline.Properties
         {
             return new[]
                 {
-                    new StaticMod("Carbamidomethyl Cysteine", "C", "C2H3ON")
+                    new StaticMod("Carbamidomethyl Cysteine", "C", null, "C2H3ON")
                 };            
         }
 

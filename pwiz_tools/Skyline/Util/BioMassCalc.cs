@@ -73,6 +73,13 @@ namespace pwiz.Skyline.Util
         public const string I = "I";    // Iodine
         public const string Au = "Au";  // Gold
         public const string Hg = "Hg";  // Mercury
+        public const string B = "B";    // Boron
+        public const string As = "As";  // Arsenic
+        public const string Cd = "Cd";  // Cadmium
+        public const string Cr = "Cr";  // Chromium
+        public const string Co = "Co";  // Cobalt
+        public const string Mn = "Mn";  // Manganese
+        public const string Mg = "Mg";  // Magnesium
 // ReSharper restore InconsistentNaming
 
         public static double MassProton
@@ -142,6 +149,13 @@ namespace pwiz.Skyline.Util
             addMass(I, 126.904473, 126.90447);
             addMass(Au, 196.966543, 196.96655);
             addMass(Hg, 201.970617, 200.59);
+            addMass(B, 11.0093055, 10.811);
+            addMass(As, 74.9215942, 74.9215942);
+            addMass(Cd, 113.903357, 112.411);
+            addMass(Cr, 51.9405098, 51.9961);
+            addMass(Co, 58.9331976, 58.933195);
+            addMass(Mn, 54.9380471, 54.938045);
+            addMass(Mg, 23.9850423, 24.305);
         }
 
         public MassType MassType { get; private set; }

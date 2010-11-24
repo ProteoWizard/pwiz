@@ -63,7 +63,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Add a new static modification on cysteine
             var peptideSettingsUI = ShowPeptideSettings();
-            var modStatic = new StaticMod("Another Cysteine", "C", "CO8N2");
+            var modStatic = new StaticMod("Another Cysteine", "C", null, "CO8N2");
             AddStaticMod(modStatic, peptideSettingsUI);
             RunUI(peptideSettingsUI.OkDialog);
             WaitForClosedForm(peptideSettingsUI);

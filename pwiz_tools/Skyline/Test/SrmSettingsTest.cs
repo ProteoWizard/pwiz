@@ -497,7 +497,7 @@ namespace pwiz.SkylineTest
             // Too big formula
             AssertEx.DeserializeError<FragmentLoss>("<potential_loss formula=\"N333\"/>");
             // Bad formula
-            AssertEx.DeserializeError<FragmentLoss, ArgumentException>("<potential_loss formula=\"H3Mg5Cl5\"/>");
+            AssertEx.DeserializeError<FragmentLoss, ArgumentException>("<potential_loss formula=\"H3Mx5Cl5\"/>");
             // Constant mass out of range
             AssertEx.DeserializeError<FragmentLoss>("<potential_loss massdiff_monoisotopic=\"" + FragmentLoss.MIN_LOSS_MASS / 2 + "\"\n" +
                     " massdiff_average=\"1\" />");

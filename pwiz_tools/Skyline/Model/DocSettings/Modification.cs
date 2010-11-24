@@ -53,13 +53,13 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         private ReadOnlyCollection<FragmentLoss> _losses;
 
-        public StaticMod(string name, string aas, string formula)
-            : this(name, aas, null, formula, LabelAtoms.None, null, null)
+        public StaticMod(string name, string aas, ModTerminus? term, string formula)
+            : this(name, aas, term, formula, LabelAtoms.None, null, null)
         {            
         }
 
-        public StaticMod(string name, string aas, LabelAtoms labelAtoms)
-            : this(name, aas, null, null, labelAtoms, null, null)
+        public StaticMod(string name, string aas, ModTerminus? term, LabelAtoms labelAtoms)
+            : this(name, aas, term, null, labelAtoms, null, null)
         {
         }
 

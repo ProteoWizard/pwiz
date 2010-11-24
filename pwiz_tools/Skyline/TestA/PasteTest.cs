@@ -28,8 +28,8 @@ namespace pwiz.SkylineTestA
             {
                 new StaticMod("13C K", "K", ModTerminus.C, null, LabelAtoms.C13, null, null),
                 new StaticMod("13C R", "R", ModTerminus.C, null, LabelAtoms.C13, null, null),
-                new StaticMod("13C V", "V", LabelAtoms.C13).ChangeExplicit(true),
-                new StaticMod("13C L", "L", LabelAtoms.C13).ChangeExplicit(true)
+                new StaticMod("13C V", "V", null, LabelAtoms.C13).ChangeExplicit(true),
+                new StaticMod("13C L", "L", null, LabelAtoms.C13).ChangeExplicit(true)
             };
 
         private static readonly List<StaticMod> HEAVY_C_K_DIFDEF = new List<StaticMod>

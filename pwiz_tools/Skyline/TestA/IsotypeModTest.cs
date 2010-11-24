@@ -180,8 +180,8 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual(2, document.PeptideCount);
 
             // Add some modifications in two new label types
-            var modCarb = new StaticMod("Carbamidomethyl Cysteine", "C", "C2H3ON");
-            var modOther = new StaticMod("Another Cysteine", "C", "CO8N2");
+            var modCarb = new StaticMod("Carbamidomethyl Cysteine", "C", null, "C2H3ON");
+            var modOther = new StaticMod("Another Cysteine", "C", null, "CO8N2");
             var staticMods = new[] {modCarb, modOther};
             var mod15N = new StaticMod("All 15N", null, null, null, LabelAtoms.N15, null, null);
             var modK13C = new StaticMod("13C K", "K", ModTerminus.C, null, LabelAtoms.C13, null, null);

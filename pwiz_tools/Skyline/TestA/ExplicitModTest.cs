@@ -40,8 +40,8 @@ namespace pwiz.SkylineTestA
                 // The original document expressed Heavy K incorrectly
                 new StaticMod("13C K", "K", ModTerminus.C, "C'8 - C8", LabelAtoms.None, null, null),
                 new StaticMod("13C R", "R", ModTerminus.C, null, LabelAtoms.C13, null, null),
-                new StaticMod("13C V", "V", LabelAtoms.C13).ChangeExplicit(true),
-                new StaticMod("13C L", "L", LabelAtoms.C13).ChangeExplicit(true)
+                new StaticMod("13C V", "V", null, LabelAtoms.C13).ChangeExplicit(true),
+                new StaticMod("13C L", "L", null, LabelAtoms.C13).ChangeExplicit(true)
             };
 
 
@@ -283,7 +283,7 @@ namespace pwiz.SkylineTestA
             var listHeavyMods = new List<StaticMod>(settings.PeptideSettings.Modifications.HeavyModifications);
 
             // Change an explicit heavy modification to something new
-            var modV = new StaticMod("Heavy V", "V", LabelAtoms.C13|LabelAtoms.N15);
+            var modV = new StaticMod("Heavy V", "V", null, LabelAtoms.C13|LabelAtoms.N15);
             listHeavyMods.Add(modV);
 
             IdentityPath path = docStudy7.GetPathTo((int)SrmDocument.Level.Peptides, 0);
