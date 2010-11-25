@@ -206,7 +206,7 @@ namespace directag
 					<< bestTagScoreIQR << '\t'
 					<< bestTagTICIQR << '\t'
 					<< tagMzRangeIQR << '\t'
-					<< numTaggedSpectra << '\n';
+					<< numTaggedSpectra << "\n";
 		fileStream << "H\tNativeID\tBestTagScore\tBestTagTIC\tTagMzRange\tScanRankerScore\n" ;
 		vector<int> seen;
 		Spectrum* s;
