@@ -52,21 +52,24 @@ using namespace pwiz::util;
 using namespace XRawfile;
 
 
-namespace {
-void checkResult(HRESULT hr, const string& msg = "")
-{
-    // note:
-    // XRawfile seems to return 0 for success, >0 for failure;
-    // COM standard: HRESULT is >=0 for success, <0 for failure
-
-    if (hr == 0) // success
-        return;
-
-    ostringstream temp;
-    temp << msg << "Failed HRESULT returned from COM object: " << hr;
-    throw RawEgg(temp.str().c_str());
+// note:
+// XRawfile seems to return 0 for success, >0 for failure;
+// COM standard: HRESULT is >=0 for success, <0 for failure
+#define checkResult(stmt, prefix) \
+{ \
+    try \
+    { \
+        HRESULT hr = (stmt); \
+        if (hr != 0) \
+            throw _com_error(hr); \
+    } \
+    catch (_com_error& e) \
+    { \
+        ostringstream temp; \
+        temp << prefix << "Failed call to XRawfile: " << e.ErrorMessage(); \
+        throw RawEgg(temp.str()); \
+    } \
 }
-} // namespace
 
 
 class RawFileImpl : public RawFile
