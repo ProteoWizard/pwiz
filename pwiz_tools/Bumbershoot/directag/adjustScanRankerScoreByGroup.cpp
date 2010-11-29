@@ -108,7 +108,8 @@ void adjustScore(	const string& filename,
 		}
 		else if (line.find("H\tNativeID") != string::npos)    // if header line, write out line, else extract subscores and compute the new score
 		{
-			ofileStream << "H\tNativeID\tBestTagScore\tBestTagTIC\tTagMzRange\tScanRankerScore\tAdjustedScore\n"; 
+			//ofileStream << "H\tNativeID\tBestTagScore\tBestTagTIC\tTagMzRange\tScanRankerScore\tAdjustedScore\n"; 
+			ofileStream << line << "\tAdjustedScore\n"; 
 		}
 		else if (line.find("H\t") != string::npos)
 		{
@@ -144,13 +145,14 @@ void adjustScore(	const string& filename,
 			float tagMzRangeNorm = ( tagMzRange - gbTagMzRangeMean ) / gbTagMzRangeIQRMean;
 			float adjustedScore = ( bestTagScoreNorm + bestTagTICNorm + tagMzRangeNorm) / 3;
 
-			ofileStream <<	"S"	<< '\t'
-						<<	nativeID	<< '\t'
-						<<	bestTagScore	<< '\t'
-						<<	bestTagTIC	<< '\t'
-						<<	tagMzRange	<< '\t'
-						<<	originalScore << '\t'
-						<<	adjustedScore << '\n';
+			// ofileStream <<	"S"	<< '\t'
+						// <<	nativeID	<< '\t'
+						// <<	bestTagScore	<< '\t'
+						// <<	bestTagTIC	<< '\t'
+						// <<	tagMzRange	<< '\t'
+						// <<	originalScore << '\t'
+						// <<	adjustedScore << '\n';
+			ofileStream << line << '\t' << adjustedScore << '\n';
 		}
 	}
 }
