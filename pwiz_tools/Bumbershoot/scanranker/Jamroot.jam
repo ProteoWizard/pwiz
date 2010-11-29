@@ -231,9 +231,9 @@ echo $(application-name) $(version-tag:J=.) $(SVNREVDATE:J=) ;
 #generate-AssemblyInfo.cs Presentation/Properties/AssemblyInfo.cs : [ glob Presentation/*.cs ] : : : "Presentation" "Implements IDPicker's presentation logic." $(COMPANY_AND_PRODUCT) ;
 
 
-path-constant BOOST_SOURCE : "DirecTag/freicore/libraries/boost_1_39_0" ;
+path-constant BOOST_SOURCE : "DirecTag/freicore/libraries/boost_1_43_0" ;
 
-using ext-boost : 1.39.0 : $(BOOST_SOURCE) ;
+using ext-boost : 1.43.0 : $(BOOST_SOURCE) ;
 
 
 rule install-location ( properties * )
@@ -267,6 +267,7 @@ rule dotNET-dependencies ( properties * )
 install install
     : # sources
         DirecTag//directag
+		DirecTag//adjustScanRankerScoreByGroup
         DirecTag/idpQonvert//idpQonvert
     : # requirements
         <install-type>EXE
@@ -389,7 +390,7 @@ tar.create $(application-name:L)-src.tar.bz2
   : # requirements
     <name>$(application-name:L)-src-$(version-tag:J=_).tar.bz2
     <location>$(BUILD_PATH)
-    <dependency>DirecTag//boost_1_39_0.tar.bz2
+    <dependency>DirecTag//boost_1_43_0.tar.bz2
   ;
 
 } # if SUBSET

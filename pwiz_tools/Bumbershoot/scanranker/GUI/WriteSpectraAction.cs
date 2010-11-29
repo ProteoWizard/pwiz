@@ -122,8 +122,8 @@ namespace ScanRanker
                     predicate.indexSet.Add(i);
                 }
 
-                MSDataFile.WriteConfig writeConfig = new MSDataFile.WriteConfig(MSDataFile.Format.Format_mzXML);
-
+                //MSDataFile.WriteConfig writeConfig = new MSDataFile.WriteConfig(MSDataFile.Format.Format_mzXML);
+                MSDataFile.WriteConfig writeConfig = new MSDataFile.WriteConfig();
                 if (outFormat.Equals("mzXML") || outFormat.Equals("mzxml"))
                 {
                     writeConfig.format = MSDataFile.Format.Format_mzXML;
