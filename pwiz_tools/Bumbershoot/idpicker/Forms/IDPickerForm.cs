@@ -127,8 +127,6 @@ namespace IDPicker
             spectrumTableForm.SpectrumViewVisualize += spectrumTableForm_SpectrumViewVisualize;
             modificationTableForm.ModificationViewFilter += modificationTableForm_ModificationViewFilter;
 
-            _layoutManager = new LayoutManager(this, peptideTableForm, proteinTableForm, spectrumTableForm, dockPanel);
-
             //logForm = new LogForm();
             //Console.SetOut(logForm.LogWriter);
             //logForm.Show(dockPanel, DockState.DockBottomAutoHide);
@@ -465,6 +463,8 @@ namespace IDPicker
             //OpenFiles(filepaths);//.Take(10).Union(filepaths.Skip(200).Take(10)).Union(filepaths.Skip(400).Take(10)).ToList());
             //return;
 
+            _layoutManager = new LayoutManager(this, peptideTableForm, proteinTableForm, spectrumTableForm, dockPanel);
+
             // load last or default location and size
             _layoutManager.LoadMainFormSettings();
 
@@ -680,6 +680,7 @@ namespace IDPicker
 
                 qonverterSettingsByAnalysis.ForEach(o => qonverter.SettingsByAnalysis[(int) o.Key.Id] = o.Value.ToQonverterSettings());
                 qonverter.QonversionProgress += progressMonitor.UpdateProgress;
+                //qonverter.LogQonversionDetails = true;
 
                 try
                 {
