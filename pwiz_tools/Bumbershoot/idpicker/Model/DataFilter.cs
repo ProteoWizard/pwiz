@@ -303,6 +303,52 @@ namespace IDPicker.DataModel
                                  MinimumSpectraPerProtein);
         }
 
+        public static void DropFilters (System.Data.IDbConnection conn)
+        {
+            // ignore errors if main tables haven't been created yet
+
+            #region Drop Filtered* tables
+            conn.ExecuteNonQuery(@"DROP TABLE IF EXISTS FilteredProtein;
+                                   DROP TABLE IF EXISTS FilteredPeptideInstance;
+                                   DROP TABLE IF EXISTS FilteredPeptide;
+                                   DROP TABLE IF EXISTS FilteredPeptideSpectrumMatch
+                                  ");
+            #endregion
+
+            #region Restore Unfiltered* tables as the main tables
+            try
+            {
+                // if unfiltered tables have not been created, this will throw and skip the rest of the block
+                conn.ExecuteNonQuery("SELECT Id FROM UnfilteredProtein LIMIT 1");
+
+                // drop filtered tables
+                conn.ExecuteNonQuery(@"DROP TABLE IF EXISTS Protein;
+                                       DROP TABLE IF EXISTS PeptideInstance;
+                                       DROP TABLE IF EXISTS Peptide;
+                                       DROP TABLE IF EXISTS PeptideSpectrumMatch
+                                      ");
+
+                // rename unfiltered tables 
+                conn.ExecuteNonQuery(@"ALTER TABLE UnfilteredProtein RENAME TO Protein;
+                                       ALTER TABLE UnfilteredPeptideInstance RENAME TO PeptideInstance;
+                                       ALTER TABLE UnfilteredPeptide RENAME TO Peptide;
+                                       ALTER TABLE UnfilteredPeptideSpectrumMatch RENAME TO PeptideSpectrumMatch
+                                      ");
+
+                // reset QValues
+                //conn.ExecuteNonQuery("UPDATE PeptideSpectrumMatch SET QValue = 2");
+            }
+            catch
+            {
+            }
+            #endregion
+        }
+
+        public void DropFilters (NHibernate.ISession session)
+        {
+            DropFilters(session.Connection);
+        }
+
         public void ApplyBasicFilters (NHibernate.ISession session)
         {
             // free up memory
@@ -312,46 +358,10 @@ namespace IDPicker.DataModel
             if (useScopedTransaction)
                 session.Transaction.Begin();
 
-            // ignore errors if main tables haven't been created yet
-
-            #region Drop Filtered* tables
-            if(OnFilteringProgress(new FilteringProgressEventArgs("Dropping current filters...", 1, null)))
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Dropping current filters...", 1, null)))
                 return;
 
-            session.CreateSQLQuery(@"DROP TABLE IF EXISTS FilteredProtein;
-                                     DROP TABLE IF EXISTS FilteredPeptideInstance;
-                                     DROP TABLE IF EXISTS FilteredPeptide;
-                                     DROP TABLE IF EXISTS FilteredPeptideSpectrumMatch
-                                    ").ExecuteUpdate();
-            #endregion
-
-            #region Restore Unfiltered* tables as the main tables
-            try
-            {
-                if (OnFilteringProgress(new FilteringProgressEventArgs("Restoring unfiltered data...", 2, null)))
-                    return;
-
-                // if unfiltered tables have not been created, this will throw and skip the rest of the block
-                session.CreateSQLQuery("SELECT Id FROM UnfilteredProtein LIMIT 1").ExecuteUpdate();
-
-                // drop filtered tables
-                session.CreateSQLQuery(@"DROP TABLE IF EXISTS Protein;
-                                         DROP TABLE IF EXISTS PeptideInstance;
-                                         DROP TABLE IF EXISTS Peptide;
-                                         DROP TABLE IF EXISTS PeptideSpectrumMatch
-                                        ").ExecuteUpdate();
-
-                // rename unfiltered tables 
-                session.CreateSQLQuery(@"ALTER TABLE UnfilteredProtein RENAME TO Protein;
-                                         ALTER TABLE UnfilteredPeptideInstance RENAME TO PeptideInstance;
-                                         ALTER TABLE UnfilteredPeptide RENAME TO Peptide;
-                                         ALTER TABLE UnfilteredPeptideSpectrumMatch RENAME TO PeptideSpectrumMatch
-                                        ").ExecuteUpdate();
-            }
-            catch
-            {
-            }
-            #endregion
+            DropFilters(session);
 
             #region Create Filtered* tables by applying the basic filters to the main tables
             if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering proteins...", 3, null)))

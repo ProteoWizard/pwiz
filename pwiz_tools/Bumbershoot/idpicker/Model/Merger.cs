@@ -151,6 +151,12 @@ namespace IDPicker.DataModel
                     if (conn.ExecuteQuery("SELECT * FROM merged.MergedFiles WHERE Filepath = '" + mergeSourceFilepath.Replace("'", "''") + "'").Count() > 0)
                         continue;
 
+                    using (var newConn = new SQLiteConnection("Data Source=\"" + mergeSourceFilepath + "\""))
+                    {
+                        newConn.Open();
+                        DataFilter.DropFilters(newConn);
+                    }
+
                     conn.ExecuteNonQuery("ATTACH DATABASE '" + mergeSourceFilepath.Replace("'", "''") + "' AS new");
                     conn.ExecuteNonQuery("PRAGMA new.cache_size=" + newCacheSize);
 
@@ -183,7 +189,6 @@ namespace IDPicker.DataModel
                         addNewAnalyses(conn);
                         addNewAnalysisParameters(conn);
                         addNewQonverterSettings(conn);
-                        getNewMaxIds(conn);
 
                         conn.ExecuteNonQuery("INSERT INTO merged.MergedFiles VALUES ('" + mergeSourceFilepath.Replace("'", "''") + "')");
                     }
@@ -195,6 +200,7 @@ namespace IDPicker.DataModel
                     finally
                     {
                         transaction.Commit();
+                        getNewMaxIds(conn);
                         conn.ExecuteNonQuery("DETACH DATABASE new");
                     }
                 }
@@ -259,43 +265,43 @@ namespace IDPicker.DataModel
         }
 
         static string mergeProteinsSql =
-              @"DROP TABLE IF EXISTS merged.ProteinMergeMap;
-                CREATE TABLE merged.ProteinMergeMap (BeforeMergeId INTEGER PRIMARY KEY, AfterMergeId INT);
-                INSERT INTO merged.ProteinMergeMap
+              @"DROP TABLE IF EXISTS ProteinMergeMap;
+                CREATE TABLE ProteinMergeMap (BeforeMergeId INTEGER PRIMARY KEY, AfterMergeId INT);
+                INSERT INTO ProteinMergeMap
                 SELECT newPro.Id, IFNULL(oldPro.Id, newPro.Id+{1})
                 FROM {0}.Protein newPro
                 LEFT JOIN merged.Protein oldPro ON newPro.Accession = oldPro.Accession;
-                CREATE UNIQUE INDEX merged.ProteinMergeMap_Index2 ON ProteinMergeMap (AfterMergeId);
+                CREATE UNIQUE INDEX ProteinMergeMap_Index2 ON ProteinMergeMap (AfterMergeId);
 
                 DROP TABLE IF EXISTS NewProteins;
                 CREATE TABLE NewProteins AS
                 SELECT BeforeMergeId, AfterMergeId
-                FROM merged.ProteinMergeMap
+                FROM ProteinMergeMap
                 WHERE AfterMergeId > {1}
                ";
         void mergeProteins (IDbConnection conn) { conn.ExecuteNonQuery(String.Format(mergeProteinsSql, mergeSourceDatabase, MaxProteinId)); }
 
 
         static string mergePeptideInstancesSql =
-              @"DROP TABLE IF EXISTS merged.PeptideInstanceMergeMap;
-                CREATE TABLE merged.PeptideInstanceMergeMap (BeforeMergeId INTEGER PRIMARY KEY, AfterMergeId INTEGER, AfterMergeProtein INTEGER, BeforeMergePeptide INTEGER, AfterMergePeptide INTEGER);
-                INSERT INTO merged.PeptideInstanceMergeMap
+              @"DROP TABLE IF EXISTS PeptideInstanceMergeMap;
+                CREATE TABLE PeptideInstanceMergeMap (BeforeMergeId INTEGER PRIMARY KEY, AfterMergeId INTEGER, AfterMergeProtein INTEGER, BeforeMergePeptide INTEGER, AfterMergePeptide INTEGER);
+                INSERT INTO PeptideInstanceMergeMap
                 SELECT newInstance.Id, IFNULL(oldInstance.Id, newInstance.Id+{1}), IFNULL(oldInstance.Protein, proMerge.AfterMergeId), newInstance.Peptide, IFNULL(oldInstance.Peptide, newInstance.Peptide+{2})
-                FROM merged.ProteinMergeMap proMerge
+                FROM ProteinMergeMap proMerge
                 JOIN {0}.PeptideInstance newInstance ON proMerge.BeforeMergeId = newInstance.Protein
                 LEFT JOIN merged.PeptideInstance oldInstance ON proMerge.AfterMergeId = oldInstance.Protein
                                                             AND newInstance.Length = oldInstance.Length
                                                             AND newInstance.Offset = oldInstance.Offset;
-                CREATE UNIQUE INDEX merged.PeptideInstanceMergeMap_Index2 ON PeptideInstanceMergeMap (AfterMergeId);
-                CREATE INDEX merged.PeptideInstanceMergeMap_Index3 ON PeptideInstanceMergeMap (BeforeMergePeptide);
-                CREATE INDEX merged.PeptideInstanceMergeMap_Index4 ON PeptideInstanceMergeMap (AfterMergePeptide);
+                CREATE UNIQUE INDEX PeptideInstanceMergeMap_Index2 ON PeptideInstanceMergeMap (AfterMergeId);
+                CREATE INDEX PeptideInstanceMergeMap_Index3 ON PeptideInstanceMergeMap (BeforeMergePeptide);
+                CREATE INDEX PeptideInstanceMergeMap_Index4 ON PeptideInstanceMergeMap (AfterMergePeptide);
                ";
         void mergePeptideInstances (IDbConnection conn) { conn.ExecuteNonQuery(String.Format(mergePeptideInstancesSql, mergeSourceDatabase, MaxPeptideInstanceId, MaxPeptideId)); }
 
 
         static string mergeAnalysesSql =
               @"DROP TABLE IF EXISTS AnalysisMergeMap;
-                CREATE TABLE merged.AnalysisMergeMap (BeforeMergeId INTEGER PRIMARY KEY, AfterMergeId INT);
+                CREATE TABLE AnalysisMergeMap (BeforeMergeId INTEGER PRIMARY KEY, AfterMergeId INT);
                 INSERT INTO AnalysisMergeMap
                 SELECT newAnalysis.Id, IFNULL(oldAnalysis.Id, newAnalysis.Id+{1})
                 FROM (SELECT a.Id, SoftwareName || ' ' || SoftwareVersion || ' ' || GROUP_CONCAT(ap.Name || ' ' || ap.Value) AS DistinctKey
@@ -406,7 +412,7 @@ namespace IDPicker.DataModel
               @"INSERT INTO merged.PeptideInstance
                 SELECT AfterMergeId, AfterMergeProtein, AfterMergePeptide,
                        Offset, Length, NTerminusIsSpecific, CTerminusIsSpecific, MissedCleavages
-                FROM merged.PeptideInstanceMergeMap piMerge
+                FROM PeptideInstanceMergeMap piMerge
                 JOIN {0}.PeptideInstance newInstance ON BeforeMergeId = newInstance.Id
                 WHERE AfterMergeId > {1}
                ";
@@ -417,7 +423,7 @@ namespace IDPicker.DataModel
               @"INSERT INTO merged.Peptide
                 SELECT AfterMergePeptide, MonoisotopicMass, MolecularWeight
                 FROM {0}.Peptide newPep
-                JOIN merged.PeptideInstanceMergeMap ON newPep.Id = BeforeMergePeptide
+                JOIN PeptideInstanceMergeMap ON newPep.Id = BeforeMergePeptide
                 WHERE AfterMergePeptide > {1}
                 GROUP BY AfterMergePeptide
                ";
@@ -429,7 +435,7 @@ namespace IDPicker.DataModel
                 INSERT OR IGNORE INTO merged.PeptideSequences
                 SELECT AfterMergePeptide, Sequence
                 FROM {0}.PeptideSequences newSequence
-                JOIN merged.PeptideInstanceMergeMap ON newSequence.Id = BeforeMergePeptide
+                JOIN PeptideInstanceMergeMap ON newSequence.Id = BeforeMergePeptide
                 WHERE AfterMergePeptide > {1}
                 GROUP BY AfterMergePeptide
                ";
@@ -496,7 +502,7 @@ namespace IDPicker.DataModel
                        QValue, MonoisotopicMass, MolecularWeight, MonoisotopicMassError, MolecularWeightError,
                        Rank, Charge
                 FROM {0}.PeptideSpectrumMatch newPSM
-                JOIN merged.PeptideInstanceMergeMap piMerge ON Peptide = BeforeMergePeptide
+                JOIN PeptideInstanceMergeMap piMerge ON Peptide = BeforeMergePeptide
                 JOIN AnalysisMergeMap aMerge ON Analysis = aMerge.BeforeMergeId
                 JOIN SpectrumMergeMap sMerge ON Spectrum = sMerge.BeforeMergeId
                 GROUP BY newPSM.Id
