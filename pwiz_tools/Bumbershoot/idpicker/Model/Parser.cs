@@ -394,6 +394,7 @@ namespace IDPicker.DataModel
                     {
                         int expectedSourceCount = int.MaxValue;
                         string sourceName = null;
+                        string processingEventType = null;
                         while (reader.Read() && sourceNames.Count < expectedSourceCount)
                         {
                             switch (reader.NodeType)
@@ -403,9 +404,35 @@ namespace IDPicker.DataModel
                                     {
                                         expectedSourceCount = getAttributeAs<int>(reader, "count");
                                     }
+                                    else if (reader.Name == "processingEvent")
+                                    {
+                                        processingEventType = getAttribute(reader, "type");
+                                        if (processingEventType == "identification")
+                                        {
+                                            curAnalysis = new Analysis()
+                                            {
+                                                Software = new AnalysisSoftware(),
+                                                Parameters = new Iesi.Collections.Generic.SortedSet<AnalysisParameter>()
+                                            };
+
+                                            try
+                                            {
+                                                string LegacyTimeFormat = "MM/dd/yyyy@HH:mm:ss";
+                                                curAnalysis.StartTime = DateTime.ParseExact(getAttribute(reader, "start"),
+                                                                                            LegacyTimeFormat, null);
+                                                //DateTime.ParseExact(getAttribute(reader, "end"), TimeFormat, null);
+                                            }
+                                            catch
+                                            {
+                                            }
+
+                                            analyses.Add(curAnalysis);
+                                        }
+                                    }
                                     else if (reader.Name == "processingParam")
                                     {
                                         string paramName = getAttribute(reader, "name");
+                                        string paramValue = getAttribute(reader, "value", true);
                                         if (paramName == "ProteinDatabase")
                                         {
                                             if (!foundDatabase)
@@ -416,7 +443,40 @@ namespace IDPicker.DataModel
                                         }
                                         else
                                         {
+                                            if (processingEventType != "identification")
+                                                continue;
 
+                                            if (paramName == "software name")
+                                            {
+                                                curAnalysis.Software.Name = paramValue;
+                                            }
+                                            else if (paramName == "software version")
+                                            {
+                                                curAnalysis.Software.Version = paramValue;
+                                            }
+                                            else if (paramName.Contains("WorkingDirectory") ||
+                                                     paramName.Contains("StatusUpdateFrequency"))
+                                            {
+                                                // skip insignificant parameters
+                                            }
+                                            else if (paramName.Contains("Config: "))
+                                            {
+                                                curAnalysis.Parameters.Add(new AnalysisParameter()
+                                                {
+                                                    Id = curAnalysis.Parameters.Count + 1,
+                                                    Name = paramName.Substring(8),
+                                                    Value = paramValue
+                                                });
+                                            }
+                                            else if (!paramName.Contains(": "))
+                                            {
+                                                curAnalysis.Parameters.Add(new AnalysisParameter()
+                                                {
+                                                    Id = curAnalysis.Parameters.Count + 1,
+                                                    Name = paramName,
+                                                    Value = paramValue
+                                                });
+                                            }
                                         }
                                     }
                                     else if (reader.Name == "spectraSource")
@@ -429,6 +489,7 @@ namespace IDPicker.DataModel
                                     if (reader.Name == "processingEventList")
                                     {
                                         sourceNames.Add(sourceName);
+                                        curAnalysis.Name = curAnalysis.Software.Name + " " + curAnalysis.Software.Version;
                                     }
                                     break;
                             }
@@ -1525,6 +1586,9 @@ BEGIN TRANSACTION;
 -- Apply a broad QValue filter on top-ranked PSMs
 DELETE FROM PeptideSpectrumMatch WHERE QValue > 0.25 AND Rank = 1;
 
+-- Reset QValue so it will be recalculated after import (with all correct terminal specificities)
+UPDATE PeptideSpectrumMatch SET QValue = 2; -- TODO: how to set to infinity?
+
 -- Delete all PSMs for a spectrum if the spectrum's top-ranked PSM was deleted above
 DELETE FROM PeptideSpectrumMatch
       WHERE Rank > 1
@@ -1950,14 +2014,6 @@ VACUUM
                     if (lastBatch)
                     {
                         //conn.ExecuteNonQuery("DROP TABLE IF EXISTS PeptideSequences");
-                        conn.ExecuteNonQuery("UPDATE PeptideSpectrumMatch SET QValue = 2");
-
-                        // another preqonversion is run with the correct terminal specificities
-                        /*var qonverter = new IDPicker.StaticWeightQonverter();
-                        qonverter.DecoyPrefix = DecoyPrefix;
-                        qonverter.ScoreWeights["mvh"] = 1;
-                        //qonverter.ScoreWeights["mzFidelity"] = 1;
-                        qonverter.Qonvert(xmlFilepath + ".idpDB");*/
                     }
 
                     conn.Close();
