@@ -49,6 +49,10 @@ namespace pwiz.Skyline.Controls
 	    private const int DEFAULT_ITEM_HEIGHT = 16;
 	    private const float DEFAULT_FONT_SIZE = (float) 8.25;
 
+        public const double DEFAULT_TEXT_FACTOR = 1;
+	    public const double LRG_TEXT_FACTOR = 1.25;
+	    public const double XLRG_TEXT_FACTOR = 1.5;
+
         public TreeViewMS()
         {
             UseKeysOverride = false;

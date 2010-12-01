@@ -139,8 +139,8 @@ namespace pwiz.Skyline
             splitMain.Panel2Collapsed = true;
             splitMain.SplitterDistance = Settings.Default.SplitMainX;
 
-            largeToolStripMenuItem.Checked = Settings.Default.TextZoom == LRG_TEXT_FACTOR;
-            extraLargeToolStripMenuItem.Checked = Settings.Default.TextZoom == XLRG_TEXT_FACTOR;
+            largeToolStripMenuItem.Checked = Settings.Default.TextZoom == TreeViewMS.LRG_TEXT_FACTOR;
+            extraLargeToolStripMenuItem.Checked = Settings.Default.TextZoom == TreeViewMS.XLRG_TEXT_FACTOR;
             defaultTextToolStripMenuItem.Checked = 
                 !(largeToolStripMenuItem.Checked || extraLargeToolStripMenuItem.Checked);
 
@@ -2590,20 +2590,16 @@ namespace pwiz.Skyline
         private void ChangeTextSize()
         {
             if (largeToolStripMenuItem.Checked)
-                Settings.Default.TextZoom = LRG_TEXT_FACTOR;
+                Settings.Default.TextZoom = TreeViewMS.LRG_TEXT_FACTOR;
             else if (extraLargeToolStripMenuItem.Checked)
-                Settings.Default.TextZoom = XLRG_TEXT_FACTOR;
+                Settings.Default.TextZoom = TreeViewMS.XLRG_TEXT_FACTOR;
             else
             {
                 defaultTextToolStripMenuItem.Checked = true;
-                Settings.Default.TextZoom = DEFAULT_TEXT_FACTOR; 
+                Settings.Default.TextZoom = TreeViewMS.DEFAULT_TEXT_FACTOR; 
             }
             SequenceTree.OnTextZoomChanged();
         }
-
-        private const double DEFAULT_TEXT_FACTOR = 1;
-        private const double LRG_TEXT_FACTOR = 1.5;
-        private const double XLRG_TEXT_FACTOR = 2;
     }
 }
 
