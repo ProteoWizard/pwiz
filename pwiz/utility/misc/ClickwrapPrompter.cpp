@@ -47,88 +47,95 @@ namespace util {
 
 PWIZ_API_DECL bool ClickwrapPrompter::prompt(const string& caption, const string& text, const string& oneTimeKey)
 {
-    // HACK(?): skip the prompt for tests which use ClickwrapPrompter (other than its unit test)
-    String^ currentProcessName = System::Diagnostics::Process::GetCurrentProcess()->ProcessName;
-    if (!currentProcessName->Contains("ClickwrapPrompterTest") && currentProcessName->Contains("Test"))
-        return true;
-
-    String^ registrySubkey = "Software\\ProteoWizard";
-    String^ registryValue = ToSystemString(oneTimeKey)->Replace("\\", "_")->Replace("/", "_");
-
-    RegistryKey^ regKey = nullptr;
-    if (!oneTimeKey.empty())
+    try
     {
-        regKey = Registry::CurrentUser->CreateSubKey(registrySubkey);
-	    if (regKey == nullptr)
-            throw runtime_error(ToStdString("[ClickwrapPrompter::prompt] Unable to open/create registry key \"" + registrySubkey + "\""));
-
-        if (regKey->GetValue(registryValue) != nullptr)
+        // HACK(?): skip the prompt for tests which use ClickwrapPrompter (other than its unit test)
+        String^ currentProcessName = System::Diagnostics::Process::GetCurrentProcess()->ProcessName;
+        if (!currentProcessName->Contains("ClickwrapPrompterTest") && currentProcessName->Contains("Test"))
             return true;
+
+        String^ registrySubkey = "Software\\ProteoWizard";
+        String^ registryValue = ToSystemString(oneTimeKey)->Replace("\\", "_")->Replace("/", "_");
+
+        RegistryKey^ regKey = nullptr;
+        if (!oneTimeKey.empty())
+        {
+            regKey = Registry::CurrentUser->CreateSubKey(registrySubkey);
+	        if (regKey == nullptr)
+                throw runtime_error(ToStdString("[ClickwrapPrompter::prompt] Unable to open/create registry key \"" + registrySubkey + "\""));
+
+            if (regKey->GetValue(registryValue) != nullptr)
+                return true;
+        }
+
+        Form^ form = gcnew Form();
+        form->Text = ToSystemString(caption);
+        form->StartPosition = FormStartPosition::CenterScreen;
+        form->Size = Size(800, 600);
+
+        Button^ disagree = gcnew Button();
+        disagree->TabIndex = 1;
+        disagree->Text = "Disagree";
+        disagree->AutoSize = true;
+        disagree->UseVisualStyleBackColor = true;
+        disagree->Anchor = AnchorStyles::Right;
+        disagree->DialogResult = DialogResult::No;
+
+        Button^ agree = gcnew Button();
+        agree->TabIndex = 0;
+        agree->Text = "Agree";
+        agree->Size = disagree->Size;
+        agree->UseVisualStyleBackColor = true;
+        agree->Anchor = AnchorStyles::Right;
+        agree->DialogResult = DialogResult::Yes;
+
+        TextBox^ textBox = gcnew TextBox();
+        textBox->Text = ToSystemString(text);
+        textBox->TabStop = false;
+        textBox->ReadOnly = true;
+        textBox->Multiline = true;
+        textBox->WordWrap = true;
+        textBox->ScrollBars = ScrollBars::Vertical;
+        textBox->HideSelection = true;
+        textBox->SelectionLength = 0;
+        textBox->BackColor = System::Drawing::SystemColors::Window;
+        textBox->Anchor = AnchorStyles::Top | AnchorStyles::Bottom | AnchorStyles::Left | AnchorStyles::Right;
+
+        TableLayoutPanel^ table = gcnew TableLayoutPanel();
+        table->TabStop = false;
+        table->ColumnCount = 2;
+        table->RowCount = 2;
+        table->ColumnStyles->Add(gcnew ColumnStyle(SizeType::Percent, 100.0));
+        table->ColumnStyles->Add(gcnew ColumnStyle());
+        table->RowStyles->Add(gcnew RowStyle(SizeType::Percent, 100.0));
+        table->RowStyles->Add(gcnew RowStyle());
+        table->Dock = DockStyle::Fill;
+        table->GrowStyle = TableLayoutPanelGrowStyle::FixedSize;
+        table->Controls->Add(textBox, 0, 0);
+        table->Controls->Add(agree, 0, 1);
+        table->Controls->Add(disagree, 1, 1);
+        table->SetColumnSpan(textBox, 2);
+
+        form->Controls->Add(table);
+
+        form->AcceptButton = agree;
+        form->CancelButton = disagree;
+
+        bool agreed = form->ShowDialog() == DialogResult::Yes;
+
+        if (regKey != nullptr)
+        {
+            if (agreed)
+		        regKey->SetValue(registryValue, true);
+	        regKey->Close();
+        }
+
+        return agreed;
     }
-
-    Form^ form = gcnew Form();
-    form->Text = ToSystemString(caption);
-    form->StartPosition = FormStartPosition::CenterScreen;
-    form->Size = Size(800, 600);
-
-    Button^ disagree = gcnew Button();
-    disagree->TabIndex = 1;
-    disagree->Text = "Disagree";
-    disagree->AutoSize = true;
-    disagree->UseVisualStyleBackColor = true;
-    disagree->Anchor = AnchorStyles::Right;
-    disagree->DialogResult = DialogResult::No;
-
-    Button^ agree = gcnew Button();
-    agree->TabIndex = 0;
-    agree->Text = "Agree";
-    agree->Size = disagree->Size;
-    agree->UseVisualStyleBackColor = true;
-    agree->Anchor = AnchorStyles::Right;
-    agree->DialogResult = DialogResult::Yes;
-
-    TextBox^ textBox = gcnew TextBox();
-    textBox->Text = ToSystemString(text);
-    textBox->TabStop = false;
-    textBox->ReadOnly = true;
-    textBox->Multiline = true;
-    textBox->WordWrap = true;
-    textBox->ScrollBars = ScrollBars::Vertical;
-    textBox->HideSelection = true;
-    textBox->SelectionLength = 0;
-    textBox->BackColor = System::Drawing::SystemColors::Window;
-    textBox->Anchor = AnchorStyles::Top | AnchorStyles::Bottom | AnchorStyles::Left | AnchorStyles::Right;
-
-    TableLayoutPanel^ table = gcnew TableLayoutPanel();
-    table->TabStop = false;
-    table->ColumnCount = 2;
-    table->RowCount = 2;
-    table->ColumnStyles->Add(gcnew ColumnStyle(SizeType::Percent, 100.0));
-    table->ColumnStyles->Add(gcnew ColumnStyle());
-    table->RowStyles->Add(gcnew RowStyle(SizeType::Percent, 100.0));
-    table->RowStyles->Add(gcnew RowStyle());
-    table->Dock = DockStyle::Fill;
-    table->GrowStyle = TableLayoutPanelGrowStyle::FixedSize;
-    table->Controls->Add(textBox, 0, 0);
-    table->Controls->Add(agree, 0, 1);
-    table->Controls->Add(disagree, 1, 1);
-    table->SetColumnSpan(textBox, 2);
-
-    form->Controls->Add(table);
-
-    form->AcceptButton = agree;
-    form->CancelButton = disagree;
-
-    bool agreed = form->ShowDialog() == DialogResult::Yes;
-
-    if (regKey != nullptr)
+    catch (System::Exception^ e)
     {
-        if (agreed)
-		    regKey->SetValue(registryValue, true);
-	    regKey->Close();
+        throw runtime_error(ToStdString(e->Message));
     }
-
-    return agreed;
 }
 
 
