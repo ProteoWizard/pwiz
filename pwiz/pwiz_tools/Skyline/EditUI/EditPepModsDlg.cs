@@ -464,8 +464,13 @@ namespace pwiz.Skyline.EditUI
                 if (!Equals(itemNew, null))
                 {
                     listSettingsMods.Add(itemNew);
+                    string itemAdd = (string) combo.SelectedItem;
                     LoadLists(listSettingsMods, listExplicitMods, listCombo, indexAA, itemNew.GetKey(),
                         selectEither);
+                    // If the selection was not successfully set to the new modification,
+                    // return to the previous selection.
+                    if (Equals(combo.SelectedItem, itemAdd))
+                        combo.SelectedIndex = selectedIndexLast;
                 }
                 else
                 {
@@ -481,7 +486,9 @@ namespace pwiz.Skyline.EditUI
                     listSettingsMods.Clear();
                     listSettingsMods.AddRange(listNew);
 
-                    string selectedItemLast = combo.Items[selectedIndexLast].ToString();
+                    string selectedItemLast = null;
+                    if (selectedIndexLast != -1)
+                        selectedItemLast = combo.Items[selectedIndexLast].ToString();
                     LoadLists(listSettingsMods, listExplicitMods, listCombo, indexAA, selectedItemLast,
                         selectEither);
                 }

@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -235,6 +236,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
+            ValidateAACombo();
             string aas = comboAA.Text;
             if (string.IsNullOrEmpty(aas))
                 aas = null;
@@ -308,6 +310,13 @@ namespace pwiz.Skyline.SettingsUI
                     if (!helper.ValidateDecimalTextBox(e, textAverageMass, -1500, 1500, out mass))
                         return;
                     avgMass = mass;
+                }
+                // Loss-only modifications may not be variable
+                else if (cbVariableMod.Checked)
+                {
+                    MessageDlg.Show(this, "The variable checkbox only applies to precursor modification.  Product ion losses are inherently variable.");
+                    cbVariableMod.Focus();
+                    return;
                 }
             }
             else if (aas == null && term.HasValue)
@@ -510,6 +519,11 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         private void comboAA_Leave(object sender, EventArgs e)
+        {
+            ValidateAACombo();
+        }
+
+        private void ValidateAACombo()
         {
             // Force proper format
             string aas = comboAA.Text.ToUpper();
