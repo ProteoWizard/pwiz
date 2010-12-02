@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -56,8 +57,7 @@ namespace pwiz.Skyline.SettingsUI
             btnFormulaPopup.Image = bm;
 
             if (heavy)
-            {
-                
+            {                
                 labelRelativeRT.Left = labelAA.Left;
                 comboRelativeRT.Left = comboAA.Left;
                 comboRelativeRT.Items.Add(RelativeRT.Matching.ToString());
@@ -73,7 +73,6 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             ShowLoss = false;
-            // TODO: Implement handling of modifications with neutral loss
             if (heavy)
                 btnLoss.Visible = false;
         }
@@ -309,6 +308,13 @@ namespace pwiz.Skyline.SettingsUI
                         return;
                     avgMass = mass;
                 }
+                // Loss-only modifications may not be variable
+                else if (cbVariableMod.Checked)
+                {
+                    MessageDlg.Show(this, "The variable checkbox only applies to precursor modification.  Product ion losses are inherently variable.");
+                    cbVariableMod.Focus();
+                    return;
+                }
             }
             else if (aas == null && term.HasValue)
             {
@@ -421,7 +427,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private void textFormula_KeyPress(object sender, KeyPressEventArgs e)
+        private static void textFormula_KeyPress(object sender, KeyPressEventArgs e)
         {
             // Force uppercase in this control.
             e.KeyChar = char.ToUpper(e.KeyChar);
@@ -500,7 +506,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private const char SEPARATOR_AA = ',';
 
-        private void comboAA_KeyPress(object sender, KeyPressEventArgs e)
+        private static void comboAA_KeyPress(object sender, KeyPressEventArgs e)
         {
             // Force uppercase in this control.
             e.KeyChar = char.ToUpper(e.KeyChar);
@@ -516,9 +522,8 @@ namespace pwiz.Skyline.SettingsUI
 
             var sb = new StringBuilder();
             var seenAas = new bool[128];
-            for (int i = 0; i < aas.Length; i++)
+            foreach (char c in aas)
             {
-                char c = aas[i];
                 // Ignore all non-amino acid characters and repeats
                 if (!AminoAcid.IsAA(c) || seenAas[c])
                     continue;

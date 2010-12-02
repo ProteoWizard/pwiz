@@ -136,7 +136,7 @@
             this.textFormula.Size = new System.Drawing.Size(160, 20);
             this.textFormula.TabIndex = 0;
             this.textFormula.TextChanged += new System.EventHandler(this.textFormula_TextChanged);
-            this.textFormula.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textFormula_KeyPress);
+            this.textFormula.KeyPress += new System.Windows.Forms.KeyPressEventHandler(textFormula_KeyPress);
             // 
             // label2
             // 
@@ -210,7 +210,7 @@
             this.comboAA.TabIndex = 3;
             this.comboAA.SelectedIndexChanged += new System.EventHandler(this.comboAA_SelectedIndexChanged);
             this.comboAA.Leave += new System.EventHandler(this.comboAA_Leave);
-            this.comboAA.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.comboAA_KeyPress);
+            this.comboAA.KeyPress += new System.Windows.Forms.KeyPressEventHandler(comboAA_KeyPress);
             // 
             // comboTerm
             // 
