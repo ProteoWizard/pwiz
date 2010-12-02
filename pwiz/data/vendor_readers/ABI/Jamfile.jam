@@ -43,15 +43,7 @@ constant READER_PATH : "pwiz/data/vendor_readers/ABI" ;
 constant READER_NAME : "Reader_ABI" ;
 
 
-import os common ;
-local ProgramFiles = [ os.environ ProgramFiles ] ;
-ProgramFiles ?= "C:\\Program Files" ;
-local ProteinPilot = "$(ProgramFiles)\\Applied Biosystems MDS Analytical Technologies\\ProteinPilot" ;
-if [ path.exists $(API_PATH)\\ABSciex.DataAccess.WiffFileDataReader.dll ] ||
-   [ path.exists $(ProteinPilot)\\ABSciex.DataAccess.WiffFileDataReader.dll ]
-{
-    .hasDLLs = true ;
-}
+if [ find-wiff-dlls $(API_PATH) ] { .hasDLLs = true ; }
 
 
 import path ;

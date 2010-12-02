@@ -624,6 +624,44 @@ rule msvc-requirement ( properties * )
 }
 
 
+# TODO HACK: find location of MSFileReader DLLs (it must be in Jamroot so both vendor_readers and vendor_api can use it)
+
+# HACK: find location of WiffFileDataReader DLLs (it must be in Jamroot so both vendor_readers and vendor_api can use it)
+rule find-wiff-dlls ( api-path )
+{
+    local ProgramFiles = [ os.environ ProgramFiles ] ;
+    ProgramFiles ?= "C:\\Program Files" ;
+    local ProteinPilot = "$(ProgramFiles)\\Applied Biosystems MDS Analytical Technologies\\ProteinPilot" ;
+    if [ path.exists $(api-path)\\ABSciex.DataAccess.WiffFileDataReader.dll ]
+    {
+        return $(api-path) ;
+    }
+    else if [ path.exists $(ProteinPilot)\\ABSciex.DataAccess.WiffFileDataReader.dll ]
+    {
+        return $(ProteinPilot) ;
+    }
+    else
+    {
+        # couldn't find Protein Pilot 3; try finding a Skyline installation under user's Local Settings
+
+        # Windows Vista/7 have %LOCALAPPDATA%
+        local LOCALAPPDATA = [ os.environ LOCALAPPDATA ] ;
+
+        # Windows 2000/XP have %USERPROFILE%\Local Settings
+        if ! $(LOCALAPPDATA) { LOCALAPPDATA = [ path.join [ os.environ USERPROFILE ] "Local Settings" ] ; }
+
+        local skyline = [ path.glob-tree $(LOCALAPPDATA) : "rscoree.dll" ] ;
+
+        # there could be multiple copies of Skyline installed, so we pick the first one
+        if $(skyline)
+        {
+            return [ path.native [ path.parent $(skyline[0]) ] ] ;
+        }
+    }
+}
+
+
+
 
 # any source tree can build binary tarballs
 

@@ -155,6 +155,30 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile, i
     msd.run.startTimeStamp = encode_xml_datetime(wifffile->getSampleAcquisitionTime());
 }
 
+void search_path(bfs::path basepath, string filename, vector<bfs::path>& matchingPaths)
+{
+    const static bfs::directory_iterator endItr;
+    bfs::directory_iterator itr(basepath);
+    for (; itr != endItr; ++itr)
+    {
+        if (bfs::is_directory(itr->status()))
+        {
+            try
+            {
+                search_path(itr->path(), filename, matchingPaths);
+            }
+            catch (bfs::filesystem_error& e)
+            {
+                // ignore permission errors
+                if (e.code() != boost::system::errc::permission_denied)
+                    throw e;
+            }
+        }
+        else if (bfs::is_regular_file(itr->status()) && itr->path().filename() == filename)
+            matchingPaths.push_back(itr->path());
+    }
+}
+
 void copyProteinPilotDLLs()
 {
     // get the filepath of the calling .exe using WinAPI
@@ -193,8 +217,39 @@ void copyProteinPilotDLLs()
             if (!bfs::exists(callingExecutablePath / "rscoree.dll"))
                 bfs::copy_file(proteinPilotPath / "rscoree.dll", callingExecutablePath / "rscoree.dll");
         }
-        else
-            throw std::runtime_error("[Reader_ABI::ctor] Reading ABI WIFF files requires Protein Pilot 3.0 to be installed. A trial version is available for download at:\nhttps://licensing.appliedbiosystems.com/download/ProteinPilot/3.0");
+        else // couldn't find Protein Pilot 3; try finding a Skyline installation
+        {
+            // Windows Vista/7 have %LOCALAPPDATA%
+            string localAppDataPath = ::getenv("LOCALAPPDATA");
+
+            // Windows 2000/XP have %APPDATA%\Local Settings
+            if (localAppDataPath.empty()) localAppDataPath = string(::getenv("USERPROFILE")) + "\\Local Settings";
+
+            if (localAppDataPath.empty())
+                throw runtime_error("[Reader_ABI::ctor] When trying to find Skyline, the Local Settings directory could not be found!");
+
+            vector<bfs::path> matchingPaths;
+            search_path(localAppDataPath, "rscoree.dll", matchingPaths);
+
+            if (matchingPaths.empty())
+                throw std::runtime_error("[Reader_ABI::ctor] Reading ABI WIFF files requires Protein Pilot 3.0 or Skyline to be installed. Skyline is freely available at:\nhttps://brendanx-uw1.gs.washington.edu/labkey/project/home/software/Skyline/begin.view");
+
+            // there could be multiple copies of Skyline installed, so we pick the first one
+            bfs::path skylinePath = matchingPaths[0].parent_path();
+            
+            if (bfs::exists(skylinePath / "ABSciex.DataAccess.WiffFileDataReader.dll"))
+            {
+                bfs::copy_file(skylinePath / "ABSciex.DataAccess.WiffFileDataReader.dll", callingExecutablePath / "ABSciex.DataAccess.WiffFileDataReader.dll");
+                if (!bfs::exists(callingExecutablePath / "Clearcore.dll"))
+                    bfs::copy_file(skylinePath / "Clearcore.dll", callingExecutablePath / "Clearcore.dll");
+                if (!bfs::exists(callingExecutablePath / "ClearCore.Storage.dll"))
+                    bfs::copy_file(skylinePath / "ClearCore.Storage.dll", callingExecutablePath / "ClearCore.Storage.dll");
+                if (!bfs::exists(callingExecutablePath / "rscoree.dll"))
+                    bfs::copy_file(skylinePath / "rscoree.dll", callingExecutablePath / "rscoree.dll");
+            }
+            else
+                throw runtime_error("[Reader_ABI::ctor] Reading ABI WIFF files requires Protein Pilot 3.0 or Skyline to be installed. Skyline is freely available at:\nhttps://brendanx-uw1.gs.washington.edu/labkey/project/home/software/Skyline/begin.view");
+        }
     }
 }
 

@@ -30,26 +30,29 @@ path-constant API_PATH : . ;
 if [ modules.peek : NT ]
 {
 
-import os common ;
-local ProgramFiles = [ os.environ ProgramFiles ] ;
-ProgramFiles ?= "C:\\Program Files" ;
-local ProteinPilot = "$(ProgramFiles)\\Applied Biosystems MDS Analytical Technologies\\ProteinPilot" ;
-if [ path.exists $(API_PATH)\\ABSciex.DataAccess.WiffFileDataReader.dll ]
+local .dllPath = [ find-wiff-dlls $(API_PATH) ] ;
+if $(API_PATH) in $(.dllPath)
 {
+    # DLLs are already copied
     .hasDLLs = true ;
 }
-
-if ! $(.hasDLLs) && [ path.exists $(ProteinPilot)\\ABSciex.DataAccess.WiffFileDataReader.dll ]
+else if $(.dllPath)
 {
+    # need to copy DLLs
     .hasDLLs = true ;
     local destination = [ path.native $(API_PATH) ] ;
-    echo "Copying WiffFileDataReader DLLs from \"$(ProteinPilot)\" to \"$(destination)\"" ;
-    echo [ SHELL "copy \"$(ProteinPilot)\\ABSciex.DataAccess.WiffFileDataReader.dll \"  \"$(destination)\"" ] ;
-    echo [ SHELL "copy \"$(ProteinPilot)\\Clearcore.dll\"  \"$(destination)\"" ] ;
-    echo [ SHELL "copy \"$(ProteinPilot)\\ClearCore.Storage.dll\" \"$(destination)\"" ] ;
-    echo [ SHELL "copy \"$(ProteinPilot)\\rscoree.dll\" \"$(destination)\"" ] ;
+    echo "Copying WiffFileDataReader DLLs from \"$(.dllPath)\" to \"$(destination)\"" ;
+    echo [ SHELL "copy \"$(.dllPath)\\ABSciex.DataAccess.WiffFileDataReader.dll \"  \"$(destination)\"" ] ;
+    echo [ SHELL "copy \"$(.dllPath)\\Clearcore.dll\"  \"$(destination)\"" ] ;
+    echo [ SHELL "copy \"$(.dllPath)\\ClearCore.Storage.dll\" \"$(destination)\"" ] ;
+    echo [ SHELL "copy \"$(.dllPath)\\rscoree.dll\" \"$(destination)\"" ] ;
     RESCAN ;
 }
+else if --require-vendor-support in [ modules.peek : ARGV ]
+{
+    exit "Unable to find ABI DLLs; --require-vendor-support makes this a fatal error." ;
+}
+
 
 rule vendor-api-requirements ( properties * )
 {
@@ -139,9 +142,12 @@ install install_pwiz_vendor_api_abi_app
 else
 {
 
-echo "Creating dummy ClearCore.dll and ClearCore.Storage.dll." ;
-SHELL "echo \"This is a dummy ClearCore.dll for Visual Studio projects to reference.\" > \"$(API_PATH)\\stub\\ClearCore.dll\"" ;
-SHELL "echo \"This is a dummy ClearCore.Storage.dll for Visual Studio projects to reference.\" > \"$(API_PATH)\\stub\\ClearCore.Storage.dll\"" ;
+if ! [ path.exists $(API_PATH)\\stub\\ClearCore.dll ]
+{
+    echo "Creating dummy ClearCore.dll and ClearCore.Storage.dll." ;
+    SHELL "echo \"This is a dummy ClearCore.dll for Visual Studio projects to reference.\" > \"$(API_PATH)\\stub\\ClearCore.dll\"" ;
+    SHELL "echo \"This is a dummy ClearCore.Storage.dll for Visual Studio projects to reference.\" > \"$(API_PATH)\\stub\\ClearCore.Storage.dll\"" ;
+}
 
 # for application build and install
 install install_pwiz_vendor_api_abi_app
