@@ -98,7 +98,7 @@ namespace pwiz.Skyline.Model.Results
             var argv = new[]
                            {
                                "--mzXML",
-                               "-s" + sampleIndex,
+                               "-s" + (sampleIndex + 1),
                                "\"" + filePathWiff + "\"",
                                "\"" + outputPath + "\"",
                            };

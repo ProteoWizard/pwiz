@@ -234,6 +234,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
+            ValidateAACombo();
             string aas = comboAA.Text;
             if (string.IsNullOrEmpty(aas))
                 aas = null;
@@ -516,6 +517,11 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         private void comboAA_Leave(object sender, EventArgs e)
+        {
+            ValidateAACombo();
+        }
+
+        private void ValidateAACombo()
         {
             // Force proper format
             string aas = comboAA.Text.ToUpper();
