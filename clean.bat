@@ -37,10 +37,10 @@ IF EXIST pwiz_aux\msrc\utility\vendor_api\ABI\rscoree.dll del /q pwiz_aux\msrc\u
 
 IF EXIST pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data rmdir /s /q pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data
 IF EXIST pwiz\data\vendor_readers\Agilent\Reader_Agilent_Test.data rmdir /s /q pwiz\data\vendor_readers\Agilent\Reader_Agilent_Test.data
-IF EXIST pwiz\data\vendor_readers\ABI\Reader_ABI_Test.data rmdir /s /q pwiz\vendor_readers\ABI\Reader_ABI_Test.data
-IF EXIST pwiz\data\vendor_readers\ABI\T2D\Reader_ABI_T2D_Test.data rmdir /s /q pwiz\vendor_readers\ABI\T2D\Reader_ABI_T2D_Test.data
-IF EXIST pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data rmdir /s /q pwiz\vendor_readers\Waters\Reader_Waters_Test.data
-IF EXIST pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data rmdir /s /q pwiz\vendor_readers\Bruker\Reader_Bruker_Test.data
+IF EXIST pwiz\data\vendor_readers\ABI\Reader_ABI_Test.data rmdir /s /q pwiz\data\vendor_readers\ABI\Reader_ABI_Test.data
+IF EXIST pwiz\data\vendor_readers\ABI\T2D\Reader_ABI_T2D_Test.data rmdir /s /q pwiz\data\vendor_readers\ABI\T2D\Reader_ABI_T2D_Test.data
+IF EXIST pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data rmdir /s /q pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data
+IF EXIST pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data rmdir /s /q pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data
 
 IF EXIST pwiz_tools\SeeMS\CleanSeeMS.bat call pwiz_tools\SeeMS\CleanSeeMS.bat
 IF EXIST pwiz_tools\Skyline\CleanSkyline.bat call pwiz_tools\Skyline\CleanSkyline.bat
