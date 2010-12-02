@@ -110,7 +110,7 @@
             this.textLossFormula.Size = new System.Drawing.Size(160, 20);
             this.textLossFormula.TabIndex = 0;
             this.textLossFormula.TextChanged += new System.EventHandler(this.textLossFormula_TextChanged);
-            this.textLossFormula.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textLossFormula_KeyPress);
+            this.textLossFormula.KeyPress += new System.Windows.Forms.KeyPressEventHandler(textLossFormula_KeyPress);
             // 
             // textLossMonoMass
             // 

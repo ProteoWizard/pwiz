@@ -431,7 +431,8 @@ namespace pwiz.Skyline.SettingsUI
         private static void textFormula_KeyPress(object sender, KeyPressEventArgs e)
         {
             // Force uppercase in this control.
-            e.KeyChar = char.ToUpper(e.KeyChar);
+            // Atoms have been added containing lower case chars
+            // e.KeyChar = char.ToUpper(e.KeyChar);
         }
 
         private void btnLoss_Click(object sender, EventArgs e)
