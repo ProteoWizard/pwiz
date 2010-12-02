@@ -23,9 +23,9 @@ if [ -f pwiz/analysis/Version.cpp ]; then rm -f pwiz/analysis/Version.cpp; fi;
 
 if [ -d pwiz/data/vendor_readers/Thermo/Reader_Thermo_Test.data ]; then rm -fr pwiz/data/vendor_readers/Thermo/Reader_Thermo_Test.data; fi;
 if [ -d pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data ]; then rm -fr pwiz/data/vendor_readers/Agilent/Reader_Agilent_Test.data; fi;
-if [ -d pwiz_aux/msrc/data/vendor_readers/ABI/Reader_ABI_Test.data ]; then rm -fr pwiz_aux/msrc/data/vendor_readers/ABI/Reader_ABI_Test.data; fi;
-if [ -d pwiz_aux/msrc/data/vendor_readers/ABI/T2D/Reader_ABI_T2D_Test.data ]; then rm -fr pwiz_aux/msrc/data/vendor_readers/ABI/T2D/Reader_ABI_T2D_Test.data; fi;
-if [ -d pwiz_aux/msrc/data/vendor_readers/Waters/Reader_Waters_Test.data ]; then rm -fr pwiz_aux/msrc/data/vendor_readers/Waters/Reader_Waters_Test.data; fi;
-if [ -d pwiz_aux/msrc/data/vendor_readers/Bruker/Reader_Bruker_Test.data ]; then rm -fr pwiz_aux/msrc/data/vendor_readers/Bruker/Reader_Bruker_Test.data; fi;
+if [ -d pwiz/data/vendor_readers/ABI/Reader_ABI_Test.data ]; then rm -fr pwiz/data/vendor_readers/ABI/Reader_ABI_Test.data; fi;
+if [ -d pwiz/data/vendor_readers/ABI/T2D/Reader_ABI_T2D_Test.data ]; then rm -fr pwiz/data/vendor_readers/ABI/T2D/Reader_ABI_T2D_Test.data; fi;
+if [ -d pwiz/data/vendor_readers/Waters/Reader_Waters_Test.data ]; then rm -fr pwiz/data/vendor_readers/Waters/Reader_Waters_Test.data; fi;
+if [ -d pwiz/data/vendor_readers/Bruker/Reader_Bruker_Test.data ]; then rm -fr pwiz/data/vendor_readers/Bruker/Reader_Bruker_Test.data; fi;
 
 popd > /dev/null
