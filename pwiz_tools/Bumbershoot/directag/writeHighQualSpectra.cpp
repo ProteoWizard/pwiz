@@ -73,6 +73,7 @@ Config createConfig(const string& inFile, const string& outputFormat)
     bool format_mzML = false;
     bool format_mzXML = false;
     bool format_MGF = false;
+	bool format_MS2 = false;
     bool precision_32 = true;
     bool precision_64 = false;
     bool mz_precision_32 = true;
@@ -95,6 +96,10 @@ Config createConfig(const string& inFile, const string& outputFormat)
 	{
 		format_MGF = true;
 	}
+	else if ( outputFormat == "MS2" || outputFormat == "ms2" )
+	{
+		format_MS2 = true;
+	}
 	else
 	{
 		throw runtime_error(" No output format specified.");
@@ -103,12 +108,13 @@ Config createConfig(const string& inFile, const string& outputFormat)
 	if (config.filename.empty())
         throw runtime_error("[msconvert] No files specified.");
 
-    int count = format_text + format_mzML + format_mzXML + format_MGF;
+    int count = format_text + format_mzML + format_mzXML + format_MGF + format_MS2;
     if (count > 1) throw runtime_error("[msconvert] Multiple format flags specified.");
     if (format_text) config.writeConfig.format = MSDataFile::Format_Text;
     if (format_mzML) config.writeConfig.format = MSDataFile::Format_mzML;
     if (format_mzXML) config.writeConfig.format = MSDataFile::Format_mzXML;
     if (format_MGF) config.writeConfig.format = MSDataFile::Format_MGF;
+	if (format_MS2) config.writeConfig.format = MSDataFile::Format_MS2;
 
     config.writeConfig.gzipped = gzip; // if true, file is written as .gz
 
@@ -128,6 +134,9 @@ Config createConfig(const string& inFile, const string& outputFormat)
             case MSDataFile::Format_MGF:
                 config.extension = ".mgf";
                 break;
+			case MSDataFile::Format_MS2:
+				config.extension = ".MS2";
+				break;
             default:
                 throw runtime_error("[msconvert] Unsupported format."); 
         }
