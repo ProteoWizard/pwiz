@@ -207,7 +207,7 @@ namespace directag
 					<< bestTagTICIQR << '\t'
 					<< tagMzRangeIQR << '\t'
 					<< numTaggedSpectra << "\n";
-		fileStream << "H\tNativeID\tBestTagScore\tBestTagTIC\tTagMzRange\tScanRankerScore\n" ;
+		fileStream << "H\tIndex\tNativeID\tBestTagScore\tBestTagTIC\tTagMzRange\tScanRankerScore\n" ;
 		vector<int> seen;
 		Spectrum* s;
 		for( SpectraList::iterator sItr = instance.begin(); sItr != instance.end(); ++sItr )
@@ -219,6 +219,7 @@ namespace directag
 			{
 				seen.push_back( s->id.index );
 				fileStream	<< "S" << '\t'
+							<< s->id.index << '\t'
 							<< s->nativeID << '\t'
 							//<< s->id.index << '\t'
 							//<< s->id.charge << '\t'
@@ -1066,7 +1067,7 @@ namespace directag {
 
 						try
 						{
-							std::sort( highQualSpectraIndices.begin(), highQualSpectraIndices.end() );
+							//std::sort( highQualSpectraIndices.begin(), highQualSpectraIndices.end() );
 							writeHighQualSpectra( *fItr, highQualSpectraIndices, g_rtConfig->OutputFormat, g_rtConfig->HighQualSpecFileName);
 							cout << g_hostString << " finished writing high quality spectra for file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
 

@@ -32,6 +32,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <boost/lexical_cast.hpp>
+#include <boost/filesystem.hpp>
 
 using boost::lexical_cast;
 using namespace std;
@@ -91,7 +92,9 @@ void adjustScore(	const string& filename,
 					float	gbTagMzRangeIQRMean)   
 {
 	cout << '\t' << filename << '\n';
-	string outputFilename = "adjusted-" + filename;
+	namespace bfs = boost::filesystem;
+	bfs::path newFilename = bfs::basename(filename) + "-adjusted.txt";
+ 	string outputFilename = newFilename.string();
 	ofstream ofileStream( outputFilename.c_str() );
 
 	// Open the input file
@@ -106,9 +109,8 @@ void adjustScore(	const string& filename,
 		{
 			ofileStream << "H\tBestTagScoreMean\tBestTagTICMean\tTagMzRangeMean\tBestTagScoreIQR\tBestTagTICIQR\tTagMzRangeIQR\tnumTaggedSpectra\tgbBestTagScoreMean\tgbBestTagTICMean\tgbTagMzRangeMean\tgbBestTagScoreIQRMean\tgbBestTagTICIQRMean\tgbTagMzRangeIQRMean\n";
 		}
-		else if (line.find("H\tNativeID") != string::npos)    // if header line, write out line, else extract subscores and compute the new score
+		else if (line.find("H\tIndex") != string::npos)    // if header line, write out line, else extract subscores and compute the new score
 		{
-			//ofileStream << "H\tNativeID\tBestTagScore\tBestTagTIC\tTagMzRange\tScanRankerScore\tAdjustedScore\n"; 
 			ofileStream << line << "\tAdjustedScore\n"; 
 		}
 		else if (line.find("H\t") != string::npos)
@@ -133,25 +135,17 @@ void adjustScore(	const string& filename,
 				v.push_back(segments);
 			}
 			// metrics file format:
-			// H	NativeID	BestTagScore	BestTagTIC	TagMzRange	ScanRankerScore
-			// S	controllerType=0 controllerNumber=1 scan=5388	54.3165	12.459	1533.74	2.00768
-			string nativeID = v[1];
-			float bestTagScore = lexical_cast<float>( v[2] );
-			float bestTagTIC = lexical_cast<float>( v[3] );
-			float tagMzRange = lexical_cast<float>( v[4] );
-			float originalScore = lexical_cast<float>( v[5] );
+			// H	Index NativeID	BestTagScore	BestTagTIC	TagMzRange	ScanRankerScore
+			// S	5387	controllerType=0 controllerNumber=1 scan=5388	54.3165	12.459	1533.74	2.00768
+			float bestTagScore = lexical_cast<float>( v[3] );
+			float bestTagTIC = lexical_cast<float>( v[4] );
+			float tagMzRange = lexical_cast<float>( v[5] );
+			float originalScore = lexical_cast<float>( v[6] );
 			float bestTagScoreNorm = ( bestTagScore - gbBestTagScoreMean ) / gbBestTagScoreIQRMean;
 			float bestTagTICNorm = ( bestTagTIC - gbBestTagTICMean ) / gbBestTagTICIQRMean;
 			float tagMzRangeNorm = ( tagMzRange - gbTagMzRangeMean ) / gbTagMzRangeIQRMean;
 			float adjustedScore = ( bestTagScoreNorm + bestTagTICNorm + tagMzRangeNorm) / 3;
 
-			// ofileStream <<	"S"	<< '\t'
-						// <<	nativeID	<< '\t'
-						// <<	bestTagScore	<< '\t'
-						// <<	bestTagTIC	<< '\t'
-						// <<	tagMzRange	<< '\t'
-						// <<	originalScore << '\t'
-						// <<	adjustedScore << '\n';
 			ofileStream << line << '\t' << adjustedScore << '\n';
 		}
 	}
