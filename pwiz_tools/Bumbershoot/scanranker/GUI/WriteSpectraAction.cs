@@ -1,4 +1,26 @@
-﻿using System;
+﻿//
+// $Id$
+//
+// The contents of this file are subject to the Mozilla Public License
+// Version 1.1 (the "License"); you may not use this file except in
+// compliance with the License. You may obtain a copy of the License at
+// http://www.mozilla.org/MPL/
+//
+// Software distributed under the License is distributed on an "AS IS"
+// basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+// License for the specific language governing rights and limitations
+// under the License.
+//
+// The Initial Developer of the DirecTag peptide sequence tagger is Matt Chambers.
+// Contributor(s): Surendra Dasaris
+//
+// The Initial Developer of the ScanRanker GUI is Zeqiang Ma.
+// Contributor(s): 
+//
+// Copyright 2009 Vanderbilt University
+//
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
@@ -88,14 +110,17 @@ namespace ScanRanker
                 // read metrics file, split and get high quality spectra indecies from the second column
                 try
                 {
+                    Workspace.SetText("\r\nExtracting scan index from metrics file: " + metricsFileName);
                     using (TextReader tr = File.OpenText(metricsFileName))
                     {
+                        tr.ReadLine();  // read the header line but do nothing, first three lines are header
+                        tr.ReadLine();  // read the header line but do nothing
                         tr.ReadLine();  // read the header line but do nothing
                         string line = string.Empty;
                         while ((line = tr.ReadLine()) != null)
                         {
                             string[] items = line.Split('\t');
-                            int index = Convert.ToInt32(items[1]);
+                            int index = Convert.ToInt32(items[1]);  //index
                             if (!allIndices.Exists(element => element == index))   // remove duplicate index
                             {
                                 allIndices.Add(index);
@@ -112,9 +137,10 @@ namespace ScanRanker
                 }
 
                 // get indices for high quality spectra
+                Workspace.SetText("\r\nGenerating indices of high quality spectra");
                 int numOutputSpectra = Convert.ToInt32(allIndices.Count * cutoff);
                 highQualIndices = allIndices.GetRange(0, numOutputSpectra);
-                highQualIndices.Sort();
+                //highQualIndices.Sort();
 
                 var predicate = new SpectrumList_FilterPredicate_IndexSet();
                 foreach (int i in highQualIndices)
@@ -136,17 +162,22 @@ namespace ScanRanker
                 {
                     writeConfig.format = MSDataFile.Format.Format_MGF;
                 }
+                else if (outFormat.Equals("MS2") || outFormat.Equals("ms2"))
+                {
+                    writeConfig.format = MSDataFile.Format.Format_MS2;
+                }
                 else
                 {
                     MessageBox.Show("Plese select output format");
                 }
 
                 writeConfig.precision = MSDataFile.Precision.Precision_32;
-
+                
                 try
                 {
+                    Workspace.SetText("\r\nWriting high quality spectra to file: " + outFileName);
                     using (MSDataFile msFile = new MSDataFile(file.FullName))
-                    {
+                    {                  
                         msFile.run.spectrumList = new SpectrumList_Filter(msFile.run.spectrumList, new SpectrumList_FilterAcceptSpectrum(predicate.accept));
                         msFile.write(outFileName, writeConfig);
                     }
@@ -160,8 +191,11 @@ namespace ScanRanker
                 }
 
                 Workspace.SetText("\r\nFinished writing high quality spectra for file: " + file.Name + " \r\n\r\n");
-                Workspace.ChangeButtonTo("Close");
-            }
-        }
+                
+            }// end of foreach file
+
+        Workspace.SetText("\r\nCompleted!");
+        Workspace.ChangeButtonTo("Close");
+        } // end of write()
     }
 }

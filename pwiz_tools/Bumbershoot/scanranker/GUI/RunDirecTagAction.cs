@@ -73,6 +73,33 @@ namespace ScanRanker
             set { addLabel = value; }
         }
 
+        private bool writeOutUnidentifedSpectra;
+        public bool WriteOutUnidentifedSpectra
+        {
+            get { return writeOutUnidentifedSpectra; }
+            set { writeOutUnidentifedSpectra = value; }
+        }
+
+        private float recoveryCutoff;
+        public float RecoveryCutoff
+        {
+            get { return recoveryCutoff; }
+            set { recoveryCutoff = value; }
+        }
+        private string recoveryOutFormat;
+        public string RecoveryOutFormat
+        {
+            get { return recoveryOutFormat; }
+            set { recoveryOutFormat = value; }
+        }
+
+        private bool adjustScanRankerScoreByGroup;
+        public bool AdjustScanRankerScoreByGroup
+        {
+            get { return adjustScanRankerScoreByGroup; }
+            set { adjustScanRankerScoreByGroup = value; }
+        }
+
         private IDPickerInfo idpickerCfg;
         public IDPickerInfo IdpickerCfg
         {
@@ -104,6 +131,7 @@ namespace ScanRanker
         /// <summary>
         /// run directag.exe to assess spectrum quality, generate a subset of high quality spectra
         /// run AddSpectraLabel() to label identified spectra if configured
+        /// run adjustScanRankerScoreByGroup.exe to add new scores
         /// </summary
         public void RunDirectag()
         {
@@ -112,7 +140,7 @@ namespace ScanRanker
                 string fileBaseName = Path.GetFileNameWithoutExtension(file.FullName);
                 string outMetricsFileName = fileBaseName + outMetricsSuffix + ".txt";
                 string outHighQualSpecFileName = fileBaseName + outputFilenameSuffixForRemoval + "." + outputFormat;
-                string outLabelFileName = fileBaseName + outputFilenameSuffixForRecovery + ".txt";
+//                string outLabelFileName = fileBaseName + outputFilenameSuffixForRecovery + ".txt";
 
                 string EXE = @"directag.exe";
                 string BIN_DIR = Path.GetDirectoryName(Application.ExecutablePath);
@@ -143,29 +171,136 @@ namespace ScanRanker
                 //    MessageBox.Show("Error in running DirecTag, no metrics file generated");
                 //}
 
-                if (File.Exists("directag_intensity_ranksum_bins.cache"))
-                {
-                    File.Delete("directag_intensity_ranksum_bins.cache");
-                }
                 Workspace.SetText("\r\nFinished spectral quality assessment for file: " + file.Name + "\r\n\r\n");
 
-                if (addLabel)
+            }
+
+            if (File.Exists("directag_intensity_ranksum_bins.cache"))
+            {
+                File.Delete("directag_intensity_ranksum_bins.cache");
+            }
+            if (File.Exists("directag.cfg"))
+            {
+                File.Delete("directag.cfg");
+            }
+
+            //if adjustScanRankerScoreByGroup = true, call adjustScanRankerScoreByGroup.exe to add new scores
+            if (adjustScanRankerScoreByGroup)
+            {
+                string groupFile = "group.txt";
+                if (File.Exists(groupFile))
                 {
+                    File.Delete(groupFile);
+                }
+
+                // write outMetricsFileName to group.txt, separated by ",", one line
+                TextWriter tw = new StreamWriter(groupFile);
+                foreach (FileInfo file in inFileList)
+                {
+                    string fileBaseName = Path.GetFileNameWithoutExtension(file.FullName);
+                    string outMetricsFileName = fileBaseName + outMetricsSuffix + ".txt";
+
+                   if (File.Exists(outMetricsFileName))
+                   {
+                            tw.Write(outMetricsFileName + ",");
+                   }
+                   else
+                   {
+                        //Workspace.SetText("\r\nCannot find metrics file: " + outMetricsFileName + "\r\n");
+                        throw new Exception("\r\nCannot find metrics file: " + outMetricsFileName + "\r\n");
+                    }
+                }
+                tw.Close();
+
+                // call adjustScanRankerScoreByGroup.exe
+                string EXE = @"adjustScanRankerScoreByGroup.exe";
+                string BIN_DIR = Path.GetDirectoryName(Application.ExecutablePath);
+                string pathAndExeFile = BIN_DIR + "\\" + EXE;
+                string args = " " + groupFile;
+
+                try
+                {
+                    Workspace.RunProcess(pathAndExeFile, args, outputDir);
+                }
+                catch (Exception exc)
+                {
+                    //throw new Exception("Error running DirecTag\r\n", exc);
+                    Workspace.SetText("\r\nError in running adjustScanRankerScoreByGroup.exe\r\n");
+                    throw new Exception(exc.Message);
+                }
+
+                //delete old metrics file
+                //new metrics file with suffix "-adjusted", hard coded in DirecTag
+                foreach (FileInfo file in inFileList)
+                {
+                    string fileBaseName = Path.GetFileNameWithoutExtension(file.FullName);
+                    string outMetricsFileName = fileBaseName + outMetricsSuffix + ".txt";
+                    if (File.Exists(outMetricsFileName))
+                    {
+                        File.Delete(outMetricsFileName);
+                    }
+                }
+
+                // remove group file
+                if (File.Exists(groupFile))
+                {
+                    File.Delete(groupFile);
+                }
+            } // end of adjustScanRankerScoreByGroup
+
+            if (addLabel)
+            {
+                foreach (FileInfo file in inFileList)
+                {
+                    string fileBaseName = Path.GetFileNameWithoutExtension(file.FullName);
+                    string outMetricsFileName = fileBaseName + outMetricsSuffix + ".txt";
+                    if (adjustScanRankerScoreByGroup)
+                    {
+                        outMetricsFileName = fileBaseName + outMetricsSuffix + "-adjusted.txt"; //name hard coded in directag
+                    }
+                    string outLabelFileName = Path.GetFileNameWithoutExtension(outMetricsFileName) + outputFilenameSuffixForRecovery + ".txt";
+
                     //Workspace.SetText("\r\nStart adding spectra labels ...\r\n\r\n");
                     AddSpectraLabelAction addSpectraLabelAction = new AddSpectraLabelAction();
                     addSpectraLabelAction.SpectraFileName = file.Name;
                     addSpectraLabelAction.MetricsFileName = outMetricsFileName;
                     addSpectraLabelAction.IdpCfg = idpickerCfg;
                     addSpectraLabelAction.OutDir = outputDir;
-                    addSpectraLabelAction.OutFileName = outLabelFileName;
+                    addSpectraLabelAction.OutFileName = outLabelFileName;                    
+                    if (writeOutUnidentifedSpectra)
+                    {
+                        addSpectraLabelAction.WriteOutUnidentifiedSpectra = true;
+                        addSpectraLabelAction.RecoveryCutoff = recoveryCutoff;
+                        addSpectraLabelAction.RecoveryOutFormat = recoveryOutFormat;
+                    }
                     addSpectraLabelAction.AddSpectraLabel();
                     //Workspace.SetText("\r\nFinished adding spectra labels\r\n\r\n");
+                    
                 }
 
-                Workspace.ChangeButtonTo("Close");
-                //Workspace.statusForm.btnStop.Visible = false;
-                //Workspace.statusForm.btnClose.Visible = true;
-            }
+                //delete old metrics file, adjust scores by group
+                //new metrics file with prefix "adjusted-", hard coded in DirecTag
+                foreach (FileInfo file in inFileList)
+                {
+                    string fileBaseName = Path.GetFileNameWithoutExtension(file.FullName);
+                    string outMetricsFileName = fileBaseName + outMetricsSuffix + ".txt";
+                    if (adjustScanRankerScoreByGroup)
+                    {
+                        outMetricsFileName = fileBaseName + outMetricsSuffix + "-adjusted.txt";
+                    }
+                    if (File.Exists(outMetricsFileName))
+                    {
+                        File.Delete(outMetricsFileName);
+                    }
+                }
+            } // end of add label
+            
+            Workspace.SetText("\r\nCompleted!");
+            Workspace.ChangeButtonTo("Close");
+            //Workspace.statusForm.btnStop.Visible = false;
+            //Workspace.statusForm.btnClose.Visible = true;
+
+
         }
     }
 }

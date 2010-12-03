@@ -155,8 +155,9 @@ namespace ScanRanker
 
             tbOutputMetricsSuffix.Text = "-ScanRankerMetrics";
             tbMetricsFileSuffixForRemoval.Text = "-ScanRankerMetrics";
-            tbOutFileNameSuffixForRemoval.Text = "-HighQualSpec" + tbRemovalCutoff.Text + "Perc";
-            tbOutFileNameSuffixForRecovery.Text = "-ScanRankerLabels";
+            tbOutFileNameSuffixForRemoval.Text = "-Top"+ tbRemovalCutoff.Text +"PercHighQualSpec";
+            tbOutFileNameSuffixForRecovery.Text = "-Labeled";
+            cbWriteOutUnidentifiedSpectra.Checked = true;
         }
 
         private void btnSrcFileBrowse_Click(object sender, EventArgs e)
@@ -641,7 +642,8 @@ namespace ScanRanker
                 return;
             }
 
-            if (cbAssessement.Checked)
+            // run directag, allow write high quality spectra by directag, allow add identification label and write unidentified spectra
+            if (cbAssessement.Checked)  
             {
                 # region  Error checking
                 if (tbSrcDir.Text.Equals(string.Empty))
@@ -654,9 +656,9 @@ namespace ScanRanker
                     MessageBox.Show("Error: Please select correct output directory!");
                     return;
                 }
+                List<string> allowedFormat = new List<string>(new string[] { "mzXML", "mzxml", "mzML", "mzml", "mgf", "MGF", "MS2", "ms2" });
                 if (cbRemoval.Checked)
-                {
-                    List<string> allowedFormat = new List<string>(new string[] { "mzXML", "mzxml", "mzML", "mzml", "mgf", "MGF" });
+                {                    
                     if (!allowedFormat.Exists(element => element.Equals(cmbOutputFileFormat.Text)))
                     {
                         MessageBox.Show("Please select proper output format");
@@ -706,6 +708,19 @@ namespace ScanRanker
                         MessageBox.Show("Error: Please specify output file suffix!");
                         return;
                     }
+                    if (cbWriteOutUnidentifiedSpectra.Checked)
+                    {
+                        if (Convert.ToInt32(tbRecoveryCutoff.Text) <= 0 || Convert.ToInt32(tbRecoveryCutoff.Text) > 100)
+                        {
+                            MessageBox.Show("Please specify proper recovery cutoff between 0 and 100!");
+                            return;
+                        }                        
+                        if (!allowedFormat.Exists(element => element.Equals(cmbRecoveryOutFormat.Text)))
+                        {
+                            MessageBox.Show("Please select proper output format");
+                            return;
+                        }
+                    }
                 }
 
                 # endregion
@@ -725,6 +740,17 @@ namespace ScanRanker
                     //directagAction.IdpickerCfg = idpickerCfg;
                     directagAction.IdpickerCfg = getIdpickerCfg();
                     directagAction.OutputFilenameSuffixForRecovery = tbOutFileNameSuffixForRecovery.Text;
+                    if (cbWriteOutUnidentifiedSpectra.Checked)
+                    {
+                        directagAction.WriteOutUnidentifedSpectra = true;
+                        directagAction.RecoveryCutoff = Convert.ToSingle(tbRecoveryCutoff.Text) / 100.0f;
+                        directagAction.RecoveryOutFormat = cmbRecoveryOutFormat.Text;
+                    }
+                }
+
+                if ( cbAdjustScoreByGroup.Checked)
+                {
+                    directagAction.AdjustScanRankerScoreByGroup = true;
                 }
 
                 string outputDir = tbOutputDir.Text;
@@ -749,7 +775,7 @@ namespace ScanRanker
                 bgDirectagRun.RunWorkerAsync(directagAction);
 
             }
-            else
+            else  // spectra removal based on metrics file, without running directag
             {
                 #region error checking
                 if (cbRemoval.Checked)
@@ -759,7 +785,7 @@ namespace ScanRanker
                         MessageBox.Show("Error: Please set up the correct output directory!");
                         return;
                     }
-                    List<string> allowedFormat = new List<string>(new string[] { "mzXML", "mzxml", "mzML", "mzml", "mgf", "MGF" });
+                    List<string> allowedFormat = new List<string>(new string[] { "mzXML", "mzxml", "mzML", "mzml", "mgf", "MGF", "MS2","ms2" });
                     if (!allowedFormat.Exists(element => element.Equals(cmbOutputFileFormat.Text)))
                     {
                         MessageBox.Show("Please select proper output format");
@@ -785,20 +811,19 @@ namespace ScanRanker
                         cbAssessement.Checked = Enabled;
                         return;
                     }
-                    if (tbOutputDir.Text.Equals(string.Empty) || !Directory.Exists(tbOutputDir.Text))
-                    {
-                        MessageBox.Show("Error: Please set up correct output directory!");
-                        return;
-                    }
-                    if (tbOutFileNameSuffixForRecovery.Text.Equals(string.Empty))
-                    {
-                        MessageBox.Show("Error: Please specify output file suffix!");
-                        return;
-                    }
+                    //if (tbOutputDir.Text.Equals(string.Empty) || !Directory.Exists(tbOutputDir.Text))
+                    //{
+                    //    MessageBox.Show("Error: Please set up correct output directory!");
+                    //    return;
+                    //}
+                    //if (tbOutFileNameSuffixForRecovery.Text.Equals(string.Empty))
+                    //{
+                    //    MessageBox.Show("Error: Please specify output file suffix!");
+                    //    return;
+                    //}
                 }
                 #endregion
-
-                // spectra removal based on metrics file, without running directag
+                                
                 if (cbRemoval.Checked)
                 {
                     WriteSpectraAction writeHighQualSpectra = new WriteSpectraAction();

@@ -47,9 +47,21 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Common, Version=2.6.234.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>obj\Common.dll</HintPath>
+    </Reference>
+    <Reference Include="IDPickerWorkspace, Version=2.6.206.0, Culture=neutral, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>obj\IDPickerWorkspace.dll</HintPath>
+    </Reference>
     <Reference Include="pwiz_bindings_cli, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>obj\pwiz_bindings_cli.dll</HintPath>
+    </Reference>
+    <Reference Include="STL_Containers, Version=1.0.0.0, Culture=neutral, PublicKeyToken=e1b14cb78f1752cf, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>obj\STL_Containers.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">

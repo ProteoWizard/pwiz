@@ -226,9 +226,9 @@ echo $(application-name) $(version-tag:J=.) $(SVNREVDATE:J=) ;
 
 
 # generate version headers for other projects
-#generate-AssemblyInfo.cs GUI/Forms/Properties/AssemblyInfo.cs : [ path.glob-tree GUI : *.cs ] : : : "IDPickerGUI" "Graphical interface for IDPicker." $(COMPANY_AND_PRODUCT) ;
-#generate-AssemblyInfo.cs Workspace/Properties/AssemblyInfo.cs : [ glob Workspace/*.cs ] : : : "Workspace" "Implements IDPicker's core logic." $(COMPANY_AND_PRODUCT) ;
-#generate-AssemblyInfo.cs Presentation/Properties/AssemblyInfo.cs : [ glob Presentation/*.cs ] : : : "Presentation" "Implements IDPicker's presentation logic." $(COMPANY_AND_PRODUCT) ;
+#generate-AssemblyInfo.cs GUI/Forms/Properties/AssemblyInfo.cs : [ path.glob-tree GUI : *.cs ] : : : "ScanRankerGUI" "Graphical interface for ScanRanker." $(COMPANY_AND_PRODUCT) ;
+#generate-AssemblyInfo.cs Workspace/Properties/AssemblyInfo.cs : [ glob Workspace/*.cs ] : : : "Workspace" "Implements ScanRanker's core logic." $(COMPANY_AND_PRODUCT) ;
+#generate-AssemblyInfo.cs Presentation/Properties/AssemblyInfo.cs : [ glob Presentation/*.cs ] : : : "Presentation" "Implements ScanRanker's presentation logic." $(COMPANY_AND_PRODUCT) ;
 
 
 path-constant BOOST_SOURCE : "DirecTag/freicore/libraries/boost_1_43_0" ;
