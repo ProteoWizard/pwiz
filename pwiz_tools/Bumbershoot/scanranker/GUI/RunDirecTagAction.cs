@@ -173,7 +173,7 @@ namespace ScanRanker
 
                 Workspace.SetText("\r\nFinished spectral quality assessment for file: " + file.Name + "\r\n\r\n");
 
-            }
+            } // end of foreach file to run directag
 
             if (File.Exists("directag_intensity_ranksum_bins.cache"))
             {
@@ -250,49 +250,68 @@ namespace ScanRanker
 
             if (addLabel)
             {
-                foreach (FileInfo file in inFileList)
+                AddSpectraLabelAction addSpectraLabelAction = new AddSpectraLabelAction();
+                addSpectraLabelAction.InFileList = inFileList;
+                addSpectraLabelAction.IdpCfg = idpickerCfg;
+                addSpectraLabelAction.OutFileSuffix = outputFilenameSuffixForRecovery;
+                addSpectraLabelAction.OutDir = outputDir;
+                addSpectraLabelAction.MetricsFileSuffix = outMetricsSuffix;
+                if (adjustScanRankerScoreByGroup)
                 {
-                    string fileBaseName = Path.GetFileNameWithoutExtension(file.FullName);
-                    string outMetricsFileName = fileBaseName + outMetricsSuffix + ".txt";
-                    if (adjustScanRankerScoreByGroup)
-                    {
-                        outMetricsFileName = fileBaseName + outMetricsSuffix + "-adjusted.txt"; //name hard coded in directag
-                    }
-                    string outLabelFileName = Path.GetFileNameWithoutExtension(outMetricsFileName) + outputFilenameSuffixForRecovery + ".txt";
-
-                    //Workspace.SetText("\r\nStart adding spectra labels ...\r\n\r\n");
-                    AddSpectraLabelAction addSpectraLabelAction = new AddSpectraLabelAction();
-                    addSpectraLabelAction.SpectraFileName = file.Name;
-                    addSpectraLabelAction.MetricsFileName = outMetricsFileName;
-                    addSpectraLabelAction.IdpCfg = idpickerCfg;
-                    addSpectraLabelAction.OutDir = outputDir;
-                    addSpectraLabelAction.OutFileName = outLabelFileName;                    
-                    if (writeOutUnidentifedSpectra)
-                    {
-                        addSpectraLabelAction.WriteOutUnidentifiedSpectra = true;
-                        addSpectraLabelAction.RecoveryCutoff = recoveryCutoff;
-                        addSpectraLabelAction.RecoveryOutFormat = recoveryOutFormat;
-                    }
-                    addSpectraLabelAction.AddSpectraLabel();
-                    //Workspace.SetText("\r\nFinished adding spectra labels\r\n\r\n");
-                    
+                    addSpectraLabelAction.MetricsFileSuffix = outMetricsSuffix + "-adjusted"; //name hard coded in directag
                 }
+                if (writeOutUnidentifedSpectra)
+                {
+                    addSpectraLabelAction.WriteOutUnidentifiedSpectra = true;
+                    addSpectraLabelAction.RecoveryCutoff = recoveryCutoff;
+                    addSpectraLabelAction.RecoveryOutFormat = recoveryOutFormat;
+                }
+                addSpectraLabelAction.AddSpectraLabel();
+                
+
+                //foreach (FileInfo file in inFileList)
+                //{
+                //    string fileBaseName = Path.GetFileNameWithoutExtension(file.FullName);
+                //    string outMetricsFileName = fileBaseName + outMetricsSuffix + ".txt";
+                //    if (adjustScanRankerScoreByGroup)
+                //    {
+                //        outMetricsFileName = fileBaseName + outMetricsSuffix + "-adjusted.txt"; //name hard coded in directag
+                //    }
+                //    string outLabelFileName = Path.GetFileNameWithoutExtension(outMetricsFileName) + outputFilenameSuffixForRecovery + ".txt";
+
+                //    //Workspace.SetText("\r\nStart adding spectra labels ...\r\n\r\n");
+                //    AddSpectraLabelAction addSpectraLabelAction = new AddSpectraLabelAction();
+                //    addSpectraLabelAction.SpectraFileName = file.Name;
+                //    addSpectraLabelAction.MetricsFileName = outMetricsFileName;
+                //    addSpectraLabelAction.IdpCfg = idpickerCfg;
+                //    addSpectraLabelAction.OutDir = outputDir;
+                //    addSpectraLabelAction.OutFileName = outLabelFileName;                    
+                //    if (writeOutUnidentifedSpectra)
+                //    {
+                //        addSpectraLabelAction.WriteOutUnidentifiedSpectra = true;
+                //        addSpectraLabelAction.RecoveryCutoff = recoveryCutoff;
+                //        addSpectraLabelAction.RecoveryOutFormat = recoveryOutFormat;
+                //    }
+                //    addSpectraLabelAction.AddSpectraLabel();
+                //    //Workspace.SetText("\r\nFinished adding spectra labels\r\n\r\n");
+                    
+                //}
 
                 //delete old metrics file, adjust scores by group
                 //new metrics file with prefix "adjusted-", hard coded in DirecTag
-                foreach (FileInfo file in inFileList)
-                {
-                    string fileBaseName = Path.GetFileNameWithoutExtension(file.FullName);
-                    string outMetricsFileName = fileBaseName + outMetricsSuffix + ".txt";
-                    if (adjustScanRankerScoreByGroup)
-                    {
-                        outMetricsFileName = fileBaseName + outMetricsSuffix + "-adjusted.txt";
-                    }
-                    if (File.Exists(outMetricsFileName))
-                    {
-                        File.Delete(outMetricsFileName);
-                    }
-                }
+                //foreach (FileInfo file in inFileList)
+                //{
+                //    string fileBaseName = Path.GetFileNameWithoutExtension(file.FullName);
+                //    string outMetricsFileName = fileBaseName + outMetricsSuffix + ".txt";
+                //    if (adjustScanRankerScoreByGroup)
+                //    {
+                //        outMetricsFileName = fileBaseName + outMetricsSuffix + "-adjusted.txt";
+                //    }
+                //    if (File.Exists(outMetricsFileName))
+                //    {
+                //        File.Delete(outMetricsFileName);
+                //    }
+                //}
             } // end of add label
             
             Workspace.SetText("\r\nCompleted!");

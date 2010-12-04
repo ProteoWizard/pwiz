@@ -27,7 +27,7 @@ namespace ScanRanker
     public class IDPickerInfo
     {
         public string PepXMLFileDir;
-        public string PepXMLFile;
+        public string PepXMLFiles;
         public string DBFile;
         public string DecoyPrefix;
         public double MaxFDR;
