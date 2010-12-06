@@ -50,6 +50,7 @@ namespace ScanRanker
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.lblInputFileDir = new System.Windows.Forms.Label();
             this.tbSrcDir = new System.Windows.Forms.TextBox();
@@ -88,6 +89,12 @@ namespace ScanRanker
             this.lblMetricsFileSuffixForRemoval = new System.Windows.Forms.Label();
             this.cbRemoval = new System.Windows.Forms.CheckBox();
             this.gbRecovery = new System.Windows.Forms.GroupBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.cmbRecoveryOutFormat = new System.Windows.Forms.ComboBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
+            this.tbRecoveryCutoff = new System.Windows.Forms.TextBox();
+            this.cbWriteOutUnidentifiedSpectra = new System.Windows.Forms.CheckBox();
             this.cbOptimizeScoreWeights = new System.Windows.Forms.CheckBox();
             this.cmbScoreWeights = new System.Windows.Forms.ComboBox();
             this.cbNormSearchScores = new System.Windows.Forms.CheckBox();
@@ -117,12 +124,7 @@ namespace ScanRanker
             this.lblInputFileFilters = new System.Windows.Forms.Label();
             this.tbInputFileFilters = new System.Windows.Forms.TextBox();
             this.btnListFiles = new System.Windows.Forms.Button();
-            this.cbWriteOutUnidentifiedSpectra = new System.Windows.Forms.CheckBox();
-            this.tbRecoveryCutoff = new System.Windows.Forms.TextBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
-            this.cmbRecoveryOutFormat = new System.Windows.Forms.ComboBox();
-            this.label3 = new System.Windows.Forms.Label();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.gbAssessment.SuspendLayout();
             this.gbDtgConfig.SuspendLayout();
             this.gbRemoval.SuspendLayout();
@@ -146,6 +148,7 @@ namespace ScanRanker
             this.tbSrcDir.Name = "tbSrcDir";
             this.tbSrcDir.Size = new System.Drawing.Size(496, 20);
             this.tbSrcDir.TabIndex = 1;
+            this.toolTip1.SetToolTip(this.tbSrcDir, "Spectrum file directory");
             // 
             // btnSrcFileBrowse
             // 
@@ -180,6 +183,8 @@ namespace ScanRanker
             this.cbAdjustScoreByGroup.Size = new System.Drawing.Size(225, 17);
             this.cbAdjustScoreByGroup.TabIndex = 5;
             this.cbAdjustScoreByGroup.Text = "Adjust Quality Scores across All Input Files";
+            this.toolTip1.SetToolTip(this.cbAdjustScoreByGroup, "Assess spectral quality across multiple files in an experiment\r\nRecommended if pr" +
+                    "oteins are fractionated by MudPIT, IEF or SDS-PAGE ");
             this.cbAdjustScoreByGroup.UseVisualStyleBackColor = true;
             // 
             // tbOutputMetricsSuffix
@@ -490,9 +495,10 @@ namespace ScanRanker
             this.cbRemoval.CheckState = System.Windows.Forms.CheckState.Checked;
             this.cbRemoval.Location = new System.Drawing.Point(0, 0);
             this.cbRemoval.Name = "cbRemoval";
-            this.cbRemoval.Size = new System.Drawing.Size(108, 17);
+            this.cbRemoval.Size = new System.Drawing.Size(110, 17);
             this.cbRemoval.TabIndex = 0;
-            this.cbRemoval.Text = "Spectra Removal";
+            this.cbRemoval.Text = "Spectral Removal";
+            this.toolTip1.SetToolTip(this.cbRemoval, "Remove low quality spectra");
             this.cbRemoval.UseVisualStyleBackColor = true;
             this.cbRemoval.CheckedChanged += new System.EventHandler(this.cbRemoval_CheckedChanged);
             // 
@@ -529,16 +535,77 @@ namespace ScanRanker
             this.gbRecovery.TabStop = false;
             this.gbRecovery.Text = " ";
             // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(188, 207);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(39, 13);
+            this.label3.TabIndex = 29;
+            this.label3.Text = "Format";
+            // 
+            // cmbRecoveryOutFormat
+            // 
+            this.cmbRecoveryOutFormat.FormattingEnabled = true;
+            this.cmbRecoveryOutFormat.Items.AddRange(new object[] {
+            "mzML",
+            "mzXML",
+            "mgf",
+            "MS2"});
+            this.cmbRecoveryOutFormat.Location = new System.Drawing.Point(58, 204);
+            this.cmbRecoveryOutFormat.Name = "cmbRecoveryOutFormat";
+            this.cmbRecoveryOutFormat.Size = new System.Drawing.Size(124, 21);
+            this.cmbRecoveryOutFormat.TabIndex = 28;
+            this.cmbRecoveryOutFormat.Text = "mzML";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(36, 207);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(15, 13);
+            this.label2.TabIndex = 27;
+            this.label2.Text = "in";
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(167, 181);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(174, 13);
+            this.label1.TabIndex = 26;
+            this.label1.Text = "% Unidentified High Quality Spectra";
+            // 
+            // tbRecoveryCutoff
+            // 
+            this.tbRecoveryCutoff.Location = new System.Drawing.Point(132, 178);
+            this.tbRecoveryCutoff.Name = "tbRecoveryCutoff";
+            this.tbRecoveryCutoff.Size = new System.Drawing.Size(35, 20);
+            this.tbRecoveryCutoff.TabIndex = 25;
+            this.tbRecoveryCutoff.Text = "50";
+            // 
+            // cbWriteOutUnidentifiedSpectra
+            // 
+            this.cbWriteOutUnidentifiedSpectra.AutoSize = true;
+            this.cbWriteOutUnidentifiedSpectra.Location = new System.Drawing.Point(17, 181);
+            this.cbWriteOutUnidentifiedSpectra.Name = "cbWriteOutUnidentifiedSpectra";
+            this.cbWriteOutUnidentifiedSpectra.Size = new System.Drawing.Size(115, 17);
+            this.cbWriteOutUnidentifiedSpectra.TabIndex = 24;
+            this.cbWriteOutUnidentifiedSpectra.Text = "Write Out The Top";
+            this.cbWriteOutUnidentifiedSpectra.UseVisualStyleBackColor = true;
+            // 
             // cbOptimizeScoreWeights
             // 
             this.cbOptimizeScoreWeights.AutoSize = true;
             this.cbOptimizeScoreWeights.Checked = true;
             this.cbOptimizeScoreWeights.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbOptimizeScoreWeights.Location = new System.Drawing.Point(206, 126);
+            this.cbOptimizeScoreWeights.Location = new System.Drawing.Point(206, 109);
             this.cbOptimizeScoreWeights.Name = "cbOptimizeScoreWeights";
             this.cbOptimizeScoreWeights.Size = new System.Drawing.Size(142, 17);
             this.cbOptimizeScoreWeights.TabIndex = 16;
             this.cbOptimizeScoreWeights.Text = "Optimize Score Weights ";
+            this.toolTip1.SetToolTip(this.cbOptimizeScoreWeights, "Optimize weights to combine multiple scores\r\nNot recommened for Mascot search res" +
+                    "ults");
             this.cbOptimizeScoreWeights.UseVisualStyleBackColor = true;
             // 
             // cmbScoreWeights
@@ -554,17 +621,20 @@ namespace ScanRanker
             this.cmbScoreWeights.Size = new System.Drawing.Size(166, 21);
             this.cmbScoreWeights.TabIndex = 17;
             this.cmbScoreWeights.Text = "mvh 1 mzFidelity 1 xcorr 1";
+            this.toolTip1.SetToolTip(this.cmbScoreWeights, "Weights used in IDPicker for multiple score combination\r\nRecommend to check \"Opti" +
+                    "mize Score Weights\"");
             // 
             // cbNormSearchScores
             // 
             this.cbNormSearchScores.AutoSize = true;
             this.cbNormSearchScores.Checked = true;
             this.cbNormSearchScores.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbNormSearchScores.Location = new System.Drawing.Point(206, 107);
+            this.cbNormSearchScores.Location = new System.Drawing.Point(206, 128);
             this.cbNormSearchScores.Name = "cbNormSearchScores";
             this.cbNormSearchScores.Size = new System.Drawing.Size(148, 17);
             this.cbNormSearchScores.TabIndex = 15;
             this.cbNormSearchScores.Text = "Normalize Search Scores ";
+            this.toolTip1.SetToolTip(this.cbNormSearchScores, "Recommended if \"Optimize Score Weights\" is checked");
             this.cbNormSearchScores.UseVisualStyleBackColor = true;
             // 
             // tbDecoyPrefix
@@ -574,6 +644,7 @@ namespace ScanRanker
             this.tbDecoyPrefix.Size = new System.Drawing.Size(72, 20);
             this.tbDecoyPrefix.TabIndex = 23;
             this.tbDecoyPrefix.Text = "rev_";
+            this.toolTip1.SetToolTip(this.tbDecoyPrefix, "Prefix of decoy sequences in protein database");
             // 
             // tbMaxFDR
             // 
@@ -582,6 +653,7 @@ namespace ScanRanker
             this.tbMaxFDR.Size = new System.Drawing.Size(72, 20);
             this.tbMaxFDR.TabIndex = 22;
             this.tbMaxFDR.Text = "0.05";
+            this.toolTip1.SetToolTip(this.tbMaxFDR, "Maximal FDR allowed for peptide validation");
             // 
             // lblDecoyPrefix
             // 
@@ -626,6 +698,7 @@ namespace ScanRanker
             this.tbDBFile.Name = "tbDBFile";
             this.tbDBFile.Size = new System.Drawing.Size(155, 20);
             this.tbDBFile.TabIndex = 18;
+            this.toolTip1.SetToolTip(this.tbDBFile, "Database file used in search");
             // 
             // lblDBFile
             // 
@@ -642,6 +715,7 @@ namespace ScanRanker
             this.tbPepXMLDir.Name = "tbPepXMLDir";
             this.tbPepXMLDir.Size = new System.Drawing.Size(155, 20);
             this.tbPepXMLDir.TabIndex = 14;
+            this.toolTip1.SetToolTip(this.tbPepXMLDir, "pepXMl file name has to be the same as spectrum file except for extensions");
             // 
             // btnPepXMLBrowse
             // 
@@ -683,9 +757,10 @@ namespace ScanRanker
             this.cbRecovery.AutoSize = true;
             this.cbRecovery.Location = new System.Drawing.Point(0, 0);
             this.cbRecovery.Name = "cbRecovery";
-            this.cbRecovery.Size = new System.Drawing.Size(112, 17);
+            this.cbRecovery.Size = new System.Drawing.Size(114, 17);
             this.cbRecovery.TabIndex = 0;
-            this.cbRecovery.Text = "Spectra Recovery";
+            this.cbRecovery.Text = "Spectral Recovery";
+            this.toolTip1.SetToolTip(this.cbRecovery, "Find unidentified high quality spectra");
             this.cbRecovery.UseVisualStyleBackColor = true;
             this.cbRecovery.CheckedChanged += new System.EventHandler(this.cbRecovery_CheckedChanged);
             // 
@@ -782,6 +857,9 @@ namespace ScanRanker
             this.tbInputFileFilters.Name = "tbInputFileFilters";
             this.tbInputFileFilters.Size = new System.Drawing.Size(496, 20);
             this.tbInputFileFilters.TabIndex = 13;
+            this.toolTip1.SetToolTip(this.tbInputFileFilters, "Multiple filters can be separated by either a semicolon (“;”), a comma (“,”) or a" +
+                    " space (“ “). \r\nFor example, a filter “groupA;mzML” will select all mzML files c" +
+                    "ontaining a string “groupA”.");
             this.tbInputFileFilters.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbInputFileFilters_KeyPress);
             // 
             // btnListFiles
@@ -794,65 +872,6 @@ namespace ScanRanker
             this.btnListFiles.Text = "List Files";
             this.btnListFiles.UseVisualStyleBackColor = true;
             this.btnListFiles.Click += new System.EventHandler(this.btnListFiles_Click);
-            // 
-            // cbWriteOutUnidentifiedSpectra
-            // 
-            this.cbWriteOutUnidentifiedSpectra.AutoSize = true;
-            this.cbWriteOutUnidentifiedSpectra.Location = new System.Drawing.Point(17, 181);
-            this.cbWriteOutUnidentifiedSpectra.Name = "cbWriteOutUnidentifiedSpectra";
-            this.cbWriteOutUnidentifiedSpectra.Size = new System.Drawing.Size(115, 17);
-            this.cbWriteOutUnidentifiedSpectra.TabIndex = 24;
-            this.cbWriteOutUnidentifiedSpectra.Text = "Write Out The Top";
-            this.cbWriteOutUnidentifiedSpectra.UseVisualStyleBackColor = true;
-            // 
-            // tbRecoveryCutoff
-            // 
-            this.tbRecoveryCutoff.Location = new System.Drawing.Point(132, 178);
-            this.tbRecoveryCutoff.Name = "tbRecoveryCutoff";
-            this.tbRecoveryCutoff.Size = new System.Drawing.Size(35, 20);
-            this.tbRecoveryCutoff.TabIndex = 25;
-            this.tbRecoveryCutoff.Text = "50";
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(167, 181);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(174, 13);
-            this.label1.TabIndex = 26;
-            this.label1.Text = "% Unidentified High Quality Spectra";
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(36, 207);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(15, 13);
-            this.label2.TabIndex = 27;
-            this.label2.Text = "in";
-            // 
-            // cmbRecoveryOutFormat
-            // 
-            this.cmbRecoveryOutFormat.FormattingEnabled = true;
-            this.cmbRecoveryOutFormat.Items.AddRange(new object[] {
-            "mzML",
-            "mzXML",
-            "mgf",
-            "MS2"});
-            this.cmbRecoveryOutFormat.Location = new System.Drawing.Point(58, 204);
-            this.cmbRecoveryOutFormat.Name = "cmbRecoveryOutFormat";
-            this.cmbRecoveryOutFormat.Size = new System.Drawing.Size(124, 21);
-            this.cmbRecoveryOutFormat.TabIndex = 28;
-            this.cmbRecoveryOutFormat.Text = "mzML";
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(188, 207);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(39, 13);
-            this.label3.TabIndex = 29;
-            this.label3.Text = "Format";
             // 
             // MainForm
             // 
@@ -965,6 +984,7 @@ namespace ScanRanker
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.ComboBox cmbRecoveryOutFormat;
         private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.ToolTip toolTip1;
 
 
         
