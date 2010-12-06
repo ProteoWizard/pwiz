@@ -1071,7 +1071,7 @@ void testContactRole()
 
     ContactRole a, b;
 
-    a.contactPtr = ContactPtr(new Person("cid"));
+    a.contactPtr = ContactPtr(new Person("cid", "cname"));
     a.role.set(MS_software_vendor);
 
     b = a;
@@ -1080,7 +1080,7 @@ void testContactRole()
     if (os_) *os_ << diff << endl;
     unit_assert(!diff);
 
-    b.contactPtr = ContactPtr(new Organization("cid2"));
+    b.contactPtr = ContactPtr(new Organization("cid2", "cname2"));
 
     diff(a, b);
 
@@ -1089,7 +1089,10 @@ void testContactRole()
 
     unit_assert(diff.b_a.contactPtr.get());
     unit_assert(diff.a_b.contactPtr.get());
-    // TODO finish this.
+    unit_assert(diff.a_b.contactPtr->id == "cid");
+    unit_assert(diff.b_a.contactPtr->id == "cid2");
+    unit_assert(diff.a_b.contactPtr->name == "cname");
+    unit_assert(diff.b_a.contactPtr->name == "cname2");
 }
 
 
