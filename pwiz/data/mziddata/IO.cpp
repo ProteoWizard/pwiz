@@ -555,7 +555,10 @@ struct HandlerDBSequence : public HandlerIdentifiableType
 
 PWIZ_API_DECL void read(std::istream& is, DBSequencePtr ds)
 {
-    // TODO throw exception if pointer is NULL
+    if (!ds.get())
+        throw runtime_error("[read(istream&,DBSequencePtr)] NULL valued "
+                            "object passed in.");
+    
     read(is, *ds);
 }
 
@@ -646,7 +649,6 @@ PWIZ_API_DECL void read(std::istream& is, ModificationPtr mod)
 
 PWIZ_API_DECL void read(std::istream& is, Modification& mod)
 {
-    // TODO throw exception if pointer is NULL
     HandlerModification handler(&mod);
     SAXParser::parse(is, handler);
 }
@@ -702,7 +704,6 @@ struct HandlerSubstitutionModification : public SAXParser::Handler
 
 PWIZ_API_DECL void read(std::istream& is, SubstitutionModification& sm)
 {
-    // TODO throw exception if pointer is NULL
     HandlerSubstitutionModification handler(&sm);
     SAXParser::parse(is, handler);
 }
@@ -813,7 +814,10 @@ struct HandlerPeptide : public HandlerIdentifiableType
 
 PWIZ_API_DECL void read(std::istream& is, PeptidePtr peptide)
 {
-    // TODO throw exception if pointer is NULL
+    if (!peptide.get())
+        throw runtime_error("[read(istream&,PeptidePtr)] NULL valued "
+            "object passed in.");
+    
     read(is, *peptide);
 }
 
@@ -978,7 +982,10 @@ struct HandlerContact : public HandlerIdentifiableType
 
 PWIZ_API_DECL void read(std::istream& is, ContactPtr cp)
 {
-    // TODO add throw if pointer DNE
+    if (!cp.get())
+        throw runtime_error("[read(istream&,ContactPtr)] NULL value "
+            "ContactPtr passed in.");
+    
     HandlerContact handler(cp.get());
     SAXParser::parse(is, handler);
 }
