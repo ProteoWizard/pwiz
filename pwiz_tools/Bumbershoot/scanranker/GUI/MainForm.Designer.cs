@@ -125,6 +125,9 @@ namespace ScanRanker
             this.tbInputFileFilters = new System.Windows.Forms.TextBox();
             this.btnListFiles = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.lblRecoveryMetricsFileSuffixForRecovery = new System.Windows.Forms.Label();
+            this.tbMetricsFileSuffixForRecovery = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
             this.gbAssessment.SuspendLayout();
             this.gbDtgConfig.SuspendLayout();
             this.gbRemoval.SuspendLayout();
@@ -169,7 +172,7 @@ namespace ScanRanker
             this.gbAssessment.Controls.Add(this.lblOutputMetricsSurfix);
             this.gbAssessment.Controls.Add(this.gbDtgConfig);
             this.gbAssessment.Controls.Add(this.cbAssessement);
-            this.gbAssessment.Location = new System.Drawing.Point(38, 280);
+            this.gbAssessment.Location = new System.Drawing.Point(38, 285);
             this.gbAssessment.Name = "gbAssessment";
             this.gbAssessment.Size = new System.Drawing.Size(264, 378);
             this.gbAssessment.TabIndex = 3;
@@ -178,18 +181,18 @@ namespace ScanRanker
             // cbAdjustScoreByGroup
             // 
             this.cbAdjustScoreByGroup.AutoSize = true;
-            this.cbAdjustScoreByGroup.Location = new System.Drawing.Point(18, 311);
+            this.cbAdjustScoreByGroup.Location = new System.Drawing.Point(18, 321);
             this.cbAdjustScoreByGroup.Name = "cbAdjustScoreByGroup";
             this.cbAdjustScoreByGroup.Size = new System.Drawing.Size(225, 17);
             this.cbAdjustScoreByGroup.TabIndex = 5;
             this.cbAdjustScoreByGroup.Text = "Adjust Quality Scores across All Input Files";
             this.toolTip1.SetToolTip(this.cbAdjustScoreByGroup, "Assess spectral quality across multiple files in an experiment\r\nRecommended if pr" +
-                    "oteins are fractionated by MudPIT, IEF or SDS-PAGE ");
+                    "oteins were fractionated by MudPIT, IEF or SDS-PAGE ");
             this.cbAdjustScoreByGroup.UseVisualStyleBackColor = true;
             // 
             // tbOutputMetricsSuffix
             // 
-            this.tbOutputMetricsSuffix.Location = new System.Drawing.Point(139, 339);
+            this.tbOutputMetricsSuffix.Location = new System.Drawing.Point(139, 349);
             this.tbOutputMetricsSuffix.Name = "tbOutputMetricsSuffix";
             this.tbOutputMetricsSuffix.Size = new System.Drawing.Size(109, 20);
             this.tbOutputMetricsSuffix.TabIndex = 4;
@@ -197,7 +200,7 @@ namespace ScanRanker
             // lblOutputMetricsSurfix
             // 
             this.lblOutputMetricsSurfix.AutoSize = true;
-            this.lblOutputMetricsSurfix.Location = new System.Drawing.Point(6, 342);
+            this.lblOutputMetricsSurfix.Location = new System.Drawing.Point(6, 352);
             this.lblOutputMetricsSurfix.Name = "lblOutputMetricsSurfix";
             this.lblOutputMetricsSurfix.Size = new System.Drawing.Size(127, 13);
             this.lblOutputMetricsSurfix.TabIndex = 2;
@@ -223,7 +226,7 @@ namespace ScanRanker
             this.gbDtgConfig.Controls.Add(this.lblPrecursorTolerance);
             this.gbDtgConfig.Location = new System.Drawing.Point(18, 23);
             this.gbDtgConfig.Name = "gbDtgConfig";
-            this.gbDtgConfig.Size = new System.Drawing.Size(229, 276);
+            this.gbDtgConfig.Size = new System.Drawing.Size(229, 292);
             this.gbDtgConfig.TabIndex = 1;
             this.gbDtgConfig.TabStop = false;
             this.gbDtgConfig.Text = "Sequence Tagging Configuration";
@@ -231,7 +234,7 @@ namespace ScanRanker
             // cbWriteOutTags
             // 
             this.cbWriteOutTags.AutoSize = true;
-            this.cbWriteOutTags.Location = new System.Drawing.Point(25, 253);
+            this.cbWriteOutTags.Location = new System.Drawing.Point(25, 263);
             this.cbWriteOutTags.Name = "cbWriteOutTags";
             this.cbWriteOutTags.Size = new System.Drawing.Size(98, 17);
             this.cbWriteOutTags.TabIndex = 17;
@@ -240,7 +243,7 @@ namespace ScanRanker
             // 
             // tbTagLength
             // 
-            this.tbTagLength.Location = new System.Drawing.Point(152, 81);
+            this.tbTagLength.Location = new System.Drawing.Point(152, 86);
             this.tbTagLength.Name = "tbTagLength";
             this.tbTagLength.Size = new System.Drawing.Size(45, 20);
             this.tbTagLength.TabIndex = 16;
@@ -249,7 +252,7 @@ namespace ScanRanker
             // lblTagLength
             // 
             this.lblTagLength.AutoSize = true;
-            this.lblTagLength.Location = new System.Drawing.Point(22, 84);
+            this.lblTagLength.Location = new System.Drawing.Point(22, 89);
             this.lblTagLength.Name = "lblTagLength";
             this.lblTagLength.Size = new System.Drawing.Size(117, 13);
             this.lblTagLength.TabIndex = 15;
@@ -258,7 +261,7 @@ namespace ScanRanker
             // cbUseMultipleProcessors
             // 
             this.cbUseMultipleProcessors.AutoSize = true;
-            this.cbUseMultipleProcessors.Location = new System.Drawing.Point(25, 227);
+            this.cbUseMultipleProcessors.Location = new System.Drawing.Point(25, 237);
             this.cbUseMultipleProcessors.Name = "cbUseMultipleProcessors";
             this.cbUseMultipleProcessors.Size = new System.Drawing.Size(142, 17);
             this.cbUseMultipleProcessors.TabIndex = 10;
@@ -268,7 +271,7 @@ namespace ScanRanker
             // cbUseChargeStateFromMS
             // 
             this.cbUseChargeStateFromMS.AutoSize = true;
-            this.cbUseChargeStateFromMS.Location = new System.Drawing.Point(25, 201);
+            this.cbUseChargeStateFromMS.Location = new System.Drawing.Point(25, 209);
             this.cbUseChargeStateFromMS.Name = "cbUseChargeStateFromMS";
             this.cbUseChargeStateFromMS.Size = new System.Drawing.Size(152, 17);
             this.cbUseChargeStateFromMS.TabIndex = 7;
@@ -278,7 +281,7 @@ namespace ScanRanker
             // rbMono
             // 
             this.rbMono.AutoSize = true;
-            this.rbMono.Location = new System.Drawing.Point(150, 173);
+            this.rbMono.Location = new System.Drawing.Point(150, 181);
             this.rbMono.Name = "rbMono";
             this.rbMono.Size = new System.Drawing.Size(52, 17);
             this.rbMono.TabIndex = 6;
@@ -287,7 +290,7 @@ namespace ScanRanker
             // 
             // tbNumChargeStates
             // 
-            this.tbNumChargeStates.Location = new System.Drawing.Point(157, 141);
+            this.tbNumChargeStates.Location = new System.Drawing.Point(157, 147);
             this.tbNumChargeStates.Name = "tbNumChargeStates";
             this.tbNumChargeStates.Size = new System.Drawing.Size(40, 20);
             this.tbNumChargeStates.TabIndex = 12;
@@ -297,7 +300,7 @@ namespace ScanRanker
             // 
             this.rbAverage.AutoSize = true;
             this.rbAverage.Checked = true;
-            this.rbAverage.Location = new System.Drawing.Point(87, 172);
+            this.rbAverage.Location = new System.Drawing.Point(87, 180);
             this.rbAverage.Name = "rbAverage";
             this.rbAverage.Size = new System.Drawing.Size(65, 17);
             this.rbAverage.TabIndex = 5;
@@ -308,7 +311,7 @@ namespace ScanRanker
             // lblUseMass
             // 
             this.lblUseMass.AutoSize = true;
-            this.lblUseMass.Location = new System.Drawing.Point(22, 174);
+            this.lblUseMass.Location = new System.Drawing.Point(22, 182);
             this.lblUseMass.Name = "lblUseMass";
             this.lblUseMass.Size = new System.Drawing.Size(57, 13);
             this.lblUseMass.TabIndex = 4;
@@ -317,7 +320,7 @@ namespace ScanRanker
             // lblNumChargeStates
             // 
             this.lblNumChargeStates.AutoSize = true;
-            this.lblNumChargeStates.Location = new System.Drawing.Point(22, 147);
+            this.lblNumChargeStates.Location = new System.Drawing.Point(22, 153);
             this.lblNumChargeStates.Name = "lblNumChargeStates";
             this.lblNumChargeStates.Size = new System.Drawing.Size(129, 13);
             this.lblNumChargeStates.TabIndex = 11;
@@ -325,7 +328,7 @@ namespace ScanRanker
             // 
             // tbStaticMods
             // 
-            this.tbStaticMods.Location = new System.Drawing.Point(94, 112);
+            this.tbStaticMods.Location = new System.Drawing.Point(94, 117);
             this.tbStaticMods.Name = "tbStaticMods";
             this.tbStaticMods.Size = new System.Drawing.Size(103, 20);
             this.tbStaticMods.TabIndex = 9;
@@ -334,7 +337,7 @@ namespace ScanRanker
             // lblStaticMods
             // 
             this.lblStaticMods.AutoSize = true;
-            this.lblStaticMods.Location = new System.Drawing.Point(22, 116);
+            this.lblStaticMods.Location = new System.Drawing.Point(22, 121);
             this.lblStaticMods.Name = "lblStaticMods";
             this.lblStaticMods.Size = new System.Drawing.Size(66, 13);
             this.lblStaticMods.TabIndex = 8;
@@ -342,7 +345,7 @@ namespace ScanRanker
             // 
             // tbFragmentTolerance
             // 
-            this.tbFragmentTolerance.Location = new System.Drawing.Point(152, 53);
+            this.tbFragmentTolerance.Location = new System.Drawing.Point(152, 56);
             this.tbFragmentTolerance.Name = "tbFragmentTolerance";
             this.tbFragmentTolerance.Size = new System.Drawing.Size(45, 20);
             this.tbFragmentTolerance.TabIndex = 3;
@@ -351,7 +354,7 @@ namespace ScanRanker
             // lblFragmentTolerance
             // 
             this.lblFragmentTolerance.AutoSize = true;
-            this.lblFragmentTolerance.Location = new System.Drawing.Point(22, 56);
+            this.lblFragmentTolerance.Location = new System.Drawing.Point(22, 59);
             this.lblFragmentTolerance.Name = "lblFragmentTolerance";
             this.lblFragmentTolerance.Size = new System.Drawing.Size(126, 13);
             this.lblFragmentTolerance.TabIndex = 2;
@@ -400,9 +403,9 @@ namespace ScanRanker
             this.gbRemoval.Controls.Add(this.tbMetricsFileSuffixForRemoval);
             this.gbRemoval.Controls.Add(this.lblMetricsFileSuffixForRemoval);
             this.gbRemoval.Controls.Add(this.cbRemoval);
-            this.gbRemoval.Location = new System.Drawing.Point(329, 280);
+            this.gbRemoval.Location = new System.Drawing.Point(329, 285);
             this.gbRemoval.Name = "gbRemoval";
-            this.gbRemoval.Size = new System.Drawing.Size(361, 139);
+            this.gbRemoval.Size = new System.Drawing.Size(361, 124);
             this.gbRemoval.TabIndex = 4;
             this.gbRemoval.TabStop = false;
             // 
@@ -414,7 +417,7 @@ namespace ScanRanker
             "mzXML",
             "mgf",
             "MS2"});
-            this.cmbOutputFileFormat.Location = new System.Drawing.Point(149, 81);
+            this.cmbOutputFileFormat.Location = new System.Drawing.Point(149, 70);
             this.cmbOutputFileFormat.Name = "cmbOutputFileFormat";
             this.cmbOutputFileFormat.Size = new System.Drawing.Size(121, 21);
             this.cmbOutputFileFormat.TabIndex = 15;
@@ -422,7 +425,7 @@ namespace ScanRanker
             // 
             // tbOutFileNameSuffixForRemoval
             // 
-            this.tbOutFileNameSuffixForRemoval.Location = new System.Drawing.Point(149, 110);
+            this.tbOutFileNameSuffixForRemoval.Location = new System.Drawing.Point(149, 97);
             this.tbOutFileNameSuffixForRemoval.Name = "tbOutFileNameSuffixForRemoval";
             this.tbOutFileNameSuffixForRemoval.Size = new System.Drawing.Size(205, 20);
             this.tbOutFileNameSuffixForRemoval.TabIndex = 14;
@@ -430,7 +433,7 @@ namespace ScanRanker
             // lblOutFileNameSurrfixForRemoval
             // 
             this.lblOutFileNameSurrfixForRemoval.AutoSize = true;
-            this.lblOutFileNameSurrfixForRemoval.Location = new System.Drawing.Point(16, 113);
+            this.lblOutFileNameSurrfixForRemoval.Location = new System.Drawing.Point(16, 100);
             this.lblOutFileNameSurrfixForRemoval.Name = "lblOutFileNameSurrfixForRemoval";
             this.lblOutFileNameSurrfixForRemoval.Size = new System.Drawing.Size(121, 13);
             this.lblOutFileNameSurrfixForRemoval.TabIndex = 13;
@@ -439,7 +442,7 @@ namespace ScanRanker
             // lblOutFileFormat
             // 
             this.lblOutFileFormat.AutoSize = true;
-            this.lblOutFileFormat.Location = new System.Drawing.Point(16, 84);
+            this.lblOutFileFormat.Location = new System.Drawing.Point(16, 73);
             this.lblOutFileFormat.Name = "lblOutFileFormat";
             this.lblOutFileFormat.Size = new System.Drawing.Size(96, 13);
             this.lblOutFileFormat.TabIndex = 10;
@@ -448,7 +451,7 @@ namespace ScanRanker
             // lblPercentSpectra
             // 
             this.lblPercentSpectra.AutoSize = true;
-            this.lblPercentSpectra.Location = new System.Drawing.Point(120, 58);
+            this.lblPercentSpectra.Location = new System.Drawing.Point(120, 50);
             this.lblPercentSpectra.Name = "lblPercentSpectra";
             this.lblPercentSpectra.Size = new System.Drawing.Size(180, 13);
             this.lblPercentSpectra.TabIndex = 9;
@@ -456,7 +459,7 @@ namespace ScanRanker
             // 
             // tbRemovalCutoff
             // 
-            this.tbRemovalCutoff.Location = new System.Drawing.Point(80, 55);
+            this.tbRemovalCutoff.Location = new System.Drawing.Point(80, 47);
             this.tbRemovalCutoff.Name = "tbRemovalCutoff";
             this.tbRemovalCutoff.Size = new System.Drawing.Size(36, 20);
             this.tbRemovalCutoff.TabIndex = 8;
@@ -466,7 +469,7 @@ namespace ScanRanker
             // lblRetain
             // 
             this.lblRetain.AutoSize = true;
-            this.lblRetain.Location = new System.Drawing.Point(16, 58);
+            this.lblRetain.Location = new System.Drawing.Point(16, 50);
             this.lblRetain.Name = "lblRetain";
             this.lblRetain.Size = new System.Drawing.Size(60, 13);
             this.lblRetain.TabIndex = 7;
@@ -474,7 +477,7 @@ namespace ScanRanker
             // 
             // tbMetricsFileSuffixForRemoval
             // 
-            this.tbMetricsFileSuffixForRemoval.Location = new System.Drawing.Point(149, 26);
+            this.tbMetricsFileSuffixForRemoval.Location = new System.Drawing.Point(149, 22);
             this.tbMetricsFileSuffixForRemoval.Name = "tbMetricsFileSuffixForRemoval";
             this.tbMetricsFileSuffixForRemoval.Size = new System.Drawing.Size(205, 20);
             this.tbMetricsFileSuffixForRemoval.TabIndex = 6;
@@ -482,7 +485,7 @@ namespace ScanRanker
             // lblMetricsFileSuffixForRemoval
             // 
             this.lblMetricsFileSuffixForRemoval.AutoSize = true;
-            this.lblMetricsFileSuffixForRemoval.Location = new System.Drawing.Point(16, 29);
+            this.lblMetricsFileSuffixForRemoval.Location = new System.Drawing.Point(16, 25);
             this.lblMetricsFileSuffixForRemoval.Name = "lblMetricsFileSuffixForRemoval";
             this.lblMetricsFileSuffixForRemoval.Size = new System.Drawing.Size(127, 13);
             this.lblMetricsFileSuffixForRemoval.TabIndex = 5;
@@ -505,6 +508,9 @@ namespace ScanRanker
             // gbRecovery
             // 
             this.gbRecovery.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.gbRecovery.Controls.Add(this.label4);
+            this.gbRecovery.Controls.Add(this.tbMetricsFileSuffixForRecovery);
+            this.gbRecovery.Controls.Add(this.lblRecoveryMetricsFileSuffixForRecovery);
             this.gbRecovery.Controls.Add(this.label3);
             this.gbRecovery.Controls.Add(this.cmbRecoveryOutFormat);
             this.gbRecovery.Controls.Add(this.label2);
@@ -528,9 +534,9 @@ namespace ScanRanker
             this.gbRecovery.Controls.Add(this.tbOutFileNameSuffixForRecovery);
             this.gbRecovery.Controls.Add(this.lblOutFileNameSuffixForRecovery);
             this.gbRecovery.Controls.Add(this.cbRecovery);
-            this.gbRecovery.Location = new System.Drawing.Point(329, 425);
+            this.gbRecovery.Location = new System.Drawing.Point(329, 415);
             this.gbRecovery.Name = "gbRecovery";
-            this.gbRecovery.Size = new System.Drawing.Size(361, 233);
+            this.gbRecovery.Size = new System.Drawing.Size(361, 248);
             this.gbRecovery.TabIndex = 5;
             this.gbRecovery.TabStop = false;
             this.gbRecovery.Text = " ";
@@ -538,7 +544,7 @@ namespace ScanRanker
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(188, 207);
+            this.label3.Location = new System.Drawing.Point(188, 226);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(39, 13);
             this.label3.TabIndex = 29;
@@ -552,7 +558,7 @@ namespace ScanRanker
             "mzXML",
             "mgf",
             "MS2"});
-            this.cmbRecoveryOutFormat.Location = new System.Drawing.Point(58, 204);
+            this.cmbRecoveryOutFormat.Location = new System.Drawing.Point(58, 223);
             this.cmbRecoveryOutFormat.Name = "cmbRecoveryOutFormat";
             this.cmbRecoveryOutFormat.Size = new System.Drawing.Size(124, 21);
             this.cmbRecoveryOutFormat.TabIndex = 28;
@@ -561,7 +567,7 @@ namespace ScanRanker
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(36, 207);
+            this.label2.Location = new System.Drawing.Point(36, 226);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(15, 13);
             this.label2.TabIndex = 27;
@@ -570,7 +576,7 @@ namespace ScanRanker
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(167, 181);
+            this.label1.Location = new System.Drawing.Point(167, 200);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(174, 13);
             this.label1.TabIndex = 26;
@@ -578,7 +584,7 @@ namespace ScanRanker
             // 
             // tbRecoveryCutoff
             // 
-            this.tbRecoveryCutoff.Location = new System.Drawing.Point(132, 178);
+            this.tbRecoveryCutoff.Location = new System.Drawing.Point(132, 197);
             this.tbRecoveryCutoff.Name = "tbRecoveryCutoff";
             this.tbRecoveryCutoff.Size = new System.Drawing.Size(35, 20);
             this.tbRecoveryCutoff.TabIndex = 25;
@@ -587,7 +593,7 @@ namespace ScanRanker
             // cbWriteOutUnidentifiedSpectra
             // 
             this.cbWriteOutUnidentifiedSpectra.AutoSize = true;
-            this.cbWriteOutUnidentifiedSpectra.Location = new System.Drawing.Point(17, 181);
+            this.cbWriteOutUnidentifiedSpectra.Location = new System.Drawing.Point(17, 200);
             this.cbWriteOutUnidentifiedSpectra.Name = "cbWriteOutUnidentifiedSpectra";
             this.cbWriteOutUnidentifiedSpectra.Size = new System.Drawing.Size(115, 17);
             this.cbWriteOutUnidentifiedSpectra.TabIndex = 24;
@@ -599,13 +605,13 @@ namespace ScanRanker
             this.cbOptimizeScoreWeights.AutoSize = true;
             this.cbOptimizeScoreWeights.Checked = true;
             this.cbOptimizeScoreWeights.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbOptimizeScoreWeights.Location = new System.Drawing.Point(206, 109);
+            this.cbOptimizeScoreWeights.Location = new System.Drawing.Point(206, 128);
             this.cbOptimizeScoreWeights.Name = "cbOptimizeScoreWeights";
             this.cbOptimizeScoreWeights.Size = new System.Drawing.Size(142, 17);
             this.cbOptimizeScoreWeights.TabIndex = 16;
             this.cbOptimizeScoreWeights.Text = "Optimize Score Weights ";
-            this.toolTip1.SetToolTip(this.cbOptimizeScoreWeights, "Optimize weights to combine multiple scores\r\nNot recommened for Mascot search res" +
-                    "ults");
+            this.toolTip1.SetToolTip(this.cbOptimizeScoreWeights, "Optimize weights to combine multiple scores\r\nNot recommended for Mascot search re" +
+                    "sults");
             this.cbOptimizeScoreWeights.UseVisualStyleBackColor = true;
             // 
             // cmbScoreWeights
@@ -616,20 +622,20 @@ namespace ScanRanker
             "xcorr 1 deltacn 1",
             "hyperscore 1 expect -1",
             "ionscore 1 identityscore -1"});
-            this.cmbScoreWeights.Location = new System.Drawing.Point(17, 124);
+            this.cmbScoreWeights.Location = new System.Drawing.Point(17, 143);
             this.cmbScoreWeights.Name = "cmbScoreWeights";
             this.cmbScoreWeights.Size = new System.Drawing.Size(166, 21);
             this.cmbScoreWeights.TabIndex = 17;
             this.cmbScoreWeights.Text = "mvh 1 mzFidelity 1 xcorr 1";
-            this.toolTip1.SetToolTip(this.cmbScoreWeights, "Weights used in IDPicker for multiple score combination\r\nRecommend to check \"Opti" +
-                    "mize Score Weights\"");
+            this.toolTip1.SetToolTip(this.cmbScoreWeights, "Weights used in IDPicker for multiple score combination\r\n\"Optimize Score Weights\"" +
+                    " is recommended");
             // 
             // cbNormSearchScores
             // 
             this.cbNormSearchScores.AutoSize = true;
             this.cbNormSearchScores.Checked = true;
             this.cbNormSearchScores.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbNormSearchScores.Location = new System.Drawing.Point(206, 128);
+            this.cbNormSearchScores.Location = new System.Drawing.Point(206, 147);
             this.cbNormSearchScores.Name = "cbNormSearchScores";
             this.cbNormSearchScores.Size = new System.Drawing.Size(148, 17);
             this.cbNormSearchScores.TabIndex = 15;
@@ -639,7 +645,7 @@ namespace ScanRanker
             // 
             // tbDecoyPrefix
             // 
-            this.tbDecoyPrefix.Location = new System.Drawing.Point(282, 80);
+            this.tbDecoyPrefix.Location = new System.Drawing.Point(282, 99);
             this.tbDecoyPrefix.Name = "tbDecoyPrefix";
             this.tbDecoyPrefix.Size = new System.Drawing.Size(72, 20);
             this.tbDecoyPrefix.TabIndex = 23;
@@ -648,17 +654,17 @@ namespace ScanRanker
             // 
             // tbMaxFDR
             // 
-            this.tbMaxFDR.Location = new System.Drawing.Point(75, 80);
+            this.tbMaxFDR.Location = new System.Drawing.Point(75, 99);
             this.tbMaxFDR.Name = "tbMaxFDR";
-            this.tbMaxFDR.Size = new System.Drawing.Size(72, 20);
+            this.tbMaxFDR.Size = new System.Drawing.Size(25, 20);
             this.tbMaxFDR.TabIndex = 22;
-            this.tbMaxFDR.Text = "0.05";
+            this.tbMaxFDR.Text = "5";
             this.toolTip1.SetToolTip(this.tbMaxFDR, "Maximal FDR allowed for peptide validation");
             // 
             // lblDecoyPrefix
             // 
             this.lblDecoyPrefix.AutoSize = true;
-            this.lblDecoyPrefix.Location = new System.Drawing.Point(203, 83);
+            this.lblDecoyPrefix.Location = new System.Drawing.Point(203, 102);
             this.lblDecoyPrefix.Name = "lblDecoyPrefix";
             this.lblDecoyPrefix.Size = new System.Drawing.Size(70, 13);
             this.lblDecoyPrefix.TabIndex = 21;
@@ -667,7 +673,7 @@ namespace ScanRanker
             // lblSearchScoreWeights
             // 
             this.lblSearchScoreWeights.AutoSize = true;
-            this.lblSearchScoreWeights.Location = new System.Drawing.Point(14, 105);
+            this.lblSearchScoreWeights.Location = new System.Drawing.Point(14, 124);
             this.lblSearchScoreWeights.Name = "lblSearchScoreWeights";
             this.lblSearchScoreWeights.Size = new System.Drawing.Size(169, 13);
             this.lblSearchScoreWeights.TabIndex = 14;
@@ -676,7 +682,7 @@ namespace ScanRanker
             // lblMaxFDR
             // 
             this.lblMaxFDR.AutoSize = true;
-            this.lblMaxFDR.Location = new System.Drawing.Point(14, 83);
+            this.lblMaxFDR.Location = new System.Drawing.Point(14, 102);
             this.lblMaxFDR.Name = "lblMaxFDR";
             this.lblMaxFDR.Size = new System.Drawing.Size(55, 13);
             this.lblMaxFDR.TabIndex = 20;
@@ -684,7 +690,7 @@ namespace ScanRanker
             // 
             // btnDBBrowse
             // 
-            this.btnDBBrowse.Location = new System.Drawing.Point(281, 50);
+            this.btnDBBrowse.Location = new System.Drawing.Point(281, 69);
             this.btnDBBrowse.Name = "btnDBBrowse";
             this.btnDBBrowse.Size = new System.Drawing.Size(73, 21);
             this.btnDBBrowse.TabIndex = 19;
@@ -694,7 +700,7 @@ namespace ScanRanker
             // 
             // tbDBFile
             // 
-            this.tbDBFile.Location = new System.Drawing.Point(120, 51);
+            this.tbDBFile.Location = new System.Drawing.Point(120, 70);
             this.tbDBFile.Name = "tbDBFile";
             this.tbDBFile.Size = new System.Drawing.Size(155, 20);
             this.tbDBFile.TabIndex = 18;
@@ -703,7 +709,7 @@ namespace ScanRanker
             // lblDBFile
             // 
             this.lblDBFile.AutoSize = true;
-            this.lblDBFile.Location = new System.Drawing.Point(14, 58);
+            this.lblDBFile.Location = new System.Drawing.Point(14, 77);
             this.lblDBFile.Name = "lblDBFile";
             this.lblDBFile.Size = new System.Drawing.Size(75, 13);
             this.lblDBFile.TabIndex = 17;
@@ -711,7 +717,7 @@ namespace ScanRanker
             // 
             // tbPepXMLDir
             // 
-            this.tbPepXMLDir.Location = new System.Drawing.Point(120, 25);
+            this.tbPepXMLDir.Location = new System.Drawing.Point(120, 44);
             this.tbPepXMLDir.Name = "tbPepXMLDir";
             this.tbPepXMLDir.Size = new System.Drawing.Size(155, 20);
             this.tbPepXMLDir.TabIndex = 14;
@@ -719,7 +725,7 @@ namespace ScanRanker
             // 
             // btnPepXMLBrowse
             // 
-            this.btnPepXMLBrowse.Location = new System.Drawing.Point(281, 25);
+            this.btnPepXMLBrowse.Location = new System.Drawing.Point(281, 44);
             this.btnPepXMLBrowse.Name = "btnPepXMLBrowse";
             this.btnPepXMLBrowse.Size = new System.Drawing.Size(73, 21);
             this.btnPepXMLBrowse.TabIndex = 14;
@@ -730,7 +736,7 @@ namespace ScanRanker
             // lblPepXMLDir
             // 
             this.lblPepXMLDir.AutoSize = true;
-            this.lblPepXMLDir.Location = new System.Drawing.Point(14, 29);
+            this.lblPepXMLDir.Location = new System.Drawing.Point(14, 48);
             this.lblPepXMLDir.Name = "lblPepXMLDir";
             this.lblPepXMLDir.Size = new System.Drawing.Size(100, 13);
             this.lblPepXMLDir.TabIndex = 16;
@@ -738,7 +744,7 @@ namespace ScanRanker
             // 
             // tbOutFileNameSuffixForRecovery
             // 
-            this.tbOutFileNameSuffixForRecovery.Location = new System.Drawing.Point(147, 150);
+            this.tbOutFileNameSuffixForRecovery.Location = new System.Drawing.Point(147, 169);
             this.tbOutFileNameSuffixForRecovery.Name = "tbOutFileNameSuffixForRecovery";
             this.tbOutFileNameSuffixForRecovery.Size = new System.Drawing.Size(207, 20);
             this.tbOutFileNameSuffixForRecovery.TabIndex = 15;
@@ -746,7 +752,7 @@ namespace ScanRanker
             // lblOutFileNameSuffixForRecovery
             // 
             this.lblOutFileNameSuffixForRecovery.AutoSize = true;
-            this.lblOutFileNameSuffixForRecovery.Location = new System.Drawing.Point(14, 153);
+            this.lblOutFileNameSuffixForRecovery.Location = new System.Drawing.Point(14, 172);
             this.lblOutFileNameSuffixForRecovery.Name = "lblOutFileNameSuffixForRecovery";
             this.lblOutFileNameSuffixForRecovery.Size = new System.Drawing.Size(121, 13);
             this.lblOutFileNameSuffixForRecovery.TabIndex = 15;
@@ -767,7 +773,7 @@ namespace ScanRanker
             // btnRun
             // 
             this.btnRun.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnRun.Location = new System.Drawing.Point(515, 664);
+            this.btnRun.Location = new System.Drawing.Point(515, 680);
             this.btnRun.Name = "btnRun";
             this.btnRun.Size = new System.Drawing.Size(80, 23);
             this.btnRun.TabIndex = 6;
@@ -778,7 +784,7 @@ namespace ScanRanker
             // btnCancel
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCancel.Location = new System.Drawing.Point(608, 664);
+            this.btnCancel.Location = new System.Drawing.Point(608, 680);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(80, 23);
             this.btnCancel.TabIndex = 7;
@@ -790,7 +796,7 @@ namespace ScanRanker
             // 
             this.lblOutputDir.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lblOutputDir.AutoSize = true;
-            this.lblOutputDir.Location = new System.Drawing.Point(23, 245);
+            this.lblOutputDir.Location = new System.Drawing.Point(23, 261);
             this.lblOutputDir.Name = "lblOutputDir";
             this.lblOutputDir.Size = new System.Drawing.Size(87, 13);
             this.lblOutputDir.TabIndex = 8;
@@ -800,7 +806,7 @@ namespace ScanRanker
             // 
             this.tbOutputDir.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbOutputDir.Location = new System.Drawing.Point(113, 242);
+            this.tbOutputDir.Location = new System.Drawing.Point(113, 258);
             this.tbOutputDir.Name = "tbOutputDir";
             this.tbOutputDir.Size = new System.Drawing.Size(496, 20);
             this.tbOutputDir.TabIndex = 9;
@@ -808,7 +814,7 @@ namespace ScanRanker
             // btnOutputDirBrowse
             // 
             this.btnOutputDirBrowse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOutputDirBrowse.Location = new System.Drawing.Point(615, 241);
+            this.btnOutputDirBrowse.Location = new System.Drawing.Point(615, 257);
             this.btnOutputDirBrowse.Name = "btnOutputDirBrowse";
             this.btnOutputDirBrowse.Size = new System.Drawing.Size(73, 21);
             this.btnOutputDirBrowse.TabIndex = 10;
@@ -836,7 +842,7 @@ namespace ScanRanker
             this.tvSelDirs.CheckBoxes = true;
             this.tvSelDirs.Location = new System.Drawing.Point(26, 77);
             this.tvSelDirs.Name = "tvSelDirs";
-            this.tvSelDirs.Size = new System.Drawing.Size(662, 158);
+            this.tvSelDirs.Size = new System.Drawing.Size(662, 174);
             this.tvSelDirs.TabIndex = 11;
             this.tvSelDirs.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.tvSelDirs_AfterCheck);
             // 
@@ -857,9 +863,9 @@ namespace ScanRanker
             this.tbInputFileFilters.Name = "tbInputFileFilters";
             this.tbInputFileFilters.Size = new System.Drawing.Size(496, 20);
             this.tbInputFileFilters.TabIndex = 13;
-            this.toolTip1.SetToolTip(this.tbInputFileFilters, "Multiple filters can be separated by either a semicolon (“;”), a comma (“,”) or a" +
-                    " space (“ “). \r\nFor example, a filter “groupA;mzML” will select all mzML files c" +
-                    "ontaining a string “groupA”.");
+            this.toolTip1.SetToolTip(this.tbInputFileFilters, "Use wildcard to filter input files in the directory\r\ne.g. \"mzML\" or \"*.mzML\" will" +
+                    " select all mzML files in the directory,\r\nand “groupA*.mzML” will select all mzM" +
+                    "L files containing a string “groupA”");
             this.tbInputFileFilters.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.tbInputFileFilters_KeyPress);
             // 
             // btnListFiles
@@ -873,11 +879,36 @@ namespace ScanRanker
             this.btnListFiles.UseVisualStyleBackColor = true;
             this.btnListFiles.Click += new System.EventHandler(this.btnListFiles_Click);
             // 
+            // lblRecoveryMetricsFileSuffixForRecovery
+            // 
+            this.lblRecoveryMetricsFileSuffixForRecovery.AutoSize = true;
+            this.lblRecoveryMetricsFileSuffixForRecovery.Location = new System.Drawing.Point(14, 22);
+            this.lblRecoveryMetricsFileSuffixForRecovery.Name = "lblRecoveryMetricsFileSuffixForRecovery";
+            this.lblRecoveryMetricsFileSuffixForRecovery.Size = new System.Drawing.Size(127, 13);
+            this.lblRecoveryMetricsFileSuffixForRecovery.TabIndex = 30;
+            this.lblRecoveryMetricsFileSuffixForRecovery.Text = "Quality Metrics File Suffix:";
+            // 
+            // tbMetricsFileSuffixForRecovery
+            // 
+            this.tbMetricsFileSuffixForRecovery.Location = new System.Drawing.Point(149, 19);
+            this.tbMetricsFileSuffixForRecovery.Name = "tbMetricsFileSuffixForRecovery";
+            this.tbMetricsFileSuffixForRecovery.Size = new System.Drawing.Size(205, 20);
+            this.tbMetricsFileSuffixForRecovery.TabIndex = 31;
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(100, 102);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(15, 13);
+            this.label4.TabIndex = 32;
+            this.label4.Text = "%";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(729, 695);
+            this.ClientSize = new System.Drawing.Size(729, 711);
             this.Controls.Add(this.btnListFiles);
             this.Controls.Add(this.tbInputFileFilters);
             this.Controls.Add(this.lblInputFileFilters);
@@ -985,6 +1016,9 @@ namespace ScanRanker
         private System.Windows.Forms.ComboBox cmbRecoveryOutFormat;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.TextBox tbMetricsFileSuffixForRecovery;
+        private System.Windows.Forms.Label lblRecoveryMetricsFileSuffixForRecovery;
+        private System.Windows.Forms.Label label4;
 
 
         

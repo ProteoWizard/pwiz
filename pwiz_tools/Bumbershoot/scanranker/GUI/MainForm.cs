@@ -56,6 +56,7 @@ namespace ScanRanker
             }
             tbMetricsFileSuffixForRemoval.Enabled = false;
             //tbMetricsFileSuffixForRemoval.Text = string.Empty;
+            tbMetricsFileSuffixForRecovery.Enabled = false;
         }
         private void enableRemovalControls()
         {
@@ -75,6 +76,10 @@ namespace ScanRanker
             {
                 c.Enabled = true;
             }
+            if (cbAssessement.Checked)
+            {
+                tbMetricsFileSuffixForRecovery.Enabled = false;                               
+            }
         }
         private void disableAssessmentControls()
         {
@@ -84,6 +89,7 @@ namespace ScanRanker
             }
             cbAssessement.Enabled = true;
             tbMetricsFileSuffixForRemoval.Enabled = (cbRemoval.Checked) ? true : false;
+            tbMetricsFileSuffixForRecovery.Enabled = (cbRecovery.Checked) ? true : false;            
            // tbMetricsFileSuffixForRemoval.Text = string.Empty;
         }
         private void disableRemovalControls()
@@ -131,7 +137,7 @@ namespace ScanRanker
             if (cbRecovery.Checked)
             {
                 enableRecoveryControls();
-                cbAssessement.Checked = Enabled;
+                //cbAssessement.Checked = Enabled;
             }
             else
             {
@@ -155,6 +161,7 @@ namespace ScanRanker
 
             tbOutputMetricsSuffix.Text = "-ScanRankerMetrics";
             tbMetricsFileSuffixForRemoval.Text = "-ScanRankerMetrics";
+            tbMetricsFileSuffixForRecovery.Text = "-ScanRankerMetrics";
             tbOutFileNameSuffixForRemoval.Text = "-Top"+ tbRemovalCutoff.Text +"PercHighQualSpec";
             tbOutFileNameSuffixForRecovery.Text = "-Labeled";
             cbWriteOutUnidentifiedSpectra.Checked = true;
@@ -333,9 +340,10 @@ namespace ScanRanker
 
                 //FileInfo[] fis = di.GetFiles("*" + filterText + "*" + ".pepxml", SearchOption.TopDirectoryOnly);
 
-                string[] filters = filterText.Split(new Char[] { ';', ' ', '\t', ',' }); // filter separated by ";",",", ignore " " and "\t"
-                FileInfo[] fis = di.GetFiles();
-                fis = filterFileInfoList(fis, filters);
+                FileInfo[] fis = di.GetFiles("*" + filterText + "*", SearchOption.TopDirectoryOnly);
+                //string[] filters = filterText.Split(new Char[] { ';', ' ', '\t', ',' }); // filter separated by ";",",", ignore " " and "\t"
+                //FileInfo[] fis = di.GetFiles();
+                //fis = filterFileInfoList(fis, filters);
 
                 //fis = filterFileInfoListByExt(fis);
 
@@ -623,7 +631,7 @@ namespace ScanRanker
             IDPickerInfo idpickerCfg = new IDPickerInfo();
             idpickerCfg.PepXMLFileDir = tbPepXMLDir.Text;
             idpickerCfg.DBFile = tbDBFile.Text;
-            idpickerCfg.MaxFDR = Convert.ToDouble(tbMaxFDR.Text);
+            idpickerCfg.MaxFDR = Convert.ToDouble(tbMaxFDR.Text) / 100;
             idpickerCfg.DecoyPrefix = tbDecoyPrefix.Text;
             idpickerCfg.ScoreWeights = cmbScoreWeights.Text;
             idpickerCfg.NormalizeSearchScores = (cbNormSearchScores.Checked) ? 1 : 0;
@@ -641,6 +649,7 @@ namespace ScanRanker
                 MessageBox.Show("please select input files");
                 return;
             }
+            List<string> allowedFormat = new List<string>(new string[] { "mzXML", "mzxml", "mzML", "mzml", "mgf", "MGF", "MS2", "ms2" });
 
             // run directag, allow write high quality spectra by directag, allow add identification label and write unidentified spectra
             if (cbAssessement.Checked)  
@@ -656,7 +665,7 @@ namespace ScanRanker
                     MessageBox.Show("Error: Please select correct output directory!");
                     return;
                 }
-                List<string> allowedFormat = new List<string>(new string[] { "mzXML", "mzxml", "mzML", "mzml", "mgf", "MGF", "MS2", "ms2" });
+                //List<string> allowedFormat = new List<string>(new string[] { "mzXML", "mzxml", "mzML", "mzml", "mgf", "MGF", "MS2", "ms2" });
                 if (cbRemoval.Checked)
                 {                    
                     if (!allowedFormat.Exists(element => element.Equals(cmbOutputFileFormat.Text)))
@@ -693,9 +702,9 @@ namespace ScanRanker
                         return;
                     }
                     double fdr = Convert.ToDouble(tbMaxFDR.Text);
-                    if (fdr <= 0 || fdr >= 1)
+                    if (fdr <= 0 || fdr >= 100)
                     {
-                        MessageBox.Show("Please input proper FDR between 0 and 1");
+                        MessageBox.Show("Please input proper FDR between 0 and 100");
                         return;
                     }
                     if (cmbScoreWeights.Text.Equals(string.Empty))
@@ -775,9 +784,10 @@ namespace ScanRanker
                 bgDirectagRun.RunWorkerAsync(directagAction);
 
             }
-            else  // spectra removal based on metrics file, without running directag
+            else  
             {
                 #region error checking
+                
                 if (cbRemoval.Checked)
                 {
                     if (tbOutputDir.Text.Equals(string.Empty) || !Directory.Exists(tbOutputDir.Text))
@@ -785,7 +795,7 @@ namespace ScanRanker
                         MessageBox.Show("Error: Please set up the correct output directory!");
                         return;
                     }
-                    List<string> allowedFormat = new List<string>(new string[] { "mzXML", "mzxml", "mzML", "mzml", "mgf", "MGF", "MS2","ms2" });
+                    
                     if (!allowedFormat.Exists(element => element.Equals(cmbOutputFileFormat.Text)))
                     {
                         MessageBox.Show("Please select proper output format");
@@ -805,12 +815,12 @@ namespace ScanRanker
 
                 if (cbRecovery.Checked)
                 {
-                    if (!cbAssessement.Checked)
-                    {
-                        MessageBox.Show("Please run quality assessment with Spectra Recovery");
-                        cbAssessement.Checked = Enabled;
-                        return;
-                    }
+                    //if (!cbAssessement.Checked)
+                    //{
+                    //    MessageBox.Show("Please run quality assessment with Spectra Recovery");
+                    //    cbAssessement.Checked = Enabled;
+                    //    return;
+                    //}
                     //if (tbOutputDir.Text.Equals(string.Empty) || !Directory.Exists(tbOutputDir.Text))
                     //{
                     //    MessageBox.Show("Error: Please set up correct output directory!");
@@ -821,10 +831,61 @@ namespace ScanRanker
                     //    MessageBox.Show("Error: Please specify output file suffix!");
                     //    return;
                     //}
+                    if (tbMetricsFileSuffixForRecovery.Text.Equals(string.Empty))
+                    {
+                        MessageBox.Show("Error: Please specify quality metrics file suffix!");
+                        return;
+                    }
+                    if (tbPepXMLDir.Text.Equals(string.Empty))
+                    {
+                        MessageBox.Show("Error: Please specify pepXML file directory!");
+                        return;
+                    }
+                    if (tbDBFile.Text.Equals(string.Empty))
+                    {
+                        MessageBox.Show("Error: Please specify database file!");
+                        return;
+                    }
+                    if (tbMaxFDR.Text.Equals(string.Empty))
+                    {
+                        MessageBox.Show("Error: Please specify FDR!");
+                        return;
+                    }
+                    double fdr = Convert.ToDouble(tbMaxFDR.Text);
+                    if (fdr <= 0 || fdr >= 100)
+                    {
+                        MessageBox.Show("Please input proper FDR between 0 and 100");
+                        return;
+                    }
+                    if (cmbScoreWeights.Text.Equals(string.Empty))
+                    {
+                        MessageBox.Show("Error: Please specify database search score weights!");
+                        return;
+                    }
+                    if (tbOutFileNameSuffixForRecovery.Text.Equals(string.Empty))
+                    {
+                        MessageBox.Show("Error: Please specify output file suffix!");
+                        return;
+                    }
+                    if (cbWriteOutUnidentifiedSpectra.Checked)
+                    {
+                        if (Convert.ToInt32(tbRecoveryCutoff.Text) <= 0 || Convert.ToInt32(tbRecoveryCutoff.Text) > 100)
+                        {
+                            MessageBox.Show("Please specify proper recovery cutoff between 0 and 100!");
+                            return;
+                        }
+                        if (!allowedFormat.Exists(element => element.Equals(cmbRecoveryOutFormat.Text)))
+                        {
+                            MessageBox.Show("Please select proper output format");
+                            return;
+                        }
+                    }
+
                 }
                 #endregion
-                                
-                if (cbRemoval.Checked)
+
+                // spectra removal based on metrics file, without running directag
+                if (cbRemoval.Checked)  
                 {
                     WriteSpectraAction writeHighQualSpectra = new WriteSpectraAction();
                     writeHighQualSpectra.InFileList = fileList;
@@ -845,34 +906,64 @@ namespace ScanRanker
                     bgWriteSpectra.WorkerSupportsCancellation = true;
                     bgWriteSpectra.RunWorkerCompleted += bgWriteSpectra_RunWorkerCompleted;
                     bgWriteSpectra.RunWorkerAsync(writeHighQualSpectra);
+
                 }
 
-                // changed adding spectra label to be run with quality assessment, not a backgroundworker
+                // add spectra label based on metrics file, without running directag
+                if (cbRecovery.Checked)
+                {
+                    //AddSpectraLabelAction addSpectraLabelAction = new AddSpectraLabelAction();
+                    //addSpectraLabelAction.InFileList = fileList;
+                    ////addSpectraLabelAction.MetricsFile = fileBaseName + tbMetricsFileSuffixForRecovery.Text + ".txt";
+                    //addSpectraLabelAction.IdpCfg = getIdpickerCfg();
+                    //string outputDir = tbOutputDir.Text; 
+                    //addSpectraLabelAction.OutDir = outputDir;
+                    ////addSpectraLabelAction.OutFilename = fileBaseName + tbOutFileNameSuffixForRecovery.Text + ".txt";
+                    //Directory.SetCurrentDirectory(outputDir);
 
-                //// add spectra label based on metrics file, without running directag
-                //if (cbRecovery.Checked)
-                //{
-                //    AddSpectraLabelAction addSpectraLabelAction = new AddSpectraLabelAction();
-                //    addSpectraLabelAction.InFileList = fileList;
-                //    //addSpectraLabelAction.MetricsFile = fileBaseName + tbMetricsFileSuffixForRecovery.Text + ".txt";
-                //    addSpectraLabelAction.IdpCfg = getIdpickerCfg();
-                //    string outputDir = tbOutputDir.Text; 
-                //    addSpectraLabelAction.OutDir = outputDir;
-                //    //addSpectraLabelAction.OutFilename = fileBaseName + tbOutFileNameSuffixForRecovery.Text + ".txt";
-                //    Directory.SetCurrentDirectory(outputDir);
+                    //if (Workspace.statusForm == null || Workspace.statusForm.IsDisposed)
+                    //{
+                    //    Workspace.statusForm = new TextBoxForm(this);
+                    //    Workspace.statusForm.Show();
+                    //    Application.DoEvents();
+                    //}
 
-                //    if (Workspace.statusForm == null || Workspace.statusForm.IsDisposed)
-                //    {
-                //        Workspace.statusForm = new TextBoxForm(this);
-                //        Workspace.statusForm.Show();
-                //        Application.DoEvents();
-                //    }
+                    //bgAddLabels.WorkerSupportsCancellation = true;
+                    //bgAddLabels.RunWorkerCompleted += bgAddLabels_RunWorkerCompleted;
+                    //bgAddLabels.RunWorkerAsync(addSpectraLabelAction);
 
-                //    bgAddLabels.WorkerSupportsCancellation = true;
-                //    bgAddLabels.RunWorkerCompleted += bgAddLabels_RunWorkerCompleted;
-                //    bgAddLabels.RunWorkerAsync(addSpectraLabelAction);
 
-                //}
+                    AddSpectraLabelAction addSpectraLabelAction = new AddSpectraLabelAction();
+                    addSpectraLabelAction.InFileList = fileList;
+                    addSpectraLabelAction.IdpCfg = getIdpickerCfg();
+                    addSpectraLabelAction.OutFileSuffix = tbOutFileNameSuffixForRecovery.Text;
+                    string outputDir = tbOutputDir.Text;
+                    addSpectraLabelAction.OutDir = outputDir;
+                    addSpectraLabelAction.MetricsFileSuffix = tbMetricsFileSuffixForRecovery.Text;
+                    //if (cbAdjustScoreByGroup.Checked)
+                    //{
+                    //    addSpectraLabelAction.MetricsFileSuffix = tbOutputMetricsSuffix.Text + "-adjusted"; //name hard coded in directag
+                    //}
+                    if (cbWriteOutUnidentifiedSpectra.Checked)
+                    {
+                        addSpectraLabelAction.WriteOutUnidentifiedSpectra = true;
+                        addSpectraLabelAction.RecoveryCutoff = Convert.ToSingle(tbRecoveryCutoff.Text) / 100.0f;
+                        addSpectraLabelAction.RecoveryOutFormat = cmbRecoveryOutFormat.Text;
+                    }
+                    //addSpectraLabelAction.AddSpectraLabel();
+                    Directory.SetCurrentDirectory(outputDir);
+
+                    if (Workspace.statusForm == null || Workspace.statusForm.IsDisposed)
+                    {
+                        Workspace.statusForm = new TextBoxForm(this);
+                        Workspace.statusForm.Show();
+                        Application.DoEvents();
+                    }
+
+                    bgAddLabels.WorkerSupportsCancellation = true;
+                    bgAddLabels.RunWorkerCompleted += bgAddLabels_RunWorkerCompleted;
+                    bgAddLabels.RunWorkerAsync(addSpectraLabelAction);
+                }
             }
         }
 

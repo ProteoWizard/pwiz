@@ -194,8 +194,8 @@ namespace ScanRanker
                 
             }// end of foreach file
 
-        Workspace.SetText("\r\nCompleted!");
-        Workspace.ChangeButtonTo("Close");
+            Workspace.SetText("\r\nFinished writing high quality spectra!");
+            Workspace.ChangeButtonTo("Close");
         } // end of write()
     }
 }

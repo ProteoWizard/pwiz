@@ -313,8 +313,9 @@ namespace ScanRanker
                 //    }
                 //}
             } // end of add label
-            
-            Workspace.SetText("\r\nCompleted!");
+
+
+            Workspace.SetText("\r\nFinished quality assessment!");
             Workspace.ChangeButtonTo("Close");
             //Workspace.statusForm.btnStop.Visible = false;
             //Workspace.statusForm.btnClose.Visible = true;

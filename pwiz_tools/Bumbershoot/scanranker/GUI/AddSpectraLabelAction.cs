@@ -193,6 +193,7 @@ namespace ScanRanker
         }
 
         private void writeUnidentifiedSpectra(string spectraFilename,
+                                               string outFileSuffix,
                                                List<int> unidentifiedSpectra,
                                                float cutoff,
                                                string outFormat)
@@ -234,7 +235,7 @@ namespace ScanRanker
 
             try
             {
-                string outFileName = Path.GetFileNameWithoutExtension(spectraFilename) + "-Top" + (recoveryCutoff*100).ToString()
+                string outFileName = Path.GetFileNameWithoutExtension(spectraFilename) + outFileSuffix + "-Top" + (recoveryCutoff*100).ToString()
                                         + "PercUnidentSpec." + recoveryOutFormat;
                 Workspace.SetText("\r\nWriting unidentified high quality spectra to file: " + outFileName);
                 using (MSDataFile msFile = new MSDataFile(spectraFilename))
@@ -421,7 +422,7 @@ namespace ScanRanker
                     Workspace.ChangeButtonTo("Close");
                     throw new Exception(exc.Message);
                 }
-                Workspace.SetText("\r\nFinished adding spectra labels for file: " + metricsFileName + " \r\n\r\n");
+                Workspace.SetText("\r\nFinished adding spectral labels for file: " + metricsFileName + " \r\n\r\n");
 
                 // write out unidentfied high quality spectra
                 if (unidentifiedSpectra.Count == numSpectra)
@@ -433,7 +434,7 @@ namespace ScanRanker
                 }
                 if (writeOutUnidentifiedSpectra)
                 {
-                    writeUnidentifiedSpectra(file.Name, unidentifiedSpectra, recoveryCutoff, recoveryOutFormat);
+                    writeUnidentifiedSpectra(file.Name, outFileSuffix, unidentifiedSpectra, recoveryCutoff, recoveryOutFormat);
                 }
 
                 Workspace.SetText("\r\n" + file.Name
@@ -443,11 +444,15 @@ namespace ScanRanker
                                     + "\r\n");
 
                 //delete old metrics file                
-                if (File.Exists(metricsFileName))
-                {
-                    File.Delete(metricsFileName);
-                }
+                //if (File.Exists(metricsFileName))
+                //{
+                //    File.Delete(metricsFileName);
+                //}
             } // end of foreach file
+
+
+            Workspace.SetText("\r\nFinished adding spectral labels!");
+            Workspace.ChangeButtonTo("Close");
         }// end of addSpectraLabel()
     }
 }
