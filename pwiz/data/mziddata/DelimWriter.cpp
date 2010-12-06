@@ -132,7 +132,7 @@ PWIZ_API_DECL ostream* DelimWriter::write(const SpectrumIdentificationItem& sii)
     if (cvParam.cvid != CVID_Unknown)
         current_line.push_back(cvParam.value);
     else
-        // TODO Find a good null character
+        // Using an empty string as the null character
         current_line.push_back("");
     
     if (sii.peptideEvidence.size())
