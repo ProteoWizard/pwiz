@@ -590,19 +590,10 @@ void diff(const ContactPtr a,
     }
     else
     {
-        // TODO add a UserParam to indicate that we're using the
-        // generic diff
-        
-        //a_b = ContactPtr(new Contact());
-        //b_a = ContactPtr(new Contact());
         ptr_diff(a, b, a_b, b_a, config);
 
         string a_type = (a_person ? "Person" : (a_organization ? "Organization" : "Contact"));
         string b_type = (b_person ? "Person" : (b_organization ? "Organization" : "Contact"));
-        //a_b->params.userParams.push_back(UserParam(ContactPtr_diff_string_
-        //                                           +a_type));
-        //b_a->params.userParams.push_back(UserParam(ContactPtr_diff_string_
-        //                                     +b_type));
     }
 }
 
