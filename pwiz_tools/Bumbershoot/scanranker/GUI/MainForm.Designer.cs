@@ -89,6 +89,9 @@ namespace ScanRanker
             this.lblMetricsFileSuffixForRemoval = new System.Windows.Forms.Label();
             this.cbRemoval = new System.Windows.Forms.CheckBox();
             this.gbRecovery = new System.Windows.Forms.GroupBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.tbMetricsFileSuffixForRecovery = new System.Windows.Forms.TextBox();
+            this.lblRecoveryMetricsFileSuffixForRecovery = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.cmbRecoveryOutFormat = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
@@ -125,9 +128,7 @@ namespace ScanRanker
             this.tbInputFileFilters = new System.Windows.Forms.TextBox();
             this.btnListFiles = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.lblRecoveryMetricsFileSuffixForRecovery = new System.Windows.Forms.Label();
-            this.tbMetricsFileSuffixForRecovery = new System.Windows.Forms.TextBox();
-            this.label4 = new System.Windows.Forms.Label();
+            this.linkLabelHelp = new System.Windows.Forms.LinkLabel();
             this.gbAssessment.SuspendLayout();
             this.gbDtgConfig.SuspendLayout();
             this.gbRemoval.SuspendLayout();
@@ -541,6 +542,31 @@ namespace ScanRanker
             this.gbRecovery.TabStop = false;
             this.gbRecovery.Text = " ";
             // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(100, 102);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(15, 13);
+            this.label4.TabIndex = 32;
+            this.label4.Text = "%";
+            // 
+            // tbMetricsFileSuffixForRecovery
+            // 
+            this.tbMetricsFileSuffixForRecovery.Location = new System.Drawing.Point(149, 19);
+            this.tbMetricsFileSuffixForRecovery.Name = "tbMetricsFileSuffixForRecovery";
+            this.tbMetricsFileSuffixForRecovery.Size = new System.Drawing.Size(205, 20);
+            this.tbMetricsFileSuffixForRecovery.TabIndex = 31;
+            // 
+            // lblRecoveryMetricsFileSuffixForRecovery
+            // 
+            this.lblRecoveryMetricsFileSuffixForRecovery.AutoSize = true;
+            this.lblRecoveryMetricsFileSuffixForRecovery.Location = new System.Drawing.Point(14, 22);
+            this.lblRecoveryMetricsFileSuffixForRecovery.Name = "lblRecoveryMetricsFileSuffixForRecovery";
+            this.lblRecoveryMetricsFileSuffixForRecovery.Size = new System.Drawing.Size(127, 13);
+            this.lblRecoveryMetricsFileSuffixForRecovery.TabIndex = 30;
+            this.lblRecoveryMetricsFileSuffixForRecovery.Text = "Quality Metrics File Suffix:";
+            // 
             // label3
             // 
             this.label3.AutoSize = true;
@@ -879,36 +905,23 @@ namespace ScanRanker
             this.btnListFiles.UseVisualStyleBackColor = true;
             this.btnListFiles.Click += new System.EventHandler(this.btnListFiles_Click);
             // 
-            // lblRecoveryMetricsFileSuffixForRecovery
+            // linkLabelHelp
             // 
-            this.lblRecoveryMetricsFileSuffixForRecovery.AutoSize = true;
-            this.lblRecoveryMetricsFileSuffixForRecovery.Location = new System.Drawing.Point(14, 22);
-            this.lblRecoveryMetricsFileSuffixForRecovery.Name = "lblRecoveryMetricsFileSuffixForRecovery";
-            this.lblRecoveryMetricsFileSuffixForRecovery.Size = new System.Drawing.Size(127, 13);
-            this.lblRecoveryMetricsFileSuffixForRecovery.TabIndex = 30;
-            this.lblRecoveryMetricsFileSuffixForRecovery.Text = "Quality Metrics File Suffix:";
-            // 
-            // tbMetricsFileSuffixForRecovery
-            // 
-            this.tbMetricsFileSuffixForRecovery.Location = new System.Drawing.Point(149, 19);
-            this.tbMetricsFileSuffixForRecovery.Name = "tbMetricsFileSuffixForRecovery";
-            this.tbMetricsFileSuffixForRecovery.Size = new System.Drawing.Size(205, 20);
-            this.tbMetricsFileSuffixForRecovery.TabIndex = 31;
-            // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(100, 102);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(15, 13);
-            this.label4.TabIndex = 32;
-            this.label4.Text = "%";
+            this.linkLabelHelp.AutoSize = true;
+            this.linkLabelHelp.Location = new System.Drawing.Point(35, 685);
+            this.linkLabelHelp.Name = "linkLabelHelp";
+            this.linkLabelHelp.Size = new System.Drawing.Size(29, 13);
+            this.linkLabelHelp.TabIndex = 14;
+            this.linkLabelHelp.TabStop = true;
+            this.linkLabelHelp.Text = "Help";
+            this.linkLabelHelp.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelHelp_LinkClicked);
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(729, 711);
+            this.Controls.Add(this.linkLabelHelp);
             this.Controls.Add(this.btnListFiles);
             this.Controls.Add(this.tbInputFileFilters);
             this.Controls.Add(this.lblInputFileFilters);
@@ -1019,6 +1032,7 @@ namespace ScanRanker
         private System.Windows.Forms.TextBox tbMetricsFileSuffixForRecovery;
         private System.Windows.Forms.Label lblRecoveryMetricsFileSuffixForRecovery;
         private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.LinkLabel linkLabelHelp;
 
 
         

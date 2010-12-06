@@ -1051,6 +1051,15 @@ namespace ScanRanker
             }
         }
 
+        private void linkLabelHelp_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            //System.Diagnostics.Process.Start("IExplore", "http://www.some.net");
+            string helpPageURL = "file:///" + Path.GetDirectoryName(Application.ExecutablePath) + "/help.mht";
+            System.Diagnostics.Process.Start(helpPageURL);
+        }
+
+
+
 
         //public void CancelBgWorker()
         //{
