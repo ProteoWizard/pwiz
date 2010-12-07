@@ -747,7 +747,7 @@ namespace ScanRanker
             this.tbPepXMLDir.Name = "tbPepXMLDir";
             this.tbPepXMLDir.Size = new System.Drawing.Size(155, 20);
             this.tbPepXMLDir.TabIndex = 14;
-            this.toolTip1.SetToolTip(this.tbPepXMLDir, "pepXMl file name has to be the same as spectrum file except for extensions");
+            this.toolTip1.SetToolTip(this.tbPepXMLDir, "pepXMl file name has to be the same as spectrum file except extensions");
             // 
             // btnPepXMLBrowse
             // 
