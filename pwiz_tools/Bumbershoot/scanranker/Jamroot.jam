@@ -50,6 +50,15 @@ local argv = [ modules.peek : ARGV ] ;
 modules.poke : ARGV : $(argv) --libraries-path="$(LIBRARIES_PATH)" ;
 
 
+local msvc-secure-scl = ;
+if --without-secure-scl in [ modules.peek : ARGV ]
+{
+    # TODO: change this from a <define> to a feature in msvc.jam
+    # disable checked iterators (on by default in VC8/9)
+    msvc-secure-scl = <toolset>msvc,<variant>release:<define>_SECURE_SCL=0 ;
+}
+
+
 import os ;
 import modules ;
 import common ;
@@ -66,9 +75,12 @@ project bumbershoot
 
       <toolset>gcc,<link>shared:<runtime-link>shared
       
-      # using pwiz_wifffile (compiled with /clr) requires the shared runtime,
-      # regardless of how pwiz_wifffile is linked
+      # any module which links with .NET (either dynamically or statically) must use the shared runtime
       <toolset>msvc:<runtime-link>shared
+
+      # SEH exceptions crossing native/managed boundaries are problematic with this set to off;
+      # also, catch(...) will catch SEH exceptions with this on
+      <toolset>msvc:<asynch-exceptions>on
 
       # special msvc hacks
       <toolset>msvc:<define>WIN32                     # windows
@@ -85,6 +97,12 @@ project bumbershoot
       <toolset>msvc:<cxxflags>/wd4267	                # warning: conversion from 'type1' to 'type2', possible loss of data (boost::lexical_cast)
       <toolset>msvc:<cxxflags>/wd4244                 # warning: conversion from 'int' to 'unsigned short', possible loss of data (boost/date_time/microsec_time_clock.hpp)
       <toolset>msvc:<cxxflags>/wd4275                 # warning: non dll-interface class 'base' used as base for dll-interface class 'derived'
+      <toolset>msvc:<cxxflags>/wd4702                 # warning: unreachable code (boost::lexical_cast)
+
+      # warning: _SECURE_SCL_THROWS is deprecated
+      <toolset>msvc:<define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
+
+      $(msvc-secure-scl)
 
       # special gcc hack - Cygwin gcc 3.4.4, Ubuntu gcc 4.1.2 
       # warning: '__cur' might be used uninitialized in this function 
@@ -242,7 +260,17 @@ rule install-location ( properties * )
     local variants = [ feature.get-values <variant> : $(properties) ] ;
     return <location>$(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
 }
-#code copied from myrimatch
+
+rule install-type ( properties * )
+{
+    local result = <install-type>EXE ;
+    if <link>shared in $(properties)
+    {
+        result += <install-dependencies>on <install-type>SHARED_LIB <install-type>MANIFEST ;
+    }
+    return $(result) ;
+}
+
 rule install-vendor-api-dependencies ( properties * )
 {
     local location = [ install-location $(properties) ] ;
@@ -259,21 +287,6 @@ rule install-vendor-api-dependencies ( properties * )
     return $(dependencies) ;
 }
 
-#rule install-vendor-api-dependencies ( properties * )
-#{
-#    local location = [ install-location $(properties) ] ;
-#    local dependencies ;
-#    if <toolset>msvc in $(properties)
-#    {
-#        if [ path.exists $(PWIZ_SOURCE)/pwiz/utility/vendor_api/thermo ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo/$(location) ; }
-#        if [ path.exists $(PWIZ_SOURCE)/pwiz/utility/vendor_api/Agilent ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz/utility/vendor_api/Agilent//install_pwiz_vendor_api_agilent/$(location) ; }
-#        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI//install_pwiz_vendor_api_abi/$(location) ; }
-#        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Bruker ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker/$(location) ; }
-#        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Waters ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/$(location) ; }
-#    }
-#    return $(dependencies) ;
-#}
-
 rule dotNET-dependencies ( properties * )
 {
     local location = [ install-location $(properties) ] ;
@@ -286,7 +299,7 @@ install install
 		DirecTag//adjustScanRankerScoreByGroup
         DirecTag/idpQonvert//idpQonvert
     : # requirements
-        <install-type>EXE
+        <conditional>@install-type
         <conditional>@dotNET-dependencies
         <conditional>@install-location
         <conditional>@install-vendor-api-dependencies
@@ -316,10 +329,9 @@ rule binary-tarball-requirements ( properties * )
 {
     local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
     local variants = [ feature.get-values <variant> : $(properties) ] ;
-    local location = $(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
+    local location = [ install-location $(properties) ] ;
 
     local non-redistributables =
-        *MSFileReader.XRawfile2.dll *fregistry.dll *fileio.dll                          # Thermo API
         *ABSciex.DataAccess.WiffFileDataReader.dll *Clear?ore*.dll *rscoree.dll         # ABI API
         *DACServer.dll *genutil.dll *raw.dll *RawCsm.dll *Security*.dll *MetaGD32.dll ; # Waters API
 
