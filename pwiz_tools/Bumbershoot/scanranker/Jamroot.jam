@@ -330,6 +330,7 @@ rule binary-tarball-requirements ( properties * )
     local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
     local variants = [ feature.get-values <variant> : $(properties) ] ;
     local location = [ install-location $(properties) ] ;
+    location = $(location:G=) ;
 
     local non-redistributables =
         *ABSciex.DataAccess.WiffFileDataReader.dll *Clear?ore*.dll *rscoree.dll         # ABI API
