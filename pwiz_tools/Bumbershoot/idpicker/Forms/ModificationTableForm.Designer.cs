@@ -73,6 +73,7 @@ namespace IDPicker.Forms
             this.dataGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
             this.dataGridView.BackgroundColor = System.Drawing.SystemColors.Window;
             this.dataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView.GridColor = System.Drawing.SystemColors.Control;
             this.dataGridView.Location = new System.Drawing.Point(0, 27);
             this.dataGridView.Name = "dataGridView";
             this.dataGridView.ReadOnly = true;

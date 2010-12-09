@@ -65,7 +65,7 @@ namespace IDPicker
             // dockPanel
             // 
             this.dockPanel.ActiveAutoHideContent = null;
-            this.dockPanel.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.dockPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.dockPanel.DefaultFloatingWindowSize = new System.Drawing.Size(300, 300);
@@ -132,7 +132,7 @@ namespace IDPicker
             // 
             // breadCrumbPanel
             // 
-            this.breadCrumbPanel.Anchor = ((System.Windows.Forms.AnchorStyles) (((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.breadCrumbPanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.breadCrumbPanel.Location = new System.Drawing.Point(130, 0);
             this.breadCrumbPanel.Name = "breadCrumbPanel";

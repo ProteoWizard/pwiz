@@ -53,7 +53,9 @@ namespace IDPicker.Forms
             Text = TabText = "Modification View";
 
             dataGridView.CellDoubleClick += new DataGridViewCellEventHandler(dataGridView_CellDoubleClick);
+            dataGridView.KeyDown += new KeyEventHandler(dataGridView_KeyDown);
         }
+
 
         void dataGridView_CellDoubleClick (object sender, DataGridViewCellEventArgs e)
         {
@@ -80,7 +82,8 @@ namespace IDPicker.Forms
             if (e.ColumnIndex > 0 && this.siteColumnNameToSite.Contains(cell.OwningColumn.HeaderText))
                 site = this.siteColumnNameToSite[cell.OwningColumn.HeaderText];
 
-            newDataFilter.ModifiedSite = site;
+            if (site != null)
+                newDataFilter.ModifiedSite = new List<char?> {site};
 
             newDataFilter.Modifications = session.CreateQuery(
                                                 "SELECT pm.Modification " +
@@ -89,6 +92,53 @@ namespace IDPicker.Forms
                                                 (site != null ? " AND pm.Site='" + site + "'" : "") +
                                                 " GROUP BY pm.Modification.id")
                                                .List<DataModel.Modification>();
+
+            // send filter event
+            ModificationViewFilter(this, newDataFilter);
+        }
+
+        void dataGridView_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode != Keys.Enter) return;
+            e.Handled = true;
+            var siteList = new List<string>();
+            var modList = new List<string>();
+            var newDataFilter = new DataFilter
+            {
+                FilterSource = this,
+                ModifiedSite = new List<char?>()
+            };
+
+            foreach (DataGridViewCell cell in dataGridView.SelectedCells)
+            {
+                // if the clicked cell is blank, don't apply a filter
+                if (cell.Value == DBNull.Value)
+                    continue;
+                // ignore top-left cell
+                if (cell.ColumnIndex == 0 && cell.RowIndex < 0)
+                    continue;
+
+                char? newSite = null;
+                if (cell.ColumnIndex > 0 && siteColumnNameToSite.Contains(cell.OwningColumn.HeaderText))
+                    newSite = siteColumnNameToSite[cell.OwningColumn.HeaderText];
+
+                if (!newDataFilter.ModifiedSite.Contains(newSite))
+                {
+                    siteList.Add("pm.Site='" + newSite.ToString() + "'");
+                    newDataFilter.ModifiedSite.Add(newSite);
+                }
+                if (!modList.Contains(cell.OwningRow.Cells[0].Value.ToString()))
+                    modList.Add("ROUND(pm.Modification.MonoMassDelta)=" + cell.OwningRow.Cells[0].Value.ToString());
+            }
+
+
+            newDataFilter.Modifications = session.CreateQuery(
+                "SELECT pm.Modification " +
+                "FROM PeptideSpectrumMatch psm JOIN psm.Modifications pm " +
+                " WHERE (" + string.Join(" OR ", modList.ToArray()) +
+                (siteList.Count > 0 ? ") AND (" + string.Join(" OR ", siteList.ToArray()) + ")" : ")") +
+                " GROUP BY pm.Modification.id")
+                .List<DataModel.Modification>();
 
             // send filter event
             ModificationViewFilter(this, newDataFilter);

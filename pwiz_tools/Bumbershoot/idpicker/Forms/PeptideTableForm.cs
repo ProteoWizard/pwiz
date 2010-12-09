@@ -187,11 +187,11 @@ namespace IDPicker.Forms
             treeListView.FormatCell += delegate(object sender, FormatCellEventArgs currentCell)
             {
                 if (currentCell.Item.RowObject is PeptideRow &&
-                    (viewFilter.Peptide != null && viewFilter.Peptide.Id != (currentCell.Item.RowObject as PeptideRow).Peptide.Id ||
+                    (viewFilter.Peptide != null && viewFilter.Peptide.Count(x => x.Id == (currentCell.Item.RowObject as PeptideRow).Peptide.Id) == 0 ||
                      viewFilter.DistinctPeptideKey != null))
                     currentCell.SubItem.ForeColor = SystemColors.GrayText;
                 else if (currentCell.Item.RowObject is PeptideSpectrumMatchRow &&
-                         viewFilter.DistinctPeptideKey != null && viewFilter.DistinctPeptideKey.Sequence != (currentCell.Item.RowObject as PeptideSpectrumMatchRow).DistinctPeptide.Sequence)
+                         viewFilter.DistinctPeptideKey != null && viewFilter.DistinctPeptideKey.Count(x=> x.Sequence == (currentCell.Item.RowObject as PeptideSpectrumMatchRow).DistinctPeptide.Sequence) == 0)
                     currentCell.SubItem.ForeColor = SystemColors.GrayText;
 
                 if (_columnSettings.ContainsKey(currentCell.Column))
@@ -363,7 +363,8 @@ namespace IDPicker.Forms
             treeListView.CanExpandGetter += delegate(object x) { return x is PeptideRow; };
             treeListView.ChildrenGetter += delegate(object x)
             {
-                var childFilter = new DataFilter(dataFilter) { Peptide = (x as PeptideRow).Peptide };
+                var childFilter = new DataFilter(dataFilter) { Peptide = new List<Peptide>() };
+                childFilter.Peptide.Add((x as PeptideRow).Peptide);
 
                 object result;
                 if (radioButton1.Checked)
@@ -382,9 +383,11 @@ namespace IDPicker.Forms
             };
 
             treeListView.CellClick += new EventHandler<CellClickEventArgs>(treeListView_CellClick);
+            treeListView.KeyPress += new KeyPressEventHandler(treeListView_KeyPress);
 
             radioButton1.CheckedChanged += new EventHandler(radioButton1_CheckedChanged);
         }
+
 
         void radioButton1_CheckedChanged (object sender, EventArgs e)
         {
@@ -413,12 +416,56 @@ namespace IDPicker.Forms
             if (e.ClickCount < 2 || e.Item == null || e.Item.RowObject == null)
                 return;
 
-            var newDataFilter = new DataFilter() { FilterSource = this };
+            var newDataFilter = new DataFilter()
+                                    {
+                                        FilterSource = this,
+                                    };
 
             if (e.Item.RowObject is PeptideRow)
-                newDataFilter.Peptide = (e.Item.RowObject as PeptideRow).Peptide;
+            {
+                newDataFilter.Peptide = new List<Peptide>
+                                            {
+                                                (e.Item.RowObject as PeptideRow).Peptide
+                                            };
+            }
             else if (e.Item.RowObject is PeptideSpectrumMatchRow)
-                newDataFilter.DistinctPeptideKey = (e.Item.RowObject as PeptideSpectrumMatchRow).DistinctPeptide;
+            {
+                newDataFilter.DistinctPeptideKey = new List<DistinctPeptideFormat>
+                                                       {
+                                                           (e.Item.RowObject as PeptideSpectrumMatchRow).DistinctPeptide
+                                                       };
+            }
+
+            if (PeptideViewFilter != null)
+                PeptideViewFilter(this, newDataFilter);
+        }
+
+        void treeListView_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar != (char)Keys.Enter)
+                return;
+
+            e.Handled = true;
+            var newDataFilter = new DataFilter {FilterSource = this,};
+
+            foreach (var item in treeListView.SelectedObjects)
+            {
+                if (item == null)
+                    continue;
+
+                if (item is PeptideRow)
+                {
+                    if (newDataFilter.Peptide == null)
+                        newDataFilter.Peptide = new List<Peptide>();
+                    newDataFilter.Peptide.Add((item as PeptideRow).Peptide);
+                }
+                else if (item is PeptideSpectrumMatchRow)
+                {
+                    if (newDataFilter.DistinctPeptideKey == null)
+                        newDataFilter.DistinctPeptideKey = new List<DistinctPeptideFormat>();
+                    newDataFilter.DistinctPeptideKey.Add((item as PeptideSpectrumMatchRow).DistinctPeptide);
+                }
+            }
 
             if (PeptideViewFilter != null)
                 PeptideViewFilter(this, newDataFilter);

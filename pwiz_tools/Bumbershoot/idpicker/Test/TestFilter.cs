@@ -77,15 +77,21 @@ namespace Test
         public void TestAggregation ()
         {
             var lhs = new DataFilter() { MaximumQValue = 1M };
-            var rhs = new DataFilter() { Protein = new Protein("foo", "bar") };
+            var rhs = new DataFilter() { Protein =  new List<Protein>()};
+            rhs.Protein.Add(new Protein("foo", "bar"));
             var result = lhs + rhs;
 
-            var rhs2 = new DataFilter() { Peptide = (Peptide) new Peptide_Accessor("FOO").Target };
+            var rhs2 = new DataFilter() { Peptide = new List<Peptide>() };
+            rhs2.Peptide.Add((Peptide)new Peptide_Accessor("FOO").Target);
             var result2 = result + rhs2;
 
-            Assert.AreEqual("foo", result.Protein.Description);
-            Assert.AreEqual("foo", result2.Protein.Description);
-            Assert.AreEqual("FOO", result2.Peptide.Sequence);
+            Assert.AreEqual(1, result.Protein.Count);
+            Assert.AreEqual(1, result2.Protein.Count);
+            Assert.AreEqual(1, result2.Peptide.Count);
+
+            Assert.AreEqual("foo", result.Protein.FirstOrDefault().Description);
+            Assert.AreEqual("foo", result2.Protein.FirstOrDefault().Description);
+            Assert.AreEqual("FOO", result2.Peptide.FirstOrDefault().Sequence);
         }
 
         [TestMethod]

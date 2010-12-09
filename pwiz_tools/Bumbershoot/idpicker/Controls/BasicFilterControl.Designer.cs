@@ -50,6 +50,7 @@ namespace IDPicker.Controls
         /// </summary>
         private void InitializeComponent ()
         {
+            this.components = new System.ComponentModel.Container();
             System.Windows.Forms.Label lblMinDistinctPeptides;
             this.gbProteinDetails = new System.Windows.Forms.GroupBox();
             this.minSpectraTextBox = new System.Windows.Forms.TextBox();
@@ -65,16 +66,22 @@ namespace IDPicker.Controls
             this.lblMaxAmbigIds = new System.Windows.Forms.Label();
             this.maxQValueComboBox = new System.Windows.Forms.ComboBox();
             this.lblMaxFdr = new System.Windows.Forms.Label();
+            this.AppliedBox = new System.Windows.Forms.GroupBox();
+            this.FilterTLV = new BrightIdeasSoftware.TreeListView();
+            this.FilterColumn = new BrightIdeasSoftware.OLVColumn();
+            this.RemoveColumn = new BrightIdeasSoftware.OLVColumn();
             lblMinDistinctPeptides = new System.Windows.Forms.Label();
             this.gbProteinDetails.SuspendLayout();
             this.gbPeptideDetails.SuspendLayout();
+            this.AppliedBox.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.FilterTLV)).BeginInit();
             this.SuspendLayout();
             // 
             // lblMinDistinctPeptides
             // 
             lblMinDistinctPeptides.Anchor = System.Windows.Forms.AnchorStyles.Left;
             lblMinDistinctPeptides.AutoSize = true;
-            lblMinDistinctPeptides.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            lblMinDistinctPeptides.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             lblMinDistinctPeptides.Location = new System.Drawing.Point(15, 24);
             lblMinDistinctPeptides.Name = "lblMinDistinctPeptides";
             lblMinDistinctPeptides.Size = new System.Drawing.Size(132, 13);
@@ -89,7 +96,7 @@ namespace IDPicker.Controls
             this.gbProteinDetails.Controls.Add(this.minAdditionalPeptidesTextBox);
             this.gbProteinDetails.Controls.Add(this.minDistinctPeptidesTextBox);
             this.gbProteinDetails.Controls.Add(lblMinDistinctPeptides);
-            this.gbProteinDetails.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.gbProteinDetails.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.gbProteinDetails.Location = new System.Drawing.Point(3, 117);
             this.gbProteinDetails.Name = "gbProteinDetails";
             this.gbProteinDetails.Size = new System.Drawing.Size(233, 108);
@@ -120,7 +127,7 @@ namespace IDPicker.Controls
             // 
             this.lblParsimonyVariable.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.lblParsimonyVariable.AutoSize = true;
-            this.lblParsimonyVariable.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.lblParsimonyVariable.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblParsimonyVariable.Location = new System.Drawing.Point(15, 51);
             this.lblParsimonyVariable.Name = "lblParsimonyVariable";
             this.lblParsimonyVariable.Size = new System.Drawing.Size(144, 13);
@@ -130,7 +137,7 @@ namespace IDPicker.Controls
             // minAdditionalPeptidesTextBox
             // 
             this.minAdditionalPeptidesTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.minAdditionalPeptidesTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.minAdditionalPeptidesTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.minAdditionalPeptidesTextBox.Location = new System.Drawing.Point(167, 46);
             this.minAdditionalPeptidesTextBox.Name = "minAdditionalPeptidesTextBox";
             this.minAdditionalPeptidesTextBox.Size = new System.Drawing.Size(46, 21);
@@ -141,7 +148,7 @@ namespace IDPicker.Controls
             // minDistinctPeptidesTextBox
             // 
             this.minDistinctPeptidesTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.minDistinctPeptidesTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.minDistinctPeptidesTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.minDistinctPeptidesTextBox.Location = new System.Drawing.Point(167, 19);
             this.minDistinctPeptidesTextBox.Name = "minDistinctPeptidesTextBox";
             this.minDistinctPeptidesTextBox.Size = new System.Drawing.Size(46, 21);
@@ -158,7 +165,7 @@ namespace IDPicker.Controls
             this.gbPeptideDetails.Controls.Add(this.lblMaxAmbigIds);
             this.gbPeptideDetails.Controls.Add(this.maxQValueComboBox);
             this.gbPeptideDetails.Controls.Add(this.lblMaxFdr);
-            this.gbPeptideDetails.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.gbPeptideDetails.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.gbPeptideDetails.Location = new System.Drawing.Point(3, 3);
             this.gbPeptideDetails.Name = "gbPeptideDetails";
             this.gbPeptideDetails.Size = new System.Drawing.Size(233, 108);
@@ -169,7 +176,7 @@ namespace IDPicker.Controls
             // lblPercentSign
             // 
             this.lblPercentSign.AutoSize = true;
-            this.lblPercentSign.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.lblPercentSign.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblPercentSign.Location = new System.Drawing.Point(214, 24);
             this.lblPercentSign.Margin = new System.Windows.Forms.Padding(0);
             this.lblPercentSign.Name = "lblPercentSign";
@@ -181,7 +188,7 @@ namespace IDPicker.Controls
             // 
             this.minPeptideLengthTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.minPeptideLengthTextBox.Enabled = false;
-            this.minPeptideLengthTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.minPeptideLengthTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.minPeptideLengthTextBox.Location = new System.Drawing.Point(167, 75);
             this.minPeptideLengthTextBox.Name = "minPeptideLengthTextBox";
             this.minPeptideLengthTextBox.Size = new System.Drawing.Size(45, 21);
@@ -193,7 +200,7 @@ namespace IDPicker.Controls
             // 
             this.maxAmbiguousIdsTextBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.maxAmbiguousIdsTextBox.Enabled = false;
-            this.maxAmbiguousIdsTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.maxAmbiguousIdsTextBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.maxAmbiguousIdsTextBox.Location = new System.Drawing.Point(167, 48);
             this.maxAmbiguousIdsTextBox.Name = "maxAmbiguousIdsTextBox";
             this.maxAmbiguousIdsTextBox.Size = new System.Drawing.Size(45, 21);
@@ -206,7 +213,7 @@ namespace IDPicker.Controls
             this.lblMinPeptideLength.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.lblMinPeptideLength.AutoSize = true;
             this.lblMinPeptideLength.Enabled = false;
-            this.lblMinPeptideLength.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.lblMinPeptideLength.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblMinPeptideLength.Location = new System.Drawing.Point(14, 78);
             this.lblMinPeptideLength.Name = "lblMinPeptideLength";
             this.lblMinPeptideLength.Size = new System.Drawing.Size(123, 13);
@@ -218,7 +225,7 @@ namespace IDPicker.Controls
             this.lblMaxAmbigIds.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.lblMaxAmbigIds.AutoSize = true;
             this.lblMaxAmbigIds.Enabled = false;
-            this.lblMaxAmbigIds.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.lblMaxAmbigIds.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblMaxAmbigIds.Location = new System.Drawing.Point(14, 51);
             this.lblMaxAmbigIds.Name = "lblMaxAmbigIds";
             this.lblMaxAmbigIds.Size = new System.Drawing.Size(125, 13);
@@ -228,7 +235,7 @@ namespace IDPicker.Controls
             // maxQValueComboBox
             // 
             this.maxQValueComboBox.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.maxQValueComboBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.maxQValueComboBox.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.maxQValueComboBox.FormattingEnabled = true;
             this.maxQValueComboBox.Items.AddRange(new object[] {
             "0",
@@ -255,12 +262,58 @@ namespace IDPicker.Controls
             this.lblMaxFdr.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.lblMaxFdr.AutoSize = true;
             this.lblMaxFdr.BackColor = System.Drawing.Color.Transparent;
-            this.lblMaxFdr.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.lblMaxFdr.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblMaxFdr.Location = new System.Drawing.Point(14, 24);
             this.lblMaxFdr.Name = "lblMaxFdr";
             this.lblMaxFdr.Size = new System.Drawing.Size(95, 13);
             this.lblMaxFdr.TabIndex = 125;
             this.lblMaxFdr.Text = "Maximum Q Value:";
+            // 
+            // AppliedBox
+            // 
+            this.AppliedBox.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.AppliedBox.Controls.Add(this.FilterTLV);
+            this.AppliedBox.Location = new System.Drawing.Point(242, 3);
+            this.AppliedBox.Name = "AppliedBox";
+            this.AppliedBox.Size = new System.Drawing.Size(245, 222);
+            this.AppliedBox.TabIndex = 134;
+            this.AppliedBox.TabStop = false;
+            this.AppliedBox.Text = "Applied Filters";
+            // 
+            // FilterTLV
+            // 
+            this.FilterTLV.AllColumns.Add(this.FilterColumn);
+            this.FilterTLV.AllColumns.Add(this.RemoveColumn);
+            this.FilterTLV.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.FilterTLV.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.FilterColumn,
+            this.RemoveColumn});
+            this.FilterTLV.Cursor = System.Windows.Forms.Cursors.Default;
+            this.FilterTLV.Location = new System.Drawing.Point(6, 19);
+            this.FilterTLV.Name = "FilterTLV";
+            this.FilterTLV.OwnerDraw = true;
+            this.FilterTLV.ShowGroups = false;
+            this.FilterTLV.Size = new System.Drawing.Size(233, 185);
+            this.FilterTLV.TabIndex = 4;
+            this.FilterTLV.UseCompatibleStateImageBehavior = false;
+            this.FilterTLV.UseHyperlinks = true;
+            this.FilterTLV.View = System.Windows.Forms.View.Details;
+            this.FilterTLV.VirtualMode = true;
+            // 
+            // FilterColumn
+            // 
+            this.FilterColumn.FillsFreeSpace = true;
+            this.FilterColumn.Text = "Filter";
+            // 
+            // RemoveColumn
+            // 
+            this.RemoveColumn.Hyperlink = true;
+            this.RemoveColumn.MaximumWidth = 62;
+            this.RemoveColumn.MinimumWidth = 62;
+            this.RemoveColumn.Text = "Remove?";
+            this.RemoveColumn.Width = 62;
             // 
             // BasicFilterControl
             // 
@@ -270,14 +323,17 @@ namespace IDPicker.Controls
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.BackColor = System.Drawing.SystemColors.Menu;
             this.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.Controls.Add(this.AppliedBox);
             this.Controls.Add(this.gbPeptideDetails);
             this.Controls.Add(this.gbProteinDetails);
             this.Name = "BasicFilterControl";
-            this.Size = new System.Drawing.Size(239, 228);
+            this.Size = new System.Drawing.Size(490, 228);
             this.gbProteinDetails.ResumeLayout(false);
             this.gbProteinDetails.PerformLayout();
             this.gbPeptideDetails.ResumeLayout(false);
             this.gbPeptideDetails.PerformLayout();
+            this.AppliedBox.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.FilterTLV)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -298,5 +354,9 @@ namespace IDPicker.Controls
         private System.Windows.Forms.Label lblMaxAmbigIds;
         private System.Windows.Forms.ComboBox maxQValueComboBox;
         private System.Windows.Forms.Label lblMaxFdr;
+        private System.Windows.Forms.GroupBox AppliedBox;
+        private BrightIdeasSoftware.TreeListView FilterTLV;
+        private BrightIdeasSoftware.OLVColumn FilterColumn;
+        private BrightIdeasSoftware.OLVColumn RemoveColumn;
     }
 }

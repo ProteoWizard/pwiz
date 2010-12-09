@@ -183,12 +183,12 @@ namespace IDPicker.Forms
             treeListView.FormatCell += delegate(object sender, FormatCellEventArgs currentCell)
             {
                 if (currentCell.Item.RowObject is ProteinGroupRow &&
-                    (viewFilter.Protein != null && viewFilter.Protein.Id != (currentCell.Item.RowObject as ProteinGroupRow).FirstProteinId ||
-                     viewFilter.Cluster != null && viewFilter.Cluster != ((currentCell.Item.RowObject as ProteinGroupRow)).Cluster))
+                    (viewFilter.Protein != null && viewFilter.Protein.Count(x => x.Id == (currentCell.Item.RowObject as ProteinGroupRow).FirstProteinId) == 0||
+                     viewFilter.Cluster != null && viewFilter.Cluster.Contains((currentCell.Item.RowObject as ProteinGroupRow).Cluster)))
                     currentCell.SubItem.ForeColor = SystemColors.GrayText;
                 else if (currentCell.Item.RowObject is ProteinRow &&
-                         (viewFilter.Protein != null && viewFilter.Protein.Id != (currentCell.Item.RowObject as ProteinRow).Protein.Id ||
-                          viewFilter.Cluster != null && viewFilter.Cluster != ((currentCell.Item.RowObject as ProteinRow)).Protein.Cluster))
+                         (viewFilter.Protein != null && viewFilter.Protein.Count(x => x.Id == (currentCell.Item.RowObject as ProteinRow).Protein.Id) == 0||
+                          viewFilter.Cluster != null && viewFilter.Cluster.Contains((currentCell.Item.RowObject as ProteinRow).Protein.Cluster)))
                     currentCell.SubItem.ForeColor = SystemColors.GrayText;
 
                 if (_columnSettings.ContainsKey(currentCell.Column))
@@ -206,6 +206,7 @@ namespace IDPicker.Forms
                               .List<object>().Select(o => new ProteinRow(o));
             };
             treeListView.CellClick += new EventHandler<CellClickEventArgs>(treeListView_CellClick);
+            treeListView.KeyPress += new KeyPressEventHandler(treeListView_KeyPress);
 
             treeListView.HyperlinkClicked += new EventHandler<HyperlinkClickedEventArgs>(treeListView_HyperlinkClicked);
             treeListView.HyperlinkStyle.Normal.ForeColor = treeListView.ForeColor;
@@ -335,7 +336,9 @@ namespace IDPicker.Forms
                     FilterSource = this
                 };
 
-                newDataFilter.Cluster = (e.Item.RowObject as ProteinGroupRow).Cluster;
+                if (newDataFilter.Cluster == null)
+                    newDataFilter.Cluster = new List<long?>();
+                newDataFilter.Cluster.Add((e.Item.RowObject as ProteinGroupRow).Cluster);
                 if (ProteinViewFilter != null)
                     ProteinViewFilter(this, newDataFilter);
             }
@@ -359,12 +362,42 @@ namespace IDPicker.Forms
             if (e.ClickCount < 2 || e.Item == null || e.Item.RowObject == null)
                 return;
 
-            var newDataFilter = new DataFilter() { FilterSource = this };
+            var newDataFilter = new DataFilter()
+                                    {
+                                        FilterSource = this,
+                                        Protein = new List<Protein>()
+                                    };
 
             if (e.Item.RowObject is ProteinGroupRow)
-                newDataFilter.Protein = session.Get<DataModel.Protein>((e.Item.RowObject as ProteinGroupRow).FirstProteinId);
+                newDataFilter.Protein.Add(session.Get<DataModel.Protein>((e.Item.RowObject as ProteinGroupRow).FirstProteinId));
             else if (e.Item.RowObject is ProteinRow)
-                newDataFilter.Protein = (e.Item.RowObject as ProteinRow).Protein;
+                newDataFilter.Protein.Add((e.Item.RowObject as ProteinRow).Protein);
+
+            if (ProteinViewFilter != null)
+                ProteinViewFilter(this, newDataFilter);
+        }
+
+        void treeListView_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar != (char)Keys.Enter)
+                return;
+
+            e.Handled = true;
+            var newDataFilter = new DataFilter {FilterSource = this};
+
+            if (treeListView.SelectedObjects.Count > 0)
+                newDataFilter.Protein = new List<Protein>();
+
+            foreach (var item in treeListView.SelectedObjects)
+            {
+                if (item == null)
+                    continue;
+
+                if (item is ProteinGroupRow)
+                    newDataFilter.Protein.Add(session.Get<DataModel.Protein>((item as ProteinGroupRow).FirstProteinId));
+                else if (item is ProteinRow)
+                    newDataFilter.Protein.Add((item as ProteinRow).Protein);
+            }
 
             if (ProteinViewFilter != null)
                 ProteinViewFilter(this, newDataFilter);

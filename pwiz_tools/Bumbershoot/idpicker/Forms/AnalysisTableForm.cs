@@ -129,7 +129,9 @@ namespace IDPicker.Forms
             };
 
             if (e.Item.RowObject is AnalysisRow)
-                newDataFilter.Analysis = (e.Item.RowObject as AnalysisRow).Analysis;
+                if (newDataFilter.Analysis == null)
+                    newDataFilter.Analysis = new List<Analysis>();
+            newDataFilter.Analysis.Add((e.Item.RowObject as AnalysisRow).Analysis);
 
             //if (PeptideViewFilter != null)
             //    PeptideViewFilter(this, newDataFilter);

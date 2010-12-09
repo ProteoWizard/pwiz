@@ -379,6 +379,7 @@ namespace IDPicker.Forms
             treeListView.CanExpandGetter += delegate(object x) { return !(x is PeptideSpectrumMatchScoreRow); };
             treeListView.ChildrenGetter += new TreeListView.ChildrenGetterDelegate(getChildren);
             treeListView.CellClick += new EventHandler<CellClickEventArgs>(treeListView_CellClick);
+            treeListView.KeyPress += new KeyPressEventHandler(treeListView_KeyPress);
             treeListView.AfterExpanding += new EventHandler<AfterExpandingEventArgs>(treeListView_AfterExpanding);
             treeListView.AfterCollapsing += new EventHandler<AfterCollapsingEventArgs>(treeListView_AfterCollapsing);
         }
@@ -705,47 +706,53 @@ namespace IDPicker.Forms
             if (x is SpectrumSourceGroupRow)
             {
                 var row = x as SpectrumSourceGroupRow;
-                var parentFilter = row.DataFilter == null ? dataFilter : row.DataFilter;
-                var childFilter = new DataFilter(parentFilter) {SpectrumSourceGroup = row.SpectrumSourceGroup};
+                var parentFilter = row.DataFilter ?? dataFilter;
+                var childFilter = new DataFilter(parentFilter) {SpectrumSourceGroup = new List<SpectrumSourceGroup>()};
+                childFilter.SpectrumSourceGroup.Add(row.SpectrumSourceGroup);
                 return getSpectrumSourceRows(childFilter);
             }
             else if (x is SpectrumSourceRow)
             {
                 var row = x as SpectrumSourceRow;
-                var parentFilter = row.DataFilter == null ? dataFilter : row.DataFilter;
-                var childFilter = new DataFilter(parentFilter) {SpectrumSource = row.SpectrumSource};
+                var parentFilter = row.DataFilter ?? dataFilter;
+                var childFilter = new DataFilter(parentFilter) {SpectrumSource = new List<SpectrumSource>()};
+                childFilter.SpectrumSource.Add(row.SpectrumSource);
                 var childGrouping = GroupingSetupControl<GroupBy>.GetChildGrouping(checkedGroupings, GroupBy.Source);
                 return getChildren(childGrouping, childFilter);
             }
             else if (x is AnalysisRow)
             {
                 var row = x as AnalysisRow;
-                var parentFilter = row.DataFilter == null ? dataFilter : row.DataFilter;
-                var childFilter = new DataFilter(parentFilter) {Analysis = row.Analysis};
+                var parentFilter = row.DataFilter ?? dataFilter;
+                var childFilter = new DataFilter(parentFilter) {Analysis = new List<Analysis>()};
+                childFilter.Analysis.Add(row.Analysis);
                 var childGrouping = GroupingSetupControl<GroupBy>.GetChildGrouping(checkedGroupings, GroupBy.Analysis);
                 return getChildren(childGrouping, childFilter);
             }
             else if (x is PeptideRow)
             {
                 var row = x as PeptideRow;
-                var parentFilter = row.DataFilter == null ? dataFilter : row.DataFilter;
-                var childFilter = new DataFilter(parentFilter) {Peptide = row.Peptide};
+                var parentFilter = row.DataFilter ?? dataFilter;
+                var childFilter = new DataFilter(parentFilter) {Peptide = new List<Peptide>()};
+                childFilter.Peptide.Add(row.Peptide);
                 var childGrouping = GroupingSetupControl<GroupBy>.GetChildGrouping(checkedGroupings, GroupBy.Peptide);
                 return getChildren(childGrouping, childFilter);
             }
             else if (x is ChargeRow)
             {
                 var row = x as ChargeRow;
-                var parentFilter = row.DataFilter == null ? dataFilter : row.DataFilter;
-                var childFilter = new DataFilter(parentFilter) {Charge = row.Charge};
+                var parentFilter = row.DataFilter ?? dataFilter;
+                var childFilter = new DataFilter(parentFilter) {Charge = new List<int?>()};
+                childFilter.Charge.Add(row.Charge);
                 var childGrouping = GroupingSetupControl<GroupBy>.GetChildGrouping(checkedGroupings, GroupBy.Charge);
                 return getChildren(childGrouping, childFilter);
             }
             else if (x is SpectrumRow)
             {
                 var row = x as SpectrumRow;
-                var parentFilter = row.DataFilter == null ? dataFilter : row.DataFilter;
-                var childFilter = new DataFilter(parentFilter) {Spectrum = row.Spectrum};
+                var parentFilter = row.DataFilter ?? dataFilter;
+                var childFilter = new DataFilter(parentFilter) {Spectrum = new List<Spectrum>()};
+                childFilter.Spectrum.Add(row.Spectrum);
                 var childGrouping = GroupingSetupControl<GroupBy>.GetChildGrouping(checkedGroupings, GroupBy.Spectrum);
                 return getChildren(childGrouping, childFilter);
             }
@@ -766,25 +773,88 @@ namespace IDPicker.Forms
             var newDataFilter = new DataFilter() { FilterSource = this };
 
             if (e.Item.RowObject is SpectrumSourceGroupRow)
-                newDataFilter.SpectrumSourceGroup = (e.Item.RowObject as SpectrumSourceGroupRow).SpectrumSourceGroup;
+                newDataFilter.SpectrumSourceGroup = new List<SpectrumSourceGroup> { (e.Item.RowObject as SpectrumSourceGroupRow).SpectrumSourceGroup };
             else if (e.Item.RowObject is SpectrumSourceRow)
-                newDataFilter.SpectrumSource = (e.Item.RowObject as SpectrumSourceRow).SpectrumSource;
+                newDataFilter.SpectrumSource = new List<SpectrumSource> { (e.Item.RowObject as SpectrumSourceRow).SpectrumSource };
             else if (e.Item.RowObject is SpectrumRow)
-                newDataFilter.Spectrum = (e.Item.RowObject as SpectrumRow).Spectrum;
+                newDataFilter.Spectrum = new List<Spectrum> { (e.Item.RowObject as SpectrumRow).Spectrum };
             else if (e.Item.RowObject is AnalysisRow)
-                newDataFilter.Analysis = (e.Item.RowObject as AnalysisRow).Analysis;
+                newDataFilter.Analysis = new List<Analysis> { (e.Item.RowObject as AnalysisRow).Analysis };
             else if (e.Item.RowObject is PeptideRow)
-                newDataFilter.Peptide = (e.Item.RowObject as PeptideRow).Peptide;
+                newDataFilter.Peptide = new List<Peptide> { (e.Item.RowObject as PeptideRow).Peptide };
             else if (e.Item.RowObject is ChargeRow)
-                newDataFilter.Charge = (e.Item.RowObject as ChargeRow).Charge;
+                newDataFilter.Charge = new List<int?> { (e.Item.RowObject as ChargeRow).Charge };
             else if (e.Item.RowObject is PeptideSpectrumMatchRow)
             {
                 if (SpectrumViewVisualize != null)
                     SpectrumViewVisualize(this, new SpectrumViewVisualizeEventArgs()
-                                                {
-                                                    PeptideSpectrumMatch = (e.Item.RowObject as PeptideSpectrumMatchRow).PeptideSpectrumMatch
-                                                });
+                                                    {
+                                                        PeptideSpectrumMatch =
+                                                            (e.Item.RowObject as PeptideSpectrumMatchRow).
+                                                            PeptideSpectrumMatch
+                                                    });
                 return;
+            }
+
+            if (SpectrumViewFilter != null)
+                SpectrumViewFilter(this, newDataFilter);
+        }
+        void treeListView_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar != (char)Keys.Enter)
+                return;
+
+            e.Handled = true;
+            var newDataFilter = new DataFilter() {FilterSource = this};
+
+            foreach (var item in treeListView.SelectedObjects)
+            {
+                if (item == null)
+                    continue;
+
+                if (item is SpectrumSourceGroupRow)
+                {
+                    if (newDataFilter.SpectrumSourceGroup == null)
+                        newDataFilter.SpectrumSourceGroup = new List<SpectrumSourceGroup> { (item as SpectrumSourceGroupRow).SpectrumSourceGroup };
+                    else
+                        newDataFilter.SpectrumSourceGroup.Add((item as SpectrumSourceGroupRow).SpectrumSourceGroup);
+                }
+                else if (item is SpectrumSourceRow)
+                {
+                    if (newDataFilter.SpectrumSource == null)
+                        newDataFilter.SpectrumSource = new List<SpectrumSource> { (item as SpectrumSourceRow).SpectrumSource };
+                    else
+                        newDataFilter.SpectrumSource.Add((item as SpectrumSourceRow).SpectrumSource);
+                }
+                else if (item is SpectrumRow)
+                {
+                    if (newDataFilter.Spectrum == null)
+                        newDataFilter.Spectrum = new List<Spectrum> { (item as SpectrumRow).Spectrum };
+                    else
+                        newDataFilter.Spectrum.Add((item as SpectrumRow).Spectrum);
+                }
+                else if (item is AnalysisRow)
+                {
+                    if (newDataFilter.Analysis == null)
+                        newDataFilter.Analysis = new List<Analysis> { (item as AnalysisRow).Analysis };
+                    else
+                        newDataFilter.Analysis.Add((item as AnalysisRow).Analysis);
+                }
+                else if (item is PeptideRow)
+                {
+                    if (newDataFilter.Peptide == null)
+                        newDataFilter.Peptide = new List<Peptide> { (item as PeptideRow).Peptide };
+                    else
+                        newDataFilter.Peptide.Add((item as PeptideRow).Peptide);
+                }
+                else if (item is ChargeRow)
+                {
+                    if (newDataFilter.Charge == null)
+                        newDataFilter.Charge = new List<int?> { (item as ChargeRow).Charge };
+                    else
+                        newDataFilter.Charge.Add((item as ChargeRow).Charge);
+                }
+
             }
 
             if (SpectrumViewFilter != null)
@@ -808,8 +878,12 @@ namespace IDPicker.Forms
             if (parentFilter != null)
             {
                 if (parentFilter.SpectrumSourceGroup != null)
-                    groups =
-                        groups.Where(o => o.SpectrumSourceGroup.IsImmediateChildOf(parentFilter.SpectrumSourceGroup));
+                {
+                    var otherList = new List<SpectrumSourceGroupRow>();
+                    foreach (var item in parentFilter.SpectrumSourceGroup)
+                        otherList.AddRange(groups.Where(o => o.SpectrumSourceGroup.IsImmediateChildOf(item)));
+                    groups = otherList;
+                }
                 else
                     groups = groups.Where(o => o.SpectrumSourceGroup.Name == "/");
             }
@@ -824,7 +898,12 @@ namespace IDPicker.Forms
             if (parentFilter != null)
             {
                 if (parentFilter.SpectrumSourceGroup != null)
-                    sources = sources.Where(o => o.SpectrumSource.Group.Id == parentFilter.SpectrumSourceGroup.Id);
+                {
+                    var otherList = new List<SpectrumSourceRow>();
+                    foreach (var item in parentFilter.SpectrumSourceGroup)
+                        otherList.AddRange(sources.Where(o => o.SpectrumSource.Group.Id == item.Id));
+                    sources = otherList;
+                }
                 else
                     return groups.Cast<AggregateRow>();
             }
