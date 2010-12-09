@@ -21,3 +21,5 @@
 #
 
 lib Qonverter : Qonverter.cpp ../Lib/SQLite ;
+
+exe idpQonvert : idpQonvert.cpp Qonverter ../freicore ;

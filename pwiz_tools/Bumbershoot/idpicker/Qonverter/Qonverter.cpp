@@ -173,6 +173,9 @@ int addPsmRow(void* data, int columnCount, char** columnValues, char** columnNam
 
 void qonvertPsmSubset(sqlite3* db, vector<PsmRow>& psmRows, const vector<double>& scoreWeights, bool logQonversionDetails)
 {
+    if (psmRows.empty())
+        return;
+
     // calculate total scores for each PSM and keep track of the top ranked PSM(s) for each spectrum
     vector<SpectrumTopRank> spectrumTopRanks;
     for (size_t i=0; i < psmRows.size(); ++i)
@@ -336,7 +339,16 @@ void Qonverter::Qonvert(sqlite3* db, const ProgressMonitor& progressMonitor)
         const string& psmChargeState = analysisSourceChargeTuple.get<2>();
         const string& specificity = analysisSourceChargeTuple.get<3>();
 
-        const Settings& qonverterSettings = settingsByAnalysis[lexical_cast<int>(analysisId)];
+        // if no settings are provided for this analysis, try to use the global settings (id == 0)
+        int analysis = lexical_cast<int>(analysisId);
+        if (settingsByAnalysis.count(analysis) == 0)
+        {
+            if (settingsByAnalysis.count(0) == 0)
+                throw runtime_error("[Qonverter::Qonvert] no global or analysis-specific qonverter settings for analysis " + analysisId);
+            settingsByAnalysis[analysis] = settingsByAnalysis[0];
+        }
+            
+        const Settings& qonverterSettings = settingsByAnalysis[analysis];
         const string& decoyPrefix = qonverterSettings.decoyPrefix;
         bool rerankMatches = qonverterSettings.rerankMatches;
         const map<string, Settings::ScoreInfo>& scoreInfoByName = qonverterSettings.scoreInfoByName;
@@ -419,7 +431,8 @@ void Qonverter::Qonvert(sqlite3* db, const ProgressMonitor& progressMonitor)
         vector<string> scoreIdSet;
         BOOST_FOREACH(const string& name, scoreNameIntersection)
         {
-            scoreWeightsVector.push_back(scoreInfoByName.find(name)->second.weight);
+            const Settings::ScoreInfo& scoreInfo = scoreInfoByName.find(name)->second;
+            scoreWeightsVector.push_back(scoreInfo.order == Settings::Order_Ascending ? scoreInfo.weight : -scoreInfo.weight);
             scoreIdSet.push_back(actualScoreIdByName[name]);
         }
 

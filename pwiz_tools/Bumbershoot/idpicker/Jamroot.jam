@@ -437,12 +437,9 @@ rule dotNET-dependencies ( properties * )
     return <dependency>IDPicker.exe/$(location) ;
 }
 
-make dummy : : @make_dummy : <location>$(BUILD_PATH) ;
-actions make_dummy { @($(STDOUT):E=This is a dummy file for the picky install rule which needs at least one 'source') > "$(<)" }
-
 install install
     : # sources
-        dummy
+        Qonverter//idpQonvert
     : # requirements
         <conditional>@dotNET-dependencies
         <conditional>@install-location

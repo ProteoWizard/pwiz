@@ -191,6 +191,18 @@
 			>
 		</File>
 		<File
+			RelativePath=".\idpQonvert.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\idpQonvert.hpp"
+			>
+		</File>
+		<File
+			RelativePath=".\CLI\Jamfile.jam"
+			>
+		</File>
+		<File
 			RelativePath=".\Jamfile.jam"
 			>
 		</File>
@@ -199,16 +211,19 @@
 			>
 		</File>
 		<File
+			RelativePath=".\CLI\Qonverter.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\CLI\Qonverter.hpp"
+			>
+		</File>
+		<File
 			RelativePath=".\Qonverter.hpp"
 			>
 		</File>
 		<File
-			RelativePath=".\StaticWeightQonverter.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\StaticWeightQonverter.h"
-			FileType="3"
+			RelativePath=".\StaticWeightQonverter.hpp"
 			>
 		</File>
 	</Files>
