@@ -36,7 +36,7 @@
     </Reference>
     <Reference Include="InteropQonverter, Version=3.0.214.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\build-nt-x86\obj\$(Configuration)\InteropQonverter.dll</HintPath>
+      <HintPath>..\build-nt-x86\obj\x86\$(Configuration)\InteropQonverter.dll</HintPath>
     </Reference>
     <Reference Include="ObjectListView, Version=2.4.1.26393, Culture=neutral, PublicKeyToken=b1c5bf581481bcd4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -48,7 +48,7 @@
     </Reference>
     <Reference Include="pwiz_bindings_cli, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\build-nt-x86\obj\$(Configuration)\pwiz_bindings_cli.dll</HintPath>
+      <HintPath>..\build-nt-x86\obj\x86\$(Configuration)\pwiz_bindings_cli.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">

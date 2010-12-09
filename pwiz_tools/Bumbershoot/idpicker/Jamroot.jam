@@ -282,8 +282,10 @@ echo $(application-name) $(version-tag:J=.) $(SVNREVDATE:J=) ;
 
 
 path-constant BOOST_SOURCE : "freicore/libraries/boost_$(BOOST_VERSION_PATH)" ;
+path-constant EXPAT_SOURCE : $(expat_src) ;
 
 using ext-boost : $(BOOST_VERSION) : $(BOOST_SOURCE) ;
+using expat : 2.0 : $(EXPAT_SOURCE) ;
 
 
 rule install-location ( properties * )
@@ -313,7 +315,7 @@ rule install-vendor-api-dependencies ( properties * )
 rule pwiz-dependency ( properties * )
 {
     local variants = [ feature.get-values <variant> : $(properties) ] ;
-    local location = <location>$(BUILD_PATH)/obj/$(variants[1]) ;
+    local location = <location>$(BUILD_PATH)/obj/x86/$(variants[1]) ;
     return <assembly>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli
            <dependency>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli/$(location)
            <dependency>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli.xml/$(location) ;
@@ -411,7 +413,7 @@ rule seems-dependency ( properties * )
 rule qonverter-dependency ( properties * )
 {
     local variants = [ feature.get-values <variant> : $(properties) ] ;
-    local location = <location>$(BUILD_PATH)/obj/$(variants[1]) ;
+    local location = <location>$(BUILD_PATH)/obj/x86/$(variants[1]) ;
     return <assembly>Qonverter/CLI//InteropQonverter
            <dependency>Qonverter/CLI//InteropQonverter/$(location) ;
            #<dependency>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli.xml/$(location) ;

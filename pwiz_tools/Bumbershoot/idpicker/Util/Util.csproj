@@ -30,9 +30,9 @@
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="InteropQonverter, Version=3.0.178.0, Culture=neutral, processorArchitecture=x86">
+    <Reference Include="InteropQonverter, Version=3.0.214.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\build-nt-x86\obj\release\InteropQonverter.dll</HintPath>
+      <HintPath>..\build-nt-x86\obj\x86\$(Configuration)\InteropQonverter.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Office.Interop.Excel, Version=12.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c">
       <SpecificVersion>False</SpecificVersion>
