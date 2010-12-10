@@ -53,6 +53,12 @@ namespace mziddata {
 using namespace boost;
 
 // Utility structs
+
+//
+// Indices
+//
+// The Indices class holds the maximum value of each class of index
+// that appends a tag's id.
 struct Indices
 {
     Indices()
@@ -74,6 +80,11 @@ struct Indices
     size_t pdp;
 };
 
+//
+// pending_insert
+//
+// The pending_insert class holds a keyword/value to be inserted at a
+// later point in the conversion.
 struct pending_insert
 {
     CVMapPtr rule;
@@ -218,8 +229,6 @@ public:
 namespace {
 
 using namespace pwiz::mziddata;
-
-// TODO may move this into a file of its own.
 
 //
 // XML tree walking
@@ -446,8 +455,7 @@ bool addToContactCV(CVParam& param, vector<string>& path,
                   organization_p());
         if (i == contacts.end())
         {
-            // TODO add a meaningful id & name
-            contacts.push_back(ContactPtr(new Organization("O_1")));
+            contacts.push_back(ContactPtr(new Organization("Organization_1")));
             i = contacts.end() - 1;
         }
     }
@@ -457,8 +465,7 @@ bool addToContactCV(CVParam& param, vector<string>& path,
                   person_p());
         if (i == contacts.end())
         {
-            // TODO add a meaningful id & name
-            contacts.push_back(ContactPtr(new Person("P_1")));
+            contacts.push_back(ContactPtr(new Person("Person_1")));
             i = contacts.end() - 1;
         }
     }
@@ -823,6 +830,11 @@ struct parameter_p
 };
 
 // Utility functions
+
+//
+// Searches a vector of shared_pointers holding a child of
+// IdentifiableType for an object with the given id value.
+//
 template<typename T>
 shared_ptr<T> find_id(vector< shared_ptr<T> >& list, const string& id)
 {
@@ -835,7 +847,11 @@ shared_ptr<T> find_id(vector< shared_ptr<T> >& list, const string& id)
     return *c;
 }
 
-
+//
+// search_score_p
+//
+// A predicate that is true if the SearchScore's name is the case
+// insensitive equivalent to the instance's name value.
 struct search_score_p
 {
     const string name;
@@ -870,6 +886,10 @@ AnalysisSoftwarePtr findSoftware(const vector<AnalysisSoftwarePtr>& software,
     return  as;
 }
 
+//
+// Chooses a reasonable threshold type based on the AnalysisSoftware
+// types that exist in the given list.
+//
 CVParam guessThreshold(const vector<AnalysisSoftwarePtr>& software)
 {
     static const CVID cvids[][2] = {
@@ -901,6 +921,10 @@ CVParam guessThreshold(const vector<AnalysisSoftwarePtr>& software)
     return cvparam;
 }
 
+//
+// Guess which AnalysisSoftware id to use for
+// ProteinDetectionProtocol's analysisSoftwarePtr.
+// 
 AnalysisSoftwarePtr guessAnalysisSoftware(
     const vector<AnalysisSoftwarePtr>& software)
 {
@@ -922,6 +946,10 @@ AnalysisSoftwarePtr guessAnalysisSoftware(
     return asp;
 }
 
+//
+// fileInfo is used to map a file extension to CV types for file
+// format and spectrum id format.
+//
 struct fileInfo
 {
     const string ext;
@@ -934,6 +962,10 @@ struct fileInfo
 
 };
 
+//
+// Maps the file's extension to a pair of CVID's that represent the
+// file format and spectrum id format values.
+//
 bool fileExtension2Type(const string& file,
                         CVID& fileFormat,
                         CVID& spectrumIDFormat)
@@ -970,7 +1002,17 @@ bool fileExtension2Type(const string& file,
         fileInfo(".mzml", MS_mzML_file, MS_mzML_unique_identifier),
         fileInfo(".mzxml", MS_ISB_mzXML_file, MS_scan_number_only_nativeID_format),
         fileInfo(".pkl", MS_Micromass_PKL_file, MS_no_nativeID_format),
+        fileInfo(".pks", MS_PerSeptive_PKS_file, MS_mass_spectrometer_file_format),
+        fileInfo(".dta", MS_DTA_file, MS_mass_spectrometer_file_format),
+        fileInfo(".srf", MS_Bioworks_SRF_file, MS_mass_spectrometer_file_format),
+        fileInfo(".baf", MS_Bruker_BAF_file, MS_mass_spectrometer_file_format),
+        fileInfo(".fid", MS_Bruker_FID_file, MS_mass_spectrometer_file_format),
+        fileInfo(".mgf", MS_Mascot_MGF_file, MS_mass_spectrometer_file_format),
+        fileInfo(".wiff", MS_ABI_WIFF_file, MS_mass_spectrometer_file_format),
         //fileInfo("", CVID_Unknown,CVID_Unknown)
+
+        // Need to find a differentiator between thermo & waters
+        //fileInfo(".raw", MS_Thermo_RAW_file, MS_mass_spectrometer_file_format),
     };
 
     bool found = false;
@@ -1071,6 +1113,8 @@ void Pep2MzIdent::Impl::translateEnzyme(const SampleEnzyme& sampleEnzyme,
     if (seCVID != CVID_Unknown)
         enzyme->enzymeName.set(seCVID);
     else
+        // If our prayers aren't answered, then toss it on the
+        // UserParam pile.
         enzyme->enzymeName.userParams.
             push_back(UserParam("name", sampleEnzyme.name));
 
@@ -1085,7 +1129,18 @@ void Pep2MzIdent::Impl::translateEnzyme(const SampleEnzyme& sampleEnzyme,
 
     enzyme->minDistance = sampleEnzyme.specificity.minSpace;
 
-    // TODO handle sense fields
+    // TODO handle sense fields.
+    if (iequals(sampleEnzyme.specificity.sense, "C"))
+    {
+    }
+    else if (iequals(sampleEnzyme.specificity.sense, "N"))
+    {
+    }
+    else if (sampleEnzyme.specificity.sense.size())
+        throw runtime_error(("[Pep2MzIdent::Impl::translateEnzyme] "
+                             "Unknown value for Specificity \"sense\""+
+                             sampleEnzyme.specificity.sense).c_str());
+    
     // first attempt at regex
     enzyme->siteRegexp = "[^"+sampleEnzyme.specificity.noCut+
         "]["+sampleEnzyme.specificity.cut+"]";
@@ -1193,6 +1248,7 @@ void Pep2MzIdent::Impl::translateSearch(const SearchSummaryPtr summary,
 
         // TODO This is invalid, but we need to save the software
         // somewhere.
+        // Edit: I guess we don't need to safe the software anywhere
         /*
         as->softwareName.userParams.push_back(
             UserParam("search_engine full name",
