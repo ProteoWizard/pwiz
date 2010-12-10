@@ -1149,7 +1149,7 @@ namespace IDPicker.Forms
                 SpectrumSourceGroup rootGroup;
                 lock (session) rootGroup = session.Query<SpectrumSourceGroup>().Where(o => o.Name == "/").Single();
                 var rootGroupRow = aggregateRows == null ? null : aggregateRows.Where(o => o is SpectrumSourceGroupRow &&
-                                                                                           (o as SpectrumSourceGroupRow).SpectrumSourceGroup.Id == rootGroup.Id).Single();
+                                                                                           (o as SpectrumSourceGroupRow).SpectrumSourceGroup.Id == rootGroup.Id).SingleOrDefault();
 
                 if (rootGroupRow != null)
                 {

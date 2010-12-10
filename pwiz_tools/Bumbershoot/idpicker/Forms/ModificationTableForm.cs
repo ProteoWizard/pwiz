@@ -122,7 +122,7 @@ namespace IDPicker.Forms
                 if (cell.ColumnIndex > 0 && siteColumnNameToSite.Contains(cell.OwningColumn.HeaderText))
                     newSite = siteColumnNameToSite[cell.OwningColumn.HeaderText];
 
-                if (!newDataFilter.ModifiedSite.Contains(newSite))
+                if (newSite != null && !newDataFilter.ModifiedSite.Contains(newSite))
                 {
                     siteList.Add("pm.Site='" + newSite.ToString() + "'");
                     newDataFilter.ModifiedSite.Add(newSite);

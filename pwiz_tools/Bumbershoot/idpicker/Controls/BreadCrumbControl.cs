@@ -571,6 +571,11 @@ namespace IDPicker.Controls
                                                         dataFilter.ModifiedSite = null;
                                                         if (dataFilter.Modifications == null)
                                                             BreadCrumbClicked(crumb, new BreadCrumbClickedEventArgs(crumb));
+                                                        else
+                                                        {
+                                                            BreadCrumbClicked(null, new BreadCrumbClickedEventArgs(null));
+                                                            breadCrumbs_ListChanged(null, null);
+                                                        }
                                                     }
                                                     else
                                                     {
