@@ -1930,10 +1930,12 @@ namespace pwiz.Skyline
                 e.Node.Text = "";
             else
                 e.CancelEdit = !sequenceTree.IsEditableNode(e.Node);
+            ClipboardControlGotFocus(sequenceTree);
         }
 
         private void sequenceTree_AfterLabelEdit(object sender, NodeLabelEditEventArgs e)
         {
+            ClipboardControlLostFocus(sequenceTree);
             if (e.Node is EmptyNode)
             {
                 string labelText = (!e.CancelEdit ? e.Label.Trim() : null);

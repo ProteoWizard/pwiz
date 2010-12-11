@@ -43,6 +43,7 @@ namespace pwiz.Skyline.Controls
     {
         private Image _dropImage;
         private TreeNode _nodeCapture;
+        private IdentityPath _nodeEditPath;
         private Timer _pickTimer;
         private NodeTip _nodeTip;
         private bool _focus;
@@ -497,6 +498,29 @@ namespace pwiz.Skyline.Controls
                     }
                 }
             }
+        }
+
+        public TreeNode FindAvailableNode(TreeNodeCollection treeNodes, IdentityPathTraversal traversal)
+        {
+            Identity id = traversal.Next;
+
+            if (ReferenceEquals(id, NODE_INSERT_ID))
+            {
+                return Nodes[Nodes.Count - 1];
+            }
+
+            foreach(TreeNode nodeTree in treeNodes)
+            {
+                SrmTreeNode node = nodeTree as SrmTreeNode;
+                if(node != null && ReferenceEquals(id, node.Model.Id))
+                {
+                    if (!traversal.HasNext)
+                        return node;
+                    else if (node.Nodes.Count != 0)
+                        return FindAvailableNode(node.Nodes, traversal);
+                }
+            }
+            return null;
         }
 
         /// <summary>
@@ -998,8 +1022,11 @@ namespace pwiz.Skyline.Controls
             String label = editTextBox.TextBox.Text;
             editTextBox.TextBox.Parent.Controls.Remove(editTextBox.TextBox);
             editTextBox.Detach();
+            var node = FindAvailableNode(Nodes, new IdentityPathTraversal(_nodeEditPath));
+            if(node == null)
+                return;
             NodeLabelEditEventArgs nodeLabelEditEventArgs =
-                new NodeLabelEditEventArgs(SelectedNode, label) {CancelEdit = wasCancelled};
+                new NodeLabelEditEventArgs(node, label) {CancelEdit = wasCancelled};
             OnAfterNodeEdit(nodeLabelEditEventArgs);
         }
 
@@ -1011,6 +1038,7 @@ namespace pwiz.Skyline.Controls
                 BeforeNodeEdit(this, new NodeLabelEditEventArgs(node));
             _editedLabel = node.Text;
             LabelEdit = true;
+            _nodeEditPath = SelectedPath;
             BeginEditNode(node, commitOnLoseFocus);
         }
 
