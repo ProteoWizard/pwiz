@@ -410,7 +410,12 @@ namespace pwiz.Skyline.SettingsUI
 
             if (string.IsNullOrEmpty(formula))
             {
-                textMonoMass.Text = textAverageMass.Text = "";
+                // If the mass edit boxes are already enabled, don't clear what a user
+                // may have typed in them.
+                if (!textMonoMass.Enabled)
+                    textMonoMass.Text = "";
+                if (!textAverageMass.Enabled)
+                    textAverageMass.Text = "";
                 textMonoMass.Enabled = textAverageMass.Enabled = (labelAtoms == LabelAtoms.None);
             }
             else
