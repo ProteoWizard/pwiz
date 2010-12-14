@@ -128,7 +128,9 @@ namespace pwiz.Topograph.ui.Forms
             this.ClientSize = new System.Drawing.Size(893, 264);
             this.Controls.Add(this.splitContainer1);
             this.Name = "ChromatogramForm";
-            this.Text = "Chromatograms";
+            this.Text = "Raw Chromatograms";
+            this.ResizeEnd += new System.EventHandler(this.ChromatogramForm_ResizeEnd);
+            this.Resize += new System.EventHandler(this.ChromatogramForm_Resize);
             ((System.ComponentModel.ISupportInitialize)(this.gridIntensities)).EndInit();
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.ResumeLayout(false);

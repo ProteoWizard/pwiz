@@ -267,7 +267,7 @@ namespace pwiz.Topograph.ui.Controls
             var intensitiesList = new List<IList<double>>();
             if (PeptideFileAnalysis != null)
             {
-                intensitiesList.Add(PeptideFileAnalysis.GetAverageIntensities());
+//                intensitiesList.Add(PeptideFileAnalysis.GetAverageIntensities());
             }
             else
             {
@@ -277,7 +277,7 @@ namespace pwiz.Topograph.ui.Controls
                     {
                         continue;
                     }
-                    intensitiesList.Add(peptideFileAnalysis.GetAverageIntensities());
+//                    intensitiesList.Add(peptideFileAnalysis.GetAverageIntensities());
                 }
             }
             var mzs = PeptideAnalysis.GetMzs();
@@ -285,8 +285,8 @@ namespace pwiz.Topograph.ui.Controls
             IList<double> averageIntensities = null;
             if (PeptideFileAnalysis != null)
             {
-                scaledIntensities = PeptideFileAnalysis.GetScaledIntensities();
-                averageIntensities = PeptideFileAnalysis.GetAverageIntensities();
+//                scaledIntensities = PeptideFileAnalysis.GetScaledIntensities();
+//                averageIntensities = PeptideFileAnalysis.GetAverageIntensities();
             }
 
             for (int iRow = 0; iRow < Rows.Count; iRow++)

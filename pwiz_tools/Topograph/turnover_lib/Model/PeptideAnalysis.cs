@@ -33,7 +33,6 @@ namespace pwiz.Topograph.Model
     {
         private int _minCharge;
         private int _maxCharge;
-        private int _intermediateLevels;
         private TurnoverCalculator _turnoverCalculator;
         private int _chromatogramRefCount;
         private double? _massAccuracy;
@@ -96,9 +95,6 @@ namespace pwiz.Topograph.Model
                 m=>m._minCharge,(m,v)=>m._minCharge = v, e => e.MinCharge, (e,v)=>e.MinCharge = v);
             yield return Property<PeptideAnalysis, int>(
                 m=>m._maxCharge,(m,v)=>m._maxCharge = v, e=>e.MaxCharge,(e,v)=>e.MaxCharge = v);
-            yield return Property<PeptideAnalysis, int>(
-                m=>m._intermediateLevels, (m,v)=>m._intermediateLevels=v, 
-                e=>e.IntermediateEnrichmentLevels, (e,v)=>e.IntermediateEnrichmentLevels=v);
             yield return Property<PeptideAnalysis, byte[]>(
                 m => m.ExcludedMzs.ToByteArray(),
                 (m, v) => (m).ExcludedMzs.SetByteArray(v),
@@ -187,10 +183,6 @@ namespace pwiz.Topograph.Model
                 {
                     fileAnalysis.Peaks.Save(session);
                 }
-                if (fileAnalysis.PeptideDistributions.IsDirty)
-                {
-                    fileAnalysis.PeptideDistributions.Save(session);
-                }
             }
             session.Save(new DbChangeLog(this));
         }
@@ -259,17 +251,6 @@ namespace pwiz.Topograph.Model
             return GetTurnoverCalculator().MassCount;
         }
 
-        public int IntermediateLevels
-        {
-            get
-            {
-                return _intermediateLevels;
-            }
-            set
-            {
-                SetIfChanged(ref _intermediateLevels, value);
-            }
-        }
         public ExcludedMzs ExcludedMzs { get; private set; }
 
         public TurnoverCalculator GetTurnoverCalculator()

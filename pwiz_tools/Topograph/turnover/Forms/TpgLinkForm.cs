@@ -129,9 +129,10 @@ namespace pwiz.Topograph.ui.Forms
             {
                 Settings.Default.Reload();
                 var fileDialog = new SaveFileDialog()
-                {
-                    Filter = TurnoverForm.OnlineWorkspaceFilter,
-                    InitialDirectory = Settings.Default.WorkspaceDirectory
+                                     {
+                                         Filter = TurnoverForm.OnlineWorkspaceFilter,
+                                         InitialDirectory = Settings.Default.WorkspaceDirectory,
+                                         FileName = tbxDatabase.Text + ".tpglnk",
                 };
 
                 if (fileDialog.ShowDialog(this) == DialogResult.Cancel)

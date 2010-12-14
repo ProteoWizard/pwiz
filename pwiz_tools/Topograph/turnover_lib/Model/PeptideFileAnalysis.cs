@@ -34,11 +34,10 @@ namespace pwiz.Topograph.Model
     public class PeptideFileAnalysis : AnnotatedEntityModel<DbPeptideFileAnalysis>
     {
         private ExcludedMzs _excludedMzs = new ExcludedMzs();
-        private bool _autoFindPeak;
         private bool _overrideExcludedMzs;
-        private double[] _times;
-        private int[] _scanIndexes;
         private WorkspaceVersion _workspaceVersion;
+        private TracerChromatograms _tracerChromatograms;
+        private TracerChromatograms _tracerChromatogramsSmoothed;
 
         public static PeptideFileAnalysis GetPeptideFileAnalysis(
             PeptideAnalysis peptideAnalysis, DbPeptideFileAnalysis dbPeptideFileAnalysis)
@@ -50,7 +49,6 @@ namespace pwiz.Topograph.Model
             : base(peptideAnalysis.Workspace, dbPeptideFileAnalysis)
         {
             Peaks = new Peaks(this, dbPeptideFileAnalysis);
-            PeptideDistributions = new PeptideDistributions(this, dbPeptideFileAnalysis);
             Chromatograms = new Chromatograms(this, dbPeptideFileAnalysis);
             PeptideAnalysis = peptideAnalysis;
             ExcludedMzs.ChangedEvent += ExcludedMzs_Changed;
@@ -74,11 +72,6 @@ namespace pwiz.Topograph.Model
                 (m, v) => m._excludedMzs.SetByteArray(v),
                 e => e.ExcludedMasses ?? new byte[0],
                 (e, v) => e.ExcludedMasses = ArrayConverter.ZeroLengthToNull(v));
-            yield return Property<PeptideFileAnalysis, bool>(
-                m => m._autoFindPeak,
-                (m, v) => m._autoFindPeak = v,
-                e => e.AutoFindPeak,
-                (e, v) => e.AutoFindPeak = v);
         }
 
         protected override void Load(DbPeptideFileAnalysis dbPeptideFileAnalysis)
@@ -89,17 +82,12 @@ namespace pwiz.Topograph.Model
             LastTime = dbPeptideFileAnalysis.ChromatogramEndTime;
             FirstDetectedScan = dbPeptideFileAnalysis.FirstDetectedScan;
             LastDetectedScan = dbPeptideFileAnalysis.LastDetectedScan;
-            if (dbPeptideFileAnalysis.TimesBytes != null)
-            {
-                _times = dbPeptideFileAnalysis.Times;
-                _scanIndexes = dbPeptideFileAnalysis.ScanIndexes;
-            }
             _workspaceVersion = Workspace.SavedWorkspaceVersion;
         }
 
         public override bool IsDirty()
         {
-            return base.IsDirty() || (!_autoFindPeak && Peaks.IsDirty);
+            return base.IsDirty() || (Peaks.IsDirty && !Peaks.AutoFindPeak);
         }
 
         public void Merge(PeptideFileAnalysisSnapshot snapshot)
@@ -107,14 +95,9 @@ namespace pwiz.Topograph.Model
             Load(snapshot.DbPeptideFileAnalysis);
             Chromatograms = snapshot.GetChromatograms(this);
             Peaks = snapshot.GetPeaks(this);
-            PeptideDistributions = snapshot.GetDistributions(this);
         }
 
         public Peaks Peaks { get; private set; }
-        public PeptideDistributions PeptideDistributions
-        {
-            get; private set;
-        }
         public Chromatograms Chromatograms
         {
             get; private set;
@@ -124,7 +107,6 @@ namespace pwiz.Topograph.Model
         {
             var dbPeptideFileAnalysis = base.UpdateDbEntity(session);
             dbPeptideFileAnalysis.OverrideExcludedMasses = OverrideExcludedMzs;
-            dbPeptideFileAnalysis.AutoFindPeak = AutoFindPeak;
             if (OverrideExcludedMzs && _excludedMzs != null)
             {
                 dbPeptideFileAnalysis.ExcludedMasses 
@@ -134,11 +116,6 @@ namespace pwiz.Topograph.Model
             {
                 dbPeptideFileAnalysis.ExcludedMasses = null;
             }
-            dbPeptideFileAnalysis.PeakStart = PeakStart;
-            dbPeptideFileAnalysis.PeakStartTime = PeakStartTime;
-            dbPeptideFileAnalysis.PeakEnd = PeakEnd;
-            dbPeptideFileAnalysis.PeakEndTime = PeakEndTime;
-            dbPeptideFileAnalysis.AutoFindPeak = AutoFindPeak;
             return dbPeptideFileAnalysis;
         }
 
@@ -152,32 +129,9 @@ namespace pwiz.Topograph.Model
         public int? FirstDetectedScan { get; private set; }
         public int? LastDetectedScan { get; private set; }
         public int TracerCount { get { return Peptide.MaxTracerCount; } }
-        public int? PeakStart
-        {
-            get { return Peaks.PeakStart; }
-        }
-        public double? PeakStartTime
-        {
-            get { return PeakStart.HasValue ? (double?) TimeFromScanIndex(PeakStart.Value) : null; }
-        }
-        public int? PeakEnd
-        {
-            get { return Peaks.PeakEnd; }
-        }
-        public double? PeakEndTime
-        {
-            get { return PeakEnd.HasValue ? (double?) TimeFromScanIndex(PeakEnd.Value) : null;}
-        }
-        public double GetError(MzKey mzKey)
-        {
-            var peak = Peaks.GetChild(mzKey);
-            if (peak == null)
-            {
-                return 1;
-            }
-            return peak.GetError();
-        }
-
+        public double? PeakStartTime { get { return Peaks.StartTime; } }
+        public double? PeakEndTime { get { return Peaks.EndTime; } }
+        
         public static DbPeptideFileAnalysis CreatePeptideFileAnalysis(ISession session, MsDataFile msDataFile, DbPeptideAnalysis dbPeptideAnalysis, DbPeptideSearchResult peptideSearchResult)
         {
             var dbMsDataFile = session.Load<DbMsDataFile>(msDataFile.Id);
@@ -261,23 +215,7 @@ namespace pwiz.Topograph.Model
         {
             get
             {
-                return _autoFindPeak;
-            }
-            set
-            {
-                if (_autoFindPeak == value)
-                {
-                    return;
-                }
-                using (GetWriteLock())
-                {
-                    _autoFindPeak = value;
-                    if (AutoFindPeak)
-                    {
-                        Recalculate();
-                    }
-                    OnChange();
-                }
+                return Peaks.AutoFindPeak;
             }
         }
 
@@ -286,11 +224,9 @@ namespace pwiz.Topograph.Model
             using (GetWriteLock())
             {
                 Peaks = new Peaks(this);
-                PeptideDistributions = new PeptideDistributions(this);
                 if (Chromatograms.ChildCount > 0)
                 {
                     Peaks.CalcIntensities();
-                    PeptideDistributions.Calculate(Peaks);
                 }
             }
         }
@@ -347,13 +283,15 @@ namespace pwiz.Topograph.Model
         }
         public void OnExcludedMzsChanged()
         {
+            ClearTracerChromatograms();
             Recalculate();
         }
         public void InvalidateChromatograms()
         {
+            ClearTracerChromatograms();
             if (!IsMzKeySetComplete(Chromatograms.GetKeys()))
             {
-                Chromatograms = new Chromatograms(this);
+                Chromatograms = new Chromatograms(this, new double[0], new int[0]);
             }
             Recalculate();
         }
@@ -361,38 +299,6 @@ namespace pwiz.Topograph.Model
         {
             OnExcludedMzsChanged();
         }
-        public int ScanIndexFromTime(double time)
-        {
-            if (Times == null || Times.Count == 0)
-            {
-                return 0;
-            }
-            int index = Array.BinarySearch(_times, time);
-            if (index < 0)
-            {
-                index = ~index;
-            }
-            index = Math.Min(index, _times.Length - 1);
-            return _scanIndexes[index];
-        }
-        public double TimeFromScanIndex(int scanIndex)
-        {
-            if (_times == null || _times.Length == 0)
-            {
-                return 0;
-            }
-            int index = Array.BinarySearch(_scanIndexes, scanIndex);
-            if (index < 0)
-            {
-                index = ~index;
-            }
-            index = Math.Min(index, _times.Length - 1);
-            return _times[index];
-        }
-        public IList<double> Times { get
-        {
-            return new ReadOnlyCollection<double>(_times ?? new double[0]);
-        } }
         public String GetLabel()
         {
             return PeptideAnalysis.GetLabel() + " " + MsDataFile.Label;
@@ -449,53 +355,37 @@ namespace pwiz.Topograph.Model
         {
             using (GetWriteLock())
             {
-                Peaks = new Peaks(this)
-                {
-                    PeakStart = peakStart,
-                    PeakEnd = peakEnd
-                };
-                Recalculate();
-                OnChange();
+//                Peaks = new Peaks(this)
+//                {
+//                    PeakStart = peakStart,
+//                    PeakEnd = peakEnd
+//                };
+//                Recalculate();
+//                OnChange();
             }
         }
 
-        public IList<double> GetAverageIntensities()
-        {
-            return Peaks.GetAverageIntensities();
-        }
-        public Dictionary<int, IList<double>> GetScaledIntensities()
-        {
-            return Peaks.GetScaledIntensities();
-        }
-
-        public IList<int> ScanIndexes { get { return new ReadOnlyCollection<int>(_scanIndexes); } }
         public event Action<EntityModel> ExcludedMzsChangedEvent;
         public void SetWorkspaceVersion(WorkspaceVersion newWorkspaceVersion)
         {
             if (!_workspaceVersion.ChromatogramsValid(newWorkspaceVersion))
             {
-                Chromatograms = new Chromatograms(this);
+                Chromatograms = new Chromatograms(this, new double[0], new int[0]);
                 Peaks = new Peaks(this);
             }
             if (!_workspaceVersion.PeaksValid(newWorkspaceVersion))
             {
                 if (AutoFindPeak)
                 {
-                    Peaks = new Peaks(this)
-                                {
-                                    PeakStart = null, 
-                                    PeakEnd = null
-                                };
+//                    Peaks = new Peaks(this)
+//                                {
+//                                    PeakStart = null, 
+//                                    PeakEnd = null
+//                                };
                 }
-            }
-            if (!_workspaceVersion.DistributionsValid(newWorkspaceVersion))
-            {
-                PeptideDistributions = new PeptideDistributions(this);
             }
             _workspaceVersion = newWorkspaceVersion;
         }
-        public double[] TimesArray { get { return _times; } }
-        public int[] ScanIndexesArray { get { return _scanIndexes; } }
         public bool SetChromatograms(WorkspaceVersion workspaceVersion, AnalysisChromatograms analysisChromatograms)
         {
             using (GetWriteLock())
@@ -504,29 +394,51 @@ namespace pwiz.Topograph.Model
                 {
                     return false;
                 }
-                _times = analysisChromatograms.Times.ToArray();
-                _scanIndexes = analysisChromatograms.ScanIndexes.ToArray();
                 _workspaceVersion = workspaceVersion;
-                Chromatograms = new Chromatograms(this);
+                Chromatograms = new Chromatograms(this, analysisChromatograms.Times.ToArray(), analysisChromatograms.ScanIndexes.ToArray());
                 foreach (var chromatogram in analysisChromatograms.Chromatograms)
                 {
                     var chromatogramData = new ChromatogramData(this, chromatogram);
                     Chromatograms.AddChild(chromatogramData.MzKey, chromatogramData);
                 }
+                ClearTracerChromatograms();
                 Recalculate();
                 Workspace.EntityChanged(PeptideAnalysis);
                 return true;
             }
         }
 
-        public void SetDistributions(Peaks peaks, PeptideDistributions peptideDistributions)
+        public void SetDistributions(Peaks peaks)
         {
             using (GetWriteLock())
             {
                 Peaks = peaks;
-                PeptideDistributions = peptideDistributions;
-                Workspace.EntityChanged(peptideDistributions);
+                Workspace.EntityChanged(this);
             }
+        }
+
+        public TracerChromatograms GetTracerChromatograms(bool smoothed)
+        {
+            var result = smoothed ? _tracerChromatogramsSmoothed : _tracerChromatograms;
+            if (result == null)
+            {
+                result = new TracerChromatograms(Chromatograms, smoothed);
+                if (smoothed)
+                {
+                    _tracerChromatogramsSmoothed = result;
+                }
+                else
+                {
+                    _tracerChromatograms = result;
+                }
+            }
+            return result;
+        }
+
+        public void ClearTracerChromatograms()
+        {
+            _tracerChromatograms = null;
+            _tracerChromatogramsSmoothed = null;
         }
     }
 }

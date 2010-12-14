@@ -17,11 +17,10 @@ namespace pwiz.Topograph.ui.Forms
         {
             InitializeComponent();
             tbxMassAccuracy.Text = workspace.GetMassAccuracy().ToString();
-            comboTracerCountType.Items.Add("Tracer Amounts");
-            comboTracerCountType.Items.Add("Precursor Enrichments");
-            comboTracerCountType.SelectedIndex = (int) Workspace.GetDefaultPeptideQuantity();
             cbxWeightSignalAbsenceMore.Checked = Workspace.GetErrOnSideOfLowerAbundance();
             tbxProteinDescriptionKey.Text = workspace.GetProteinDescriptionKey();
+            tbxMaxRetentionTimeShift.Text = workspace.GetMaxIsotopeRetentionTimeShift().ToString();
+            tbxMinCorrelationCoefficient.Text = workspace.GetMinCorrelationCoefficient().ToString();
         }
 
         private void btnOK_Click(object sender, EventArgs e)
@@ -29,7 +28,6 @@ namespace pwiz.Topograph.ui.Forms
             using (Workspace.GetWriteLock())
             {
                 Workspace.SetMassAccuracy(Convert.ToDouble(tbxMassAccuracy.Text));
-                Workspace.SetDefaultPeptideQuantity((PeptideQuantity)comboTracerCountType.SelectedIndex);
                 Workspace.SetErrOnSideOfLowerAbundance(cbxWeightSignalAbsenceMore.Checked);
                 Workspace.SetProteinDescriptionKey(tbxProteinDescriptionKey.Text);
             }

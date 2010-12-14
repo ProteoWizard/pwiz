@@ -13,7 +13,7 @@ namespace pwiz.Topograph.Data
 {
     public class WorkspaceUpgrader : ILongOperationJob
     {
-        public const int CurrentVersion = 5;
+        public const int CurrentVersion = 7;
         public const int MinUpgradeableVersion = 1;
         private IDbCommand _currentCommand;
         private LongOperationBroker _longOperationBroker;
@@ -66,8 +66,17 @@ namespace pwiz.Topograph.Data
                     throw new JobCancelledException();
                 }
                 _currentCommand = connection.CreateCommand();
+                _currentCommand.CommandTimeout = 600;
                 _currentCommand.CommandText = commandText;
                 return _currentCommand;
+            }
+        }
+
+        public bool IsSqlite
+        {
+            get
+            {
+                return TpgLinkDef == null;
             }
         }
 
@@ -127,6 +136,77 @@ namespace pwiz.Topograph.Data
                     CreateCommand(connection, "ALTER TABLE DbPeptideDistribution ADD COLUMN Turnover DOUBLE")
                         .ExecuteNonQuery();
                     CreateCommand(connection, "ALTER TABLE DbPeptideDistribution ADD COLUMN PrecursorEnrichmentFormula TEXT")
+                        .ExecuteNonQuery();
+                }
+                if (dbVersion < 6)
+                {
+                    broker.UpdateStatusMessage("Upgrading from version 5 to version 6");
+                    if (IsSqlite)
+                    {
+                        CreateCommand(connection, "DROP TABLE DbPeak")
+                            .ExecuteNonQuery();
+                        CreateCommand(connection, "CREATE TABLE DbPeak (Id  integer, Version INTEGER not null, "
+                                                  + "\nPeptideFileAnalysis INTEGER not null, Name TEXT not null, StartTime NUMERIC, EndTime NUMERIC, TotalArea NUMERIC,"
+                                                  + "\nBackground NUMERIC, RatioToBase NUMERIC, RatioToBaseError NUMERIC,"
+                                                  + "\nCorrelation NUMERIC, Intercept NUMERIC, TracerPercent NUMERIC, RelativeAmount NUMERIC,"
+                                                  + "\nprimary key (Id),unique (PeptideFileAnalysis, Name))")
+                            .ExecuteNonQuery();
+                    }
+                    else
+                    {
+                        CreateCommand(connection, "DELETE FROM DbPeak")
+                            .ExecuteNonQuery();
+                        try
+                        {
+                            CreateCommand(connection, "DROP INDEX PeptideFileAnalysis ON DbPeak")
+                                .ExecuteNonQuery();
+                        }
+                        catch
+                        {
+                            // ignore
+                        }
+                        CreateCommand(connection, "ALTER TABLE DbPeak ADD COLUMN Name VARCHAR(255)")
+                            .ExecuteNonQuery();
+                        CreateCommand(connection, "ALTER TABLE DbPeak ADD COLUMN StartTime DOUBLE")
+                            .ExecuteNonQuery();
+                        CreateCommand(connection, "ALTER TABLE DbPeak ADD COLUMN EndTime DOUBLE")
+                            .ExecuteNonQuery();
+                        CreateCommand(connection, "ALTER TABLE DbPeak ADD COLUMN RatioToBase DOUBLE")
+                            .ExecuteNonQuery();
+                        CreateCommand(connection, "ALTER TABLE DbPeak ADD COLUMN RatioToBaseError DOUBLE")
+                            .ExecuteNonQuery();
+                        CreateCommand(connection, "ALTER TABLE DbPeak ADD COLUMN Correlation DOUBLE")
+                            .ExecuteNonQuery();
+                        CreateCommand(connection, "ALTER TABLE DbPeak ADD COLUMN Intercept DOUBLE")
+                            .ExecuteNonQuery();
+                        CreateCommand(connection, "ALTER TABLE DbPeak ADD COLUMN TracerPercent DOUBLE")
+                            .ExecuteNonQuery();
+                        CreateCommand(connection, "ALTER TABLE DbPeak ADD COLUMN RelativeAmount DOUBLE")
+                            .ExecuteNonQuery();
+                        CreateCommand(connection,
+                                      "CREATE UNIQUE INDEX PeptideFileAnalysis ON DbPeak (PeptideFileAnalysis, Name)")
+                            .ExecuteNonQuery();
+                    }
+                    CreateCommand(connection, "ALTER TABLE DbPeptideFileAnalysis ADD COLUMN BasePeakName TEXT")
+                        .ExecuteNonQuery();
+                    CreateCommand(connection, "ALTER TABLE DbPeptideFileAnalysis ADD COLUMN TracerPercent DOUBLE")
+                        .ExecuteNonQuery();
+                    CreateCommand(connection, "ALTER TABLE DbPeptideFileAnalysis ADD COLUMN DeconvolutionScore DOUBLE")
+                        .ExecuteNonQuery();
+                    CreateCommand(connection, "ALTER TABLE DbPeptideFileAnalysis ADD COLUMN PrecursorEnrichment DOUBLE")
+                        .ExecuteNonQuery();
+                    CreateCommand(connection, "UPDATE DbPeptideFileAnalysis SET PeakCount = 0")
+                        .ExecuteNonQuery();
+
+                    CreateCommand(connection,
+                                  "ALTER TABLE DbPeptideFileAnalysis ADD COLUMN PrecursorEnrichmentFormula TEXT")
+                        .ExecuteNonQuery();
+                    CreateCommand(connection, "ALTER TABLE DbPeptideFileAnalysis ADD COLUMN Turnover DOUBLE")
+                        .ExecuteNonQuery();
+                }
+                if (dbVersion < 7)
+                {
+                    CreateCommand(connection, "ALTER TABLE DbMsDataFile ADD Column Sample TEXT")
                         .ExecuteNonQuery();
                 }
                 if (dbVersion < CurrentVersion)

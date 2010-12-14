@@ -25,6 +25,7 @@ namespace pwiz.Topograph.ui.Forms
             var tracerDef = workspace.GetTracerDefs()[0];
             tbxInitialTracerPercent.Text = tracerDef.InitialApe.ToString();
             tbxFinalTracerPercent.Text = tracerDef.FinalApe.ToString();
+            comboCalculationType.SelectedIndex = 0;
         }
 
         public double MinScore
@@ -49,7 +50,7 @@ namespace pwiz.Topograph.ui.Forms
         private void btnRequery_Click(object sender, EventArgs e)
         {
             double minScore = MinScore;
-            var calculator = new HalfLifeCalculator(Workspace)
+            var calculator = new HalfLifeCalculator(Workspace, HalfLifeCalculationType)
                                  {
                                      ByProtein = cbxByProtein.Checked,
                                      MinScore = minScore,
@@ -68,7 +69,9 @@ namespace pwiz.Topograph.ui.Forms
                 if (!calculator.Cohorts.Contains(entry.Key))
                 {
                     dataGridView1.Columns.Remove(entry.Value.HalfLifeColumn);
-                    dataGridView1.Columns.Remove(entry.Value.HalfLifeErrorColumn);
+                    dataGridView1.Columns.Remove(entry.Value.MinHalfLifeColumn);
+                    dataGridView1.Columns.Remove(entry.Value.MaxHalfLifeColumn);
+                    dataGridView1.Columns.Remove(entry.Value.NumDataPointsColumn);
                     _cohortColumns.Remove(entry.Key);
                 }
             }
@@ -87,14 +90,28 @@ namespace pwiz.Topograph.ui.Forms
                                                                      DefaultCellStyle = {Format = "0.####"},
                                                                      SortMode = DataGridViewColumnSortMode.Automatic,
                                                                  },
-                                            HalfLifeErrorColumn = new DataGridViewTextBoxColumn
+                                            MinHalfLifeColumn=  new DataGridViewTextBoxColumn
                                                                       {
-                                                                          HeaderText = cohort + " half life range",
+                                                                          HeaderText = cohort + " min half life",
+                                                                          DefaultCellStyle = { Format = "0.####" },
                                                                           SortMode = DataGridViewColumnSortMode.Automatic,
                                                                       },
+                                            MaxHalfLifeColumn = new DataGridViewTextBoxColumn
+                                            {
+                                                HeaderText = cohort + " max half life",
+                                                DefaultCellStyle = { Format = "0.####" },
+                                                SortMode = DataGridViewColumnSortMode.Automatic,
+                                            },
+                                            NumDataPointsColumn = new DataGridViewTextBoxColumn()
+                                                                      {
+                                                                          HeaderText = cohort + " # points",
+                                                                          SortMode = DataGridViewColumnSortMode.Automatic,
+                                                                      }
                                         };
                     dataGridView1.Columns.Add(cohortColumns.HalfLifeColumn);
-                    dataGridView1.Columns.Add(cohortColumns.HalfLifeErrorColumn);
+                    dataGridView1.Columns.Add(cohortColumns.MinHalfLifeColumn);
+                    dataGridView1.Columns.Add(cohortColumns.MaxHalfLifeColumn);
+                    dataGridView1.Columns.Add(cohortColumns.NumDataPointsColumn);
                     _cohortColumns.Add(cohort, cohortColumns);
                 }
             }
@@ -104,10 +121,14 @@ namespace pwiz.Topograph.ui.Forms
                 MessageBox.Show(this, "No results.  The problem might be that you have not set the time point on any data files.", Program.AppName);
                 return;
             }
-            dataGridView1.Rows.Add(calculator.ResultRows.Count);
-            for (int iRow = 0; iRow < calculator.ResultRows.Count; iRow++) 
+            // Filter out rows that have zero data points
+            var filteredResultRows =
+                new List<HalfLifeCalculator.ResultRow>(
+                    calculator.ResultRows.Where(r => r.ResultDatas.Select(rd => rd.Value.PointCount).Sum() > 0));
+            dataGridView1.Rows.Add(filteredResultRows.Count);
+            for (int iRow = 0; iRow < filteredResultRows.Count; iRow++) 
             {
-                var resultRow = calculator.ResultRows[iRow];
+                var resultRow = filteredResultRows[iRow];
                 var row = dataGridView1.Rows[iRow];
                 row.Cells[colPeptide.Index].Value = resultRow.PeptideSequence;
                 row.Cells[colProteinName.Index].Value = resultRow.ProteinName;
@@ -118,16 +139,21 @@ namespace pwiz.Topograph.ui.Forms
                     var cohortColumns = _cohortColumns[cohort];
                     var resultData = resultRow.ResultDatas[cohort];
                     row.Cells[cohortColumns.HalfLifeColumn.Index].Value = resultData.HalfLife;
-                    row.Cells[cohortColumns.HalfLifeErrorColumn.Index].Value = resultData.MinHalfLife.ToString("0.####") + "-" + resultData.MaxHalfLife.ToString("0.####") + " (" + resultData.PointCount + " pts)";
+                    row.Cells[cohortColumns.MinHalfLifeColumn.Index].Value = resultData.MinHalfLife;
+                    row.Cells[cohortColumns.MaxHalfLifeColumn.Index].Value = resultData.MaxHalfLife;
+                    row.Cells[cohortColumns.NumDataPointsColumn.Index].Value = resultData.PointCount;
                 }
             }
+            UpdateColumnVisibility();
             btnSave.Enabled = true;
         }
 
         private class CohortColumns
         {
             public DataGridViewColumn HalfLifeColumn { get; set; }
-            public DataGridViewColumn HalfLifeErrorColumn { get; set; }
+            public DataGridViewColumn MinHalfLifeColumn { get; set; }
+            public DataGridViewColumn MaxHalfLifeColumn { get; set; }
+            public DataGridViewColumn NumDataPointsColumn { get; set; }
         }
 
         private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
@@ -185,6 +211,7 @@ namespace pwiz.Topograph.ui.Forms
                                                InitialPercent = double.Parse(tbxInitialTracerPercent.Text),
                                                FinalPercent = double.Parse(tbxFinalTracerPercent.Text),
                                                FixedInitialPercent = cbxFixYIntercept.Checked,
+                                               HalfLifeCalculationType = HalfLifeCalculationType,
                                            };
                     halfLifeForm.Show(DockPanel, DockState);
                 }
@@ -213,6 +240,10 @@ namespace pwiz.Topograph.ui.Forms
                 var tab = "";
                 foreach (var column in columns)
                 {
+                    if (!column.Visible)
+                    {
+                        continue;
+                    }
                     writer.Write(tab);
                     tab = "\t";
                     writer.Write(column.HeaderText);
@@ -224,6 +255,10 @@ namespace pwiz.Topograph.ui.Forms
                     tab = "";
                     foreach (var column in columns)
                     {
+                        if (!column.Visible)
+                        {
+                            continue;
+                        }
                         writer.Write(tab);
                         tab = "\t";
                         writer.Write(row.Cells[column.Index].Value);
@@ -240,5 +275,47 @@ namespace pwiz.Topograph.ui.Forms
             return result;
         }
 
+        private void cbxShowColumn_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateColumnVisibility();
+        }
+
+        public void UpdateColumnVisibility()
+        {
+            foreach (var cohortColumns in _cohortColumns.Values)
+            {
+                cohortColumns.HalfLifeColumn.Visible = cbxShowHalfLife.Checked;
+                cohortColumns.MinHalfLifeColumn.Visible = cbxShowMinHalfLife.Checked;
+                cohortColumns.MaxHalfLifeColumn.Visible = cbxShowMaxHalfLife.Checked;
+                cohortColumns.NumDataPointsColumn.Visible = cbxShowNumDataPoints.Checked;
+            }
+        }
+
+        private void comboCalculationType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            switch (HalfLifeCalculationType)
+            {
+                default:
+                    tbxInitialTracerPercent.Enabled = false;
+                    tbxFinalTracerPercent.Enabled = false;
+                    cbxFixYIntercept.Enabled = false;
+                    break;
+                case HalfLifeCalculationType.TracerPercent:
+                    tbxInitialTracerPercent.Enabled = true;
+                    tbxFinalTracerPercent.Enabled = true;
+                    cbxFixYIntercept.Enabled = true;
+                    break;
+            }
+        }
+
+
+
+        public HalfLifeCalculationType HalfLifeCalculationType
+        {
+            get
+            {
+                return (HalfLifeCalculationType)comboCalculationType.SelectedIndex;
+            }
+        }
     }
 }

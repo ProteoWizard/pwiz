@@ -90,6 +90,7 @@ namespace pwiz.Topograph.ui.Forms
             row.Cells[colLabel.Index].Value = dataFile.Label;
             row.Cells[colCohort.Index].Value = dataFile.Cohort;
             row.Cells[colTimePoint.Index].Value = dataFile.TimePoint;
+            row.Cells[colSample.Index].Value = dataFile.Sample;
         }
 
         protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
@@ -151,6 +152,10 @@ namespace pwiz.Topograph.ui.Forms
             else if (column == colLabel)
             {
                 msDataFile.Label = Convert.ToString(cell.Value);
+            }
+            else if (column == colSample)
+            {
+                msDataFile.Sample = Convert.ToString(cell.Value);
             }
         }
 
@@ -250,13 +255,6 @@ namespace pwiz.Topograph.ui.Forms
                     .ExecuteUpdate();
                 broker.UpdateStatusMessage("Deleting peaks");
                 session.CreateSQLQuery("DELETE FROM DbPeak WHERE PeptideFileAnalysis IN " + sqlFileAnalysisIds)
-                    .ExecuteUpdate();
-                broker.UpdateStatusMessage("Deleting distributions");
-                session.CreateSQLQuery(
-                    "DELETE FROM DbPeptideAmount WHERE PeptideDistribution IN (SELECT Id FROM DbPeptideDistribution WHERE PeptideFileAnalysis IN " +
-                    sqlFileAnalysisIds + ")")
-                    .ExecuteUpdate();
-                session.CreateSQLQuery("DELETE FROM DbPeptideDistribution WHERE PeptideFileAnalysis IN " + sqlFileAnalysisIds)
                     .ExecuteUpdate();
                 broker.UpdateStatusMessage("Deleting file analyses");
                 session.CreateSQLQuery("DELETE FROM DbPeptideFileAnalysis WHERE MsDataFile IN " + sqlDataFileIds)

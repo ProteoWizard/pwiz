@@ -20,7 +20,7 @@ namespace pwiz.Topograph.Enrichment
                 MinCharge = peptideFileAnalysis.MinCharge;
                 MaxCharge = peptideFileAnalysis.MaxCharge;
                 ExcludedMzs = peptideFileAnalysis.ExcludedMzs;
-                Times = peptideFileAnalysis.Times;
+                //Times = peptideFileAnalysis.Times;
             }
         }
 
@@ -89,22 +89,22 @@ namespace pwiz.Topograph.Enrichment
             var result = new List<IList<double>>();
             int minCharge = MinCharge;
             int maxCharge = MaxCharge;
-            var times = PeptideFileAnalysis.Times;
-            for (int iMass = 0; iMass < TurnoverCalculator.MassCount; iMass ++)
-            {
-                var vector = new double[times.Count];
-                for (int charge = minCharge; charge <= maxCharge; charge++)
-                {
-                    var mzKey = new MzKey(charge, iMass);
-                    var chromatogram = Chromatograms.GetChild(mzKey);
-                    var intensities = chromatogram.GetIntensities();
-                    for (int i = 0; i < vector.Length; i++)
-                    {
-                        vector[i] += intensities[i];
-                    }
-                }
-                result.Add(vector);
-            }
+            //var times = PeptideFileAnalysis.Times;
+//            for (int iMass = 0; iMass < TurnoverCalculator.MassCount; iMass ++)
+//            {
+//                var vector = new double[times.Count];
+//                for (int charge = minCharge; charge <= maxCharge; charge++)
+//                {
+//                    var mzKey = new MzKey(charge, iMass);
+//                    var chromatogram = Chromatograms.GetChild(mzKey);
+//                    var intensities = chromatogram.GetIntensities();
+//                    for (int i = 0; i < vector.Length; i++)
+//                    {
+//                        vector[i] += intensities[i];
+//                    }
+//                }
+//                result.Add(vector);
+//            }
             return result;
         }
 

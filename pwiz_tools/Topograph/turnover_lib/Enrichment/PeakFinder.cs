@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using pwiz.Crawdad;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
 
@@ -35,7 +36,7 @@ namespace pwiz.Topograph.Enrichment
         {
             get; set;
         }
-        public IList<ChromatogramData> Chromatograms
+        public TracerChromatograms Chromatograms
         {
             get; set;
         }
@@ -60,7 +61,7 @@ namespace pwiz.Topograph.Enrichment
             }
             int nextPeakStart = peakStart;
             int nextPeakEnd = peakEnd;
-            for (int i = 0; i < Chromatograms.Count; i++)
+            foreach (var entry in Chromatograms.Points)
             {
                 if (IsotopesEluteLater)
                 {
@@ -70,34 +71,58 @@ namespace pwiz.Topograph.Enrichment
                 {
                     peakStart = nextPeakStart;
                 }
-                var chromatogram = Chromatograms[i];
                 int chromPeakStart, chromPeakEnd;
-                FindPeak(chromatogram, peakStart, peakEnd, out chromPeakStart, out chromPeakEnd);
+                FindPeak(Chromatograms.Times, entry.Value, peakStart, peakEnd, out chromPeakStart, out chromPeakEnd);
                 nextPeakStart = Math.Min(nextPeakStart, chromPeakStart);
                 nextPeakEnd = Math.Max(nextPeakEnd, chromPeakEnd);
             }
             peakStart = nextPeakStart;
             peakEnd = nextPeakEnd;
         }
-        static void FindPeak(ChromatogramData chromatogramData, int firstDetectedScan, int lastDetectedScan, 
+        static void FindPeak(IList<double> times, IList<double> intensities, int firstDetectedScan, int lastDetectedScan, 
             out int peakStart, out int peakEnd)
         {
-            var intensities = chromatogramData.GetIntensities();
-            int maxIndex = MaxInRange(intensities, firstDetectedScan, lastDetectedScan);
-            double baseline = 0;
-            for (peakStart = maxIndex; peakStart > 0; peakStart--)
+            CrawdadPeakFinder peakFinder = new CrawdadPeakFinder();
+            peakFinder.SetChromatogram(times, intensities);
+            double minDist = Double.MaxValue;
+            var overlappingPeaks = new List<CrawdadPeak>();
+            CrawdadPeak closestPeak = null;
+            foreach (var peak in peakFinder.CalcPeaks())
             {
-                if (intensities[peakStart] <= baseline)
+                double distance;
+                if (peak.EndIndex < firstDetectedScan)
                 {
-                    break;
+                    distance = firstDetectedScan - peak.EndIndex;
+                }
+                else if (peak.StartIndex > lastDetectedScan)
+                {
+                    distance = peak.StartIndex - lastDetectedScan;
+                }
+                else
+                {
+                    distance = 0;
+                    overlappingPeaks.Add(peak);
+                }
+                if (distance < minDist)
+                {
+                    minDist = distance;
+                    closestPeak = peak;
                 }
             }
-            for (peakEnd = maxIndex; peakEnd < intensities.Count() - 1; peakEnd++)
+            peakStart = firstDetectedScan;
+            peakEnd = lastDetectedScan;
+            if (closestPeak == null)
             {
-                if (intensities[peakEnd] <= baseline)
-                {
-                    break;
-                }
+                return;
+            }
+            if (overlappingPeaks.Count == 0)
+            {
+                overlappingPeaks.Add(closestPeak);
+            }
+            foreach (var peak in overlappingPeaks)
+            {
+                peakStart = Math.Min(peakStart, peak.StartIndex);
+                peakEnd = Math.Max(peakEnd, peak.EndIndex);
             }
         }
 
@@ -116,35 +141,35 @@ namespace pwiz.Topograph.Enrichment
             return maxIndex;
         }
 
-        public static void ComputePeak(
-            ChromatogramData chromatogram, 
-            DbPeak peak,
-            double unitBackground)
-        {
-            int startIndex = Array.BinarySearch(chromatogram.ScanIndexes, peak.PeakStart);
-            if (startIndex < 0)
-            {
-                startIndex = ~startIndex;
-            }
-            int endIndex = Array.BinarySearch(chromatogram.ScanIndexes, peak.PeakEnd);
-            {
-                if (endIndex < 0)
-                {
-                    endIndex = ~endIndex;
-                }
-            }
-            double totalArea = 0;
-            for (int iScan = startIndex; iScan <= endIndex; iScan++)
-            {
-                double[] times = chromatogram.Times;
-                var intensities = chromatogram.GetIntensities();
-                int prevScan = Math.Max(0, iScan - 1);
-                int nextScan = Math.Min(times.Length - 1, iScan + 1);
-                double width = (times[nextScan] - times[prevScan]) / (nextScan - prevScan);
-                totalArea += intensities[iScan] * width;
-            }
-            peak.Background = 0;
-            peak.TotalArea = totalArea;
-        }
+//        public static void ComputePeak(
+//            ChromatogramData chromatogram, 
+//            DbPeak peak,
+//            double unitBackground)
+//        {
+//            int startIndex = Array.BinarySearch(chromatogram.ScanIndexes, peak.PeakStart);
+//            if (startIndex < 0)
+//            {
+//                startIndex = ~startIndex;
+//            }
+//            int endIndex = Array.BinarySearch(chromatogram.ScanIndexes, peak.PeakEnd);
+//            {
+//                if (endIndex < 0)
+//                {
+//                    endIndex = ~endIndex;
+//                }
+//            }
+//            double totalArea = 0;
+//            for (int iScan = startIndex; iScan <= endIndex; iScan++)
+//            {
+//                double[] times = chromatogram.Times;
+//                var intensities = chromatogram.GetIntensities();
+//                int prevScan = Math.Max(0, iScan - 1);
+//                int nextScan = Math.Min(times.Length - 1, iScan + 1);
+//                double width = (times[nextScan] - times[prevScan]) / (nextScan - prevScan);
+//                totalArea += intensities[iScan] * width;
+//            }
+//            peak.Background = 0;
+//            peak.TotalArea = totalArea;
+//        }
     }
 }

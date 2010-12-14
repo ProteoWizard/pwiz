@@ -59,12 +59,7 @@ namespace pwiz.Topograph.ui.Controls
                 using (var session = Workspace.OpenSession())
                 {
                     dbPeptideFileAnalysis = null;
-                    if (value is DbPeptideDistribution)
-                    {
-                        dbPeptideFileAnalysis =
-                            session.Get<DbPeptideDistribution>(((DbPeptideDistribution) value).Id).PeptideFileAnalysis;
-                    }
-                    else if (value is DbPeak)
+                    if (value is DbPeak)
                     {
                         dbPeptideFileAnalysis = session.Get<DbPeak>(((DbPeak) value).Id).PeptideFileAnalysis;
                     }

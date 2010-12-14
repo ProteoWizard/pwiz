@@ -96,26 +96,8 @@ namespace pwiz.Topograph.ui.Forms
             var peptideFileAnalysis = (PeptideFileAnalysis) row.Tag;
             row.Cells[colStatus.Index].Value = peptideFileAnalysis.ValidationStatus;
             row.Cells[colSequence.Index].Value = peptideFileAnalysis.Sequence;
-            row.Cells[colPeakStart.Index].Value = peptideFileAnalysis.PeakStart;
-            row.Cells[colPeakEnd.Index].Value = peptideFileAnalysis.PeakEnd;
-            var precursorEnrichments = peptideFileAnalysis.PeptideDistributions.GetChild(PeptideQuantity.precursor_enrichment);
-            var tracerAmounts = peptideFileAnalysis.PeptideDistributions.GetChild(PeptideQuantity.tracer_count);
-            if (precursorEnrichments != null)
-            {
-                row.Cells[colTurnover.Index].Value = 100.0 - precursorEnrichments.GetChild("").PercentAmountValue;
-            }
-            else
-            {
-                row.Cells[colTurnover.Index].Value = null;
-            }
-            if (tracerAmounts != null)
-            {
-                row.Cells[colApe.Index].Value = tracerAmounts.TracerPercent; 
-            }
-            else
-            {
-                row.Cells[colApe.Index].Value = null;
-            }
+            row.Cells[colPeakStart.Index].Value = peptideFileAnalysis.PeakStartTime;
+            row.Cells[colPeakEnd.Index].Value = peptideFileAnalysis.PeakEndTime;
         }
 
         private IList<DataGridViewRow> AddRows(ICollection<PeptideFileAnalysis> peptideFileAnalyses)
@@ -153,21 +135,21 @@ namespace pwiz.Topograph.ui.Forms
             var peptideFileAnalysis = (PeptideFileAnalysis) dataGridView.Rows[e.RowIndex].Tag;
             if (e.ColumnIndex < 0)
             {
-                ShowPeptideFileAnalysisForm<AbstractChromatogramForm>(peptideFileAnalysis);
+                ShowPeptideFileAnalysisForm<TracerChromatogramForm>(peptideFileAnalysis);
                 return;
             }
             var column = dataGridView.Columns[e.ColumnIndex];
             if (column == colPeakStart || column == colPeakEnd)
             {
-                ShowPeptideFileAnalysisForm<AbstractChromatogramForm>(peptideFileAnalysis);
+                ShowPeptideFileAnalysisForm<TracerChromatogramForm>(peptideFileAnalysis);
             } 
             else if (column == colTurnover)
             {
-                ShowPeptideFileAnalysisForm<PrecursorEnrichmentsForm>(peptideFileAnalysis);
+                ShowPeptideFileAnalysisForm<TracerChromatogramForm>(peptideFileAnalysis);
             }
             else if (column == colApe)
             {
-                ShowPeptideFileAnalysisForm<TracerAmountsForm>(peptideFileAnalysis);
+                ShowPeptideFileAnalysisForm<TracerChromatogramForm>(peptideFileAnalysis);
             }
             
         }

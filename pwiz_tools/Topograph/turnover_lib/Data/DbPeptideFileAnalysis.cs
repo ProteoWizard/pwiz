@@ -31,7 +31,6 @@ namespace pwiz.Topograph.Data
         {
             Chromatograms = new List<DbChromatogram>();
             Peaks = new List<DbPeak>();
-            PeptideDistributions = new List<DbPeptideDistribution>();
         }
         public virtual DbPeptideAnalysis PeptideAnalysis { get; set; }
         public virtual DbMsDataFile MsDataFile { get; set; }
@@ -39,21 +38,22 @@ namespace pwiz.Topograph.Data
         public virtual int ChromatogramCount { get; set; }
         public virtual ICollection<DbPeak> Peaks { get; set; }
         public virtual int PeakCount { get; set; }
-        public virtual ICollection<DbPeptideDistribution> PeptideDistributions { get; set; }
-        public virtual int PeptideDistributionCount { get; set; }
         public virtual bool AutoFindPeak { get; set; }
         public virtual bool OverrideExcludedMasses { get; set; }
         public virtual double ChromatogramStartTime { get; set; }
         public virtual double ChromatogramEndTime { get; set; }
         public virtual int? FirstDetectedScan { get; set; }
         public virtual int? LastDetectedScan { get; set; }
-        public virtual int? PeakStart { get; set; }
-        public virtual double? PeakStartTime { get; set; }
-        public virtual int? PeakEnd { get; set; }
-        public virtual double? PeakEndTime { get; set; }
         public virtual byte[] TimesBytes { get; set; }
         public virtual byte[] ScanIndexesBytes { get; set; }
         public virtual byte[] ExcludedMasses { get; set; }
+        public virtual string BasePeakName { get; set; }
+        public virtual double? TracerPercent { get; set; }
+        public virtual double? DeconvolutionScore { get; set; }
+        public virtual double? PrecursorEnrichment { get; set; }
+        public virtual string PrecursorEnrichmentFormula { get; set; }
+        public virtual double? Turnover { get; set; }
+        public virtual bool IsCalculated { get { return PeakCount != 0 && TracerPercent.HasValue; } }
         public virtual double[] Times 
         { 
             get

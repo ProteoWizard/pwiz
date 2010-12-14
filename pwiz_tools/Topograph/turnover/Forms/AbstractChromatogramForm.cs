@@ -79,52 +79,50 @@ namespace pwiz.Topograph.ui.Forms
 
         private SelectionDragging GetSelectionDragging(Point pt)
         {
-            if (!PeptideFileAnalysis.PeakStart.HasValue || !PeptideFileAnalysis.PeakEnd.HasValue)
-            {
-                return SelectionDragging.none;
-            }
-            const int mouseTolerance = 2;
-            float xPeakStart =
-                msGraphControl.GraphPane.XAxis.Scale.Transform(
-                TimeFromScanIndex(PeptideFileAnalysis.PeakStart.Value));
-            float xPeakEnd =
-                msGraphControl.GraphPane.XAxis.Scale.Transform(
-                    TimeFromScanIndex(PeptideFileAnalysis.PeakEnd.Value));
-            if (Math.Abs(pt.X - xPeakStart) <= Math.Abs(pt.X - xPeakEnd))
-            {
-                if (Math.Abs(pt.X - xPeakStart) <= mouseTolerance)
-                {
-                    return SelectionDragging.start;
-                }
-            }
-            else
-            {
-                if (Math.Abs(pt.X - xPeakEnd) <= mouseTolerance)
-                {
-                    return SelectionDragging.end;
-                }
-            }
+//            if (!PeptideFileAnalysis.PeakStart.HasValue || !PeptideFileAnalysis.PeakEnd.HasValue)
+//            {
+//                return SelectionDragging.none;
+//            }
+//            const int mouseTolerance = 2;
+//            float xPeakStart =
+//                msGraphControl.GraphPane.XAxis.Scale.Transform(
+//                TimeFromScanIndex(PeptideFileAnalysis.PeakStart.Value));
+//            float xPeakEnd =
+//                msGraphControl.GraphPane.XAxis.Scale.Transform(
+//                    TimeFromScanIndex(PeptideFileAnalysis.PeakEnd.Value));
+//            if (Math.Abs(pt.X - xPeakStart) <= Math.Abs(pt.X - xPeakEnd))
+//            {
+//                if (Math.Abs(pt.X - xPeakStart) <= mouseTolerance)
+//                {
+//                    return SelectionDragging.start;
+//                }
+//            }
+//            else
+//            {
+//                if (Math.Abs(pt.X - xPeakEnd) <= mouseTolerance)
+//                {
+//                    return SelectionDragging.end;
+//                }
+//            }
             return SelectionDragging.none;
         }
         private void GetPeakStartEnd(SelectionDragging selectionDragging, double curValue, out double peakStart, out double peakEnd)
         {
-            double value2 = (selectionDragging == SelectionDragging.start
-                                ? TimeFromScanIndex(PeptideFileAnalysis.PeakEnd.Value)
-                                : TimeFromScanIndex(PeptideFileAnalysis.PeakStart.Value));
+            double value2 = 0;
             peakStart = Math.Min(curValue, value2);
             peakEnd = Math.Max(curValue, value2);
         }
         int ScanIndexFromTime(double time)
         {
-            return PeptideFileAnalysis.ScanIndexFromTime(time);
+            return PeptideFileAnalysis.Chromatograms.ScanIndexFromTime(time);
         }
 
         protected double TimeFromScanIndex(int scanIndex)
         {
-            return PeptideFileAnalysis.TimeFromScanIndex(scanIndex);
+            return PeptideFileAnalysis.Chromatograms.TimeFromScanIndex(scanIndex);
         }
 
-        bool msGraphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
+        protected virtual bool msGraphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             selectionDragging = GetSelectionDragging(e.Location);
             if (selectionDragging != SelectionDragging.none)
@@ -134,7 +132,9 @@ namespace pwiz.Topograph.ui.Forms
             return false;
         }
 
-        bool msGraphControl_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
+       
+
+        protected virtual bool msGraphControl_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             if (selectionDragging != SelectionDragging.none)
             {
@@ -162,37 +162,38 @@ namespace pwiz.Topograph.ui.Forms
             return false;
         }
 
-        bool msGraphControl_MouseUpEvent(ZedGraphControl sender, MouseEventArgs e)
+        protected virtual bool msGraphControl_MouseUpEvent(ZedGraphControl sender, MouseEventArgs e)
         {
             _ptClick = e.Location;
             if (selectionDragging == SelectionDragging.none)
             {
                 return false;
             }
-            int value1 = ScanIndexFromTime(msGraphControl.GraphPane.XAxis.Scale.ReverseTransform(e.X));
-            int value2;
-            if (selectionDragging == SelectionDragging.start)
-            {
-                value2 = PeptideFileAnalysis.PeakEnd.Value;
-            }
-            else
-            {
-                value2 = PeptideFileAnalysis.PeakStart.Value;
-            }
-            PeptideFileAnalysis.AutoFindPeak = false;
-            PeptideFileAnalysis.SetPeakStartEnd(Math.Min(value1, value2), Math.Max(value1, value2), PeptideFileAnalysis.Chromatograms);
-            selectionDragging = SelectionDragging.none;
-            Recalc();
+//            int value1 = ScanIndexFromTime(msGraphControl.GraphPane.XAxis.Scale.ReverseTransform(e.X));
+//            int value2;
+//            if (selectionDragging == SelectionDragging.start)
+//            {
+//                value2 = PeptideFileAnalysis.PeakEnd.Value;
+//            }
+//            else
+//            {
+//                value2 = PeptideFileAnalysis.PeakStart.Value;
+//            }
+//            PeptideFileAnalysis.AutoFindPeak = false;
+//            PeptideFileAnalysis.SetPeakStartEnd(Math.Min(value1, value2), Math.Max(value1, value2), PeptideFileAnalysis.Chromatograms);
+//            selectionDragging = SelectionDragging.none;
+//            Recalc();
             return true;
         }
 
-        bool msGraphControl_DoubleClickEvent(ZedGraphControl sender, MouseEventArgs e)
+        protected virtual bool msGraphControl_DoubleClickEvent(ZedGraphControl sender, MouseEventArgs e)
         {
-            double x, y;
-            msGraphControl.GraphPane.ReverseTransform(e.Location, out x, out y);
-            int scanIndex = PeptideFileAnalysis.ScanIndexFromTime(x);
-            DisplaySpectrum(scanIndex);
-            return true;
+            return false;
+//            double x, y;
+//            msGraphControl.GraphPane.ReverseTransform(e.Location, out x, out y);
+//            int scanIndex = PeptideFileAnalysis.Chromatograms.ScanIndexFromTime(x);
+//            DisplaySpectrum(scanIndex);
+//            return true;
         }
 
         protected virtual ICollection<int> GetSelectedCharges()
@@ -288,7 +289,7 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     return;
                 }
-                times = PeptideFileAnalysis.Times ?? new double[0];
+                times = PeptideFileAnalysis.Chromatograms.Times ?? new double[0];
                 Recalc();
             }
             finally
@@ -300,7 +301,8 @@ namespace pwiz.Topograph.ui.Forms
         protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
         {
             base.OnWorkspaceEntitiesChanged(args);
-            if (args.Contains(PeptideFileAnalysis) || args.Contains(PeptideAnalysis) || !Equals(Workspace.WorkspaceVersion, _workspaceVersion))
+            if (args.Contains(PeptideFileAnalysis) || args.Contains(PeptideFileAnalysis.Peaks) 
+                || args.Contains(PeptideAnalysis) || !Equals(Workspace.WorkspaceVersion, _workspaceVersion))
             {
                 UpdateUi();
             }
@@ -357,9 +359,26 @@ namespace pwiz.Topograph.ui.Forms
         {
             double x, y;
             msGraphControl.GraphPane.ReverseTransform(_ptClick, out x, out y);
-            int scanIndex = PeptideFileAnalysis.ScanIndexFromTime(x);
+            int scanIndex = PeptideFileAnalysis.Chromatograms.ScanIndexFromTime(x);
             DisplaySpectrum(scanIndex);
         }
+        protected void SetAutoFindPeak(bool autoFindPeak)
+        {
+            if (autoFindPeak)
+            {
+                var newPeaks = new Peaks(PeptideFileAnalysis);
+                newPeaks.CalcIntensities();
+                PeptideFileAnalysis.SetDistributions(newPeaks);
+            }
+            else
+            {
+                var newPeaks = PeptideFileAnalysis.Peaks.ChangeBasePeak(PeptideFileAnalysis.Peaks.BaseTracerFormula);
+                newPeaks.AutoFindPeak = false;
+                PeptideFileAnalysis.SetDistributions(newPeaks);
+            }
+
+        }
+
     }
     public class ChromatogramGraphItem : IMSGraphItemInfo
     {
@@ -405,6 +424,7 @@ namespace pwiz.Topograph.ui.Forms
             axis.Scale.MaxAuto = true;
             CustomizeAxis(axis);
         }
+
 
         public IPointList Points
         {

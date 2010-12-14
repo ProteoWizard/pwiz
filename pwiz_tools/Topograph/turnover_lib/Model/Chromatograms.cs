@@ -18,23 +18,36 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using pwiz.Topograph.Data;
+using pwiz.Topograph.Enrichment;
 
 namespace pwiz.Topograph.Model
 {
     public class Chromatograms : EntityModelCollection<DbPeptideFileAnalysis, MzKey, DbChromatogram, ChromatogramData>
     {
+        private double[] _times;
+        private int[] _scanIndexes;
         public Chromatograms(PeptideFileAnalysis peptideFileAnalysis, DbPeptideFileAnalysis dbPeptideFileAnalysis) 
             : base(peptideFileAnalysis.Workspace, dbPeptideFileAnalysis)
         {
             Parent = peptideFileAnalysis;
         }
 
-        public Chromatograms(PeptideFileAnalysis peptideFileAnalysis) : base(peptideFileAnalysis.Workspace)
+        public Chromatograms(PeptideFileAnalysis peptideFileAnalysis, double[] times, int[] scanIndexes) : base(peptideFileAnalysis.Workspace)
         {
             Parent = peptideFileAnalysis;
+            _times = times;
+            _scanIndexes = scanIndexes;
+        }
+
+        protected override void Load(DbPeptideFileAnalysis parent)
+        {
+            base.Load(parent);
+            _times = parent.Times;
+            _scanIndexes = parent.ScanIndexes;
         }
 
         public PeptideFileAnalysis PeptideFileAnalysis { get { return (PeptideFileAnalysis) Parent; } }
@@ -70,9 +83,72 @@ namespace pwiz.Topograph.Model
                 {
                     continue;
                 }
+                if (chromatogram.Charge < PeptideFileAnalysis.MinCharge || chromatogram.Charge > PeptideFileAnalysis.MaxCharge)
+                {
+                    continue;
+                }
                 result.Add(chromatogram);
             }
             return result;
         }
+        public int ScanIndexFromTime(double time)
+        {
+            if (Times == null || Times.Count == 0)
+            {
+                return 0;
+            }
+            int index = IndexFromTime(time);
+            return _scanIndexes[index];
+        }
+        public double TimeFromScanIndex(int scanIndex)
+        {
+            if (_times == null || _times.Length == 0)
+            {
+                return 0;
+            }
+            int index = Array.BinarySearch(_scanIndexes, scanIndex);
+            if (index < 0)
+            {
+                index = ~index;
+            }
+            index = Math.Min(index, _times.Length - 1);
+            return _times[index];
+        }
+        public int IndexFromScanIndex(int scanIndex)
+        {
+            int index = Array.BinarySearch(_scanIndexes, scanIndex);
+            if (index < 0)
+            {
+                index = ~index;
+            }
+            index = Math.Min(index, _scanIndexes.Length - 1);
+            return index;
+        }
+        public int IndexFromTime(double time)
+        {
+            if (Times == null || Times.Count == 0)
+            {
+                return 0;
+            }
+            int index = Array.BinarySearch(_times, time);
+            if (index < 0)
+            {
+                index = ~index;
+            }
+            index = Math.Min(index, _times.Length - 1);
+            return index;
+        }
+        public IList<double> Times
+        {
+            get
+            {
+                return new ReadOnlyCollection<double>(_times ?? new double[0]);
+            }
+        }
+        public IList<int> ScanIndexes { get { return new ReadOnlyCollection<int>(_scanIndexes); } }
+        public double[] TimesArray { get { return _times; } }
+        public int[] ScanIndexesArray { get { return _scanIndexes; } }
+        public double FirstTime { get { return _times[0]; } }
+        public double LastTime { get { return _times[_times.Length - 1]; } }
     }
 }

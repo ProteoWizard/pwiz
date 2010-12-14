@@ -24,6 +24,9 @@ namespace pwiz.Topograph.ui.Forms
                                    {
                                        Dock = DockStyle.Fill,
                                    };
+            _zedGraphControl.GraphPane.Title.Text = "Distribution of Precursor Enrichment Values";
+            _zedGraphControl.GraphPane.XAxis.Title.Text = "Precursor Enrichment (%)";
+            _zedGraphControl.GraphPane.YAxis.Title.Text = "# of peptide replicates";
             splitContainer1.Panel2.Controls.Add(_zedGraphControl);
         }
 
@@ -102,7 +105,7 @@ namespace pwiz.Topograph.ui.Forms
                 var row = dataGridView1.Rows[i];
                 if (dataGridView1.SelectedRows.Count == 0 || dataGridView1.SelectedRows.Contains(row))
                 {
-                    _zedGraphControl.GraphPane.AddBar(cohortKey.ToString(), xValues, yValues, DistributionResultsForm.GetColor(i, cohortKeys.Count));
+                    _zedGraphControl.GraphPane.AddBar(cohortKey.ToString(), xValues, yValues, TracerChromatogramForm.GetColor(i, cohortKeys.Count));
                 }
                 row.Cells[colCohort.Index].Value = cohortKey;
                 var statsX = new Statistics(xValues);
@@ -131,14 +134,14 @@ namespace pwiz.Topograph.ui.Forms
             if (byFile)
             {
                 query = session.CreateQuery(
-                    "SELECT D.PrecursorEnrichment, Count(D.Id), D.PeptideFileAnalysis.PeptideAnalysis.Peptide.Sequence, D.PeptideFileAnalysis.MsDataFile.Label FROM DbPeptideDistribution D WHERE D.PeptideQuantity = 0 AND D.Score >= :minScore GROUP BY D.PeptideFileAnalysis.PeptideAnalysis.Peptide.Sequence, D.PrecursorEnrichment, D.PeptideFileAnalysis.MsDataFile.Label")
+                    "SELECT F.PrecursorEnrichment, Count(F.Id), F.PeptideAnalysis.Peptide.Sequence, F.MsDataFile.Label FROM DbPeptideFileAnalysis F WHERE F.DeconvolutionScore >= :minScore GROUP BY F.PeptideAnalysis.Peptide.Sequence, F.PrecursorEnrichment, F.MsDataFile.Label")
                     .SetParameter("minScore", minScore);
             }
             else
             {
                 query =
                     session.CreateQuery(
-                    "SELECT D.PrecursorEnrichment, Count(D.Id), D.PeptideFileAnalysis.PeptideAnalysis.Peptide.Sequence, D.PeptideFileAnalysis.MsDataFile.Cohort, D.PeptideFileAnalysis.MsDataFile.TimePoint FROM DbPeptideDistribution D WHERE D.PeptideQuantity = 0 AND D.Score >= :minScore GROUP BY D.PeptideFileAnalysis.PeptideAnalysis.Peptide.Sequence, D.PrecursorEnrichment, D.PeptideFileAnalysis.MsDataFile.Cohort, D.PeptideFileAnalysis.MsDataFile.TimePoint")
+                    "SELECT F.PrecursorEnrichment, Count(F.Id), F.PeptideAnalysis.Peptide.Sequence, F.MsDataFile.Cohort, F.MsDataFile.TimePoint FROM DbPeptideFileAnalysis F WHERE F.DeconvolutionScore >= :minScore GROUP BY F.PeptideAnalysis.Peptide.Sequence, F.PrecursorEnrichment, F.MsDataFile.Cohort, F.MsDataFile.TimePoint")
                     .SetParameter("minScore", minScore);
             }
             var result = new Dictionary<CohortKey, IDictionary<double, int>>();

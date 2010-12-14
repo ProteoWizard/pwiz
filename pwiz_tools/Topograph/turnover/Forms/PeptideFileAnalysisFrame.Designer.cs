@@ -80,16 +80,17 @@
             this.panel1.Size = new System.Drawing.Size(893, 238);
             this.panel1.TabIndex = 2;
             // 
-            // PeptideDataForm
+            // PeptideFileAnalysisFrame
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(893, 264);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.tableLayoutPanel2);
-            this.Name = "PeptideDataForm";
+            this.Name = "PeptideFileAnalysisFrame";
             this.TabText = "PeptideDataForm";
             this.Text = "PeptideDataForm";
+            this.Resize += new System.EventHandler(this.PeptideFileAnalysisFrame_Resize);
             this.tableLayoutPanel2.ResumeLayout(false);
             this.tableLayoutPanel2.PerformLayout();
             this.ResumeLayout(false);

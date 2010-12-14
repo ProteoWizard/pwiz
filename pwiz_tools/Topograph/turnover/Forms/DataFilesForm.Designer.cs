@@ -41,6 +41,7 @@ namespace pwiz.Topograph.ui.Forms
             this.colLabel = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTimePoint = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colCohort = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colSample = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -63,7 +64,7 @@ namespace pwiz.Topograph.ui.Forms
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.gridView);
-            this.splitContainer1.Size = new System.Drawing.Size(579, 264);
+            this.splitContainer1.Size = new System.Drawing.Size(772, 264);
             this.splitContainer1.SplitterDistance = 65;
             this.splitContainer1.TabIndex = 0;
             // 
@@ -81,7 +82,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 64.61539F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 35.38462F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(579, 65);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(772, 65);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // label1
@@ -90,7 +91,7 @@ namespace pwiz.Topograph.ui.Forms
             this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.label1.Location = new System.Drawing.Point(3, 41);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(283, 24);
+            this.label1.Size = new System.Drawing.Size(380, 24);
             this.label1.TabIndex = 0;
             this.label1.Text = "Find:";
             this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
@@ -99,9 +100,9 @@ namespace pwiz.Topograph.ui.Forms
             // 
             this.findBox1.DataGridView = this.gridView;
             this.findBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.findBox1.Location = new System.Drawing.Point(292, 44);
+            this.findBox1.Location = new System.Drawing.Point(389, 44);
             this.findBox1.Name = "findBox1";
-            this.findBox1.Size = new System.Drawing.Size(284, 18);
+            this.findBox1.Size = new System.Drawing.Size(380, 18);
             this.findBox1.TabIndex = 1;
             // 
             // gridView
@@ -113,11 +114,12 @@ namespace pwiz.Topograph.ui.Forms
             this.colName,
             this.colLabel,
             this.colTimePoint,
-            this.colCohort});
+            this.colCohort,
+            this.colSample});
             this.gridView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.gridView.Location = new System.Drawing.Point(0, 0);
             this.gridView.Name = "gridView";
-            this.gridView.Size = new System.Drawing.Size(579, 195);
+            this.gridView.Size = new System.Drawing.Size(772, 195);
             this.gridView.TabIndex = 0;
             this.gridView.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridView_CellEndEdit);
             this.gridView.RowHeaderMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.gridView_RowHeaderMouseDoubleClick);
@@ -129,7 +131,7 @@ namespace pwiz.Topograph.ui.Forms
             this.label2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.label2.Location = new System.Drawing.Point(3, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(573, 41);
+            this.label2.Size = new System.Drawing.Size(766, 41);
             this.label2.TabIndex = 2;
             this.label2.Text = resources.GetString("label2.Text");
             // 
@@ -154,11 +156,16 @@ namespace pwiz.Topograph.ui.Forms
             this.colCohort.HeaderText = "Cohort";
             this.colCohort.Name = "colCohort";
             // 
+            // colSample
+            // 
+            this.colSample.HeaderText = "Sample";
+            this.colSample.Name = "colSample";
+            // 
             // DataFilesForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(579, 264);
+            this.ClientSize = new System.Drawing.Size(772, 264);
             this.Controls.Add(this.splitContainer1);
             this.Name = "DataFilesForm";
             this.TabText = "DataFilesForm";
@@ -185,5 +192,6 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn colLabel;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTimePoint;
         private System.Windows.Forms.DataGridViewTextBoxColumn colCohort;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colSample;
     }
 }

@@ -34,14 +34,15 @@ namespace pwiz.Topograph.ui.Forms
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
-            this.comboTracerCountType = new System.Windows.Forms.ComboBox();
-            this.label3 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.cbxWeightSignalAbsenceMore = new System.Windows.Forms.CheckBox();
             this.label5 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.tbxProteinDescriptionKey = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.tbxMaxRetentionTimeShift = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.tbxMinCorrelationCoefficient = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // label1
@@ -55,15 +56,15 @@ namespace pwiz.Topograph.ui.Forms
             // 
             // tbxMassAccuracy
             // 
-            this.tbxMassAccuracy.Location = new System.Drawing.Point(346, 184);
+            this.tbxMassAccuracy.Location = new System.Drawing.Point(337, 184);
             this.tbxMassAccuracy.Name = "tbxMassAccuracy";
-            this.tbxMassAccuracy.Size = new System.Drawing.Size(136, 20);
+            this.tbxMassAccuracy.Size = new System.Drawing.Size(144, 20);
             this.tbxMassAccuracy.TabIndex = 1;
             // 
             // btnOK
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOK.Location = new System.Drawing.Point(382, 443);
+            this.btnOK.Location = new System.Drawing.Point(366, 529);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(76, 23);
             this.btnOK.TabIndex = 1;
@@ -75,7 +76,7 @@ namespace pwiz.Topograph.ui.Forms
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(464, 443);
+            this.btnCancel.Location = new System.Drawing.Point(448, 529);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(67, 23);
             this.btnCancel.TabIndex = 2;
@@ -90,32 +91,6 @@ namespace pwiz.Topograph.ui.Forms
             this.label2.Size = new System.Drawing.Size(503, 74);
             this.label2.TabIndex = 3;
             this.label2.Text = resources.GetString("label2.Text");
-            // 
-            // comboTracerCountType
-            // 
-            this.comboTracerCountType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboTracerCountType.FormattingEnabled = true;
-            this.comboTracerCountType.Location = new System.Drawing.Point(346, 73);
-            this.comboTracerCountType.Name = "comboTracerCountType";
-            this.comboTracerCountType.Size = new System.Drawing.Size(135, 21);
-            this.comboTracerCountType.TabIndex = 4;
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(236, 73);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(88, 13);
-            this.label3.TabIndex = 5;
-            this.label3.Text = "More useful form:";
-            // 
-            // label4
-            // 
-            this.label4.Location = new System.Drawing.Point(20, 9);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(503, 61);
-            this.label4.TabIndex = 6;
-            this.label4.Text = resources.GetString("label4.Text");
             // 
             // label6
             // 
@@ -160,21 +135,54 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxProteinDescriptionKey.Size = new System.Drawing.Size(144, 20);
             this.tbxProteinDescriptionKey.TabIndex = 12;
             // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(29, 383);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(234, 13);
+            this.label3.TabIndex = 13;
+            this.label3.Text = "Maximum retention time per labeled amino acids:";
+            // 
+            // tbxMaxRetentionTimeShift
+            // 
+            this.tbxMaxRetentionTimeShift.Location = new System.Drawing.Point(337, 383);
+            this.tbxMaxRetentionTimeShift.Name = "tbxMaxRetentionTimeShift";
+            this.tbxMaxRetentionTimeShift.Size = new System.Drawing.Size(144, 20);
+            this.tbxMaxRetentionTimeShift.TabIndex = 14;
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(33, 412);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(349, 13);
+            this.label4.TabIndex = 15;
+            this.label4.Text = "Minimum acceptable correlation coefficient when finding matching peaks";
+            // 
+            // tbxMinCorrelationCoefficient
+            // 
+            this.tbxMinCorrelationCoefficient.Location = new System.Drawing.Point(337, 433);
+            this.tbxMinCorrelationCoefficient.Name = "tbxMinCorrelationCoefficient";
+            this.tbxMinCorrelationCoefficient.Size = new System.Drawing.Size(144, 20);
+            this.tbxMinCorrelationCoefficient.TabIndex = 16;
+            // 
             // MiscSettingsForm
             // 
             this.AcceptButton = this.btnOK;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(550, 478);
+            this.ClientSize = new System.Drawing.Size(534, 564);
+            this.Controls.Add(this.tbxMinCorrelationCoefficient);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.tbxMaxRetentionTimeShift);
+            this.Controls.Add(this.label3);
             this.Controls.Add(this.tbxProteinDescriptionKey);
             this.Controls.Add(this.label7);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.cbxWeightSignalAbsenceMore);
             this.Controls.Add(this.label6);
-            this.Controls.Add(this.label4);
-            this.Controls.Add(this.label3);
-            this.Controls.Add(this.comboTracerCountType);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.btnCancel);
@@ -197,13 +205,14 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.ComboBox comboTracerCountType;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.CheckBox cbxWeightSignalAbsenceMore;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.TextBox tbxProteinDescriptionKey;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.TextBox tbxMaxRetentionTimeShift;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.TextBox tbxMinCorrelationCoefficient;
     }
 }

@@ -28,28 +28,45 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.cbxAutoFindPeak = new System.Windows.Forms.CheckBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.tbxPrecursorPool = new System.Windows.Forms.TextBox();
-            this.label2 = new System.Windows.Forms.Label();
-            this.tbxTurnover = new System.Windows.Forms.TextBox();
             this.gridViewTracerPercents = new System.Windows.Forms.DataGridView();
             this.colTracer = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTracerPercent = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.cbxShowScore = new System.Windows.Forms.CheckBox();
-            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
+            this.label3 = new System.Windows.Forms.Label();
+            this.tbxScore = new System.Windows.Forms.TextBox();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.colFormula = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colAmount = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colAreaPct = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colSlopePct = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colArea = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colStartTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colEndTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colCorr = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.label1 = new System.Windows.Forms.Label();
+            this.tbxTracerPercentByAreas = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.tbxTracerPercentBySlopes = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.comboAdjustPeaks = new System.Windows.Forms.ComboBox();
+            this.btnAdjustPeaks = new System.Windows.Forms.Button();
+            this.label5 = new System.Windows.Forms.Label();
+            this.tbxRetentionTimeShift = new System.Windows.Forms.TextBox();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridViewTracerPercents)).BeginInit();
-            this.splitContainer2.Panel1.SuspendLayout();
-            this.splitContainer2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
+            this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // splitContainer1
@@ -61,8 +78,8 @@
             // splitContainer1.Panel1
             // 
             this.splitContainer1.Panel1.Controls.Add(this.tableLayoutPanel1);
-            this.splitContainer1.Size = new System.Drawing.Size(855, 485);
-            this.splitContainer1.SplitterDistance = 285;
+            this.splitContainer1.Size = new System.Drawing.Size(861, 458);
+            this.splitContainer1.SplitterDistance = 379;
             this.splitContainer1.TabIndex = 0;
             // 
             // tableLayoutPanel1
@@ -71,24 +88,33 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.Controls.Add(this.cbxAutoFindPeak, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.label1, 0, 1);
-            this.tableLayoutPanel1.Controls.Add(this.tbxPrecursorPool, 1, 1);
-            this.tableLayoutPanel1.Controls.Add(this.label2, 0, 2);
-            this.tableLayoutPanel1.Controls.Add(this.tbxTurnover, 1, 2);
-            this.tableLayoutPanel1.Controls.Add(this.gridViewTracerPercents, 0, 3);
+            this.tableLayoutPanel1.Controls.Add(this.gridViewTracerPercents, 0, 7);
             this.tableLayoutPanel1.Controls.Add(this.cbxShowScore, 1, 0);
-            this.tableLayoutPanel1.Controls.Add(this.splitContainer2, 0, 4);
+            this.tableLayoutPanel1.Controls.Add(this.label3, 0, 3);
+            this.tableLayoutPanel1.Controls.Add(this.tbxScore, 1, 3);
+            this.tableLayoutPanel1.Controls.Add(this.dataGridView1, 0, 8);
+            this.tableLayoutPanel1.Controls.Add(this.label1, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this.tbxTracerPercentByAreas, 1, 1);
+            this.tableLayoutPanel1.Controls.Add(this.label2, 0, 2);
+            this.tableLayoutPanel1.Controls.Add(this.tbxTracerPercentBySlopes, 1, 2);
+            this.tableLayoutPanel1.Controls.Add(this.label4, 0, 6);
+            this.tableLayoutPanel1.Controls.Add(this.panel1, 1, 6);
+            this.tableLayoutPanel1.Controls.Add(this.label5, 0, 4);
+            this.tableLayoutPanel1.Controls.Add(this.tbxRetentionTimeShift, 1, 4);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 5;
+            this.tableLayoutPanel1.RowCount = 9;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(285, 485);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(379, 458);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // cbxAutoFindPeak
@@ -103,60 +129,44 @@
             this.cbxAutoFindPeak.UseVisualStyleBackColor = true;
             this.cbxAutoFindPeak.CheckedChanged += new System.EventHandler(this.cbxAutoFindPeak_CheckedChanged);
             // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label1.Location = new System.Drawing.Point(3, 25);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(136, 25);
-            this.label1.TabIndex = 2;
-            this.label1.Text = "Precursor Pool";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // tbxPrecursorPool
-            // 
-            this.tbxPrecursorPool.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tbxPrecursorPool.Location = new System.Drawing.Point(145, 28);
-            this.tbxPrecursorPool.Name = "tbxPrecursorPool";
-            this.tbxPrecursorPool.ReadOnly = true;
-            this.tbxPrecursorPool.Size = new System.Drawing.Size(137, 20);
-            this.tbxPrecursorPool.TabIndex = 3;
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label2.Location = new System.Drawing.Point(3, 50);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(136, 25);
-            this.label2.TabIndex = 4;
-            this.label2.Text = "Turnover";
-            this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // tbxTurnover
-            // 
-            this.tbxTurnover.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tbxTurnover.Location = new System.Drawing.Point(145, 53);
-            this.tbxTurnover.Name = "tbxTurnover";
-            this.tbxTurnover.ReadOnly = true;
-            this.tbxTurnover.Size = new System.Drawing.Size(137, 20);
-            this.tbxTurnover.TabIndex = 5;
-            // 
             // gridViewTracerPercents
             // 
             this.gridViewTracerPercents.AllowUserToAddRows = false;
             this.gridViewTracerPercents.AllowUserToDeleteRows = false;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridViewTracerPercents.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.gridViewTracerPercents.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.gridViewTracerPercents.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colTracer,
             this.colTracerPercent});
             this.tableLayoutPanel1.SetColumnSpan(this.gridViewTracerPercents, 2);
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.gridViewTracerPercents.DefaultCellStyle = dataGridViewCellStyle2;
             this.gridViewTracerPercents.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.gridViewTracerPercents.Location = new System.Drawing.Point(3, 78);
+            this.gridViewTracerPercents.Location = new System.Drawing.Point(3, 178);
             this.gridViewTracerPercents.Name = "gridViewTracerPercents";
             this.gridViewTracerPercents.ReadOnly = true;
-            this.gridViewTracerPercents.Size = new System.Drawing.Size(279, 94);
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridViewTracerPercents.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            this.gridViewTracerPercents.Size = new System.Drawing.Size(373, 94);
             this.gridViewTracerPercents.TabIndex = 6;
             // 
             // colTracer
@@ -174,7 +184,7 @@
             // cbxShowScore
             // 
             this.cbxShowScore.AutoSize = true;
-            this.cbxShowScore.Location = new System.Drawing.Point(145, 3);
+            this.cbxShowScore.Location = new System.Drawing.Point(192, 3);
             this.cbxShowScore.Name = "cbxShowScore";
             this.cbxShowScore.Size = new System.Drawing.Size(84, 17);
             this.cbxShowScore.TabIndex = 7;
@@ -182,35 +192,69 @@
             this.cbxShowScore.UseVisualStyleBackColor = true;
             this.cbxShowScore.CheckedChanged += new System.EventHandler(this.cbxShowScore_CheckedChanged);
             // 
-            // splitContainer2
+            // label3
             // 
-            this.tableLayoutPanel1.SetColumnSpan(this.splitContainer2, 2);
-            this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer2.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
-            this.splitContainer2.Location = new System.Drawing.Point(3, 178);
-            this.splitContainer2.Name = "splitContainer2";
-            this.splitContainer2.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            this.label3.AutoSize = true;
+            this.label3.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.label3.Location = new System.Drawing.Point(3, 75);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(183, 25);
+            this.label3.TabIndex = 9;
+            this.label3.Text = "Deconvolution Score";
             // 
-            // splitContainer2.Panel1
+            // tbxScore
             // 
-            this.splitContainer2.Panel1.Controls.Add(this.dataGridView1);
-            this.splitContainer2.Size = new System.Drawing.Size(279, 304);
-            this.splitContainer2.SplitterDistance = 137;
-            this.splitContainer2.TabIndex = 8;
+            this.tbxScore.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tbxScore.Location = new System.Drawing.Point(192, 78);
+            this.tbxScore.Name = "tbxScore";
+            this.tbxScore.ReadOnly = true;
+            this.tbxScore.Size = new System.Drawing.Size(184, 20);
+            this.tbxScore.TabIndex = 10;
             // 
             // dataGridView1
             // 
             this.dataGridView1.AllowUserToAddRows = false;
             this.dataGridView1.AllowUserToDeleteRows = false;
+            this.dataGridView1.AllowUserToOrderColumns = true;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridView1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colFormula,
-            this.colAmount});
+            this.colAreaPct,
+            this.colSlopePct,
+            this.colArea,
+            this.colStartTime,
+            this.colEndTime,
+            this.colCorr});
+            this.tableLayoutPanel1.SetColumnSpan(this.dataGridView1, 2);
+            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle5.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridView1.DefaultCellStyle = dataGridViewCellStyle5;
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView1.Location = new System.Drawing.Point(0, 0);
+            this.dataGridView1.Location = new System.Drawing.Point(3, 278);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
-            this.dataGridView1.Size = new System.Drawing.Size(279, 137);
+            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle6.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridView1.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
+            this.dataGridView1.Size = new System.Drawing.Size(373, 177);
             this.dataGridView1.TabIndex = 1;
             this.dataGridView1.SelectionChanged += new System.EventHandler(this.dataGridView1_SelectionChanged);
             // 
@@ -220,29 +264,159 @@
             this.colFormula.Name = "colFormula";
             this.colFormula.ReadOnly = true;
             // 
-            // colAmount
+            // colAreaPct
             // 
-            this.colAmount.HeaderText = "Amount";
-            this.colAmount.Name = "colAmount";
-            this.colAmount.ReadOnly = true;
+            this.colAreaPct.HeaderText = "Area %";
+            this.colAreaPct.Name = "colAreaPct";
+            this.colAreaPct.ReadOnly = true;
+            // 
+            // colSlopePct
+            // 
+            this.colSlopePct.HeaderText = "Slope %";
+            this.colSlopePct.Name = "colSlopePct";
+            this.colSlopePct.ReadOnly = true;
+            // 
+            // colArea
+            // 
+            this.colArea.HeaderText = "Area";
+            this.colArea.Name = "colArea";
+            this.colArea.ReadOnly = true;
+            // 
+            // colStartTime
+            // 
+            this.colStartTime.HeaderText = "Start";
+            this.colStartTime.Name = "colStartTime";
+            this.colStartTime.ReadOnly = true;
+            // 
+            // colEndTime
+            // 
+            this.colEndTime.HeaderText = "End";
+            this.colEndTime.Name = "colEndTime";
+            this.colEndTime.ReadOnly = true;
+            // 
+            // colCorr
+            // 
+            this.colCorr.HeaderText = "Corr";
+            this.colCorr.Name = "colCorr";
+            this.colCorr.ReadOnly = true;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(3, 25);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(123, 13);
+            this.label1.TabIndex = 11;
+            this.label1.Text = "Tracer Percent By Areas";
+            // 
+            // tbxTracerPercentByAreas
+            // 
+            this.tbxTracerPercentByAreas.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tbxTracerPercentByAreas.Location = new System.Drawing.Point(192, 28);
+            this.tbxTracerPercentByAreas.Name = "tbxTracerPercentByAreas";
+            this.tbxTracerPercentByAreas.ReadOnly = true;
+            this.tbxTracerPercentByAreas.Size = new System.Drawing.Size(184, 20);
+            this.tbxTracerPercentByAreas.TabIndex = 12;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(3, 50);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(128, 13);
+            this.label2.TabIndex = 13;
+            this.label2.Text = "Tracer Percent By Slopes";
+            // 
+            // tbxTracerPercentBySlopes
+            // 
+            this.tbxTracerPercentBySlopes.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tbxTracerPercentBySlopes.Location = new System.Drawing.Point(192, 53);
+            this.tbxTracerPercentBySlopes.Name = "tbxTracerPercentBySlopes";
+            this.tbxTracerPercentBySlopes.ReadOnly = true;
+            this.tbxTracerPercentBySlopes.Size = new System.Drawing.Size(184, 20);
+            this.tbxTracerPercentBySlopes.TabIndex = 14;
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(3, 150);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(68, 13);
+            this.label4.TabIndex = 15;
+            this.label4.Text = "Adjust peaks";
+            // 
+            // panel1
+            // 
+            this.panel1.Controls.Add(this.comboAdjustPeaks);
+            this.panel1.Controls.Add(this.btnAdjustPeaks);
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel1.Location = new System.Drawing.Point(192, 153);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(184, 19);
+            this.panel1.TabIndex = 16;
+            // 
+            // comboAdjustPeaks
+            // 
+            this.comboAdjustPeaks.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.comboAdjustPeaks.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboAdjustPeaks.FormattingEnabled = true;
+            this.comboAdjustPeaks.Items.AddRange(new object[] {
+            "Full",
+            "Overlapping",
+            "Narrow"});
+            this.comboAdjustPeaks.Location = new System.Drawing.Point(0, 0);
+            this.comboAdjustPeaks.Name = "comboAdjustPeaks";
+            this.comboAdjustPeaks.Size = new System.Drawing.Size(153, 21);
+            this.comboAdjustPeaks.TabIndex = 0;
+            // 
+            // btnAdjustPeaks
+            // 
+            this.btnAdjustPeaks.AutoSize = true;
+            this.btnAdjustPeaks.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.btnAdjustPeaks.Dock = System.Windows.Forms.DockStyle.Right;
+            this.btnAdjustPeaks.Location = new System.Drawing.Point(153, 0);
+            this.btnAdjustPeaks.Name = "btnAdjustPeaks";
+            this.btnAdjustPeaks.Size = new System.Drawing.Size(31, 19);
+            this.btnAdjustPeaks.TabIndex = 1;
+            this.btnAdjustPeaks.Text = "Go";
+            this.btnAdjustPeaks.UseVisualStyleBackColor = true;
+            this.btnAdjustPeaks.Click += new System.EventHandler(this.btnAdjustPeaks_Click);
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(3, 100);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(103, 13);
+            this.label5.TabIndex = 17;
+            this.label5.Text = "Retention Time Shift";
+            // 
+            // tbxRetentionTimeShift
+            // 
+            this.tbxRetentionTimeShift.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tbxRetentionTimeShift.Location = new System.Drawing.Point(192, 103);
+            this.tbxRetentionTimeShift.Name = "tbxRetentionTimeShift";
+            this.tbxRetentionTimeShift.ReadOnly = true;
+            this.tbxRetentionTimeShift.Size = new System.Drawing.Size(184, 20);
+            this.tbxRetentionTimeShift.TabIndex = 18;
             // 
             // TracerChromatogramForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(855, 485);
+            this.ClientSize = new System.Drawing.Size(861, 458);
             this.Controls.Add(this.splitContainer1);
             this.Name = "TracerChromatogramForm";
             this.TabText = "TracerChromatogramForm";
-            this.Text = "TracerChromatogramForm";
+            this.Text = "Tracer Chromatograms";
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridViewTracerPercents)).EndInit();
-            this.splitContainer2.Panel1.ResumeLayout(false);
-            this.splitContainer2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -252,17 +426,29 @@
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.CheckBox cbxAutoFindPeak;
-        private System.Windows.Forms.DataGridView dataGridView1;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colFormula;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colAmount;
         private System.Windows.Forms.CheckBox cbxShowScore;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.TextBox tbxPrecursorPool;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.TextBox tbxTurnover;
         private System.Windows.Forms.DataGridView gridViewTracerPercents;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.TextBox tbxScore;
+        private System.Windows.Forms.DataGridView dataGridView1;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.TextBox tbxTracerPercentByAreas;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.TextBox tbxTracerPercentBySlopes;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Button btnAdjustPeaks;
+        private System.Windows.Forms.ComboBox comboAdjustPeaks;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colFormula;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colAreaPct;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colSlopePct;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colArea;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colStartTime;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colEndTime;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colCorr;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTracer;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTracerPercent;
-        private System.Windows.Forms.SplitContainer splitContainer2;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TextBox tbxRetentionTimeShift;
     }
 }

@@ -337,7 +337,8 @@ namespace pwiz.Topograph.Util
 
         private double VarianceTotal()
         {
-            return (SumOfSquares() - _list.Length * Math.Pow(Mean(), 2));
+            // Sometimes due to rounding errors, a zero variance will result in a very small negative value.
+            return Math.Max(0, SumOfSquares() - _list.Length * Math.Pow(Mean(), 2));
         }
 
         /// <summary>
@@ -941,6 +942,53 @@ namespace pwiz.Topograph.Util
             // And re-rank
             return new Statistics(listNewValues.ToArray()).Rank();
         }
+        ///<summary>
+        ///This subroutine determines the best fit line by minimizing the sum of the squares
+        ///of the perpendicular distances of the points to the line.
+        ///This was initially reported by Kermack and Haldane (1950) Biometrika, 37, 30.
+        ///However I found it in York, D. (1966) Canadian Journal of Physics, vol 44, p 1079.
+        ///</summary>
+        public static LinearRegression LinearRegressionWithErrorsInBothCoordinates(Statistics a, Statistics b)
+        {
+            double meanA = a.Mean();
+            double meanB = b.Mean();
+            double sA2 = 0;
+            double sB2 = 0;
+            double sAB = 0;
 
+            for (int i = 0; i < a.Length; i++)
+            {
+                double dA = a._list[i] - meanA;
+                double dB = b._list[i] - meanB;
+
+                sA2 += dA * dA;
+                sB2 += dB * dB;
+                sAB += dA * dB;
+            }
+            LinearRegression result = new LinearRegression();
+            if (sA2 > 0 && sB2 > 0 && sAB > 0)
+            {
+                result.Correlation = sAB / Math.Sqrt(sA2 * sB2);
+                result.Slope = (sB2 - sA2 + Math.Sqrt((sB2 - sA2) * (sB2 - sA2)
+                                               + 4 * (sAB * sAB))) / 2 / sAB;
+                result.Intercept = meanB - result.Slope * meanA;
+                if (result.Correlation < 1)
+                {
+                    result.SlopeError = (result.Slope / result.Correlation) * Math.Sqrt((1 - (result.Correlation * result.Correlation)) / a.Length);
+                }
+                else
+                {
+                    result.SlopeError = 0;
+                }
+            }
+            else
+            {
+                result.Correlation = 0;
+                result.Slope = 0;
+                result.SlopeError = 0;
+                result.Intercept = 0;
+            }
+            return result;
+        }
     }
 }

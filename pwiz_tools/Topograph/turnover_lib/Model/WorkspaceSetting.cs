@@ -90,6 +90,13 @@ namespace pwiz.Topograph.Model
                     return workspaceVersion.IncEnrichmentVersion();
                 }
             }
+            if (Name == SettingEnum.max_isotope_retention_time_shift.ToString())
+            {
+                if (entity == null || Value != entity.Value)
+                {
+                    return workspaceVersion.IncChromatogramPeakVersion();
+                }
+            }
             return workspaceVersion;
         }
     }

@@ -20,60 +20,39 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;
+using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.Data
 {
     public class DbPeak : DbEntity<DbPeak>
     {
         public virtual DbPeptideFileAnalysis PeptideFileAnalysis { get; set; }
-        public virtual int Charge { get; set; }
-        public virtual int MassIndex { get; set; }
-        public virtual double MzMin { get; set; }
-        public virtual double MzMax { get; set; }
+        public virtual String Name { get; set; }
+        public virtual TracerFormula TracerFormula { get { return TracerFormula.Parse(Name); } }
+        public virtual double StartTime { get; set; }
+        public virtual double EndTime { get; set; }
+        public virtual double Width { get { return EndTime - StartTime; } }
         public virtual double TotalArea { get; set; }
-        public virtual double TotalError { get; set; }
         public virtual double Area { get { return Math.Max(0, TotalArea - Background); } }
         public virtual double Background { get; set; }
-        public virtual int PeakStart { get; set; }
-        public virtual int PeakEnd { get; set; }
-        public virtual MzKey MzKey {get
+        public virtual double RatioToBase { get; set; }
+        public virtual double RatioToBaseError { get; set; }
+        public virtual double Correlation { get; set; }
+        public virtual double Intercept { get; set; }
+        public virtual double TracerPercent { get; set; }
+        protected virtual double? RelativeAmount { get; set; }
+        public virtual double RelativeAmountValue
+        {
+            get
             {
-                return new MzKey(Charge, MassIndex);
+                return ConvertHelper.FromDbValue(RelativeAmount);
             }
             set
             {
-                Charge = value.Charge;
-                MassIndex = value.MassIndex;
+                RelativeAmount = ConvertHelper.ToDbValue(value);
             }
-        }
-        public virtual MzRange MzRange 
-        { 
-            get
-            {
-                return new MzRange(MzMin, MzMax);
-            } 
-            set 
-            { 
-                MzMin = value.Min;
-                MzMax = value.Max;
-            }
-        }
-        public virtual double GetError()
-        {
-            if (TotalArea == 0)
-            {
-                return 0;
-            }
-            return Math.Max(0, (TotalError - Background) / TotalArea);
-        }
-        public virtual bool IsAcceptable()
-        {
-            if (TotalError - Background > TotalArea / 2)
-            {
-                return false;
-            }
-            return true;
         }
     }
 }

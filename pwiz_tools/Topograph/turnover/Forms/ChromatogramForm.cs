@@ -107,25 +107,7 @@ namespace pwiz.Topograph.ui.Forms
             }
             using (PeptideFileAnalysis.GetReadLock())
             {
-                if (PeptideFileAnalysis.Peaks.ChildCount == 0)
-                {
-                    return;
-                }
                 ShowChromatograms();
-                if (PeptideFileAnalysis.PeakStart.HasValue)
-                {
-                    double selStart = TimeFromScanIndex(PeptideFileAnalysis.PeakStart.Value);
-                    double selEnd = TimeFromScanIndex(PeptideFileAnalysis.PeakEnd.Value);
-                    selectionBoxObj = new BoxObj(selStart, int.MaxValue,
-                                                     selEnd - selStart,
-                                                     int.MaxValue, Color.Goldenrod,
-                                                     Color.Goldenrod)
-                    {
-                        IsClippedToChartRect = true,
-                        ZOrder = ZOrder.F_BehindGrid
-                    };
-                    msGraphControl.GraphPane.GraphObjList.Add(selectionBoxObj);
-                }
                 var backgroundLine = new LineObj(Color.DarkGray, times[0], PeptideFileAnalysis.Background, times[times.Count - 1], PeptideFileAnalysis.Background);
                 msGraphControl.GraphPane.GraphObjList.Add(backgroundLine);
                 double detectedLineHeight = msGraphControl.GraphPane.YAxis.Scale.Max * .9;
@@ -159,12 +141,29 @@ namespace pwiz.Topograph.ui.Forms
 
         private void cbxAutoFindPeak_CheckedChanged(object sender, EventArgs e)
         {
-            PeptideFileAnalysis.AutoFindPeak = cbxAutoFindPeak.Checked;
+            SetAutoFindPeak(cbxAutoFindPeak.Checked);        
         }
 
         private void cbxOverrideExcludedMasses_CheckedChanged(object sender, EventArgs e)
         {
             PeptideFileAnalysis.OverrideExcludedMzs = cbxOverrideExcludedMzs.Checked;
+        }
+
+        private void ChromatogramForm_Resize(object sender, EventArgs e)
+        {
+            try
+            {
+                BeginInvoke(new Action(() => splitContainer1.Dock = DockStyle.Fill));
+                splitContainer1.Dock = DockStyle.None;
+            }
+            catch
+            {
+                
+            }
+        }
+
+        private void ChromatogramForm_ResizeEnd(object sender, EventArgs e)
+        {
         }
     }
 }

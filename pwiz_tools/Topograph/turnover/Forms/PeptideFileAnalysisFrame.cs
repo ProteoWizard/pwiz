@@ -36,10 +36,10 @@ namespace pwiz.Topograph.ui.Forms
     public partial class PeptideFileAnalysisFrame : PeptideFileAnalysisForm
     {
         private readonly DockPanel dockPanel;
-        private AbstractChromatogramForm _chromatogramForm;
-        private PrecursorEnrichmentsForm _precursorEnrichmentsForm;
-        private TracerAmountsForm _tracerAmountsForm;
+        private ChromatogramForm _chromatogramForm;
         private TracerChromatogramForm _tracerChromatogramForm;
+        private PrecursorPoolForm _precursorPoolForm;
+        private RelexForm _relexForm;
         private PeptideFileAnalysisFrame(PeptideFileAnalysis peptideFileAnalysis) : base(peptideFileAnalysis)
         {
             InitializeComponent();
@@ -135,6 +135,14 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return;
             }
+            if (_tracerChromatogramForm == null)
+            {
+                _tracerChromatogramForm = new TracerChromatogramForm(PeptideFileAnalysis)
+                {
+                    CloseButton = false
+                };
+                _tracerChromatogramForm.Show(dockPanel, DockState.Document);
+            }
             if (_chromatogramForm == null)
             {
                 _chromatogramForm = new ChromatogramForm(PeptideFileAnalysis)
@@ -143,30 +151,21 @@ namespace pwiz.Topograph.ui.Forms
                                         };
                 _chromatogramForm.Show(dockPanel, DockState.Document);
             }
-            if (_precursorEnrichmentsForm == null)
+            if (_relexForm == null)
             {
-                _precursorEnrichmentsForm = new PrecursorEnrichmentsForm(PeptideFileAnalysis)
-                                                {
-                                                    CloseButton = false
-
-                                                };
-                _precursorEnrichmentsForm.Show(dockPanel, DockState.Document);
+                _relexForm = new RelexForm(PeptideFileAnalysis)
+                                 {
+                                     CloseButton = false
+                                 };
+                _relexForm.Show(dockPanel, DockState.Document);
             }
-            if (_tracerAmountsForm == null)
+            if (_precursorPoolForm == null)
             {
-                _tracerAmountsForm = new TracerAmountsForm(PeptideFileAnalysis)
+                _precursorPoolForm = new PrecursorPoolForm(PeptideFileAnalysis)
                                          {
-                                             CloseButton = false
+                                             CloseButton = false,
                                          };
-                _tracerAmountsForm.Show(dockPanel, DockState.Document);
-            }
-            if (_tracerChromatogramForm == null)
-            {
-                _tracerChromatogramForm = new TracerChromatogramForm(PeptideFileAnalysis)
-                                              {
-                                                  CloseButton = false
-                                              };
-                _tracerChromatogramForm.Show(dockPanel, DockState.Document);
+                _precursorPoolForm.Show(dockPanel, DockState.Document);
             }
             UpdateForm();
         }
@@ -186,6 +185,39 @@ namespace pwiz.Topograph.ui.Forms
             {
                 UpdateForm();
             }
+        }
+        /// <summary>
+        /// The docking windows have a problem where resizing doesn't update heavily nested docking windows.
+        /// In the resize event, we undock and re-dock the window, which causes some flicker, but eventually
+        /// gets everything to resize correctly.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void PeptideFileAnalysisFrame_Resize(object sender, EventArgs e)
+        {
+            try
+            {
+                var controls = Controls.Cast<Control>().Where(control => control.Dock == DockStyle.Fill).ToList();
+                if (controls.Count > 0)
+                {
+                    BeginInvoke(new Action(() =>
+                    {
+                        foreach (var c in controls)
+                        {
+                            c.Dock = DockStyle.Fill;
+                        }
+                    }));
+                    foreach (var c in controls)
+                    {
+                        c.Dock = DockStyle.None;
+                    }
+                }
+            }
+            catch
+            {
+
+            }
+
         }
     }
 }

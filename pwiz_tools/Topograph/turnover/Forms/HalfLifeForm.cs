@@ -29,10 +29,13 @@ namespace pwiz.Topograph.ui.Forms
                                        Dock = DockStyle.Fill,
                                        GraphPane = { Title = {Text = null}}
                                    };
+            _zedGraphControl.GraphPane.XAxis.Title.Text = "Time";
             splitContainer1.Panel2.Controls.Add(_zedGraphControl);
             var tracerDef = Workspace.GetTracerDefs()[0];
             tbxInitialPercent.Text = tracerDef.InitialApe.ToString();
             tbxFinalPercent.Text = tracerDef.FinalApe.ToString();
+            colTurnover.DefaultCellStyle.Format = "#.##%";
+            comboCalculationType.SelectedIndex = 0;
         }
         public String Peptide { 
             get
@@ -283,52 +286,50 @@ namespace pwiz.Topograph.ui.Forms
                     row.Cells[colStatus.Index].Value = peptideFileAnalysis.ValidationStatus;
                     row.Cells[colTimePoint.Index].Value = peptideFileAnalysis.MsDataFile.TimePoint;
                     row.Cells[colCohort.Index].Value = peptideFileAnalysis.MsDataFile.Cohort;
-                    var peptideDistribution =
-                        peptideFileAnalysis.PeptideDistributions.GetChild(PeptideQuantity.tracer_count);
-                    if (peptideDistribution != null)
-                    {
-                        row.Cells[colTracerPercent.Index].Value = peptideDistribution.TracerPercent;
-                        row.Cells[colScore.Index].Value = peptideDistribution.Score;
-                    }
-                    else
-                    {
-                        row.Cells[colTracerPercent.Index].Value = null;
-                        row.Cells[colScore.Index].Value = null;
-                    }
+                    row.Cells[colTracerPercent.Index].Value = peptideFileAnalysis.Peaks.TracerPercent;
+                    row.Cells[colScore.Index].Value = peptideFileAnalysis.Peaks.DeconvolutionScore;
+                    row.Cells[colTurnover.Index].Value = peptideFileAnalysis.Peaks.Turnover;
                 }
                 UpdateGraph(peptideFileAnalyses);
             }
         }
         private void UpdateGraph(List<PeptideFileAnalysis> peptideFileAnalyses)
         {
-            var peptideRateCalculator = new HalfLifeCalculator(Workspace)
+            var peptideRateCalculator = new HalfLifeCalculator(Workspace, HalfLifeCalculationType)
                                             {
                                                 InitialPercent = InitialPercent,
                                                 FinalPercent = FinalPercent,
                                                 FixedInitialPercent = FixedInitialPercent,
                                             };
+            var halfLife = peptideRateCalculator.CalculateHalfLife(peptideFileAnalyses);
             _zedGraphControl.GraphPane.CurveList.Clear();
             _zedGraphControl.GraphPane.GraphObjList.Clear();
             var xValues = new List<double>();
             var yValues = new List<double>();
             foreach (var peptideFileAnalysis in peptideFileAnalyses)
             {
-                var distribution = GetPeptideDistribution(peptideFileAnalysis);
-                var value = distribution.TracerPercent;
+                double? value;
                 if (LogPlot)
                 {
-                    value = peptideRateCalculator.GetLogValue(value);
+                    value = peptideRateCalculator.GetLogValue(peptideFileAnalysis);
+                } 
+                else
+                {
+                    value = peptideRateCalculator.GetValue(peptideFileAnalysis);
                 }
-                if (double.IsInfinity(value) || double.IsNaN(value))
+                if (!value.HasValue)
+                {
+                    continue;
+                }
+                if (double.IsInfinity(value.Value) || double.IsNaN(value.Value))
                 {
                     continue;
                 }
                 xValues.Add(peptideFileAnalysis.MsDataFile.TimePoint.Value);
-                yValues.Add(value);
+                yValues.Add(value.Value);
             }
             var pointsCurve = _zedGraphControl.GraphPane.AddCurve(null, xValues.ToArray(), yValues.ToArray(), Color.Black);
             pointsCurve.Line.IsVisible = false;
-            var halfLife = peptideRateCalculator.CalculateHalfLife(peptideFileAnalyses);
             Func<double,double> funcMiddle = x => halfLife.YIntercept + halfLife.RateConstant*x;
             Func<double, double> funcMin = x => halfLife.YIntercept + (halfLife.RateConstant - halfLife.RateConstantError) * x;
             Func<double, double> funcMax = x => halfLife.YIntercept + (halfLife.RateConstant + halfLife.RateConstantError) * x;
@@ -340,9 +341,31 @@ namespace pwiz.Topograph.ui.Forms
             }
             else
             {
-                AddFunction(x => peptideRateCalculator.GetTracerPercent(funcMiddle(x)), Color.Black);
-                AddFunction(x => peptideRateCalculator.GetTracerPercent(funcMin(x)), Color.LightBlue);
-                AddFunction(x => peptideRateCalculator.GetTracerPercent(funcMax(x)), Color.LightGreen);
+                AddFunction(x => peptideRateCalculator.InvertLogValue(funcMiddle(x)), Color.Black);
+                AddFunction(x => peptideRateCalculator.InvertLogValue(funcMin(x)), Color.LightBlue);
+                AddFunction(x => peptideRateCalculator.InvertLogValue(funcMax(x)), Color.LightGreen);
+            }
+            if (LogPlot)
+            {
+                if (HalfLifeCalculationType == HalfLifeCalculationType.TracerPercent)
+                {
+                    _zedGraphControl.GraphPane.YAxis.Title.Text = "Log ((Tracer % - Final %)/(Initial % - Final %))";
+                }
+                else
+                {
+                    _zedGraphControl.GraphPane.YAxis.Title.Text = "Log (100% - % newly synthesized)";
+                }
+            }
+            else
+            {
+                if (HalfLifeCalculationType == HalfLifeCalculationType.TracerPercent)
+                {
+                    _zedGraphControl.GraphPane.YAxis.Title.Text = "Tracer %";
+                }
+                else
+                {
+                    _zedGraphControl.GraphPane.YAxis.Title.Text = "% newly synthesized";
+                }
             }
             _zedGraphControl.GraphPane.XAxis.IsAxisSegmentVisible = !LogPlot;
             _zedGraphControl.GraphPane.AxisChange();
@@ -378,11 +401,6 @@ namespace pwiz.Topograph.ui.Forms
             return curve;
         }
 
-        private PeptideDistribution GetPeptideDistribution(PeptideFileAnalysis peptideFileAnalysis)
-        {
-            return peptideFileAnalysis.PeptideDistributions.GetChild(PeptideQuantity.tracer_count);
-        }
-
         private bool IsIncluded(PeptideFileAnalysis peptideFileAnalysis)
         {
             if (!string.IsNullOrEmpty(Cohort))
@@ -400,10 +418,16 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return false;
             }
-            var distribution = GetPeptideDistribution(peptideFileAnalysis);
-            if (distribution == null || distribution.Score < MinScore)
+            if (!peptideFileAnalysis.Peaks.DeconvolutionScore.HasValue || peptideFileAnalysis.Peaks.DeconvolutionScore < MinScore)
             {
                 return false;
+            }
+            if (HalfLifeCalculationType == HalfLifeCalculationType.IndividualPrecursorPool)
+            {
+                if (!peptideFileAnalysis.Peaks.Turnover.HasValue)
+                {
+                    return false;
+                }
             }
             return true;
         }
@@ -452,7 +476,7 @@ namespace pwiz.Topograph.ui.Forms
             if (e.ColumnIndex == colPeptide.Index)
             {
                 var peptideFileAnalysis = (PeptideFileAnalysis) row.Tag;
-                PeptideFileAnalysisFrame.ShowFileAnalysisForm<TracerAmountsForm>(peptideFileAnalysis);
+                PeptideFileAnalysisFrame.ShowFileAnalysisForm<TracerChromatogramForm>(peptideFileAnalysis);
             }
         }
 
@@ -487,6 +511,36 @@ namespace pwiz.Topograph.ui.Forms
         private void cbxFixedInitialPercent_CheckedChanged(object sender, EventArgs e)
         {
             UpdateRows();
+        }
+
+        private void comboCalculationType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            switch (HalfLifeCalculationType)
+            {
+                default:
+                    tbxInitialPercent.Enabled = false;
+                    tbxFinalPercent.Enabled = false;
+                    cbxFixedInitialPercent.Enabled = false;
+                    break;
+                case HalfLifeCalculationType.TracerPercent:
+                    tbxInitialPercent.Enabled = true;
+                    tbxFinalPercent.Enabled = true;
+                    cbxFixedInitialPercent.Enabled = true;
+                    break;                
+            }
+            UpdateRows();
+        }
+
+        public HalfLifeCalculationType HalfLifeCalculationType
+        {
+            get
+            {
+                return (HalfLifeCalculationType) comboCalculationType.SelectedIndex;
+            }
+            set
+            {
+                comboCalculationType.SelectedIndex = (int) value;
+            }
         }
     }
 }

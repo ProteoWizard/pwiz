@@ -12,11 +12,18 @@ namespace pwiz.Topograph.MsData
 {
     public class HalfLifeCalculator : ILongOperationJob
     {
-        public HalfLifeCalculator(Workspace workspace)
+        private IDictionary<long, double> _precursorPools;
+        public HalfLifeCalculator(Workspace workspace, HalfLifeCalculationType halfLifeCalculationType)
         {
             Workspace = workspace;
+            HalfLifeCalculationType = halfLifeCalculationType;
             InitialPercent = 0;
             FinalPercent = 100;
+        }
+
+        public HalfLifeCalculationType HalfLifeCalculationType
+        {
+            get; private set;
         }
 
         public double InitialPercent
@@ -36,32 +43,66 @@ namespace pwiz.Topograph.MsData
 
         private List<RowData> Query()
         {
-            var hql = "SELECT T.TracerPercent, "
-                      + "T.Score, "
-                      + "T.PeptideFileAnalysis.PeptideAnalysis.Peptide.Id, "
-                      + "T.PeptideFileAnalysis.MsDataFile.Cohort, "
-                      + "T.PeptideFileAnalysis.MsDataFile.TimePoint\n"
-                      + "FROM " + typeof (DbPeptideDistribution) + " T\n"
-                      + "WHERE T.PeptideFileAnalysis.MsDataFile.TimePoint IS NOT NULL\n"
-                      + "AND T.Score > :minScore\n" 
-                      + "AND T.PeptideFileAnalysis.ValidationStatus != " + (int) ValidationStatus.reject + "\n";
-            var query = Session.CreateQuery(hql)
+            var hql = new StringBuilder();
+            hql.Append("SELECT"
+                       +"\nF.Turnover * 100,"
+                       +"\nF.TracerPercent,"
+                       +"\nF.DeconvolutionScore, "
+                       + "\nF.PeptideAnalysis.Peptide.Id, "
+                       + "\nF.MsDataFile.Id "
+                       + "\nFROM " + typeof (DbPeptideFileAnalysis) + " F"
+                       + "\nWHERE F.MsDataFile.TimePoint IS NOT NULL"
+                       + "\nAND F.DeconvolutionScore > :minScore"
+                       + "\nAND F.ValidationStatus != " + (int) ValidationStatus.reject
+                       + "\nAND F.TracerPercent IS NOT NULL");
+            var query = Session.CreateQuery(hql.ToString())
                 .SetParameter("minScore", MinScore);
 
             var result = new List<RowData>();
             foreach (object[] row in query.List())
             {
+                try
+                {
+                    
                 var rowData = new RowData
                                   {
-                                      TracerPercent = (double) row[0],
-                                      Score = (double) row[1],
-                                      PeptideId = (long) row[2],
-                                      Cohort = (string) row[3],
-                                      TimePoint = (double) row[4]
+                                      Turnover = (double?) row[0],
+                                      TracerPercent = (double) row[1],
+                                      Score = (double) row[2],
+                                      PeptideId = (long) row[3],
+                                      DataFileId = (long) row[4],
                                   };
                 result.Add(rowData);
+                }
+                catch (Exception e)
+                {
+                    Console.Out.WriteLine(e);
+                }
             }
             return result;
+        }
+
+        private IDictionary<long, double> GetPrecursorPools(ISession session)
+        {
+            var query = session.CreateQuery("SELECT F.MsDataFile.Id, F.PrecursorEnrichment * 100 FROM " + typeof (DbPeptideFileAnalysis) + " F"
+                        + "\nWHERE F.TracerPercent IS NOT NULL"
+                        + "\nAND F.PrecursorEnrichment IS NOT NULL"
+                        + "\nAND F.ValidationStatus <> " + (int) ValidationStatus.reject
+                        + "\nAND F.DeconvolutionScore > :minScore").SetParameter("minScore", MinScore);
+            var valueLists = new Dictionary<long, IList<double>>();
+            foreach (object[] row in query.List())
+            {
+                IList<double> list;
+                var dataFileId = (long) row[0];
+                var precursorEnrichment = (double) row[1];
+                if (!valueLists.TryGetValue(dataFileId, out list))
+                {
+                    list = new List<double>();
+                    valueLists.Add(dataFileId, list);
+                }
+                list.Add(precursorEnrichment);
+            }
+            return valueLists.ToDictionary(kv => kv.Key, kv => new Statistics(kv.Value.ToArray()).Median());
         }
 
         public void Run(LongOperationBroker longOperationBroker)
@@ -69,6 +110,11 @@ namespace pwiz.Topograph.MsData
             List<RowData> rowDatas;
             using (Session = Workspace.OpenSession())
             {
+                if (HalfLifeCalculationType == HalfLifeCalculationType.GroupPrecursorPool)
+                {
+                    longOperationBroker.UpdateStatusMessage("Querying precursor pools");
+                    _precursorPools = GetPrecursorPools(Session);
+                }
                 longOperationBroker.UpdateStatusMessage("Querying database");
                 rowDatas = Query();
             }
@@ -88,7 +134,7 @@ namespace pwiz.Topograph.MsData
                     {
                         continue;
                     }
-                    cohorts.Add(rowData.Cohort ?? "");
+                    cohorts.Add(GetCohort(rowData));
                     rowData.PeptideSequence = peptide.Sequence;
                     rowData.ProteinName = peptide.ProteinName;
                     rowData.ProteinDescription = peptide.ProteinDescription;
@@ -111,9 +157,20 @@ namespace pwiz.Topograph.MsData
                 {
                     return;
                 }
-                resultRows.Add(CalculateResultRow(entry.Value));
+                var resultRow = CalculateResultRow(entry.Value);
+                resultRows.Add(resultRow);
             }
             ResultRows = resultRows;
+        }
+
+        private String GetCohort(RowData rowData)
+        {
+            return Workspace.MsDataFiles.GetChild(rowData.DataFileId).Cohort;
+        }
+
+        private double? GetTimePoint(RowData rowData)
+        {
+            return Workspace.MsDataFiles.GetChild(rowData.DataFileId).TimePoint;
         }
 
         private ResultRow CalculateResultRow(List<RowData> rowDatas)
@@ -142,13 +199,18 @@ namespace pwiz.Topograph.MsData
             var logValues = new List<double>();
             foreach (var rowData in rowDatas)
             {
-                var logValue = GetLogValue(rowData.TracerPercent);
-                if (double.IsNaN(logValue) || double.IsInfinity(logValue))
+                double? logValue = GetLogValue(rowData);
+                if (!logValue.HasValue || double.IsNaN(logValue.Value) || double.IsInfinity(logValue.Value))
                 {
                     continue;
                 }
-                logValues.Add(logValue);
-                timePoints.Add(rowData.TimePoint);
+                double? timePoint = GetTimePoint(rowData);
+                if (!timePoint.HasValue)
+                {
+                    continue;
+                }
+                logValues.Add(logValue.Value);
+                timePoints.Add(timePoint.Value);
             }
             var statsTimePoints = new Statistics(timePoints.ToArray());
             var statsLogValues = new Statistics(logValues.ToArray());
@@ -177,28 +239,105 @@ namespace pwiz.Topograph.MsData
                 };
         }
 
-        public double GetLogValue(double tracerPercent)
+        public double InvertLogValue(double logValue)
         {
-            return Math.Log((tracerPercent - FinalPercent)/(InitialPercent - FinalPercent));
+            if (HalfLifeCalculationType == HalfLifeCalculationType.TracerPercent)
+            {
+                return Math.Exp(logValue)*(InitialPercent - FinalPercent) + FinalPercent;
+            }
+            return 100*(1 - Math.Exp(logValue));
         }
-        public double GetTracerPercent(double logValue)
+
+        private double? GetValue(RowData rowData)
         {
-            return Math.Exp(logValue)*(InitialPercent - FinalPercent) + FinalPercent;
+            if (rowData == null)
+            {
+                return null;
+            }
+            switch (HalfLifeCalculationType)
+            {
+                case HalfLifeCalculationType.TracerPercent:
+                    return rowData.TracerPercent;
+                case HalfLifeCalculationType.IndividualPrecursorPool:
+                    return rowData.Turnover;
+                case HalfLifeCalculationType.GroupPrecursorPool:
+                    double precursorPool;
+                    if (!_precursorPools.TryGetValue(rowData.DataFileId, out precursorPool))
+                    {
+                        return null;
+                    }
+                    return 100 * (rowData.TracerPercent - InitialPercent) / (precursorPool - InitialPercent);
+                default:
+                    throw new ArgumentException();
+                
+            }
         }
+
+        private double? GetLogValue(RowData rowData)
+        {
+            double? value = GetValue(rowData);
+            if (!value.HasValue)
+            {
+                return null;
+            }
+            switch (HalfLifeCalculationType)
+            {
+                case HalfLifeCalculationType.TracerPercent:
+                    return Math.Log((value.Value - FinalPercent) / (InitialPercent - FinalPercent));
+                default:
+                    return Math.Log(1- (value.Value / 100));
+            }
+        }
+
+
+        private RowData ToRowData(PeptideFileAnalysis peptideFileAnalysis)
+        {
+            if (!peptideFileAnalysis.Peaks.IsCalculated)
+            {
+                return null;
+            }
+            return new RowData
+                       {
+                           DataFileId = peptideFileAnalysis.MsDataFile.Id.Value,
+                           PeptideId = peptideFileAnalysis.Peptide.Id.Value,
+                           PeptideSequence = peptideFileAnalysis.Peptide.Sequence,
+                           ProteinDescription = peptideFileAnalysis.Peptide.ProteinDescription,
+                           ProteinName = peptideFileAnalysis.Peptide.ProteinName,
+                           Score = peptideFileAnalysis.Peaks.DeconvolutionScore.Value,
+                           TracerPercent = peptideFileAnalysis.Peaks.TracerPercent.Value,
+                           Turnover = peptideFileAnalysis.Peaks.Turnover * 100,
+                       };
+        }
+
+        public double? GetValue(PeptideFileAnalysis peptideFileAnalysis)
+        {
+            return GetValue(ToRowData(peptideFileAnalysis));
+        }
+
+        public double? GetLogValue(PeptideFileAnalysis peptideFileAnalysis)
+        {
+            return GetLogValue(ToRowData(peptideFileAnalysis));
+        }
+
 
         public ResultData CalculateHalfLife(IEnumerable<PeptideFileAnalysis> peptideFileAnalyses)
         {
             var rowDatas = new List<RowData>();
             foreach (var peptideFileAnalysis in peptideFileAnalyses)
             {
-                var peptideDistribution = peptideFileAnalysis.PeptideDistributions.GetChild(PeptideQuantity.tracer_count);
-                var rowData = new RowData
-                                  {
-                                      TimePoint = peptideFileAnalysis.MsDataFile.TimePoint.Value,
-                                      TracerPercent = peptideDistribution.TracerPercent,
-                                      Score = peptideDistribution.Score
-                                  };
+                var rowData = ToRowData(peptideFileAnalysis);
+                if (rowData == null)
+                {
+                    continue;
+                }
                 rowDatas.Add(rowData);
+            }
+            if (HalfLifeCalculationType == HalfLifeCalculationType.GroupPrecursorPool && _precursorPools == null)
+            {
+                using (var session = Workspace.OpenSession())
+                {
+                    _precursorPools = GetPrecursorPools(session);
+                }
             }
             return CalculateHalfLife(rowDatas);
         }
@@ -214,7 +353,7 @@ namespace pwiz.Topograph.MsData
             var result = new List<RowData>();
             foreach (var rowData in rowDatas)
             {
-                if (cohort == rowData.Cohort)
+                if (cohort == GetCohort(rowData))
                 {
                     result.Add(rowData);
                 }
@@ -241,12 +380,12 @@ namespace pwiz.Topograph.MsData
         {
             public double TracerPercent { get; set; }
             public double Score { get; set; }
+            public double? Turnover { get; set; }
             public long PeptideId { get; set; }
-            public String Cohort { get; set; }
-            public double TimePoint { get; set; }
             public String PeptideSequence { get; set; }
             public String ProteinName { get; set; }
             public String ProteinDescription { get; set; }
+            public long DataFileId { get; set; }
         }
 
         public class ResultRow
@@ -337,5 +476,12 @@ namespace pwiz.Topograph.MsData
             degreesOfFreedom = Math.Min(values.Length - 1, degreesOfFreedom);
             return values[degreesOfFreedom];
         }
+
+    }
+    public enum HalfLifeCalculationType
+    {
+        TracerPercent,
+        IndividualPrecursorPool,
+        GroupPrecursorPool,
     }
 }

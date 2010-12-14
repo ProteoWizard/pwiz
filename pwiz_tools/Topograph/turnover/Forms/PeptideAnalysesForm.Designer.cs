@@ -46,10 +46,8 @@ namespace pwiz.Topograph.ui.Forms
             this.colProteinDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colMaxTracers = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colDataFileCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colMinScoreTracerCount = new System.Windows.Forms.DataGridViewLinkColumn();
-            this.colMaxScoreTracerCount = new System.Windows.Forms.DataGridViewLinkColumn();
-            this.colMinScorePrecursorEnrichment = new System.Windows.Forms.DataGridViewLinkColumn();
-            this.colMaxScorePrecursorEnrichment = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.colMinScore = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.colMaxScore = new System.Windows.Forms.DataGridViewLinkColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.contextMenuStrip1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -68,10 +66,8 @@ namespace pwiz.Topograph.ui.Forms
             this.colProteinDescription,
             this.colMaxTracers,
             this.colDataFileCount,
-            this.colMinScoreTracerCount,
-            this.colMaxScoreTracerCount,
-            this.colMinScorePrecursorEnrichment,
-            this.colMaxScorePrecursorEnrichment});
+            this.colMinScore,
+            this.colMaxScore});
             this.dataGridView.ContextMenuStrip = this.contextMenuStrip1;
             this.dataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView.Location = new System.Drawing.Point(0, 29);
@@ -190,31 +186,19 @@ namespace pwiz.Topograph.ui.Forms
             this.colDataFileCount.Name = "colDataFileCount";
             this.colDataFileCount.ReadOnly = true;
             // 
-            // colMinScoreTracerCount
+            // colMinScore
             // 
-            this.colMinScoreTracerCount.HeaderText = "Min Score";
-            this.colMinScoreTracerCount.Name = "colMinScoreTracerCount";
-            this.colMinScoreTracerCount.ReadOnly = true;
-            this.colMinScoreTracerCount.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            this.colMinScore.HeaderText = "Min Score";
+            this.colMinScore.Name = "colMinScore";
+            this.colMinScore.ReadOnly = true;
+            this.colMinScore.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
-            // colMaxScoreTracerCount
+            // colMaxScore
             // 
-            this.colMaxScoreTracerCount.HeaderText = "Max Score";
-            this.colMaxScoreTracerCount.Name = "colMaxScoreTracerCount";
-            this.colMaxScoreTracerCount.ReadOnly = true;
-            this.colMaxScoreTracerCount.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
-            // colMinScorePrecursorEnrichment
-            // 
-            this.colMinScorePrecursorEnrichment.HeaderText = "Min Score";
-            this.colMinScorePrecursorEnrichment.Name = "colMinScorePrecursorEnrichment";
-            this.colMinScorePrecursorEnrichment.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.colMinScorePrecursorEnrichment.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
-            // colMaxScorePrecursorEnrichment
-            // 
-            this.colMaxScorePrecursorEnrichment.HeaderText = "Max Score";
-            this.colMaxScorePrecursorEnrichment.Name = "colMaxScorePrecursorEnrichment";
+            this.colMaxScore.HeaderText = "Max Score";
+            this.colMaxScore.Name = "colMaxScore";
+            this.colMaxScore.ReadOnly = true;
+            this.colMaxScore.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
             // PeptideAnalysesForm
             // 
@@ -250,9 +234,7 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn colProteinDescription;
         private System.Windows.Forms.DataGridViewTextBoxColumn colMaxTracers;
         private System.Windows.Forms.DataGridViewTextBoxColumn colDataFileCount;
-        private System.Windows.Forms.DataGridViewLinkColumn colMinScoreTracerCount;
-        private System.Windows.Forms.DataGridViewLinkColumn colMaxScoreTracerCount;
-        private System.Windows.Forms.DataGridViewLinkColumn colMinScorePrecursorEnrichment;
-        private System.Windows.Forms.DataGridViewLinkColumn colMaxScorePrecursorEnrichment;
+        private System.Windows.Forms.DataGridViewLinkColumn colMinScore;
+        private System.Windows.Forms.DataGridViewLinkColumn colMaxScore;
     }
 }

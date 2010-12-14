@@ -93,6 +93,7 @@ namespace pwiz.Topograph.ui.Forms
                         runningJobsToolStripMenuItem,
                         databaseLocksToolStripMenuItem,
                         outputWorkspaceSQLToolStripMenuItem,
+                        recalculateResultsToolStripMenuItem,
                 };
             }
         }
@@ -637,11 +638,15 @@ namespace pwiz.Topograph.ui.Forms
 
         private void halfLivesToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var ratesForm = Program.FindOpenForm<HalfLivesForm>();
-            if (ratesForm != null)
+            HalfLivesForm ratesForm;
+            if (false) // Allow the user to open more than one HalfLivesForm
             {
-                ratesForm.Activate();
-                return;
+                ratesForm = Program.FindOpenForm<HalfLivesForm>();
+                if (ratesForm != null)
+                {
+                    ratesForm.Activate();
+                    return;
+                }
             }
             ratesForm = new HalfLivesForm(Workspace);
             ratesForm.Show(dockPanel, DockState.Document);
@@ -857,6 +862,20 @@ namespace pwiz.Topograph.ui.Forms
         {
             var form = new PrecursorEnrichmentForm(Workspace);
             form.Show(dockPanel, DockState.Document);
+        }
+
+        private void recalculateResultsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var f = Program.FindOpenForm<RecalculateResultsForm>();
+            if (f == null)
+            {
+                f = new RecalculateResultsForm(Workspace);
+                f.Show(this);
+            }
+            else
+            {
+                f.Activate();
+            }
         }
     }
 }

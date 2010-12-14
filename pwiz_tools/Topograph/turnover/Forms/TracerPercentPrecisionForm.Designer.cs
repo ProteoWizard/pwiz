@@ -1,6 +1,6 @@
 ﻿namespace pwiz.Topograph.ui.Forms
 {
-    partial class DistributionResultsForm
+    partial class TracerPercentPrecisionForm
     {
         /// <summary>
         /// Required designer variable.
@@ -30,7 +30,7 @@
         {
             this.components = new System.ComponentModel.Container();
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Text = "DistributionResultsForm";
+            this.Text = "TracerPercentPrecisionForm";
         }
 
         #endregion

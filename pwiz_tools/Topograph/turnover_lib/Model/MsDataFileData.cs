@@ -64,7 +64,7 @@ namespace pwiz.Topograph.Model
             if (_times != null)
             {
                 msDataFile.Times = _times;
-                if (msDataFile.MsLevels != null)
+                if (msDataFile.MsLevels != null && msDataFile.MsLevels.Length == _msLevels.Length)
                 {
                     for (int i = 0; i < _msLevels.Length; i++)
                     {

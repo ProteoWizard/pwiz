@@ -33,6 +33,7 @@ namespace pwiz.Topograph.Model
     {
         private String _label;
         private String _cohort;
+        private String _sample;
         private double? _timePoint;
         public MsDataFile(Workspace workspace, DbMsDataFile msDataFile) : base(workspace, msDataFile)
         {
@@ -57,6 +58,9 @@ namespace pwiz.Topograph.Model
             yield return Property<MsDataFile, double?>(
                 m => m._timePoint, (m, v) => m._timePoint = v,
                 e => e.TimePoint, (e, v) => e.TimePoint = v);
+            yield return Property<MsDataFile, string>(
+                m => m._sample, (m, v) => m._sample = v,
+                e => e.Sample, (e, v) => e.Sample = v);
         }
         protected override void Load(DbMsDataFile entity)
         {
@@ -96,6 +100,17 @@ namespace pwiz.Topograph.Model
             set
             {
                 SetIfChanged(ref _timePoint, value);
+            }
+        }
+        public string Sample
+        {
+            get
+            {
+                return _sample;
+            }
+            set
+            {
+                SetIfChanged(ref _sample, value);
             }
         }
         

@@ -39,5 +39,7 @@ namespace pwiz.Topograph.Data
         data_directory,
         err_on_side_of_lower_abundance,
         protein_description_key,
+        max_isotope_retention_time_shift,
+        min_correlation_coeff,
     }
 }

@@ -115,7 +115,6 @@ namespace pwiz.Topograph.Model
                 Workspace = dbPeptide.Workspace,
                 MinCharge = minCharge,
                 MaxCharge = maxCharge,
-                IntermediateEnrichmentLevels = 0,
             };
         }
 

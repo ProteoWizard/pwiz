@@ -45,6 +45,14 @@ namespace pwiz.Topograph.ui.Forms
         {
             InitializeComponent();
             _timer.Tick += _timer_Tick;
+            if (workspace.GetTracerDefs().Count == 0)
+            {
+                tbxMinTracers.Text = 0.ToString();
+            }
+            else
+            {
+                tbxMinTracers.Text = 1.ToString();
+            }
         }
 
         void _timer_Tick(object sender, EventArgs e)
@@ -196,7 +204,6 @@ namespace pwiz.Topograph.ui.Forms
                                     {"Version",1},
                                     {"ChromatogramCount", 0},
                                     {"PeakCount",0},
-                                    {"PeptideDistributionCount",0},
                                     {"ValidationStatus",0},
                                 }
                             ));

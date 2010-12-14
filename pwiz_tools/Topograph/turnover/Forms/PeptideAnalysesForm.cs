@@ -48,10 +48,8 @@ namespace pwiz.Topograph.ui.Forms
             TabText = Name = Title + " (loading)";
             deleteMenuItem.Click += _deleteAnalysesMenuItem_Click;
             
-            colMinScoreTracerCount.DefaultCellStyle.Format = "0.####";
-            colMaxScoreTracerCount.DefaultCellStyle.Format = "0.####";
-            colMinScorePrecursorEnrichment.DefaultCellStyle.Format = "0.####";
-            colMaxScorePrecursorEnrichment.DefaultCellStyle.Format = "0.####";
+            colMinScore.DefaultCellStyle.Format = "0.####";
+            colMaxScore.DefaultCellStyle.Format = "0.####";
         }
 
         void _deleteAnalysesMenuItem_Click(object sender, EventArgs e)
@@ -199,14 +197,14 @@ namespace pwiz.Topograph.ui.Forms
                         peptideAnalysisRow.Note = (string)rowData[2];
                         peptideAnalysisRow.DataFileCount = (int) rowData[3];
                     }
-                    var hql2 = "SELECT pd.PeptideFileAnalysis.PeptideAnalysis.Id, pd.PeptideQuantity, Min(pd.Score), Max(pd.Score), Min(pd.PeptideFileAnalysis.ValidationStatus), Max(pd.PeptideFileAnalysis.ValidationStatus) "
-                               + "\nfrom " + typeof(DbPeptideDistribution) +
-                               " pd ";
+                    var hql2 = "SELECT pfa.PeptideAnalysis.Id, Min(pfa.DeconvolutionScore), Max(pfa.DeconvolutionScore), Min(pfa.ValidationStatus), Max(pfa.ValidationStatus) "
+                               + "\nfrom " + typeof(DbPeptideFileAnalysis) +
+                               " pfa ";
                     if (idsToRequery != null)
                     {
-                        hql2 += "\nWHERE pd.PeptideFileAnalysis.PeptideAnalysis.Id IN " + idList;
+                        hql2 += "\nWHERE pfa.PeptideAnalysis.Id IN " + idList;
                     }
-                    hql2 += "\nGROUP BY pd.PeptideFileAnalysis.PeptideAnalysis.Id, pd.PeptideQuantity";
+                    hql2 += "\nGROUP BY pfa.PeptideAnalysis.Id";
                     var query2 = session.CreateQuery(hql2);
                     foreach (object[] rowData in query2.List())
                     {
@@ -216,19 +214,10 @@ namespace pwiz.Topograph.ui.Forms
                         {
                             continue;
                         }
-                        var peptideQuantity = (PeptideQuantity)rowData[1];
-                        if (peptideQuantity == PeptideQuantity.tracer_count)
-                        {
-                            peptideAnalysisRow.MinScoreTracerAmounts = (double?)rowData[2];
-                            peptideAnalysisRow.MaxScoreTracerAmounts = (double?)rowData[3];
-                        }
-                        else
-                        {
-                            peptideAnalysisRow.MinScorePrecursorEnrichments = (double?)rowData[2];
-                            peptideAnalysisRow.MaxScorePrecursorEnrichments = (double?)rowData[3];
-                        }
-                        peptideAnalysisRow.MinValidationStatus = (ValidationStatus?) rowData[4];
-                        peptideAnalysisRow.MaxValidationStatus = (ValidationStatus?) rowData[5];
+                        peptideAnalysisRow.MinScore = (double?)rowData[1];
+                        peptideAnalysisRow.MaxScore = (double?)rowData[2];
+                        peptideAnalysisRow.MinValidationStatus = (ValidationStatus?) rowData[3];
+                        peptideAnalysisRow.MaxValidationStatus = (ValidationStatus?) rowData[4];
                     }
                 }
                 if (idsToRequery != null)
@@ -290,10 +279,8 @@ namespace pwiz.Topograph.ui.Forms
                         row.Cells[colProteinDescription.Index].Value = row.Cells[colProteinDescription.Index].ToolTipText = peptide.ProteinDescription;
                         row.Cells[colMaxTracers.Index].Value = peptide.MaxTracerCount;
                     }
-                    row.Cells[colMinScoreTracerCount.Index].Value = entry.Value.MinScoreTracerAmounts;
-                    row.Cells[colMaxScoreTracerCount.Index].Value = entry.Value.MaxScoreTracerAmounts;
-                    row.Cells[colMinScorePrecursorEnrichment.Index].Value = entry.Value.MinScorePrecursorEnrichments;
-                    row.Cells[colMaxScorePrecursorEnrichment.Index].Value = entry.Value.MaxScorePrecursorEnrichments;
+                    row.Cells[colMinScore.Index].Value = entry.Value.MinScore;
+                    row.Cells[colMaxScore.Index].Value = entry.Value.MaxScore;
                     row.Cells[colDataFileCount.Index].Value = entry.Value.DataFileCount;
                     if (peptideAnalysis == null)
                     {
@@ -320,22 +307,9 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        private void UpdateColumnVisibility()
-        {
-            var defTracerCount = Workspace.GetDefaultPeptideQuantity() == PeptideQuantity.tracer_count;
-            colMinScoreTracerCount.Visible = defTracerCount;
-            colMaxScoreTracerCount.Visible = defTracerCount;
-            colMinScorePrecursorEnrichment.Visible = !defTracerCount;
-            colMaxScorePrecursorEnrichment.Visible = !defTracerCount;
-        }
-
         protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
         {
             base.OnWorkspaceEntitiesChanged(args);
-            if (!Workspace.WorkspaceVersion.Equals(_workspaceVersion))
-            {
-                UpdateColumnVisibility();
-            }
             var changedPeptideAnalysisIds = new HashSet<long>(args.GetChangedPeptideAnalyses().Keys);
             foreach (var peptideFileAnalysis in args.GetEntities<PeptideFileAnalysis>())
             {
@@ -400,71 +374,50 @@ namespace pwiz.Topograph.ui.Forms
             }
             var column = dataGridView.Columns[e.ColumnIndex];
             var row = dataGridView.Rows[e.RowIndex];
-            var peptideAnalysis = TurnoverForm.Instance.LoadPeptideAnalysis((long) row.Tag);
+            if (column != colPeptide && column != colMinScore && column != colMaxScore)
+            {
+                return;
+            }
+            var peptideAnalysis = TurnoverForm.Instance.LoadPeptideAnalysis((long)row.Tag);
             if (peptideAnalysis == null)
             {
                 return;
             }
-
-            PeptideQuantity? peptideQuantity = null;
-            if (column == colMinScoreTracerCount || column == colMaxScoreTracerCount)
-            {
-                peptideQuantity = PeptideQuantity.tracer_count;
-            }
-            if (column == colMinScorePrecursorEnrichment || column == colMaxScorePrecursorEnrichment)
-            {
-                peptideQuantity = PeptideQuantity.precursor_enrichment;
-            }
-            if (column != colPeptide && peptideQuantity == null)
-            {
-                return;
-            }
             var form = OpenPeptideAnalysis(peptideAnalysis);
-            if (column == colMinScoreTracerCount || column == colMaxScoreTracerCount 
-                || column == colMinScorePrecursorEnrichment || column == colMaxScorePrecursorEnrichment)
+            if (column == colMinScore || column == colMaxScore)
             {
-                bool max = column == colMaxScoreTracerCount || column == colMaxScorePrecursorEnrichment;
-                PeptideDistribution peptideDistribution = null;
+                bool max = column == colMaxScore;
+                Peaks peaks = null;
                 foreach (var peptideFileAnalysis in peptideAnalysis.FileAnalyses.ListPeptideFileAnalyses(true))
                 {
-                    foreach (var pd in peptideFileAnalysis.PeptideDistributions.ListChildren())
+                    if (!peptideFileAnalysis.Peaks.DeconvolutionScore.HasValue)
                     {
-                        if (pd.PeptideQuantity != peptideQuantity)
+                        continue;
+                    }
+                    if (peaks == null)
+                    {
+                        peaks = peptideFileAnalysis.Peaks;
+                    }
+                    else if (max)
+                    {
+                        if (peptideFileAnalysis.Peaks.DeconvolutionScore > peaks.DeconvolutionScore)
                         {
-                            continue;
+                            peaks = peptideFileAnalysis.Peaks;
                         }
-                        if (peptideDistribution == null)
+                    }
+                    else
+                    {
+                        if (peptideFileAnalysis.Peaks.DeconvolutionScore < peaks.DeconvolutionScore)
                         {
-                            peptideDistribution = pd;
-                        }
-                        else if (max)
-                        {
-                            if (pd.Score > peptideDistribution.Score)
-                            {
-                                peptideDistribution = pd;
-                            }
-                        }
-                        else
-                        {
-                            if (pd.Score < peptideDistribution.Score)
-                            {
-                                peptideDistribution = pd;
-                            }
+                            peaks = peptideFileAnalysis.Peaks;
                         }
                     }
                 }
-                if (peptideDistribution == null)
+                if (peaks == null)
                 {
                     return;
                 }
-                if (peptideDistribution.PeptideQuantity == PeptideQuantity.tracer_count)
-                {
-                    PeptideFileAnalysisFrame.ActivatePeptideDataForm<TracerAmountsForm>(form.PeptideAnalysisSummary, peptideDistribution.PeptideFileAnalysis);
-                }
-                else
-                {
-                    PeptideFileAnalysisFrame.ActivatePeptideDataForm<PrecursorEnrichmentsForm>(form.PeptideAnalysisSummary, peptideDistribution.PeptideFileAnalysis);
-                }
+                PeptideFileAnalysisFrame.ActivatePeptideDataForm<TracerChromatogramForm>(form.PeptideAnalysisSummary, peaks.PeptideFileAnalysis);
                 return;
             }
         }
@@ -474,10 +427,8 @@ namespace pwiz.Topograph.ui.Forms
             public long Id;
             public long PeptideId;
             public String Note;
-            public double? MinScoreTracerAmounts;
-            public double? MaxScoreTracerAmounts;
-            public double? MinScorePrecursorEnrichments;
-            public double? MaxScorePrecursorEnrichments;
+            public double? MinScore;
+            public double? MaxScore;
             public ValidationStatus? MinValidationStatus;
             public ValidationStatus? MaxValidationStatus;
             public int DataFileCount;

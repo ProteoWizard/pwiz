@@ -261,6 +261,25 @@ namespace pwiz.Topograph.Model
             return _settings.GetSetting(SettingEnum.protein_description_key, "");
         }
 
+        public double GetMaxIsotopeRetentionTimeShift()
+        {
+            return _settings.GetSetting(SettingEnum.max_isotope_retention_time_shift, 1.0);
+        }
+
+        public void SetMaxIsotopeRetentionTimeShift(double value)
+        {
+            _settings.SetSetting(SettingEnum.max_isotope_retention_time_shift, value);
+        }
+
+        public double GetMinCorrelationCoefficient()
+        {
+            return _settings.GetSetting(SettingEnum.min_correlation_coeff, .9);
+        }
+        public void SetMinCorrelationCoefficient(double value)
+        {
+            _settings.SetSetting(SettingEnum.min_correlation_coeff, value);
+        }
+
         public void SetProteinDescriptionKey(String proteinDescriptionKey)
         {
             if (proteinDescriptionKey == GetProteinDescriptionKey())
@@ -321,21 +340,6 @@ namespace pwiz.Topograph.Model
                 return;
             }
             _settings.SetSetting(SettingEnum.err_on_side_of_lower_abundance, b);
-            SetWorkspaceVersion(WorkspaceVersion.IncEnrichmentVersion());
-        }
-
-        public PeptideQuantity GetDefaultPeptideQuantity()
-        {
-            return _settings.GetSetting(SettingEnum.default_peptide_quantity, PeptideQuantity.tracer_count);
-        }
-
-        public void SetDefaultPeptideQuantity(PeptideQuantity peptideQuantity)
-        {
-            if (peptideQuantity == GetDefaultPeptideQuantity())
-            {
-                return;
-            }
-            _settings.SetSetting(SettingEnum.default_peptide_quantity, peptideQuantity);
             SetWorkspaceVersion(WorkspaceVersion.IncEnrichmentVersion());
         }
 
@@ -489,7 +493,10 @@ namespace pwiz.Topograph.Model
                 }
                 else if (key is PeptideFileAnalysis)
                 {
-                    _dirtyPeptideAnalyses.Add(((PeptideFileAnalysis) key).PeptideAnalysis);
+                    if (((PeptideFileAnalysis) key).IsDirty())
+                    {
+                        _dirtyPeptideAnalyses.Add(((PeptideFileAnalysis)key).PeptideAnalysis);
+                    }
                 }
                 if (!IsDirty)
                 {
@@ -555,6 +562,38 @@ namespace pwiz.Topograph.Model
             return true;
         }
 
+        public void UpdateWorkspaceVersion(LongOperationBroker longOperationBroker, ISession session, WorkspaceVersion currentWorkspaceVersion)
+        {
+            if (!SavedWorkspaceVersion.ChromatogramsValid(currentWorkspaceVersion))
+            {
+                longOperationBroker.UpdateStatusMessage("Deleting chromatograms");
+                session.CreateSQLQuery("DELETE FROM DbChromatogram")
+                    .ExecuteUpdate();
+                session.CreateSQLQuery("UPDATE DbPeptideFileAnalysis SET ChromatogramCount = 0, PeakCount = 0")
+                    .ExecuteUpdate();
+                session.CreateSQLQuery("DELETE FROM DbLock").ExecuteUpdate();
+            }
+            if (!SavedWorkspaceVersion.DistributionsValid(currentWorkspaceVersion))
+            {
+                session.CreateSQLQuery("UPDATE DbPeptideFileAnalysis SET TracerPercent = NULL")
+                    .ExecuteUpdate();
+                if (!SavedWorkspaceVersion.PeaksValid(currentWorkspaceVersion))
+                {
+                    if (SavedWorkspaceVersion.ChromatogramsValid(currentWorkspaceVersion))
+                    {
+                        session.CreateSQLQuery("UPDATE DbPeptideFileAnalysis SET PeakCount = 0")
+                            .ExecuteUpdate();
+                    }
+                    longOperationBroker.UpdateStatusMessage("Deleting peaks");
+                    session.CreateSQLQuery("DELETE FROM DbPeak").ExecuteUpdate();
+                }
+                if (SavedWorkspaceVersion.ChromatogramsValid(currentWorkspaceVersion))
+                {
+                    session.CreateSQLQuery("DELETE FROM DbLock WHERE LockType = " + (int)LockType.results).ExecuteUpdate();
+                }
+            }
+        }
+
         public void Save(LongOperationBroker longOperationBroker)
         {
             longOperationBroker.UpdateStatusMessage("Synchronizing with database changes");
@@ -573,45 +612,7 @@ namespace pwiz.Topograph.Model
                 using (var session = OpenWriteSession())
                 {
                     session.BeginTransaction();
-                    if (!SavedWorkspaceVersion.ChromatogramsValid(WorkspaceVersion))
-                    {
-                        longOperationBroker.UpdateStatusMessage("Deleting chromatograms");
-                        session.CreateSQLQuery("DELETE FROM DbChromatogram")
-                            .ExecuteUpdate();
-                        session.CreateSQLQuery("UPDATE DbPeptideFileAnalysis SET ChromatogramCount = 0, PeakCount = 0, PeptideDistributionCount = 0")
-                            .ExecuteUpdate();
-                        session.CreateSQLQuery("DELETE FROM DbLock").ExecuteUpdate();
-                    }
-                    if (!SavedWorkspaceVersion.PeaksValid(WorkspaceVersion))
-                    {
-                        longOperationBroker.UpdateStatusMessage("Deleting peaks");
-                        session.CreateSQLQuery("DELETE FROM DbPeak").ExecuteUpdate();
-                        if (SavedWorkspaceVersion.ChromatogramsValid(WorkspaceVersion))
-                        {
-                            session.CreateSQLQuery("UPDATE DbPeptideFileAnalysis SET PeakCount = 0, PeptideDistributionCount = 0")
-                                .ExecuteUpdate();
-                        }
-                        session.CreateSQLQuery(
-                            "UPDATE DbPeptideFileAnalysis SET PeakStart = NULL, PeakEnd = NULL WHERE DbPeptideFileAnalysis.AutoFindPeak")
-                            .ExecuteUpdate();
-                    }
-                    if (!SavedWorkspaceVersion.DistributionsValid(WorkspaceVersion))
-                    {
-                        longOperationBroker.UpdateStatusMessage("Deleting results");
-                        session.CreateSQLQuery("DELETE FROM DbPeptideAmount")
-                            .ExecuteUpdate();
-                        session.CreateSQLQuery("DELETE FROM DbPeptideDistribution")
-                            .ExecuteUpdate();
-                        if (SavedWorkspaceVersion.PeaksValid(WorkspaceVersion))
-                        {
-                            session.CreateSQLQuery("UPDATE DbPeptideFileAnalysis SET PeptideDistributionCount = 0")
-                                .ExecuteUpdate();
-                        }
-                        if (SavedWorkspaceVersion.ChromatogramsValid(WorkspaceVersion))
-                        {
-                            session.CreateSQLQuery("DELETE FROM DbLock WHERE LockType = " + (int)LockType.results).ExecuteUpdate();
-                        }
-                    }
+                    UpdateWorkspaceVersion(longOperationBroker, session, WorkspaceVersion);
                     bool workspaceChanged = false;
                     longOperationBroker.UpdateStatusMessage("Saving tracer definitions");
                     workspaceChanged = _tracerDefs.SaveChildren(session) || workspaceChanged;
@@ -708,7 +709,6 @@ namespace pwiz.Topograph.Model
                         foreach (var peptideFileAnalysis in peptideAnalysis.GetFileAnalyses(false))
                         {
                             peptideFileAnalysis.Peaks.Save(session);
-                            peptideFileAnalysis.PeptideDistributions.Save(session);
                         }
                         session.Transaction.Commit();
                         return true;

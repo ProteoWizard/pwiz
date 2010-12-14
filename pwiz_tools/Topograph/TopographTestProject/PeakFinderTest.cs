@@ -184,11 +184,10 @@ namespace pwiz.Topograph.Test
             }
             var peaks = new Peaks(peptideFileAnalysis);
             peaks.CalcIntensities();
-            var peptideDistributions = new PeptideDistributions(peptideFileAnalysis);
-            peptideDistributions.Calculate(peaks);
-            
-            Assert.AreEqual(peakFinderPeptide.ExpectedPeakStart + "-" + peakFinderPeptide.ExpectedPeakEnd, 
-                peaks.PeakStart + "-" + peaks.PeakEnd);
+            const string format = "0.000";
+            Assert.AreEqual(
+                peakFinderPeptide.ExpectedPeakStart.ToString(format) + "-" + peakFinderPeptide.ExpectedPeakEnd.ToString(format),
+                peaks.StartTime.Value.ToString(format) + "-" + peaks.EndTime.Value.ToString(format));
         }
 
         private MsDataFile GetMsDataFile(Workspace workspace, String name)
@@ -204,8 +203,8 @@ namespace pwiz.Topograph.Test
             public int LastDetectedScan;
             public int MinCharge;
             public int MaxCharge;
-            public int ExpectedPeakStart;
-            public int ExpectedPeakEnd;
+            public double ExpectedPeakStart;
+            public double ExpectedPeakEnd;
         }
 
         private static PeakFinderPeptide[] peptides =
@@ -219,8 +218,8 @@ namespace pwiz.Topograph.Test
                     LastDetectedScan = 304,
                     MinCharge = 2,
                     MaxCharge = 2,
-                    ExpectedPeakStart = 274,
-                    ExpectedPeakEnd = 585,
+                    ExpectedPeakStart = 1.902,
+                    ExpectedPeakEnd = 2.142,
                 },
                 new PeakFinderPeptide
                 {
@@ -230,8 +229,8 @@ namespace pwiz.Topograph.Test
                    LastDetectedScan = 137,
                    MinCharge = 3,
                    MaxCharge = 3,
-                   ExpectedPeakStart = 103,
-                   ExpectedPeakEnd = 167,
+                   ExpectedPeakStart = .742,
+                   ExpectedPeakEnd = 1.029,
                 },
                 new PeakFinderPeptide
                     {
@@ -241,8 +240,8 @@ namespace pwiz.Topograph.Test
                         LastDetectedScan = 169,
                         MinCharge = 2,
                         MaxCharge = 2,
-                        ExpectedPeakStart = 129,
-                        ExpectedPeakEnd = 184,
+                        ExpectedPeakStart = .974,
+                        ExpectedPeakEnd = 2.148,
                     },
                 new PeakFinderPeptide
                     {
@@ -252,8 +251,8 @@ namespace pwiz.Topograph.Test
                         LastDetectedScan = 243,
                         MinCharge = 3,
                         MaxCharge = 3,
-                        ExpectedPeakStart = 178,
-                        ExpectedPeakEnd = 260,
+                        ExpectedPeakStart = 1.526,
+                        ExpectedPeakEnd = 1.706,
                     },
                 new PeakFinderPeptide
                     {
@@ -263,8 +262,8 @@ namespace pwiz.Topograph.Test
                         LastDetectedScan = 87,
                         MinCharge = 2,
                         MaxCharge = 2,
-                        ExpectedPeakStart = 43,
-                        ExpectedPeakEnd = 105,
+                        ExpectedPeakStart = .230,
+                        ExpectedPeakEnd = .580,
                     }
             };
     }

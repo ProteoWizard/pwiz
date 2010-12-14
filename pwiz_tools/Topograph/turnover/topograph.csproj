@@ -54,7 +54,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>91</ApplicationRevision>
+    <ApplicationRevision>121</ApplicationRevision>
     <ApplicationVersion>0.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -175,12 +175,6 @@
     <Compile Include="Forms\DataFileSummary.Designer.cs">
       <DependentUpon>DataFileSummary.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\DistributionResultsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\DistributionResultsForm.Designer.cs">
-      <DependentUpon>DistributionResultsForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="Forms\DumpWorkspaceDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -289,6 +283,12 @@
     <Compile Include="Forms\PrecursorEnrichmentForm.Designer.cs">
       <DependentUpon>PrecursorEnrichmentForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\PrecursorPoolForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\PrecursorPoolForm.Designer.cs">
+      <DependentUpon>PrecursorPoolForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\QueriesForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -306,6 +306,18 @@
     </Compile>
     <Compile Include="Forms\HalfLivesForm.Designer.cs">
       <DependentUpon>HalfLivesForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\RecalculateResultsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\RecalculateResultsForm.Designer.cs">
+      <DependentUpon>RecalculateResultsForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\RelexForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\RelexForm.Designer.cs">
+      <DependentUpon>RelexForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\StatusForm.cs">
       <SubType>Form</SubType>
@@ -325,12 +337,6 @@
     <Compile Include="Forms\TracerAmountsByCohort.Designer.cs">
       <DependentUpon>TracerAmountsByCohort.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\TracerAmountsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\TracerAmountsForm.Designer.cs">
-      <DependentUpon>TracerAmountsForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="Forms\PeptideFileAnalysisForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -349,17 +355,17 @@
     <Compile Include="Forms\SpectrumForm.Designer.cs">
       <DependentUpon>SpectrumForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\PrecursorEnrichmentsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\PrecursorEnrichmentsForm.Designer.cs">
-      <DependentUpon>PrecursorEnrichmentsForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="Forms\TracerChromatogramForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\TracerChromatogramForm.Designer.cs">
       <DependentUpon>TracerChromatogramForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\TracerPercentPrecisionForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\TracerPercentPrecisionForm.Designer.cs">
+      <DependentUpon>TracerPercentPrecisionForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\TurnoverForm.cs">
       <SubType>Form</SubType>
@@ -474,6 +480,10 @@
       <DependentUpon>PrecursorEnrichmentForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Forms\PrecursorPoolForm.resx">
+      <DependentUpon>PrecursorPoolForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\QueriesForm.resx">
       <DependentUpon>QueriesForm.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -486,12 +496,16 @@
       <DependentUpon>HalfLivesForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\SpectrumForm.resx">
-      <DependentUpon>SpectrumForm.cs</DependentUpon>
+    <EmbeddedResource Include="Forms\RecalculateResultsForm.resx">
+      <DependentUpon>RecalculateResultsForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\PrecursorEnrichmentsForm.resx">
-      <DependentUpon>PrecursorEnrichmentsForm.cs</DependentUpon>
+    <EmbeddedResource Include="Forms\RelexForm.resx">
+      <DependentUpon>RelexForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\SpectrumForm.resx">
+      <DependentUpon>SpectrumForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\StatusForm.resx">
@@ -504,10 +518,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\TracerAmountsByCohort.resx">
       <DependentUpon>TracerAmountsByCohort.cs</DependentUpon>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Forms\TracerAmountsForm.resx">
-      <DependentUpon>TracerAmountsForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\TracerChromatogramForm.resx">
@@ -539,6 +549,12 @@
     <Content Include="Interop.EDAL.SxS.manifest">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="EULA.MHDAC">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="EULA.MSFileReader">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Properties\app.manifest" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -557,6 +573,10 @@
     <ProjectReference Include="..\..\Shared\Common\Common.csproj">
       <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
       <Name>Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Shared\Crawdad\Crawdad.vcproj">
+      <Project>{5C81BB57-E46C-4B3B-9764-82F835E643B8}</Project>
+      <Name>Crawdad</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Shared\MSGraph\MSGraph.csproj">
       <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
@@ -618,6 +638,24 @@
     <Content Include="Topograph.ico" />
   </ItemGroup>
   <ItemGroup>
+    <PublishFile Include="Clearcore">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Exclude</PublishState>
+      <FileType>Assembly</FileType>
+    </PublishFile>
+    <PublishFile Include="Clearcore.Storage">
+      <Visible>False</Visible>
+      <Group>
+      </Group>
+      <TargetPath>
+      </TargetPath>
+      <PublishState>Exclude</PublishState>
+      <FileType>Assembly</FileType>
+    </PublishFile>
     <PublishFile Include="Interop.EDAL">
       <Visible>False</Visible>
       <Group>

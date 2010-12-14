@@ -105,5 +105,11 @@ namespace pwiz.Topograph.ui.Forms
             form.Show(TurnoverForm.Instance.DocumentPanel, DockState.Document);
             return form;
         }
+
+        private void PeptideAnalysisFrame_Resize(object sender, EventArgs e)
+        {
+            SuspendLayout();
+            ResumeLayout(true);
+        }
     }
 }

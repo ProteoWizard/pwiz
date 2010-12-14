@@ -25,19 +25,18 @@ namespace pwiz.Topograph.Query
             "Tracer Amounts",
             string.Join("\n", new [] 
             {
-                "SELECT T.TracerPercent,",
-	            "T.Score,",
-            	"T.PrecursorEnrichment,",
-            	"T.Turnover,",
-	            "T.PeptideFileAnalysis.MsDataFile.Name AS File,",
-	            "T.PeptideFileAnalysis.MsDataFile.TimePoint AS TimePoint,",
-	            "T.PeptideFileAnalysis.MsDataFile.Cohort AS Cohort,",
-	            "T.PeptideFileAnalysis.PeptideAnalysis.Peptide.FullSequence AS Peptide,",
-	            "T.PeptideFileAnalysis.PeptideAnalysis.Peptide.Protein AS Protein,",
-	            "T.PeptideFileAnalysis.PeptideAnalysis.Peptide.ProteinDescription AS ProteinDescription,",
-	            "T.PeptideFileAnalysis AS Analysis",
-                "FROM DbPeptideDistribution T",
-                "WHERE T.PeptideQuantity = 0"
+                "SELECT F.TracerPercent,",
+	            "F.DeconvolutionScore,",
+            	"F.PrecursorEnrichment,",
+            	"F.Turnover,",
+	            "F.MsDataFile.Name AS File,",
+	            "F.MsDataFile.TimePoint AS TimePoint,",
+	            "F.MsDataFile.Cohort AS Cohort,",
+	            "F.PeptideAnalysis.Peptide.FullSequence AS Peptide,",
+	            "F.PeptideAnalysis.Peptide.Protein AS Protein,",
+	            "F.PeptideAnalysis.Peptide.ProteinDescription AS ProteinDescription,",
+	            "F AS Analysis",
+                "FROM DbPeptideFileAnalysis F",
             }));
 
         public static BuiltInQuery PeptideAreas = new BuiltInQuery(
@@ -53,9 +52,7 @@ namespace pwiz.Topograph.Query
 	            "P.PeptideFileAnalysis.PeptideAnalysis.Peptide.Protein AS Protein,",
 	            "P.PeptideFileAnalysis.PeptideAnalysis.Peptide.ProteinDescription AS ProteinDescription,",
 	            "P.PeptideFileAnalysis AS Analysis",
-                "FROM DbPeak P, DbPeptideDistribution D",
-                "WHERE P.PeptideFileAnalysis = D.PeptideFileAnalysis",
-                "AND D.PeptideQuantity= 0",
+                "FROM DbPeak P",
                 "GROUP BY P.PeptideFileAnalysis",
             }));
         public static IList<BuiltInQuery> List

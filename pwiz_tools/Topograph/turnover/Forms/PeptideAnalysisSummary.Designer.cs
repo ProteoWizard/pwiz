@@ -42,8 +42,6 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxMaxCharge = new System.Windows.Forms.TextBox();
             this.gridViewExcludedMzs = new pwiz.Topograph.ui.Controls.ExcludedMzsGrid();
             this.btnCreateAnalyses = new System.Windows.Forms.Button();
-            this.label7 = new System.Windows.Forms.Label();
-            this.tbxIntermediateLevels = new System.Windows.Forms.TextBox();
             this.label8 = new System.Windows.Forms.Label();
             this.tbxMonoMass = new System.Windows.Forms.TextBox();
             this.label9 = new System.Windows.Forms.Label();
@@ -105,8 +103,6 @@ namespace pwiz.Topograph.ui.Forms
             this.tableLayoutPanel1.Controls.Add(this.tbxMaxCharge, 1, 6);
             this.tableLayoutPanel1.Controls.Add(this.gridViewExcludedMzs, 0, 10);
             this.tableLayoutPanel1.Controls.Add(this.btnCreateAnalyses, 0, 9);
-            this.tableLayoutPanel1.Controls.Add(this.label7, 0, 7);
-            this.tableLayoutPanel1.Controls.Add(this.tbxIntermediateLevels, 1, 7);
             this.tableLayoutPanel1.Controls.Add(this.label8, 0, 3);
             this.tableLayoutPanel1.Controls.Add(this.tbxMonoMass, 1, 3);
             this.tableLayoutPanel1.Controls.Add(this.label9, 0, 4);
@@ -237,26 +233,6 @@ namespace pwiz.Topograph.ui.Forms
             this.btnCreateAnalyses.Text = "Create File Analyses";
             this.btnCreateAnalyses.UseVisualStyleBackColor = true;
             this.btnCreateAnalyses.Click += new System.EventHandler(this.btnCreateAnalyses_Click);
-            // 
-            // label7
-            // 
-            this.label7.AutoSize = true;
-            this.label7.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label7.Location = new System.Drawing.Point(3, 175);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(117, 25);
-            this.label7.TabIndex = 12;
-            this.label7.Text = "Intermediate Levels";
-            this.label7.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // tbxIntermediateLevels
-            // 
-            this.tbxIntermediateLevels.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tbxIntermediateLevels.Location = new System.Drawing.Point(126, 178);
-            this.tbxIntermediateLevels.Name = "tbxIntermediateLevels";
-            this.tbxIntermediateLevels.Size = new System.Drawing.Size(130, 20);
-            this.tbxIntermediateLevels.TabIndex = 15;
-            this.tbxIntermediateLevels.Leave += new System.EventHandler(this.tbxIntermediateLevels_Leave);
             // 
             // label8
             // 
@@ -484,8 +460,6 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.TextBox tbxProtein;
         private System.Windows.Forms.Button btnShowGraph;
-        private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.TextBox tbxIntermediateLevels;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.TextBox tbxMassAccuracy;
         private ValidationStatusColumn colStatus;

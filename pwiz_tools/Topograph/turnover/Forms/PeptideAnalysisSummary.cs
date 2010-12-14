@@ -35,6 +35,9 @@ namespace pwiz.Topograph.ui.Forms
     {
         private readonly Dictionary<PeptideFileAnalysis, DataGridViewRow> _peptideFileAnalysisRows 
             = new Dictionary<PeptideFileAnalysis, DataGridViewRow>();
+
+        private int? _originalMinCharge;
+        private int? _originalMaxCharge;
         public PeptideAnalysisSummary(PeptideAnalysis peptideAnalysis) : base(peptideAnalysis)
         {
             InitializeComponent();
@@ -65,6 +68,21 @@ namespace pwiz.Topograph.ui.Forms
                 UpdateRow(AddRow(peptideFileAnalysis));
             }
             OnPeptideAnalysisChanged();
+            InitializeOriginalMinMaxCharge();
+        }
+
+        private void InitializeOriginalMinMaxCharge()
+        {
+            using (var session = Workspace.OpenSession())
+            {
+                var query = session.CreateQuery("SELECT MIN(S.MinCharge), MAX(S.MaxCharge) FROM " +
+                                                typeof (DbPeptideSearchResult) + " S WHERE S.Peptide.Id = :peptideId")
+                    .SetParameter("peptideId", Peptide.Id);
+                var row = (object[]) query.UniqueResult();
+                _originalMinCharge = Convert.ToInt32(row[0]);
+                _originalMaxCharge = Convert.ToInt32(row[1]);
+            }
+            BeginInvoke(new Action(OnPeptideAnalysisChanged));
         }
 
         private DataGridViewRow AddRow(PeptideFileAnalysis peptideFileAnalysis)
@@ -93,36 +111,31 @@ namespace pwiz.Topograph.ui.Forms
             row.Cells[colTimePoint.Name].Value = peptideFileAnalysis.MsDataFile.TimePoint;
             row.Cells[colCohort.Name].Value = peptideFileAnalysis.MsDataFile.Cohort;
             row.Cells[colDataFileLabel.Name].Value = peptideFileAnalysis.MsDataFile.Label;
-            row.Cells[colPeakStart.Name].Value = peptideFileAnalysis.PeakStartTime;
-            row.Cells[colPeakEnd.Name].Value = peptideFileAnalysis.PeakEndTime;
+            row.Cells[colPeakStart.Name].Value = peptideFileAnalysis.Peaks.StartTime;
+            row.Cells[colPeakEnd.Name].Value = peptideFileAnalysis.Peaks.EndTime;
             row.Cells[colPeakStart.Index].Style.Font 
                 = row.Cells[colPeakEnd.Index].Style.Font
                 = peptideFileAnalysis.AutoFindPeak
                     ? row.DataGridView.Font
                     : new Font(row.DataGridView.Font, FontStyle.Bold);
-            var peptideDistribution =
-                peptideFileAnalysis.PeptideDistributions.GetChild(Workspace.GetDefaultPeptideQuantity());
-            if (peptideDistribution != null)
+            if (peptideFileAnalysis.Peaks.TracerPercent.HasValue)
             {
-                row.Cells[colTracerPercent.Index].Value = peptideDistribution.TracerPercent / 100;
-                row.Cells[colScore.Index].Value = peptideDistribution.Score;
-                if (Workspace.GetTracerDefs().Count > 1)
-                {
-                    row.Cells[colPrecursorEnrichment.Index].Value = peptideDistribution.PrecursorEnrichmentFormula;
-                }
-                else
-                {
-                    row.Cells[colPrecursorEnrichment.Index].Value = peptideDistribution.PrecursorEnrichment;
-                }
-                row.Cells[colTurnover.Index].Value = peptideDistribution.Turnover;
+                row.Cells[colTracerPercent.Index].Value = peptideFileAnalysis.Peaks.TracerPercent/100;
             }
             else
             {
                 row.Cells[colTracerPercent.Index].Value = null;
-                row.Cells[colScore.Index].Value = null;
-                row.Cells[colPrecursorEnrichment.Index].Value = null;
-                row.Cells[colTurnover.Index].Value = null;
             }
+            row.Cells[colScore.Index].Value = peptideFileAnalysis.Peaks.DeconvolutionScore;
+            if (Workspace.GetTracerDefs().Count > 1)
+            {
+                row.Cells[colPrecursorEnrichment.Index].Value = peptideFileAnalysis.Peaks.PrecursorEnrichmentFormula;
+            }
+            else
+            {
+                row.Cells[colPrecursorEnrichment.Index].Value = peptideFileAnalysis.Peaks.PrecursorEnrichment;
+            }
+            row.Cells[colTurnover.Index].Value = peptideFileAnalysis.Peaks.Turnover;
         }
 
         protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
@@ -134,10 +147,14 @@ namespace pwiz.Topograph.ui.Forms
             }
             else
             {
-                var peptideFileAnalyses = new HashSet<PeptideFileAnalysis>(args.GetEntities<PeptideFileAnalysis>());
-                foreach (var peptideDistribution in args.GetEntities<PeptideDistribution>())
+                var peptideFileAnalyses = new HashSet<PeptideFileAnalysis>(
+                    args.GetEntities<PeptideFileAnalysis>().Where(f=>Equals(PeptideAnalysis, f.PeptideAnalysis)));
+                foreach (var peaks in args.GetEntities<Peaks>())
                 {
-                    peptideFileAnalyses.Add(peptideDistribution.PeptideFileAnalysis);
+                    if (Equals(PeptideAnalysis, peaks.PeptideAnalysis))
+                    {
+                        peptideFileAnalyses.Add(peaks.PeptideFileAnalysis);
+                    }
                 }
                 UpdateRows(peptideFileAnalyses);
             }
@@ -170,7 +187,6 @@ namespace pwiz.Topograph.ui.Forms
             tbxAvgMass.Text = Peptide.GetChargedPeptide(1).GetMassDistribution(res).AverageMass.ToString("0.####");
             tbxMinCharge.Text = PeptideAnalysis.MinCharge.ToString();
             tbxMaxCharge.Text = PeptideAnalysis.MaxCharge.ToString();
-            tbxIntermediateLevels.Text = PeptideAnalysis.IntermediateLevels.ToString();
             tbxProtein.Text = Peptide.ProteinName + " " + Peptide.ProteinDescription;
             tbxMassAccuracy.Text = PeptideAnalysis.GetMassAccuracy().ToString();
             if (PeptideAnalysis.MassAccuracy == null)
@@ -181,6 +197,23 @@ namespace pwiz.Topograph.ui.Forms
             {
                 tbxMassAccuracy.Font = new Font(Font, FontStyle.Bold);
             }
+            if (_originalMinCharge.HasValue && _originalMinCharge != PeptideAnalysis.MinCharge)
+            {
+                tbxMinCharge.Font = new Font(Font, FontStyle.Bold);
+            }
+            else
+            {
+                tbxMinCharge.Font = Font;
+            }
+            if (_originalMaxCharge.HasValue && _originalMaxCharge != PeptideAnalysis.MaxCharge)
+            {
+                tbxMaxCharge.Font = new Font(Font, FontStyle.Bold);
+            }
+            else
+            {
+                tbxMaxCharge.Font = Font;
+            }
+
             UpdateMassGrid();
             UpdateRows(PeptideAnalysis.FileAnalyses.ListChildren());
         }
@@ -225,18 +258,6 @@ namespace pwiz.Topograph.ui.Forms
             }
     }
 
-        private void tbxIntermediateLevels_Leave(object sender, EventArgs e)
-        {
-            try
-            {
-                PeptideAnalysis.IntermediateLevels = Convert.ToInt32(tbxIntermediateLevels.Text);
-            }
-            catch (FormatException)
-            {
-                // ignore
-            }
-        }
-
         private void UpdateMassGrid()
         {
             gridViewExcludedMzs.UpdateGrid();
@@ -259,7 +280,7 @@ namespace pwiz.Topograph.ui.Forms
                 return;
             }
             var row = dataGridView.Rows[e.RowIndex];
-            var peptideAnalysis = (PeptideFileAnalysis)row.Tag;
+            var peptideFileAnalysis = (PeptideFileAnalysis)row.Tag;
             var column = dataGridView.Columns[e.ColumnIndex];
             if (e.ColumnIndex >= 0)
             {
@@ -267,18 +288,11 @@ namespace pwiz.Topograph.ui.Forms
             }
             if (column == colPeakStart || column == colPeakEnd)
             {
-                PeptideFileAnalysisFrame.ActivatePeptideDataForm<AbstractChromatogramForm>(this, peptideAnalysis);
+                PeptideFileAnalysisFrame.ActivatePeptideDataForm<AbstractChromatogramForm>(this, peptideFileAnalysis);
             }
             else if (column == colTracerPercent || column == colScore)
             {
-                if (Workspace.GetDefaultPeptideQuantity() == PeptideQuantity.tracer_count)
-                {
-                    PeptideFileAnalysisFrame.ActivatePeptideDataForm<TracerAmountsForm>(this, peptideAnalysis);
-                }
-                else
-                {
-                    PeptideFileAnalysisFrame.ActivatePeptideDataForm<PrecursorEnrichmentsForm>(this, peptideAnalysis);
-                }
+                PeptideFileAnalysisFrame.ActivatePeptideDataForm<TracerChromatogramForm>(this, peptideFileAnalysis);
             }
         }
 

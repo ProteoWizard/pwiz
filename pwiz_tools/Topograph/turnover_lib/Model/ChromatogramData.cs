@@ -49,16 +49,16 @@ namespace pwiz.Topograph.Model
         public int Charge { get { return MzKey.Charge; } }
         public MzRange MzRange { get; private set; }
         public IList<ChromatogramPoint> Points { get; private set; }
-        public PeptideFileAnalysis PeptideFileAnalysis { get { return ((Chromatograms) Parent).PeptideFileAnalysis; } }
-        public int[] ScanIndexes { get { return PeptideFileAnalysis.ScanIndexesArray; } }
-        public double[] Times { get { return PeptideFileAnalysis.TimesArray; } }
+        public Chromatograms Chromatograms { get { return (Chromatograms) Parent;}}
+        public int[] ScanIndexes { get { return Chromatograms.ScanIndexesArray; } }
+        public double[] Times { get { return Chromatograms.TimesArray; } }
         private IList<double> _intensities;
         private double _massAccuarcy;
         public IList<double> GetIntensities()
         {
             lock(this)
             {
-                var massAccuracy = PeptideFileAnalysis.PeptideAnalysis.GetMassAccuracy();
+                var massAccuracy = Chromatograms.PeptideFileAnalysis.PeptideAnalysis.GetMassAccuracy();
                 if (_intensities != null && massAccuracy == _massAccuarcy)
                 {
                     return _intensities;

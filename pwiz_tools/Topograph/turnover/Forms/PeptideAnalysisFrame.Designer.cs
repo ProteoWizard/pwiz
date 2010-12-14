@@ -98,6 +98,7 @@
             this.Name = "PeptideAnalysisFrame";
             this.TabText = "PeptideAnalysisFrame";
             this.Text = "PeptideAnalysisFrame";
+            this.Resize += new System.EventHandler(this.PeptideAnalysisFrame_Resize);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);

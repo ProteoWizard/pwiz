@@ -54,7 +54,6 @@
             this.tbxMinTracers.Name = "tbxMinTracers";
             this.tbxMinTracers.Size = new System.Drawing.Size(131, 20);
             this.tbxMinTracers.TabIndex = 1;
-            this.tbxMinTracers.Text = "1";
             // 
             // label2
             // 
@@ -71,7 +70,6 @@
             this.tbxExcludeAas.Name = "tbxExcludeAas";
             this.tbxExcludeAas.Size = new System.Drawing.Size(131, 20);
             this.tbxExcludeAas.TabIndex = 3;
-            this.tbxExcludeAas.Text = "QN";
             // 
             // btnCreateAnalyses
             // 

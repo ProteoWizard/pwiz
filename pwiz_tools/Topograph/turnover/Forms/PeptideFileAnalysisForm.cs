@@ -50,7 +50,7 @@ namespace pwiz.Topograph.ui.Forms
 
         protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
         {
-            if (args.Contains(PeptideFileAnalysis) || args.Contains(PeptideFileAnalysis.PeptideDistributions))
+            if (args.Contains(PeptideFileAnalysis) || args.Contains(PeptideFileAnalysis.Peaks))
             {
                 PeptideFileAnalysisChanged();
             }
