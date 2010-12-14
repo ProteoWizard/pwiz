@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using pwiz.CLI.cv;
 using pwiz.CLI.data;
@@ -301,8 +302,16 @@ namespace pwiz.ProteowizardWrapper
         {
             using (var spectrum = SpectrumList.spectrum(scanIndex, true))
             {
-                mzArray = ToArray(spectrum.getMZArray().data);
-                intensityArray = ToArray(spectrum.getIntensityArray().data);
+                try
+                {
+                    mzArray = ToArray(spectrum.getMZArray().data);
+                    intensityArray = ToArray(spectrum.getIntensityArray().data);
+                }
+                catch (NullReferenceException)
+                {
+                    mzArray = new double[0];
+                    intensityArray = new double[0];
+                }
             }
         }
 
