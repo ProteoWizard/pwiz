@@ -63,6 +63,8 @@ rule vendor-api-requirements ( properties * )
     return $(result) [ vendor-api-usage-requirements $(properties) ] ;
 }
 
+lib shlwapi : : <name>shlwapi ; # for PathIsNetworkPath
+
 rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
@@ -77,6 +79,7 @@ rule vendor-api-usage-requirements ( properties * )
             result += <assembly-dependency>$(API_PATH)/fregistry.dll ;
             result += <assembly-dependency>$(API_PATH)/fileio.dll ;
             result += <assembly-dependency>$(API_PATH)/EULA.MSFileReader ;
+            result += <library>shlwapi ;
         }
     }
     return $(result) ;

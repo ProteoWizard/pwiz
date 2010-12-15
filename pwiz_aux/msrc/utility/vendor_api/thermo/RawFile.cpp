@@ -46,6 +46,7 @@
 
 
 #include <windows.h> // GetModuleFileName
+#include <shlwapi.h> // PathIsNetworkPath
 
 using namespace pwiz::vendor_api::Thermo;
 using namespace pwiz::util;
@@ -162,6 +163,7 @@ class RawFileImpl : public RawFile
     IXRawfilePtr raw_;
     int rawInterfaceVersion_; // IXRawfile=1, IXRawfile2=2, IXRawfile3=3, etc.
     string filename_;
+    bool isTemporary_;
     ControllerType currentControllerType_;
 
     InstrumentModelType instrumentModel_;
@@ -205,6 +207,7 @@ PWIZ_API_DECL RawFilePtr RawFile::create(const string& filename)
 RawFileImpl::RawFileImpl(const string& filename)
 :   raw_(NULL),
     filename_(filename),
+    isTemporary_(false),
     instrumentModel_(InstrumentModelType_Unknown),
     instrumentMethodParsed_(init_once_flag_proxy)
 {
@@ -216,6 +219,15 @@ RawFileImpl::RawFileImpl(const string& filename)
     delete buf;
     if (decimalSeparator != ".")
         throw runtime_error("[RawFile::ctor] Reading Thermo RAW files requires the decimal separator to be '.' - adjust regional/language settings in the Control Panel.");
+
+    // XRawfile requires ',' as a list separator
+    int listSeparatorLength = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SLIST, 0, 0);
+    buf = new char[listSeparatorLength];
+    GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SLIST, buf, listSeparatorLength);
+    string listSeparator = buf;
+    delete buf;
+    if (listSeparator != ",")
+        throw runtime_error("[RawFile::ctor] Reading Thermo RAW files requires the list separator to be ',' - adjust regional/language settings in the Control Panel.");
 
     COMInitializer::initialize();
 
@@ -297,7 +309,19 @@ RawFileImpl::RawFileImpl(const string& filename)
 
     try
     {
-        if (raw_->Open(filename.c_str()))
+        // if file is on a network drive, copy it to a temporary local file
+        /*if (::PathIsNetworkPath(filename.c_str()))
+        {
+            char* temp = ::getenv("TEMP");
+            bfs::path tempFilepath = bfs::path(temp) / bfs::path(filename).filename();
+            if (bfs::exists(tempFilepath))
+                bfs::remove(tempFilepath);
+            bfs::copy_file(filename, tempFilepath);
+            filename_ = tempFilepath.string();
+            isTemporary_ = true;
+        }*/
+
+        if (raw_->Open(filename_.c_str()))
             throw RawEgg("[RawFile::ctor] Unable to open file " + filename);
     }
     catch (_com_error& e)
@@ -311,36 +335,12 @@ RawFileImpl::~RawFileImpl()
 {
     raw_->Close();
     raw_ = NULL;
-    COMInitializer::uninitialize();
+    
+    // if applicable, delete temporary file
+    if (isTemporary_)
+        bfs::remove(filename_);
 
-    /*size_t lpMem = 0;
-    size_t totalVirtualCommit = 0;
-    size_t totalVirtualReserve = 0;
-    size_t totalVirtualFree = 0;
-    MEMORY_BASIC_INFORMATION memInfo;
-    while( VirtualQuery((LPCVOID)lpMem, &memInfo, sizeof(memInfo)) > 0 && memInfo.State != 0x2000)
-        lpMem += memInfo.RegionSize;
-    if(memInfo.State == 0x2000)
-        lpMem += memInfo.RegionSize;
-    while( VirtualQuery((LPCVOID)lpMem, &memInfo, sizeof(memInfo)) > 0 )
-    {
-        lpMem += memInfo.RegionSize;
-        if(memInfo.State == 0x1000)
-            totalVirtualCommit += memInfo.RegionSize;
-        if(memInfo.State == 0x2000)
-        {
-            cout << std::hex << memInfo.BaseAddress << endl;
-            string input;
-            //std::getline(cin, input);
-                //VirtualFree(memInfo.BaseAddress, 0, 0x8000);
-            totalVirtualReserve += memInfo.RegionSize;
-        }
-        if(memInfo.State == 0x10000)
-            totalVirtualFree += memInfo.RegionSize;
-    }
-    cout << "Commit: " << std::dec << totalVirtualCommit <<
-            "\nReserve: " << totalVirtualReserve <<
-            "\nFree: " << totalVirtualFree << endl;*/
+    COMInitializer::uninitialize();
 }
 
 
