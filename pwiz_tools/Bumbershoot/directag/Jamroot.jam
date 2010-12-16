@@ -153,7 +153,8 @@ local application-name = "DirecTag" ;
 
 # set version info (used for tarball filenames)
 import svnrev ;
-local revision-info = [ svnrev.generate-version-header svnrev.hpp : [ glob  *.?pp *.h Jamroot.jam ] : warn-on-missing ] ;
+local revision-info = [ svnrev.generate-version-header $(ROOT_PATH)/svnrev.hpp : [
+	glob  $(ROOT_PATH)/.?pp $(ROOT_PATH)/*.h $(ROOT_PATH)/Jamroot.jam ] : warn-on-missing ] ;
 
 # revision-info is a sequence: <max revision> <max year> <max month> <max day> <number of modified files in working copy>
 
