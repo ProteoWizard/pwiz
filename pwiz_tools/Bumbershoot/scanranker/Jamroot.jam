@@ -214,7 +214,7 @@ constant COMPANY_AND_PRODUCT : "Vanderbilt University" "ScanRanker" ;
 
 # generate overall ScanRanker version header
 local revision-info = [ generate-AssemblyInfo.cs GUI/Properties/AssemblyInfo.cs :
-    [ path.glob-tree . : *.jam
+    [ path.glob . : *.jam
                          *.?pp *.h
                          *.cs
                          #*.html
