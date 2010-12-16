@@ -315,10 +315,25 @@ namespace pwiz.Skyline.Util
 
         /// <summary>
         /// Base statistical value used in calculating variance and standard deviations.
+        /// <para>
+        /// Simple "Naive" algorithm has inherent numeric instability.  See:
+        /// http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance
+        /// </para>
         /// </summary>
         private double VarianceTotal()
         {
-            return (SumOfSquares() - _list.Length * Math.Pow(Mean(), 2));            
+//            return (SumOfSquares() - _list.Length * Math.Pow(Mean(), 2));            
+            double mean = Mean();
+
+            double s = 0;
+            double sc = 0;
+            foreach (double value in _list)
+            {
+                double diff = value - mean;
+                s += Math.Pow(diff, 2);
+                sc += diff;
+            }
+            return (s - Math.Pow(sc, 2)/_list.Length);
         }
 
         /// <summary>

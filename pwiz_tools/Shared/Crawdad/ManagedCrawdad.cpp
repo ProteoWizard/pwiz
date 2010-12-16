@@ -200,20 +200,27 @@ namespace Crawdad {
         vector<SlimCrawPeak>::iterator itPeakEnd = _pPeakFinder->sps.end();
         double totalArea = 0;
 		int stop_rt = _pPeakFinder->chrom.size() - _widthDataWings - 1;
+		int adjust_stop_rt = stop_rt - _widthDataWings;
         while (itPeak != itPeakEnd)
         {
 			if (itPeak->start_rt_idx < stop_rt && itPeak->stop_rt_idx > _widthDataWings)
 			{
-	            totalArea += itPeak->peak_area;
+				double rheight = itPeak->peak_height / itPeak->raw_height;
+				double rarea = itPeak->peak_area / itPeak->raw_area;
 
-				itPeak->start_rt_idx = Math::Max(_widthDataWings, itPeak->start_rt_idx);
-				itPeak->start_rt_idx -= _widthDataWings;
-				itPeak->peak_rt_idx = Math::Max(_widthDataWings, Math::Min(stop_rt, itPeak->peak_rt_idx));
-				itPeak->peak_rt_idx -= _widthDataWings;
-				itPeak->stop_rt_idx = Math::Max(_widthDataWings, Math::Min(stop_rt, itPeak->stop_rt_idx));
-				itPeak->stop_rt_idx -= _widthDataWings;
+				if (rheight > 0.02 && rarea > 0.02)
+				{
+					itPeak->start_rt_idx = Math::Max(_widthDataWings, itPeak->start_rt_idx);
+					itPeak->start_rt_idx -= _widthDataWings;
+					itPeak->peak_rt_idx = Math::Max(_widthDataWings, Math::Min(stop_rt, itPeak->peak_rt_idx));
+					itPeak->peak_rt_idx -= _widthDataWings;
+					itPeak->stop_rt_idx = Math::Max(_widthDataWings, Math::Min(stop_rt, itPeak->stop_rt_idx));
+					itPeak->stop_rt_idx -= _widthDataWings;
 
-				result->Add(gcnew CrawdadPeak(*itPeak));
+					result->Add(gcnew CrawdadPeak(*itPeak));
+
+					totalArea += itPeak->peak_area;
+				}
 			}
             itPeak++;
         }

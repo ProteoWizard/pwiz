@@ -17,10 +17,8 @@
  * limitations under the License.
  */
 
-using System;
 using System.IO;
 using System.Collections.Generic;
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
@@ -100,7 +98,7 @@ namespace pwiz.SkylineTestTutorial
             }));
 
             // Pasting FASTA Sequences, p. 4
-            RunUI(() => SetClipboardText(@"MethodEdit\FASTA\fasta.txt"));
+            RunUI(() => SetClipboardFileText(@"MethodEdit\FASTA\fasta.txt"));
 
             // New in v0.7 : Skyline asks about removing empty proteins.
             var emptyProteinsDlg = ShowDialog<EmptyProteinsDlg>(SkylineWindow.Paste);
@@ -169,7 +167,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 var node = SkylineWindow.SequenceTree.Nodes[SkylineWindow.SequenceTree.Nodes.Count - 1];
                 SkylineWindow.SequenceTree.SelectedNode = node;
-                SetClipboardText(@"MethodEdit\FASTA\Protein list.txt");
+                SetClipboardFileText(@"MethodEdit\FASTA\Protein list.txt");
                 pasteProteinsDlg.SelectedPath = SkylineWindow.SequenceTree.SelectedPath;
                 pasteProteinsDlg.PasteProteins();
             });
@@ -185,7 +183,7 @@ namespace pwiz.SkylineTestTutorial
             // Inserting a Peptide List, p. 12
             RunUI(() =>
             {
-                SetClipboardText(@"MethodEdit\FASTA\Peptide list.txt");
+                SetClipboardFileText(@"MethodEdit\FASTA\Peptide list.txt");
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0];
                 SkylineWindow.Paste();
                 SkylineWindow.SequenceTree.Nodes[0].Text = "Primary Peptides";
@@ -319,15 +317,9 @@ namespace pwiz.SkylineTestTutorial
             OkDialog(exportDialog, () => exportDialog.OkDialog(TestFilesDir.GetTestPath("")));
         }
 
-        private void SetClipboardText(string filepath)
+        private void SetClipboardFileText(string filepath)
         {
-            TextReader textReader =
-                    new StreamReader(TestFilesDir.GetTestPath(filepath));
-            String fastaText = textReader.ReadToEnd();
-            textReader.Close();
-            DataObject clipText = new DataObject();
-            clipText.SetData(DataFormats.Text, fastaText);
-            Clipboard.SetDataObject(clipText);
+            SetClipboardTextUI(File.ReadAllText(TestFilesDir.GetTestPath(filepath)));
         }
 
         private static void TestAutoComplete(string text, int index)

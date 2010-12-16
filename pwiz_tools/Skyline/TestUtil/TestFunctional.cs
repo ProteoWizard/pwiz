@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -29,6 +30,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -120,6 +122,33 @@ namespace pwiz.SkylineTestUtil
         {
             var pathSelect = SkylineWindow.Document.GetPathTo((int)level, iNode);
             RunUI(() => SkylineWindow.SequenceTree.SelectedPath = pathSelect);
+        }
+
+        /// <summary>
+        /// Sets the clipboard text, failing with a useful message if the
+        /// SetText() method throws an exception, invoking the UI thread first.
+        /// </summary>
+        protected static void SetClipboardTextUI(string text)
+        {
+            RunUI(() => SetClipboardText(text));            
+        }
+
+        /// <summary>
+        /// Sets the clipboard text, failing with a useful message if the
+        /// SetText() method throws an exception.  This function must be called
+        /// on the UI thread.  If the calling code is not in the UI thread,
+        /// use <see cref="SetClipboardTextUI"/> instead.
+        /// </summary>
+        protected static void SetClipboardText(string text)
+        {
+            try
+            {
+                Clipboard.SetText(text);
+            }
+            catch (ExternalException)
+            {
+                Assert.Fail(ClipboardHelper.GetOpenClipboardMessage("Failed to set text to the clipboard."));
+            }
         }
 
         public static TDlg FindOpenForm<TDlg>() where TDlg : Form

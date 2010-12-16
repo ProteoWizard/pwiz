@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
@@ -1196,7 +1197,17 @@ namespace pwiz.Skyline.EditUI
 
         private void Paste(DataGridView dataGridView, bool enumerateProteins)
         {
-            string text = Clipboard.GetText();
+            string text;
+
+            try
+            {
+                text = Clipboard.GetText();
+            }
+            catch (ExternalException)
+            {
+                MessageDlg.Show(this, ClipboardHelper.GetOpenClipboardMessage("Failed getting data from the clipboard."));
+                return;
+            }
 
             int numUnmatched;
             int numMultipleMatches;

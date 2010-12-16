@@ -62,7 +62,7 @@ namespace pwiz.Skyline.Model.Results
             else
             {
                 RawPeaks = Finder.CalcPeaks(MAX_PEAKS);
-                // Calculate smoothing for later use in extendint the Crawdad peaks
+                // Calculate smoothing for later use in extending the Crawdad peaks
                 IntensitiesSmooth = ChromatogramInfo.SavitzkyGolaySmooth(Intensities);
             }
         }
@@ -258,6 +258,7 @@ namespace pwiz.Skyline.Model.Results
         private int PeakCount { get; set; }
         public double TotalArea { get; private set; }
         public double ProductArea { get; private set; }
+        public double MaxHeight { get; private set; }
 
         private const int MIN_TOLERANCE_LEN = 4;
         private const int MIN_TOLERANCE_SMOOTH_FWHM = 3;
@@ -394,15 +395,15 @@ namespace pwiz.Skyline.Model.Results
             // Avoid using optimization data in scoring
             if (dataPeak.Peak != null && !dataPeak.Data.IsOptimizationData)
             {
+                MaxHeight = Math.Max(MaxHeight, dataPeak.Peak.Height);
                 double area = dataPeak.Peak.Area;
                 if (PeakCount == 0)
                     TotalArea = area;
                 else
                     TotalArea += area;
                 PeakCount++;
-
-                ProductArea = TotalArea * Math.Pow(10.0, PeakCount);
             }
+            UpdateProductArea();
         }
 
         private void SubtractPeak(ChromDataPeak dataPeak)
@@ -416,9 +417,22 @@ namespace pwiz.Skyline.Model.Results
                     TotalArea = 0;
                 else
                     TotalArea -= area;
-
-                ProductArea = TotalArea * Math.Pow(10.0, PeakCount);
             }
+            UpdateProductArea();
+        }
+
+        private void UpdateProductArea()
+        {
+            ProductArea = ScorePeak(TotalArea, PeakCount, Count);
+        }
+
+        public static double ScorePeak(double totalArea, double peakCount, double totalCount)
+        {
+            // Use proportion of total peaks found to avoid picking super small peaks
+            // in unrefined data
+            if (totalCount > 4)
+                return totalArea * Math.Pow(10.0, 4.0 * peakCount / totalCount);
+            return totalArea * Math.Pow(10.0, peakCount);
         }
 
         protected override void ClearItems()
@@ -426,27 +440,30 @@ namespace pwiz.Skyline.Model.Results
             PeakCount = 0;
             TotalArea = 0;
             ProductArea = 0;
+            MaxHeight = 0;
 
             base.ClearItems();
         }
 
         protected override void InsertItem(int index, ChromDataPeak item)
         {
-            AddPeak(item);
             base.InsertItem(index, item);
+            AddPeak(item);
         }
 
         protected override void RemoveItem(int index)
         {
-            SubtractPeak(this[index]);
+            var peak = this[index];
             base.RemoveItem(index);
+            SubtractPeak(peak);
         }
 
         protected override void SetItem(int index, ChromDataPeak item)
         {
-            SubtractPeak(this[index]);
-            AddPeak(item);
+            var peak = this[index];
             base.SetItem(index, item);
+            SubtractPeak(peak);
+            AddPeak(item);
         }
     }
 }

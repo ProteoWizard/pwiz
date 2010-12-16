@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -13,6 +15,7 @@ namespace pwiz.Skyline.Util
     public class HtmlFragment
     {
         #region Read and decode from clipboard
+
         /// <summary>
         /// Get a HTML fragment from the clipboard.
         /// </summary>    
@@ -22,6 +25,7 @@ namespace pwiz.Skyline.Util
         ///    HtmlFragment html2 = HtmlFragment.FromClipboard();
         ///    Debug.Assert(html2.Fragment == html);
         /// </example>
+        /// <exception cref="ExternalException" />
         public static HtmlFragment FromClipboard()
         {
             string rawClipboardText = Clipboard.GetText(TextDataFormat.Html);
@@ -167,6 +171,7 @@ namespace pwiz.Skyline.Util
         /// <example>
         ///    HtmlFragment.CopyToClipboard("<b>Hello!</b>");
         /// </example>
+        /// <exception cref="ExternalException" />
         public static void CopyToClipboard(string htmlFragment)
         {
             CopyToClipboard(htmlFragment, null, null);
@@ -178,6 +183,7 @@ namespace pwiz.Skyline.Util
         /// <param name="htmlFragment">a html fragment</param>
         /// <param name="title">optional title of the HTML document (can be null)</param>
         /// <param name="sourceUrl">optional Source URL of the HTML document, for resolving relative links (can be null)</param>
+        /// <exception cref="ExternalException" />
         public static void CopyToClipboard(string htmlFragment, string title, Uri sourceUrl)
         {
             Clipboard.SetText(ClipBoardText(htmlFragment, title, sourceUrl), TextDataFormat.Html);
@@ -269,12 +275,12 @@ EndSelection:<<<<<<<3
         {
             if (format == null || !format.StartsWith(FILE_SIZE_FORMAT))
             {
-                return defaultFormat(format, arg, formatProvider);
+                return DefaultFormat(format, arg, formatProvider);
             }
 
             if (arg is string)
             {
-                return defaultFormat(format, arg, formatProvider);
+                return DefaultFormat(format, arg, formatProvider);
             }
 
             Decimal size;
@@ -285,7 +291,7 @@ EndSelection:<<<<<<<3
             }
             catch (InvalidCastException)
             {
-                return defaultFormat(format, arg, formatProvider);
+                return DefaultFormat(format, arg, formatProvider);
             }
 
             string suffix;
@@ -315,7 +321,7 @@ EndSelection:<<<<<<<3
             return String.Format("{0:N" + precision + "}{1}", size, suffix);
         }
 
-        private static string defaultFormat(string format, object arg, IFormatProvider formatProvider)
+        private static string DefaultFormat(string format, object arg, IFormatProvider formatProvider)
         {
             IFormattable formattableArg = arg as IFormattable;
             if (formattableArg != null)
@@ -352,5 +358,35 @@ EndSelection:<<<<<<<3
 
             comboBox.DropDownWidth = widestWidth;
         }        
+    }
+
+    public static class ClipboardHelper
+    {
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetOpenClipboardWindow();
+        [DllImport("user32.dll")]
+        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+        public static string GetOpenClipboardMessage(string prefix)
+        {
+            try
+            {
+                IntPtr hwnd = GetOpenClipboardWindow();
+                if (hwnd != null)
+                {
+                    uint processId;
+                    GetWindowThreadProcessId(hwnd, out processId);
+                    var process = Process.GetProcessById((int)processId);
+                    if (process != null)
+                        return string.Format("{0}\nThe the process '{1}' (ID = {2}) has the clipboard open.",
+                            prefix, process.ProcessName, processId);
+                }
+            }
+            catch (Exception)
+            {
+                return prefix;
+            }
+            return prefix;
+        }
     }
 }

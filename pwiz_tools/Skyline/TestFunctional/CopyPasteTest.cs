@@ -17,7 +17,9 @@
  * limitations under the License.
  */
 
+using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Windows.Forms;
@@ -103,12 +105,16 @@ namespace pwiz.SkylineTestFunctional
                 // Test clipboard HTML contains formatting for modified peptides.
                 sequenceTree.SelectedNode = sequenceTree.Nodes[3].Nodes[0];
                 SkylineWindow.Copy();
-                var dataObject = (MemoryStream)Clipboard.GetData("HTML format");
-                string clipboardHtml = new StreamReader(dataObject).ReadToEnd();
-                Assert.IsTrue(clipboardHtml.Contains("font") && clipboardHtml.Contains("color"));
+                try
+                {
+                    string clipboardHtml = GetClipboardHtml();
+                    Assert.IsTrue(clipboardHtml.Contains("font") && clipboardHtml.Contains("color"));
+                }
+                catch (ExternalException)
+                {
+                    Assert.Fail(ClipboardHelper.GetOpenClipboardMessage("Failure getting data from the clipboard."));
+                }
           });
-         
-
         }
 
         // Check that actual clipboard text and HTML match the expected clipboard text and HTML.
@@ -138,12 +144,31 @@ namespace pwiz.SkylineTestFunctional
 
                 lineBreaks = expectedLineBreaks;
             }
+            htmlSb.AppendLine();
+            textSb.AppendLine();
 
-            Assert.AreEqual(textSb.AppendLine().ToString(), (string)Clipboard.GetData("Text"));
+            string clipboardText;
+            string clipboardHtml;
 
-            var dataObject = (MemoryStream) Clipboard.GetData("HTML format");
-            string clipboardHtml = new StreamReader(dataObject).ReadToEnd();
-            Assert.AreEqual(new HtmlFragment(clipboardHtml).Fragment, htmlSb.AppendLine().ToString());
+            try
+            {
+                clipboardText = Clipboard.GetText();
+                clipboardHtml = GetClipboardHtml();
+            }
+            catch (ExternalException)
+            {
+                Assert.Fail(ClipboardHelper.GetOpenClipboardMessage("Failure getting data from the clipboard."));
+                return;
+            }
+
+            Assert.AreEqual(textSb.ToString(), clipboardText);
+            Assert.AreEqual(htmlSb.ToString(), new HtmlFragment(clipboardHtml).Fragment);
+        }
+
+        private static string GetClipboardHtml()
+        {
+            var dataObject = (MemoryStream)Clipboard.GetData("HTML format");
+            return new StreamReader(dataObject).ReadToEnd();            
         }
 
         private static void AppendText(StringBuilder sb, string text, string lineSep, string indent, int levels, int lineBreaks)

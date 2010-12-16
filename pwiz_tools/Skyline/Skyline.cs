@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -713,8 +714,6 @@ namespace pwiz.Skyline
             if (StatementCompletionAction(textBox => textBox.Copy()) || sequenceTree.SelectedNodes.Count < 0)
                 return;
             
-            Clipboard.Clear();
-
             List<TreeNode> sortedNodes = new List<TreeNode>();
             int shallowestLevel = int.MaxValue;
             foreach (TreeNodeMS node in SequenceTree.SelectedNodes)
@@ -771,7 +770,15 @@ namespace pwiz.Skyline
             sbData.Append(stringWriter);
             dataObj.SetData("Skyline Format", sbData.ToString());
 
-            Clipboard.SetDataObject(dataObj);
+            try
+            {
+                Clipboard.Clear();
+                Clipboard.SetDataObject(dataObj);
+            }
+            catch (ExternalException)
+            {
+                MessageDlg.Show(this, ClipboardHelper.GetOpenClipboardMessage("Failed setting data to the clipboard."));
+            }
         }
 
         private static void AppendClipboardText(StringBuilder sb, string text, string lineSep, string indent, int levels, int lineBreaks)
@@ -789,7 +796,17 @@ namespace pwiz.Skyline
             if (StatementCompletionAction(textBox => textBox.Paste()))
                 return;
 
-            var dataObjectSkyline = (string) Clipboard.GetData("Skyline Format");
+            string dataObjectSkyline;
+
+            try
+            {
+                dataObjectSkyline = (string) Clipboard.GetData("Skyline Format");
+            }
+            catch (ExternalException)
+            {
+                MessageDlg.Show(this, ClipboardHelper.GetOpenClipboardMessage("Failed getting data from the clipboard."));
+                return;
+            }
         
             if (dataObjectSkyline != null)
             {
@@ -815,8 +832,18 @@ namespace pwiz.Skyline
             }
             else
             {
-                string textCsv = Clipboard.GetText(TextDataFormat.CommaSeparatedValue);
-                string text = Clipboard.GetText().Trim();
+                string text;
+                string textCsv;
+                try
+                {
+                    text = Clipboard.GetText().Trim();
+                    textCsv = Clipboard.GetText(TextDataFormat.CommaSeparatedValue);
+                }
+                catch (ExternalException)
+                {
+                    MessageDlg.Show(this, ClipboardHelper.GetOpenClipboardMessage("Failed getting data from the clipboard."));
+                    return;
+                }
                 try
                 {
                     if (string.IsNullOrEmpty(textCsv))

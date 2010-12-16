@@ -140,7 +140,7 @@ namespace pwiz.SkylineTest.Results
                     }
                 }
                 // Allow 2 missed peaks
-                Assert.IsTrue(countPeaks > transNew.Length - 2);
+                Assert.IsTrue(countPeaks >= transNew.Length - 2);
 
                 // Check results calculations for peptides and groups
                 foreach (var nodePep in docResults.Peptides)

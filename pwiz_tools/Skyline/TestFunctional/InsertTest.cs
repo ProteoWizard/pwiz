@@ -60,7 +60,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
 
-            RunUI(() => Clipboard.SetText(PEPTIDES_CLIPBOARD_TEXT));
+            SetClipboardTextUI(PEPTIDES_CLIPBOARD_TEXT);
             var insertPeptidesDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg);
             // Keep all peptides.
             PastePeptides(insertPeptidesDlg, BackgroundProteome.DuplicateProteinsFilter.AddToAll, true, true);
@@ -92,13 +92,13 @@ namespace pwiz.SkylineTestFunctional
                 !SkylineWindow.Document.Settings.Accept(peptide)));
             RunUI(insertPeptidesDlg1.ClearRows);
             // Pasting garbage should throw an error then disallow the paste.
-            RunUI(() => Clipboard.SetText(PEPTIDES_CLIPBOARD_TEXT_GARBAGE));
+            SetClipboardTextUI(PEPTIDES_CLIPBOARD_TEXT_GARBAGE);
             RunDlg<MessageDlg>(insertPeptidesDlg1.PastePeptides, messageDlg => messageDlg.OkDialog());
             Assert.AreEqual(1, insertPeptidesDlg1.PeptideRowCount);
             RunUI(insertPeptidesDlg1.Close);
 
             // Test pasting a transition list.
-            RunUI(() => Clipboard.SetText(TRANSITIONS_CLIPBOARD_TEXT));
+            SetClipboardTextUI(TRANSITIONS_CLIPBOARD_TEXT);
             var insertTransitionListDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             PasteTransitions(insertTransitionListDlg, BackgroundProteome.DuplicateProteinsFilter.AddToAll, true, true);
             Assert.AreEqual(25, insertTransitionListDlg.TransitionRowCount);

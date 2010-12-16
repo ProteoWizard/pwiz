@@ -196,9 +196,8 @@ namespace pwiz.Skyline.Model
                         // file per precursor per replicate.
                         double tranArea = 0;
                         double tranMeasured = 0;
-                        for (int j = 0; j < result.Count; j++)
+                        foreach (var chromInfo in result)
                         {
-                            var chromInfo = result[j];
                             if (chromInfo != null && chromInfo.Area > 0)
                             {
                                 tranArea += chromInfo.Area;
@@ -208,7 +207,8 @@ namespace pwiz.Skyline.Model
                         groupArea += tranArea/result.Count;
                         groupTranMeasured += tranMeasured/result.Count;
                     }
-                    productArea += groupArea * Math.Pow(10, groupTranMeasured);
+                    productArea += ChromDataPeakList.ScorePeak(groupArea, groupTranMeasured,
+                        nodeGroup.Children.Count);
                 }
                 if (productArea > bestArea)
                 {

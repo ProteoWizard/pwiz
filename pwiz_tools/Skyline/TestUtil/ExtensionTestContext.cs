@@ -61,7 +61,8 @@ namespace pwiz.SkylineTestUtil
 
         public static bool CanImportThermoRaw
         {
-            get { return Equals(".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator); }
+            get { return Equals(".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator) &&
+                Equals(",", CultureInfo.CurrentCulture.TextInfo.ListSeparator); }
         }
 
         public static string ExtThermoRaw

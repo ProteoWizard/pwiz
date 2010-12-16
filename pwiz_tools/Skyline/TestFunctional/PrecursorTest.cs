@@ -128,11 +128,8 @@ namespace pwiz.SkylineTestFunctional
                       });
 
             // Paste the transition list
-            RunUI(() =>
-                      {
-                          Clipboard.SetText(File.ReadAllText(tranListPath));
-                          SkylineWindow.Paste();
-                      });
+            SetClipboardTextUI(File.ReadAllText(tranListPath));
+            RunUI(() => SkylineWindow.Paste());
 
             Assert.AreEqual(2, GetPrecursorTranstionCount());
             Assert.AreEqual(docCurrent.TransitionCount, SkylineWindow.Document.TransitionCount);

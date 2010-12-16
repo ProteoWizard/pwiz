@@ -18,7 +18,10 @@
  */
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -41,12 +44,24 @@ namespace pwiz.Skyline.SettingsUI
 
         public static void DoPaste(this DataGridView grid, IWin32Window parent, ValidateCellValues validate)
         {
+            string textClip;
+            try
+            {
+                textClip = Clipboard.GetText();
+            }
+            catch (ExternalException)
+            {
+                MessageDlg.Show(parent, ClipboardHelper.GetOpenClipboardMessage("Failed getting data from the clipboard."));
+                return;
+            }
+
             grid.SuspendLayout();
+
+            TextReader reader = new StringReader(textClip);
 
             // Remove everything, and paste new contents
             grid.Rows.Clear();
 
-            TextReader reader = new StringReader(Clipboard.GetText());
             int lineNum = 0;
             String line;
             while ((line = reader.ReadLine()) != null)
@@ -57,7 +72,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     string message = string.Format("Incorrect number of columns ({0}) found at line {1}.",
                                                    columns.Length, lineNum);
-                    MessageBox.Show(parent, message, Program.Name);
+                    MessageDlg.Show(parent, message);
                     break;
                 }
 
@@ -70,7 +85,7 @@ namespace pwiz.Skyline.SettingsUI
                 grid.Rows.Add(columns);
             }
 
-            grid.ResumeLayout();            
+            grid.ResumeLayout();
         }
 
         public static void DoDelete(this DataGridView grid)

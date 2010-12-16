@@ -114,7 +114,7 @@ namespace pwiz.SkylineTestTutorial
                     }
                     sb.AppendLine();
                 }
-                Clipboard.SetText(sb.ToString());
+                SetClipboardText(sb.ToString());
             });
             RunDlg<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg, pasteDlg =>
             {
@@ -243,7 +243,7 @@ namespace pwiz.SkylineTestTutorial
                     }
                     sb.AppendLine();
                 }
-                Clipboard.SetText(sb.ToString());
+                SetClipboardText(sb.ToString());
             });
             
             RunDlg<MessageDlg>(SkylineWindow.Paste, messageDlg => messageDlg.OkDialog());

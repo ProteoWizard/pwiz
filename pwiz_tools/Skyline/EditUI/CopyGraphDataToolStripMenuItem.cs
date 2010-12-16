@@ -19,9 +19,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.MSGraph;
+using pwiz.Skyline.Util;
 using ZedGraph;
 
 namespace pwiz.Skyline.EditUI
@@ -128,10 +130,18 @@ namespace pwiz.Skyline.EditUI
                     }
                 }
             }
-            Clipboard.SetText(ToTsv(graphPane, curves, rows));
+            try
+            {
+                Clipboard.Clear();
+                Clipboard.SetText(ToTsv(graphPane, curves, rows));
+            }
+            catch (ExternalException)
+            {
+                MessageBox.Show(ClipboardHelper.GetOpenClipboardMessage("Failed setting data to clipboard."), Program.Name);
+            }
         }
 
-        private static string ToTsv(GraphPane graphPane, IList<CurveItem> curves, IDictionary<object, KeyValuePair<object, IList<double?[]>>> dict)
+        private static string ToTsv(GraphPane graphPane, IEnumerable<CurveItem> curves, IDictionary<object, KeyValuePair<object, IList<double?[]>>> dict)
         {
             var sb = new StringBuilder();
             sb.Append(graphPane.XAxis.Title.Text ?? "");

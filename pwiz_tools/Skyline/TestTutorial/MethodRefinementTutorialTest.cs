@@ -136,6 +136,13 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual("VTVVDDQSVILK", SkylineWindow.SequenceTree.SelectedNode.Text);
             });
             WaitForGraphs();
+//            foreach (var peptideDocNode in SkylineWindow.Document.Peptides)
+//            {
+//                var nodeGroup = ((TransitionGroupDocNode)peptideDocNode.Children[0]);
+//                Console.WriteLine("{0} - {1}", peptideDocNode.Peptide.Sequence,
+//                    nodeGroup.GetDisplayText(SkylineWindow.SequenceTree.GetDisplaySettings(peptideDocNode)));
+//            }
+//            Console.WriteLine("---------------------------------");
             RunUI(() =>
             {
                 var graphChrom = SkylineWindow.GetGraphChromatogram("Unrefined");
@@ -201,11 +208,17 @@ namespace pwiz.SkylineTestTutorial
                 refineDlg.DotProductThreshold = 0.95;
                 refineDlg.OkDialog();
             });
-            WaitForCondition(() => SkylineWindow.Document.PeptideCount == 72);
+            WaitForCondition(() => SkylineWindow.Document.PeptideCount < 75);
+//            foreach (var peptideDocNode in SkylineWindow.Document.Peptides)
+//            {
+//                var nodeGroup = ((TransitionGroupDocNode) peptideDocNode.Children[0]);
+//                Console.WriteLine("{0} - {1}", peptideDocNode.Peptide.Sequence,
+//                    nodeGroup.GetDisplayText(SkylineWindow.SequenceTree.GetDisplaySettings(peptideDocNode)));
+//            }
             RunUI(() =>
             {
-                Assert.AreEqual(72, SkylineWindow.Document.PeptideCount);
-                Assert.AreEqual(216, SkylineWindow.Document.TransitionCount);
+                Assert.AreEqual(70, SkylineWindow.Document.PeptideCount);
+                Assert.AreEqual(210, SkylineWindow.Document.TransitionCount);
                 SkylineWindow.CollapsePeptides();
                 SkylineWindow.Undo();
             });
@@ -217,7 +230,7 @@ namespace pwiz.SkylineTestTutorial
                 refineDlg.DotProductThreshold = 0.90;
                 refineDlg.OkDialog();
             });
-            WaitForCondition(() => SkylineWindow.Document.PeptideCount == 110);
+            WaitForCondition(() => SkylineWindow.Document.PeptideCount < 120);
             RunUI(() =>
             {
                 Assert.AreEqual(110, SkylineWindow.Document.PeptideCount);
