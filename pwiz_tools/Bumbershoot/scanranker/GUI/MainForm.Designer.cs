@@ -129,6 +129,7 @@ namespace ScanRanker
             this.btnListFiles = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.linkLabelHelp = new System.Windows.Forms.LinkLabel();
+            this.linkLabelAnalyzeResult = new System.Windows.Forms.LinkLabel();
             this.gbAssessment.SuspendLayout();
             this.gbDtgConfig.SuspendLayout();
             this.gbRemoval.SuspendLayout();
@@ -916,11 +917,24 @@ namespace ScanRanker
             this.linkLabelHelp.Text = "Help";
             this.linkLabelHelp.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelHelp_LinkClicked);
             // 
+            // linkLabelAnalyzeResult
+            // 
+            this.linkLabelAnalyzeResult.AutoSize = true;
+            this.linkLabelAnalyzeResult.Location = new System.Drawing.Point(94, 685);
+            this.linkLabelAnalyzeResult.Name = "linkLabelAnalyzeResult";
+            this.linkLabelAnalyzeResult.Size = new System.Drawing.Size(77, 13);
+            this.linkLabelAnalyzeResult.TabIndex = 33;
+            this.linkLabelAnalyzeResult.TabStop = true;
+            this.linkLabelAnalyzeResult.Text = "Analyze Result";
+            this.toolTip1.SetToolTip(this.linkLabelAnalyzeResult, "Interactive peptide-spectrum matches validation");
+            this.linkLabelAnalyzeResult.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelAnalyzeResult_LinkClicked);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(729, 711);
+            this.Controls.Add(this.linkLabelAnalyzeResult);
             this.Controls.Add(this.linkLabelHelp);
             this.Controls.Add(this.btnListFiles);
             this.Controls.Add(this.tbInputFileFilters);
@@ -1033,6 +1047,7 @@ namespace ScanRanker
         private System.Windows.Forms.Label lblRecoveryMetricsFileSuffixForRecovery;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.LinkLabel linkLabelHelp;
+        private System.Windows.Forms.LinkLabel linkLabelAnalyzeResult;
 
 
         

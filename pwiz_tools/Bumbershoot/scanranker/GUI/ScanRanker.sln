@@ -9,6 +9,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "freicore", "..\DirecTag\fre
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScanRanker", "ScanRanker.csproj", "{9F787AE9-131B-4AEE-B831-3E06CDBC91BF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IonMatcher", "IonMatcher\IonMatcher.csproj", "{FC9B250B-32CA-4921-9531-31D26234BC68}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,18 @@ Global
 		{9F787AE9-131B-4AEE-B831-3E06CDBC91BF}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{9F787AE9-131B-4AEE-B831-3E06CDBC91BF}.Release|Win32.ActiveCfg = Release|Any CPU
 		{9F787AE9-131B-4AEE-B831-3E06CDBC91BF}.Release|x86.ActiveCfg = Release|Any CPU
+		{FC9B250B-32CA-4921-9531-31D26234BC68}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC9B250B-32CA-4921-9531-31D26234BC68}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC9B250B-32CA-4921-9531-31D26234BC68}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{FC9B250B-32CA-4921-9531-31D26234BC68}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{FC9B250B-32CA-4921-9531-31D26234BC68}.Debug|Win32.ActiveCfg = Debug|Any CPU
+		{FC9B250B-32CA-4921-9531-31D26234BC68}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FC9B250B-32CA-4921-9531-31D26234BC68}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC9B250B-32CA-4921-9531-31D26234BC68}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC9B250B-32CA-4921-9531-31D26234BC68}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{FC9B250B-32CA-4921-9531-31D26234BC68}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{FC9B250B-32CA-4921-9531-31D26234BC68}.Release|Win32.ActiveCfg = Release|Any CPU
+		{FC9B250B-32CA-4921-9531-31D26234BC68}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

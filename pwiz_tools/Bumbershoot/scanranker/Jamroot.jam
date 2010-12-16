@@ -290,7 +290,8 @@ rule install-vendor-api-dependencies ( properties * )
 rule dotNET-dependencies ( properties * )
 {
     local location = [ install-location $(properties) ] ;
-    return <dependency>GUI//ScanRanker.exe/$(location) ;
+    #return <dependency>GUI//ScanRanker.exe/$(location) ;
+	return <dependency>GUI//ScanRanker.exe/$(location) <dependency>GUI/IonMatcher//IonMatcher.exe/$(location) ;
 }
 
 install install

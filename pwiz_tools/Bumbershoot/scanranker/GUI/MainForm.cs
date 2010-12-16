@@ -1058,6 +1058,14 @@ namespace ScanRanker
             System.Diagnostics.Process.Start(helpPageURL);
         }
 
+        private void linkLabelAnalyzeResult_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            string EXE = @"IonMatcher.exe";
+            string BIN_DIR = Path.GetDirectoryName(Application.ExecutablePath);
+            string pathAndExeFile = BIN_DIR + "\\" + EXE;
+            System.Diagnostics.Process.Start(pathAndExeFile);
+        }
+
 
 
 
