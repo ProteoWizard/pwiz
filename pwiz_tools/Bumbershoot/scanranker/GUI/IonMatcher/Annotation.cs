@@ -1,5 +1,5 @@
 //
-// $Id: Annotation.cs 1599 2009-12-04 01:35:39Z brendanx $
+// $Id$
 //
 //
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>

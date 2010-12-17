@@ -181,23 +181,24 @@ namespace ScanRanker
             RunProc.StartInfo.RedirectStandardError = true;
             RunProc.StartInfo.RedirectStandardOutput = true;
 
+            RunProc.ErrorDataReceived += new DataReceivedEventHandler(StdErrorHandler);
             //RunProc.OutputDataReceived += new DataReceivedEventHandler( StdOutputHandler );
             //RunProc.ErrorDataReceived += new DataReceivedEventHandler(StdErrorHandler);
 
             RunProc.StartInfo.FileName = pathAndExeFile;
             RunProc.StartInfo.Arguments = args;
-
+            
             RunProc.Start();
 
             //RunProc.BeginOutputReadLine();
-            //RunProc.BeginErrorReadLine();
+            RunProc.BeginErrorReadLine();
 
             //string stdOutput = RunProc.StandardOutput.ReadToEnd();
             //statusForm.tbStatus.AppendText(stdOutput);
             //RunProc.WaitForExit();
 
             StreamReader srOut = RunProc.StandardOutput;
-            StreamReader srErr = RunProc.StandardError;
+            //StreamReader srErr = RunProc.StandardError;
             //while (!RunProc.HasExited)
 
             string outLine = string.Empty;
@@ -212,12 +213,62 @@ namespace ScanRanker
                 //statusForm.tbStatus.AppendText(outLine + "\n");
                 // RunProc.WaitForExit(500);
             }
-            SetText("\r\nError/warning message from " + pathAndExeFile + " :\r\n");
-            SetText(srErr.ReadToEnd().ToString()+"\r\n");
+            //SetText("\r\nError/warning message from " + pathAndExeFile + " :\r\n");          
+            //string srErr = RunProc.StandardError.ReadToEnd();
+            //SetText(srErr.ReadToEnd().ToString()+"\r\n");
+            //SetText(srErr + "\r\n");
             RunProc.WaitForExit();
+            RunProc.Close();
 
         }
 
+        private static void StdErrorHandler(object sendingProcess,
+            DataReceivedEventArgs errLine)
+        {
+            
+            SetText(errLine.Data + "\r\n");
 
-    }
+            // Write the error text to the file if there is something
+            // to write and an error file has been specified.
+
+            //if (!String.IsNullOrEmpty(errLine.Data))
+            //{
+            //    if (!errorsWritten)
+            //    {
+            //        if (streamError == null)
+            //        {
+            //            // Open the file.
+            //            try
+            //            {
+            //                streamError = new StreamWriter(netErrorFile, true);
+            //            }
+            //            catch (Exception e)
+            //            {
+            //                Console.WriteLine("Could not open error file!");
+            //                Console.WriteLine(e.Message.ToString());
+            //            }
+            //        }
+
+            //        if (streamError != null)
+            //        {
+            //            // Write a header to the file if this is the first
+            //            // call to the error output handler.
+            //            streamError.WriteLine();
+            //            streamError.WriteLine(DateTime.Now.ToString());
+            //            streamError.WriteLine("Net View error output:");
+            //        }
+            //        errorsWritten = true;
+            //    }
+
+            //    if (streamError != null)
+            //    {
+            //        // Write redirected errors to the file.
+            //        streamError.WriteLine(errLine.Data);
+            //        streamError.Flush();
+            //    }
+            //}
+        }
+
+
+    }//workspace
 }

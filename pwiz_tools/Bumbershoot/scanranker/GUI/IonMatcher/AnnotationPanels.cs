@@ -1,5 +1,5 @@
 ﻿//
-// $Id: AnnotationPanels.Designer.cs 1593 2009-12-03 17:21:14Z chambm $
+// $Id$
 //
 //
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>

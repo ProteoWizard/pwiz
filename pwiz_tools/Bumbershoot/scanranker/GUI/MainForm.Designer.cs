@@ -128,8 +128,8 @@ namespace ScanRanker
             this.tbInputFileFilters = new System.Windows.Forms.TextBox();
             this.btnListFiles = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
-            this.linkLabelHelp = new System.Windows.Forms.LinkLabel();
             this.linkLabelAnalyzeResult = new System.Windows.Forms.LinkLabel();
+            this.linkLabelHelp = new System.Windows.Forms.LinkLabel();
             this.gbAssessment.SuspendLayout();
             this.gbDtgConfig.SuspendLayout();
             this.gbRemoval.SuspendLayout();
@@ -906,19 +906,9 @@ namespace ScanRanker
             this.btnListFiles.UseVisualStyleBackColor = true;
             this.btnListFiles.Click += new System.EventHandler(this.btnListFiles_Click);
             // 
-            // linkLabelHelp
-            // 
-            this.linkLabelHelp.AutoSize = true;
-            this.linkLabelHelp.Location = new System.Drawing.Point(35, 685);
-            this.linkLabelHelp.Name = "linkLabelHelp";
-            this.linkLabelHelp.Size = new System.Drawing.Size(29, 13);
-            this.linkLabelHelp.TabIndex = 14;
-            this.linkLabelHelp.TabStop = true;
-            this.linkLabelHelp.Text = "Help";
-            this.linkLabelHelp.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelHelp_LinkClicked);
-            // 
             // linkLabelAnalyzeResult
             // 
+            this.linkLabelAnalyzeResult.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.linkLabelAnalyzeResult.AutoSize = true;
             this.linkLabelAnalyzeResult.Location = new System.Drawing.Point(94, 685);
             this.linkLabelAnalyzeResult.Name = "linkLabelAnalyzeResult";
@@ -928,6 +918,18 @@ namespace ScanRanker
             this.linkLabelAnalyzeResult.Text = "Analyze Result";
             this.toolTip1.SetToolTip(this.linkLabelAnalyzeResult, "Interactive peptide-spectrum matches validation");
             this.linkLabelAnalyzeResult.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelAnalyzeResult_LinkClicked);
+            // 
+            // linkLabelHelp
+            // 
+            this.linkLabelHelp.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.linkLabelHelp.AutoSize = true;
+            this.linkLabelHelp.Location = new System.Drawing.Point(35, 685);
+            this.linkLabelHelp.Name = "linkLabelHelp";
+            this.linkLabelHelp.Size = new System.Drawing.Size(29, 13);
+            this.linkLabelHelp.TabIndex = 14;
+            this.linkLabelHelp.TabStop = true;
+            this.linkLabelHelp.Text = "Help";
+            this.linkLabelHelp.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabelHelp_LinkClicked);
             // 
             // MainForm
             // 

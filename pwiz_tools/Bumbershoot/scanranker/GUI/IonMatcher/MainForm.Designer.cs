@@ -1,5 +1,5 @@
 ﻿//
-// $Id: MainForm.cs 19 2010-12-06 23:53:20Z zeqiangma $
+// $Id$
 //
 // The contents of this file are subject to the Mozilla Public License
 // Version 1.1 (the "License"); you may not use this file except in
@@ -51,18 +51,19 @@ namespace IonMatcher
         private void InitializeComponent()
         {
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.btnRun = new System.Windows.Forms.Button();
+            this.btnSpecFileBrowse = new System.Windows.Forms.Button();
+            this.btnMetricsFileBrowser = new System.Windows.Forms.Button();
+            this.tbSpecFile = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
+            this.tbMetricsFile = new System.Windows.Forms.TextBox();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.pepGridView = new System.Windows.Forms.DataGridView();
             this.splitContainer3 = new System.Windows.Forms.SplitContainer();
             this.splitContainer4 = new System.Windows.Forms.SplitContainer();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label1 = new System.Windows.Forms.Label();
-            this.tbSpecFile = new System.Windows.Forms.TextBox();
-            this.btnSpecFileBrowse = new System.Windows.Forms.Button();
-            this.tbMetricsFile = new System.Windows.Forms.TextBox();
-            this.btnMetricsFileBrowser = new System.Windows.Forms.Button();
-            this.btnRun = new System.Windows.Forms.Button();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -98,6 +99,75 @@ namespace IonMatcher
             this.splitContainer1.Size = new System.Drawing.Size(897, 605);
             this.splitContainer1.SplitterDistance = 56;
             this.splitContainer1.TabIndex = 0;
+            // 
+            // btnRun
+            // 
+            this.btnRun.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnRun.Location = new System.Drawing.Point(811, 9);
+            this.btnRun.Name = "btnRun";
+            this.btnRun.Size = new System.Drawing.Size(73, 39);
+            this.btnRun.TabIndex = 7;
+            this.btnRun.Text = "Run";
+            this.btnRun.UseVisualStyleBackColor = true;
+            this.btnRun.Click += new System.EventHandler(this.btnRun_Click);
+            // 
+            // btnSpecFileBrowse
+            // 
+            this.btnSpecFileBrowse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnSpecFileBrowse.Location = new System.Drawing.Point(733, 5);
+            this.btnSpecFileBrowse.Name = "btnSpecFileBrowse";
+            this.btnSpecFileBrowse.Size = new System.Drawing.Size(73, 21);
+            this.btnSpecFileBrowse.TabIndex = 4;
+            this.btnSpecFileBrowse.Text = "Browse";
+            this.btnSpecFileBrowse.UseVisualStyleBackColor = true;
+            this.btnSpecFileBrowse.Click += new System.EventHandler(this.btnSpecFileBrowse_Click);
+            // 
+            // btnMetricsFileBrowser
+            // 
+            this.btnMetricsFileBrowser.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnMetricsFileBrowser.Location = new System.Drawing.Point(733, 31);
+            this.btnMetricsFileBrowser.Name = "btnMetricsFileBrowser";
+            this.btnMetricsFileBrowser.Size = new System.Drawing.Size(73, 21);
+            this.btnMetricsFileBrowser.TabIndex = 6;
+            this.btnMetricsFileBrowser.Text = "Browse";
+            this.btnMetricsFileBrowser.UseVisualStyleBackColor = true;
+            this.btnMetricsFileBrowser.Click += new System.EventHandler(this.btnMetricsFileBrowser_Click);
+            // 
+            // tbSpecFile
+            // 
+            this.tbSpecFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbSpecFile.Location = new System.Drawing.Point(92, 6);
+            this.tbSpecFile.Name = "tbSpecFile";
+            this.tbSpecFile.Size = new System.Drawing.Size(635, 20);
+            this.tbSpecFile.TabIndex = 9;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(12, 9);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(74, 13);
+            this.label2.TabIndex = 1;
+            this.label2.Text = "Spectrum File:";
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(12, 35);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(63, 13);
+            this.label1.TabIndex = 0;
+            this.label1.Text = "Metrics File:";
+            // 
+            // tbMetricsFile
+            // 
+            this.tbMetricsFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbMetricsFile.Location = new System.Drawing.Point(92, 32);
+            this.tbMetricsFile.Name = "tbMetricsFile";
+            this.tbMetricsFile.Size = new System.Drawing.Size(635, 20);
+            this.tbMetricsFile.TabIndex = 11;
             // 
             // splitContainer2
             // 
@@ -160,81 +230,13 @@ namespace IonMatcher
             this.splitContainer4.SplitterDistance = 408;
             this.splitContainer4.TabIndex = 0;
             // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 9);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(74, 13);
-            this.label2.TabIndex = 1;
-            this.label2.Text = "Spectrum File:";
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 35);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(63, 13);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "Metrics File:";
-            // 
-            // tbSpecFile
-            // 
-            this.tbSpecFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbSpecFile.Location = new System.Drawing.Point(92, 6);
-            this.tbSpecFile.Name = "tbSpecFile";
-            this.tbSpecFile.Size = new System.Drawing.Size(635, 20);
-            this.tbSpecFile.TabIndex = 9;
-            // 
-            // btnSpecFileBrowse
-            // 
-            this.btnSpecFileBrowse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSpecFileBrowse.Location = new System.Drawing.Point(733, 5);
-            this.btnSpecFileBrowse.Name = "btnSpecFileBrowse";
-            this.btnSpecFileBrowse.Size = new System.Drawing.Size(73, 21);
-            this.btnSpecFileBrowse.TabIndex = 4;
-            this.btnSpecFileBrowse.Text = "Browse";
-            this.btnSpecFileBrowse.UseVisualStyleBackColor = true;
-            this.btnSpecFileBrowse.Click += new System.EventHandler(this.btnSpecFileBrowse_Click);
-            // 
-            // tbMetricsFile
-            // 
-            this.tbMetricsFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbMetricsFile.Location = new System.Drawing.Point(92, 32);
-            this.tbMetricsFile.Name = "tbMetricsFile";
-            this.tbMetricsFile.Size = new System.Drawing.Size(635, 20);
-            this.tbMetricsFile.TabIndex = 11;
-            // 
-            // btnMetricsFileBrowser
-            // 
-            this.btnMetricsFileBrowser.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnMetricsFileBrowser.Location = new System.Drawing.Point(733, 31);
-            this.btnMetricsFileBrowser.Name = "btnMetricsFileBrowser";
-            this.btnMetricsFileBrowser.Size = new System.Drawing.Size(73, 21);
-            this.btnMetricsFileBrowser.TabIndex = 6;
-            this.btnMetricsFileBrowser.Text = "Browse";
-            this.btnMetricsFileBrowser.UseVisualStyleBackColor = true;
-            this.btnMetricsFileBrowser.Click += new System.EventHandler(this.btnMetricsFileBrowser_Click);
-            // 
-            // btnRun
-            // 
-            this.btnRun.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnRun.Location = new System.Drawing.Point(811, 9);
-            this.btnRun.Name = "btnRun";
-            this.btnRun.Size = new System.Drawing.Size(73, 39);
-            this.btnRun.TabIndex = 7;
-            this.btnRun.Text = "Run";
-            this.btnRun.UseVisualStyleBackColor = true;
-            this.btnRun.Click += new System.EventHandler(this.btnRun_Click);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(897, 605);
             this.Controls.Add(this.splitContainer1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "MainForm";
             this.Text = "IonMatcher";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
