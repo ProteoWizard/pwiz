@@ -35,6 +35,7 @@ namespace pwiz.Topograph.ui.Forms
             tbxInitialPercent.Text = tracerDef.InitialApe.ToString();
             tbxFinalPercent.Text = tracerDef.FinalApe.ToString();
             colTurnover.DefaultCellStyle.Format = "#.##%";
+            colPrecursorPool.DefaultCellStyle.Format = "#.##%";
             comboCalculationType.SelectedIndex = 0;
         }
         public String Peptide { 
@@ -289,19 +290,38 @@ namespace pwiz.Topograph.ui.Forms
                     row.Cells[colTracerPercent.Index].Value = peptideFileAnalysis.Peaks.TracerPercent;
                     row.Cells[colScore.Index].Value = peptideFileAnalysis.Peaks.DeconvolutionScore;
                     row.Cells[colTurnover.Index].Value = peptideFileAnalysis.Peaks.Turnover;
+                    row.Cells[colPrecursorPool.Index].Value = peptideFileAnalysis.Peaks.PrecursorEnrichment;
                 }
-                UpdateGraph(peptideFileAnalyses);
+                var halfLifeCalculator = UpdateGraph(peptideFileAnalyses);
+                if (HalfLifeCalculationType == HalfLifeCalculationType.GroupPrecursorPool)
+                {
+                    colTurnoverAvg.Visible = true;
+                    for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
+                    {
+                        var row = dataGridView1.Rows[iRow];
+                        var peptideFileAnalysis = (PeptideFileAnalysis) row.Tag;
+
+                        row.Cells[colTurnoverAvg.Index].Value = halfLifeCalculator.GetValue(peptideFileAnalysis);
+                        row.Cells[colPrecursorPoolAvg.Index].Value =
+                            halfLifeCalculator.GetPrecursorPool(peptideFileAnalysis.MsDataFile);
+                    }
+                }
+                else
+                {
+                    colTurnoverAvg.Visible = false;
+                    colPrecursorPoolAvg.Visible = false;
+                }
             }
         }
-        private void UpdateGraph(List<PeptideFileAnalysis> peptideFileAnalyses)
+        private HalfLifeCalculator UpdateGraph(List<PeptideFileAnalysis> peptideFileAnalyses)
         {
-            var peptideRateCalculator = new HalfLifeCalculator(Workspace, HalfLifeCalculationType)
+            var halfLifeCalculator = new HalfLifeCalculator(Workspace, HalfLifeCalculationType)
                                             {
                                                 InitialPercent = InitialPercent,
                                                 FinalPercent = FinalPercent,
                                                 FixedInitialPercent = FixedInitialPercent,
                                             };
-            var halfLife = peptideRateCalculator.CalculateHalfLife(peptideFileAnalyses);
+            var halfLife = halfLifeCalculator.CalculateHalfLife(peptideFileAnalyses);
             _zedGraphControl.GraphPane.CurveList.Clear();
             _zedGraphControl.GraphPane.GraphObjList.Clear();
             var xValues = new List<double>();
@@ -311,11 +331,11 @@ namespace pwiz.Topograph.ui.Forms
                 double? value;
                 if (LogPlot)
                 {
-                    value = peptideRateCalculator.GetLogValue(peptideFileAnalysis);
+                    value = halfLifeCalculator.GetLogValue(peptideFileAnalysis);
                 } 
                 else
                 {
-                    value = peptideRateCalculator.GetValue(peptideFileAnalysis);
+                    value = halfLifeCalculator.GetValue(peptideFileAnalysis);
                 }
                 if (!value.HasValue)
                 {
@@ -341,9 +361,9 @@ namespace pwiz.Topograph.ui.Forms
             }
             else
             {
-                AddFunction(x => peptideRateCalculator.InvertLogValue(funcMiddle(x)), Color.Black);
-                AddFunction(x => peptideRateCalculator.InvertLogValue(funcMin(x)), Color.LightBlue);
-                AddFunction(x => peptideRateCalculator.InvertLogValue(funcMax(x)), Color.LightGreen);
+                AddFunction(x => halfLifeCalculator.InvertLogValue(funcMiddle(x)), Color.Black);
+                AddFunction(x => halfLifeCalculator.InvertLogValue(funcMin(x)), Color.LightBlue);
+                AddFunction(x => halfLifeCalculator.InvertLogValue(funcMax(x)), Color.LightGreen);
             }
             if (LogPlot)
             {
@@ -374,6 +394,7 @@ namespace pwiz.Topograph.ui.Forms
                                    halfLife.RateConstantError.ToString("0.##E0");
             tbxHalfLife.Text = halfLife.HalfLife.ToString("0.##") + "(" + halfLife.MinHalfLife.ToString("0.##") + "-" +
                                halfLife.MaxHalfLife.ToString("0.##") + ")";
+            return halfLifeCalculator;
         }
 
         private CurveItem AddFunction(Func<double,double> func, Color color)

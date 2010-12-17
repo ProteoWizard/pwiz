@@ -273,6 +273,16 @@ namespace pwiz.Topograph.MsData
             }
         }
 
+        public double? GetPrecursorPool(MsDataFile msDataFile)
+        {
+            double precursorPool;
+            if (!_precursorPools.TryGetValue(msDataFile.Id.Value, out precursorPool))
+            {
+                return null;
+            }
+            return precursorPool;
+        }
+
         private double? GetLogValue(RowData rowData)
         {
             double? value = GetValue(rowData);

@@ -52,7 +52,10 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxHalfLife = new System.Windows.Forms.TextBox();
             this.cbxFixedInitialPercent = new System.Windows.Forms.CheckBox();
             this.cbxLogPlot = new System.Windows.Forms.CheckBox();
+            this.comboCalculationType = new System.Windows.Forms.ComboBox();
+            this.label10 = new System.Windows.Forms.Label();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.colPeptide = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTimePoint = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -61,9 +64,9 @@ namespace pwiz.Topograph.ui.Forms
             this.colTracerPercent = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colScore = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTurnover = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
-            this.comboCalculationType = new System.Windows.Forms.ComboBox();
-            this.label10 = new System.Windows.Forms.Label();
+            this.colPrecursorPool = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colTurnoverAvg = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colPrecursorPoolAvg = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -337,6 +340,30 @@ namespace pwiz.Topograph.ui.Forms
             this.cbxLogPlot.UseVisualStyleBackColor = true;
             this.cbxLogPlot.CheckedChanged += new System.EventHandler(this.cbxLogPlot_CheckedChanged);
             // 
+            // comboCalculationType
+            // 
+            this.comboCalculationType.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.comboCalculationType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboCalculationType.FormattingEnabled = true;
+            this.comboCalculationType.Items.AddRange(new object[] {
+            "Tracer %",
+            "Individual Precursor Pool",
+            "Avg Precursor Pool"});
+            this.comboCalculationType.Location = new System.Drawing.Point(153, 153);
+            this.comboCalculationType.Name = "comboCalculationType";
+            this.comboCalculationType.Size = new System.Drawing.Size(128, 21);
+            this.comboCalculationType.TabIndex = 20;
+            this.comboCalculationType.SelectedIndexChanged += new System.EventHandler(this.comboCalculationType_SelectedIndexChanged);
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(3, 150);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(86, 13);
+            this.label10.TabIndex = 21;
+            this.label10.Text = "Calculation Type";
+            // 
             // dataGridView1
             // 
             this.dataGridView1.AllowUserToAddRows = false;
@@ -351,7 +378,10 @@ namespace pwiz.Topograph.ui.Forms
             this.colCohort,
             this.colTracerPercent,
             this.colScore,
-            this.colTurnover});
+            this.colTurnover,
+            this.colPrecursorPool,
+            this.colTurnoverAvg,
+            this.colPrecursorPoolAvg});
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView1.Location = new System.Drawing.Point(0, 0);
             this.dataGridView1.Name = "dataGridView1";
@@ -359,6 +389,24 @@ namespace pwiz.Topograph.ui.Forms
             this.dataGridView1.TabIndex = 1;
             this.dataGridView1.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellEndEdit);
             this.dataGridView1.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
+            // 
+            // splitContainer2
+            // 
+            this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer2.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer2.Name = "splitContainer2";
+            this.splitContainer2.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // splitContainer2.Panel1
+            // 
+            this.splitContainer2.Panel1.Controls.Add(this.splitContainer1);
+            // 
+            // splitContainer2.Panel2
+            // 
+            this.splitContainer2.Panel2.Controls.Add(this.dataGridView1);
+            this.splitContainer2.Size = new System.Drawing.Size(948, 522);
+            this.splitContainer2.SplitterDistance = 299;
+            this.splitContainer2.TabIndex = 1;
             // 
             // colPeptide
             // 
@@ -404,51 +452,29 @@ namespace pwiz.Topograph.ui.Forms
             // 
             // colTurnover
             // 
-            this.colTurnover.HeaderText = "Turnover";
+            this.colTurnover.HeaderText = "Turnover (Ind)";
             this.colTurnover.Name = "colTurnover";
             this.colTurnover.ReadOnly = true;
             // 
-            // splitContainer2
+            // colPrecursorPool
             // 
-            this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer2.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer2.Name = "splitContainer2";
-            this.splitContainer2.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            this.colPrecursorPool.HeaderText = "Precursor Pool (Ind)";
+            this.colPrecursorPool.Name = "colPrecursorPool";
+            this.colPrecursorPool.Width = 140;
             // 
-            // splitContainer2.Panel1
+            // colTurnoverAvg
             // 
-            this.splitContainer2.Panel1.Controls.Add(this.splitContainer1);
+            this.colTurnoverAvg.HeaderText = "Turnover (Avg)";
+            this.colTurnoverAvg.Name = "colTurnoverAvg";
+            this.colTurnoverAvg.ReadOnly = true;
+            this.colTurnoverAvg.Width = 105;
             // 
-            // splitContainer2.Panel2
+            // colPrecursorPoolAvg
             // 
-            this.splitContainer2.Panel2.Controls.Add(this.dataGridView1);
-            this.splitContainer2.Size = new System.Drawing.Size(948, 522);
-            this.splitContainer2.SplitterDistance = 299;
-            this.splitContainer2.TabIndex = 1;
-            // 
-            // comboCalculationType
-            // 
-            this.comboCalculationType.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.comboCalculationType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboCalculationType.FormattingEnabled = true;
-            this.comboCalculationType.Items.AddRange(new object[] {
-            "Tracer %",
-            "Individual Precursor Pool",
-            "Avg Precursor Pool"});
-            this.comboCalculationType.Location = new System.Drawing.Point(153, 153);
-            this.comboCalculationType.Name = "comboCalculationType";
-            this.comboCalculationType.Size = new System.Drawing.Size(128, 21);
-            this.comboCalculationType.TabIndex = 20;
-            this.comboCalculationType.SelectedIndexChanged += new System.EventHandler(this.comboCalculationType_SelectedIndexChanged);
-            // 
-            // label10
-            // 
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(3, 150);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(86, 13);
-            this.label10.TabIndex = 21;
-            this.label10.Text = "Calculation Type";
+            this.colPrecursorPoolAvg.HeaderText = "Precursor Pool (Avg)";
+            this.colPrecursorPoolAvg.Name = "colPrecursorPoolAvg";
+            this.colPrecursorPoolAvg.ReadOnly = true;
+            this.colPrecursorPoolAvg.Width = 140;
             // 
             // HalfLifeForm
             // 
@@ -497,6 +523,8 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.TextBox tbxRateConstant;
         private System.Windows.Forms.TextBox tbxHalfLife;
         private System.Windows.Forms.CheckBox cbxFixedInitialPercent;
+        private System.Windows.Forms.ComboBox comboCalculationType;
+        private System.Windows.Forms.Label label10;
         private System.Windows.Forms.DataGridViewLinkColumn colPeptide;
         private System.Windows.Forms.DataGridViewTextBoxColumn colFile;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTimePoint;
@@ -505,7 +533,8 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn colTracerPercent;
         private System.Windows.Forms.DataGridViewTextBoxColumn colScore;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTurnover;
-        private System.Windows.Forms.ComboBox comboCalculationType;
-        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colPrecursorPool;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colTurnoverAvg;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colPrecursorPoolAvg;
     }
 }
