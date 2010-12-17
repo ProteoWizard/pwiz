@@ -153,6 +153,7 @@ Global
 		{F1A6D016-7608-4A7B-8D68-FB32B8344D4B}.Release|Mixed Platforms.ActiveCfg = Release|x86
 		{F1A6D016-7608-4A7B-8D68-FB32B8344D4B}.Release|Mixed Platforms.Build.0 = Release|x86
 		{F1A6D016-7608-4A7B-8D68-FB32B8344D4B}.Release|x86.ActiveCfg = Release|x86
+		{F1A6D016-7608-4A7B-8D68-FB32B8344D4B}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
