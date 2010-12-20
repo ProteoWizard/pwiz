@@ -513,7 +513,8 @@ namespace IonMatcher
                 pepGridView.AllowUserToOrderColumns = false; 
 
                 // Set the event handler for spectrum viewer
-                pepGridView.DoubleClick += new EventHandler(triggerSpectrumViewer);
+                //pepGridView.DoubleClick += new EventHandler(triggerSpectrumViewer);
+                pepGridView.Click += new EventHandler(triggerSpectrumViewer);
                 pepGridView.Visible = true;
                 Application.DoEvents();
               }
