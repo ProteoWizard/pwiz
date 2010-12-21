@@ -88,7 +88,7 @@ PWIZ_API_DECL void initializeTiny(MSData& msd)
     ParamGroupPtr pg2(new ParamGroup);
     pg2->id = "CommonMS2SpectrumParams";
     pg2->set(MS_MSn_spectrum);
-    pg2->set(MS_positive_scan);
+    pg2->set(MS_negative_scan);
     msd.paramGroupPtrs.push_back(pg2);
 
     // sampleList
