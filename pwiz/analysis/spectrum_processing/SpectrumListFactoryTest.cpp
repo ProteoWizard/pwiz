@@ -226,14 +226,7 @@ void testWrapActivation()
         unit_assert(sl.get());
         unit_assert(sl->size() == 5);
 
-        try
-        {
-            SpectrumListFactory::wrap(msd, "activation UNEXPECTED_INPUT");
-            unit_assert(false);
-        }
-        catch (runtime_error& e)
-        {
-        }
+        unit_assert_throws(SpectrumListFactory::wrap(msd, "activation UNEXPECTED_INPUT"), runtime_error);
     }
 
 }
@@ -273,15 +266,59 @@ void testWrapMassAnalyzer()
         SpectrumListPtr& sl = msd.run.spectrumListPtr;
         unit_assert(sl.get());
         unit_assert(sl->size() == 5);
+        unit_assert_throws(SpectrumListFactory::wrap(msd, "analyzerType UNEXPECTED_INPUT"), runtime_error)
+    }
+}
 
-        try
-        {
-            SpectrumListFactory::wrap(msd, "analyzerType UNEXPECTED_INPUT");
-            unit_assert(false);
-        }
-        catch (runtime_error& e)
-        {
-        }
+void testWrapPolarity()
+{
+    // test filter by positive polarity
+    {
+        MSData msd;
+        examples::initializeTiny(msd);
+
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert(sl.get());
+        unit_assert(sl->size() == 5);
+
+        SpectrumListFactory::wrap(msd, "polarity positive");
+        size_t siz = sl->size();
+        unit_assert(sl->size() == 3);
+    }
+    // test filter by + polarity
+    {
+        MSData msd;
+        examples::initializeTiny(msd);
+
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert(sl.get());
+        unit_assert(sl->size() == 5);
+
+        SpectrumListFactory::wrap(msd, "polarity +");
+        size_t siz = sl->size();
+        unit_assert(sl->size() == 3);
+    }
+    // test filter by negative polarity
+    {
+        MSData msd;
+        examples::initializeTiny(msd);
+
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert(sl.get());
+        unit_assert(sl->size() == 5);
+
+        SpectrumListFactory::wrap(msd, "polarity -");
+        unit_assert(sl->size() == 2);
+    }
+    // test invalid argument
+    {
+        MSData msd;
+        examples::initializeTiny(msd);
+
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert(sl.get());
+        unit_assert(sl->size() == 5);
+        unit_assert_throws(SpectrumListFactory::wrap(msd, "polarity UNEXPECTED_INPUT"), runtime_error)
     }
 }
 
@@ -295,6 +332,7 @@ void test()
     testWrapDefaultArrayLength();
     testWrapActivation();
     testWrapMassAnalyzer();
+    testWrapPolarity();
 }
 
 

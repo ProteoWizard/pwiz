@@ -228,6 +228,7 @@ SpectrumListPtr filterCreator_MS2Deisotope(const MSData& msd, const string& arg)
             SpectrumList_PeakFilter(msd.run.spectrumListPtr,
                                    filter));
 }
+
 struct StripIonTrapSurveyScans : public SpectrumList_Filter::Predicate
 {
     virtual boost::logic::tribool accept(const SpectrumIdentity& spectrumIdentity) const
@@ -463,6 +464,29 @@ SpectrumListPtr filterCreator_thresholdFilter(const MSData& msd, const string& a
     return SpectrumListPtr(new SpectrumList_PeakFilter(msd.run.spectrumListPtr, filter));
 }
 
+SpectrumListPtr filterCreator_polarityFilter(const MSData& msd, const string& arg)
+{
+    istringstream parser(arg);
+    string polarityArg;
+
+    parser >> polarityArg;
+
+    CVID polarity = CVID_Unknown;
+
+    if (parser)
+    {
+        if (polarityArg == "positive" || polarityArg == "+")
+            polarity = MS_positive_scan;
+        else if (polarityArg == "negative" || polarityArg == "-")
+            polarity = MS_negative_scan;
+    }
+
+    if (polarity == CVID_Unknown)
+        throw runtime_error("[SpectrumListFactory::filterCreator_polarityFilter()] invalid polarity (expected \"positive\" or \"negative\")");
+
+    return SpectrumListPtr(new SpectrumList_Filter(msd.run.spectrumListPtr, SpectrumList_FilterPredicate_Polarity(polarity)));
+}
+
 
 struct JumpTableEntry
 {
@@ -494,7 +518,8 @@ JumpTableEntry jumpTable_[] =
     {"ETDFilter", "removePrecursor:<default:true|false>  removeChargeReduced:<default:true|false>  removeNeutralLoss:<default:true|false>  blanketRemoval:<default:true|false>  MatchingTolerance:(val <PPM|MZ>) (default:3.1 MZ)", filterCreator_ETDFilter},
     {"chargeStatePredictor", "overrideExistingCharge:<default:true|false>  maxMultipleCharge:<int>(3)  minMultipleCharge:<int>(2)  singleChargeFractionTIC:<real>(0.9)", filterCreator_chargeStatePredictor},
     {"activation", "<ETD|CID|SA|HCD> (filter by precursor activation type)", filterCreator_ActivationType},
-    {"analyzerType", "<FTMS|ITMS> (filter by mass analyzer type)", filterCreator_AnalyzerType}
+    {"analyzerType", "<FTMS|ITMS> (filter by mass analyzer type)", filterCreator_AnalyzerType},
+    {"polarity", "<positive|negative|+|-> (filter by scan polarity)", filterCreator_polarityFilter}
 };
 
 

@@ -366,6 +366,17 @@ PWIZ_API_DECL bool SpectrumList_FilterPredicate_AnalyzerType::accept(const msdat
     return res;
 }
 
+//
+// SpectrumList_FilterPredicate_Polarity
+//
+
+PWIZ_API_DECL SpectrumList_FilterPredicate_Polarity::SpectrumList_FilterPredicate_Polarity(CVID polarity) : polarity(polarity) {}
+
+PWIZ_API_DECL bool SpectrumList_FilterPredicate_Polarity::accept(const msdata::Spectrum& spectrum) const
+{
+    return spectrum.hasCVParam(polarity);
+}
+
 
 } // namespace analysis
 } // namespace pwiz
