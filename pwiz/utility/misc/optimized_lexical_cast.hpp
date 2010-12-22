@@ -27,6 +27,7 @@
 #include <cstdlib>
 #include <cerrno>
 #include <boost/lexical_cast.hpp>
+#include <boost/logic/tribool.hpp>
 
 // optimized string->numeric conversions
 namespace boost
@@ -108,6 +109,25 @@ namespace boost
 			throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
 		return value;
 	}
+
+    template<>
+    inline bool lexical_cast( const std::string& str )
+    {
+        if (str == "0" || str == "false")
+            return false;
+        return true;
+    }
+
+    template<>
+    inline boost::logic::tribool lexical_cast( const std::string& str )
+    {
+        using namespace boost::logic;
+        if (str.empty())
+            return tribool(indeterminate);
+        if (str == "0" || str == "false")
+            return false;
+        return true;
+    }
 
 	/*template<>
 	inline float lexical_cast( const char*& str )

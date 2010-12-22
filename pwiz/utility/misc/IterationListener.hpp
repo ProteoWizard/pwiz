@@ -42,11 +42,12 @@ class PWIZ_API_DECL IterationListener
 
     struct UpdateMessage
     {
+        const std::string& message;
         size_t iterationIndex;
         size_t iterationCount; // 0 == unknown
 
-        UpdateMessage(size_t index, size_t count) 
-        :   iterationIndex(index), iterationCount(count)
+        UpdateMessage(size_t index, size_t count, const std::string& message = "") 
+        :   iterationIndex(index), iterationCount(count), message(message)
         {}
     };
 
