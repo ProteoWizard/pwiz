@@ -33,9 +33,15 @@ using System.Collections;
 using System.IO;
 using System.Drawing.Imaging;
 
+using pwiz.CLI;
+using pwiz.CLI.cv;
+using pwiz.CLI.msdata;
+using pwiz.CLI.analysis;
+
+
 namespace IonMatcher
 {
-    public partial class MainForm : Form
+    public partial  class MainForm : Form
     {
         DataGridViewRow currentPepGridSelection;
 
@@ -45,8 +51,8 @@ namespace IonMatcher
 
             //tbSrcDir.Text = @"C:\Documents and Settings\maz\My Documents\IonMatch-test;";
             //tbOutDir.Text = @"C:\Documents and Settings\maz\My Documents\IonMatch-test";
-            //tbSpecFile.Text = @"C:\Documents and Settings\maz\My Documents\Atest\mzXMLs\T20100314-06.mzXML";
-            //tbMetricsFile.Text = @"C:\Documents and Settings\maz\My Documents\Atest\mzXMLs\T20100314-06-ScanRankerMetrics-adjusted-Labeled.txt";
+            tbSpecFile.Text = @"C:\Documents and Settings\maz\My Documents\test\mzXMLs\mam_20100301o_Project85_JensKraus_Antibody_Fab_A_10x.mzML";
+            tbMetricsFile.Text = @"C:\Documents and Settings\maz\My Documents\test\mzXMLs\mam_20100301o_Project85_JensKraus_Antibody_Fab_A_10x-ScanRankerMetrics-Labeled.txt";
         }
 
         public static string OpenFileBrowseDialog(string sPrevFile)
@@ -232,6 +238,7 @@ namespace IonMatcher
             
             // Get the current row
             DataGridViewRow row = pepGridView.CurrentRow;
+            tbPepNovoResult.Clear();
  
             if(row != null) 
             {
@@ -258,8 +265,12 @@ namespace IonMatcher
 
                             splitContainer4.Panel1.Hide();
                             splitContainer4.Panel2.Hide();
-                            splitContainer3.Panel2.Hide();
-                            Application.DoEvents();
+                            //splitContainer3.Panel2.Hide();
+                            splitContainer5.Panel1.Hide();
+                            //splitContainer5.Panel2.Hide();
+                            
+                        
+                        Application.DoEvents();
                             //UniqueSpectrumID uniqueSpectrumID;  // for alternative interpretations
                             // Create a spectrum viewer and add its components
                             if(nativeID!=null && nativeID.Length>0) 
@@ -277,13 +288,18 @@ namespace IonMatcher
                             splitContainer4.Panel1.Controls.Add(currentSpectrumViewer.annotationPanel);
                             splitContainer4.Panel2.Controls.Clear();
                             splitContainer4.Panel2.Controls.Add(currentSpectrumViewer.fragmentationPanel);
-                            splitContainer3.Panel2.Controls.Clear();
-                            splitContainer3.Panel2.Controls.Add(currentSpectrumViewer.spectrumPanel);
-                            splitContainer3.Panel2.AutoScroll = true;
+                            //splitContainer3.Panel2.Controls.Clear();
+                            //splitContainer3.Panel2.Controls.Add(currentSpectrumViewer.spectrumPanel);
+                            //splitContainer3.Panel2.AutoScroll = true;
+                            splitContainer5.Panel1.Controls.Clear();
+                            splitContainer5.Panel1.Controls.Add(currentSpectrumViewer.spectrumPanel);
+                            splitContainer5.Panel1.AutoScroll = true;
                             //splitContainer1.Panel2.Controls.Add(splitContainer5);
                             splitContainer4.Panel1.Show();
                             splitContainer4.Panel2.Show();
-                            splitContainer3.Panel2.Show();
+                            //splitContainer3.Panel2.Show();
+                            splitContainer5.Panel1.Show();
+                            splitContainer5.Panel2.Show();
 
                             Application.DoEvents();
                             // If we have a seconday result associated with this spectrum, 
@@ -458,7 +474,10 @@ namespace IonMatcher
                 currentPepGridSelection = null;
                 splitContainer4.Panel1.Controls.Clear();
                 splitContainer4.Panel2.Controls.Clear();
-                splitContainer3.Panel2.Controls.Clear();
+                //splitContainer3.Panel2.Controls.Clear();
+                splitContainer5.Panel1.Controls.Clear();
+                //splitContainer5.Panel2.Controls.Clear();
+                
                 this.Refresh();
 
                 //read peptide table to a data table and bind to pepGridView
@@ -661,8 +680,113 @@ namespace IonMatcher
 
          private void MainForm_Load(object sender, EventArgs e)
          {
-
+             splitContainer5.Panel2.Hide();
          }
+
+         public static void SetText(MainForm mainForm, string text)
+         {
+             mainForm.tbPepNovoResult.AppendText(text);
+         }
+
+        private class SpectrumList_FilterPredicate_IndexSet
+        {
+            public List<string> indexSet;
+            public bool accept(Spectrum s) { return indexSet.Contains(s.id); }
+            public SpectrumList_FilterPredicate_IndexSet()
+            {
+                indexSet = new List<string>();
+            }
+
+        }
+
+        private void writeSingleSpectrum(string sourceFile, string nativeID, string outFileName)
+        {
+            MSDataFile.WriteConfig writeConfig = new MSDataFile.WriteConfig();
+            writeConfig.format = MSDataFile.Format.Format_MGF;
+            writeConfig.precision = MSDataFile.Precision.Precision_32;
+
+            var predicate = new SpectrumList_FilterPredicate_IndexSet();
+            predicate.indexSet.Add(nativeID);
+
+            try
+            {
+                //Workspace.SetText("\r\nWriting selected spectrum to " + outFileName);
+                MainForm.SetText(this, "Start writing selected spectrum to " + outFileName + "\r\n");
+                using (MSDataFile msFile = new MSDataFile(sourceFile))
+                {
+                    msFile.run.spectrumList = new SpectrumList_Filter(msFile.run.spectrumList, new SpectrumList_FilterAcceptSpectrum(predicate.accept));
+                    msFile.write(outFileName, writeConfig);
+                }
+                MainForm.SetText(this, "Finished writing selected spectrum to " + outFileName + "\r\n");
+            }
+            catch (Exception exc)
+            {
+                //throw new Exception("Error in writiing new spectra file", exc);
+                //Workspace.SetText("\r\nError in writing new spectra file\r\n");
+                tbPepNovoResult.AppendText("\r\nError in writing new spectra file\r\n");
+                throw new Exception(exc.Message);
+            }
+        }
+
+         private void btnRunPepNovo_Click(object sender, EventArgs e)
+         {
+             # region  Error checking
+                string EXE = @"PepNovo.exe";
+                string BIN_DIR = Path.GetDirectoryName(Application.ExecutablePath) + "\\" + "PepNovo";
+                string pathAndExeFile = BIN_DIR + "\\" + EXE;   
+                if (!File.Exists(pathAndExeFile))
+                {
+                    MessageBox.Show("Error: Cannot find PepNovo program! Please download PepNovo at http://proteomics.ucsd.edu/ and copy it to "
+                        + BIN_DIR + " folder");
+                    return;
+                }
+                if (tbPrecursorTolerance.Text.Equals(string.Empty))
+                {
+                    MessageBox.Show("Error: Please specify precursor tolerance!");
+                    return;
+                }
+                if (tbFragmentTolerance.Text.Equals(string.Empty))
+                {
+                    MessageBox.Show("Error: Please specify fragment tolerance!");
+                    return;
+                }
+                if (pepGridView.SelectedRows.Count != 1)
+                {
+                    MessageBox.Show("Error: Please select a single spectrum!");
+                    return;
+                }
+             #endregion
+
+             //write out a temp spectrum file for selected spectrum in data table
+             tbPepNovoResult.Clear();
+             string workingDir = Path.GetDirectoryName(tbMetricsFile.Text);
+             Directory.SetCurrentDirectory(workingDir);
+
+             string sourceFile = tbSpecFile.Text;
+             string nativeID = Convert.ToString(pepGridView.SelectedRows[0].Cells["NativeID"].Value);
+             string singleSpectrumFileName = "tempSpectrumForPepNovo.mgf";
+             if (File.Exists(singleSpectrumFileName))
+             {
+                 File.Delete(singleSpectrumFileName);
+             }
+             writeSingleSpectrum(sourceFile, nativeID, singleSpectrumFileName);
+
+             RunPepNovoAction runPepNovoAction = new RunPepNovoAction(this);
+             runPepNovoAction.InFile = singleSpectrumFileName; 
+             runPepNovoAction.PrecursorTolerance = Convert.ToSingle(tbPrecursorTolerance.Text);
+             runPepNovoAction.FragmentTolerance = Convert.ToSingle(tbFragmentTolerance.Text);
+             runPepNovoAction.PTMs = tbPTMs.Text;
+             runPepNovoAction.UseSpectrumCharge = cbUseSpectrumCharge.Checked ? " -use_spectrum_charge " : " ";
+             runPepNovoAction.UseSpectrumMz = cbUseSpectrumMZ.Checked ? " -use_spectrum_mz " : " ";
+             runPepNovoAction.WorkingDir = workingDir;
+             //runPepNovoAction.RunPepNovo();
+             //tbPepNovoResult.AppendText("Start bgRunPepNovo");
+
+             bgRunPepNovo.WorkerSupportsCancellation = true;
+             bgRunPepNovo.RunWorkerCompleted += bgRunPepNovo_RunWorkerCompleted;
+             bgRunPepNovo.RunWorkerAsync(runPepNovoAction);
+
+         }//btnRunPepNovo_Click
 
 
          //private void btnExport_Click(object sender, EventArgs e)
@@ -670,5 +794,28 @@ namespace IonMatcher
          //    exportInterpretation();
          //}  
 
-    }
+         private void bgRunPepNovo_DoWork(object sender, DoWorkEventArgs e)
+         {
+             BackgroundWorker bw = sender as BackgroundWorker;
+             RunPepNovoAction arg = e.Argument as RunPepNovoAction;
+             while (!bw.CancellationPending)
+             {
+                 arg.RunPepNovo();
+                 return;
+             }
+         }
+
+         private void bgRunPepNovo_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+         {
+             if (e.Error != null)
+             {
+                 string msg = String.Format("An error occurred: {0}", e.Error.Message);
+                 MessageBox.Show(msg);
+             }
+         }
+
+
+
+
+    }//MainForm
 }

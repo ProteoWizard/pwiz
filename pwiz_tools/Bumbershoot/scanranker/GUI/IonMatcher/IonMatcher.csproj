@@ -130,8 +130,10 @@
     <Compile Include="PTMDiggerTypes.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="RunPepNovoAction.cs" />
     <Compile Include="ScoringUtils.cs" />
     <Compile Include="SpectrumViewer.cs" />
+    <Compile Include="Workspace.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

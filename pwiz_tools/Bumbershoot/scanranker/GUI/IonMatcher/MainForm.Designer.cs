@@ -64,6 +64,19 @@ namespace IonMatcher
             this.pepGridView = new System.Windows.Forms.DataGridView();
             this.splitContainer3 = new System.Windows.Forms.SplitContainer();
             this.splitContainer4 = new System.Windows.Forms.SplitContainer();
+            this.splitContainer5 = new System.Windows.Forms.SplitContainer();
+            this.gbDenovo = new System.Windows.Forms.GroupBox();
+            this.tbPepNovoResult = new System.Windows.Forms.TextBox();
+            this.btnRunPepNovo = new System.Windows.Forms.Button();
+            this.cbUseSpectrumMZ = new System.Windows.Forms.CheckBox();
+            this.cbUseSpectrumCharge = new System.Windows.Forms.CheckBox();
+            this.tbPTMs = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.tbFragmentTolerance = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.tbPrecursorTolerance = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.bgRunPepNovo = new System.ComponentModel.BackgroundWorker();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -72,8 +85,12 @@ namespace IonMatcher
             this.splitContainer2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pepGridView)).BeginInit();
             this.splitContainer3.Panel1.SuspendLayout();
+            this.splitContainer3.Panel2.SuspendLayout();
             this.splitContainer3.SuspendLayout();
             this.splitContainer4.SuspendLayout();
+            this.splitContainer5.Panel2.SuspendLayout();
+            this.splitContainer5.SuspendLayout();
+            this.gbDenovo.SuspendLayout();
             this.SuspendLayout();
             // 
             // splitContainer1
@@ -217,6 +234,10 @@ namespace IonMatcher
             // splitContainer3.Panel1
             // 
             this.splitContainer3.Panel1.Controls.Add(this.splitContainer4);
+            // 
+            // splitContainer3.Panel2
+            // 
+            this.splitContainer3.Panel2.Controls.Add(this.splitContainer5);
             this.splitContainer3.Size = new System.Drawing.Size(614, 545);
             this.splitContainer3.SplitterDistance = 167;
             this.splitContainer3.TabIndex = 0;
@@ -229,6 +250,140 @@ namespace IonMatcher
             this.splitContainer4.Size = new System.Drawing.Size(614, 167);
             this.splitContainer4.SplitterDistance = 408;
             this.splitContainer4.TabIndex = 0;
+            // 
+            // splitContainer5
+            // 
+            this.splitContainer5.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer5.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer5.Name = "splitContainer5";
+            this.splitContainer5.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // splitContainer5.Panel2
+            // 
+            this.splitContainer5.Panel2.Controls.Add(this.gbDenovo);
+            this.splitContainer5.Size = new System.Drawing.Size(614, 374);
+            this.splitContainer5.SplitterDistance = 286;
+            this.splitContainer5.TabIndex = 0;
+            // 
+            // gbDenovo
+            // 
+            this.gbDenovo.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.gbDenovo.Controls.Add(this.tbPepNovoResult);
+            this.gbDenovo.Controls.Add(this.btnRunPepNovo);
+            this.gbDenovo.Controls.Add(this.cbUseSpectrumMZ);
+            this.gbDenovo.Controls.Add(this.cbUseSpectrumCharge);
+            this.gbDenovo.Controls.Add(this.tbPTMs);
+            this.gbDenovo.Controls.Add(this.label5);
+            this.gbDenovo.Controls.Add(this.tbFragmentTolerance);
+            this.gbDenovo.Controls.Add(this.label4);
+            this.gbDenovo.Controls.Add(this.tbPrecursorTolerance);
+            this.gbDenovo.Controls.Add(this.label3);
+            this.gbDenovo.Location = new System.Drawing.Point(0, 3);
+            this.gbDenovo.Name = "gbDenovo";
+            this.gbDenovo.Size = new System.Drawing.Size(611, 81);
+            this.gbDenovo.TabIndex = 0;
+            this.gbDenovo.TabStop = false;
+            this.gbDenovo.Text = "de novo sequencing";
+            // 
+            // tbPepNovoResult
+            // 
+            this.tbPepNovoResult.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbPepNovoResult.Location = new System.Drawing.Point(304, 10);
+            this.tbPepNovoResult.Multiline = true;
+            this.tbPepNovoResult.Name = "tbPepNovoResult";
+            this.tbPepNovoResult.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.tbPepNovoResult.Size = new System.Drawing.Size(307, 70);
+            this.tbPepNovoResult.TabIndex = 1;
+            // 
+            // btnRunPepNovo
+            // 
+            this.btnRunPepNovo.Location = new System.Drawing.Point(168, 58);
+            this.btnRunPepNovo.Name = "btnRunPepNovo";
+            this.btnRunPepNovo.Size = new System.Drawing.Size(130, 23);
+            this.btnRunPepNovo.TabIndex = 8;
+            this.btnRunPepNovo.Text = "Run PepNovo";
+            this.btnRunPepNovo.UseVisualStyleBackColor = true;
+            this.btnRunPepNovo.Click += new System.EventHandler(this.btnRunPepNovo_Click);
+            // 
+            // cbUseSpectrumMZ
+            // 
+            this.cbUseSpectrumMZ.AutoSize = true;
+            this.cbUseSpectrumMZ.Location = new System.Drawing.Point(168, 41);
+            this.cbUseSpectrumMZ.Name = "cbUseSpectrumMZ";
+            this.cbUseSpectrumMZ.Size = new System.Drawing.Size(112, 17);
+            this.cbUseSpectrumMZ.TabIndex = 7;
+            this.cbUseSpectrumMZ.Text = "Use Spectrum MZ";
+            this.cbUseSpectrumMZ.UseVisualStyleBackColor = true;
+            // 
+            // cbUseSpectrumCharge
+            // 
+            this.cbUseSpectrumCharge.AutoSize = true;
+            this.cbUseSpectrumCharge.Location = new System.Drawing.Point(168, 20);
+            this.cbUseSpectrumCharge.Name = "cbUseSpectrumCharge";
+            this.cbUseSpectrumCharge.Size = new System.Drawing.Size(130, 17);
+            this.cbUseSpectrumCharge.TabIndex = 6;
+            this.cbUseSpectrumCharge.Text = "Use Spectrum Charge";
+            this.cbUseSpectrumCharge.UseVisualStyleBackColor = true;
+            // 
+            // tbPTMs
+            // 
+            this.tbPTMs.Location = new System.Drawing.Point(50, 60);
+            this.tbPTMs.Name = "tbPTMs";
+            this.tbPTMs.Size = new System.Drawing.Size(100, 20);
+            this.tbPTMs.TabIndex = 5;
+            this.tbPTMs.Text = "C+57:M+16";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(6, 63);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(38, 13);
+            this.label5.TabIndex = 4;
+            this.label5.Text = "PTMs:";
+            // 
+            // tbFragmentTolerance
+            // 
+            this.tbFragmentTolerance.Location = new System.Drawing.Point(113, 39);
+            this.tbFragmentTolerance.Name = "tbFragmentTolerance";
+            this.tbFragmentTolerance.Size = new System.Drawing.Size(37, 20);
+            this.tbFragmentTolerance.TabIndex = 3;
+            this.tbFragmentTolerance.Text = "0.4";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(6, 42);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(105, 13);
+            this.label4.TabIndex = 2;
+            this.label4.Text = "Fragment Tolerance:";
+            // 
+            // tbPrecursorTolerance
+            // 
+            this.tbPrecursorTolerance.Location = new System.Drawing.Point(113, 18);
+            this.tbPrecursorTolerance.Name = "tbPrecursorTolerance";
+            this.tbPrecursorTolerance.Size = new System.Drawing.Size(37, 20);
+            this.tbPrecursorTolerance.TabIndex = 1;
+            this.tbPrecursorTolerance.Text = "0.02";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(6, 21);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(106, 13);
+            this.label3.TabIndex = 0;
+            this.label3.Text = "Precursor Tolerance:";
+            // 
+            // bgRunPepNovo
+            // 
+            this.bgRunPepNovo.DoWork += new System.ComponentModel.DoWorkEventHandler(this.bgRunPepNovo_DoWork);
+            this.bgRunPepNovo.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.bgRunPepNovo_RunWorkerCompleted);
             // 
             // MainForm
             // 
@@ -250,8 +405,13 @@ namespace IonMatcher
             this.splitContainer2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.pepGridView)).EndInit();
             this.splitContainer3.Panel1.ResumeLayout(false);
+            this.splitContainer3.Panel2.ResumeLayout(false);
             this.splitContainer3.ResumeLayout(false);
             this.splitContainer4.ResumeLayout(false);
+            this.splitContainer5.Panel2.ResumeLayout(false);
+            this.splitContainer5.ResumeLayout(false);
+            this.gbDenovo.ResumeLayout(false);
+            this.gbDenovo.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -270,6 +430,20 @@ namespace IonMatcher
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox tbMetricsFile;
+        private System.Windows.Forms.SplitContainer splitContainer5;
+        private System.Windows.Forms.GroupBox gbDenovo;
+        private System.Windows.Forms.CheckBox cbUseSpectrumMZ;
+        private System.Windows.Forms.CheckBox cbUseSpectrumCharge;
+        private System.Windows.Forms.TextBox tbPTMs;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TextBox tbFragmentTolerance;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.TextBox tbPrecursorTolerance;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Button btnRunPepNovo;
+        private System.Windows.Forms.TextBox tbPepNovoResult;
+        public System.ComponentModel.BackgroundWorker bgRunPepNovo;
+       
 
 
     }

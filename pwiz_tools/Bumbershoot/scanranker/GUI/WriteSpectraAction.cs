@@ -28,6 +28,7 @@ using System.IO;
 using System.Windows.Forms;
 
 using pwiz.CLI;
+using pwiz.CLI.cv;
 using pwiz.CLI.msdata;
 using pwiz.CLI.analysis;
 
@@ -77,6 +78,20 @@ namespace ScanRanker
             }
 
         }
+
+        private class SpectrumList_SorterPredicate_IndexSet
+        {
+            public List<int> indexSet;
+            public bool lessThan(Spectrum lhs, Spectrum rhs) {return indexSet[lhs.index] < indexSet[rhs.index];}            
+            public SpectrumList_SorterPredicate_IndexSet()
+            {
+                indexSet = new List<int>();
+
+            }
+
+        }
+
+        private bool lessThan(Spectrum lhs, Spectrum rhs) { return (double)lhs.cvParam(CVID.MS_TIC).value < (double)rhs.cvParam(CVID.MS_TIC).value; }
 
         /// <summary>
         /// write out a subset of high quality spectra based on ScanRanker metrics file
@@ -148,6 +163,12 @@ namespace ScanRanker
                     predicate.indexSet.Add(i);
                 }
 
+                //var sorterPredicate = new SpectrumList_SorterPredicate_IndexSet();
+                //foreach (int i in highQualIndices)
+                //{
+                //    sorterPredicate.indexSet.Add(i);
+                //}
+
                 //MSDataFile.WriteConfig writeConfig = new MSDataFile.WriteConfig(MSDataFile.Format.Format_mzXML);
                 MSDataFile.WriteConfig writeConfig = new MSDataFile.WriteConfig();
                 if (outFormat.Equals("mzXML") || outFormat.Equals("mzxml"))
@@ -179,6 +200,9 @@ namespace ScanRanker
                     using (MSDataFile msFile = new MSDataFile(file.FullName))
                     {                  
                         msFile.run.spectrumList = new SpectrumList_Filter(msFile.run.spectrumList, new SpectrumList_FilterAcceptSpectrum(predicate.accept));
+                        //msFile.run.spectrumList = new SpectrumList_Sorter(msFile.run.spectrumList, new SpectrumList_Sorter_LessThan( sorterPredicate.lessThan ));
+                        //msFile.run.spectrumList = new SpectrumList_Sorter(msFile.run.spectrumList, new SpectrumList_Sorter_LessThan(lessThan));
+
                         msFile.write(outFileName, writeConfig);
                     }
                 }
