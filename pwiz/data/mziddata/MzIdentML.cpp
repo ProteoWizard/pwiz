@@ -229,7 +229,7 @@ PWIZ_API_DECL bool Modification::empty() const
 
 PWIZ_API_DECL bool Enzymes::empty() const
 {
-    return independent.empty() &&
+    return indeterminate(independent) &&
         enzymes.empty();
 }
 

@@ -501,7 +501,7 @@ class PWIZ_API_DECL TextWriter
     TextWriter& operator()(const Enzymes& ezs)
     {
         (*this)("Enzymes: ");
-        if (!ezs.independent.empty())
+        if (!indeterminate(ezs.independent))
             child()("independent: ", ezs.independent);
         if (!ezs.enzymes.empty())
             child()("enzymes: ", ezs.enzymes);

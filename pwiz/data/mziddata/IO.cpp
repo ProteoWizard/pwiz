@@ -474,16 +474,24 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DBSequence& ds)
     if (ds.searchDatabasePtr.get())
         attributes.push_back(make_pair("SearchDatabase_ref", ds.searchDatabasePtr->id));
     
-    writer.startElement("DBSequence", attributes);
+    if (!ds.paramGroup.empty() || !ds.seq.empty())
+    {
+        writer.startElement("DBSequence", attributes);
 
-    writer.pushStyle(XMLWriter::StyleFlag_InlineInner);
-    writer.startElement("seq");
-    writer.characters(ds.seq);
-    writer.endElement();
-    writer.popStyle();
+        if (!ds.seq.empty())
+        {
+            writer.pushStyle(XMLWriter::StyleFlag_InlineInner);
+            writer.startElement("seq");
+            writer.characters(ds.seq);
+            writer.endElement();
+            writer.popStyle();
+        }
 
-    writeParamContainer(writer, ds.paramGroup);
-    writer.endElement();
+        writeParamContainer(writer, ds.paramGroup);
+        writer.endElement();
+    }
+    else
+        writer.startElement("DBSequence", attributes, XMLWriter::EmptyElement);
 }
 
 
@@ -1856,9 +1864,12 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Enzyme& ez)
         writer.popStyle();
     }
 
-    writer.startElement("EnzymeName");
-    writeParamContainer(writer, ez.enzymeName);
-    writer.endElement();
+    if (!ez.enzymeName.empty())
+    {
+        writer.startElement("EnzymeName");
+        writeParamContainer(writer, ez.enzymeName);
+        writer.endElement();
+    }
 
     writer.endElement();
 }
@@ -1953,8 +1964,8 @@ PWIZ_API_DECL void read(std::istream& is, Enzyme& ez)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Enzymes& ez)
 {
     XMLWriter::Attributes attributes;
-    if (!ez.independent.empty())
-        attributes.push_back(make_pair("independent", ez.independent));
+    if (!indeterminate(ez.independent))
+        attributes.push_back(make_pair("independent", ez.independent ? "true" : "false"));
     
     writer.startElement("Enzymes", attributes);
 
@@ -2206,11 +2217,14 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ModParam& mp)
     attributes.push_back(make_pair("massDelta", lexical_cast<string>(mp.massDelta)));
     attributes.push_back(make_pair("residues", mp.residues));
 
-    writer.startElement("ModParam", attributes);
-    
-    writeParamContainer(writer, mp.cvParams);
-
-    writer.endElement();
+    if (!mp.cvParams.empty())
+    {
+        writer.startElement("ModParam", attributes);
+        writeParamContainer(writer, mp.cvParams);
+        writer.endElement();
+    }
+    else
+        writer.startElement("ModParam", attributes, XMLWriter::EmptyElement);
 }
 
 
@@ -3639,8 +3653,14 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptideEvidence& pep
     addIdAttributes(pep, attributes);
     if (pep.dbSequencePtr.get() && !pep.dbSequencePtr->empty())
         attributes.push_back(make_pair("DBSequence_Ref", pep.dbSequencePtr->id));
-    attributes.push_back(make_pair("start", lexical_cast<string>(pep.start)));
-    attributes.push_back(make_pair("end", lexical_cast<string>(pep.end)));
+
+    // don't output these optional attributes if they haven't been set
+    if (pep.start > 0 || pep.end > pep.start)
+    {
+        attributes.push_back(make_pair("start", lexical_cast<string>(pep.start)));
+        attributes.push_back(make_pair("end", lexical_cast<string>(pep.end)));
+    }
+
     if (!pep.pre.empty())
         attributes.push_back(make_pair("pre", pep.pre));
     if (!pep.post.empty())
@@ -3652,11 +3672,15 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptideEvidence& pep
     attributes.push_back(make_pair("isDecoy", pep.isDecoy  ? "true" : "false"));
     if (pep.missedCleavages != 0)
         attributes.push_back(make_pair("missedCleavages", lexical_cast<string>(pep.missedCleavages)));
-    
-    writer.startElement("PeptideEvidence", attributes); //, XMLWriter::EmptyElement);
 
-    writeParamContainer(writer, pep.paramGroup);
-    writer.endElement();
+    if (!pep.paramGroup.empty())
+    {
+        writer.startElement("PeptideEvidence", attributes);
+        writeParamContainer(writer, pep.paramGroup);
+        writer.endElement();
+    }
+    else
+        writer.startElement("PeptideEvidence", attributes, XMLWriter::EmptyElement);
 }
 
 
@@ -3910,7 +3934,8 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
     attributes.push_back(make_pair("chargeState", lexical_cast<string>(siip.chargeState)));
     attributes.push_back(make_pair("experimentalMassToCharge", lexical_cast<string>(siip.experimentalMassToCharge)));
     attributes.push_back(make_pair("calculatedMassToCharge", lexical_cast<string>(siip.calculatedMassToCharge)));
-    attributes.push_back(make_pair("calculatedPI", lexical_cast<string>(siip.calculatedPI)));
+    if (siip.calculatedPI > 0)
+        attributes.push_back(make_pair("calculatedPI", lexical_cast<string>(siip.calculatedPI)));
     if (siip.peptidePtr.get() && !siip.peptidePtr->empty())
         attributes.push_back(make_pair("Peptide_ref", siip.peptidePtr->id));
     attributes.push_back(make_pair("rank", lexical_cast<string>(siip.rank)));
@@ -4048,14 +4073,19 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
     attributes.push_back(make_pair("spectrumID", sirp.spectrumID));
     if (sirp.spectraDataPtr.get() && !sirp.spectraDataPtr->empty())
         attributes.push_back(make_pair("SpectraData_ref", sirp.spectraDataPtr->id));
-    
-    writer.startElement("SpectrumIdentificationResult", attributes);
 
-    for (vector<SpectrumIdentificationItemPtr>::const_iterator it=sirp.spectrumIdentificationItem.begin(); it!=sirp.spectrumIdentificationItem.end(); it++)
-        write(writer, *it);
-    
-    writeParamContainer(writer, sirp.paramGroup);
-    writer.endElement();
+    if (sirp.paramGroup.empty() && sirp.spectrumIdentificationItem.empty())
+        writer.startElement("SpectrumIdentificationResult", attributes, XMLWriter::EmptyElement);
+    else
+    {
+        writer.startElement("SpectrumIdentificationResult", attributes);
+
+        for (vector<SpectrumIdentificationItemPtr>::const_iterator it=sirp.spectrumIdentificationItem.begin(); it!=sirp.spectrumIdentificationItem.end(); it++)
+            write(writer, *it);
+        
+        writeParamContainer(writer, sirp.paramGroup);
+        writer.endElement();
+    }
 }
 
 

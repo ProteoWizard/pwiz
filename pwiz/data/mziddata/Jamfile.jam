@@ -88,30 +88,33 @@ lib pwiz_data_mzid_version : Version.cpp : <link>static <conditional>@static-wit
 
 lib pwiz_data_mzid 
     : # sources
-      Diff.cpp
-      MzIdentML.cpp
-      MzIdentMLFile.cpp
-      Reader.cpp
-      DefaultReaderList.cpp
-      IO.cpp
-      Serializer_mzid.cpp
-      Pep2MzIdent.cpp
-      DelimWriter.cpp
-      DelimReader.cpp
-      References.cpp
-      KwCVMap.cpp
-      $(mascot_sources)
+        Diff.cpp
+        MzIdentML.cpp
+        MzIdentMLFile.cpp
+        Reader.cpp
+        DefaultReaderList.cpp
+        IO.cpp
+        Serializer_mzid.cpp
+        Serializer_pepXML.cpp
+        Pep2MzIdent.cpp
+        DelimWriter.cpp
+        DelimReader.cpp
+        References.cpp
+        KwCVMap.cpp
+        $(mascot_sources)
     : # requirements
-      <library>pwiz_data_mzid_version
-      <library>../common//pwiz_data_common
-      <library>../misc//pwiz_data_misc
-      <library>../../utility/chemistry//pwiz_utility_chemistry
-      <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
-      <library>/ext/boost//regex
-      $(mascot_libs)
+        <library>pwiz_data_mzid_version
+        <library>../proteome//pwiz_data_proteome
+        <library>../common//pwiz_data_common
+        <library>../misc//pwiz_data_misc
+        <library>../../utility/chemistry//pwiz_utility_chemistry
+        <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
+        <library>/ext/boost//regex
+        $(mascot_libs)
     : # default-build
     : # usage-requirements
         <library>pwiz_data_mzid_version
+        <library>../proteome//pwiz_data_proteome
         <library>../common//pwiz_data_common
         <library>../misc//pwiz_data_misc
         <library>../../utility/chemistry//pwiz_utility_chemistry
@@ -148,7 +151,8 @@ unit-test-if-exists MzIdentMLTest : MzIdentMLTest.cpp pwiz_data_mzid pwiz_data_m
 unit-test-if-exists DiffTest : DiffTest.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
 unit-test-if-exists ReferencesTest : ReferencesTest.cpp pwiz_data_mzid ;
 unit-test-if-exists IOTest : IOTest.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
-unit-test-if-exists Serializer_mzid : Serializer_mzid_Test.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
+unit-test-if-exists Serializer_mzid_Test : Serializer_mzid_Test.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
+#unit-test-if-exists Serializer_pepXML_Test : Serializer_pepXML_Test.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
 unit-test-if-exists KwCVMapTest : KwCVMapTest.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
 #unit-test-if-exists Pep2MzIdent : Pep2MzIdentTest.cpp pwiz_data_mzid ;
 #unit-test-if-exists TraDataFileTest : TraDataFileTest.cpp pwiz_data_tradata pwiz_data_tradata_examples /ext/boost//filesystem ;

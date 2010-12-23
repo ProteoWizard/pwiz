@@ -396,7 +396,7 @@ typedef boost::shared_ptr<Enzyme> EnzymePtr;
 
 struct PWIZ_API_DECL Enzymes
 {
-    std::string independent;
+    boost::logic::tribool independent;
 
     std::vector<EnzymePtr> enzymes;
 

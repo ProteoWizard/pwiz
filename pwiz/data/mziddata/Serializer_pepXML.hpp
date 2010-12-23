@@ -2,10 +2,9 @@
 // $Id$
 //
 //
-// Original author: Robert Burke <robert.burke@proteowizard.org>
+// Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
 //
-// Copyright 2007 Spielberg Family Center for Applied Proteomics
-//   Cedars-Sinai Medical Center, Los Angeles, California  90048
+// Copyright 2010 Vanderbilt University - Nashville, TN 37232
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); 
 // you may not use this file except in compliance with the License. 
@@ -21,8 +20,8 @@
 //
 
 
-#ifndef _SERIALIZER_MZID_HPP_
-#define _SERIALIZER_MZID_HPP_
+#ifndef _SERIALIZER_PEPXML_HPP_
+#define _SERIALIZER_PEPXML_HPP_
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "MzIdentML.hpp"
@@ -32,26 +31,26 @@
 namespace pwiz {
 namespace mziddata {
 
-/// MZIDData <-> mzIdentML stream serialization
-class PWIZ_API_DECL Serializer_mzIdentML
+/// MZIDData <-> pepXML stream serialization
+class PWIZ_API_DECL Serializer_pepXML
 {
     public:
-    Serializer_mzIdentML() {}
+    Serializer_pepXML() {}
 
-    /// write MZIDData object to ostream as mzIdentML
+    /// write MZIDData object to ostream as pepXML
     void write(std::ostream& os, const MzIdentML& mzid,
                const pwiz::util::IterationListenerRegistry* = 0) const;
 
-    /// read in MZIDData object from a mzIdentML istream
+    /// read in MZIDData object from a pepXML istream
     void read(boost::shared_ptr<std::istream> is, MzIdentML& mzid,
               const pwiz::util::IterationListenerRegistry* = 0) const;
 
     private:
-    Serializer_mzIdentML(Serializer_mzIdentML&);
-    Serializer_mzIdentML& operator=(Serializer_mzIdentML&);
+    Serializer_pepXML(Serializer_pepXML&);
+    Serializer_pepXML& operator=(Serializer_pepXML&);
 };
 
 } // namespace pwiz 
 } // namespace mziddata 
 
-#endif // _SERIALIZER_MZID_HPP_
+#endif // _SERIALIZER_PEPXML_HPP_

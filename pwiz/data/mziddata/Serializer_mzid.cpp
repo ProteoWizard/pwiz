@@ -38,7 +38,8 @@ using boost::iostreams::stream_offset;
 using namespace pwiz::minimxml;
 
 
-void Serializer_mzIdentML::write(ostream& os, const MzIdentML& mzid) const
+void Serializer_mzIdentML::write(ostream& os, const MzIdentML& mzid,
+                                 const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
 {
     // instantiate XMLWriter
 
@@ -52,7 +53,8 @@ void Serializer_mzIdentML::write(ostream& os, const MzIdentML& mzid) const
 }
 
 
-void Serializer_mzIdentML::read(shared_ptr<istream> is, MzIdentML& mzid) const
+void Serializer_mzIdentML::read(shared_ptr<istream> is, MzIdentML& mzid,
+                                const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
 {
     if (!is.get() || !*is)
         throw runtime_error("[Serializer_mzIdentML::read()] Bad istream.");
