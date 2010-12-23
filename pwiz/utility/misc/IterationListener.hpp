@@ -27,6 +27,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "boost/shared_ptr.hpp"
+#include <string>
 
 
 namespace pwiz {
