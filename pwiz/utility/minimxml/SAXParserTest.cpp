@@ -191,9 +191,13 @@ class FirstHandler : public Handler
 {
     public:
     
-    FirstHandler(First& first)
+    FirstHandler(First& first, bool autoUnescapeAttributes, bool autoUnescapeCharacters)
     :   object_(first)
-    {}
+    {
+        parseCharacters = true;
+        this->autoUnescapeAttributes = autoUnescapeAttributes;
+        this->autoUnescapeCharacters = autoUnescapeCharacters;
+    }
 
     virtual Status startElement(const string& name,
                                 const Handler::Attributes& attributes, 
@@ -226,9 +230,13 @@ class SecondHandler : public Handler
 {
     public:
 
-    SecondHandler(Second& object)
+    SecondHandler(Second& object, bool autoUnescapeAttributes, bool autoUnescapeCharacters)
     :   object_(object)
-    {}
+    {
+        parseCharacters = true;
+        this->autoUnescapeAttributes = autoUnescapeAttributes;
+        this->autoUnescapeCharacters = autoUnescapeCharacters;
+    }
 
     virtual Status startElement(const string& name,
                                 const Handler::Attributes& attributes, 
@@ -258,9 +266,13 @@ class FifthHandler : public Handler
 {
     public:
 
-    FifthHandler(Fifth& object)
-    : object_(object)
-    {}
+    FifthHandler(Fifth& object, bool autoUnescapeAttributes, bool autoUnescapeCharacters)
+    :   object_(object)
+    {
+        parseCharacters = true;
+        this->autoUnescapeAttributes = autoUnescapeAttributes;
+        this->autoUnescapeCharacters = autoUnescapeCharacters;
+    }
 
     virtual Status startElement(const string& name,
                                 const Handler::Attributes& attributes, 
@@ -295,12 +307,16 @@ class RootHandler : public Handler
 {
     public:
     
-    RootHandler(Root& root)
+    RootHandler(Root& root, bool autoUnescapeAttributes = true, bool autoUnescapeCharacters = true)
     :   object_(root), 
-        firstHandler_(object_.first),
-        secondHandler_(object_.second),
-        fifthHandler_(object_.fifth)
-    {}
+        firstHandler_(object_.first, autoUnescapeAttributes, autoUnescapeCharacters),
+        secondHandler_(object_.second, autoUnescapeAttributes, autoUnescapeCharacters),
+        fifthHandler_(object_.fifth, autoUnescapeAttributes, autoUnescapeCharacters)
+    {
+        parseCharacters = true;
+        this->autoUnescapeAttributes = autoUnescapeAttributes;
+        this->autoUnescapeCharacters = autoUnescapeCharacters;
+    }
 
     virtual Status startElement(const string& name,
                                 const Attributes& attributes, 
@@ -382,9 +398,7 @@ void testNoAutoUnescape()
 
     istringstream is(sampleXML);
     Root root;
-    RootHandler rootHandler(root);
-    rootHandler.autoUnescapeAttributes = false;
-    rootHandler.autoUnescapeCharacters = false;
+    RootHandler rootHandler(root, false, false);
     parse(is, rootHandler);
 
     if (os_)

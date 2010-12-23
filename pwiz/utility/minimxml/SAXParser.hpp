@@ -52,6 +52,9 @@ class Handler
 {
     public:
 
+    /// When false, no calls to characters() will be made
+    bool parseCharacters;
+
     /// Setting these to false will disable the auto-unescaping feature of the parser;
     /// this is useful for handlers which deal with large amounts of data
     bool autoUnescapeAttributes, autoUnescapeCharacters;
@@ -97,7 +100,7 @@ class Handler
     virtual Status characters(const std::string& text,
                               stream_offset position) {return Status::Ok;}
 
-    Handler() : autoUnescapeAttributes(true), autoUnescapeCharacters(true), version(0) {}
+    Handler() : parseCharacters(false), autoUnescapeAttributes(true), autoUnescapeCharacters(true), version(0) {}
     virtual ~Handler(){}
 
     protected:
@@ -105,10 +108,12 @@ class Handler
     template <typename T>
     T& getAttribute(const Attributes& attributes,
                     const std::string& name,
-                    T& result)
+                    T& result,
+                    T defaultValue = T())
     {
+        result = defaultValue;
         Attributes::const_iterator it = attributes.find(name);
-        if (it != attributes.end()) 
+        if (it != attributes.end() && !it->second.empty())
             result = boost::lexical_cast<T>(it->second);
         return result;
     }

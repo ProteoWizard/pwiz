@@ -173,7 +173,10 @@ class HandlerIndexListOffset : public SAXParser::Handler
 
     HandlerIndexListOffset(stream_offset& indexListOffset)
     :   indexListOffset_(indexListOffset)
-    {}
+    {
+        parseCharacters = true;
+        autoUnescapeCharacters = false;
+    }
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
@@ -201,7 +204,11 @@ struct HandlerOffset : public SAXParser::Handler
     SpectrumIdentity* spectrumIdentity;
     map<string,string>* legacyIdRefToNativeId;
 
-    HandlerOffset() : spectrumIdentity(0) {}
+    HandlerOffset() : spectrumIdentity(0)
+    {
+        parseCharacters = true;
+        autoUnescapeCharacters = false;
+    }
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
@@ -261,7 +268,6 @@ class HandlerIndex : public SAXParser::Handler
     HandlerIndex(vector<SpectrumIdentity>& index, map<string,string>& legacyIdRefToNativeId, int version)
     :   index_(index), offsetCount_(0)
     {
-        handlerOffset_.autoUnescapeCharacters = false;
         handlerOffset_.version = version;
         handlerOffset_.legacyIdRefToNativeId = &legacyIdRefToNativeId;
     }
@@ -477,7 +483,6 @@ void SpectrumList_mzMLImpl::createIndex() const
             is_->clear();
             is_->seekg(0);
             HandlerIndexCreator handler(index_);
-            handler.autoUnescapeCharacters = false;
             SAXParser::parse(*is_, handler);
         }
     }
@@ -486,7 +491,6 @@ void SpectrumList_mzMLImpl::createIndex() const
         is_->clear();
         is_->seekg(0);
         HandlerIndexCreator handler(index_);
-        handler.autoUnescapeCharacters = false;
         SAXParser::parse(*is_, handler);
     }
 

@@ -301,10 +301,13 @@ class HandlerWrangler : public SAXParser::Handler
 
     virtual Status characters(const string& text, stream_offset position)
     {
-        Status status = handlers_.top().handler.characters(text, position);
+        Status status = topHandler().characters(text, position);
         verifyNoDelegate(status);
         return status;
     }
+
+    const Handler& topHandler() const {return handlers_.top().handler;}
+    Handler& topHandler() {return handlers_.top().handler;}
 
     private:
     stack<HandlerInfo> handlers_;
@@ -369,9 +372,11 @@ PWIZ_API_DECL void parse(istream& is, Handler& handler)
 
         position += stripws(buffer); 
 
-        if (!buffer.empty())
+        // TODO: is it possible to detect when Handler::characters() has been overridden?
+        const Handler& topHandler = wrangler.topHandler();
+        if (!buffer.empty() && topHandler.parseCharacters)
         {
-            if (handler.autoUnescapeCharacters)
+            if (topHandler.autoUnescapeCharacters)
                 unescapeXML(buffer);
             Handler::Status status = wrangler.characters(buffer, position);
             if (status.flag == Handler::Status::Done) return;

@@ -154,7 +154,10 @@ class HandlerIndexListOffset : public SAXParser::Handler
 
     HandlerIndexListOffset(stream_offset& indexListOffset)
     :   indexListOffset_(indexListOffset)
-    {}
+    {
+        parseCharacters = true;
+        autoUnescapeCharacters = false;
+    }
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
@@ -181,7 +184,11 @@ struct HandlerOffset : public SAXParser::Handler
 {
     ChromatogramIdentity* chromatogramIdentity; 
 
-    HandlerOffset() : chromatogramIdentity(0) {}
+    HandlerOffset() : chromatogramIdentity(0)
+    {
+        parseCharacters = true;
+        autoUnescapeCharacters = false;
+    }
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,

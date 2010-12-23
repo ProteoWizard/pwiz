@@ -89,7 +89,11 @@ struct PWIZ_API_DECL Peak
 struct HandlerPeak : public SAXParser::Handler
 {
     Peak* peak;
-    HandlerPeak(Peak* _peak = 0) : peak(_peak) {}
+    HandlerPeak(Peak* _peak = 0) : peak(_peak)
+    {
+        parseCharacters = true;
+        autoUnescapeCharacters = false;
+    }
 
     virtual Status startElement(const std::string& name,
                                 const Attributes& attributes,

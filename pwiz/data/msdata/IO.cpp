@@ -1670,7 +1670,10 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         defaultArrayLength(0),
         arrayLength_(0),
         encodedLength_(0)
-    {}
+    {
+        parseCharacters = true;
+        autoUnescapeCharacters = false;
+    }
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
@@ -1687,10 +1690,8 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
             if (!dataProcessingRef.empty())
                 binaryDataArray->dataProcessingPtr = DataProcessingPtr(new DataProcessing(dataProcessingRef));
 
-            arrayLength_ = defaultArrayLength;
-            encodedLength_ = 0;
-            getAttribute(attributes, "arrayLength", arrayLength_);
             getAttribute(attributes, "encodedLength", encodedLength_);
+            getAttribute(attributes, "arrayLength", arrayLength_, defaultArrayLength);
 
             return Status::Ok;
         }
@@ -1805,7 +1806,6 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
 PWIZ_API_DECL void read(std::istream& is, BinaryDataArray& binaryDataArray, const MSData* msd)
 {
     HandlerBinaryDataArray handler(&binaryDataArray, msd);
-    handler.autoUnescapeCharacters = false;
     SAXParser::parse(is, handler);
 }
 
@@ -2175,6 +2175,7 @@ void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList, const 
         // write the spectrum
 
         SpectrumPtr spectrum = spectrumList.spectrum(i, true);
+        BOOST_ASSERT(spectrum->defaultArrayLength == spectrum->binaryDataArrayPtrs[0]->data.size());
         if (spectrum->index != i) throw runtime_error("[IO::write(SpectrumList)] Bad index.");
         write(writer, *spectrum, msd, config);
     }

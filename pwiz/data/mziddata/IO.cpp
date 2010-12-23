@@ -325,7 +325,7 @@ struct HandlerString : public SAXParser::Handler
 {
     string* str;
     
-    HandlerString(string* str_ = 0) : str(str_) {}
+    HandlerString(string* str_ = 0) : str(str_) {parseCharacters = true;}
     virtual ~HandlerString() {}
     
     virtual Status startElement(const string& name, 
@@ -501,7 +501,11 @@ struct HandlerDBSequence : public HandlerIdentifiableType
     bool inSeq;
 
     HandlerDBSequence(DBSequence* _ds = 0)
-        : ds(_ds), inSeq(false) {}
+        : ds(_ds), inSeq(false)
+    {
+        parseCharacters = true;
+        autoUnescapeCharacters = false;
+    }
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
@@ -756,7 +760,11 @@ struct HandlerPeptide : public HandlerIdentifiableType
     bool inPeptideSequence;
     Peptide* peptide;
     HandlerPeptide(Peptide* _peptide = 0)
-        : inPeptideSequence(false), peptide(_peptide) {}
+        : inPeptideSequence(false), peptide(_peptide)
+    {
+        parseCharacters = true;
+        autoUnescapeCharacters = false;
+    }
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
@@ -1881,7 +1889,10 @@ struct HandlerEnzyme : public SAXParser::Handler
     bool inSiteRegexp;
     HandlerEnzyme(Enzyme* _ez = 0)
         : ez(_ez), inSiteRegexp(false),
-          handlerNamedParamContainer_("EnzymeName") {}
+          handlerNamedParamContainer_("EnzymeName")
+    {
+        parseCharacters = true;
+    }
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
@@ -3017,7 +3028,9 @@ struct HandlerSpectraData : public HandlerIdentifiableType
         : inExternalFormatDocumentation(false), sd(_sd),
           handlerFileFormat_("fileFormat"),
           handlerSpectrumIDFormat_("spectrumIDFormat")
-    {}
+    {
+        parseCharacters = true;
+    }
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
@@ -3263,7 +3276,9 @@ struct HandlerSourceFile : public HandlerIdentifiableType
     HandlerSourceFile(SourceFile* _sf = 0)
         : inExternalFormatDocumentation(false), sf(_sf),
           handlerFileFormat_("fileFormat")
-    {}
+    {
+        parseCharacters = true;
+    }
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,

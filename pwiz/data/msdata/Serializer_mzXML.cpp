@@ -430,12 +430,14 @@ vector<PrecursorInfo> getPrecursorInfo(const Spectrum& spectrum,
             // mzXML scanNumber takes a different form depending on the source's nativeID format
             info.scanNum = id::translateNativeIDToScanNumber(nativeIdFormat, it->spectrumID);
         }
+
         if (!it->selectedIons.empty())
         { 
             info.mz = it->selectedIons[0].cvParam(MS_selected_ion_m_z).value;
             info.intensity = it->selectedIons[0].cvParam(MS_peak_intensity).value;
             info.charge = it->selectedIons[0].cvParam(MS_charge_state).value;
         }
+
         if (!it->activation.empty())
         {
             if (it->activation.hasCVParam(MS_ETD))
@@ -443,9 +445,7 @@ vector<PrecursorInfo> getPrecursorInfo(const Spectrum& spectrum,
                 info.activation = "ETD";
 
                 if (it->activation.hasCVParam(MS_CID))
-                {
                     info.activation += "+SA";
-                }
             }
             else if (it->activation.hasCVParam(MS_ECD))
             {
@@ -485,7 +485,7 @@ void write_precursors(XMLWriter& xmlWriter, const vector<PrecursorInfo>& precurs
         if(!it->activation.empty())
             attributes.push_back(make_pair("activationMethod", it->activation));
         xmlWriter.startElement("precursorMz", attributes);
-        xmlWriter.characters(it->mz);
+        xmlWriter.characters(it->mz, false);
         xmlWriter.endElement();
     }
 
@@ -524,7 +524,7 @@ void write_peaks(XMLWriter& xmlWriter, const vector<MZIntensityPair>& mzIntensit
     xmlWriter.pushStyle(XMLWriter::StyleFlag_InlineInner |
                         XMLWriter::StyleFlag_AttributesOnMultipleLines);
     xmlWriter.startElement("peaks", attributes);
-    xmlWriter.characters(encoded);
+    xmlWriter.characters(encoded, false);
     xmlWriter.endElement();
     xmlWriter.popStyle();
 }
@@ -702,7 +702,7 @@ void write_index(XMLWriter& xmlWriter, const vector<IndexEntry>& index)
         XMLWriter::Attributes entryAttributes;
         entryAttributes.push_back(make_pair("id", lexical_cast<string>(it->scanNumber)));
         xmlWriter.startElement("offset", entryAttributes);
-        xmlWriter.characters(lexical_cast<string>(it->offset));
+        xmlWriter.characters(lexical_cast<string>(it->offset), false);
         xmlWriter.endElement(); // offset
     }
     xmlWriter.popStyle();
@@ -743,14 +743,14 @@ void Serializer_mzXML::Impl::write(ostream& os, const MSData& msd,
 
         xmlWriter.pushStyle(XMLWriter::StyleFlag_InlineInner);
         xmlWriter.startElement("indexOffset");
-        xmlWriter.characters(lexical_cast<string>(indexOffset));
+        xmlWriter.characters(lexical_cast<string>(indexOffset), false);
         xmlWriter.endElement();
         xmlWriter.popStyle();
     }
 
     xmlWriter.pushStyle(XMLWriter::StyleFlag_InlineInner);
     xmlWriter.startElement("sha1");
-    xmlWriter.characters(sha1OutputObserver.hash());
+    xmlWriter.characters(sha1OutputObserver.hash(), false);
     xmlWriter.endElement();
     xmlWriter.popStyle();
 

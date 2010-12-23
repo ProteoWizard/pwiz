@@ -111,7 +111,10 @@ struct HandlerPrecursor : public SAXParser::Handler
 
     HandlerPrecursor()
     :   precursor(0)
-    {}
+    {
+        parseCharacters = true;
+        autoUnescapeCharacters = false;
+    }
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
@@ -177,7 +180,10 @@ class HandlerPeaks : public SAXParser::Handler
 
     HandlerPeaks(Spectrum& spectrum)
     :   peaksCount(0), spectrum_(spectrum)
-    {}
+    {
+        parseCharacters = true;
+        autoUnescapeCharacters = false;
+    }
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
@@ -555,7 +561,10 @@ class HandlerIndexOffset : public SAXParser::Handler
 
     HandlerIndexOffset(stream_offset& indexOffset)
     :   indexOffset_(indexOffset)
-    {}
+    {
+        parseCharacters = true;
+        autoUnescapeCharacters = false;
+    }
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
@@ -585,7 +594,11 @@ struct HandlerOffset : public SAXParser::Handler
 
     HandlerOffset(const MSData& msd)
         :   spectrumIdentity(0),
-            nativeIdFormat(id::getDefaultNativeIDFormat(msd)) {}
+            nativeIdFormat(id::getDefaultNativeIDFormat(msd))
+    {
+        parseCharacters = true;
+        autoUnescapeCharacters = false;
+    }
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
@@ -625,7 +638,10 @@ class HandlerIndex : public SAXParser::Handler
 
     HandlerIndex(vector<SpectrumIdentity>& index, const MSData& msd)
     :   index_(index), handlerOffset_(msd)
-    {}
+    {
+        parseCharacters = true;
+        autoUnescapeCharacters = false;
+    }
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
