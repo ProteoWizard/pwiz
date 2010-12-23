@@ -46,7 +46,7 @@ class PWIZ_API_DECL IterationListener
         size_t iterationIndex;
         size_t iterationCount; // 0 == unknown
 
-        UpdateMessage(size_t index, size_t count, const std::string& message = "") 
+        UpdateMessage(size_t index, size_t count, const std::string& message = std::string()) 
         :   iterationIndex(index), iterationCount(count), message(message)
         {}
     };
