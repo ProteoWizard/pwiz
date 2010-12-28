@@ -247,7 +247,7 @@ void testPeptideEvidence()
     a.frame = 0;
     a.isDecoy = true;
     a.missedCleavages = 0;
-    a.paramGroup.set(MS_mascot_score, 15.71);
+    a.paramGroup.set(MS_Mascot_score, 15.71);
     b = a;
 
     diff(a,b);
@@ -262,7 +262,7 @@ void testPeptideEvidence()
     b.frame = 1;
     b.isDecoy = false;
     b.missedCleavages = 1;
-    b.paramGroup.set(MS_mascot_expectation_value, 0.0268534444565851);
+    b.paramGroup.set(MS_Mascot_expectation_value, 0.0268534444565851);
 
     diff(a, b);
     if (os_) *os_ << diff << endl;
@@ -295,7 +295,7 @@ void testPeptideEvidence()
     unit_assert_equal(diff.b_a.missedCleavages, 1.0, epsilon);
     unit_assert(diff.a_b.paramGroup.cvParams.size() == 0);
     unit_assert(diff.b_a.paramGroup.cvParams.size() == 1);
-    unit_assert(diff.b_a.paramGroup.hasCVParam(MS_mascot_expectation_value));
+    unit_assert(diff.b_a.paramGroup.hasCVParam(MS_Mascot_expectation_value));
 
 }
 
@@ -308,14 +308,14 @@ void testProteinAmbiguityGroup()
 
     a.proteinDetectionHypothesis.push_back(ProteinDetectionHypothesisPtr(new ProteinDetectionHypothesis));
     a.proteinDetectionHypothesis.back()->dbSequencePtr = DBSequencePtr(new DBSequence("DBSequence_ref"));
-    a.paramGroup.set(MS_mascot_score, 164.4);
+    a.paramGroup.set(MS_Mascot_score, 164.4);
     b = a;
 
     Diff<ProteinAmbiguityGroup, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     b.proteinDetectionHypothesis.clear();
-    b.paramGroup.set(MS_mascot_expectation_value, 0.0268534444565851);
+    b.paramGroup.set(MS_Mascot_expectation_value, 0.0268534444565851);
 
     diff(a, b);
     if (os_) *os_ << diff << endl;
@@ -329,7 +329,7 @@ void testProteinAmbiguityGroup()
     unit_assert(diff.a_b.proteinDetectionHypothesis.back()->dbSequencePtr->id == "DBSequence_ref");
     unit_assert(diff.a_b.paramGroup.cvParams.size() == 0);
     unit_assert(diff.b_a.paramGroup.cvParams.size() == 1);
-    unit_assert(diff.b_a.paramGroup.hasCVParam(MS_mascot_expectation_value)); // TODO check vals also?
+    unit_assert(diff.b_a.paramGroup.hasCVParam(MS_Mascot_expectation_value)); // TODO check vals also?
 
 }
 
@@ -348,7 +348,7 @@ void testProteinDetectionHypothesis()
     b.passThreshold = false;
     a.peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence("marjoram")));
     b.peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence("thyme")));
-    a.paramGroup.set(MS_mascot_expectation_value);
+    a.paramGroup.set(MS_Mascot_expectation_value);
 
     diff(a,b);
     if (os_) *os_ << diff << endl;
@@ -369,7 +369,7 @@ void testProteinDetectionHypothesis()
     unit_assert(diff.b_a.peptideHypothesis.back()->id ==  "thyme");
     unit_assert(diff.a_b.paramGroup.cvParams.size() == 1);
     unit_assert(diff.b_a.paramGroup.cvParams.size() == 0);
-    unit_assert(diff.a_b.paramGroup.hasCVParam(MS_mascot_expectation_value));
+    unit_assert(diff.a_b.paramGroup.hasCVParam(MS_Mascot_expectation_value));
 
 }
 
@@ -385,11 +385,11 @@ void testSpectrumIdentificationList()
     b.numSequencesSearched = 5;
 
     MeasurePtr testMeasure(new Measure());
-    testMeasure->paramGroup.set(MS_mascot_expectation_value);
+    testMeasure->paramGroup.set(MS_Mascot_expectation_value);
     a.fragmentationTable.push_back(testMeasure);
 
     SpectrumIdentificationResultPtr testSIRPtr(new SpectrumIdentificationResult());
-    testSIRPtr->paramGroup.set(MS_mascot_expectation_value);
+    testSIRPtr->paramGroup.set(MS_Mascot_expectation_value);
     a.spectrumIdentificationResult.push_back(testSIRPtr);
 
     diff(a,b);
@@ -403,10 +403,10 @@ void testSpectrumIdentificationList()
     unit_assert_equal(diff.b_a.numSequencesSearched,5.0,epsilon);
     unit_assert(diff.a_b.fragmentationTable.size() == 1);
     unit_assert(diff.b_a.fragmentationTable.size() == 0);
-    unit_assert(diff.a_b.fragmentationTable.back()->paramGroup.hasCVParam(MS_mascot_expectation_value));
+    unit_assert(diff.a_b.fragmentationTable.back()->paramGroup.hasCVParam(MS_Mascot_expectation_value));
     unit_assert(diff.a_b.spectrumIdentificationResult.size() == 1);
     unit_assert(diff.b_a.spectrumIdentificationResult.size() == 0);
-    unit_assert(diff.a_b.spectrumIdentificationResult.back()->paramGroup.hasCVParam(MS_mascot_expectation_value));
+    unit_assert(diff.a_b.spectrumIdentificationResult.back()->paramGroup.hasCVParam(MS_Mascot_expectation_value));
 
 }
 
@@ -420,7 +420,7 @@ void testProteinDetectionList()
     unit_assert(!diff);
 
     a.proteinAmbiguityGroup.push_back(ProteinAmbiguityGroupPtr(new ProteinAmbiguityGroup()));
-    a.proteinAmbiguityGroup.back()->paramGroup.set(MS_mascot_expectation_value, 0.0268534444565851);
+    a.proteinAmbiguityGroup.back()->paramGroup.set(MS_Mascot_expectation_value, 0.0268534444565851);
     a.paramGroup.set(MS_frag__z_ion);
     b.paramGroup.set(MS_frag__b_ion);
 
@@ -433,7 +433,7 @@ void testProteinDetectionList()
     // and correctly
     unit_assert(diff.a_b.proteinAmbiguityGroup.size() == 1);
     unit_assert(diff.b_a.proteinAmbiguityGroup.size() == 0);
-    unit_assert(diff.a_b.proteinAmbiguityGroup.back()->paramGroup.hasCVParam(MS_mascot_expectation_value));
+    unit_assert(diff.a_b.proteinAmbiguityGroup.back()->paramGroup.hasCVParam(MS_Mascot_expectation_value));
     unit_assert(diff.a_b.paramGroup.cvParams.size() == 1);
     unit_assert(diff.b_a.paramGroup.cvParams.size() == 1);
     unit_assert(diff.a_b.paramGroup.hasCVParam(MS_frag__z_ion));
