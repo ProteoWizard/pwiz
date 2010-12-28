@@ -2175,7 +2175,8 @@ void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList, const 
         // write the spectrum
 
         SpectrumPtr spectrum = spectrumList.spectrum(i, true);
-        BOOST_ASSERT(spectrum->defaultArrayLength == spectrum->binaryDataArrayPtrs[0]->data.size());
+        BOOST_ASSERT(spectrum->binaryDataArrayPtrs.empty() ||
+                     spectrum->defaultArrayLength == spectrum->getMZArray()->data.size());
         if (spectrum->index != i) throw runtime_error("[IO::write(SpectrumList)] Bad index.");
         write(writer, *spectrum, msd, config);
     }
