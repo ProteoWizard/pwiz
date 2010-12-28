@@ -893,8 +893,8 @@ AnalysisSoftwarePtr findSoftware(const vector<AnalysisSoftwarePtr>& software,
 CVParam guessThreshold(const vector<AnalysisSoftwarePtr>& software)
 {
     static const CVID cvids[][2] = {
-        {MS_Mascot, MS_mascot_score},
-        {MS_Sequest, MS_sequest_probability},
+        {MS_Mascot, MS_Mascot_score},
+        {MS_Sequest, MS_Sequest_probability},
         {MS_Phenyx, MS_Phenyx_Score},
         {CVID_Unknown, CVID_Unknown}
     };
@@ -914,7 +914,7 @@ CVParam guessThreshold(const vector<AnalysisSoftwarePtr>& software)
     // TODO put a reasonable default here and a reasonable way to set it.
     if (cvparam.cvid == CVID_Unknown)
     {
-        cvparam.cvid = MS_mascot_score;
+        cvparam.cvid = MS_Mascot_score;
         cvparam.value = "0.05";
     }
     
@@ -1191,15 +1191,15 @@ CVID Pep2MzIdent::Impl::cvidFromSearchScore(const string& name)
     {
         if (iequals(name, "ionscore"))
         {
-            id = MS_mascot_score;
+            id = MS_Mascot_score;
         }
         else if (iequals(name, "identityscore"))
         {
-            id = MS_mascot_identity_threshold;
+            id = MS_Mascot_identity_threshold;
         }
         else if (iequals(name, "expect"))
         {
-            id = MS_mascot_expectation_value;
+            id = MS_Mascot_expectation_value;
         }
     }
 
@@ -1290,12 +1290,12 @@ void Pep2MzIdent::Impl::translateSearch(const SearchSummaryPtr summary,
     // TODO this goes in the analysis software section, I think.
     /*
     if (iends_with(summary->baseName, ".dat") &&
-        iequals(summary->searchEngine, "mascot"))
+        iequals(summary->searchEngine, "Mascot"))
         searchDatabase->fileFormat.set(MS_Mascot_DAT_file);
-    else if (iequals(summary->searchEngine, "sequest"))
+    else if (iequals(summary->searchEngine, "Sequest"))
         searchDatabase->fileFormat.set(MS_Sequest_out_file);
-    else if (iequals(summary->searchEngine, "xtandem"))
-        searchDatabase->fileFormat.set(MS_xtandem_xml_file);
+    else if (iequals(summary->searchEngine, "X_Tandem"))
+        searchDatabase->fileFormat.set(MS_X_Tandem_xml_file);
     */
     
     mzid->dataCollection.inputs.searchDatabase.push_back(searchDatabase);
@@ -1310,16 +1310,16 @@ CVID Pep2MzIdent::Impl::mapToNearestSoftware(const string& softwareName,
 {
     // TODO clean this up and move the patterns into a separate class
     // as we get more patterns.
-    static regex xtandemMod("[xX][\\!]?[ ]*[Tt]andem[ ]*[\\(]?([^\\)]*)[\\)]?");
+    static regex X_TandemMod("[xX][\\!]?[ ]*[Tt]andem[ ]*[\\(]?([^\\)]*)[\\)]?");
     
     CVID cvid = getCVID(softwareName);
 
     if (cvid == CVID_Unknown)
     {
         smatch what;
-        if (regex_match(softwareName, what, xtandemMod))
+        if (regex_match(softwareName, what, X_TandemMod))
         {
-            cvid = MS_xtandem;
+            cvid = MS_X_Tandem;
 
             // HACK: smatch.size() is never 0
             if (what.size()>1 && // If there's at least 1 match
@@ -1932,7 +1932,7 @@ void Pep2MzIdent::Impl::lateParameters(ParameterPtr parameter,
         pdp->threshold.cvParams.push_back(cvparam);
         pdp->analysisSoftwarePtr = findSoftware(mzid->analysisSoftwareList,
                                                 cvparam.cvid);
-        pdp->analysisParams.set(MS_mascot_MaxProteinHits, parameter->value);
+        pdp->analysisParams.set(MS_Mascot_MaxProteinHits, parameter->value);
     }
     
     // TODO stick the rest in UserParam objects somewhere.
@@ -1995,11 +1995,11 @@ CVID Pep2MzIdent::Impl::getCVID(const string& name)
 
     if (id == CVID_Unknown)
     {
-        if (iequals(name, "mascot"))
+        if (iequals(name, "Mascot"))
         {
             id = MS_Mascot;
         }
-        else if (iequals(name, "sequest"))
+        else if (iequals(name, "Sequest"))
         {
             id = MS_Sequest;
         }

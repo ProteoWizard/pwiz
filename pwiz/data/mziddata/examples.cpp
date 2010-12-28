@@ -68,7 +68,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     mzid.analysisSoftwareList.push_back(analysisSoftwarePtr);
 
     analysisSoftwarePtr = AnalysisSoftwarePtr(new AnalysisSoftware());
-    analysisSoftwarePtr->id="AS_mascot_server";
+    analysisSoftwarePtr->id="AS_Mascot_server";
     analysisSoftwarePtr->name="Mascot Server";
     analysisSoftwarePtr->version="2.2.101";
     analysisSoftwarePtr->URI="http://www.matrixscience.com/search_form_select.html";
@@ -82,7 +82,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     mzid.analysisSoftwareList.push_back(analysisSoftwarePtr);
 
     analysisSoftwarePtr = AnalysisSoftwarePtr(new AnalysisSoftware());
-    analysisSoftwarePtr->id = "AS_mascot_parser";
+    analysisSoftwarePtr->id = "AS_Mascot_parser";
     analysisSoftwarePtr->name = "Mascot Parser";
     analysisSoftwarePtr->softwareName.set(MS_Mascot_Parser);
     mzid.analysisSoftwareList.push_back(analysisSoftwarePtr);
@@ -199,7 +199,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
 
     SpectrumIdentificationProtocolPtr sip(new SpectrumIdentificationProtocol());
     sip->id="SIP";
-    sip->analysisSoftwarePtr=AnalysisSoftwarePtr(new AnalysisSoftware("AS_mascot_server"));
+    sip->analysisSoftwarePtr=AnalysisSoftwarePtr(new AnalysisSoftware("AS_Mascot_server"));
     sip->searchType.set(MS_ms_ms_search);
     sip->additionalSearchParams.set(MS_parent_mass_type_mono);
     sip->additionalSearchParams.set(MS_param__a_ion);
@@ -245,7 +245,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     sip->parentTolerance.set(MS_search_tolerance_plus_value, "3", UO_dalton);
     sip->parentTolerance.set(MS_search_tolerance_minus_value, "3", UO_dalton);
 
-    sip->threshold.set(MS_mascot_SigThreshold, "0.05");
+    sip->threshold.set(MS_Mascot_SigThreshold, "0.05");
     
     FilterPtr fp(new Filter());
     fp->filterType.set(MS_DB_filter_taxonomy);
@@ -255,18 +255,18 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
 
     ProteinDetectionProtocolPtr pdp(new ProteinDetectionProtocol());
     pdp->id="PDP_MascotParser_1";
-    pdp->analysisSoftwarePtr=AnalysisSoftwarePtr(new AnalysisSoftware("AS_mascot_parser"));
-    pdp->analysisParams.set(MS_mascot_SigThreshold, "0.05");
-    pdp->analysisParams.set(MS_mascot_MaxProteinHits, "Auto");
-    pdp->analysisParams.set(MS_mascot_ProteinScoringMethod, "MudPIT");
-    pdp->analysisParams.set(MS_mascot_MinMSMSThreshold, "0");
-    pdp->analysisParams.set(MS_mascot_ShowHomologousProteinsWithSamePeptides, "1");
-    pdp->analysisParams.set(MS_mascot_ShowHomologousProteinsWithSubsetOfPeptides, "1");
-    pdp->analysisParams.set(MS_mascot_RequireBoldRed, "0");
-    pdp->analysisParams.set(MS_mascot_UseUnigeneClustering, "false");
-    pdp->analysisParams.set(MS_mascot_IncludeErrorTolerantMatches, "1");
-    pdp->analysisParams.set(MS_mascot_ShowDecoyMatches, "0");
-    pdp->threshold.set(MS_mascot_SigThreshold, "0.05", CVID_Unknown);
+    pdp->analysisSoftwarePtr=AnalysisSoftwarePtr(new AnalysisSoftware("AS_Mascot_parser"));
+    pdp->analysisParams.set(MS_Mascot_SigThreshold, "0.05");
+    pdp->analysisParams.set(MS_Mascot_MaxProteinHits, "Auto");
+    pdp->analysisParams.set(MS_Mascot_ProteinScoringMethod, "MudPIT");
+    pdp->analysisParams.set(MS_Mascot_MinMSMSThreshold, "0");
+    pdp->analysisParams.set(MS_Mascot_ShowHomologousProteinsWithSamePeptides, "1");
+    pdp->analysisParams.set(MS_Mascot_ShowHomologousProteinsWithSubsetOfPeptides, "1");
+    pdp->analysisParams.set(MS_Mascot_RequireBoldRed, "0");
+    pdp->analysisParams.set(MS_Mascot_UseUnigeneClustering, "false");
+    pdp->analysisParams.set(MS_Mascot_IncludeErrorTolerantMatches, "1");
+    pdp->analysisParams.set(MS_Mascot_ShowDecoyMatches, "0");
+    pdp->threshold.set(MS_Mascot_SigThreshold, "0.05", CVID_Unknown);
     mzid.analysisProtocolCollection.proteinDetectionProtocol.push_back(pdp);
 
 
@@ -282,7 +282,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     SearchDatabasePtr searchDb(new SearchDatabase());
     searchDb->id="SDB_5peptideMix";
     searchDb->name="5peptideMix";
-    searchDb->location="file:///c:/inetpub/mascot/sequence/5peptideMix/current/5peptideMix_20090515.fasta";
+    searchDb->location="file:///c:/inetpub/Mascot/sequence/5peptideMix/current/5peptideMix_20090515.fasta";
     searchDb->numDatabaseSequences=5;
     searchDb->numResidues=52;
     searchDb->releaseDate="5peptideMix_20090515.fasta";
@@ -294,7 +294,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     searchDb = SearchDatabasePtr(new SearchDatabase());
     searchDb->id="SDB_SwissProt";
     searchDb->name="SwissProt";
-    searchDb->location="file:///C:/inetpub/mascot/sequence/SwissProt/current/SwissProt_51.6.fasta";
+    searchDb->location="file:///C:/inetpub/Mascot/sequence/SwissProt/current/SwissProt_51.6.fasta";
     searchDb->numDatabaseSequences=5;
     searchDb->numResidues=52;
     searchDb->releaseDate="SwissProt_51.6.fasta";
@@ -345,8 +345,8 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     siip->peptidePtr=PeptidePtr(new Peptide("peptide_1_1"));
     siip->rank=1;
     siip->passThreshold=true;
-    siip->paramGroup.set(MS_mascot_score, "15.71");
-    siip->paramGroup.set(MS_mascot_expectation_value, "0.0268534444565851");
+    siip->paramGroup.set(MS_Mascot_score, "15.71");
+    siip->paramGroup.set(MS_Mascot_expectation_value, "0.0268534444565851");
 
     PeptideEvidencePtr pep(new PeptideEvidence());
     pep->id="PE_1_1_Neurotensin";
@@ -396,8 +396,8 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     pep->dbSequencePtr=DBSequencePtr(new DBSequence("DBSeq_HSP71_RAT"));
     siip->peptideEvidence.push_back(pep);
     
-    siip->paramGroup.set(MS_mascot_score, "15.71");
-    siip->paramGroup.set(MS_mascot_expectation_value, 0.0268534444565851);
+    siip->paramGroup.set(MS_Mascot_score, "15.71");
+    siip->paramGroup.set(MS_Mascot_expectation_value, 0.0268534444565851);
 
     IonTypePtr ionType(new IonType());
     ionType->setIndex("2 3 4 5 6 7").charge=1;
@@ -423,7 +423,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     pdhp->passThreshold=true;
     pdhp->peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence("PE_19_1_Bombessin_0")));
     pdhp->peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence("PE_20_1_Bombessin_0")));
-    pdhp->paramGroup.set(MS_mascot_score, "164.4");
+    pdhp->paramGroup.set(MS_Mascot_score, "164.4");
     pdhp->paramGroup.set(MS_sequence_coverage, "100");
     pdhp->paramGroup.set(MS_distinct_peptide_sequences, "7");
     pagp->proteinDetectionHypothesis.push_back(pdhp);
@@ -433,7 +433,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     pdhp->dbSequencePtr=DBSequencePtr(new DBSequence("DBSeq_HSP71_RAT"));
     pdhp->passThreshold="false";
     pdhp->peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence("PE_2_1_HSP71_RAT_0")));
-    pdhp->paramGroup.set(MS_mascot_score, "40.95");
+    pdhp->paramGroup.set(MS_Mascot_score, "40.95");
     pdhp->paramGroup.set(MS_sequence_coverage, "2");
     pdhp->paramGroup.set(MS_distinct_peptide_sequences, "1");
     pdhp->paramGroup.set(MS_manual_validation);

@@ -1,5 +1,5 @@
 format-version: 1.2
-date: 11:02:2010 10:12
+date: 14:03:2010 10:12
 saved-by: George Gkoutos
 auto-generated-by: OBO-Edit 2.000-beta55
 subsetdef: abnormal_slim "Abnormal/normal slim"
@@ -141,6 +141,7 @@ id: UO:0000017
 name: micrometer
 def: "A length unit which is equal to one millionth of a meter or 10^[-6] m." [NIST:NIST "http://physics.nist.gov/cuu/Units/"]
 synonym: "um" EXACT []
+synonym: "micron" EXACT []
 is_a: UO:0000001 ! length unit
 
 [Term]
@@ -1621,7 +1622,7 @@ is_a: UO:0000225 ! magnetic flux
 
 [Term]
 id: UO:0000227
-name: magnetic flux density
+name: magnetic flux density unit
 def: "A derived unit which is a standard measure of the strength of a magnetic field." [allnet:allnet "www.all.net/books/standards/remnants/glo.html"]
 synonym: "B" EXACT []
 is_a: UO:0000046 ! derived unit
@@ -1714,9 +1715,9 @@ is_a: UO:0000239 ! spatial resolution unit
 
 [Term]
 id: UO:0000241
-name: micron
+name: micron pixel
 def: "A spatial resolution unit which is equal to a pixel size of one micrometer." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
-synonym: "micrometer" EXACT []
+synonym: "micrometer pixel" EXACT []
 is_a: UO:0000239 ! spatial resolution unit
 
 [Term]
@@ -1850,6 +1851,7 @@ relationship: unit_of PATO:0001521 ! sound amplitude
 [Term]
 id: UO:0000260
 name: effective dose unit
+def: "A derived unit which is a standard measure of the estimate of the stochastic effect that a non-uniform radiation dose has on a human." [Wikipedia:Wikipedia "http://www.wikipedia.org"]
 is_a: UO:0000127 ! radiation unit
 relationship: unit_of PATO:0001747 ! radiation effective dose
 
@@ -1923,6 +1925,31 @@ synonym: "AU" EXACT []
 is_a: UO:0000186 ! dimensionless unit
 created_by: gg295
 creation_date: 2009-07-14T12:33:48Z
+
+[Term]
+id: UO:0000270
+name: volumetric flow rate unit
+def: "A derived unit which is a standard measure of the volume of fluid which passes through a given surface per unit time ." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
+is_a: UO:0000046 ! derived unit
+relationship: unit_of PATO:0001574 ! flow
+created_by: george gkoutos
+
+[Term]
+id: UO:0000271
+name: microliters per minute
+def: "A volumetric flow rate unit which is equal to one microliter volume through a given surface in one minute." [PATOC:GVG]
+synonym: "uL/min" EXACT []
+is_a: UO:0000270 ! volumetric flow rate unit
+created_by: george gkoutos
+
+[Term]
+id: UO:0000272
+name: millimetres of mercury
+def: "A unit of pressure equal to the amount of fluid pressure one millimeter deep in mercury at zero degrees centigrade on Earth." [url:en.wiktionary.org/wiki/mmHg]
+synonym: "mmHg" EXACT []
+is_a: UO:0000109 ! pressure unit
+created_by: george gkoutos
+
 
 [Typedef]
 id: decreased_in_magnitude_relative_to

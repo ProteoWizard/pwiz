@@ -319,71 +319,71 @@ CVID DelimReader::Impl::mapScore(const string& value)
     if (value.empty() || value == "")
         return MS_search_engine_specific_score_for_peptides;
 
-    // {MS_sequest_probability, MS_search_engine_specific_score_for_peptides},
-    else if (value ==  "MS:1001154" || value == "sequest:probability")
-        return MS_sequest_probability;
-    //{MS_sequest_xcorr,
+    // {MS_Sequest_probability, MS_search_engine_specific_score_for_peptides},
+    else if (value ==  "MS:1001154" || value == "Sequest:probability")
+        return MS_Sequest_probability;
+    //{MS_Sequest_xcorr,
     //MS_search_engine_specific_score_for_peptides},
-    else if (value == "MS:1001155" || value == "sequest:xcorr")
-        return MS_sequest_xcorr;
+    else if (value == "MS:1001155" || value == "Sequest:xcorr")
+        return MS_Sequest_xcorr;
 
-    //{MS_sequest_deltacn,
+    //{MS_Sequest_deltacn,
     //MS_search_engine_specific_score_for_peptides},
-    else if (value == "MS:1001156" || value == "sequest:deltacn")
-        return MS_sequest_deltacn;
+    else if (value == "MS:1001156" || value == "Sequest:deltacn")
+        return MS_Sequest_deltacn;
     
-    //{MS_sequest_sf, MS_search_engine_specific_score_for_peptides},
-    else if (value == "MS:1001160" || value == "sequest:sf")
-        return MS_sequest_sf;
+    //{MS_Sequest_sf, MS_search_engine_specific_score_for_peptides},
+    else if (value == "MS:1001160" || value == "Sequest:sf")
+        return MS_Sequest_sf;
     
-    //{MS_sequest_matched_ions,
+    //{MS_Sequest_matched_ions,
     //MS_search_engine_specific_score_for_peptides},
-    else if (value == "MS:1001161" || value == "sequest:matched ions")
-        return MS_sequest_matched_ions;
+    else if (value == "MS:1001161" || value == "Sequest:matched ions")
+        return MS_Sequest_matched_ions;
     
-    //{MS_sequest_total_ions,
+    //{MS_Sequest_total_ions,
     //MS_search_engine_specific_score_for_peptides},
-    else if (value == "MS:1001162" || value == "sequest:total ions")
-        return MS_sequest_total_ions;
+    else if (value == "MS:1001162" || value == "Sequest:total ions")
+        return MS_Sequest_total_ions;
     
-    //{MS_mascot_score, MS_search_engine_specific_score_for_peptides},
-    else if (value == "MS:1001171" || value == "mascot:score")
-        return MS_mascot_score;
+    //{MS_Mascot_score, MS_search_engine_specific_score_for_peptides},
+    else if (value == "MS:1001171" || value == "Mascot:score")
+        return MS_Mascot_score;
     
-    //{MS_mascot_expectation_value,
+    //{MS_Mascot_expectation_value,
     //MS_search_engine_specific_score_for_peptides},
-    else if (value == "MS:1001172" || value == "mascot:expectation value")
-        return MS_mascot_expectation_value;
+    else if (value == "MS:1001172" || value == "Mascot:expectation value")
+        return MS_Mascot_expectation_value;
     
-    //{MS_mascot_matched_ions,
+    //{MS_Mascot_matched_ions,
     //MS_search_engine_specific_score_for_peptides},
-    else if (value == "MS:1001173" || value == "mascot:matched ions")
-        return MS_mascot_matched_ions;
+    else if (value == "MS:1001173" || value == "Mascot:matched ions")
+        return MS_Mascot_matched_ions;
     
-    //{MS_mascot_total_ions,
+    //{MS_Mascot_total_ions,
     //MS_search_engine_specific_score_for_peptides},
-    else if (value == "MS:1001174" || value == "mascot:total ions")
-        return MS_mascot_total_ions;
+    else if (value == "MS:1001174" || value == "Mascot:total ions")
+        return MS_Mascot_total_ions;
     
-    //{MS_sequest_PeptideSp,
+    //{MS_Sequest_PeptideSp,
     //MS_search_engine_specific_score_for_peptides},
-    else if (value == "MS:1001215" || value == "sequest:PeptideSp")
-        return MS_sequest_PeptideSp;
+    else if (value == "MS:1001215" || value == "Sequest:PeptideSp")
+        return MS_Sequest_PeptideSp;
     
-    //{MS_sequest_PeptideRankSp,
+    //{MS_Sequest_PeptideRankSp,
     //MS_search_engine_specific_score_for_peptides},
-    else if (value == "MS:1001217" || value == "sequest:PeptideRankSp")
-        return MS_sequest_PeptideRankSp;
+    else if (value == "MS:1001217" || value == "Sequest:PeptideRankSp")
+        return MS_Sequest_PeptideRankSp;
     
-    //{MS_sequest_PeptideNumber,
+    //{MS_Sequest_PeptideNumber,
     //MS_search_engine_specific_score_for_peptides},
-    else if (value == "MS:1001217" || value == "sequest:PeptideRankSp")
-        return MS_sequest_PeptideRankSp;
+    else if (value == "MS:1001217" || value == "Sequest:PeptideRankSp")
+        return MS_Sequest_PeptideRankSp;
     
-    //{MS_sequest_PeptideIdnumber,
+    //{MS_Sequest_PeptideIdnumber,
     //MS_search_engine_specific_score_for_peptides},
-    else if (value == "MS:1001219" || value == "sequest:PeptideIdnumber")
-        return MS_sequest_PeptideIdnumber;
+    else if (value == "MS:1001219" || value == "Sequest:PeptideIdnumber")
+        return MS_Sequest_PeptideIdnumber;
     
     //{MS_OMSSA_evalue, MS_search_engine_specific_score_for_peptides},
     else if (value == "MS:1001328" || value == "OMSSA:evalue")
@@ -393,25 +393,25 @@ CVID DelimReader::Impl::mapScore(const string& value)
     else if (value == "MS:1001329" || value == "OMSSA:pvalue")
         return MS_OMSSA_pvalue;
     
-    //{MS_xtandem_expect,
+    //{MS_X_Tandem_expect,
     //MS_search_engine_specific_score_for_peptides},
-    else if (value == "MS:1001330" || value == "xtandem:expect")
-        return MS_xtandem_expect;
+    else if (value == "MS:1001330" || value == "X!Tandem:expect")
+        return MS_X_Tandem_expect;
     
-    //{MS_xtandem_hyperscore,
+    //{MS_X_Tandem_hyperscore,
     //MS_search_engine_specific_score_for_peptides},
-    else if (value == "MS:1001331" || value == "xtandem:hyperscore")
-        return MS_xtandem_hyperscore;
+    else if (value == "MS:1001331" || value == "X!Tandem:hyperscore")
+        return MS_X_Tandem_hyperscore;
     
-    //{MS_mascot_homology_threshold,
+    //{MS_Mascot_homology_threshold,
     //MS_search_engine_specific_score_for_peptides},
-    else if (value == "MS:1001370" || value == "mascot:homology threshold")
-        return MS_mascot_homology_threshold;
+    else if (value == "MS:1001370" || value == "Mascot:homology threshold")
+        return MS_Mascot_homology_threshold;
     
-    //{MS_mascot_identity_threshold,
+    //{MS_Mascot_identity_threshold,
     //MS_search_engine_specific_score_for_peptides},
-    else if (value == "MS:1001371" || value == "mascot:identity threshold")
-        return MS_mascot_identity_threshold;
+    else if (value == "MS:1001371" || value == "Mascot:identity threshold")
+        return MS_Mascot_identity_threshold;
     
     //{MS_Phenyx_Auto, MS_search_engine_specific_score_for_peptides},
     else if (value == "MS:1001393" || value == "Phenyx:Auto")
@@ -529,10 +529,10 @@ CVID DelimReader::Impl::mapScore(const string& value)
     else if (value == "MS:1001506" || value == "ProteinScape:SequestMetaScore")
         return MS_ProteinScape_SequestMetaScore;
     
-    //{MS_Scaffold__Peptide_Probability,
+    //{MS_Scaffold_Peptide_Probability,
     //MS_search_engine_specific_score_for_peptides},
     else if (value == "ProteinScape:SequestMetaScore" || value == "Scaffold: Peptide Probability")
-        return MS_Scaffold__Peptide_Probability;
+        return MS_Scaffold_Peptide_Probability;
     
     //{MS_IdentityE_Score,
     //MS_search_engine_specific_score_for_peptides},
@@ -542,22 +542,22 @@ CVID DelimReader::Impl::mapScore(const string& value)
     //{MS_ProteinLynx__Log_Likelihood,
     //MS_search_engine_specific_score_for_peptides},
     else if (value == "MS:1001570" || value == "ProteinLynx: Log Likelihood")
-        return MS_ProteinLynx__Log_Likelihood;
+        return MS_ProteinLynx_Log_Likelihood;
     
-    //{MS_ProteinLynx__Ladder_Score,
+    //{MS_ProteinLynx_Ladder_Score,
     //MS_search_engine_specific_score_for_peptides},
     else if (value == "MS:1001571" || value == "ProteinLynx: Ladder Score")
-        return MS_ProteinLynx__Ladder_Score;
+        return MS_ProteinLynx_Ladder_Score;
     
-    //{MS_SpectrumMill__Score,
+    //{MS_SpectrumMill_Score,
     //MS_search_engine_specific_score_for_peptides},
     else if (value == "MS:1001572" || value == "SpectrumMill: Score")
-        return MS_SpectrumMill__Score;
+        return MS_SpectrumMill_Score;
     
-    //{MS_SpectrumMill__SPI,
+    //{MS_SpectrumMill_SPI,
     //MS_search_engine_specific_score_for_peptides},
     else if (value == "MS:1001573" || value == "SpectrumMill: SPI")
-        return MS_SpectrumMill__SPI;
+        return MS_SpectrumMill_SPI;
     
     //{MS_ProteinScape_ProfoundProbability,
     //MS_search_engine_specific_score_for_peptides},

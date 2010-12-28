@@ -492,7 +492,7 @@ void testSpectrumIdentificationProtocol()
     a.massTable.msLevel = "2";
     a.fragmentTolerance.set(MS_search_tolerance_plus_value, "0.6", UO_dalton);
     a.parentTolerance.set(MS_search_tolerance_plus_value, "3", UO_dalton);
-    a.threshold.set(MS_mascot_SigThreshold, "0.05");
+    a.threshold.set(MS_Mascot_SigThreshold, "0.05");
 
     FilterPtr b(new Filter());
     b->filterType.set(MS_DB_filter_taxonomy);
@@ -509,8 +509,8 @@ void testProteinDetectionProtocol()
     a.id = "id";
     a.id="PDP_MascotParser_1";
     a.analysisSoftwarePtr = AnalysisSoftwarePtr(new AnalysisSoftware("ref"));
-    a.analysisParams.set(MS_mascot_SigThreshold, "0.05");
-    a.threshold.set(MS_mascot_SigThreshold, "0.05", CVID_Unknown);
+    a.analysisParams.set(MS_Mascot_SigThreshold, "0.05");
+    a.threshold.set(MS_Mascot_SigThreshold, "0.05", CVID_Unknown);
 
     testObject(a);
 }
@@ -661,7 +661,7 @@ void testPeptideEvidence()
     a.isDecoy = true;
     a.missedCleavages = 4;
     
-    a.paramGroup.set(MS_mascot_score, "15.71");
+    a.paramGroup.set(MS_Mascot_score, "15.71");
 
     testObject(a);
 }
@@ -692,7 +692,7 @@ void testSpectrumIdentificationItem()
     c->charge = 5;
     a.fragmentation.push_back(c);
 
-    a.paramGroup.set(MS_mascot_score, "15.71");
+    a.paramGroup.set(MS_Mascot_score, "15.71");
     
     testObject(a);
 }
@@ -711,7 +711,7 @@ void testSpectrumIdentificationResult()
     b->chargeState = 1;
     a.spectrumIdentificationItem.push_back(b);
     
-    a.paramGroup.set(MS_mascot_score, "15.71");
+    a.paramGroup.set(MS_Mascot_score, "15.71");
 
     testObject(a);
 }
@@ -726,7 +726,7 @@ void testProteinDetectionHypothesis()
     a.passThreshold = "pt";
 
     a.peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence("test")));
-    a.paramGroup.set(MS_mascot_score, "164.4");
+    a.paramGroup.set(MS_Mascot_score, "164.4");
 
     testObject(a);
 }
@@ -740,7 +740,7 @@ void testProteinAmbiguityGroup()
     ProteinDetectionHypothesisPtr b(new ProteinDetectionHypothesis());
     b->dbSequencePtr = DBSequencePtr(new DBSequence("dbs_ref"));
     a.proteinDetectionHypothesis.push_back(b);
-    a.paramGroup.set(MS_mascot_score, "164.4");
+    a.paramGroup.set(MS_Mascot_score, "164.4");
 
     testObject(a);
 }
@@ -754,7 +754,7 @@ void testSpectrumIdentificationList()
     a.numSequencesSearched = 1;
 
     MeasurePtr b(new Measure());
-    b->paramGroup.set(MS_mascot_score, "164.4");
+    b->paramGroup.set(MS_Mascot_score, "164.4");
     a.fragmentationTable.push_back(b);
     
     SpectrumIdentificationResultPtr c(new SpectrumIdentificationResult());
@@ -774,7 +774,7 @@ void testProteinDetectionList()
     ProteinAmbiguityGroupPtr b(new ProteinAmbiguityGroup());
     a.proteinAmbiguityGroup.push_back(b);
 
-    a.paramGroup.set(MS_mascot_score, "164.4");
+    a.paramGroup.set(MS_Mascot_score, "164.4");
 
     testObject(a);
 }
@@ -790,7 +790,7 @@ void testAnalysisData()
     a.spectrumIdentificationList.push_back(b);
 
     a.proteinDetectionListPtr = ProteinDetectionListPtr(new ProteinDetectionList("id2"));
-    a.proteinDetectionListPtr->paramGroup.set(MS_mascot_score, "164.4");
+    a.proteinDetectionListPtr->paramGroup.set(MS_Mascot_score, "164.4");
 
     testObject(a);
 }

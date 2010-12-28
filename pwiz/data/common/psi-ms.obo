@@ -4,8 +4,8 @@ saved-by: edeutsch
 auto-generated-by: OBO-Edit 1.101
 default-namespace: MS
 remark: namespace: MS
-remark: version: 2.38.0
-remark: release date: 2010-08-11
+remark: version: 2.39.0
+remark: release date: 2010-12-22
 remark: coverage: Mass spectrometer output files and spectra interpretation
 remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
@@ -4073,7 +4073,7 @@ is_a: MS:1000560 ! mass spectrometer file format
 [Term]
 id: MS:1000615
 name: ProteoWizard
-def: "ProteoWizard software for data analysis. Currently developed and maintained by Darren Kessner at Parag Mallick's lab (Center for Applied Molecular Medicine at the University of Southern California)." [PSI:MS]
+def: "ProteoWizard software for data processing and analysis. Primarily developed by the labs of P. Malick and D. Tabb." [PSI:MS]
 synonym: "pwiz" EXACT []
 is_a: MS:1001456 ! analysis software
 is_a: MS:1001457 ! data processing software
@@ -6254,25 +6254,25 @@ relationship: part_of MS:0000000 ! Proteomics Standards Initiative Mass Spectrom
 
 [Term]
 id: MS:1001005
-name: sequest:CleavesAt
+name: Sequest:CleavesAt
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001006
-name: sequest:ViewCV
+name: Sequest:ViewCV
 def: "Branch containing the CV terms for Sequest View Input Parameters." [PSI:PI]
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001007
-name: sequest:OutputLines
+name: Sequest:OutputLines
 xref: value-type:xsd\:nonNegativeInteger "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001009
-name: sequest:DescriptionLines
+name: Sequest:DescriptionLines
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
@@ -6381,7 +6381,7 @@ is_a: MS:1001011 ! search database details
 
 [Term]
 id: MS:1001026
-name: sequest:NormalizeXCorrValues
+name: Sequest:NormalizeXCorrValues
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
@@ -6393,7 +6393,7 @@ is_a: MS:1001511 ! Sequence database filter types
 
 [Term]
 id: MS:1001028
-name: sequest:SequenceHeaderFilter
+name: Sequest:SequenceHeaderFilter
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
@@ -6420,7 +6420,7 @@ is_a: MS:1001080 ! search type
 
 [Term]
 id: MS:1001032
-name: sequest:SequencePartialFilter
+name: Sequest:SequencePartialFilter
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
@@ -6440,16 +6440,16 @@ is_a: MS:1001184 ! search statistics
 
 [Term]
 id: MS:1001037
-name: sequest:ShowFragmentIons
+name: Sequest:ShowFragmentIons
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001038
-name: sequest:Consensus
+name: Sequest:Consensus
 def: "Specify depth as value of the CVParam!" [PSI:PI]
 xref: value-type:xsd\:positiveInteger "The allowed value-type for this CV term."
-is_a: MS:1001006 ! sequest:ViewCV
+is_a: MS:1001006 ! Sequest:ViewCV
 
 [Term]
 id: MS:1001040
@@ -6459,13 +6459,13 @@ is_a: MS:1001459 ! file format
 
 [Term]
 id: MS:1001041
-name: sequest:sortCV
+name: Sequest:sortCV
 def: "Branch containing the CV terms for Sequest View / Sort Input Parameters." [PSI:PI]
-is_a: MS:1001006 ! sequest:ViewCV
+is_a: MS:1001006 ! Sequest:ViewCV
 
 [Term]
 id: MS:1001042
-name: sequest:LimitTo
+name: Sequest:LimitTo
 def: "Specify \"number of dtas shown\" as value of the CVParam!" [PSI:PI]
 xref: value-type:xsd\:positiveInteger "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
@@ -6484,33 +6484,33 @@ is_a: MS:1001044 ! cleavage agent details
 
 [Term]
 id: MS:1001046
-name: sequest:sort_by_dCn
+name: Sequest:sort_by_dCn
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
-is_a: MS:1001041 ! sequest:sortCV
+is_a: MS:1001041 ! Sequest:sortCV
 
 [Term]
 id: MS:1001047
-name: sequest:sort_by_dM
+name: Sequest:sort_by_dM
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
-is_a: MS:1001041 ! sequest:sortCV
+is_a: MS:1001041 ! Sequest:sortCV
 
 [Term]
 id: MS:1001048
-name: sequest:sort_by_Ions
+name: Sequest:sort_by_Ions
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
-is_a: MS:1001041 ! sequest:sortCV
+is_a: MS:1001041 ! Sequest:sortCV
 
 [Term]
 id: MS:1001049
-name: sequest:sort_by_MH+
+name: Sequest:sort_by_MH+
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
-is_a: MS:1001041 ! sequest:sortCV
+is_a: MS:1001041 ! Sequest:sortCV
 
 [Term]
 id: MS:1001050
-name: sequest:sort_by_P
+name: Sequest:sort_by_P
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
-is_a: MS:1001041 ! sequest:sortCV
+is_a: MS:1001041 ! Sequest:sortCV
 
 [Term]
 id: MS:1001051
@@ -6522,15 +6522,15 @@ is_obsolete: true
 
 [Term]
 id: MS:1001052
-name: sequest:sort_by_PreviousAminoAcid
+name: Sequest:sort_by_PreviousAminoAcid
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
-is_a: MS:1001041 ! sequest:sortCV
+is_a: MS:1001041 ! Sequest:sortCV
 
 [Term]
 id: MS:1001053
-name: sequest:sort_by_Ref
+name: Sequest:sort_by_Ref
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
-is_a: MS:1001041 ! sequest:sortCV
+is_a: MS:1001041 ! Sequest:sortCV
 
 [Term]
 id: MS:1001055
@@ -6559,9 +6559,9 @@ is_a: MS:1001060 ! quality estimation method details
 
 [Term]
 id: MS:1001059
-name: sequest:sort_by_RSp
+name: Sequest:sort_by_RSp
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
-is_a: MS:1001041 ! sequest:sortCV
+is_a: MS:1001041 ! Sequest:sortCV
 
 [Term]
 id: MS:1001060
@@ -6596,33 +6596,33 @@ is_a: MS:1001249 ! search input details
 
 [Term]
 id: MS:1001068
-name: sequest:sort_by_Sp
+name: Sequest:sort_by_Sp
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
-is_a: MS:1001041 ! sequest:sortCV
+is_a: MS:1001041 ! Sequest:sortCV
 
 [Term]
 id: MS:1001069
-name: sequest:sort_by_TIC
+name: Sequest:sort_by_TIC
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
-is_a: MS:1001041 ! sequest:sortCV
+is_a: MS:1001041 ! Sequest:sortCV
 
 [Term]
 id: MS:1001070
-name: sequest:sort_by_Scan
+name: Sequest:sort_by_Scan
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
-is_a: MS:1001041 ! sequest:sortCV
+is_a: MS:1001041 ! Sequest:sortCV
 
 [Term]
 id: MS:1001071
-name: sequest:sort_by_Sequence
+name: Sequest:sort_by_Sequence
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
-is_a: MS:1001041 ! sequest:sortCV
+is_a: MS:1001041 ! Sequest:sortCV
 
 [Term]
 id: MS:1001072
-name: sequest:sort_by_Sf
+name: Sequest:sort_by_Sf
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
-is_a: MS:1001041 ! sequest:sortCV
+is_a: MS:1001041 ! Sequest:sortCV
 
 [Term]
 id: MS:1001073
@@ -6673,13 +6673,13 @@ is_a: MS:1001405 ! spectrum identification result details
 
 [Term]
 id: MS:1001086
-name: sequest:sort_by_XCorr
+name: Sequest:sort_by_XCorr
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
-is_a: MS:1001041 ! sequest:sortCV
+is_a: MS:1001041 ! Sequest:sortCV
 
 [Term]
 id: MS:1001087
-name: sequest:ProcessCV
+name: Sequest:ProcessCV
 def: "Branch containing the CV terms for Sequest View / Process Input Parameters." [PSI:PI]
 is_a: MS:1001302 ! search engine specific input parameter
 
@@ -6730,22 +6730,22 @@ is_a: MS:1001116 ! single protein result details
 
 [Term]
 id: MS:1001094
-name: sequest:sort_by_z
+name: Sequest:sort_by_z
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
-is_a: MS:1001041 ! sequest:sortCV
+is_a: MS:1001041 ! Sequest:sortCV
 
 [Term]
 id: MS:1001095
-name: sequest:ProcessAll
+name: Sequest:ProcessAll
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
-is_a: MS:1001087 ! sequest:ProcessCV
+is_a: MS:1001087 ! Sequest:ProcessCV
 
 [Term]
 id: MS:1001096
-name: sequest:TopPercentMostIntense
+name: Sequest:TopPercentMostIntense
 def: "Specify \"percentage\" as value of the CVParam!" [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001087 ! sequest:ProcessCV
+is_a: MS:1001087 ! Sequest:ProcessCV
 
 [Term]
 id: MS:1001097
@@ -6783,15 +6783,15 @@ is_a: MS:1001085 ! protein result details
 
 [Term]
 id: MS:1001102
-name: sequest:Chromatogram
+name: Sequest:Chromatogram
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
-is_a: MS:1001006 ! sequest:ViewCV
+is_a: MS:1001006 ! Sequest:ViewCV
 
 [Term]
 id: MS:1001103
-name: sequest:InfoAndLog
+name: Sequest:InfoAndLog
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
-is_a: MS:1001006 ! sequest:ViewCV
+is_a: MS:1001006 ! Sequest:ViewCV
 
 [Term]
 id: MS:1001104
@@ -6806,10 +6806,10 @@ is_a: MS:1001405 ! spectrum identification result details
 
 [Term]
 id: MS:1001106
-name: sequest:TopNumber
+name: Sequest:TopNumber
 def: "Specify \"number\" as value of the CVParam!" [PSI:PI]
 xref: value-type:xsd\:positiveInteger "The allowed value-type for this CV term."
-is_a: MS:1001087 ! sequest:ProcessCV
+is_a: MS:1001087 ! Sequest:ProcessCV
 
 [Term]
 id: MS:1001107
@@ -6824,22 +6824,22 @@ is_a: MS:1001066 ! ions series considered in search
 
 [Term]
 id: MS:1001109
-name: sequest:CullTo
+name: Sequest:CullTo
 def: "Specify cull string as value of the CVParam!" [PSI:PI]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
-is_a: MS:1001087 ! sequest:ProcessCV
+is_a: MS:1001087 ! Sequest:ProcessCV
 
 [Term]
 id: MS:1001110
-name: sequest:modeCV
+name: Sequest:modeCV
 def: "Branch containing the CV terms for Sequest Mode Input Parameters." [PSI:PI]
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001111
-name: sequest:Full
+name: Sequest:Full
 xref: value-type:xsd\:bool "The allowed value-type for this CV term."
-is_a: MS:1001110 ! sequest:modeCV
+is_a: MS:1001110 ! Sequest:modeCV
 
 [Term]
 id: MS:1001112
@@ -6898,9 +6898,9 @@ is_a: MS:1001066 ! ions series considered in search
 
 [Term]
 id: MS:1001120
-name: sequest:FormatAndLinks
+name: Sequest:FormatAndLinks
 xref: value-type:xsd\:bool "The allowed value-type for this CV term."
-is_a: MS:1001110 ! sequest:modeCV
+is_a: MS:1001110 ! Sequest:modeCV
 
 [Term]
 id: MS:1001121
@@ -6939,9 +6939,9 @@ is_a: MS:1001198 ! protein quality estimation measure
 
 [Term]
 id: MS:1001126
-name: sequest:Fast
+name: Sequest:Fast
 xref: value-type:xsd\:bool "The allowed value-type for this CV term."
-is_a: MS:1001110 ! sequest:modeCV
+is_a: MS:1001110 ! Sequest:modeCV
 
 [Term]
 id: MS:1001127
@@ -6951,7 +6951,7 @@ is_a: MS:1001105 ! peptide result details
 
 [Term]
 id: MS:1001128
-name: sequest:selectCV
+name: Sequest:selectCV
 def: "Branch containing the CV terms for Sequest Select Input Parameters." [PSI:PI]
 is_a: MS:1001302 ! search engine specific input parameter
 
@@ -7050,14 +7050,14 @@ is_a: MS:1001105 ! peptide result details
 
 [Term]
 id: MS:1001144
-name: sequest:SelectDefault
-is_a: MS:1001128 ! sequest:selectCV
+name: Sequest:SelectDefault
+is_a: MS:1001128 ! Sequest:selectCV
 
 [Term]
 id: MS:1001145
-name: TODOsequest:SelectAdvancedCV
+name: TODOSequest:SelectAdvancedCV
 def: "Branch containing the CV terms for Sequest Select Advanced Input Parameters." [PSI:PI]
-is_a: MS:1001128 ! sequest:selectCV
+is_a: MS:1001128 ! Sequest:selectCV
 
 [Term]
 id: MS:1001146
@@ -7105,7 +7105,7 @@ is_a: MS:1001405 ! spectrum identification result details
 
 [Term]
 id: MS:1001154
-name: sequest:probability
+name: Sequest:probability
 def: "The SEQUEST result 'Probability'." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for peptides
@@ -7113,7 +7113,7 @@ is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001155
-name: sequest:xcorr
+name: Sequest:xcorr
 def: "The SEQUEST result 'Xcorr'." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for peptides
@@ -7121,7 +7121,7 @@ is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001156
-name: sequest:deltacn
+name: Sequest:deltacn
 def: "The SEQUEST result 'DeltaCn'." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for peptides
@@ -7129,7 +7129,7 @@ is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001157
-name: sequest:sp
+name: Sequest:sp
 def: "The SEQUEST result 'Sp' (protein)." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001116 ! single protein result details
@@ -7137,21 +7137,21 @@ is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001158
-name: sequest:Uniq
+name: Sequest:Uniq
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001116 ! single protein result details
 is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001159
-name: sequest:expectation value
+name: Sequest:expectation value
 def: "The SEQUEST result 'Expectation value'." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001160
-name: sequest:sf
+name: Sequest:sf
 def: "The SEQUEST result 'Sf'." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for peptides
@@ -7159,7 +7159,7 @@ is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001161
-name: sequest:matched ions
+name: Sequest:matched ions
 def: "The SEQUEST result 'Matched Ions'." [PSI:PI]
 xref: value-type:xsd\:integer "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for peptides
@@ -7167,7 +7167,7 @@ is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001162
-name: sequest:total ions
+name: Sequest:total ions
 def: "The SEQUEST result 'Total Ions'." [PSI:PI]
 xref: value-type:xsd\:integer "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for peptides
@@ -7175,14 +7175,14 @@ is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001163
-name: sequest:consensus score
+name: Sequest:consensus score
 def: "The SEQUEST result 'Consensus Score'." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001164
-name: paragon:unused protscore
+name: Paragon:unused protscore
 def: "The Paragon result 'Unused ProtScore'." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001147 ! protein ambiguity group result details
@@ -7190,7 +7190,7 @@ is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001165
-name: paragon:total protscore
+name: Paragon:total protscore
 def: "The Paragon result 'Total ProtScore'." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001147 ! protein ambiguity group result details
@@ -7198,42 +7198,42 @@ is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001166
-name: paragon:score
+name: Paragon:score
 def: "The Paragon result 'Score'." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001167
-name: paragon:confidence
+name: Paragon:confidence
 def: "The Paragon result 'Confidence'." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001168
-name: paragon:expression error factor
+name: Paragon:expression error factor
 def: "The Paragon result 'Expression Error Factor'." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001169
-name: paragon:expression change p-value
+name: Paragon:expression change p-value
 def: "The Paragon result 'Expression change P-value'." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001170
-name: paragon:contrib
+name: Paragon:contrib
 def: "The Paragon result 'Contrib'." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001171
-name: mascot:score
+name: Mascot:score
 def: "The Mascot result 'Score'." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001116 ! single protein result details
@@ -7242,7 +7242,7 @@ is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001172
-name: mascot:expectation value
+name: Mascot:expectation value
 def: "The Mascot result 'expectation value'." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001116 ! single protein result details
@@ -7251,7 +7251,7 @@ is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001173
-name: mascot:matched ions
+name: Mascot:matched ions
 def: "The Mascot result 'Matched ions'." [PSI:PI]
 xref: value-type:xsd\:nonNegativeInteger "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for peptides
@@ -7259,7 +7259,7 @@ is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001174
-name: mascot:total ions
+name: Mascot:total ions
 def: "The Mascot result 'Total ions'." [PSI:PI]
 xref: value-type:xsd\:nonNegativeInteger "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for peptides
@@ -7455,7 +7455,7 @@ is_a: MS:1001405 ! spectrum identification result details
 
 [Term]
 id: MS:1001215
-name: sequest:PeptideSp
+name: Sequest:PeptideSp
 def: "The SEQUEST result 'Sp' in out file (peptide)." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for peptides
@@ -7463,7 +7463,7 @@ is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001217
-name: sequest:PeptideRankSp
+name: Sequest:PeptideRankSp
 def: "The SEQUEST result 'Sp' of 'Rank/Sp' in out file (peptide). Also called 'rsp'." [PSI:PI]
 xref: value-type:xsd\:integer "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for peptides
@@ -7471,7 +7471,7 @@ is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001218
-name: sequest:PeptideNumber
+name: Sequest:PeptideNumber
 def: "The SEQUEST result '#' in out file (peptide)." [PSI:PI]
 xref: value-type:xsd\:integer "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for peptides
@@ -7479,7 +7479,7 @@ is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001219
-name: sequest:PeptideIdnumber
+name: Sequest:PeptideIdnumber
 def: "The SEQUEST result 'Id#' in out file (peptide)." [PSI:PI]
 xref: value-type:xsd\:integer "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for peptides
@@ -7979,61 +7979,61 @@ relationship: has_regexp MS:1001341 ! (?<=[EZ])(?!P)
 
 [Term]
 id: MS:1001316
-name: mascot:SigThreshold
+name: Mascot:SigThreshold
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001317
-name: mascot:MaxProteinHits
+name: Mascot:MaxProteinHits
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001318
-name: mascot:ProteinScoringMethod
+name: Mascot:ProteinScoringMethod
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001319
-name: mascot:MinMSMSThreshold
+name: Mascot:MinMSMSThreshold
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001320
-name: mascot:ShowHomologousProteinsWithSamePeptides
+name: Mascot:ShowHomologousProteinsWithSamePeptides
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001321
-name: mascot:ShowHomologousProteinsWithSubsetOfPeptides
+name: Mascot:ShowHomologousProteinsWithSubsetOfPeptides
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001322
-name: mascot:RequireBoldRed
+name: Mascot:RequireBoldRed
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001323
-name: mascot:UseUnigeneClustering
+name: Mascot:UseUnigeneClustering
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001324
-name: mascot:IncludeErrorTolerantMatches
+name: Mascot:IncludeErrorTolerantMatches
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001325
-name: mascot:ShowDecoyMatches
+name: Mascot:ShowDecoyMatches
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
@@ -8061,7 +8061,7 @@ is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001330
-name: xtandem:expect
+name: X\!Tandem:expect
 def: "The X!Tandem expectation value." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for peptides
@@ -8069,7 +8069,7 @@ is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001331
-name: xtandem:hyperscore
+name: X\!Tandem:hyperscore
 def: "The X!Tandem hyperscore." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for peptides
@@ -8297,7 +8297,7 @@ is_a: MS:1000560 ! mass spectrometer file format
 
 [Term]
 id: MS:1001370
-name: mascot:homology threshold
+name: Mascot:homology threshold
 def: "The Mascot result 'homology threshold'." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for peptides
@@ -8306,7 +8306,7 @@ is_a: MS:1001405 ! spectrum identification result details
 
 [Term]
 id: MS:1001371
-name: mascot:identity threshold
+name: Mascot:identity threshold
 def: "The Mascot result 'identity threshold'." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001116 ! single protein result details
@@ -8316,21 +8316,21 @@ is_a: MS:1001405 ! spectrum identification result details
 
 [Term]
 id: MS:1001372
-name: sequest:Sequences
+name: Sequest:Sequences
 xref: value-type:xsd\:positiveInteger "The allowed value-type for this CV term."
 is_a: MS:1001116 ! single protein result details
 is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001373
-name: sequest:TIC
+name: Sequest:TIC
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001116 ! single protein result details
 is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001374
-name: sequest:Sum
+name: Sequest:Sum
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001116 ! single protein result details
 is_a: MS:1001153 ! search engine specific score
@@ -8506,7 +8506,7 @@ is_a: MS:1001040 ! intermediate analysis format
 
 [Term]
 id: MS:1001401
-name: xtandem xml file
+name: X\!Tandem xml file
 def: "Source file for this mzIdentML was an X!Tandem xml file." [PSI:PI]
 is_a: MS:1001040 ! intermediate analysis format
 
@@ -8970,7 +8970,7 @@ is_a: MS:1001456 ! analysis software
 
 [Term]
 id: MS:1001476
-name: xtandem
+name: X\!Tandem
 def: "X!Tandem was used to analyze the spectra." [PSI:PI]
 is_a: MS:1001456 ! analysis software
 
@@ -9553,7 +9553,7 @@ is_a: MS:1001040 ! intermediate analysis format
 
 [Term]
 id: MS:1001568
-name: Scaffold: Peptide Probability
+name: Scaffold:Peptide Probability
 def: "Scaffold peptide probability score." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for peptides
@@ -9569,7 +9569,7 @@ is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001570
-name: ProteinLynx: Log Likelihood
+name: ProteinLynx:Log Likelihood
 def: "ProteinLynx log likelihood score." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for peptides
@@ -9577,7 +9577,7 @@ is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001571
-name: ProteinLynx: Ladder Score
+name: ProteinLynx:Ladder Score
 def: "Waters ProteinLynx Ladder score." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for peptides
@@ -9585,7 +9585,7 @@ is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001572
-name: SpectrumMill: Score
+name: SpectrumMill:Score
 def: "Spectrum mill peptide score." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for peptides
@@ -9593,7 +9593,7 @@ is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001573
-name: SpectrumMill: SPI
+name: SpectrumMill:SPI
 def: "SpectrumMill SPI score (%)." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for peptides
@@ -9635,14 +9635,14 @@ is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001579
-name: Scaffold: Protein Probability
+name: Scaffold:Protein Probability
 def: "Scaffold protein probability score." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001116 ! single protein result details
 
 [Term]
 id: MS:1001580
-name: SpectrumMill: Discriminant Score
+name: SpectrumMill:Discriminant Score
 def: "Discriminant score from Agilent SpectrumMill software." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for peptides
@@ -9674,6 +9674,48 @@ id: MS:1001584
 name: combined pmf + ms-ms search
 def: "Search that includes data from Peptide Mass Fingerprint (PMF) and MS/MS (aka Peptide Fragment Fingerprint - PFF)." [PSI:MS]
 is_a: MS:1001080 ! search type
+
+[Term]
+id: MS:1001585
+name: MyriMatch
+def: "Tabb Lab software for directly comparing peptides in a database to tandem mass spectra." [PSI:MS]
+is_a: MS:1001456 ! analysis software
+
+[Term]
+id: MS:1001586
+name: DirecTag
+def: "Tabb Lab software for generating sequence tags from tandem mass spectra." [PSI:MS]
+is_a: MS:1001456 ! analysis software
+
+[Term]
+id: MS:1001587
+name: TagRecon
+def: "Tabb Lab software for reconciling sequence tags to a protein database." [PSI:MS]
+is_a: MS:1001456 ! analysis software
+
+[Term]
+id: MS:1001588
+name: Pepitome
+def: "Tabb Lab software for spectral library searches on tandem mass spectra." [PSI:MS]
+is_a: MS:1001456 ! analysis software
+
+[Term]
+id: MS:1001589
+name: MyriMatch:MVH
+def: "Using the multivariate hypergeometric distribution and a peak list divided into several intensity classes, this score is the negative natural log probability that the predicted peaks matched to experimental peaks by random chance." [PSI:MS]
+synonym: "TagRecon:MVH" EXACT []
+synonym: "Pepitome:MVH" EXACT []
+is_a: MS:1001143 ! search engine specific score for peptides
+is_a: MS:1001153 ! search engine specific score
+
+[Term]
+id: MS:1001590
+name: MyriMatch:mzFidelity
+def: "The negative natural log probability that predicted peaks match to experimental peaks by random chance by scoring the m/z delta of the matches in a multinomial distribution." [PSI:MS]
+synonym: "TagRecon:mzFidelity" EXACT []
+synonym: "Pepitome:mzFidelity" EXACT []
+is_a: MS:1001143 ! search engine specific score for peptides
+is_a: MS:1001153 ! search engine specific score
 
 [Typedef]
 id: has_regexp
