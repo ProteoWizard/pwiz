@@ -42,6 +42,8 @@ namespace pwiz.Skyline.Model
                     RemoveRepeatedPeptides = true;
             }
         }
+
+        public IEnumerable<string> AcceptedPeptides { get; set; }
         public bool RemoveRepeatedPeptides { get; set; }
         public int? MinTransitionsPepPrecursor { get; set; }
         public IsotopeLabelType RefineLabelType { get; set; }
@@ -69,6 +71,8 @@ namespace pwiz.Skyline.Model
 
             HashSet<string> includedPeptides = (RemoveRepeatedPeptides ? new HashSet<string>() : null);
             HashSet<string> repeatedPeptides = (RemoveDuplicatePeptides ? new HashSet<string>() : null);
+            HashSet<string> acceptedPeptides = (AcceptedPeptides != null ?
+                new HashSet<string>(AcceptedPeptides) : null);
 
             var listPepGroups = new List<PeptideGroupDocNode>();
             // Excluding proteins with too few peptides, since they can impact results
@@ -77,7 +81,8 @@ namespace pwiz.Skyline.Model
             foreach (PeptideGroupDocNode nodePepGroup in document.Children)
             {
                 PeptideGroupDocNode nodePepGroupRefined =
-                    Refine(nodePepGroup, document, outlierIds, includedPeptides, repeatedPeptides);
+                    Refine(nodePepGroup, document, outlierIds,
+                        includedPeptides, repeatedPeptides, acceptedPeptides);
 
                 if (nodePepGroupRefined.Children.Count < minPeptides)
                     continue;
@@ -116,18 +121,22 @@ namespace pwiz.Skyline.Model
             return (SrmDocument) document.ChangeChildrenChecked(listPepGroups.ToArray(), true);
         }
 
-// ReSharper disable SuggestBaseTypeForParameter
         private PeptideGroupDocNode Refine(PeptideGroupDocNode nodePepGroup,
-// ReSharper restore SuggestBaseTypeForParameter
                                            SrmDocument document,
                                            ICollection<int> outlierIds,
                                            ICollection<string> includedPeptides,
-                                           ICollection<string> repeatedPeptides)
+                                           ICollection<string> repeatedPeptides,
+                                           ICollection<string> acceptedPeptides)
         {
             var listPeptides = new List<PeptideDocNode>();
             foreach (PeptideDocNode nodePep in nodePepGroup.Children)
             {
                 if (outlierIds.Contains(nodePep.Id.GlobalIndex))
+                    continue;
+
+                // If there is a set of accepted peptides, and this is not one of them
+                // then skip it.
+                if (acceptedPeptides != null && !acceptedPeptides.Contains(nodePep.Peptide.Sequence))
                     continue;
 
                 int bestResultIndex = (UseBestResult ? nodePep.BestResult : -1);

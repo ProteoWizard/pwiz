@@ -1446,6 +1446,19 @@ namespace pwiz.Skyline
             ModifyDocument("Remove repeated peptides", refinementSettings.Refine);
         }
 
+        private void acceptPeptidesMenuItem_Click(object sender, EventArgs e)
+        {
+            var dlg = new RefineListDlg(DocumentUI);
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+            {
+                var refinementSettings = new RefinementSettings{ AcceptedPeptides = dlg.AcceptedPeptides };
+                if (dlg.RemoveEmptyProteins)
+                    refinementSettings.MinPeptidesPerProtein = 1;
+
+                ModifyDocument("Accept peptides", refinementSettings.Refine);
+            }
+        }
+
         private void removeMissingResultsMenuItem_Click(object sender, EventArgs e)
         {
             RemoveMissingResults();

@@ -317,6 +317,7 @@ namespace pwiz.Skyline
             this.peptideCvsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator28 = new System.Windows.Forms.ToolStripSeparator();
             this.areaPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.acceptPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuMain.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.contextMenuTreeNode.SuspendLayout();
@@ -717,6 +718,7 @@ namespace pwiz.Skyline
             this.removeEmptyProteinsMenuItem,
             this.removeDuplicatePeptidesMenuItem,
             this.removeRepeatedPeptidesMenuItem,
+            this.acceptPeptidesMenuItem,
             this.removeMissingResultsMenuItem,
             this.toolStripSeparator35,
             this.refineAdvancedMenuItem});
@@ -2751,6 +2753,13 @@ namespace pwiz.Skyline
             this.areaPropsContextMenuItem.Text = "Properties...";
             this.areaPropsContextMenuItem.Click += new System.EventHandler(this.areaPropsContextMenuItem_Click);
             // 
+            // acceptPeptidesMenuItem
+            // 
+            this.acceptPeptidesMenuItem.Name = "acceptPeptidesMenuItem";
+            this.acceptPeptidesMenuItem.Size = new System.Drawing.Size(218, 22);
+            this.acceptPeptidesMenuItem.Text = "A&ccept Peptides...";
+            this.acceptPeptidesMenuItem.Click += new System.EventHandler(this.acceptPeptidesMenuItem_Click);
+            // 
             // SkylineWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -3076,6 +3085,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem defaultTextToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem largeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem extraLargeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem acceptPeptidesMenuItem;
     }
 }
 
