@@ -2577,6 +2577,7 @@ namespace pwiz.Skyline
             bool enabled = (nodeTree != null || sequenceTree.SelectedNodes.Count > 1);
             cutToolBarButton.Enabled = cutMenuItem.Enabled = enabled;
             copyToolBarButton.Enabled = copyMenuItem.Enabled = enabled;
+            pasteToolBarButton.Enabled = pasteMenuItem.Enabled = true;
             deleteMenuItem.Enabled = enabled;
         }
 

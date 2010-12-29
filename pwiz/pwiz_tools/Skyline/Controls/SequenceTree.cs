@@ -49,7 +49,6 @@ namespace pwiz.Skyline.Controls
         private bool _focus;
         private bool _sawDoubleClick;
         private bool _triggerLabelEdit;
-        private string _viewedLabel;
         private string _editedLabel;
         private int _resultsIndex;
         private int _ratioIndex;
@@ -846,11 +845,6 @@ namespace pwiz.Skyline.Controls
 
         protected override void OnBeforeLabelEdit(NodeLabelEditEventArgs e)
         {
-            // Put node label to initial state to ensure that in case of label editing cancelled
-            // the initial state of label is preserved
-
-            SelectedNode.Text = _viewedLabel;
-
             // Statement completion UI now handles editing, so cancel the default
             // tree node label edit behavior.
             e.CancelEdit = true;
@@ -1033,7 +1027,6 @@ namespace pwiz.Skyline.Controls
         public void StartLabelEdit(bool commitOnLoseFocus)
         {
             TreeNode node = SelectedNode;
-            _viewedLabel = node.Text;
             if (BeforeNodeEdit != null)
                 BeforeNodeEdit(this, new NodeLabelEditEventArgs(node));
             _editedLabel = node.Text;
