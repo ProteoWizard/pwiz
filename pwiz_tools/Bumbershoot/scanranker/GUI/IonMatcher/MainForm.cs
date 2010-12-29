@@ -51,8 +51,8 @@ namespace IonMatcher
 
             //tbSrcDir.Text = @"C:\Documents and Settings\maz\My Documents\IonMatch-test;";
             //tbOutDir.Text = @"C:\Documents and Settings\maz\My Documents\IonMatch-test";
-            tbSpecFile.Text = @"C:\Documents and Settings\maz\My Documents\test\mzXMLs\mam_20100301o_Project85_JensKraus_Antibody_Fab_A_10x.mzML";
-            tbMetricsFile.Text = @"C:\Documents and Settings\maz\My Documents\test\mzXMLs\mam_20100301o_Project85_JensKraus_Antibody_Fab_A_10x-ScanRankerMetrics-Labeled.txt";
+            //tbSpecFile.Text = @"C:\Documents and Settings\maz\My Documents\test\mzXMLs\mam_20100301o_Project85_JensKraus_Antibody_Fab_A_10x.mzML";
+            //tbMetricsFile.Text = @"C:\Documents and Settings\maz\My Documents\test\mzXMLs\mam_20100301o_Project85_JensKraus_Antibody_Fab_A_10x-ScanRankerMetrics-Labeled.txt";
         }
 
         public static string OpenFileBrowseDialog(string sPrevFile)
