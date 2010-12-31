@@ -27,9 +27,14 @@
 #include "pwiz/utility/minimxml/SAXParser.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/chemistry/Ion.hpp"
+#include "pwiz/data/msdata/MSData.hpp"
 #include "pwiz/data/proteome/AminoAcid.hpp"
 #include "pwiz/data/common/CVTranslator.hpp"
+#include "boost/utility/singleton.hpp"
+#include "boost/xpressive/xpressive.hpp"
+#include <cstring>
 
 
 namespace pwiz {
@@ -42,20 +47,620 @@ using namespace pwiz::minimxml;
 using namespace pwiz::chemistry;
 using namespace pwiz::proteome;
 using namespace pwiz::util;
+using namespace pwiz::cv;
 
 
-void Serializer_pepXML::write(ostream& os, const MzIdentML& mzid,
+namespace {
+
+
+struct ci_less
+{
+    bool operator() (const string& lhs, const string& rhs) const
+    {
+        return _stricmp(lhs.c_str(), rhs.c_str()) < 0;
+    }
+};
+
+
+struct AnalysisSoftwareTranslation
+{
+    CVID softwareCVID;
+    const char* softwareNames; // first name is the preferred one
+};
+
+const AnalysisSoftwareTranslation analysisSoftwareTranslationTable[] =
+{
+    {MS_Sequest, "Sequest"},
+    {MS_Mascot, "Mascot"},
+    {MS_OMSSA, "OMSSA"},
+    {MS_Phenyx, "Phenyx"},
+    {MS_greylag, "greylag"},
+    {MS_ProteinPilot_Software, "ProteinPilot;Protein Pilot"},
+    {MS_ProteinLynx_Global_Server, "ProteinLynx;Protein Lynx;PLGS"},
+    {MS_MyriMatch, "MyriMatch"},
+    {MS_TagRecon, "TagRecon"},
+    {MS_Pepitome, "Pepitome"},
+    {MS_X_Tandem, "X! Tandem;X!Tandem;xtandem"},
+    {MS_Spectrum_Mill_for_MassHunter_Workstation, "Spectrum Mill;SpectrumMill"},
+    {MS_Proteios, "Proteios"},
+    // TODO: Comet, PROBID, InsPecT, Crux, Tide need CV terms
+};
+
+const size_t analysisSoftwareTranslationTableSize = sizeof(analysisSoftwareTranslationTable)/sizeof(AnalysisSoftwareTranslation);
+
+struct AnalysisSoftwareTranslator : public boost::singleton<AnalysisSoftwareTranslator>
+{
+    AnalysisSoftwareTranslator(boost::restricted)
+    {
+        for (size_t i=0; i < analysisSoftwareTranslationTableSize; ++i)
+        {
+            const AnalysisSoftwareTranslation& ast = analysisSoftwareTranslationTable[i];
+            vector<string> names;
+            bal::split(names, ast.softwareNames, bal::is_any_of(";"));
+            if (names.empty())
+                throw runtime_error("[AnalysisSoftwareTranslator::ctor] Invalid software name list.");
+
+            preferredSoftwareNameByCVID[ast.softwareCVID] = names[0];
+            for (size_t j=0; j < names.size(); ++j)
+                cvidBySoftwareName[names[j]] = ast.softwareCVID;
+        }
+    }
+
+    CVID translate(const string& softwareName) const
+    {
+        map<string, CVID, ci_less>::const_iterator itr = cvidBySoftwareName.find(softwareName);
+        if (itr == cvidBySoftwareName.end())
+            return CVID_Unknown;
+        return itr->second;
+    }
+
+    const string& translate(CVID softwareCVID) const
+    {
+        map<CVID, string>::const_iterator itr = preferredSoftwareNameByCVID.find(softwareCVID);
+        if (itr == preferredSoftwareNameByCVID.end())
+            return empty;
+        return itr->second;
+    }
+
+    private:
+    map<CVID, string> preferredSoftwareNameByCVID;
+    map<string, CVID, ci_less> cvidBySoftwareName;
+    const string empty;
+};
+
+
+struct ScoreTranslation
+{
+    CVID softwareCVID;
+    CVID scoreCVID;
+    const char* scoreNames; // first name is the preferred one
+};
+
+const ScoreTranslation scoreTranslationTable[] =
+{
+    {MS_Sequest, MS_Sequest_xcorr, "xcorr"},
+    {MS_Sequest, MS_Sequest_deltacn, "deltacn;deltcn"},
+    {MS_Mascot, MS_Mascot_score, "ionscore;score"},
+    {MS_Mascot, MS_Mascot_identity_threshold, "identityscore"},
+    {MS_Mascot, MS_Mascot_homology_threshold, "homologyscore"},
+    {MS_Mascot, MS_Mascot_expectation_value, "expect"}, // ??
+    {MS_OMSSA, MS_OMSSA_pvalue, "pvalue"},
+    {MS_OMSSA, MS_OMSSA_evalue, "expect"},
+    {MS_Phenyx, MS_Phenyx_Pepzscore, "zscore"},
+    {MS_Phenyx, MS_Phenyx_PepPvalue, "zvalue"},
+    //{MS_greylag, MS_greylag_??, "??"},
+    //{MS_Phenyx, MS_Phenyx_Score, "??"},
+    //{MS_ProteinPilot_Software, MS_Paragon_score, "??"},
+    //{MS_ProteinLynx_Global_Server, MS_ProteinLynx_Ladder_Score, "??"},
+    //{MS_ProteinLynx_Global_Server, MS_ProteinLynx_Log_Likelihood, "??"},
+    {MS_MyriMatch, MS_MyriMatch_MVH, "mvh"},
+    {MS_TagRecon, MS_MyriMatch_MVH, "mvh"},
+    {MS_Pepitome, MS_MyriMatch_MVH, "mvh"},
+    {MS_MyriMatch, MS_MyriMatch_mzFidelity, "mzFidelity"},
+    {MS_TagRecon, MS_MyriMatch_mzFidelity, "mzFidelity"},
+    {MS_Pepitome, MS_MyriMatch_mzFidelity, "mzFidelity"},
+    {MS_X_Tandem, MS_X_Tandem_hyperscore, "hyperscore"},
+    {MS_X_Tandem, MS_X_Tandem_expect, "expect"},
+    //{MS_Spectrum_Mill_for_MassHunter_Workstation, MS_SpectrumMill_Score, "??"},
+    //{MS_Spectrum_Mill_for_MassHunter_Workstation, MS_SpectrumMill_Discriminant_Score, "??"},
+    //{MS_Spectrum_Mill_for_MassHunter_Workstation, MS_SpectrumMill_SPI, "??"},
+    //{MS_Proteios, MS_Proteios_??, "??"},
+};
+
+const size_t scoreTranslationTableSize = sizeof(scoreTranslationTable)/sizeof(ScoreTranslation);
+
+struct ScoreTranslator : public boost::singleton<ScoreTranslator>
+{
+    ScoreTranslator(boost::restricted)
+    {
+        preferredScoreNameBySoftwareAndScoreCVID[CVID_Unknown][CVID_Unknown] = "";
+
+        for (size_t i=0; i < scoreTranslationTableSize; ++i)
+        {
+            const ScoreTranslation& st = scoreTranslationTable[i];
+            vector<string> names;
+            bal::split(names, st.scoreNames, bal::is_any_of(";"));
+            if (names.empty())
+                throw runtime_error("[AnalysisSoftwareTranslator::ctor] Invalid software name list.");
+
+            preferredScoreNameBySoftwareAndScoreCVID[st.softwareCVID][st.scoreCVID] = names[0];
+            for (size_t j=0; j < names.size(); ++j)
+                scoreCVIDBySoftwareAndScoreName[st.softwareCVID][names[j]] = st.scoreCVID;
+        }
+    }
+
+    CVID translate(CVID softwareCVID, const string& scoreName) const
+    {
+        map<CVID, map<string, CVID, ci_less> >::const_iterator itr = scoreCVIDBySoftwareAndScoreName.find(softwareCVID);
+        if (itr == scoreCVIDBySoftwareAndScoreName.end())
+            return CVID_Unknown;
+        map<string, CVID, ci_less>::const_iterator itr2 = itr->second.find(scoreName);
+        if (itr2 == itr->second.end())
+            return CVID_Unknown;
+        return itr2->second;
+    }
+
+    const string& translate(CVID softwareCVID, CVID scoreCVID) const
+    {
+        map<CVID, map<CVID, string> >::const_iterator itr = preferredScoreNameBySoftwareAndScoreCVID.find(softwareCVID);
+        if (itr == preferredScoreNameBySoftwareAndScoreCVID.end())
+            return empty;
+        map<CVID, string>::const_iterator itr2 = itr->second.find(scoreCVID);
+        if (itr2 == itr->second.end())
+            return empty;
+        return itr2->second;
+    }
+
+    private:
+    // TODO: use boost::multi_index?
+    map<CVID, map<CVID, string> > preferredScoreNameBySoftwareAndScoreCVID;
+    map<CVID, map<string, CVID, ci_less> > scoreCVIDBySoftwareAndScoreName;
+    const string empty;
+};
+
+
+struct NativeIdTranslator : public boost::singleton<NativeIdTranslator>
+{
+    NativeIdTranslator(boost::restricted)
+    {
+        using namespace boost::xpressive;
+
+        BOOST_FOREACH(CVID cvid, pwiz::cv::cvids())
+        {
+            if (!cvIsA(cvid, MS_native_spectrum_identifier_format))
+                continue;
+
+            string format = cvTermInfo(cvid).def;
+            bal::replace_all(format, "xsd:nonNegativeInteger", "\\d+");
+            bal::replace_all(format, "xsd:positiveInteger", "\\d+");
+            bal::replace_all(format, "xsd:Long", "\\d+");
+            bal::replace_all(format, "xsd:string", "\\S+");
+            bal::replace_all(format, "xsd:IDREF", "\\S+");
+            nativeIdRegexAndFormats.push_back(make_pair(sregex::compile(format), cvid));
+        }
+    }
+
+    CVID translate(const string& id)
+    {
+        using namespace boost::xpressive;
+
+        smatch what;
+        BOOST_FOREACH(const RegexFormatPair& pair, nativeIdRegexAndFormats)
+            if (regex_match(id, what, pair.first))
+                return pair.second;
+        return CVID_Unknown;
+    }
+
+    private:
+    typedef pair<boost::xpressive::sregex, CVID> RegexFormatPair;
+    vector<RegexFormatPair> nativeIdRegexAndFormats;
+};
+
+
+Formula nTerm("H1"), cTerm("O1H1");
+
+string base_name(const MzIdentML& mzid, const string& filepath)
+{
+    bfs::path location = filepath;
+    if (!mzid.dataCollection.inputs.spectraData.empty())
+        location = mzid.dataCollection.inputs.spectraData[0]->location;
+    return location.replace_extension("").filename();
+}
+
+void start_msms_pipeline_analysis(XMLWriter& xmlWriter, const MzIdentML& mzid, const string& filepath)
+{
+    XMLWriter::Attributes attributes;
+
+    if (!mzid.creationDate.empty())
+        attributes.add("date", mzid.creationDate);
+
+    attributes.add("summary_xml", filepath);
+    attributes.add("xmlns", "http://regis-web.systemsbiology.net/pepXML");
+    attributes.add("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+    attributes.add("xsi:schemaLocation", "http://sashimi.sourceforge.net/schema_revision/pepXML/pepXML_v117.xsd");
+
+    xmlWriter.startElement("msms_pipeline_analysis", attributes);
+}
+
+// TODO: write_analysis_summary
+
+void start_msms_run_summary(XMLWriter& xmlWriter, const MzIdentML& mzid, const string& filepath)
+{
+    XMLWriter::Attributes attributes;
+
+    attributes.add("base_name", base_name(mzid, filepath));
+    attributes.add("raw_data_type", "");
+    attributes.add("raw_data", "");
+
+    xmlWriter.startElement("msms_run_summary", attributes);
+}
+
+void write_sample_enzyme(XMLWriter& xmlWriter, const MzIdentML& mzid)
+{
+    bool independent = mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->enzymes.independent;
+    const Enzyme& enzyme = *mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->enzymes.enzymes[0];
+    if (enzyme.enzymeName.empty() && enzyme.siteRegexp.empty())
+        throw runtime_error("[write_sample_enzyme] No enzyme name or regular expression.");
+
+    // TODO: create a cumulative enzyme name like "CNBr+Trypsin" if there are multiple enzymes;
+    //       parse CV enzymeName or siteRegexp from each enzyme into cut/no_cut/sense attributes;
+    //       determine minimum specificity (to use for the sample_enzyme attribute)
+    //       write each enzyme as a <specificity> element
+
+    XMLWriter::Attributes attributes;
+    attributes.add("name", "Trypsin");
+    attributes.add("fidelity", "specific");
+    attributes.add("independent", independent ? "true" : "false");
+
+    xmlWriter.startElement("sample_enzyme", attributes);
+    {
+        attributes.clear();
+        attributes.add("sense", "C");
+        attributes.add("min_spacing", "1");
+        attributes.add("cut", "KR");
+        attributes.add("no_cut", "");
+        xmlWriter.startElement("specificity", attributes, XMLWriter::EmptyElement);
+    }
+    xmlWriter.endElement(); // sample_enzyme
+}
+
+void write_search_summary(XMLWriter& xmlWriter, const MzIdentML& mzid, const string& filepath)
+{
+    XMLWriter::Attributes attributes;
+
+    attributes.add("base_name", base_name(mzid, filepath));
+
+    const SpectrumIdentificationProtocol& sip = *mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0];
+
+    if (!sip.analysisSoftwarePtr.get())
+        throw runtime_error("[write_search_summary] PepXML requires the analysis software to be known.");
+
+    CVParam searchEngine = sip.analysisSoftwarePtr->softwareName.cvParamChild(MS_analysis_software);
+    if (!searchEngine.empty())
+        attributes.add("search_engine", searchEngine.name());
+    else if (!sip.analysisSoftwarePtr->softwareName.userParams.empty())
+        attributes.add("search_engine", sip.analysisSoftwarePtr->softwareName.userParams[0].name);
+    else
+        throw runtime_error("[write_search_summary] PepXML requires the analysis software to be known.");
+
+    attributes.add("precursor_mass_type", sip.additionalSearchParams.hasCVParam(MS_parent_mass_type_average) ? "average" : "monoisotopic");
+    attributes.add("fragment_mass_type", sip.additionalSearchParams.hasCVParam(MS_fragment_mass_type_average) ? "average" : "monoisotopic");
+    attributes.add("out_data_type", "");
+    attributes.add("out_data", "");
+
+    xmlWriter.startElement("search_summary", attributes);
+    {
+        if (mzid.dataCollection.inputs.searchDatabase.empty())
+            throw runtime_error("[write_search_summary] PepXML requires the searched database to be known.");
+
+        const SearchDatabase& sd = *mzid.dataCollection.inputs.searchDatabase[0];
+        attributes.clear();
+        attributes.add("local_path", sd.location);
+        attributes.add("database_name", sd.id);
+        //attributes.add("database_release_identifier", "");
+        if (sd.numDatabaseSequences > 0)
+            attributes.add("size_in_db_entries", sd.numDatabaseSequences);
+        if (sd.numResidues > 0)
+            attributes.add("size_of_residues", sd.numResidues);
+        attributes.add("type", sd.params.hasCVParam(MS_database_type_amino_acid) ? "AA" : "NA");
+        xmlWriter.startElement("search_database", attributes, XMLWriter::EmptyElement);
+
+        attributes.clear();
+        attributes.add("enzyme", "Trypsin"); // TODO: use the combined name from sample_enzyme
+        attributes.add("max_num_internal_cleavages", sip.enzymes.enzymes[0]->missedCleavages);
+        attributes.add("min_number_termini", sip.enzymes.enzymes[0]->semiSpecific ? "1" : "2");
+        xmlWriter.startElement("enzymatic_search_constraint", attributes, XMLWriter::EmptyElement);
+
+        BOOST_FOREACH(const SearchModificationPtr& sm, sip.modificationParams)
+        {
+            const ModParam& mp = sm->modParam;
+
+            string residues = mp.residues;
+            if (residues.empty())
+            {
+                if (sm->specificityRules.empty())
+                    throw runtime_error("[write_search_summary] Empty SearchModification.");
+                if (sm->specificityRules.hasCVParam(MS_modification_specificity_N_term))
+                    residues = "n";
+                else
+                    residues = "c";
+            }
+
+            BOOST_FOREACH(char aa, residues)
+            {
+                if (aa == ' ')
+                    continue;
+
+                attributes.clear();
+                if (aa > 'Z') // terminal_modification
+                {
+                    attributes.add("terminus", string(1, aa));
+                    attributes.add("massdiff", mp.massDelta);
+
+                    if (aa == 'n')
+                        attributes.add("mass", nTerm.monoisotopicMass() + mp.massDelta);
+                    else
+                        attributes.add("mass", cTerm.monoisotopicMass() + mp.massDelta);
+                }
+                else // aminoacid_modificiation
+                {
+                    double aaMass = AminoAcid::Info::record(aa).residueFormula.monoisotopicMass();
+                    attributes.add("aminoacid", string(1, aa));
+                    attributes.add("massdiff", mp.massDelta);
+                    attributes.add("mass", mp.massDelta + aaMass);
+                    if (sm->specificityRules.hasCVParam(MS_modification_specificity_N_term))
+                        attributes.add("peptide_terminus", "n");
+                    if (sm->specificityRules.hasCVParam(MS_modification_specificity_C_term))
+                        attributes.add("peptide_terminus", "c");
+                }
+                attributes.add("variable", sm->fixedMod ? "N" : "Y");
+                // TODO: attributes.add("description", sm->);
+
+                xmlWriter.startElement(aa > 'Z' ? "terminal_modification" : "aminoacid_modification", attributes, XMLWriter::EmptyElement);
+            }
+        } // *_modification
+
+        BOOST_FOREACH(const UserParam& userParam, sip.additionalSearchParams.userParams)
+        {
+            attributes.clear();
+            attributes.add("name", userParam.name);
+            attributes.add("value", userParam.value);
+            xmlWriter.startElement("parameter", attributes, XMLWriter::EmptyElement);
+        }
+    }
+    xmlWriter.endElement(); // search_summary
+}
+
+void write_modification_info(XMLWriter& xmlWriter, const SpectrumIdentificationItem& sii)
+{
+    XMLWriter::Attributes attributes;
+
+    const Peptide& peptide = *sii.peptidePtr;
+    vector<ModificationPtr> aaMods;
+    aaMods.reserve(peptide.modification.size());
+
+    BOOST_FOREACH(const ModificationPtr& modPtr, peptide.modification)
+    {
+        const Modification& mod = *modPtr;
+        double modMass = mod.monoisotopicMassDelta > 0 ? mod.monoisotopicMassDelta : mod.avgMassDelta;
+        if (mod.location == 0)
+            attributes.add("mod_nterm_mass", nTerm.monoisotopicMass() + modMass);
+        else if (mod.location == (int) peptide.peptideSequence.length() + 1)
+            attributes.add("mod_cterm_mass", cTerm.monoisotopicMass() + modMass);
+        else
+            aaMods.push_back(modPtr);
+    }
+
+    if (aaMods.empty())
+        xmlWriter.startElement("modification_info", attributes, XMLWriter::EmptyElement);
+    else
+    {
+        xmlWriter.startElement("modification_info", attributes);
+        {
+            BOOST_FOREACH(const ModificationPtr& modPtr, aaMods)
+            {
+                const Modification& mod = *modPtr;
+                char modifiedResidue = mod.residues.size() == 1 ? mod.residues[0] : peptide.peptideSequence[mod.location-1];
+                double aaMass = AminoAcid::Info::record(modifiedResidue).residueFormula.monoisotopicMass();
+                double modMass = mod.monoisotopicMassDelta > 0 ? mod.monoisotopicMassDelta : mod.avgMassDelta;
+
+                attributes.clear();
+                attributes.add("position", mod.location);
+                attributes.add("mass", aaMass + modMass);
+                xmlWriter.startElement("mod_aminoacid_mass", attributes, XMLWriter::EmptyElement);
+            }
+        }
+        xmlWriter.endElement();
+    }
+}
+
+void write_alternative_proteins(XMLWriter& xmlWriter, const SpectrumIdentificationItem& sii)
+{
+    XMLWriter::Attributes attributes;
+
+    for (size_t i=1; i < sii.peptideEvidence.size(); ++i)
+    {
+        attributes.clear();
+        attributes.add("protein", sii.peptideEvidence[i]->dbSequencePtr->accession);
+        xmlWriter.startElement("alternative_protein", attributes, XMLWriter::EmptyElement);
+    }
+}
+
+void write_search_hit(XMLWriter& xmlWriter,
+                      CVID analysisSoftwareCVID,
+                      const SpectrumIdentificationResult& sir,
+                      const SpectrumIdentificationItem& sii)
+{
+    if (!sii.peptidePtr.get())
+        throw runtime_error("[write_search_hit] PepXML requires SpectrumIdentificationItem elements to refer to Peptides.");
+    if (sii.peptideEvidence.empty())
+        throw runtime_error("[write_search_hit] PepXML requires PeptideEvidence elements.");
+    if (!sii.peptideEvidence[0]->dbSequencePtr.get())
+        throw runtime_error("[write_search_hit] PepXML requires PeptideEvidence elements to refer to DBSequences.");
+
+    XMLWriter::Attributes attributes;
+
+    attributes.add("hit_rank", sii.rank);
+    attributes.add("peptide", sii.peptidePtr->peptideSequence);
+    attributes.add("peptide_prev_aa", sii.peptideEvidence[0]->pre);
+    attributes.add("peptide_next_aa", sii.peptideEvidence[0]->post);
+    attributes.add("protein", sii.peptideEvidence[0]->dbSequencePtr->accession);
+    attributes.add("num_tot_proteins", sii.peptideEvidence.size());
+    attributes.add("calc_neutral_pep_mass", Ion::neutralMass(sii.calculatedMassToCharge, sii.chargeState));
+    attributes.add("massdiff", Ion::neutralMass(sii.calculatedMassToCharge, sii.chargeState) - Ion::neutralMass(sii.experimentalMassToCharge, sii.chargeState));
+    attributes.add("num_tol_term", "2"); // TODO: calculate this if protein sequences are provided?
+    attributes.add("num_missed_cleavages", sii.peptideEvidence[0]->missedCleavages);
+
+    if (sii.paramGroup.hasCVParam(MS_number_of_matched_peaks))
+    {
+        int matchedPeaks = sii.paramGroup.cvParam(MS_number_of_matched_peaks).valueAs<int>();
+        attributes.add("num_matched_ions", matchedPeaks);
+
+        if (sii.paramGroup.hasCVParam(MS_number_of_unmatched_peaks))
+            attributes.add("tot_num_ions", matchedPeaks + sii.paramGroup.cvParam(MS_number_of_unmatched_peaks).valueAs<int>());
+    }
+
+    xmlWriter.startElement("search_hit", attributes);
+    {
+        if (sii.peptideEvidence.size() > 1)
+            write_alternative_proteins(xmlWriter, sii);
+
+        if (!sii.peptidePtr->modification.empty())
+            write_modification_info(xmlWriter, sii);
+
+        BOOST_FOREACH(const CVParam& cvParam, sii.paramGroup.cvParams)
+        {
+            if (cvIsA(cvParam.cvid, MS_search_engine_specific_score_for_peptides))
+            {
+                const string& preferredScoreName = ScoreTranslator::instance->translate(analysisSoftwareCVID, cvParam.cvid);
+
+                attributes.clear();
+                attributes.add("name", preferredScoreName.empty() ? cvParam.name() : preferredScoreName);
+                attributes.add("value", cvParam.value);
+                xmlWriter.startElement("search_score", attributes, XMLWriter::EmptyElement);
+            }
+        }
+    }
+    xmlWriter.endElement();
+}
+
+void write_spectrum_queries(XMLWriter& xmlWriter, const MzIdentML& mzid, const string& filepath)
+{
+    XMLWriter::Attributes attributes;
+
+    int lastChargeState, lastSpectrumIndex;
+    int spectrumIndex = 0;
+    int queryIndex = 0;
+
+    string basename = base_name(mzid, filepath);
+
+    CVParam analysisSoftware = mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->analysisSoftwarePtr->softwareName.cvParamChild(MS_analysis_software);
+    CVID nativeIdFormat = mzid.dataCollection.inputs.spectraData[0]->spectrumIDFormat.cvParamChild(MS_native_spectrum_identifier_format).cvid;
+
+    const SpectrumIdentificationList& sil = *mzid.dataCollection.analysisData.spectrumIdentificationList[0];
+    BOOST_FOREACH(const SpectrumIdentificationResultPtr& sirPtr, sil.spectrumIdentificationResult)
+    {
+        const SpectrumIdentificationResult& sir = *sirPtr;
+
+        ++spectrumIndex;
+        ++queryIndex;
+        lastChargeState = 0;
+
+        BOOST_FOREACH(const SpectrumIdentificationItemPtr& siiPtr, sir.spectrumIdentificationItem)
+        {
+            const SpectrumIdentificationItem& sii = *siiPtr;
+
+            if (sii.chargeState != lastChargeState || spectrumIndex != lastSpectrumIndex)
+            {
+                // close the current spectrum_query
+                if (queryIndex > 1)
+                {
+                    xmlWriter.endElement(); // search_result
+                    xmlWriter.endElement(); // spectrum_query
+                }
+
+                ++queryIndex;
+                lastChargeState = sii.chargeState;
+                lastSpectrumIndex = spectrumIndex;
+
+                string scanNumber = msdata::id::translateNativeIDToScanNumber(nativeIdFormat, sir.spectrumID);
+                if (scanNumber.empty())
+                    scanNumber = lexical_cast<string>(spectrumIndex);
+
+                // basename.scanNumber.scanNumber.charge
+                ostringstream conventionalSpectrumId;
+                conventionalSpectrumId << basename << "." << scanNumber << "." << scanNumber << "." << sii.chargeState;
+
+                attributes.clear();
+                attributes.add("spectrum", conventionalSpectrumId.str());
+                if (nativeIdFormat != MS_scan_number_only_nativeID_format)
+                    attributes.add("spectrumNativeID", sir.spectrumID);
+                attributes.add("start_scan", scanNumber);
+                attributes.add("end_scan", scanNumber);
+                attributes.add("precursor_neutral_mass", Ion::neutralMass(sii.experimentalMassToCharge, sii.chargeState));
+                attributes.add("assumed_charge", sii.chargeState);
+                attributes.add("index", queryIndex);
+
+                xmlWriter.startElement("spectrum_query", attributes);
+                xmlWriter.startElement("search_result");
+            }
+
+            write_search_hit(xmlWriter, analysisSoftware.cvid, sir, sii);
+        }
+    }
+
+    // close the last spectrum_query
+    if (!sil.spectrumIdentificationResult.empty())
+    {
+        xmlWriter.endElement(); // search_result
+        xmlWriter.endElement(); // spectrum_query
+    }
+}
+
+} // namespace
+
+void Serializer_pepXML::write(ostream& os, const MzIdentML& mzid, const string& filepath,
                               const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
 {
+    // check for the minimum information to write a pepXML
+    if (mzid.analysisCollection.spectrumIdentification.empty())
+        throw runtime_error("[Serializer_pepXML::write] PepXML requires at least one spectrum identification.");
+
+    if (mzid.analysisProtocolCollection.spectrumIdentificationProtocol.empty())
+        throw runtime_error("[Serializer_pepXML::write] PepXML requires at least one spectrum identification protocol.");
+
+    if (!mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->searchType.hasCVParam(MS_ms_ms_search))
+        throw runtime_error("[Serializer_pepXML::write] PepXML can only represent an MS/MS analysis.");
+
+    if (mzid.dataCollection.analysisData.spectrumIdentificationList.empty())
+        throw runtime_error("[Serializer_pepXML::write] PepXML requires at least one spectrum identification list.");
+
+    if (mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->enzymes.empty())
+        throw runtime_error("[Serializer_pepXML::write] PepXML requires at least one enzyme in the spectrum identification protocol.");
+
+    if (mzid.dataCollection.inputs.searchDatabase.size() > 1)
+        throw runtime_error("[Serializer_pepXML::write] PepXML only supports a single search database.");
+
+    if (mzid.dataCollection.inputs.spectraData.empty())
+        throw runtime_error("[Serializer_pepXML::write] PepXML requires at least one SpectraData in the input list.");
+
     // instantiate XMLWriter
 
-    /*XMLWriter::Config xmlConfig;
+    XMLWriter::Config xmlConfig;
     XMLWriter xmlWriter(os, xmlConfig);
 
     string xmlData = "version=\"1.0\" encoding=\"ISO-8859-1\"";
     xmlWriter.processingInstruction("xml", xmlData);
 
-    IO::write(xmlWriter, mzid);*/
+    start_msms_pipeline_analysis(xmlWriter, mzid, filepath);
+    start_msms_run_summary(xmlWriter, mzid, filepath);
+
+    write_sample_enzyme(xmlWriter, mzid);
+    write_search_summary(xmlWriter, mzid, filepath);
+    write_spectrum_queries(xmlWriter, mzid, filepath);
+
+    xmlWriter.endElement(); // msms_run_summary
+    xmlWriter.endElement(); // msms_pipeline_analysis
 }
 
 
@@ -83,7 +688,7 @@ struct HandlerSampleEnzyme : public SAXParser::Handler
         else if (name == "specificity")
         {
             EnzymePtr enzyme = EnzymePtr(new Enzyme);
-            enzyme->id = "ENZ_" + lexical_cast<string>(_sip->enzymes.enzymes.size());
+            enzyme->id = "ENZ_" + lexical_cast<string>(_sip->enzymes.enzymes.size()+1);
             enzyme->semiSpecific = _fidelity == "semispecific" ? true : false;
             enzyme->nTermGain = "H";
             enzyme->cTermGain = "OH";
@@ -103,7 +708,7 @@ struct HandlerSampleEnzyme : public SAXParser::Handler
                 throw runtime_error("[HandlerSampleEnzyme] Invalid specificity sense: " + sense);
 
             enzyme->siteRegexp = string("(?<=") + (cut.length() > 1 ? "[" : "") + cut + (cut.length() > 1 ? "])" : ")") +
-                                (noCut.empty() ? "" : "(?!") + (noCut.length() > 1 ? "[" : "") + noCut + (noCut.length() > 1 ? "])" : ")");
+                                (noCut.empty() ? "" : "(?!") + (noCut.length() > 1 ? "[" : "") + noCut + (noCut.length() > 1 ? "]" : "") + (noCut.empty() ? "" : ")");
 
             string value;
             getAttribute(attributes, "min_spacing", value);
@@ -124,6 +729,7 @@ struct HandlerSampleEnzyme : public SAXParser::Handler
     const CVTranslator& _cvTranslator;
 };
 
+
 struct HandlerSearchSummary : public SAXParser::Handler
 {
     MzIdentML* _mzid;
@@ -131,17 +737,215 @@ struct HandlerSearchSummary : public SAXParser::Handler
 
     HandlerSearchSummary(const CVTranslator& cvTranslator) : _cvTranslator(cvTranslator) {}
 
+    CVID translateSearchEngine(const string& name)
+    {
+        // TODO: replace this with CVTranslator (after making it filter for a parent term "analysis software")
+        CVID result = AnalysisSoftwareTranslator::instance->translate(name);
+        const string* preferredName;
+        if (result == CVID_Unknown)
+        {
+            result = MS_analysis_software;
+            preferredName = &name;
+        }
+        else
+            preferredName = &AnalysisSoftwareTranslator::instance->translate(result);
+
+        AnalysisSoftwarePtr software = AnalysisSoftwarePtr(new AnalysisSoftware("AS_" + *preferredName, *preferredName));
+        software->softwareName.set(result);
+        _mzid->analysisSoftwareList.push_back(software);
+        _sip->analysisSoftwarePtr = software;
+
+        // TODO if MS_analysis_software log warning that search engine could not be translated
+        return result;
+    }
+
+    CVID translateToleranceUnits(const string& value)
+    {
+        if (bal::istarts_with(value, "da"))  return UO_dalton;
+        if (bal::iequals(value, "ppm"))      return UO_parts_per_million;
+        if (bal::iequals(value, "mmu"))      return UO_dalton; // special case
+        if (bal::iequals(value, "%") ||
+            bal::iequals(value, "percent"))  return UO_percent;
+        return CVID_Unknown;
+    }
+
+    void translateIonSeriesConsidered(const string& ionSeriesList)
+    {
+        vector<string> tokens;
+        bal::split(tokens, ionSeriesList, bal::is_any_of(","));
+        BOOST_FOREACH(const string& ionSeries, tokens)
+        {
+            if (ionSeries == "immonium")        _sip->additionalSearchParams.set(MS_param__immonium_ion);
+            else if (ionSeries == "a")          _sip->additionalSearchParams.set(MS_param__a_ion);
+            else if (ionSeries == "a-NH3")      _sip->additionalSearchParams.set(MS_param__a_ion_NH3);
+            else if (ionSeries == "a-H2O")      _sip->additionalSearchParams.set(MS_param__a_ion_H2O);
+            else if (ionSeries == "b")          _sip->additionalSearchParams.set(MS_param__b_ion);
+            else if (ionSeries == "b-NH3")      _sip->additionalSearchParams.set(MS_param__b_ion_NH3);
+            else if (ionSeries == "b-H2O")      _sip->additionalSearchParams.set(MS_param__b_ion_H2O);
+            else if (ionSeries == "c")          _sip->additionalSearchParams.set(MS_param__c_ion);
+            //else if (ionSeries == "c-NH3")      _sip->additionalSearchParams.set(MS_param__c_ion_NH3);
+            //else if (ionSeries == "c-H2O")      _sip->additionalSearchParams.set(MS_param__c_ion_H2O);
+            else if (ionSeries == "x")          _sip->additionalSearchParams.set(MS_param__x_ion);
+            //else if (ionSeries == "x-NH3")      _sip->additionalSearchParams.set(MS_param__x_ion_NH3);
+            //else if (ionSeries == "x-H2O")      _sip->additionalSearchParams.set(MS_param__x_ion_H2O);
+            else if (ionSeries == "y")          _sip->additionalSearchParams.set(MS_param__y_ion);
+            else if (ionSeries == "y-NH3")      _sip->additionalSearchParams.set(MS_param__y_ion_NH3);
+            else if (ionSeries == "y-H2O")      _sip->additionalSearchParams.set(MS_param__y_ion_H2O);
+            else if (ionSeries == "z")          _sip->additionalSearchParams.set(MS_param__z_ion);
+            //else if (ionSeries == "z-NH3")      _sip->additionalSearchParams.set(MS_param__z_ion_NH3);
+            //else if (ionSeries == "z-H2O")      _sip->additionalSearchParams.set(MS_param__z_ion_H2O);
+            else if (ionSeries == "z+1" ||
+                     ionSeries == "z*")         _sip->additionalSearchParams.set(MS_param__z_1_ion);
+            else if (ionSeries == "z+2")        _sip->additionalSearchParams.set(MS_param__z_2_ion);
+            else if (ionSeries == "d")          _sip->additionalSearchParams.set(MS_param__d_ion);
+            else if (ionSeries == "v")          _sip->additionalSearchParams.set(MS_param__v_ion);
+            else if (ionSeries == "w")          _sip->additionalSearchParams.set(MS_param__w_ion);
+        }
+    }
+
+    void translateParameter(const string& name, const string& value)
+    {
+        // Unless the CV starts to map the search engine specific parameters to the proper CV terms,
+        // there's not really a way to avoid hand coding these mappings
+
+        CVID searchEngine = _sip->analysisSoftwarePtr->softwareName.cvParamChild(MS_analysis_software).cvid;
+
+        switch (searchEngine)
+        {
+            case MS_Mascot:
+                // we depend on TOL being parsed before TOLU
+                if (bal::iequals(name, "tol"))
+                {
+                    _sip->parentTolerance.set(MS_search_tolerance_minus_value, value);
+                    _sip->parentTolerance.set(MS_search_tolerance_plus_value, value);
+                }
+                else if (bal::iequals(name, "tolu"))
+                {
+                    _sip->parentTolerance.cvParams[0].units = 
+                    _sip->parentTolerance.cvParams[1].units = translateToleranceUnits(value);
+                    if (bal::iequals(value, "mmu"))
+                        _sip->parentTolerance.cvParams[0].value = 
+                        _sip->parentTolerance.cvParams[1].value = _sip->parentTolerance.cvParams[0].valueAs<double>() / 1000;
+                }
+                else if (bal::iequals(name, "itol"))
+                {
+                    _sip->fragmentTolerance.set(MS_search_tolerance_minus_value, value);
+                    _sip->fragmentTolerance.set(MS_search_tolerance_plus_value, value);
+                }
+                else if (bal::iequals(name, "itolu"))
+                {
+                    _sip->fragmentTolerance.cvParams[0].units = 
+                    _sip->fragmentTolerance.cvParams[1].units = translateToleranceUnits(value);
+
+                    // special case: divide mmu by 1000 since the official unit is daltons
+                    if (bal::iequals(value, "mmu"))
+                        _sip->fragmentTolerance.cvParams[0].value = 
+                        _sip->fragmentTolerance.cvParams[1].value = _sip->parentTolerance.cvParams[0].valueAs<double>() / 1000;
+                }
+                else if (bal::iequals(name, "instrument"))
+                {
+                    // set predicted fragment series
+                    if (bal::iequals(value, "Default"))              translateIonSeriesConsidered("a,a-NH3,b,b-NH3,y,y-NH3");
+                    else if (bal::iequals(value, "ESI-4-SECT"))      translateIonSeriesConsidered("immonium,a,a-NH3,a-H2O,b,b-NH3,b-H2O,y,z");
+                    else if (bal::istarts_with(value, "ESI"))        translateIonSeriesConsidered("b,b-NH3,b-H2O,y,y-NH3,y-H2O");
+                    else if (bal::icontains(value, "ECD") ||
+                             bal::icontains(value, "ETD"))           translateIonSeriesConsidered("c,y,z+1,z+2");
+                    else if (bal::iequals(value, "MALDI-QUAD-TOF"))  translateIonSeriesConsidered("immonium,b,b-NH3,b-H2O,y,y-NH3,y-H2O");
+                    else
+                    {
+                        if (bal::icontains(value, "TOF"))            translateIonSeriesConsidered("immonium,a,a-NH3,a-H2O,b,b-NH3,b-H2O,y");
+                        if (bal::iends_with(value, "TOF"))           translateIonSeriesConsidered("y-NH3, y-H2O");
+                        if (bal::iends_with(value, "TOF-TOF"))       translateIonSeriesConsidered("d,v,w");
+                    }
+                }
+                // TODO:
+                // LICENSE: add as a Contact string
+                // USEREMAIL: add as Contact's email
+                // USERNAME: add as Contact's name
+                break;
+
+            case MS_MyriMatch:
+            case MS_TagRecon:
+            case MS_Pepitome:
+                // we depend on PrecursorMzTolerance being parsed before PrecursorMzToleranceUnits
+                if (bal::iends_with(name, "PrecursorMzTolerance"))
+                {
+                    _sip->parentTolerance.set(MS_search_tolerance_minus_value, value);
+                    _sip->parentTolerance.set(MS_search_tolerance_plus_value, value);
+                }
+                else if (bal::iends_with(name, "PrecursorMzToleranceUnits"))
+                {
+                    _sip->parentTolerance.cvParams[0].units = 
+                    _sip->parentTolerance.cvParams[1].units = translateToleranceUnits(value);
+                }
+                else if (bal::iends_with(name, "FragmentMzTolerance"))
+                {
+                    _sip->fragmentTolerance.set(MS_search_tolerance_minus_value, value);
+                    _sip->fragmentTolerance.set(MS_search_tolerance_plus_value, value);
+                }
+                else if (bal::iends_with(name, "FragmentMzToleranceUnits"))
+                {
+                    _sip->fragmentTolerance.cvParams[0].units = 
+                    _sip->fragmentTolerance.cvParams[1].units = translateToleranceUnits(value);
+                }
+                else if (bal::iends_with(name, "FragmentationRule"))
+                {
+                    if (bal::icontains(value, "cid"))     translateIonSeriesConsidered("b,y");
+                    if (bal::icontains(value, "etd"))     translateIonSeriesConsidered("c,z+1");
+                    if (bal::icontains(value, "manual"))  translateIonSeriesConsidered(value.substr(7)); // skip "manual:"
+                }
+                break;
+
+            case MS_X_Tandem:
+                // we depend on "parent monoisotopic mass error"
+                // being parsed before "parent monoisotopic mass error units"
+                if (bal::iends_with(name, "parent monoisotopic mass error minus"))
+                    _sip->parentTolerance.set(MS_search_tolerance_minus_value, value);
+                else if (bal::iends_with(name, "parent monoisotopic mass error plus"))
+                    _sip->parentTolerance.set(MS_search_tolerance_plus_value, value);
+                else if (bal::iends_with(name, "parent monoisotopic mass error units"))
+                {
+                    _sip->parentTolerance.cvParams[0].units = 
+                    _sip->parentTolerance.cvParams[1].units = translateToleranceUnits(value);
+                }
+                else if (bal::iends_with(name, "fragment monoisotopic mass error"))
+                {
+                    _sip->fragmentTolerance.set(MS_search_tolerance_minus_value, value);
+                    _sip->fragmentTolerance.set(MS_search_tolerance_plus_value, value);
+                }
+                else if (bal::iends_with(name, "fragment monoisotopic mass error units"))
+                {
+                    _sip->fragmentTolerance.cvParams[0].units = 
+                    _sip->fragmentTolerance.cvParams[1].units = translateToleranceUnits(value);
+                }
+                else if (bal::iequals(value, "yes"))
+                {
+                    if (bal::iends_with(name, "b ions"))        translateIonSeriesConsidered("b");
+                    else if (bal::iends_with(name, "c ions"))   translateIonSeriesConsidered("c");
+                    else if (bal::iends_with(name, "y ions"))   translateIonSeriesConsidered("y");
+                    else if (bal::iends_with(name, "z ions"))   translateIonSeriesConsidered("z+1");
+                }
+                break;
+
+            // TODO: add more search engines
+
+            default:
+                // TODO: something with parameters from unknown search engines?
+                break;
+        }
+    }
+
     virtual Status startElement(const string& name, const Attributes& attributes, stream_offset position)
     {
         if (name == "search_summary")
         {
             string basename, searchEngine, precursorMassType, fragmentMassType;
             getAttribute(attributes, "base_name", basename);
-            bal::to_lower(getAttribute(attributes, "search_engine", searchEngine));
+            getAttribute(attributes, "search_engine", searchEngine);
             getAttribute(attributes, "precursor_mass_type", precursorMassType);
             getAttribute(attributes, "fragment_mass_type", fragmentMassType);
 
-            // TODO: translate search engine name
+            translateSearchEngine(searchEngine);
 
             if (bal::istarts_with(precursorMassType, "mono"))
                 _sip->additionalSearchParams.set(MS_parent_mass_type_mono);
@@ -203,7 +1007,10 @@ struct HandlerSearchSummary : public SAXParser::Handler
             SearchModificationPtr searchModification = SearchModificationPtr(new SearchModification);
             getAttribute(attributes, "massdiff", searchModification->modParam.massDelta);
             searchModification->modParam.residues = aminoacid;
-            searchModification->fixedMod = !(variable == "y" || lexical_cast<bool>(variable));
+            if (variable == "y" || variable == "n")
+                searchModification->fixedMod = (variable == "n");
+            else
+                searchModification->fixedMod = lexical_cast<bool>(variable);
 
             if (bal::icontains(peptideTerminus, "n"))
                 searchModification->specificityRules.set(MS_modification_specificity_N_term);
@@ -231,13 +1038,12 @@ struct HandlerSearchSummary : public SAXParser::Handler
         }
         else if (name == "parameter")
         {
-            // TODO: use cvTranslator? to map search engine specific parameters to mzIdentML elements and attributes
-            // e.g. Mascot: TOL -> precursor m/z tolerance, ITOL -> fragment m/z tolerance
-
             string name, value;
             getAttribute(attributes, "name", name);
             getAttribute(attributes, "value", value);
             _sip->additionalSearchParams.userParams.push_back(UserParam(name, value));
+
+            translateParameter(name, value);
         }
         else
             throw runtime_error("[HandlerSearchSummary] Unexpected element name: " + name);
@@ -313,6 +1119,7 @@ struct HandlerSearchResults : public SAXParser::Handler
     MzIdentML* _mzid;
     SpectrumIdentificationProtocol* _sip;
     SpectrumIdentificationList* _sil;
+    CVID nativeIdFormat;
 
     HandlerSearchResults(const CVTranslator& cvTranslator,
                          const IterationListenerRegistry* iterationListenerRegistry)
@@ -320,13 +1127,17 @@ struct HandlerSearchResults : public SAXParser::Handler
         _cTerm("O1H1"),
         _cvTranslator(cvTranslator),
         ilr(iterationListenerRegistry),
-        siiCount(0) {}
+        siiCount(0), peptideCount(0)
+    {
+        // (basename.scanNumber.scanNumber).charge
+        conventionalSpectrumIdRegex = boost::xpressive::sregex::compile("([^.]*\\.\\d+\\.\\d+).*");
+    }
 
     DBSequencePtr getDBSequence(const string& accession)
     {
         pair<map<string, DBSequencePtr>::iterator, bool> insertResult = _dbSequences.insert(make_pair(accession, DBSequencePtr()));
 
-        DBSequencePtr dbSequence = insertResult.first->second;
+        DBSequencePtr& dbSequence = insertResult.first->second;
 
         if (insertResult.second)
         {
@@ -335,9 +1146,33 @@ struct HandlerSearchResults : public SAXParser::Handler
 
             // MzIdentML::dataCollection is populated in HandlerSearchSummary
             dbSequence->searchDatabasePtr = _mzid->dataCollection.inputs.searchDatabase[0];
-            dbSequence->accession = dbSequence->id = accession;
+            dbSequence->accession = accession;
+            dbSequence->id = "DBSeq_" + accession;
         }
         return dbSequence;
+    }
+
+    void translateScore(SpectrumIdentificationItem& sii, const Attributes& attributes)
+    {
+        CVParam searchEngine = _sip->analysisSoftwarePtr->softwareName.cvParamChild(MS_analysis_software);
+
+        string scoreName;
+        getAttribute(attributes, "name", scoreName);
+
+        CVID controlledScoreName = ScoreTranslator::instance->translate(searchEngine.cvid, scoreName);
+
+        if (controlledScoreName == CVID_Unknown)
+        {
+            sii.paramGroup.userParams.push_back(UserParam());
+            UserParam& score = sii.paramGroup.userParams.back();
+            swap(scoreName, score.name);
+            getAttribute(attributes, "value", score.value);
+        }
+        else
+        {
+            sii.paramGroup.cvParams.push_back(CVParam(controlledScoreName));
+            getAttribute(attributes, "value", sii.paramGroup.cvParams.back().value);
+        }
     }
 
     virtual Status startElement(const string& name, const Attributes& attributes, stream_offset position)
@@ -350,29 +1185,39 @@ struct HandlerSearchResults : public SAXParser::Handler
             // so once we get here we can check if _currentPeptide is in sequenceCollection
             if (_currentPeptide->id.empty())
             {
+                PeptideIndexEntry& indexEntry = _peptides[_currentPeptide->peptideSequence];
+
+                // if distinct peptide is new, add the current peptideEvidences
+                if (indexEntry.peptideInstances.empty())
+                {
+                    indexEntry.peptideInstances = sii.peptideEvidence;
+                    
+                    // build a unique id for each PeptideEvidence (based on distinct peptide count)
+                    BOOST_FOREACH(PeptideEvidencePtr& pe, sii.peptideEvidence)
+                        pe->id += "_PEP_" + lexical_cast<string>(_peptides.size());
+                }
+                else
+                    sii.peptideEvidence = indexEntry.peptideInstances;
+
+                // the PeptideLessThan comparator assumes the modifications are sorted
                 sort(_currentPeptide->modification.begin(), _currentPeptide->modification.end(), ModLessThan());
-                pair<set<PeptidePtr, PeptideLessThan>::iterator, bool> insertResult = _peptides.insert(_currentPeptide);
+
+                // try to insert the current peptide variant
+                pair<set<PeptidePtr, PeptideLessThan>::iterator, bool> insertResult = indexEntry.peptideVariants.insert(_currentPeptide);
                 _currentPeptide = *insertResult.first;
 
-                // if peptide does not exist, add it
+                // if the variant was added, give it an id
                 if (insertResult.second)
                 {
-                    _currentPeptide->id = "PEP_" + lexical_cast<string>(_peptides.size());
+                    _currentPeptide->id = "PEP_" + lexical_cast<string>(++peptideCount);
                     _mzid->sequenceCollection.peptides.push_back(_currentPeptide);
-
-                    // now that _currentPeptide has an id, use it to build a unique id for each PeptideEvidence
-                    BOOST_FOREACH(PeptideEvidencePtr& pe, sii.peptideEvidence)
-                        pe->id += "_" + _currentPeptide->id;
                 }
 
                 // the peptide is guaranteed to exist, so reference it
                 sii.peptidePtr = _currentPeptide;
             }
 
-            sii.paramGroup.userParams.push_back(UserParam());
-            UserParam& score = sii.paramGroup.userParams.back();
-            getAttribute(attributes, "name", score.name);
-            getAttribute(attributes, "value", score.value);
+            translateScore(sii, attributes);
         }
         else if (name == "modification_info")
         {
@@ -406,16 +1251,20 @@ struct HandlerSearchResults : public SAXParser::Handler
             double modMassPlusAminoAcid;
             getAttribute(attributes, "mass", modMassPlusAminoAcid);
             mod.avgMassDelta = mod.monoisotopicMassDelta = modMassPlusAminoAcid - AminoAcid::Info::record(modifiedResidue).residueFormula.monoisotopicMass();
+            mod.residues = string(1, modifiedResidue);
         }
         else if (name == "alternative_protein")
         {
             SpectrumIdentificationItem& sii = *_sir->spectrumIdentificationItem.back();
 
-            PeptideEvidencePtr pe = PeptideEvidencePtr(new PeptideEvidence);
-            sii.peptideEvidence.push_back(pe);
+            if (!sii.peptideEvidence.empty())
+            {
+                PeptideEvidencePtr pe = PeptideEvidencePtr(new PeptideEvidence);
+                sii.peptideEvidence.push_back(pe);
 
-            getAttribute(attributes, "protein", pe->id);
-            pe->dbSequencePtr = getDBSequence(pe->id);
+                getAttribute(attributes, "protein", pe->id);
+                pe->dbSequencePtr = getDBSequence(pe->id);
+            }
         }
         else if (name == "search_hit")
         {
@@ -428,39 +1277,64 @@ struct HandlerSearchResults : public SAXParser::Handler
 
             int matchedIons, totalIons;
             getAttribute(attributes, "num_matched_ions", matchedIons);
+            if (matchedIons > 0)
+                sii.paramGroup.set(MS_number_of_matched_peaks, matchedIons);
+
             getAttribute(attributes, "tot_num_ions", totalIons);
-            sii.paramGroup.set(MS_number_of_matched_peaks, matchedIons);
-            sii.paramGroup.set(MS_number_of_unmatched_peaks, totalIons - matchedIons);
+            if (totalIons > 0)
+                sii.paramGroup.set(MS_number_of_unmatched_peaks, totalIons - matchedIons);
 
             _currentPeptide = PeptidePtr(new Peptide);
             getAttribute(attributes, "peptide", _currentPeptide->peptideSequence);
 
-            PeptideEvidencePtr pe = PeptideEvidencePtr(new PeptideEvidence);
-            sii.peptideEvidence.push_back(pe);
+            PeptideIndexEntry& indexEntry = _peptides[_currentPeptide->peptideSequence];
 
-            getAttribute(attributes, "protein", pe->id);
-            pe->dbSequencePtr = getDBSequence(pe->id);
-            getAttribute(attributes, "num_missed_cleavages", pe->missedCleavages);
-            getAttribute(attributes, "peptide_prev_aa", pe->pre);
-            getAttribute(attributes, "peptide_next_aa", pe->post);
+            // if distinct peptide is new, add the current peptideEvidences
+            if (indexEntry.peptideInstances.empty())
+            {
+                PeptideEvidencePtr pe = PeptideEvidencePtr(new PeptideEvidence);
+                sii.peptideEvidence.push_back(pe);
+
+                getAttribute(attributes, "protein", pe->id);
+                pe->dbSequencePtr = getDBSequence(pe->id);
+                getAttribute(attributes, "num_missed_cleavages", pe->missedCleavages);
+                getAttribute(attributes, "peptide_prev_aa", pe->pre);
+                getAttribute(attributes, "peptide_next_aa", pe->post);
+            }
         }
         else if (name == "spectrum_query")
         {
             if (ilr) ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(1, siiCount, "Reading spectrum queries"));
 
-            string spectrumNativeID;
-            getAttribute(attributes, "spectrumNativeID", spectrumNativeID);
-            //if (sirPtr->spectrumID.empty())
+            string spectrum, spectrumWithoutCharge;
+            getAttribute(attributes, "spectrum", spectrum);
+
+            if (boost::xpressive::regex_match(spectrum, what, conventionalSpectrumIdRegex))
+                spectrumWithoutCharge = what[1];
+            else
+                spectrumWithoutCharge = spectrum;
 
             // we assume that spectrum_query elements from the same spectrum are adjacent;
             // so we add a new SpectrumIdentificationResult when the spectrumNativeID changes
-            if (!_sir.get() || _sir->spectrumID != spectrumNativeID)
+            if (!_sir.get() || _sir->name != spectrumWithoutCharge)
             {
+                string spectrumNativeID;
+                getAttribute(attributes, "spectrumNativeID", spectrumNativeID);
+                if (spectrumNativeID.empty())
+                {
+                    string start_scan;
+                    getAttribute(attributes, "start_scan", start_scan);
+                    spectrumNativeID = msdata::id::translateScanNumberToNativeID(nativeIdFormat, start_scan);
+                    if (spectrumNativeID.empty())
+                        spectrumNativeID = "scan=" + start_scan;
+                }
+
                 _sir = SpectrumIdentificationResultPtr(new SpectrumIdentificationResult);
                 _sil->spectrumIdentificationResult.push_back(_sir);
                 _sir->id = "SIR_" + lexical_cast<string>(_sil->spectrumIdentificationResult.size());
                 _sir->spectrumID = spectrumNativeID;
-                getAttribute(attributes, "spectrum", _sir->name);
+                _sir->name = spectrumWithoutCharge;
+                _sir->spectraDataPtr = _mzid->dataCollection.inputs.spectraData[0];
             }
 
             double precursorNeutralMass;
@@ -484,13 +1358,22 @@ struct HandlerSearchResults : public SAXParser::Handler
     private:
     SpectrumIdentificationResultPtr _sir;
     SpectrumIdentificationItem _sii;
-    set<PeptidePtr, PeptideLessThan> _peptides;
     map<string, DBSequencePtr> _dbSequences;
     PeptidePtr _currentPeptide;
     Formula _nTerm, _cTerm;
-    int siiCount;
+    boost::xpressive::sregex conventionalSpectrumIdRegex;
+    boost::xpressive::smatch what;
+    int siiCount, peptideCount;
     const CVTranslator& _cvTranslator;
     const IterationListenerRegistry* ilr;
+
+    // stores evidence and modified forms of a distinct peptide
+    struct PeptideIndexEntry
+    {
+        vector<PeptideEvidencePtr> peptideInstances;
+        set<PeptidePtr, PeptideLessThan> peptideVariants;
+    };
+    map<string, PeptideIndexEntry> _peptides;
 };
 
 
@@ -505,6 +1388,9 @@ struct Handler_pepXML : public SAXParser::Handler
         handlerSearchResults(cvTranslator, iterationListenerRegistry),
         ilr(iterationListenerRegistry)
     {
+        // add default CVs
+        mzid.cvs = defaultCVList();
+
         // add the SpectrumIdentificationProtocol
         SpectrumIdentificationProtocolPtr sipPtr = SpectrumIdentificationProtocolPtr(new SpectrumIdentificationProtocol("SIP"));
         mzid.analysisProtocolCollection.spectrumIdentificationProtocol.push_back(sipPtr);
@@ -538,23 +1424,23 @@ struct Handler_pepXML : public SAXParser::Handler
         {
             if (ilr) ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(1, 0, "Reading header..."));
 
-            string date, summaryXml;
-            getAttribute(attributes, "date", date);
+            string summaryXml;
+            getAttribute(attributes, "date", mzid.creationDate);
             getAttribute(attributes, "summary_xml", summaryXml);
 
-            if (!summaryXml.empty())
+            /*if (!summaryXml.empty())
             {
                 SourceFilePtr sourceFile = SourceFilePtr(new SourceFile);
                 sourceFile->id = "SF_1";
                 sourceFile->name = bfs::path(summaryXml).filename();
                 sourceFile->location = summaryXml;
                 mzid.dataCollection.inputs.sourceFile.push_back(sourceFile);
-            }
+            }*/
             return Status::Ok;
         }
         else if (name == "msms_run_summary")
         {
-            SpectraDataPtr spectraData = SpectraDataPtr(new SpectraData("SD_1"));
+            SpectraDataPtr spectraData = SpectraDataPtr(new SpectraData("SD"));
             getAttribute(attributes, "base_name", spectraData->location);
             spectraData->name = bfs::path(spectraData->location).filename();
 
@@ -574,6 +1460,17 @@ struct Handler_pepXML : public SAXParser::Handler
         }
         else if (name == "spectrum_query")
         {
+            // determine nativeID format from first spectrum_query
+            string spectrumNativeID;
+            getAttribute(attributes, "spectrumNativeID", spectrumNativeID);
+
+            CVID nativeIdFormat = NativeIdTranslator::instance->translate(spectrumNativeID);
+            if (nativeIdFormat == CVID_Unknown)
+                nativeIdFormat = MS_scan_number_only_nativeID_format;
+
+            mzid.dataCollection.inputs.spectraData[0]->spectrumIDFormat.set(nativeIdFormat);
+
+            handlerSearchResults.nativeIdFormat = nativeIdFormat;
             return Status(Status::Delegate, &handlerSearchResults);
         }
         throw runtime_error("[Handler_pepXML] Unexpected element name: " + name);

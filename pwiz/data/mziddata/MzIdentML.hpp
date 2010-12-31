@@ -26,28 +26,41 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Exception.hpp"
 #include "pwiz/data/common/cv.hpp"
 #include "pwiz/data/common/ParamTypes.hpp"
-#include "boost/shared_ptr.hpp"
 #include "boost/logic/tribool.hpp"
 #include <vector>
 #include <string>
 #include <map>
 
 
+#ifdef USE_RAW_PTR
+#define TYPEDEF_SHARED_PTR(type) typedef type* type##Ptr
+#define BOOST_FOREACH(a, b) a;
+#else
+#include <boost/foreach.hpp>
+#define TYPEDEF_SHARED_PTR(type) typedef boost::shared_ptr<type> type##Ptr
+#endif
+
+
 namespace pwiz {
 namespace mziddata {
 
+
 using namespace pwiz::cv;
 using namespace pwiz::data;
+
 
 /// returns a default list of CVs used in an MzIdentML document;
 /// currently includes PSI-MS, Unit Ontology, and UNIMOD
 PWIZ_API_DECL std::vector<CV> defaultCVList();
 
+
 struct PWIZ_API_DECL Element
 {
 };
+
 
 struct PWIZ_API_DECL IdentifiableType : public Element
 {
@@ -62,6 +75,7 @@ struct PWIZ_API_DECL IdentifiableType : public Element
     virtual bool empty() const;
 };
 
+
 struct PWIZ_API_DECL ExternalData : public IdentifiableType
 {
     ExternalData(const std::string id_ = "",
@@ -71,6 +85,7 @@ struct PWIZ_API_DECL ExternalData : public IdentifiableType
     
     bool empty() const;
 };
+
 
 struct PWIZ_API_DECL BibliographicReference : public IdentifiableType
 {
@@ -89,7 +104,8 @@ struct PWIZ_API_DECL BibliographicReference : public IdentifiableType
     bool empty() const;
 };
 
-typedef boost::shared_ptr<BibliographicReference> BibliographicReferencePtr;
+TYPEDEF_SHARED_PTR(BibliographicReference);
+
 
 struct PWIZ_API_DECL Contact : public IdentifiableType
 {
@@ -109,9 +125,8 @@ struct PWIZ_API_DECL Contact : public IdentifiableType
     virtual bool empty() const;
 };
 
-typedef boost::shared_ptr<Contact> ContactPtr;
+TYPEDEF_SHARED_PTR(Contact);
 
-//struct PWIZ_API_DECL Organization;
 
 struct PWIZ_API_DECL Organization : public Contact
 {
@@ -133,7 +148,8 @@ struct PWIZ_API_DECL Organization : public Contact
     virtual bool empty() const;
 };
 
-typedef boost::shared_ptr<Organization> OrganizationPtr;
+TYPEDEF_SHARED_PTR(Organization);
+
 
 struct PWIZ_API_DECL Affiliations : public Element
 {
@@ -145,6 +161,7 @@ struct PWIZ_API_DECL Affiliations : public Element
 
     bool empty() const;
 };
+
 
 struct PWIZ_API_DECL Person : public Contact
 {
@@ -160,7 +177,8 @@ struct PWIZ_API_DECL Person : public Contact
     virtual bool empty() const;
 };
 
-typedef boost::shared_ptr<Person> PersonPtr;
+TYPEDEF_SHARED_PTR(Person);
+
 
 struct PWIZ_API_DECL ContactRole : public Element
 {
@@ -173,7 +191,7 @@ struct PWIZ_API_DECL ContactRole : public Element
     bool empty() const;
 };
 
-typedef boost::shared_ptr<ContactRole> ContactRolePtr;
+TYPEDEF_SHARED_PTR(ContactRole);
 
 
 struct PWIZ_API_DECL Provider : public IdentifiableType
@@ -186,7 +204,8 @@ struct PWIZ_API_DECL Provider : public IdentifiableType
     bool empty() const;
 };
 
-typedef boost::shared_ptr<Provider> ProviderPtr;
+TYPEDEF_SHARED_PTR(Provider);
+
 
 struct PWIZ_API_DECL Material : public IdentifiableType
 {
@@ -199,7 +218,6 @@ struct PWIZ_API_DECL Material : public IdentifiableType
     virtual bool empty() const;
 };
 
-struct PWIZ_API_DECL Sample;
 
 struct PWIZ_API_DECL Sample : public Material
 {
@@ -222,7 +240,8 @@ struct PWIZ_API_DECL Sample : public Material
     bool empty() const;
 };
 
-typedef boost::shared_ptr<Sample> SamplePtr;
+TYPEDEF_SHARED_PTR(Sample);
+
 
 struct PWIZ_API_DECL AnalysisSoftware : public IdentifiableType
 {
@@ -241,7 +260,8 @@ struct PWIZ_API_DECL AnalysisSoftware : public IdentifiableType
     virtual bool empty() const;
 };
 
-typedef boost::shared_ptr<AnalysisSoftware> AnalysisSoftwarePtr;
+TYPEDEF_SHARED_PTR(AnalysisSoftware);
+
 
 // TODO find example document w/ this in it and determine best
 // representation for data model
@@ -270,7 +290,7 @@ struct PWIZ_API_DECL SearchDatabase : public ExternalData
     bool empty() const;
 };
 
-typedef boost::shared_ptr<SearchDatabase> SearchDatabasePtr;
+TYPEDEF_SHARED_PTR(SearchDatabase);
 
 
 struct PWIZ_API_DECL DBSequence : public IdentifiableType
@@ -290,7 +310,8 @@ struct PWIZ_API_DECL DBSequence : public IdentifiableType
     bool empty() const;
 };
 
-typedef boost::shared_ptr<DBSequence> DBSequencePtr;
+TYPEDEF_SHARED_PTR(DBSequence);
+
 
 struct PWIZ_API_DECL Modification
 {
@@ -306,7 +327,7 @@ struct PWIZ_API_DECL Modification
     bool empty() const;
 };
     
-typedef boost::shared_ptr<Modification> ModificationPtr;
+TYPEDEF_SHARED_PTR(Modification);
 
 
 struct PWIZ_API_DECL SubstitutionModification
@@ -337,7 +358,8 @@ struct PWIZ_API_DECL Peptide : public IdentifiableType
     bool empty() const;
 };
 
-typedef boost::shared_ptr<Peptide> PeptidePtr;
+TYPEDEF_SHARED_PTR(Peptide);
+
 
 struct PWIZ_API_DECL SequenceCollection
 {
@@ -371,7 +393,7 @@ struct PWIZ_API_DECL SearchModification
     bool empty() const;
 };
 
-typedef boost::shared_ptr<SearchModification> SearchModificationPtr;
+TYPEDEF_SHARED_PTR(SearchModification);
 
 
 struct PWIZ_API_DECL Enzyme
@@ -391,7 +413,7 @@ struct PWIZ_API_DECL Enzyme
     bool empty() const;
 };
 
-typedef boost::shared_ptr<Enzyme> EnzymePtr;
+TYPEDEF_SHARED_PTR(Enzyme);
 
 
 struct PWIZ_API_DECL Enzymes
@@ -414,7 +436,7 @@ struct PWIZ_API_DECL Residue
     bool empty() const;
 };
 
-typedef boost::shared_ptr<Residue> ResiduePtr;
+TYPEDEF_SHARED_PTR(Residue);
 
 
 struct PWIZ_API_DECL AmbiguousResidue
@@ -426,7 +448,7 @@ struct PWIZ_API_DECL AmbiguousResidue
     bool empty() const;
 };
 
-typedef boost::shared_ptr<AmbiguousResidue> AmbiguousResiduePtr;
+TYPEDEF_SHARED_PTR(AmbiguousResidue);
 
 
 struct PWIZ_API_DECL MassTable
@@ -442,7 +464,7 @@ struct PWIZ_API_DECL MassTable
     bool empty() const;
 };
 
-typedef boost::shared_ptr<MassTable> MassTablePtr;
+TYPEDEF_SHARED_PTR(MassTable);
 
 
 struct PWIZ_API_DECL Filter
@@ -454,7 +476,8 @@ struct PWIZ_API_DECL Filter
     bool empty() const;
 };
 
-typedef boost::shared_ptr<Filter> FilterPtr;
+TYPEDEF_SHARED_PTR(Filter);
+
 
 struct PWIZ_API_DECL TranslationTable : public IdentifiableType
 {
@@ -466,7 +489,8 @@ struct PWIZ_API_DECL TranslationTable : public IdentifiableType
     bool empty() const;
 };
 
-typedef boost::shared_ptr<TranslationTable> TranslationTablePtr;
+TYPEDEF_SHARED_PTR(TranslationTable);
+
 
 struct PWIZ_API_DECL DatabaseTranslation
 {
@@ -482,7 +506,7 @@ struct PWIZ_API_DECL DatabaseTranslation
     bool empty() const;
 };
 
-typedef boost::shared_ptr<DatabaseTranslation> DatabaseTranslationPtr;
+TYPEDEF_SHARED_PTR(DatabaseTranslation);
 
 
 struct PWIZ_API_DECL SpectrumIdentificationProtocol : public IdentifiableType
@@ -507,7 +531,7 @@ struct PWIZ_API_DECL SpectrumIdentificationProtocol : public IdentifiableType
     bool empty() const;
 };
 
-typedef boost::shared_ptr<SpectrumIdentificationProtocol> SpectrumIdentificationProtocolPtr;
+TYPEDEF_SHARED_PTR(SpectrumIdentificationProtocol);
 
 
 struct PWIZ_API_DECL Measure : public IdentifiableType
@@ -520,7 +544,7 @@ struct PWIZ_API_DECL Measure : public IdentifiableType
     bool empty() const;
 };
 
-typedef boost::shared_ptr<Measure> MeasurePtr;
+TYPEDEF_SHARED_PTR(Measure);
 
 
 struct PWIZ_API_DECL FragmentArray
@@ -539,7 +563,7 @@ struct PWIZ_API_DECL FragmentArray
     bool empty() const;
 };
 
-typedef boost::shared_ptr<FragmentArray> FragmentArrayPtr;
+TYPEDEF_SHARED_PTR(FragmentArray);
 
 
 struct PWIZ_API_DECL IonType
@@ -560,7 +584,7 @@ struct PWIZ_API_DECL IonType
     bool empty() const;
 };
 
-typedef boost::shared_ptr<IonType> IonTypePtr;
+TYPEDEF_SHARED_PTR(IonType);
 
 
 struct PWIZ_API_DECL PeptideEvidence : public IdentifiableType
@@ -585,7 +609,7 @@ struct PWIZ_API_DECL PeptideEvidence : public IdentifiableType
     bool empty() const;
 };
 
-typedef boost::shared_ptr<PeptideEvidence> PeptideEvidencePtr;
+TYPEDEF_SHARED_PTR(PeptideEvidence);
 
 
 struct PWIZ_API_DECL SpectrumIdentificationItem : public IdentifiableType
@@ -614,7 +638,8 @@ struct PWIZ_API_DECL SpectrumIdentificationItem : public IdentifiableType
     bool empty() const;
 };
 
-typedef boost::shared_ptr<SpectrumIdentificationItem> SpectrumIdentificationItemPtr;
+TYPEDEF_SHARED_PTR(SpectrumIdentificationItem);
+
 
 struct PWIZ_API_DECL SpectraData : public IdentifiableType
 {
@@ -630,7 +655,7 @@ struct PWIZ_API_DECL SpectraData : public IdentifiableType
     bool empty() const;
 };
 
-typedef boost::shared_ptr<SpectraData> SpectraDataPtr;
+TYPEDEF_SHARED_PTR(SpectraData);
 
 
 struct PWIZ_API_DECL SpectrumIdentificationResult : public IdentifiableType
@@ -645,7 +670,8 @@ struct PWIZ_API_DECL SpectrumIdentificationResult : public IdentifiableType
     bool empty() const;
 };
 
-typedef boost::shared_ptr<SpectrumIdentificationResult> SpectrumIdentificationResultPtr;
+TYPEDEF_SHARED_PTR(SpectrumIdentificationResult);
+
 
 struct PWIZ_API_DECL SpectrumIdentificationList : public IdentifiableType
 {
@@ -660,7 +686,7 @@ struct PWIZ_API_DECL SpectrumIdentificationList : public IdentifiableType
     bool empty() const;
 };
 
-typedef boost::shared_ptr<SpectrumIdentificationList> SpectrumIdentificationListPtr;
+TYPEDEF_SHARED_PTR(SpectrumIdentificationList);
 
 
 struct PWIZ_API_DECL SpectrumIdentification : public IdentifiableType
@@ -680,7 +706,8 @@ struct PWIZ_API_DECL SpectrumIdentification : public IdentifiableType
     bool empty() const;
 };
 
-typedef boost::shared_ptr<SpectrumIdentification> SpectrumIdentificationPtr;
+TYPEDEF_SHARED_PTR(SpectrumIdentification);
+
 
 struct PWIZ_API_DECL ProteinDetectionProtocol : public IdentifiableType
 {
@@ -696,7 +723,7 @@ struct PWIZ_API_DECL ProteinDetectionProtocol : public IdentifiableType
     bool empty() const;
 };
 
-typedef boost::shared_ptr<ProteinDetectionProtocol> ProteinDetectionProtocolPtr;
+TYPEDEF_SHARED_PTR(ProteinDetectionProtocol);
 
 
 struct PWIZ_API_DECL ProteinDetectionHypothesis : public IdentifiableType
@@ -717,7 +744,7 @@ struct PWIZ_API_DECL ProteinDetectionHypothesis : public IdentifiableType
     bool empty() const;
 };
 
-typedef boost::shared_ptr<ProteinDetectionHypothesis> ProteinDetectionHypothesisPtr;
+TYPEDEF_SHARED_PTR(ProteinDetectionHypothesis);
 
 
 struct PWIZ_API_DECL ProteinAmbiguityGroup : public IdentifiableType
@@ -730,7 +757,8 @@ struct PWIZ_API_DECL ProteinAmbiguityGroup : public IdentifiableType
     bool empty() const;
 };
 
-typedef boost::shared_ptr<ProteinAmbiguityGroup> ProteinAmbiguityGroupPtr;
+TYPEDEF_SHARED_PTR(ProteinAmbiguityGroup);
+
 
 struct PWIZ_API_DECL ProteinDetectionList : public IdentifiableType
 {
@@ -743,7 +771,7 @@ struct PWIZ_API_DECL ProteinDetectionList : public IdentifiableType
     bool empty() const;
 };
 
-typedef boost::shared_ptr<ProteinDetectionList> ProteinDetectionListPtr;
+TYPEDEF_SHARED_PTR(ProteinDetectionList);
 
 
 struct PWIZ_API_DECL ProteinDetection : public IdentifiableType
@@ -762,7 +790,8 @@ struct PWIZ_API_DECL ProteinDetection : public IdentifiableType
     virtual bool empty() const;
 };
 
-typedef boost::shared_ptr<ProteinDetection> ProteinDetectionPtr;
+TYPEDEF_SHARED_PTR(ProteinDetection);
+
 
 struct PWIZ_API_DECL AnalysisCollection
 {
@@ -782,7 +811,7 @@ struct PWIZ_API_DECL AnalysisProtocolCollection
     bool empty() const;
 };
 
-typedef boost::shared_ptr<AnalysisProtocolCollection> AnalysisProtocolCollectionPtr;
+TYPEDEF_SHARED_PTR(AnalysisProtocolCollection);
 
 
 struct PWIZ_API_DECL SourceFile : public IdentifiableType
@@ -797,7 +826,8 @@ struct PWIZ_API_DECL SourceFile : public IdentifiableType
     bool empty() const;
 };
 
-typedef boost::shared_ptr<SourceFile> SourceFilePtr;
+TYPEDEF_SHARED_PTR(SourceFile);
+
 
 /// Input element. Contains 0+ of SourceFile, SearchDatabase,
 /// SpectraData
@@ -811,10 +841,7 @@ struct PWIZ_API_DECL Inputs
     bool empty() const;
 };
 
-typedef boost::shared_ptr<Inputs> InputsPtr;
-
-
-
+TYPEDEF_SHARED_PTR(Inputs);
 
 
 /// AnalysisData element. 
@@ -826,7 +853,8 @@ struct PWIZ_API_DECL AnalysisData
     bool empty() const;
 };
 
-typedef boost::shared_ptr<AnalysisData> AnalysisDataPtr;
+TYPEDEF_SHARED_PTR(AnalysisData);
+
 
 struct PWIZ_API_DECL DataCollection
 {
@@ -836,9 +864,11 @@ struct PWIZ_API_DECL DataCollection
     bool empty() const;
 };
 
-typedef boost::shared_ptr<DataCollection> DataCollectionPtr;
+TYPEDEF_SHARED_PTR(DataCollection);
+
 
 namespace IO {struct HandlerMzIdentML;} // forward declaration for friend
+
 
 struct PWIZ_API_DECL MzIdentML : public IdentifiableType
 {
@@ -883,7 +913,7 @@ struct PWIZ_API_DECL MzIdentML : public IdentifiableType
     friend struct IO::HandlerMzIdentML;
 };
 
-typedef boost::shared_ptr<MzIdentML> MzIdentMLPtr;
+TYPEDEF_SHARED_PTR(MzIdentML);
 
 
 } // namespace mziddata 

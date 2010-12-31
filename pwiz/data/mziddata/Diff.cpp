@@ -500,8 +500,6 @@ void diff(const SpectrumIdentificationProtocol& a,
     diff(a.searchType, b.searchType, a_b.searchType, b_a.searchType, config);
     diff(a.additionalSearchParams, b.additionalSearchParams,
          a_b.additionalSearchParams, b_a.additionalSearchParams, config);
-    diff(a.searchType, b.searchType,
-         a_b.searchType, b_a.searchType, config);
     diff(a.enzymes, b.enzymes, a_b.enzymes, b_a.enzymes, config);
     diff(a.massTable, b.massTable, a_b.massTable, b_a.massTable, config);
     diff(a.fragmentTolerance, b.fragmentTolerance, a_b.fragmentTolerance, b_a.fragmentTolerance, config);
@@ -757,6 +755,8 @@ void diff(const Peptide& a,
           Peptide& b_a,
           const DiffConfig& config)
 {
+    diff((IdentifiableType&)a, (IdentifiableType&)b,
+         (IdentifiableType&)a_b, (IdentifiableType&)b_a, config);
     diff(a.peptideSequence, b.peptideSequence, a_b.peptideSequence,
          b_a.peptideSequence, config);
     vector_diff_deep(a.modification, b.modification, a_b.modification,

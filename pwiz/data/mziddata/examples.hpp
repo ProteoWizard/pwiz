@@ -30,6 +30,7 @@ namespace pwiz {
 namespace mziddata {
 namespace examples {
 
+PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid);
 PWIZ_API_DECL void initializeTiny(MzIdentML& mzid);
 
 } // namespace pwiz 

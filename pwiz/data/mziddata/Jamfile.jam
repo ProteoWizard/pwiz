@@ -106,6 +106,7 @@ lib pwiz_data_mzid
         <library>pwiz_data_mzid_version
         <library>../proteome//pwiz_data_proteome
         <library>../common//pwiz_data_common
+        <library>../msdata//pwiz_data_msdata # TODO: move nativeID stuff to pwiz_data_common
         <library>../misc//pwiz_data_misc
         <library>../../utility/chemistry//pwiz_utility_chemistry
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
@@ -116,6 +117,7 @@ lib pwiz_data_mzid
         <library>pwiz_data_mzid_version
         <library>../proteome//pwiz_data_proteome
         <library>../common//pwiz_data_common
+        <library>../msdata//pwiz_data_msdata
         <library>../misc//pwiz_data_misc
         <library>../../utility/chemistry//pwiz_utility_chemistry
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
@@ -152,7 +154,7 @@ unit-test-if-exists DiffTest : DiffTest.cpp pwiz_data_mzid pwiz_data_mzid_exampl
 unit-test-if-exists ReferencesTest : ReferencesTest.cpp pwiz_data_mzid ;
 unit-test-if-exists IOTest : IOTest.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
 unit-test-if-exists Serializer_mzid_Test : Serializer_mzid_Test.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
-#unit-test-if-exists Serializer_pepXML_Test : Serializer_pepXML_Test.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
+unit-test-if-exists Serializer_pepXML_Test : Serializer_pepXML_Test.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
 unit-test-if-exists KwCVMapTest : KwCVMapTest.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
 #unit-test-if-exists Pep2MzIdent : Pep2MzIdentTest.cpp pwiz_data_mzid ;
 #unit-test-if-exists TraDataFileTest : TraDataFileTest.cpp pwiz_data_tradata pwiz_data_tradata_examples /ext/boost//filesystem ;

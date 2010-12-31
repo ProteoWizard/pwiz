@@ -76,6 +76,17 @@ class PWIZ_API_DECL XMLWriter
         {}
     };
 
+    /// vector of name/value pairs to be written as XML attributes
+    class Attributes : public std::vector< std::pair<std::string,std::string> >
+    {
+        public:
+        template <typename T>
+        inline void add(const std::string& name, const T& value)
+        {
+            push_back(make_pair(name, lexical_cast<std::string>(value)));
+        }
+    };
+
     /// constructor
     XMLWriter(std::ostream& os, const Config& config = Config());
     virtual ~XMLWriter() {}
@@ -88,8 +99,6 @@ class PWIZ_API_DECL XMLWriter
 
     /// writes a processing instruction
     void processingInstruction(const std::string& name, const std::string& data);
-
-    typedef std::vector< std::pair<std::string,std::string> > Attributes;
 
     /// tag for indicating an empty element
     enum EmptyElementTag {NotEmptyElement, EmptyElement};

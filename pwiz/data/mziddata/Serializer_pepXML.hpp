@@ -38,7 +38,7 @@ class PWIZ_API_DECL Serializer_pepXML
     Serializer_pepXML() {}
 
     /// write MZIDData object to ostream as pepXML
-    void write(std::ostream& os, const MzIdentML& mzid,
+    void write(std::ostream& os, const MzIdentML& mzid, const std::string& filepath,
                const pwiz::util::IterationListenerRegistry* = 0) const;
 
     /// read in MZIDData object from a pepXML istream
