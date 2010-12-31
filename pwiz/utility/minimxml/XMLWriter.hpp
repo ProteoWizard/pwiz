@@ -29,6 +29,7 @@
 #include "boost/shared_ptr.hpp"
 #include "boost/iostreams/positioning.hpp"
 #include "boost/iostreams/filter/counter.hpp"
+#include "boost/lexical_cast.hpp"
 #include <iosfwd>
 #include <string>
 #include <vector>
@@ -83,7 +84,7 @@ class PWIZ_API_DECL XMLWriter
         template <typename T>
         inline void add(const std::string& name, const T& value)
         {
-            push_back(make_pair(name, lexical_cast<std::string>(value)));
+            push_back(make_pair(name, boost::lexical_cast<std::string>(value)));
         }
     };
 
