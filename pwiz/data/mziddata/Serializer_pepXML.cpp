@@ -57,7 +57,12 @@ struct ci_less
 {
     bool operator() (const string& lhs, const string& rhs) const
     {
-        return _stricmp(lhs.c_str(), rhs.c_str()) < 0;
+        if (lhs.length() != rhs.length())
+            return lhs.length() < rhs.length();
+        for (size_t i=0; i < lhs.length(); ++i)
+            if (tolower(lhs[i]) < tolower(rhs[i]))
+                return true;
+        return false;
     }
 };
 
