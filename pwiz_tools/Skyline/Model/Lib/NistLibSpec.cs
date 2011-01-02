@@ -327,25 +327,136 @@ namespace pwiz.Skyline.Model.Lib
             {
                 // Modification values taken from http://chemdata.nist.gov/mass-spc/ftp/mass-spc/PepLib.pdf
                 {"Oxidation", SequenceMassCalc.GetModDiffDescription(15.994915)},
-                {"Carbamidomethyl", SequenceMassCalc.GetModDiffDescription(57.02146)},            
-                {"ICAT_light", SequenceMassCalc.GetModDiffDescription(227.12)},
-                {"ICAT_heavy", SequenceMassCalc.GetModDiffDescription(236.12)},
-                {"AB_old_ICATd0", SequenceMassCalc.GetModDiffDescription(442.20)},
-                {"AB_old_ICATd8", SequenceMassCalc.GetModDiffDescription(450.20)},
-                {"Acetyl", SequenceMassCalc.GetModDiffDescription(42.0106)},
-                {"Deamidation", SequenceMassCalc.GetModDiffDescription(0.9840)},
-                {"Pyro-cmC", SequenceMassCalc.GetModDiffDescription(-17.026549)},
-                {"Pyro-glu", SequenceMassCalc.GetModDiffDescription(-17.026549)},
-                {"Pyro_glu", SequenceMassCalc.GetModDiffDescription(-18.010565)},
-                {"Amide", SequenceMassCalc.GetModDiffDescription(-0.984016)},
-                {"Phospho", SequenceMassCalc.GetModDiffDescription(79.9663)},
-                {"Methyl", SequenceMassCalc.GetModDiffDescription(14.0157)},
-                {"Carbamyl", SequenceMassCalc.GetModDiffDescription(43.00581)},
-                // Found in the wild
-                {"Gln->pyro-Glu", SequenceMassCalc.GetModDiffDescription(-17.0265)},
-                {"Glu->pyro-Glu", SequenceMassCalc.GetModDiffDescription(-18.0106)},
+                // Use SpectraST (taken from Unimod) values below
+//                {"Carbamidomethyl", SequenceMassCalc.GetModDiffDescription(57.02146)},            
+//                {"ICAT_light", SequenceMassCalc.GetModDiffDescription(227.12)},
+//                NOTE: The value below differs significantly from the Unimod value
+//                {"ICAT_heavy", SequenceMassCalc.GetModDiffDescription(236.12)},
+//                {"AB_old_ICATd0", SequenceMassCalc.GetModDiffDescription(442.20)},
+//                NOTE: The value below differs significantly from the Unimod value
+//                {"AB_old_ICATd8", SequenceMassCalc.GetModDiffDescription(450.20)},
+//                {"Acetyl", SequenceMassCalc.GetModDiffDescription(42.0106)},
+//                {"Deamidation", SequenceMassCalc.GetModDiffDescription(0.9840)},
+//                NOTE: The value was wrong in this version (39.994915 in Unimod)
+//                {"Pyro-cmC", SequenceMassCalc.GetModDiffDescription(-17.026549)},
+//                {"Pyro-glu", SequenceMassCalc.GetModDiffDescription(-17.026549)},
+//                {"Pyro_glu", SequenceMassCalc.GetModDiffDescription(-18.010565)},
+//                {"Amide", SequenceMassCalc.GetModDiffDescription(-0.984016)},
+//                {"Phospho", SequenceMassCalc.GetModDiffDescription(79.9663)},
+//                {"Methyl", SequenceMassCalc.GetModDiffDescription(14.0157)},
+//                {"Carbamyl", SequenceMassCalc.GetModDiffDescription(43.00581)},
+
+                // Modification values taken from SpectraST
+                // http://sashimi.svn.sourceforge.net/viewvc/sashimi/trunk/trans_proteomic_pipeline/src/Search/SpectraST/Peptide.cpp?revision=5277&view=markup
+                // line 1078
+                {"ICAT_light", SequenceMassCalc.GetModDiffDescription(227.126991)}, 
+                {"ICAT-C", SequenceMassCalc.GetModDiffDescription(227.126991)}, // PSI new name
+                {"ICAT_heavy", SequenceMassCalc.GetModDiffDescription(236.157185)},
+                {"ICAT-C:13C(9)", SequenceMassCalc.GetModDiffDescription(236.157185)}, // PSI new name
+                {"AB_old_ICATd0", SequenceMassCalc.GetModDiffDescription(442.224991)},
+                {"ICAT-D", SequenceMassCalc.GetModDiffDescription(442.224991)}, // PSI new name
+                {"AB_old_ICATd8", SequenceMassCalc.GetModDiffDescription(450.275205)},
+                {"ICAT-D:2H(8)", SequenceMassCalc.GetModDiffDescription(450.275205)}, // PSI new name
+                {"Carbamidomethyl", SequenceMassCalc.GetModDiffDescription(57.021464)},
                 {"Carboxymethyl", SequenceMassCalc.GetModDiffDescription(58.005479)},
-                {"Deamidated", SequenceMassCalc.GetModDiffDescription(0.984016)},
+                {"Propionamide", SequenceMassCalc.GetModDiffDescription(71.037114)}, // alkylation of acrylamide to cysteines
+                {"Propionamide:2H(3)", SequenceMassCalc.GetModDiffDescription(74.055944)}, // alkylation of heavy acrylamide to cysteines
+                {"Propionamide:13C(3)", SequenceMassCalc.GetModDiffDescription(74.047178)}, // alkylation of heavy acrylamide to cysteines
+                {"Acetyl", SequenceMassCalc.GetModDiffDescription(42.010565)}, // acetylation of N terminus
+                {"Deamidation", SequenceMassCalc.GetModDiffDescription(0.984016)},
+                {"Deamidated", SequenceMassCalc.GetModDiffDescription(0.984016)}, // PSI new name
+                {"Pyro-cmC", SequenceMassCalc.GetModDiffDescription(39.994915)}, // cyclicization of N-terminal CAM-cysteine (FIXED value 01/27/07)
+                {"Pyro-carbamidomethyl", SequenceMassCalc.GetModDiffDescription(39.994915)}, // PSI new name
+                {"Pyro-glu", SequenceMassCalc.GetModDiffDescription(-17.026549)}, // loss of NH3 from glutamine
+                {"Gln->pyro-Glu", SequenceMassCalc.GetModDiffDescription(-17.026549)}, // PSI new name
+                {"Pyro_glu", SequenceMassCalc.GetModDiffDescription(-18.010565)}, // loss of H2O from glutamic acid
+                {"Glu->pyro-Glu", SequenceMassCalc.GetModDiffDescription(-18.010565)}, // PSI new name
+                {"Amide", SequenceMassCalc.GetModDiffDescription(-0.984016)}, // amidation of C terminus
+                {"Amidated", SequenceMassCalc.GetModDiffDescription(-0.984016)}, // PSI new name
+                {"Phospho", SequenceMassCalc.GetModDiffDescription(79.966331)}, // phosphorylation
+                {"Methyl", SequenceMassCalc.GetModDiffDescription(14.015650)}, // methylation
+                {"Carbamyl", SequenceMassCalc.GetModDiffDescription(43.005814)}, // carbamylation of N terminus or lysines
+                {"iTRAQ4plex", SequenceMassCalc.GetModDiffDescription(144.102063)}, // iTRAQ 4-plex
+                {"PEO-Iodoacetyl-LC-Biotin", SequenceMassCalc.GetModDiffDescription(414.52)}, // Hui Zhang's PEO alkylation agent on cysteines
+                {"Label:13C(6)", SequenceMassCalc.GetModDiffDescription(6.020129)}, // SILAC heavy lysine and arginine (+6)
+                {"Label:13C(6)15N(1)", SequenceMassCalc.GetModDiffDescription(7.017165)},
+                {"Label:13C(6)15N(2)", SequenceMassCalc.GetModDiffDescription(8.014199)}, // SILAC heavy lysine (+8)
+                {"Label:13C(6)15N(3)", SequenceMassCalc.GetModDiffDescription(9.011235)},  
+                {"Label:13C(6)15N(4)", SequenceMassCalc.GetModDiffDescription(10.008269)}, // SILAC heavy arginine (+10)
+                {"Methylthio", SequenceMassCalc.GetModDiffDescription(45.987721)}, // methylthiolated cysteine (cys blocking by MMTS)
+                {"Leucyl", SequenceMassCalc.GetModDiffDescription(113.08406)}, // leucine added to N-term or K
+                {"Leucyl:13C(6)15N(1)", SequenceMassCalc.GetModDiffDescription(120.101224)}, // heavy leucine added to N-term or K
+                {"Nitro", SequenceMassCalc.GetModDiffDescription(44.985078)},
+                {"Dimethyl", SequenceMassCalc.GetModDiffDescription(28.031300)},
+                {"Trimethyl", SequenceMassCalc.GetModDiffDescription(42.046950)},  
+                {"Bromo", SequenceMassCalc.GetModDiffDescription(77.910511)},
+                // Ubl chains
+                {"SUMO_1", SequenceMassCalc.GetModDiffDescription(2135.920495)}, // SUMO-1 Tryptic/LysC tail
+                {"SUMO_2_3_Tryp", SequenceMassCalc.GetModDiffDescription(3549.536567)}, // SUMO-2/3 Tryptic tail
+                {"Smt3_R93A_Tryp", SequenceMassCalc.GetModDiffDescription(3812.747563)}, // Smt3_R93A Tryptic tail
+                {"Smt3_R93A_LysC", SequenceMassCalc.GetModDiffDescription(4544.074787)}, // Smt3_R93A LysC tail
+                {"NEDD8_LysC", SequenceMassCalc.GetModDiffDescription(1555.956231)}, // NEDD8 LysC tail
+                {"Rub1_LysC", SequenceMassCalc.GetModDiffDescription(2454.341699)}, // Rub1 LysC tail
+                {"Ub_LysC", SequenceMassCalc.GetModDiffDescription(1431.831075)}, // Ubiquitin LysC tail
+                {"GlyGly", SequenceMassCalc.GetModDiffDescription(114.042927)}, // Ubiquitin/NEDD8 Tryptic tail (2 glycines)
+            };
+
+        private static readonly Dictionary<string, string> MODIFICATION_MASSES_AVG = new Dictionary<string, string>
+            {
+                // Modification values taken from SpectraST
+                // http://sashimi.svn.sourceforge.net/viewvc/sashimi/trunk/trans_proteomic_pipeline/src/Search/SpectraST/Peptide.cpp?revision=5277&view=markup
+                // line 1078
+                {"ICAT_light", SequenceMassCalc.GetModDiffDescription(227.2603)}, 
+                {"ICAT-C", SequenceMassCalc.GetModDiffDescription(227.2603)}, // PSI new name
+                {"ICAT_heavy", SequenceMassCalc.GetModDiffDescription(236.1942)},
+                {"ICAT-C:13C(9)", SequenceMassCalc.GetModDiffDescription(236.1942)}, // PSI new name
+                {"AB_old_ICATd0", SequenceMassCalc.GetModDiffDescription(442.5728)},
+                {"ICAT-D", SequenceMassCalc.GetModDiffDescription(442.5728)}, // PSI new name
+                {"AB_old_ICATd8", SequenceMassCalc.GetModDiffDescription(450.6221)},
+                {"ICAT-D:2H(8)", SequenceMassCalc.GetModDiffDescription(450.6221)}, // PSI new name
+                {"Carbamidomethyl", SequenceMassCalc.GetModDiffDescription(57.0513)},  
+                {"Carboxymethyl", SequenceMassCalc.GetModDiffDescription(58.0361)},  
+                {"Propionamide", SequenceMassCalc.GetModDiffDescription(71.0779)}, // alkylation of acrylamide to cysteines
+                {"Propionamide:2H(3)", SequenceMassCalc.GetModDiffDescription(74.0964)}, // alkylation of heavy acrylamide to cysteines
+                {"Propionamide:13C(3)", SequenceMassCalc.GetModDiffDescription(74.0558)},  
+                {"Oxidation", SequenceMassCalc.GetModDiffDescription(15.9994)},  
+                {"Acetyl", SequenceMassCalc.GetModDiffDescription(42.0106)}, // acetylation of N terminus  
+                {"Deamidation", SequenceMassCalc.GetModDiffDescription(0.9848)},
+                {"Deamidated", SequenceMassCalc.GetModDiffDescription(0.9848)}, // PSI new name
+                {"Pyro-cmC", SequenceMassCalc.GetModDiffDescription(40.0208)}, // cyclicization of N-terminal CAM-cysteine (FIXED value 01/27/07)
+                {"Pyro-carbamidomethyl", SequenceMassCalc.GetModDiffDescription(40.0208)}, // PSI new name
+                {"Pyro-glu", SequenceMassCalc.GetModDiffDescription(-17.0305)}, // loss of NH3 from glutamine
+                {"Gln->pyro-Glu", SequenceMassCalc.GetModDiffDescription(-17.0305)}, // PSI new name
+                {"Pyro_glu", SequenceMassCalc.GetModDiffDescription(-18.01524)}, // loss of H2O from glutamic acid
+                {"Glu->pyro-Glu", SequenceMassCalc.GetModDiffDescription(-18.01524)}, // PSI new name
+                {"Amide", SequenceMassCalc.GetModDiffDescription(-0.9848)}, // amidation of C terminus
+                {"Amidated", SequenceMassCalc.GetModDiffDescription(-0.9848)}, // PSI new name  
+                {"Phospho", SequenceMassCalc.GetModDiffDescription(79.9799)}, // phosphorylation  
+                {"Methyl", SequenceMassCalc.GetModDiffDescription(14.0266)}, // methylation  
+                {"Carbamyl", SequenceMassCalc.GetModDiffDescription(43.0247)}, // carbamylation of N terminus or lysines
+                {"iTRAQ4plex", SequenceMassCalc.GetModDiffDescription( 144.1544)}, // iTRAQ on N terminus or K
+                {"PEO-Iodoacetyl-LC-Biotin", SequenceMassCalc.GetModDiffDescription( 414.52)}, // Hui Zhang's PEO alkylation agent on cysteines
+                {"Label:13C(6)", SequenceMassCalc.GetModDiffDescription(5.9559)}, // SILAC heavy lysine or arginine (+6)
+                {"Label:13C(6)15N(1)", SequenceMassCalc.GetModDiffDescription(6.9490)},
+                {"Label:13C(6)15N(2)", SequenceMassCalc.GetModDiffDescription(7.9427)}, // SILAC heavy lysine (+8)
+                {"Label:13C(6)15N(3)", SequenceMassCalc.GetModDiffDescription(8.9358)},  
+                {"Label:13C(6)15N(4)", SequenceMassCalc.GetModDiffDescription(9.9296)}, // SILAC heavy arginine (+10)
+                {"Methylthio", SequenceMassCalc.GetModDiffDescription(46.0916)}, // methylthiolated cysteine (cys blocking by MMTS)
+                {"Leucyl", SequenceMassCalc.GetModDiffDescription(113.1594)}, // leucine added to N-term or K
+                {"Leucyl:13C(6)15N(1)", SequenceMassCalc.GetModDiffDescription(120.1087)}, // heavy leucine added to N-term or K 
+                {"Nitro", SequenceMassCalc.GetModDiffDescription(44.9976)},
+                {"Dimethyl", SequenceMassCalc.GetModDiffDescription(28.0532)},
+                {"Trimethyl", SequenceMassCalc.GetModDiffDescription(42.0797)},
+                {"Bromo", SequenceMassCalc.GetModDiffDescription(78.8961)},                  
+                // Ubl chains
+                {"SUMO_1", SequenceMassCalc.GetModDiffDescription(2137.2567)}, // SUMO-1 Tryptic/LysC tail
+                {"SUMO_2_3_Tryp", SequenceMassCalc.GetModDiffDescription(3551.7075)}, // SUMO-2/3 Tryptic tail
+                {"Smt3_R93A_Tryp", SequenceMassCalc.GetModDiffDescription(3815.0935)}, // Smt3_R93A Tryptic tail
+                {"Smt3_R93A_LysC", SequenceMassCalc.GetModDiffDescription(4546.9153)}, // Smt3_R93A LysC tail
+                {"NEDD8_LysC", SequenceMassCalc.GetModDiffDescription(1556.9154)}, // NEDD8 LysC tail
+                {"Rub1_LysC", SequenceMassCalc.GetModDiffDescription(2455.9015)}, // Rub1 LysC tail
+                {"Ub_LysC", SequenceMassCalc.GetModDiffDescription(1432.6894)}, // Ubiquitin LysC tail
+                {"GlyGly", SequenceMassCalc.GetModDiffDescription(114.1026)}, // Ubiquitin/NEDD8 Tryptic tail (2 glycines)
             };
 
         private NistSpectrumInfo[] _libraryEntries;
