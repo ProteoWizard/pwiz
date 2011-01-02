@@ -647,7 +647,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private void Validate()
         {
-            if (!FastaSequence.IsSequence(PeptideSequence))
+            if (!FastaSequence.IsExSequence(PeptideSequence))
                 throw new InvalidDataException(string.Format("The sequence {0} is not a valid peptide.", PeptideSequence));
             if (RetentionTime < 0)
                 throw new InvalidDataException("Measured retention times must be positive values.");            
