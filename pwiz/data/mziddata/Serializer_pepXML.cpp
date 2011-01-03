@@ -60,8 +60,8 @@ struct ci_less
         if (lhs.length() != rhs.length())
             return lhs.length() < rhs.length();
         for (size_t i=0; i < lhs.length(); ++i)
-            if (tolower(lhs[i]) < tolower(rhs[i]))
-                return true;
+            if (tolower(lhs[i]) != tolower(rhs[i]))
+                return tolower(lhs[i]) < tolower(rhs[i]);
         return false;
     }
 };
@@ -830,7 +830,7 @@ struct HandlerSearchSummary : public SAXParser::Handler
                     _sip->parentTolerance.cvParams[1].units = translateToleranceUnits(value);
                     if (bal::iequals(value, "mmu"))
                         _sip->parentTolerance.cvParams[0].value = 
-                        _sip->parentTolerance.cvParams[1].value = _sip->parentTolerance.cvParams[0].valueAs<double>() / 1000;
+                        _sip->parentTolerance.cvParams[1].value = lexical_cast<string>(_sip->parentTolerance.cvParams[0].valueAs<double>() / 1000);
                 }
                 else if (bal::iequals(name, "itol"))
                 {
@@ -845,7 +845,7 @@ struct HandlerSearchSummary : public SAXParser::Handler
                     // special case: divide mmu by 1000 since the official unit is daltons
                     if (bal::iequals(value, "mmu"))
                         _sip->fragmentTolerance.cvParams[0].value = 
-                        _sip->fragmentTolerance.cvParams[1].value = _sip->parentTolerance.cvParams[0].valueAs<double>() / 1000;
+                        _sip->fragmentTolerance.cvParams[1].value = lexical_cast<string>(_sip->fragmentTolerance.cvParams[0].valueAs<double>() / 1000);
                 }
                 else if (bal::iequals(name, "instrument"))
                 {
@@ -1130,9 +1130,9 @@ struct HandlerSearchResults : public SAXParser::Handler
                          const IterationListenerRegistry* iterationListenerRegistry)
     :   _nTerm("H1"),
         _cTerm("O1H1"),
+        siiCount(0), peptideCount(0),
         _cvTranslator(cvTranslator),
-        ilr(iterationListenerRegistry),
-        siiCount(0), peptideCount(0)
+        ilr(iterationListenerRegistry)
     {
         // (basename.scanNumber.scanNumber).charge
         conventionalSpectrumIdRegex = boost::xpressive::sregex::compile("([^.]*\\.\\d+\\.\\d+).*");

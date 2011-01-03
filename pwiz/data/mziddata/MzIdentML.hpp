@@ -269,7 +269,7 @@ struct PWIZ_API_DECL AnalysisSampleCollection
 {
     std::vector<SamplePtr> samples;
 
-    virtual bool empty() const;
+    bool empty() const;
 };
 
 
