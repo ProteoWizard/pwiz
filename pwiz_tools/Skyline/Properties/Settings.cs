@@ -744,7 +744,7 @@ namespace pwiz.Skyline.Properties
 
     public sealed class CollisionEnergyList : SettingsList<CollisionEnergyRegression>
     {
-        public override int RevisionIndexCurrent { get { return 2; } }
+        public override int RevisionIndexCurrent { get { return 3; } }
 
         public static CollisionEnergyRegression GetDefault()
         {
@@ -798,7 +798,7 @@ namespace pwiz.Skyline.Properties
                             new CollisionEnergyRegression("Waters", new[]
                                 { new ChargeRegressionLine(2, 0.034, 3.314), }),
                         };
-                default:    // v0.6 - fix
+                case 2:    // v0.6 - fix
                     return new[]
                         {
                             GetDefault(), 
@@ -816,6 +816,32 @@ namespace pwiz.Skyline.Properties
                                 { new ChargeRegressionLine(2, 0.036, -4.8), }),
                             new CollisionEnergyRegression("Waters", new[]
                                 { new ChargeRegressionLine(2, 0.034, 3.314), }),
+                        };
+
+                default:    // v1.1
+                    return new[]
+                        {
+                            GetDefault(), 
+                            new CollisionEnergyRegression("Thermo TSQ Ultra", new []
+                                {
+                                    new ChargeRegressionLine(2, 0.036, 0.954),
+                                    new ChargeRegressionLine(3, 0.037, 3.525)
+                                }), 
+                            new CollisionEnergyRegression("ABI 4000 QTrap", new []
+                                {
+                                    new ChargeRegressionLine(2, 0.057, -4.265),
+                                    new ChargeRegressionLine(3, 0.031, 7.082)
+                                }), 
+                            new CollisionEnergyRegression("Agilent 6460", new[]
+                                {
+                                    new ChargeRegressionLine(2, 0.051, -15.563),
+                                    new ChargeRegressionLine(3, 0.037, -9.784)
+                                }),
+                            new CollisionEnergyRegression("Waters Xevo", new[]
+                                {
+                                    new ChargeRegressionLine(2, 0.037, -1.066),
+                                    new ChargeRegressionLine(3, 0.036, -1.328)
+                                }),
                         };
             }
         }

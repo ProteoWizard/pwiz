@@ -348,7 +348,7 @@ namespace pwiz.Skyline.Model.Lib
 
                 // Modification values taken from SpectraST
                 // http://sashimi.svn.sourceforge.net/viewvc/sashimi/trunk/trans_proteomic_pipeline/src/Search/SpectraST/Peptide.cpp?revision=5277&view=markup
-                // line 1078
+                // line 1196
                 {"ICAT_light", SequenceMassCalc.GetModDiffDescription(227.126991)}, 
                 {"ICAT-C", SequenceMassCalc.GetModDiffDescription(227.126991)}, // PSI new name
                 {"ICAT_heavy", SequenceMassCalc.GetModDiffDescription(236.157185)},
