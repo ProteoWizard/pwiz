@@ -20,6 +20,7 @@ using System;
 using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.EditUI
@@ -32,8 +33,16 @@ namespace pwiz.Skyline.EditUI
 
             textLineWidth.Text = Settings.Default.ChromatogramLineWidth.ToString();
             textFontSize.Text = Settings.Default.ChromatogramFontSize.ToString();
-            if (Settings.Default.ChromatogramTimeRange != 0)
-                textTimeRange.Text = Settings.Default.ChromatogramTimeRange.ToString();
+
+            if (Settings.Default.ChromatogramTimeRange == 0)
+            {
+                Settings.Default.ChromatogramTimeRange = GraphChromatogram.DEFAULT_PEAK_RELATIVE_WINDOW;
+                Settings.Default.ChromatogramTimeRangeRelative = true;
+            }
+
+            cbRelative.Checked = Settings.Default.ChromatogramTimeRangeRelative;
+            textTimeRange.Text = Settings.Default.ChromatogramTimeRange.ToString();
+
             if (Settings.Default.ChromatogramMaxIntensity != 0)
                 textMaxIntensity.Text = Settings.Default.ChromatogramMaxIntensity.ToString();
         }
@@ -58,6 +67,7 @@ namespace pwiz.Skyline.EditUI
                 if (!helper.ValidateDecimalTextBox(e, textTimeRange, 0.05, 15.0, out timeRange))
                     return;
             }
+            bool relative = cbRelative.Checked;
 
             double maxIntensity = 0;
             if (!string.IsNullOrEmpty(textMaxIntensity.Text))
@@ -69,6 +79,7 @@ namespace pwiz.Skyline.EditUI
             Settings.Default.ChromatogramLineWidth = lineWidth;
             Settings.Default.ChromatogramFontSize = fontSize;
             Settings.Default.ChromatogramTimeRange = timeRange;
+            Settings.Default.ChromatogramTimeRangeRelative = relative;
             Settings.Default.ChromatogramMaxIntensity = maxIntensity;
             if (maxIntensity != 0)
                 Settings.Default.LockYChrom = true;
@@ -79,6 +90,11 @@ namespace pwiz.Skyline.EditUI
         private void btnOk_Click(object sender, EventArgs e)
         {
             OkDialog();
+        }
+
+        private void cbRelative_CheckedChanged(object sender, EventArgs e)
+        {
+            labelTimeUnits.Text = (cbRelative.Checked ? "widths" : "minutes");
         }
     }
 }

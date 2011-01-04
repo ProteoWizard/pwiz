@@ -36,10 +36,11 @@
             this.label1 = new System.Windows.Forms.Label();
             this.textTimeRange = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
+            this.labelTimeUnits = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.textMaxIntensity = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
+            this.cbRelative = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -101,7 +102,7 @@
             // 
             this.textTimeRange.Location = new System.Drawing.Point(26, 49);
             this.textTimeRange.Name = "textTimeRange";
-            this.textTimeRange.Size = new System.Drawing.Size(107, 20);
+            this.textTimeRange.Size = new System.Drawing.Size(116, 20);
             this.textTimeRange.TabIndex = 1;
             // 
             // label2
@@ -113,44 +114,59 @@
             this.label2.TabIndex = 0;
             this.label2.Text = "&Best peak time range:";
             // 
-            // label4
+            // labelTimeUnits
             // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(138, 52);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(43, 13);
-            this.label4.TabIndex = 2;
-            this.label4.Text = "minutes";
+            this.labelTimeUnits.AutoSize = true;
+            this.labelTimeUnits.Location = new System.Drawing.Point(148, 52);
+            this.labelTimeUnits.Name = "labelTimeUnits";
+            this.labelTimeUnits.Size = new System.Drawing.Size(43, 13);
+            this.labelTimeUnits.TabIndex = 2;
+            this.labelTimeUnits.Text = "minutes";
             // 
             // groupBox1
             // 
+            this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox1.Controls.Add(this.cbRelative);
             this.groupBox1.Controls.Add(this.textMaxIntensity);
             this.groupBox1.Controls.Add(this.label5);
             this.groupBox1.Controls.Add(this.textTimeRange);
-            this.groupBox1.Controls.Add(this.label4);
+            this.groupBox1.Controls.Add(this.labelTimeUnits);
             this.groupBox1.Controls.Add(this.label2);
             this.groupBox1.Location = new System.Drawing.Point(15, 75);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(215, 160);
+            this.groupBox1.Size = new System.Drawing.Size(215, 187);
             this.groupBox1.TabIndex = 4;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "&Graph area dimensions:";
             // 
             // textMaxIntensity
             // 
-            this.textMaxIntensity.Location = new System.Drawing.Point(26, 115);
+            this.textMaxIntensity.Location = new System.Drawing.Point(26, 143);
             this.textMaxIntensity.Name = "textMaxIntensity";
-            this.textMaxIntensity.Size = new System.Drawing.Size(104, 20);
+            this.textMaxIntensity.Size = new System.Drawing.Size(116, 20);
             this.textMaxIntensity.TabIndex = 4;
             // 
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(23, 99);
+            this.label5.Location = new System.Drawing.Point(23, 127);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(96, 13);
             this.label5.TabIndex = 3;
             this.label5.Text = "&Maximum Intensity:";
+            // 
+            // cbRelative
+            // 
+            this.cbRelative.AutoSize = true;
+            this.cbRelative.Location = new System.Drawing.Point(26, 72);
+            this.cbRelative.Name = "cbRelative";
+            this.cbRelative.Size = new System.Drawing.Size(116, 17);
+            this.cbRelative.TabIndex = 5;
+            this.cbRelative.Text = "&Peak width relative";
+            this.cbRelative.UseVisualStyleBackColor = true;
+            this.cbRelative.CheckedChanged += new System.EventHandler(this.cbRelative_CheckedChanged);
             // 
             // ChromChartPropertyDlg
             // 
@@ -158,7 +174,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(337, 260);
+            this.ClientSize = new System.Drawing.Size(337, 287);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.textFontSize);
             this.Controls.Add(this.label1);
@@ -190,9 +206,10 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox textTimeRange;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label labelTimeUnits;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.TextBox textMaxIntensity;
         private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.CheckBox cbRelative;
     }
 }

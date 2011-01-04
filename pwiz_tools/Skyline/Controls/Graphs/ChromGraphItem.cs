@@ -471,7 +471,7 @@ namespace pwiz.Skyline.Controls.Graphs
             return 0;
         }
 
-        public double GetNearesBestPeakBoundary(double time)
+        public double GetNearestBestPeakBoundary(double time)
         {
             var tranPeakInfo = TransitionChromInfo;
             if (tranPeakInfo == null)

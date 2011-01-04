@@ -79,6 +79,7 @@ namespace pwiz.Skyline
             this.removeEmptyProteinsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeDuplicatePeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeRepeatedPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.acceptPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeMissingResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator35 = new System.Windows.Forms.ToolStripSeparator();
             this.refineAdvancedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -317,7 +318,7 @@ namespace pwiz.Skyline
             this.peptideCvsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator28 = new System.Windows.Forms.ToolStripSeparator();
             this.areaPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.acceptPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator42 = new System.Windows.Forms.ToolStripSeparator();
             this.menuMain.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.contextMenuTreeNode.SuspendLayout();
@@ -718,8 +719,9 @@ namespace pwiz.Skyline
             this.removeEmptyProteinsMenuItem,
             this.removeDuplicatePeptidesMenuItem,
             this.removeRepeatedPeptidesMenuItem,
-            this.acceptPeptidesMenuItem,
             this.removeMissingResultsMenuItem,
+            this.toolStripSeparator42,
+            this.acceptPeptidesMenuItem,
             this.toolStripSeparator35,
             this.refineAdvancedMenuItem});
             this.refineToolStripMenuItem.Name = "refineToolStripMenuItem";
@@ -746,6 +748,13 @@ namespace pwiz.Skyline
             this.removeRepeatedPeptidesMenuItem.Size = new System.Drawing.Size(218, 22);
             this.removeRepeatedPeptidesMenuItem.Text = "&Remove Repeated Peptides";
             this.removeRepeatedPeptidesMenuItem.Click += new System.EventHandler(this.removeRepeatedPeptidesMenuItem_Click);
+            // 
+            // acceptPeptidesMenuItem
+            // 
+            this.acceptPeptidesMenuItem.Name = "acceptPeptidesMenuItem";
+            this.acceptPeptidesMenuItem.Size = new System.Drawing.Size(218, 22);
+            this.acceptPeptidesMenuItem.Text = "A&ccept Peptides...";
+            this.acceptPeptidesMenuItem.Click += new System.EventHandler(this.acceptPeptidesMenuItem_Click);
             // 
             // removeMissingResultsMenuItem
             // 
@@ -2753,12 +2762,10 @@ namespace pwiz.Skyline
             this.areaPropsContextMenuItem.Text = "Properties...";
             this.areaPropsContextMenuItem.Click += new System.EventHandler(this.areaPropsContextMenuItem_Click);
             // 
-            // acceptPeptidesMenuItem
+            // toolStripSeparator42
             // 
-            this.acceptPeptidesMenuItem.Name = "acceptPeptidesMenuItem";
-            this.acceptPeptidesMenuItem.Size = new System.Drawing.Size(218, 22);
-            this.acceptPeptidesMenuItem.Text = "A&ccept Peptides...";
-            this.acceptPeptidesMenuItem.Click += new System.EventHandler(this.acceptPeptidesMenuItem_Click);
+            this.toolStripSeparator42.Name = "toolStripSeparator42";
+            this.toolStripSeparator42.Size = new System.Drawing.Size(215, 6);
             // 
             // SkylineWindow
             // 
@@ -3086,6 +3093,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem largeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem extraLargeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem acceptPeptidesMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator42;
     }
 }
 

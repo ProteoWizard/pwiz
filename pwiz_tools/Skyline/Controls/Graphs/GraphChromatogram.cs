@@ -41,6 +41,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public partial class GraphChromatogram : DockableForm, IGraphContainer
     {
+        public const double DEFAULT_PEAK_RELATIVE_WINDOW = 3.4;
+
         public static ShowRTChrom ShowRT
         {
             get
@@ -1089,7 +1091,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (bestEndTime != 0)
                     {
                         // If an explicit time range around the best peak is set, then use it.
-                        if (_timeRange != 0)
+                        if (_timeRange != 0 && !Settings.Default.ChromatogramTimeRangeRelative)
                         {
                             // CONSIDER: Should it be centered on the peak apex?
                             double mid = (bestStartTime + bestEndTime)/2;
@@ -1192,7 +1194,12 @@ namespace pwiz.Skyline.Controls.Graphs
             if (end <= 0)
                 return;
             double start = chromInfo.StartRetentionTime;
-            double margin = (end - start) * 1.2;
+            double multiplier = DEFAULT_PEAK_RELATIVE_WINDOW;
+            if (Settings.Default.ChromatogramTimeRange != 0 && Settings.Default.ChromatogramTimeRangeRelative)
+                multiplier = Settings.Default.ChromatogramTimeRange;
+            double width = end - start;
+            double window = width*multiplier;
+            double margin = (window - width)/2;
             start -= margin;
             end += margin;
 
@@ -1455,7 +1462,7 @@ namespace pwiz.Skyline.Controls.Graphs
             foreach (var curve in GraphPane.CurveList)
             {
                 ChromGraphItem graphItemNext = (ChromGraphItem)curve.Tag;
-                double timeMatch = graphItemNext.GetNearesBestPeakBoundary(time);
+                double timeMatch = graphItemNext.GetNearestBestPeakBoundary(time);
                 if (timeMatch > 0)
                 {
                     double delta = Math.Abs(time - timeMatch);
