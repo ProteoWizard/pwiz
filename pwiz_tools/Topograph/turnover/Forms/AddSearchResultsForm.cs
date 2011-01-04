@@ -49,8 +49,10 @@ namespace pwiz.Topograph.ui.Forms
         private double _minXCorr1 = 1.8;
         private double _minXCorr2 = 2.0;
         private double _minXCorr3 = 2.4;
+        private double _maxQValue = 0.01;
         private bool _useMinXCorr = false;
         private bool _onlyExistingPeptides = true;
+        private SearchResultFileType searchResultFileType;
         public AddSearchResultsForm(Workspace workspace)
             : base(workspace)
         {
@@ -58,6 +60,7 @@ namespace pwiz.Topograph.ui.Forms
             tbxMinXCorr1.Text = _minXCorr1.ToString();
             tbxMinXCorr2.Text = _minXCorr2.ToString();
             tbxMinXCorr3.Text = _minXCorr3.ToString();
+            tbxMaxQValue.Text = _maxQValue.ToString();
             cbxMinimumXCorr.Checked = _useMinXCorr;
             cbxMinimumXCorr_CheckedChanged(cbxMinimumXCorr, new EventArgs());
             cbxOnlyExistingPeptides.Checked = _onlyExistingPeptides;
@@ -191,7 +194,10 @@ namespace pwiz.Topograph.ui.Forms
                     filenames = new HashSet<string>();
                     searchResultFilenames.Add(trimmedSequence, filenames);
                 }
-                filenames.Add(searchResult.Filename);
+                if (searchResult.Filename != null)
+                {
+                    filenames.Add(searchResult.Filename);
+                }
             }
             var result = new Dictionary<string, int>();
             foreach (var entry in searchResultFilenames)
@@ -205,27 +211,35 @@ namespace pwiz.Topograph.ui.Forms
         {
             String baseMessage = _message;
             String extension = Path.GetExtension(file);
-            IList<SearchResult> searchResults;
-            String msDataFileName;
+            IList<SearchResult> searchResults = null;
+            String msDataFileName = null;
             using (var stream = File.OpenRead(file))
             {
-                if (extension == ".sqt")
+                switch (searchResultFileType)
                 {
-                    msDataFileName = Path.GetFileNameWithoutExtension(file);
-                    searchResults = SearchResults.ReadSQT(msDataFileName, stream, ProgressMonitor);
-                    searchResults = FilterSearchResults(peptides, searchResults);
-                }
-                else if (file.ToLower().EndsWith(".pep.xml"))
-                {
-                    msDataFileName = Path.GetFileName(file);
-                    msDataFileName = msDataFileName.Substring(0, msDataFileName.Length - 8);
-                    searchResults = SearchResults.ReadPepXml(msDataFileName, stream, ProgressMonitor);
-                    searchResults = FilterSearchResults(peptides, searchResults);
-                }
-                else
-                {
-                    msDataFileName = null;
-                    searchResults = SearchResults.ReadDTASelect(stream, ProgressMonitor);
+                    default:
+                        if (extension == ".sqt")
+                        {
+                            msDataFileName = Path.GetFileNameWithoutExtension(file);
+                            searchResults = SearchResults.ReadSQT(msDataFileName, stream, ProgressMonitor);
+                            searchResults = FilterSearchResults(peptides, searchResults);
+                        }
+                        else if (true || file.ToLower().EndsWith(".pep.xml"))
+                        {
+                            msDataFileName = Path.GetFileName(file);
+                            msDataFileName = msDataFileName.Substring(0, msDataFileName.Length - 8);
+                            searchResults = SearchResults.ReadPepXml(msDataFileName, stream, ProgressMonitor);
+                            searchResults = FilterSearchResults(peptides, searchResults);
+                        }
+                        break;
+                    case SearchResultFileType.Dtaselect:
+                        msDataFileName = null;
+                        searchResults = SearchResults.ReadDTASelect(stream, ProgressMonitor);
+                        break;
+                    case SearchResultFileType.Percolator:
+                        msDataFileName = null;
+                        searchResults = SearchResults.ReadPercolatorOutput(stream, _maxQValue, ProgressMonitor);
+                        break;
                 }
             }
             if (searchResults == null)
@@ -287,6 +301,10 @@ namespace pwiz.Topograph.ui.Forms
                     if (!peptides.TryGetValue(trimmedSequence, out dbPeptide))
                     {
                         // should not happen
+                        continue;
+                    }
+                    if (searchResult.Filename == null)
+                    {
                         continue;
                     }
                     DbMsDataFile dbMsDataFile;
@@ -523,12 +541,18 @@ namespace pwiz.Topograph.ui.Forms
             _onlyExistingPeptides = cbxOnlyExistingPeptides.Checked;
         }
 
-        private void AddSearchResults(IList<String> filenames)
+        private void AddSearchResults(IList<String> filenames, SearchResultFileType searchResultFileType)
         {
+            _minXCorr1 = double.Parse(tbxMinXCorr1.Text);
+            _minXCorr2 = double.Parse(tbxMinXCorr2.Text);
+            _minXCorr3 = double.Parse(tbxMinXCorr3.Text);
+            _maxQValue = double.Parse(tbxMaxQValue.Text);
             this.filenames = filenames;
             btnChooseSqtFiles.Enabled = false;
             btnChooseDTASelect.Enabled = false;
+            btnChoosePercolatorResults.Enabled = false;
             IsRunning = true;
+            this.searchResultFileType = searchResultFileType;
             new Action(WorkBackground).BeginInvoke(null, null);
         }
 
@@ -557,7 +581,7 @@ namespace pwiz.Topograph.ui.Forms
             }
             Settings.Default.SearchResultsDirectory = Path.GetDirectoryName(openFileDialog.FileName);
             Settings.Default.Save();
-            AddSearchResults(openFileDialog.FileNames);
+            AddSearchResults(openFileDialog.FileNames, SearchResultFileType.Sequest);
         }
 
         private void btnChooseDTASelect_Click(object sender, EventArgs e)
@@ -575,7 +599,33 @@ namespace pwiz.Topograph.ui.Forms
             }
             Settings.Default.SearchResultsDirectory = Path.GetDirectoryName(openFileDialog.FileName);
             Settings.Default.Save();
-            AddSearchResults(openFileDialog.FileNames);
+            AddSearchResults(openFileDialog.FileNames, SearchResultFileType.Dtaselect);
         }
+
+        private void btnChoosePercolatorResults_Click(object sender, EventArgs e)
+        {
+            Settings.Default.Reload();
+            var openFileDialog = new OpenFileDialog
+                                     {
+                                         Filter =
+                                             "Percolator Combined Results (combined-results.xml)|combined-results.xml|All Files|*.*",
+                                         Multiselect = true,
+                                         InitialDirectory = Settings.Default.SearchResultsDirectory
+                                     };
+            if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
+            {
+                return;
+            }
+            Settings.Default.SearchResultsDirectory = Path.GetDirectoryName(openFileDialog.FileName);
+            Settings.Default.Save();
+            AddSearchResults(openFileDialog.FileNames, SearchResultFileType.Percolator);
+        }
+    }
+
+    enum SearchResultFileType
+    {
+        Dtaselect,
+        Percolator,
+        Sequest,
     }
 }

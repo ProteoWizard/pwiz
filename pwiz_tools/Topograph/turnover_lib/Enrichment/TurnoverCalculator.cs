@@ -182,15 +182,12 @@ namespace pwiz.Topograph.Enrichment
             }
             Matrix matrixP = targetVector.ToColumnMatrix();
             Matrix matrixAT = Matrix.Transpose(matrixA);
-            Matrix matrixATAInv;
-            try
-            {
-                matrixATAInv = matrixAT.Multiply(matrixA).Inverse();
-            }
-            catch (InvalidOperationException)
+            var matrixATA = matrixAT.Multiply(matrixA);
+            if (matrixATA.Determinant() == 0)
             {
                 return null;
             }
+            var matrixATAInv = matrixATA.Inverse();
             Matrix matrixResult = matrixATAInv.Multiply(matrixAT).Multiply(matrixP);
             return matrixResult.GetColumnVector(0);
         }

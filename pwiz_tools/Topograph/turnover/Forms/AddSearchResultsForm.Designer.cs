@@ -48,26 +48,31 @@
             this.label5 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.label6 = new System.Windows.Forms.Label();
+            this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.btnChoosePercolatorResults = new System.Windows.Forms.Button();
+            this.label7 = new System.Windows.Forms.Label();
+            this.tbxMaxQValue = new System.Windows.Forms.TextBox();
             this.tableLayoutPanel1.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
+            this.groupBox3.SuspendLayout();
             this.SuspendLayout();
             // 
             // tbxStatus
             // 
             this.tbxStatus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbxStatus.Location = new System.Drawing.Point(1, 369);
+            this.tbxStatus.Location = new System.Drawing.Point(1, 438);
             this.tbxStatus.Multiline = true;
             this.tbxStatus.Name = "tbxStatus";
             this.tbxStatus.ReadOnly = true;
-            this.tbxStatus.Size = new System.Drawing.Size(402, 18);
+            this.tbxStatus.Size = new System.Drawing.Size(624, 18);
             this.tbxStatus.TabIndex = 1;
             // 
             // btnCancel
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCancel.Location = new System.Drawing.Point(320, 494);
+            this.btnCancel.Location = new System.Drawing.Point(542, 494);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(65, 27);
             this.btnCancel.TabIndex = 0;
@@ -79,9 +84,9 @@
             // 
             this.progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBar.Location = new System.Drawing.Point(1, 393);
+            this.progressBar.Location = new System.Drawing.Point(1, 462);
             this.progressBar.Name = "progressBar";
-            this.progressBar.Size = new System.Drawing.Size(402, 20);
+            this.progressBar.Size = new System.Drawing.Size(624, 20);
             this.progressBar.TabIndex = 2;
             // 
             // cbxOnlyExistingPeptides
@@ -90,7 +95,7 @@
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.cbxOnlyExistingPeptides.Location = new System.Drawing.Point(10, 44);
             this.cbxOnlyExistingPeptides.Name = "cbxOnlyExistingPeptides";
-            this.cbxOnlyExistingPeptides.Size = new System.Drawing.Size(364, 34);
+            this.cbxOnlyExistingPeptides.Size = new System.Drawing.Size(586, 34);
             this.cbxOnlyExistingPeptides.TabIndex = 3;
             this.cbxOnlyExistingPeptides.Text = "Only add search results whose peptide sequence is already in this workspace";
             this.cbxOnlyExistingPeptides.UseVisualStyleBackColor = true;
@@ -118,16 +123,16 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(355, 101);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(577, 101);
             this.tableLayoutPanel1.TabIndex = 5;
             // 
             // tbxMinXCorr3
             // 
             this.tbxMinXCorr3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tbxMinXCorr3.Enabled = false;
-            this.tbxMinXCorr3.Location = new System.Drawing.Point(131, 78);
+            this.tbxMinXCorr3.Location = new System.Drawing.Point(211, 78);
             this.tbxMinXCorr3.Name = "tbxMinXCorr3";
-            this.tbxMinXCorr3.Size = new System.Drawing.Size(221, 20);
+            this.tbxMinXCorr3.Size = new System.Drawing.Size(363, 20);
             this.tbxMinXCorr3.TabIndex = 5;
             this.tbxMinXCorr3.Text = "2.4";
             // 
@@ -135,9 +140,9 @@
             // 
             this.tbxMinXCorr2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tbxMinXCorr2.Enabled = false;
-            this.tbxMinXCorr2.Location = new System.Drawing.Point(131, 53);
+            this.tbxMinXCorr2.Location = new System.Drawing.Point(211, 53);
             this.tbxMinXCorr2.Name = "tbxMinXCorr2";
-            this.tbxMinXCorr2.Size = new System.Drawing.Size(221, 20);
+            this.tbxMinXCorr2.Size = new System.Drawing.Size(363, 20);
             this.tbxMinXCorr2.TabIndex = 4;
             this.tbxMinXCorr2.Text = "2.0";
             // 
@@ -147,7 +152,7 @@
             this.label2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.label2.Location = new System.Drawing.Point(3, 25);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(122, 25);
+            this.label2.Size = new System.Drawing.Size(202, 25);
             this.label2.TabIndex = 0;
             this.label2.Text = "Charge 1:";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -158,7 +163,7 @@
             this.label3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.label3.Location = new System.Drawing.Point(3, 50);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(122, 25);
+            this.label3.Size = new System.Drawing.Size(202, 25);
             this.label3.TabIndex = 1;
             this.label3.Text = "Charge 2:";
             this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -169,7 +174,7 @@
             this.label4.Dock = System.Windows.Forms.DockStyle.Fill;
             this.label4.Location = new System.Drawing.Point(3, 75);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(122, 26);
+            this.label4.Size = new System.Drawing.Size(202, 26);
             this.label4.TabIndex = 2;
             this.label4.Text = "Charge 3 or more:";
             this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -178,9 +183,9 @@
             // 
             this.tbxMinXCorr1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tbxMinXCorr1.Enabled = false;
-            this.tbxMinXCorr1.Location = new System.Drawing.Point(131, 28);
+            this.tbxMinXCorr1.Location = new System.Drawing.Point(211, 28);
             this.tbxMinXCorr1.Name = "tbxMinXCorr1";
-            this.tbxMinXCorr1.Size = new System.Drawing.Size(221, 20);
+            this.tbxMinXCorr1.Size = new System.Drawing.Size(363, 20);
             this.tbxMinXCorr1.TabIndex = 3;
             this.tbxMinXCorr1.Text = "1.8";
             // 
@@ -199,7 +204,7 @@
             // btnChooseSqtFiles
             // 
             this.btnChooseSqtFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnChooseSqtFiles.Location = new System.Drawing.Point(260, 193);
+            this.btnChooseSqtFiles.Location = new System.Drawing.Point(482, 193);
             this.btnChooseSqtFiles.Name = "btnChooseSqtFiles";
             this.btnChooseSqtFiles.Size = new System.Drawing.Size(113, 27);
             this.btnChooseSqtFiles.TabIndex = 6;
@@ -224,7 +229,7 @@
             this.groupBox1.Controls.Add(this.label5);
             this.groupBox1.Location = new System.Drawing.Point(12, 31);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(380, 84);
+            this.groupBox1.Size = new System.Drawing.Size(602, 63);
             this.groupBox1.TabIndex = 8;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "DTASelect";
@@ -232,7 +237,7 @@
             // btnChooseDTASelect
             // 
             this.btnChooseDTASelect.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnChooseDTASelect.Location = new System.Drawing.Point(190, 55);
+            this.btnChooseDTASelect.Location = new System.Drawing.Point(412, 31);
             this.btnChooseDTASelect.Name = "btnChooseDTASelect";
             this.btnChooseDTASelect.Size = new System.Drawing.Size(183, 23);
             this.btnChooseDTASelect.TabIndex = 1;
@@ -246,7 +251,7 @@
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.label5.Location = new System.Drawing.Point(6, 21);
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(358, 33);
+            this.label5.Size = new System.Drawing.Size(580, 33);
             this.label5.TabIndex = 0;
             this.label5.Text = "You can choose a DTASelect filter file, and Topograph will add all of the peptide" +
                 "s in it.";
@@ -259,9 +264,9 @@
             this.groupBox2.Controls.Add(this.tableLayoutPanel1);
             this.groupBox2.Controls.Add(this.cbxOnlyExistingPeptides);
             this.groupBox2.Controls.Add(this.btnChooseSqtFiles);
-            this.groupBox2.Location = new System.Drawing.Point(12, 121);
+            this.groupBox2.Location = new System.Drawing.Point(12, 206);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(380, 226);
+            this.groupBox2.Size = new System.Drawing.Size(602, 226);
             this.groupBox2.TabIndex = 9;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Sequest or .pep.xml";
@@ -272,16 +277,57 @@
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.label6.Location = new System.Drawing.Point(7, 16);
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(357, 33);
+            this.label6.Size = new System.Drawing.Size(579, 33);
             this.label6.TabIndex = 6;
             this.label6.Text = "You can specify restrictions on which peptides are added from a Sequest (.sqt) or" +
                 " pep.xml search results file";
+            // 
+            // groupBox3
+            // 
+            this.groupBox3.Controls.Add(this.tbxMaxQValue);
+            this.groupBox3.Controls.Add(this.label7);
+            this.groupBox3.Controls.Add(this.btnChoosePercolatorResults);
+            this.groupBox3.Location = new System.Drawing.Point(13, 109);
+            this.groupBox3.Name = "groupBox3";
+            this.groupBox3.Size = new System.Drawing.Size(601, 91);
+            this.groupBox3.TabIndex = 10;
+            this.groupBox3.TabStop = false;
+            this.groupBox3.Text = "Percolator Combined Results";
+            // 
+            // btnChoosePercolatorResults
+            // 
+            this.btnChoosePercolatorResults.Location = new System.Drawing.Point(411, 57);
+            this.btnChoosePercolatorResults.Name = "btnChoosePercolatorResults";
+            this.btnChoosePercolatorResults.Size = new System.Drawing.Size(183, 23);
+            this.btnChoosePercolatorResults.TabIndex = 0;
+            this.btnChoosePercolatorResults.Text = "Choose Percolator Results...";
+            this.btnChoosePercolatorResults.UseVisualStyleBackColor = true;
+            this.btnChoosePercolatorResults.Click += new System.EventHandler(this.btnChoosePercolatorResults_Click);
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(14, 31);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(95, 13);
+            this.label7.TabIndex = 1;
+            this.label7.Text = "Maximum Q Value:";
+            // 
+            // tbxMaxQValue
+            // 
+            this.tbxMaxQValue.Location = new System.Drawing.Point(130, 29);
+            this.tbxMaxQValue.Name = "tbxMaxQValue";
+            this.tbxMaxQValue.Size = new System.Drawing.Size(452, 20);
+            this.tbxMaxQValue.TabIndex = 2;
+            this.tbxMaxQValue.Text = "0.01";
+            this.tbxMaxQValue.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // AddSearchResultsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(404, 533);
+            this.ClientSize = new System.Drawing.Size(626, 533);
+            this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.label1);
@@ -296,6 +342,8 @@
             this.tableLayoutPanel1.PerformLayout();
             this.groupBox1.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);
+            this.groupBox3.ResumeLayout(false);
+            this.groupBox3.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -322,5 +370,9 @@
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.GroupBox groupBox3;
+        private System.Windows.Forms.Button btnChoosePercolatorResults;
+        private System.Windows.Forms.TextBox tbxMaxQValue;
+        private System.Windows.Forms.Label label7;
     }
 }

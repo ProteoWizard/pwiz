@@ -194,6 +194,54 @@ namespace pwiz.Topograph.Search
             }
             return results;
         }
+
+        public static List<SearchResult> ReadPercolatorOutput(Stream stream, double maxQValue, Func<int, bool> progressMonitor)
+        {
+            var results = new List<SearchResult>();
+            var xmlReader = XmlReader.Create(stream);
+            while (xmlReader.ReadToFollowing("psm"))
+            {
+                if (!progressMonitor.Invoke((int) (100 * stream.Position / stream.Length)))
+                {
+                    return null;
+                }
+                double qValue;
+                if (xmlReader.ReadToDescendant("q_value"))
+                {
+                    qValue = xmlReader.ReadElementContentAsDouble();
+                }
+                else
+                {
+                    continue;
+                }
+                if (qValue > maxQValue)
+                {
+                    continue;
+                }
+                string peptide;
+                if (xmlReader.ReadToFollowing("peptide_seq"))
+                {
+                    peptide = xmlReader.GetAttribute("n") + "." + xmlReader.GetAttribute("seq") + "." +
+                              xmlReader.GetAttribute("c");
+                }
+                else
+                {
+                    continue;
+                }
+                string protein = null;
+                if (xmlReader.ReadToFollowing("protein_id"))
+                {
+                    protein = xmlReader.ReadElementContentAsString();
+                }
+
+                results.Add(new SearchResult(peptide)
+                                {
+                                    Protein = protein,
+                                    QValue = qValue,
+                                });
+            }
+            return results;
+        }
     }
 
 
@@ -214,5 +262,6 @@ namespace pwiz.Topograph.Search
         public int Charge { get; set; }
         public bool Unique { get; set; }
         public double XCorr { get; set; }
+        public double QValue { get; set; }
     }
 }
