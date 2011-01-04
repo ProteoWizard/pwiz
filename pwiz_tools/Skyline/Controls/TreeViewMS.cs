@@ -166,29 +166,38 @@ namespace pwiz.Skyline.Controls
                         node.BoundsMS.Contains(e.Location))
                     SelectedNode = node;
             }
-            else
+            base.OnMouseDown(e);
+        }
+
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Right)
             {
-                // Handle cases where clicking on the selected node should change
-                // the selection.
                 TreeNodeMS node = (TreeNodeMS)GetNodeAt(0, e.Y);
                 if (node != null && node.BoundsMS.Contains(e.Location))
                 {
+                    // If we are within the bounds of a node and that node is not the selected node,
+                    // make it the selected node. Changing the font of the TreeView at runtime
+                    // apparently does not update node bounds, so we need to do this check in case the
+                    // user clicked outside of the original node bounds.
                     if (!ReferenceEquals(node, SelectedNode))
                         SelectedNode = node;
+                    // Handle cases where clicking on the selected node should change
+                    // the selection.
                     else
                     {
                         // Disjoint selection or the SelectedNode is not in the selection
                         if (IsDisjointSelect || !IsNodeSelected(node))
                             SelectedNode = null;
-                            // More than a single node currently selected, and not performing
-                            // range selection on an existing range selection.
+                        // More than a single node currently selected, and not performing
+                        // range selection on an existing range selection.
                         else if (SelectedNodes.Count > 1 &&
                                  (!IsRangeSelect || ReferenceEquals(_anchorNode, SelectedNode)))
                             SelectedNode = null;
                     }
                 }
             }
-            base.OnMouseDown(e);
+            base.OnMouseUp(e);
         }
 
         protected override void OnBeforeSelect(TreeViewCancelEventArgs e)
