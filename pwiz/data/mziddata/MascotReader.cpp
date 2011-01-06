@@ -600,7 +600,7 @@ public:
             new ProteinDetectionHypothesis(
                 indices.makeIndex("PDH_", indices.proteindetectionhypothesis)));
 
-        pdh->paramGroup.set(MS_mascot_score, prot->getScore());
+        pdh->paramGroup.set(MS_Mascot_score, prot->getScore());
         pdh->paramGroup.set(MS_sequence_coverage, prot->getCoverage());
 
         ProteinAmbiguityGroupPtr pag(
